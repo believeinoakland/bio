@@ -60564,6 +60564,1840 @@ function retrievalRoutes(r, url, body) {
   };
 }
 
+// src/progressions/schema.mjs
+var PROGRESSIONS_SCHEMA = `
+-- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
+-- section 8.2, "generalises the connection table rather than sitting beside it"). A
+-- definition is a named ordered set of STAGES with the rules a progression's junction
+-- checks need: after, cardinality, interval, required-ness. This is DATA in the record,
+-- not cases in a switch, so the set can be authored and (later) edited through a UI.
+-- BOTH of Bob's example progressions must be expressible as rows here -- the meeting
+-- chain (meeting -> agenda -> minutes) AND the procurement chain (need -> award ->
+-- signed contract) -- or the generalisation has not been made (the acceptance).
+--
+-- A progression definition is a CLAIM the group is making about how its institutions
+-- OUGHT to behave (framework 8.1's connection-table note 3), so it is FIRST-CLASS
+-- member-declared state carrying its author and date -- like the subject registry
+-- (entities), NOT a projection of the corpus. So a whole-store purge (the scratch-reset
+-- tool) clears it, but a per-bundle purge leaves it (it has no bundle_id). The connection
+-- table above is the TWO-STAGE case of this one (framework: "a connection row is a
+-- progression of two stages; nothing needs both"); they are one construct at two
+-- generalities, not two tables beside each other.
+CREATE TABLE IF NOT EXISTS progression_defs (
+  progression_key TEXT PRIMARY KEY,
+  label           TEXT NOT NULL,
+  note            TEXT,
+  declared_by     TEXT,
+  at              TEXT
+);
+-- The ordered STAGES of a progression definition. after_stage names the stage this one
+-- PRESUPPOSES (framework 8.2: "read forwards it predicts; read backwards it accuses" --
+-- the MISSING PREDECESSOR is slice B), NULL for the first stage. cardinality is 1 / 0..1
+-- / 0..n (an RFP has many responses; an award has one contract). within_interval is the
+-- clock that makes an absence OVERDUE rather than pending (NULL = no clock). required is
+-- always / usually / sometimes / never / unless_exception (a lawful skip needs an
+-- exception document -- slice B). stage_no is the ordinal, so the stages read in order
+-- without depending on after_stage forming a single line (a real chain can branch).
+-- Keyed (progression_key, stage_key). Cleared with its definition by a whole-store purge.
+CREATE TABLE IF NOT EXISTS progression_stages (
+  progression_key TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  stage_no        INTEGER NOT NULL,
+  label           TEXT,
+  after_stage     TEXT,
+  cardinality     TEXT NOT NULL,
+  within_interval TEXT,
+  required        TEXT NOT NULL,
+  PRIMARY KEY (progression_key, stage_key)
+);
+CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progression_key);
+-- D-128 (framework 8.2, The declared flow and its revisions, BOB #27 2026-09-22): a definition is
+-- APPEND-ONLY. The two tables above are the CURRENT version, the one every instance and finding
+-- is derived against, and these two hold EVERY version ever declared, never updated and never
+-- deleted but by a whole-store purge. A revision writes version N+1 carrying its author, date and
+-- BASIS (the member's statement and a citation, the anatomy an exception document carries); the
+-- prior version stands and reads back through op=progression with version=N. A definition
+-- declared before D-128 has no rows here -- the store reads it as version 1 with its basis NOT
+-- RECORDED, and its first revision writes that version here first, verbatim from the tables above.
+-- basis_statement and basis_citation are NULL when the declaring member stated none, which only a
+-- FIRST version may do; a revision is refused without both.
+CREATE TABLE IF NOT EXISTS progression_def_versions (
+  progression_key TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  label           TEXT NOT NULL,
+  note            TEXT,
+  declared_by     TEXT,
+  at              TEXT,
+  basis_statement TEXT,
+  basis_citation  TEXT,
+  PRIMARY KEY (progression_key, version)
+);
+CREATE TABLE IF NOT EXISTS progression_stage_versions (
+  progression_key TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  stage_key       TEXT NOT NULL,
+  stage_no        INTEGER NOT NULL,
+  label           TEXT,
+  after_stage     TEXT,
+  cardinality     TEXT NOT NULL,
+  within_interval TEXT,
+  required        TEXT NOT NULL,
+  PRIMARY KEY (progression_key, version, stage_key)
+);
+-- CONSTRUCTS Step 5, SLICE B (FW-9): a PROGRESSION INSTANCE -- an actual N-stage chain of
+-- REAL captured documents threaded through a definition's stages by a THREADING ENTITY (a
+-- contract number, a project id, a fund). Framework 8.2: "an instance of a progression is
+-- assembled by following an entity" -- which is why the entity axis is Step 4 and this is
+-- Step 5. Each row is ONE captured document placed at ONE stage of ONE instance; the
+-- instance is all rows sharing (progression_key, entity_id). The INSTANCE GRADE (the
+-- weakest connection along the chain, framework 8.2's D-73 pair->chain generalised beyond
+-- FW-8's two-node base case) and the MISSING-PREDECESSOR findings are DERIVED on read from
+-- these rows plus the definition -- NEVER stored as a grade that could go stale, so an
+-- instance read reflects the live definition and the documents still held (undetermined is
+-- honest; a grade is never invented). grade here is the DOCUMENT's own end-grade: the
+-- STRONGEST 8.1 resolution of THIS capture to the threading entity (the same collapse
+-- op=concerns and op=connect make), so a placement records how well its document is tied to
+-- the subject, and the chain math takes the weaker end of each consecutive pair.
+--
+-- A placement is only admitted for a document that ACTUALLY resolves to the threading
+-- entity (FW-7): a document that does not concern the entity cannot be threaded on it (an
+-- equality a caller can hand us is one a caller can invent). Which STAGE a document fills is
+-- the member's authored judgment (this document is the award, that one the contract), so
+-- threaded_by is stamped server-side; the GRADE is the record's, never the caller's.
+--
+-- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly
+-- as resolutions do (it is in op=purge's TABLES): a per-bundle purge removes that document's
+-- placements and the instance honestly re-reads with that stage now unfilled, and a
+-- whole-store purge takes them all (D-113). EXCEPTION documents that discharge a lawful
+-- skip, JUNCTION checks as findings, and the SCHEDULED task that walks this table for
+-- missing predecessors are DEFERRED past FW-9.
+CREATE TABLE IF NOT EXISTS progression_instances (
+  progression_key TEXT NOT NULL,
+  entity_id       TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  capture_sha     TEXT NOT NULL,
+  bundle_id       TEXT NOT NULL,
+  grade           TEXT NOT NULL,
+  threaded_by     TEXT,
+  at              TEXT,
+  PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha)
+);
+CREATE INDEX IF NOT EXISTS progression_instances_key ON progression_instances(progression_key, entity_id);
+CREATE INDEX IF NOT EXISTS progression_instances_bundle ON progression_instances(bundle_id);
+CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instances(capture_sha);
+-- CONSTRUCTS Step 5, SLICE C (FW-10): an EXCEPTION DOCUMENT that discharges a LEGITIMATE SKIP
+-- (framework 8.2: "a sole-source award skips the solicitation stage lawfully ... a skipped
+-- stage with no exception document is [a finding]. The table records which document discharges
+-- which skip"). A row is a REAL captured document, threaded onto ONE progression instance and
+-- NAMING the ONE stage it discharges, carrying a reason and a citation -- the justification an
+-- institution is supposed to publish for the skip, the same statement anatomy FW-8's declared
+-- relations carry (justification + citation, both NOT NULL). Keyed
+-- (progression_key, entity_id, stage_key, capture_sha) so a stage may be discharged by several
+-- documents and re-recording the same document at a stage UPSERTS in place.
+--
+-- A discharge must be EARNED, enforced by the write path (op=discharge), never by a caller's
+-- bare assertion (an equality a caller can hand us is one a caller can invent): the document
+-- must ACTUALLY resolve to the threading entity (FW-7) -- refused NOT_CONCERNED otherwise, the
+-- same gate op=thread uses -- and must name a REAL stage of the definition (BAD_STAGE
+-- otherwise). Whether the discharge APPLIES is derived ON READ in #assembleInstance: only a
+-- REQUIRED stage that is actually MISSING is discharged (rendered a distinct "discharged"
+-- state carrying this reason/citation, never a gap and never silently absent); an exception
+-- naming a stage that is not missing discharges nothing (the stage is present, so there is no
+-- skip to discharge). Derived findings inform, they do not decide -- so this table stores the
+-- documents, not a stored "discharged" boolean that could go stale against the live placements.
+--
+-- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly as
+-- progression_instances do (it is in op=purge's TABLES): a per-bundle purge removes that
+-- document's discharges and the stage honestly re-reads as an undischarged gap; a whole-store
+-- purge takes them all (D-113). JUNCTION checks as findings and the SCHEDULED walking-task are
+-- DEFERRED past FW-10.
+CREATE TABLE IF NOT EXISTS progression_exceptions (
+  progression_key TEXT NOT NULL,
+  entity_id       TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  capture_sha     TEXT NOT NULL,
+  bundle_id       TEXT NOT NULL,
+  reason          TEXT NOT NULL,
+  citation        TEXT NOT NULL,
+  declared_by     TEXT,
+  at              TEXT,
+  PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha)
+);
+CREATE INDEX IF NOT EXISTS progression_exceptions_key ON progression_exceptions(progression_key, entity_id);
+CREATE INDEX IF NOT EXISTS progression_exceptions_bundle ON progression_exceptions(bundle_id);
+CREATE INDEX IF NOT EXISTS progression_exceptions_capture ON progression_exceptions(capture_sha);
+-- K102 (R8): EVERY THREADING OF AN INSTANCE IS A DATED VERSION. progression_instances above holds
+-- the CURRENT placements, the ones an instance is read against; these two hold every threading ever
+-- made, numbered from 1 per (progression_key, entity_id), with who threaded it and when, never
+-- updated and never deleted but by a purge. An instance threaded before versions were kept has no
+-- rows here: its first re-threading writes the placements it replaces as version 1 first, verbatim
+-- from the current rows, their threader and instant as those rows recorded them.
+CREATE TABLE IF NOT EXISTS progression_threads (
+  progression_key TEXT NOT NULL,
+  entity_id       TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  threaded_by     TEXT,
+  at              TEXT,
+  PRIMARY KEY (progression_key, entity_id, version)
+);
+-- One row per placement of one threading. Carries bundle_id so a per-bundle purge takes that
+-- document's placements from every version, as it does from the current one (K23).
+CREATE TABLE IF NOT EXISTS progression_thread_placements (
+  progression_key TEXT NOT NULL,
+  entity_id       TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  stage_key       TEXT NOT NULL,
+  capture_sha     TEXT NOT NULL,
+  bundle_id       TEXT NOT NULL,
+  grade           TEXT NOT NULL,
+  PRIMARY KEY (progression_key, entity_id, version, stage_key, capture_sha)
+);
+CREATE INDEX IF NOT EXISTS progression_thread_placements_bundle ON progression_thread_placements(bundle_id);
+-- K102 (R14): EVERY RECORDING OF AN EXCEPTION DOCUMENT IS A DATED VERSION. progression_exceptions
+-- above holds the CURRENT one per (instance, stage, document), the one that applies; this holds every
+-- recording, numbered from 1, never updated. A row recorded before versions were kept has none
+-- here: its next recording writes it as version 1 first, verbatim.
+CREATE TABLE IF NOT EXISTS progression_exception_versions (
+  progression_key TEXT NOT NULL,
+  entity_id       TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  capture_sha     TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  bundle_id       TEXT NOT NULL,
+  reason          TEXT NOT NULL,
+  citation        TEXT NOT NULL,
+  declared_by     TEXT,
+  at              TEXT,
+  PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha, version)
+);
+CREATE INDEX IF NOT EXISTS progression_exception_versions_bundle ON progression_exception_versions(bundle_id);
+-- REC-7 / D-79: the PROPOSAL-DISPOSITION store. A derived proposal (REC-6's
+-- op=proposals: one missing-predecessor finding per (progression_key, stage_key),
+-- aggregated across the instances that fire it) is NOT a bundle, so a member who
+-- defers or dismisses it has nowhere to land a disposition -- op=dispose disposes
+-- a focus BUNDLE (a handle + a state), and declining a proposal must NOT mint a
+-- bundle, because declining is not authoring (D-79). This table is that home: it
+-- records that a member aged the record's own question, keyed by the SAME identity
+-- REC-6 aggregates by, so the disposition attaches to the proposal and not to any
+-- one instance beneath it.
+--
+-- D-79's AGE RATHER THAN VANISH: a machine-surfaced finding nobody has acted on
+-- moves to deferred/dismissed with the reason recorded, never silently
+-- disappearing, because a finding that disappears is indistinguishable from one
+-- never made -- and that rule does not relax because the finder was a machine.
+-- This row IS the ageing: op=proposals reads it, filters the aged proposal out of
+-- the OPEN feed, and returns it alongside so the decision stays on the record.
+-- state is 'deferred' (parked, returnable) or 'dismissed' (declined); both age the
+-- proposal out of open. A re-disposition UPSERTS on the (progression_key,
+-- stage_key) key -- the same proposal re-decided keeps ONE row, re-triageable,
+-- never a second. decided_by is the deciding member, STAMPED server-side (never
+-- the caller's word). A re-fired proposal whose gap still exists but was dismissed
+-- stays dismissed with its reason until this row changes: the key is the identity,
+-- not the instance set, so a wider gap does not silently resurrect it.
+--
+-- Member-authored state (a member's decision), not a projection of the corpus --
+-- like the registry and the progression definitions above -- but op=purge is the
+-- scratch-reset tool, so a whole-store purge that reported scope ALL while leaving
+-- dispositions is the D-113 silent-leftover: cleared in the whole-store arm only,
+-- left by a per-bundle purge (it has no bundle_id). hygiene.test.mjs asserts this
+-- against schema.mjs.
+CREATE TABLE IF NOT EXISTS proposal_dispositions (
+  progression_key TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  state           TEXT NOT NULL,
+  reason          TEXT NOT NULL,
+  decided_by      TEXT,
+  at              TEXT,
+  definition_version INTEGER,   -- REC-184: the progression definition version the decision was taken against
+  PRIMARY KEY (progression_key, stage_key)
+);
+-- REC-184 (framework 8.2, The declared flow and its revisions): definition_version is the version of
+-- the progression definition CURRENT when the member decided, stamped by the store and never the
+-- caller's word. A decision applies only to the version it was taken against -- once the definition
+-- is revised the proposal is OPEN again, with the earlier decision published beside it, because a
+-- decision the record applies to a definition nobody judged is the record claiming more than it
+-- holds. NULLABLE AND NEVER BACK-FILLED: a row written before this column existed recorded no
+-- version, and the only value a backfill could reach for is the current one, which is the claim
+-- this column exists to test. NULL reads back as not recorded, stated, and such a row governs
+-- only while the definition has not been declared again since the decision was taken (the
+-- definition's own at against the row's at) -- the version stays unknown, the ORDER is recorded.
+CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
+`;
+var PROGRESSIONS_TABLES = [
+  "progression_instances",
+  "progression_exceptions",
+  "progression_thread_placements",
+  "progression_exception_versions",
+  { name: "progression_defs", keys: [] },
+  { name: "progression_stages", keys: [] },
+  { name: "progression_def_versions", keys: [] },
+  { name: "progression_stage_versions", keys: [] },
+  { name: "progression_threads", keys: [] },
+  { name: "proposal_dispositions", keys: [] }
+];
+function migrateProgressions(sql) {
+  const bare2 = PROGRESSIONS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  const stmts = bare2.split(";").map((x) => x.trim()).filter(Boolean);
+  const info = [...sql.exec(`PRAGMA table_info(proposal_dispositions)`)];
+  if (info.length && !info.some((r) => r.name === "definition_version"))
+    sql.exec(`ALTER TABLE proposal_dispositions ADD COLUMN definition_version INTEGER`);
+  for (const s of stmts) sql.exec(s);
+}
+
+// src/progressions/checks.mjs
+var checks_exports20 = {};
+__export(checks_exports20, {
+  DISPOSITIONS: () => DISPOSITIONS,
+  GENERIC_CODES: () => GENERIC_CODES,
+  PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
+  generic: () => generic,
+  notADisposition: () => notADisposition,
+  refusal: () => refusal11
+});
+var at9 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
+var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
+var PROGRESSION_CHECKS = Object.freeze({
+  PROGRESSION_NO_LABEL: {
+    check: "C-100.2",
+    where: at9("defineProgression", "is-progression-labelled"),
+    translation: "A declared flow carries a name a person can read, and this one has none. Give it a name. Nothing was written."
+  },
+  NO_STAGES: {
+    check: "C-100.3",
+    where: at9("defineProgression", "is-progression-staged"),
+    translation: "A declared flow is its steps in order, and this one names no step. Name at least one step. Nothing was written."
+  },
+  NO_STAGE_KEY: {
+    check: "C-100.4",
+    where: at9("defineProgression", "is-stage-keyed"),
+    translation: "One step of this flow has no key, so nothing could later be placed at it or found missing from it. Give every step a key. Nothing was written."
+  },
+  DUPLICATE_STAGE: {
+    check: "C-100.5",
+    where: at9("defineProgression", "is-stage-unique"),
+    translation: "Two steps of this flow share one key, so a document placed at that key could belong to either. Give each step its own key. Nothing was written."
+  },
+  NO_CARDINALITY: {
+    check: "C-100.6",
+    where: at9("defineProgression", "is-stage-counted"),
+    translation: "One step does not say how many documents it may hold (exactly one, at most one, or any number), so the record could not tell a step holding too many from one holding the usual set. Say how many. Nothing was written."
+  },
+  BAD_REQUIRED: {
+    check: "C-100.7",
+    where: at9("defineProgression", "is-stage-required"),
+    translation: "One step does not say how firmly it is expected, in one of the five words the record understands (always, usually, sometimes, never, unless an exception is recorded). Use one of them. Nothing was written."
+  },
+  UNKNOWN_AFTER: {
+    check: "C-33.26",
+    where: at9("defineProgression", "is-progression-order"),
+    translation: "One step here says it comes after a step this sequence does not contain, so the order cannot be worked out. Name a step that exists, or leave the ordering off and let it stand on its own."
+  },
+  PROGRESSION_VERSION_NOT_HELD: {
+    check: "C-100.8",
+    where: at9("readProgression", "is-version-held"),
+    translation: "The record holds no such version of this flow. The versions it does hold are named beside this message, and each reads back in full."
+  },
+  NO_PLACEMENTS: {
+    check: "C-100.10",
+    where: at9("threadInstance", "is-thread-placed"),
+    translation: "Threading places documents at the steps of a flow, and this request places none. Name at least one step and the document that fills it. Nothing was written."
+  },
+  NO_SUCH_PROGRESSION: {
+    check: "C-100.11",
+    where: at9("#declared", "is-progression-declared"),
+    translation: "No flow of that key has been declared, so there is nothing to place documents in or to decide about. Declare the flow first. Nothing was written."
+  },
+  NO_STAGE: {
+    check: "C-100.13",
+    where: at9("#stageNamed", "is-stage-named"),
+    translation: "This request does not say which step of the flow it is about. Name the step. Nothing was written."
+  },
+  BAD_STAGE: {
+    check: "C-100.14",
+    where: at9("#stageOf", "is-stage-of-progression"),
+    translation: "The step named here is not a step of this flow as it is declared now. Name one of its steps. Nothing was written."
+  },
+  NO_CAPTURE: {
+    check: "C-100.15",
+    where: at9("#documentNamed", "is-document-named"),
+    translation: "A step is filled by a captured document, named by its fingerprint, and this request names none. Name the document. Nothing was written."
+  },
+  DUPLICATE_PLACEMENT: {
+    check: "C-100.16",
+    where: at9("threadInstance", "is-placement-unique"),
+    translation: "The same document is placed at the same step twice in this request. Place it once. Nothing was written."
+  },
+  NOT_CONCERNED: {
+    check: "C-100.17",
+    where: at9("#concerned", "is-document-concerned"),
+    translation: "The record does not show this document concerning the subject this instance follows, so it cannot be placed in it or excuse one of its steps. Resolve the document to the subject first, or use it in the instance of the subject it does concern. Nothing was written."
+  },
+  NO_REASON: {
+    check: "C-100.18",
+    where: at9("#reasonStated", "is-reason-stated"),
+    translation: "This act is recorded with a reason, in your own words, and none was given. A decision or an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was written."
+  },
+  NOT_A_DISPOSITION: {
+    check: "C-100.20",
+    where: "src/progressions/checks.mjs notADisposition > is-disposition-word",
+    translation: "Setting something down means deferring it (set aside for now) or dismissing it (declined); taking it up is a different act. Choose deferred or dismissed. Nothing was written."
+  },
+  BAD_REASON: {
+    check: "C-100.21",
+    where: at9("disposeProposal", "is-reason-bounded"),
+    translation: "The reason is too long or contains a quotation mark, a backslash or a line break, which the record cannot keep as written. Shorten it to one plain line. Nothing was written."
+  },
+  NO_DECIDER: {
+    check: "C-100.22",
+    where: at9("disposeProposal", "is-decider-stamped"),
+    translation: "A decision is recorded under the member who took it, and this request reached the record without one. Sign in and decide again. Nothing was written."
+  },
+  NO_DEFINITION_VERSION: {
+    check: "C-33.42",
+    where: at9("disposeProposal", "is-dispose-version-named"),
+    translation: "Setting aside one of the record's own questions is a decision about the way a body is said to work \u2014 and that description is written down, dated, and rewritten when the group learns better. This request does not say which of those versions you were reading when you decided, so the record cannot say what you actually judged. Open the question again and send the version shown beside it. Nothing was recorded."
+  },
+  DEFINITION_MOVED: {
+    check: "C-33.43",
+    where: at9("disposeProposal", "is-dispose-version-current"),
+    translation: "The version of the declared flow this decision names is not the one standing now. Rather than file your decision against a description you did not read, the record keeps it out and asks you to look again: read the question against the version in force and decide again. The answer may well be the same one, and it will then be yours. Both versions are named beside this message, the earlier one still reads back in full, and nothing was recorded."
+  }
+});
+var GENERIC_CODES = Object.freeze(["NO_KEY"]);
+function refusal11(code, detail, extra = {}) {
+  const row2 = PROGRESSION_CHECKS[code] || (code === "NO_BASIS" || code === "NO_CITATION" ? ACT_SHAPE_CHECKS[code] : null);
+  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
+    throw new Error(`progressions: ${code} has no row with a translation (DEC-49)`);
+  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, ...extra, detail };
+}
+function generic(code, detail, extra = {}) {
+  if (!GENERIC_CODES.includes(code)) throw new Error(`progressions: ${code} is not a generic code; it answers with its row`);
+  return { ok: false, reason: code, code, ...extra, detail };
+}
+var NOT_A_DISPOSITION_DETAIL = "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition";
+function notADisposition(to, extra = null) {
+  if (typeof to === "string" && DISPOSITIONS.includes(to)) return null;
+  const row2 = PROGRESSION_CHECKS.NOT_A_DISPOSITION;
+  const given = to === void 0 || to === null || typeof to === "string" && !to.trim() ? null : to;
+  return {
+    ...extra && typeof extra === "object" ? extra : {},
+    ok: false,
+    reason: "NOT_A_DISPOSITION",
+    code: "NOT_A_DISPOSITION",
+    check: row2.check,
+    translation: row2.translation,
+    to: given,
+    dispositions: DISPOSITIONS,
+    detail: NOT_A_DISPOSITION_DETAIL
+  };
+}
+
+// src/progressions/index.mjs
+var STAGE_REQUIREDNESS = Object.freeze(["always", "usually", "sometimes", "never", "unless_exception"]);
+var DISPOSITION_REASON_MAX = 160;
+var NOTE_MAX = 1e3;
+var BASIS_MAX = 4e3;
+var CITATION_MAX2 = 2e3;
+var REASON_MAX = 4e3;
+var REQUIRED_FIRES = /* @__PURE__ */ new Set(["always", "usually", "unless_exception"]);
+var SINGLE = /* @__PURE__ */ new Set(["1", "0..1"]);
+var DISPOSE_ITEM_KEYS = [["key"], ["progressionKey", "stageKey"]];
+var DISPOSE_SHARED_KEYS = ["to", "reason", "definitionVersion"];
+var str2 = (v) => typeof v === "string" ? v.trim() : "";
+var basisView = (statement, citation) => ({ statement: statement ?? null, citation: citation ?? null, stated: statement != null });
+function dispositionVersionView(d, cur) {
+  const recorded = d.definition_version != null;
+  const current = cur ? cur.version : null;
+  let applies, because;
+  if (!cur) {
+    applies = false;
+    because = "definition_not_declared";
+  } else if (recorded) {
+    applies = Number(d.definition_version) === current;
+    because = applies ? "decided_against_current_version" : "decided_against_earlier_version";
+  } else if (cur.at == null || d.at == null || String(cur.at) === String(d.at)) {
+    applies = false;
+    because = "version_not_recorded_order_undetermined";
+  } else if (String(cur.at) > String(d.at)) {
+    applies = false;
+    because = "version_not_recorded_definition_declared_since";
+  } else {
+    applies = true;
+    because = "version_not_recorded_definition_not_declared_since";
+  }
+  return {
+    definition_version: recorded ? Number(d.definition_version) : null,
+    definition_version_state: recorded ? "recorded" : "not recorded",
+    current_definition_version: current,
+    applies,
+    applies_because: because
+  };
+}
+function dispositionOnFinding(d, cur) {
+  const v = dispositionVersionView(d, cur);
+  return {
+    state: d.state,
+    reason: d.reason,
+    decided_by: d.decided_by,
+    at: d.at,
+    definition_version: v.definition_version,
+    definition_version_state: v.definition_version_state,
+    applies: v.applies,
+    applies_because: v.applies_because
+  };
+}
+function intervalDeadlineMs(anchorMs, within) {
+  if (typeof within !== "string") return null;
+  const m = within.trim().match(/^(\d+)\s*(day|days|week|weeks|month|months|year|years)$/i);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  if (!Number.isFinite(n)) return null;
+  const unit = m[2].toLowerCase();
+  if (unit.startsWith("day")) return anchorMs + n * 864e5;
+  if (unit.startsWith("week")) return anchorMs + n * 7 * 864e5;
+  const d = new Date(anchorMs);
+  if (unit.startsWith("month")) {
+    d.setUTCMonth(d.getUTCMonth() + n);
+    return d.getTime();
+  }
+  d.setUTCFullYear(d.getUTCFullYear() + n);
+  return d.getTime();
+}
+var Progressions = class {
+  constructor({ storage, record, extraction, provenance, entities, connections, env = null, now = null, nowMs = null }) {
+    this.storage = storage;
+    this.sql = storage.sql;
+    this.record = record;
+    this.extraction = extraction;
+    this.provenance = provenance;
+    this.entities = entities;
+    this.connections = connections;
+    this.env = env;
+    this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
+    this.clockMs = typeof nowMs === "function" ? nowMs : null;
+    this.threadListeners = [];
+  }
+  #rows(q6, ...a) {
+    return [...this.sql.exec(q6, ...a)];
+  }
+  #one(q6, ...a) {
+    const r = this.#rows(q6, ...a);
+    return r.length ? r[0] : null;
+  }
+  #rank(g) {
+    return gradeRank[g];
+  }
+  /** The module's tables, with the migration an earlier store's shape needs (REC-184's column). */
+  migrate() {
+    migrateProgressions(this.sql);
+  }
+  /* R16: now is the caller's instant (milliseconds; an absent value is null or "", never the epoch), else the instance's
+     configured clock, else the wall clock. */
+  nowMs(explicit) {
+    if (explicit !== void 0 && explicit !== null && explicit !== "") {
+      const e = Number(explicit);
+      if (Number.isFinite(e) && e >= 0) return e;
+    }
+    if (this.clockMs) {
+      const c = Number(this.clockMs());
+      if (Number.isFinite(c) && c >= 0) return c;
+    }
+    const raw = this.env ? this.env.BIO_NOW_MS : void 0;
+    const v = raw === void 0 || raw === null || raw === "" ? NaN : Number(raw);
+    if (Number.isFinite(v) && v >= 0) return v;
+    return Date.now();
+  }
+  /* R13, R15: a bundle id is withheld from a viewer who may not see it: membership's one predicate (its R43) over
+     record-core's `bundles` read contract (its R37). An absent or unrecognised viewer sees nothing. */
+  #redactor(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return (id) => id ?? null;
+    if (gate.scope === "DENY") return (id) => id ? null : id ?? null;
+    const memo = /* @__PURE__ */ new Map();
+    return (id) => {
+      if (!id) return id ?? null;
+      if (!memo.has(id))
+        memo.set(id, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args));
+      return memo.get(id) ? id : null;
+    };
+  }
+  /* ===================================================================== *
+   * THE REFUSALS SEVERAL ACTS ANSWER (R6, R14, R21; K231, N242): each code is minted in its one helper, which
+   * answers the refusal or null; every act that asks the question calls it with its own sentence and fields.
+   * ===================================================================== */
+  /* C-100.11: no definition of this key has been declared. */
+  #declared(key, detail) {
+    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, key))
+      return refusal11(
+        "NO_SUCH_PROGRESSION",
+        detail,
+        { progression_key: key }
+      );
+    return null;
+  }
+  /* R6, R9, R14, R15 (N285): the request names no entity (`entityId` as the caller sent it; blank is none). An instance
+     is (progression, entity), so such a request says nothing about whose instance it means: entities' one answer (its
+     R37, `noEntity`), minted there. */
+  #entityNamed(entityId, detail) {
+    return str2(entityId) ? null : noEntity(detail);
+  }
+  /* C-100.13: the request names no stage. */
+  #stageNamed(stageKey, detail, extra = {}) {
+    if (!stageKey)
+      return refusal11(
+        "NO_STAGE",
+        detail,
+        extra
+      );
+    return null;
+  }
+  /* C-100.14: the stage named is not a stage of the definition as it is declared now. */
+  #stageOf(key, stageKey, detail, extra = {}) {
+    if (!this.#one(`SELECT 1 AS x FROM progression_stages WHERE progression_key=? AND stage_key=?`, key, stageKey))
+      return refusal11(
+        "BAD_STAGE",
+        detail,
+        extra
+      );
+    return null;
+  }
+  /* C-100.15: the request names no captured document. */
+  #documentNamed(captureSha, detail, extra = {}) {
+    if (!captureSha)
+      return refusal11(
+        "NO_CAPTURE",
+        detail,
+        extra
+      );
+    return null;
+  }
+  /* C-100.17: the document does not resolve to the entity (`resolution` is its strongest resolution, or absent). */
+  #concerned(resolution, detail, extra = {}) {
+    if (!resolution)
+      return refusal11(
+        "NOT_CONCERNED",
+        detail,
+        extra
+      );
+    return null;
+  }
+  /* C-100.18: the act carries no reason (`reason` already trimmed by the act, each by its own rule). */
+  #reasonStated(reason, detail) {
+    if (!reason)
+      return refusal11(
+        "NO_REASON",
+        detail,
+        {}
+      );
+    return null;
+  }
+  /* ===================================================================== *
+   * THE DECLARED FLOW (R1–R5; FW-8, D-128).
+   * ===================================================================== */
+  /* The CURRENT version of a definition, the one every instance and finding is derived against. A definition with no
+     version rows was declared before versions were kept and reads as version 1, basis not recorded. null if never
+     declared. */
+  #current(key) {
+    const def = this.#one(`SELECT progression_key, label, note, declared_by, at FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return null;
+    const stages = this.#rows(
+      `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
+         FROM progression_stages WHERE progression_key=? ORDER BY stage_no`,
+      key
+    );
+    const v = this.#one(
+      `SELECT version, basis_statement, basis_citation FROM progression_def_versions
+         WHERE progression_key=? ORDER BY version DESC LIMIT 1`,
+      key
+    );
+    return {
+      ...def,
+      stages,
+      version: v ? v.version : 1,
+      version_recorded: !!v,
+      basis: v ? basisView(v.basis_statement, v.basis_citation) : basisView(null, null)
+    };
+  }
+  /* REC-184: the current version's number and the instant it came to stand: the one reader the instance, the act and
+     the feed share, so which version is current has one answer. null if never declared. */
+  definitionVersionOf(key) {
+    const def = this.#one(`SELECT at FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return null;
+    const v = this.#one(`SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`, key);
+    return { version: v && v.v != null ? v.v : 1, at: def.at ?? null };
+  }
+  /* R23: one version, appended; a second write of the same version is an error, never an overwrite. */
+  #writeVersion(key, version, def, stages, statement, citation) {
+    this.sql.exec(
+      `INSERT INTO progression_def_versions (progression_key,version,label,note,declared_by,at,basis_statement,basis_citation)
+       VALUES (?,?,?,?,?,?,?,?)`,
+      key,
+      version,
+      def.label,
+      def.note ?? null,
+      def.declared_by ?? null,
+      def.at ?? null,
+      statement,
+      citation
+    );
+    for (const s of stages)
+      this.sql.exec(
+        `INSERT INTO progression_stage_versions (progression_key,version,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        key,
+        version,
+        s.stage_key,
+        s.stage_no,
+        s.label ?? null,
+        s.after_stage ?? null,
+        s.cardinality,
+        s.within_interval ?? null,
+        s.required
+      );
+  }
+  /** R1–R4 (`op=progressiondefine`): declare a flow as data: ordered stages with what each presupposes, how many
+   *  documents it may hold, how soon it must follow and whether it is required. A definition is APPEND-ONLY (D-128): a
+   *  declaration that changes anything is a revision, version N+1 with its basis; one identical to the current version
+   *  writes nothing. The declarer is the control plane's stamp (R26). */
+  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
+    if (!str2(progressionKey))
+      return generic("NO_KEY", "a progression definition is named by a key, e.g. 'meeting' or 'procurement'");
+    const key = str2(progressionKey);
+    if (!str2(label))
+      return refusal11(
+        "PROGRESSION_NO_LABEL",
+        "a progression definition carries a human label, the name a member reads it by beside its key"
+      );
+    if (!Array.isArray(stages) || stages.length === 0)
+      return refusal11(
+        "NO_STAGES",
+        "a progression is its ordered stages, each a key with how many documents it holds and how firmly it is expected; name at least one"
+      );
+    const norm = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (let i = 0; i < stages.length; i++) {
+      const s = stages[i] || {};
+      const sk = str2(s.key) || str2(s.stageKey);
+      if (!sk)
+        return refusal11(
+          "NO_STAGE_KEY",
+          `stage ${i + 1} has no key, so nothing could later be placed at it or found missing from it`,
+          { stage: i + 1 }
+        );
+      if (seen.has(sk))
+        return refusal11(
+          "DUPLICATE_STAGE",
+          `stage key '${sk}' appears twice, so a document placed at it could belong to either stage`,
+          { stage_key: sk }
+        );
+      seen.add(sk);
+      const card = str2(s.cardinality);
+      if (!card)
+        return refusal11(
+          "NO_CARDINALITY",
+          `stage '${sk}' needs a cardinality (1, 0..1, 0..n): how many documents it may hold`,
+          { stage_key: sk }
+        );
+      const req = str2(s.required);
+      if (!STAGE_REQUIREDNESS.includes(req))
+        return refusal11(
+          "BAD_REQUIRED",
+          `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", "),
+          { stage_key: sk }
+        );
+      norm.push({
+        stage_key: sk,
+        stage_no: i + 1,
+        label: typeof s.label === "string" && s.label ? s.label : null,
+        after_stage: str2(s.after) || str2(s.afterStage) || null,
+        cardinality: card,
+        within_interval: str2(s.within) || null,
+        required: req
+      });
+    }
+    for (const s of norm)
+      if (s.after_stage != null && !seen.has(s.after_stage))
+        return refusal11(
+          "UNKNOWN_AFTER",
+          `stage '${s.stage_key}' is after '${s.after_stage}', which is not a stage of this progression`,
+          { stage_key: s.stage_key, after: s.after_stage }
+        );
+    const lbl = label.trim();
+    const nt = note == null ? null : String(note).slice(0, NOTE_MAX);
+    const stmt = str2(basis) ? str2(basis).slice(0, BASIS_MAX) : null;
+    const cite = str2(citation) ? str2(citation).slice(0, CITATION_MAX2) : null;
+    const cur = this.#current(key);
+    if (cur) {
+      const same = cur.label === lbl && (cur.note ?? null) === nt && cur.stages.length === norm.length && norm.every((s, i) => {
+        const c = cur.stages[i];
+        return c.stage_key === s.stage_key && (c.label ?? null) === s.label && (c.after_stage ?? null) === s.after_stage && c.cardinality === s.cardinality && (c.within_interval ?? null) === s.within_interval && c.required === s.required;
+      });
+      if (same)
+        return {
+          ok: true,
+          progression_key: key,
+          label: cur.label,
+          stage_count: cur.stages.length,
+          stages: cur.stages,
+          declared_by: cur.declared_by,
+          at: cur.at,
+          version: cur.version,
+          unchanged: true,
+          basis: cur.basis,
+          prior_version: null
+        };
+      if (!stmt) return refusal11(
+        "NO_BASIS",
+        `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)`,
+        { progression_key: key, version: cur.version }
+      );
+      if (!cite) return refusal11(
+        "NO_CITATION",
+        "a revision of a declared flow carries a citation -- where the basis for the change is published or held",
+        { progression_key: key, version: cur.version }
+      );
+    }
+    const version = cur ? cur.version + 1 : 1;
+    const at15 = this.now();
+    const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
+    this.record.transact(() => {
+      if (cur && !cur.version_recorded) this.#writeVersion(key, cur.version, cur, cur.stages, null, null);
+      this.sql.exec(
+        `INSERT INTO progression_defs (progression_key,label,note,declared_by,at) VALUES (?,?,?,?,?)
+         ON CONFLICT(progression_key) DO UPDATE SET label=excluded.label, note=excluded.note,
+           declared_by=excluded.declared_by, at=excluded.at`,
+        key,
+        lbl,
+        nt,
+        by,
+        at15
+      );
+      this.sql.exec(`DELETE FROM progression_stages WHERE progression_key=?`, key);
+      for (const s of norm)
+        this.sql.exec(
+          `INSERT INTO progression_stages (progression_key,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
+           VALUES (?,?,?,?,?,?,?,?)`,
+          key,
+          s.stage_key,
+          s.stage_no,
+          s.label,
+          s.after_stage,
+          s.cardinality,
+          s.within_interval,
+          s.required
+        );
+      this.#writeVersion(key, version, { label: lbl, note: nt, declared_by: by, at: at15 }, norm, stmt, cite);
+    });
+    return {
+      ok: true,
+      progression_key: key,
+      label: lbl,
+      stage_count: norm.length,
+      stages: norm,
+      declared_by: by,
+      at: at15,
+      version,
+      unchanged: false,
+      basis: basisView(stmt, cite),
+      prior_version: cur ? cur.version : null
+    };
+  }
+  /** R5 (`op=progression`): a definition, the current version by default or any held one, with every version held. */
+  readProgression({ progressionKey, version = null } = {}) {
+    if (!str2(progressionKey))
+      return generic("NO_KEY", "read a progression definition by its key (op=progression&key=meeting)");
+    const key = str2(progressionKey);
+    const cur = this.#current(key);
+    if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
+    const recorded = this.#rows(
+      `SELECT version, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
+         WHERE progression_key=? ORDER BY version`,
+      key
+    );
+    const versions = recorded.length ? recorded.map((v) => ({
+      version: v.version,
+      declared_by: v.declared_by,
+      at: v.at,
+      basis: basisView(v.basis_statement, v.basis_citation)
+    })) : [{ version: 1, declared_by: cur.declared_by, at: cur.at, basis: cur.basis }];
+    const want = version == null || version === "" ? cur.version : Number(version);
+    if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
+      return refusal11(
+        "PROGRESSION_VERSION_NOT_HELD",
+        `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions ` + versions.map((v) => v.version).join(", "),
+        {
+          progression_key: key,
+          version: String(version).slice(0, 40),
+          current_version: cur.version,
+          versions_held: versions.map((v) => v.version)
+        }
+      );
+    let def = cur, stages = cur.stages;
+    if (want !== cur.version) {
+      def = this.#one(
+        `SELECT label, note, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
+           WHERE progression_key=? AND version=?`,
+        key,
+        want
+      );
+      def.basis = basisView(def.basis_statement, def.basis_citation);
+      stages = this.#rows(
+        `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
+           FROM progression_stage_versions WHERE progression_key=? AND version=? ORDER BY stage_no`,
+        key,
+        want
+      );
+    }
+    return {
+      ok: true,
+      progression_key: key,
+      found: true,
+      label: def.label,
+      note: def.note,
+      declared_by: def.declared_by,
+      at: def.at,
+      version: want,
+      current: want === cur.version,
+      current_version: cur.version,
+      basis: def.basis,
+      version_count: versions.length,
+      versions,
+      stage_count: stages.length,
+      stages
+    };
+  }
+  /* ===================================================================== *
+   * INSTANCES (R6–R13, R31; FW-9, FW-10, K102).
+   * ===================================================================== */
+  /* The threadings of an instance, oldest first, each with who threaded it, when and its placements (R8). An instance
+     threaded before versions were kept, and not re-threaded since, reads its current rows as version 1. */
+  #threads(key, eid) {
+    const heads = this.#rows(
+      `SELECT version, threaded_by, at FROM progression_threads WHERE progression_key=? AND entity_id=? ORDER BY version`,
+      key,
+      eid
+    );
+    if (!heads.length) {
+      const cur = this.#rows(
+        `SELECT stage_key, capture_sha, bundle_id, grade, threaded_by, at FROM progression_instances
+           WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`,
+        key,
+        eid
+      );
+      if (!cur.length) return [];
+      return [{
+        version: 1,
+        version_recorded: false,
+        threaded_by: cur[0].threaded_by ?? null,
+        at: cur[0].at ?? null,
+        placements: cur.map((p) => ({ stage_key: p.stage_key, capture_sha: p.capture_sha, bundle_id: p.bundle_id, grade: p.grade }))
+      }];
+    }
+    const placed = /* @__PURE__ */ new Map();
+    for (const p of this.#rows(
+      `SELECT version, stage_key, capture_sha, bundle_id, grade FROM progression_thread_placements
+         WHERE progression_key=? AND entity_id=? ORDER BY version, stage_key, capture_sha`,
+      key,
+      eid
+    )) {
+      if (!placed.has(p.version)) placed.set(p.version, []);
+      placed.get(p.version).push({ stage_key: p.stage_key, capture_sha: p.capture_sha, bundle_id: p.bundle_id, grade: p.grade });
+    }
+    return heads.map((h) => ({
+      version: h.version,
+      version_recorded: true,
+      threaded_by: h.threaded_by,
+      at: h.at,
+      placements: placed.get(h.version) || []
+    }));
+  }
+  /* Assemble an instance from its current placements and the CURRENT definition, deriving its grade and findings on
+     read (R10, R11, R24, R31), never from a stored grade that could go stale. */
+  #assemble(progressionKey, entityId) {
+    const def = this.#one(`SELECT progression_key, label FROM progression_defs WHERE progression_key=?`, progressionKey);
+    if (!def) return {
+      ok: true,
+      progression_key: progressionKey,
+      entity_id: entityId,
+      found: false,
+      defined: false,
+      detail: "no such progression definition (define it first, op=progressiondefine)"
+    };
+    const definitionVersion = this.definitionVersionOf(progressionKey).version;
+    const e = this.entities.readEntity({ entityId });
+    const entity2 = e && e.found && e.entity ? { entity_id: e.entity.entity_id, kind: e.entity.kind, label: e.entity.label } : null;
+    const stageDefs = this.#rows(
+      `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
+         FROM progression_stages WHERE progression_key=? ORDER BY stage_no`,
+      progressionKey
+    );
+    const rows = this.#rows(
+      `SELECT stage_key, capture_sha, bundle_id, grade FROM progression_instances
+         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`,
+      progressionKey,
+      entityId
+    );
+    const excByStage = /* @__PURE__ */ new Map();
+    for (const x of this.#rows(
+      `SELECT stage_key, capture_sha, bundle_id, reason, citation, declared_by, at FROM progression_exceptions
+         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`,
+      progressionKey,
+      entityId
+    )) {
+      if (!excByStage.has(x.stage_key)) excByStage.set(x.stage_key, []);
+      excByStage.get(x.stage_key).push({
+        capture_sha: x.capture_sha,
+        bundle_id: x.bundle_id,
+        reason: x.reason,
+        citation: x.citation,
+        declared_by: x.declared_by,
+        at: x.at
+      });
+    }
+    if (rows.length === 0)
+      return {
+        ok: true,
+        progression_key: progressionKey,
+        entity_id: entityId,
+        found: false,
+        defined: true,
+        definition_version: definitionVersion,
+        label: def.label,
+        entity: entity2,
+        grade: null,
+        grade_determined: false,
+        established: false,
+        stage_count: stageDefs.length,
+        placed_count: 0,
+        chain: [],
+        stages: [],
+        findings: [],
+        finding_count: 0,
+        discharges: [],
+        discharge_count: 0
+      };
+    const docsByStage = /* @__PURE__ */ new Map();
+    for (const r of rows) {
+      if (!docsByStage.has(r.stage_key)) docsByStage.set(r.stage_key, []);
+      docsByStage.get(r.stage_key).push({ capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
+    }
+    const repGrade = /* @__PURE__ */ new Map();
+    for (const [sk, docs] of docsByStage) {
+      let best = docs[0];
+      for (const d of docs) if (this.#rank(d.grade) > this.#rank(best.grade)) best = d;
+      repGrade.set(sk, best.grade);
+    }
+    const placedInOrder = stageDefs.filter((s) => docsByStage.has(s.stage_key));
+    const chain2 = [];
+    let grade = null;
+    for (let i = 1; i < placedInOrder.length; i++) {
+      const a = placedInOrder[i - 1], b = placedInOrder[i];
+      const ga = repGrade.get(a.stage_key), gb = repGrade.get(b.stage_key);
+      const g = this.connections.weakerGrade(ga, gb);
+      chain2.push({ from_stage: a.stage_key, to_stage: b.stage_key, a_grade: ga, b_grade: gb, grade: g });
+      if (grade === null || this.#rank(g) < this.#rank(grade)) grade = g;
+    }
+    const determined = grade !== null;
+    const carried = { grade: determined ? grade : "undetermined", grade_determined: determined };
+    const stages = [], findings = [], discharges = [];
+    for (const s of stageDefs) {
+      const docs = docsByStage.get(s.stage_key) || [];
+      const present = docs.length > 0;
+      const exceptions = excByStage.get(s.stage_key) || [];
+      const discharged = !present && exceptions.length > 0;
+      stages.push({
+        stage_key: s.stage_key,
+        label: s.label,
+        after_stage: s.after_stage,
+        cardinality: s.cardinality,
+        required: s.required,
+        present,
+        document_count: docs.length,
+        grade: present ? repGrade.get(s.stage_key) : null,
+        discharged,
+        exception_count: exceptions.length,
+        exceptions,
+        documents: docs
+      });
+      if (!present && REQUIRED_FIRES.has(s.required)) {
+        if (discharged)
+          discharges.push({
+            kind: "discharged_skip",
+            stage_key: s.stage_key,
+            stage_label: s.label,
+            required: s.required,
+            after_stage: s.after_stage,
+            definition_version: definitionVersion,
+            documents: exceptions,
+            detail: `the '${s.stage_key}' stage is ${s.required} required and unfilled, but its skip is discharged by ${exceptions.length} exception document(s) naming why it may be missing (framework 8.2) -- a lawful, recorded skip, not a gap`
+          });
+        else
+          findings.push({
+            kind: "missing_predecessor",
+            stage_key: s.stage_key,
+            stage_label: s.label,
+            required: s.required,
+            after_stage: s.after_stage,
+            definition_version: definitionVersion,
+            dischargeable: true,
+            ...carried,
+            detail: `the '${s.stage_key}' stage is ${s.required} required but no threaded document fills it and no exception document discharges the skip -- a missing predecessor (framework 8.2), carrying the instance's grade`
+          });
+      }
+      if (SINGLE.has(s.cardinality) && docs.length > 1)
+        findings.push({
+          kind: "cardinality_exceeded",
+          stage_key: s.stage_key,
+          stage_label: s.label,
+          required: s.required,
+          after_stage: s.after_stage,
+          definition_version: definitionVersion,
+          cardinality: s.cardinality,
+          document_count: docs.length,
+          dischargeable: false,
+          ...carried,
+          detail: `the '${s.stage_key}' stage is declared to hold ${s.cardinality === "1" ? "exactly one" : "at most one"} document and ${docs.length} are threaded at it -- a finding, which decides nothing about which of them belongs (framework 8.2)`
+        });
+    }
+    return {
+      ok: true,
+      progression_key: progressionKey,
+      entity_id: entityId,
+      found: true,
+      defined: true,
+      definition_version: definitionVersion,
+      label: def.label,
+      entity: entity2,
+      grade,
+      grade_determined: determined,
+      established: determined && isEstablished(grade),
+      stage_count: stageDefs.length,
+      placed_count: placedInOrder.length,
+      chain: chain2,
+      stages,
+      findings,
+      finding_count: findings.length,
+      discharges,
+      discharge_count: discharges.length
+    };
+  }
+  /* R12: stage_key -> the published decision, for ONE progression. */
+  #decisionsByStage(progressionKey) {
+    const cur = this.definitionVersionOf(progressionKey);
+    const byStage = /* @__PURE__ */ new Map();
+    for (const d of this.#rows(
+      `SELECT stage_key, state, reason, decided_by, at, definition_version FROM proposal_dispositions WHERE progression_key=?`,
+      progressionKey
+    ))
+      byStage.set(d.stage_key, dispositionOnFinding(d, cur));
+    return byStage;
+  }
+  /* R12: each finding carries its decision (or null); `open_finding_count` counts those no applying decision governs,
+     `finding_count` all of them: nothing is hidden. */
+  #withDecisions(inst, byStage = null) {
+    if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
+    const decided = byStage || this.#decisionsByStage(inst.progression_key);
+    const findings = inst.findings.map((f8) => ({ ...f8, disposition: decided.get(f8.stage_key) ?? null }));
+    return { ...inst, findings, open_finding_count: findings.filter((f8) => !(f8.disposition && f8.disposition.applies)).length };
+  }
+  /* R13: the whole derivation stands for every reader; only the back-references to bundles the viewer may not see are
+     withheld. Capture shas, grades, findings and counts are the same for everyone. */
+  #redact(inst, viewer) {
+    if (!inst || inst.ok !== true) return inst;
+    const keep = this.#redactor(viewer);
+    const doc = (d) => ({ ...d, bundle_id: keep(d.bundle_id) });
+    const list2 = (l) => Array.isArray(l) ? l.map(doc) : l;
+    return {
+      ...inst,
+      ...Array.isArray(inst.stages) ? { stages: inst.stages.map((s) => ({ ...s, documents: list2(s.documents), exceptions: list2(s.exceptions) })) } : {},
+      ...Array.isArray(inst.discharges) ? { discharges: inst.discharges.map((d) => ({ ...d, documents: list2(d.documents) })) } : {},
+      ...Array.isArray(inst.threads) ? { threads: inst.threads.map((t) => ({ ...t, placements: list2(t.placements) })) } : {}
+    };
+  }
+  /* R10's read, the one `readInstance` returns and the thread and discharge echoes carry (a write's receipt is a read). */
+  #answer(key, eid, viewer) {
+    const inst = this.#withDecisions(this.#assemble(key, eid));
+    if (inst && inst.ok === true && inst.found) {
+      const threads = this.#threads(key, eid);
+      inst.threads = threads;
+      inst.thread_version = threads.length ? threads[threads.length - 1].version : null;
+    }
+    return this.#redact(inst, viewer);
+  }
+  /** R6–R8 (`op=thread`): thread captured documents through a definition's stages by one entity. A document is admitted
+   *  only if it resolves to the entity, at the grade the record holds (R7). The thread is a new dated version (R8); then
+   *  every listener registered with `onThreaded` is told (R33). */
+  async threadInstance({ progressionKey, entityId, placements, threadedBy = null, viewer = null } = {}) {
+    if (!str2(progressionKey)) return generic("NO_KEY", "a progression instance names its definition by key (op=thread)");
+    const key = str2(progressionKey);
+    const nameless = this.#entityNamed(entityId, "a progression instance is threaded by an entity, named by its id");
+    if (nameless) return nameless;
+    const eid = str2(entityId);
+    if (!Array.isArray(placements) || placements.length === 0)
+      return refusal11(
+        "NO_PLACEMENTS",
+        "name at least one {stage, captureSha} placement to thread: the step, and the captured document that fills it"
+      );
+    const undeclared = this.#declared(key, "define the progression first (op=progressiondefine), then thread documents through it");
+    if (undeclared) return undeclared;
+    if (!this.entities.has(eid)) return noSuchEntity(eid);
+    const concerning = this.entities.strongestByCapture(eid);
+    const norm = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (let i = 0; i < placements.length; i++) {
+      const p = placements[i] || {};
+      const sk = str2(p.stage) || str2(p.stageKey);
+      const refused = this.#stageNamed(sk, `placement ${i + 1} names no stage`, { placement: i + 1 }) || this.#stageOf(key, sk, `'${sk}' is not a stage of progression '${key}'`, { stage_key: sk });
+      if (refused) return refused;
+      const cs = str2(p.captureSha) || str2(p.capture_sha);
+      const unnamed = this.#documentNamed(cs, `placement for '${sk}' names no capture sha`, { stage_key: sk });
+      if (unnamed) return unnamed;
+      const dup = sk + "\0" + cs;
+      if (seen.has(dup))
+        return refusal11(
+          "DUPLICATE_PLACEMENT",
+          `the same document is placed at '${sk}' twice in this request; place it once`,
+          { stage_key: sk, capture_sha: cs }
+        );
+      seen.add(dup);
+      const res = concerning.get(cs);
+      const unconcerned = this.#concerned(
+        res,
+        "this document does not resolve to the threading entity, so it cannot be threaded on it (resolve it first with op=resolve, or thread it on the entity it actually concerns)",
+        { stage_key: sk, capture_sha: cs, entity_id: eid }
+      );
+      if (unconcerned) return unconcerned;
+      norm.push({ stage_key: sk, capture_sha: cs, bundle_id: res.bundle_id, grade: res.grade });
+    }
+    const at15 = this.now();
+    const by = threadedBy == null ? null : String(threadedBy).slice(0, 200);
+    this.record.transact(() => {
+      const last = this.#one(`SELECT MAX(version) AS v FROM progression_threads WHERE progression_key=? AND entity_id=?`, key, eid);
+      let version = last && last.v != null ? last.v + 1 : 1;
+      if (version === 1) {
+        const prior = this.#threads(key, eid);
+        if (prior.length) {
+          this.#writeThread(key, eid, 1, prior[0].threaded_by, prior[0].at, prior[0].placements);
+          version = 2;
+        }
+      }
+      this.#writeThread(key, eid, version, by, at15, norm);
+      this.sql.exec(`DELETE FROM progression_instances WHERE progression_key=? AND entity_id=?`, key, eid);
+      for (const p of norm)
+        this.sql.exec(
+          `INSERT INTO progression_instances (progression_key,entity_id,stage_key,capture_sha,bundle_id,grade,threaded_by,at)
+           VALUES (?,?,?,?,?,?,?,?)`,
+          key,
+          eid,
+          p.stage_key,
+          p.capture_sha,
+          p.bundle_id,
+          p.grade,
+          by,
+          at15
+        );
+    });
+    const answer = { ...this.#answer(key, eid, viewer), threaded: norm.length, threaded_by: by, at: at15 };
+    if (this.threadListeners.length) {
+      let nextDeadline = null;
+      try {
+        nextDeadline = this.overdueScan(Date.parse(at15)).next_deadline;
+      } catch {
+        nextDeadline = null;
+      }
+      for (const l of this.threadListeners) {
+        try {
+          await l.fn({ progressionKey: key, entityId: eid, nextDeadline });
+        } catch {
+        }
+      }
+    }
+    return answer;
+  }
+  #writeThread(key, eid, version, by, at15, placements) {
+    this.sql.exec(
+      `INSERT INTO progression_threads (progression_key,entity_id,version,threaded_by,at) VALUES (?,?,?,?,?)`,
+      key,
+      eid,
+      version,
+      by ?? null,
+      at15 ?? null
+    );
+    for (const p of placements)
+      this.sql.exec(
+        `INSERT INTO progression_thread_placements (progression_key,entity_id,version,stage_key,capture_sha,bundle_id,grade)
+         VALUES (?,?,?,?,?,?,?)`,
+        key,
+        eid,
+        version,
+        p.stage_key,
+        p.capture_sha,
+        p.bundle_id,
+        p.grade
+      );
+  }
+  /** R33 (N202): a later module registers once, at start, to be told of every thread (`scheduler`'s `arm`, K90 (6)). A
+   *  malformed registration, or a second by the same module, is membership's one answer (its R81); the listeners are
+   *  kept in the modules' total order (its R83), a module outside that list after every one in it, in registration
+   *  order. */
+  onThreaded(module, fn) {
+    const refused = listenerRefusal(this.threadListeners, module, fn);
+    if (refused) return refused;
+    const i = MODULE_ORDER.indexOf(module);
+    this.threadListeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.threadListeners.length });
+    this.threadListeners.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  /** R9–R13 (`op=instance`). */
+  readInstance({ progressionKey, entityId, viewer = null } = {}) {
+    const how = "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)";
+    if (!str2(progressionKey)) return generic("NO_KEY", how);
+    const nameless = this.#entityNamed(entityId, how);
+    if (nameless) return nameless;
+    return this.#answer(str2(progressionKey), str2(entityId), viewer);
+  }
+  /* ===================================================================== *
+   * EXCEPTION DOCUMENTS (R14, R15; FW-10, K102).
+   * ===================================================================== */
+  /** R14 (`op=discharge`): record a captured document that discharges a lawful skip of one stage of one instance, with
+   *  its reason and citation. It must resolve to the entity and name a real stage. Recording the same document at the
+   *  same stage again writes a new dated version; the current one applies and every earlier one reads back (R15).
+   *  Whether it discharges anything is derived on read (R11). */
+  dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null, viewer = null } = {}) {
+    if (!str2(progressionKey)) return generic("NO_KEY", "an exception document names its progression by key (op=discharge)");
+    const key = str2(progressionKey);
+    const nameless = this.#entityNamed(entityId, "an exception document discharges a skip in one entity's instance, named by id");
+    if (nameless) return nameless;
+    const eid = str2(entityId);
+    const sk = str2(stageKey) || str2(stage);
+    const cs = str2(captureSha) || str2(capture_sha);
+    const rsn = str2(reason);
+    const cite = str2(citation);
+    const refused = this.#stageNamed(sk, "an exception document NAMES the stage it discharges") || this.#documentNamed(cs, "an exception document IS a captured document, named by its capture sha") || this.#reasonStated(rsn, "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)") || (!cite ? refusal11("NO_CITATION", "an exception document carries a citation -- where the justification for the skip is published") : null) || this.#declared(key, "define the progression first (op=progressiondefine), then discharge a skip in one of its instances") || (!this.entities.has(eid) ? noSuchEntity(eid) : null) || this.#stageOf(
+      key,
+      sk,
+      `'${sk}' is not a stage of progression '${key}' -- an exception must name a real stage to discharge`,
+      { stage_key: sk }
+    );
+    if (refused) return refused;
+    const res = this.entities.strongestByCapture(eid).get(cs);
+    const unconcerned = this.#concerned(
+      res,
+      "this document does not resolve to the threading entity, so it cannot discharge that entity's skip (resolve it first with op=resolve, or discharge the skip in the instance it actually concerns)",
+      { stage_key: sk, capture_sha: cs, entity_id: eid }
+    );
+    if (unconcerned) return unconcerned;
+    const at15 = this.now();
+    const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
+    const r = rsn.slice(0, REASON_MAX), c = cite.slice(0, CITATION_MAX2);
+    let version = 1;
+    this.record.transact(() => {
+      const last = this.#one(
+        `SELECT MAX(version) AS v FROM progression_exception_versions
+           WHERE progression_key=? AND entity_id=? AND stage_key=? AND capture_sha=?`,
+        key,
+        eid,
+        sk,
+        cs
+      );
+      version = last && last.v != null ? last.v + 1 : 1;
+      if (version === 1) {
+        const held = this.#one(
+          `SELECT bundle_id, reason, citation, declared_by, at FROM progression_exceptions
+             WHERE progression_key=? AND entity_id=? AND stage_key=? AND capture_sha=?`,
+          key,
+          eid,
+          sk,
+          cs
+        );
+        if (held) {
+          this.#writeException(key, eid, sk, cs, 1, held);
+          version = 2;
+        }
+      }
+      this.#writeException(key, eid, sk, cs, version, { bundle_id: res.bundle_id, reason: r, citation: c, declared_by: by, at: at15 });
+      this.sql.exec(
+        `INSERT INTO progression_exceptions (progression_key,entity_id,stage_key,capture_sha,bundle_id,reason,citation,declared_by,at)
+         VALUES (?,?,?,?,?,?,?,?,?)
+         ON CONFLICT(progression_key,entity_id,stage_key,capture_sha) DO UPDATE SET
+           bundle_id=excluded.bundle_id, reason=excluded.reason, citation=excluded.citation,
+           declared_by=excluded.declared_by, at=excluded.at`,
+        key,
+        eid,
+        sk,
+        cs,
+        res.bundle_id,
+        r,
+        c,
+        by,
+        at15
+      );
+    });
+    return {
+      ...this.#answer(key, eid, viewer),
+      discharged_stage: sk,
+      exception_document: cs,
+      reason: r,
+      citation: c,
+      declared_by: by,
+      at: at15,
+      exception_version: version
+    };
+  }
+  #writeException(key, eid, sk, cs, version, x) {
+    this.sql.exec(
+      `INSERT INTO progression_exception_versions
+         (progression_key,entity_id,stage_key,capture_sha,version,bundle_id,reason,citation,declared_by,at)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      key,
+      eid,
+      sk,
+      cs,
+      version,
+      x.bundle_id,
+      x.reason,
+      x.citation,
+      x.declared_by ?? null,
+      x.at ?? null
+    );
+  }
+  /** R15 (`op=exceptions`): every exception recorded for the instance, applied or not, ordered by stage then capture,
+   *  each with every version recorded (oldest first; the current one is the exception's own fields). */
+  readExceptions({ progressionKey, entityId, viewer = null } = {}) {
+    const how = "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)";
+    if (!str2(progressionKey)) return generic("NO_KEY", how);
+    const nameless = this.#entityNamed(entityId, how);
+    if (nameless) return nameless;
+    const key = str2(progressionKey), eid = str2(entityId);
+    const keep = this.#redactor(viewer);
+    const versions = /* @__PURE__ */ new Map();
+    for (const v of this.#rows(
+      `SELECT stage_key, capture_sha, version, bundle_id, reason, citation, declared_by, at FROM progression_exception_versions
+         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha, version`,
+      key,
+      eid
+    )) {
+      const k = v.stage_key + "\0" + v.capture_sha;
+      if (!versions.has(k)) versions.set(k, []);
+      versions.get(k).push({
+        version: v.version,
+        bundle_id: keep(v.bundle_id),
+        reason: v.reason,
+        citation: v.citation,
+        declared_by: v.declared_by,
+        at: v.at
+      });
+    }
+    const exceptions = this.#rows(
+      `SELECT stage_key, capture_sha, bundle_id, reason, citation, declared_by, at FROM progression_exceptions
+         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`,
+      key,
+      eid
+    ).map((r) => {
+      const held = versions.get(r.stage_key + "\0" + r.capture_sha) || [];
+      return {
+        ...r,
+        bundle_id: keep(r.bundle_id),
+        version: held.length ? held[held.length - 1].version : 1,
+        versions: held.length ? held : [{
+          version: 1,
+          bundle_id: keep(r.bundle_id),
+          reason: r.reason,
+          citation: r.citation,
+          declared_by: r.declared_by,
+          at: r.at
+        }]
+      };
+    });
+    return { ok: true, progression_key: key, entity_id: eid, exception_count: exceptions.length, exceptions };
+  }
+  /* ===================================================================== *
+   * THE OVERDUE CLOCK (R16, R17; REC-8). Derived on read, never stored.
+   * ===================================================================== */
+  /* A captured document's date in ms: its reading's date (extraction), else its registration (provenance); null when
+     neither is determinable, and the stage anchored on it is never overdue. */
+  #captureDateMs(captureSha) {
+    if (typeof captureSha !== "string" || !captureSha) return null;
+    const r = this.extraction.readingOf(captureSha);
+    const at15 = r && r.reading && typeof r.reading.at === "string" ? r.reading.at : null;
+    if (at15) {
+      const t = Date.parse(at15);
+      if (Number.isFinite(t)) return t;
+    }
+    const home = this.provenance.homeOf(captureSha);
+    if (home && typeof home.registered === "string" && home.registered) {
+      const t = Date.parse(home.registered);
+      if (Number.isFinite(t)) return t;
+    }
+    return null;
+  }
+  /* For an assembled instance, the deadline of every missing-required-undischarged stage whose deadline is determinable
+     (a parseable interval, a placed predecessor, a dated predecessor document), past or not. The anchor is the LATEST
+     dated document of the predecessor stage, so a stage is overdue only when it truly is. */
+  #deadlines(inst) {
+    const out = [];
+    if (!inst || !inst.found || !Array.isArray(inst.findings)) return out;
+    const missing = inst.findings.filter((f8) => f8.kind === "missing_predecessor");
+    if (!missing.length) return out;
+    const within = new Map(this.#rows(
+      `SELECT stage_key, within_interval FROM progression_stages WHERE progression_key=?`,
+      inst.progression_key
+    ).map((r) => [r.stage_key, r.within_interval]));
+    const stageByKey = new Map((inst.stages || []).map((s) => [s.stage_key, s]));
+    for (const f8 of missing) {
+      const wi = within.get(f8.stage_key);
+      if (!wi || !f8.after_stage) continue;
+      const anchor = stageByKey.get(f8.after_stage);
+      if (!anchor || !anchor.present) continue;
+      let anchorMs = null;
+      for (const d of anchor.documents || []) {
+        const t = this.#captureDateMs(d.capture_sha);
+        if (t !== null && (anchorMs === null || t > anchorMs)) anchorMs = t;
+      }
+      if (anchorMs === null) continue;
+      const deadline = intervalDeadlineMs(anchorMs, wi);
+      if (deadline === null) continue;
+      out.push({ finding: f8, within_interval: wi, predecessor_stage: f8.after_stage, predecessor_ms: anchorMs, deadline_ms: deadline });
+    }
+    return out;
+  }
+  /* R16: the overdue findings of one instance at `nowMs`, each also a missing predecessor, carrying its grade. */
+  #overdue(inst, nowMs) {
+    const out = [];
+    for (const d of this.#deadlines(inst)) {
+      if (d.deadline_ms >= nowMs) continue;
+      const f8 = d.finding;
+      out.push({
+        kind: "overdue_successor",
+        stage_key: f8.stage_key,
+        stage_label: f8.stage_label,
+        required: f8.required,
+        after_stage: f8.after_stage,
+        definition_version: f8.definition_version,
+        predecessor_stage: d.predecessor_stage,
+        predecessor_at: new Date(d.predecessor_ms).toISOString(),
+        within_interval: d.within_interval,
+        deadline: new Date(d.deadline_ms).toISOString(),
+        overdue_by_ms: nowMs - d.deadline_ms,
+        grade: f8.grade,
+        grade_determined: f8.grade_determined,
+        detail: "the '" + f8.stage_key + "' stage is " + f8.required + " required and still absent past its '" + d.within_interval + "' deadline after '" + d.predecessor_stage + "' (" + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = " + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade"
+      });
+    }
+    return out;
+  }
+  #pairs() {
+    return this.#rows(`SELECT DISTINCT progression_key, entity_id FROM progression_instances ORDER BY progression_key, entity_id`);
+  }
+  /** R17: how many required successors are overdue at `now`, and the earliest deadline strictly after it (never now, so
+   *  a consumer never re-arms to now). Writes nothing. */
+  overdueScan(now) {
+    const nowMs = this.nowMs(now);
+    let overdue = 0, next = null;
+    for (const p of this.#pairs())
+      for (const d of this.#deadlines(this.#assemble(p.progression_key, p.entity_id))) {
+        if (d.deadline_ms < nowMs) overdue += 1;
+        else if (d.deadline_ms > nowMs && (next === null || d.deadline_ms < next)) next = d.deadline_ms;
+      }
+    return { overdue_count: overdue, next_deadline: next, next_deadline_at: next === null ? null : new Date(next).toISOString() };
+  }
+  /* ===================================================================== *
+   * THE FEEDS (R18, R19; REC-6, REC-7, REC-9, REC-184, D-552).
+   * ===================================================================== */
+  /** R18 (`op=proposals`): one walk over every threaded instance. `instances[]` each instance with an open finding
+   *  (missing, then overdue, then any other kind); `proposals[]` one per (progression, stage) of the missing findings,
+   *  carrying its instances; `dispositions[]` every decision recorded. A finding an applying decision governs leaves
+   *  the first two and stays in the third (D-79: aged, never vanished). */
+  proposalsFeed(nowMs) {
+    const now = this.nowMs(nowMs);
+    const recorded = /* @__PURE__ */ new Map();
+    const curOf = /* @__PURE__ */ new Map();
+    for (const d of this.#rows(`SELECT progression_key, stage_key, state, reason, decided_by, at, definition_version FROM proposal_dispositions`)) {
+      if (!curOf.has(d.progression_key)) curOf.set(d.progression_key, this.definitionVersionOf(d.progression_key));
+      recorded.set(d.progression_key + "::" + d.stage_key, { ...d, ...dispositionVersionView(d, curOf.get(d.progression_key)) });
+    }
+    const aged = (pk, sk) => {
+      const d = recorded.get(pk + "::" + sk);
+      return !!(d && d.applies);
+    };
+    const instances34 = [];
+    const groups = /* @__PURE__ */ new Map();
+    for (const p of this.#pairs()) {
+      const inst = this.#assemble(p.progression_key, p.entity_id);
+      const open = (f8) => !aged(inst.progression_key, f8.stage_key);
+      const missing = (inst.findings || []).filter((f8) => f8.kind === "missing_predecessor" && open(f8));
+      const overdueF = this.#overdue(inst, now).filter(open);
+      const others = (inst.findings || []).filter((f8) => f8.kind !== "missing_predecessor" && open(f8));
+      const overdueByStage = new Map(overdueF.map((f8) => [f8.stage_key, f8]));
+      const findings = [...missing, ...overdueF, ...others];
+      if (!findings.length) continue;
+      const entityLabel = inst.entity ? inst.entity.label : null;
+      instances34.push({
+        progression_key: inst.progression_key,
+        progression_label: inst.label,
+        definition_version: inst.definition_version,
+        entity_id: inst.entity_id,
+        entity_label: entityLabel,
+        findings
+      });
+      for (const f8 of missing) {
+        const key = inst.progression_key + "::" + f8.stage_key;
+        let g = groups.get(key);
+        if (!g) {
+          const prior = recorded.get(key) || null;
+          g = {
+            key,
+            progression_key: inst.progression_key,
+            progression_label: inst.label,
+            stage_key: f8.stage_key,
+            stage_label: f8.stage_label,
+            required: f8.required,
+            definition_version: inst.definition_version,
+            surfaced_by: "machine",
+            overdue_count: 0,
+            instances: [],
+            prior_disposition: prior ? {
+              state: prior.state,
+              reason: prior.reason,
+              decided_by: prior.decided_by,
+              at: prior.at,
+              definition_version: prior.definition_version,
+              definition_version_state: prior.definition_version_state,
+              applies: false,
+              applies_because: prior.applies_because
+            } : null
+          };
+          groups.set(key, g);
+        }
+        const od = overdueByStage.get(f8.stage_key) || null;
+        if (od) g.overdue_count += 1;
+        g.instances.push({
+          entity_id: inst.entity_id,
+          entity_label: entityLabel,
+          progression_key: inst.progression_key,
+          definition_version: inst.definition_version,
+          grade: f8.grade_determined ? f8.grade : null,
+          grade_determined: f8.grade_determined === true,
+          overdue: !!od,
+          deadline: od ? od.deadline : null
+        });
+      }
+    }
+    const proposals = [];
+    for (const g of groups.values()) {
+      g.n = g.instances.length;
+      const anyUndetermined = g.instances.some((i) => !i.grade_determined || !i.grade);
+      g.grade_determined = !anyUndetermined;
+      g.grade = anyUndetermined ? null : g.instances.map((i) => i.grade).reduce((a, b) => this.connections.weakerGrade(a, b));
+      g.overdue = g.overdue_count > 0;
+      g.kinds = g.overdue ? ["missing_predecessor", "overdue_successor"] : ["missing_predecessor"];
+      proposals.push(g);
+    }
+    proposals.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+    const dispositions = [...recorded.values()].map((d) => ({
+      key: d.progression_key + "::" + d.stage_key,
+      progression_key: d.progression_key,
+      stage_key: d.stage_key,
+      state: d.state,
+      reason: d.reason,
+      decided_by: d.decided_by,
+      at: d.at,
+      definition_version: d.definition_version,
+      definition_version_state: d.definition_version_state,
+      current_definition_version: d.current_definition_version,
+      applies: d.applies,
+      applies_because: d.applies_because
+    })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+    return {
+      ok: true,
+      instances: instances34,
+      proposals,
+      dispositions,
+      instance_count: instances34.length,
+      proposal_count: proposals.length,
+      disposition_count: dispositions.length
+    };
+  }
+  /** R19 (`op=captureprogressions`): every (progression, entity, stage) at which a capture is placed, each instance
+   *  assembled once, with its missing, overdue and other findings, each carrying `established`, `needs_confirmation`
+   *  and its decision, and the instance's `open_finding_count`. */
+  captureProgressions({ captureSha, nowMs } = {}) {
+    if (typeof captureSha !== "string" || !captureSha)
+      return noSha("progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)");
+    const now = this.nowMs(nowMs);
+    const rows = this.#rows(
+      `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
+         WHERE capture_sha=? ORDER BY progression_key, entity_id, stage_key`,
+      captureSha
+    );
+    const assembled = /* @__PURE__ */ new Map();
+    const project = (f8) => ({
+      ...f8,
+      established: f8.grade_determined === true && isEstablished(f8.grade),
+      needs_confirmation: f8.grade === "C"
+    });
+    const instances34 = [];
+    for (const r of rows) {
+      const ck = r.progression_key + "\0" + r.entity_id;
+      let a = assembled.get(ck);
+      if (!a) {
+        const inst2 = this.#assemble(r.progression_key, r.entity_id);
+        a = {
+          inst: inst2,
+          overdue: inst2 && inst2.found ? this.#overdue(inst2, now) : [],
+          decided: inst2 && inst2.found ? this.#decisionsByStage(inst2.progression_key) : /* @__PURE__ */ new Map()
+        };
+        assembled.set(ck, a);
+      }
+      const inst = a.inst;
+      if (!inst || !inst.found) continue;
+      const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
+      const missing = inst.findings.filter((f8) => f8.kind === "missing_predecessor");
+      const others = inst.findings.filter((f8) => f8.kind !== "missing_predecessor");
+      const findings = [...missing, ...a.overdue, ...others].map(project).map((f8) => ({ ...f8, disposition: a.decided.get(f8.stage_key) ?? null }));
+      instances34.push({
+        progression_key: inst.progression_key,
+        progression_label: inst.label,
+        definition_version: inst.definition_version,
+        entity_id: inst.entity_id,
+        entity_label: inst.entity ? inst.entity.label : null,
+        stage_key: r.stage_key,
+        stage_label: stage ? stage.label : r.stage_key,
+        findings,
+        finding_count: findings.length,
+        open_finding_count: findings.filter((f8) => !(f8.disposition && f8.disposition.applies)).length
+      });
+    }
+    return { ok: true, capture_sha: captureSha, count: instances34.length, instances: instances34 };
+  }
+  /* ===================================================================== *
+   * DECISIONS (R20–R22; REC-7, REC-184, REC-211).
+   * ===================================================================== */
+  /** R21, R22 (`op=proposedispose`, its progression arm): record a member's deferral or dismissal of a derived question,
+   *  keyed (progression, stage), without minting a bundle (declining is not authoring, D-79). The act binds the
+   *  definition version the member saw (REC-211). With `items`, each item is decided on its own under the per-item
+   *  weight, the decider forced onto every item. */
+  disposeProposal({ progressionKey, stageKey, key, to, state, reason, definitionVersion = null, decidedBy = null, items } = {}) {
+    if (items !== void 0)
+      return perItem(
+        "proposedispose",
+        { items, progressionKey, stageKey, key, to, state, reason, definitionVersion },
+        { decidedBy },
+        (b) => this.disposeProposal(b),
+        { itemKeys: DISPOSE_ITEM_KEYS, sharedKeys: DISPOSE_SHARED_KEYS }
+      );
+    let pk = str2(progressionKey), sk = str2(stageKey);
+    if ((!pk || !sk) && typeof key === "string" && key.includes("::")) {
+      const i = key.indexOf("::");
+      if (!pk) pk = key.slice(0, i).trim();
+      if (!sk) sk = key.slice(i + 2).trim();
+    }
+    if (!pk) return generic("NO_KEY", "a proposal disposition names its progression (progressionKey, or key='progression::stage')");
+    const unstaged = this.#stageNamed(sk, "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')");
+    if (unstaged) return unstaged;
+    const st = str2(to) || str2(state);
+    const undisposed = notADisposition(st);
+    if (undisposed) return undisposed;
+    const why = String(reason ?? "").trim();
+    const unreasoned = this.#reasonStated(why, "deferring or dismissing the record's own question is recorded with a reason, in the member's own words \u2014 a disposition with no reason ages a finding with no account of why");
+    if (unreasoned) return unreasoned;
+    if (why.length > DISPOSITION_REASON_MAX || /["\\\r\n]/.test(why))
+      return refusal11("BAD_REASON", `a reason is at most ${DISPOSITION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
+    const by = decidedBy == null ? "" : String(decidedBy).trim();
+    if (!by)
+      return refusal11("NO_DECIDER", "a disposition is recorded under the deciding member, stamped from the session. An unnamed decider cannot age the record's question.");
+    const absent = this.#declared(pk, "define the progression first (op=progressiondefine); a proposal exists only for a defined one") || this.#stageOf(
+      pk,
+      sk,
+      `'${sk}' is not a stage of progression '${pk}' \u2014 a disposition must name a real stage`,
+      { progression_key: pk, stage_key: sk }
+    );
+    if (absent) return absent;
+    const currentVersion = this.definitionVersionOf(pk).version;
+    const seen = typeof definitionVersion === "number" || typeof definitionVersion === "string" && definitionVersion.trim() !== "" ? Number(definitionVersion) : NaN;
+    if (!Number.isInteger(seen) || seen < 1)
+      return refusal11(
+        "NO_DEFINITION_VERSION",
+        `a disposition is a judgment of ONE version of the declared flow \u2014 the one the member was reading when they decided (framework \xA78.2). Send \`definitionVersion\` as the version op=proposals published beside this proposal (it is standing at ${currentVersion}). Nothing was recorded.`,
+        {
+          progression_key: pk,
+          stage_key: sk,
+          definition_version: null,
+          current_definition_version: currentVersion,
+          requires: ["definitionVersion"]
+        }
+      );
+    if (seen !== currentVersion)
+      return refusal11(
+        "DEFINITION_MOVED",
+        `this decision names version ${seen} of '${pk}' and version ${currentVersion} is standing. Read the proposal again (op=proposals) and decide against the version in force; the earlier version still reads back in full (op=progression&version=${seen}). Nothing was recorded \u2014 no disposition was written and no proposal moved.`,
+        { progression_key: pk, stage_key: sk, definition_version: seen, current_definition_version: currentVersion }
+      );
+    const at15 = this.now();
+    this.sql.exec(
+      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
+       VALUES (?,?,?,?,?,?,?)
+       ON CONFLICT(progression_key,stage_key) DO UPDATE SET
+         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at,
+         definition_version=excluded.definition_version`,
+      pk,
+      sk,
+      st,
+      why.slice(0, DISPOSITION_REASON_MAX),
+      by.slice(0, 200),
+      at15,
+      currentVersion
+    );
+    return {
+      ok: true,
+      key: pk + "::" + sk,
+      progression_key: pk,
+      stage_key: sk,
+      to: st,
+      state: st,
+      reason: why,
+      decided_by: by,
+      at: at15,
+      bundle: null,
+      definition_version: currentVersion
+    };
+  }
+};
+function progressionOps(p, url, body) {
+  const q6 = (k) => url.searchParams.get(k);
+  return {
+    progressiondefine: () => p.defineProgression(body || {}),
+    progression: () => p.readProgression({ progressionKey: q6("key"), version: q6("version") }),
+    thread: () => p.threadInstance({ ...body || {}, viewer: q6("viewer") }),
+    instance: () => p.readInstance({ progressionKey: q6("key"), entityId: q6("id"), viewer: q6("viewer") }),
+    discharge: () => p.dischargeStage({ ...body || {}, viewer: q6("viewer") }),
+    exceptions: () => p.readExceptions({ progressionKey: q6("key"), entityId: q6("id"), viewer: q6("viewer") }),
+    proposals: () => p.proposalsFeed(q6("now")),
+    captureprogressions: () => p.captureProgressions({ captureSha: q6("sha256"), nowMs: q6("now") })
+  };
+}
+var instances11 = /* @__PURE__ */ new WeakMap();
+function progressionsOf(host, deps) {
+  let p = instances11.get(host);
+  if (!p) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    p = new Progressions({
+      ...d,
+      storage,
+      record,
+      extraction: d.extraction || extractionOf(host),
+      provenance: d.provenance || provenanceOf(host),
+      entities: d.entities || entitiesOf(host, { record }),
+      connections: d.connections || { weakerGrade }
+    });
+    instances11.set(host, p);
+    record.declarePurge("progressions", PROGRESSIONS_TABLES);
+  }
+  return p;
+}
+
 // src/inquiry/schema.mjs
 var INQUIRY_SCHEMA = `
 
@@ -60966,7 +62800,6 @@ var agentOf = (v) => {
   const t = typeof v === "string" ? v.trim() : "";
   return t && t.length <= MEMBER_AGENT_MAX && !/[\u0000-\u001f\u007f]/.test(t) ? t : null;
 };
-var DISPOSITIONS = ["deferred", "dismissed"];
 var INQUIRY_DISPOSE_CHECKS = {
   DRAWN_ON_BY_SEVERAL_PROJECTS: {
     check: "C-106.1",
@@ -61614,14 +63447,8 @@ var Inquiry = class _Inquiry {
         legal: INQUIRY_STATES,
         detail: `an inquiry's state is one of ${INQUIRY_STATES.join(", ")}`
       };
-    if (!DISPOSITIONS.includes(to))
-      return {
-        ok: false,
-        reason: "NOT_A_DISPOSITION",
-        to,
-        dispositions: DISPOSITIONS,
-        detail: "only deferring and dismissing are dispositions: every other inquiry state is entered by its own act, with its own entry requirements, never by a bulk state flip."
-      };
+    const undisposed = notADisposition(to);
+    if (undisposed) return undisposed;
     const why = String(reason ?? "").trim();
     if (!why)
       return {
@@ -63328,9 +65155,9 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     };
   }
 };
-var instances11 = /* @__PURE__ */ new WeakMap();
+var instances12 = /* @__PURE__ */ new WeakMap();
 function inquiryOf(host, deps) {
-  let k = instances11.get(host);
+  let k = instances12.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -63338,7 +65165,7 @@ function inquiryOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances11.set(host, k);
+    instances12.set(host, k);
     record.declarePurge("inquiry", INQUIRY_TABLES);
     promotion.registerStep("inquiry", { check: (c) => k.check(c), project: (c) => k.project(c) });
     if (typeof content.onStale === "function") content.onStale("inquiry", (notice) => k.staled(notice));
@@ -63371,305 +65198,157 @@ function inquiryOps(k, url, body) {
 }
 
 // src/intent/checks.mjs
-var checks_exports20 = {};
-__export(checks_exports20, {
+var checks_exports21 = {};
+__export(checks_exports21, {
   INTENT_CHECKS: () => INTENT_CHECKS,
-  refusal: () => refusal11
+  refusal: () => refusal12
 });
-var at9 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
+var at10 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 var INTENT_CHECKS = Object.freeze({
   NO_OBJECTIVE: {
     check: "C-2.9",
-    where: at9("#checkProject", "is-objective-stated"),
+    where: at10("#checkProject", "is-objective-stated"),
     translation: "A project states what it is trying to achieve, and this one states nothing. Write its objective and send it again. Nothing was written."
   },
   MACHINE_CANNOT_SET_OBJECTIVE: {
     check: "C-111.1",
-    where: at9("setCondition", "is-condition-member"),
+    where: at10("setCondition", "is-condition-member"),
     translation: "What a project is aiming at is a member's decision. An assistant may point out gaps; it may not set or change the measure. Sign in as a member. Nothing was written."
   },
   CONDITION_UNREADABLE: {
     check: "C-111.3",
-    where: at9("#conditionRefusal", "is-condition-shaped"),
+    where: at10("#conditionRefusal", "is-condition-shaped"),
     translation: "The measure sent for this objective is not in the shape the record reads: a progression, an entity, what each matching instance must reach, and the share of them that must reach it. Nothing was written."
   },
   NO_SUCH_PROGRESSION: {
     check: "C-111.4",
-    where: at9("refuseNoSuchProgression", "is-named-progression"),
+    where: at10("refuseNoSuchProgression", "is-named-progression"),
     translation: "The measure names a declared flow the record does not hold. Declare the flow first, or name one that exists. Nothing was written."
   },
   NO_SUCH_ENTITY: {
     check: "C-111.5",
-    where: at9("refuseNoSuchEntity", "is-named-entity"),
+    where: at10("refuseNoSuchEntity", "is-named-entity"),
     translation: "The measure names an entity the record does not hold. Register it first, or name one that exists. Nothing was written."
   },
   BAD_STAGE: {
     check: "C-111.6",
-    where: at9("#conditionRefusal", "is-condition-stage"),
+    where: at10("#conditionRefusal", "is-condition-stage"),
     translation: "The measure requires a step the declared flow does not have. Name steps the flow declares. Nothing was written."
   },
   CONDITION_BAD_GRADE: {
     check: "C-111.7",
-    where: at9("#conditionRefusal", "is-condition-grade"),
+    where: at10("#conditionRefusal", "is-condition-grade"),
     translation: "The grade the measure requires is not one of the four the record uses, A (strongest) to D. Nothing was written."
   },
   BAD_SHARE: {
     check: "C-111.8",
-    where: at9("#conditionRefusal", "is-condition-share"),
+    where: at10("#conditionRefusal", "is-condition-share"),
     translation: "The share of instances that must meet the measure is a whole number from 1 to 100. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_GOAL: {
     check: "C-111.9",
-    where: at9("goalMachineRefusal", "is-goal-member"),
+    where: at10("goalMachineRefusal", "is-goal-member"),
     translation: "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the group pursues. Sign in as a member. Nothing was written."
   },
   PURSUIT_UNSTATED: {
     check: "C-111.10",
-    where: at9("refusePursuitUnstated", "is-pursuit-stated"),
+    where: at10("refusePursuitUnstated", "is-pursuit-stated"),
     translation: "A goal says what it pursues and what bounds it, and an aspiration says what it holds to. Something here is empty. Write it and send it again. Nothing was written."
   },
   NO_SUCH_GOAL: {
     check: "C-111.11",
-    where: at9("refuseNoSuchGoal", "is-goal-held"),
+    where: at10("refuseNoSuchGoal", "is-goal-held"),
     translation: "No goal answers to that id here. Nothing was written."
   },
   NO_SUCH_ASPIRATION: {
     check: "C-111.12",
-    where: at9("refuseNoSuchAspiration", "is-aspiration-held"),
+    where: at10("refuseNoSuchAspiration", "is-aspiration-held"),
     translation: "No aspiration answers to that id here. Nothing was written."
   },
   NO_REASON: {
     check: "C-111.13",
-    where: at9("refuseNoReason", "is-reason-stated"),
+    where: at10("refuseNoReason", "is-reason-stated"),
     translation: "This act is recorded with a reason in your own words, and none was given. The record keeps why, so the next reader is not left guessing. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_ASPIRATION: {
     check: "C-111.14",
-    where: at9("aspirationMachineRefusal", "is-aspiration-member"),
+    where: at10("aspirationMachineRefusal", "is-aspiration-member"),
     translation: "What the group holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written."
   },
   NOT_YOURS: {
     check: "C-111.15",
-    where: at9("#aspirationAuthority", "is-aspiration-yours"),
+    where: at10("#aspirationAuthority", "is-aspiration-yours"),
     translation: "A member's own aspiration is declared, revised and retired by that member alone. Nothing was written."
   },
   GROUP_ASPIRATION_NOT_ADMIN: {
     check: "C-111.16",
-    where: at9("#aspirationAuthority", "is-group-aspiration-admin"),
+    where: at10("#aspirationAuthority", "is-group-aspiration-admin"),
     translation: "An aspiration the whole group holds is declared, revised and retired by an administrator, and the act carries their name and date. Ask an administrator. Nothing was written."
   },
   NO_LESSON: {
     check: "C-111.17",
-    where: at9("refuseNoLesson", "is-retirement-taught"),
+    where: at10("refuseNoLesson", "is-retirement-taught"),
     translation: "Retiring an aspiration records what pursuing it taught the group, and nothing was written there. Say what was learned. Nothing was retired."
   },
   MACHINE_CANNOT_TRIAGE: {
     check: "C-111.18",
-    where: at9("triage", "is-triage-member"),
+    where: at10("triage", "is-triage-member"),
     translation: "An assistant may turn a finding into an open question, and nothing more. Adopting it, deferring it or dismissing it is a member's decision. Sign in as a member. Nothing was written."
   },
   MACHINE_CANNOT_CHOOSE_THE_QUESTION: {
     check: "C-111.19",
-    where: at9("workObjective", "is-objective-member"),
+    where: at10("workObjective", "is-objective-member"),
     translation: "Setting an assistant to work on a project's objective is a member's act: the objective is the group's, and so is the choice to pursue it. Sign in as a member. No run was opened."
   },
   PURSUIT_STATE_MOVE_UNDECLARED: {
     check: "C-111.20",
-    where: at9("#checkPursuit", "is-pursuit-state-move"),
+    where: at10("#checkPursuit", "is-pursuit-state-move"),
     translation: "An aspiration is held until it is retired, and a goal is open until it is closed. No other move is accepted, and neither comes back. Nothing was written."
   },
   BAD_SCOPE: {
     check: "C-111.21",
-    where: at9("refuseBadScope", "is-aspiration-scoped"),
+    where: at10("refuseBadScope", "is-aspiration-scoped"),
     translation: "An aspiration belongs to the group, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written."
   },
   NO_SUCH_PROPOSAL: {
     check: "C-111.22",
-    where: at9("triage", "is-proposal-open"),
+    where: at10("triage", "is-proposal-open"),
     translation: "No open proposal answers to that key. It may already have been decided; the decision stays readable with its reason. Nothing was written."
   },
   TRIAGE_ACT_UNKNOWN: {
     check: "C-111.23",
-    where: at9("triage", "is-triage-act"),
+    where: at10("triage", "is-triage-act"),
     translation: "A proposal is adopted into a project's objective, turned into an open question, deferred or dismissed. This act is none of those. Nothing was written."
   },
   SOURCE_DECLARED: {
     check: "C-111.24",
-    where: at9("registerSource", "is-source-once"),
+    where: at10("registerSource", "is-source-once"),
     translation: "This source of proposals is already registered. A source registers once, when the plane starts."
   },
   SOURCE_MALFORMED: {
     check: "C-111.25",
-    where: at9("registerSource", "is-source-shaped"),
+    where: at10("registerSource", "is-source-shaped"),
     translation: "A source of proposals names its kind and gives a reader. This registration does not."
   },
   PURSUIT_ENDED: {
     check: "C-111.26",
-    where: at9("refusePursuitEnded", "is-pursuit-live"),
+    where: at10("refusePursuitEnded", "is-pursuit-live"),
     translation: "This goal is closed, or this aspiration is retired. It stays readable with everything recorded under it, and it does not reopen. Nothing was written."
   },
   ADOPTIONS_UNSPLICEABLE: {
     check: "C-111.28",
-    where: at9("triage", "is-adoptions-spliceable"),
+    where: at10("triage", "is-adoptions-spliceable"),
     translation: "The project's record of adopted proposals is not in a shape the record can add to, so this adoption could not be written into it. Nothing was written."
   },
   NO_NOTE: {
     check: "C-111.27",
-    where: at9("recordDeadEnd", "is-dead-end-noted"),
+    where: at10("recordDeadEnd", "is-dead-end-noted"),
     translation: "A dead end is recorded with what was tried and why it went nowhere, and nothing was written. Nothing was recorded."
   }
 });
-function refusal11(code, detail, extra) {
+function refusal12(code, detail, extra) {
   const row2 = INTENT_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
-}
-
-// src/progressions/checks.mjs
-var checks_exports21 = {};
-__export(checks_exports21, {
-  DISPOSITIONS: () => DISPOSITIONS2,
-  GENERIC_CODES: () => GENERIC_CODES,
-  PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
-  generic: () => generic,
-  notADisposition: () => notADisposition,
-  refusal: () => refusal12
-});
-var at10 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
-var DISPOSITIONS2 = Object.freeze(["deferred", "dismissed"]);
-var PROGRESSION_CHECKS = Object.freeze({
-  PROGRESSION_NO_LABEL: {
-    check: "C-100.2",
-    where: at10("defineProgression", "is-progression-labelled"),
-    translation: "A declared flow carries a name a person can read, and this one has none. Give it a name. Nothing was written."
-  },
-  NO_STAGES: {
-    check: "C-100.3",
-    where: at10("defineProgression", "is-progression-staged"),
-    translation: "A declared flow is its steps in order, and this one names no step. Name at least one step. Nothing was written."
-  },
-  NO_STAGE_KEY: {
-    check: "C-100.4",
-    where: at10("defineProgression", "is-stage-keyed"),
-    translation: "One step of this flow has no key, so nothing could later be placed at it or found missing from it. Give every step a key. Nothing was written."
-  },
-  DUPLICATE_STAGE: {
-    check: "C-100.5",
-    where: at10("defineProgression", "is-stage-unique"),
-    translation: "Two steps of this flow share one key, so a document placed at that key could belong to either. Give each step its own key. Nothing was written."
-  },
-  NO_CARDINALITY: {
-    check: "C-100.6",
-    where: at10("defineProgression", "is-stage-counted"),
-    translation: "One step does not say how many documents it may hold (exactly one, at most one, or any number), so the record could not tell a step holding too many from one holding the usual set. Say how many. Nothing was written."
-  },
-  BAD_REQUIRED: {
-    check: "C-100.7",
-    where: at10("defineProgression", "is-stage-required"),
-    translation: "One step does not say how firmly it is expected, in one of the five words the record understands (always, usually, sometimes, never, unless an exception is recorded). Use one of them. Nothing was written."
-  },
-  UNKNOWN_AFTER: {
-    check: "C-33.26",
-    where: at10("defineProgression", "is-progression-order"),
-    translation: "One step here says it comes after a step this sequence does not contain, so the order cannot be worked out. Name a step that exists, or leave the ordering off and let it stand on its own."
-  },
-  PROGRESSION_VERSION_NOT_HELD: {
-    check: "C-100.8",
-    where: at10("readProgression", "is-version-held"),
-    translation: "The record holds no such version of this flow. The versions it does hold are named beside this message, and each reads back in full."
-  },
-  NO_PLACEMENTS: {
-    check: "C-100.10",
-    where: at10("threadInstance", "is-thread-placed"),
-    translation: "Threading places documents at the steps of a flow, and this request places none. Name at least one step and the document that fills it. Nothing was written."
-  },
-  NO_SUCH_PROGRESSION: {
-    check: "C-100.11",
-    where: at10("#declared", "is-progression-declared"),
-    translation: "No flow of that key has been declared, so there is nothing to place documents in or to decide about. Declare the flow first. Nothing was written."
-  },
-  NO_STAGE: {
-    check: "C-100.13",
-    where: at10("#stageNamed", "is-stage-named"),
-    translation: "This request does not say which step of the flow it is about. Name the step. Nothing was written."
-  },
-  BAD_STAGE: {
-    check: "C-100.14",
-    where: at10("#stageOf", "is-stage-of-progression"),
-    translation: "The step named here is not a step of this flow as it is declared now. Name one of its steps. Nothing was written."
-  },
-  NO_CAPTURE: {
-    check: "C-100.15",
-    where: at10("#documentNamed", "is-document-named"),
-    translation: "A step is filled by a captured document, named by its fingerprint, and this request names none. Name the document. Nothing was written."
-  },
-  DUPLICATE_PLACEMENT: {
-    check: "C-100.16",
-    where: at10("threadInstance", "is-placement-unique"),
-    translation: "The same document is placed at the same step twice in this request. Place it once. Nothing was written."
-  },
-  NOT_CONCERNED: {
-    check: "C-100.17",
-    where: at10("#concerned", "is-document-concerned"),
-    translation: "The record does not show this document concerning the subject this instance follows, so it cannot be placed in it or excuse one of its steps. Resolve the document to the subject first, or use it in the instance of the subject it does concern. Nothing was written."
-  },
-  NO_REASON: {
-    check: "C-100.18",
-    where: at10("#reasonStated", "is-reason-stated"),
-    translation: "This act is recorded with a reason, in your own words, and none was given. A decision or an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was written."
-  },
-  NOT_A_DISPOSITION: {
-    check: "C-100.20",
-    where: "src/progressions/checks.mjs notADisposition > is-disposition-word",
-    translation: "Setting something down means deferring it (set aside for now) or dismissing it (declined); taking it up is a different act. Choose deferred or dismissed. Nothing was written."
-  },
-  BAD_REASON: {
-    check: "C-100.21",
-    where: at10("disposeProposal", "is-reason-bounded"),
-    translation: "The reason is too long or contains a quotation mark, a backslash or a line break, which the record cannot keep as written. Shorten it to one plain line. Nothing was written."
-  },
-  NO_DECIDER: {
-    check: "C-100.22",
-    where: at10("disposeProposal", "is-decider-stamped"),
-    translation: "A decision is recorded under the member who took it, and this request reached the record without one. Sign in and decide again. Nothing was written."
-  },
-  NO_DEFINITION_VERSION: {
-    check: "C-33.42",
-    where: at10("disposeProposal", "is-dispose-version-named"),
-    translation: "Setting aside one of the record's own questions is a decision about the way a body is said to work \u2014 and that description is written down, dated, and rewritten when the group learns better. This request does not say which of those versions you were reading when you decided, so the record cannot say what you actually judged. Open the question again and send the version shown beside it. Nothing was recorded."
-  },
-  DEFINITION_MOVED: {
-    check: "C-33.43",
-    where: at10("disposeProposal", "is-dispose-version-current"),
-    translation: "The version of the declared flow this decision names is not the one standing now. Rather than file your decision against a description you did not read, the record keeps it out and asks you to look again: read the question against the version in force and decide again. The answer may well be the same one, and it will then be yours. Both versions are named beside this message, the earlier one still reads back in full, and nothing was recorded."
-  }
-});
-var GENERIC_CODES = Object.freeze(["NO_KEY"]);
-function refusal12(code, detail, extra = {}) {
-  const row2 = PROGRESSION_CHECKS[code] || (code === "NO_BASIS" || code === "NO_CITATION" ? ACT_SHAPE_CHECKS[code] : null);
-  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
-    throw new Error(`progressions: ${code} has no row with a translation (DEC-49)`);
-  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, ...extra, detail };
-}
-function generic(code, detail, extra = {}) {
-  if (!GENERIC_CODES.includes(code)) throw new Error(`progressions: ${code} is not a generic code; it answers with its row`);
-  return { ok: false, reason: code, code, ...extra, detail };
-}
-var NOT_A_DISPOSITION_DETAIL = "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition";
-function notADisposition(to, extra = null) {
-  if (typeof to === "string" && DISPOSITIONS2.includes(to)) return null;
-  const row2 = PROGRESSION_CHECKS.NOT_A_DISPOSITION;
-  const given = to === void 0 || to === null || typeof to === "string" && !to.trim() ? null : to;
-  return {
-    ...extra && typeof extra === "object" ? extra : {},
-    ok: false,
-    reason: "NOT_A_DISPOSITION",
-    code: "NOT_A_DISPOSITION",
-    check: row2.check,
-    translation: row2.translation,
-    to: given,
-    dispositions: DISPOSITIONS2,
-    detail: NOT_A_DISPOSITION_DETAIL
-  };
 }
 
 // src/publication/checks.mjs
@@ -64230,6 +65909,7 @@ var BASIS_VERSION_LEGS_MAX = 500;
 var NARROW_CANDIDATES_MAX = 50;
 var PROJECTS_DRAWING_MAX2 = 32;
 var PROJECTS_DRAWING_EXAMINED = 256;
+var PROJECT_QUESTIONS_MAX = 500;
 var TESTIMONY_REACH_MAX = 200;
 var TESTIMONY_REACH_DEPTH = 64;
 var VERSION_REASON_MAX = 500;
@@ -64269,6 +65949,8 @@ var safeJson9 = (s) => {
   }
 };
 var isInquiryId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]]) === "inquiry";
+var INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIASES).filter((t) => LEGACY_TYPE_ALIASES[t] === "inquiry")]);
+var drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.references : []).some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inquiryId);
 var BasisVersions = class _BasisVersions {
   #candidateSource = null;
   // R25's extract arm: {module, fn}
@@ -64507,7 +66189,7 @@ var BasisVersions = class _BasisVersions {
       bundleId
     ).map((r) => ({ version: r.name, ord: r.ord, target: r.target_id, content_id: r.content_id ?? null })) };
   }
-  /* ================================================================ reads (R8–R11, R22, R23, R37, R38) */
+  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41) */
   /** D-235: the collections the record holds for one version, read once for `op=basisversions` and `op=suggest`'s
    *  answer. The ground labels come from the legs this answer carries, the blank label a legless part projects dropped.
    *  `composition_grades: "authored"` says the frozen string keeps what was AUTHORED while `legs[]` publishes what the
@@ -64652,12 +66334,15 @@ var BasisVersions = class _BasisVersions {
    *  document, and one that did nothing about the question answer the same empty record. Commentary is labelled
    *  `evidence: false`. */
   conclusionRecordOf(projectId, inquiryId, viewer) {
-    const none = { history: [], stance: null };
     const pid = String(projectId ?? "").trim();
-    if (!pid || !this.#seen(pid, viewer)) return none;
+    if (!pid || !this.#seen(pid, viewer)) return { history: [], stance: null };
     const text3 = this.#doc(pid);
-    if (text3 === null) return none;
-    const fm = parseFrontmatter(text3).data || {};
+    if (text3 === null) return { history: [], stance: null };
+    return _BasisVersions.#recordIn(parseFrontmatter(text3).data || {}, pid, inquiryId);
+  }
+  /* R22's one reading of a project's parsed document: its rows for one question, in order, and the stance. Shared by
+     `conclusionRecordOf` (after its sight test) and R41 (viewer-free), so the two cannot read a row differently. */
+  static #recordIn(fm, pid, inquiryId) {
     const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];
     const s = (v) => typeof v === "string" ? v : null;
     const want = String(inquiryId ?? "").trim();
@@ -64778,10 +66463,7 @@ var BasisVersions = class _BasisVersions {
           }
           const text3 = this.#doc(r.pid);
           if (text3 === null) continue;
-          const fm = parseFrontmatter(text3).data || {};
-          const refs = Array.isArray(fm.references) ? fm.references : [];
-          const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inq);
-          if (!draws) continue;
+          if (!drawsOn(parseFrontmatter(text3).data || {}, inq)) continue;
           if (out.length === PROJECTS_DRAWING_MAX2) {
             out.truncated = true;
             return out;
@@ -64794,7 +66476,50 @@ var BasisVersions = class _BasisVersions {
     }
     return out;
   }
-  /** R38 (MK-1 (A), N67): what would carry a member's authored observation into the published record. From each root
+  /** R41 (N300): the inquiries a project draws on, by R13's own test, in id order after `after`, each with whether its
+   *  basis holds a leg (inquiry R16's `basisFor`, limit 1) and the project's stance by R22. Viewer-free: its caller
+   *  (publication R45) fences the project. The candidates are the document's live `cites` targets that the record holds
+   *  as inquiries, read in one bounded statement, one past the page, so `cursor` (the last answered) is set only when
+   *  more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
+   *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`. */
+  projectQuestions({ project = null, after = null, limit = null } = {}) {
+    const out = { items: [], cursor: null };
+    try {
+      const pid = String(project ?? "").trim();
+      if (!pid) return out;
+      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
+      if (!p || normalizeType(p.object_type) !== "project") return out;
+      const text3 = this.#doc(pid);
+      if (text3 === null) return out;
+      const fm = parseFrontmatter(text3).data || {};
+      const live = [...new Set((Array.isArray(fm.references) ? fm.references : []).filter((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed").map((x) => String(x.target ?? "").trim()).filter(Boolean))];
+      if (!live.length) return out;
+      const n = Math.floor(Number(limit));
+      const cap = !Number.isFinite(n) || n === 0 ? PROJECT_QUESTIONS_MAX : Math.max(1, Math.min(PROJECT_QUESTIONS_MAX, n));
+      const rows = this.#rows(
+        `SELECT bundle_id FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))
+            AND object_type IN (SELECT value FROM json_each(?)) AND bundle_id > ?
+          ORDER BY bundle_id LIMIT ?`,
+        JSON.stringify(live),
+        INQUIRY_TYPES,
+        String(after ?? ""),
+        cap + 1
+      );
+      for (const r of rows.slice(0, cap)) {
+        const basis = this.inquiry.basisFor(r.bundle_id, { limit: 1 });
+        const { stance } = _BasisVersions.#recordIn(fm, pid, r.bundle_id);
+        out.items.push({
+          inquiry: r.bundle_id,
+          legs: !!basis?.ok && Array.isArray(basis.legs) && basis.legs.length > 0,
+          stance: stance ? stance.state : "none"
+        });
+      }
+      if (rows.length > cap) out.cursor = out.items[out.items.length - 1].inquiry;
+    } catch {
+    }
+    return out;
+  }
+  /** R39 (MK-1 (A), N67): what would carry a member's authored observation into the published record. From each root
    *  the evidence graph is walked through every basis leg AND every version leg (an older reading of the basis is still
    *  bytes a published finding can point at); an observation is a bundle holding an authored register row. `self`
    *  names roots that ARE observations; `via` a finding and the observation it rests on. One bounded statement. */
@@ -65009,10 +66734,7 @@ var BasisVersions = class _BasisVersions {
       const denied = this.membership.projectAuthority(projectId, a.identity ?? null, "joined", "versioncurrent");
       if (denied) return denied;
       const ptext = this.#doc(projectId);
-      const pfm = ptext !== null ? parseFrontmatter(ptext).data || {} : {};
-      const refs = Array.isArray(pfm.references) ? pfm.references : [];
-      const draws = refs.some((r) => r && typeof r === "object" && r.rel === "cites" && r.status !== "severed" && String(r.target ?? "").trim() === target);
-      if (!draws)
+      if (!drawsOn(ptext !== null ? parseFrontmatter(ptext).data || {} : {}, target))
         return refuse5(
           "VERSION_CURRENT_UNRELATED",
           `${projectId} does not draw on ${target}, so it has no stance on this question to move. Cite the question into the project first.`,
@@ -65272,9 +66994,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       };
     let want = vname;
     if (pid) {
-      const prefs = Array.isArray(pfm.references) ? pfm.references : [];
-      const draws = prefs.some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === target);
-      if (!draws)
+      if (!drawsOn(pfm, target))
         return {
           ok: false,
           reason: "NO_CLAIM",
@@ -66065,9 +67785,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     };
   }
 };
-var instances12 = /* @__PURE__ */ new WeakMap();
+var instances13 = /* @__PURE__ */ new WeakMap();
 function basisVersionsOf(host, deps) {
-  let bv = instances12.get(host);
+  let bv = instances13.get(host);
   if (!bv) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -66075,14 +67795,15 @@ function basisVersionsOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     const given = d.inquiry || {};
-    const own2 = ["earned", "legCapped", "cyclePath"].every((k) => typeof given[k] === "function") ? null : inquiryOf(host, { record, membership, promotion, content });
+    let own2 = ["earned", "legCapped", "cyclePath"].every((k) => typeof given[k] === "function") ? null : inquiryOf(host, { record, membership, promotion, content });
     const inquiry = {
       earned: typeof given.earned === "function" ? given.earned : (s, t) => own2.earned(s, t),
       legCapped: typeof given.legCapped === "function" ? given.legCapped : legCapped,
-      cyclePath: typeof given.cyclePath === "function" ? given.cyclePath : (id, t) => own2.cyclePath(id, t)
+      cyclePath: typeof given.cyclePath === "function" ? given.cyclePath : (id, t) => own2.cyclePath(id, t),
+      basisFor: typeof given.basisFor === "function" ? given.basisFor : (id, o) => (own2 ||= inquiryOf(host, { record, membership, promotion, content })).basisFor(id, o)
     };
     bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances12.set(host, bv);
+    instances13.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
   }
@@ -66489,10 +68210,11 @@ var VERSION_STRENGTH_STATES_MAX = VERSION_MACHINE.legal.length;
 var CANDIDATE_ERROR_MAX = 200;
 var PAIR_COMPOSED_KEYS = Object.freeze(["strength", "grade", "score", "overall", "composed", "letter", "rating", "value"]);
 var MEMBER_ID_FIELDS = Object.freeze(["bundle_id", "target_id", "inherited_from", "through"]);
+var OUT_OF_VIEW_WORDS = "Part of what this rests on is out of your view.";
 var ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
 var HUNCH_WHY = "this leg is marked as a hunch, so it is visible here and does not count as evidence";
 var isHunch = (source) => typeof source === "string" && VERSION_STRENGTH_INERT_SOURCES.includes(source);
-var str2 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var str3 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var typeOfId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]]) ?? "";
 function barAxisWords(bar) {
   return ["capture", "connection"].map((axis) => bar[axis] == null ? `no bar set on the ${axis} axis` : `${axis} ${bar[axis]}`).join(", ");
@@ -66703,10 +68425,11 @@ var Strength = class _Strength {
       testimony: pair.testimony
     };
   }
-  /** R6 (REC-34): `op=inquirystrength`, the pair gated. An inquiry the viewer may not see is withheld whole, byte for
-   *  byte as one that does not exist; an id named inside a visible answer is a back-reference and is redacted to null
-   *  while every record fact stands (a derivation that changed with its reader would claim different things to
-   *  different people). Computed on read, never from the cache (R13). */
+  /** R6 (REC-34, N303): `op=inquirystrength`, the pair gated. An inquiry the viewer may not see is withheld whole,
+   *  byte for byte as one that does not exist. Inside a visible answer, every member the viewer may not see is withheld
+   *  whole, in the members and the prose, with no id, title, state, placeholder or count, and `out_of_view: true`
+   *  states only that something was (DEC-36); every record fact about the axes stands (a derivation that changed with
+   *  its reader would claim different things to different people). Computed on read, never from the cache (R13). */
   inquiryStrength({ id = null, viewer = null } = {}) {
     if (!id) return {
       ok: false,
@@ -66727,14 +68450,10 @@ var Strength = class _Strength {
     const s = this.strengthOf(id);
     if (!s.ok) return s;
     const keep = this.#redactor(viewer);
-    return {
-      ok: true,
-      target: id,
-      depth_bound: s.depth_bound,
-      capture: redactAxis(s.capture, keep),
-      connection: redactAxis(s.connection, keep),
-      testimony: redactAxis(s.testimony, keep)
-    };
+    const hidden = this.#legsOf(id).some((l) => l.target_id && keep(l.target_id) === null);
+    const axes = Object.fromEntries(STRENGTH_AXES.map((a) => [a, redactAxis(s[a], keep, hidden)]));
+    const withheld = STRENGTH_AXES.some((a) => axes[a].out_of_view === true);
+    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ...withheld ? { out_of_view: true } : {} };
   }
   /** R13: the pair the search cache holds for an inquiry, `{capture: {grade, state}, connection: {grade, state}}`, or
    *  null for any other bundle. A cache, marked so wherever it is read; nothing here answers strength from it. */
@@ -66981,7 +68700,7 @@ var Strength = class _Strength {
     if (checked) {
       const byPart = /* @__PURE__ */ new Map();
       for (const l of legs) {
-        const g = str2(l.ground);
+        const g = str3(l.ground);
         if (!g) continue;
         if (!byPart.has(g)) byPart.set(g, []);
         byPart.get(g).push(l.target_id);
@@ -67142,7 +68861,7 @@ var Strength = class _Strength {
   /* A candidate leg `{target, role, grade, grade_axis, grade_source, ground}` as the walk's leg, its position its ord
      and its type read from its id's prefix. */
   static #candidateLeg(l, k) {
-    const target = str2(l?.target) ?? "";
+    const target = str3(l?.target) ?? "";
     return {
       ord: k,
       target_id: target,
@@ -67151,7 +68870,7 @@ var Strength = class _Strength {
       grade: l?.grade ?? null,
       grade_axis: l?.grade_axis ?? null,
       grade_source: l?.grade_source ?? null,
-      ground: str2(l?.ground)
+      ground: str3(l?.ground)
     };
   }
   /** R26: R1–R5's three axes over `legs` given in place of the inquiry's live basis, walking inquiry legs to the depth
@@ -67321,42 +69040,68 @@ var Strength = class _Strength {
 function distinctParts(legs) {
   return new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size;
 }
-function redactAxis(axis, keep) {
-  let touched = false;
-  const member = (m) => {
-    let out2 = m;
-    for (const f8 of MEMBER_ID_FIELDS) {
-      if (m[f8] == null || keep(m[f8]) !== null) continue;
-      if (out2 === m) out2 = { ...m };
-      out2[f8] = null;
+function redactAxis(axis, keep, hidden) {
+  let touched = !!hidden;
+  const unseen = (id) => id != null && keep(id) === null;
+  const prose = (v) => {
+    if (typeof v !== "string") return v;
+    let hit = false;
+    const gone = (id2) => {
+      if (!unseen(id2)) return false;
+      hit = true;
+      return true;
+    };
+    const id = ID_IN_PROSE.source;
+    let t = v.replace(new RegExp(`\\s*\\(through (${id})\\)`, "g"), (m, x) => gone(x) ? "" : m).replace(new RegExp(`, which is (${id})`, "g"), (m, x) => gone(x) ? "" : m).replace(new RegExp(`(?:${id})(?:, (?:${id}))+`, "g"), (run) => {
+      const ids = run.split(", ");
+      const kept = ids.filter((x) => !unseen(x));
+      if (!kept.length || kept.length === ids.length) return run;
+      hit = true;
+      return kept.join(", ");
+    });
+    const still = (x) => [...x.matchAll(new RegExp(id, "g"))].some((m) => gone(m[0]));
+    t = t.split(/(?<=[.:])\s+/).filter((x) => !still(x)).join(" ");
+    if (!hit) return v;
+    touched = true;
+    return t ? `${t} ${OUT_OF_VIEW_WORDS}` : OUT_OF_VIEW_WORDS;
+  };
+  const seen = (m) => !MEMBER_ID_FIELDS.some((f8) => f8 !== "through" && unseen(m[f8]));
+  const named = (m) => {
+    const out2 = { ...m };
+    if (unseen(out2.through)) {
+      delete out2.through;
       touched = true;
     }
+    if (out2.why != null) out2.why = prose(out2.why);
     return out2;
   };
-  const prose = (v) => typeof v !== "string" ? v : v.replace(ID_IN_PROSE, (m) => {
-    if (keep(m) !== null) return m;
+  const list2 = (ms) => (ms ?? []).flatMap((m) => {
+    if (seen(m)) return [named(m)];
     touched = true;
-    return "an object you may not see";
+    return [];
   });
-  const named = (m) => {
-    const r = member(m);
-    const w = prose(r.why ?? null);
-    if (w === (r.why ?? null)) return r;
-    return { ...r, why: w };
+  const withWeakest = (o, w) => {
+    if (!w) return { ...o, weakest: w };
+    if (seen(w)) return { ...o, weakest: named(w) };
+    touched = true;
+    const { weakest, ...rest } = o;
+    return rest;
   };
+  const uncounted = (o) => {
+    if (!hidden) return o;
+    const { load_bearing, population, ...rest } = o;
+    return rest;
+  };
+  const part = (o) => uncounted(withWeakest({
+    ...o,
+    not_load_bearing: list2(o.not_load_bearing),
+    ...o.undetermined_at ? { undetermined_at: list2(o.undetermined_at) } : {}
+  }, o.weakest));
   const out = {
-    ...axis,
-    weakest: axis.weakest ? named(axis.weakest) : axis.weakest,
-    not_load_bearing: (axis.not_load_bearing ?? []).map(named),
-    ...axis.undetermined_at ? { undetermined_at: axis.undetermined_at.map(named) } : {},
+    ...part(axis),
     /* REC-42: each ground names its own weakest, inert and unfinished members, so it gets the same sweep; the ground
        label is authored on the visible subject itself and is a record fact. */
-    ...axis.grounds ? { grounds: axis.grounds.map((g) => ({
-      ...g,
-      weakest: g.weakest ? named(g.weakest) : g.weakest,
-      not_load_bearing: (g.not_load_bearing ?? []).map(named),
-      ...g.undetermined_at ? { undetermined_at: g.undetermined_at.map(named) } : {}
-    })) } : {},
+    ...axis.grounds ? { grounds: axis.grounds.map(part) } : {},
     detail: prose(axis.detail)
   };
   return touched ? { ...out, out_of_view: true } : axis;
@@ -67426,9 +69171,9 @@ function strengthOps(s, url, body) {
     })
   };
 }
-var instances13 = /* @__PURE__ */ new WeakMap();
+var instances14 = /* @__PURE__ */ new WeakMap();
 function strengthOf(host, deps) {
-  let s = instances13.get(host);
+  let s = instances14.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -67439,7 +69184,7 @@ function strengthOf(host, deps) {
       return f8 && f8.ok ? f8.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, producingGroup });
-    instances13.set(host, s);
+    instances14.set(host, s);
     s.migrate();
     record.declarePurge("strength", [], { exempt: STRENGTH_EXEMPT_TABLES });
     s.registerGrounded();
@@ -67706,7 +69451,7 @@ var NOTICE_SWEEP_MAX = 1e3;
 var NOTICES_LIMIT_DEFAULT = 200;
 var NOTICES_LIMIT_MAX = 1e3;
 var REEVAL_NOTICE_DELAY_MS = 1e3;
-var NOTE_MAX = 500;
+var NOTE_MAX2 = 500;
 var CAUSE_SOURCES = Object.freeze([
   "supersession",
   "edition",
@@ -67720,7 +69465,7 @@ var RAISED_ON = Object.freeze(["affected", "undetermined"]);
 var CASE_CURSOR = "case:";
 var DOCUMENT_EXTENT = canonicalExtent({ kind: "document" });
 var PAIR_AXES = Object.freeze(["capture", "connection", "testimony"]);
-var str3 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var str4 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var MACHINE_ADMIN = `${MACHINE_CLASS_PREFIX}admin`;
 var UNSTORABLE = /["\\\n\r]/;
 var SHA256_HEX = /^[0-9a-fA-F]{64}$/;
@@ -68048,7 +69793,7 @@ var Reevaluation = class {
   /** R1–R6: the re-evaluation obligation, derived on read. With `target`, the dependents of one moved thing (and, R17,
    *  that thing itself if its derivation weakened under a published edition); with none, every id a basis leg names. */
   reevaluations({ target = null, viewer = null } = {}) {
-    const t0 = str3(target);
+    const t0 = str4(target);
     if (t0 && !this.#visible(t0, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: t0 };
     const targets = t0 ? [t0] : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis ORDER BY target_id`).map((r) => r.target_id);
     const dependents = t0 ? [t0] : this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis ORDER BY bundle_id`).map((r) => r.bundle_id);
@@ -68230,7 +69975,7 @@ var Reevaluation = class {
    *  the viewer may not see withheld and not counted, no titles. Called by the acts that move a target, after they
    *  commit; the act puts the answer in its reply as `reevaluation`. R8's listeners are told. */
   raise({ target = null, source = null, since = null, edition = null, viewer = null } = {}) {
-    const t = str3(target);
+    const t = str4(target);
     const visible = this.#redactor(viewer);
     let live = null;
     try {
@@ -68681,7 +70426,7 @@ var Reevaluation = class {
         a = null;
       }
       if (!a || a.ok === false || !Array.isArray(a.parts)) continue;
-      const project = str3(a.project);
+      const project = str4(a.project);
       let owners = [];
       try {
         owners = project ? this.membership.projectOwners(project) || [] : [];
@@ -68689,7 +70434,7 @@ var Reevaluation = class {
         owners = [];
       }
       a.parts.forEach((p, ord) => {
-        const part = p ? str3(p.bundle_id) : null;
+        const part = p ? str4(p.bundle_id) : null;
         const capture = p && typeof p.capture_sha === "string" && SHA256_HEX.test(p.capture_sha.trim()) ? p.capture_sha.trim().toLowerCase() : null;
         if (!part || !capture) return;
         parts.push({
@@ -68796,7 +70541,7 @@ var Reevaluation = class {
    *  `op=versionnotice` withholds that version (N200, K224). */
   notices({ holder = null, state = "open", after = null, limit = null, viewer = null } = {}) {
     const cap = clamp2(limit, NOTICES_LIMIT_DEFAULT, NOTICES_LIMIT_MAX);
-    const h = str3(holder);
+    const h = str4(holder);
     const st = ["open", "adopted", "kept", "all"].includes(state) ? state : "open";
     const g = viewerPredicate(viewer);
     const rows = this.#noticeRows(
@@ -69082,11 +70827,11 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
     if (s.refusal) return s.refusal;
     const { who: who2, r } = s;
     const text3 = why == null ? null : String(why).trim() || null;
-    if (text3 !== null && (text3.length > NOTE_MAX || UNSTORABLE.test(text3)))
+    if (text3 !== null && (text3.length > NOTE_MAX2 || UNSTORABLE.test(text3)))
       return this.#refuse(
         "VERSION_CHOICE_WHY_MALFORMED",
-        `the reason is ${text3.length} characters (at most ${NOTE_MAX}), or holds a quote, backslash or line break.`,
-        { notice: r.notice_id, limit: NOTE_MAX }
+        `the reason is ${text3.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
+        { notice: r.notice_id, limit: NOTE_MAX2 }
       );
     const when = this.#when();
     this.sql.exec(
@@ -69131,13 +70876,13 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
         who2 ? `'${who2.slice(0, 60)}' is a machine identity.` : "no member is named as the one who looked again."
       );
     const text3 = String(note ?? "").trim();
-    if (!text3 || text3.length > NOTE_MAX || UNSTORABLE.test(text3))
+    if (!text3 || text3.length > NOTE_MAX2 || UNSTORABLE.test(text3))
       return this.#refuse(
         "REEVALUATION_NOTE_MALFORMED",
-        !text3 ? "pass note=<what was looked at and what was decided>." : `the note is ${text3.length} characters (at most ${NOTE_MAX}), or holds a quote, backslash or line break.`,
-        { limit: NOTE_MAX }
+        !text3 ? "pass note=<what was looked at and what was decided>." : `the note is ${text3.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
+        { limit: NOTE_MAX2 }
       );
-    const dep = str3(dependent), tgt = str3(target), src = str3(source);
+    const dep = str4(dependent), tgt = str4(target), src = str4(source);
     const noCause = (detail) => this.#refuse(
       "REEVALUATION_NO_SUCH_CAUSE",
       detail,
@@ -69205,9 +70950,9 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
     return fm ? checkReevalPending(fm) : [];
   }
 };
-var instances14 = /* @__PURE__ */ new WeakMap();
+var instances15 = /* @__PURE__ */ new WeakMap();
 function reevaluationOf(host, deps) {
-  let r = instances14.get(host);
+  let r = instances15.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -69215,7 +70960,7 @@ function reevaluationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Reevaluation({ ...d, host, storage, record, membership, promotion });
-    instances14.set(host, r);
+    instances15.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
@@ -69956,7 +71701,7 @@ var safeJson10 = (s) => {
   }
 };
 var fmSafe3 = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
-var str4 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
+var str5 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var shaOf = (text3) => createSha256().update(new TextEncoder().encode(String(text3))).hex();
 var REVIEW_DOORS = Object.freeze([
   "draftForMember",
@@ -70146,7 +71891,7 @@ var Publication = class {
    *  fills it; `review` does when extracted. */
   registerReviewProvider(moduleOrProvider, maybeProvider = void 0) {
     const provider = typeof moduleOrProvider === "string" ? maybeProvider : moduleOrProvider;
-    const module = typeof moduleOrProvider === "string" ? str4(moduleOrProvider) : str4(provider && provider.module) || "unnamed";
+    const module = typeof moduleOrProvider === "string" ? str5(moduleOrProvider) : str5(provider && provider.module) || "unnamed";
     if (!provider || typeof provider !== "object" || !REVIEW_DOORS.every((d) => typeof provider[d] === "function"))
       return {
         ok: false,
@@ -70183,7 +71928,7 @@ var Publication = class {
    *  available-actions block (its R15). Nothing it answers enters the case's own bytes. A second registration is
    *  refused `PROVIDER_DECLARED`, a malformed one `PROVIDER_MALFORMED`. */
   registerEvidenceBlock(module, name, fn) {
-    if (!str4(module) || !/^[a-z][a-z0-9_]{0,63}$/.test(String(name ?? "")) || typeof fn !== "function")
+    if (!str5(module) || !/^[a-z][a-z0-9_]{0,63}$/.test(String(name ?? "")) || typeof fn !== "function")
       return {
         ok: false,
         reason: "PROVIDER_MALFORMED",
@@ -70196,7 +71941,7 @@ var Publication = class {
         module: this.#evidenceBlock.module,
         detail: `the evidence-package block is already registered by ${this.#evidenceBlock.module}`
       };
-    this.#evidenceBlock = { module: str4(module), name: String(name), fn };
+    this.#evidenceBlock = { module: str5(module), name: String(name), fn };
     return { ok: true, module: this.#evidenceBlock.module, name: this.#evidenceBlock.name };
   }
   /* R36: the package's block for one answered case edition, computed at the read. A block that throws is stated as
@@ -70229,7 +71974,7 @@ var Publication = class {
     at: at15 = null,
     draft = null
   } = {}) {
-    const id = str4(caseArg ?? caseId), ed = Number(edition);
+    const id = str5(caseArg ?? caseId), ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || typeof text3 !== "string" || !text3)
       return { ok: false, reason: "MALFORMED", detail: "a case document names its case, a positive edition and its text" };
     const docSha = shaOf(text3);
@@ -70243,7 +71988,7 @@ var Publication = class {
       ed,
       docSha,
       text3,
-      str4(at15) || this.#when(),
+      str5(at15) || this.#when(),
       author ?? null,
       draft ?? null
     );
@@ -70269,7 +72014,7 @@ var Publication = class {
     section = null,
     lines = null
   } = {}) {
-    const id = str4(caseArg ?? caseId), ed = Number(edition);
+    const id = str5(caseArg ?? caseId), ed = Number(edition);
     const locate = typeof section === "string" && Object.prototype.hasOwnProperty.call(SECTIONS2, section) ? SECTIONS2[section] : null;
     const fmLines = lines && Array.isArray(lines.frontmatter) ? lines.frontmatter.map(String) : null;
     const bodyLines = lines && Array.isArray(lines.body) ? lines.body.map(String) : null;
@@ -70284,7 +72029,7 @@ var Publication = class {
     const held = { case_id: id, edition: ed, doc_sha: doc ? doc.doc_sha : null };
     if (!doc) return { ok: true, ...held, reauthored: false, why: "no case document is held for this edition" };
     if (doc.sig_armored) return { ok: true, ...held, reauthored: false, why: "this case document is signed, and a signed document never changes" };
-    if (str4(docSha) && doc.doc_sha !== str4(docSha))
+    if (str5(docSha) && doc.doc_sha !== str5(docSha))
       return { ok: true, ...held, reauthored: false, why: "this case document has moved since it was read, so nothing was spliced" };
     const all = doc.text.split("\n");
     const at15 = locate(all);
@@ -70364,7 +72109,7 @@ var Publication = class {
         highest,
         detail: `${bundleId} is published through edition ${highest} on its OWN version chain; a revision must increment it (DEC-12). Editions do not overwrite each other \u2014 edition ${highest} keeps its own signature, attestor, time and gate version, and a new one joins it. This is the FINDING's edition, not the edition of any case it is a member of: since CASE-5 the two are separate numbers.`
       };
-    const now = str4(at15) || this.#when();
+    const now = str5(at15) || this.#when();
     const byCase = this.pinnedCaseEditionsOf(bundleId, bundleSha);
     const rel = this.soleCase(byCase);
     const caseId = rel ? rel.case_id : null;
@@ -70542,8 +72287,8 @@ var Publication = class {
     deliveredBy = null,
     at: at15 = null
   } = {}) {
-    const id = str4(caseArg ?? caseId), ed = Number(edition);
-    if (!id || !Number.isInteger(ed) || ed < 1 || !str4(sigArmored) || !str4(attestorKey) || !str4(gateVersion) || !Array.isArray(roster))
+    const id = str5(caseArg ?? caseId), ed = Number(edition);
+    if (!id || !Number.isInteger(ed) || ed < 1 || !str5(sigArmored) || !str5(attestorKey) || !str5(gateVersion) || !Array.isArray(roster))
       return { ok: false, reason: "MALFORMED", detail: "a case edition names its case, a positive edition, the signature, the attesting key, the gate version and its roster" };
     const members = roster.filter((m) => m && typeof m.bundle_id === "string" && m.bundle_id);
     const doc = this.#one(`SELECT doc_sha, text, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
@@ -70585,7 +72330,7 @@ var Publication = class {
         signed: project ?? null,
         detail: `case ${id} is ${owner.project_id}'s production and this signed case document names ${project}. A case does not change hands between editions (DEC-72).`
       };
-    const when = str4(at15) || this.#when();
+    const when = str5(at15) || this.#when();
     if (!owner)
       this.sql.exec(
         `INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
@@ -70655,16 +72400,16 @@ var Publication = class {
    *  version, `project` the cases that project owns. An unsigned preparation is never an edition here. The read
    *  `conformance` R2 uses. */
   publishedEditionsOf({ finding: finding3 = null, version = null, project = null } = {}) {
-    const id = str4(finding3);
+    const id = str5(finding3);
     if (!id) return { ok: false, reason: "NO_ID", detail: "publishedEditionsOf requires a finding" };
     const where = [`m.bundle_id=?`, `c.ratified_at IS NOT NULL`], args = [id];
-    if (str4(version)) {
+    if (str5(version)) {
       where.push(`m.version_sha=?`);
-      args.push(str4(version));
+      args.push(str5(version));
     }
-    if (str4(project)) {
+    if (str5(project)) {
       where.push(`k.project_id=?`);
-      args.push(str4(project));
+      args.push(str5(project));
     }
     const rows = this.#rows(
       `SELECT m.case_id, m.edition, m.version_sha, m.role, k.project_id FROM published_case_members m
@@ -70713,7 +72458,7 @@ var Publication = class {
    *  `registerCaseParts` (its R26). A case with no ratified edition (or not that one) answers `NO_SUCH_CASE_EDITION`;
    *  no case named, `NO_ID`. Writes nothing. */
   caseCitedParts({ case: caseArg = null, caseId = null, edition = null } = {}) {
-    const id = str4(caseArg ?? caseId);
+    const id = str5(caseArg ?? caseId);
     if (!id) return { ok: false, reason: "NO_ID", detail: "caseCitedParts names a case" };
     const want = edition == null || edition === "" ? null : Number(edition);
     const row2 = Number.isInteger(want) ? this.#one(`SELECT edition FROM published_cases WHERE case_id=? AND edition=? AND ratified_at IS NOT NULL`, id, want) : want === null ? this.#one(`SELECT MAX(edition) AS edition FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, id) : null;
@@ -72991,9 +74736,9 @@ var Publication = class {
     return reg;
   }
 };
-var instances15 = /* @__PURE__ */ new WeakMap();
+var instances16 = /* @__PURE__ */ new WeakMap();
 function publicationOf(host, deps) {
-  let p = instances15.get(host);
+  let p = instances16.get(host);
   if (!p) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -73001,7 +74746,7 @@ function publicationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     p = new Publication({ ...d, host, storage, record, membership, promotion });
-    instances15.set(host, p);
+    instances16.set(host, p);
     p.migrate();
     record.declarePurge("publication", PUBLICATION_TABLES, { exempt: PUBLICATION_EXEMPT });
     promotion.registerFact("caseMember", "publication", (id) => !!p.caseRelation(id).member);
@@ -74127,7 +75872,7 @@ function appendSessionLog3(text3, entry) {
 var CITE_EDGE_BYTES = 83;
 var CITE_PIN_BYTES = 85;
 var CITE_LOG_SAMPLE = 20;
-var NOTE_MAX2 = 200;
+var NOTE_MAX3 = 200;
 var EXTENT_VALUE_MAX = 200;
 var EDGE_REASON_MAX3 = 160;
 var EDGE_NOTE_MAX = 480;
@@ -74458,7 +76203,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       if (denied) return denied;
     }
     const nt = String(note ?? "");
-    if (nt.length > NOTE_MAX2 || /["\\\r\n]/.test(nt))
+    if (nt.length > NOTE_MAX3 || /["\\\r\n]/.test(nt))
       return {
         ok: false,
         reason: "BAD_NOTE",
@@ -74825,12 +76570,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances16 = /* @__PURE__ */ new WeakMap();
+var instances17 = /* @__PURE__ */ new WeakMap();
 function inquiryServices(k) {
   return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
 }
 function citationOf(host, deps) {
-  let c = instances16.get(host);
+  let c = instances17.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -74840,7 +76585,7 @@ function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
     c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
-    instances16.set(host, c);
+    instances17.set(host, c);
   }
   return c;
 }
@@ -74910,7 +76655,7 @@ var safeJson11 = (s) => {
   }
 };
 var isObj8 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var str5 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var str6 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var sha256Hex10 = (text3) => createSha256().update(enc.encode(String(text3))).hex();
 function statementRows(bundleId, fm) {
   const stmts = fm && Array.isArray(fm.statements) ? fm.statements : [];
@@ -75039,9 +76784,9 @@ var Bias = class _Bias {
       this.#sql.exec(
         `UPDATE bias_adoptions SET bundle_sha=?, source_url=?, retrieved=?, source_sha256=? WHERE bundle_id=?`,
         c.bundleSha,
-        str5(fm.policy_source),
-        str5(fm.policy_retrieved),
-        str5(fm.policy_sha256) ? str5(fm.policy_sha256).toLowerCase() : null,
+        str6(fm.policy_source),
+        str6(fm.policy_retrieved),
+        str6(fm.policy_sha256) ? str6(fm.policy_sha256).toLowerCase() : null,
         bundleId
       );
     return null;
@@ -75162,9 +76907,9 @@ var Bias = class _Bias {
       h.bundleSha,
       who2,
       now,
-      str5(fm.policy_source),
-      str5(fm.policy_retrieved),
-      str5(fm.policy_sha256) ? str5(fm.policy_sha256).toLowerCase() : null
+      str6(fm.policy_source),
+      str6(fm.policy_retrieved),
+      str6(fm.policy_sha256) ? str6(fm.policy_sha256).toLowerCase() : null
     );
     this.#notify();
     return {
@@ -75177,9 +76922,9 @@ var Bias = class _Bias {
       at: now,
       pinned: {
         bundle_sha: h.bundleSha,
-        source_url: str5(fm.policy_source),
-        retrieved: str5(fm.policy_retrieved),
-        source_sha256: str5(fm.policy_sha256) ? str5(fm.policy_sha256).toLowerCase() : null
+        source_url: str6(fm.policy_source),
+        retrieved: str6(fm.policy_retrieved),
+        source_sha256: str6(fm.policy_sha256) ? str6(fm.policy_sha256).toLowerCase() : null
       },
       /* Stated rather than implied: the row exists, and the lens is in force only once the revision the pin
          names stands at `adopted`. */
@@ -76158,17 +77903,17 @@ var CONTRADICTION_ABSENCE = Object.freeze({
 });
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances17 = /* @__PURE__ */ new WeakMap();
+var instances18 = /* @__PURE__ */ new WeakMap();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances17.get(storage);
+  let c = instances18.get(storage);
   if (!c) {
     c = new Contradiction(storage, {
       ...opts,
       record: opts.record ?? recordOf(ctx),
       extraction: opts.extraction ?? (() => extractionOf(ctx))
     });
-    instances17.set(storage, c);
+    instances18.set(storage, c);
   }
   return c;
 }
@@ -80683,9 +82428,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     return { proposedReadings: c("proposed_readings", "bundle_id"), suggestRefusals: c("suggest_refusals", "target") };
   }
 };
-var instances18 = /* @__PURE__ */ new WeakMap();
+var instances19 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p = instances18.get(host);
+  let p = instances19.get(host);
   if (!p) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -80704,7 +82449,7 @@ function runProductionsOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances18.set(host, p);
+    instances19.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
   }
@@ -82075,7 +83820,7 @@ var ACT_MAX = 200;
 var DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "period", "supersedes", "author", "viewer"]);
 var PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
 var ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
-var str6 = (v) => typeof v === "string" ? v.trim() : "";
+var str7 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj9 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand6 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var safeJson14 = (s) => {
@@ -82190,10 +83935,10 @@ var Standards = class {
     const level = typeof first.level === "string" && first.level ? first.level : "undetermined";
     const differs = [];
     for (const f8 of ["kind", "issuer"])
-      if (str6(declared[f8]) && str6(declared[f8]) !== first[f8])
+      if (str7(declared[f8]) && str7(declared[f8]) !== first[f8])
         differs.push({
           field: f8,
-          declared: str6(declared[f8]),
+          declared: str7(declared[f8]),
           source: first[f8],
           says: `recorded as declared; the matched source says ${f8} '${first[f8]}'`
         });
@@ -82239,14 +83984,14 @@ var Standards = class {
     if (unknown) return unknown;
     const d = this.#declareRefusal(a);
     if (d.ok === false) return d;
-    return this.#write(d.fields, str6(a.author), a.viewer ?? null, null);
+    return this.#write(d.fields, str7(a.author), a.viewer ?? null, null);
   }
   /* R1's refusals after the author, in R1's order, then R6's; `{ok: true, fields}`, checked, when none applies. */
   #declareRefusal(a) {
-    const cite = str6(a.cite);
+    const cite = str7(a.cite);
     if (!cite || cite.length > CITE_MAX) return refuseNoCite(cite.length);
     if (!STANDARD_KINDS.includes(a.kind)) return refuseKindUnknown(a.kind);
-    const issuer = str6(a.issuer);
+    const issuer = str7(a.issuer);
     if (!issuer)
       return refusal15("STANDARD_NO_ISSUER", "a standard names the body that made it. Nothing was written.");
     const texts = textIds(a.text);
@@ -82367,7 +84112,7 @@ var Standards = class {
   }
   /** R5: one standard, with each text passage's standing and whether a newer capture of its document holds it. */
   standardRead({ id = null, viewer = null } = {}) {
-    const sid = str6(id);
+    const sid = str7(id);
     if (!sid) return refuseNoId("standard");
     const row2 = this.#row(sid);
     if (!row2 || !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
@@ -82392,10 +84137,10 @@ var Standards = class {
   }
   /** R7: whether a standard was in force on a date, with why. */
   inForce(id, date) {
-    if (!str6(id)) return refuseNoId("standardinforce");
+    if (!str7(id)) return refuseNoId("standardinforce");
     if (!isDate2(date)) return refuseDateInvalid(date);
-    const row2 = this.#row(str6(id));
-    if (!row2) return refuseNoSuchStandard(str6(id));
+    const row2 = this.#row(str7(id));
+    if (!row2) return refuseNoSuchStandard(str7(id));
     return { ok: true, id: row2.standard_id, date, ...inForceAt({ from: row2.period_from, to: row2.period_to }, date) };
   }
   /** R8: the standards the filters admit, in id order, at most `PAGE_MAX` per page; with `at`, each with R7's answer
@@ -82411,22 +84156,22 @@ var Standards = class {
       where.push("s.kind=?");
       args.push(kind);
     }
-    if (str6(source) === "undetermined") where.push(`json_extract(s.source_json, '$.state')='undetermined'`);
-    else if (str6(source)) {
+    if (str7(source) === "undetermined") where.push(`json_extract(s.source_json, '$.state')='undetermined'`);
+    else if (str7(source)) {
       where.push(`json_extract(s.source_json, '$.source')=?`);
-      args.push(str6(source));
+      args.push(str7(source));
     }
-    if (str6(cite)) {
+    if (str7(cite)) {
       where.push("instr(lower(s.cite), lower(?)) > 0");
-      args.push(str6(cite));
+      args.push(str7(cite));
     }
     if (date) {
       where.push("NOT ((s.period_from IS NOT NULL AND s.period_from > ?) OR (s.period_to IS NOT NULL AND s.period_to < ?))");
       args.push(date, date);
     }
-    if (str6(after)) {
+    if (str7(after)) {
       where.push("s.standard_id > ?");
-      args.push(str6(after));
+      args.push(str7(after));
     }
     const rows = this.#rows(`SELECT s.* FROM standards s JOIN bundles b ON b.bundle_id = s.standard_id
                               WHERE ${where.join(" AND ")} ORDER BY s.standard_id LIMIT ?`, ...args, n + 1);
@@ -82454,17 +84199,17 @@ var Standards = class {
     const a = isObj9(args) ? args : {};
     const unknown = refuseFieldUnknown(a, PROPOSE_KEYS);
     if (unknown) return unknown;
-    const who2 = str6(a.proposer);
+    const who2 = str7(a.proposer);
     if (!who2)
       return refusal15("STANDARD_PROPOSER_UNNAMED", "the plane stamps the proposer from the credential that asked, and this call carries nobody. Nothing was written.");
-    const cite = str6(a.cite);
+    const cite = str7(a.cite);
     if (!cite || cite.length > CITE_MAX) return refuseNoCite(cite.length);
     if (a.kind != null && a.kind !== "" && !STANDARD_KINDS.includes(a.kind)) return refuseKindUnknown(a.kind);
     const texts = a.text == null ? [] : textIds(a.text);
     if (texts === null || texts.length > TEXTS_MAX) return refuseTextUnresolved(null);
     const unresolved = this.#unresolvedText(texts, a.viewer ?? null);
     if (unresolved) return refuseTextUnresolved(unresolved);
-    const why = str6(a.why);
+    const why = str7(a.why);
     if (!why || why.length > WHY_MAX)
       return refusal15(
         "STANDARD_WHY_INVALID",
@@ -82477,7 +84222,7 @@ var Standards = class {
     return this.record.transact(() => {
       const at15 = this.#when();
       const id = this.record.allocId("STDP", at15.slice(0, 4)).id;
-      const kind = a.kind || null, issuer = str6(a.issuer) || null;
+      const kind = a.kind || null, issuer = str7(a.issuer) || null;
       this.sql.exec(
         `INSERT INTO standard_proposals (proposal_id, cite, kind, issuer, text_json, why, act, proposed_by,
                        proposed_at) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -82528,9 +84273,9 @@ var Standards = class {
     if (byMachine) return byMachine;
     const unknown = refuseFieldUnknown(a, ADOPT_KEYS);
     if (unknown) return unknown;
-    const p = this.#proposal(str6(a.proposal));
+    const p = this.#proposal(str7(a.proposal));
     if (!p || a.viewer != null && viewerPredicate(a.viewer).scope === "DENY")
-      return refusal15("STANDARD_NO_SUCH_PROPOSAL", "no proposal of a standard answers to that id here. Nothing was written.", { proposal: str6(a.proposal) || null });
+      return refusal15("STANDARD_NO_SUCH_PROPOSAL", "no proposal of a standard answers to that id here. Nothing was written.", { proposal: str7(a.proposal) || null });
     const done = this.#adoptRefusal(p);
     if (done) return done;
     const fromProposal = [];
@@ -82550,7 +84295,7 @@ var Standards = class {
     };
     const d = this.#declareRefusal(fields);
     if (d.ok === false) return d;
-    const r = this.#write(d.fields, str6(a.author), a.viewer ?? null, p.proposal_id);
+    const r = this.#write(d.fields, str7(a.author), a.viewer ?? null, p.proposal_id);
     if (!r || !r.ok) return r;
     return { ...r, adopted: {
       proposal: p.proposal_id,
@@ -82639,7 +84384,7 @@ function periodOf(p) {
   return { from, to };
 }
 function machineRefusal(author) {
-  if (str6(author) && !isMachineIdentity(str6(author))) return null;
+  if (str7(author) && !isMachineIdentity(str7(author))) return null;
   return refusal15("MACHINE_CANNOT_DECLARE_STANDARD", "recording a standard is a named member's act; a machine proposes one (standardPropose). Nothing was written.");
 }
 function refuseFieldUnknown(a, keys) {
@@ -82703,9 +84448,9 @@ function standardsOps(s, url, body) {
     standardadopt: () => s.standardAdopt({ ...b, viewer: qp("viewer") })
   };
 }
-var instances19 = /* @__PURE__ */ new WeakMap();
+var instances20 = /* @__PURE__ */ new WeakMap();
 function standardsOf(host, deps) {
-  let s = instances19.get(host);
+  let s = instances20.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -82720,7 +84465,7 @@ function standardsOf(host, deps) {
       promotion,
       content: d.content || (() => contentOf(host, { record, membership }))
     });
-    instances19.set(host, s);
+    instances20.set(host, s);
     record.declarePurge("standards", STANDARDS_TABLES);
     promotion.registerStep("standards", { check: (c) => s.check(c) });
   }
@@ -82872,7 +84617,7 @@ function migrateConformance(sql) {
 var OUTCOMES = Object.freeze(["compliant", "noncompliant", "unclear"]);
 var READINGS = Object.freeze(["aligns", "diverges", "open"]);
 var SIGNIFICANCE_KEYS = Object.freeze(["significance", "severity", "priority", "urgency", "rank", "score"]);
-var REASON_MAX = 500;
+var REASON_MAX2 = 500;
 var DETERMINATIONS_PAGE_MAX = 200;
 var LIMITS = Object.freeze({ findings: 50, standards: 50, rows: 200, questions: 20, evidence: 50 });
 var TEXT_MAX = 4e3;
@@ -82880,7 +84625,7 @@ var PROPOSAL_SAYS = "This is a comparison, not a determination: it sets out what
 var FLAG_SAYS = "This is a notice: something this determination rests on changed. The determination and its outcomes are unchanged until a member supersedes it.";
 var UNSEEN = "an object you may not see";
 var DATE_RE4 = /^\d{4}-\d{2}-\d{2}$/;
-var str7 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var str8 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj10 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var text = (v) => typeof v === "string" && v.trim() && v.length <= TEXT_MAX ? v.trim() : null;
 var isDate3 = (v) => typeof v === "string" && DATE_RE4.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
@@ -82978,18 +84723,18 @@ var Conformance = class _Conformance {
    * ===================================================================== */
   /* R1, R13: an empty or machine author. */
   #refuseMachine(author) {
-    if (!str7(author) || isMachineIdentity(author))
+    if (!str8(author) || isMachineIdentity(author))
       return refusal3(
         "MACHINE_CANNOT_DETERMINE",
         "a determination is a member's judgment; this act names no member author, or a machine credential. A machine may prepare a comparison (comparisonPropose). Nothing was written.",
-        { author: str7(author) }
+        { author: str8(author) }
       );
     return null;
   }
   /* R1, R15 (membership R44): a project the viewer sees only at existence answers membership's own refusal; one not
      seen, absent or not a project, one answer: membership's `noSuchProject` (its R78, N274), whose row is its own. */
   #projectRefusal(project, viewer) {
-    const id = str7(project);
+    const id = str8(project);
     const existence = id ? this.membership.existenceAct(id, viewer) : null;
     if (existence) return existence;
     const info = id ? this.record.bundleInfo(id) : null;
@@ -83003,7 +84748,7 @@ var Conformance = class _Conformance {
     const member = this.membership.positionalMember(null, author);
     const denied = member ? this.membership.projectAuthority(project, author, "joined", "determine") : true;
     if (denied)
-      return refusal3("NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. Nothing was written.", { project, author: str7(author) });
+      return refusal3("NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. Nothing was written.", { project, author: str8(author) });
     return null;
   }
   /* The bounds every determination and comparison keeps (LIMITS). */
@@ -83029,11 +84774,11 @@ var Conformance = class _Conformance {
      recorded; otherwise every part is required. With `supersedes` and no act id, the act is the predecessor's (R7). */
   #actOf(act, project, supersedes) {
     const a = isObj10(act) ? act : {};
-    let id = str7(a.id);
-    if (!id && str7(supersedes)) {
+    let id = str8(a.id);
+    if (!id && str8(supersedes)) {
       const prev = this.#one(
         `SELECT act_id FROM determinations WHERE determination_id=? AND project_id=?`,
-        str7(supersedes),
+        str8(supersedes),
         project
       );
       if (prev) id = prev.act_id;
@@ -83071,7 +84816,7 @@ var Conformance = class _Conformance {
       if (!isDate3(from) || !isDate3(to) || to < from)
         return incomplete("period", "the act's period states both ends as dates (YYYY-MM-DD), the end not before the start.");
     }
-    const ev = Array.isArray(a.evidence) ? a.evidence.map(str7) : [];
+    const ev = Array.isArray(a.evidence) ? a.evidence.map(str8) : [];
     if (!ev.length || ev.some((x) => !x)) return incomplete("evidence", "the act names the content that shows it.");
     const unheld = [...new Set(ev)].filter((cid) => {
       try {
@@ -83118,11 +84863,11 @@ var Conformance = class _Conformance {
     const pins = [], seen = /* @__PURE__ */ new Set();
     for (const item of list2) {
       const f8 = isObj10(item) ? {
-        finding: str7(item.finding ?? item.id),
-        version: str7(item.version),
-        case: str7(item.case),
+        finding: str8(item.finding ?? item.id),
+        version: str8(item.version),
+        case: str8(item.case),
         edition: item.edition == null ? null : Number(item.edition)
-      } : { finding: str7(item), version: null, case: null, edition: null };
+      } : { finding: str8(item), version: null, case: null, edition: null };
       let items = [];
       if (f8.finding) {
         let r = null;
@@ -83158,7 +84903,7 @@ var Conformance = class _Conformance {
       return refusal3("NO_STANDARDS", "a determination measures the act against at least one standard the record holds (R14). Nothing was written.");
     const out = [], byId = /* @__PURE__ */ new Map();
     for (const item of list2) {
-      const id = isObj10(item) ? str7(item.standard ?? item.id) : str7(item);
+      const id = isObj10(item) ? str8(item.standard ?? item.id) : str8(item);
       const outcome = isObj10(item) ? item.outcome : void 0;
       let read2 = null;
       try {
@@ -83213,7 +84958,7 @@ var Conformance = class _Conformance {
     };
     for (const [i, r] of list2.entries()) {
       const row2 = isObj10(r) ? r : {};
-      const standard = str7(row2.standard), requires = text(row2.requires), did = text(row2.did);
+      const standard = str8(row2.standard), requires = text(row2.requires), did = text(row2.did);
       const reading = READINGS.includes(row2.reading) ? row2.reading : null;
       if (!standard || !named.has(standard))
         return incomplete(`row ${i} names no standard this determination names.`, { row: i });
@@ -83223,7 +84968,7 @@ var Conformance = class _Conformance {
           !did && "what was done",
           !reading && `a reading (${READINGS.join(", ")})`
         ].filter(Boolean).join(", ")}: each is required.`, { row: i });
-      const content = Array.isArray(row2.content) ? row2.content.map(str7).filter(Boolean).slice(0, LIMITS.evidence) : str7(row2.content) ? [str7(row2.content)] : [];
+      const content = Array.isArray(row2.content) ? row2.content.map(str8).filter(Boolean).slice(0, LIMITS.evidence) : str8(row2.content) ? [str8(row2.content)] : [];
       out.push({ standard, requires, did, reading, content });
     }
     const bare2 = standards.find((s) => !out.some((r) => r.standard === s.standard));
@@ -83242,7 +84987,7 @@ var Conformance = class _Conformance {
       const item = isObj10(x) ? x : { question: x };
       const question = text(item.question);
       if (!question) return bad(`question ${i} states no question.`, { question: i });
-      const inquiry = str7(item.inquiry);
+      const inquiry = str8(item.inquiry);
       if (inquiry) {
         const info = this.record.bundleInfo(inquiry);
         if (!info || normalizeType(info.type) !== "inquiry" || !this.membership.inSight(inquiry, author))
@@ -83257,7 +85002,7 @@ var Conformance = class _Conformance {
   /* R7: `supersedes` names an earlier determination of the same act in the same project, not yet superseded, with a
      reason: an absent one is `NO_REASON`, one over REASON_MAX characters `BAD_REASON` (N233, K264). */
   #supersession(supersedes, reason, act, project, viewer) {
-    const id = str7(supersedes);
+    const id = str8(supersedes);
     if (!id) return { ok: true, prev: null };
     const prev = this.#one(`SELECT * FROM determinations WHERE determination_id=?`, id);
     if (!prev || prev.project_id !== project || this.membership.sight(prev.project_id, viewer) !== Membership.SIGHT_FULL)
@@ -83266,9 +85011,9 @@ var Conformance = class _Conformance {
       return refusal3("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.id}. Nothing was written.`, { supersedes: id, act: act.id, predecessor_act: prev.act_id });
     const why = typeof reason === "string" ? reason.trim() : reason == null ? "" : null;
     if (why === "")
-      return refusal3("NO_REASON", "superseding a determination says why it is superseded; this names no reason. Nothing was written.", { supersedes: id, max: REASON_MAX });
-    if (why === null || why.length > REASON_MAX)
-      return refusal3("BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX });
+      return refusal3("NO_REASON", "superseding a determination says why it is superseded; this names no reason. Nothing was written.", { supersedes: id, max: REASON_MAX2 });
+    if (why === null || why.length > REASON_MAX2)
+      return refusal3("BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX2} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX2 });
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
     if (by)
       return refusal3(
@@ -83300,7 +85045,7 @@ var Conformance = class _Conformance {
     const viewer = input && input.viewer != null ? input.viewer : author;
     const byMachine = this.#refuseMachine(author);
     if (byMachine) return byMachine;
-    const pid = str7(project);
+    const pid = str8(project);
     const unseen = this.#projectRefusal(pid, viewer);
     if (unseen) return unseen;
     const notJoined = this.#participantRefusal(pid, author);
@@ -83331,7 +85076,7 @@ var Conformance = class _Conformance {
     if (!qs.ok) return qs;
     const sig = this.#refuseSignificance(input);
     if (sig) return sig;
-    const drew = str7(proposal);
+    const drew = str8(proposal);
     if (drew && !this.#one(`SELECT proposal_id FROM comparison_proposals WHERE proposal_id=? AND project_id=?`, drew, pid))
       return refuseNoSuchProposal(drew);
     const sup = this.#supersession(supersedes, reason, a.act, pid, viewer);
@@ -83345,7 +85090,7 @@ var Conformance = class _Conformance {
       questions: qs.questions,
       sup,
       proposal: drew,
-      author: str7(author),
+      author: str8(author),
       viewer
     });
   }
@@ -83541,7 +85286,7 @@ var Conformance = class _Conformance {
    * ===================================================================== */
   /* R15: the determination's row when the viewer sees its project in full, else null (absent and unseen alike). */
   #seen(id, viewer) {
-    const r = str7(id) ? this.#one(`SELECT * FROM determinations WHERE determination_id=?`, str7(id)) : null;
+    const r = str8(id) ? this.#one(`SELECT * FROM determinations WHERE determination_id=?`, str8(id)) : null;
     return r && this.membership.sight(r.project_id, viewer) === Membership.SIGHT_FULL ? r : null;
   }
   /** R9: one determination: the act, each standard with its outcome, whether it was in force and its rows (with any
@@ -83722,7 +85467,7 @@ var Conformance = class _Conformance {
         read2 = null;
       }
       if (!read2 || read2.ok === false) continue;
-      if (str7(read2.superseded_by))
+      if (str8(read2.superseded_by))
         add({
           kind: "standard",
           subject: s.standard_id,
@@ -83732,7 +85477,7 @@ var Conformance = class _Conformance {
         });
       for (const t of (Array.isArray(read2.text) ? read2.text : []).slice(0, LIMITS.evidence))
         if (typeof t === "string") passages.add(t);
-        else if (isObj10(t) && str7(t.content_id ?? t.id)) passages.add(str7(t.content_id ?? t.id));
+        else if (isObj10(t) && str8(t.content_id ?? t.id)) passages.add(str8(t.content_id ?? t.id));
     }
     for (const cid of [...passages].slice(0, 2 * LIMITS.evidence)) {
       let n = null;
@@ -83766,36 +85511,36 @@ var Conformance = class _Conformance {
     limit = null,
     viewer = null
   } = {}) {
-    const pid = str7(project);
+    const pid = str8(project);
     if (pid) {
       const unseen = this.#projectRefusal(pid, viewer);
       if (unseen) return unseen;
     }
     const cap = Number.isInteger(Number(limit)) && Number(limit) >= 1 ? Math.min(Number(limit), DETERMINATIONS_PAGE_MAX) : DETERMINATIONS_PAGE_MAX;
     const gate = viewerPredicate(viewer);
-    const where = [`d.determination_id > ?`, `(${gate.sql})`], args = [str7(after) ?? "", ...gate.args];
+    const where = [`d.determination_id > ?`, `(${gate.sql})`], args = [str8(after) ?? "", ...gate.args];
     if (pid) {
       where.push(`d.project_id = ?`);
       args.push(pid);
     }
-    if (str7(act)) {
+    if (str8(act)) {
       where.push(`d.act_id = ?`);
-      args.push(str7(act));
+      args.push(str8(act));
     }
-    if (str7(standard)) {
+    if (str8(standard)) {
       where.push(`EXISTS (SELECT 1 FROM determination_standards s WHERE s.determination_id = d.determination_id
                           AND s.standard_id = ?)`);
-      args.push(str7(standard));
+      args.push(str8(standard));
     }
-    if (str7(outcome)) {
+    if (str8(outcome)) {
       where.push(`EXISTS (SELECT 1 FROM determination_standards s WHERE s.determination_id = d.determination_id
                           AND s.outcome = ?)`);
-      args.push(str7(outcome));
+      args.push(str8(outcome));
     }
-    if (str7(finding3)) {
+    if (str8(finding3)) {
       where.push(`EXISTS (SELECT 1 FROM determination_findings f WHERE f.determination_id = d.determination_id
                           AND f.finding_id = ?)`);
-      args.push(str7(finding3));
+      args.push(str8(finding3));
     }
     if (live === true || live === "true" || live === "1")
       where.push(`NOT EXISTS (SELECT 1 FROM determination_supersessions x WHERE x.superseded = d.determination_id)`);
@@ -83843,7 +85588,7 @@ var Conformance = class _Conformance {
   comparisonPropose(input = {}) {
     const { project = null, act = null, standards = null, rows = null, questions = null, proposer = null } = isObj10(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : proposer;
-    const pid = str7(project);
+    const pid = str8(project);
     const unseen = this.#projectRefusal(pid, viewer);
     if (unseen) return unseen;
     const large = this.#sizeRefusal({ standards, rows, questions, evidence: isObj10(act) ? act.evidence : null });
@@ -83854,7 +85599,7 @@ var Conformance = class _Conformance {
     if (sig) return sig;
     const a = isObj10(act) ? act : {};
     const theAct = {
-      id: str7(a.id),
+      id: str8(a.id),
       description: text(a.description),
       actor: isObj10(a.actor) ? { role: text(a.actor.role), body: text(a.actor.body) } : null,
       at: isDate3(a.at) ? a.at : null,
@@ -83862,19 +85607,19 @@ var Conformance = class _Conformance {
         from: isDate3(a.period.from) ? a.period.from : null,
         to: isDate3(a.period.to) ? a.period.to : null
       } : null,
-      evidence: Array.isArray(a.evidence) ? a.evidence.map(str7).filter(Boolean) : []
+      evidence: Array.isArray(a.evidence) ? a.evidence.map(str8).filter(Boolean) : []
     };
-    const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj10(x) ? str7(x.standard ?? x.id) : str7(x)).filter(Boolean);
+    const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj10(x) ? str8(x.standard ?? x.id) : str8(x)).filter(Boolean);
     const rs = (Array.isArray(rows) ? rows : []).filter(isObj10).map((x) => ({
-      standard: str7(x.standard),
+      standard: str8(x.standard),
       requires: text(x.requires),
       did: text(x.did),
       reading: READINGS.includes(x.reading) ? x.reading : null,
-      content: Array.isArray(x.content) ? x.content.map(str7).filter(Boolean).slice(0, LIMITS.evidence) : []
+      content: Array.isArray(x.content) ? x.content.map(str8).filter(Boolean).slice(0, LIMITS.evidence) : []
     }));
-    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj10(x) ? x : { question: x }).map((x) => ({ question: text(x.question), inquiry: str7(x.inquiry) })).filter((x) => x.question);
+    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj10(x) ? x : { question: x }).map((x) => ({ question: text(x.question), inquiry: str8(x.inquiry) })).filter((x) => x.question);
     const at15 = this.#when();
-    const who2 = str7(proposer);
+    const who2 = str8(proposer);
     let id = null;
     this.record.transact(() => {
       id = this.record.allocId("CMP", at15.slice(0, 4)).id;
@@ -83900,7 +85645,7 @@ var Conformance = class _Conformance {
   }
   /** R12: one proposal, its label and the determinations that drew on it; absent, unseen and another project's alike. */
   comparisonRead({ id = null, viewer = null } = {}) {
-    const r = str7(id) ? this.#one(`SELECT * FROM comparison_proposals WHERE proposal_id=?`, str7(id)) : null;
+    const r = str8(id) ? this.#one(`SELECT * FROM comparison_proposals WHERE proposal_id=?`, str8(id)) : null;
     if (!r || this.membership.sight(r.project_id, viewer) !== Membership.SIGHT_FULL) return refuseNoSuchProposal(id);
     return { ok: true, proposal: this.#proposalView(r, viewer) };
   }
@@ -83930,16 +85675,16 @@ var Conformance = class _Conformance {
    *  newer capture (affected or undetermined) flags every determination whose act it evidences. Recorded once; the
    *  determination itself is not touched. */
   basisChanged(event2) {
-    if (!isObj10(event2) || !str7(event2.subject)) return { flagged: 0 };
+    if (!isObj10(event2) || !str8(event2.subject)) return { flagged: 0 };
     const kind = event2.kind === "passage" ? "passage" : "finding";
     if (kind === "passage" && !["affected", "undetermined"].includes(event2.affects)) return { flagged: 0 };
-    const subject = str7(event2.subject);
+    const subject = str8(event2.subject);
     const ids = kind === "finding" ? this.#rows(`SELECT DISTINCT determination_id FROM determination_findings WHERE finding_id=?
                     ORDER BY determination_id LIMIT 1000`, subject) : this.#rows(`SELECT d.determination_id FROM determinations d, json_each(d.act_evidence) e WHERE e.value=?
                     ORDER BY d.determination_id LIMIT 1000`, subject);
     const at15 = this.#when();
-    const source = str7(event2.source) ?? (kind === "passage" ? "newer_capture" : "changed");
-    const since = str7(event2.since) ?? "";
+    const source = str8(event2.source) ?? (kind === "passage" ? "newer_capture" : "changed");
+    const since = str8(event2.since) ?? "";
     const detail = typeof event2.detail === "string" ? event2.detail.slice(0, 500) : null;
     this.record.transact(() => {
       for (const { determination_id } of ids)
@@ -83971,10 +85716,10 @@ var Conformance = class _Conformance {
   }
 };
 function refuseNoSuchDetermination(id) {
-  return refusal3("NO_SUCH_DETERMINATION", "no determination answers to that id here. One you may not see answers exactly as one that does not exist.", { id: str7(id) });
+  return refusal3("NO_SUCH_DETERMINATION", "no determination answers to that id here. One you may not see answers exactly as one that does not exist.", { id: str8(id) });
 }
 function refuseNoSuchProposal(id) {
-  return refusal3("NO_SUCH_PROPOSAL", "no comparison answers to that id in this project. One you may not see answers exactly as one that does not exist. Nothing was written.", { proposal: str7(id) });
+  return refusal3("NO_SUCH_PROPOSAL", "no comparison answers to that id in this project. One you may not see answers exactly as one that does not exist. Nothing was written.", { proposal: str8(id) });
 }
 function determinationDoc({ id, project, act, pins, standards, rows, questions, sup, proposal, author, at: at15 }) {
   const when = act.at ? `on ${act.at}` : `from ${act.period.from} to ${act.period.to}`;
@@ -84038,9 +85783,9 @@ function determinationDoc({ id, project, act, pins, standards, rows, questions, 
   ];
   return lines.join("\n");
 }
-var instances20 = /* @__PURE__ */ new WeakMap();
+var instances21 = /* @__PURE__ */ new WeakMap();
 function conformanceOf(host, deps) {
-  let c = instances20.get(host);
+  let c = instances21.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -84048,7 +85793,7 @@ function conformanceOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Conformance({ ...d, host, storage, record, membership, promotion });
-    instances20.set(host, c);
+    instances21.set(host, c);
     c.migrate();
     record.declarePurge("conformance", CONFORMANCE_TABLES);
     promotion.registerStep("conformance", { check: (x) => c.check(x) });
@@ -84289,7 +86034,7 @@ function migrateActions(sql) {
 }
 
 // src/actions/index.mjs
-var NOTE_MAX3 = 500;
+var NOTE_MAX4 = 500;
 var CORRESPOND_LEASE_MS = 3e4;
 var LAW_PROPOSALS_READ_MAX = 12;
 var RISK_PROPOSALS_READ_MAX = 12;
@@ -85042,11 +86787,11 @@ var Actions = class _Actions {
         reason: "ACTION_MOVE_NO_REASON",
         detail: "an action moves for a stated reason, authored by the member moving it and never prefilled. A state change with no account of why cannot be checked by anyone."
       };
-    if (why.length > NOTE_MAX3 || /["\\\r\n]/.test(why))
+    if (why.length > NOTE_MAX4 || /["\\\r\n]/.test(why))
       return {
         ok: false,
         reason: "BAD_REASON",
-        detail: `reason is at most ${NOTE_MAX3} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
+        detail: `reason is at most ${NOTE_MAX4} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
       };
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one action moves at a time: pass target=<action id>" };
@@ -85300,11 +87045,11 @@ Reason: ${why}
         detail: "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)."
       };
     for (const [name, v] of [["account", acct], ["medium", String(medium ?? "")], ["party", String(party ?? "")]])
-      if (v.length > NOTE_MAX3 || /["\\\r\n]/.test(v))
+      if (v.length > NOTE_MAX4 || /["\\\r\n]/.test(v))
         return {
           ok: false,
           reason: `BAD_${name.toUpperCase()}`,
-          detail: `${name} is at most ${NOTE_MAX3} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
+          detail: `${name} is at most ${NOTE_MAX4} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
         };
     const quote = {};
     for (const [k, v] of [
@@ -85342,7 +87087,7 @@ Reason: ${why}
         ...extra || {}
       };
     };
-    for (const [k, max] of [["exemptions", NOTE_MAX3], ["due_cite", CITATION_MAX]])
+    for (const [k, max] of [["exemptions", NOTE_MAX4], ["due_cite", CITATION_MAX]])
       if (life[k] !== void 0 && (life[k].length > max || /["\\\r\n]/.test(life[k])))
         return refusal18(
           "LIFECYCLE_TEXT_UNWRITABLE",
@@ -85358,10 +87103,10 @@ Reason: ${why}
         );
       }
     for (const k of ["quote_currency", "quote_basis"])
-      if (quote[k] !== void 0 && (quote[k].length > NOTE_MAX3 || /["\\\r\n]/.test(quote[k])))
+      if (quote[k] !== void 0 && (quote[k].length > NOTE_MAX4 || /["\\\r\n]/.test(quote[k])))
         return refusal18(
           "QUOTE_TEXT_UNWRITABLE",
-          `${k} is at most ${NOTE_MAX3} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`,
+          `${k} is at most ${NOTE_MAX4} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`,
           { field: k }
         );
     const gate = viewerPredicate(viewer);
@@ -86730,9 +88475,9 @@ function computeDeadline(d, fm, view) {
   }
   return { date: iso3(t), start };
 }
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances22 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances21.get(host);
+  let a = instances22.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -86740,7 +88485,7 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances21.set(host, a);
+    instances22.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
@@ -87634,9 +89379,9 @@ var Ratification = class _Ratification {
     return caseMemberImageFindings(image, parseFrontmatter);
   }
 };
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function ratificationOf(host, deps) {
-  let r = instances22.get(host);
+  let r = instances23.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -87644,7 +89389,7 @@ function ratificationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
-    instances22.set(host, r);
+    instances23.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument2);
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
     record.registerAuditCheck("ratification", (image) => r.audit(image));
@@ -87838,1700 +89583,14 @@ var AffordanceFacts = class {
     };
   }
 };
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances23.get(host);
+  let a = instances24.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances23.set(host, a);
+    instances24.set(host, a);
   }
   return a;
-}
-
-// src/progressions/schema.mjs
-var PROGRESSIONS_SCHEMA = `
--- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
--- section 8.2, "generalises the connection table rather than sitting beside it"). A
--- definition is a named ordered set of STAGES with the rules a progression's junction
--- checks need: after, cardinality, interval, required-ness. This is DATA in the record,
--- not cases in a switch, so the set can be authored and (later) edited through a UI.
--- BOTH of Bob's example progressions must be expressible as rows here -- the meeting
--- chain (meeting -> agenda -> minutes) AND the procurement chain (need -> award ->
--- signed contract) -- or the generalisation has not been made (the acceptance).
---
--- A progression definition is a CLAIM the group is making about how its institutions
--- OUGHT to behave (framework 8.1's connection-table note 3), so it is FIRST-CLASS
--- member-declared state carrying its author and date -- like the subject registry
--- (entities), NOT a projection of the corpus. So a whole-store purge (the scratch-reset
--- tool) clears it, but a per-bundle purge leaves it (it has no bundle_id). The connection
--- table above is the TWO-STAGE case of this one (framework: "a connection row is a
--- progression of two stages; nothing needs both"); they are one construct at two
--- generalities, not two tables beside each other.
-CREATE TABLE IF NOT EXISTS progression_defs (
-  progression_key TEXT PRIMARY KEY,
-  label           TEXT NOT NULL,
-  note            TEXT,
-  declared_by     TEXT,
-  at              TEXT
-);
--- The ordered STAGES of a progression definition. after_stage names the stage this one
--- PRESUPPOSES (framework 8.2: "read forwards it predicts; read backwards it accuses" --
--- the MISSING PREDECESSOR is slice B), NULL for the first stage. cardinality is 1 / 0..1
--- / 0..n (an RFP has many responses; an award has one contract). within_interval is the
--- clock that makes an absence OVERDUE rather than pending (NULL = no clock). required is
--- always / usually / sometimes / never / unless_exception (a lawful skip needs an
--- exception document -- slice B). stage_no is the ordinal, so the stages read in order
--- without depending on after_stage forming a single line (a real chain can branch).
--- Keyed (progression_key, stage_key). Cleared with its definition by a whole-store purge.
-CREATE TABLE IF NOT EXISTS progression_stages (
-  progression_key TEXT NOT NULL,
-  stage_key       TEXT NOT NULL,
-  stage_no        INTEGER NOT NULL,
-  label           TEXT,
-  after_stage     TEXT,
-  cardinality     TEXT NOT NULL,
-  within_interval TEXT,
-  required        TEXT NOT NULL,
-  PRIMARY KEY (progression_key, stage_key)
-);
-CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progression_key);
--- D-128 (framework 8.2, The declared flow and its revisions, BOB #27 2026-09-22): a definition is
--- APPEND-ONLY. The two tables above are the CURRENT version, the one every instance and finding
--- is derived against, and these two hold EVERY version ever declared, never updated and never
--- deleted but by a whole-store purge. A revision writes version N+1 carrying its author, date and
--- BASIS (the member's statement and a citation, the anatomy an exception document carries); the
--- prior version stands and reads back through op=progression with version=N. A definition
--- declared before D-128 has no rows here -- the store reads it as version 1 with its basis NOT
--- RECORDED, and its first revision writes that version here first, verbatim from the tables above.
--- basis_statement and basis_citation are NULL when the declaring member stated none, which only a
--- FIRST version may do; a revision is refused without both.
-CREATE TABLE IF NOT EXISTS progression_def_versions (
-  progression_key TEXT NOT NULL,
-  version         INTEGER NOT NULL,
-  label           TEXT NOT NULL,
-  note            TEXT,
-  declared_by     TEXT,
-  at              TEXT,
-  basis_statement TEXT,
-  basis_citation  TEXT,
-  PRIMARY KEY (progression_key, version)
-);
-CREATE TABLE IF NOT EXISTS progression_stage_versions (
-  progression_key TEXT NOT NULL,
-  version         INTEGER NOT NULL,
-  stage_key       TEXT NOT NULL,
-  stage_no        INTEGER NOT NULL,
-  label           TEXT,
-  after_stage     TEXT,
-  cardinality     TEXT NOT NULL,
-  within_interval TEXT,
-  required        TEXT NOT NULL,
-  PRIMARY KEY (progression_key, version, stage_key)
-);
--- CONSTRUCTS Step 5, SLICE B (FW-9): a PROGRESSION INSTANCE -- an actual N-stage chain of
--- REAL captured documents threaded through a definition's stages by a THREADING ENTITY (a
--- contract number, a project id, a fund). Framework 8.2: "an instance of a progression is
--- assembled by following an entity" -- which is why the entity axis is Step 4 and this is
--- Step 5. Each row is ONE captured document placed at ONE stage of ONE instance; the
--- instance is all rows sharing (progression_key, entity_id). The INSTANCE GRADE (the
--- weakest connection along the chain, framework 8.2's D-73 pair->chain generalised beyond
--- FW-8's two-node base case) and the MISSING-PREDECESSOR findings are DERIVED on read from
--- these rows plus the definition -- NEVER stored as a grade that could go stale, so an
--- instance read reflects the live definition and the documents still held (undetermined is
--- honest; a grade is never invented). grade here is the DOCUMENT's own end-grade: the
--- STRONGEST 8.1 resolution of THIS capture to the threading entity (the same collapse
--- op=concerns and op=connect make), so a placement records how well its document is tied to
--- the subject, and the chain math takes the weaker end of each consecutive pair.
---
--- A placement is only admitted for a document that ACTUALLY resolves to the threading
--- entity (FW-7): a document that does not concern the entity cannot be threaded on it (an
--- equality a caller can hand us is one a caller can invent). Which STAGE a document fills is
--- the member's authored judgment (this document is the award, that one the contract), so
--- threaded_by is stamped server-side; the GRADE is the record's, never the caller's.
---
--- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly
--- as resolutions do (it is in op=purge's TABLES): a per-bundle purge removes that document's
--- placements and the instance honestly re-reads with that stage now unfilled, and a
--- whole-store purge takes them all (D-113). EXCEPTION documents that discharge a lawful
--- skip, JUNCTION checks as findings, and the SCHEDULED task that walks this table for
--- missing predecessors are DEFERRED past FW-9.
-CREATE TABLE IF NOT EXISTS progression_instances (
-  progression_key TEXT NOT NULL,
-  entity_id       TEXT NOT NULL,
-  stage_key       TEXT NOT NULL,
-  capture_sha     TEXT NOT NULL,
-  bundle_id       TEXT NOT NULL,
-  grade           TEXT NOT NULL,
-  threaded_by     TEXT,
-  at              TEXT,
-  PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha)
-);
-CREATE INDEX IF NOT EXISTS progression_instances_key ON progression_instances(progression_key, entity_id);
-CREATE INDEX IF NOT EXISTS progression_instances_bundle ON progression_instances(bundle_id);
-CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instances(capture_sha);
--- CONSTRUCTS Step 5, SLICE C (FW-10): an EXCEPTION DOCUMENT that discharges a LEGITIMATE SKIP
--- (framework 8.2: "a sole-source award skips the solicitation stage lawfully ... a skipped
--- stage with no exception document is [a finding]. The table records which document discharges
--- which skip"). A row is a REAL captured document, threaded onto ONE progression instance and
--- NAMING the ONE stage it discharges, carrying a reason and a citation -- the justification an
--- institution is supposed to publish for the skip, the same statement anatomy FW-8's declared
--- relations carry (justification + citation, both NOT NULL). Keyed
--- (progression_key, entity_id, stage_key, capture_sha) so a stage may be discharged by several
--- documents and re-recording the same document at a stage UPSERTS in place.
---
--- A discharge must be EARNED, enforced by the write path (op=discharge), never by a caller's
--- bare assertion (an equality a caller can hand us is one a caller can invent): the document
--- must ACTUALLY resolve to the threading entity (FW-7) -- refused NOT_CONCERNED otherwise, the
--- same gate op=thread uses -- and must name a REAL stage of the definition (BAD_STAGE
--- otherwise). Whether the discharge APPLIES is derived ON READ in #assembleInstance: only a
--- REQUIRED stage that is actually MISSING is discharged (rendered a distinct "discharged"
--- state carrying this reason/citation, never a gap and never silently absent); an exception
--- naming a stage that is not missing discharges nothing (the stage is present, so there is no
--- skip to discharge). Derived findings inform, they do not decide -- so this table stores the
--- documents, not a stored "discharged" boolean that could go stale against the live placements.
---
--- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly as
--- progression_instances do (it is in op=purge's TABLES): a per-bundle purge removes that
--- document's discharges and the stage honestly re-reads as an undischarged gap; a whole-store
--- purge takes them all (D-113). JUNCTION checks as findings and the SCHEDULED walking-task are
--- DEFERRED past FW-10.
-CREATE TABLE IF NOT EXISTS progression_exceptions (
-  progression_key TEXT NOT NULL,
-  entity_id       TEXT NOT NULL,
-  stage_key       TEXT NOT NULL,
-  capture_sha     TEXT NOT NULL,
-  bundle_id       TEXT NOT NULL,
-  reason          TEXT NOT NULL,
-  citation        TEXT NOT NULL,
-  declared_by     TEXT,
-  at              TEXT,
-  PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha)
-);
-CREATE INDEX IF NOT EXISTS progression_exceptions_key ON progression_exceptions(progression_key, entity_id);
-CREATE INDEX IF NOT EXISTS progression_exceptions_bundle ON progression_exceptions(bundle_id);
-CREATE INDEX IF NOT EXISTS progression_exceptions_capture ON progression_exceptions(capture_sha);
--- K102 (R8): EVERY THREADING OF AN INSTANCE IS A DATED VERSION. progression_instances above holds
--- the CURRENT placements, the ones an instance is read against; these two hold every threading ever
--- made, numbered from 1 per (progression_key, entity_id), with who threaded it and when, never
--- updated and never deleted but by a purge. An instance threaded before versions were kept has no
--- rows here: its first re-threading writes the placements it replaces as version 1 first, verbatim
--- from the current rows, their threader and instant as those rows recorded them.
-CREATE TABLE IF NOT EXISTS progression_threads (
-  progression_key TEXT NOT NULL,
-  entity_id       TEXT NOT NULL,
-  version         INTEGER NOT NULL,
-  threaded_by     TEXT,
-  at              TEXT,
-  PRIMARY KEY (progression_key, entity_id, version)
-);
--- One row per placement of one threading. Carries bundle_id so a per-bundle purge takes that
--- document's placements from every version, as it does from the current one (K23).
-CREATE TABLE IF NOT EXISTS progression_thread_placements (
-  progression_key TEXT NOT NULL,
-  entity_id       TEXT NOT NULL,
-  version         INTEGER NOT NULL,
-  stage_key       TEXT NOT NULL,
-  capture_sha     TEXT NOT NULL,
-  bundle_id       TEXT NOT NULL,
-  grade           TEXT NOT NULL,
-  PRIMARY KEY (progression_key, entity_id, version, stage_key, capture_sha)
-);
-CREATE INDEX IF NOT EXISTS progression_thread_placements_bundle ON progression_thread_placements(bundle_id);
--- K102 (R14): EVERY RECORDING OF AN EXCEPTION DOCUMENT IS A DATED VERSION. progression_exceptions
--- above holds the CURRENT one per (instance, stage, document), the one that applies; this holds every
--- recording, numbered from 1, never updated. A row recorded before versions were kept has none
--- here: its next recording writes it as version 1 first, verbatim.
-CREATE TABLE IF NOT EXISTS progression_exception_versions (
-  progression_key TEXT NOT NULL,
-  entity_id       TEXT NOT NULL,
-  stage_key       TEXT NOT NULL,
-  capture_sha     TEXT NOT NULL,
-  version         INTEGER NOT NULL,
-  bundle_id       TEXT NOT NULL,
-  reason          TEXT NOT NULL,
-  citation        TEXT NOT NULL,
-  declared_by     TEXT,
-  at              TEXT,
-  PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha, version)
-);
-CREATE INDEX IF NOT EXISTS progression_exception_versions_bundle ON progression_exception_versions(bundle_id);
--- REC-7 / D-79: the PROPOSAL-DISPOSITION store. A derived proposal (REC-6's
--- op=proposals: one missing-predecessor finding per (progression_key, stage_key),
--- aggregated across the instances that fire it) is NOT a bundle, so a member who
--- defers or dismisses it has nowhere to land a disposition -- op=dispose disposes
--- a focus BUNDLE (a handle + a state), and declining a proposal must NOT mint a
--- bundle, because declining is not authoring (D-79). This table is that home: it
--- records that a member aged the record's own question, keyed by the SAME identity
--- REC-6 aggregates by, so the disposition attaches to the proposal and not to any
--- one instance beneath it.
---
--- D-79's AGE RATHER THAN VANISH: a machine-surfaced finding nobody has acted on
--- moves to deferred/dismissed with the reason recorded, never silently
--- disappearing, because a finding that disappears is indistinguishable from one
--- never made -- and that rule does not relax because the finder was a machine.
--- This row IS the ageing: op=proposals reads it, filters the aged proposal out of
--- the OPEN feed, and returns it alongside so the decision stays on the record.
--- state is 'deferred' (parked, returnable) or 'dismissed' (declined); both age the
--- proposal out of open. A re-disposition UPSERTS on the (progression_key,
--- stage_key) key -- the same proposal re-decided keeps ONE row, re-triageable,
--- never a second. decided_by is the deciding member, STAMPED server-side (never
--- the caller's word). A re-fired proposal whose gap still exists but was dismissed
--- stays dismissed with its reason until this row changes: the key is the identity,
--- not the instance set, so a wider gap does not silently resurrect it.
---
--- Member-authored state (a member's decision), not a projection of the corpus --
--- like the registry and the progression definitions above -- but op=purge is the
--- scratch-reset tool, so a whole-store purge that reported scope ALL while leaving
--- dispositions is the D-113 silent-leftover: cleared in the whole-store arm only,
--- left by a per-bundle purge (it has no bundle_id). hygiene.test.mjs asserts this
--- against schema.mjs.
-CREATE TABLE IF NOT EXISTS proposal_dispositions (
-  progression_key TEXT NOT NULL,
-  stage_key       TEXT NOT NULL,
-  state           TEXT NOT NULL,
-  reason          TEXT NOT NULL,
-  decided_by      TEXT,
-  at              TEXT,
-  definition_version INTEGER,   -- REC-184: the progression definition version the decision was taken against
-  PRIMARY KEY (progression_key, stage_key)
-);
--- REC-184 (framework 8.2, The declared flow and its revisions): definition_version is the version of
--- the progression definition CURRENT when the member decided, stamped by the store and never the
--- caller's word. A decision applies only to the version it was taken against -- once the definition
--- is revised the proposal is OPEN again, with the earlier decision published beside it, because a
--- decision the record applies to a definition nobody judged is the record claiming more than it
--- holds. NULLABLE AND NEVER BACK-FILLED: a row written before this column existed recorded no
--- version, and the only value a backfill could reach for is the current one, which is the claim
--- this column exists to test. NULL reads back as not recorded, stated, and such a row governs
--- only while the definition has not been declared again since the decision was taken (the
--- definition's own at against the row's at) -- the version stays unknown, the ORDER is recorded.
-CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
-`;
-var PROGRESSIONS_TABLES = [
-  "progression_instances",
-  "progression_exceptions",
-  "progression_thread_placements",
-  "progression_exception_versions",
-  { name: "progression_defs", keys: [] },
-  { name: "progression_stages", keys: [] },
-  { name: "progression_def_versions", keys: [] },
-  { name: "progression_stage_versions", keys: [] },
-  { name: "progression_threads", keys: [] },
-  { name: "proposal_dispositions", keys: [] }
-];
-function migrateProgressions(sql) {
-  const bare2 = PROGRESSIONS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  const stmts = bare2.split(";").map((x) => x.trim()).filter(Boolean);
-  const info = [...sql.exec(`PRAGMA table_info(proposal_dispositions)`)];
-  if (info.length && !info.some((r) => r.name === "definition_version"))
-    sql.exec(`ALTER TABLE proposal_dispositions ADD COLUMN definition_version INTEGER`);
-  for (const s of stmts) sql.exec(s);
-}
-
-// src/progressions/index.mjs
-var STAGE_REQUIREDNESS = Object.freeze(["always", "usually", "sometimes", "never", "unless_exception"]);
-var DISPOSITION_REASON_MAX = 160;
-var NOTE_MAX4 = 1e3;
-var BASIS_MAX = 4e3;
-var CITATION_MAX2 = 2e3;
-var REASON_MAX2 = 4e3;
-var REQUIRED_FIRES = /* @__PURE__ */ new Set(["always", "usually", "unless_exception"]);
-var SINGLE = /* @__PURE__ */ new Set(["1", "0..1"]);
-var DISPOSE_ITEM_KEYS = [["key"], ["progressionKey", "stageKey"]];
-var DISPOSE_SHARED_KEYS = ["to", "reason", "definitionVersion"];
-var str8 = (v) => typeof v === "string" ? v.trim() : "";
-var basisView = (statement, citation) => ({ statement: statement ?? null, citation: citation ?? null, stated: statement != null });
-function dispositionVersionView(d, cur) {
-  const recorded = d.definition_version != null;
-  const current = cur ? cur.version : null;
-  let applies, because;
-  if (!cur) {
-    applies = false;
-    because = "definition_not_declared";
-  } else if (recorded) {
-    applies = Number(d.definition_version) === current;
-    because = applies ? "decided_against_current_version" : "decided_against_earlier_version";
-  } else if (cur.at == null || d.at == null || String(cur.at) === String(d.at)) {
-    applies = false;
-    because = "version_not_recorded_order_undetermined";
-  } else if (String(cur.at) > String(d.at)) {
-    applies = false;
-    because = "version_not_recorded_definition_declared_since";
-  } else {
-    applies = true;
-    because = "version_not_recorded_definition_not_declared_since";
-  }
-  return {
-    definition_version: recorded ? Number(d.definition_version) : null,
-    definition_version_state: recorded ? "recorded" : "not recorded",
-    current_definition_version: current,
-    applies,
-    applies_because: because
-  };
-}
-function dispositionOnFinding(d, cur) {
-  const v = dispositionVersionView(d, cur);
-  return {
-    state: d.state,
-    reason: d.reason,
-    decided_by: d.decided_by,
-    at: d.at,
-    definition_version: v.definition_version,
-    definition_version_state: v.definition_version_state,
-    applies: v.applies,
-    applies_because: v.applies_because
-  };
-}
-function intervalDeadlineMs(anchorMs, within) {
-  if (typeof within !== "string") return null;
-  const m = within.trim().match(/^(\d+)\s*(day|days|week|weeks|month|months|year|years)$/i);
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  if (!Number.isFinite(n)) return null;
-  const unit = m[2].toLowerCase();
-  if (unit.startsWith("day")) return anchorMs + n * 864e5;
-  if (unit.startsWith("week")) return anchorMs + n * 7 * 864e5;
-  const d = new Date(anchorMs);
-  if (unit.startsWith("month")) {
-    d.setUTCMonth(d.getUTCMonth() + n);
-    return d.getTime();
-  }
-  d.setUTCFullYear(d.getUTCFullYear() + n);
-  return d.getTime();
-}
-var Progressions = class {
-  constructor({ storage, record, extraction, provenance, entities, connections, env = null, now = null, nowMs = null }) {
-    this.storage = storage;
-    this.sql = storage.sql;
-    this.record = record;
-    this.extraction = extraction;
-    this.provenance = provenance;
-    this.entities = entities;
-    this.connections = connections;
-    this.env = env;
-    this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
-    this.clockMs = typeof nowMs === "function" ? nowMs : null;
-    this.threadListeners = [];
-  }
-  #rows(q6, ...a) {
-    return [...this.sql.exec(q6, ...a)];
-  }
-  #one(q6, ...a) {
-    const r = this.#rows(q6, ...a);
-    return r.length ? r[0] : null;
-  }
-  #rank(g) {
-    return gradeRank[g];
-  }
-  /** The module's tables, with the migration an earlier store's shape needs (REC-184's column). */
-  migrate() {
-    migrateProgressions(this.sql);
-  }
-  /* R16: now is the caller's instant (milliseconds; an absent value is null or "", never the epoch), else the instance's
-     configured clock, else the wall clock. */
-  nowMs(explicit) {
-    if (explicit !== void 0 && explicit !== null && explicit !== "") {
-      const e = Number(explicit);
-      if (Number.isFinite(e) && e >= 0) return e;
-    }
-    if (this.clockMs) {
-      const c = Number(this.clockMs());
-      if (Number.isFinite(c) && c >= 0) return c;
-    }
-    const raw = this.env ? this.env.BIO_NOW_MS : void 0;
-    const v = raw === void 0 || raw === null || raw === "" ? NaN : Number(raw);
-    if (Number.isFinite(v) && v >= 0) return v;
-    return Date.now();
-  }
-  /* R13, R15: a bundle id is withheld from a viewer who may not see it: membership's one predicate (its R43) over
-     record-core's `bundles` read contract (its R37). An absent or unrecognised viewer sees nothing. */
-  #redactor(viewer) {
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "member") return (id) => id ?? null;
-    if (gate.scope === "DENY") return (id) => id ? null : id ?? null;
-    const memo = /* @__PURE__ */ new Map();
-    return (id) => {
-      if (!id) return id ?? null;
-      if (!memo.has(id))
-        memo.set(id, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args));
-      return memo.get(id) ? id : null;
-    };
-  }
-  /* ===================================================================== *
-   * THE REFUSALS SEVERAL ACTS ANSWER (R6, R14, R21; K231, N242): each code is minted in its one helper, which
-   * answers the refusal or null; every act that asks the question calls it with its own sentence and fields.
-   * ===================================================================== */
-  /* C-100.11: no definition of this key has been declared. */
-  #declared(key, detail) {
-    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, key))
-      return refusal12(
-        "NO_SUCH_PROGRESSION",
-        detail,
-        { progression_key: key }
-      );
-    return null;
-  }
-  /* R6, R9, R14, R15 (N285): the request names no entity (`entityId` as the caller sent it; blank is none). An instance
-     is (progression, entity), so such a request says nothing about whose instance it means: entities' one answer (its
-     R37, `noEntity`), minted there. */
-  #entityNamed(entityId, detail) {
-    return str8(entityId) ? null : noEntity(detail);
-  }
-  /* C-100.13: the request names no stage. */
-  #stageNamed(stageKey, detail, extra = {}) {
-    if (!stageKey)
-      return refusal12(
-        "NO_STAGE",
-        detail,
-        extra
-      );
-    return null;
-  }
-  /* C-100.14: the stage named is not a stage of the definition as it is declared now. */
-  #stageOf(key, stageKey, detail, extra = {}) {
-    if (!this.#one(`SELECT 1 AS x FROM progression_stages WHERE progression_key=? AND stage_key=?`, key, stageKey))
-      return refusal12(
-        "BAD_STAGE",
-        detail,
-        extra
-      );
-    return null;
-  }
-  /* C-100.15: the request names no captured document. */
-  #documentNamed(captureSha, detail, extra = {}) {
-    if (!captureSha)
-      return refusal12(
-        "NO_CAPTURE",
-        detail,
-        extra
-      );
-    return null;
-  }
-  /* C-100.17: the document does not resolve to the entity (`resolution` is its strongest resolution, or absent). */
-  #concerned(resolution, detail, extra = {}) {
-    if (!resolution)
-      return refusal12(
-        "NOT_CONCERNED",
-        detail,
-        extra
-      );
-    return null;
-  }
-  /* C-100.18: the act carries no reason (`reason` already trimmed by the act, each by its own rule). */
-  #reasonStated(reason, detail) {
-    if (!reason)
-      return refusal12(
-        "NO_REASON",
-        detail,
-        {}
-      );
-    return null;
-  }
-  /* ===================================================================== *
-   * THE DECLARED FLOW (R1–R5; FW-8, D-128).
-   * ===================================================================== */
-  /* The CURRENT version of a definition, the one every instance and finding is derived against. A definition with no
-     version rows was declared before versions were kept and reads as version 1, basis not recorded. null if never
-     declared. */
-  #current(key) {
-    const def = this.#one(`SELECT progression_key, label, note, declared_by, at FROM progression_defs WHERE progression_key=?`, key);
-    if (!def) return null;
-    const stages = this.#rows(
-      `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
-         FROM progression_stages WHERE progression_key=? ORDER BY stage_no`,
-      key
-    );
-    const v = this.#one(
-      `SELECT version, basis_statement, basis_citation FROM progression_def_versions
-         WHERE progression_key=? ORDER BY version DESC LIMIT 1`,
-      key
-    );
-    return {
-      ...def,
-      stages,
-      version: v ? v.version : 1,
-      version_recorded: !!v,
-      basis: v ? basisView(v.basis_statement, v.basis_citation) : basisView(null, null)
-    };
-  }
-  /* REC-184: the current version's number and the instant it came to stand: the one reader the instance, the act and
-     the feed share, so which version is current has one answer. null if never declared. */
-  definitionVersionOf(key) {
-    const def = this.#one(`SELECT at FROM progression_defs WHERE progression_key=?`, key);
-    if (!def) return null;
-    const v = this.#one(`SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`, key);
-    return { version: v && v.v != null ? v.v : 1, at: def.at ?? null };
-  }
-  /* R23: one version, appended; a second write of the same version is an error, never an overwrite. */
-  #writeVersion(key, version, def, stages, statement, citation) {
-    this.sql.exec(
-      `INSERT INTO progression_def_versions (progression_key,version,label,note,declared_by,at,basis_statement,basis_citation)
-       VALUES (?,?,?,?,?,?,?,?)`,
-      key,
-      version,
-      def.label,
-      def.note ?? null,
-      def.declared_by ?? null,
-      def.at ?? null,
-      statement,
-      citation
-    );
-    for (const s of stages)
-      this.sql.exec(
-        `INSERT INTO progression_stage_versions (progression_key,version,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
-         VALUES (?,?,?,?,?,?,?,?,?)`,
-        key,
-        version,
-        s.stage_key,
-        s.stage_no,
-        s.label ?? null,
-        s.after_stage ?? null,
-        s.cardinality,
-        s.within_interval ?? null,
-        s.required
-      );
-  }
-  /** R1–R4 (`op=progressiondefine`): declare a flow as data: ordered stages with what each presupposes, how many
-   *  documents it may hold, how soon it must follow and whether it is required. A definition is APPEND-ONLY (D-128): a
-   *  declaration that changes anything is a revision, version N+1 with its basis; one identical to the current version
-   *  writes nothing. The declarer is the control plane's stamp (R26). */
-  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
-    if (!str8(progressionKey))
-      return generic("NO_KEY", "a progression definition is named by a key, e.g. 'meeting' or 'procurement'");
-    const key = str8(progressionKey);
-    if (!str8(label))
-      return refusal12(
-        "PROGRESSION_NO_LABEL",
-        "a progression definition carries a human label, the name a member reads it by beside its key"
-      );
-    if (!Array.isArray(stages) || stages.length === 0)
-      return refusal12(
-        "NO_STAGES",
-        "a progression is its ordered stages, each a key with how many documents it holds and how firmly it is expected; name at least one"
-      );
-    const norm = [];
-    const seen = /* @__PURE__ */ new Set();
-    for (let i = 0; i < stages.length; i++) {
-      const s = stages[i] || {};
-      const sk = str8(s.key) || str8(s.stageKey);
-      if (!sk)
-        return refusal12(
-          "NO_STAGE_KEY",
-          `stage ${i + 1} has no key, so nothing could later be placed at it or found missing from it`,
-          { stage: i + 1 }
-        );
-      if (seen.has(sk))
-        return refusal12(
-          "DUPLICATE_STAGE",
-          `stage key '${sk}' appears twice, so a document placed at it could belong to either stage`,
-          { stage_key: sk }
-        );
-      seen.add(sk);
-      const card = str8(s.cardinality);
-      if (!card)
-        return refusal12(
-          "NO_CARDINALITY",
-          `stage '${sk}' needs a cardinality (1, 0..1, 0..n): how many documents it may hold`,
-          { stage_key: sk }
-        );
-      const req = str8(s.required);
-      if (!STAGE_REQUIREDNESS.includes(req))
-        return refusal12(
-          "BAD_REQUIRED",
-          `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", "),
-          { stage_key: sk }
-        );
-      norm.push({
-        stage_key: sk,
-        stage_no: i + 1,
-        label: typeof s.label === "string" && s.label ? s.label : null,
-        after_stage: str8(s.after) || str8(s.afterStage) || null,
-        cardinality: card,
-        within_interval: str8(s.within) || null,
-        required: req
-      });
-    }
-    for (const s of norm)
-      if (s.after_stage != null && !seen.has(s.after_stage))
-        return refusal12(
-          "UNKNOWN_AFTER",
-          `stage '${s.stage_key}' is after '${s.after_stage}', which is not a stage of this progression`,
-          { stage_key: s.stage_key, after: s.after_stage }
-        );
-    const lbl = label.trim();
-    const nt = note == null ? null : String(note).slice(0, NOTE_MAX4);
-    const stmt = str8(basis) ? str8(basis).slice(0, BASIS_MAX) : null;
-    const cite = str8(citation) ? str8(citation).slice(0, CITATION_MAX2) : null;
-    const cur = this.#current(key);
-    if (cur) {
-      const same = cur.label === lbl && (cur.note ?? null) === nt && cur.stages.length === norm.length && norm.every((s, i) => {
-        const c = cur.stages[i];
-        return c.stage_key === s.stage_key && (c.label ?? null) === s.label && (c.after_stage ?? null) === s.after_stage && c.cardinality === s.cardinality && (c.within_interval ?? null) === s.within_interval && c.required === s.required;
-      });
-      if (same)
-        return {
-          ok: true,
-          progression_key: key,
-          label: cur.label,
-          stage_count: cur.stages.length,
-          stages: cur.stages,
-          declared_by: cur.declared_by,
-          at: cur.at,
-          version: cur.version,
-          unchanged: true,
-          basis: cur.basis,
-          prior_version: null
-        };
-      if (!stmt) return refusal12(
-        "NO_BASIS",
-        `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)`,
-        { progression_key: key, version: cur.version }
-      );
-      if (!cite) return refusal12(
-        "NO_CITATION",
-        "a revision of a declared flow carries a citation -- where the basis for the change is published or held",
-        { progression_key: key, version: cur.version }
-      );
-    }
-    const version = cur ? cur.version + 1 : 1;
-    const at15 = this.now();
-    const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
-    this.record.transact(() => {
-      if (cur && !cur.version_recorded) this.#writeVersion(key, cur.version, cur, cur.stages, null, null);
-      this.sql.exec(
-        `INSERT INTO progression_defs (progression_key,label,note,declared_by,at) VALUES (?,?,?,?,?)
-         ON CONFLICT(progression_key) DO UPDATE SET label=excluded.label, note=excluded.note,
-           declared_by=excluded.declared_by, at=excluded.at`,
-        key,
-        lbl,
-        nt,
-        by,
-        at15
-      );
-      this.sql.exec(`DELETE FROM progression_stages WHERE progression_key=?`, key);
-      for (const s of norm)
-        this.sql.exec(
-          `INSERT INTO progression_stages (progression_key,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
-           VALUES (?,?,?,?,?,?,?,?)`,
-          key,
-          s.stage_key,
-          s.stage_no,
-          s.label,
-          s.after_stage,
-          s.cardinality,
-          s.within_interval,
-          s.required
-        );
-      this.#writeVersion(key, version, { label: lbl, note: nt, declared_by: by, at: at15 }, norm, stmt, cite);
-    });
-    return {
-      ok: true,
-      progression_key: key,
-      label: lbl,
-      stage_count: norm.length,
-      stages: norm,
-      declared_by: by,
-      at: at15,
-      version,
-      unchanged: false,
-      basis: basisView(stmt, cite),
-      prior_version: cur ? cur.version : null
-    };
-  }
-  /** R5 (`op=progression`): a definition, the current version by default or any held one, with every version held. */
-  readProgression({ progressionKey, version = null } = {}) {
-    if (!str8(progressionKey))
-      return generic("NO_KEY", "read a progression definition by its key (op=progression&key=meeting)");
-    const key = str8(progressionKey);
-    const cur = this.#current(key);
-    if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
-    const recorded = this.#rows(
-      `SELECT version, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
-         WHERE progression_key=? ORDER BY version`,
-      key
-    );
-    const versions = recorded.length ? recorded.map((v) => ({
-      version: v.version,
-      declared_by: v.declared_by,
-      at: v.at,
-      basis: basisView(v.basis_statement, v.basis_citation)
-    })) : [{ version: 1, declared_by: cur.declared_by, at: cur.at, basis: cur.basis }];
-    const want = version == null || version === "" ? cur.version : Number(version);
-    if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
-      return refusal12(
-        "PROGRESSION_VERSION_NOT_HELD",
-        `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions ` + versions.map((v) => v.version).join(", "),
-        {
-          progression_key: key,
-          version: String(version).slice(0, 40),
-          current_version: cur.version,
-          versions_held: versions.map((v) => v.version)
-        }
-      );
-    let def = cur, stages = cur.stages;
-    if (want !== cur.version) {
-      def = this.#one(
-        `SELECT label, note, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
-           WHERE progression_key=? AND version=?`,
-        key,
-        want
-      );
-      def.basis = basisView(def.basis_statement, def.basis_citation);
-      stages = this.#rows(
-        `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
-           FROM progression_stage_versions WHERE progression_key=? AND version=? ORDER BY stage_no`,
-        key,
-        want
-      );
-    }
-    return {
-      ok: true,
-      progression_key: key,
-      found: true,
-      label: def.label,
-      note: def.note,
-      declared_by: def.declared_by,
-      at: def.at,
-      version: want,
-      current: want === cur.version,
-      current_version: cur.version,
-      basis: def.basis,
-      version_count: versions.length,
-      versions,
-      stage_count: stages.length,
-      stages
-    };
-  }
-  /* ===================================================================== *
-   * INSTANCES (R6–R13, R31; FW-9, FW-10, K102).
-   * ===================================================================== */
-  /* The threadings of an instance, oldest first, each with who threaded it, when and its placements (R8). An instance
-     threaded before versions were kept, and not re-threaded since, reads its current rows as version 1. */
-  #threads(key, eid) {
-    const heads = this.#rows(
-      `SELECT version, threaded_by, at FROM progression_threads WHERE progression_key=? AND entity_id=? ORDER BY version`,
-      key,
-      eid
-    );
-    if (!heads.length) {
-      const cur = this.#rows(
-        `SELECT stage_key, capture_sha, bundle_id, grade, threaded_by, at FROM progression_instances
-           WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`,
-        key,
-        eid
-      );
-      if (!cur.length) return [];
-      return [{
-        version: 1,
-        version_recorded: false,
-        threaded_by: cur[0].threaded_by ?? null,
-        at: cur[0].at ?? null,
-        placements: cur.map((p) => ({ stage_key: p.stage_key, capture_sha: p.capture_sha, bundle_id: p.bundle_id, grade: p.grade }))
-      }];
-    }
-    const placed = /* @__PURE__ */ new Map();
-    for (const p of this.#rows(
-      `SELECT version, stage_key, capture_sha, bundle_id, grade FROM progression_thread_placements
-         WHERE progression_key=? AND entity_id=? ORDER BY version, stage_key, capture_sha`,
-      key,
-      eid
-    )) {
-      if (!placed.has(p.version)) placed.set(p.version, []);
-      placed.get(p.version).push({ stage_key: p.stage_key, capture_sha: p.capture_sha, bundle_id: p.bundle_id, grade: p.grade });
-    }
-    return heads.map((h) => ({
-      version: h.version,
-      version_recorded: true,
-      threaded_by: h.threaded_by,
-      at: h.at,
-      placements: placed.get(h.version) || []
-    }));
-  }
-  /* Assemble an instance from its current placements and the CURRENT definition, deriving its grade and findings on
-     read (R10, R11, R24, R31), never from a stored grade that could go stale. */
-  #assemble(progressionKey, entityId) {
-    const def = this.#one(`SELECT progression_key, label FROM progression_defs WHERE progression_key=?`, progressionKey);
-    if (!def) return {
-      ok: true,
-      progression_key: progressionKey,
-      entity_id: entityId,
-      found: false,
-      defined: false,
-      detail: "no such progression definition (define it first, op=progressiondefine)"
-    };
-    const definitionVersion = this.definitionVersionOf(progressionKey).version;
-    const e = this.entities.readEntity({ entityId });
-    const entity2 = e && e.found && e.entity ? { entity_id: e.entity.entity_id, kind: e.entity.kind, label: e.entity.label } : null;
-    const stageDefs = this.#rows(
-      `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
-         FROM progression_stages WHERE progression_key=? ORDER BY stage_no`,
-      progressionKey
-    );
-    const rows = this.#rows(
-      `SELECT stage_key, capture_sha, bundle_id, grade FROM progression_instances
-         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`,
-      progressionKey,
-      entityId
-    );
-    const excByStage = /* @__PURE__ */ new Map();
-    for (const x of this.#rows(
-      `SELECT stage_key, capture_sha, bundle_id, reason, citation, declared_by, at FROM progression_exceptions
-         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`,
-      progressionKey,
-      entityId
-    )) {
-      if (!excByStage.has(x.stage_key)) excByStage.set(x.stage_key, []);
-      excByStage.get(x.stage_key).push({
-        capture_sha: x.capture_sha,
-        bundle_id: x.bundle_id,
-        reason: x.reason,
-        citation: x.citation,
-        declared_by: x.declared_by,
-        at: x.at
-      });
-    }
-    if (rows.length === 0)
-      return {
-        ok: true,
-        progression_key: progressionKey,
-        entity_id: entityId,
-        found: false,
-        defined: true,
-        definition_version: definitionVersion,
-        label: def.label,
-        entity: entity2,
-        grade: null,
-        grade_determined: false,
-        established: false,
-        stage_count: stageDefs.length,
-        placed_count: 0,
-        chain: [],
-        stages: [],
-        findings: [],
-        finding_count: 0,
-        discharges: [],
-        discharge_count: 0
-      };
-    const docsByStage = /* @__PURE__ */ new Map();
-    for (const r of rows) {
-      if (!docsByStage.has(r.stage_key)) docsByStage.set(r.stage_key, []);
-      docsByStage.get(r.stage_key).push({ capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
-    }
-    const repGrade = /* @__PURE__ */ new Map();
-    for (const [sk, docs] of docsByStage) {
-      let best = docs[0];
-      for (const d of docs) if (this.#rank(d.grade) > this.#rank(best.grade)) best = d;
-      repGrade.set(sk, best.grade);
-    }
-    const placedInOrder = stageDefs.filter((s) => docsByStage.has(s.stage_key));
-    const chain2 = [];
-    let grade = null;
-    for (let i = 1; i < placedInOrder.length; i++) {
-      const a = placedInOrder[i - 1], b = placedInOrder[i];
-      const ga = repGrade.get(a.stage_key), gb = repGrade.get(b.stage_key);
-      const g = this.connections.weakerGrade(ga, gb);
-      chain2.push({ from_stage: a.stage_key, to_stage: b.stage_key, a_grade: ga, b_grade: gb, grade: g });
-      if (grade === null || this.#rank(g) < this.#rank(grade)) grade = g;
-    }
-    const determined = grade !== null;
-    const carried = { grade: determined ? grade : "undetermined", grade_determined: determined };
-    const stages = [], findings = [], discharges = [];
-    for (const s of stageDefs) {
-      const docs = docsByStage.get(s.stage_key) || [];
-      const present = docs.length > 0;
-      const exceptions = excByStage.get(s.stage_key) || [];
-      const discharged = !present && exceptions.length > 0;
-      stages.push({
-        stage_key: s.stage_key,
-        label: s.label,
-        after_stage: s.after_stage,
-        cardinality: s.cardinality,
-        required: s.required,
-        present,
-        document_count: docs.length,
-        grade: present ? repGrade.get(s.stage_key) : null,
-        discharged,
-        exception_count: exceptions.length,
-        exceptions,
-        documents: docs
-      });
-      if (!present && REQUIRED_FIRES.has(s.required)) {
-        if (discharged)
-          discharges.push({
-            kind: "discharged_skip",
-            stage_key: s.stage_key,
-            stage_label: s.label,
-            required: s.required,
-            after_stage: s.after_stage,
-            definition_version: definitionVersion,
-            documents: exceptions,
-            detail: `the '${s.stage_key}' stage is ${s.required} required and unfilled, but its skip is discharged by ${exceptions.length} exception document(s) naming why it may be missing (framework 8.2) -- a lawful, recorded skip, not a gap`
-          });
-        else
-          findings.push({
-            kind: "missing_predecessor",
-            stage_key: s.stage_key,
-            stage_label: s.label,
-            required: s.required,
-            after_stage: s.after_stage,
-            definition_version: definitionVersion,
-            dischargeable: true,
-            ...carried,
-            detail: `the '${s.stage_key}' stage is ${s.required} required but no threaded document fills it and no exception document discharges the skip -- a missing predecessor (framework 8.2), carrying the instance's grade`
-          });
-      }
-      if (SINGLE.has(s.cardinality) && docs.length > 1)
-        findings.push({
-          kind: "cardinality_exceeded",
-          stage_key: s.stage_key,
-          stage_label: s.label,
-          required: s.required,
-          after_stage: s.after_stage,
-          definition_version: definitionVersion,
-          cardinality: s.cardinality,
-          document_count: docs.length,
-          dischargeable: false,
-          ...carried,
-          detail: `the '${s.stage_key}' stage is declared to hold ${s.cardinality === "1" ? "exactly one" : "at most one"} document and ${docs.length} are threaded at it -- a finding, which decides nothing about which of them belongs (framework 8.2)`
-        });
-    }
-    return {
-      ok: true,
-      progression_key: progressionKey,
-      entity_id: entityId,
-      found: true,
-      defined: true,
-      definition_version: definitionVersion,
-      label: def.label,
-      entity: entity2,
-      grade,
-      grade_determined: determined,
-      established: determined && isEstablished(grade),
-      stage_count: stageDefs.length,
-      placed_count: placedInOrder.length,
-      chain: chain2,
-      stages,
-      findings,
-      finding_count: findings.length,
-      discharges,
-      discharge_count: discharges.length
-    };
-  }
-  /* R12: stage_key -> the published decision, for ONE progression. */
-  #decisionsByStage(progressionKey) {
-    const cur = this.definitionVersionOf(progressionKey);
-    const byStage = /* @__PURE__ */ new Map();
-    for (const d of this.#rows(
-      `SELECT stage_key, state, reason, decided_by, at, definition_version FROM proposal_dispositions WHERE progression_key=?`,
-      progressionKey
-    ))
-      byStage.set(d.stage_key, dispositionOnFinding(d, cur));
-    return byStage;
-  }
-  /* R12: each finding carries its decision (or null); `open_finding_count` counts those no applying decision governs,
-     `finding_count` all of them: nothing is hidden. */
-  #withDecisions(inst, byStage = null) {
-    if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
-    const decided = byStage || this.#decisionsByStage(inst.progression_key);
-    const findings = inst.findings.map((f8) => ({ ...f8, disposition: decided.get(f8.stage_key) ?? null }));
-    return { ...inst, findings, open_finding_count: findings.filter((f8) => !(f8.disposition && f8.disposition.applies)).length };
-  }
-  /* R13: the whole derivation stands for every reader; only the back-references to bundles the viewer may not see are
-     withheld. Capture shas, grades, findings and counts are the same for everyone. */
-  #redact(inst, viewer) {
-    if (!inst || inst.ok !== true) return inst;
-    const keep = this.#redactor(viewer);
-    const doc = (d) => ({ ...d, bundle_id: keep(d.bundle_id) });
-    const list2 = (l) => Array.isArray(l) ? l.map(doc) : l;
-    return {
-      ...inst,
-      ...Array.isArray(inst.stages) ? { stages: inst.stages.map((s) => ({ ...s, documents: list2(s.documents), exceptions: list2(s.exceptions) })) } : {},
-      ...Array.isArray(inst.discharges) ? { discharges: inst.discharges.map((d) => ({ ...d, documents: list2(d.documents) })) } : {},
-      ...Array.isArray(inst.threads) ? { threads: inst.threads.map((t) => ({ ...t, placements: list2(t.placements) })) } : {}
-    };
-  }
-  /* R10's read, the one `readInstance` returns and the thread and discharge echoes carry (a write's receipt is a read). */
-  #answer(key, eid, viewer) {
-    const inst = this.#withDecisions(this.#assemble(key, eid));
-    if (inst && inst.ok === true && inst.found) {
-      const threads = this.#threads(key, eid);
-      inst.threads = threads;
-      inst.thread_version = threads.length ? threads[threads.length - 1].version : null;
-    }
-    return this.#redact(inst, viewer);
-  }
-  /** R6–R8 (`op=thread`): thread captured documents through a definition's stages by one entity. A document is admitted
-   *  only if it resolves to the entity, at the grade the record holds (R7). The thread is a new dated version (R8); then
-   *  every listener registered with `onThreaded` is told (R33). */
-  async threadInstance({ progressionKey, entityId, placements, threadedBy = null, viewer = null } = {}) {
-    if (!str8(progressionKey)) return generic("NO_KEY", "a progression instance names its definition by key (op=thread)");
-    const key = str8(progressionKey);
-    const nameless = this.#entityNamed(entityId, "a progression instance is threaded by an entity, named by its id");
-    if (nameless) return nameless;
-    const eid = str8(entityId);
-    if (!Array.isArray(placements) || placements.length === 0)
-      return refusal12(
-        "NO_PLACEMENTS",
-        "name at least one {stage, captureSha} placement to thread: the step, and the captured document that fills it"
-      );
-    const undeclared = this.#declared(key, "define the progression first (op=progressiondefine), then thread documents through it");
-    if (undeclared) return undeclared;
-    if (!this.entities.has(eid)) return noSuchEntity(eid);
-    const concerning = this.entities.strongestByCapture(eid);
-    const norm = [];
-    const seen = /* @__PURE__ */ new Set();
-    for (let i = 0; i < placements.length; i++) {
-      const p = placements[i] || {};
-      const sk = str8(p.stage) || str8(p.stageKey);
-      const refused = this.#stageNamed(sk, `placement ${i + 1} names no stage`, { placement: i + 1 }) || this.#stageOf(key, sk, `'${sk}' is not a stage of progression '${key}'`, { stage_key: sk });
-      if (refused) return refused;
-      const cs = str8(p.captureSha) || str8(p.capture_sha);
-      const unnamed = this.#documentNamed(cs, `placement for '${sk}' names no capture sha`, { stage_key: sk });
-      if (unnamed) return unnamed;
-      const dup = sk + "\0" + cs;
-      if (seen.has(dup))
-        return refusal12(
-          "DUPLICATE_PLACEMENT",
-          `the same document is placed at '${sk}' twice in this request; place it once`,
-          { stage_key: sk, capture_sha: cs }
-        );
-      seen.add(dup);
-      const res = concerning.get(cs);
-      const unconcerned = this.#concerned(
-        res,
-        "this document does not resolve to the threading entity, so it cannot be threaded on it (resolve it first with op=resolve, or thread it on the entity it actually concerns)",
-        { stage_key: sk, capture_sha: cs, entity_id: eid }
-      );
-      if (unconcerned) return unconcerned;
-      norm.push({ stage_key: sk, capture_sha: cs, bundle_id: res.bundle_id, grade: res.grade });
-    }
-    const at15 = this.now();
-    const by = threadedBy == null ? null : String(threadedBy).slice(0, 200);
-    this.record.transact(() => {
-      const last = this.#one(`SELECT MAX(version) AS v FROM progression_threads WHERE progression_key=? AND entity_id=?`, key, eid);
-      let version = last && last.v != null ? last.v + 1 : 1;
-      if (version === 1) {
-        const prior = this.#threads(key, eid);
-        if (prior.length) {
-          this.#writeThread(key, eid, 1, prior[0].threaded_by, prior[0].at, prior[0].placements);
-          version = 2;
-        }
-      }
-      this.#writeThread(key, eid, version, by, at15, norm);
-      this.sql.exec(`DELETE FROM progression_instances WHERE progression_key=? AND entity_id=?`, key, eid);
-      for (const p of norm)
-        this.sql.exec(
-          `INSERT INTO progression_instances (progression_key,entity_id,stage_key,capture_sha,bundle_id,grade,threaded_by,at)
-           VALUES (?,?,?,?,?,?,?,?)`,
-          key,
-          eid,
-          p.stage_key,
-          p.capture_sha,
-          p.bundle_id,
-          p.grade,
-          by,
-          at15
-        );
-    });
-    const answer = { ...this.#answer(key, eid, viewer), threaded: norm.length, threaded_by: by, at: at15 };
-    if (this.threadListeners.length) {
-      let nextDeadline = null;
-      try {
-        nextDeadline = this.overdueScan(Date.parse(at15)).next_deadline;
-      } catch {
-        nextDeadline = null;
-      }
-      for (const l of this.threadListeners) {
-        try {
-          await l.fn({ progressionKey: key, entityId: eid, nextDeadline });
-        } catch {
-        }
-      }
-    }
-    return answer;
-  }
-  #writeThread(key, eid, version, by, at15, placements) {
-    this.sql.exec(
-      `INSERT INTO progression_threads (progression_key,entity_id,version,threaded_by,at) VALUES (?,?,?,?,?)`,
-      key,
-      eid,
-      version,
-      by ?? null,
-      at15 ?? null
-    );
-    for (const p of placements)
-      this.sql.exec(
-        `INSERT INTO progression_thread_placements (progression_key,entity_id,version,stage_key,capture_sha,bundle_id,grade)
-         VALUES (?,?,?,?,?,?,?)`,
-        key,
-        eid,
-        version,
-        p.stage_key,
-        p.capture_sha,
-        p.bundle_id,
-        p.grade
-      );
-  }
-  /** R33 (N202): a later module registers once, at start, to be told of every thread (`scheduler`'s `arm`, K90 (6)). A
-   *  malformed registration, or a second by the same module, is membership's one answer (its R81); the listeners are
-   *  kept in the modules' total order (its R83), a module outside that list after every one in it, in registration
-   *  order. */
-  onThreaded(module, fn) {
-    const refused = listenerRefusal(this.threadListeners, module, fn);
-    if (refused) return refused;
-    const i = MODULE_ORDER.indexOf(module);
-    this.threadListeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.threadListeners.length });
-    this.threadListeners.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
-    return { ok: true, module };
-  }
-  /** R9–R13 (`op=instance`). */
-  readInstance({ progressionKey, entityId, viewer = null } = {}) {
-    const how = "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)";
-    if (!str8(progressionKey)) return generic("NO_KEY", how);
-    const nameless = this.#entityNamed(entityId, how);
-    if (nameless) return nameless;
-    return this.#answer(str8(progressionKey), str8(entityId), viewer);
-  }
-  /* ===================================================================== *
-   * EXCEPTION DOCUMENTS (R14, R15; FW-10, K102).
-   * ===================================================================== */
-  /** R14 (`op=discharge`): record a captured document that discharges a lawful skip of one stage of one instance, with
-   *  its reason and citation. It must resolve to the entity and name a real stage. Recording the same document at the
-   *  same stage again writes a new dated version; the current one applies and every earlier one reads back (R15).
-   *  Whether it discharges anything is derived on read (R11). */
-  dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null, viewer = null } = {}) {
-    if (!str8(progressionKey)) return generic("NO_KEY", "an exception document names its progression by key (op=discharge)");
-    const key = str8(progressionKey);
-    const nameless = this.#entityNamed(entityId, "an exception document discharges a skip in one entity's instance, named by id");
-    if (nameless) return nameless;
-    const eid = str8(entityId);
-    const sk = str8(stageKey) || str8(stage);
-    const cs = str8(captureSha) || str8(capture_sha);
-    const rsn = str8(reason);
-    const cite = str8(citation);
-    const refused = this.#stageNamed(sk, "an exception document NAMES the stage it discharges") || this.#documentNamed(cs, "an exception document IS a captured document, named by its capture sha") || this.#reasonStated(rsn, "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)") || (!cite ? refusal12("NO_CITATION", "an exception document carries a citation -- where the justification for the skip is published") : null) || this.#declared(key, "define the progression first (op=progressiondefine), then discharge a skip in one of its instances") || (!this.entities.has(eid) ? noSuchEntity(eid) : null) || this.#stageOf(
-      key,
-      sk,
-      `'${sk}' is not a stage of progression '${key}' -- an exception must name a real stage to discharge`,
-      { stage_key: sk }
-    );
-    if (refused) return refused;
-    const res = this.entities.strongestByCapture(eid).get(cs);
-    const unconcerned = this.#concerned(
-      res,
-      "this document does not resolve to the threading entity, so it cannot discharge that entity's skip (resolve it first with op=resolve, or discharge the skip in the instance it actually concerns)",
-      { stage_key: sk, capture_sha: cs, entity_id: eid }
-    );
-    if (unconcerned) return unconcerned;
-    const at15 = this.now();
-    const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
-    const r = rsn.slice(0, REASON_MAX2), c = cite.slice(0, CITATION_MAX2);
-    let version = 1;
-    this.record.transact(() => {
-      const last = this.#one(
-        `SELECT MAX(version) AS v FROM progression_exception_versions
-           WHERE progression_key=? AND entity_id=? AND stage_key=? AND capture_sha=?`,
-        key,
-        eid,
-        sk,
-        cs
-      );
-      version = last && last.v != null ? last.v + 1 : 1;
-      if (version === 1) {
-        const held = this.#one(
-          `SELECT bundle_id, reason, citation, declared_by, at FROM progression_exceptions
-             WHERE progression_key=? AND entity_id=? AND stage_key=? AND capture_sha=?`,
-          key,
-          eid,
-          sk,
-          cs
-        );
-        if (held) {
-          this.#writeException(key, eid, sk, cs, 1, held);
-          version = 2;
-        }
-      }
-      this.#writeException(key, eid, sk, cs, version, { bundle_id: res.bundle_id, reason: r, citation: c, declared_by: by, at: at15 });
-      this.sql.exec(
-        `INSERT INTO progression_exceptions (progression_key,entity_id,stage_key,capture_sha,bundle_id,reason,citation,declared_by,at)
-         VALUES (?,?,?,?,?,?,?,?,?)
-         ON CONFLICT(progression_key,entity_id,stage_key,capture_sha) DO UPDATE SET
-           bundle_id=excluded.bundle_id, reason=excluded.reason, citation=excluded.citation,
-           declared_by=excluded.declared_by, at=excluded.at`,
-        key,
-        eid,
-        sk,
-        cs,
-        res.bundle_id,
-        r,
-        c,
-        by,
-        at15
-      );
-    });
-    return {
-      ...this.#answer(key, eid, viewer),
-      discharged_stage: sk,
-      exception_document: cs,
-      reason: r,
-      citation: c,
-      declared_by: by,
-      at: at15,
-      exception_version: version
-    };
-  }
-  #writeException(key, eid, sk, cs, version, x) {
-    this.sql.exec(
-      `INSERT INTO progression_exception_versions
-         (progression_key,entity_id,stage_key,capture_sha,version,bundle_id,reason,citation,declared_by,at)
-       VALUES (?,?,?,?,?,?,?,?,?,?)`,
-      key,
-      eid,
-      sk,
-      cs,
-      version,
-      x.bundle_id,
-      x.reason,
-      x.citation,
-      x.declared_by ?? null,
-      x.at ?? null
-    );
-  }
-  /** R15 (`op=exceptions`): every exception recorded for the instance, applied or not, ordered by stage then capture,
-   *  each with every version recorded (oldest first; the current one is the exception's own fields). */
-  readExceptions({ progressionKey, entityId, viewer = null } = {}) {
-    const how = "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)";
-    if (!str8(progressionKey)) return generic("NO_KEY", how);
-    const nameless = this.#entityNamed(entityId, how);
-    if (nameless) return nameless;
-    const key = str8(progressionKey), eid = str8(entityId);
-    const keep = this.#redactor(viewer);
-    const versions = /* @__PURE__ */ new Map();
-    for (const v of this.#rows(
-      `SELECT stage_key, capture_sha, version, bundle_id, reason, citation, declared_by, at FROM progression_exception_versions
-         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha, version`,
-      key,
-      eid
-    )) {
-      const k = v.stage_key + "\0" + v.capture_sha;
-      if (!versions.has(k)) versions.set(k, []);
-      versions.get(k).push({
-        version: v.version,
-        bundle_id: keep(v.bundle_id),
-        reason: v.reason,
-        citation: v.citation,
-        declared_by: v.declared_by,
-        at: v.at
-      });
-    }
-    const exceptions = this.#rows(
-      `SELECT stage_key, capture_sha, bundle_id, reason, citation, declared_by, at FROM progression_exceptions
-         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`,
-      key,
-      eid
-    ).map((r) => {
-      const held = versions.get(r.stage_key + "\0" + r.capture_sha) || [];
-      return {
-        ...r,
-        bundle_id: keep(r.bundle_id),
-        version: held.length ? held[held.length - 1].version : 1,
-        versions: held.length ? held : [{
-          version: 1,
-          bundle_id: keep(r.bundle_id),
-          reason: r.reason,
-          citation: r.citation,
-          declared_by: r.declared_by,
-          at: r.at
-        }]
-      };
-    });
-    return { ok: true, progression_key: key, entity_id: eid, exception_count: exceptions.length, exceptions };
-  }
-  /* ===================================================================== *
-   * THE OVERDUE CLOCK (R16, R17; REC-8). Derived on read, never stored.
-   * ===================================================================== */
-  /* A captured document's date in ms: its reading's date (extraction), else its registration (provenance); null when
-     neither is determinable, and the stage anchored on it is never overdue. */
-  #captureDateMs(captureSha) {
-    if (typeof captureSha !== "string" || !captureSha) return null;
-    const r = this.extraction.readingOf(captureSha);
-    const at15 = r && r.reading && typeof r.reading.at === "string" ? r.reading.at : null;
-    if (at15) {
-      const t = Date.parse(at15);
-      if (Number.isFinite(t)) return t;
-    }
-    const home = this.provenance.homeOf(captureSha);
-    if (home && typeof home.registered === "string" && home.registered) {
-      const t = Date.parse(home.registered);
-      if (Number.isFinite(t)) return t;
-    }
-    return null;
-  }
-  /* For an assembled instance, the deadline of every missing-required-undischarged stage whose deadline is determinable
-     (a parseable interval, a placed predecessor, a dated predecessor document), past or not. The anchor is the LATEST
-     dated document of the predecessor stage, so a stage is overdue only when it truly is. */
-  #deadlines(inst) {
-    const out = [];
-    if (!inst || !inst.found || !Array.isArray(inst.findings)) return out;
-    const missing = inst.findings.filter((f8) => f8.kind === "missing_predecessor");
-    if (!missing.length) return out;
-    const within = new Map(this.#rows(
-      `SELECT stage_key, within_interval FROM progression_stages WHERE progression_key=?`,
-      inst.progression_key
-    ).map((r) => [r.stage_key, r.within_interval]));
-    const stageByKey = new Map((inst.stages || []).map((s) => [s.stage_key, s]));
-    for (const f8 of missing) {
-      const wi = within.get(f8.stage_key);
-      if (!wi || !f8.after_stage) continue;
-      const anchor = stageByKey.get(f8.after_stage);
-      if (!anchor || !anchor.present) continue;
-      let anchorMs = null;
-      for (const d of anchor.documents || []) {
-        const t = this.#captureDateMs(d.capture_sha);
-        if (t !== null && (anchorMs === null || t > anchorMs)) anchorMs = t;
-      }
-      if (anchorMs === null) continue;
-      const deadline = intervalDeadlineMs(anchorMs, wi);
-      if (deadline === null) continue;
-      out.push({ finding: f8, within_interval: wi, predecessor_stage: f8.after_stage, predecessor_ms: anchorMs, deadline_ms: deadline });
-    }
-    return out;
-  }
-  /* R16: the overdue findings of one instance at `nowMs`, each also a missing predecessor, carrying its grade. */
-  #overdue(inst, nowMs) {
-    const out = [];
-    for (const d of this.#deadlines(inst)) {
-      if (d.deadline_ms >= nowMs) continue;
-      const f8 = d.finding;
-      out.push({
-        kind: "overdue_successor",
-        stage_key: f8.stage_key,
-        stage_label: f8.stage_label,
-        required: f8.required,
-        after_stage: f8.after_stage,
-        definition_version: f8.definition_version,
-        predecessor_stage: d.predecessor_stage,
-        predecessor_at: new Date(d.predecessor_ms).toISOString(),
-        within_interval: d.within_interval,
-        deadline: new Date(d.deadline_ms).toISOString(),
-        overdue_by_ms: nowMs - d.deadline_ms,
-        grade: f8.grade,
-        grade_determined: f8.grade_determined,
-        detail: "the '" + f8.stage_key + "' stage is " + f8.required + " required and still absent past its '" + d.within_interval + "' deadline after '" + d.predecessor_stage + "' (" + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = " + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade"
-      });
-    }
-    return out;
-  }
-  #pairs() {
-    return this.#rows(`SELECT DISTINCT progression_key, entity_id FROM progression_instances ORDER BY progression_key, entity_id`);
-  }
-  /** R17: how many required successors are overdue at `now`, and the earliest deadline strictly after it (never now, so
-   *  a consumer never re-arms to now). Writes nothing. */
-  overdueScan(now) {
-    const nowMs = this.nowMs(now);
-    let overdue = 0, next = null;
-    for (const p of this.#pairs())
-      for (const d of this.#deadlines(this.#assemble(p.progression_key, p.entity_id))) {
-        if (d.deadline_ms < nowMs) overdue += 1;
-        else if (d.deadline_ms > nowMs && (next === null || d.deadline_ms < next)) next = d.deadline_ms;
-      }
-    return { overdue_count: overdue, next_deadline: next, next_deadline_at: next === null ? null : new Date(next).toISOString() };
-  }
-  /* ===================================================================== *
-   * THE FEEDS (R18, R19; REC-6, REC-7, REC-9, REC-184, D-552).
-   * ===================================================================== */
-  /** R18 (`op=proposals`): one walk over every threaded instance. `instances[]` each instance with an open finding
-   *  (missing, then overdue, then any other kind); `proposals[]` one per (progression, stage) of the missing findings,
-   *  carrying its instances; `dispositions[]` every decision recorded. A finding an applying decision governs leaves
-   *  the first two and stays in the third (D-79: aged, never vanished). */
-  proposalsFeed(nowMs) {
-    const now = this.nowMs(nowMs);
-    const recorded = /* @__PURE__ */ new Map();
-    const curOf = /* @__PURE__ */ new Map();
-    for (const d of this.#rows(`SELECT progression_key, stage_key, state, reason, decided_by, at, definition_version FROM proposal_dispositions`)) {
-      if (!curOf.has(d.progression_key)) curOf.set(d.progression_key, this.definitionVersionOf(d.progression_key));
-      recorded.set(d.progression_key + "::" + d.stage_key, { ...d, ...dispositionVersionView(d, curOf.get(d.progression_key)) });
-    }
-    const aged = (pk, sk) => {
-      const d = recorded.get(pk + "::" + sk);
-      return !!(d && d.applies);
-    };
-    const instances34 = [];
-    const groups = /* @__PURE__ */ new Map();
-    for (const p of this.#pairs()) {
-      const inst = this.#assemble(p.progression_key, p.entity_id);
-      const open = (f8) => !aged(inst.progression_key, f8.stage_key);
-      const missing = (inst.findings || []).filter((f8) => f8.kind === "missing_predecessor" && open(f8));
-      const overdueF = this.#overdue(inst, now).filter(open);
-      const others = (inst.findings || []).filter((f8) => f8.kind !== "missing_predecessor" && open(f8));
-      const overdueByStage = new Map(overdueF.map((f8) => [f8.stage_key, f8]));
-      const findings = [...missing, ...overdueF, ...others];
-      if (!findings.length) continue;
-      const entityLabel = inst.entity ? inst.entity.label : null;
-      instances34.push({
-        progression_key: inst.progression_key,
-        progression_label: inst.label,
-        definition_version: inst.definition_version,
-        entity_id: inst.entity_id,
-        entity_label: entityLabel,
-        findings
-      });
-      for (const f8 of missing) {
-        const key = inst.progression_key + "::" + f8.stage_key;
-        let g = groups.get(key);
-        if (!g) {
-          const prior = recorded.get(key) || null;
-          g = {
-            key,
-            progression_key: inst.progression_key,
-            progression_label: inst.label,
-            stage_key: f8.stage_key,
-            stage_label: f8.stage_label,
-            required: f8.required,
-            definition_version: inst.definition_version,
-            surfaced_by: "machine",
-            overdue_count: 0,
-            instances: [],
-            prior_disposition: prior ? {
-              state: prior.state,
-              reason: prior.reason,
-              decided_by: prior.decided_by,
-              at: prior.at,
-              definition_version: prior.definition_version,
-              definition_version_state: prior.definition_version_state,
-              applies: false,
-              applies_because: prior.applies_because
-            } : null
-          };
-          groups.set(key, g);
-        }
-        const od = overdueByStage.get(f8.stage_key) || null;
-        if (od) g.overdue_count += 1;
-        g.instances.push({
-          entity_id: inst.entity_id,
-          entity_label: entityLabel,
-          progression_key: inst.progression_key,
-          definition_version: inst.definition_version,
-          grade: f8.grade_determined ? f8.grade : null,
-          grade_determined: f8.grade_determined === true,
-          overdue: !!od,
-          deadline: od ? od.deadline : null
-        });
-      }
-    }
-    const proposals = [];
-    for (const g of groups.values()) {
-      g.n = g.instances.length;
-      const anyUndetermined = g.instances.some((i) => !i.grade_determined || !i.grade);
-      g.grade_determined = !anyUndetermined;
-      g.grade = anyUndetermined ? null : g.instances.map((i) => i.grade).reduce((a, b) => this.connections.weakerGrade(a, b));
-      g.overdue = g.overdue_count > 0;
-      g.kinds = g.overdue ? ["missing_predecessor", "overdue_successor"] : ["missing_predecessor"];
-      proposals.push(g);
-    }
-    proposals.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-    const dispositions = [...recorded.values()].map((d) => ({
-      key: d.progression_key + "::" + d.stage_key,
-      progression_key: d.progression_key,
-      stage_key: d.stage_key,
-      state: d.state,
-      reason: d.reason,
-      decided_by: d.decided_by,
-      at: d.at,
-      definition_version: d.definition_version,
-      definition_version_state: d.definition_version_state,
-      current_definition_version: d.current_definition_version,
-      applies: d.applies,
-      applies_because: d.applies_because
-    })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
-    return {
-      ok: true,
-      instances: instances34,
-      proposals,
-      dispositions,
-      instance_count: instances34.length,
-      proposal_count: proposals.length,
-      disposition_count: dispositions.length
-    };
-  }
-  /** R19 (`op=captureprogressions`): every (progression, entity, stage) at which a capture is placed, each instance
-   *  assembled once, with its missing, overdue and other findings, each carrying `established`, `needs_confirmation`
-   *  and its decision, and the instance's `open_finding_count`. */
-  captureProgressions({ captureSha, nowMs } = {}) {
-    if (typeof captureSha !== "string" || !captureSha)
-      return noSha("progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)");
-    const now = this.nowMs(nowMs);
-    const rows = this.#rows(
-      `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
-         WHERE capture_sha=? ORDER BY progression_key, entity_id, stage_key`,
-      captureSha
-    );
-    const assembled = /* @__PURE__ */ new Map();
-    const project = (f8) => ({
-      ...f8,
-      established: f8.grade_determined === true && isEstablished(f8.grade),
-      needs_confirmation: f8.grade === "C"
-    });
-    const instances34 = [];
-    for (const r of rows) {
-      const ck = r.progression_key + "\0" + r.entity_id;
-      let a = assembled.get(ck);
-      if (!a) {
-        const inst2 = this.#assemble(r.progression_key, r.entity_id);
-        a = {
-          inst: inst2,
-          overdue: inst2 && inst2.found ? this.#overdue(inst2, now) : [],
-          decided: inst2 && inst2.found ? this.#decisionsByStage(inst2.progression_key) : /* @__PURE__ */ new Map()
-        };
-        assembled.set(ck, a);
-      }
-      const inst = a.inst;
-      if (!inst || !inst.found) continue;
-      const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
-      const missing = inst.findings.filter((f8) => f8.kind === "missing_predecessor");
-      const others = inst.findings.filter((f8) => f8.kind !== "missing_predecessor");
-      const findings = [...missing, ...a.overdue, ...others].map(project).map((f8) => ({ ...f8, disposition: a.decided.get(f8.stage_key) ?? null }));
-      instances34.push({
-        progression_key: inst.progression_key,
-        progression_label: inst.label,
-        definition_version: inst.definition_version,
-        entity_id: inst.entity_id,
-        entity_label: inst.entity ? inst.entity.label : null,
-        stage_key: r.stage_key,
-        stage_label: stage ? stage.label : r.stage_key,
-        findings,
-        finding_count: findings.length,
-        open_finding_count: findings.filter((f8) => !(f8.disposition && f8.disposition.applies)).length
-      });
-    }
-    return { ok: true, capture_sha: captureSha, count: instances34.length, instances: instances34 };
-  }
-  /* ===================================================================== *
-   * DECISIONS (R20–R22; REC-7, REC-184, REC-211).
-   * ===================================================================== */
-  /** R21, R22 (`op=proposedispose`, its progression arm): record a member's deferral or dismissal of a derived question,
-   *  keyed (progression, stage), without minting a bundle (declining is not authoring, D-79). The act binds the
-   *  definition version the member saw (REC-211). With `items`, each item is decided on its own under the per-item
-   *  weight, the decider forced onto every item. */
-  disposeProposal({ progressionKey, stageKey, key, to, state, reason, definitionVersion = null, decidedBy = null, items } = {}) {
-    if (items !== void 0)
-      return perItem(
-        "proposedispose",
-        { items, progressionKey, stageKey, key, to, state, reason, definitionVersion },
-        { decidedBy },
-        (b) => this.disposeProposal(b),
-        { itemKeys: DISPOSE_ITEM_KEYS, sharedKeys: DISPOSE_SHARED_KEYS }
-      );
-    let pk = str8(progressionKey), sk = str8(stageKey);
-    if ((!pk || !sk) && typeof key === "string" && key.includes("::")) {
-      const i = key.indexOf("::");
-      if (!pk) pk = key.slice(0, i).trim();
-      if (!sk) sk = key.slice(i + 2).trim();
-    }
-    if (!pk) return generic("NO_KEY", "a proposal disposition names its progression (progressionKey, or key='progression::stage')");
-    const unstaged = this.#stageNamed(sk, "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')");
-    if (unstaged) return unstaged;
-    const st = str8(to) || str8(state);
-    const undisposed = notADisposition(st);
-    if (undisposed) return undisposed;
-    const why = String(reason ?? "").trim();
-    const unreasoned = this.#reasonStated(why, "deferring or dismissing the record's own question is recorded with a reason, in the member's own words \u2014 a disposition with no reason ages a finding with no account of why");
-    if (unreasoned) return unreasoned;
-    if (why.length > DISPOSITION_REASON_MAX || /["\\\r\n]/.test(why))
-      return refusal12("BAD_REASON", `a reason is at most ${DISPOSITION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
-    const by = decidedBy == null ? "" : String(decidedBy).trim();
-    if (!by)
-      return refusal12("NO_DECIDER", "a disposition is recorded under the deciding member, stamped from the session. An unnamed decider cannot age the record's question.");
-    const absent = this.#declared(pk, "define the progression first (op=progressiondefine); a proposal exists only for a defined one") || this.#stageOf(
-      pk,
-      sk,
-      `'${sk}' is not a stage of progression '${pk}' \u2014 a disposition must name a real stage`,
-      { progression_key: pk, stage_key: sk }
-    );
-    if (absent) return absent;
-    const currentVersion = this.definitionVersionOf(pk).version;
-    const seen = typeof definitionVersion === "number" || typeof definitionVersion === "string" && definitionVersion.trim() !== "" ? Number(definitionVersion) : NaN;
-    if (!Number.isInteger(seen) || seen < 1)
-      return refusal12(
-        "NO_DEFINITION_VERSION",
-        `a disposition is a judgment of ONE version of the declared flow \u2014 the one the member was reading when they decided (framework \xA78.2). Send \`definitionVersion\` as the version op=proposals published beside this proposal (it is standing at ${currentVersion}). Nothing was recorded.`,
-        {
-          progression_key: pk,
-          stage_key: sk,
-          definition_version: null,
-          current_definition_version: currentVersion,
-          requires: ["definitionVersion"]
-        }
-      );
-    if (seen !== currentVersion)
-      return refusal12(
-        "DEFINITION_MOVED",
-        `this decision names version ${seen} of '${pk}' and version ${currentVersion} is standing. Read the proposal again (op=proposals) and decide against the version in force; the earlier version still reads back in full (op=progression&version=${seen}). Nothing was recorded \u2014 no disposition was written and no proposal moved.`,
-        { progression_key: pk, stage_key: sk, definition_version: seen, current_definition_version: currentVersion }
-      );
-    const at15 = this.now();
-    this.sql.exec(
-      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
-       VALUES (?,?,?,?,?,?,?)
-       ON CONFLICT(progression_key,stage_key) DO UPDATE SET
-         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at,
-         definition_version=excluded.definition_version`,
-      pk,
-      sk,
-      st,
-      why.slice(0, DISPOSITION_REASON_MAX),
-      by.slice(0, 200),
-      at15,
-      currentVersion
-    );
-    return {
-      ok: true,
-      key: pk + "::" + sk,
-      progression_key: pk,
-      stage_key: sk,
-      to: st,
-      state: st,
-      reason: why,
-      decided_by: by,
-      at: at15,
-      bundle: null,
-      definition_version: currentVersion
-    };
-  }
-};
-function progressionOps(p, url, body) {
-  const q6 = (k) => url.searchParams.get(k);
-  return {
-    progressiondefine: () => p.defineProgression(body || {}),
-    progression: () => p.readProgression({ progressionKey: q6("key"), version: q6("version") }),
-    thread: () => p.threadInstance({ ...body || {}, viewer: q6("viewer") }),
-    instance: () => p.readInstance({ progressionKey: q6("key"), entityId: q6("id"), viewer: q6("viewer") }),
-    discharge: () => p.dischargeStage({ ...body || {}, viewer: q6("viewer") }),
-    exceptions: () => p.readExceptions({ progressionKey: q6("key"), entityId: q6("id"), viewer: q6("viewer") }),
-    proposals: () => p.proposalsFeed(q6("now")),
-    captureprogressions: () => p.captureProgressions({ captureSha: q6("sha256"), nowMs: q6("now") })
-  };
-}
-var instances24 = /* @__PURE__ */ new WeakMap();
-function progressionsOf(host, deps) {
-  let p = instances24.get(host);
-  if (!p) {
-    const d = deps || {};
-    const storage = d.storage || host.storage;
-    const record = d.record || recordOf(host);
-    p = new Progressions({
-      ...d,
-      storage,
-      record,
-      extraction: d.extraction || extractionOf(host),
-      provenance: d.provenance || provenanceOf(host),
-      entities: d.entities || entitiesOf(host, { record }),
-      connections: d.connections || { weakerGrade }
-    });
-    instances24.set(host, p);
-    record.declarePurge("progressions", PROGRESSIONS_TABLES);
-  }
-  return p;
 }
 
 // src/affordances.mjs
@@ -96702,7 +96761,7 @@ var Intent = class {
   #checkProject(c) {
     const fm = c.docFm || {};
     if (typeof fm.objective !== "string" || fm.objective.trim() === "")
-      return refusal11("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
+      return refusal12("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
     const now = conditionOf(fm);
     const held = c.head ? conditionOf(parseFm2(this.record.readFile(c.bundleId, "bundle.md")?.text) || {}) : null;
     if (now && JSON.stringify(now.condition) !== JSON.stringify(held ? held.condition : null))
@@ -96719,7 +96778,7 @@ var Intent = class {
     const from = c.head ? c.head.currentState : null, to = c.promotedState;
     const legal = c.head ? to === from || from === first && to === last : to === first;
     if (!legal)
-      return refusal11(
+      return refusal12(
         "PURSUIT_STATE_MOVE_UNDECLARED",
         `a ${type} ${c.head ? `at '${from}' moves only to '${last}', once` : `is created '${first}'`}, and this promotion names '${String(to).slice(0, 40)}'. Nothing was written.`,
         { object_type: type, from, to: to ?? null }
@@ -96745,7 +96804,7 @@ var Intent = class {
     if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str12(owner) || scope === "group" && owner != null)
       return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
     if (scope === "member" && str12(owner) !== who2)
-      return refusal11("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
+      return refusal12("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
     if (scope === "project") {
       const p = this.#project(owner, viewer);
       if (p.refused) return p.refused;
@@ -96753,14 +96812,14 @@ var Intent = class {
       if (denied) return denied;
     }
     if (scope === "group" && !this.membership.isAdministrator(who2))
-      return refusal11("GROUP_ASPIRATION_NOT_ADMIN", "an aspiration the whole group holds is declared, revised and retired by an active administrator. Nothing was written.");
+      return refusal12("GROUP_ASPIRATION_NOT_ADMIN", "an aspiration the whole group holds is declared, revised and retired by an active administrator. Nothing was written.");
     return null;
   }
   /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
   #conditionRefusal(c) {
     const shaped = isObj14(c) && TOKEN3.test(str12(c.progression)) && TOKEN3.test(str12(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj14(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN3.test(String(v)))) && isObj14(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN3.test(String(s)))) && isObj14(c.satisfied);
     if (!shaped)
-      return refusal11("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
+      return refusal12("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
     const def = this.progressions.readProgression({ progressionKey: str12(c.progression) });
     if (!def || def.ok === false || !def.found)
       return refuseNoSuchProgression(
@@ -96775,16 +96834,16 @@ var Intent = class {
     const declared = new Set(def.stages.map((s) => s.stage_key));
     const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
     if (bad.length)
-      return refusal11(
+      return refusal12(
         "BAD_STAGE",
         `the flow '${str12(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
         { stages: bad, declared: [...declared] }
       );
     if (c.required.grade != null && !GRADES.includes(c.required.grade))
-      return refusal11("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
+      return refusal12("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
     const share = c.satisfied.share;
     if (!Number.isInteger(share) || share < 1 || share > 100)
-      return refusal11("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
+      return refusal12("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
     return null;
   }
   /** record-core R59: C-2.9's objective arm in the audit, beside the catalogue, over the same image (R22). */
@@ -96808,7 +96867,7 @@ var Intent = class {
    *  project's document through `promotion`; the earlier revision stays in history. */
   setCondition({ project, condition, author, viewer = null } = {}) {
     if (machine2(author))
-      return refusal11("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
+      return refusal12("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
     const p = this.#project(project, viewer);
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "setCondition");
@@ -97351,7 +97410,7 @@ var Intent = class {
       { aspiration: aspiration ?? null }
     );
     if (!str12(note))
-      return refusal11("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
+      return refusal12("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at15 = this.#when();
@@ -97594,9 +97653,9 @@ ${bodyText2(note)}`
    *  answers its proposals, `{key, kind, grade, basis, instances, surfaced_by}`. */
   registerSource(kind, reader) {
     if (typeof kind !== "string" || !TOKEN3.test(kind) || typeof reader !== "function" || kind === "progressions" || kind === "intent")
-      return refusal11("SOURCE_MALFORMED", "a source names its kind (a key, not 'progressions' or 'intent', which are read directly) and gives a reader function.", { kind: typeof kind === "string" ? kind : null });
+      return refusal12("SOURCE_MALFORMED", "a source names its kind (a key, not 'progressions' or 'intent', which are read directly) and gives a reader function.", { kind: typeof kind === "string" ? kind : null });
     if (this.#sources.has(kind))
-      return refusal11("SOURCE_DECLARED", `the source '${kind}' is already registered.`, { kind });
+      return refusal12("SOURCE_DECLARED", `the source '${kind}' is already registered.`, { kind });
     this.#sources.set(kind, reader);
     return { ok: true, kind };
   }
@@ -97741,14 +97800,14 @@ ${bodyText2(note)}`
     assistantPrincipal = null
   } = {}) {
     if (!TRIAGE_ACTS.includes(act))
-      return refusal11(
+      return refusal12(
         "TRIAGE_ACT_UNKNOWN",
         `a proposal is triaged by one of ${TRIAGE_ACTS.join(", ")}. Nothing was written.`,
         { acts: TRIAGE_ACTS }
       );
     const isMachine2 = machine2(author);
     if (isMachine2 && act !== "question")
-      return refusal11("MACHINE_CANNOT_TRIAGE", "an assistant may open a question from a proposal and take no other act on it. Nothing was written.");
+      return refusal12("MACHINE_CANNOT_TRIAGE", "an assistant may open a question from a proposal and take no other act on it. Nothing was written.");
     let proj = null;
     if (project != null && project !== "") {
       const p = this.#project(project, viewer ?? (isMachine2 ? null : author));
@@ -97757,7 +97816,7 @@ ${bodyText2(note)}`
     }
     const found = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).find((p) => p.key === proposal);
     if (!found)
-      return refusal11("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
+      return refusal12("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
     const why = str12(reason);
     if ((act === "defer" || act === "dismiss") && !why)
       return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
@@ -97780,7 +97839,7 @@ ${bodyText2(note)}`
           at: q5(at15)
         }
       );
-      if (text3 === null) return refusal11("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
+      if (text3 === null) return refusal12("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
       text3 = setField2(text3, "last_updated", q5(at15));
       text3 = logEntry(text3, at15, "Proposal adopted", str12(author), `the proposal ${found.key} is adopted into the objective.`);
       const r = this.#revise(proj, text3, str12(author), viewer);
@@ -97983,7 +98042,7 @@ ${bodyText2(note)}`
    *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). */
   async workObjective({ project, author, viewer = null, run = {} } = {}) {
     if (machine2(author))
-      return refusal11("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
+      return refusal12("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const g = this.gaps({ project, viewer: viewer ?? author });
@@ -114328,10 +114387,10 @@ var MODULE_CHECK_FILES = [
   checks_exports10,
   checks_exports15,
   inquiry_exports,
-  checks_exports20,
+  checks_exports21,
   checks_exports6,
   checks_exports18,
-  checks_exports21,
+  checks_exports20,
   checks_exports16,
   checks_exports17,
   checks_exports22,
