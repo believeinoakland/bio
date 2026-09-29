@@ -56,3 +56,7 @@ N285 applied: R35 notADisposition (C-100.20, R35's translation), exported with D
 **Tests and checks.** progressions: pass 42, fail 0, todo 1 (R32). Users' and providers' tests: intent 41/0, scheduler 46/0, affordances 74/0, queue 10/0, connections 65/0, entities 41/0. `format`: 0 failures. `architecture`: 10 files, 33 imports, 0 failures. `coverage`: 35 of 35 ids, 0 failures. `ownership`: 7 files, legacy 0/0, 0 failures.
 
 Size (session_01X6gfmWECg3C2k8SqLBBz7h): test runs 13, module lines 1614
+
+## J4 · COMPLETE · re B3
+
+B3 applied. I merged tranche/T12; #entityNamed answers entities.noEntity (R37), so R6, R9, R14 and R15 go through it, and C-100.9 is retired. R27's todo is now a full-compliance test (4 acts x 8 absence shapes, field-for-field noEntity, writes nothing). Tests: 42 pass, 0 fail, 1 todo (R32). Users and providers are green: intent, scheduler, affordances, queue, connections and entities. format, architecture, coverage 35/35 and ownership each report 0 failures. R27's N285 mark is met. Guard: NO_ENTITY's remaining second site is connections'; the NO_LABEL ratchet is back to 32. Record: build/jobs/T12/progressions.md, Completion (B3).
