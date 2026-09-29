@@ -13,8 +13,13 @@
    WHAT FAILS, naming the row: any other difference (a row that arrived, departed, or changed its check, code, `where`
    or translation with no record, or a stamp that missed one), found by diffing against the stamp's own lines
    (`fixtures/row-census-<version>.jsonl`, itself held to the pin's digest).
-   THE NEGATIVE CONTROL is in the suite: a row added to the tree's census without a re-pin fails, by name, through the
-   same comparison, and so do a departure and a changed translation. */
+   NEGATIVE CONTROL: (run 2026-09-29, LEGACY-TESTS #11; the first three arms are in the suite and run with it, the
+   fourth on a scratch worktree, restored by `git checkout`) (1) a row added to the census without a re-pin -> the
+   comparison fails naming `arrived with no record: C-999.1 CONTROL_ARRIVAL`; (2) a stamped row taken out -> it fails
+   naming `departed with no record: C-59.6 MINT_EXHAUSTED`; (3) that row's translation changed -> it fails naming
+   `changed with no record: C-59.6 MINT_EXHAUSTED`, and a declared `awaiting stamp` row the tree does not bear out is a
+   failure, not an exemption; (4) a row `C-59.99 CONTROL_ROW` added to record-core's own `RECORD_CORE_CHECKS` on the real
+   tree -> 7 pass 1 fail, `CENSUS MOVED: arrived with no record: C-59.99 CONTROL_ROW`. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
