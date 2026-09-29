@@ -192,3 +192,26 @@ test("R15 (N182 (4)): when the new version cannot be written, adopt is refused, 
   } finally { w.basisVersions.appendVersion = append; }
   assert.equal(w.r.notices({ viewer: ADMIN }).notices[0].state, "open");
 });
+
+test("R25 R18 (N239): where the pass stands survives in whole-second instants spelled by record-core's stampInstant, whatever the milliseconds of now", async () => {
+  const { stampInstant } = await import("../../../src/record-core/index.mjs");
+  const w = world();
+  const a = w.cap("a", "old"), b = w.cap("b", "new");
+  w.doc(OLD, [a]); w.doc(NEW, [b]);
+  const units = Array.from({ length: 5 }, (_, i) => U(i, `page ${i} of the old`));
+  w.read(a.sha, units, { pageCount: 5 });
+  w.read(b.sha, units.map((u, i) => U(i, `page ${i} rewritten`)), { pageCount: 5 });
+  w.at(a.sha, "ex.org/doc", "2026-09-01T00:00:00Z"); w.at(b.sha, "ex.org/doc", "2026-09-20T00:00:00Z");
+  const cids = units.map((_, i) => w.passage(OLD, a.sha, { kind: "pdf-page", page: i }));
+  const holders = Math.ceil((NOTICE_SWEEP_DEFAULT + 1) / cids.length);
+  for (let h = 0; h < holders; h++)
+    w.inquiry(`INQ-2026-${String(h + 1).padStart(4, "0")}-h`, { legs: cids.map((cid) => ({ target: OLD, content_id: cid })) });
+  const ms = NOW + 789;
+  assert.equal(w.r.noticeSweep(ms).truncated, true, "a pass part-way");
+  const part = w.row(`SELECT pass_began FROM reevaluation_sweep WHERE id = 1`);
+  assert.equal(part.pass_began, stampInstant("second", ms));
+  assert.match(part.pass_began, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
+  again(w).noticeSweep(ms + 5000);
+  const done = w.row(`SELECT pass_began, complete_began FROM reevaluation_sweep WHERE id = 1`);
+  assert.deepEqual(done, { pass_began: null, complete_began: stampInstant("second", ms) }, "the pass keeps the instant it began");
+});

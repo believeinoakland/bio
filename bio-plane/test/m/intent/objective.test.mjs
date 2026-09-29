@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { checkBundle } from "../../../checks/bio-checks.mjs";
 import { INTENT_CHECKS } from "../../../src/intent/index.mjs";
+import { noSuchProject, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { world, seeded, V, MACHINE, COND, projMd } from "./fixture.mjs";
 
 const strip = (r) => { const { detail, project, ...rest } = r; return rest; };
@@ -48,7 +49,7 @@ test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no 
   assert.equal(pass.tally["C-2.9"], 1);
   assert.equal(pass.tallyDetail["C-2.9/NO_OBJECTIVE"], 1);
   /* every refusal code intent.md names has its row here, with a check id and a translation */
-  const named = ["NO_OBJECTIVE", "MACHINE_CANNOT_SET_OBJECTIVE", "NO_SUCH_PROJECT", "CONDITION_UNREADABLE", "NO_SUCH_PROGRESSION",
+  const named = ["NO_OBJECTIVE", "MACHINE_CANNOT_SET_OBJECTIVE", "CONDITION_UNREADABLE", "NO_SUCH_PROGRESSION",
     "NO_SUCH_ENTITY", "BAD_STAGE", "CONDITION_BAD_GRADE", "BAD_SHARE", "MACHINE_CANNOT_DECLARE_GOAL", "PURSUIT_UNSTATED", "NO_SUCH_GOAL",
     "NO_SUCH_ASPIRATION", "NO_REASON", "MACHINE_CANNOT_DECLARE_ASPIRATION", "NOT_YOURS", "GROUP_ASPIRATION_NOT_ADMIN",
     "NO_LESSON", "MACHINE_CANNOT_TRIAGE", "MACHINE_CANNOT_CHOOSE_THE_QUESTION"];
@@ -68,6 +69,35 @@ test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no 
   }
   /* N180: no code another module mints for its own condition is borrowed: NO_STATEMENT is the catalogue's, BAD_GRADE strength's */
   for (const borrowed of ["NO_STATEMENT", "BAD_GRADE"]) assert.equal(INTENT_CHECKS[borrowed], undefined, borrowed);
+});
+
+test("R22 R2 R3 NO_SUCH_PROJECT is membership's one row (its R78, C-70.5): intent holds no row for it (C-111.2 retired), and every act and read naming an absent or unseen project answers exactly membership's noSuchProject", async () => {
+  assert.equal(INTENT_CHECKS.NO_SUCH_PROJECT, undefined, "intent's own row is retired");
+  assert.ok(!Object.values(INTENT_CHECKS).some((r) => r.check === "C-111.2"), "its number is not reused");
+  const w = seeded();
+  w.entity("ENT-1");
+  w.define();
+  const hidden = w.project("Hidden", "carol");
+  const g = w.i.declareGoal({ statement: "s", bounds: "b", author: V("bob") }).goal;
+  const a = w.i.declareAspiration({ scope: "group", statement: "s", author: V("alice") }).aspiration;
+  w.i.registerSource("monitoring", () => [{ key: "c-1", kind: "k", basis: null }]);
+  const acts = (p) => [
+    ["setCondition", w.i.setCondition({ project: p, condition: COND, author: V("bob"), viewer: V("bob") })],
+    ["progress", w.i.progress({ project: p, viewer: V("bob") })],
+    ["gaps", w.i.gaps({ project: p, viewer: V("bob") })],
+    ["aspirationsFor", w.i.aspirationsFor({ project: p, viewer: V("bob") })],
+    ["proposals", w.i.proposals({ project: p, viewer: V("bob") })],
+    ["linkObjective", w.i.linkObjective({ goal: g, project: p, author: V("bob"), viewer: V("bob") })],
+    ["departFrom", w.i.departFrom({ project: p, aspiration: a, reason: "r", author: V("bob"), viewer: V("bob") })],
+    ["declareAspiration", w.i.declareAspiration({ scope: "project", owner: p, statement: "s", author: V("bob"), viewer: V("bob") })],
+    ["triage", w.i.triage({ proposal: "monitoring::c-1", act: "adopt", project: p, author: V("bob"), viewer: V("bob") })],
+  ];
+  for (const p of [hidden, "PROJ-2026-9999-nothing"])
+    for (const [name, r] of acts(p)) assert.deepEqual(r, noSuchProject(p), `${name} ${p}`);
+  assert.deepEqual(await w.i.workObjective({ project: hidden, author: V("bob") }), noSuchProject(hidden));
+  /* adopting with no project named is the same condition: no project answers */
+  assert.deepEqual(w.i.triage({ proposal: "monitoring::c-1", act: "adopt", author: V("bob") }), noSuchProject(null));
+  assert.equal(noSuchProject(hidden).check, MEMBERSHIP_CHECKS.NO_SUCH_PROJECT.check);
 });
 
 test("R2 setCondition's refusals, in order: machine, absent or unseen project (one answer), not joined, unreadable, no progression, no entity, bad stage, bad grade, bad share", async () => {

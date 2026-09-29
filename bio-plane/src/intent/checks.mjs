@@ -9,7 +9,9 @@
  * no statement is `PURSUIT_UNSTATED` (the catalogue's `NO_STATEMENT` is `publishCase`'s), and a condition's grade
  * outside A–D is `CONDITION_BAD_GRADE` (strength's `BAD_GRADE` is its own). Refusals minted
  * by the modules intent uses (membership's `PROJECT_ACT_NOT_A_PARTICIPANT` and C-70.1, progressions' dispose rows,
- * ai-runs' open rows) are relayed with their own rows and are not restated here. */
+ * ai-runs' open rows) are relayed with their own rows and are not restated here. `NO_SUCH_PROJECT` is membership's one
+ * row (C-70.5, answered through its `noSuchProject`, R78); intent's C-111.2 is retired (N208, K275) and its number is
+ * not reused. */
 
 const at = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 /* A code several acts answer is minted once, by its own function at the foot of `index.mjs` (DEC-49's one code, one
@@ -25,11 +27,6 @@ export const INTENT_CHECKS = Object.freeze({
     check: 'C-111.1', where: at("setCondition", "is-condition-member"),
     translation: 'What a project is aiming at is a member\'s decision. An assistant may point out gaps; it may not '
       + 'set or change the measure. Sign in as a member. Nothing was written.',
-  },
-  NO_SUCH_PROJECT: {
-    check: 'C-111.2', where: at("refuseNoSuchProject", "is-project-seen"),
-    translation: 'No project answers to that id here. A project you cannot see is answered exactly as one that does '
-      + 'not exist, so this is not a hint either way.',
   },
   CONDITION_UNREADABLE: {
     check: 'C-111.3', where: at("#conditionRefusal", "is-condition-shaped"),
