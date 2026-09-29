@@ -83,7 +83,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - **R19** Progress is derived, never reported: no service accepts a progress figure, count, share or completion, and nothing stores one (Framework §12 consequence 1; invariant 8).
 - **R20** An assistant proposes at any point and adopts at none: every act that adopts, dismisses, defers, sets a condition, links, declares, departs, closes or retires refuses a machine (§12 "The discovery loop").
 - **R21** Aspirations and goals set priority and never filter evidence: no read here or elsewhere is narrowed, reordered or withheld by one, and a proposal that cuts against a goal is offered on the same terms as one that supports it (Framework invariant 7, §12.2).
-- **R22** C-2.9's objective arm moves here as an invariant with its test (K6); every refusal this file names gets a catalogue row in this module, except `NO_SUCH_PROJECT`, whose one row is membership's (its R78; N208, K275).
+- **R22** C-2.9's objective arm moves here as an invariant with its test (K6); every refusal this file names gets a catalogue row in this module, except `NO_SUCH_PROJECT`, whose one row is membership's (its R78; N208, K275), and `NO_SUCH_ENTITY`, whose one row is entities' (its R36; N285, K275).
 - **R23** Every read and act naming a project, goal or aspiration the viewer may not see answers exactly as an absent one.
 - **R24** This module's tables carry the id they are about and are declared to record-core's purge (K23).
 - **R25** No place is named in this module's behaviour or outward text; §12's examples are illustrations only.
