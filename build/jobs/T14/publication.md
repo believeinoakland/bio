@@ -61,7 +61,7 @@
 
 **Deferred:** nothing.
 
-**Found in other modules** (REPORT J3):
+**Found in other modules** (REPORT J2):
 1. **Stale, not rebuilt (§14):** `bio-plane/dist/bio-plane.bundled.mjs` (not_product) bundles `src/publication/`. It is regenerated at the layer close.
 2. **legacy-index (layer 11):** add `storeRefusal` to the `bindPublishedPlane` call (`src/index.mjs`:172), as above. It may also stop handing `StoreSilent`, which publication no longer reads.
 3. **Grep:** there is no hit in `civicos-ui/` or affordances' lists for any name added (`stages`, `STAGE_NEEDS`, `STAGE_SENTENCES`, `CLOSED_RECORDED_MAX`, `relayUnanswered`) or for `projectstage`. The UI's `stages` hits are progressions' own.
