@@ -234,7 +234,7 @@ const hide = (src) => {
       return i === -1 ? [src, 0]
         : [src.slice(0, j) + "\n   (z1) break one more thing -> one more assertion fails\n   (z2) break another -> another fails" + src.slice(j), 1];
     } });
-  console.log(`    RESULT: exit ${a.code} · fleet ${a.f.fleet} (baseline 4/4/35 — the tally must have RISEN)`);
+  console.log(`    RESULT: exit ${a.code} · fleet ${a.f.fleet} (baseline ${rows[0].fleet} — the tally must have RISEN)`);
 }
 
 /* (8) THE CLASS SWEEP IS REPORTED AND NOT GATED, and the arm proves the "not
