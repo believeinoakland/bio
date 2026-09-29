@@ -32,3 +32,15 @@ Found beyond my module (record, Completion 'Found'): (1) plane bundle bio-plane/
 ## J2 · COMPLETE
 
 N285 applied: attestationsFor answers no digest (absent, not a string, empty) through extraction.noSha (its R63); content mints no NO_SHA. New test R44 (N285): every shape of absence is noSha's answer field for field, reads and writes nothing; negative control. Tests 57/57 against a local R63 stand-in (not committed); format, architecture, coverage 47/47, ownership: 0 failures. R44's 'not yet met: N285' is met by this work. Awaiting the CHANGE to merge tranche/T12 and re-run against the real helper. Record: build/jobs/T12/content.md, Completion.
+
+## Completion (B2)
+
+**Applied.** Merged `tranche/T12` (extraction's R63 `noSha`, re-exported from `src/extraction/index.mjs`) into `job/T12/content` (92533fa714). No stand-in was ever committed, so there was none to drop; content's import resolves to the real helper unchanged. R44's mark is struck (BOB).
+
+**Found.** DEC-49 guard now loads the whole plane: arm G's `NO_SHA` stands at 5 literal sites, none content's (entities ×3, `src/extraction/checks.mjs` R63's helper, progressions), each theirs under N285. The plane bundle is still stale (J1, item 1).
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/content/` against the real helper: tests 57, pass 57, fail 0.
+- format: 69 modules, 64 requirements files; 0 failures. architecture: 14 product files, 43 relative imports; 0 failures. coverage: 47 of 47 live ids named; 0 failures. ownership (tranche/T12): legacy-store 0/0, legacy-checks 0/0; 0 failures.
+
+Size (session_017fc5LrB8dqSfCReXYcSpsV, B2): test runs 1, module lines 2233
