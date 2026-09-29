@@ -1,17 +1,21 @@
-/* queue's own refusal rows (requirements: `build/requirements/queue.md`, R11, R19, R25, R28, R29, R35). DEC-49: every
- * refusal this module answers carries its code, its row's check id and the member's translation, spread at its site, so
- * a surface shows the same sentence wherever the act is reached.
+/* queue's own refusal rows (requirements: `build/requirements/queue.md`, R11, R19, R25, R28, R29, R35, R41), and the
+ * task grammar C-19.1 (R41). DEC-49: every refusal this module answers carries its code, its row's check id and the
+ * member's translation, spread at its site, so a surface shows the same sentence wherever the act is reached.
  *
  * Moved from the check catalogue (`checks/bio-checks.mjs`) at the module's extraction (T12; K6, K64's pattern): the
  * queue mint's family C-31 whole, `TASK_ACTOR_CHECKS` (C-76.1) whole, and four single rows split out of the families
  * that held them (`MACHINE_FENCE_CHECKS`' C-32.10 and C-32.11, `ACT_SHAPE_CHECKS`' C-33.27 and C-33.44), each keeping
  * its check id and its words. `NO_PROJECT_SCOPE` is new with R29 (D-623): the one code both of the project arm's
  * no-scope refusals answer, numbered C-33.50, the next free row of the act-shape family (K107 (3): the job names a new
- * code's row; K174: a module holds its new rows). C-19.1 (`checkInboxGrammar`) is still the catalogue's: its gate runs
- * it over every bundle's `data/inbox.json` (QUEUE #2's record, Q1).
+ * code's row; K174: a module holds its new rows). C-19.1 (`checkInboxGrammar`, the task grammar) moved here in T14
+ * (N325, R41), monitoring's C-18.5 move (its R27, R42): `legacy-checks` cannot import this module, so its `checkBundle`
+ * no longer runs C-19.1; this module registers the one function with promotion (at the write, R41's `INBOX_REFUSED`,
+ * row C-19.2, new here) and with record-core's audit, and its own drain runs it over every candidate task.
  *
  * N301 (K356): the class `FINDING` keeps its code and its meaning and is shown to members as **Noticed**; "finding" is
  * reserved for a concluded question. So no translation below calls a queue item a finding. */
+
+import { isPublicHttpsLocator, ISO_TS_RE, BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
 
 const at = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
 
@@ -115,4 +119,158 @@ export const TASK_ACTOR_CHECKS = Object.freeze({
  *  above; the code is the caller's string literal, so the DEC-49 guard can read it at the site. */
 export function queueRefusal(code, row, extra = {}) {
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra };
+}
+
+/* C-19.2 — the task grammar's refusal at the write (R41, N325): a promotion carrying a `data/inbox.json` whose C-19.1
+ * grammar finds an error. New with the move, beside monitoring's `GATHERING_REFUSED` (its C-18.5 refusal), so the code
+ * has its translation (DEC-49). The `findings` beside it name each C-19.1 error. */
+export const QUEUE_INBOX_CHECKS = Object.freeze({
+  INBOX_REFUSED: Object.freeze({
+    check: 'C-19.2',
+    where: at("inboxCheck", "is-inbox-refused"),
+    translation: 'This was not saved: the list of tasks it carries is not written the way the record writes tasks, '
+      + 'so a member could be shown something in it that the record cannot vouch for. The findings beside this say '
+      + 'which entries and what is wrong with each. Nothing was changed.',
+  }),
+});
+
+/* ---------------------------------------------------------------------------------------------------------------
+ * C-19.1, the task grammar, moved from the catalogue (`checks/bio-checks.mjs`) with its comments (N325, R41).
+ * --------------------------------------------------------------------------------------------------------------- */
+
+/* The catalogue's finding shape (legacy-checks' private `f`), for the check that moved here. */
+function f(check, severity, message, repairs) {
+  const out = { check, severity, message };
+  if (repairs) { out.repairable = true; out.repairs = repairs; }
+  return out;
+}
+function asText(v) {
+  if (typeof v === 'string') return v;
+  return new TextDecoder().decode(v);
+}
+
+const TASK_ID_RE = /^TASK-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+const TASK_KIND_ENUM = ['authority-undetermined'];
+const TASK_ROLE_ENUM = ['project-manager', 'group-admin', 'member'];
+const TASK_STATUS_ENUM = ['open', 'resolved', 'forwarded'];
+const TASK_EVENT_ENUM = ['created', 'forwarded', 'resolved', 'folded'];
+const MEMBER_ID_RE = /^[a-z0-9][a-z0-9-]{1,40}$/;
+
+/** C-19.1 (error): data/inbox.json task grammar (D-98, INBOX-GRAMMAR.md).
+ *
+ *  A SIBLING of C-18.5, not a new kind of thing. Bob's ruling puts an
+ *  undetermined-authority capture in front of a member, and says the transport
+ *  MIGHT ONE DAY BE EMAIL. That clause is the whole reason this is a grammar
+ *  and not a table: an email renders in a client we do not control, where a
+ *  plausible-looking instruction is exactly what phishing is. So the F5 split
+ *  that governs the gathering queue governs this file unchanged: fields a
+ *  member READS are length-bounded and newline-free so the exporter renders
+ *  them as inert quoted data, and fields a MACHINE acts on are enum- or
+ *  pattern-bounded so a malformed value is refused rather than obeyed.
+ *
+ *  Every bound below copies the C-18.5 pattern for the same kind of field
+ *  rather than a similar one, and `refers_to` reuses BUNDLE_ID_RE, the C-1.2
+ *  validator, rather than restating the canonical ID grammar. A second grammar
+ *  pretending to be the same one is the mistake checkGatheringGrammar's own
+ *  comment warns against.
+ *
+ *  Scoped by declared contract: enforced only where the file is present. One
+ *  function at the three places it runs (R41): the promotion check, the audit
+ *  check, and the drain's candidate task. */
+export function checkInboxGrammar(ctx, findings) {
+  const raw = ctx.files.get('data/inbox.json');
+  if (!raw) return;
+  let g;
+  try { g = JSON.parse(asText(raw)); } catch { return; } // C-14.3 reports
+  if (typeof g !== 'object' || g === null || Array.isArray(g)) {
+    findings.push(f('C-19.1', 'error', 'data/inbox.json must be a JSON object'));
+    return;
+  }
+  const tasks = Array.isArray(g.tasks) ? g.tasks : null;
+  if (g.tasks !== undefined && !tasks) {
+    findings.push(f('C-19.1', 'error', 'inbox.json tasks must be an array'));
+    return;
+  }
+  const seen = new Set();
+  for (let i = 0; i < (tasks || []).length; i++) {
+    const tk = tasks[i];
+    if (typeof tk !== 'object' || tk === null) { findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}] is not an object`)); continue; }
+
+    if (!TASK_ID_RE.test(tk.id || '')) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].id '${tk.id}' does not match the TASK grammar`));
+    else if (seen.has(tk.id)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}] repeats id '${tk.id}'`));
+    else seen.add(tk.id);
+
+    if (!TASK_KIND_ENUM.includes(tk.kind)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].kind '${tk.kind}' must be one of: ${TASK_KIND_ENUM.join(', ')}`));
+
+    /* The two fields a member actually reads. Bounded exactly as C-18.5 bounds
+       target.text and target.description, character for character. */
+    const sub = tk.subject;
+    if (!sub || typeof sub !== 'object') findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}] missing subject block`));
+    else {
+      if (typeof sub.text !== 'string' || sub.text.length === 0 || sub.text.length > 200 || /[\r\n]/.test(sub.text)) {
+        findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].subject.text must be a nonempty single-line string under 200 chars`));
+      }
+      if (sub.description !== undefined && (typeof sub.description !== 'string' || sub.description.length > 2000)) {
+        findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].subject.description must be a string under 2000 chars`));
+      }
+    }
+
+    /* The task points AT a bundle, so this is the canonical ID grammar and not
+       a locator. A substrate path here would be the C-6.1 mistake. */
+    if (!BUNDLE_ID_RE.test(tk.refers_to || '')) {
+      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].refers_to '${String(tk.refers_to).slice(0, 40)}' is not a canonical bundle ID`));
+    } else if (ctx.resolveTarget && !ctx.resolveTarget(tk.refers_to)) {
+      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].refers_to '${tk.refers_to}' does not resolve in the store`,
+        ['re-point the task at the successor bundle', 'resolve the task with a reason if its subject is gone']));
+    }
+
+    if (tk.locators !== undefined) {
+      if (!Array.isArray(tk.locators)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].locators must be an array`));
+      else for (let L = 0; L < tk.locators.length; L++) {
+        if (!isPublicHttpsLocator(tk.locators[L])) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].locators[${L}] '${String(tk.locators[L]).slice(0, 40)}' is not an https public-host locator`));
+      }
+    }
+
+    if (tk.assignee !== 'unassigned' && !MEMBER_ID_RE.test(tk.assignee || '')) {
+      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].assignee '${tk.assignee}' must be a member_id or the literal 'unassigned'`));
+    }
+    if (!TASK_ROLE_ENUM.includes(tk.assignee_role)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].assignee_role '${tk.assignee_role}' must be one of: ${TASK_ROLE_ENUM.join(', ')}`));
+    if (!TASK_STATUS_ENUM.includes(tk.status)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].status '${tk.status}' must be one of: ${TASK_STATUS_ENUM.join(', ')}`));
+
+    if (!ISO_TS_RE.test(tk.created || '')) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].created must be an ISO 8601 UTC instant`));
+    if (tk.resolved_at !== undefined && tk.resolved_at !== null && !ISO_TS_RE.test(tk.resolved_at)) {
+      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].resolved_at must be an ISO 8601 UTC instant`));
+    }
+    /* A resolved task without the instant it resolved at is a status nobody can
+       audit, which is the same class of defect as a clock entry silently past
+       due (C-11.1). */
+    if (tk.status === 'resolved' && !ISO_TS_RE.test(tk.resolved_at || '')) {
+      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}] is resolved but carries no resolved_at instant`));
+    }
+
+    /* Append-only, and shaped exactly like a member_expertise row: what
+       happened, who did it, when. Who a task was taken FROM is as much a fact
+       as who holds it now, so a forward ADDS here and never rewrites. */
+    const hist = tk.history;
+    if (!Array.isArray(hist) || hist.length === 0) {
+      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history must be a nonempty append-only array`));
+    } else {
+      let prev = '';
+      for (let h = 0; h < hist.length; h++) {
+        const e = hist[h];
+        if (typeof e !== 'object' || e === null) { findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}] is not an object`)); continue; }
+        if (!ISO_TS_RE.test(e.at || '')) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}].at must be an ISO 8601 UTC instant`));
+        else { if (prev && e.at < prev) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}] is out of chronological order`)); prev = e.at; }
+        if (!TASK_EVENT_ENUM.includes(e.event)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}].event '${e.event}' must be one of: ${TASK_EVENT_ENUM.join(', ')}`));
+        /* The actor is a name a member reads beside an event, so it is bounded
+           like one rather than left free. */
+        if (typeof e.actor !== 'string' || e.actor.length === 0 || e.actor.length > 64 || /[\r\n]/.test(e.actor)) {
+          findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}].actor must be a nonempty single-line string under 64 chars`));
+        }
+      }
+      if (hist[0] && hist[0].event !== 'created') {
+        findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history does not begin with its creation`));
+      }
+    }
+  }
 }

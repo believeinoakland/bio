@@ -278,8 +278,14 @@ test("R38: no place is named in the feed's outward text", () => {
   for (const place of ["Oakland", "California", "Alameda", "CPRA", "Brown Act", "Sunshine"]) assert.ok(!text.includes(place), place);
 });
 
-test("R39: resolved carries the obligations resolved lately on visible subjects, with who and when; the bias half is stated unread", () => {
-  const w = world();
+test("R39: resolved carries the obligations resolved lately on visible subjects, with who and when: tasks and settled bias debts", () => {
+  let asked = null;
+  const settled = [
+    { run: "RUN-1", context_type: "inquiry", context_id: "INQ-1", settled_kind: "resolved", settled_at: iso(NOW - 7200000),
+      actor: "bob", reason: "re-read under the new lens" },
+    { run: "RUN-2", context_type: "inquiry", context_id: "INQ-1", settled_kind: "lens_returned", settled_at: iso(NOW - 3600000),
+      actor: null, reason: null }];
+  const w = world({ bias: { settled: (a) => { asked = a; return { debts: settled, limit: a.limit, truncated: false, since: a.since }; } } });
   w.member("alice"); w.bundle("INF-1"); w.bundle("PRJ-H", "project");
   const hist = (by, at) => [{ at: iso(NOW - 10 * 86400000), event: "created", actor: "alarm" }, { at, event: "resolved", actor: by }];
   w.task("TASK-2026-0001-a", "INF-1", { status: "resolved", resolvedAt: iso(NOW - 86400000), history: hist("bob", iso(NOW - 86400000)) });
@@ -287,10 +293,26 @@ test("R39: resolved carries the obligations resolved lately on visible subjects,
   w.task("TASK-2026-0003-c", "PRJ-H", { status: "resolved", resolvedAt: iso(NOW - 3600000), history: hist("bob", iso(NOW - 3600000)) });
   const r = w.feed("alice").resolved;
   assert.equal(r.personal, false); assert.equal(r.window_days, 30); assert.equal(r.bound, 64);
+  assert.equal(r.since, iso(NOW - 30 * 86400000));
   assert.deepEqual(r.obligations.map((o) => [o.id, o.resolved_by, o.resolved_at]), [["TASK-2026-0001-a", "bob", iso(NOW - 86400000)]]);
-  assert.equal(r.bias_debts.read, false);
+  // the bias half: bias.settled asked with the viewer's gate, in the same window and bound (N326)
+  assert.deepEqual(asked, { gate: viewerPredicate("member:alice"), since: r.since, limit: 64 });
+  const b = r.bias_debts;
+  assert.equal(b.read, true); assert.equal(b.count, 2); assert.equal(b.bound, 64); assert.equal(b.truncated, false);
+  assert.deepEqual(b.debts[0], { id: "OBLIGATION::bias-debt::RUN-1", class: "OBLIGATION", kind: "bias-debt", run: "RUN-1",
+    context: { type: "inquiry", id: "INQ-1" }, resolved_by: "bob", settled_kind: "resolved", resolved_at: iso(NOW - 7200000),
+    reason: "re-read under the new lens" });
+  // a debt no member settled: resolved_by null beside its settled_kind, never "nobody"
+  assert.deepEqual([b.debts[1].resolved_by, b.debts[1].settled_kind], [null, "lens_returned"]);
+  assert.ok(b.debts.every((d) => d.resolved_by === null || d.resolved_by === "bob"), "no stand-in name for an absent member");
+  // bias's bound and its failure are published, never read as none
+  const w2 = world({ bias: { settled: ({ limit }) => ({ debts: [], limit, truncated: false, undetermined: true,
+                                                        stated: "the settled bias debts could not be read, so none is listed" }) } });
+  const u = w2.feed(null, "class:admin").resolved.bias_debts;
+  assert.equal(u.read, false); assert.equal(u.stated, "the settled bias debts could not be read, so none is listed");
+  const w3 = world({ bias: { settled: ({ limit }) => ({ debts: settled.slice(0, 1), limit, truncated: true }) } });
+  assert.equal(w3.feed(null, "class:admin").resolved.bias_debts.truncated, true);
 });
-test.todo("R39: the settled bias debts in `resolved` — bias offers no read of its settlements to a later module (QUEUE #2 Q4)");
 
 test("R40: a snoozed case's lapse is published in mute and each of its items is marked snoozed, never withheld", () => {
   const w = world();
