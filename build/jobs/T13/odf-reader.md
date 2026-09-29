@@ -60,3 +60,7 @@ R45's wording would need both additions. If BOB prefers other rules, I will brin
 Two items outside my module, from N30 (details in my record's Completion):
 1. **legacy-tests**: `bio-plane/test/formats-odf.test.mjs:461` pins the old R16 shape (`hRows.rows` = `[3]`). With R16's ranges it now fails 1 of 171: it gets `[{"min":3,"max":3,"visibility":"collapse"}]`. It passes on `tranche/T13`. It needs re-anchoring to R16's range shape. Not edited: it is legacy-tests' suite.
 2. **Generated artifacts made stale** (not rebuilt): `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) and `agent-worker/dist/agent-worker.bundled.mjs`. Both carry `src/odf.mjs`. The pdf-worker and ocr-worker bundles do not carry it.
+
+## J4 · COMPLETE
+
+N30 applied: R45 (`ODF_REPEAT_EXPANSION_MAX` = 262,144, exported; `over_repeat_bound` answered as over the size guard on all three entries), R16 (hidden rows as `{min, max, visibility}` ranges) and R41's new branch. Every bound test from B1 passes at its bound. J2's two additions (link copies cost a unit; copied text bounded by the COFF-6 figure) are built on my best reading. If you rule otherwise, a CHANGE brings them in line. Marks for you to strike: R16, R41 and R45's `(not yet met: N30)`. Tests: odf-reader 57/57; format-registry and capture 97/97; legacy formats-odf 170/171 (J3). Checks: format, architecture and ownership 0 failures; coverage 45/45. Record: `build/jobs/T13/odf-reader.md`, Completion.
