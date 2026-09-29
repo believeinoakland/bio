@@ -41,12 +41,12 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 **Stamps**
 - **R17** For every op, any stamp the caller sends (query or body) is deleted. The op's declared stamps are then set from the authenticated caller:
   - a session: its member, its viewer (`admin` for the founder) and its identity (`member:<id>`);
-  - an `ai` credential: its principal;
-  - a binding class: `class:<cls>` as viewer or identity, and `token:<cls>` as author, actor or `who`.
+  - an `ai` credential: its principal as viewer, and `class:ai/<tokenId>` as author (REC-134);
+  - a binding class: `class:<cls>`, or `token:<cls>` where the op's recorded decision names that form (D-311).
 
-  The founder's `author` is `admin`. `origin` is the origin the request reached. So no handler ever receives a caller's own statement of who or where they are.
+  The founder's `author` is `admin`, and `member:admin` on the action-layer and intent acts (T8). `origin` is the origin the request reached. So no handler ever receives a caller's own statement of who or where they are.
 - **R18** `administer` is true exactly for a session that administers (membership R3) and for the `admin` binding class. `op=whoami` answers `tokenClass`, `session`, `member`, `handle`, `administer`, `rootOfTrust`, the session's sorted `capabilities` (`null` for a credential), the capability `vocabulary` and `confinedTo` (for an `ai` credential, else `null`).
-- **R19** An agent credential's scope is judged when it is minted. An op no spec declares is refused `AI_SCOPE_UNKNOWN_OP` (C-29.8). An op no member reaches is refused `AI_SCOPE_BEYOND_MEMBER_REACH` (C-29.9). A `confinedTo` other than absent or exactly `scratch` is refused `AI_CONFINEMENT_NOT_SCRATCH` (C-29.10). The credential's value and a review grant's secret are generated here, returned once in the minting answer, and passed on only as their SHA-256. An op a bearer is refused by R14 counts as beyond member reach, both at the mint and in R12. *(not yet met: D-586)*
+- **R19** An agent credential's scope is judged when it is minted. An op no spec declares is refused `AI_SCOPE_UNKNOWN_OP` (C-29.8). An op no member reaches is refused `AI_SCOPE_BEYOND_MEMBER_REACH` (C-29.9). A `confinedTo` other than absent or exactly `scratch` is refused `AI_CONFINEMENT_NOT_SCRATCH` (C-29.10). The credential's value and a review grant's secret are generated here, returned once in the minting answer, and passed on only as their SHA-256. An op a bearer is refused by R14 counts as beyond member reach, both at the mint and in R12.
 
 **Doors that authenticate by a secret**
 - **R20** `reviewcopy`, `reviewcomment` and `statementack` admit a caller holding a review grant's secret, whose digest the store checks. A draft outside the fence is answered 404 `NO_REVIEW_COPY`, with the same bytes from `reviewcopy` and from `casedrafts`.
@@ -55,7 +55,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **R21** Every answer is JSON with `access-control-allow-origin: *`. A forwarded answer is the handler's, with `store` and `tokenClass` added and its HTTP status kept.
 - **R22** A refusal (`ok: false`, at the top level or in `result`) whose `reason` or `code` has a catalogue row gains `code`, `check` and `translation` where absent. Only those two levels are decorated.
 - **R23** A store answer that is not JSON with `ok: true` means the store did not answer. It is refused 502 `STORE_DID_NOT_ANSWER` (C-69.2), naming the op, and is never read as an absence, a refusal or a success.
-- **R24** A public op relaying the store's answer answers the store's own status, and answers R23 on a store failure, never 200. `claim`, `login`, `invitelook` and `enroll` read the answer without its `ok` today. *(not yet met: D-679)*
+- **R24** A public op relaying the store's answer answers the store's own status, and answers R23 on a store failure, never 200.
 - **R25** An error thrown anywhere in either door is answered with a named internal-error code (`PLANE_INTERNAL_ERROR` in the Worker, `STORE_INTERNAL_ERROR` in the store) and a correlation id. It never carries the stack, the message, a path or a line, and the stack is logged server-side under the correlation id. *(not yet met: D-629; `Store.fetch` answers `String(e.stack)` today)*
 
 **The act gate: `ACT_GATE`, `decorateAct(act)`** (read by `affordances.decorate`, its R11, for `op=affordances` and queue R17's `op=queue`)
@@ -81,7 +81,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 
 ### Invariants
 
-- **R28** The gates run in one order, which the tests pin: R3, R4, R5, then the public ops (R15 among them), then R7–R8 with R10's session gate, R9, R11/R12, R10's export refusal, R13, R6's scope refusal, then R14 and R16, and then the op. Nothing is read or written when a gate refuses.
+- **R28** The gates run in one order, which the tests pin: R3, R4, R5, then the public ops (R15 among them), then R10's export refusal, R7–R8 with R10's session gate, R9, R11/R12, R13, R6's scope refusal, then R14 and R16, and then the op. Nothing is read or written when a gate refuses.
 - **R29** No handler receives a caller-supplied value for any stamp (R17). This is tested for every op that declares a stamp.
 - **R30** No credential, session token, secret or stack appears in any answer, except the one minting answer of R19.
 - **R31** An op spec for every op any module serves, and no spec without a handler or a store route.

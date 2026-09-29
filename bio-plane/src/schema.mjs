@@ -16,62 +16,7 @@ ${RECORD_SCHEMA}
 -- defined with their reasons in src/provenance/schema.mjs (R41, R48).
 ${PROVENANCE_SCHEMA}
 
--- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG,
--- ONE VALUE FOR THE WHOLE INSTANCE. Every bundle this instance writes names it as its
--- group, in the bytes that get signed, and nothing else may supply that name: not a
--- literal in the code, and not a deploy-time variable, which a redeploy could move
--- silently. One row, id=1, WRITTEN ONCE: every writer is an INSERT that does nothing on
--- conflict, and no statement anywhere updates or deletes it.
---   source  'bootstrap'  recorded at the store's FIRST BOOT (the migrate pass that finds no
---                        bundles table), from the slug the installer bound as INSTANCE_NAME,
---                        the worker name the group chose (D-102), read at that moment only
---           'seed'       recorded once by op=instancegroupseed, the root of trust's act, on a
---                        store that already held the schema when this table arrived
---   recorded_by  NULL for bootstrap, the server-stamped credential for a seed
--- EXEMPT FROM op=purge, in both arms: identity, not derived from the corpus, in the family
--- of bootstrap and seq. hygiene.test.mjs lists it among the purge exemptions.
-CREATE TABLE IF NOT EXISTS instance_group (
-  id           INTEGER PRIMARY KEY CHECK (id = 1),
-  slug         TEXT NOT NULL,
-  recorded_at  TEXT NOT NULL,
-  source       TEXT NOT NULL,
-  recorded_by  TEXT
-);
-
 -- ---- write arc ----
-
--- What the runtime was observed to COST and to ALLOW, measured rather than
--- assumed. capture_limits holds ceilings found by being refused; this holds
--- consumption found by measuring, which is a different kind of fact and the only
--- kind available for CPU.
---
--- Exceeding the CPU limit TERMINATES the isolate: there is no catchable error,
--- so no invocation can ever record its own death. Consumption is therefore
--- measured on every real run and the ceiling is found by a stepped probe whose
--- checkpoints survive the kill. peak_ms is the worst single run seen, which is
--- the number that matters for headroom; a mean would hide the run that dies.
-CREATE TABLE IF NOT EXISTS runtime_observations (
-  metric     TEXT PRIMARY KEY,
-  peak_ms    REAL NOT NULL,
-  peak_at    TEXT NOT NULL,
-  peak_detail TEXT,
-  last_ms    REAL NOT NULL,
-  last_at    TEXT NOT NULL,
-  samples    INTEGER NOT NULL DEFAULT 1,
-  total_ms   REAL NOT NULL DEFAULT 0
-);
-
--- The stepped CPU probe's durable trail. One row per step COMPLETED, so if the
--- isolate is killed during step N the table shows N-1 and the next probe knows
--- the ceiling lies between them. Nothing here is buffered until the end of the
--- request, on purpose: a buffered checkpoint is exactly the record that would be
--- lost at the moment it became interesting.
-CREATE TABLE IF NOT EXISTS cpu_probe (
-  step        INTEGER PRIMARY KEY,
-  elapsed_ms  REAL NOT NULL,
-  iterations  INTEGER NOT NULL,
-  at          TEXT NOT NULL
-);
 
 ${QUEUE_SCHEMA}
 
@@ -132,40 +77,6 @@ ${CALIBRATION_SCHEMA}
 
 -- =========================================================================
 
--- REC-164: THE PUBLISHING GROUP'S DISPLAY NAME AND ITS DOMAIN (BIO_Publication_v0_1.md
--- section 7 points 2 and 3). Two durable values, each with a dated history: a value is
--- the LATEST row for its field, and no statement updates or deletes a row, so every
--- revision stays readable with its date and the administrator who made it.
---   field             'display_name' or 'domain'
---   set_by            the member the control plane stamped from the signed-in session,
---                     never a caller's statement, never a bearer
---   instance_address  a domain row only: the origin the administrator's session reached,
---                     stamped by the control plane, which the well-known file must name
--- EXEMPT FROM op=purge, in both arms: identity, not derived from the corpus, the family
--- of instance_group. hygiene.test.mjs lists both tables among the purge exemptions.
-CREATE TABLE IF NOT EXISTS group_identity_history (
-  seq               INTEGER PRIMARY KEY AUTOINCREMENT,
-  field             TEXT NOT NULL CHECK (field IN ('display_name','domain')),
-  value             TEXT NOT NULL,
-  set_at            TEXT NOT NULL,
-  set_by            TEXT NOT NULL,
-  instance_address  TEXT
-);
--- Every verdict on a claimed domain, dated. The public read shows a domain only while
--- the latest verdict for the CURRENT claim is 'verified'. 'undetermined' is the fourth
--- word, and it is not one of the design's three: the governor holding the host, a fetch
--- that did not complete, or an answer that is neither a file nor its absence says
--- nothing about the domain, so it is recorded as what it is and never as 'absent'.
---   trigger  'set' (the administrator's act) or 'alarm' (the reconciling re-check)
-CREATE TABLE IF NOT EXISTS group_domain_checks (
-  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
-  domain      TEXT NOT NULL,
-  verdict     TEXT NOT NULL CHECK (verdict IN ('verified','absent','mismatched','undetermined')),
-  checked_at  TEXT NOT NULL,
-  trigger     TEXT NOT NULL,
-  status      INTEGER,
-  detail      TEXT
-);
 -- =========================================================================
 
 ${HOST_GOVERNOR_SCHEMA}

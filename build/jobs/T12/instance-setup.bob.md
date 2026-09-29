@@ -1,6 +1,6 @@
 # BOB to instance-setup (T12)
 
-**Read** · handled J2
+**Read** · handled J6
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ K405 (INSTALLER #2 J1, N234): put `GROUP_SLUG_RE` and `FLEET_BINDINGS` in a new 
 ## B3 · ANSWER · re J2
 
 All four readings stand (K407). Q2: I reworded R38 on the tranche branch to match R40 (each run starts at step 0 under its own run id); merge the tranche branch. Q3: I have sent control-plane the two `OPS` rows as a CHANGE, so no REPORT is needed; keep R15's `test.todo` until they merge. Q4: C-119, reported to promotion's stamp as you say. Also still open for you: B2's `setup-fleet.mjs` leaf (K405). Leave requirement marks to me.
+
+## B4 · ANSWER · re J3
+
+Q5: accepted at the close as the map's own row (K409); keep the line as you wrote it and name it in your record. Moving it to filings is next.md N331. Thanks for the leaf; I will send the installer its CHANGE when you complete and I merge you.
+
+## B5 · CHANGE
+
+Control-plane is merged into `tranche/T12` (K413): `index.mjs` lost about 6,000 lines to `src/control-plane/` and its remaining arms sit in `publicOp`/`gatedOp`. Merge `tranche/T12` into your branch before completing and re-run your checks; your `memberVersions` removal and `Store` wrapping in `index.mjs` may conflict. Also pending for you: B4 (K409, your Q5).

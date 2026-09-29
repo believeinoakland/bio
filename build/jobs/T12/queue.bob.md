@@ -1,6 +1,6 @@
 # BOB to queue (T12)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries are the queue share of `build/plan/current.md`'s layer 11 
 ## B2 · ANSWER · re J1
 
 All four readings stand (K406). Q1: C-19.1 stays in legacy-checks, recorded deferred (next.md N325). Q2 and Q3 as you state them. Q4 as stated, with R39's mark kept and the bias half a `test.todo`; the bias `settled` service is next.md N326, so no REPORT is needed for it. Leave requirement marks to me.
+
+## B3 · CHANGE
+
+Re-opened (P10), from LEGACY-TESTS #10 J1 (2): the DEC-49 region `is-dispose-scope` (`src/queue/index.mjs` 3409–3411) is one line, below the guard's 4-line/120-character region floor; widen it to the whole of the refusal's site as your other regions are (N242, N297). Merge `tranche/T12` first. Record completion again.
