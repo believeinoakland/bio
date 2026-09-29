@@ -1,10 +1,10 @@
-/* basis-versions: the reads — op=basisversions (R8–R11), sight (R33), the projects drawing on a question (R37) and the
-   testimony walk (R39). */
+/* basis-versions: the reads — op=basisversions (R8–R11), sight (R33), the projects drawing on a question (R37), the
+   testimony walk (R39) and a project's questions (R41). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, inqMd, V } from "./fixture.mjs";
-import { BASIS_VERSIONS_LIMIT_DEFAULT, BASIS_VERSIONS_LIMIT_MAX, BASIS_VERSION_LEGS_MAX, PROJECTS_DRAWING_MAX }
-  from "../../../src/basis-versions/index.mjs";
+import { BASIS_VERSIONS_LIMIT_DEFAULT, BASIS_VERSIONS_LIMIT_MAX, BASIS_VERSION_LEGS_MAX, PROJECTS_DRAWING_MAX,
+         TESTIMONY_REACH_DEPTH, PROJECT_QUESTIONS_MAX } from "../../../src/basis-versions/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-r";
 const T = "2026-09-27T00:00:00Z";
@@ -144,4 +144,91 @@ test("R39: testimonyReach walks basis and version legs to the authored observati
   assert.deepEqual(w.bv.testimonyReach([]), { self: [], via: [] });
   assert.deepEqual(w.bv.testimonyReach(null), { self: [], via: [] });
   assert.deepEqual(w.bv.testimonyReach([DOC]), { self: [], via: [] });
+});
+
+test("R39 (N316): testimonyReach walks to depth 64 and no further — an observation 64 legs from its root is reached, one 65 legs away is not, whether the chain runs through basis or version legs", () => {
+  const w = setup();
+  assert.equal(TESTIMONY_REACH_DEPTH, 64);
+  w.st.sql.exec(`UPDATE register SET authored=1 WHERE bundle_id IN (?, ?)`, DOC, DOC2);
+  /* a chain of `hops` legs from `root` to `obs`: the first leg a version leg of a held inquiry, the rest basis legs */
+  const chain = (root, hops, obs, tag) => {
+    const ids = [root, ...Array.from({ length: hops - 1 }, (_, i) => `INQ-2026-${tag}${String(i).padStart(3, "0")}-x`), obs];
+    assert.equal(w.inquiry(root, block(version("first", [ids[1]]))).ok, true);
+    for (let i = 1; i < hops; i++)
+      w.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, target_id) VALUES (?, 0, ?)`, ids[i], ids[i + 1]);
+  };
+  /* the intermediate inquiries must be held for the root's version leg to land (R6); only the first is a version leg */
+  for (const tag of ["1", "2"]) w.inquiry(`INQ-2026-${tag}000-x`, block({}));
+  const at64 = "INQ-2026-0064-p", at65 = "INQ-2026-0065-p";
+  chain(at64, 64, DOC, "1");
+  chain(at65, 65, DOC2, "2");
+  assert.deepEqual(w.bv.testimonyReach([at64]), { self: [], via: [{ finding: at64, observation: DOC }] }, "depth 64 is reached");
+  assert.deepEqual(w.bv.testimonyReach([at65]), { self: [], via: [] }, "depth 65 is not");
+  /* the guard, not the chain, stops it: the 65-leg chain's observation is reached from one leg further in */
+  assert.deepEqual(w.bv.testimonyReach(["INQ-2026-2000-x"]).via, [{ finding: "INQ-2026-2000-x", observation: DOC2 }]);
+  /* a cycle terminates under the same guard */
+  w.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, target_id) VALUES ('INQ-2026-9001-c', 0, 'INQ-2026-9002-c'),
+                 ('INQ-2026-9002-c', 0, 'INQ-2026-9001-c'), ('INQ-2026-9002-c', 1, ?)`, DOC);
+  assert.deepEqual(w.bv.testimonyReach(["INQ-2026-9001-c"]).via, [{ finding: "INQ-2026-9001-c", observation: DOC }]);
+});
+
+test("R41: projectQuestions answers the inquiries a project draws on by a cites reference not severed, in id order after `after`, each with legs (basisFor, limit 1) and the project's stance by R22; limit defaults to 500, clamped to 1–500, cursor the last answered only when more follow; viewer-free; an empty or non-project id answers items: []; writes nothing; never throws", () => {
+  const w = setup();
+  const Q3 = "INQ-2026-0003-s", Q4 = "INQ-2026-0004-t", Q5 = "INQ-2026-0005-u", GONE = "INQ-2026-0404-z";
+  for (const q of [Q, Q2, Q3, Q4, Q5]) assert.equal(w.inquiry(q, block({})).ok, true);
+  w.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, target_id) VALUES (?, 0, ?), (?, 1, ?), (?, 0, ?)`, Q, DOC, Q, DOC2, Q4, DOC);
+  const row = (q, lines) => [`  - inquiry: "${q}"`, ...lines.map((l) => `    ${l}`)];
+  /* owned by bo: the read is viewer-free, its caller fences the project */
+  const p = w.project("Team", "bo", [Q5, Q, DOC, Q2, GONE, Q4], { severed: [Q3], extra: ["conclusions:",
+    ...row(Q, [`act: "concluded"`, `version: "first"`, `claim: "c"`, `at: "${T}"`, `by: "member:bo"`]),
+    ...row(Q2, [`act: "concluded"`, `version: "first"`, `claim: "c"`, `at: "${T}"`, `by: "member:bo"`]),
+    ...row(Q2, [`act: "withdrawn"`, `withdraws_version: "first"`, `withdraws_at: "${T}"`, `reason: "wrong"`, `at: "${T}"`, `by: "member:bo"`]),
+    ...row(Q4, [`act: "reconsidered"`, `at: "${T}"`, `by: "member:bo"`]),
+    ...row(Q3, [`act: "concluded"`, `version: "first"`, `claim: "c"`, `at: "${T}"`, `by: "member:bo"`])] });
+  const before = { bundles: w.count("bundles"), sha: w.sha(p) };
+  w.inq.calls.length = 0;
+  const all = w.bv.projectQuestions({ project: p });
+  assert.deepEqual(all, { cursor: null, items: [
+    { inquiry: Q, legs: true, stance: "concluded" },
+    { inquiry: Q2, legs: false, stance: "withdrawn" },
+    { inquiry: Q4, legs: true, stance: "undetermined" },
+    { inquiry: Q5, legs: false, stance: "none" }] }, "severed, non-inquiry and unheld targets are not answered");
+  assert.deepEqual(w.inq.calls, [Q, Q2, Q4, Q5].map((q) => ["basisFor", q, 1]), "legs through basisFor with limit 1");
+  /* pages: the cursor is the last answered while more follow, null on the last page */
+  const p1 = w.bv.projectQuestions({ project: p, limit: 3 });
+  assert.deepEqual([p1.items.map((x) => x.inquiry), p1.cursor], [[Q, Q2, Q4], Q4]);
+  const p2 = w.bv.projectQuestions({ project: p, limit: 3, after: p1.cursor });
+  assert.deepEqual([p2.items.map((x) => x.inquiry), p2.cursor], [[Q5], null]);
+  const exact = w.bv.projectQuestions({ project: p, limit: 4 });
+  assert.deepEqual([exact.items.length, exact.cursor], [4, null], "no cursor when nothing follows");
+  assert.deepEqual(w.bv.projectQuestions({ project: p, after: Q5 }), { items: [], cursor: null });
+  /* the clamp: a negative limit reads 1; zero or a non-number the default */
+  assert.deepEqual(w.bv.projectQuestions({ project: p, limit: -4 }).items.map((x) => x.inquiry), [Q]);
+  for (const l of [0, "x", null, undefined]) assert.equal(w.bv.projectQuestions({ project: p, limit: l }).items.length, 4, String(l));
+  /* empty, non-project, absent */
+  for (const id of ["", null, undefined, Q, DOC, "PROJ-2026-0404-none"])
+    assert.deepEqual(w.bv.projectQuestions({ project: id }), { items: [], cursor: null }, String(id));
+  assert.deepEqual(w.bv.projectQuestions(), { items: [], cursor: null });
+  assert.deepEqual([w.count("bundles"), w.sha(p)], [before.bundles, before.sha], "writes nothing");
+  /* never throws */
+  const broken = world();
+  broken.doc(DOC); broken.member("bo");
+  broken.inquiry(Q, block({}));
+  const bp = broken.project("Broken", "bo", [Q]);
+  broken.st.sql.exec(`DROP TABLE inquiry_basis`);
+  assert.doesNotThrow(() => broken.bv.projectQuestions({ project: bp }));
+});
+
+test("R41: limit is clamped to 500 — a project drawing on 501 inquiries answers 500 and a cursor, then the last", () => {
+  const w = setup();
+  assert.equal(PROJECT_QUESTIONS_MAX, 500);
+  const ids = Array.from({ length: 501 }, (_, i) => `INQ-2026-${String(i).padStart(4, "0")}-m`);
+  for (const q of ids) assert.equal(w.inquiry(q, block({})).ok, true);
+  const p = w.project("Wide", "alice", ids);
+  for (const limit of [undefined, 5000]) {
+    const a = w.bv.projectQuestions({ project: p, limit });
+    assert.deepEqual([a.items.length, a.cursor, a.items[0].inquiry], [500, ids[499], ids[0]], String(limit));
+  }
+  const b = w.bv.projectQuestions({ project: p, after: ids[499] });
+  assert.deepEqual([b.items.map((x) => x.inquiry), b.cursor], [[ids[500]], null]);
 });

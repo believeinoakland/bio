@@ -1,6 +1,6 @@
 /* basis-versions over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
    connections for the `refs` edges), on a real SQLite database (node:sqlite) standing in for a Durable Object's
-   storage. What `inquiry` provides (its earned registry, `legCapped`, the cycle walk and its `inquiry_basis` table) is a
+   storage. What `inquiry` provides (its earned registry, `legCapped`, the cycle walk, `basisFor` and its `inquiry_basis` table) is a
    provider the test controls, as `basisVersionsOf`'s `deps.inquiry` takes it; the case-member fact is the test's too.
    The readings extraction would write (`readings`, `reading_refs`) and the resolutions entities would write are rows the
    test inserts, as those modules' writers would. Every test drives `basis-versions` at its interface. */
@@ -86,6 +86,14 @@ export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true } = 
       return "ABCD".indexOf(stated) >= "ABCD".indexOf(e.grade) ? null : { grade: e.grade, why: `capped at ${e.grade} for ${id}` };
     },
     cyclePath: (id, targets) => { for (const t of targets) if (inq.cycles[t]) return [id, t, id]; return null; },
+    /* inquiry R16's read over the table the test fills: the first `limit` legs by ord, `truncated` one past */
+    basisFor: (id, { limit = null } = {}) => {
+      inq.calls.push(["basisFor", id, limit]);
+      const legs = st.sql.exec(`SELECT ord, target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, id);
+      return Number.isInteger(limit) && limit > 0
+        ? { ok: true, bundleId: id, legs: legs.slice(0, limit), limit, truncated: legs.length > limit }
+        : { ok: true, bundleId: id, legs };
+    },
   };
   const bv = basisVersionsOf(host, { record, membership, promotion, content, inquiry, now: () => clock.now });
   bv.migrate();
