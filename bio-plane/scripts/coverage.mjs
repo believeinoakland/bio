@@ -86,7 +86,10 @@ const JSON_OUT = process.argv.includes("--json");
 
 /* ---------------------------------------------------------------- inventory */
 
-const indexSrc = readFileSync(join(ROOT, "src/index.mjs"), "utf8");
+/* N338 (T13): the op declarations are control-plane's (T12, K3), so the table is read from its `ops.mjs`, where it is
+   declared, and no longer from `src/index.mjs`, which stopped holding it and made this script throw. */
+const OPS_PATH = "src/control-plane/ops.mjs";
+const opsSrc = readFileSync(join(ROOT, OPS_PATH), "utf8");
 const checksSrc = readFileSync(join(ROOT, "checks/bio-checks.mjs"), "utf8");
 
 /* The body of a `<name> = { ... }` object literal, brace-matched out of source
@@ -109,7 +112,7 @@ function tableBody(src, name) {
    completeness test. */
 function opTable(src) {
   const body = tableBody(src, "OPS");
-  if (body == null) throw new Error("OPS table not found in src/index.mjs");
+  if (body == null) throw new Error(`OPS table not found in ${OPS_PATH}`);
   const ops = new Map();
   for (const m of body.matchAll(/^\s{2}([a-z][a-z0-9]*)\s*:\s*\{([^}]*)\}/gm)) {
     const mutating = /mutating:\s*true/.test(m[2]);
@@ -120,7 +123,7 @@ function opTable(src) {
   return ops;
 }
 
-const OPS = opTable(indexSrc);
+const OPS = opTable(opsSrc);
 /* D-277. The catalog is what the catalogue DECLARES, and a comment declares
    nothing. `CHECKS_IN_PROSE` is the excluded set and is PRINTED on every run:
    narrowing a corpus without naming what was dropped trades a loud error for a
@@ -275,7 +278,7 @@ for (const d of driverRows)
 const notWalked = readdirSync(join(ROOT, "test"))
   .filter((f) => f.includes(".control.") && !f.endsWith(".control.mjs")).sort();
 
-/* A call-shaped occurrence, not a mention. `index.mjs` resolves the op as
+/* A call-shaped occurrence, not a mention. The control plane resolves the op as
    `searchParams.get("op") || path.slice(1)`, so `/api/?op=cite` and a bare
    `/cite` are the SAME dispatch and both count; the word "monitor" appearing in
    a field name does not. Getting this wrong in the generous direction would
