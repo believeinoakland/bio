@@ -89,13 +89,15 @@ test("R12 R18: a determination may name the proposal it drew on, and the proposa
   assert.deepEqual(read.proposal.drawn_on_by, [{ determination: d.id, at: d.at }]);
   assert.deepEqual([read.proposal.label, read.proposal.says], [proposalLabel(MACHINE, "comparison"), PROPOSAL_SAYS]);
   assert.match(w.text(d.id), new RegExp(`drew_on: ${p.id}`));
-  refused(nothing(w, () => w.c.determine(input({ proposal: "CMP-2026-0099" }))), "NO_SUCH_PROPOSAL");
+  refused(nothing(w, () => w.c.determine(input({ proposal: "CMP-2026-0099" }))), "NO_SUCH_COMPARISON");
   const libs = w.project("Libraries", "olive");
   const theirs = w.c.comparisonPropose({ project: libs, proposer: MACHINE, viewer: MACHINE }).proposal;
-  refused(nothing(w, () => w.c.determine(input({ proposal: theirs.id }))), "NO_SUCH_PROPOSAL");
+  refused(nothing(w, () => w.c.determine(input({ proposal: theirs.id }))), "NO_SUCH_COMPARISON");
   /* a proposal's read answers as its project's sight says */
-  refused(w.c.comparisonRead({ id: p.id, viewer: V("quinn") }), "NO_SUCH_PROPOSAL");
-  refused(w.c.comparisonRead({ id: "CMP-2026-0099", viewer: V("pat") }), "NO_SUCH_PROPOSAL");
+  refused(w.c.comparisonRead({ id: p.id, viewer: V("quinn") }), "NO_SUCH_COMPARISON");
+  refused(w.c.comparisonRead({ id: "CMP-2026-0099", viewer: V("pat") }), "NO_SUCH_COMPARISON");
+  /* K380: the proposal code is intent's; this module's is NO_SUCH_COMPARISON, row C-113.20 */
+  assert.deepEqual(["NO_SUCH_PROPOSAL" in CONFORMANCE_CHECKS, CONFORMANCE_CHECKS.NO_SUCH_COMPARISON.check], [false, "C-113.20"]);
 });
 
 test("R16: determinations, supersessions, flags and proposals are append-only (no act changes a row it wrote), and each table is declared to record-core's purge", () => {
