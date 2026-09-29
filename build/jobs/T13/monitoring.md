@@ -39,3 +39,7 @@ Size (session_012PquHVC9k9aMw1YH8G1kq4): test runs 3, module lines 2330
 ## J1 · REPORT
 
 Found in other modules (full list in my record's Completion): (1) DEC-49 guard (civicos-ui/check-refusal-codes.mjs, legacy-tests'): 15 failures vs the parent's 14; the one new failure is arm G, 'NOT_AN_ADMIN is declared in MULTI_SITE_CLOSED but is not multi-site on this tree'. That is N324's intended effect (one mint site, membership's notAnAdmin). The declaration and the K403 notes at lines 638 and 1468 are stale, for legacy-tests' arm G. (2) affordances.mjs:862 and :2222 on monitorpause are still accurate; nothing to change. (3) Stale, not rebuilt: bio-plane/dist/bio-plane.bundled.mjs (takes src/monitoring/index.mjs). (4) Marks for you to strike: R30 (N324), R44 (N65) and Uses' capture line (N166), all met. The ownership check refused my striking them in build/requirements/, so I reverted. Wording: the Uses capture line's 'never by the table's name' contradicts capture R59/K235, which make the table itself the read contract. I suggest cutting that clause.
+
+## J2 · COMPLETE
+
+N324 applied: R30's pause refuses a non-administrator through membership.notAnAdmin (R84); monitoring's own NOT_AN_ADMIN site and its CUSTODIAL_CHECKS read are gone. Monitoring tests 52 pass, 0 fail, 6 todo. format, architecture, coverage (45/45) and ownership: 0 failures. Record: build/jobs/T13/monitoring.md on job/T13/monitoring.
