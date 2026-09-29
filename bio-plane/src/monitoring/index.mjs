@@ -197,6 +197,9 @@ export const DRIVE_SHELLS_RETRIEVALS_MAX = 50;
 
 /** R32: the most addresses one read answers. */
 export const MONITORING_READ_MAX = 1000;
+/** R48: the most flagged documents one read answers (and its default), and the documents read per page to find them. */
+export const FLAGGED_LIMIT_MAX = 200;
+const FLAGGED_PAGE = 200;
 /** R30: the due slate's fixed framing. Nothing between the markers is instruction: each line is one quoted JSON item. */
 export const SLATE_FRAMING_OPEN = "This is the due slate of a CivicOS instance: the documents, named requests and "
   + "sweeps its daemon would check or gather now. Run it by hand: for each item, fetch or check what it names and "
@@ -1846,6 +1849,76 @@ export class Monitoring {
              limit: cap, truncated: unread || items.length > cap, prompt };
   }
 
+  /** R47 (N330, K406; for `queue`): what the next unranked archive tick (R20) would find eligible, asking the same
+   *  questions and writing nothing: of at most MONITOR_TICK_BATCH addresses at the floor of consecutive failures, oldest
+   *  failing run first, those `capture.sourceReachability` answers `fallback_eligible`, each `{address,
+   *  first_failure_since, reachability}`. `limit` and `truncated` (more addresses at the floor than were read) and the
+   *  pause (R30) are stated beside them; a pause never empties them, since eligibility is capture's fact about our
+   *  attempts (K406). Never throws: a read that fails answers `ok: false` saying so in words. */
+  archiveEligible(now = null) {
+    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    const limit = MONITOR_TICK_BATCH;
+    let paused = { paused: false };
+    try {
+      paused = this.paused();
+      const nowIso = stampInstant("second", nowMs);
+      /* R20's own read, one row past its batch so `truncated` says more addresses are at the floor. */
+      const read = this.#rows(
+        `SELECT address_norm, first_failure_since FROM source_reachability
+          WHERE consecutive_failures >= ? ORDER BY first_failure_since LIMIT ?`, this.floor(), limit + 1);
+      const eligible = [];
+      for (const r of read.slice(0, limit)) {
+        const reach = this.capture.sourceReachability({ addressNorm: r.address_norm, now: nowIso });
+        if (reach && reach.fallback_eligible === true)
+          eligible.push({ address: r.address_norm, first_failure_since: r.first_failure_since ?? null, reachability: reach });
+      }
+      return { ok: true, at: nowIso, eligible, limit, truncated: read.length > limit, paused };
+    } catch (e) {
+      return { ok: false, reason: null, at: stampInstant("second", nowMs), eligible: [], limit, truncated: false, paused,
+               detail: "the addresses the archive tick would find eligible could not be read: "
+                     + String(e && e.message || e).slice(0, 160) };
+    }
+  }
+
+  /** R48 (N330, K406, K391; for `queue`): the monitored documents the viewer may see whose last tick flagged them (R8:
+   *  `reeval_pending.flag` true with `source: source_status`), each `{bundleId, source_status, since}`, at most `limit`
+   *  (1–FLAGGED_LIMIT_MAX, default FLAGGED_LIMIT_MAX) in id order. A monitored document is one whose projection asks
+   *  (every version R15 groups into R32's addresses, and a bundle scheduled as itself). Sight is membership's predicate
+   *  inside the read, so a document the viewer may not see is never read, listed or counted; `truncated` when more
+   *  follow. Writes nothing and never throws. */
+  flagged({ viewer = null, limit = null } = {}) {
+    const cap = clampLimit(limit, FLAGGED_LIMIT_MAX, FLAGGED_LIMIT_MAX);
+    try {
+      const gate = viewerPredicate(viewer);
+      const items = [];
+      let after = null, more = false;
+      /* Pages of the monitored documents the viewer sees, in id order, until one past the bound is found flagged. */
+      for (;;) {
+        const page = this.#rows(
+          `SELECT b.bundle_id AS id, f.content AS content
+             FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
+             JOIN files f ON f.bundle_id = b.bundle_id AND f.path = 'bundle.md'
+            WHERE bp.monitor_enabled = 1 AND (${gate.sql})${after !== null ? " AND b.bundle_id > ?" : ""}
+            ORDER BY b.bundle_id LIMIT ?`, ...gate.args, ...(after !== null ? [after] : []), FLAGGED_PAGE);
+        for (const r of page) {
+          let fm = null;
+          try { fm = typeof r.content === "string" ? parseFrontmatter(r.content).data : null; } catch { fm = null; }
+          const re = fm && fm.reeval_pending && typeof fm.reeval_pending === "object" ? fm.reeval_pending : null;
+          if (!re || re.flag !== true || re.source !== "source_status") continue;
+          if (items.length === cap) { more = true; break; }
+          items.push({ bundleId: r.id, source_status: typeof fm.source_status === "string" ? fm.source_status : null,
+                       since: re.since == null ? null : String(re.since) });
+        }
+        if (more || page.length < FLAGGED_PAGE) break;
+        after = page[page.length - 1].id;
+      }
+      return { ok: true, items, limit: cap, truncated: more };
+    } catch (e) {
+      return { ok: false, reason: null, items: [], limit: cap, truncated: false,
+               detail: "the flagged monitored documents could not be read: " + String(e && e.message || e).slice(0, 160) };
+    }
+  }
+
   /** R32: one plan row with every bundle the viewer does not see removed from it. `versions` keeps the seen ones;
    *  `newer_unmonitored` keeps the seen ones, or is dropped; a disagreement is restated over the authored words of
    *  the versions the viewer sees (`subjects`' own test), and dropped when those do not disagree, since a
@@ -2109,7 +2182,7 @@ export function monitoringOps(m, url, body) {
 }
 
 /** R1–R10 from the Worker (`legacy-index` routes `op=monitor` here, K72 (11)): the method check, the required
- *  argument and the envelope are the control plane's (`json`, `requiredArgument`, `storeSilent`, passed in with the
+ *  argument and the envelope are the control plane's (`json`, `requiredArgument`, `storeSilent`, `storeRefusal`, passed in with the
  *  stamps it decided); the tick runs in the Durable Object's `monitor` service. A store silence is named, never
  *  read as `ABSENT` or as recorded (R1, R10).
  *  N278, N247 (D-240 (e), DETECTOR C): the Durable Object's envelope is opened through the control plane's `doAnswer`,
@@ -2117,8 +2190,8 @@ export function monitoringOps(m, url, body) {
  *  store's body is spread, so the verdict reader classifies it. N313 (K231: one rule, one site): this module holds no
  *  reading of the envelope of its own; a call that hands no `doAnswer` has no way to read the store's answer, so the
  *  store is not asked and its answer is named silent. */
-export async function monitorOp(req, store, { json, storeSilent, requiredArgument, doAnswer, viewer, actorClass,
-                                              actor, storeName, cls }) {
+export async function monitorOp(req, store, { json, storeSilent, storeRefusal = null, requiredArgument, doAnswer, viewer,
+                                              actorClass, actor, storeName, cls }) {
   if (req.method !== "POST") return json({ ok: false, error: "monitor is a POST" }, 405);
   const body = await req.json().catch(() => null);
   const bundleId = body?.bundleId;
@@ -2132,7 +2205,13 @@ export async function monitorOp(req, store, { json, storeSilent, requiredArgumen
     out = await doAnswer(store.fetch(new Request(`http://do/monitor?${qs}`, {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ bundleId }) })));
   } catch { out = { answered: false, result: undefined }; }
-  if (!out.answered) return storeSilent("monitor");
+  /* R49 (N339, K421; control-plane R23): the store's own refusal (`ok: false` below 500) is relayed with its status,
+     code and sentence through the plane's `storeRefusal`; a caller that hands none gets the same answer, the store's
+     reply at its status. Only a reply that is no answer is a silence, carrying the correlation id `doAnswer` read from
+     the store's internal error when it gave one (control-plane R25; N349). */
+  if (out.refused && out.reply && typeof out.reply === "object")
+    return typeof storeRefusal === "function" ? storeRefusal(out) : json(out.reply.body, out.reply.status);
+  if (!out.answered) return storeSilent("monitor", out.correlation);
   const r = out.result;
   if (!r || typeof r.status !== "number" || !r.body || typeof r.body !== "object") return storeSilent("monitor");
   /* The verdict first, as a literal on each branch (D-240): the store's `ok` is carried by the spread, so the two
