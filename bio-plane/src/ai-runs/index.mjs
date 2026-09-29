@@ -1,4 +1,4 @@
-/* ai-runs — THE AI RUN (requirements: `build/requirements/ai-runs.md`, R1–R44). Extracted from `store.mjs` at T7
+/* ai-runs — THE AI RUN (requirements: `build/requirements/ai-runs.md`, R1–R45). Extracted from `store.mjs` at T7
  * (T6-6's entry; the map is `build/extraction/ai-runs.md`). The vocabulary and pure rules stay in `../airun.mjs`
  * (R1–R8, this module's path since before the extraction); this file is the mechanism: the one exit, open, tick,
  * close, the reaper and the wake, the reads, and the services later modules produce under a run through (R28, R29).
@@ -23,7 +23,7 @@ import { normalizeType, OBJECT_TYPES } from "../../checks/bio-checks.mjs";
 import { sha256hex, instanceAiCredential, instanceClaudeToken } from "../tokens.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STATES, OBSERVATION_LEVELS,
          OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage, checkBound, checkCondition,
-         checkConsume, finishedBound, runStatusFor, projectGate, runConsultsProjects, checkRunContextKind,
+         checkConsume, checkRunState, finishedBound, runStatusFor, projectGate, runConsultsProjects, checkRunContextKind,
          runPrincipalGate } from "../airun.mjs";
 import { checkSkillVersion } from "./skill-version.mjs";
 import { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
@@ -35,6 +35,8 @@ export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
 export * from "./checks.mjs";
 export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN, DEPLOYED_MODES, DEFAULT_MODE }
   from "./deployment.mjs";
+/* R45: the state ceiling, for the modules that write a run's state (agent-worker R49). */
+export { AI_RUN_STATE_MAX_BYTES } from "../airun.mjs";
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
@@ -116,15 +118,17 @@ export class AiRuns {
   /** R30: the runs as the bias debt's work products (bias R33): `list(after, limit)` the run ids after `after`,
    *  ascending; `read(run)` the run's context, member principal, the lens recorded when it began (the lens in force
    *  at its open where the open recorded one, else the manifest it was handed; null when neither can be read, R32),
-   *  the manifest it ran under when that was the lens in force, and its `rerun_of`; `visible(run, viewer)` R19's
-   *  sight. Read as the administrator viewer, as bias reads every work product. */
+   *  the manifest it ran under when that was the lens in force, its `rerun_of`, and `registered` (N284): the run's
+   *  `created`, the open's instant, which bias offers the scheduler's rank as the product's `waitingSince` (null
+   *  when the stored instant cannot be read, never filled in); `visible(run, viewer)` R19's sight. Read as the
+   *  administrator viewer, as bias reads every work product. */
   workProducts() {
     const MEMBER = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/;
     return {
       list: (after, limit) => this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`,
         String(after ?? ""), Math.max(1, Math.floor(Number(limit) || 50))).map((r) => String(r.run)),
       read: async (run) => {
-        const row = this.#one(`SELECT rerun_of FROM ai_runs WHERE run = ?`, String(run ?? ""));
+        const row = this.#one(`SELECT rerun_of, created FROM ai_runs WHERE run = ?`, String(run ?? ""));
         if (!row) return null;
         const a = await this.read({ run, viewer: "admin" });
         const s = a && a.found === true ? a.session : null;
@@ -140,6 +144,7 @@ export class AiRuns {
           lens,
           ranUnder: bias.in_force === true ? sha(bias.manifest) : null,
           rerunOf: row.rerun_of != null && String(row.rerun_of).trim() ? String(row.rerun_of).trim() : null,
+          registered: typeof row.created === "string" && Number.isFinite(Date.parse(row.created)) ? row.created : null,
         };
       },
       visible: async (run, viewer) => !!this.runFor(run, viewer),
@@ -633,7 +638,7 @@ export class AiRuns {
    *  merely stored, because "every run records the skill version it ran under"
    *  is a requirement and a condition that may be omitted is not recorded. It
    *  is still never derived: the plane refuses, it does not fill in. The
-   *  refusal is C-22.7, built in `skillpack.mjs checkSkillVersion`. */
+   *  refusal is C-22.7, built in `./skill-version.mjs checkSkillVersion`. */
   async open({ run, contextType, contextId, label = null, mode = null,
               principalPlane = null, principalClaude = null, principalClaudeRef = null,
               skillVersion = null, biasManifest = null, standardPair = null,
@@ -698,7 +703,7 @@ export class AiRuns {
        correction this item's own guard run forced. The refusal is MINTED in
        `airun.mjs projectGate`, whose row already claims it as a governed site;
        this is a RELAY, exactly as the C-22.7 line four guards down relays
-       `skillpack.mjs`'s. A marker here would have declared a second governed
+       `skill-version.mjs`'s. A marker here would have declared a second governed
        site for one refusal, and `check-refusal-codes.mjs` failed the harness by
        name for precisely that: *a defence that is documented and not wired is
        worse than a missing one.* The code stays a string literal where it is
@@ -776,7 +781,7 @@ export class AiRuns {
     /* SK-1 — THE THIRD CONDITION, AND IT IS REFUSED WHERE THE PRINCIPALS ARE.
        §11 records what a run was FORMED under, and the skill version is one of
        the three. The decision and the two failure shapes are on
-       `skillpack.mjs checkSkillVersion`, which is where the C-22.7 refusal is
+       `skill-version.mjs checkSkillVersion`, which is where the C-22.7 refusal is
        built and the only implementation of the rule. This site adds nothing to
        it: it hands the value over and returns what comes back, in the same
        `started: false` shape the two guards above use, carrying the DEC-49 code
@@ -814,6 +819,13 @@ export class AiRuns {
     if (badSeed)
       return { run, started: false, code: badSeed.code, check: badSeed.check,
                translation: badSeed.translation, note: badSeed.detail };
+    /* R45 (N293) — THE SEED'S STATE IS BOUNDED AS THE TICK'S IS, asked after the bounds and before anything is
+       computed or written. A RELAY: C-22.18 is minted in `airun.mjs checkRunState`, whose row names that site. */
+    const badState = checkRunState(state);
+    if (badState)
+      return { run, started: false, code: badState.code, check: badState.check,
+               translation: badState.translation, note: badState.detail,
+               bytes: badState.bytes, limit: badState.limit };
     /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 3, BOB #25): THE LENS IN FORCE AT THIS INSTANT, computed by
        the PLANE, beside the manifest the run was HANDED. The handed one is stored verbatim below and nothing is
        derived from it; this is the call `#biasForRun` makes for the run's context (a project's scope for a run
@@ -1036,6 +1048,17 @@ export class AiRuns {
                code: badConsume.code, check: badConsume.check,
                translation: badConsume.translation, detail: badConsume.detail, bound: badConsume.bound,
                note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. "
+                   + "Nothing was appended and no budget was spent" };
+    /* R45 (N293) — THE STATE IS BOUNDED, judged whole after the figures and before anything is written: a state over
+       the ceiling refuses the whole tick (no entry, no figure, no lease, no tick), and an absent or null one is not
+       measured and the held state stands (R12). A RELAY of `airun.mjs checkRunState`, as the figures' refusal is. */
+    const badState = checkRunState(state);
+    if (badState)
+      return { run, ticked: false, found: true, status: row.status,
+               code: badState.code, check: badState.check,
+               translation: badState.translation, detail: badState.detail,
+               bytes: badState.bytes, limit: badState.limit,
+               note: "a run's state is its resumable work list, and it is bounded. "
                    + "Nothing was appended and no budget was spent" };
 
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : AiRuns.AI_RUN_LEASE_MS;
