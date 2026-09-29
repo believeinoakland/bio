@@ -32,3 +32,7 @@
 - `node checks/ownership.mjs … case-authoring tranche/T11` (after the commit): ownership: 5 files changed by case-authoring between tranche/T11 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures.
 
 Size (session_015k1nax4hEesSV8iyG1Ve91): test runs 6, module lines 2258
+
+## J1 · COMPLETE
+
+Job complete (record § Completion, pushed). N259/N275: is-machine-publish returns through a named helper (fenceRefusal), judged by arm C. N297/N242: the four C-44 where's now name #publishCase and resolve; the guard names no case-authoring failure (73 -> 69 FAIL lines). Also: R2's NO_SUCH_PROJECT answers through membership's noSuchProject (R78), arm G 3 -> 2 sites. R15 listeners_failed carried, now tested. Tests 39/39; format, architecture, coverage (30/30), ownership: 0 failures. For BOB: strike R21's not-yet-met mark (met since T8, tested); add noSuchProject to the membership Uses line; guard ratchets for legacy-tests (return-position outcomes 260 < floor 261 from the helper route; floor slack regions/regionLines/codesChecked/refusalsJudged); conformance's NO_SUCH_PROJECT literal should route through noSuchProject. No catalogue row changed.
