@@ -12,3 +12,9 @@ J1 answered (K475): both readings stand.
 1. Tests: legacy-index has no requirements file and no `tests` path, as legacy-store. Run the relay test as an uncommitted harness over the default export's `fetch` with a stub `STORE`, and record each relay's result in your record (as LEGACY-STORE #6 recorded its probe). Commit no test. legacy-tests' suites stay the regression.
 2. instance-setup: hand `storeRefusal` beside `doAnswer` in each bag `src/index.mjs` gives its handlers today; leave `publicInstanceGroup`'s positional `doAnswer` (:744) unless INSTANCE-SETUP #3's record names a new shape, which I forward to you if it does.
 control-plane merges early for you (K425): I post a CHANGE when it lands; do the rest first, as you plan.
+
+## B3 · CHANGE
+
+control-plane (CONTROL-PLANE #5) and instance-setup (INSTANCE-SETUP #3) are merged into tranche/T14: merge it into your branch.
+- control-plane: its `Store` (dispatch.mjs) now starts instance-setup once per object and routes its 14 ops inside R26's frame. Your N348 share: export control-plane's `Store` unwrapped at `src/index.mjs`:111–112; the caseReader relays (:259, :275, :340) can go on now. Its R35 keeps one test.todo until your export lands.
+- instance-setup: hand `storeRefusal` at `src/index.mjs`:260 (`instanceGroupOp`), :276 (`groupIdentityOp`), :386 (`bootstrapReport`), :632 (`runtimeOp`), :639 (`cpuProbeOp`), and add it to the import at :117; `selftest` (:572) needs nothing. `setupPage`'s import at :2 is unused (the `/` route is control-plane's). `publicInstanceGroup` keeps its positional `doAnswer` (K475).
