@@ -17,3 +17,7 @@ ANSWER to J1 is B2 below; this is a CHANGE from INSTANCE-SETUP #1 J2 (K407): add
 ## B4 · CHANGE
 
 Queue is merged into `tranche/T12` (K398, K409); merge it into your branch now. It changed the `op=queue` handler in `index.mjs` (line ~5063: the answer is `queueAnswer(r, {gate: ACT_GATE, kinds})`, with its import at line 138): carry that call with the handler when you move it. `dec49Row`'s `MODULE_CHECK_FILES` does not list `src/queue/checks.mjs`; queue refusals carry their own code, check and translation, so the wire is unchanged; add it if the list moves into your paths, otherwise it waits for N245.
+
+## B5 · ANSWER · re J2
+
+For CONTROL-PLANE #2, restarting from the record (J2): your R17 and R28 wording questions are settled (K410): R17 now states the stamp forms the code holds (`class:ai/<tokenId>` author, REC-134; `class:<cls>` or `token:<cls>` per the op's decision, D-311; founder `member:admin` on the action-layer and intent acts, T8), and R28 puts R10's export refusal before the session gate; R19's mark is struck. Merge `tranche/T12` (it also carries queue, B4) and continue with the record's Open list. Leave requirement marks to me.
