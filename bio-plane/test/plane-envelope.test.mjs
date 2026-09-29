@@ -902,7 +902,16 @@ ok("`doAnswer` is the only thing in index.mjs that reads `ok` off a Durable Obje
 ok("`answered` is `ok === true` AND NOTHING ELSE — it does not require a non-empty result, "
    + "because a store may legitimately answer null, [] or {} and treating a real empty answer as a "
    + "non-answer is this same collapse running the other way",
-   /return \(out && out\.ok === true\)\s*\n\s*\? \{ answered: true, result: out\.result \}/.test(SRC));
+   /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K421/K422, CONTROL-PLANE #3, control-plane R23): `doAnswer` now
+      also carries `reply` and grades a below-500 `ok: false` as the store's own REFUSAL (`answered: false, refused:
+      true`), so the one-expression ternary became three returns. The rule is unchanged and read as such: the one
+      `answered: true` in the function is guarded by `out.ok === true` alone, with no test of the result. */
+   (() => {
+     const fn = SRC.slice(SRC.indexOf("async function doAnswer(res)"));
+     const body = fn.slice(0, fn.indexOf("\n}\n") + 2);
+     return (body.match(/answered: true/g) || []).length === 1
+       && /\n\s*if \(out\.ok === true\) return \{ answered: true, result: out\.result, reply \};/.test(body);
+   })());
 ok("the refusal states the state of the EXCHANGE and makes no claim about the record",
    /It is NOT a claim that what you asked for is absent, unpublished, unknown or refused/.test(SRC));
 ok("and it does not echo the Durable Object's `error`, which is a raw stack trace on ops "

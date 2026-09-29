@@ -236,10 +236,13 @@ console.log("\n--- C-38.8 · AN OMISSION, STATED AS ONE AND GIVEN NO INVENTED RA
      kind would also satisfy.
      RE-ANCHORED 2026-09-29 (K413, control-plane R23, CONTROL-PLANE #1 item 6), NEVER EXEMPTED: the forward no longer
      relays the store's `{ok: false, error: "unknown op: …"}`; a store answer that is not `ok: true` is R23's 502
-     `STORE_DID_NOT_ANSWER` naming the op. Still positive: that answer exists only past admission, at the forward. */
+     `STORE_DID_NOT_ANSWER` naming the op. Still positive: that answer exists only past admission, at the forward.
+     RE-ANCHORED AGAIN 2026-09-29 (LEGACY-TESTS #10, T12; K421/K422, CONTROL-PLANE #3, R23 reworded): a below-500
+     `ok: false` is the store's OWN refusal and is relayed with its status and envelope, so the op meets dispatch's
+     `unknown op: <op>` again, the positive this arm was written for; no admission code is on it. */
   t("NEGATIVE CONTROL: the same op is NOT refused admission to the machine credential — it passes the gate "
-  + "and reaches the store's forward, where a row with no handler answers R23's STORE_DID_NOT_ANSWER naming the op",
-    [m.reason ?? null, m.check ?? null, m.op ?? null], ["STORE_DID_NOT_ANSWER", "C-69.2", UNRULED_OP]);
+  + "and reaches the store's dispatch, whose `unknown op` refusal the forward relays (R23, K421)",
+    [m.ok, m.error ?? null, m.reason ?? null, m.code ?? null], [false, `unknown op: ${UNRULED_OP}`, null, null]);
   /* REC-155: THE OP THIS ARM DROVE UNTIL §4.10, AT ITS NEW ANSWER. `cai` holds no capability, and
      `provenanceroute` NEEDS `contribute` — so passing the SESSION gate is shown by meeting the
      CAPABILITY gate behind it, by name, rather than any session-gate code. */
