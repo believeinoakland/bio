@@ -1,10 +1,10 @@
 # Plan: next tranche
 
-**Status** · Entries not carried by T9 (opened by BOB #56, 2026-09-28), and those arising during it, awaiting the tranche they join (PROCESS-MECHANICS §5). An entry T9 carries only in part stays here for the shares T9 does not carry. Grouped by module, modules by layer. `draft-T10.md` drafts the next tranche from them.
+**Status** · Entries awaiting the tranche they join (PROCESS-MECHANICS §5), grouped by module, modules by layer. T12 (opened by BOB #62, 2026-09-29) carries the entries its plan names, N299–N316 among them; an entry it carries only in part stays here for the shares it does not carry.
 
-## Carried by T9
+## Carried by T12
 
-`build/plan/current.md` names the entries T9 carries and each one's share.
+`build/plan/current.md` names the entries T12 carries and each one's share.
 
 ## Later layers
 
@@ -326,3 +326,5 @@ N110, N113 (Bob's, K158: with observation-log's next job), N116 (with monitoring
 - N314 · 2026-09-29 · **monitoring**, **legacy-index** (LEGACY-INDEX #8 J1, K376; T12): R30's pause is "an administrator"'s, but T11's Worker opens `monitorpause` to the root of trust only (the admin token and the founder's session), since the Worker holds no administrator refusal. Monitoring's `pause` refuses a non-administrator through membership (its `isAdministrator` and `NOT_AN_ADMIN`'s one site, K231), and the Worker opens the op to every member session, stamping `actor`.
 - N315 · 2026-09-29 · **publication** (LEGACY-TESTS #9; T12, with N308): R42 `restingCapturesOf` reads each capture's findings unbounded (`derivation-bounds` red); BOB words a bound, publication applies it with a test at the bound.
 - N316 · 2026-09-29 · **legacy-tests** (LEGACY-TESTS #8; T12): `nc-mk1`'s `pubdirect` arm retired as `pubcited` was (MK-7, D-431), leaving basis-versions' `testimonyReach` depth unguarded by that suite; an interface test in basis-versions or a re-derived arm guards it.
+- N317 · 2026-09-29 · **promotion**, **legacy-checks**, **intent** (N300's draft, open point 7; K379): the project document's stored `current_state` (other than `closed` with its `closed_reason`), `workproduct_state` and `evaluations`, the legacy `STATES.project` edges and C-2.9's arms remain writable though `projectStage` never reads them. Whether promotion refuses a hand-written non-`closed` project state, and whether those fields and C-2.9's arms retire, is Bob's where it drops or changes a check; BOB brings it with a recommendation after T12.
+- N318 · 2026-09-29 · **promotion** (K380; T13): `CATALOG_VERSION` stamps T12's check-row changes made after its layer 2: review's two `MINT_EXHAUSTED` rows (N306); C-113.9, C-113.18, C-114.1, C-116.3, C-116.4 retired; conformance's `DETERMINATION_SUPERSEDED` row added; C-113.3, C-113.20, C-114.2, C-114.3, C-116.6, C-116.30 renamed (N309, N312); with legacy-tests' census re-pin.

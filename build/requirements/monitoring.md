@@ -60,7 +60,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 **Standing intent** (Intake Doctrine §4)
 - **R28** Each open named request in a bundle's `data/gathering.json` whose cadence is due is captured through `capture.acquire` from its locators in order, the authoritative publisher first, with the request named as authority; what it brings lands no higher than its verification earns. *(not yet met: Intake Doctrine §4; nothing executes a gathering request)*
 - **R29** A ratified sweep is run within its scope and breadth budget (per-tick fetch cap, backlog ceiling, an anomaly note when yield departs its history); what it brings lands at `collected`. Sweeps wait for a design of what a sweep's query is; until then only named requests (R28) are run. *(not yet met: Intake Doctrine §4; K102)*
-- **R30** The daemon is pausable by an administrator (monitoring's and the fallback's fetches stop; a paused tick says so), and its due slate (every named request, sweep and monitored address now due) is exported as quoted data inside fixed instruction framing.
+- **R30** The daemon is pausable by an administrator (monitoring's and the fallback's fetches stop; a paused tick says so); a pause or resume asked by a member who is not an administrator (`membership` R64's `isAdministrator`, read of the stamped `actor`) is refused `NOT_AN_ADMIN`, membership's code, with nothing written, and the root of trust is an administrator here (N314, K380) *(not yet met: N314)*; and its due slate (every named request, sweep and monitored address now due) is exported as quoted data inside fixed instruction framing.
 
 **What reaches members** (NOTIFICATIONS.md, the catalogue and the item contract)
 - **R31** It publishes items in the item contract, with their options: `source-modified` and `source-removed` (FINDING) for each flagged tick; `archive-fallback-eligible` (CONDITION) for an eligible address; `monitoring-recheck-due` (CONDITION) for a monitored address overdue by more than its interval or unscheduled. `queue` reads them. *(not yet met: `queuestate.mjs` names the four kinds with no producer)*
@@ -78,7 +78,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
 - `legacy-checks`: `MONITOR_FREQ`, `MECHANICAL_FIELD_SETS`, `isPublicHttpsLocator`, `parseFrontmatter`, the C-48 rows (read, as `capture` reads them, K72 (1)).
 - `record-core`: `recordOf(ctx)`, the image read, `stampInstant` (R47), `declarePurge` (R41).
-- `membership`: `viewerPredicate`, bundle sight (R1, R26, R32).
+- `membership`: `viewerPredicate`, bundle sight (R1, R26, R32); `isAdministrator` (its R64), for R30's pause (N314).
 - `promotion`: `promote` (R8, R34), `registerStep` (R27). *(not declared)*
 - `provenance`: the `register` and `captured_locators` read contract, the captured-locator writer (R12, R15). *(not declared)*
 - `host-governor`: `governedFetch` (R2). *(not declared)*

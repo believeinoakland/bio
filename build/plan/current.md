@@ -4,20 +4,26 @@
 
 **Jobs** · (none yet)
 
+Cut by BOB #59 (K347) from `draft-T11.md`: the N285 shared-code cluster and the layer-11 extractions; completed by BOB #62 with T11's arising entries (N299–N316), worded before opening. Every job with a long battery runs it in the foreground, in chunks under ten minutes, pushing its record after each (BOB #61's lesson, T11).
+
 ### Layers 2–7 · N285 (K275 per code, each keeping its translation; worded K343)
 
 - **membership** (layer 2) · N285 (`EXPERTISE_NO_LABEL`). **capture** (layer 3) · N285 (R63 `evidenceAbsent`). **extraction** (layer 4) · N285 (R63 `noSha`; R31 through capture R63). **content** (layer 4) · N285 (R44 through `noSha`).
 - **entities** (layer 5) · N285 (R37 `noEntity`; `ENTITY_NO_LABEL`). **progressions** (layer 5) · N285 (R35 `notADisposition`; `PROGRESSION_NO_LABEL`, `PROGRESSION_VERSION_NOT_HELD`). **connections** (layer 5) · N285 (R1 through `noEntity`).
-- **inquiry** (layer 6) · N285 (R20 through `notADisposition`). **intent** (layer 7) · N285 (its `NO_SUCH_ENTITY` site, entities R36). **legacy-store** · N285 (its proposal dispose).
+- **inquiry** (layer 6) · N285 (R20 through `notADisposition`). **intent** (layer 7) · N285 (its `NO_SUCH_ENTITY` site, entities R36). **legacy-store** (layer 10) · N285 (its proposal dispose).
 
-### Arising in T11 (BOB #61; each worded or to be worded before T12 opens)
+### Arising in T11 (worded before T12 opened: K360, K367, K379, K380)
 
-- **legacy-checks** (layer 1) · N299 (C-22.7's catalogue copy leaves). **promotion** (layer 2) · N302 (stamps T11's check-row changes, layers 6–9, K369).
-- **strength** (layer 5) · N303 (R6 withholds hidden members whole, worded K360).
-- **intent** (layer 7) · N305 (internal reads bounded, worded K367).
-- **publication** (layer 8) · N300 (project stage, R44–R47 from `draft-N300.md`, Bob K362/K364: folded when T11 closes); N308 (R38's bound, to word). **review** (layer 8) · N306 (`MINT_EXHAUSTED` rows).
-- **actions** (layer 9) · N311 (R31's entry cursor or R3's clock bound, to word). **conformance**, **escalation**, **membership**, **standards** · N309, N312 (one site per shared code: helpers `noSuchStandard`, the determination codes, `NOT_PROPOSED`, `NOT_A_PARTICIPANT`, to word).
-- **agent-worker** · N304 (control arms re-anchored).
+- **legacy-checks** (layer 1) · N299 (C-22.7's catalogue copy leaves). **promotion** (layer 2) · N302 (stamps T11's check-row changes, layers 6–9, K369; T12's own row changes, N306 and K380's retired and renamed rows, are made in layers 8–9 after promotion's layer and are stamped by the next tranche, N318).
+- **strength** (layer 6) · N303 (R6 withholds hidden members whole, K360).
+- **basis-versions** (layer 6) · N300 (R41 `projectQuestions`, K379); N316 (an interface test that `testimonyReach` (R39) walks to depth 64 and no further, guarding what `nc-mk1`'s retired `pubdirect` arm guarded).
+- **intent** (layer 7) · N305 (internal reads bounded, K367).
+- **publication** (layer 8) · N300 (R44–R47 `projectStage`, K379); N308 (R38 by a cursor, K380); N315 (R42's per-capture and per-page bounds, K380). **ratification** (layer 8) · N308 (R5 reads R38 through its cursor). **review** (layer 8) · N306 (`MINT_EXHAUSTED` rows).
+- **standards** (layer 9) · N309 (R17 `noSuchStandard`). **conformance** · N309, N312 (R19 `noSuchDetermination`, R20 `determinationSuperseded`; renames). **consequences** · N309 (through R19/R20; `CONSEQUENCE_NOT_NONCOMPLIANT`, `CONSEQUENCE_NOT_A_PARTICIPANT`). **actions** · N311 (R31's entry cursor), N312 (R8 through conformance R20). **escalation** · N309, N312 (through R19/R20; `ESCALATION_NOT_A_PARTICIPANT`, `EDGE_NOT_PROPOSED`). All worded K380 (`draft-T12-wordings.md`'s table); membership and intent unchanged.
+- **monitoring** (layer 10) · N313 (`openEnvelope` goes, reading `doAnswer` through `monitorOp`, K372); N314 (R30's pause refuses a non-administrator, K380).
+- **agent-worker** (layer 6) · N304 (control arms re-anchored).
+- **legacy-index** (layer 11) · N314 (the Worker opens `monitorpause` to every member session, stamping `actor`). **affordances** (layer 11) · every code K380 renames that its `reasoned`, `JUSTIFICATION_REFUSALS` or `NON_ACTS` lists name (K370's lesson).
+- Met in T11, not carried: N307 (K369), N310 (K370).
 
 ### Bob's UX rulings (K356)
 
