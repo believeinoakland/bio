@@ -1,6 +1,6 @@
 # affordances (T13)
 
-**Status** · session_01NhLZHCLTs7E1w8EfnWcDnJ · depth 2 · COMPLETE · handled B2
+**Status** · session_01NhLZHCLTs7E1w8EfnWcDnJ · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
