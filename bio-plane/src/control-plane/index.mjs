@@ -1826,7 +1826,11 @@ export function makeFetch(hooks = {}) {
                                 "projectparticipants",
                                 /* REC-150: the requests read decides by the caller's SIGHT of the project it
                                    names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
-                                "projectrequests"];
+                                "projectrequests",
+                                /* N321 (publication R44): the stage read names a project by its own id and answers by
+                                   the caller's SIGHT (the absent answer at NONE, the id and name at EXISTENCE), so it
+                                   takes the stamp and fails closed without it. */
+                                "projectstage"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
