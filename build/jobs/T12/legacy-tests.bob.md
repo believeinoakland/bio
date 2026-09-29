@@ -57,3 +57,7 @@ Queue is merged again (K416): `is-dispose-scope` is now 5 lines. Merge `tranche/
 ## B13 · CHANGE
 
 Control-plane is merged again (K418): `relayAnswer` now reads through `doAnswer`. Merge `tranche/T12`; `plane-envelope` (it imports `DISPATCH_CHECKS` from the catalogue, now control-plane's, B8) should then load and its Detector A go green: confirm it.
+
+## B14 · CHANGE
+
+Instance-setup is merged again (K419): boot now calls `scheduler.start()`, so no probe is armed at boot. Merge `tranche/T12` and confirm `scheduler.test.mjs` 52/0 (it measured so on instance-setup's branch). That is the last module change this tranche expects: once your battery is done, record completion.
