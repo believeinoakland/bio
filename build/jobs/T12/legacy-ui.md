@@ -37,3 +37,36 @@ Size (session_01BSC2Ek4hARuMbaqzmitcK9): test runs 4, module lines 53
 ## J1 · COMPLETE
 
 Complete (record's Completion). K387: entitycreate probe keys on ENTITY_NO_LABEL; intent-write.test.mjs green again. No other UI probe or label keys on a T12-renamed code (grep; the rest render the plane's translation). N301: queue class FINDING shown as Noticed (one helper queueClassLabel: row chip, notifClassLine) and 'noticed item' in the queue, set-aside ledgers and progression/document decision sentences; 'finding' kept for concluded questions. For legacy-tests to re-anchor (text pins of the old N301 wording): notifications.test.mjs:894,:923; queue.test.mjs:725; queue-projectscope.test.mjs:397; document-decided-finding.test.mjs:254/277/285/327-330; progression-decided-finding.test.mjs:224/247/253. Pre-existing, unchanged: add-surface, bias-vocabulary, semantics-harvest; the three check scripts' FAILs identical before/after. No code added or retired; no generated artifact stale. Checks: format, architecture, coverage, ownership 0 failures.
+
+## Completion after B2 (CHANGE)
+
+I merged `tranche/T12` into this branch (queue merged, K409).
+
+**Applied:**
+- **`options_grain` (queue R18).** The lead no longer carries `options_grain`. The UI's grain renderer draws one only for an item that carries it, so nothing shows on the lead now. The stance and version items still declare their grain and still render it. The comment above the renderer is updated to say this.
+- **The lead's new options (`cite`, and with a project home `proposedispose`).** These render through `queueOptionsHtml` like any other option.
+- **A dead control I found and fixed.** Each queue row draws its own Defer/Dismiss buttons. For a *project-scoped* finding, the lead among them, those buttons sent the instance-wide `key`. The plane refuses that shape (the IC-60 bridge, `NO_PROJECT_SCOPE` in spirit of R18). A project-scoped finding now draws:
+  - Defer and Dismiss only. Adopt makes the question a shared one; the lead's take-up is its `cite` option.
+  - A dialog that names the case, or asks for it when the item is filed under several, with none chosen until the member chooses (D-266).
+  - A commit that sends `{project, finding, to, reason}`.
+
+  The selection-bar path already did this (UI-110).
+- **`notifDispositionKeyed` reads the published `disposition.op`.** Adopt/Defer/Dismiss are drawn only where that op is `proposedispose`. Queue R12's newer-capture notice (`available: true`, decided through `versionadopt`/`versionkeep`) no longer gets three controls that would be refused. It gets no "no adopt, defer or dismiss" sentence either, since its options are its door.
+- **`class_labels`.** `queueClassLabel` reads `op=queue`'s `class_labels` verbatim. It falls back to "Noticed" for FINDING only on a plane that publishes none.
+
+**Tests and checks run:**
+- **The UI battery.** `node --test civicos-ui/test/*.test.mjs` fails the same ten files before and after this round's edits, on the merged tree (stash diff):
+  - Five N301 text pins, reported in J1.
+  - `add-surface`, `bias-vocabulary` and `semantics-harvest`, which were already failing.
+  - `member-respect` (ARM 4d reads `proposeDispose`, `taskResolve`, `taskForward` and `queuemute` in `store.mjs`, which queue moved) and `bound-sweep` (3 delta walks). These two are red since the tranche merge, before my edits, and are for legacy-tests to re-anchor.
+  - Per-assertion FAIL lines are identical before and after in `queue`, `queue-projectscope`, `notifications`, `member-respect`, `bound-sweep`, `document-decided-finding` and `progression-decided-finding`.
+- **A scratch smoke test** (outside the repository) on `queue-projectscope`'s real-plane fixture: 11 pass, 0 fail. It checks the following on a two-home stance finding:
+  - Defer and Dismiss are drawn with no Adopt; the instance-wide finding keeps Adopt.
+  - The dialog asks for the case and draws no commit, and sends nothing, until one is chosen.
+  - It then sends one `proposedispose` with `{project, finding}` and no `key`.
+  - The plane accepts it, and the read-back finds the decision under the chosen case.
+- **Process checks.** format: 0 failures. architecture: 0 failures. coverage: 0 of 0 ids. ownership (`tranche/T12`): 1 file changed by legacy-ui, 0 failures.
+
+**Found for BOB:** the `member-respect` and `bound-sweep` re-anchoring above, for legacy-tests. No code was added or retired, and nothing generated is stale.
+
+Size (session_01BSC2Ek4hARuMbaqzmitcK9): test runs 9, module lines 132
