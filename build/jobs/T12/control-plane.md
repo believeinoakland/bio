@@ -56,6 +56,20 @@ Size (session_019VRv42WPEJNBLLAJbEDG3c, after B6): test runs 19, module lines 5,
 
 Size (session_019VRv42WPEJNBLLAJbEDG3c, after B7): test runs 21, module lines 5,911
 
+## Work (CONTROL-PLANE #3)
+
+Read whole: `roles/JOB.md`, the requirements (R23 as K421 reworded it), B8, `src/control-plane/index.mjs`; `store.mjs`'s `Store.fetch` envelope (its `BAD_JSON`, unknown-route and catch answers). Merged `tranche/T12` (K421).
+
+**B8 (K421), applied.** `doAnswer`, REC-52's one reader, now tells three replies apart: an answer (`ok: true`), the store's own refusal (JSON `ok: false` below 500: `BAD_JSON`, `unknown op: <op>`), which comes back `refused` with the reply's status and envelope, and a silence (not JSON, `ok` not a boolean, an array, a rejected or absent reply, and an `ok: false` at 500 or above). The 5xx case is a reading: it is the store's catch, whose `error` is a stack, so relaying it would break R30; it stays R23's 502 until N333's `STORE_INTERNAL_ERROR` replaces the stack. Every relay in the module answers a refusal through `storeRefusal` at the store's status, its code and sentence kept and R22's decoration added: the generic forward (with `store` and `tokenClass`, R21), `relayAnswer` (`claim`; legacy-index's `login`, `invitelook`, `enroll`), `reviewAnswer` (`reviewcopy`, `reviewcomment`, `statementack`, `casedrafts`), the mint and the grant (with `op`, `store`, `tokenClass`). An answer carries its reply too, so the forward keeps the store's envelope and status without a second reader. The plane's own lookups (the credential and session reads) are not relays and still read any non-answer as a silence (R8).
+
+Tests: R23's test now drives `doAnswer` over the three kinds (answers at several statuses, four refusals, thirteen silences) and every relay through the door with five silences (502, no stack) and three store refusals (relayed at 400, 400, 409 with their code and sentence, never `STORE_DID_NOT_ANSWER`); R24's two tests gain the refusal arms (`claim` through the door, the three relayed public ops, and the relay against `doAnswer`'s verdict). On the old forward the new R23 arms fail (a `BAD_JSON` 400 answered 502). Control-plane: 43 tests, 40 pass, 0 fail, 3 todo (N333). Every module (`test/m/`): 2,717 tests, 2,695 pass, 1 fail, 21 todo; the fail is promotion's `write-path.test.mjs` (`FACT_UNAVAILABLE` for `producingGroup`), red on the tranche without this change too. Old battery: `empty-body.test.mjs` 10 pass, 0 fail (was 9/1).
+
+Checks (process repository): format 0 failures; architecture 9 files, 59 imports, 0 failures; coverage 34 of 34, 0 failures; ownership 0 failures (legacy files untouched).
+
+Found in other modules (nothing of theirs changed): (1) promotion's `test/m/promotion/write-path.test.mjs` is red on `tranche/T12`: its promotion is refused `FACT_UNAVAILABLE` (C-102.4) for the fact `producingGroup`, which no module provides in that suite's Worker. (2) The modules' handlers that are handed `doAnswer` (instance-setup, capture, ratification, extraction, monitoring) answer every non-answer with `storeSilent`; where one relays a caller's body, a store refusal still reaches its caller as R23's 502. They can test `out.refused` and answer `storeRefusal` (exported). No generated artifact is made stale beyond those named in J4.
+
+Size (session_011nRiF6A26Vj9uVFBYoYwpF): test runs 10, module lines 5,923
+
 ## J1 · QUESTION
 
 Q1. The forward's versionchain stamp normalises `address` with subresources' `normalizeAddress` (index.mjs 5826, moved with the forward). control-plane's uses lack `subresources` (layer 1, no cycle), so architecture fails once. My best reading: add the edge `control-plane` → `subresources`; I import it meanwhile. (Also for your review at close: ownership lists two added legacy-index lines it cannot pair with an import, the headers of `publicOp`/`gatedOp`, the functions that now hold legacy-index's remaining arms for `makeFetch`; the arm bodies are unchanged lines.)
