@@ -9,3 +9,7 @@ Depth 2. Your entries are the legacy-tests bullet of `build/plan/current.md` (la
 ## B2 · CHANGE
 
 Affordances has applied both halves of N310: `ACTION_MOVE_NO_REASON` is in `JUSTIFICATION_REFUSALS`, and `determine` is graded `reasoned`. It is merged into `tranche/T11` (§4). Merge the tranche and re-run `rung-ladder`; it should read 50/0.
+
+## B3 · CHANGE
+
+One more for you, measured by BOB on the merged tranche: `rung-ladder` reads 49/1. The red arm is "escalationresume's way back is published …", which gets `[…, false, …, false, …]` where it wants `true`. Escalation's N297 widened `is-resume-suspended` and `is-suspend-once` (T11 layer 9), so the arm's source anchors on those regions moved. Re-anchor it on the regions as they now stand, or on the ops' behaviour.
