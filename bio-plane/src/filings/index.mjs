@@ -17,7 +17,8 @@
  *                                   `registerEvidenceBlock`, `publishedEditionsOf`; `attestationsOf`; `contentRow`,
  *                                   `captureFor`.
  *   membership     `inSight` (its R80): the sight of the project a draft or packet draws on (R11, R13, K316).
- *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), `clockPropose` (R32), from `actionsOf` (K253).
+ *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), `clockPropose` (R32), from `actionsOf` (K253);
+ *                  and its module-level `noSuchAction` (R43), through which every missing action is answered (N217).
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11), from `conformanceOf` (K252).
  *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
@@ -40,7 +41,7 @@ import { publicationOf } from "../publication/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
-import { actionsOf } from "../actions/index.mjs";
+import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, proposalLabel, parseFrontmatter, MACHINE_CLASS_PREFIX,
          sha256HexSync } from "../../checks/bio-checks.mjs";
@@ -185,14 +186,11 @@ export class Filings {
   }
 
   /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
-     module answers actions' read (K248: refused, never passed). */
+     module answers actions' read (K248: refused, never passed). The code is actions' (its R43; N217, K275): its row, its
+     fixed sentence; where no module answers the read, `why` says so as an extra field (K351). */
   #noAction(id) {
-    /* DEC-49 REGION is-no-such-action */
-    return { ok: false, reason: "NO_SUCH_ACTION", action: str(id),
-             detail: this.actions && typeof this.actions.actionRead === "function"
-               ? "no action by that id is readable here; one you may not see answers the same"
-               : "no module answers an action's read here, so no action is readable" };
-    /* END DEC-49 REGION is-no-such-action */
+    return noSuchAction(str(id), this.actions && typeof this.actions.actionRead === "function" ? undefined
+      : { why: "no module answers an action's read here, so no action is readable" });
   }
 
   /* R6, R7, R19: the one answer for a draft that is absent or whose action the viewer may not see. */
