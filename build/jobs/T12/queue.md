@@ -26,3 +26,25 @@ What this extraction touches outside queue, each for its owner.
 6. **legacy-ui (N301 and the lead).** `civicos-ui/app.html` 24600–24700 renders the lead's `options_grain`, which R18 retires: the lead now offers `cite` and, with a project home, `proposedispose`. `civicos-ui/check-refusal-codes.mjs` 2304–2314 lists `NO_PROJECT_SCOPE` as owed by D-623, now met (C-33.50), and harvests the moved families from the catalogue. `op=queue` now publishes `class_labels` (`FINDING` → "Noticed"). `civicos-ui/test/notifications.*` pin `options_grain`.
 7. **membership.** `activeAdmins()` answers the administrators in roster (rowid) order with no stated order; R23's "earliest active administrator" now rests on that order (it was `ORDER BY created, member_id`). An ordered answer, or `created` in `memberFacts`, would make it stated.
 8. **monitoring (Q2, Q3; K406).** Two producers derive what monitoring does not offer as a read: the addresses the archive tick would find eligible (from `source_reachability` at `floor()`), and a flagged tick (from the document's front matter). A read of each, beside R32's `monitoring()`, would let queue stop reading `source_reachability` and front matter.
+
+## J3 · COMPLETE
+
+**Entries applied.**
+- **The extraction** (map `build/extraction/queue.md`): `op=queue`'s composition, producers and mint; `queueMute`, `queueSnooze` and the re-notify consumer; `proposeDispose`'s set, bridge and project arm; the obligation inbox (`#routeTask` … `taskResolve`) with the drain's cadence; the scheduler registrations and capture's task notice, all now in `src/queue/index.mjs` (`queueOf`, `queueOps`, `queueAnswer`). Tables in `src/queue/schema.mjs` (`schema.mjs` interpolates it), purge declared by queue (R36). Check rows in `src/queue/checks.mjs`. `legacy-store` keeps one import, the factory call, the ops spread and a purge filter; its queue imports and dead helpers left with the code (N13's queue share).
+- **Rewired to services:** membership (gate from `viewerPredicate`, `inSight`, `positionalMember`, `isAdministrator`, `activeAdmins`, `projectOwners`, `memberFacts`, `participation`, `existenceAct`, `projectAuthority`, `noSuchProject`), record-core (`manifestByAuthor` N95, `bundleInfo`, `head`, `readFile`, `mintOpaqueId`, `perItem`), capture R45/R46, provenance `homeOf`, host-governor, capture-requests, connections `edgeSevered`, basis-versions (`projectsDrawingOn`, conclusions, `basisVersions` in place of reading uncontracted columns), ai-runs `runFor` (in place of reading `ai_runs`), publication `exportLog`, progressions, bias `uncleared` (N171's queue share), affordances.
+- **N172:** `newer-capture-affects-reference` catalogued (R1), its producer over `reevaluation.notices` and its door `versionadopt`/`versionkeep` (R12); `objective-gap` over `intent.gaps`, 50 projects, bound published. **N229:** `source-modified`/`source-removed`, `archive-fallback-eligible`, `monitoring-recheck-due` (Q2, Q3 as K406). **N301:** `class_labels`, and no member-facing sentence of queue's calls an item a finding. **R18** (REC-202), **R26**, **R29** (D-623, C-33.50), **R40** met; **R39** met for tasks, the bias half a `test.todo` (N326). **N173:** 40 of 40 ids named at the interface.
+- **Flaws fixed in the module:** a case-mute row naming an OBLIGATION kind suppressed an obligation (R31 says never, even if a row held one); `limit: 0` fell to the default instead of clamping to 1 (R6, R23, R24); stale "store.mjs" pointers in the catalogue's sentences.
+
+**Deferred.** C-19.1 (`checkInboxGrammar`) stays in legacy-checks (Q1, K406, N325). N171's `#counts` half is legacy-store's (J2 item 4). Requirement marks are BOB's (B2).
+
+**Found in other modules:** J2 (REPORT), eight items: stale bundles, the catalogue census, control-plane's `MODULE_CHECK_FILES`, legacy-store's `#counts`, legacy-tests' re-anchors, legacy-ui's `options_grain` and `class_labels`, membership's admin order, monitoring's two reads.
+
+**Tests and checks** (on `job/T12/queue` after merging `tranche/T12` @ ce9f0f7791):
+- `node --test bio-plane/test/m/queue/`: tests 59, pass 58, fail 0, todo 1 (R39's bias half).
+- `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures.
+- `node checks/architecture.mjs … queue`: 13 product files, 52 relative imports; 0 failures.
+- `node checks/coverage.mjs … queue`: 40 of 40 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs … queue tranche/T12`: legacy-store 6 added, 3,731 removed; legacy-checks 0 added, 131 removed; legacy-index 2 added, 5 removed; 0 failures. The added lines: the `queueOf`/`queueOps`/`queueOwns` import, `.filter((t) => !queueOwns(t))`, `queueOf(ctx, { env })`, `...queueOps(queueOf(this.ctx), url, body)` (store.mjs); the `QUEUE_SCHEMA` import and interpolation (schema.mjs); the `queueAnswer` import and its call in the `op=queue` handler (index.mjs). Ten edited import lines only remove names.
+- Legacy suites run as a check (J2 item 5).
+
+Size (session_01AA2FMtVLuYJEyYEy7Hivyi): test runs 14, module lines 4892
