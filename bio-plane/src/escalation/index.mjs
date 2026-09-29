@@ -40,7 +40,7 @@
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import * as conformanceModule from "../conformance/index.mjs";
+import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, actionFacts, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
@@ -92,20 +92,6 @@ const instantMs = (v) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
 };
 const iso = (ms) => stampInstant("second", ms);
-
-/* conformance R19, R20 (N309, N312, K275): the one answer to an absent or unseen determination, and to a superseded
-   one, minted there and answered through here (R1). Until conformance's helpers are merged into the tranche (its job
-   builds them beside this one), a stand-in in their wording answers, with conformance's own row where it has one; the
-   stand-in goes when they land. */
-const { conformanceOf, CONFORMANCE_CHECKS } = conformanceModule;
-const standIn = (code, determination, fields, detail, extra) => ({ ...(extra || {}), ok: false, reason: code, code,
-  check: CONFORMANCE_CHECKS[code]?.check ?? null, translation: CONFORMANCE_CHECKS[code]?.translation ?? null,
-  determination: determination ?? null, ...fields, detail });
-const noSuchDetermination = conformanceModule.noSuchDetermination || ((determinationId, extra) =>
-  standIn("NO_SUCH_DETERMINATION", determinationId, {}, "No determination you may see answers to that id.", extra));
-const determinationSuperseded = conformanceModule.determinationSuperseded || ((determinationId, supersededBy, extra) =>
-  standIn("DETERMINATION_SUPERSEDED", determinationId, { superseded_by: supersededBy ?? null },
-          "That determination has been superseded by a later one.", extra));
 
 /* ---- the providers' answers, read in one place each (their Provides) ---- */
 

@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { scene, V } from "../conformance/fixture.mjs";
 import { escalationOf } from "../../../src/escalation/index.mjs";
 import { actionsOf, noSuchAction } from "../../../src/actions/index.mjs";
+import { noSuchDetermination, determinationSuperseded } from "../../../src/conformance/index.mjs";
 
 function real() {
   const s = scene();
@@ -110,23 +111,17 @@ test("R5 R6 R7 over the real actions (K256): a sent entry on the attached breach
   assert.deepEqual(x.esc.escalationRead({ id: E, viewer: V("pat") }).proposed.map((p) => p.to), [5, 7]);
 });
 
-/* R1 through conformance's own helpers (its R19, R20; N309, N312, K275): once they are merged into the tranche, the
-   escalation's answer to each condition is exactly the helper's. Until then escalation answers through a stand-in in
-   their wording (open.test.mjs), and this test waits on conformance's merge. */
-import * as conformanceModule from "../../../src/conformance/index.mjs";
-const helpers = typeof conformanceModule.noSuchDetermination === "function"
-  && typeof conformanceModule.determinationSuperseded === "function";
-const R1_REAL = "R1 over the real conformance: NO_SUCH_DETERMINATION (absent and unseen) and DETERMINATION_SUPERSEDED are conformance's own answers, R19's and R20's, exactly";
-if (!helpers) test.todo(`${R1_REAL} (awaiting conformance R19/R20's merge into tranche/T12)`);
-else test(R1_REAL, () => {
+/* R1 through conformance's own helpers (its R19, R20; N309, N312, K275, K400): escalation's answer to each condition is
+   exactly the helper's. */
+test("R1 over the real conformance: NO_SUCH_DETERMINATION (absent and unseen) and DETERMINATION_SUPERSEDED are conformance's own answers, R19's and R20's, exactly", () => {
   const x = real();
   const first = x.w.c.determine(x.input());
   assert.equal(first.ok, true, JSON.stringify(first).slice(0, 300));
   const open = (determination, who = "pat") => x.esc.escalationOpen({ determination, author: V(who), viewer: V(who) });
-  assert.deepEqual(open("CONF-2026-0999-determination"), conformanceModule.noSuchDetermination("CONF-2026-0999-determination"));
-  assert.deepEqual(open(first.id, "quinn"), conformanceModule.noSuchDetermination(first.id), "unseen answers as absent");
-  assert.deepEqual(open(undefined), conformanceModule.noSuchDetermination(null));
+  assert.deepEqual(open("CONF-2026-0999-determination"), noSuchDetermination("CONF-2026-0999-determination"));
+  assert.deepEqual(open(first.id, "quinn"), noSuchDetermination(first.id), "unseen answers as absent");
+  assert.deepEqual(open(undefined), noSuchDetermination(null));
   const second = x.w.c.determine(x.input({ supersedes: first.id, reason: "the act was misdated" }));
   assert.equal(second.ok, true, JSON.stringify(second).slice(0, 300));
-  assert.deepEqual(open(first.id), conformanceModule.determinationSuperseded(first.id, second.id));
+  assert.deepEqual(open(first.id), determinationSuperseded(first.id, second.id));
 });
