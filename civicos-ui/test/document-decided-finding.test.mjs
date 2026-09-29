@@ -213,6 +213,11 @@ const th = await post("thread", { progressionKey:"grant", entityId:eG.entity_id,
   placements:[{ stage:"award", captureSha:gAward }] }, IRIS);
 ok("the award is threaded, so the application before it and the contract after it are missing", th && th.ok !== false);
 
+/* RE-ANCHORED 2026-09-29 (N301, K356; LEGACY-UI #1 J1, legacy-tests T12 B3): the queue class FINDING is shown to
+   members as "Noticed" — "noticed item" in the queue, the set-aside ledgers and the decision sentences; "finding" is
+   kept for a concluded question. Every pin of the decision sentences below reads "this noticed item" (the negative
+   pins too, which the old wording would have left passing over nothing); the arms' labels are kept, the controls'
+   anchors. */
 /* The document page's panel, rendered by the page's own function, with the member signed in. */
 const openDoc = async () => U.docKnowsPanel(gAward);
 /* One finding's own block on the document page: from its opening tag to the next finding's (or the
@@ -251,7 +256,7 @@ const a0 = docBlock(p0, "application"), o0 = docBlock(p0, "contract", true);
 ok("the document page is painted and lists the application and the overdue contract",
    p0.length > 500 && says(a0, /the application is usually expected but no document fills it yet/i) && says(o0, /overdue/i));
 ok("and each says no member has decided it",
-   says(a0, /no member has decided this finding/i) && says(o0, /no member has decided this finding/i));
+   says(a0, /no member has decided this noticed item/i) && says(o0, /no member has decided this noticed item/i));
 ok("and no decision is painted", !/data-decided-finding=/.test(p0));
 ok("the read is the plane's op=captureprogressions, carrying the member's session",
    CALLED.some(c => c.op === "captureprogressions" && c.token === IRIS));
@@ -274,15 +279,15 @@ const a1 = docBlock(p1, "application");
 ok("the finding is STILL LISTED on the document page",
    says(a1, /the application is usually expected but no document fills it yet/i));
 ok("THE DECIDED-FINDING ARM: a dismissed finding renders its decision BESIDE it — inside the finding's own block",
-   /data-decided-finding="application"/.test(a1) && says(a1, /a member decided this finding/i));
+   /data-decided-finding="application"/.test(a1) && says(a1, /a member decided this noticed item/i));
 ok("THE DECIDED-FINDING ARM: the decision's state, its author and its instant, all the record's",
    says(a1, new RegExp(`set aside as dismissed by ${d1 && d1.decided_by} on ${d1 && String(d1.at).slice(0, 10)}`, "i")));
 ok("THE DECIDED-FINDING ARM: the member's reason, verbatim", a1.includes(U.esc(REASON)));
 ok("THE DECIDED-FINDING ARM: which version of the declared flow it judged, and that it still stands",
    says(a1, /it judged version 1 of the declared flow/i) && says(a1, /still the one standing/i));
-ok("and it is no longer called undecided", !says(a1, /no member has decided this finding/i));
+ok("and it is no longer called undecided", !says(a1, /no member has decided this noticed item/i));
 ok("the decision does not leak: the overdue contract nobody decided still says so, and carries none",
-   says(docBlock(p1, "contract", true), /no member has decided this finding/i)
+   says(docBlock(p1, "contract", true), /no member has decided this noticed item/i)
    && !/data-decided-finding=/.test(docBlock(p1, "contract", true)));
 
 /* ============================================================
@@ -324,10 +329,10 @@ OLD_PLANE = false;
 const a3 = docBlock(p3, "application"), o3 = docBlock(p3, "contract", true);
 ok("the findings are still listed", says(a3, /no document fills it yet/i) && says(o3, /overdue/i));
 ok("THE NOT-KNOWN ARM: each says the record did not say whether a member decided it",
-   says(a3, /the record did not say whether a member has decided this finding/i)
-   && says(o3, /the record did not say whether a member has decided this finding/i));
+   says(a3, /the record did not say whether a member has decided this noticed item/i)
+   && says(o3, /the record did not say whether a member has decided this noticed item/i));
 ok("THE NOT-KNOWN ARM: and none is called undecided, none decided",
-   !says(p3, /no member has decided this finding/i) && !/data-decided-finding=/.test(p3));
+   !says(p3, /no member has decided this noticed item/i) && !/data-decided-finding=/.test(p3));
 
 await mf.dispose();
 if(fails.length){ console.error(`document-decided-finding: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }

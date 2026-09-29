@@ -185,6 +185,8 @@ const everyText = async (D, store = "bio") => {
   }
   return { bundles: rows.length, files: texts.length, texts };
 };
+/* The installer's slug grammar as a value (S4 finds it; S4b drives the plane against it). */
+let INSTALLER_SLUG_RE = null;
 const holding = (scan, needle) => scan.texts.filter((x) => x.v.includes(needle)).map((x) => `${x.id}:${x.path}`);
 
 try {
@@ -227,12 +229,22 @@ console.log("\n--- 0. the plane's source names no group of its own, and the valu
   t("S3: THE ONE READER reads the store and nothing else — never the environment a redeploy can move",
     [!!reader, !!reader && /instance_group/.test(reader[1]), !!reader && /\benv\b|INSTANCE_NAME/.test(reader[1])],
     [true, true, false]);
-  /* Read RAW, both: `codeOnly`'s lexer blanks a regex literal along with the comments, so the pattern is taken from
-     the source text itself (measured: through `codeOnly` the plane's line reads `static GROUP_SLUG_RE = ;`). */
-  const installer = /const SLUG_RE = (\/[^\n]+\/);/.exec(readFileSync(join(REPO, "newgroup", "src", "index.mjs"), "utf8"));
-  const plane = /static GROUP_SLUG_RE = (\/[^\n]+\/);/.exec(readFileSync(join(SRC_DIR, "store.mjs"), "utf8"));
-  t("S4: the plane checks a slug by the INSTALLER'S OWN grammar — the two sources are byte-equal, so neither moves alone",
-    [!!installer, !!plane, installer && plane ? installer[1] === plane[1] : false], [true, true, true]);
+  /* RE-ANCHORED 2026-09-29 (K405, INSTALLER #2 J1, N234; legacy-tests T12 B2): S4 read the installer's `SLUG_RE` and
+     the store's `static GROUP_SLUG_RE` by SOURCE TEXT and pinned them byte-equal. N234 removes the installer's copy: it
+     imports `GROUP_SLUG_RE` from instance-setup's import-free leaf `bio-plane/src/setup-fleet.mjs` (a stub in its own
+     paths until instance-setup merges), and "imported, never copied" is the installer's own R30. What stays this row's
+     is the plane's half, now tested at the interface: S4 takes the installer's grammar AS A VALUE — the module its
+     `import { GROUP_SLUG_RE }` names, imported, or, before N234 lands, its own copy — and S4b (§5) drives the plane's
+     first boot and seed over boundary slugs and requires it to accept exactly what that grammar accepts. It holds
+     before and after the installer merges, and does not care where the plane keeps its RegExp. */
+  const installerSrc = readFileSync(join(REPO, "newgroup", "src", "index.mjs"), "utf8");
+  const imported = /import\s*\{[^}]*\bGROUP_SLUG_RE\b[^}]*\}\s*from\s*["']([^"']+)["']/.exec(installerSrc);
+  const copied = /const SLUG_RE = (\/[^\n]+\/);/.exec(installerSrc);
+  if (imported) INSTALLER_SLUG_RE = (await import(new URL(imported[1], new URL("../../newgroup/src/", import.meta.url)).href)).GROUP_SLUG_RE;
+  else if (copied) INSTALLER_SLUG_RE = new Function(`return ${copied[1]};`)();
+  t("S4: the installer's slug grammar is found as ONE value — imported (N234, K405) or, until that lands, its own copy — "
+    + "and it is a RegExp; §5's S4b holds the plane to it by behaviour",
+    [!!imported !== !!copied, INSTALLER_SLUG_RE instanceof RegExp], [true, true]);
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion R13): the stamp moved with `promote` from store.mjs's
      `static #stampGroup` to `src/promotion/index.mjs`'s module function `stampGroup`; the same pin, read there. */
   const promotionCode = codeOnly(readFileSync(join(SRC_DIR, "promotion", "index.mjs"), "utf8"));
@@ -502,6 +514,33 @@ console.log("\n--- 5. a replay carries the past verbatim; a malformed installer 
   t("R2: a first boot whose installer binding is not a slug in the installer's grammar records NOTHING — an invented "
     + "or mangled value in signed bytes is the defect", g?.group, null);
   await retire(M);
+  /* S4b (K405, N234; 2026-09-29, legacy-tests T12 B2) — the plane's slug grammar, driven: every slug the installer's
+     grammar accepts is recorded at a first boot bound to it, and every slug it refuses is refused by the root of
+     trust's seed (C-64.2) and recorded at no first boot. Boundaries: 3 and 40 characters, a hyphen inside, a digit
+     first; 2 and 41 characters, a hyphen at either end, a capital, an underscore, a space inside. */
+  const slugs = ["abc", "a-1", "0ak-town", "a" + "b".repeat(38) + "c",
+                 "ab", "a" + "b".repeat(39) + "c", "-abc", "abc-", "Abc", "a_bc", "oak town"];
+  const byInstaller = slugs.map((s) => !!INSTALLER_SLUG_RE && INSTALLER_SLUG_RE.test(s));
+  const S = planeAt({ name: null });
+  const DS = door(S);
+  const byPlane = [];
+  for (const [i, s] of slugs.entries()) {
+    if (byInstaller[i]) {
+      const F = planeAt({ name: s });
+      byPlane.push((await door(F).GET(`op=instancegroup&token=${ADM}`))?.group === s);
+      await retire(F);
+    } else {
+      const F = planeAt({ name: s });
+      const booted = (await door(F).GET(`op=instancegroup&token=${ADM}`))?.group;
+      await retire(F);
+      const seeded = await DS.POST(`op=instancegroupseed&token=${ADM}`, { slug: s });
+      byPlane.push(!(booted === null && codeOf(seeded) === "GROUP_SLUG_MALFORMED"));
+    }
+  }
+  await retire(S);
+  t("S4b: THE PLANE CHECKS A SLUG BY THE INSTALLER'S OWN GRAMMAR — over eleven boundary slugs it records at first boot "
+    + "exactly those the installer's grammar accepts, and refuses the rest at first boot and at seed (C-64.2)",
+    [byInstaller.filter(Boolean).length, byPlane], [4, byInstaller]);
 }
 
 } catch (e) {

@@ -890,8 +890,11 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
   ok("§4 a class that answered with none says the record LOOKED and raised none — a different sentence "
      + "from the one above, for a different fact",
      /<b>OBLIGATION<\/b> — the record looked and raised none/.test(h1));
+  /* RE-ANCHORED 2026-09-29 (N301, K356; LEGACY-UI #1 J1, legacy-tests T12 B3): the class FINDING keeps its code
+     and is SHOWN to members as "Noticed" (`queueClassLabel`); "finding" is kept for a concluded question. The level
+     line names the class by that label, so these two pins read it, and the CONDITION/OBLIGATION lines are unchanged. */
   ok("§4 and a class that raised some reports the record's own count",
-     /<b>FINDING<\/b> — 1 raised/.test(h1));
+     /<b>Noticed<\/b> — 1 raised/.test(h1));
   /* CORRECTED IN PLACE BY UI-86: this arm read the WHOLE page, and "here" is the
      level block. Since UI-86 the case mute names the kinds PRESENT on the case —
      the record's own token for an item on the screen, which the mute already did
@@ -920,7 +923,7 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
   await c3.__renderQueue();
   const h3 = keep("an empty but fully-answered feed", q(c3));
   ok("§4 an empty feed that ANSWERED still states which level was empty, per class",
-     /<b>FINDING<\/b> — the record looked and raised none/.test(h3)
+     /<b>Noticed<\/b> — the record looked and raised none/.test(h3)   /* N301, 2026-09-29: as §4 above */
      && /<b>CONDITION<\/b> — the record looked and raised none/.test(h3));
   ok("§4 and the all-clear is still made beside it, because they are different claims",
      /Nothing needs anybody right now/.test(h3));
