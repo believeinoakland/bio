@@ -1,0 +1,132 @@
+/* control-plane's test harness: the module loaded under plain node, a fake `env` whose `STORE` is shaped like a Durable
+   Object namespace and records every inner request, and a driver that calls `makeFetch(hooks)`'s `fetch` and reads the
+   answer. `store.mjs` (imported by the module) imports `cloudflare:workers`, which plain node cannot resolve, so the
+   one specifier is answered here by an in-thread resolve hook with a stand-in `DurableObject` class; nothing else is
+   stubbed and no shared helper is touched. Every test drives the module at its interface. */
+import { registerHooks } from "node:module";
+import { createHash, randomBytes } from "node:crypto";
+
+registerHooks({
+  resolve(spec, ctx, next) {
+    if (spec === "cloudflare:workers")
+      return { url: "data:text/javascript,export class DurableObject{constructor(c,e){this.ctx=c;this.env=e}};export const env={};",
+               shortCircuit: true };
+    return next(spec, ctx);
+  },
+});
+
+export const M = await import("../../../src/control-plane/index.mjs");
+export const O = await import("../../../src/control-plane/ops.mjs");
+export const { makeFetch } = M;
+export const { OPS, SESSION_OPS, NEEDS } = O;
+
+export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
+export const hex64 = () => randomBytes(32).toString("hex");
+export const aik = () => `aik-${hex64()}`;
+
+/* The stamp fields R17 names: the query ones and the body ones. */
+export const QUERY_STAMPS = ["viewer", "identity", "author", "by", "actor", "who", "origin", "administer"];
+export const BODY_STAMPS = ["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal",
+                            "migrationReplay"];
+export const FORGED = "member:forged-by-caller";
+
+const ok = (result, status = 200) => new Response(JSON.stringify({ ok: true, result }), { status });
+
+/** A fake env. `sessions` maps a 64-hex session token to its session row; `creds` maps an `aik-` value to its credential
+ *  row (looked up by SHA-256, as the module asks). `answer(call)` may return a Response to override any route. */
+export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], group = null } = {}) {
+  const calls = [];
+  const bySha = new Map(Object.entries(creds).map(([v, c]) => [sha(v), c]));
+  const env = {
+    ADMIN_TOKEN: hex64(), MEMBER_TOKEN: hex64(), PROBE_TOKEN: hex64(), DAEMON_TOKEN: hex64(), VERSION: "9.8.7",
+    calls,
+    STORE: {
+      idFromName(n) { return n; },
+      get(id) {
+        return {
+          async fetch(input, init) {
+            const req = input instanceof Request ? input : new Request(String(input), init);
+            const u = new URL(req.url);
+            const text = req.method === "GET" || req.method === "HEAD" ? "" : await req.text();
+            let body = null;
+            try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+            const route = u.pathname.slice(1);
+            const call = { ns: id, route, url: u, params: Object.fromEntries(u.searchParams), body, method: req.method };
+            calls.push(call);
+            if (answer) { const r = await answer(call); if (r) return r; }
+            if (route === "session") return ok({ session: sessions[u.searchParams.get("t")] ?? null });
+            if (route === "aicredentiallook") {
+              const c = bySha.get(u.searchParams.get("sha"));
+              return ok(c ? { found: true, credential: c } : { found: false });
+            }
+            if (route === "groupidentitypublic" || route === "instancegrouppublic")
+              return ok(group ?? { slug: null });
+            if (route === "claim") return ok({ ok: true, claimed: true });
+            return ok({ ok: true, echo: route });
+          },
+        };
+      },
+    },
+  };
+  for (const k of omit) delete env[k];
+  return env;
+}
+
+/* Callers. */
+export const founder = (caps = []) => ({ role: "admin", capabilities: caps, administer: true, rootOfTrust: true, handle: "founder" });
+export const member = (id, caps = [], extra = {}) => ({ role: `member:${id}`, capabilities: caps, administer: false,
+                                                        rootOfTrust: false, handle: id, ...extra });
+export const cred = (extra = {}) => ({ tokenId: "agent-1", principal: "member:ann", writes: [], revoked: false,
+                                       confinedTo: null, taskScope: "t", ...extra });
+
+/** Drive the Worker entry. Returns status, headers, raw text and parsed JSON (null if not JSON). */
+export async function call(env, { op, token, params = {}, method = "GET", body, path = "/api", headers = {},
+                                  hooks } = {}) {
+  const u = new URL(`https://plane.example${path}`);
+  if (op !== undefined) u.searchParams.set("op", op);
+  if (token !== undefined) u.searchParams.set("token", token);
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+  const init = { method, headers };
+  if (body !== undefined) init.body = typeof body === "string" ? body : JSON.stringify(body);
+  const fetch = makeFetch(hooks ?? defaultHooks());
+  const res = await fetch(new Request(u, init), env);
+  const text = await res.text();
+  let json = null;
+  try { json = JSON.parse(text); } catch { json = null; }
+  return { status: res.status, headers: res.headers, text, json };
+}
+
+/* Hooks that record what reached them: every public op is answered by `publicOp` (ok, naming the op), and `gatedOp`
+   declines so the generic forward runs. */
+export function defaultHooks(log = []) {
+  return {
+    log,
+    async publicOp(ctx) { log.push({ kind: "public", op: ctx.op }); return M.json({ ok: true, publicOp: ctx.op }); },
+    async gatedOp(ctx) { log.push({ kind: "gated", op: ctx.op, cls: ctx.cls }); return undefined; },
+  };
+}
+
+/** The inner requests that are not the credential lookups (session, aicredentiallook). */
+export const opCalls = (env) => env.calls.filter((c) => c.route !== "session" && c.route !== "aicredentiallook");
+
+/** A standard world: every kind of caller. */
+export function world(opts = {}) {
+  const allCaps = opts.caps ?? ["contribute", "publish", "create_projects"];
+  const S = { founder: hex64(), ann: hex64(), bare: hex64() };
+  const A = { ann: aik(), revoked: aik(), confined: aik(), org: aik() };
+  const sessions = {
+    [S.founder]: founder(allCaps),
+    [S.ann]: member("ann", allCaps),
+    [S.bare]: member("bea", []),
+    ...(opts.sessions || {}),
+  };
+  const creds = {
+    [A.ann]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: opts.writes ?? [] }),
+    [A.revoked]: cred({ tokenId: "agent-old", revoked: true, revokedAt: "2026-09-01", revokedBy: "ann" }),
+    [A.confined]: cred({ tokenId: "agent-sandbox", confinedTo: "scratch" }),
+    [A.org]: cred({ tokenId: "agent-org", principal: "class:ai" }),
+    ...(opts.creds || {}),
+  };
+  const env = makeEnv({ sessions, creds, answer: opts.answer, omit: opts.omit, group: opts.group });
+  return { env, S, A };
+}
