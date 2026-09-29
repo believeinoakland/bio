@@ -29,3 +29,7 @@ For other modules (details in my record's Completion):
 2. Generated artifacts made stale by gate.mjs: agent-worker/dist/agent-worker.bundled.mjs and bio-plane/dist/bio-plane.bundled.mjs. Reported, not rebuilt.
 3. N302's list was incomplete. Diffing every row table since 7702929d29 also found: actions' C-117.2, C-117.3 and C-117.6 added; intent's C-111.2 retired; wording-only where and translation moves in actions (C-73.3, C-73.6, C-90.2), case-authoring (C-44.1, C-44.3–.5) and consequences (C-114.x). 1.42.0 stamps all of them.
 4. For BOB to word (a promotion improvement, not made): R34's own test cannot see a row move. Only the d470 census guards that, and it covers the catalogue file only. A census over every module's row table, pinned beside CATALOG_VERSION, would guard R34 in full, but it would go red mid-tranche whenever a later layer changes rows before the next stamp.
+
+## J2 · COMPLETE
+
+N302 applied: CATALOG_VERSION 1.42.0 (8 arrivals, 4 departures, 1 changed, C-22.7 moved), commit f955769afc on job/T12/promotion. Promotion tests 67/0; format, architecture, coverage (49/49) and ownership: 0 failures. Stale bundles and the d470 re-pin are in the REPORT.
