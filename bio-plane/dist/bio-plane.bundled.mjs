@@ -68569,6 +68569,36 @@ CREATE TABLE IF NOT EXISTS reevaluation_records (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_records_dependent ON reevaluation_records (dependent, target, source);
+-- R14's case half, R26 (N210): ONE NOTICE PER (case, cited part, pinned
+-- capture, newer capture). A cited part is a case member at its pin (publication
+-- R41); its pinned capture is the one its bundle.md at the pin names, and the
+-- newer capture is graded as the leg half grades a passage (the whole
+-- document). owners is the JSON list of the owning project's owners read when
+-- it was raised: they are the ones told, and nobody else is. ord is the part's
+-- place in the edition's parts. keepVersion closes it; a new edition that
+-- re-pins the part is publication's act, not this module's.
+CREATE TABLE IF NOT EXISTS reevaluation_case_notices (
+  notice_id        TEXT PRIMARY KEY,
+  case_id          TEXT NOT NULL,
+  edition          INTEGER,
+  project          TEXT,
+  ord              INTEGER NOT NULL,
+  part             TEXT NOT NULL,
+  part_sha         TEXT NOT NULL,
+  capture_sha      TEXT NOT NULL,
+  newer_capture    TEXT NOT NULL,
+  newer_bundle     TEXT,
+  grade            TEXT,
+  affects          TEXT NOT NULL,
+  owners           TEXT NOT NULL,
+  raised_at        TEXT NOT NULL,
+  state            TEXT NOT NULL DEFAULT 'open',
+  closed_by        TEXT,
+  closed_at        TEXT,
+  why              TEXT,
+  UNIQUE (case_id, part, capture_sha, newer_capture)
+);
+CREATE INDEX IF NOT EXISTS reevaluation_case_notices_case ON reevaluation_case_notices (case_id, state);
 -- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
 -- of the pass part-way (after the last leg a batch read), when that pass began
 -- and when the last complete one began, and the receipt mark: receipt_seq is
@@ -68590,6 +68620,8 @@ CREATE TABLE IF NOT EXISTS reevaluation_sweep (
 var REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_notices", keys: ["holder"] },
   { name: "reevaluation_records", keys: ["dependent"] },
+  /* R26: a case is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
+  { name: "reevaluation_case_notices", keys: [] },
   /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
   { name: "reevaluation_sweep", keys: [] }
 ]);
@@ -68620,6 +68652,8 @@ var CAUSE_SOURCES = Object.freeze([
   "weakened"
 ]);
 var RAISED_ON = Object.freeze(["affected", "undetermined"]);
+var CASE_CURSOR = "case:";
+var DOCUMENT_EXTENT = canonicalExtent({ kind: "document" });
 var PAIR_AXES = Object.freeze(["capture", "connection", "testimony"]);
 var str4 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var MACHINE_ADMIN = `${MACHINE_CLASS_PREFIX}admin`;
@@ -68639,6 +68673,8 @@ var Reevaluation = class {
   #deps;
   #listeners = [];
   // R8: {module, fn}, in registration order
+  #caseParts = null;
+  // R26: {module, parts, cases}, publication's, one registration
   constructor({
     storage,
     record,
@@ -69093,11 +69129,21 @@ var Reevaluation = class {
   /** R8: a later module's listener, registered once at start, told of every R7 raise and every R14 notice raised,
    *  after the act commits. A second registration by one module is `LISTENER_DECLARED`. */
   onBasisChanged(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
     this.#listeners.push({ module, fn });
+    return { ok: true, module };
+  }
+  /** R26 (N210): the one registration of a case edition's cited parts (publication R41): `parts({case, edition?})`
+   *  answers `{case, edition, project, parts: [{bundle_id, bundle_sha}]}`, and `cases({after, limit})` the cases with a
+   *  ratified edition, `{cases, cursor}`, which the sweep's case half pages through (a case is no bundle, so only its
+   *  holder can list them). Both refusals are membership's (its R81): a registration missing either function is
+   *  malformed; a second, by any module, is declared. */
+  registerCaseParts(module, fns) {
+    const ok = !!fns && typeof fns === "object" && typeof fns.parts === "function" && typeof fns.cases === "function";
+    const refused = listenerRefusal(this.#caseParts, module, ok ? fns.parts : null);
+    if (refused) return refused;
+    this.#caseParts = { module, parts: fns.parts, cases: fns.cases };
     return { ok: true, module };
   }
   /* R8: every listener once, in registration order; one that throws or rejects changes nothing, and is named. */
@@ -69372,9 +69418,11 @@ var Reevaluation = class {
    *  R8's listeners are told of each notice raised, after the sweep's writes commit. */
   raiseNotices({ limit = null, after = null } = {}) {
     const cap = clamp2(limit, NOTICE_SWEEP_DEFAULT, NOTICE_SWEEP_MAX);
-    const m = /^(.*)#(\d+)$/.exec(String(after ?? ""));
+    const aft = String(after ?? "");
+    const inCases = aft.startsWith(CASE_CURSOR);
+    const m = inCases ? null : /^(.*)#(\d+)$/.exec(aft);
     const [aHolder, aOrd] = m ? [m[1], Number(m[2])] : ["", -1];
-    const page = this.#rows(
+    const page = inCases ? [] : this.#rows(
       `SELECT ib.bundle_id AS holder, ib.ord AS ord, ib.target_id AS target_id, ib.content_id AS content_id
          FROM inquiry_basis ib
         WHERE ib.content_id IS NOT NULL AND ib.content_id <> ''
@@ -69385,7 +69433,7 @@ var Reevaluation = class {
       aOrd,
       cap + 1
     );
-    const truncated3 = page.length > cap;
+    let truncated3 = page.length > cap;
     const legs = page.slice(0, cap);
     const holders = [...new Set(legs.map((l) => l.holder))];
     const divided = new Set(holders.length ? this.#rows(`SELECT bundle_id FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))
@@ -69394,6 +69442,7 @@ var Reevaluation = class {
     const rows = new Map((ids.length ? this.#rows(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content
                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length) : []).map((r) => [r.content_id, r]));
     const memo = /* @__PURE__ */ new Map(), noticeMemo = /* @__PURE__ */ new Map();
+    const cases = truncated3 ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
     const when = this.#when();
     const raised = [];
     let examined = 0, unread = 0;
@@ -69448,11 +69497,70 @@ var Reevaluation = class {
           });
         }
       }
+      for (const p of cases ? cases.parts : []) {
+        examined++;
+        const n = p.notice;
+        if (!n || n.state === "chain_unread") {
+          unread++;
+          continue;
+        }
+        for (const c of n.candidates || []) {
+          if (!RAISED_ON.includes(c.affects)) continue;
+          const id = `RC-${sha256HexSync(`${p.case}\0${p.part}\0${p.capture_sha}\0${c.capture_sha}`).slice(0, 24)}`;
+          if (this.#one(`SELECT 1 AS x FROM reevaluation_case_notices WHERE notice_id=?`, id)) continue;
+          this.sql.exec(
+            `INSERT INTO reevaluation_case_notices (notice_id, case_id, edition, project, ord, part, part_sha, capture_sha,
+                                                    newer_capture, newer_bundle, grade, affects, owners, raised_at, state)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'open')`,
+            id,
+            p.case,
+            p.edition,
+            p.project,
+            p.ord,
+            p.part,
+            p.part_sha,
+            p.capture_sha,
+            c.capture_sha,
+            c.bundle_id ?? null,
+            c.grade ?? null,
+            c.affects,
+            JSON.stringify(p.owners),
+            when
+          );
+          raised.push({
+            notice: id,
+            kind: "case",
+            case: p.case,
+            edition: p.edition,
+            project: p.project,
+            ord: p.ord,
+            part: p.part,
+            part_sha: p.part_sha,
+            capture_sha: p.capture_sha,
+            newer_capture: c.capture_sha,
+            grade: c.grade ?? null,
+            affects: c.affects,
+            owners: p.owners
+          });
+        }
+      }
       return null;
     });
     const failed2 = /* @__PURE__ */ new Set();
-    for (const r of raised)
-      for (const mod of this.#tell({
+    for (const r of raised) {
+      const told = r.kind === "case" ? {
+        kind: "passage",
+        subject: r.part,
+        source: "newer_capture",
+        since: when,
+        detail: `a newer capture of ${r.part} (${r.newer_capture.slice(0, 12)}), cited by case ${r.case}, grades it ${r.grade ?? "undetermined"} (${r.affects})`,
+        dependents: [],
+        case: { case: r.case, edition: r.edition, project: r.project, owners: r.owners },
+        captures: { cited: r.capture_sha, newer: r.newer_capture },
+        grade: r.grade,
+        affects: r.affects,
+        notice: r.notice
+      } : {
         kind: "passage",
         subject: r.content_id,
         source: "newer_capture",
@@ -69463,9 +69571,15 @@ var Reevaluation = class {
         grade: r.grade,
         affects: r.affects,
         notice: r.notice
-      }))
-        failed2.add(mod);
+      };
+      for (const mod of this.#tell(told)) failed2.add(mod);
+    }
     const last = legs.length ? legs[legs.length - 1] : null;
+    let cursor = truncated3 && last ? `${last.holder}#${last.ord}` : null;
+    if (cases && cases.cursor !== null) {
+      truncated3 = true;
+      cursor = `${CASE_CURSOR}${cases.cursor}`;
+    }
     return {
       ok: true,
       examined,
@@ -69474,14 +69588,106 @@ var Reevaluation = class {
       count: raised.length,
       limit: cap,
       truncated: truncated3,
-      cursor: truncated3 && last ? `${last.holder}#${last.ord}` : null,
+      cursor,
       ...failed2.size ? { listeners_failed: [...failed2] } : {},
-      says: "a notice is raised once per question, leg and newer capture, only where the newer version affects the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a reference"
+      ...cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the cited parts of a case edition, so no case's owners were told of a newer version of what it cites; that is not the same as none" } : {},
+      says: "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer capture to that case's owners, only where the newer version affects the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a reference"
     };
+  }
+  /* R26: R14's case half for one batch: the ratified cases after `afterCase`, one counting one toward `budget`, each
+     cited part graded at its pinned capture. Reads only; the caller writes. `cursor` is the last case read when more
+     may follow (`""` when the budget is spent before the first), else null; `absent` when nothing is registered. */
+  #caseHalf(afterCase, budget, memo) {
+    const reg = this.#caseParts;
+    if (!reg) return { absent: true, parts: [], cursor: null };
+    if (budget <= 0) return { parts: [], cursor: afterCase };
+    let list2 = null;
+    try {
+      list2 = reg.cases({ after: afterCase, limit: budget });
+    } catch {
+      list2 = null;
+    }
+    const ids = (list2 && Array.isArray(list2.cases) ? list2.cases : []).filter((c) => typeof c === "string" && c).slice(0, budget);
+    const parts = [];
+    for (const caseId of ids) {
+      let a = null;
+      try {
+        a = reg.parts({ case: caseId });
+      } catch {
+        a = null;
+      }
+      if (!a || a.ok === false || !Array.isArray(a.parts)) continue;
+      const project = str4(a.project);
+      let owners = [];
+      try {
+        owners = project ? this.membership.projectOwners(project) || [] : [];
+      } catch {
+        owners = [];
+      }
+      a.parts.forEach((p, ord) => {
+        const part = p ? str4(p.bundle_id) : null, pin = p ? str4(p.bundle_sha) : null;
+        if (!part || !pin) return;
+        const capture = this.#pinnedCapture(part, pin);
+        const notice = capture ? this.#gradeWhole(part, capture, memo) : null;
+        parts.push({
+          case: caseId,
+          edition: Number.isInteger(a.edition) ? a.edition : null,
+          project,
+          owners,
+          ord,
+          part,
+          part_sha: pin,
+          capture_sha: capture,
+          notice
+        });
+      });
+    }
+    return { parts, cursor: ids.length === budget ? ids[ids.length - 1] : null };
+  }
+  /* R26: a cited part's pinned capture: the capture its bundle.md at the pin names (`content_hash`), held for the part,
+     else the part's first-held capture (content R11), read at the pin (record-core R60). Null when none is held. */
+  #pinnedCapture(part, pin) {
+    let text3 = null;
+    try {
+      text3 = this.record.textAtSha(part, pin);
+    } catch {
+      text3 = null;
+    }
+    if (typeof text3 !== "string") return null;
+    let fm = null;
+    try {
+      fm = parseFrontmatter(text3).data;
+    } catch {
+      fm = null;
+    }
+    const authored = fm && typeof fm.content_hash === "string" && /^[0-9a-fA-F]{64}$/.test(fm.content_hash.trim()) ? fm.content_hash.trim().toLowerCase() : null;
+    try {
+      return this.content.captureFor(part, authored) || null;
+    } catch {
+      return null;
+    }
+  }
+  /* R26: content's notice for the whole of one capture of a part, as the record holds it (a machine viewer). */
+  #gradeWhole(part, capture, memo) {
+    const row2 = {
+      content_id: null,
+      capture_sha: capture,
+      bundle_id: part,
+      extent_kind: "document",
+      extent: DOCUMENT_EXTENT,
+      ref: null,
+      cited_as: null
+    };
+    try {
+      return this.content.noticeForRow(row2, MACHINE_ADMIN, memo);
+    } catch {
+      return null;
+    }
   }
   #noticeView(r) {
     return {
       notice: r.notice_id,
+      kind: r.kind,
       holder: r.holder,
       ord: r.ord,
       content_id: r.content_id,
@@ -69496,8 +69702,39 @@ var Reevaluation = class {
       closed_by: r.closed_by,
       closed_at: r.closed_at,
       why: r.why,
-      adopted_version: r.adopted_version
+      adopted_version: r.adopted_version,
+      ...r.kind === "case" ? { case: {
+        case: r.holder,
+        edition: r.edition,
+        project: r.project,
+        part: r.target_id,
+        part_sha: r.part_sha
+      } } : {}
     };
+  }
+  /* R14, R26: the two kinds of notice as one listing. A leg notice is seen through its holder; a case notice only by
+     the owners it told (and a machine credential, which is not filtered), so nobody else is told. */
+  #noticeRows(g, where, args, tail, tailArgs) {
+    const seeAll = g.scope === "member" ? 1 : 0;
+    return this.#rows(
+      `SELECT * FROM (
+         SELECT 'leg' AS kind, n.notice_id, n.holder, n.ord, n.content_id, n.target_id, n.capture_sha, n.newer_capture,
+                n.newer_bundle, n.grade, n.affects, n.raised_at, n.state, n.closed_by, n.closed_at, n.why,
+                n.adopted_version, NULL AS edition, NULL AS project, NULL AS part_sha
+           FROM reevaluation_notices n JOIN bundles b ON b.bundle_id = n.holder WHERE (${g.sql})
+         UNION ALL
+         SELECT 'case' AS kind, c.notice_id, c.case_id, c.ord, NULL, c.part, c.capture_sha, c.newer_capture,
+                c.newer_bundle, c.grade, c.affects, c.raised_at, c.state, c.closed_by, c.closed_at, c.why,
+                NULL, c.edition, c.project, c.part_sha
+           FROM reevaluation_case_notices c
+          WHERE ? = 1 OR EXISTS (SELECT 1 FROM json_each(c.owners) o WHERE o.value = ?)
+       ) WHERE ${where} ${tail}`,
+      ...g.args,
+      seeAll,
+      g.member ?? null,
+      ...args,
+      ...tailArgs
+    );
   }
   /* R14 (N200): whether the viewer sees a capture, by the gate `versionChain` reads it through (provenance R17): some
      bundle registering it is one the viewer may see. Memoised for the one answer it serves. */
@@ -69524,17 +69761,12 @@ var Reevaluation = class {
     const h = str4(holder);
     const st = ["open", "adopted", "kept", "all"].includes(state) ? state : "open";
     const g = viewerPredicate(viewer);
-    const rows = this.#rows(
-      `SELECT n.* FROM reevaluation_notices n JOIN bundles b ON b.bundle_id = n.holder
-        WHERE (${g.sql}) AND (? IS NULL OR n.holder = ?) AND (? = 'all' OR n.state = ?) AND n.notice_id > ?
-        ORDER BY n.notice_id LIMIT ?`,
-      ...g.args,
-      h,
-      h,
-      st,
-      st,
-      String(after ?? ""),
-      cap + 1
+    const rows = this.#noticeRows(
+      g,
+      `(? IS NULL OR holder = ?) AND (? = 'all' OR state = ?) AND notice_id > ?`,
+      [h, h, st, st, String(after ?? "")],
+      `ORDER BY notice_id LIMIT ?`,
+      [cap + 1]
     );
     const visible = this.#redactor(viewer);
     const seesCapture = this.#captureSeer(viewer);
@@ -69616,7 +69848,7 @@ var Reevaluation = class {
     const row2 = this.#sweepRow();
     if (!this.#sweepPending(row2)) return { pending: false };
     const ms = Number(now);
-    const began = row2.pass_began !== null ? row2.pass_began : Number.isFinite(ms) ? new Date(ms).toISOString().replace(/\.\d+Z$/, "Z") : this.#when();
+    const began = row2.pass_began !== null ? row2.pass_began : Number.isFinite(ms) ? stampInstant("second", ms) : this.#when();
     const pass = row2.pass_began !== null ? { began, seq: row2.pass_seq ?? 0, after: row2.cursor } : { began, seq: Number(row2.receipt_seq) || 0, after: null };
     const batch = this.raiseNotices({ after: pass.after });
     const seq = this.#sweepRow().receipt_seq;
@@ -69646,8 +69878,8 @@ var Reevaluation = class {
         who2 ? `'${who2.slice(0, 60)}' is a machine identity.` : "no member is named as the one choosing."
       ) };
     const id = String(notice ?? "").trim();
-    const r = id ? this.#one(`SELECT * FROM reevaluation_notices WHERE notice_id=?`, id) : null;
-    if (!r || !this.#visible(r.holder, viewer))
+    const r = !id ? null : this.#noticeRows(viewerPredicate(viewer), `notice_id = ?`, [id], `LIMIT 1`, [])[0] ?? null;
+    if (!r)
       return { refusal: this.#refuse(
         "VERSION_NOTICE_NOT_FOUND",
         `no notice by the id '${id.slice(0, 60)}' is readable here.`,
@@ -69669,6 +69901,12 @@ var Reevaluation = class {
     const s = this.#choiceSubject("MACHINE_CANNOT_ADOPT_VERSION", notice, author, viewer);
     if (s.refusal) return s.refusal;
     const { who: who2, r } = s;
+    if (r.kind === "case")
+      return this.#refuse(
+        "VERSION_ADOPT_UNWRITABLE",
+        `${r.notice_id} is about a part case ${r.holder} cites at its pin; a case edition keeps the bytes it was signed over, and resting a case on the newer version is a new edition, which is the case's authors' act. Nothing was written.`,
+        { notice: r.notice_id }
+      );
     const fm = this.#frontmatterOf(r.holder);
     const legs = this.#basisFrontmatter(fm);
     const leg = legs[r.ord];
@@ -69813,8 +70051,14 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
         { notice: r.notice_id, limit: NOTE_MAX }
       );
     const when = this.#when();
-    this.sql.exec(`UPDATE reevaluation_notices SET state='kept', closed_by=?, closed_at=?, why=?
-                    WHERE notice_id=? AND state='open'`, who2, when, text3, r.notice_id);
+    this.sql.exec(
+      `UPDATE ${r.kind === "case" ? "reevaluation_case_notices" : "reevaluation_notices"}
+                      SET state='kept', closed_by=?, closed_at=?, why=? WHERE notice_id=? AND state='open'`,
+      who2,
+      when,
+      text3,
+      r.notice_id
+    );
     return {
       ok: true,
       notice: r.notice_id,
@@ -69826,7 +70070,7 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
       why: text3,
       capture_sha: r.capture_sha,
       newer_capture: r.newer_capture,
-      says: `${r.holder}'s leg ${r.ord} stays on the earlier version (${r.capture_sha.slice(0, 12)}); the newer capture (${r.newer_capture.slice(0, 12)}) will not raise this notice again`
+      says: `${r.kind === "case" ? `case ${r.holder}'s cited part ${r.target_id}` : `${r.holder}'s leg ${r.ord}`} stays on the earlier version (${r.capture_sha.slice(0, 12)}); the newer capture (${r.newer_capture.slice(0, 12)}) will not raise this notice again`
     };
   }
   /* ---------------------------------------------------------------- R16: a recorded re-evaluation */
@@ -69936,7 +70180,7 @@ function reevaluationOf(host, deps) {
     instances15.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
-    r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }).raised);
+    r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
     promotion.onReopened("reevaluation", ({ target, at: at14, viewer }) => r.raise({ target, source: "reopened", since: at14, viewer }));
     promotion.registerStep("reevaluation", { check: (c) => r.check(c) });
     record.registerAuditCheck("reevaluation", (image) => r.audit(image));
@@ -94412,11 +94656,6 @@ var INTENT_CHECKS = Object.freeze({
     where: at11("setCondition", "is-condition-member"),
     translation: "What a project is aiming at is a member's decision. An assistant may point out gaps; it may not set or change the measure. Sign in as a member. Nothing was written."
   },
-  NO_SUCH_PROJECT: {
-    check: "C-111.2",
-    where: at11("refuseNoSuchProject", "is-project-seen"),
-    translation: "No project answers to that id here. A project you cannot see is answered exactly as one that does not exist, so this is not a hint either way."
-  },
   CONDITION_UNREADABLE: {
     check: "C-111.3",
     where: at11("#conditionRefusal", "is-condition-shaped"),
@@ -94833,6 +95072,8 @@ var GOALS_MAX = 200;
 var TRIAGED_MAX = 1e3;
 var SET_ASIDE_MAX = 200;
 var SERVES_MAX = 1e3;
+var ASPIRATIONS_MAX = 1e3;
+var CONTACTS_MAX = 1e3;
 var str12 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -94911,7 +95152,7 @@ var Intent = class {
       if (seen) return { refused: seen };
     }
     if (!d || d.type !== "project" || viewer !== null && viewer !== void 0 && !this.membership.inSight(projectId, viewer))
-      return { refused: refuseNoSuchProject("no project answers to that id here; one you cannot see is answered exactly as one that does not exist.", { project: typeof projectId === "string" ? projectId : null }) };
+      return { refused: noSuchProject(typeof projectId === "string" ? projectId : null) };
     return { doc: d };
   }
   /* An aspiration or goal the viewer may see (R8: absent and unseen are one answer). A project's aspiration is that
@@ -95702,6 +95943,27 @@ ${bodyText2(note)}`
     }
     return out;
   }
+  /* R12, R13 (N209, K338): the first ASPIRATIONS_MAX held aspirations the viewer may see, in id order, walked a page
+     at a time and read one past so a cut says so. */
+  #heldAspirations(viewer) {
+    const out = [];
+    let after = "", truncated3 = false;
+    for (; ; ) {
+      const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
+      for (const id of page.ids) {
+        const a = this.#pursuit(id, ASPIRATION, viewer);
+        if (!a || a.head.currentState !== "held") continue;
+        if (out.length === ASPIRATIONS_MAX) {
+          truncated3 = true;
+          break;
+        }
+        out.push(this.#aspirationView(a));
+      }
+      if (truncated3 || page.ids.length < 200 || !page.cursor) break;
+      after = page.cursor;
+    }
+    return { held: out, truncated: truncated3 };
+  }
   #aspirationView(a) {
     const list2 = (v) => Array.isArray(v) ? v.map(String).filter((x) => x !== "") : [];
     return {
@@ -95736,7 +95998,7 @@ ${bodyText2(note)}`
       const p = this.#project(project, viewer);
       if (p.refused) return p.refused;
     }
-    const held = this.#aspirations(viewer).filter((a) => a.state === "held");
+    const { held, truncated: truncated3 } = this.#heldAspirations(viewer);
     const dep = project ? this.#departures(project) : { latest: /* @__PURE__ */ new Map(), truncated: false };
     const departed = dep.latest;
     const group = held.filter((a) => a.scope === "group" && !departed.has(a.id));
@@ -95748,6 +96010,8 @@ ${bodyText2(note)}`
       project: project || null,
       member: member || null,
       aspirations: [...group, ...own2, ...mine],
+      limit: ASPIRATIONS_MAX,
+      truncated: truncated3,
       departures,
       departures_limit: DEPARTURES_MAX,
       departures_truncated: dep.truncated,
@@ -95755,24 +96019,31 @@ ${bodyText2(note)}`
       says: "these are held side by side; the record states no order among them and resolves nothing between them"
     };
   }
-  /** R13: each pair of held aspirations naming a common entity or progression, with what they share. */
+  /** R13: each pair of held aspirations naming a common entity or progression, with what they share. The first
+   *  ASPIRATIONS_MAX held aspirations in id order are paired, and at most CONTACTS_MAX pairs are listed, in the order of
+   *  their first and then second aspiration's id; `truncated` says either was cut (N209, K338). */
   contacts({ viewer = null } = {}) {
-    const held = this.#aspirations(viewer).filter((a) => a.state === "held");
+    const { held, truncated: cut3 } = this.#heldAspirations(viewer);
     const pairs = [];
-    for (let i = 0; i < held.length; i++)
+    let truncated3 = cut3;
+    outer: for (let i = 0; i < held.length; i++)
       for (let j = i + 1; j < held.length; j++) {
         const a = held[i], b = held[j];
         const entities = a.entities.filter((e) => b.entities.includes(e));
         const progressions = a.progressions.filter((k) => b.progressions.includes(k));
-        if (entities.length || progressions.length)
-          pairs.push({
-            a: a.id,
-            b: b.id,
-            shared: { entities, progressions },
-            says: "both name what is listed; the record does not say whether they agree"
-          });
+        if (!entities.length && !progressions.length) continue;
+        if (pairs.length === CONTACTS_MAX) {
+          truncated3 = true;
+          break outer;
+        }
+        pairs.push({
+          a: a.id,
+          b: b.id,
+          shared: { entities, progressions },
+          says: "both name what is listed; the record does not say whether they agree"
+        });
       }
-    return { ok: true, contacts: pairs };
+    return { ok: true, contacts: pairs, limit: CONTACTS_MAX, truncated: truncated3 };
   }
   /** R14: an aspiration's pursuit record: the goals opened under it and their objectives, the proposals triaged under
    *  them with each act and reason, the capture requests named in them with their outcome, and the dead ends. */
@@ -95817,20 +96088,15 @@ ${bodyText2(note)}`
       at: r.at
     }));
     const named = [...new Set(triaged.flatMap((t) => captureRequestsNamed(t.basis)))];
-    let held = /* @__PURE__ */ new Map(), readCut = false;
-    if (named.length) {
-      const read2 = this.#lazy(this.captureRequests).captureRequests({ viewer, limit: 1e3 });
-      const rows = read2 && Array.isArray(read2.requests) ? read2.requests : [];
-      held = new Map(rows.map((r) => [r.request, r]));
-      readCut = read2 ? read2.truncated === true : false;
-    }
+    const byId = named.length ? this.#lazy(this.captureRequests) : null;
     const capture_requests = named.map((id) => {
-      const r = held.get(id);
-      if (!r) return {
-        request: id,
-        outcome: null,
-        why: readCut ? "not among the requests the read answered (it was cut at its bound)" : "no such request is held, or it is one you may not see"
-      };
+      let r = null;
+      try {
+        r = byId.requestById({ request: id, viewer });
+      } catch {
+        r = null;
+      }
+      if (!r) return { request: id, outcome: null, why: "no such request is held, or it is one you may not see" };
       return { request: id, outcome: {
         state: r.state,
         code: r.code ?? null,
@@ -96027,7 +96293,7 @@ ${bodyText2(note)}`
     if ((act === "defer" || act === "dismiss") && !why)
       return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
     if (act === "adopt" && !proj)
-      return refuseNoSuchProject("a proposal is adopted into a named project's objective; name the project. Nothing was written.", { project: null });
+      return noSuchProject(null);
     if (proj && !isMachine2) {
       const denied = this.membership.projectAuthority(proj.id, author, "joined", `triage:${act}`);
       if (denied) return denied;
@@ -96269,18 +96535,6 @@ ${bodyText2(note)}`
     return { ...isObj14(opened) ? opened : {}, project, instructions };
   }
 };
-function refuseNoSuchProject(detail, extra) {
-  const row2 = INTENT_CHECKS.NO_SUCH_PROJECT;
-  return {
-    ok: false,
-    reason: "NO_SUCH_PROJECT",
-    code: "NO_SUCH_PROJECT",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
 function refuseNoSuchGoal(detail, extra) {
   const row2 = INTENT_CHECKS.NO_SUCH_GOAL;
   return {
