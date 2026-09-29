@@ -211,13 +211,12 @@ test("R5: a finding's reference to a target not yet published never enters the p
                                       w.publication.publishedEditions(Q)]), new RegExp(DOC));
 });
 
-/* Live once publication's N256 share merges (its R22's held reference): today `publishEdges` drops the reference. */
-test.todo("R16, R5: the reference held for a published finding becomes a `serve` edge when its target is published; nothing else in either edition changes", () => {
+test("R16, R5: the reference held for a published finding becomes a `serve` edge when its target is published; nothing else in either edition changes", () => {
   const { w, args, edges } = heldWorld();
   assert.equal(w.r.publish(args(Q, edges)).ok, true);
   const q1 = w.row(`SELECT * FROM published_bundles WHERE bundle_id=?`, Q);
   const r = w.r.publish(args(DOC, []));
-  assert.equal(r.ok, true);
+  assert.deepEqual([r.ok, r.heldLinked], [true, 1]);
   assert.deepEqual(w.st.sql.exec(`SELECT to_bundle, kind, disclosure FROM published_edges WHERE from_bundle=? ORDER BY kind`, Q),
     [{ to_bundle: DOC, kind: "cites", disclosure: "serve" },
      { to_bundle: "INQ-2026-0000-parent", kind: "division_parent", disclosure: "name" }]);
