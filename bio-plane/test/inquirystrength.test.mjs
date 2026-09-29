@@ -66,7 +66,11 @@ const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
    module function `redactAxis` with its `ID_IN_PROSE`, `#redactor`, `strengthOf`, `#captureBoundsFor`, `#walk`
    reached through `#pairOver`). The source pins in sections 2 and 8 read it there. */
 const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8");
-const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (T12 B8/B10; K413, CONTROL-PLANE #2): the viewer-stamp list and the OPS table left
+   src/index.mjs for src/control-plane/index.mjs and src/control-plane/ops.mjs; the two source arms read the entry
+   and both, so each still finds its line wherever the control plane keeps it. */
+const INDEX_SRC = ["index.mjs", "control-plane/index.mjs", "control-plane/ops.mjs"]
+  .map((f) => readFileSync(SRC(f), "utf8")).join("\n");
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
 
 let pass = 0, fail = 0;
@@ -80,7 +84,7 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
 /* The probe module: the REAL worker, the REAL Store, one extra door. */
 const PROBE_SRC = `
 import worker from "./index.mjs";
-import { Store } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 export class ProbeStore extends Store {
   async fetch(req) {
     const url = new URL(req.url);

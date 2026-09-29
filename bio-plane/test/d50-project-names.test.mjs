@@ -131,7 +131,8 @@ t("§1 C-77.2 names, as warnings, a bundle with no bundle.md (UNDETERMINED) and 
 const WRAP = fileURLToPath(new URL("../src/__d50-identity.mjs", import.meta.url));   /* virtual: never written */
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: WRAP, compatibilityDate: "2026-07-01",
-  script: `import def, { Store } from "./store.mjs";
+  script: `import def from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 import { projectNameKey } from "../checks/bio-checks.mjs";
 export { Store };
 export default { fetch(req, env, ctx) {

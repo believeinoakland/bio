@@ -56,7 +56,8 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
    second deterministically, which is what a record written before D-543 holds) and calling the helpers. */
 const PROBE_SRC = `
 import worker from "./index.mjs";
-import { Store, stampInstant, instantOrder } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
+import { stampInstant, instantOrder } from "./store.mjs";
 export class ProbeStore extends Store {
   async fetch(req) {
     const url = new URL(req.url);

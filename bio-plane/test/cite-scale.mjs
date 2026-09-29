@@ -16,11 +16,12 @@ import { createHash } from "node:crypto";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
+const STARTED = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 const mf = new Miniflare({
-  modules: true, script: readFileSync(SRC("store.mjs"), "utf8"),
-  modulesRoot: "/", scriptPath: SRC("store.mjs"),
+  modules: true, script: readFileSync(STARTED, "utf8"),
+  modulesRoot: "/", scriptPath: STARTED,
   compatibilityDate: "2026-07-01",
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
 });
@@ -69,10 +70,14 @@ Changes: collected.
 
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
    creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
-const projMd = (id) => `---
+/* CORRECTED 2026-09-29 (T12 legacy-tests; C-86.3 ENVELOPE_TITLE_DISAGREES, and project names unique per instance,
+   NAME_TAKEN): every promote here was refused before a single measurement — the envelopes named a title their
+   documents did not bear ("Bulk" for "Bulk <id>", "Cumulative" for "Scale"), and every project after the first reused
+   "Scale". The envelope now names the document's own title, and each project its own name. */
+const projMd = (id, title = "Scale") => `---
 ${id === null ? "" : `id: ${id}\n`}object_type: project
 schema: project@1
-title: "Scale"
+title: "${title}"
 current_state: forming
 prior_state: null
 created: "2026-07-01T00:00:00Z"
@@ -142,7 +147,7 @@ const ids = [];
 for (let i = 0; i < N; i++) {
   const id = `INFO-2026-${String(100000 + i)}-bulk`;
   ids.push(id);
-  await promoteRaw(id, infoMd(id), infoMeta);
+  await promoteRaw(id, infoMd(id), { ...infoMeta, title: `Bulk ${id}` });
   if (i % 2000 === 0) process.stdout.write(".");
 }
 console.log(" done");
@@ -150,7 +155,7 @@ console.log(" done");
 console.log("\n  n      select     cite      bundle.md    outcome");
 console.log("  -----  ---------  --------  -----------  -------------------------------");
 for (const n of [1000, 2500, 5000, 7500, 10000].filter((x) => x <= N)) {
-  const proj = (await promoteRaw(null, projMd(null), projMeta))?.bundleId;
+  const proj = (await promoteRaw(null, projMd(null, `Scale ${n}`), { ...projMeta, title: `Scale ${n}` }))?.bundleId;
   if (typeof proj !== "string") { console.log(`  ${String(n).padEnd(5)}  project promote returned no minted id`); continue; }
 
   const t0 = Date.now();
@@ -180,7 +185,7 @@ for (const n of [1000, 2500, 5000, 7500, 10000].filter((x) => x <= N)) {
    a guard nothing can reach is a guard nothing has tested. */
 if (N >= 10000) {
   console.log("\n  cumulative: citing repeatedly into one Project");
-  const proj = (await promoteRaw(null, projMd(null), { ...projMeta, title: "Cumulative" }))?.bundleId;
+  const proj = (await promoteRaw(null, projMd(null, "Cumulative"), { ...projMeta, title: "Cumulative" }))?.bundleId;
   if (typeof proj !== "string") throw new Error("cumulative: project promote returned no minted id");
   let total = 0;
   for (let round = 0; round < 8; round++) {

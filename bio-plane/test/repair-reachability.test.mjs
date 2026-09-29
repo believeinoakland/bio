@@ -122,7 +122,9 @@ const PROMOTION_CHECK_SRC = readFileSync(SRC("promotion/history.mjs"), "utf8") +
    code)`; the catalogue's repairs are now those three files. */
 const REGISTER_CHECK_SRC = readFileSync(SRC("provenance/register-checks.mjs"), "utf8");
 const CHECKS_SRC = readFileSync(CHECKS, "utf8") + "\n" + PROMOTION_CHECK_SRC + "\n" + REGISTER_CHECK_SRC;
-const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (T12 B8/B10; K413, CONTROL-PLANE #2): the control plane's OPS table left `index.mjs` for
+   `src/control-plane/ops.mjs`; the declared ops (A5, the plant's measurement) are read there. */
+const INDEX_SRC = readFileSync(SRC("control-plane/ops.mjs"), "utf8");
 
 /* =====================================================================
    THE WALK — every repair string in the catalogue, with its check and line
@@ -555,7 +557,7 @@ const provDoc = (chain) => {
     codes.every((c) => /^'[a-z]+(-[a-z]+)*'$/.test(c)), true);
 }
 
-const STORE = SRC("store.mjs");
+const STORE = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const mf = new Miniflare({
   modules: true, script: readFileSync(STORE, "utf8"),
   modulesRoot: "/", scriptPath: STORE,
