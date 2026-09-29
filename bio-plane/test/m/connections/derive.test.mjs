@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { REGISTRATION_CHECKS } from "../../../checks/bio-checks.mjs";
+import { noEntity } from "../../../src/entities/index.mjs";
 import { Connections, PAIR_RULE, CONNECTIONS_LIMIT_DEFAULT, CONNECTIONS_LIMIT_MAX, weakerGrade } from "../../../src/connections/index.mjs";
 
 const E = "ENT-2026-0001";
@@ -38,7 +39,26 @@ test("R1: NO_ENTITY for an empty id; one connection per unordered pair, graded t
   assert.ok(caps.length === 3);
 });
 
-test.todo("R1: NO_ENTITY is answered by entities.noEntity (its R37) — not yet met: N285, T12 (K347)");
+test("R1 (N285): a request naming no entity id (absent, not a string, or empty) is answered by entities.noEntity (its R37), with this act's sentence, writing nothing and telling no listener", () => {
+  const w = world();
+  three(w);
+  const heard = [];
+  w.k.onDerived("observation-log", (e) => heard.push(e));
+  const before = w.snapshot(["connections", "connection_dirty", "connection_pair_choices"]);
+  const one = noEntity("x");
+  assert.equal(one.reason, "NO_ENTITY");
+  for (const entityId of [undefined, null, "", 42, {}, ["ENT-2026-0001"]]) {
+    const r = w.k.derive({ entityId, assertedBy: "system" });
+    const label = JSON.stringify(entityId) ?? "undefined";
+    assert.deepEqual(r, noEntity(r.detail), `the helper's own answer, whole (${label})`);
+    assert.equal(r.ok, false); assert.equal(r.reason, "NO_ENTITY"); assert.equal(r.code, one.code);
+    assert.equal(r.check, one.check); assert.equal(r.translation, one.translation, "the member's translation is entities' row");
+    assert.match(r.detail, /derived among the documents that concern one entity, by its id \(op=connect&id=/, "this act's sentence");
+  }
+  assert.equal(w.k.derive().reason, "NO_ENTITY", "no arguments at all");
+  assert.deepEqual(w.snapshot(["connections", "connection_dirty", "connection_pair_choices"]), before, "nothing written");
+  assert.deepEqual(heard, [], "a refused derivation is not a derivation");
+});
 
 test("R1: per capture the strongest resolution wins, ties to the first reference by sort, with the position of its first read", () => {
   const w = world();
