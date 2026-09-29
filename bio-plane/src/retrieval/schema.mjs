@@ -1,5 +1,5 @@
-/* retrieval — its storage (K4): the projection columns it adds to record-core's `bundles` (R1, R2; where they live is
- * BOB's Q1, recorded in the job record), the text index `bundles_fts` (R1, R17), and the selections (R18–R22).
+/* retrieval — its storage (K4): its projection table `bundle_projection` (R1, R2, R61), the text index `bundles_fts`
+ * (R1, R17), and the selections (R18–R22).
  * Every statement here is idempotent: `migrate()` runs them at every start. */
 import { FTS_COLUMNS } from "../query.mjs";
 
@@ -17,6 +17,9 @@ import { FTS_COLUMNS } from "../query.mjs";
    filter without opening every bundle. THE TWO CLOCK COLUMNS ARE A CACHE AND THE READ IS THE AUTHORITY: action_clock_next
    is the earliest PENDING clock date, which does not rot; action_clock_overdue is that date compared against the clock
    AT PROMOTION TIME, and it exists for the FILTER, never for the answer a reader is shown (R53: the rule is `actions'`).
+
+   R61 (N283, K327): the columns live in this module's own table, `bundle_projection`, one row per bundle keyed by
+   `bundle_id`, and never on record-core's `bundles`; an older store's columns there are moved in once (R58).
 
    S-10 step 2: `fts_id`, the row key the text index is aligned on. FTS5 addresses rows by integer rowid, and probe 2
    chose an integer join over a string join for text-plus-metadata queries, so a bundle needs a stable integer of its
@@ -36,10 +39,25 @@ export const PROJECTION_COLUMNS = Object.freeze([
    success. REC-26 added `monitor_enabled` (the cadence consumer asks it on every reconcile of the one alarm). REC-24
    indexes three of the six action columns: "every open CPRA request", "every action awaiting a response", "everything
    overdue" are the Actions rail's own three seeks; the other three are read WITH a row, and an index nobody seeks on is
-   cost with no reader (REC-12's reason). `strength`'s two axis columns are indexed by their writer, not here. */
+   cost with no reader (REC-12's reason). `strength`'s two axis columns are indexed by their writer, not here. Each
+   index is `bundle_projection_<column>`. */
 export const PROJECTION_INDEXED = Object.freeze(["schema_id", "produced_mode", "source_authority", "source_status",
   "monitor_enabled", "monitor_frequency", "reeval_flag", "annotations_open",
   "action_kind", "action_resolution", "action_clock_overdue"]);
+
+/* R61: the projection's relation, as `query-language`'s `compile` takes it (its R25): the table, and the key that
+   equals `bundles.bundle_id`. Every compile this module runs names it, and so does every reader of a projection column
+   in a later module (a JOIN on `bundle_id`). */
+export const PROJECTION_TABLE = "bundle_projection";
+export const PROJECTION_RELATION = Object.freeze({ table: PROJECTION_TABLE, key: "bundle_id" });
+export const PROJECTION_SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS ${PROJECTION_TABLE} (
+         bundle_id  TEXT PRIMARY KEY,
+         ${PROJECTION_COLUMNS.map(([c, t]) => `${c} ${t}`).join(",\n         ")}
+       )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS ${PROJECTION_TABLE}_fts_id ON ${PROJECTION_TABLE}(fts_id)`,
+  ...PROJECTION_INDEXED.map((c) => `CREATE INDEX IF NOT EXISTS ${PROJECTION_TABLE}_${c} ON ${PROJECTION_TABLE}(${c})`),
+];
 
 /* S-10 step 2: the text index, inside the Durable Object, which is what probe 1 measured and chose. Five columns rather
    than one blob, so a member can scope a term to the part of the document they mean; `meta` carries the flattened
@@ -99,11 +117,12 @@ export const SELECTION_SCHEMA = [
    frontier's index-state read, D-390) is cut at it, and the selection tests cross the boundary on purpose. */
 export const SELECTION_ID_CHUNK = 64;
 
-/* R33 (K23): the tables this module declares to record-core's purge. The text index is keyed to its bundle by the
-   `bundle_id` column above. The two selection tables are cleared only by the whole-store form: a per-bundle purge
+/* R33 (K23), R61: the tables this module declares to record-core's purge. The projection and the text index are each
+   keyed to their bundle by a `bundle_id` column, so a bundle's purge removes its projection row and its index row. The two selection tables are cleared only by the whole-store form: a per-bundle purge
    leaves an enumerated item in place, so the next resolve reports it as `drift.purged` (R19) rather than the item
    silently leaving the set. */
 export const RETRIEVAL_PURGE = Object.freeze([
+  { name: PROJECTION_TABLE, keys: ["bundle_id"] },
   { name: "bundles_fts", keys: ["bundle_id"] },
   { name: "selection_items", keys: [] },
   { name: "selections", keys: [] },

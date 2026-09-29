@@ -2,15 +2,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, md, T0, infoMd } from "./fixture.mjs";
-import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX, RETRIEVAL_TABLES, retrievalRoutes }
-  from "../../../src/retrieval/index.mjs";
+import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX, RETRIEVAL_TABLES, retrievalRoutes,
+         PROJECTION_RELATION, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
 import { textOf, FTS_COLUMNS } from "../../../src/query.mjs";
 
 const ftsRow = (w, id) => {
-  const b = w.row(`SELECT fts_id FROM bundles WHERE bundle_id=?`, id);
+  const b = w.row(`SELECT fts_id FROM bundle_projection WHERE bundle_id=?`, id);
   return b && b.fts_id != null ? w.row(`SELECT rowid, ${FTS_COLUMNS.join(", ")}, bundle_id FROM bundles_fts WHERE rowid=?`, b.fts_id) : null;
 };
-const projRow = (w, id) => w.row(`SELECT ${PROJECTION_COLS.join(", ")} FROM bundles WHERE bundle_id=?`, id);
+const projRow = (w, id) => w.row(`SELECT ${PROJECTION_COLS.join(", ")} FROM bundle_projection WHERE bundle_id=?`, id);
 
 test("R1: after a promotion the projection equals projectionOf(bundle.md) and the index row equals textOf(files), in the same transaction; a revision replaces the bundle's own row under the key allocated once", () => {
   const w = world();
@@ -104,7 +104,7 @@ test("R3: reproject re-derives rows lacking a projection or an index, at most `l
   const w = world();
   for (let i = 1; i <= 5; i++) w.doc(`INFO-${i}`, {}, { files: [{ path: "n.md", text: `word${i}` }] });
   w.retrieval.projectionClear({});
-  assert.equal(w.row(`SELECT COUNT(*) n FROM bundles WHERE fm_json IS NULL AND fts_id IS NULL`).n, 5);
+  assert.equal(w.row(`SELECT COUNT(*) n FROM bundle_projection WHERE fm_json IS NULL AND fts_id IS NULL`).n, 5);
   assert.deepEqual(w.retrieval.reproject({ limit: 2 }), { reprojected: 2, reindexed: 2, limit: 2, remaining: 3 });
   assert.equal(w.retrieval.reproject({ limit: 0 }).limit, 500);
   assert.equal(w.retrieval.reproject({ limit: 99999 }).limit, 5000);
@@ -126,7 +126,7 @@ test("R4: projectionPlan shows the filtered columns' indexes are used; projectio
   w.doc("INFO-1"); w.doc("INFO-2");
   const plan = w.retrieval.projectionPlan();
   assert.deepEqual(Object.keys(plan), ["source_status", "produced_mode", "schema_id", "reeval_flag"]);
-  for (const [c, rows] of Object.entries(plan)) assert.ok(rows.some((d) => d.includes(`bundles_${c}`)), `${c}: ${rows}`);
+  for (const [c, rows] of Object.entries(plan)) assert.ok(rows.some((d) => d.includes(`bundle_projection_${c}`)), `${c}: ${rows}`);
   assert.deepEqual(w.retrieval.projectionClear({ bundleId: "INFO-1", text: false }), { ok: true, scope: "INFO-1", text: false });
   assert.equal(projRow(w, "INFO-1").fm_json, null);
   assert.ok(ftsRow(w, "INFO-1"), "text: false keeps the index row");
@@ -135,7 +135,7 @@ test("R4: projectionPlan shows the filtered columns' indexes are used; projectio
   assert.notEqual(projRow(w, "INFO-2").fm_json, null);
   assert.deepEqual(w.retrieval.projectionClear({}), { ok: true, scope: "ALL", text: true });
   assert.equal(w.count("bundles_fts"), 0);
-  assert.equal(w.row(`SELECT COUNT(*) n FROM bundles WHERE fm_json IS NOT NULL OR fts_id IS NOT NULL`).n, 0);
+  assert.equal(w.row(`SELECT COUNT(*) n FROM bundle_projection WHERE fm_json IS NOT NULL OR fts_id IS NOT NULL`).n, 0);
 });
 
 test("R5: projection with an id answers the row or null (absent or hidden alike); without, {bundles, limit, cursor, total} in id order, limit clamped (200, at most 5,000), total counted through the gate, jsonPath/jsonEquals filtering", () => {
@@ -189,9 +189,9 @@ test("R30: the projection and the index are derived: both are rebuilt from the s
   assert.equal(w.retrieval.searchIndexCheck({ viewer: MACHINE }).ok, true);
 });
 
-test("R33: selections, selection_items and bundles_fts are declared to record-core's purge; a bundle's purge removes its index row, and the whole-store purge clears all three", () => {
+test("R33, R61: bundle_projection, selections, selection_items and bundles_fts are declared to record-core's purge; a bundle's purge removes its projection and index rows, and the whole-store purge clears all four", () => {
   const w = world();
-  assert.deepEqual([...RETRIEVAL_TABLES].sort(), ["bundles_fts", "selection_items", "selections"]);
+  assert.deepEqual([...RETRIEVAL_TABLES].sort(), ["bundle_projection", "bundles_fts", "selection_items", "selections"]);
   /* Declared: a second declaration of any of them is refused as another module's. */
   for (const t of RETRIEVAL_TABLES) {
     const r = w.record.declarePurge("someone-else", [t]);
@@ -202,6 +202,9 @@ test("R33: selections, selection_items and bundles_fts are declared to record-co
   return w.retrieval.selectionCreate({ owner: "o", viewer: V("ann"), ids: ["INFO-1", "INFO-2"] }).then((sel) => {
     const one = w.record.purge({ bundleId: "INFO-1" });
     assert.equal(one.removed.bundles_fts, 1);
+    assert.equal(one.removed.bundle_projection, 1);
+    assert.equal(projRow(w, "INFO-1"), null);
+    assert.notEqual(projRow(w, "INFO-2"), null);
     assert.equal(ftsRow(w, "INFO-2") !== null, true);
     assert.equal(w.row(`SELECT COUNT(*) n FROM bundles_fts WHERE bundle_id='INFO-1'`).n, 0);
     /* The selection survives a bundle's purge, so the next resolve names the purged item (R19). */
@@ -209,8 +212,9 @@ test("R33: selections, selection_items and bundles_fts are declared to record-co
     assert.deepEqual(r.drift.purged, ["INFO-1"]);
     assert.equal(w.retrieval.searchIndexCheck({ viewer: MACHINE }).orphans.length, 0, "no orphan left behind");
     const all = w.record.purge({});
-    assert.deepEqual([all.removed.selections, all.removed.selection_items, all.removed.bundles_fts], [1, 2, 1]);
-    assert.deepEqual(RETRIEVAL_TABLES.map((t) => w.count(t)), [0, 0, 0]);
+    assert.deepEqual([all.removed.selections, all.removed.selection_items, all.removed.bundles_fts, all.removed.bundle_projection],
+      [1, 2, 1, 1]);
+    assert.deepEqual(RETRIEVAL_TABLES.map((t) => w.count(t)), [0, 0, 0, 0]);
   });
 });
 
@@ -243,13 +247,13 @@ test("R5, R56: decorations run in the modules' total order, whatever order they 
   assert.equal(one.first, true);
 });
 
-test("R58: migrate() creates the projection columns, their indexes, the keyed text index and the selection tables and backfills, idempotently; retrievalRoutes answers every op of R1–R54 for the router", async () => {
+test("R58: migrate() creates the projection table, its indexes, the keyed text index and the selection tables and backfills, idempotently; retrievalRoutes answers every op of R1–R54 for the router", async () => {
   const w = world();
   w.doc("INFO-1", { source_status: "live" }, { files: [{ path: "n.md", text: "hello water" }] });
-  const cols = w.rows(`PRAGMA table_info(bundles)`).map((c) => c.name);
-  for (const c of [...PROJECTION_COLS, "fts_id"]) assert.ok(cols.includes(c), c);
+  const cols = w.rows(`PRAGMA table_info(bundle_projection)`).map((c) => c.name);
+  for (const c of ["bundle_id", ...PROJECTION_COLS, "fts_id"]) assert.ok(cols.includes(c), c);
   assert.ok(w.rows(`PRAGMA table_info(bundles_fts)`).some((c) => c.name === "bundle_id"));
-  assert.ok(w.rows(`SELECT name FROM sqlite_master WHERE type='index'`).some((r) => r.name === "bundles_source_status"));
+  assert.ok(w.rows(`SELECT name FROM sqlite_master WHERE type='index'`).some((r) => r.name === "bundle_projection_source_status"));
   for (const t of ["selections", "selection_items"]) assert.equal(w.rows(`PRAGMA table_info(${t})`).length > 0, true, t);
   const before = JSON.stringify(w.rows(`SELECT sql FROM sqlite_master ORDER BY name`));
   assert.deepEqual(w.retrieval.migrate(), { reprojected: 0, reindexed: 0, limit: 500, remaining: 0 });
@@ -278,4 +282,87 @@ test("R58: migrate() creates the projection columns, their indexes, the keyed te
   assert.deepEqual(Object.keys(routes(url("projectionplan")).projectionplan()), ["source_status", "produced_mode", "schema_id", "reeval_flag"]);
 });
 
-test.todo("R61: the projection columns of R2 and fts_id held in bundle_projection, keyed by bundle_id, declared to purge, not on bundles — moved to T11 with its readers (monitoring, actions, legacy-store): N283, K327");
+const MOVED = [...PROJECTION_COLS, "fts_id"];
+
+test("R61: the projection columns of R2 and fts_id are held in bundle_projection, keyed by bundle_id, declared to record-core's purge by that key, never on bundles; the module names the relation to the compiler and is its only writer", () => {
+  const w = world();
+  assert.deepEqual({ ...PROJECTION_RELATION }, { table: "bundle_projection", key: "bundle_id" });
+  assert.equal(PROJECTION_TABLE, "bundle_projection");
+  /* The table: keyed by bundle_id, every R2 column and the index key. */
+  const info = w.rows(`PRAGMA table_info(bundle_projection)`);
+  assert.deepEqual(info.filter((c) => c.pk).map((c) => c.name), ["bundle_id"]);
+  assert.deepEqual(info.map((c) => c.name).sort(), ["bundle_id", ...MOVED].sort());
+  /* Not on bundles, and no index there names one. */
+  const onBundles = w.rows(`PRAGMA table_info(bundles)`).map((c) => c.name);
+  for (const c of MOVED) assert.ok(!onBundles.includes(c), c);
+  assert.ok(!w.rows(`SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='bundles'`)
+    .some((r) => MOVED.some((c) => r.name === `bundles_${c}`)));
+  /* Declared to purge by bundle_id (R33's test removes a bundle's row by it); a second declaration is another module's. */
+  assert.deepEqual([w.record.declarePurge("someone-else", ["bundle_projection"]).reason], ["TABLE_DECLARED"]);
+  /* The one writer: a promotion writes the bundle's row, a revision replaces it in place under the same key. */
+  w.doc("INFO-1", { source_status: "live", source: { locator: "https://example.org/a" } }, { files: [{ path: "n.md", text: "rates" }] });
+  const first = w.row(`SELECT * FROM bundle_projection WHERE bundle_id='INFO-1'`);
+  assert.equal(first.source_status, "live");
+  w.doc("INFO-1", { source_status: "withdrawn" }, { files: [{ path: "n.md", text: "bonds" }] });
+  const second = w.row(`SELECT * FROM bundle_projection WHERE bundle_id='INFO-1'`);
+  assert.deepEqual([second.source_status, second.fts_id], ["withdrawn", first.fts_id]);
+  assert.equal(w.count("bundle_projection"), 1);
+  /* The compiler reads it through the relation: a projection field filters, sorts and facets with the columns absent
+     from bundles, and a page's hit carries the projected columns. */
+  w.doc("INFO-2", { source_status: "live" }, { files: [{ path: "n.md", text: "bonds too" }] });
+  const s = w.retrieval.search({ q: "bonds status:live", viewer: V("vera"), facets: ["status"] });
+  assert.deepEqual([s.total, s.hits.map((h) => h.bundle_id), s.hits[0].source_status], [1, ["INFO-2"], "live"]);
+  assert.deepEqual(s.facets.status, [{ value: "live", n: 1 }]);
+  assert.deepEqual(w.retrieval.search({ q: "status:withdrawn", viewer: V("vera"), mode: "ids" }).ids, ["INFO-1"]);
+  assert.equal(s.query.warnings.some((x) => /projection/.test(x)), false, "the relation is accepted as named");
+});
+
+test("R58, R61: an older store's projection columns on bundles are moved into bundle_projection once, with their values, and leave bundles with their indexes; a row already moved is kept; a second start does nothing", () => {
+  const w = world();
+  w.doc("INFO-1", { source_status: "live" }, { files: [{ path: "n.md", text: "water" }] });
+  w.doc("INFO-2", { source_status: "gone" }, { files: [{ path: "n.md", text: "sewer" }] });
+  const was = w.rows(`SELECT * FROM bundle_projection ORDER BY bundle_id`);
+  /* The old arrangement: the columns and their indexes on bundles, holding the values; INFO-1's row not yet moved,
+     INFO-2's already moved (a newer value than the one bundles holds). */
+  const decl = new Map([["INTEGER", ["monitor_enabled", "annotations_open", "reeval_flag", "fts_id", "action_risk_tier", "action_clock_overdue"]]]);
+  for (const c of MOVED) w.st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c} ${decl.get("INTEGER").includes(c) ? "INTEGER" : "TEXT"}`);
+  for (const c of ["source_status", "schema_id", "action_clock_overdue"]) w.st.db.exec(`CREATE INDEX bundles_${c} ON bundles(${c})`);
+  w.st.db.exec(`CREATE UNIQUE INDEX bundles_fts_id ON bundles(fts_id)`);
+  for (const r of was)
+    w.st.sql.exec(`UPDATE bundles SET ${MOVED.map((c) => `${c}=?`).join(", ")} WHERE bundle_id=?`,
+      ...MOVED.map((c) => (r.bundle_id === "INFO-2" && c === "source_status" ? "stale" : r[c])), r.bundle_id);
+  w.st.sql.exec(`DELETE FROM bundle_projection WHERE bundle_id='INFO-1'`);
+  const moved = w.retrieval.migrate();
+  assert.deepEqual(moved, { reprojected: 0, reindexed: 0, limit: 500, remaining: 0 });
+  assert.deepEqual(w.rows(`SELECT * FROM bundle_projection ORDER BY bundle_id`), was, "values moved; INFO-2's row kept");
+  const cols = w.rows(`PRAGMA table_info(bundles)`).map((c) => c.name);
+  for (const c of MOVED) assert.ok(!cols.includes(c), c);
+  assert.deepEqual(w.rows(`SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'bundles_%' AND tbl_name='bundles'`)
+    .map((r) => r.name).filter((n) => MOVED.some((c) => n === `bundles_${c}`)), []);
+  assert.equal(w.retrieval.search({ q: "water", viewer: V("vera") }).total, 1);
+  assert.equal(w.retrieval.searchIndexCheck({ viewer: MACHINE }).ok, true);
+  const schema = JSON.stringify(w.rows(`SELECT sql FROM sqlite_master ORDER BY name`));
+  w.retrieval.migrate();
+  assert.equal(JSON.stringify(w.rows(`SELECT sql FROM sqlite_master ORDER BY name`)), schema, "idempotent");
+  assert.deepEqual(w.rows(`SELECT * FROM bundle_projection ORDER BY bundle_id`), was);
+});
+
+test("R3, R61: a bundle with no projection row at all is stale on both counts and reproject writes it", () => {
+  const w = world();
+  w.doc("INFO-1", {}, { files: [{ path: "n.md", text: "gull" }] });
+  const kept = w.row(`SELECT * FROM bundle_projection WHERE bundle_id='INFO-1'`);
+  w.st.sql.exec(`DELETE FROM bundles_fts`);
+  w.st.sql.exec(`DELETE FROM bundle_projection`);
+  assert.deepEqual(w.retrieval.reproject({}), { reprojected: 1, reindexed: 1, limit: 500, remaining: 0 });
+  assert.deepEqual(w.row(`SELECT * FROM bundle_projection WHERE bundle_id='INFO-1'`), kept);
+  assert.equal(w.retrieval.search({ q: "gull", viewer: V("vera") }).total, 1);
+});
+
+test("R1, R17: a new bundle's index key is never an orphan's, so the orphan stays visible to the check", () => {
+  const w = world();
+  w.doc("INFO-1", {}, { files: [{ path: "n.md", text: "one" }] });
+  w.st.sql.exec(`INSERT INTO bundles_fts (rowid, ${FTS_COLUMNS.join(", ")}) VALUES (50, 't', 'orphan text', 'm', 'l', 'a')`);
+  w.doc("INFO-2", {}, { files: [{ path: "n.md", text: "two" }] });
+  assert.equal(w.row(`SELECT fts_id FROM bundle_projection WHERE bundle_id='INFO-2'`).fts_id, 51);
+  assert.deepEqual(w.retrieval.searchIndexCheck({ viewer: MACHINE }).orphans, [50]);
+});

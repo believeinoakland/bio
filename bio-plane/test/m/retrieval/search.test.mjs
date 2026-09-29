@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
+import { PROJECTION_RELATION } from "../../../src/retrieval/index.mjs";
 import { FIELDS, FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX, PROVENANCE_COLS, cachedNotes, compile, meaningVocabulary }
   from "../../../src/query.mjs";
 
@@ -62,7 +63,7 @@ test("R8: cached publishes query-language's cachedNotes for the routes the answe
   const { w } = corpus();
   const q = "capture:B sort:capture";
   const page = w.retrieval.search({ q, viewer: V("vera") });
-  const plan = compile({ q, viewer: V("vera") });
+  const plan = compile({ q, viewer: V("vera") }, { projection: PROJECTION_RELATION });
   assert.deepEqual(page.cached[0].via, ["filter", "facet", "sort"], "a cached column read by three routes");
   assert.deepEqual(page.cached, cachedNotes(plan.cached, { facets: true, ordered: true }));
   const count = w.retrieval.search({ q, viewer: V("vera"), mode: "count" });
@@ -72,7 +73,7 @@ test("R8: cached publishes query-language's cachedNotes for the routes the answe
   const noFacets = w.retrieval.search({ q, viewer: V("vera"), facets: false });
   assert.deepEqual(noFacets.cached, cachedNotes(plan.cached, { facets: false, ordered: true }));
   assert.deepEqual(w.retrieval.search({ q: "parks", viewer: V("vera"), facets: false }).cached,
-                   cachedNotes(compile({ q: "parks", viewer: V("vera") }).cached, { facets: false, ordered: true }));
+                   cachedNotes(compile({ q: "parks", viewer: V("vera") }, { projection: PROJECTION_RELATION }).cached, { facets: false, ordered: true }));
 });
 
 test("R9: a conjunction of more than one atom that finds nothing counts the OR reading and offers widen only when it finds something; otherwise widen is null", () => {
@@ -145,11 +146,11 @@ test("R17: searchIndexCheck finds NO_FTS_ID, NO_INDEX_ROW and DIVERGED over visi
   assert.deepEqual(clean.counts, { bundles: 5, indexed: 5, keyed: 5 });
   assert.deepEqual([clean.orphans_limit, clean.orphans_truncated], [100, false]);
   /* Break it three ways. */
-  const k1 = w.row(`SELECT fts_id FROM bundles WHERE bundle_id='INFO-1'`).fts_id;
-  w.st.sql.exec(`UPDATE bundles SET fts_id=NULL WHERE bundle_id='INFO-1'`);   /* its index row is now an orphan */
-  const k2 = w.row(`SELECT fts_id FROM bundles WHERE bundle_id='INFO-2'`).fts_id;
+  const k1 = w.row(`SELECT fts_id FROM bundle_projection WHERE bundle_id='INFO-1'`).fts_id;
+  w.st.sql.exec(`UPDATE bundle_projection SET fts_id=NULL WHERE bundle_id='INFO-1'`);   /* its index row is now an orphan */
+  const k2 = w.row(`SELECT fts_id FROM bundle_projection WHERE bundle_id='INFO-2'`).fts_id;
   w.st.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, k2);
-  const k3 = w.row(`SELECT fts_id FROM bundles WHERE bundle_id='INFO-3'`).fts_id;
+  const k3 = w.row(`SELECT fts_id FROM bundle_projection WHERE bundle_id='INFO-3'`).fts_id;
   w.st.sql.exec(`UPDATE bundles_fts SET body='tampered' WHERE rowid=?`, k3);
   w.st.sql.exec(`INSERT INTO bundles_fts (rowid, title, body, meta, locator, authority) VALUES (999, 't', 'b', 'm', 'l', 'a')`);
   const bad = w.retrieval.searchIndexCheck({ viewer: V("vera") });
@@ -180,7 +181,7 @@ test("R28: no search, meaning-row or selection statement runs without the gate's
   assert.throws(() => w.retrieval.runQuery({ sql: "SELECT bundle_id FROM bundles", args: [] }, { applied: 0 }), /viewer visibility gate/);
   assert.throws(() => w.retrieval.runQuery(null, { applied: 0 }), /viewer visibility gate/);
   const tally = { applied: 0 };
-  const plan = compile({ q: "water", viewer: V("vera") });
+  const plan = compile({ q: "water", viewer: V("vera") }, { projection: PROJECTION_RELATION });
   assert.equal(w.retrieval.runQuery(plan.statements.count(), tally)[0].n, 2);
   assert.equal(tally.applied, 1);
 });
