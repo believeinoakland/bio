@@ -61,3 +61,7 @@ Control-plane is merged again (K418): `relayAnswer` now reads through `doAnswer`
 ## B14 · CHANGE
 
 Instance-setup is merged again (K419): boot now calls `scheduler.start()`, so no probe is armed at boot. Merge `tranche/T12` and confirm `scheduler.test.mjs` 52/0 (it measured so on instance-setup's branch). That is the last module change this tranche expects: once your battery is done, record completion.
+
+## B15 · CHANGE
+
+On J4: (1) is control-plane's, re-opened as CONTROL-PLANE #3 with R23 reworded (K421); `empty-body` goes green when it merges, and I will tell you. (2) is next.md N338 (legacy-index has no job this tranche); `owed-controls` stays red to T13, recorded as such at the close. Nothing else is owed you; when your battery is done, record completion.
