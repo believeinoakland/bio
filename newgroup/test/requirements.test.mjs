@@ -12,7 +12,7 @@ import { createHash } from "node:crypto";
 import worker, * as installer from "../src/index.mjs";
 import { CFG, PLANE_LIMITS } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
-import { EXAMPLE_SLUG, PUBLISHER } from "../src/ui.mjs";
+import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
@@ -29,6 +29,11 @@ const secretsOf = (put) => (put?.meta?.bindings || []).filter((b) => b.type === 
 const PAGES = [];
 const seen = (x) => { PAGES.push(typeof x === "string" ? x : x.page.words); return x; };
 const MEMBERS = FLEET_BINDINGS.map(([m]) => m), BINDINGS = FLEET_BINDINGS.map(([, b]) => b);
+/* R21's choices are `jurisdictions`' data, shown as data: R22 and R31 hold over every other word of every page, so
+   exactly the rendered name and coverage of each choice is taken out before they read a page. */
+const withoutChoices = (page) => page.replace(/<span class="pname">[^<]*<\/span>/g, "")
+  .replace(/<span class="small pcovers">[^<]*<\/span>/g, "")
+  .replace(/<input type="checkbox" name="profile" value="[^"]*">/g, "");
 const INVITATION = readFileSync(new URL("../../bio-plane/public/newgroup/index.html", import.meta.url), "utf8");
 
 /* ------------------------------------------------------------------------------------------------ the routes */
@@ -514,7 +519,66 @@ test("R19 the Cloudflare token and every credential appear in no page, log or er
 });
 
 test.todo("R20 the plane's limits are carried from the signed release; a release stating none is refused by name, and an older installer still verifies its fleet signature (not yet met: DIST-15; PLANE_LIMITS is a constant pinned to the plane's config)");
-test.todo("R21 the install offers the held non-test jurisdiction profiles by name and coverage, none preselected, and binds the chosen ids as JURISDICTION_PROFILES; choosing none is allowed and said; an update never changes them (not yet met: N10, which needs instance-setup R13)");
+test("R21 the install offers the held non-test jurisdiction profiles by name and coverage, none preselected, and binds the chosen ids as JURISDICTION_PROFILES; choosing none is allowed and said; an update never changes them", async () => {
+  /* The offer: every held profile but the test ones, each by name and coverage, none checked; and what none means. */
+  const held = jurisdictions.list();
+  const offered = held.filter((p) => !p.test);
+  assert.ok(offered.length > 0 && held.some((p) => p.test), "both kinds are held, so the filter is exercised");
+  assert.deepEqual(PROFILE_CHOICES.map((p) => [p.id, p.name, [...p.covers]]), offered.map((p) => [p.id, p.name, p.covers]));
+  const home = await text("/"), upd = await text("/update");
+  const boxes = [...home.matchAll(/<input type="checkbox" name="profile" value="([^"]*)"([^>]*)>/g)];
+  assert.deepEqual(boxes.map((m) => m[1]), offered.map((p) => p.id));
+  assert.ok(boxes.every((m) => !/checked/.test(m[2])), "none preselected");
+  for (const p of offered) {
+    assert.ok(home.includes(`<span class="pname">${p.name}</span>`), p.id);
+    assert.ok(home.includes(`<span class="small pcovers">covers ${p.covers.join(", ")}</span>`), p.id);
+  }
+  for (const p of held.filter((x) => x.test)) assert.ok(!home.includes(p.id) && !home.includes(p.name), `${p.id} not offered`);
+  assert.ok(home.includes(PROFILES_NONE) && /Choosing none is allowed/.test(PROFILES_NONE));
+  assert.ok(!upd.includes('type="checkbox" name="profile"'), "an update offers no choice");
+  assert.ok(home.includes("profiles:chosen"), "the install page sends the choice");
+  /* /begin refuses, by name, what it cannot bind: a profile not offered (unknown, or a test profile), a repeat, not a
+     list, and any choice on an update. */
+  const ids = offered.map((p) => p.id);
+  const testId = held.find((p) => p.test).id;
+  for (const [profiles, mode, says] of [[["no-such-profile"], "install", /Not a jurisdiction profile this installer offers: "no-such-profile"/],
+      [[testId], "install", new RegExp(`Not a jurisdiction profile this installer offers: "${testId}"`)],
+      [[ids[0], ids[0]], "install", /chosen twice/], [ids[0], "install", /must be a list/], [[7], "install", /offers: 7/],
+      [ids, "update", /An update never changes which jurisdiction profiles/]]) {
+    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "prof-refused", mode, profiles }) });
+    const j = await r.json();
+    assert.deepEqual([r.status, j.ok], [400, false], JSON.stringify(profiles));
+    assert.match(j.error, says);
+    assert.equal(r.headers.get("set-cookie"), null);
+  }
+  /* The binding: the chosen ids, in the order given, on the install's plane uploads, the step-3 re-upload included,
+     so the copy holds it at its first boot. */
+  const chosen = await begin("prof-chosen", "install", { profiles: ids });
+  assert.equal(chosen.j.ok, true);
+  assert.deepEqual(cookieValue(chosen.cookie).p, ids);
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT });
+  const w = seen(await run({ slug: "prof-chosen", rel, cookie: chosen.cookie, state: chosen.state }));
+  restoreSigners();
+  assert.equal(w.planePuts.length, 2, "the install PUT and its step-3 re-PUT");
+  for (const put of w.planePuts) assert.deepEqual(bindingOf(put, "JURISDICTION_PROFILES"), { type: "plain_text", name: "JURISDICTION_PROFILES", text: ids.join(",") });
+  assert.equal(w.acct.get("prof-chosen").filter((b) => b.name === "JURISDICTION_PROFILES").length, 1, "the copy holds it after the act");
+  /* None chosen (an empty list, or none sent) binds nothing, and the install proceeds. */
+  for (const extra of [{ profiles: [] }, {}]) {
+    const b = await begin("prof-none", "install", extra);
+    assert.equal(b.j.ok, true);
+    const n = seen(await run({ slug: "prof-none", cookie: b.cookie, state: b.state }));
+    assert.ok(n.page.done, "the install proceeds");
+    for (const put of n.planePuts) assert.equal(bindingOf(put, "JURISDICTION_PROFILES"), null);
+  }
+  /* An update never sends it, whatever the copy holds. */
+  const held0 = [...planeBase("prof-upd"), { type: "plain_text", name: "JURISDICTION_PROFILES", text: ids.join(",") }];
+  armWith(SIGNER.line);
+  const u = seen(await run({ slug: "prof-upd", mode: "update", pre: { "prof-upd": held0 }, rel: await release({ version: NEXT }) }));
+  restoreSigners();
+  assert.ok(u.planePuts.length >= 1);
+  for (const put of u.planePuts) assert.equal((put.meta.bindings || []).some((b) => b.name === "JURISDICTION_PROFILES"), false);
+});
 
 test("R22 every page names CivicOS and the installing group, by its chosen name once chosen; no page names a third party (K262); the installer's own address stays, and its pages say it is run by the publisher of CivicOS releases; the example name is not a place", async () => {
   const before = { "/": await text("/"), "/update": await text("/update"), "404": await text("/nowhere"), invitation: INVITATION };
@@ -544,7 +608,7 @@ test("R22 every page names CivicOS and the installing group, by its chosen name 
   assert.match(denied.raw, /For the group <b class="mono" id="group">river-keepers<\/b>/);
   /* Over every page rendered anywhere in this suite (K262): no page names a third party. The publisher is said to run
      the installer without being named, and the only trace of its name is the installer's own address, which stays. */
-  for (const page of [...PAGES, ...Object.values(before)]) {
+  for (const page of [...PAGES, ...Object.values(before)].map(withoutChoices)) {
     const rest = page.replace(/newgroup\.believeinoakland\.workers\.dev/g, "");
     assert.equal(/believe in oakland|oakland|biosmoke/i.test(rest), false, rest.match(/.{0,60}(oakland|biosmoke).{0,40}/i)?.[0]);
   }
@@ -704,7 +768,7 @@ test("R31 no place is named in the installer's behaviour: no page it serves or s
   assert.ok(places.size > 0);
   const pages = [...PAGES, await text("/"), await text("/update"), await text("/elsewhere"), INVITATION];
   assert.ok(pages.length > 40, "the pages this suite rendered");
-  for (const page of pages) {
+  for (const page of pages.map(withoutChoices)) {
     const words = page.replace(/newgroup\.believeinoakland\.workers\.dev/g, "")
       .toLowerCase().split(/[^a-z]+/);
     assert.deepEqual(words.filter((w) => places.has(w)), [], page.slice(0, 120));

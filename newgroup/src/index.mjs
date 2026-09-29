@@ -23,7 +23,7 @@
  * on the client, deploy, verify a real run, then remove the old.
  */
 
-import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, publisherFooter } from "./ui.mjs";
+import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, publisherFooter, PROFILE_CHOICES } from "./ui.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
 import { ARMED_SIGNERS } from "./signers.mjs";
 /* One verifier, shared with the plane. The installer and the instance
@@ -342,6 +342,25 @@ const instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name:
  * has no plane-limits field, and adding one to the fleet statement would fail every older installer's verification. */
 export const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
 
+/* R21 (N10): the jurisdiction profiles the operator chose, in the order chosen, bound for the copy to record at its first
+   boot (instance-setup R13). None chosen binds nothing, and R13 then records nothing. An update never sends it: only
+   the install's own two plane uploads (the install PUT and its step-3 re-PUT, whose update shape keeps no `plain_text`,
+   and which may precede the store's first boot) carry it. */
+export const PROFILES_BINDING = "JURISDICTION_PROFILES";
+const HELD_CHOICES = new Set(PROFILE_CHOICES.map((p) => p.id));
+const profilesBinding = (ids) => Array.isArray(ids) && ids.length
+  ? [{ type: "plain_text", name: PROFILES_BINDING, text: ids.join(",") }] : [];
+/* The refusal for a `profiles` value /begin cannot bind, or null. */
+function profilesRefusal(v, mode) {
+  if (v === undefined) return null;
+  if (mode === "update") return "An update never changes which jurisdiction profiles your copy reads; an administrator changes them on your copy's setup page.";
+  if (!Array.isArray(v)) return "The jurisdiction profiles must be a list of the profiles offered.";
+  const bad = v.filter((id) => typeof id !== "string" || !HELD_CHOICES.has(id));
+  if (bad.length) return "Not a jurisdiction profile this installer offers: " + bad.map((x) => JSON.stringify(x)).join(", ") + ".";
+  if (new Set(v).size !== v.length) return "A jurisdiction profile was chosen twice.";
+  return null;
+}
+
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
    the script the same PUT creates, and nothing here can prove Cloudflare accepts
    that self-reference without a real install, which is deploy-gated. So the
@@ -377,6 +396,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       { type: "secret_text", name: "DAEMON_TOKEN", text: secrets.daemon },
       /* DIST-9 (D-260's deploy half): the organisation `ai` credential, ONLY when the operator supplied one. */
       ...instanceAiBinding(secrets.instanceAi),
+      /* R21: the chosen jurisdiction profiles, only when some were chosen. */
+      ...profilesBinding(opts.profiles),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
@@ -456,6 +477,8 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          it. Unlike DAEMON_TOKEN above there is NO `|| rand(32)` here, and there must never be one: see
          instanceAiBinding. */
       ...instanceAiBinding(opts.instanceAi),
+      /* R21: restated only by the install's step-3 re-PUT (see PROFILES_BINDING); an update never passes it. */
+      ...profilesBinding(opts.profiles),
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -617,7 +640,7 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
   emit.step("bind", "Connecting your copy to its capability workers");
   try {
     await uploadUpdate(token, acct, slug, opts.withR2, release,
-      { members: want, daemon: opts.daemon, noSelf: opts.noSelf });
+      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles });
     emit.ok("bind", "Your copy is connected to " + added.join(", ") + ".");
     return { bound: want, unbound: [] };
   } catch (e) {
@@ -926,9 +949,10 @@ async function runInstall(emit, code, saved) {
 
   /* DIST-6, step 1: bind only the members this account already holds (see BINDING_OF for the order). */
   const present = await membersPresent(token, acct.id);
+  const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
   let selfRefused = false;
   emit.step("install", "Installing the software into your account");
-  try { await uploadInstall(token, acct.id, slug, secrets, release, { members: present }); emit.ok("install"); }
+  try { await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles }); emit.ok("install"); }
   catch (e) {
     /* An install carries a service binding to the script this very upload
        creates. That self-reference cannot be rehearsed here — the only way to
@@ -939,7 +963,7 @@ async function runInstall(emit, code, saved) {
        never installed is not. Same doctrine as the storage arm of the update:
        an install is never refused over something it can complete later. */
     let degraded = false;
-    try { await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present }); degraded = true; }
+    try { await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles }); degraded = true; }
     catch { /* the original refusal is the one worth reporting */ }
     selfRefused = degraded;
     if (!degraded) {
@@ -961,7 +985,7 @@ async function runInstall(emit, code, saved) {
      install otherwise), the DAEMON_TOKEN restated is the one just generated, and SELF is restated only if the
      install kept it. */
   await bindMembers(emit, token, acct.id, slug, release, present, fleet,
-    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused });
+    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles });
   /* DIST-9: told only AFTER the upload that carried it succeeded — never "stored" ahead of the act. */
   instanceAiNotice(emit, "install", !!secrets.instanceAi);
 
@@ -1257,7 +1281,11 @@ export default {
       const ai = typeof body.instanceAi === "string" ? body.instanceAi.trim() : "";
       if (ai && !instanceAiOk(ai))
         return json({ ok: false, error: "The organisation AI credential does not look like one: paste it exactly as it was shown when it was minted (16 to 512 characters, no spaces), or leave the box empty." }, 400);
-      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}) })));
+      /* R21: the chosen jurisdiction profiles (install only), refused by name when not offered, never silently dropped. */
+      const profilesWhy = profilesRefusal(body.profiles, mode);
+      if (profilesWhy) return json({ ok: false, error: profilesWhy }, 400);
+      const p = Array.isArray(body.profiles) && body.profiles.length ? body.profiles : null;
+      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}), ...(p ? { p } : {}) })));
       return json({ ok: true, authorize: `${CFG.AUTHORIZE}?${q}` }, 200,
         { "set-cookie": setCookie(cookie, CFG.COOKIE_MAX_AGE_S) });
     }
