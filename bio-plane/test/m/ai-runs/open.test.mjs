@@ -1,4 +1,4 @@
-/* ai-runs R9, R10, R32, R40: the open (`op=airunopen`), at the module's interface. */
+/* ai-runs R9, R10, R32, R40 (R45 in state.test.mjs): the open (`op=airunopen`), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0 } from "./world.mjs";
@@ -27,7 +27,7 @@ function refused(r, code) {
   } else assert.equal(typeof r.translation, "string");
 }
 
-test("R9: the open's refusals in order, nothing written on any — no context, existence, kind, project gate, principals, skill, bounds, already open, re-run self/unknown/other", async () => {
+test("R9: the open's refusals in order, nothing written on any — no context, existence, kind, project gate, principals, skill, bounds, state, already open, re-run self/unknown/other", async () => {
   const w = await openWorld();
   const before = w.dump();
   const bob = { actor: "bob", viewer: "member:bob", principalPlane: "member:bob/t1" };
@@ -58,6 +58,10 @@ test("R9: the open's refusals in order, nothing written on any — no context, e
   refused(await w.runs.open(OPEN({ bounds: [{ bound: "fetches" }] })), "AI_RUN_BOUND_NO_ALLOWANCE");
   refused(await w.runs.open(OPEN({ bounds: [{ bound: "lease", allowed: 1 }] })), "AI_RUN_BOUND_PLANE_COUNTED");
   refused(await w.runs.open(OPEN({ bounds: [{ bound: "fetches", allowed: -1 }] })), "AI_RUN_CONSUME_INVALID");
+  /* R45 over the state, after the bounds */
+  const big = { s: "x".repeat(262144) };
+  refused(await w.runs.open(OPEN({ state: big, bounds: [{ bound: "fetches", allowed: -1 }] })), "AI_RUN_CONSUME_INVALID");
+  refused(await w.runs.open(OPEN({ state: big })), "AI_RUN_STATE_TOO_LARGE");
   assert.equal(w.dump(), before, "no refusal wrote anything");
   /* a run id already held: C-33.31 */
   assert.equal((await w.runs.open(OPEN())).started, true);

@@ -63,22 +63,35 @@ test("R29: boundOf answers one bound's {allowed, consumed} or null; consumeBound
   assert.deepEqual([t.status, t.ended.bound], ["stopped", "fetches"]);
 });
 
-test("R30: each run is registered with bias as a work product — its context, member principal, lens at the open, the manifest it ran under, its rerun_of and R19's sight; an unrecorded open is undetermined, never filled in", async () => {
+test("R30: each run is registered with bias as a work product — its context, member principal, lens at the open, the manifest it ran under, its rerun_of, `registered` (its created instant, which bias offers the scheduler's rank as waitingSince) and R19's sight; an unrecorded open or an unreadable instant is undetermined, never filled in", async () => {
   const w = await prodWorld();
   const again = w.bias.registerWorkProducts("ai-run", { list: () => [], read: async () => null, visible: async () => false });
   assert.deepEqual([again.ok, again.reason], [false, "WORK_PRODUCTS_DECLARED"], "this module holds the registration");
   w.lens("BIAS-2026-0001-a");
   const now = await w.bias.biasManifest({ scope: "instance", scopeId: "", viewer: "admin", limit: 1 });
-  await w.runs.open(OPEN({ run: "R2", principalPlane: "member:ann/t9", biasManifest: JSON.stringify({ statements_sha: now.statements_sha }), rerunOf: "R1" }));
+  const OPENED = "2026-07-01T00:07:31Z";
+  await w.runs.open(OPEN({ run: "R2", principalPlane: "member:ann/t9", biasManifest: JSON.stringify({ statements_sha: now.statements_sha }), rerunOf: "R1",
+    at: "2026-07-01T00:07:31.900Z" }));
   const wp = w.runs.workProducts();
   assert.deepEqual(wp.list("", 50), ["R1", "R2", "RH"]);
   assert.deepEqual(wp.list("R1", 1), ["R2"]);
   assert.deepEqual(await wp.read("R2"), { context: { type: "inquiry", id: INQ }, principal: "ann",
-    lens: { basis: "at_open", statements_sha: now.statements_sha }, ranUnder: now.statements_sha, rerunOf: "R1" });
+    lens: { basis: "at_open", statements_sha: now.statements_sha }, ranUnder: now.statements_sha, rerunOf: "R1",
+    registered: OPENED });
   assert.deepEqual(await wp.read("R1"), { context: { type: "inquiry", id: INQ }, principal: null,
-    lens: { basis: "at_open", statements_sha: null }, ranUnder: null, rerunOf: null });
-  w.sql.exec(`UPDATE ai_runs SET lens_at_open = '{broken' WHERE run = 'R1'`);
-  assert.equal((await wp.read("R1")).lens, null, "a lens that cannot be read is offered as undetermined");
+    lens: { basis: "at_open", statements_sha: null }, ranUnder: null, rerunOf: null, registered: T0 });
+  /* `registered` is the run's own `created`, the open's instant to the second, for every run */
+  for (const run of wp.list("", 50))
+    assert.equal((await wp.read(run)).registered, w.row(`SELECT created FROM ai_runs WHERE run = ?`, run).created, run);
+  /* through bias's own door: the sweep offers the scheduler's rank each product's context and its wait (bias R33) */
+  let offered = null;
+  await w.bias.biasDebtSweep(Date.parse("2026-07-01T01:00:00Z"), (items) => { offered = items.map(({ kind, id, waitingSince }) => ({ kind, id, waitingSince })); return items; });
+  assert.deepEqual(offered, [{ kind: "bundle", id: INQ, waitingSince: Date.parse(T0) },
+    { kind: "bundle", id: INQ, waitingSince: Date.parse(OPENED) }, { kind: "bundle", id: HIDDEN, waitingSince: Date.parse(T0) }]);
+  w.sql.exec(`UPDATE ai_runs SET lens_at_open = '{broken', created = 'not an instant' WHERE run = 'R1'`);
+  const broken = await wp.read("R1");
+  assert.equal(broken.lens, null, "a lens that cannot be read is offered as undetermined");
+  assert.equal(broken.registered, null, "an instant that cannot be read is offered as none, never filled in");
   assert.equal(await wp.read("R404"), null);
   assert.deepEqual([await wp.visible("RH", "member:ann"), await wp.visible("RH", "member:dan"), await wp.visible("R1", "member:dan")], [true, false, true]);
 });
