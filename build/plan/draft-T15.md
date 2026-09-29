@@ -66,10 +66,10 @@ Cut from T14's "Not in T14" (`current.md`, with K464's reading), `next.md`'s ope
 
 1. N345's rows are stamped in T16, not at T15's layer 2 (the rule, N318/K425); the N345 draft's "promotion stamps at layer 2" is read so.
 2. C-19.1's catalogue row: decided from QUEUE's T14 record.
-3. N352: BOB words membership's provider (R88) before opening, else N352 drops from every layer.
-4. N351: BOB words the bound (entities R39) before opening.
+3. DONE (K477). N352: BOB words membership's provider (R88) before opening, else N352 drops from every layer.
+4. DONE (K477). N351: BOB words the bound (entities R39) before opening.
 5. Contradiction R41 and the K5 arm need a measured recommender run; if the job lacks model access they are `test.todo` and K5 candidates stay unshown.
-6. Module size: queue is 4,162 lines and N345 adds R43–R47; review queue.md's named split of the obligation inbox before its job (P6). Publication (3,613) and inquiry (2,680) also grow.
-7. Marks that look met in code, to check and strike: queue R5 (N49), strength R26/R27 (N60), basis-versions R37 (N64), scheduler R5's N164/N167/N178.
+6. Measured by BOB #68's worker: queue's code is 5,145 lines (about 6,870 with tests and requirements; queue.md's Size line is stale); the named inbox split (~750 lines of code) is concrete in its functions, not its seams (module name, queue's read of tasks, who registers `task-drain` and C-19.1, which ids move), and leaves queue ~4,400, so the feed producers (~1,500) are a second cut. A new product module is Bob's (P17): brought to him with the recommendation to cut both. Was: queue is 4,162 lines and N345 adds R43–R47; review queue.md's named split of the obligation inbox before its job (P6). Publication (3,613) and inquiry (2,680) also grow.
+7. DONE (K478): the marks struck; basis-versions R41 (N300) looks met too, checked at the re-read.
 8. `next.md` housekeeping: entries carried in full (N10, N93, N112, N129, N130, N150, N154, N167, N170, N171, N192, N323; N202, N128, N344 met) move to `archive/next-applied.md`.
 9. Everything T14's layers 3–11 record (rows, reports, deferrals) is folded at the re-read.
