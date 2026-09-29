@@ -11,7 +11,8 @@
    "surface": "whether civicos-ui/app.html offers the act today, from its SURFACES registry, ACT_FLOW, ROSTER_ACTS and op call sites",
    "frequency": "worker's judgement from the journeys, Interaction Constructs and Case Making",
    "memberWord": "memberWordSrc cites a design doc, requirement or the old UI; proposed: true means the worker's proposal"
-  }
+  },
+  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65"
  },
  "constructs": [
   {
@@ -5351,9 +5352,9 @@
    "ids": "ai-runs R40, R44; AI Roles §2, §8"
   },
   {
-   "what": "Contradictions: never shown to members; PRESENT and RESOLVE undesigned",
-   "why": "design gap",
-   "ids": "contradiction Purpose; System Design §3 row 8"
+   "what": "Contradictions: decided, not yet built. How a contradiction is presented and resolved is ruled (conditional contradiction, resolution kinds, inline tension marks, six presentation forms); nothing yet shows a candidate to a member",
+   "why": "decided, not yet built: the level-2 PRESENT and RESOLVE design and its requirements (contradiction, inquiry, conformance, publication) are owed",
+   "ids": "DEC-76; DEC-77; contradiction Purpose; System Design §3 row 8"
   },
   {
    "what": "Layer 9 (standards to escalation) built in T8 but requirement files still carry 'not yet met: new module' marks; fixes pending",
@@ -5406,9 +5407,9 @@
    "ids": "affordances R1; build/extraction/retrieval.md"
   },
   {
-   "what": "Project lifecycle (forming→investigating→matured→closed) and work-product readiness exist in canon only",
-   "why": "no requirement holds them",
-   "ids": "State Rules §4.3; intent Decided by BOB (C-2.9 other arms stay in legacy-checks)"
+   "what": "Project stage (forming→investigating→matured→closed) and work-product readiness: built in the plane as publication R44-R47 (projectStage, op projectstage); the display is decided (stacked stage bars), not yet built in the interface",
+   "why": "built in T12; the Worker route lands in T13; the interface display is owed",
+   "ids": "publication R44-R47; K396, K399 (T12); N321 (T13); DEC-79; State Rules §4.3"
   },
   {
    "what": "Member surfaces absent: publish/ratify, start a CHECK run, frontier, bias, transcription, AI readings",
@@ -5416,14 +5417,9 @@
    "ids": "System Design §3 rows 4, 7, 9, 11, 12, 13"
   },
   {
-   "what": "Publication ceremony pre-flight (op=publishpreflight) deferred",
-   "why": "DEC-33",
-   "ids": "Interaction Constructs §RULED 2026-08-01; case-authoring R12"
-  },
-  {
-   "what": "How a knock becomes record is not designed",
-   "why": "design gap",
-   "ids": "Intake Doctrine §2a status"
+   "what": "How a knock becomes record: decided, not yet built. Pulling admits the material as a capture carrying the knock's receipt; the source is an unnamed knocker; vouching stays with release",
+   "why": "decided, not yet built: capture's requirements (doorbell provenance, the pull act, the knocker secret) and a home for a source's disclosure history are owed",
+   "ids": "DEC-78; Intake Doctrine §2a"
   },
   {
    "what": "Discovery: an assistant that searches for what is working and what is not",
