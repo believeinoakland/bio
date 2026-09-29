@@ -29,6 +29,7 @@ import { schedulerOf } from "./scheduler/index.mjs";
 import { captureOf } from "./capture/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
+import { GROUP_SLUG_RE, FLEET_BINDINGS } from "./setup-fleet.mjs";
 
 /* The intake form obeys the check catalog's own tables rather than a copy of
    them. Injected at module load, so a catalog change moves the UI with it and
@@ -1558,9 +1559,8 @@ state();
  * store-side and Worker-side code, moved in from `legacy-store` and `legacy-index` at its extraction (K69, N38).
  * ============================================================================================================ */
 
-/* The producing group's slug grammar (R1–R4, "Terms"): 3 to 40 of a-z, 0-9 and '-', beginning and ending with a
-   letter or digit. One copy: the installer imports it from here (N234, installer R30). */
-export const GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
+/* The slug grammar and the fleet's binding names live in the import-free leaf the installer imports (N234, K405). */
+export { GROUP_SLUG_RE, FLEET_BINDINGS };
 
 /* D-116 — EACH FLEET MEMBER'S BUILD, READ BACK THROUGH THE BINDING THIS PLANE ACTUALLY HOLDS.
  *
@@ -1577,7 +1577,6 @@ export const GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
  *   SILENT    bound, and it did not answer a readable version within the bound (`why` says what happened).
  *   MISNAMED  something answered through the binding, but under another name — the binding points at the wrong worker.
  * Read only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to three workers. */
-export const FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
 const MEMBER_VERSION_WAIT_MS = 4000;
 export async function memberVersions(env) {
   const out = {};
@@ -2428,6 +2427,21 @@ export async function instanceSetupRoute(m, req) {
   }
   try { return Response.json({ ok: true, result: await instanceSetupOps(m, url, body)[op]() }); }
   catch (e) { return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 }); }
+}
+
+/** The Durable Object class the plane exports: `Base` (legacy-store's, earlier, which cannot call this module)
+ *  started with this module after its own schema pass, and routing this module's ops before its own map (K93; the
+ *  map's §3). Moves to `control-plane` when it becomes the composition root. */
+export function instanceSetupStore(Base) {
+  return class Store extends Base {
+    constructor(ctx, env) {
+      super(ctx, env);
+      ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
+    }
+    async fetch(req) {
+      return (await instanceSetupRoute(instanceSetupOf(this.ctx, this.env), req)) ?? super.fetch(req);
+    }
+  };
 }
 
 /* ============================================================================================================

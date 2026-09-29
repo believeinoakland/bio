@@ -1,6 +1,6 @@
 import { livefire } from "./livefire.mjs";
 import { setupPage, publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapReport, selftest, runtimeOp,
-         cpuProbeOp, instanceSetupOf, instanceSetupRoute } from "./setup.mjs";
+         cpuProbeOp, instanceSetupStore } from "./setup.mjs";
 import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
 import { GATE_VERSION } from "./gate.mjs";
@@ -177,7 +177,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
   return fetchGoverned(target, { userAgent: userAgent(env, purpose, delegated), fetch: (...a) => fetch(...a),
                                  governor: stub ? governorOverStub(stub) : null });
 }
-import { Store as LegacyStore } from "./store.mjs";
+import { Store } from "./store.mjs";
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
 import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";
@@ -188,12 +188,9 @@ import { monitorOp } from "./monitoring/index.mjs";
 import { pdfStructureOp, acquireReadingOp } from "./extraction/ops.mjs";
 import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
 /* instance-setup (K93; its map §3): legacy-store, earlier, cannot call it, so the Durable Object this file exports
-   starts it after legacy-store's schema pass and routes its ops before legacy-store's map. */
-class Store extends LegacyStore {
-  constructor(ctx, env) { super(ctx, env); ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start()); }
-  async fetch(req) { return (await instanceSetupRoute(instanceSetupOf(this.ctx, this.env), req)) ?? super.fetch(req); }
-}
-export { Store };
+   is legacy-store's class started with it and routing its ops first. */
+const InstanceStore = instanceSetupStore(Store);
+export { InstanceStore as Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
 /* BIO plane, control plane entry.
