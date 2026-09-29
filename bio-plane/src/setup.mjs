@@ -16,7 +16,19 @@
  * when the page is served — see `setupPage` below.
  */
 
-import { STATES, HEADINGS, deriveInquiryTitle, RISK_TIERS, riskTierState } from "../checks/bio-checks.mjs";
+import { STATES, HEADINGS, deriveInquiryTitle, civicosUserAgent } from "../checks/bio-checks.mjs";
+/* R32 (N65 (3)): the risk tiers and their reader are actions', read there and never copied (actions R40). */
+import { RISK_TIERS, riskTierState } from "./actions/checks.mjs";
+import { COUNTERPARTY_LEVELS, list as heldProfiles, get as heldProfile, combine as combineProfiles }
+  from "../../jurisdictions/index.mjs";
+import { recordOf, stampInstant } from "./record-core/index.mjs";
+import { membershipOf } from "./membership/index.mjs";
+import { promotionOf } from "./promotion/index.mjs";
+import { governorOf } from "./host-governor/index.mjs";
+import { schedulerOf } from "./scheduler/index.mjs";
+import { captureOf } from "./capture/index.mjs";
+import { cpuProbe } from "./cpu.mjs";
+import { liveToken } from "./tokens.mjs";
 
 /* The intake form obeys the check catalog's own tables rather than a copy of
    them. Injected at module load, so a catalog change moves the UI with it and
@@ -34,6 +46,11 @@ const HEADINGS_JSON = JSON.stringify(HEADINGS);
    riskTierState travels with the map because the page must not decide for itself WHICH keys a member may
    author: the settable tiers are exactly the values the plane reads back as themselves. */
 const RISK_TIERS_JSON = JSON.stringify(RISK_TIERS);
+/* R24: an office's level, the product's vocabulary (jurisdictions' COUNTERPARTY_LEVELS), offered as written. */
+const COUNTERPARTY_LEVELS_OPTIONS = COUNTERPARTY_LEVELS
+  .map((l) => '<option value="' + String(l).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]))
+    + '">' + String(l).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])) + "</option>")
+  .join("");
 
 /* REC-163 / IC-174 — WHOSE RECORD THIS IS, STATED ON THE PAGE AND READ FROM THE RECORD.
  *
@@ -250,6 +267,23 @@ ${GROUP_LINE_UNREAD}
     <button id="go-inbox">Review the inbox</button>
     <button id="go-members" hidden>Members and keys</button>
   </div>
+  <!-- R15 (N10, K102): which jurisdiction profiles this copy reads its local facts from. Shown by name to every
+       signed-in member; the choice is offered only to a session that administers, among every held profile that
+       is not a test profile, with NOTHING PRESELECTED; the change is warned about before it is sent, and choosing
+       none is allowed and says what it means. -->
+  <h2>Where this copy's local facts come from</h2>
+  <div class="card" id="pf-active"><p class="small" style="margin:0">Reading the profiles&hellip;</p></div>
+  <div id="pf-choose" hidden>
+    <p class="small">Choose the jurisdiction profiles this copy reads its local facts from, in the order they
+    should be read. Nothing is chosen for you, and choosing none is allowed.</p>
+    <div class="card" id="pf-choices"></div>
+    <div class="actions"><button id="pf-review">Review this change</button></div>
+    <div class="notice" id="pf-warn" hidden>
+      <p id="pf-warn-text"></p>
+      <button id="pf-confirm">Make this change</button> <button id="pf-cancel">Keep things as they are</button>
+    </div>
+    <p class="err" id="pf-err"></p>
+  </div>
   <h2>What this page is, and is not</h2>
   <p>This page opens the record for reading, takes in new material, and
   publishes what the group has ratified. Signing in with a password lets you
@@ -276,8 +310,8 @@ ${GROUP_LINE_UNREAD}
   <h2>Files in this bundle</h2>
   <div class="card" id="b-files"></div>
   <h2>History</h2>
-  <p class="small">Every revision this bundle has ever had, oldest first. The
-  record is append-only: nothing here can be edited or removed.</p>
+  <p class="small">Every revision this bundle has ever had. The record is
+  append-only: nothing here can be edited or removed.</p>
   <div class="card" id="b-history"></div>
   <div id="b-ratify"></div>
 </section>
@@ -349,10 +383,18 @@ ${GROUP_LINE_UNREAD}
       what is known so far. There is no third answer and nothing is filled in for you.</p>
       <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
         <input type="radio" name="n-cp" id="n-cp-named" value="named" style="width:auto;margin-top:4px">
-        <span>A named counterparty</span></label>
+        <span>A named counterparty: an office</span></label>
+      <!-- R24 (N235; actions R9, jurisdictions R24): a named counterparty is an OFFICE, stated by its official role
+           and the body it belongs to, never a bare name and never a person. The level is optional and nothing is
+           preselected: its words are the product's vocabulary of an office's level, injected, never written here. -->
       <div id="n-cp-name-box" hidden style="margin:6px 0 10px 26px">
-        <label for="n-cp-name">Who</label>
-        <input id="n-cp-name" placeholder="City Clerk, Office of the City Auditor">
+        <label for="n-cp-role">The office: its official role</label>
+        <input id="n-cp-role" placeholder="Clerk, Auditor, Director of Public Works">
+        <label for="n-cp-body">The body that office belongs to</label>
+        <input id="n-cp-body" placeholder="the council, the county, a named department">
+        <label for="n-cp-level">Its level of government (optional)</label>
+        <select id="n-cp-level"><option value="">Not stated</option>${COUNTERPARTY_LEVELS_OPTIONS}</select>
+        <p class="hint">An office, never a person: whoever holds the role is reached through the role.</p>
       </div>
       <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
         <input type="radio" name="n-cp" id="n-cp-undet" value="undetermined" style="width:auto;margin-top:4px">
@@ -599,6 +641,9 @@ let WHO = "admin";
    that will refuse: fail closed. */
 let CAPS = new Set();
 const can = (c)=>CAPS.has(c);
+/* R23: whether this session ADMINISTERS, as op=whoami reports it (the founder and every enrolled administrator),
+   never inferred from the name signed in with. Starts false, so the members section is absent until whoami says. */
+let ADMIN = false;
 let INVITE = null;
 /* Everything section 5 hides, in ONE place, so a control cannot be added later
    in a screen that forgot to ask. Called before whoami answers as well as after,
@@ -606,6 +651,7 @@ let INVITE = null;
    member may not use. */
 function applyCaps(){
   $("#go-new").hidden = !can("contribute");
+  $("#go-members").hidden = !ADMIN;
   const t = $("#n-type");
   if (t) for (const o of t.options) if (o.value === "project") o.hidden = !can("create_projects");
 }
@@ -615,12 +661,14 @@ function panel(login, claimedAt){
     SESSION = login.token;
     try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
   }
-  $("#go-members").hidden = WHO !== "admin";
+  ADMIN = false;
   applyCaps();
   rec("whoami").then((r)=>{
     CAPS = new Set(r && r.result && Array.isArray(r.result.capabilities) ? r.result.capabilities : []);
+    ADMIN = !!(r && r.result && r.result.administer === true);
     applyCaps();
-  }).catch(()=>{ CAPS = new Set(); applyCaps(); });
+    openProfiles();
+  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); });
   $("#panel-lede").textContent = WHO === "admin"
     ? "Signed in as administrator." : "Signed in as " + WHO + ".";
   $("#p-version").textContent = window.__ver || "unknown";
@@ -710,6 +758,16 @@ async function openBundle(id){
   CURRENT = { id, img };
   renderBundle(id, img, null);
 }
+/* R25 (D-719; State Rules section 6): the history reads in WRITE order, never the caller-chosen snap key, whose
+   lexical order is not a clock. The image carries each entry's write-order rank as seq; when EVERY entry carries a
+   distinct integer one the list follows it, else it is listed by key and the page says which order it shows. */
+function historyOrder(raw){
+  const list = Array.isArray(raw) ? raw.filter(e=>e && typeof e === "object") : [];
+  const seqs = list.map(e=>e.seq);
+  const write = list.length > 0 && seqs.every(v=>Number.isSafeInteger(v)) && new Set(seqs).size === list.length;
+  return write ? { order:"write", entries: list.slice().sort((a,b)=>a.seq-b.seq) }
+    : { order:"key", entries: list.slice().sort((a,b)=>String(a.key).localeCompare(String(b.key))) };
+}
 function renderBundle(id, img, revisionKey){
   const liveText = typeof img["bundle.md"] === "string" ? img["bundle.md"] : "";
   /* Canonical snapshot path: the key lives in the filename, not a directory. */
@@ -740,8 +798,12 @@ function renderBundle(id, img, revisionKey){
 
   let entries = [];
   try { entries = JSON.parse(img["_history/manifest.json"]||"{}").entries || []; } catch {}
-  entries = entries.slice().sort((a,b)=>String(a.key).localeCompare(String(b.key)));
-  $("#b-history").innerHTML = entries.map(e=>{
+  const hist = historyOrder(entries);
+  entries = hist.entries;
+  $("#b-history").innerHTML = (entries.length ? '<p class="small" style="margin-top:0">'
+    + (hist.order === "write" ? "Listed in the order they were written, oldest first."
+      : "Listed by snapshot key: this copy of the record does not carry the order they were written, and key order is not necessarily the order they were written.")
+    + "</p>" : "") + entries.map(e=>{
     const viewable = typeof img["_history/bundle_"+e.key+".md"] === "string";
     return '<div class="kv"><span class="k mono">'+escH(e.key)+'</span><span class="v">'
       + escH(e.kind||"") + " by " + escH(e.author||"unknown") + ' <span class="dim">' + fmtWhen(e.created) + "</span> "
@@ -930,9 +992,13 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
        empty: a member who answered "not determined yet" and wrote nothing has
        left a requirement unmet, and C-2.10 says so precisely. Dropping the
        block would hand them the vaguer refusal for a question they answered. */
+    /* R24 (N235): a named counterparty is written as actions R9 requires, an office by its role and body and,
+       when the member stated one, its level; never a bare name, which R9 refuses on creation. */
     if (cp && cp.state === "named")
       fm.push("counterparty:","  state: named",
-              ...(String(cp.name || "").trim() ? ["  name: " + JSON.stringify(String(cp.name).trim())] : []));
+              ...(String(cp.role || "").trim() ? ["  role: " + JSON.stringify(String(cp.role).trim())] : []),
+              ...(String(cp.body || "").trim() ? ["  body: " + JSON.stringify(String(cp.body).trim())] : []),
+              ...(String(cp.level || "").trim() ? ["  level: " + String(cp.level).trim()] : []));
     else if (cp && cp.state === "undetermined")
       fm.push("counterparty:","  state: undetermined",
               ...(String(cp.basis || "").trim() ? ["  basis: " + JSON.stringify(String(cp.basis).trim())] : []));
@@ -1067,15 +1133,17 @@ $("#n-save").addEventListener("click", async ()=>{
   if (type === "action") {
     const named = $("#n-cp-named") && $("#n-cp-named").checked;
     const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
-    const nm = ($("#n-cp-name") ? $("#n-cp-name").value.trim() : "");
+    const role = ($("#n-cp-role") ? $("#n-cp-role").value.trim() : "");
+    const office = ($("#n-cp-body") ? $("#n-cp-body").value.trim() : "");
+    const level = ($("#n-cp-level") ? $("#n-cp-level").value.trim() : "");
     const bs = ($("#n-cp-basis") ? $("#n-cp-basis").value.trim() : "");
     if (!named && !undet) { e.textContent = "Say who this is addressed to, or that it is not determined yet."; return; }
-    if (named && !nm) { e.textContent = "Name the counterparty."; return; }
+    if (named && (!role || !office)) { e.textContent = "Name the office: its official role and the body it belongs to."; return; }
     if (undet && !bs) { e.textContent = "Say what is known so far, and what would settle it."; return; }
     /* D-483: the tier goes with the counterparty because both are the member's answers and neither is
        this form's. No refusal beside it: a member who assessed nothing has answered honestly, and a gate
        that stopped them here would press them into stating the one value nobody assessed. */
-    act = { counterparty: named ? { state:"named", name:nm } : { state:"undetermined", basis:bs },
+    act = { counterparty: named ? { state:"named", role, body:office, ...(level ? { level } : {}) } : { state:"undetermined", basis:bs },
             risk_tier: chosenRiskTier() };
   }
   $("#n-save").disabled = true;
@@ -1399,6 +1467,68 @@ $("#k-add").addEventListener("click", async ()=>{
   $("#k-key").value = ""; $("#k-who").value = ""; openMembers();
 });
 
+/* ---- the jurisdiction profiles (R12, R15) ----
+   Shown by name to every signed-in member. The choice is offered only to a session that administers, with nothing
+   preselected: the order a member ticks them is the order they are read. A change is warned about before it is
+   sent, and choosing none is allowed and says what it means. */
+let PF_ORDER = [];
+async function openProfiles(){
+  let r = null;
+  try { r = await rec("profiles"); } catch { r = null; }
+  const res = r && r.result;
+  if (!res || res.ok !== true) {
+    $("#pf-active").innerHTML = '<p class="small" style="margin:0">This copy could not read its jurisdiction profiles just now.</p>';
+    $("#pf-choose").hidden = true; return;
+  }
+  const act = Array.isArray(res.profiles) ? res.profiles : [];
+  $("#pf-active").innerHTML = (act.length
+    ? act.map((p,i)=>'<div class="kv"><span class="k">'+(i+1)+'. '+escH(p.name || p.id)+'</span><span class="v">'
+        + escH((p.covers||[]).join(", ")) + "</span></div>").join("")
+    : '<p class="small" style="margin:0">No profile is active: this copy reads no local facts, and every one is answered as undetermined.'
+        + (res.boot && res.boot.why ? " At install, " + escH(res.boot.why) + ", so nothing was recorded." : "") + "</p>")
+    + ((res.conflicts||[]).length ? '<p class="small" style="margin:8px 0 0">The active profiles disagree on '
+        + (res.conflicts.length) + " fact" + (res.conflicts.length === 1 ? "" : "s") + ", and each is left unread rather than chosen between.</p>" : "");
+  if (!ADMIN) { $("#pf-choose").hidden = true; return; }
+  PF_ORDER = [];
+  $("#pf-warn").hidden = true; $("#pf-err").textContent = "";
+  const choices = Array.isArray(res.choices) ? res.choices : [];
+  $("#pf-choices").innerHTML = choices.length ? choices.map(p=>
+    '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">'
+    + '<input type="checkbox" class="pf-pick" value="'+escH(p.id)+'" style="width:auto;margin-top:4px">'
+    + '<span>'+escH(p.name || p.id)+' <span class="dim">'+escH((p.covers||[]).join(", "))+'</span></span></label>').join("")
+    : '<p class="small" style="margin:0">This copy holds no profile to choose.</p>';
+  document.querySelectorAll("#pf-choices .pf-pick").forEach(x=>x.addEventListener("change", ()=>{
+    PF_ORDER = PF_ORDER.filter(v=>v !== x.value);
+    if (x.checked) PF_ORDER.push(x.value);
+    $("#pf-warn").hidden = true;
+  }));
+  $("#pf-choose").hidden = false;
+}
+function profilesWarning(order, choices){
+  const name = (id)=>{ const p = (choices||[]).find(c=>c.id === id); return p && p.name ? p.name : id; };
+  return order.length
+    ? "From now on, this copy reads its local facts from " + order.map(name).join(", then ")
+      + ". Local facts will read differently from then on: what the record already holds is unchanged, but anything read after this is read from these profiles."
+    : "You chose no profile. From now on this copy reads no local facts, and every one is answered as undetermined. Local facts will read differently from then on.";
+}
+$("#pf-review").addEventListener("click", async ()=>{
+  const r = await rec("profiles").catch(()=>null);
+  $("#pf-warn-text").textContent = profilesWarning(PF_ORDER, r && r.result && r.result.choices);
+  $("#pf-warn").hidden = false;
+});
+$("#pf-cancel").addEventListener("click", ()=>{ $("#pf-warn").hidden = true; });
+$("#pf-confirm").addEventListener("click", async ()=>{
+  const e = $("#pf-err"); e.textContent = "";
+  $("#pf-confirm").disabled = true;
+  try {
+    const r = await post("profilesset", { profiles: PF_ORDER.slice() });
+    const res = r && (r.result || r);
+    if (!res || res.ok !== true) { e.textContent = (res && (res.translation || res.detail)) || (r && r.error) || "The change was not made."; return; }
+    openProfiles();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#pf-confirm").disabled = false; }
+});
+
 /* ---- enrolment, for an invited member with no password yet ---- */
 $("#en-go").addEventListener("click", async ()=>{
   const e = $("#en-err"); e.textContent = "";
@@ -1474,4 +1604,995 @@ export async function memberVersions(env) {
     } finally { clearTimeout(timer); }
   }));
   return out;
+}
+
+/* ============================================================================================================
+ * THE CHECKS THIS MODULE HOLDS (R30, K6). C-64.2, C-64.3 and C-64.5–C-64.7 moved here from the catalogue's
+ * `INSTANCE_GROUP_CHECKS`, code, condition and translation unmoved, their `where`s now this file's. C-64.1
+ * (GROUP_UNDETERMINED, raised at the write) stays with the catalogue's family for `promotion`; C-64.4 (a bearer on
+ * the two sets) is `control-plane`'s. C-119 is the jurisdiction profiles' (R14), a family of its own.
+ * ============================================================================================================ */
+export const INSTANCE_SETUP_CHECKS = Object.freeze({
+  GROUP_SLUG_MALFORMED: {
+    check: 'C-64.2',
+    where: 'src/setup.mjs instanceGroupSeed > is-instance-group-seed',
+    translation: 'A group is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase '
+      + 'letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.',
+  },
+  GROUP_ALREADY_RECORDED: {
+    check: 'C-64.3',
+    where: 'src/setup.mjs instanceGroupSeed > is-instance-group-seed',
+    translation: 'This copy\'s group is already recorded, and it is recorded once: the name travels inside every '
+      + 'document the record has signed, so a second name would make those documents name a producer they were '
+      + 'not written under. Nothing was changed.',
+  },
+  GROUP_IDENTITY_NOT_ADMIN: {
+    check: 'C-64.5',
+    where: 'src/setup.mjs #groupIdentityGate > is-group-identity-admin',
+    translation: 'Only one of the group\'s administrators can set the name it shows the public or the web '
+      + 'address it claims. The person signed in here is not one of its active administrators. Nothing was '
+      + 'changed.',
+  },
+  GROUP_DISPLAY_NAME_MALFORMED: {
+    check: 'C-64.6',
+    where: 'src/setup.mjs groupNameSet > is-group-display-name',
+    translation: 'A display name is the group\'s own words for itself: some text, at most 120 characters, on '
+      + 'one line. It is always shown beside the group\'s short name and never instead of it. Nothing was '
+      + 'changed.',
+  },
+  GROUP_DOMAIN_MALFORMED: {
+    check: 'C-64.7',
+    where: 'src/setup.mjs groupDomainSet > is-group-domain',
+    translation: 'A web address is claimed by its bare domain name, like example.org: no https://, no path and '
+      + 'no port. The claim is then checked by reading a file the domain itself serves, and the public sees '
+      + 'the domain only while that check passes. Nothing was changed.',
+  },
+  /* R14 (N10, K102): the list of jurisdiction profiles this copy reads its local facts from. */
+  PROFILES_NOT_ADMIN: {
+    check: 'C-119.1',
+    where: 'src/setup.mjs profilesSet > is-profiles-admin',
+    translation: 'Only one of the group\'s administrators, signed in as themselves, can choose which jurisdiction '
+      + 'profiles this copy reads its local facts from. Nothing was changed.',
+  },
+  NOT_A_LIST: {
+    check: 'C-119.2',
+    where: 'src/setup.mjs profilesSet > is-profiles-list',
+    translation: 'The profiles are chosen as a list, in the order they are to be read, and an empty list means '
+      + 'none. What was sent is not a list. Nothing was changed.',
+  },
+  UNKNOWN_PROFILE: {
+    check: 'C-119.3',
+    where: 'src/setup.mjs profilesSet > is-profiles-list',
+    translation: 'This copy holds no jurisdiction profile by that name, so it cannot read local facts from it. '
+      + 'Choose among the profiles it offers. Nothing was changed.',
+  },
+  PROFILE_IS_TEST: {
+    check: 'C-119.4',
+    where: 'src/setup.mjs profilesSet > is-profiles-list',
+    translation: 'That profile is made up for testing: its facts describe no real place, so a copy never reads '
+      + 'local facts from it. Nothing was changed.',
+  },
+});
+
+const refusal = (code, detail, extra) => {
+  const row = INSTANCE_SETUP_CHECKS[code];
+  return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+};
+
+/* ============================================================================================================
+ * THE TABLES (K4, `build/layers.md` ruling 3: each module owns its tables), created by `migrate` at start. Every one
+ * is declared to record-core exempt from purge, in both forms (R28, R41): the instance's identity and its
+ * measurements of the runtime are not derived from the corpus, in the family of `seq` and the settings.
+ * ============================================================================================================ */
+export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_identity_history", "group_domain_checks",
+  "runtime_observations", "cpu_probe_runs", "cpu_probe_steps"]);
+export const INSTANCE_SETUP_SCHEMA = `
+-- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG, ONE VALUE FOR THE WHOLE
+-- INSTANCE. Every bundle this instance writes names it as its group, in the bytes that get signed, and nothing else may
+-- supply that name: not a literal in the code, and not a deploy-time variable, which a redeploy could move silently.
+-- One row, id=1, WRITTEN ONCE: every writer is an INSERT that does nothing on conflict, and no statement anywhere
+-- updates or deletes it (R26).
+--   source  'bootstrap'  recorded at the store's FIRST BOOT (record-core's isFirstBoot, its R54), from the slug the
+--                        installer bound as INSTANCE_NAME, read at that moment only (R2)
+--           'seed'       recorded once by op=instancegroupseed, the root of trust's act, on a store that already held
+--                        the schema when this table arrived (R4)
+--   recorded_by  NULL for bootstrap, the server-stamped credential for a seed
+CREATE TABLE IF NOT EXISTS instance_group (
+  id           INTEGER PRIMARY KEY CHECK (id = 1),
+  slug         TEXT NOT NULL,
+  recorded_at  TEXT NOT NULL,
+  source       TEXT NOT NULL,
+  recorded_by  TEXT
+);
+-- REC-164: THE PUBLISHING GROUP'S DISPLAY NAME AND ITS DOMAIN (BIO_Publication_v0_1.md section 7 points 2 and 3). Two
+-- durable values, each with a dated history: a value is the LATEST row for its field, and no statement updates or
+-- deletes a row (R26), so every revision stays readable with its date and the administrator who made it.
+--   field             'display_name' or 'domain'
+--   set_by            the member the control plane stamped from the signed-in session, never a caller's statement
+--   instance_address  a domain row only: the origin the administrator's session reached, stamped by the control
+--                     plane, which the well-known file must name
+CREATE TABLE IF NOT EXISTS group_identity_history (
+  seq               INTEGER PRIMARY KEY AUTOINCREMENT,
+  field             TEXT NOT NULL CHECK (field IN ('display_name','domain')),
+  value             TEXT NOT NULL,
+  set_at            TEXT NOT NULL,
+  set_by            TEXT NOT NULL,
+  instance_address  TEXT
+);
+-- Every verdict on a claimed domain, dated (R8). 'undetermined' is recorded as what it is and never as 'absent'.
+--   trigger  'set' (the administrator's act) or 'alarm' (the reconciling re-check, R9)
+CREATE TABLE IF NOT EXISTS group_domain_checks (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  domain      TEXT NOT NULL,
+  verdict     TEXT NOT NULL CHECK (verdict IN ('verified','absent','mismatched','undetermined')),
+  checked_at  TEXT NOT NULL,
+  trigger     TEXT NOT NULL,
+  status      INTEGER,
+  detail      TEXT
+);
+-- What the runtime was observed to COST (R33, R34), measured rather than assumed. capture_limits (capture's) holds
+-- ceilings found by being refused; this holds consumption found by measuring. The columns are named *_ms for the
+-- metric that first wrote them; each metric carries its own UNIT, and a count of work is never read as a time.
+CREATE TABLE IF NOT EXISTS runtime_observations (
+  metric     TEXT PRIMARY KEY,
+  peak_ms    REAL NOT NULL,
+  peak_at    TEXT NOT NULL,
+  peak_detail TEXT,
+  last_ms    REAL NOT NULL,
+  last_at    TEXT NOT NULL,
+  samples    INTEGER NOT NULL DEFAULT 1,
+  total_ms   REAL NOT NULL DEFAULT 0,
+  unit       TEXT
+);
+-- The stepped CPU probe's durable trail (R35–R40), ONE RUN APART FROM ANOTHER. Exceeding the CPU limit TERMINATES the
+-- isolate, so no run can record its own death: a run is started, each step it completes is written before the next
+-- begins, and its end is written when it returns. A run with no end is one the isolate did not survive, and the
+-- ceiling lies between its last completed step and the next, each timed from that run's own start.
+CREATE TABLE IF NOT EXISTS cpu_probe_runs (
+  run         TEXT PRIMARY KEY,
+  started_at  TEXT NOT NULL,
+  iterations  INTEGER,
+  budget_ms   REAL,
+  ended_at    TEXT,
+  reason      TEXT,
+  completed   INTEGER,
+  elapsed_ms  REAL
+);
+CREATE TABLE IF NOT EXISTS cpu_probe_steps (
+  run         TEXT NOT NULL,
+  step        INTEGER NOT NULL,
+  elapsed_ms  REAL NOT NULL,
+  iterations  INTEGER NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (run, step)
+);
+`;
+
+/* The probe run the trail held before runs were kept apart (R40): its rows, keyed on the step alone, become one run. */
+export const LEGACY_PROBE_RUN = "legacy";
+
+/* A metric's unit, for the metrics that predate the unit column (R34): a `_bytes` metric counts bytes. */
+const unitOfMetric = (metric) => (/_bytes$/.test(String(metric)) ? "bytes" : "ms");
+
+/* =====================================================================
+ * D-436 / IC-172 — THE PRODUCING GROUP, ONE RECORDED VALUE FOR THE WHOLE INSTANCE (R1–R4).
+ *
+ * State Rules v1.5 §3.1: every bundle.md carries `group`, the producing group's slug, and it travels with every
+ * distributed copy — so it is in the SIGNED bytes. There is ONE value, the `instance_group` row, and every default and
+ * every stamp reads it through `producingGroup()`, which this module registers with promotion as the fact
+ * `producingGroup` (promotion R40, R1 here). Nothing in the plane names a group of its own.
+ *
+ * DECISION (a), WHERE IT COMES FROM (K102). It is written ONCE, at the store's FIRST BOOT (record-core's `isFirstBoot`,
+ * its R54): on that boot and on no other, the slug the installer bound as INSTANCE_NAME is recorded, the worker name
+ * the group chose (D-102), which `newgroup` binds in the SAME upload that creates the worker. It is checked against the
+ * installer's own slug grammar first, and a missing or malformed name records NOTHING — the store then says so.
+ *   NEVER A DEPLOY-TIME VARIABLE AS ITS SOURCE. INSTANCE_NAME is the channel the slug ARRIVES by, read at one moment;
+ *   every later boot ignores it. So a redeploy that moves the binding moves nothing already recorded.
+ *   WHY THE FIRST BOOT AND NOT op=claim. The scratch namespace is a Durable Object of its own that no claim ever
+ *   reaches; the root of trust can write before anyone claims; and a claim is RE-ARMED by rotating ADMIN_TOKEN, so
+ *   "the first claim" would need a witness of its own. The store's birth is witnessed by the schema itself.
+ *
+ * DECISION (b), A STORE THAT PREDATES THE VALUE. A store that already held the schema when this table arrived records
+ * NOTHING at boot, even with INSTANCE_NAME bound: the binding and the record can disagree, and choosing between them is
+ * a person's act, not a boot's. It is recorded ONCE by the root of trust (`instanceGroupSeed`), and refused a second
+ * time. The documents already written are not rewritten: their bytes are signed.
+ *
+ * DECISION (c), NOTHING RECORDED. A write that must name the producing group is never given a default (C-64.1,
+ * promotion's): the fact answers null, and the writer refuses by name.
+ * ===================================================================== */
+
+/* What a store recording no group SAYS, in ONE copy: the credentialed read and the public reads both answer with it. */
+export const NO_GROUP_RECORDED = "no producing group is recorded for this store. A store records it once: at its first "
+  + "boot, from the slug its installer bound, or — on a store that already held documents when the value "
+  + "arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must "
+  + "name its producing group is given no default: a caller's own statement of its group is kept "
+  + "as the caller's, and a write stating none is refused.";
+
+/* REC-164 — THE DISPLAY NAME AND THE DOMAIN (R5–R11): the bounds and the file. */
+export const GROUP_DISPLAY_NAME_MAX = 120;
+/* A bare lowercase host name with at least one dot, labels of 1-63 letters, digits and hyphens: no scheme, path, port
+   or IP literal. The last label must begin with a letter, which is what excludes a dotted-quad. */
+export const GROUP_DOMAIN_RE = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+export const GROUP_WELL_KNOWN_PATH = "/.well-known/civicos-group.json";
+export const GROUP_WELL_KNOWN_MAX_BYTES = 16384;
+export const GROUP_DOMAIN_RECHECK_MS = 86_400_000;   // chosen, not measured: once a day
+/* IC-246: the check log answered newest first, cut at a NAMED bound and the cut PUBLISHED (R11). */
+export const GROUP_DOMAIN_CHECKS_MAX = 20;
+
+/* The instance's own address as the control plane stamped it: an origin, lowercased, no trailing slash. */
+function instanceAddress(origin) {
+  try {
+    const u = new URL(String(origin ?? ""));
+    return (u.protocol === "https:" || u.protocol === "http:") ? `${u.protocol}//${u.host}`.toLowerCase() : null;
+  } catch { return null; }
+}
+
+/* At most `max` bytes of a response body, decoded as UTF-8; the rest is never read (R8: at most 16 KiB). */
+async function boundedText(res, max) {
+  const body = res && res.body;
+  if (!body || typeof body.getReader !== "function")
+    return String(await res.text().catch(() => "")).slice(0, max);
+  const reader = body.getReader();
+  const parts = [];
+  let held = 0;
+  try {
+    while (held < max) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = value instanceof Uint8Array ? value : new Uint8Array(value);
+      parts.push(chunk.subarray(0, Math.min(chunk.length, max - held)));
+      held += Math.min(chunk.length, max - held);
+    }
+  } catch { /* what was read stands */ }
+  try { await reader.cancel(); } catch { /* already closed */ }
+  const all = new Uint8Array(held);
+  let at = 0;
+  for (const p of parts) { all.set(p, at); at += p.length; }
+  return new TextDecoder().decode(all);
+}
+
+/* =====================================================================
+ * THE MODULE ON ONE DURABLE OBJECT'S STORAGE (K61): `instanceSetupOf(ctx, env, deps)`.
+ * `deps` lets a test hand its own record-core, membership, promotion, governor, scheduler, capture, `fetch` and
+ * `sleep`; each defaults to the module's own factory on the same `ctx`.
+ * ===================================================================== */
+export class InstanceSetup {
+  #ctx; #env; #deps; #sql; #started = false;
+
+  constructor(ctx, env = {}, deps = {}) {
+    this.#ctx = ctx;
+    this.#env = env || {};
+    this.#deps = deps || {};
+    this.#sql = (ctx && ctx.storage ? ctx.storage : ctx).sql;
+  }
+
+  #record() { return this.#deps.record ?? recordOf(this.#ctx); }
+  #membership() { return this.#deps.membership ?? membershipOf(this.#ctx); }
+  #promotion() { return this.#deps.promotion ?? promotionOf(this.#ctx); }
+  #governor() { return this.#deps.governor ?? governorOf(this.#ctx); }
+  #scheduler() { return this.#deps.scheduler ?? schedulerOf(this.#ctx, this.#env); }
+  #capture() { return this.#deps.capture ?? captureOf(this.#ctx, { env: this.#env }); }
+  #fetch(...a) { return (this.#deps.fetch ?? globalThis.fetch)(...a); }
+  #sleep(ms) { return this.#deps.sleep ? this.#deps.sleep(ms) : new Promise((s) => setTimeout(s, ms)); }
+  #now() { return this.#deps.now ? this.#deps.now() : Date.now(); }
+  #iso() { return new Date(this.#now()).toISOString(); }
+
+  #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
+  #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+
+  /* ---- start (the Suggestions' "Factory and start") ---- */
+
+  /** This module's tables, and the migrations of the two that predate a column (R34) or a key (R40). Idempotent. */
+  migrate() {
+    const bare = INSTANCE_SETUP_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const stmt of bare.split(";").map((x) => x.trim()).filter(Boolean)) this.#sql.exec(stmt);
+    /* R34: a store written before the unit column holds its rows unit-less; each takes its metric's unit. */
+    const cols = this.#rows(`PRAGMA table_info(runtime_observations)`).map((r) => r.name);
+    if (!cols.includes("unit")) this.#sql.exec(`ALTER TABLE runtime_observations ADD COLUMN unit TEXT`);
+    for (const r of this.#rows(`SELECT metric FROM runtime_observations WHERE unit IS NULL`))
+      this.#sql.exec(`UPDATE runtime_observations SET unit = ? WHERE metric = ?`, unitOfMetric(r.metric), r.metric);
+    /* R40: the trail that predates runs, keyed on the step alone, becomes one run of its own, and its table goes. */
+    if (this.#rows(`PRAGMA table_info(cpu_probe)`).length) {
+      const old = this.#rows(`SELECT step, elapsed_ms, iterations, at FROM cpu_probe ORDER BY step`);
+      if (old.length && !this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, LEGACY_PROBE_RUN)) {
+        this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, reason) VALUES (?, ?, ?, 'UNRECORDED')`,
+                       LEGACY_PROBE_RUN, old[0].at, old[0].iterations);
+        for (const r of old)
+          this.#sql.exec(`INSERT OR IGNORE INTO cpu_probe_steps (run, step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?, ?)`,
+                         LEGACY_PROBE_RUN, r.step, r.elapsed_ms, r.iterations, r.at);
+      }
+      this.#sql.exec(`DROP TABLE cpu_probe`);
+    }
+  }
+
+  /** At start, once: the tables; the purge exemptions (R28, R41); the fact `producingGroup` (R1); the scheduler
+   *  consumer `group-domain-recheck` (R9, scheduler R8) and an arm, since this runs after the scheduler's own start
+   *  reconciled; capture's compute listener (R42); and, at the first boot, R2 and R13. */
+  async start({ firstBoot } = {}) {
+    if (this.#started) return { ok: true, started: false, detail: "this module had already started on this storage" };
+    this.#started = true;
+    this.migrate();
+    const out = { ok: true, started: true };
+    out.purge = this.#record().declarePurge("instance-setup", [], { exempt: [...INSTANCE_SETUP_TABLES] });
+    out.fact = this.#promotion().registerFact("producingGroup", "instance-setup", () => this.producingGroup());
+    out.consumer = this.#scheduler().register("instance-setup", { name: "group-domain-recheck", key: "groupdomain",
+      due: () => this.groupDomainWake(), wake: () => this.groupDomainWake(), tick: () => this.groupDomainTick() });
+    out.compute = this.#capture().on("compute", "instance-setup",
+      (m) => this.recordRuntimeObservation({ metric: m && m.metric, ms: m && m.value, detail: m && m.detail,
+                                            unit: unitOfMetric(m && m.metric) }));
+    const first = firstBoot === undefined ? this.#record().isFirstBoot() : firstBoot === true;
+    if (first) { out.group = this.#recordGroupAtFirstBoot(); out.profiles = this.#recordProfilesAtFirstBoot(); }
+    try { out.armed = await this.#scheduler().arm(); } catch { out.armed = null; /* the next arm reconciles */ }
+    return out;
+  }
+
+  /* ---- R1–R4: the producing group ---- */
+
+  /** R1: THE ONE READER — the recorded slug, or null. It reads the store and nothing else, never `env`. */
+  producingGroup() {
+    const r = this.#one(`SELECT slug FROM instance_group WHERE id=1`);
+    return r && typeof r.slug === "string" && r.slug ? r.slug : null;
+  }
+
+  /* R2: DECISION (a)'s write, at the first boot only. */
+  #recordGroupAtFirstBoot() {
+    const slug = String(this.#env.INSTANCE_NAME ?? "").trim();
+    if (!GROUP_SLUG_RE.test(slug)) return { recorded: false };
+    this.#sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
+                    VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`, slug, this.#iso());
+    return { recorded: true, group: slug };
+  }
+
+  /** R3, op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
+  instanceGroup() {
+    const r = this.#one(`SELECT slug, recorded_at, source, recorded_by FROM instance_group WHERE id=1`);
+    if (r) return { ok: true, group: r.slug, recorded_at: r.recorded_at, source: r.source, recorded_by: r.recorded_by ?? null };
+    return { ok: true, group: null, recorded_at: null, source: null, recorded_by: null, detail: NO_GROUP_RECORDED };
+  }
+
+  /** R3, REC-163 / IC-174: the PUBLIC projection (Publication §7 point 1: the slug is public, and nothing else in the
+   *  row is). It reads through the one reader and selects nothing else. */
+  instanceGroupPublic() {
+    const slug = this.producingGroup();
+    return slug ? { ok: true, group: slug } : { ok: true, group: null, detail: NO_GROUP_RECORDED };
+  }
+
+  /** R4, op=instancegroupseed: DECISION (b), the root of trust's one act. The control plane stamps `author`. */
+  instanceGroupSeed({ slug = null, author = null } = {}) {
+    const s = typeof slug === "string" ? slug.trim() : "";
+    /* DEC-49 REGION is-instance-group-seed */
+    if (!GROUP_SLUG_RE.test(s))
+      return refusal("GROUP_SLUG_MALFORMED",
+        `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a group is recorded as"} a slug in the `
+        + `installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). `
+        + `Nothing was recorded.`);
+    const held = this.#one(`SELECT slug, recorded_at, source FROM instance_group WHERE id=1`);
+    if (held)
+      return refusal("GROUP_ALREADY_RECORDED",
+        `this store has recorded its producing group since ${held.recorded_at} (${held.source}), and it is `
+        + `recorded once. Nothing was changed.`, { group: held.slug, recorded_at: held.recorded_at, source: held.source });
+    /* END DEC-49 REGION is-instance-group-seed */
+    const at = this.#iso();
+    const who = typeof author === "string" && author.trim() ? author.trim() : null;
+    this.#sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
+                    VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at, who);
+    return { ok: true, group: s, recorded_at: at, source: "seed", recorded_by: who,
+             note: "every document this store writes from now on names this group. Documents already written are "
+                 + "NOT rewritten: whatever group their bytes name is what they were signed under." };
+  }
+
+  /* =====================================================================
+   * REC-164 — THE PUBLISHING GROUP'S DISPLAY NAME AND ITS VERIFIED DOMAIN (R5–R11). `BIO_Publication_v0_1.md` §7
+   * points 2 and 3, resting on point 1's public slug.
+   *
+   * TWO DURABLE VALUES, EACH WITH A DATED HISTORY: the value is the latest row for its field, and nothing updates or
+   * deletes a row. Each is set by an ADMINISTRATOR'S SESSION ACT, and `by` is the control plane's stamp (R29), asked of
+   * membership's `isAdministrator` (its R64) — a bearer is refused before this (C-64.4, control-plane's).
+   *
+   * THE DISPLAY NAME is presentation only (R27): it is written into no signed bytes, and the public read shows it WITH
+   * the slug and never without one. THE DOMAIN is a CLAIM, shown publicly only while the latest verdict on the current
+   * claim is `verified`. The verifier fetches the well-known file through the per-host governor at the set act and on
+   * the reconciling alarm, because a check made once certifies a file the domain can change the next minute. Its
+   * verdicts: `verified`, `absent`, `mismatched` and a FOURTH, `undetermined`, which says nothing about the domain and
+   * is never recorded as `absent`.
+   * ===================================================================== */
+
+  #groupDomainRecheckMs() {
+    const v = Number(this.#env.GROUP_DOMAIN_RECHECK_MS);
+    return Number.isFinite(v) && v > 0 ? v : GROUP_DOMAIN_RECHECK_MS;
+  }
+
+  /* R5: WHO MAY SET EITHER VALUE — an administrator, named by the control plane's stamp, asked before anything is
+     read or validated, so a caller with no standing learns nothing about what is recorded. */
+  #groupIdentityGate(by) {
+    /* DEC-49 REGION is-group-identity-admin */
+    if (!by || !this.#membership().isAdministrator(by))
+      return refusal("GROUP_IDENTITY_NOT_ADMIN",
+        "setting the group's display name or claiming its domain is an administrator's act (Publication §7), and "
+        + "the plane stamps who is asking from the signed-in session rather than taking it from the caller. This "
+        + "caller is not one of the active administrators.", { by: by ?? null });
+    /* END DEC-49 REGION is-group-identity-admin */
+    return null;
+  }
+
+  #identityCurrent(field) {
+    return this.#one(`SELECT value, set_at, set_by, instance_address FROM group_identity_history
+                      WHERE field=? ORDER BY seq DESC LIMIT 1`, field) || null;
+  }
+  #identityHistory(field) {
+    return this.#rows(`SELECT value, set_at, set_by FROM group_identity_history WHERE field=? ORDER BY seq`, field)
+      .map((r) => ({ value: r.value, set_at: r.set_at, set_by: r.set_by }));
+  }
+  #domainLatestCheck(domain) {
+    const r = this.#one(`SELECT domain, verdict, checked_at, trigger, status, detail FROM group_domain_checks
+                         WHERE domain=? ORDER BY seq DESC LIMIT 1`, domain);
+    return r ? { ...r } : null;
+  }
+
+  /** R6, op=groupnameset — §7 point 2. `by` is the control plane's stamp. */
+  groupNameSet({ name = null, by = null } = {}) {
+    const gate = this.#groupIdentityGate(by);
+    if (gate) return gate;
+    const s = typeof name === "string" ? name.trim() : "";
+    const chars = [...s].length;
+    /* DEC-49 REGION is-group-display-name */
+    if (!s || chars > GROUP_DISPLAY_NAME_MAX || /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(s))
+      return refusal("GROUP_DISPLAY_NAME_MALFORMED",
+        `${s ? `a name of ${chars} characters` : "the request names no display name, and it is set as"} `
+        + `one line of 1 to ${GROUP_DISPLAY_NAME_MAX} characters with no control characters. Nothing was set.`);
+    /* END DEC-49 REGION is-group-display-name */
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by) VALUES ('display_name', ?, ?, ?)`,
+                   s, at, by);
+    return { ok: true, display_name: s, set_at: at, set_by: by, history: this.#identityHistory("display_name"),
+             note: "presentation only: no signed bytes carry it, and every public surface shows it beside the slug." };
+  }
+
+  /** R7, op=groupdomainset — §7 point 3. `by` and `origin` are the control plane's stamps: `origin` is the address the
+   *  administrator's session reached, which the domain's well-known file must name. Recorded, checked at once (R8),
+   *  and the scheduler armed for the re-check (R9; scheduler R9: a later producer arms itself). */
+  async groupDomainSet({ domain = null, by = null, origin = null } = {}) {
+    const gate = this.#groupIdentityGate(by);
+    if (gate) return gate;
+    const d = typeof domain === "string" ? domain.trim().toLowerCase().replace(/\.$/, "") : "";
+    /* DEC-49 REGION is-group-domain */
+    if (!GROUP_DOMAIN_RE.test(d))
+      return refusal("GROUP_DOMAIN_MALFORMED",
+        `${d ? `'${d.slice(0, 80)}' is not` : "the request names no domain, and one is claimed as"} a bare host `
+        + `name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.`);
+    /* END DEC-49 REGION is-group-domain */
+    const address = instanceAddress(origin);
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by, instance_address)
+                    VALUES ('domain', ?, ?, ?, ?)`, d, at, by, address);
+    const check = await this.#checkGroupDomain("set");
+    try { await this.#scheduler().arm(); } catch { /* the check above stands; the next arm reconciles */ }
+    return { ok: true, domain: d, set_at: at, set_by: by, instance_address: address, check,
+             shown_publicly: !!check && check.verdict === "verified", history: this.#identityHistory("domain") };
+  }
+
+  /** R8, THE VERIFIER: one governed fetch of the current claim's well-known file, and one dated verdict. */
+  async #checkGroupDomain(trigger) {
+    const cur = this.#identityCurrent("domain");
+    if (!cur) return null;
+    const domain = cur.value;
+    const slug = this.producingGroup();
+    const address = cur.instance_address || null;
+    let verdict = "undetermined", status = null, detail;
+    if (!slug || !address) {
+      detail = !slug ? "this store records no producing group, so there is no slug for the file to name"
+                     : "the claim carries no instance address for the file to name";
+    } else {
+      let g;
+      try { g = this.#governor().governorAdmit({ host: domain }); }
+      catch (e) { g = { admitted: false, reason: `the governor did not answer (${String(e && e.message || e).slice(0, 120)})` }; }
+      if (!g || !g.admitted) {
+        detail = `the per-host governor held ${domain} (${g && g.reason}); this says nothing about the domain`;
+      } else {
+        if (g.wait_ms) await this.#sleep(g.wait_ms);
+        let res = null;
+        try {
+          res = await this.#fetch(`https://${domain}${GROUP_WELL_KNOWN_PATH}`, { redirect: "manual",
+            headers: { "user-agent": civicosUserAgent(this.#env.VERSION, this.#env.INSTANCE_NAME, "group-domain") } });
+        } catch { res = null; }
+        if (!res) {
+          detail = "the fetch did not complete, and this plane did not record why";
+        } else {
+          status = res.status;
+          try { this.#governor().governorReport({ host: domain, status }); } catch { /* an unrecorded outcome is not a verdict */ }
+          if (status === 404 || status === 410 || (status >= 300 && status < 400)) {
+            verdict = "absent";
+            detail = status < 400 ? `the domain redirected (HTTP ${status}); the file is read on the claimed domain itself`
+                                  : `the domain serves no ${GROUP_WELL_KNOWN_PATH} (HTTP ${status})`;
+          } else if (status >= 200 && status < 300) {
+            const text = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
+            let f = null;
+            try { f = JSON.parse(text); } catch { f = null; }
+            const isObject = !!f && typeof f === "object" && !Array.isArray(f);
+            const inst = isObject && typeof f.instance === "string" ? instanceAddress(f.instance) : null;
+            const grp = isObject && typeof f.group === "string" ? f.group.trim() : null;
+            if (inst === address && grp === slug) {
+              verdict = "verified";
+              detail = `the file names this instance (${address}) and its slug (${slug})`;
+            } else {
+              verdict = "mismatched";
+              detail = !isObject
+                ? "the file is not the JSON object this plane reads ({ instance, group })"
+                : `the file names instance ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and group `
+                  + `${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
+            }
+          } else {
+            detail = `the domain answered HTTP ${status}, which is neither the file nor its absence`;
+          }
+        }
+      }
+    }
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO group_domain_checks (domain, verdict, checked_at, trigger, status, detail)
+                    VALUES (?, ?, ?, ?, ?, ?)`, domain, verdict, at, trigger, status, detail);
+    return { domain, verdict, checked_at: at, trigger, status, detail };
+  }
+
+  /** R9, the alarm consumer's two halves: the next re-check is due one interval after the current claim's latest
+   *  verdict, and an instance claiming no domain holds no wake. */
+  groupDomainWake() {
+    const cur = this.#identityCurrent("domain");
+    if (!cur) return null;
+    const last = this.#domainLatestCheck(cur.value);
+    const from = Date.parse((last && last.checked_at) || cur.set_at);
+    return (Number.isFinite(from) ? from : 0) + this.#groupDomainRecheckMs();
+  }
+  async groupDomainTick() {
+    return { groupdomain: await this.#checkGroupDomain("alarm") };
+  }
+
+  /** R10, op=groupidentity's PUBLIC projection: the slug, the display name only beside a slug, and the domain only
+   *  while the latest verdict on the current claim is `verified`. */
+  groupIdentityPublic() {
+    const slug = this.producingGroup();
+    const name = this.#identityCurrent("display_name");
+    const dom = this.#identityCurrent("domain");
+    const last = dom ? this.#domainLatestCheck(dom.value) : null;
+    /* THE VERDICT GATE: the one line that decides whether a claimed domain reaches a stranger. */
+    const verified = !!(slug && dom && last && last.verdict === "verified");
+    return { ok: true, group: slug,
+             display_name: slug && name ? name.value : null,
+             domain: verified ? dom.value : null,
+             domain_verified_at: verified ? last.checked_at : null,
+             ...(slug ? {} : { detail: NO_GROUP_RECORDED }) };
+  }
+
+  /** R11, op=groupidentity for a credentialed reader: R10, and the claim, its state and both histories. */
+  groupIdentity() {
+    const pub = this.groupIdentityPublic();
+    /* Read at `max + 1` so `truncated` is measured, never inferred from the count equalling the bound. */
+    const max = GROUP_DOMAIN_CHECKS_MAX;
+    const checks = this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
+                                 FROM group_domain_checks ORDER BY seq DESC LIMIT ?`, max + 1);
+    const dom = this.#identityCurrent("domain");
+    return { ...pub,
+             display_name_recorded: this.#identityCurrent("display_name")?.value ?? null,
+             display_name_history: this.#identityHistory("display_name"),
+             domain_claim: dom ? { domain: dom.value, set_at: dom.set_at, set_by: dom.set_by,
+                                   instance_address: dom.instance_address ?? null,
+                                   latest: this.#domainLatestCheck(dom.value) } : null,
+             domain_history: this.#identityHistory("domain"),
+             domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
+             domain_checks_limit: max, domain_checks_truncated: checks.length > max };
+  }
+
+  /* =====================================================================
+   * N10 — THE JURISDICTION PROFILES THIS COPY READS ITS LOCAL FACTS FROM (R12–R16). `build/layers.md`, "No
+   * jurisdiction in the product", rule 2: an instance setting chosen at install. The list is record-core's setting
+   * `jurisdiction_profiles` (its R26), which `extraction`, `monitoring`, `actions` and `standards` read; this module is
+   * its one writer: at the first boot from the installer's binding (R13), and by an administrator's act (R14).
+   * No profile is ever chosen for a group: an empty list is valid, and every consumer then answers undetermined.
+   * ===================================================================== */
+
+  /* The note R13 leaves when the installer's binding could not be recorded, so R12 can say why. */
+  static PROFILES_BOOT_NOTE = "jurisdiction_profiles_boot";
+
+  #checkProfileList(list) {
+    const ids = list.map((v) => (typeof v === "string" ? v.trim() : v));
+    const unknown = ids.filter((id) => typeof id !== "string" || !id || !heldProfile(id));
+    const tests = ids.filter((id) => typeof id === "string" && heldProfile(id) && heldProfile(id).test === true);
+    return { ids, unknown, tests };
+  }
+
+  /* R13: at the first boot, the installer's comma-separated binding, recorded when every id is held and none is a
+     test profile; otherwise nothing is recorded, and the note says why. */
+  #recordProfilesAtFirstBoot() {
+    const raw = this.#env.JURISDICTION_PROFILES;
+    if (typeof raw !== "string" || !raw.trim()) return { recorded: false, bound: false };
+    const { ids, unknown, tests } = this.#checkProfileList(raw.split(",").map((s) => s.trim()).filter(Boolean));
+    const unique = [...new Set(ids)];
+    let why = null;
+    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which this copy does not hold`;
+    else if (tests.length) why = `the installer bound ${tests.join(", ")}, a profile made up for testing`;
+    const core = this.#record();
+    if (why) {
+      core.setSetting(InstanceSetup.PROFILES_BOOT_NOTE, { bound: raw, recorded: false, why, at: this.#iso() }, "bootstrap");
+      return { recorded: false, bound: true, why };
+    }
+    const set = core.setSetting("jurisdiction_profiles", unique, "bootstrap");
+    return set && set.ok ? { recorded: true, profiles: unique } : { recorded: false, bound: true, why: set && set.reason };
+  }
+
+  /** R12, R16: the active profiles, each with its name and what it covers, the conflicts `jurisdictions.combine`
+   *  reports over them, and the held profiles an administrator may choose among (R15), from the namespace addressed. */
+  profiles() {
+    const core = this.#record();
+    const set = core.getSetting("jurisdiction_profiles");
+    const ids = Array.isArray(set) ? set.filter((x) => typeof x === "string") : [];
+    const choices = heldProfiles().filter((p) => p.test !== true).map((p) => ({ id: p.id, name: p.name, covers: p.covers }));
+    const active = ids.map((id) => {
+      const p = heldProfile(id);
+      return p ? { id, name: p.name, covers: p.covers } : { id, name: null, covers: null, held: false };
+    });
+    const combined = ids.length ? combineProfiles(ids) : { ok: true, conflicts: [] };
+    const out = { ok: true, profiles: active, conflicts: combined.ok ? combined.conflicts : [],
+                  ...(combined.ok ? {} : { errors: combined.errors }), choices };
+    if (!ids.length) {
+      out.detail = "no active profile: this copy reads no local facts, which is valid, and every fact that needs one "
+        + "is answered as undetermined until an administrator chooses";
+      const note = core.getSetting(InstanceSetup.PROFILES_BOOT_NOTE);
+      if (note && note.recorded === false && typeof note.why === "string")
+        out.boot = { recorded: false, why: note.why, bound: note.bound ?? null };
+    }
+    return out;
+  }
+
+  /** R14, op=profilesset: replaces the list. `by` is the control plane's stamp of an administrator's own session. */
+  profilesSet({ profiles = undefined, by = null } = {}) {
+    /* DEC-49 REGION is-profiles-admin */
+    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
+      return refusal("PROFILES_NOT_ADMIN",
+        "choosing the jurisdiction profiles is an administrator's act, and the plane stamps who is asking from the "
+        + "signed-in session. This caller is not one of the active administrators.", { by: by ?? null });
+    /* END DEC-49 REGION is-profiles-admin */
+    /* DEC-49 REGION is-profiles-list */
+    if (!Array.isArray(profiles))
+      return refusal("NOT_A_LIST", "the profiles are sent as a list of profile ids, in the order they are read; an "
+        + "empty list chooses none. Nothing was changed.");
+    const { ids, unknown, tests } = this.#checkProfileList(profiles);
+    if (unknown.length)
+      return refusal("UNKNOWN_PROFILE", `this copy holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. `
+        + "Nothing was changed.", { profiles: unknown });
+    if (tests.length)
+      return refusal("PROFILE_IS_TEST", `${tests.join(", ")} ${tests.length > 1 ? "are profiles" : "is a profile"} made up `
+        + "for testing. Nothing was changed.", { profiles: tests });
+    /* END DEC-49 REGION is-profiles-list */
+    const unique = [...new Set(ids)];
+    const set = this.#record().setSetting("jurisdiction_profiles", unique, by);
+    if (!set || set.ok !== true) return set;
+    return { ...this.profiles(), set_by: by, ...(unique.length < ids.length ? { collapsed: true } : {}),
+             note: unique.length
+               ? "local facts are read from these profiles, in this order, from now on; what was recorded before is unchanged"
+               : "no profile is active from now on: every local fact is answered as undetermined" };
+  }
+
+  /* =====================================================================
+   * THE INSTANCE'S OWN LIMITS (K98; R33–R40). What runs here COST, measured, and where the CPU ceiling lies, found
+   * by walking into it. They are measurements of the runtime, not of the corpus (R41).
+   * ===================================================================== */
+
+  /** R33: record what a run cost. The peak is kept beside the last because the peak is the run that will die first
+   *  and a mean would hide it. `unit` is the metric's (R34), fixed by its first observation. Never throws. */
+  recordRuntimeObservation({ metric, ms, detail = null, at = null, unit = null } = {}) {
+    try {
+      if (typeof metric !== "string" || !metric || typeof ms !== "number" || !Number.isFinite(ms)) return { recorded: false };
+      const now = at || stampInstant("second", this.#now());
+      const cur = this.#one(`SELECT * FROM runtime_observations WHERE metric = ?`, metric);
+      if (!cur) {
+        this.#sql.exec(
+          `INSERT INTO runtime_observations (metric, peak_ms, peak_at, peak_detail, last_ms, last_at, samples, total_ms, unit)
+           VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`, metric, ms, now, detail, ms, now, ms,
+          typeof unit === "string" && unit ? unit : unitOfMetric(metric));
+        return { metric, peak_ms: ms, last_ms: ms, samples: 1, new_peak: true };
+      }
+      const isPeak = ms > cur.peak_ms;
+      this.#sql.exec(
+        `UPDATE runtime_observations SET last_ms = ?, last_at = ?, samples = samples + 1, total_ms = total_ms + ?
+         ${isPeak ? ", peak_ms = ?, peak_at = ?, peak_detail = ?" : ""} WHERE metric = ?`,
+        ...(isPeak ? [ms, now, ms, ms, now, detail, metric] : [ms, now, ms, metric]));
+      return { metric, peak_ms: isPeak ? ms : cur.peak_ms, last_ms: ms, samples: cur.samples + 1, new_peak: isPeak };
+    } catch { return { recorded: false }; }
+  }
+
+  /** R34: every metric in name order, each with the unit it was recorded in. A time is also given under its `_ms`
+   *  names; a count of work never is, so a count is never described as a time. */
+  runtimeObservations() {
+    const metrics = this.#rows(`SELECT * FROM runtime_observations ORDER BY metric`).map((r) => {
+      const unit = r.unit || unitOfMetric(r.metric);
+      const mean = r.samples ? r.total_ms / r.samples : null;
+      return { metric: r.metric, unit, peak: r.peak_ms, peak_at: r.peak_at, peak_detail: r.peak_detail ?? null,
+               last: r.last_ms, last_at: r.last_at, samples: r.samples, total: r.total_ms, mean,
+               ...(unit === "ms" ? { peak_ms: r.peak_ms, last_ms: r.last_ms, total_ms: r.total_ms, mean_ms: mean } : {}) };
+    });
+    return { metrics,
+      note: "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute "
+          + "segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak "
+          + "is the run that would die first if a ceiling were near; a mean would hide it." };
+  }
+
+  /** R40: a probe run begins. Its steps are numbered and timed from this run's own start. */
+  recordCpuProbeStart({ run, iterations = null, budgetMs = null, at = null } = {}) {
+    if (typeof run !== "string" || !run) return { recorded: false };
+    this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, budget_ms) VALUES (?, ?, ?, ?)
+                    ON CONFLICT(run) DO NOTHING`, run, at || stampInstant("second", this.#now()), iterations, budgetMs);
+    return { run, recorded: true };
+  }
+
+  /** R35: one completed step of one run (`run`, R40): its number, its elapsed time from its run's start, its
+   *  iterations and the instant. Never throws for a well-formed call. */
+  recordCpuProbeStep({ run = LEGACY_PROBE_RUN, step, elapsedMs, iterations, at = null } = {}) {
+    const now = at || stampInstant("second", this.#now());
+    if (!this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, run))
+      this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations) VALUES (?, ?, ?)`, run, now, iterations);
+    this.#sql.exec(
+      `INSERT INTO cpu_probe_steps (run, step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(run, step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
+      run, step, elapsedMs, iterations, now);
+    return { run, step, elapsed_ms: elapsedMs };
+  }
+
+  /** R40: a probe run returned, with what it completed and why it stopped. A run with no end is one cut off. */
+  recordCpuProbeEnd({ run, completed = null, elapsedMs = null, reason = null, at = null } = {}) {
+    if (typeof run !== "string" || !run) return { recorded: false };
+    this.#sql.exec(`UPDATE cpu_probe_runs SET ended_at = ?, completed = ?, elapsed_ms = ?, reason = ? WHERE run = ?`,
+                   at || stampInstant("second", this.#now()), completed, elapsedMs, reason, run);
+    return { run, recorded: true };
+  }
+
+  /** R36, R40: where the probe got to, and so what is known about the ceiling. Writes nothing. */
+  cpuProbeState() {
+    const runs = this.#rows(`SELECT * FROM cpu_probe_runs ORDER BY started_at, run`);
+    const steps = this.#rows(`SELECT run, step, elapsed_ms, iterations, at FROM cpu_probe_steps ORDER BY run, step`);
+    const byRun = new Map(runs.map((r) => [r.run, []]));
+    for (const s of steps) (byRun.get(s.run) || byRun.set(s.run, []).get(s.run)).push(s);
+    const rows = [];
+    let top = null;
+    const runOut = runs.map((r) => {
+      const own = (byRun.get(r.run) || []).map((s) => ({ step: s.step, elapsed_ms: s.elapsed_ms, iterations: s.iterations, at: s.at }));
+      for (const s of own) {
+        rows.push({ run: r.run, ...s });
+        if (!top || s.elapsed_ms > top.elapsed_ms) top = s;
+      }
+      const last = own[own.length - 1] || null;
+      const returned = r.ended_at ? true : r.reason === "UNRECORDED" ? null : false;
+      return { run: r.run, started_at: r.started_at, iterations: r.iterations, budget_ms: r.budget_ms ?? null,
+               steps: own, returned,
+               ...(r.ended_at ? { ended: { at: r.ended_at, completed: r.completed, elapsed_ms: r.elapsed_ms, reason: r.reason } } : {}),
+               ...(returned === false ? { bracket: { last_completed_step: last ? last.step : 0,
+                                                     above_ms: last ? last.elapsed_ms : 0,
+                                                     next_step: (last ? last.step : 0) + 1 } } : {}) };
+    });
+    const cut = runOut.filter((r) => r.returned === false && r.steps.length);
+    return { steps: rows.length, highest_completed: top ? top.step : 0, elapsed_at_highest_ms: top ? top.elapsed_ms : 0,
+      rows, runs: runOut,
+      note: !rows.length
+        ? "the probe has never run, so nothing is known about the ceiling by measurement"
+        : `a run completed a step ${top.elapsed_ms} ms into its own isolate, so the ceiling lies above `
+          + `elapsed_at_highest_ms. `
+          + (cut.length ? "A run with no recorded end was cut off: the ceiling lies within its bracket, above its last "
+                        + "completed step's elapsed time and below what its next step would have cost."
+                        : "No run has been cut off yet, so the ceiling is above everything tried.") };
+  }
+}
+
+const INSTANCES = new WeakMap();
+
+/** The one instance of this module for a Durable Object's storage (K61). `deps` is read on the first call only. */
+export function instanceSetupOf(ctx, env = null, deps = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let m = INSTANCES.get(storage);
+  if (!m) { m = new InstanceSetup(ctx, env || {}, deps); INSTANCES.set(storage, m); }
+  return m;
+}
+
+/** This module's Durable Object routes (the `membershipOps` pattern). The stamps (`author`, `by`, `origin`) are the
+ *  control plane's, read from the query AFTER the body is spread, so a body naming its own is overwritten (R29). */
+export function instanceSetupOps(m, url, body) {
+  const q = (k) => url.searchParams.get(k);
+  return {
+    instancegroup: () => m.instanceGroup(),
+    instancegrouppublic: () => m.instanceGroupPublic(),
+    instancegroupseed: () => m.instanceGroupSeed({ ...(body || {}), author: q("author") }),
+    groupnameset: () => m.groupNameSet({ ...(body || {}), by: q("by") }),
+    groupdomainset: () => m.groupDomainSet({ ...(body || {}), by: q("by"), origin: q("origin") }),
+    groupidentity: () => m.groupIdentity(),
+    groupidentitypublic: () => m.groupIdentityPublic(),
+    profiles: () => m.profiles(),
+    profilesset: () => m.profilesSet({ ...(body || {}), by: q("by") }),
+    runtimeobservations: () => m.runtimeObservations(),
+    cpuprobestate: () => m.cpuProbeState(),
+    cpuprobestart: () => m.recordCpuProbeStart(body || {}),
+    recordcpuprobestep: () => m.recordCpuProbeStep(body || {}),
+    cpuprobeend: () => m.recordCpuProbeEnd(body || {}),
+  };
+}
+
+/** The Durable Object's door for this module's ops: `null` for any other op, so the caller hands the request on
+ *  untouched; else the store's own envelope (`{ok: true, result}`, `BAD_JSON` 400, a throw 500). */
+export async function instanceSetupRoute(m, req) {
+  const url = new URL(req.url);
+  const op = url.pathname.slice(1);
+  if (!Object.prototype.hasOwnProperty.call(instanceSetupOps(m, url, null), op)) return null;
+  let body = null;
+  if (req.method === "POST") {
+    const raw = await req.text();
+    if (raw.trim() !== "") {
+      try { body = JSON.parse(raw); }
+      catch { return Response.json({ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, { status: 400 }); }
+    }
+  }
+  try { return Response.json({ ok: true, result: await instanceSetupOps(m, url, body)[op]() }); }
+  catch (e) { return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 }); }
+}
+
+/* ============================================================================================================
+ * THE INSTANCE'S REPORTS, WORKER SIDE (R17–R19, R37, R38). The credential, the namespace and the envelope are the
+ * control plane's: each function takes the `{json, storeSilent, doAnswer}` it hands them (capture's `knockOp`
+ * pattern) and the store it resolved, and answers a Response.
+ * ============================================================================================================ */
+
+/* REC-163 / IC-174 / D-596 — THE PUBLIC READ OF THE PRODUCING GROUP, ONE READER FOR THE SURFACES THAT SHOW IT TO A
+   STRANGER: op=instancegroup's and op=groupidentity's public arms and the setup page served at `/` (R3, R10, R20).
+   Exactly two projections may be named; any other value is answered as a silence rather than forwarded, so a typo
+   cannot reach a Durable Object path. An instance with no store binding cannot be asked, and that is a silence too. */
+export const PUBLIC_GROUP_PROJECTIONS = Object.freeze(["instancegrouppublic", "groupidentitypublic"]);
+export async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic", doAnswer) {
+  if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: undefined };
+  let stub = null;
+  try { stub = env.STORE.get(env.STORE.idFromName(storeName)); } catch { stub = null; }
+  if (!stub) return { answered: false, result: undefined };
+  return doAnswer(stub.fetch(`http://do/${projection}`));
+}
+
+/** R3 over the wire: a credentialed reader (`viewer` set by the control plane) is answered the whole row; anybody
+ *  else the public projection. A silence is a silence (REC-52), never "no group is recorded". */
+export async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, { json, storeSilent, doAnswer }) {
+  if (viewer) {
+    const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/instancegroup"));
+    if (!out.answered) return storeSilent("instancegroup");
+    return json({ ok: true, result: out.result, store: storeName, tokenClass: cls }, 200);
+  }
+  const pub = await publicInstanceGroup(env, storeName, "instancegrouppublic", doAnswer);
+  if (!pub.answered) return storeSilent("instancegroup");
+  return json({ ok: true, result: pub.result, store: storeName }, 200);
+}
+
+/** R10, R11 over the wire: the credentialed read (R11) or the public projection (R10). */
+export async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, { json, storeSilent, doAnswer }) {
+  const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
+    .fetch(viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
+  if (!out.answered) return storeSilent("groupidentity");
+  return json({ ok: true, result: out.result, store: storeName, ...(viewer ? { tokenClass: cls } : {}) }, 200);
+}
+
+/** R17, op=bootstrap: this isolate's `version`, `bootstrapConfigured` (a live ADMIN_TOKEN), membership's
+ *  `bootstrapState` and the store's own `storeVersion` from the Durable Object's route, and with `members` each
+ *  member's own build (D-116: THREE BUILDS, EACH READ FROM WHERE IT RUNS — `storeVersion` is never written here). */
+export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer }) {
+  const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
+  if (!out.answered) return storeSilent("bootstrap");
+  return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
+                bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...out.result,
+                ...(members ? { memberVersions: await memberVersions(env) } : {}) }, 200);
+}
+
+/** R18, op=selftest: deployment health as JSON, so "did the deploy work" is a link rather than a command. It
+ *  reports every binding, relays the store's stats (under op=stats' stamps: `capacity` for the admin class and the
+ *  caller's `viewer`), and round-trips R2 under the scratch prefix; it never returns a secret. `ok` is false when
+ *  exactly one bucket is bound, when the store does not answer, when the round trip fails, or when a required token
+ *  binding is not live. */
+export async function selftest(env, storeName, { cls = null, viewer = "", scratch = "scratch" } = {}, { json, doAnswer }) {
+  /* R2 is optional by design: "not configured" is a first-class healthy state, distinct from "configured and
+     broken", and the buckets are only ever added as a pair. */
+  const r2Configured = typeof env.CAPTURES?.get === "function" && typeof env.PUBLISHED?.get === "function";
+  const out = {
+    ok: true, service: "bio-plane", version: env.VERSION || "0.0.0", time: new Date().toISOString(), tokenClass: cls,
+    bindings: {
+      STORE: typeof env.STORE?.idFromName === "function",
+      CAPTURES: typeof env.CAPTURES?.get === "function" ? true : "not configured",
+      PUBLISHED: typeof env.PUBLISHED?.get === "function" ? true : "not configured",
+      ADMIN_TOKEN: await liveToken(env.ADMIN_TOKEN),
+      MEMBER_TOKEN: await liveToken(env.MEMBER_TOKEN),
+      PROBE_TOKEN: await liveToken(env.PROBE_TOKEN),
+      /* REC-33: REPORTED, and deliberately NOT required: an instance that predates this class runs monitoring on the
+         ADMIN_TOKEN fallback and is healthy. */
+      DAEMON_TOKEN: (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN.length > 0)
+        ? await liveToken(env.DAEMON_TOKEN) : "not configured",
+    },
+    r2Configured,
+  };
+  /* Half a fence is a defect, not an option. */
+  if ((typeof env.CAPTURES?.get === "function") !== (typeof env.PUBLISHED?.get === "function")) {
+    out.ok = false;
+    out.r2 = "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither";
+  }
+  try {
+    /* REC-52: a store that answered `ok:false`, or did not answer, is a failure of the health check, never healthy. */
+    const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
+      .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(viewer ?? "")}`));
+    if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
+    else out.store = sOut.result;
+  } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
+  if (r2Configured) {
+    try {
+      const key = `${scratch}/selftest-${Date.now()}`;
+      await env.CAPTURES.put(key, "ok");
+      const back = await env.CAPTURES.get(key);
+      out.captures = (await back.text()) === "ok" ? "read-write ok" : "MISMATCH";
+      if (out.captures !== "read-write ok") out.ok = false;
+      await env.CAPTURES.delete(key);
+    } catch (e) { out.ok = false; out.captures = "ERR " + String(e && e.message || e); }
+  } else {
+    out.captures = "not configured";
+  }
+  /* Required for health: the store and three live token bindings. R2 is reported but not required. */
+  out.bindingsAllPresent = out.bindings.STORE === true && out.bindings.ADMIN_TOKEN === true
+    && out.bindings.MEMBER_TOKEN === true && out.bindings.PROBE_TOKEN === true;
+  if (!out.bindingsAllPresent) out.ok = false;
+  return json(out, out.ok ? 200 : 500);
+}
+
+/* The sentence R37 states: the subrequest ceiling is known by being refused, the CPU ceiling by op=cpuprobe. */
+export const RUNTIME_ASYMMETRY = "a refused subrequest throws and is caught, so the subrequest ceiling is known by "
+  + "having hit it. Exceeding the CPU limit TERMINATES the isolate, so no run can report its own death: consumption "
+  + "is measured on every run and the ceiling is found by op=cpuprobe, whose checkpoints survive the kill.";
+
+/** R37, op=runtime: R34's measurements, R36's probe state and capture's subrequest ceiling (capture R23), through one
+ *  surface. When any of the three reads does not answer, the op answers the store-silence refusal (REC-52). */
+export async function runtimeOp(stub, { json, storeSilent, doAnswer }) {
+  const obsOut = await doAnswer(stub.fetch("http://x/runtimeobservations"));
+  const probeOut = await doAnswer(stub.fetch("http://x/cpuprobestate"));
+  const limOut = await doAnswer(stub.fetch("http://x/capturelimit?runtime=subrequests"));
+  if (!obsOut.answered || !probeOut.answered || !limOut.answered) return storeSilent("runtime");
+  return json({ ok: true, measured: obsOut.result, cpu_probe: probeOut.result, subrequests: limOut.result,
+                asymmetry: RUNTIME_ASYMMETRY });
+}
+
+/** R38–R40, op=cpuprobe: find the CPU ceiling by walking into it. R36 is read first (a store that does not answer
+ *  burns nothing); a new run is started under its own id, each completed step is written, and CONFIRMED, before the
+ *  next begins (R39: an unconfirmed checkpoint ends the probe); its end is written when it returns. */
+export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = null, probe = cpuProbe } = {},
+                                 { json, storeSilent, doAnswer }) {
+  const beforeOut = await doAnswer(stub.fetch("http://x/cpuprobestate"));
+  if (!beforeOut.answered || !beforeOut.result) return storeSilent("cpuprobe");
+  const iters = Math.max(100000, Number(iterations) || 2000000);
+  const budget = Math.max(50, Number(budget_ms) || 20000);
+  const id = typeof run === "string" && run ? run
+    : `${new Date().toISOString().slice(0, 19)}Z~${crypto.randomUUID().slice(0, 8)}`;
+  const post = (path, body) => doAnswer(stub.fetch(`http://x/${path}`, { method: "POST",
+    headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
+  const started = await post("cpuprobestart", { run: id, iterations: iters, budgetMs: budget });
+  if (!started.answered || !started.result || started.result.recorded !== true) return storeSilent("cpuprobe");
+  let confirmed = 0;
+  const UNCONFIRMED = Symbol("unconfirmed");
+  let r;
+  try {
+    r = await probe({
+      startStep: 0, iterationsPerStep: iters, budgetMs: budget,
+      checkpoint: async (step, elapsed) => {
+        const w = await post("recordcpuprobestep", { run: id, step, elapsedMs: elapsed, iterations: iters });
+        if (!w.answered || !w.result || w.result.step !== step) throw UNCONFIRMED;
+        confirmed = step;
+      },
+    });
+  } catch (e) {
+    if (e !== UNCONFIRMED) throw e;
+    r = { completed: confirmed, elapsed_ms: null, reason: "CHECKPOINT_UNCONFIRMED" };
+  }
+  const complete = r.reason !== "CHECKPOINT_UNCONFIRMED";
+  if (complete) await post("cpuprobeend", { run: id, completed: r.completed, elapsedMs: r.elapsed_ms, reason: r.reason });
+  const afterOut = await doAnswer(stub.fetch("http://x/cpuprobestate"));
+  if (!afterOut.answered) return storeSilent("cpuprobe");
+  return json({ ok: true, run: { ...r, id }, state: afterOut.result, trail_complete: complete,
+    ...(complete ? {} : { last_confirmed_step: confirmed }),
+    note: complete
+      ? "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last "
+        + "recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms."
+      : `the store did not confirm step ${confirmed + 1}, so the probe stopped there and burned nothing more: the `
+        + `trail is incomplete, and the last step the store confirmed is ${confirmed}.` });
 }
