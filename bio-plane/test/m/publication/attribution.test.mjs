@@ -2,7 +2,7 @@
    reads the gates and the author use (R17). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, NOW, sha } from "./fixture.mjs";
+import { planeWorld as world, V, NOW, sha } from "./fixture.mjs";
 import { ATTRIBUTION_ACT_CHECKS } from "../../../src/publication/checks.mjs";
 import { ATTRIBUTION_LEVELS, ATTRIBUTION_PROSE_HEAD, attributionFrontmatterLines,
          attributionBodyLines } from "../../../src/publication/index.mjs";

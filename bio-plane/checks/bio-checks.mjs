@@ -4871,7 +4871,11 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). SEVENTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (SIXTEEN until 2026-09-27, when T6's
+ * and §14b.6). WHAT THIS TABLE HOLDS NOW (T11, legacy-checks, N289, K350): observation-log's eight rows, the
+ * ones below, until that module takes them, and C-22.7, ai-runs' row, until ai-runs holds it in its own table
+ * (its R35) and this copy leaves in T12 (N299). The run's other rows are ai-runs' own (`src/ai-runs/checks.mjs`);
+ * `src/airun.mjs` exports `AI_RUN_CHECKS` as both. The history below counts the
+ * family's allocations, not this table's rows. SEVENTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (SIXTEEN until 2026-09-27, when T6's
  * legacy-checks job added C-22.17 — a look that states NEVER_LOOKED, split from C-22.1 (N118, K148);
  * FIFTEEN until 2026-09-23, when REC-177 added
  * C-22.16 — a bound declared at the open states a positive allowance; FOURTEEN until 2026-09-23, when REC-172 added
@@ -4991,6 +4995,7 @@ export const AI_RUN_CHECKS = {
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'The observation log is not part of any published document and cannot be filed into one.',
   },
+  // C-22.7 is ai-runs' row: ai-runs takes it into its own table (ai-runs R35); this copy leaves in T12 (N299).
   /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
      bias manifest in force, the launching project's standard pair, and THE
      SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
@@ -5118,8 +5123,8 @@ export const AI_RUN_CHECKS = {
      absence of a row, never a row; its one exception is a run's terminal rollup, K148) under C-22.1's code, and
      C-22.1's sentence ("does not say which kind of absence it found") is false for it: that look named a kind, the
      one kind a look cannot be. DEC-49 is one code, one condition, so it takes a code of its own rather than C-22.1
-     reworded to cover both. observation-log mints it at its next job (N118's observation-log share); until then the
-     region below is unmarked and C-22.1 is still what that site answers. */
+     reworded to cover both. Since T10 observation-log mints it: the region `is-never-looked-stored` is marked in
+     `checkObservation` (`src/observation-log/vocabulary.mjs`), and C-22.17 is what that site answers (N286). */
   AI_LOG_NEVER_LOOKED_STORED: {
     check: 'C-22.17',
     where: 'src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored',
@@ -10329,6 +10334,15 @@ export const TRANSCRIBE_CHECKS = {
  * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's
  * and lives in C-2.8 (`checkTestimonyLeg`, IC-142), not in this family; the
  * attribution level on the case act (§4) is MK-7's, C-92 (publication's and ratification's).
+ *
+ * WHAT THE FAMILY HOLDS NOW, AND WHERE (T11, legacy-checks, N282; K325). This
+ * catalogue's `TESTIMONY_CHECKS` holds C-53.1–C-53.9 and C-53.13, all minted in
+ * provenance, until that module holds them. C-53.10–C-53.12 are ratification's
+ * (`src/ratification/checks.mjs` RATIFY_TESTIMONY_CHECKS). C-53.14,
+ * REGISTER_BYTES_UNSTATED (a register entry states its size, provenance R50), is
+ * provenance's and was minted in its own table, `REGISTER_ENTRY_CHECKS`
+ * (`src/provenance/checks.mjs`, region `is-register-bytes` in `#registerEntries`),
+ * and never stood here.
  * ===================================================================== */
 /* =====================================================================
  * C-92 — THE ATTRIBUTION ACT AND ITS GATE (MK-7; MEMBER-KNOWLEDGE-DESIGN.md

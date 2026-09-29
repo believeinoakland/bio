@@ -31,12 +31,15 @@
  * reaching a branch the product's own route cannot is a finding about the ROUTE,
  * and it is reported as a DESIGN GAP rather than hidden inside a green arm.
  */
-/* DEAD SINCE T5, FOUND 2026-09-28 (legacy-tests T10): run in a scratch worktree @ 777083f36d, the baseline is AS
-   DECLARED (green) and EVERY one of the seven arms DID NOT ARM (each patch matched 0×). The text index's writer, its
-   bound, its unit-arm set (`CAPTURE_TEXT_UNIT_CONTAINERS`, now `observation-log/index.mjs`, xlsx/ods/csv armed by N134)
-   and the wire's `textUnits` left `store.mjs`/`index.mjs` with EXTRACTION #1 (5637083691, T5-2). Re-deriving each arm
-   onto its new home (and `armsopen`'s declaration onto C3b's HTML container, K332) is N57's sweep of the controls,
-   deferred as at T9; until then this harness reports seven findings and proves nothing. */
+/* DEAD SINCE T5, FOUND 2026-09-28 (legacy-tests T10): every one of the seven arms matched 0× — the text index's
+   writer, bound, unit-arm set and wire left `store.mjs`/`index.mjs` with EXTRACTION #1 (5637083691, T5-2).
+   RE-DERIVED 2026-09-29 (T11, legacy-tests; N298, N57): each arm now patches the line's current home, and each
+   declaration was re-measured there rather than carried. The writer is extraction's `indexUnits` (R22) in
+   `extraction/index.mjs`, with the per-capture bound; the purge declaration is extraction's `EXTRACTION_TABLES`
+   (record-core R21, K23) — and legacy-store's own list names `capture_text` too, filtered out only while extraction
+   owns it, so `nopurge` must take it from BOTH or legacy-store silently re-declares it; the `indexed` observation
+   and `CAPTURE_TEXT_UNIT_CONTAINERS` are observation-log's (R7; xlsx/ods/csv armed by N134, so `armsopen`'s subject
+   is C3b's HTML page, K332); the wire's `textUnits` is extraction's `pipeline.mjs`. */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -57,10 +60,13 @@ const SAFE = controlPen("rec91");
 mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");
-const INDEX = join(PLANE, "src/index.mjs");
+/* N298: the four homes the arms' lines moved to (see the note above). */
+const EXTRACTION = join(PLANE, "src/extraction/index.mjs");
+const PIPELINE = join(PLANE, "src/extraction/pipeline.mjs");
+const OBSLOG = join(PLANE, "src/observation-log/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const MIN_BYTES = 10000;   /* both files are hundreds of KB; a restore over a stub
-                              must fail loudly rather than quietly. */
+const MIN_BYTES = 10000;   /* every subject is tens of KB or more; a restore over a
+                              stub must fail loudly rather than quietly. */
 
 const runSuite = (file) => {
   const r = spawnSync(process.execPath, [file], { cwd: PLANE, encoding: "utf8",
@@ -100,8 +106,9 @@ const ARMS = {
      corpus. This is the queue row's own first control: *the FTS arm dropped from
      purge → the purge scope test names the table*. */
   nopurge: {
-    files: [STORE], suite: SUBJECT,
-    why: "drop `capture_text` from purge's TABLES, so a purged corpus keeps its indexed passages",
+    files: [EXTRACTION, STORE], suite: SUBJECT,
+    why: "drop `capture_text` from purge's declarations (extraction's EXTRACTION_TABLES and legacy-store's list), "
+       + "so a purged corpus keeps its indexed passages",
     /* CORRECTED AFTER THE FIRST RUN, AND THE CORRECTION IS THE MORE USEFUL
        RESULT. This arm was declared to leave rows behind. It does something
        WORSE and the suite could not finish saying so: with `capture_text` out of
@@ -115,7 +122,9 @@ const ARMS = {
        needs: this is not "a purge that leaves rows", it is "a purge that breaks
        the store", and it is the strongest evidence in this set that the SWEEP's
        ordering is load-bearing rather than tidy. */
-    mustFail: ["A7: `capture_text` is in purge's TABLES",
+    /* RE-MEASURED (N298): A7's label follows T3's re-anchor (record-core R21); the arm still corrupts the store
+       (the after-purge promote answers "database disk image is malformed") and fails A7 ×2, A8, E1 and E2. */
+    mustFail: ["A7: `capture_text` is declared to purge",
                "E1: the PER-BUNDLE arm takes that document's units",
                "E2: the WHOLE-STORE arm empties both",
                "THREW"],
@@ -126,7 +135,17 @@ const ARMS = {
     alsoWhy: "hygiene's D-113 census must ALSO go red — it is the check that would have caught "
            + "this at the moment the mistake was made, and a control that only the item's own "
            + "suite can see is a control that does not protect the next item",
-    patch: () => arm(STORE, `                    "capture_text"];`, `                    ];`),
+    /* RE-DERIVED (N298; record-core R21, K23): both declarations, since legacy-store's list re-declares any table
+       extraction stops owning. Each anchor carries its closing punctuation so m025's A4 can read it (a list of
+       names alone is prose to its extractor). */
+    patch: () => {
+      const a = arm(EXTRACTION, `"capture_text", "capture_text_skipped", "capture_text_state"]);`,
+                                `"capture_text_skipped", "capture_text_state"]);`);
+      if (!a.armed) return a;
+      return arm(STORE, `"inquiry_migration_replays", "capture_text",
+      { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },`, `"inquiry_migration_replays",
+      { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },`);
+    },
   },
 
   /* THE CHAIN-MOVE ARM, and it is the one that is INVISIBLE on a first
@@ -136,7 +155,7 @@ const ARMS = {
      replacing it — and the record then answers a search with text the current
      chain never produced. */
   nodelete: {
-    files: [STORE], suite: SUBJECT,
+    files: [EXTRACTION], suite: SUBJECT,
     why: "remove the leading DELETE in the writer, so a chain move ADDS units instead of replacing "
        + "them and the superseded engine's text stays searchable",
     /* CORRECTED AFTER THE FIRST RUN, AND WHAT IT FOUND IS A DEFENCE NOBODY HAD
@@ -158,8 +177,8 @@ const ARMS = {
             + "The suite DIES at the chain-move promote rather than reaching `D2`, because the "
             + "primary key refuses the write; `D2` is therefore NOT in this arm's declared set, "
             + "and the arm that reaches it is `replace`",
-    patch: () => arm(STORE,
-      "    this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);",
+    patch: () => arm(EXTRACTION,
+      "    this.#sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);",
       "    /* ARMED */"),
   },
 
@@ -171,7 +190,7 @@ const ARMS = {
      base table is correct, every count of it is correct, and a search answers
      out of text the record no longer holds. */
   replace: {
-    files: [STORE], suite: SUBJECT,
+    files: [EXTRACTION], suite: SUBJECT,
     why: "write the units with INSERT OR REPLACE and drop the delete — the index entry of every "
        + "superseded row is orphaned and still matches, while the base table looks perfect",
     /* THIS ARM CAME BACK 2/3 ON ITS FIRST RUN AND THE MISSING THIRD WAS A
@@ -188,14 +207,16 @@ const ARMS = {
     mustFail: ["A6: the writer DELETES the capture's rows",
                "D2: A CHAIN MOVE REPLACES THE UNITS AND DOES NOT ADD TO THEM",
                "D2b: and the FTS index moved with it"],
-    mustPass: "every arm about a FIRST promotion, and every count of the BASE table — the whole "
-            + "point of this arm is that the damage is invisible to the base table",
+    /* RE-MEASURED (N298): 9 red, the declared three plus six downstream of the orphans (E0, E1b, A8, E2, E3 over
+       the purges and W2's later chain read) — the orphaned index entries outlive every later write and purge. */
+    mustPass: "every arm about a FIRST promotion (A1-A5, B, C, D1, D1b, D3, D4, G) — the damage "
+            + "is invisible until a chain move",
     patch: () => {
-      const a = arm(STORE,
-        "    this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);",
+      const a = arm(EXTRACTION,
+        "    this.#sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);",
         "    /* ARMED */");
       if (!a.armed) return a;
-      return arm(STORE, "        `INSERT INTO capture_text\n", "        `INSERT OR REPLACE INTO capture_text\n");
+      return arm(EXTRACTION, "        `INSERT INTO capture_text (capture_sha,", "        `INSERT OR REPLACE INTO capture_text (capture_sha,");
     },
   },
 
@@ -205,21 +226,25 @@ const ARMS = {
      *indexed* are one vocabulary in one place. This arm removes the statement
      and leaves the write, so the rows are all there and nothing can say so. */
   noobs: {
-    files: [STORE], suite: SUBJECT,
+    files: [OBSLOG], suite: SUBJECT,
     why: "neuter the `indexed` observation, so the units are written and the record cannot say "
        + "what it holds — which is the sparse rule failing at the one surface that reads absence",
     mustFail: ["C2: the DOCUMENT's content axis says its text is FULLY indexed",
-               "C3: the WORKBOOK says NONE with a REASON",
+               /* RE-MEASURED (N298): N134 armed the workbook (C3 now FULL) and C3b's HTML page carries
+                  the none-with-a-reason answer (K332); both read the observation, so both go red here. */
+               "C3: the WORKBOOK's text is now FULLY indexed",
+               "C3b: a container with NO unit arm (HTML)",
                "D1b: and the capture says its text is fully indexed",
                "D3: a unit over the PER-UNIT cap",
                "D4: a capture whose text did not fit"],
     mustPass: "every ROW-COUNT arm (C1, C1b, D1, D2, D2b, E1, E2, E3) — they read `op=stats` and "
-            + "not the log, which is what separates the OBSERVATION from the WRITE",
-    patch: () => arm(STORE,
-      "  #observeIndexed(bundleId, captureSha, result, { author = null, hadText = false,\n"
-      + "                                                  unitArm = true, armReason = null } = {}) {",
-      "  #observeIndexed(bundleId, captureSha, result, { author = null, hadText = false,\n"
-      + "                                                  unitArm = true, armReason = null } = {}) {\n"
+            + "not the log, which is what separates the OBSERVATION from the WRITE (measured at N298: "
+            + "the other reds, G6-G8b, W2, W3, are all state or sentence reads)",
+    /* RE-DERIVED (N298): the writer is observation-log's public `observeIndexed` (R7); the anchor is the tail of
+       its signature, which ends the one line that opens its body. */
+    patch: () => arm(OBSLOG,
+      "                                                 noTextDetail = null } = {}) {",
+      "                                                 noTextDetail = null } = {}) {\n"
       + "    if (true) return null;   /* ARMED */"),
   },
 
@@ -231,7 +256,7 @@ const ARMS = {
      M-20 measured the size of the gap; this arm measures what happens when the
      record forgets it is a gap. */
   armsopen: {
-    files: [STORE], suite: SUBJECT,
+    files: [OBSLOG], suite: SUBJECT,
     why: "treat every container as having an indexing unit arm, so a workbook reads as a document "
        + "whose producer returned nothing rather than as one this record cannot address",
     /* CORRECTED AFTER THE FIRST RUN, AND THE CORRECTION IS A FINDING ABOUT THE
@@ -248,13 +273,14 @@ const ARMS = {
        than the state. A surface that rendered the state alone would show a
        workbook the record cannot index and a workbook nobody could read as the
        same answer. */
-    mustFail: ["C3b: and the reason NAMES the container"],
-    mustPass: "`C3` — THE STATE DOES NOT MOVE, only the reason, which is the finding this arm "
-            + "recorded rather than the failure it predicted — and every arm about the DOCUMENT "
-            + "and the DECK, which really do have unit arms",
-    patch: () => arm(STORE,
-      `const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);`,
-      `const CAPTURE_TEXT_UNIT_CONTAINERS = { has: () => true };   /* ARMED */`),
+    /* RE-MEASURED (N298; N134, K332): the workbook has a unit arm now, so the container with none is C3b's HTML
+       page. The finding above still holds there: C3b is the ONE red, the state does not move, only the reason. */
+    mustFail: ["C3b: a container with NO unit arm (HTML)"],
+    mustPass: "everything else, `C3` included (the workbook is armed by N134 either way) — the state "
+            + "does not move, only the reason, which is the finding this arm recorded",
+    patch: () => arm(OBSLOG,
+      `export const CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));`,
+      `export const CAPTURE_TEXT_UNIT_CONTAINERS = { has: () => true };   /* ARMED */`),
   },
 
   /* THE OVER-STRICTNESS DIRECTION, ARMED AGAINST THE BOUND RATHER THAN THE
@@ -264,18 +290,22 @@ const ARMS = {
      It is also the only way the store's per-capture branch is reachable at all
      (see this file's header), which is itself the finding. */
   overstrict: {
-    files: [STORE], suite: SUBJECT,
+    files: [EXTRACTION], suite: SUBJECT,
     why: "drop the per-capture bound to 64 B, so an ordinary document is reported as partly "
        + "indexed when the record holds all of it",
+    /* RE-MEASURED (N298): the workbook is armed now (N134), so the bound reaches it and C3 goes red too; D4 stays
+       partial but its sentence no longer names the design's 2 MiB; every count of units written moves with the
+       bound (C1, D1, G5-G8, A7/E1's per-bundle delta, E3's after-purge promote). */
     mustFail: ["C2: the DOCUMENT's content axis says its text is FULLY indexed",
+               "C3: the WORKBOOK's text is now FULLY indexed",
                "D1b: and the capture says its text is fully indexed",
                "D3: a unit over the PER-UNIT cap"],
-    mustPass: "`D4` (the capture that really IS partial stays partial), `C3` (the workbook's "
-            + "no-unit-arm answer is about the CONTAINER and no bound can change it), and every "
-            + "purge and index arm — a bound is not a refusal and must move no refusal",
-    patch: () => arm(STORE,
-      "const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;",
-      "const CAPTURE_TEXT_CAPTURE_BOUND = 64;   /* ARMED */"),
+    mustPass: "every ACQUIRE arm (B), the structural pins (A1-A6), the chain move (D2, D2b), the "
+            + "whole-store purge (E2), the FTS probe (F) and the blank-unit arms (W) — a bound "
+            + "moves what is written, not the wire and not the writer's discipline",
+    patch: () => arm(EXTRACTION,
+      "export const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;",
+      "export const CAPTURE_TEXT_CAPTURE_BOUND = 64;   /* ARMED */"),
   },
 
   /* THE WIRE, NOT THE STORE. Every arm above breaks the store; this one breaks
@@ -285,7 +315,7 @@ const ARMS = {
      one piece of this item that lives in a file three other workers hold regions
      of. */
   nowire: {
-    files: [INDEX], suite: SUBJECT,
+    files: [PIPELINE], suite: SUBJECT,
     why: "stop the acquire answer carrying the units at all, so the producers emit them and "
        + "nothing reaches the store",
     /* THIS ARM KILLED THE SUITE ON ITS FIRST RUN AND THAT WAS THE SUITE'S
@@ -301,13 +331,13 @@ const ARMS = {
                "B2b: and the one slide unit carries BOTH",
                "C1: the units are PERSISTED",
                "C2: the DOCUMENT's content axis says its text is FULLY indexed"],
-    mustPass: "`B3` (the workbook emits nothing either way — which is why the workbook arm alone "
-            + "cannot tell a wire failure from a container with no unit arm, and why this arm and "
-            + "`armsopen` are two arms), and every `pdf-page` arm, which is driven through "
-            + "`op=promote` with an authored document and never touches this wire",
-    patch: () => arm(INDEX,
-      "                textUnits = kept.length ? kept : null;",
-      "                textUnits = null;   /* ARMED */"),
+    /* RE-MEASURED (N298): the workbook emits sheet units now (N134), so B3 and C3 go red with the rest, as do
+       the purge deltas over the docx (A7, E1) and W1/W1b's acquire; the declared set is unchanged. */
+    mustPass: "every `pdf-page` arm, which is driven through `op=promote` with an authored "
+            + "document and never touches this wire (D1-D4, G5-G8b, W2, W3)",
+    patch: () => arm(PIPELINE,
+      "    textUnits = kept.length ? kept : null;",
+      "    textUnits = null;   /* ARMED */"),
   },
 };
 
@@ -356,6 +386,7 @@ for (const name of names) {
     const r2 = runSuite(a.alsoRun);
     alsoOk = a.alsoMustFail ? r2.fail > 0 : r2.fail === 0;
     console.log(`  ALSO       ${a.alsoRun}: ${r2.pass} pass, ${r2.fail} fail — ${alsoOk ? "AS DECLARED" : "NOT AS DECLARED"}`);
+    for (const l of r2.failing) console.log(`             ${l}`);   /* N298: which red, not only how many */
     console.log(`             ${a.alsoWhy}`);
     if (!alsoOk) finding++;
   }

@@ -1,7 +1,7 @@
 /* standards: its invariants (R11–R15). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, BYLAW } from "./fixture.mjs";
+import { seeded, world, V, MACHINE, BYLAW } from "./fixture.mjs";
 import { STANDARDS_CHECKS, STANDARD_KINDS, STANDARDS_TABLES } from "../../../src/standards/index.mjs";
 import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
@@ -136,4 +136,35 @@ test("R15 a standard is a record object of its own type: promoted through promot
   const fix = w.declare({ supersedes: r.id });
   assert.equal(w.fm(fix.id).supersedes, r.id);
   assert.equal(w.record.head(r.id).rowVersion, 1, "the first is never revised");
+});
+
+test("R16 constructing the instance creates every table it declares to purge, so every service and record-core's purge succeed after construction with no caller calling migrate()", () => {
+  const w = world({ construct: false });
+  w.member("bob");
+  w.member("carol");
+  const tables = () => new Set(w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name));
+  for (const t of TABLES) assert.ok(!tables().has(t), `${t} is not there before construction`);
+  const s = w.build();
+  for (const t of STANDARDS_TABLES.map((x) => x.name)) assert.ok(tables().has(t), `${t} exists once constructed`);
+  /* the purge record-core runs over the declared tables succeeds, and so does every service */
+  const empty = w.record.purge({});
+  assert.notEqual(empty.ok, false, JSON.stringify(empty).slice(0, 300));
+  for (const t of TABLES) assert.ok(t in empty.removed, `${t} is purged`);
+  const text = w.passage().contentId;
+  const r = s.standardDeclare({ cite: BYLAW, kind: "ordinance", issuer: "S", text, author: V("bob"), viewer: V("bob") });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(s.standardRead({ id: r.id, viewer: V("carol") }).ok, true);
+  assert.equal(s.inForce(r.id, "2021-01-01").ok, true);
+  assert.equal(s.standardsIn({ viewer: V("carol") }).count, 1);
+  const p = s.standardPropose({ cite: BYLAW, why: "w", proposer: MACHINE });
+  assert.equal(p.ok, true);
+  assert.equal(s.standardAdopt({ proposal: p.proposal.id, author: V("bob"), kind: "ordinance", issuer: "S", text }).ok, true);
+  const one = w.record.purge({ bundleId: r.id });
+  assert.notEqual(one.ok, false);
+  assert.equal(one.removed.standards, 1);
+  assert.notEqual(w.record.purge({}).ok, false);
+  /* the one instance per host: a later call answers it, and an explicit migrate() still changes nothing */
+  assert.equal(w.build(), s);
+  s.migrate();
+  assert.deepEqual([...tables()].filter((t) => TABLES.includes(t)).sort(), [...TABLES].sort());
 });

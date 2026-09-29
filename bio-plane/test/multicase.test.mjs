@@ -244,7 +244,9 @@ t("the new refusal is a DEC-49 ROW carrying its C-number and a canned translatio
   + "copy agrees at zero cost and that has been measured five times",
   [row.check, typeof row.translation === "string" && row.translation.length > 120,
    row.where, store.includes(row.translation)],
-  ["C-44.1", true, "src/case-authoring/index.mjs publishCase > case-identity-derivation", false]);
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T11; N297/N242, case-authoring's T11 job): the region sits in `#publishCase`,
+     not the `publishCase` transaction wrapper, so the `where` names it there and resolves. */
+  ["C-44.1", true, "src/case-authoring/index.mjs #publishCase > case-identity-derivation", false]);
 
 /* THE REGION MARKERS. The guard FAILS if a `where`'s markers are missing,
    unclosed, duplicated, outside the named function or trivially short — a `where`
@@ -278,8 +280,12 @@ t("and its `where` names a REGION rather than the FUNCTION, with exactly one ope
 t("and the code reaches the wire as a STRING LITERAL through a helper named `refusal` — a code held "
   + "in a variable is invisible to the DEC-49 guard, and one shipped `translation: undefined` to a "
   + "member exactly that way",
-  /* case-authoring's helper takes the family first: `refusal(CASE_DERIVATION_CHECKS, "CASE_IDENTITY_AMBIGUOUS", …)`. */
-  [/refusal\(CASE_DERIVATION_CHECKS, "CASE_IDENTITY_AMBIGUOUS"/.test(whereText),
+  /* case-authoring's helper takes the family first: `refusal(CASE_DERIVATION_CHECKS, "CASE_IDENTITY_AMBIGUOUS", …)`.
+     RE-ANCHORED 2026-09-29 (legacy-tests T11; N259, N275): each family now has its own named helper over the one
+     `refusal`, the code its literal first argument (`derivationRefusal("CASE_IDENTITY_AMBIGUOUS", …)`), the shape the
+     guard's arm C reads; the helper is asserted to be exactly that family's over `refusal`. */
+  [/derivationRefusal\("CASE_IDENTITY_AMBIGUOUS"/.test(whereText)
+   && /const derivationRefusal = \(key, extra\) => refusal\(CASE_DERIVATION_CHECKS, key, extra\);/.test(whereText),
    /function refusal\(family, key, extra = \{\}\)/.test(whereText)],
   [true, true]);
 

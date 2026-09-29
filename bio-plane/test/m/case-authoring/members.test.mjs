@@ -190,6 +190,31 @@ test("R13, R23: publishing writes nothing on any finding — each member is pinn
   assert.deepEqual(a2.findings[0].reevaluation.source, "edition");
 });
 
+test("R15: a new member edition above 1 raises through reevaluation, and its answer is carried whole: a listener that fails is named under listeners_failed, never refused on, and the act lands", () => {
+  const w = setup();
+  w.finding(Q, [{ target: DOC }]);
+  const A = w.project("A", "alice", [Q]);
+  const a1 = w.publish(A, "alice", [Q]);
+  assert.equal(a1.ok, true, JSON.stringify(a1).slice(0, 300));
+  assert.equal(a1.findings[0].reevaluation, undefined, "a member's edition 1 raises nothing");
+  w.ratify(a1);
+  assert.equal(w.publication.commitEdition({ bundleId: Q, edition: 1, bundleSha: w.head(Q), title: "q", attestorKey: "k",
+    gateVersion: "1.37.0", sigArmored: "s-q-1", shas: [], edges: [], at: "2026-09-28T02:00:00Z" }).ok, true);
+  const told = [];
+  assert.equal(w.reevaluation.onBasisChanged("queue", () => { throw new Error("listener down"); }).ok, true);
+  assert.equal(w.reevaluation.onBasisChanged("monitoring", (e) => { told.push(e); }).ok, true);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }]);
+  const a2 = w.publish(A, "alice", [Q], { caseId: a1.caseId, statement: "It does not cover the award's amendments.",
+    subjectJustification: "A public record, so the question is whether it was followed.",
+    biasAcknowledgement: "We read the minutes as the account of the meeting, as of this edition.",
+    excluded: [{ description: "the amendments", reason: "requested and not yet held" }] });
+  assert.equal(a2.ok, true, JSON.stringify(a2).slice(0, 300));
+  const r = a2.findings[0].reevaluation;
+  assert.deepEqual([r.source, r.edition, r.listeners_failed], ["edition", 2, ["queue"]]);
+  assert.deepEqual(told.map((e) => [e.kind, e.subject, e.source, e.edition]), [["finding", Q, "edition", 2]]);
+  assert.ok(w.row(`SELECT 1 x FROM case_documents WHERE case_id=? AND edition=2`, a1.caseId), "the document is stored");
+});
+
 test("R24: no answer or document composes a case-level strength: every pair is per member and per axis", () => {
   const w = setup();
   w.finding(Q, [{ target: DOC, grade: "C", grade_axis: "capture", grade_source: "capture" }]);

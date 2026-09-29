@@ -92,7 +92,8 @@ test("R31 pendingClocks lists pending entries dated before `before` across visib
   assert.deepEqual(r.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", past: true }]);
   assert.equal(r.limit, 500); assert.equal(r.truncated, false);
   assert.equal(w.a.pendingClocks({ before: "2026-10-01", viewer: "nobody" }).items.length, 0);
-  assert.equal(w.a.pendingClocks({ before: "soon", viewer: M }).reason, "BAD_DATE");
+  const bad = w.a.pendingClocks({ before: "soon", viewer: M });
+  assert.deepEqual([bad.reason, bad.check], ["PENDING_CLOCKS_BAD_BEFORE", "C-117.5"], "its own code, not C-33.6's");
   const B = "ACTN-2026-0002-b";
   w.action(B, ["clock:", ...CLK("2026-01-01"), ...CLK("2026-01-02")]);
   assert.deepEqual([w.a.pendingClocks({ before: "2026-10-01", limit: 2, viewer: M }).truncated], [true]);
@@ -116,6 +117,12 @@ test("R32 clockPropose computes from the profile's deadline, stored apart and la
   assert.ok(dl.count === "business" ? (p.proposal.entry.date === null || /^\d{4}-\d{2}-\d{2}$/.test(p.proposal.entry.date)) : /^\d{4}/.test(p.proposal.entry.date));
   assert.equal(w.fm(A).clock, undefined, "never written into clock[]");
   assert.equal(P({ rule: "no_such" }).reason, "NO_SUCH_RULE");
+  /* N246: an absent rule has no code of its own; it is answered NO_SUCH_RULE at that code's place (R32's second arm). */
+  for (const rule of [undefined, null, ""]) assert.equal(P({ rule }).reason, "NO_SUCH_RULE");
+  assert.equal(P({ rule: undefined, target: "ACTN-2026-0404-x" }).reason, "NO_SUCH_BUNDLE", "after NO_SUCH_BUNDLE, in order");
+  assert.equal(P({ rule: undefined, target: "" }).reason, "NO_TARGET");
+  const ids = new Set(Object.keys({ ...actions.ACTION_CATALOGUE_CHECKS, ...actions.ACTION_FENCE_CHECKS }));
+  assert.ok(!ids.has("NO_RULE"));
   assert.equal(P({ proposer: "" }).reason, "NO_AUTHOR");
   const cal = actions.actionKinds(null);
   assert.deepEqual(cal, ["records_request", "request_for_comment", "other"]);

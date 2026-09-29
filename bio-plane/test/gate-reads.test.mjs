@@ -1746,6 +1746,14 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "is ABSENT, never a placeholder, with no count of the withheld (`counts` and `truncated` are taken over the rows "
       + "the viewer sees). The viewer is stamped fail-closed in index.mjs (`driveshells`' reason, REC-25). It writes "
       + "nothing.",
+    /* CLASSIFIED 2026-09-29 (legacy-tests T11; K377, LEGACY-INDEX #8 J2, K372): the due slate, routed on monitoring's cut;
+       its reason read off src/monitoring/index.mjs `slate` whole. */
+    monitorslate: "monitoring R30 (K372): the due slate, every monitored address due, open named request and ratified "
+      + "sweep, as quoted data in fixed framing. GATED per bundle: an address is listed only when the viewer sees its "
+      + "bundle (`membership.inSight`), and the gathering files are read through viewerPredicate over `bundles` in SQL, "
+      + "so a request or sweep filed in a project the caller was never invited to is absent, with no count of the "
+      + "withheld (`counts` and `truncated` are over what the viewer sees). The viewer is stamped fail-closed in "
+      + "index.mjs (`monitoring`'s reason). It writes nothing.",
     reevaluationnotices: "reevaluation R14, R20 (N200, K224): the pushed notices, for the queue that renders them. "
       + "GATED twice: a notice whose HOLDER the viewer may not see is withheld whole in SQL (viewerPredicate over "
       + "`bundles`, JOINed on the holder) and not counted; in a visible notice the NEWER version is withheld whole when "
@@ -1996,6 +2004,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "`inForce` joins nothing and takes no viewer, so there is no project row here for a viewer predicate to filter. "
       + "DRIVEN in the T9 section above while carol's hidden project holds a determination measured against it: dave "
       + "and carol are answered identically, naming nothing of the project. It writes nothing.",
+    /* CLASSIFIED 2026-09-29 (legacy-tests T11; K377, LEGACY-INDEX #8 J2, N231): its reason read off
+       src/actions/index.mjs `kinds` and `#view` whole. */
+    actionkinds: "NAMES NO BUNDLE: actions R42 (N231), the action kinds this instance accepts — the product's own and "
+      + "the active jurisdiction profiles' combined view, read from the `jurisdiction_profiles` setting alone. It "
+      + "answers the instance's kinds and names no bundle: no row of the corpus, and no viewer to stamp, so there is "
+      + "nothing a viewer predicate could filter. It writes nothing.",
     memberpairings: "HOLDS NO CORPUS MATERIAL: membership R19's cover-and-handle pairings a member (or an "
       + "administrator) chose to publish (`pairing_published=1`), plus the caller's OWN pairing, and every pairing "
       + "for an administrator, by the server-stamped viewer and administer. It reads the `members` table alone: no "

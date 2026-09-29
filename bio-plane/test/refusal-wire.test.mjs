@@ -487,7 +487,12 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
      ratification's store half for the case gate (`casegate`, R2) and forwards its refusal — `CASE_RATIFY_STALE`, which
      at T7 was minted as a literal in index.mjs, and publication's `caseDocumentFacts` answer (`NO_CASE_DOCUMENT`)
      — neither of which holds a row in any family: the census's, named in the T8 legacy-tests record for ratification. */
-  ["built", "c", "confinement.error", "declared.error", "facts", "gate", "r", "rec",
+  /* CORRECTED 2026-09-29 (legacy-tests T11; K372, K377, LEGACY-INDEX #8), LOOKED AT as this assertion asks, by name:
+     `r.body` ARRIVED — op=monitor (`monitorOp`, `src/monitoring/index.mjs`) now reads the store's answer through the
+     control plane's `doAnswer`, handed in by index.mjs (K372 (c)), as `r = out.result`, and forwards the monitor act's
+     refusal as `{ ok: false, ...r.body }` at the store's own status, the verdict a literal on each branch (D-240). No
+     departure. */
+  ["built", "c", "confinement.error", "declared.error", "facts", "gate", "r", "r.body", "rec",
    "scoped.error", "storeAbsent", "zip"]);
 
 /* ====================================================================== 3

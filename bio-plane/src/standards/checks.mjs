@@ -1,8 +1,9 @@
 /* standards' refusal rows (requirements: `build/requirements/standards.md`). DEC-49: every refusal this module answers
  * carries its code, its row and the member's translation, so a surface shows the same sentence wherever the act is
  * reached. A new module with nothing moved (its map, §1): the rows are its own family, C-112 (K174: a module holds its
- * new family; C-112 assigned by BOB, K248). `NO_ID` has no row: it is the generic code of many reads, row-less under
- * the catalogue's REC-64 rule (K163), and C-112.11 is left unused so no row is renumbered. No translation names a place (R13, `layers.md` rule 1), and none
+ * new family; C-112 assigned by BOB, K248). R5's read naming no standard is refused `STANDARD_NO_ID` through its row,
+ * C-112.11, never codeless (N269, D-495): standards' own condition, so its own code (K275), not the generic `NO_ID`
+ * other modules mint for their own subjects. No translation names a place (R13, `layers.md` rule 1), and none
  * speaks of a standard's merit (R12). */
 
 const at = (fn, region) => `src/standards/index.mjs ${fn} > ${region}`;
@@ -55,6 +56,10 @@ export const STANDARDS_CHECKS = Object.freeze({
   NO_SUCH_STANDARD: {
     check: 'C-112.10', where: at("refuseNoSuchStandard", "is-standard-held"),
     translation: 'No standard answers to that id here. Nothing was written.',
+  },
+  STANDARD_NO_ID: {
+    check: 'C-112.11', where: at("refuseNoId", "is-standard-named"),
+    translation: 'A standard is read by its id, and none was named. Name the standard to read. Nothing was answered.',
   },
   STANDARD_DATE_INVALID: {
     check: 'C-112.12', where: at("refuseDateInvalid", "is-date-readable"),

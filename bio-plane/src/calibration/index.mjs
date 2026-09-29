@@ -1,6 +1,7 @@
 /* calibration — the store half of the calibration construct (requirements: `build/requirements/calibration.md`).
  * CPDF-13 (D-183, D-253). The RULES are `../calibration.mjs`'s (R1–R3) and none of them is restated here; what lives
- * in this file is the storage, the surfaces, and the services `extraction` reaches measurements through (R10–R12).
+ * in this file is the storage, the surfaces, the services `extraction` reaches measurements through (R10–R12), and
+ * the two post-write notices `scheduler` arms through (R18, R19).
  *
  * THE ONE THING TO UNDERSTAND BEFORE READING ANY OF IT: recording a calibration WRITES NOTHING ABOUT A TRANSCRIPTION
  * (R13). `calibrationRecord` writes a calibration row and stamps `replaced_by`/`drift` on the one it replaces — facts
@@ -12,7 +13,7 @@
  * REACHED as `calibrationOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call
  * with `deps` and returned to every later caller. `deps`:
  *   record  record-core, `recordOf(ctx)` unless a test passes its own; its `transact` and `declarePurge` are used.
- *   order   the modules' total order (ids), which `onCalibration` listeners run in: membership's `MODULE_ORDER` (its
+ *   order   the modules' total order (ids), which every listener (R12, R18, R19) runs in: membership's `MODULE_ORDER` (its
  *           R83), the one list every module orders its listeners by, unless a test passes its own. Unknown modules
  *           run last, in the order they registered.
  *   now     the module's clock, milliseconds since the epoch (default: the wall clock). A caller's body never sets it.
@@ -43,6 +44,8 @@ const nonEmpty = (v) => typeof v === "string" && v.trim().length > 0;
 class Calibration {
   #sql; #record; #order; #now;
   #listeners = [];        // R12: {module, fn, seq}, kept in the modules' order
+  #subjectListeners = []; // R18: the same shape
+  #signalListeners = [];  // R19: the same shape
 
   constructor({ sql, record, order, now } = {}) {
     this.#sql = sql;
@@ -127,12 +130,34 @@ class Calibration {
    *  the same transaction, in the modules' order, and returns a list of obligations, or `{obligations, truncated}`.
    *  A malformed or repeated registration is refused through membership's `listenerRefusal` (its R81; N202), the one
    *  site of `LISTENER_MALFORMED` and `LISTENER_DECLARED`. */
-  onCalibration(module, fn) {
-    const refused = listenerRefusal(this.#listeners, module, fn);
+  onCalibration(module, fn) { return this.#register(this.#listeners, module, fn); }
+
+  /** R18 (N223): a later module's listener, called once after each successful `calibrationSubjectRegister` with
+   *  `{engine, probe_id, next_probe}`, in the modules' order (`scheduler` registers its `arm`). Refused as R12. */
+  onSubjectRegistered(module, fn) { return this.#register(this.#subjectListeners, module, fn); }
+
+  /** R19 (N223): a later module's listener, called once after each signal `calibrationSignalRecord` records with
+   *  `{engine, next_probe}`, in the modules' order (`scheduler` registers its `arm`). Refused as R12. */
+  onSignalRecorded(module, fn) { return this.#register(this.#signalListeners, module, fn); }
+
+  /* One registration into one slot: membership's `listenerRefusal` first (its R81, the one site of its two codes),
+     then kept in the modules' total order, a module outside it after every one in it, in registration order. */
+  #register(held, module, fn) {
+    const refused = listenerRefusal(held, module, fn);
     if (refused) return refused;
-    this.#listeners.push({ module, fn, seq: this.#listeners.length });
-    this.#listeners.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    held.push({ module, fn, seq: held.length });
+    held.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
+  }
+
+  /* R18, R19: the post-write notices. Told after the write has stood, each listener once, in the modules' order, and
+     each with its own copy of the notice, so nothing it does reaches the write, its answer or another listener: one
+     that throws or rejects is isolated here (retrieval R52's pattern). A listener's answer is not read. */
+  async #notify(held, notice) {
+    for (const l of held) {
+      const copy = JSON.parse(JSON.stringify(notice));
+      try { await l.fn(copy); } catch { /* isolated */ }
+    }
   }
 
   /* ---------------------------------------------------------------- R4, R5: recording a measurement */
@@ -271,7 +296,7 @@ class Calibration {
    *  enforced three ways: `checkSignal` refuses a signal shaped like a measurement; `nextProbeDue` takes the minimum
    *  against the cadence's own instant; and nothing anywhere reads a signal when computing a cap, a grade or a
    *  drift verdict. ABSENCE OF AN ANNOUNCEMENT IS NOT EVIDENCE OF NO CHANGE. */
-  calibrationSignalRecord(pkg = {}) {
+  async calibrationSignalRecord(pkg = {}) {
     const p = pkg && typeof pkg === "object" && !Array.isArray(pkg) ? pkg : {};
     const now = this.#now();
     const sig = { engine: p.engine, source: p.source,
@@ -296,9 +321,12 @@ class Calibration {
     const subject = this.#one(
       `SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
          FROM calibration_subjects WHERE engine=?`, sig.engine);
+    const next = subject ? this.#nextProbe(subject, now) : null;
+    /* R19: the signal is recorded; now its listeners (the scheduler's `arm`) are told. */
+    await this.#notify(this.#signalListeners, { engine: sig.engine, next_probe: next });
     return { ok: true, signal_id: id, engine: sig.engine, source: sig.source,
              observed_at: observed, probe_by_ms: by,
-             next_probe: subject ? this.#nextProbe(subject, now) : null,
+             next_probe: next,
              armed: !!subject,
              changed_grades: 0, stood_in_for_probe: false,
              why: `recorded that ${sig.source} announced something about ${sig.engine}. An announcement may only `
@@ -314,7 +342,7 @@ class Calibration {
    *  calibration, because the engine that most needs calibrating is one nothing has ever measured, and that state
    *  must be registrable and visible. A never-probed subject is due immediately (`nextProbeDue`'s `never-probed`
    *  branch). REGISTERING IS NOT MEASURING: this writes no cap, no score, nothing a grade could rest on. */
-  calibrationSubjectRegister(pkg = {}) {
+  async calibrationSubjectRegister(pkg = {}) {
     const p = pkg && typeof pkg === "object" && !Array.isArray(pkg) ? pkg : {};
     const now = this.#now();
     const engine = typeof p.engine === "string" ? p.engine.trim() : "";
@@ -340,9 +368,12 @@ class Calibration {
     const s = this.#one(
       `SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
          FROM calibration_subjects WHERE engine=?`, engine);
+    const next = this.#nextProbe(s, now);
+    /* R18: the subject is registered; now its listeners (the scheduler's `arm`) are told. */
+    await this.#notify(this.#subjectListeners, { engine, probe_id: probeId, next_probe: next });
     return { ok: true, engine, probe_id: probeId, enabled: !!enabled,
              cadence_ms: CALIBRATION_CADENCE_MS, cadence: cadenceSentence(),
-             next_probe: this.#nextProbe(s, now),
+             next_probe: next,
              measured: false,
              why: `${engine} is registered for calibration in this instance. Registering is not measuring: no `
                 + `fidelity is claimed for it and nothing rests on it until a probe runs. ${s.last_probe_ms == null

@@ -22,6 +22,12 @@
  * rather than smoothed. A surprising green is a finding about the arm.
  *
  *     node bio-plane/test/nc-rec64.mjs
+ *
+ * RE-ANCHORED, NOT RUN, 2026-09-29 (T11, legacy-tests; N298, N57): arms 1 and 2 follow their lines to
+ * basis-versions and ai-runs (see `P`); every arm's mutation was shown to change its file, with every restore
+ * byte-identical, in a scratch worktree with the subjects stubbed. The harness was NOT run as declared: its
+ * baseline requires the DEC-49 guard GREEN, and the guard is red on other modules' sites (N279, K317: a control
+ * is not re-declared against a red baseline). It runs when the guard does.
  */
 import fs from "fs";
 import path from "path";
@@ -33,9 +39,13 @@ import { controlPen } from "./pen.mjs";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, "..", "..");
 const P = {
-  store:   path.join(ROOT, "bio-plane", "src", "store.mjs"),
   catalog: path.join(ROOT, "bio-plane", "checks", "bio-checks.mjs"),
   guard:   path.join(ROOT, "civicos-ui", "check-refusal-codes.mjs"),
+  /* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): `conclude` (region is-conclude-answer, C-33.1-2) is
+     basis-versions' now (its row's `where`: `src/basis-versions/index.mjs conclude > is-conclude-answer`), and the
+     run-open door's AI_RUN_CAPABILITY_UNAVAILABLE refusal is ai-runs' (`AI_RUN_ACT_SHAPE_CHECKS`, K182 (3)). */
+  basisv:  path.join(ROOT, "bio-plane", "src", "basis-versions", "index.mjs"),
+  airuns:  path.join(ROOT, "bio-plane", "src", "ai-runs", "index.mjs"),
 };
 const PRISTINE = controlPen("rec64");
 
@@ -122,14 +132,14 @@ arm({
   + "WHY THIS IS THE SHARP ONE: DEC-49 licenses a surface to render an AUTHORED translation only\n"
   + "  because an untranslated code FAILS THE HARNESS rather than reaching a member. If this arm\n"
   + "  comes back green, the ruling is unsafe and the whole item is decoration.",
-  file: "store",
+  file: "basisv",
   mutate: (src) => src.replace(
-    '    if (!concl)\n      return { ok: false, reason: "NO_CONCLUSION",',
+    '    if (!concl && !pid)\n      return { ok: false, reason: "NO_CONCLUSION",',
     '    if (concl === "nc-rec64") return { ok: false, reason: "NC_REC64_UNTRANSLATED" };\n'
-  + '    if (!concl)\n      return { ok: false, reason: "NO_CONCLUSION",'),
+  + '    if (!concl && !pid)\n      return { ok: false, reason: "NO_CONCLUSION",'),
   expect: () => {
     const g = runGuard();
-    const names = /NC_REC64_UNTRANSLATED/.test(g.out) && /store\.mjs:\d+/.test(g.out)
+    const names = /NC_REC64_UNTRANSLATED/.test(g.out) && /basis-versions\/index\.mjs:\d+/.test(g.out)
                && /in conclude/.test(g.out) && /is-conclude-answer/.test(g.out);
     return { ok: g.exit !== 0 && names,
              summary: `guard exit ${g.exit}; names the planted code ${names ? "WITH" : "WITHOUT"} `
@@ -150,9 +160,9 @@ arm({
   + "MECHANISM: strip `translation:` from the run-open door's refusal, leaving the code. The code\n"
   + "  is still RECEIVED; the sentence is not. That is exactly the half DEC-8 forbids a surface\n"
   + "  from supplying for itself.",
-  file: "store",
+  file: "airuns",
   mutate: (src) => src.replace(
-    "               translation: ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.translation,\n", ""),
+    "               translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.translation,\n", ""),
   expect: () => {
     const s = runSuite();
     const c2 = /FAIL\s+ARM C2:[^\n]*DEC-8/.test(s.out);

@@ -263,7 +263,25 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    moving the stamp for arrivals and changed checks. The d470 census, of the catalogue file only, is unmoved: 397,
    sha256 e1c688c5…, behaviour source 9927c1ad… (its own print on this tree), so its 1.40.0 row, legacy-tests', names
    `changed: ["C-105.8", "C-105.9"]` to stand apart from 1.39.0's (A4). */
-export const CATALOG_VERSION = "1.40.0";
+/* 1.41.0 (PROMOTION #11, T11 layer 2, 2026-09-28; N281, K343, K233's pattern): THREE ARRIVALS, THREE DEPARTURES, TWO
+   CHANGED, counted wherever the rows live (R34, R47). After 1.40.0 was minted (97cb7a30d2), T10's jobs moved these, and
+   nothing re-stamped them. ARRIVED: C-53.14 REGISTER_BYTES_UNSTATED, provenance's `REGISTER_ENTRY_CHECKS` (its R50,
+   N263); C-91.4 NO_SUCH_ENTITY, entities' `ENTITY_CHECKS` (its R36, N208); C-107.2 BAD_GRADE, strength's
+   `STRENGTH_BAR_CHECKS` (N208, K275). DEPARTED, their ids retired: progressions' C-100.1 NO_KEY (answered now as the
+   catalogue's generic code, with no row, K329), C-100.12 NO_SUCH_ENTITY (gives way to C-91.4) and C-100.23
+   LISTENER_DECLARED (membership's `listenerRefusal`, its R81). CHANGED: C-22.17 AI_LOG_NEVER_LOOKED_STORED is now what
+   observation-log's `checkObservation` answers a stored never-looked look, which C-22.1 answered until T10 (N118), so
+   C-22.1 now refuses one condition and both changed. MOVED, NOT CHANGED: C-81.11–C-81.14 are held once, in the
+   catalogue's `THEME_CHECKS`, and connections' second copy became a view of them (N125); C-22.7 stays in the
+   catalogue until ai-runs holds its own copy (K350, N299), code, condition and translation unmoved. Wording only, what is refused or admitted unmoved: the `where`s of
+   C-26.11, C-30.7, C-30.8, C-100.9, C-100.11, C-100.13–C-100.15, C-100.17, C-100.18 and inquiry's C-106 rows; the
+   comments of C-22 and C-53 (N282, N286); and C-102.9, whose finding `caseCatalogueFailed` now builds the case gate's
+   whole answer (N275), the same answer as before. MINOR, rule 17 moving the stamp for arrivals, departures and changed
+   checks. The d470 census, of the catalogue file only, is unmoved (every arrival and departure is in a module's own
+   table): 397, sha256 e1c688c5…, behaviour source 9927c1ad… (its own print on this tree after K350's restore), so its
+   1.41.0 row, legacy-tests', names `changed: ["C-22.1", "C-22.17"]` to stand apart from 1.40.0's (A4); A3 and A5 are
+   that re-pin's. */
+export const CATALOG_VERSION = "1.41.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -376,12 +394,16 @@ const te = new TextEncoder();
    itself — its BODY (C-3.1's section followed the block into it) and each member's `basis` at the
    PINNED bytes (C-2.8's testimony-row and per-ground arms read it). Omitting `memberBasis` BLINDS
    those two arms rather than softening them; the store supplies it with the rest of the facts. */
-/* R33, N254: the one finding the case gate makes of its own, CASE_CATALOGUE_FAILED (C-102.9), when the catalogue it
-   runs threw `e` or answered no list of findings: it has judged nothing, so the document is not passed. */
+/* R33, N254, N275: the one refusal the case gate makes of its own, CASE_CATALOGUE_FAILED (C-102.9), when the catalogue
+   it runs threw `e` or answered no list of findings: it has judged nothing, so the document is not passed. It builds
+   the gate's whole answer, R29's shape with its verdict `ok: false` at the top, so the region C-102.9's `where` names
+   holds the refusal's verdict (the DEC-49 guard's arm C reads it there). */
 function caseCatalogueFailed(e) {
-  return { check: "CASE_CATALOGUE_FAILED", severity: "error",
-           message: `the case-document catalogue could not judge this document, so it is not passed: `
-                  + String(e && e.message ? e.message : e).slice(0, 200) };
+  return { gateVersion: GATE_VERSION, ok: false,
+           findings: [{ check: "CASE_CATALOGUE_FAILED",
+                        detail: `the case-document catalogue could not judge this document, so it is not passed: `
+                              + String(e && e.message ? e.message : e).slice(0, 200) }],
+           warnings: 0 };
 }
 
 /* R33, R47: `catalogue` is the case-document catalogue promotion runs, the one a later module registered with the
@@ -395,7 +417,7 @@ export function runCaseGate({ caseId, edition, fm, priorCase, body = null, membe
     if (!Array.isArray(findings) || !findings.every((x) => x && typeof x === "object"))
       throw new Error("the catalogue answered no list of findings");
   } catch (e) {
-    findings = [caseCatalogueFailed(e)];
+    return caseCatalogueFailed(e);
   }
   const errors = findings
     .filter((x) => x.severity === "error")

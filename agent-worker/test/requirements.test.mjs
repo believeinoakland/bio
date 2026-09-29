@@ -1,6 +1,6 @@
 /* agent-worker — ITS REQUIREMENTS, ONE BY ONE, AT ITS INTERFACE (`build/requirements/agent-worker.md`).
  *
- * Every live id R1–R48 is named by a test here, in its title, and each test checks the whole requirement. The
+ * Every live id R1–R49 is named by a test here, in its title, and each test checks the whole requirement. The
  * member is driven through `POST /run` and `GET /version` inside workerd, over a real service binding to a plane
  * mock, with its one other egress — the model API (R40, R41) — answered by a scripted model mock that
  * miniflare's `outboundService` puts behind every global `fetch`. The pure exports the requirements name
@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   CONTROL_FLOW, FIRST_STEP, LEVELS, MODES, REPORTING_LEVEL, PLANE_OPS, JUDGEABLE, NOT_JUDGEABLE, BUDGET_BOUNDS,
-  nextStep, stopBecause, applyJudgement, runContextTarget, stepLog,
+  nextStep, stopBecause, applyJudgement, runContextTarget, stepLog, publishableState, stateBytes, resumableState,
 } from "../src/harness.mjs";
 import {
   REPORT_KEYS, REPORT_STATES, SUMMARY_MAX, ADDRESS_MAX, CITATIONS_MAX, REPORT_MAX_BYTES, SPAWN_KEYS,
@@ -37,6 +37,7 @@ import { captureRequestBranch } from "./plane-capturerequest.mjs";
 
 /* THE PLANE'S OWN VOCABULARIES AND THE SKILL PACK, from their modules (uses: ai-runs, skills, legacy-checks). */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_ENDINGS, RUN_BOUNDS, runStatusFor } from "../../bio-plane/src/airun.mjs";
+import * as AI_RUNS from "../../bio-plane/src/airun.mjs";
 import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
 import * as HARNESS from "../src/harness.mjs";
 import { renderPack } from "../../bio-plane/src/skillpack.mjs";
@@ -164,6 +165,13 @@ export default {
     }
     if (op === "airuntick") {
       if (S.status !== "running") return Response.json({ ok: true, result: { ticked: false, status: S.status } });
+      /* ai-runs R45 (N293), when the arm names the ceiling: a larger state refuses the whole tick, nothing written. */
+      if (CFG.stateMax && body && body.state != null) {
+        const bytes = new TextEncoder().encode(JSON.stringify(body.state)).length;
+        if (bytes > CFG.stateMax)
+          return Response.json({ ok: true, result: { ok: false, code: "AI_RUN_STATE_TOO_LARGE", reason: "AI_RUN_STATE_TOO_LARGE",
+                                                     check: "C-22.18", bytes, limit: CFG.stateMax } });
+      }
       /* observation-log R3, as the plane's \`checkObservation\` applies it to a member's entry: NEVER_LOOKED and an
          absent state are refused, per entry, the rest appended. */
       let appended = 0; const refused = [];
@@ -880,6 +888,62 @@ section("R26 · an entry the plane refuses is in log_refused and refusals, and n
   t("R26: the refused entry is named with its step in log_refused and in refusals; logged stays 0",
     [r.out.log_refused?.map((x) => [x.step, x.code, x.check]), (r.out.refusals || []).filter((x) => x.at === "airuntick.log").length, r.out.logged],
     [[["plan", "AI_RUN_CONDITION_UNKNOWN", "C-22.4"]], 1, 0]);
+}
+
+section("R49 · the state a tick publishes stays within ai-runs' AI_RUN_STATE_MAX_BYTES; its refusal is a refusal");
+{
+  /* The figure ai-runs R45 provides; the member reads the name from ai-runs' own file (below), never this number. */
+  const LIMIT = 262144;
+  const big = (n, ch = "x") => Array.from({ length: n }, (_, i) =>
+    ({ kind: "basis-version", name: `c${i}`, description: ch.repeat(4000) }));
+  const small = { step: "submit", pass: 1, queue: [{ name: "a" }], candidates: [{ name: "a" }] };
+  const fits = publishableState(small, LIMIT);
+  t("R49: a state within the ceiling is published whole, measured as the UTF-8 length of its JSON",
+    [fits.state, fits.bytes, fits.restarted], [resumableState(small), new TextEncoder().encode(JSON.stringify(resumableState(small))).length, null]);
+  const over = { step: "submit", pass: 2, candidates: big(70), queue: big(70), reports: [{ level: "meaning" }],
+                 submission: { name: "c0" }, adjusted: true };
+  const cut = publishableState(over, LIMIT);
+  t("R49: a state over the ceiling is published as its pass restarted at plan: the pass kept, every working field null",
+    [cut.state, cut.restarted?.at, cut.restarted?.limit, cut.restarted?.bytes > LIMIT, cut.bytes <= LIMIT],
+    [resumableState({ step: "plan", pass: 2, adjusted: false }), "plan", LIMIT, true, true]);
+  t("R49: next-pass and close keep their own step when restarted",
+    ["next-pass", "close", "fanout", "adjust"].map((step) => publishableState({ ...over, step }, LIMIT).state.step),
+    ["next-pass", "close", "plan", "plan"]);
+  const wide2 = { step: "dedup", pass: 0, candidates: big(40, "é") };
+  t("R49: the measure is UTF-8 bytes, not characters: a state under the ceiling in characters and over it in bytes is cut",
+    [JSON.stringify(resumableState(wide2)).length <= LIMIT, stateBytes(resumableState(wide2)) > LIMIT,
+     publishableState(wide2, LIMIT).restarted?.at], [true, true, "plan"]);
+  t("R49: with no ceiling published, the state is published whole",
+    [undefined, 0, -1].map((l) => publishableState(over, l).restarted), [null, null, null]);
+
+  /* THROUGH THE OP, at the plane's ceiling: a mock that refuses as ai-runs R45 does receives no state it refuses. */
+  const CEILING = AI_RUNS.AI_RUN_STATE_MAX_BYTES;
+  {
+    t("R49: the ceiling the member applies is ai-runs' own, the figure its R45 provides", CEILING, LIMIT);
+    await reset(mf, { target: "INQ-R49", stateMax: CEILING });
+    const r = await runOp(mf, { ...base, judgements: [{ targets: [] }, { reports: [] }, { candidates: big(80) }, {}] });
+    const st = await planeState(mf);
+    const states = st.log.filter((l) => l.op === "airuntick" && l.body?.state).map((l) => l.body.state);
+    t("R49: through the op, no tick carried a state over the ceiling and none was refused for it; the run completed",
+      [states.every((x) => stateBytes(x) <= CEILING), (r.out.refusals || []).filter((x) => x.code === "AI_RUN_STATE_TOO_LARGE").length,
+       r.out.ended?.bound], [true, 0, "completed"]);
+    t("R49: the tick whose state would not fit published the pass restarted at plan, and the step's trace says so",
+      [states.some((x) => x.step === "plan" && x.candidates === null && x.queue === null),
+       (r.out.trace || []).some((x) => /ai-runs R45/.test(x.note ?? ""))], [true, true]);
+  }
+
+  /* A tick refused AI_RUN_STATE_TOO_LARGE is a refusal, recorded, and never the plane failing. */
+  const refusedTick = { ok: true, result: { ok: false, code: "AI_RUN_STATE_TOO_LARGE", reason: "AI_RUN_STATE_TOO_LARGE",
+                                            check: "C-22.18", bytes: 300000, limit: LIMIT } };
+  await reset(mf, { refuse_op: { airuntick: { body: refusedTick } } });
+  const r = await runOp(mf, { ...base, judgements: J() });
+  const at = (r.out.refusals || []).filter((x) => x.at === "airuntick");
+  t("R49: a tick refused AI_RUN_STATE_TOO_LARGE is in refusals at airuntick with its code, its check and the plane's body",
+    [at.length, at.length === (r.out.trace || []).length, [...new Set(at.map((x) => `${x.code} ${x.check}`))],
+     JSON.stringify(at[0]?.plane) === JSON.stringify(refusedTick)],
+    [(r.out.trace || []).length, true, ["AI_RUN_STATE_TOO_LARGE C-22.18"], true]);
+  t("R49: …and never read as a failure of the plane: 200, no PLANE_SILENT or PLANE_REFUSED, the table still closes the run",
+    [r.status, r.out.ok, r.out.ended, r.out.logged], [200, true, { bound: "completed", by: "the table" }, 0]);
 }
 
 section("R27 · close: op=airunclose names the bound; ended only when the plane accepted; max_steps");

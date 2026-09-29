@@ -39,7 +39,7 @@
  * (its R48). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf, REOPENABLE_FROM } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES } from "../content/index.mjs";
@@ -47,7 +47,7 @@ import { inquiryOf, legCapped } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { strengthOf, GRADE_RANK } from "../strength/index.mjs";
 import { normalizeType, parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX, sha256HexSync,
-         VERSION_NAME_RE, GROUND_LABEL_RE } from "../../checks/bio-checks.mjs";
+         VERSION_NAME_RE, GROUND_LABEL_RE, canonicalExtent } from "../../checks/bio-checks.mjs";
 import { checkReevalPending, REEVAL_SOURCES, VERSION_NOTICE_SUBJECT_CHECKS, REEVALUATION_ACT_CHECKS,
          rowOf } from "./checks.mjs";
 import { REEVALUATION_TABLES, migrateReevaluation } from "./schema.mjs";
@@ -84,12 +84,18 @@ export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred
   ...REEVAL_SOURCES, "weakened"]);
 /** R14: the grades a notice is raised on (content R31's `affects`); A and B read `unaffected` and never raise one. */
 const RAISED_ON = Object.freeze(["affected", "undetermined"]);
+/** R26: the sweep cursor's mark once it stands in the case half (`case:<case id>`); `case:` alone is its start. */
+export const CASE_CURSOR = "case:";
+/* R26: a cited part is graded whole, as a leg on a whole document is (content R46's `document` extent). */
+const DOCUMENT_EXTENT = canonicalExtent({ kind: "document" });
 /** R17: the axes whose frozen and derived letters are compared. */
 const PAIR_AXES = Object.freeze(["capture", "connection", "testimony"]);
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const MACHINE_ADMIN = `${MACHINE_CLASS_PREFIX}admin`;
 const UNSTORABLE = /["\\\n\r]/;
+/* R26 (K365): a pinned capture is a whole sha-256, as publication R41 answers it. */
+const SHA256_HEX = /^[0-9a-fA-F]{64}$/;
 const asList = (v) => {
   if (Array.isArray(v)) return v.map((x) => String(x ?? "").trim()).filter(Boolean);
   if (typeof v === "string") return v.split(",").map((x) => x.trim()).filter(Boolean);
@@ -108,6 +114,7 @@ function notLater(since, recorded) {
 export class Reevaluation {
   #deps;
   #listeners = [];     // R8: {module, fn}, in registration order
+  #caseParts = null;   // R26: {module, parts, cases}, publication's, one registration
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, content = null,
                 connections = null, provenance = null, strength = null, basisVersions = null, now = null,
@@ -513,11 +520,23 @@ export class Reevaluation {
   /** R8: a later module's listener, registered once at start, told of every R7 raise and every R14 notice raised,
    *  after the act commits. A second registration by one module is `LISTENER_DECLARED`. */
   onBasisChanged(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    /* Both refusals are minted at membership's one site (its R81; K231). */
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
     this.#listeners.push({ module, fn });
+    return { ok: true, module };
+  }
+
+  /** R26 (N210): the one registration of a case edition's cited parts (publication R41): `parts({case, edition?})`
+   *  answers `{case, edition, project, parts: [{bundle_id, capture_sha}]}` (K365), and `cases({after, limit})` the cases with a
+   *  ratified edition, `{cases, cursor}`, which the sweep's case half pages through (a case is no bundle, so only its
+   *  holder can list them). Both refusals are membership's (its R81): a registration missing either function is
+   *  malformed; a second, by any module, is declared. */
+  registerCaseParts(module, fns) {
+    const ok = !!fns && typeof fns === "object" && typeof fns.parts === "function" && typeof fns.cases === "function";
+    const refused = listenerRefusal(this.#caseParts, module, ok ? fns.parts : null);
+    if (refused) return refused;
+    this.#caseParts = { module, parts: fns.parts, cases: fns.cases };
     return { ok: true, module };
   }
 
@@ -733,15 +752,17 @@ export class Reevaluation {
    *  R8's listeners are told of each notice raised, after the sweep's writes commit. */
   raiseNotices({ limit = null, after = null } = {}) {
     const cap = clamp(limit, NOTICE_SWEEP_DEFAULT, NOTICE_SWEEP_MAX);
-    const m = /^(.*)#(\d+)$/.exec(String(after ?? ""));
+    const aft = String(after ?? "");
+    const inCases = aft.startsWith(CASE_CURSOR);
+    const m = inCases ? null : /^(.*)#(\d+)$/.exec(aft);
     const [aHolder, aOrd] = m ? [m[1], Number(m[2])] : ["", -1];
-    const page = this.#rows(
+    const page = inCases ? [] : this.#rows(
       `SELECT ib.bundle_id AS holder, ib.ord AS ord, ib.target_id AS target_id, ib.content_id AS content_id
          FROM inquiry_basis ib
         WHERE ib.content_id IS NOT NULL AND ib.content_id <> ''
           AND (ib.bundle_id > ? OR (ib.bundle_id = ? AND ib.ord > ?))
         ORDER BY ib.bundle_id, ib.ord LIMIT ?`, aHolder, aHolder, aOrd, cap + 1);
-    const truncated = page.length > cap;
+    let truncated = page.length > cap;
     const legs = page.slice(0, cap);
     const holders = [...new Set(legs.map((l) => l.holder))];
     const divided = new Set(holders.length
@@ -754,6 +775,8 @@ export class Reevaluation {
                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length)
       : []).map((r) => [r.content_id, r]));
     const memo = new Map(), noticeMemo = new Map();
+    /* R26: the case half runs once the legs are read to their end, with what is left of this batch's limit. */
+    const cases = truncated ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
     const when = this.#when();
     const raised = [];
     let examined = 0, unread = 0;
@@ -783,31 +806,121 @@ export class Reevaluation {
                         affects: c.affects });
         }
       }
+      for (const p of cases ? cases.parts : []) {
+        examined++;
+        const n = p.notice;
+        if (!n || n.state === "chain_unread") { unread++; continue; }
+        for (const c of n.candidates || []) {
+          if (!RAISED_ON.includes(c.affects)) continue;
+          const id = `RC-${sha256HexSync(`${p.case}\u0000${p.part}\u0000${p.capture_sha}\u0000${c.capture_sha}`).slice(0, 24)}`;
+          if (this.#one(`SELECT 1 AS x FROM reevaluation_case_notices WHERE notice_id=?`, id)) continue;
+          this.sql.exec(
+            `INSERT INTO reevaluation_case_notices (notice_id, case_id, edition, project, ord, part, capture_sha,
+                                                    newer_capture, newer_bundle, grade, affects, owners, raised_at, state)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, 'open')`,
+            id, p.case, p.edition, p.project, p.ord, p.part, p.capture_sha, c.capture_sha,
+            c.bundle_id ?? null, c.grade ?? null, c.affects, JSON.stringify(p.owners), when);
+          raised.push({ notice: id, kind: "case", case: p.case, edition: p.edition, project: p.project, ord: p.ord,
+                        part: p.part, capture_sha: p.capture_sha, newer_capture: c.capture_sha,
+                        grade: c.grade ?? null, affects: c.affects, owners: p.owners });
+        }
+      }
       return null;
     });
     const failed = new Set();
-    for (const r of raised)
-      for (const mod of this.#tell({ kind: "passage", subject: r.content_id, source: "newer_capture", since: when,
-                                     detail: `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades `
-                                           + `this passage ${r.grade ?? "undetermined"} (${r.affects})`,
-                                     dependents: [{ bundle_id: r.holder, ord: r.ord }],
-                                     captures: { cited: r.capture_sha, newer: r.newer_capture },
-                                     grade: r.grade, affects: r.affects, notice: r.notice }))
-        failed.add(mod);
+    for (const r of raised) {
+      const told = r.kind === "case"
+        ? { kind: "passage", subject: r.part, source: "newer_capture", since: when,
+            detail: `a newer capture of ${r.part} (${r.newer_capture.slice(0, 12)}), cited by case ${r.case}, grades it `
+                  + `${r.grade ?? "undetermined"} (${r.affects})`,
+            dependents: [], case: { case: r.case, edition: r.edition, project: r.project, owners: r.owners },
+            captures: { cited: r.capture_sha, newer: r.newer_capture }, grade: r.grade, affects: r.affects, notice: r.notice }
+        : { kind: "passage", subject: r.content_id, source: "newer_capture", since: when,
+            detail: `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades `
+                  + `this passage ${r.grade ?? "undetermined"} (${r.affects})`,
+            dependents: [{ bundle_id: r.holder, ord: r.ord }],
+            captures: { cited: r.capture_sha, newer: r.newer_capture },
+            grade: r.grade, affects: r.affects, notice: r.notice };
+      for (const mod of this.#tell(told)) failed.add(mod);
+    }
     const last = legs.length ? legs[legs.length - 1] : null;
-    return { ok: true, examined, chain_unread: unread, raised, count: raised.length, limit: cap, truncated,
-             cursor: truncated && last ? `${last.holder}#${last.ord}` : null,
+    let cursor = truncated && last ? `${last.holder}#${last.ord}` : null;
+    if (cases && cases.cursor !== null) { truncated = true; cursor = `${CASE_CURSOR}${cases.cursor}`; }
+    return { ok: true, examined, chain_unread: unread, raised, count: raised.length, limit: cap, truncated, cursor,
              ...(failed.size ? { listeners_failed: [...failed] } : {}),
-             says: "a notice is raised once per question, leg and newer capture, only where the newer version affects "
-                 + "the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a "
-                 + "reference" };
+             ...(cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the "
+               + "cited parts of a case edition, so no case's owners were told of a newer version of what it cites; "
+               + "that is not the same as none" } : {}),
+             says: "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer "
+                 + "capture to that case's owners, only where the newer version affects the passage or whether it does is "
+                 + "undetermined; nothing was moved, and only a member's act moves a reference" };
+  }
+
+  /* R26: R14's case half for one batch: the ratified cases after `afterCase`, one counting one toward `budget`, each
+     cited part graded at the capture the edition pinned (its `capture_sha`, K365). Reads only; the caller writes. `cursor` is the last case read when more
+     may follow (`""` when the budget is spent before the first), else null; `absent` when nothing is registered. */
+  #caseHalf(afterCase, budget, memo) {
+    const reg = this.#caseParts;
+    if (!reg) return { absent: true, parts: [], cursor: null };
+    if (budget <= 0) return { parts: [], cursor: afterCase };
+    let list = null;
+    try { list = reg.cases({ after: afterCase, limit: budget }); } catch { list = null; }
+    const ids = (list && Array.isArray(list.cases) ? list.cases : []).filter((c) => typeof c === "string" && c)
+      .slice(0, budget);
+    const parts = [];
+    for (const caseId of ids) {
+      let a = null;
+      try { a = reg.parts({ case: caseId }); } catch { a = null; }
+      if (!a || a.ok === false || !Array.isArray(a.parts)) continue;
+      const project = str(a.project);
+      let owners = [];
+      try { owners = project ? this.membership.projectOwners(project) || [] : []; } catch { owners = []; }
+      a.parts.forEach((p, ord) => {
+        const part = p ? str(p.bundle_id) : null;
+        const capture = p && typeof p.capture_sha === "string" && SHA256_HEX.test(p.capture_sha.trim())
+          ? p.capture_sha.trim().toLowerCase() : null;
+        if (!part || !capture) return;
+        parts.push({ case: caseId, edition: Number.isInteger(a.edition) ? a.edition : null, project, owners, ord,
+                     part, capture_sha: capture, notice: this.#gradeWhole(part, capture, memo) });
+      });
+    }
+    /* A full page may have more after it; a short one is the end. */
+    return { parts, cursor: ids.length === budget ? ids[ids.length - 1] : null };
+  }
+
+  /* R26: content's notice for the whole of one capture of a part, as the record holds it (a machine viewer). */
+  #gradeWhole(part, capture, memo) {
+    const row = { content_id: null, capture_sha: capture, bundle_id: part, extent_kind: "document",
+                  extent: DOCUMENT_EXTENT, ref: null, cited_as: null };
+    try { return this.content.noticeForRow(row, MACHINE_ADMIN, memo); } catch { return null; }
   }
 
   #noticeView(r) {
-    return { notice: r.notice_id, holder: r.holder, ord: r.ord, content_id: r.content_id, target: r.target_id,
-             capture_sha: r.capture_sha, newer_capture: r.newer_capture, newer_bundle: r.newer_bundle,
+    return { notice: r.notice_id, kind: r.kind, holder: r.holder, ord: r.ord, content_id: r.content_id,
+             target: r.target_id, capture_sha: r.capture_sha, newer_capture: r.newer_capture, newer_bundle: r.newer_bundle,
              grade: r.grade, affects: r.affects, raised_at: r.raised_at, state: r.state,
-             closed_by: r.closed_by, closed_at: r.closed_at, why: r.why, adopted_version: r.adopted_version };
+             closed_by: r.closed_by, closed_at: r.closed_at, why: r.why, adopted_version: r.adopted_version,
+             ...(r.kind === "case" ? { case: { case: r.holder, edition: r.edition, project: r.project,
+                                               part: r.target_id } } : {}) };
+  }
+
+  /* R14, R26: the two kinds of notice as one listing. A leg notice is seen through its holder; a case notice only by
+     the owners it told (and a machine credential, which is not filtered), so nobody else is told. */
+  #noticeRows(g, where, args, tail, tailArgs) {
+    const seeAll = g.scope === "member" ? 1 : 0;
+    return this.#rows(
+      `SELECT * FROM (
+         SELECT 'leg' AS kind, n.notice_id, n.holder, n.ord, n.content_id, n.target_id, n.capture_sha, n.newer_capture,
+                n.newer_bundle, n.grade, n.affects, n.raised_at, n.state, n.closed_by, n.closed_at, n.why,
+                n.adopted_version, NULL AS edition, NULL AS project
+           FROM reevaluation_notices n JOIN bundles b ON b.bundle_id = n.holder WHERE (${g.sql})
+         UNION ALL
+         SELECT 'case' AS kind, c.notice_id, c.case_id, c.ord, NULL, c.part, c.capture_sha, c.newer_capture,
+                c.newer_bundle, c.grade, c.affects, c.raised_at, c.state, c.closed_by, c.closed_at, c.why,
+                NULL, c.edition, c.project
+           FROM reevaluation_case_notices c
+          WHERE ? = 1 OR EXISTS (SELECT 1 FROM json_each(c.owners) o WHERE o.value = ?)
+       ) WHERE ${where} ${tail}`, ...g.args, seeAll, g.member ?? null, ...args, ...tailArgs);
   }
 
   /* R14 (N200): whether the viewer sees a capture, by the gate `versionChain` reads it through (provenance R17): some
@@ -836,10 +949,8 @@ export class Reevaluation {
     const h = str(holder);
     const st = ["open", "adopted", "kept", "all"].includes(state) ? state : "open";
     const g = viewerPredicate(viewer);
-    const rows = this.#rows(
-      `SELECT n.* FROM reevaluation_notices n JOIN bundles b ON b.bundle_id = n.holder
-        WHERE (${g.sql}) AND (? IS NULL OR n.holder = ?) AND (? = 'all' OR n.state = ?) AND n.notice_id > ?
-        ORDER BY n.notice_id LIMIT ?`, ...g.args, h, h, st, st, String(after ?? ""), cap + 1);
+    const rows = this.#noticeRows(g, `(? IS NULL OR holder = ?) AND (? = 'all' OR state = ?) AND notice_id > ?`,
+      [h, h, st, st, String(after ?? "")], `ORDER BY notice_id LIMIT ?`, [cap + 1]);
     const visible = this.#redactor(viewer);
     const seesCapture = this.#captureSeer(viewer);
     const list = rows.slice(0, cap).map((r) => ({ ...this.#noticeView(r), newer_bundle: visible(r.newer_bundle),
@@ -906,7 +1017,7 @@ export class Reevaluation {
     if (!this.#sweepPending(row)) return { pending: false };
     const ms = Number(now);
     const began = row.pass_began !== null ? row.pass_began
-      : Number.isFinite(ms) ? new Date(ms).toISOString().replace(/\.\d+Z$/, "Z") : this.#when();
+      : Number.isFinite(ms) ? stampInstant("second", ms) : this.#when();
     const pass = row.pass_began !== null ? { began, seq: row.pass_seq ?? 0, after: row.cursor }
       : { began, seq: Number(row.receipt_seq) || 0, after: null };
     const batch = this.raiseNotices({ after: pass.after });
@@ -935,8 +1046,10 @@ export class Reevaluation {
       return { refusal: this.#refuse(machineCode,
         who ? `'${who.slice(0, 60)}' is a machine identity.` : "no member is named as the one choosing.") };
     const id = String(notice ?? "").trim();
-    const r = id ? this.#one(`SELECT * FROM reevaluation_notices WHERE notice_id=?`, id) : null;
-    if (!r || !this.#visible(r.holder, viewer))
+    /* R26: a case notice answers only to the owners it told; any other viewer reads it as absent. */
+    const r = !id ? null
+      : this.#noticeRows(viewerPredicate(viewer), `notice_id = ?`, [id], `LIMIT 1`, [])[0] ?? null;
+    if (!r)
       return { refusal: this.#refuse("VERSION_NOTICE_NOT_FOUND",
         `no notice by the id '${id.slice(0, 60)}' is readable here.`, { notice: id || null }) };
     if (r.state !== "open")
@@ -955,6 +1068,11 @@ export class Reevaluation {
     const s = this.#choiceSubject("MACHINE_CANNOT_ADOPT_VERSION", notice, author, viewer);
     if (s.refusal) return s.refusal;
     const { who, r } = s;
+    if (r.kind === "case")
+      return this.#refuse("VERSION_ADOPT_UNWRITABLE",
+        `${r.notice_id} is about a part case ${r.holder} cites at its pin; a case edition keeps the bytes it was signed `
+        + `over, and resting a case on the newer version is a new edition, which is the case's authors' act. `
+        + `Nothing was written.`, { notice: r.notice_id });
     const fm = this.#frontmatterOf(r.holder);
     const legs = this.#basisFrontmatter(fm);
     const leg = legs[r.ord];
@@ -1067,12 +1185,14 @@ export class Reevaluation {
         `the reason is ${text.length} characters (at most ${NOTE_MAX}), or holds a quote, backslash or line break.`,
         { notice: r.notice_id, limit: NOTE_MAX });
     const when = this.#when();
-    this.sql.exec(`UPDATE reevaluation_notices SET state='kept', closed_by=?, closed_at=?, why=?
-                    WHERE notice_id=? AND state='open'`, who, when, text, r.notice_id);
+    this.sql.exec(`UPDATE ${r.kind === "case" ? "reevaluation_case_notices" : "reevaluation_notices"}
+                      SET state='kept', closed_by=?, closed_at=?, why=? WHERE notice_id=? AND state='open'`,
+                  who, when, text, r.notice_id);
     return { ok: true, notice: r.notice_id, holder: r.holder, ord: r.ord, act: "kept", author: who, at: when,
              why: text, capture_sha: r.capture_sha, newer_capture: r.newer_capture,
-             says: `${r.holder}'s leg ${r.ord} stays on the earlier version (${r.capture_sha.slice(0, 12)}); the newer `
-                 + `capture (${r.newer_capture.slice(0, 12)}) will not raise this notice again` };
+             says: `${r.kind === "case" ? `case ${r.holder}'s cited part ${r.target_id}` : `${r.holder}'s leg ${r.ord}`} `
+                 + `stays on the earlier version (${r.capture_sha.slice(0, 12)}); the newer capture `
+                 + `(${r.newer_capture.slice(0, 12)}) will not raise this notice again` };
   }
 
   /* ---------------------------------------------------------------- R16: a recorded re-evaluation */
@@ -1163,9 +1283,10 @@ export function reevaluationOf(host, deps) {
     instances.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
-    /* R7: a deferral, a division and a re-read, through inquiry's registration (its R42): it answers the dependents. */
+    /* R7, R8: a deferral, a division and a re-read, through inquiry's registration (its R42): it answers `raise`'s answer
+       whole, so R8's `listeners_failed` reaches the act's reply (N292). */
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) =>
-      r.raise({ target, source: cause, since, viewer }).raised);
+      r.raise({ target, source: cause, since, viewer }));
     /* R7: a reopening, through promotion's (its R46): the answer joins reopen's reply under this module's id. */
     promotion.onReopened("reevaluation", ({ target, at, viewer }) => r.raise({ target, source: "reopened", since: at, viewer }));
     promotion.registerStep("reevaluation", { check: (c) => r.check(c) });

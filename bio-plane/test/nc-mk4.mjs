@@ -72,10 +72,12 @@ const NO_LEG_REFUSAL = [CHECKS, "    if (v && LEAD_ID_RE.test(v)) {\n      findi
 /* THE LIAR: a lead that is merely an unlabelled observation — its id shape made
    CITABLE (a bundle-id prefix, typed as information). With C-54.1 also gone,
    nothing names it and nothing stops it: a lead lands as a basis leg. */
-const LIAR_RE = [CHECKS, "export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS)-",
-                         "export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|LEAD)-"];
-const LIAR_TYPE = [CHECKS, "PROJ: 'project', ACTN: 'action', BIAS: 'bias' };",
-                           "PROJ: 'project', ACTN: 'action', BIAS: 'bias', LEAD: 'information' };"];
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): the id grammar and the type table gained the six new
+   object types (STD, CONF, CONS, ESC, ASP, GOAL; N241/K283), so the liar appends LEAD after the last of them. */
+const LIAR_RE = [CHECKS, "export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-",
+                         "export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL|LEAD)-"];
+const LIAR_TYPE = [CHECKS, "ASP: 'aspiration', GOAL: 'goal' };",
+                           "ASP: 'aspiration', GOAL: 'goal', LEAD: 'information' };"];
 
 const ARMS = {
   baseline: {

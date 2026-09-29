@@ -72,10 +72,10 @@ test("R4: the id is minted from the highest suffix ever used, never a count", ()
   assert.equal(rec(c).calibration_id, "CAL-42", "CAL-41 is higher than CAL-9 though it sorts lower as text");
 });
 
-test("R4: the engine's subject is registered or updated with this probe as its last, and its pending signals consumed", () => {
+test("R4: the engine's subject is registered or updated with this probe as its last, and its pending signals consumed", async () => {
   const { c, rows, clock } = fresh();
-  c.calibrationSignalRecord({ engine: "pdfjs", source: "notes", probe_by_ms: T0 + 3 * DAY });
-  c.calibrationSignalRecord({ engine: "tesseract", source: "notes" });
+  await c.calibrationSignalRecord({ engine: "pdfjs", source: "notes", probe_by_ms: T0 + 3 * DAY });
+  await c.calibrationSignalRecord({ engine: "tesseract", source: "notes" });
   clock.t = T0 + 5 * DAY;
   rec(c, { probe_id: "P-7" });
   const subj = rows(`SELECT * FROM calibration_subjects WHERE engine='pdfjs'`)[0];
@@ -83,7 +83,7 @@ test("R4: the engine's subject is registered or updated with this probe as its l
   assert.equal(subj.probe_id, "P-7"); assert.equal(subj.version, "4.0"); assert.equal(subj.enabled, 1);
   assert.deepEqual(rows(`SELECT engine, consumed_at FROM calibration_signals ORDER BY engine`).map((r) => ({ ...r })),
     [{ engine: "pdfjs", consumed_at: "2026-09-01T00:00:00Z" }, { engine: "tesseract", consumed_at: null }]);
-  c.calibrationSubjectRegister({ engine: "ocr", probe_id: "P-2", enabled: false });
+  await c.calibrationSubjectRegister({ engine: "ocr", probe_id: "P-2", enabled: false });
   clock.t = T0 + 6 * DAY;
   rec(c, { engine: "ocr", version: "5", probe_id: "P-3" });
   const o = rows(`SELECT * FROM calibration_subjects WHERE engine='ocr'`)[0];
@@ -176,13 +176,13 @@ test("R6 R15: the default limit is 200, cut by reading one more", () => {
   assert.equal(r.calibrations[0].calibration_id, "CAL-201");
 });
 
-test("R6 R3 R15: calibrations names the enabled subjects with each one's next probe over its unconsumed signals, and the cadence", () => {
+test("R6 R3 R15: calibrations names the enabled subjects with each one's next probe over its unconsumed signals, and the cadence", async () => {
   const { c, clock } = fresh();
-  c.calibrationSubjectRegister({ engine: "never", probe_id: "P-0" });
-  c.calibrationSubjectRegister({ engine: "off", probe_id: "P-0", enabled: false });
+  await c.calibrationSubjectRegister({ engine: "never", probe_id: "P-0" });
+  await c.calibrationSubjectRegister({ engine: "off", probe_id: "P-0", enabled: false });
   rec(c, { engine: "pdfjs" });
   clock.t = T0 + DAY;
-  c.calibrationSignalRecord({ engine: "pdfjs", source: "notes", probe_by_ms: T0 + 4 * DAY });
+  await c.calibrationSignalRecord({ engine: "pdfjs", source: "notes", probe_by_ms: T0 + 4 * DAY });
   const r = c.calibrations();
   assert.equal(r.cadence_ms, CALIBRATION_CADENCE_MS);
   assert.match(r.cadence, /30 day/);
@@ -203,52 +203,52 @@ test("R6 R3 R15: calibrations names the enabled subjects with each one's next pr
 
 /* ------------------------------------------------------------------ R7 */
 
-test("R7 R13: calibrationSignalRecord records an accepted signal and answers the subject's next probe, changing no grade", () => {
+test("R7 R13: calibrationSignalRecord records an accepted signal and answers the subject's next probe, changing no grade", async () => {
   const { s, c, clock, rows } = fresh();
-  const none = c.calibrationSignalRecord({ engine: "pdfjs", source: "vendor blog" });
+  const none = await c.calibrationSignalRecord({ engine: "pdfjs", source: "vendor blog" });
   assert.equal(none.ok, true);
   assert.equal(none.next_probe, null, "no subject registered for the engine");
   assert.equal(none.changed_grades, 0); assert.equal(none.stood_in_for_probe, false);
   rec(c);
   const cals = dump(s, ["calibrations"]);
   clock.t = T0 + DAY;
-  const r = c.calibrationSignalRecord({ engine: "pdfjs", source: "changelog", probe_by_ms: T0 + 3 * DAY, detail: "v4.1" });
+  const r = await c.calibrationSignalRecord({ engine: "pdfjs", source: "changelog", probe_by_ms: T0 + 3 * DAY, detail: "v4.1" });
   assert.equal(r.ok, true);
   assert.equal(r.next_probe.at, T0 + 3 * DAY);
   assert.equal(r.changed_grades, 0); assert.equal(r.stood_in_for_probe, false);
-  const later = c.calibrationSignalRecord({ engine: "pdfjs", source: "changelog", probe_by_ms: T0 + 99 * DAY });
+  const later = await c.calibrationSignalRecord({ engine: "pdfjs", source: "changelog", probe_by_ms: T0 + 99 * DAY });
   assert.equal(later.next_probe.at, T0 + 3 * DAY, "a later signal pushes nothing out");
-  const now = c.calibrationSignalRecord({ engine: "pdfjs", source: "changelog" });
+  const now = await c.calibrationSignalRecord({ engine: "pdfjs", source: "changelog" });
   assert.equal(now.probe_by_ms, T0 + DAY, "no instant asks for now");
   assert.equal(now.next_probe.at, T0 + DAY);
   assert.equal(rows(`SELECT COUNT(*) AS n FROM calibration_signals`)[0].n, 4, "same-millisecond signals are each kept");
   assert.deepEqual(dump(s, ["calibrations"]), cals, "a signal changes no calibration");
 });
 
-test("R7 R3 R14: a signal R3 refuses is refused with its row and writes nothing", () => {
+test("R7 R3 R14: a signal R3 refuses is refused with its row and writes nothing", async () => {
   const { s, c } = fresh();
   const before = dump(s);
-  refused(c.calibrationSignalRecord({ engine: "pdfjs" }), "CAL_SIGNAL_SHAPE");
-  refused(c.calibrationSignalRecord(null), "CAL_SIGNAL_SHAPE");
-  refused(c.calibrationSignalRecord({ engine: "pdfjs", source: "x", cap: "A" }), "CAL_SIGNAL_CLAIMS_MEASUREMENT");
-  refused(c.calibrationSignalRecord({ engine: "pdfjs", source: "x", scores: { cer: 0 } }), "CAL_SIGNAL_CLAIMS_MEASUREMENT");
+  refused(await c.calibrationSignalRecord({ engine: "pdfjs" }), "CAL_SIGNAL_SHAPE");
+  refused(await c.calibrationSignalRecord(null), "CAL_SIGNAL_SHAPE");
+  refused(await c.calibrationSignalRecord({ engine: "pdfjs", source: "x", cap: "A" }), "CAL_SIGNAL_CLAIMS_MEASUREMENT");
+  refused(await c.calibrationSignalRecord({ engine: "pdfjs", source: "x", scores: { cer: 0 } }), "CAL_SIGNAL_CLAIMS_MEASUREMENT");
   assert.deepEqual(dump(s), before);
 });
 
 /* ------------------------------------------------------------------ R8 */
 
-test("R8 R14: calibrationSubjectRegister needs an engine (CAL_SUBJECT_UNNAMED, C-42.9) and a probe (CAL_SUBJECT_NO_PROBE, C-42.10)", () => {
+test("R8 R14: calibrationSubjectRegister needs an engine (CAL_SUBJECT_UNNAMED, C-42.9) and a probe (CAL_SUBJECT_NO_PROBE, C-42.10)", async () => {
   const { s, c } = fresh();
   const before = dump(s);
-  for (const e of [undefined, "", "  ", 5]) refused(c.calibrationSubjectRegister({ engine: e, probe_id: "P" }), "CAL_SUBJECT_UNNAMED");
-  for (const p of [undefined, "", " ", {}]) refused(c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: p }), "CAL_SUBJECT_NO_PROBE");
-  refused(c.calibrationSubjectRegister(), "CAL_SUBJECT_UNNAMED");
+  for (const e of [undefined, "", "  ", 5]) refused(await c.calibrationSubjectRegister({ engine: e, probe_id: "P" }), "CAL_SUBJECT_UNNAMED");
+  for (const p of [undefined, "", " ", {}]) refused(await c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: p }), "CAL_SUBJECT_NO_PROBE");
+  refused(await c.calibrationSubjectRegister(), "CAL_SUBJECT_UNNAMED");
   assert.deepEqual(dump(s), before);
 });
 
-test("R8 R13: registering claims no fidelity, and a never-probed subject is due at once", () => {
+test("R8 R13: registering claims no fidelity, and a never-probed subject is due at once", async () => {
   const { s, c, rows } = fresh();
-  const r = c.calibrationSubjectRegister({ engine: " pdfjs ", probe_id: " P-1 ", version: "4.0" });
+  const r = await c.calibrationSubjectRegister({ engine: " pdfjs ", probe_id: " P-1 ", version: "4.0" });
   assert.equal(r.ok, true);
   assert.equal(r.engine, "pdfjs"); assert.equal(r.probe_id, "P-1");
   assert.equal(r.measured, false);
@@ -258,16 +258,16 @@ test("R8 R13: registering claims no fidelity, and a never-probed subject is due 
   assert.deepEqual(dump(s, ["calibrations", "calibration_signals", ...OTHERS]),
                    dump(storage(), ["calibrations", "calibration_signals", ...OTHERS]), "no measurement written");
   assert.equal(rows(`SELECT last_probe_ms FROM calibration_subjects`)[0].last_probe_ms, null);
-  assert.equal(c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P-1", enabled: false }).enabled, false);
+  assert.equal((await c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P-1", enabled: false })).enabled, false);
 });
 
 /* ------------------------------------------------------------------ R9 */
 
-test("R9: calibrationDue counts the subjects due, calibrationWake is null with none enabled, else the earliest", () => {
+test("R9: calibrationDue counts the subjects due, calibrationWake is null with none enabled, else the earliest", async () => {
   const { c, clock } = fresh();
   assert.equal(c.calibrationDue(T0), 0);
   assert.equal(c.calibrationWake(T0, 250), null);
-  c.calibrationSubjectRegister({ engine: "off", probe_id: "P", enabled: false });
+  await c.calibrationSubjectRegister({ engine: "off", probe_id: "P", enabled: false });
   assert.equal(c.calibrationWake(T0, 250), null, "a disabled subject holds no alarm");
   assert.equal(c.calibrationDue(T0), 0);
   rec(c, { engine: "a" });
@@ -275,9 +275,9 @@ test("R9: calibrationDue counts the subjects due, calibrationWake is null with n
   const now = T0 + 3 * DAY;
   assert.equal(c.calibrationDue(now), 0);
   assert.equal(c.calibrationWake(now, 250), T0 + CALIBRATION_CADENCE_MS, "the earliest next probe");
-  c.calibrationSignalRecord({ engine: "b", source: "notes", probe_by_ms: T0 + 10 * DAY });
+  await c.calibrationSignalRecord({ engine: "b", source: "notes", probe_by_ms: T0 + 10 * DAY });
   assert.equal(c.calibrationWake(now, 250), T0 + 10 * DAY);
-  c.calibrationSubjectRegister({ engine: "never", probe_id: "P" });
+  await c.calibrationSubjectRegister({ engine: "never", probe_id: "P" });
   assert.equal(c.calibrationDue(now), 1);
   assert.equal(c.calibrationWake(now, 250), now + 250, "a past probe moves to now plus the caller's grace");
   assert.equal(c.calibrationWake(now), now, "no grace given is none");
@@ -286,10 +286,10 @@ test("R9: calibrationDue counts the subjects due, calibrationWake is null with n
   assert.equal(c.calibrationDue(T0 + 30 * DAY), 3, "a's cadence is due");
 });
 
-test("R9 R13: calibrationTick lists the due subjects and runs no probe and writes no calibration", () => {
+test("R9 R13: calibrationTick lists the due subjects and runs no probe and writes no calibration", async () => {
   const { s, c, clock } = fresh();
   rec(c, { engine: "a" });
-  c.calibrationSubjectRegister({ engine: "never", probe_id: "P-9" });
+  await c.calibrationSubjectRegister({ engine: "never", probe_id: "P-9" });
   const before = dump(s);
   const quiet = c.calibrationTick(T0 + DAY);
   assert.deepEqual(quiet.subjects.map((x) => x.engine), ["never"]);
@@ -440,11 +440,11 @@ test("R12: with no order given, listeners run in membership's MODULE_ORDER, unkn
   assert.deepEqual(seen, [...late.slice().reverse(), "unlisted-b", "unlisted-a"]);
 });
 
-test("R12 R4: a listener that throws, or answers anything but a list, fails the whole record", () => {
+test("R12 R4: a listener that throws, or answers anything but a list, fails the whole record", async () => {
   for (const bad of [() => { throw new Error("boom"); }, () => ({ not: "a list" }), () => Promise.resolve([]),
                      () => ({ obligations: "x", truncated: true }), () => ({ obligations: [], truncated: "yes" }), () => 7]) {
     const { s, c, clock } = fresh();
-    c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" });
+    await c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" });
     rec(c, { cap: "A" });
     let calls = 0;
     c.onCalibration("extraction", (...a) => { calls++; return bad(...a); });
@@ -458,12 +458,12 @@ test("R12 R4: a listener that throws, or answers anything but a list, fails the 
 
 /* ------------------------------------------------------------------ R13, R15, R16, R17 */
 
-test("R13: no service here writes a reading, a chain or a grade, and a signal stands in for no probe", () => {
+test("R13: no service here writes a reading, a chain or a grade, and a signal stands in for no probe", async () => {
   const { s, c, clock } = fresh({ order: [] });
   c.onCalibration("extraction", () => []);
   const before = dump(s, OTHERS);
-  c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P-1" });
-  const sig = c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" });
+  await c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P-1" });
+  const sig = await c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" });
   assert.equal(sig.stood_in_for_probe, false);
   assert.equal(c.calibrations().calibrations.length, 0, "a signal is not a calibration");
   assert.equal(c.liveCalibration({ engine: "pdfjs", version: "4.0" }), null);
@@ -482,11 +482,11 @@ test("R15: every list read answers its limit and whether it was cut", () => {
   assert.equal(typeof c.calibrationTick(T0).truncated, "boolean");
 });
 
-test("R16: the three tables are declared to purge as exempt, and purge in either form leaves them whole", () => {
+test("R16: the three tables are declared to purge as exempt, and purge in either form leaves them whole", async () => {
   const { s, c, clock } = fresh();
   rec(c); clock.t += DAY; rec(c, { cap: "D", at: "2026-09-02" });
-  c.calibrationSubjectRegister({ engine: "x", probe_id: "P" });
-  c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" });
+  await c.calibrationSubjectRegister({ engine: "x", probe_id: "P" });
+  await c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" });
   const before = dump(s, CAL_TABLES);
   const rc = recordOf({ storage: s });
   const all = rc.purge();
@@ -501,18 +501,18 @@ test("R16: the three tables are declared to purge as exempt, and purge in either
   assert.equal(rec(c, { at: "2026-09-03" }).calibration_id, "CAL-3", "no id is reissued across a purge");
 });
 
-test("R17: no place is named in this module's outward text", () => {
+test("R17: no place is named in this module's outward text", async () => {
   const PLACES = /oakland|alameda|california|berkeley|legistar|granicus|san francisco|county|city council/i;
   const { c, clock } = fresh();
   c.onCalibration("extraction", () => []);
   const texts = [];
   const walk = (v) => { if (typeof v === "string") texts.push(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); };
   walk(CALIBRATION_CHECKS);
-  walk(c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P" }));
-  walk(c.calibrationSubjectRegister({}));
-  walk(c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" }));
-  walk(c.calibrationSignalRecord({ engine: "nobody", source: "notes" }));
-  walk(c.calibrationSignalRecord({ engine: "pdfjs", source: "n", cap: "A" }));
+  walk(await c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P" }));
+  walk(await c.calibrationSubjectRegister({}));
+  walk(await c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" }));
+  walk(await c.calibrationSignalRecord({ engine: "nobody", source: "notes" }));
+  walk(await c.calibrationSignalRecord({ engine: "pdfjs", source: "n", cap: "A" }));
   walk(rec(c, { cap: "A" })); clock.t += DAY; walk(rec(c, { cap: "C", at: "2026-09-02" }));
   clock.t += DAY; walk(rec(c, { cap: "A", at: "2026-09-03" })); walk(rec(c, { engine: "t", cap: null }));
   walk(rec(c, { regrade: true })); walk(rec(c, {}, {}));

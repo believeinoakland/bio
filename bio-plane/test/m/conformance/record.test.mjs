@@ -48,7 +48,36 @@ test("R12 R18: a proposal naming an outcome anywhere is refused PROPOSAL_CANNOT_
   const hidden = w.project("Hidden", "olive");
   refused(w.c.comparisonPropose({ ...base, project: hidden, proposer: V("quinn"), viewer: V("quinn") }), "NO_SUCH_PROJECT");
   refused(w.c.comparisonPropose({ ...base, project: "PROJ-2026-9999-none" }), "NO_SUCH_PROJECT");
-  refused(w.c.comparisonPropose({ ...base, rows: Array(LIMITS.rows + 1).fill(input().rows[0]) }), "DETERMINATION_TOO_LARGE");
+  /* R18: a comparison carries at most what a determination carries, each part named with its cap; at the bound, accepted */
+  const over = { standards: Array(LIMITS.standards + 1).fill(std), rows: Array(LIMITS.rows + 1).fill(input().rows[0]),
+                 questions: Array(LIMITS.questions + 1).fill({ question: "Q?" }),
+                 act: { ...input().act, evidence: Array(LIMITS.evidence + 1).fill(input().act.evidence[0]) } };
+  for (const [part, v] of Object.entries(over)) {
+    const r = nothing(w, () => w.c.comparisonPropose({ ...base, [part]: v }));
+    refused(r, "DETERMINATION_TOO_LARGE");
+    const named = part === "act" ? "evidence" : part;
+    assert.deepEqual([r.part, r.max, r.count], [named, LIMITS[named], LIMITS[named] + 1]);
+  }
+  const at = { standards: Array(LIMITS.standards).fill(std), rows: Array(LIMITS.rows).fill(input().rows[0]),
+               questions: Array(LIMITS.questions).fill({ question: "Q?" }),
+               act: { ...input().act, evidence: Array(LIMITS.evidence).fill(input().act.evidence[0]) } };
+  assert.equal(w.c.comparisonPropose({ ...base, ...at }).ok, true);
+});
+
+test("R8 R12: no comparison answer carries a significance, severity, priority, urgency, rank or score, nor an outcome", () => {
+  const { w, proj, std, input } = scene();
+  const p = w.c.comparisonPropose({ project: proj, act: input().act, standards: [std], rows: input().rows,
+                                    questions: [{ question: "Q?" }], proposer: MACHINE, viewer: MACHINE });
+  const d = w.c.determine(input({ proposal: p.proposal.id }));
+  const walk = (v) => Array.isArray(v) ? v.forEach(walk) : v && typeof v === "object"
+    ? Object.entries(v).forEach(([k, x]) => {
+      assert.equal(SIGNIFICANCE_KEYS.includes(k.toLowerCase()), false, k);
+      assert.equal(["outcome", "outcomes", "verdict"].includes(k.toLowerCase()), false, k);
+      walk(x);
+    }) : null;
+  walk(p);
+  walk(w.c.comparisonRead({ id: p.proposal.id, viewer: V("pat") }));
+  assert.equal(d.proposal, p.proposal.id);
 });
 
 test("R12 R18: a determination may name the proposal it drew on, and the proposal records that; a proposal absent or of another project is refused", () => {

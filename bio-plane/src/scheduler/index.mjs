@@ -315,7 +315,7 @@ export class Scheduler {
 
   /** Registers `arm` with each notice an earlier producer offers (K72 (9), K206). Each listener only schedules.
    *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. */
-  listenTo({ retrieval, bias, promotion, capture, progressions } = {}) {
+  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests } = {}) {
     const arm = () => this.arm();
     const configured = () => {
       if (!this.#owners.monitoring) return false;
@@ -331,6 +331,14 @@ export class Scheduler {
     if (capture) out.capture = capture.on("source-outcome", "scheduler",   /* capture R44 */
       async (o) => (o && o.counted && o.outcome !== "success" && configured() ? await arm() : null));
     if (progressions) out.progressions = progressions.onThreaded("scheduler", () => arm());   /* progressions R33 */
+    /* N223: each of these acts creates its consumer's work, so each arms outright; the reconcile reads the owner's
+       wake (the re-probe's, the reaper's, the drain's). */
+    if (calibration) {
+      out.calibrationSubject = calibration.onSubjectRegistered("scheduler", () => arm());   /* calibration R18 */
+      out.calibrationSignal = calibration.onSignalRecorded("scheduler", () => arm());       /* calibration R19 */
+    }
+    if (aiRuns) out.aiRuns = aiRuns.onRunOpened("scheduler", () => arm());                     /* ai-runs R43 */
+    if (captureRequests) out.captureRequests = captureRequests.onRequestFiled("scheduler", () => arm());   /* capture-requests R44 */
     return out;
   }
 }
@@ -351,7 +359,8 @@ export function schedulerOf(ctx, env = null, deps = {}) {
     instances.set(ctx, s);
     if (!deps.owners)
       s.listenTo({ retrieval: retrievalOf(ctx), bias: biasOf(ctx), promotion: promotionOf(ctx), capture: captureOf(ctx),
-                   progressions: progressionsOf(ctx, { env: e }) });
+                   progressions: progressionsOf(ctx, { env: e }), calibration: calibrationOf(ctx), aiRuns: aiRunsOf(ctx, e),
+                   captureRequests: captureRequestsOf(ctx) });
   }
   return s;
 }

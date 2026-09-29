@@ -113,3 +113,22 @@ test("R2: escalationresume, graded `reversible` (K264), is taken back by a publi
   assert.equal(w.esc.escalationResume({ id: w.E, ...who }).ok, true);
   assert.equal(state(), "open");
 });
+
+/* N310 (with conformance's N233): `determine`, graded `reasoned`, driven at conformance's interface over its fixture's
+   scene (a published finding and a standard in force). A first determination replaces nothing and asks no reason
+   (K212); a supersession, which revises what stands, is refused without its reason and accepted with one. */
+import { scene as confScene } from "../conformance/fixture.mjs";
+
+test("R19: determine, graded `reasoned` (N310), superseding a determination without its reason is refused with a code "
+   + "in JUSTIFICATION_REFUSALS, and with one it is accepted; a first determination, which replaces nothing, asks none", () => {
+  assert.equal(RUNGS.determine, "reasoned");
+  const { w, input } = confScene();
+  const first = w.c.determine(input());
+  assert.equal(first.ok, true, JSON.stringify(first).slice(0, 300));
+  for (const reason of NO_WHY) {
+    const r = w.c.determine(input({ supersedes: first.id, reason }));
+    assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason), `${JSON.stringify(reason)}: ${JSON.stringify(r).slice(0, 200)}`);
+  }
+  const next = w.c.determine(input({ supersedes: first.id, reason: "a second notice rule applies" }));
+  assert.equal(next.ok, true, JSON.stringify(next).slice(0, 300));
+});

@@ -2,7 +2,7 @@
    interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, NOW } from "./fixture.mjs";
+import { planeWorld as world, NOW } from "./fixture.mjs";
 import { EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX } from "../../../src/publication/index.mjs";
 
 test("R18 exportManifest answers every bundle with its files, promotions in write order, snapshots and references, and the register, with counts, and logs itself in the same act", () => {

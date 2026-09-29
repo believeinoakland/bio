@@ -93,17 +93,36 @@ test("R9: overall addressed across every mix of states; the latest record per pa
   w.mark(un);
   assert.equal(w.overall().state, "undetermined");
   assert.match(w.overall().why, new RegExp(un));
-  /* The empty case of K172's route, literally: an assessed "no consequence" part, addressed, is still unproven. */
+});
+
+test("R9 R5 (N257, K172, K283): a group's judgment of no consequence, a zero measure, is addressed and ends the check", () => {
+  const w = setup();
   const E = w.determination("CONF-2026-0002-none", w.P, { [S]: "noncompliant" });
-  const zero = w.c.consequenceRecord({ determination: E, standard: S, affected: { kind: "other", description: "no consequence" },
-    period: { from: "2026-01-01", to: "2026-01-31" }, measure: { unit: "count", value: 0 },
-    basis: { rationale: "the group judges the breach had no consequence" }, author: V("alice") });
-  w.mark(zero.id);
-  assert.equal(w.c.addressed({ determination: E, viewer: V("alice") }).state, "undetermined");
-  /* Only once a concluded inquiry is named does it read addressed. */
-  const zc = w.c.consequenceRevise({ id: zero.id, causation: INQ, reason: "the inquiry concluded", author: V("alice") });
-  w.mark(zc.id);
-  assert.equal(w.c.addressed({ determination: E, viewer: V("alice") }).state, "addressed");
+  const overall = () => w.c.addressed({ determination: E, viewer: V("alice") });
+  const zero = (measure, over = {}) => w.c.consequenceRecord({ determination: E, standard: S,
+    affected: { kind: "other", description: "no consequence" }, period: { from: "2026-01-01", to: "2026-01-31" }, measure,
+    basis: { rationale: "the group judges the breach had no consequence" }, author: V("alice"), ...over });
+  /* No live part: undetermined, never addressed (K172). */
+  assert.equal(overall().state, "undetermined");
+  /* An assessed zero, no causation named: not_applicable, so not unproven; never assessed until a member records it. */
+  const z = zero({ unit: "count", value: 0 });
+  assert.equal(z.part.causation.state, "not_applicable");
+  assert.deepEqual(overall().parts.map((p) => p.causation), ["not_applicable"]);
+  assert.equal(overall().state, "not_addressed", "a zero part is not unproven, and is not yet addressed");
+  w.mark(z.id);
+  assert.deepEqual([overall().state, overall().why], ["addressed", "every live part is recorded addressed, with evidence"]);
+  w.mark(z.id, "not_addressed", []);
+  assert.equal(overall().state, "not_addressed", "the latest record wins for a zero part too");
+  w.mark(z.id);
+  /* A range [0, 0] is zero too; beside it, a part that is not zero and names no inquiry stays unproven. */
+  const r = zero({ unit: "money", currency: "USD", range: { low: 0, high: 0 } });
+  w.mark(r.id);
+  assert.equal(overall().state, "addressed");
+  const some = zero({ unit: "count", range: { low: 0, high: 3 } });
+  w.mark(some.id);
+  assert.equal(some.part.causation.state, "unproven", "a range reaching above zero claims a harm");
+  assert.equal(overall().state, "undetermined");
+  assert.match(overall().why, new RegExp(some.id));
 });
 
 test("R9: addressedRecord is accepted on a superseded determination's parts, and addressed reads them (escalation R14)", () => {

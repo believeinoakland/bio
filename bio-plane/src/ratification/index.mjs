@@ -820,9 +820,11 @@ export class Ratification {
          bytes, or for a member published under BIO_Publication §3 rule 12 from the ratified case documents pinning
          them — with EDITION_EXISTS and EDITION_NOT_INCREMENTED (DEC-12: a revision appends; a retry of the same
          bytes is idempotent and reports `existed`), the per-case checks and discharge, the bar projection, every
-         file's hash (append-only), and the edges (`serve` only to a published target, `name` otherwise; a `name`
-         edge from a published finding to this target becomes `serve`, R16). The signer is the verified signature's
-         and the deliverer the control plane's stamp, each from its one source (R12). */
+         file's hash (append-only), and the edges: `serve` only to a published target; a reference to a target not
+         yet published is held privately, never in the published graph (its id is not published), and becomes `serve`
+         when that target is published, as a reference held for a published finding to THIS target does now (R16;
+         publication R22, R35; Bob, K283). The signer is the verified signature's and the deliverer the control
+         plane's stamp, each from its one source (R12). */
       return this.publication.commitEdition({
         bundleId, bundleSha, ...(Number.isInteger(edition) ? { edition } : {}), title, completeness,
         strength, memberCarriesBlocks, group, edges, shas, attestorKey, attestorMember: attestorMember ?? null,

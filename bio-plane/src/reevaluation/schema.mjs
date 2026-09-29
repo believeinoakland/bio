@@ -1,4 +1,4 @@
-/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25). The obligation itself is a
+/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25, R26). The obligation itself is a
  * query and has no table (R18, P-64); these hold only what a member's act or the pushed notice writes. Each is keyed by
  * the bundle it is about and declared to record-core's purge (K23), so a purge of that bundle clears its rows; the sweep's
  * position (R25) is about no bundle and is cleared by a whole-store purge only. */
@@ -52,6 +52,35 @@ CREATE TABLE IF NOT EXISTS reevaluation_records (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_records_dependent ON reevaluation_records (dependent, target, source);
+-- R14's case half, R26 (N210): ONE NOTICE PER (case, cited part, pinned
+-- capture, newer capture). A cited part is a document the edition cites, at
+-- the capture it pinned (publication R41's capture_sha; K365), and the
+-- newer capture is graded as the leg half grades a passage (the whole
+-- document). owners is the JSON list of the owning project's owners read when
+-- it was raised: they are the ones told, and nobody else is. ord is the part's
+-- place in the edition's parts. keepVersion closes it; a new edition that
+-- re-pins the part is publication's act, not this module's.
+CREATE TABLE IF NOT EXISTS reevaluation_case_notices (
+  notice_id        TEXT PRIMARY KEY,
+  case_id          TEXT NOT NULL,
+  edition          INTEGER,
+  project          TEXT,
+  ord              INTEGER NOT NULL,
+  part             TEXT NOT NULL,
+  capture_sha      TEXT NOT NULL,
+  newer_capture    TEXT NOT NULL,
+  newer_bundle     TEXT,
+  grade            TEXT,
+  affects          TEXT NOT NULL,
+  owners           TEXT NOT NULL,
+  raised_at        TEXT NOT NULL,
+  state            TEXT NOT NULL DEFAULT 'open',
+  closed_by        TEXT,
+  closed_at        TEXT,
+  why              TEXT,
+  UNIQUE (case_id, part, capture_sha, newer_capture)
+);
+CREATE INDEX IF NOT EXISTS reevaluation_case_notices_case ON reevaluation_case_notices (case_id, state);
 -- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
 -- of the pass part-way (after the last leg a batch read), when that pass began
 -- and when the last complete one began, and the receipt mark: receipt_seq is
@@ -75,6 +104,8 @@ CREATE TABLE IF NOT EXISTS reevaluation_sweep (
 export const REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_notices", keys: ["holder"] },
   { name: "reevaluation_records", keys: ["dependent"] },
+  /* R26: a case is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
+  { name: "reevaluation_case_notices", keys: [] },
   /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
   { name: "reevaluation_sweep", keys: [] },
 ]);

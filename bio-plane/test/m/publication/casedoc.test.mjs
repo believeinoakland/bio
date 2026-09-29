@@ -2,7 +2,7 @@
    (R21), the review provider (R23) and the read contract (R40). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
+import { planeWorld as world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, REAUTHORABLE_SECTIONS,
          PUBLICATION_TABLES } from "../../../src/publication/index.mjs";

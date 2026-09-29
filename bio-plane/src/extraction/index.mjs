@@ -1,5 +1,5 @@
 /* extraction (layer 4): readings made from captured bytes, and what the record keeps of them. The store half
-   (R19–R30, R36–R40) and the Durable Object side of the pipeline (R1–R18 through `read`, R31–R35 through
+   (R19–R30, R36–R40, R61–R62) and the Durable Object side of the pipeline (R1–R18 through `read`, R31–R35 through
    `pdfStructure`), reached through `extractionOf(ctx)` (K61). Moved from `store.mjs` (the reading writer, the
    re-read, the history, the text-source and text-index writers, the reads, the term helpers, the drift reads) and
    `index.mjs` (`op=pdfstructure`, the acquire wire's reading block), with the rows this job applied named at their
@@ -116,7 +116,7 @@ export function extractionOf(ctx, opts = {}) {
 }
 
 export class Extraction {
-  #sql; #storage; #listeners = []; #declared = false; #stepped = false; #calListening = false;
+  #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, env = {} } = {}) {
     this.#storage = storage;
@@ -257,12 +257,18 @@ export class Extraction {
    *  after each write, in the same transaction, in `MODULE_ORDER` (membership R83) whatever order they registered
    *  in, with `unitsBefore` (the capture's indexed units before the write, null when never indexed), and a throw
    *  fails the whole write. */
-  onReading(module, fn) {
-    const refused = listenerRefusal(this.#listeners, module, fn);
+  onReading(module, fn) { return this.#register(this.#listeners, module, fn); }
+
+  /** R62 (N294): the index notice, registered as R24's are, raised after each `indexTestimony` write (R61) and
+   *  never by R19's writer, whose index outcome reaches its listeners as R24's `indexed`. */
+  onIndexed(module, fn) { return this.#register(this.#indexListeners, module, fn); }
+
+  #register(list, module, fn) {
+    const refused = listenerRefusal(list, module, fn);
     if (refused) return refused;
     const i = MODULE_ORDER.indexOf(module);
-    this.#listeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.#listeners.length });
-    this.#listeners.sort((a, b) => (a.rank - b.rank) || (a.seq - b.seq));
+    list.push({ module, fn, rank: i === -1 ? Infinity : i, seq: list.length });
+    list.sort((a, b) => (a.rank - b.rank) || (a.seq - b.seq));
     return { ok: true, module };
   }
 
@@ -571,6 +577,25 @@ export class Extraction {
       stampInstant("second"));
     return { offered, written, bytes, truncated: truncatedUnits, over_bound: over, wire_over_bound: wire,
              unaddressable, unaddressed, chain_kind: chainKind, skipped, skipped_named: skippedNamed, state };
+  }
+
+  /** R61 (N294, K337): a member's authored observation (provenance R28) indexed as its capture's own text, inside
+   *  the caller's transaction (a nested `transact` joins it). The capture's index is replaced by R22's rule over one
+   *  unit, the words whole at `{kind: "document"}`, `seq` 0, chain null; words holding no glyph are dropped by that
+   *  rule and index nothing. No reading, history, reference, name term or text-source row is written, because no
+   *  reader ran over the words, and R24's listeners are not called; R62's are, and a throw from one fails the write.
+   *  A request naming no bundle or capture writes nothing and answers `written: 0`. */
+  indexTestimony({ bundleId = null, captureSha = null, words = null, author = null } = {}) {
+    if (typeof bundleId !== "string" || !bundleId || typeof captureSha !== "string" || !captureSha)
+      return { offered: 0, written: 0, bytes: 0, truncated: 0, over_bound: 0, wire_over_bound: 0, unaddressable: 0,
+               unaddressed: [], chain_kind: "undetermined", skipped: [], skipped_named: 0, state: null,
+               why: "an authored observation is indexed under its bundle and its capture digest, and one was not named" };
+    return this.core.transact(() => {
+      const indexed = this.indexUnits(bundleId, captureSha, [{ extent: { kind: "document" }, text: words, seq: 0 }], null);
+      for (const l of this.#indexListeners)
+        l.fn({ bundleId, captureSha, indexed, author, container: "document" });
+      return indexed;
+    });
   }
 
   /* ---- reading the record (R27–R30, R36, R37) ---- */

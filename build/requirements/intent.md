@@ -30,7 +30,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 
 **watchSet({project, after?, limit?}) → `{entities, progressions, captures, limit, truncated, cursor, measure_truncated}`**
 - **R7** What the condition reads: its entity and related entities, its progression, and the captures placed in matched instances, so `monitoring` watches exactly those. Empty with no condition. `captures` is paged in capture order after `after`: `limit` defaults to 1,000 and is clamped to 1–1,000, and `cursor` names the last capture answered when more follow, else null, so `monitoring` can follow it (N181, K239).
-- **Bounds (N181, K239).** Every collection these services answer is bounded and says so: `progress` and `gaps` answer `limit` and `truncated`, and past 1,000 matched instances `satisfied` is null with its reason; `aspirationsFor` answers `departures_limit` and `departures_truncated`; `pursuitOf` answers `goals_limit`, `goals_truncated` (200), `triaged_limit` and `triaged_truncated` (1,000); `proposals` answers `set_aside_limit` (200, newest first) and `set_aside_truncated`.
+- **Bounds (N181, K239).** Every collection these services answer is bounded and says so: `progress` and `gaps` answer `limit` and `truncated`, and past 1,000 matched instances `satisfied` is null with its reason; `aspirationsFor` answers `departures_limit` and `departures_truncated`; `pursuitOf` answers `goals_limit`, `goals_truncated` (200), `triaged_limit` and `triaged_truncated` (1,000); `proposals` answers `set_aside_limit` (200, newest first) and `set_aside_truncated`. Their internal reads are bounded the same way (N305, K367): R28's context reads at most the first 1,000 held aspirations in force and the first 1,000 conditioned projects, each in id order, and `serves` answers `context_truncated` when either is cut; `proposals` with no project named reads at most the first 1,000 projects in id order and answers `projects_truncated` when cut; `pursuitOf` reads at most 1,000 named capture requests, in the order the basis names them, and answers `requests_limit` and `requests_truncated`. *(not yet met: N305; each read is unbounded)*
 
 **servesOf({addresses?, bundles?, requests?}) → `{ok, serves, truncated}`** (for `scheduler`'s rank, its R10; not an op)
 - **R28** For each named subject (at most 1,000 in all; beyond that the first 1,000 in the order given, with `truncated: true`), `serves` holds `{kind, id, gaps, aspirations}`: `gaps` the keys (R6) of every open gap, in any project, the subject serves, and `aspirations` the ids of every `held` aspiration in force (R12) for the subject's project that it serves, member aspirations aside (they shape that member's queue only, §12.1). A bundle serves a gap when it is a document of the gap's short instance, and an aspiration when it is placed in an instance of a progression the aspiration names or concerns an entity it names; an address serves what the bundles captured from it serve; a request serves what its address and its `target` question serve. A subject serving nothing, or unknown, answers empty lists. It is read as the plane, orders work only and is never shown: no read of evidence uses it (R21). It writes nothing and never throws.
@@ -67,13 +67,13 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 
 - `legacy-checks`: the C-2.9 row until it moves (R22), `isMachineIdentity`, `ISO_TS_RE`.
 - `record-core`: `recordOf(ctx)`, `transact`, id allocation for aspirations and goals, `declarePurge`.
-- `membership`: `viewerPredicate`, `projectAuthority`, `isAdministrator`, `isProjectEditor`.
+- `membership`: `viewerPredicate`, `projectAuthority`, `isAdministrator`, `isProjectEditor`; `noSuchProject` (its R78), through which R2's, R3's and every other act's `NO_SUCH_PROJECT` is answered, in place of C-111.2 (N208, K275).
 - `promotion`: `promote`, `registerStep` (R1, R2). *(not declared)*
 - `entities`: `readEntity`, the constitutive relations (R4, R7, R28). *(not declared)* `noSuchEntity` (its R36), R2's `NO_SUCH_ENTITY`, in place of C-111.5 (N285).
 - `provenance`: the captures held at an address (R28). *(not declared)*
 - `progressions`: `readProgression`, `readInstance`, `proposalsFeed`, `disposeProposal` (R4–R6, R15, R16).
 - `retrieval`: `selectionCreate` (one enumerated selection per aged question, owner `plane:intent`, for inquiry's `dispose`; R17; K198).
-- `capture-requests`: `requestById` (its R43: one request's outcome by key, for R14's pursuit; N291) and `bundlesOf` (its R28); `captureRequests` (a request's outcome, for R14's pursuit; K200) until N291. *(not yet met: N291; `pursuitOf` reads the bounded list)*
+- `capture-requests`: `requestById` (its R43: one request's outcome by key, for R14's pursuit; N291) and `bundlesOf` (its R28); `captureRequests` (a request's address, for R28's serving).
 - `inquiry`: the create-at-`surfaced` path and the dispose act (R16, R17).
 - `ai-runs`: opening a run (R18).
 - `content`: nothing any requirement calls. Proposed dropped.
@@ -83,7 +83,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - **R19** Progress is derived, never reported: no service accepts a progress figure, count, share or completion, and nothing stores one (Framework §12 consequence 1; invariant 8).
 - **R20** An assistant proposes at any point and adopts at none: every act that adopts, dismisses, defers, sets a condition, links, declares, departs, closes or retires refuses a machine (§12 "The discovery loop").
 - **R21** Aspirations and goals set priority and never filter evidence: no read here or elsewhere is narrowed, reordered or withheld by one, and a proposal that cuts against a goal is offered on the same terms as one that supports it (Framework invariant 7, §12.2).
-- **R22** C-2.9's objective arm moves here as an invariant with its test (K6); every refusal this file names gets a catalogue row in this module.
+- **R22** C-2.9's objective arm moves here as an invariant with its test (K6); every refusal this file names gets a catalogue row in this module, except `NO_SUCH_PROJECT`, whose one row is membership's (its R78; N208, K275).
 - **R23** Every read and act naming a project, goal or aspiration the viewer may not see answers exactly as an absent one.
 - **R24** This module's tables carry the id they are about and are declared to record-core's purge (K23).
 - **R25** No place is named in this module's behaviour or outward text; §12's examples are illustrations only.

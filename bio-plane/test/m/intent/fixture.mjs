@@ -2,7 +2,8 @@
    membership, promotion, entities, progressions), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage. Four are stand-ins in the shape of their Provides, which the test controls and records: inquiry's
    `dispose` (R20–R22: the selection resolved, each member moved to the disposition with its reason and author),
-   retrieval's `selectionCreate` (R18), ai-runs' `open` (R9–R10) and capture-requests' read (`captureRequests`, R23).
+   retrieval's `selectionCreate` (R18), ai-runs' `open` (R9–R10) and capture-requests' reads (`captureRequests`, R23;
+   `requestById`, R43).
    Every test drives `intent` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -15,13 +16,37 @@ import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
+/* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
+   and `[0]` or `.length` of it is undefined. It also refuses a LIKE or GLOB pattern over 50 bytes ("LIKE or GLOB
+   pattern too complex"), which node:sqlite does not (K313). This storage answers as workerd does, so code that indexes
+   a cursor or writes a long pattern fails here as it would in the Durable Object (K316). */
+export const WORKERD_PATTERN_CAP = 50;
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -65,7 +90,7 @@ export function world({ now = NOW, plane = null } = {}) {
     return p;
   };
   let progressions = plane ? null : buildProgressions();
-  const calls = { selections: [], dispose: [], open: [], requests: [] };
+  const calls = { selections: [], dispose: [], open: [], requests: [], requestById: [] };
   const selections = new Map();
   const retrieval = {
     async selectionCreate(a) {
@@ -103,9 +128,17 @@ export function world({ now = NOW, plane = null } = {}) {
     },
   };
   const aiRuns = { open: async (a) => { calls.open.push(a); return { run: a.run ?? null, started: true, status: "running" }; } };
-  /* capture-requests' read (its R23): the rows the viewer may see, oldest first, bounded */
+  /* capture-requests' read (its R23): the rows the viewer may see, oldest first, bounded; and its one read by key (its
+     R43): a row whose `seenBy` (when set) does not name the viewer answers null, as an unknown one does */
   const requests = [];
-  const captureRequests = { captureRequests: (a) => { calls.requests.push(a); return { count: requests.length, limit: a.limit, truncated: false, requests: [...requests] }; } };
+  const captureRequests = {
+    captureRequests: (a) => { calls.requests.push(a); return { count: requests.length, limit: a.limit, truncated: false, requests: [...requests] }; },
+    requestById: (a) => {
+      calls.requestById.push(a);
+      const r = requests.find((x) => x.request === a.request);
+      return r && (!r.seenBy || r.seenBy.includes(a.viewer)) ? { ...r } : null;
+    },
+  };
   const i = intentOf(host, { record, membership, promotion, entities, ...(plane ? {} : { progressions }), inquiry, retrieval,
                              aiRuns, captureRequests, now: () => clock.now });
   i.migrate();
@@ -115,14 +148,14 @@ export function world({ now = NOW, plane = null } = {}) {
     st, host, record, membership, promotion, entities, progressions, i, clock, calls, requests,
     /** The four stand-ins intent was built with, so a test can make one answer otherwise. */
     stand: { inquiry, retrieval, aiRuns, captureRequests },
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
+    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
     fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },
     snapshot() {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`));
+        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`).toArray());
       return out;
     },
     member(id, { role = "member", status = "active" } = {}) {

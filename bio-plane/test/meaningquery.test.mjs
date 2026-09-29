@@ -77,6 +77,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
+import { PROJECTION_SCHEMA } from "../src/retrieval/schema.mjs";   /* T11: section 12's text-index key index (N283) */
 import { compile, MEANING, meaningVocabulary, ambiguousBareWords,
          GATE_MARK, FIELDS, SORTABLE } from "../src/query.mjs";
 /* The vocabularies are asserted against the CATALOG the compiler imports them
@@ -879,11 +880,16 @@ console.log("\n--- 12. the indexes, and the one that was not added ---");
      a comment and a bare substring test would have matched the prose — a check
      that passes on its own explanation is not a check. */
   const creates = (src, re) => (src.match(re) || []).length;
-  t("the join every statement makes is ALREADY indexed — in store.mjs's migration, not the schema text",
+  t("the join every statement makes is ALREADY indexed — in retrieval's migration, not the schema text",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R33): the migration that creates it is retrieval's
        `migrate()`; the store's text and retrieval's are counted together, and the schema text still holds none. */
-    [creates(STORE_SRC + RETRIEVAL_SRC, /CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles\(fts_id\)/g),
-     creates(SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON bundles\(fts_id\)/g)], [1, 0]);
+    /* RE-ANCHORED 2026-09-29 (legacy-tests T11; RETRIEVAL #3, N283, K354; retrieval R58, R61): `fts_id` left `bundles`
+       for retrieval's own `bundle_projection`, and so did its index, now `bundle_projection_fts_id`, created once in
+       retrieval's PROJECTION_SCHEMA (read as the statements `migrate()` runs, the table name interpolated). No source
+       creates the old `bundles_fts_id` any longer; the store's schema text still holds none. */
+    [PROJECTION_SCHEMA.filter((q) => q === "CREATE UNIQUE INDEX IF NOT EXISTS bundle_projection_fts_id ON bundle_projection(fts_id)").length,
+     creates(STORE_SRC + RETRIEVAL_SRC, /CREATE[^\n]*INDEX[^\n]*ON bundles\(fts_id\)/g),
+     creates(SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON (bundles|bundle_projection)\(fts_id\)/g)], [1, 0, 0]);
   t("no index on inquiry_basis(role) — measured as a candidate at -9.1%, and the reason is recorded",
     [creates(SCHEMA_SRC + INQUIRY_SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON inquiry_basis\(role/g),
      /NO INDEX ON role/.test(INQUIRY_SCHEMA_SRC)], [0, true]);

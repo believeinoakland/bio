@@ -2,7 +2,8 @@
  * answers carries its code, its row and the member's translation, so a surface shows the same sentence wherever the
  * act is reached. The family is C-116 (K248), minted with the module (K174: a new module holds its new family). Each
  * code is minted at one site (K231), named by its row's `where`. Refusals minted by the modules escalation uses
- * (conformance's, actions', filings', consequences', promotion's) are relayed with their own rows where it relays them. */
+ * (conformance's, actions', filings', consequences', promotion's) are relayed with their own rows where it relays them;
+ * `NO_SUCH_ACTION` is actions' own (its R43 `noSuchAction`, C-117.2; N217), so C-116.11 is retired and not reused. */
 
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 
@@ -56,11 +57,6 @@ export const ESCALATION_CHECKS = Object.freeze({
     check: 'C-116.10', where: at("refuseEnded", "is-escalation-ended"),
     translation: 'This escalation has ended: compliance was restored and the consequences addressed. An ended '
       + 'escalation is never reopened; a new breach is a new determination. Nothing was written.',
-  },
-  NO_SUCH_ACTION: {
-    check: 'C-116.11', where: at("escalationAttach", "is-action-seen"),
-    translation: 'No action answers to that here. One you may not see is answered exactly as one that does not exist. '
-      + 'Nothing was written.',
   },
   NOT_A_BREACH_ACTION: {
     check: 'C-116.12', where: at("escalationAttach", "is-breach-action"),

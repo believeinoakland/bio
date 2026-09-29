@@ -105,3 +105,57 @@ test("R9: changesOf answers now the causes standing on each finding and each pas
   assert.deepEqual([many.findings.length, many.findings_truncated], [CHANGES_OF_MAX, true]);
   assert.deepEqual(w.r.changesOf({ findings: `${T},${DEP}`, viewer: ADMIN }).findings.map((f) => f.id), [T, DEP]);
 });
+
+test("R7 R8 (N292): the onRaised registration answers raise's answer whole, so listeners_failed reaches dispose's, divide's and a re-read's reply", () => {
+  const boom = () => { throw new Error("boom"); };
+  /* a deferral */
+  {
+    const w = base();
+    w.r.onBasisChanged("consequences", boom);
+    w.selections.set("h", [T]);
+    const d = w.k.dispose({ handle: "h", to: "deferred", reason: "later", viewer: ADMIN, owner: "o", author: V("alice") });
+    assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+    assert.deepEqual([d.reevaluation.source, d.reevaluation.raised.map((l) => l.bundle_id), d.reevaluation.listeners_failed],
+      ["deferred", [DEP], ["consequences"]]);
+    assert.equal(w.record.head(T).currentState, "deferred", "the act stands");
+  }
+  /* a division */
+  {
+    const w = base({ caseMembers: new Set([DEP]) });
+    w.r.onBasisChanged("consequences", boom);
+    const d = w.k.divide({ target: T, reason: "two questions", viewer: "admin", author: V("alice"),
+      children: [{ id: C1, question: "First half?", legs: [0] }, { id: C2, question: "Second half?", legs: [1] }] });
+    assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+    assert.deepEqual([d.reevaluation.source, d.reevaluation.listeners_failed], ["supersession", ["consequences"]]);
+  }
+  /* a re-read that stales a cited passage (inquiry R41) */
+  {
+    const w = world();
+    const a = w.cap("a", "old");
+    w.doc(DOC, [a]);
+    w.read(a.sha, [U(0, "alpha"), U(1, "the budget was cut")]);
+    const cid = w.passage(DOC, a.sha);
+    w.inquiry(DEP, { legs: [{ target: DOC, content_id: cid }] });
+    w.r.onBasisChanged("consequences", boom);
+    const s = w.k.staled({ capture_sha: a.sha, rows: [{ content_id: cid }] });
+    assert.deepEqual([s.reevaluation.source, s.reevaluation.listeners_failed], ["restaled", ["consequences"]]);
+    /* with every listener well, no listeners_failed is carried */
+    const w2 = world();
+    w2.doc(DOC, [a]);
+    w2.read(a.sha, [U(0, "alpha"), U(1, "the budget was cut")]);
+    const cid2 = w2.passage(DOC, a.sha);
+    w2.inquiry(DEP, { legs: [{ target: DOC, content_id: cid2 }] });
+    w2.r.onBasisChanged("conformance", () => null);
+    const s2 = w2.k.staled({ capture_sha: a.sha, rows: [{ content_id: cid2 }] });
+    assert.equal(s2.reevaluation.source, "restaled");
+    assert.equal(s2.reevaluation.listeners_failed, undefined);
+  }
+});
+
+test("R8 (K231): onBasisChanged's refusals are membership's one site (listenerRefusal, its R81)", async () => {
+  const { listenerRefusal } = await import("../../../src/membership/index.mjs");
+  const w = base();
+  assert.deepEqual(w.r.onBasisChanged("", () => {}), listenerRefusal([], "", () => {}));
+  assert.equal(w.r.onBasisChanged("conformance", () => {}).ok, true);
+  assert.deepEqual(w.r.onBasisChanged("conformance", () => {}), listenerRefusal([{ module: "conformance" }], "conformance", () => {}));
+});

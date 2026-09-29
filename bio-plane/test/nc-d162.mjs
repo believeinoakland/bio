@@ -91,7 +91,7 @@ const ARMS = {
                                "    if (false) {\n      findings.push(refusal(\"THEME_NOT_EVIDENCE\","]]),
   },
   liar: {
-    files: [AFF, ENTITIES],
+    files: [ENTITIES],
     why: "THE LIAR THE ROW NAMES: a theme as an ELEVENTH ENTITY KIND — a named, citable thing the "
        + "registry will create",
     mustFail: ["`theme` is NOT in ENTITY_KINDS", "the subject registry REFUSES a theme as an entity kind"],
@@ -100,9 +100,9 @@ const ARMS = {
        list, which `affordances.mjs` still copies until N13 re-exports it; the liar adds the kind to BOTH, as it
        added it to the one list before. Its first run here, on `affordances.mjs` alone, left the registry arm GREEN
        (67/1): the registry no longer reads affordances' list. */
-    patch: () => arm([[AFF, "\"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\",\n];",
-                            "\"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\", \"theme\",\n];"],
-                      [ENTITIES, "  \"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\"]);",
+    /* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N57, N13): `affordances.mjs` now RE-EXPORTS entities' list (N13)
+       and holds no copy, so the liar patches the one list there is. */
+    patch: () => arm([[ENTITIES, "  \"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\"]);",
                                  "  \"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\", \"theme\"]);"]]),
   },
   notest: {

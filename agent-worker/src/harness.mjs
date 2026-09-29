@@ -791,6 +791,38 @@ export function resumableState(state) {
   return out;
 }
 
+/* ---------------------------------------------------- R49, N293: THE STATE STAYS UNDER THE PLANE'S CEILING
+ *
+ * ai-runs R45 holds a run's `state` to `AI_RUN_STATE_MAX_BYTES`, measured as the UTF-8 length of its JSON, and refuses
+ * a tick carrying more with nothing written: no entry, no spend, no lease. The table's working fields (reports,
+ * holdings, candidates, the queue) come from judgements and can grow past it, so the state is measured before it is
+ * published, the way the plane measures it.
+ *
+ * WHAT IS PUBLISHED WHEN IT DOES NOT FIT: the same pass, restarted. The smallest state that still resumes truthfully
+ * is the pass count at `plan`, every working field null (`next-pass` and `close` keep their own step: neither works
+ * from those fields). A later segment then fans out again rather than resuming from a state the record refuses; what
+ * was already written stays written, and `dedup` keeps it from being written twice. A partial cut of the working
+ * fields is not published: which half of a queue or a report list survived would be this member's guess. */
+export const STATE_RESTART_STEPS = ["next-pass", "close"];
+
+/** The UTF-8 length of a state's JSON: ai-runs R45's measure. */
+export function stateBytes(state) {
+  return new TextEncoder().encode(JSON.stringify(state ?? null)).length;
+}
+
+/** `{ state, bytes, restarted }`: the state a tick may publish under `limit`. With no positive limit (the plane
+ *  publishes none), the state as it is. `restarted` is null when it fits, else `{ bytes, limit, at }`: the measured
+ *  size of the state that did not fit and the step the published one restarts at. */
+export function publishableState(state, limit) {
+  const full = resumableState(state);
+  const bytes = stateBytes(full);
+  const ceiling = Number(limit);
+  if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
+  const at = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
+  const restart = resumableState({ step: at, pass: full.pass, adjusted: false });
+  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at } };
+}
+
 const list = (v) => (Array.isArray(v) ? v : []);
 const record = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
 

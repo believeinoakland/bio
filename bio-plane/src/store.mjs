@@ -585,6 +585,9 @@ export class Store extends DurableObject {
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
        `deps` on the first call only, so created there it would never see `env` (its R25). */
     reevaluationOf(ctx, { env });
+    /* publication (K365): built here, after reevaluation, so its case reads are registered with reevaluation (its R41,
+       R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none. */
+    publicationOf(ctx);
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("legacy-store", (legs) => {
       const cap = this.earnedBasisRegistry(null, [...new Set(legs.map((l) => l.target_id))])?.earned?.capture || {};
@@ -619,8 +622,7 @@ export class Store extends DurableObject {
     intentOf(ctx);   /* intent (K61, K198): its check (R1, R2, R26) joins every promotion before legacy-store's; its audit check keeps C-2.9 (R22) */
     caseAuthoringOf(ctx);
     /* N216 (K250): layer 9, in the modules' order, each registering at start what its factory registers (checks,
-       projections, purge, filings' evidence block). standards' factory creates no tables, so they are created here. */
-    standardsOf(ctx).migrate();
+       projections, purge, filings' evidence block). standards creates its own tables at construction (N267). */
     const conformance = conformanceOf(ctx);
     const consequences = consequencesModule(ctx, { conformance });
     filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences,
@@ -1921,15 +1923,14 @@ export class Store extends DurableObject {
   // N265: NO READING IS WRITTEN, SO THIS PATH DOES NOT GO THROUGH EXTRACTION'S WRITER (`writeReading`, its R19). No
   // reader ran over the words, so there is no reading to write, and inventing one would make the record claim acts
   // nobody performed: the writer's listeners would record a reader run that found no references (observation-log R8)
-  // and tier outcomes judged from a chain that does not exist (its R6). So the path asks extraction's text index
-  // (`indexUnits`, R22's half of the writer) and observation-log's index row (`observeIndexed`, R7) directly, and
-  // nothing else of the writer. The extraction look below is not a formality: without it `op=contentaxis` finds no
-  // `extract` row for this capture and calls it NOBODY LOOKED, which is false, since the words ARE the text. It
-  // throws to roll the whole promotion back rather than return a half.
+  // and tier outcomes judged from a chain that does not exist (its R6). N294: the words are indexed through
+  // extraction's `indexTestimony` (its R61), whose index notice (R62) observation-log turns into the index row (its
+  // R7), so this path writes no index row of its own. The extraction look below is not a formality: without it
+  // `op=contentaxis` finds no `extract` row for this capture and calls it NOBODY LOOKED, which is false, since the
+  // words ARE the text. It throws to roll the whole promotion back rather than return a half.
   #testimonyWithin(bid, pkg) {
-    const indexed = extractionOf(this.ctx).indexUnits(bid, pkg[TESTIMONY_PATH].captureSha,
-      [{ extent: { kind: "document" }, text: pkg[TESTIMONY_PATH].words, seq: 0 }], null);
-    observationLogOf(this.ctx).observeIndexed(bid, pkg[TESTIMONY_PATH].captureSha, indexed, { author: pkg[TESTIMONY_PATH].author, hadText: true, unitArm: true });
+    const indexed = extractionOf(this.ctx).indexTestimony({ bundleId: bid, captureSha: pkg[TESTIMONY_PATH].captureSha,
+      words: pkg[TESTIMONY_PATH].words, author: pkg[TESTIMONY_PATH].author });
     const m = this.mintContent({ bundleId: bid, captureSha: pkg[TESTIMONY_PATH].captureSha, extent: { kind: "document" },
                                  mintedBy: pkg[TESTIMONY_PATH].author, at: pkg[TESTIMONY_PATH].recordedAt });
     if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
@@ -5203,6 +5204,7 @@ export class Store extends DurableObject {
       return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
     };
     const n = (t, ...keys) => nx(t, null, keys);
+    const mon = monitoringOf(this.ctx).counts();
     return {
       bundles: n("bundles", "bundle_id"), files: n("files", "bundle_id"), history: n("history", "bundle_id"),
       refs: n("refs", "bundle_id", "target_id"), register: n("register", "bundle_id"), indexed: retrievalOf(this.ctx).counts(hid).indexed,
@@ -5244,9 +5246,8 @@ export class Store extends DurableObject {
          can PROVE it took them (D-113) and so an operator can see a tick that is
          still open — a non-zero monitorTickEpoch means the last tick failed on
          something and the next one will be its retry. */
-      monitorFired: n("monitor_fired"), monitorTickEpoch: n("monitor_tick_epoch"),
-      /* REC-191: reported so a whole-store purge can PROVE it took the address types (D-113). */
-      monitorAddressType: n("monitor_address_type"),
+      /* REC-191: and the address types. The three are monitoring's tables, counted whole-store by its R46 (N266). */
+      monitorFired: mon.monitorFired, monitorTickEpoch: mon.monitorTickEpoch, monitorAddressType: mon.monitorAddressType,
       /* FW-6: the subject registry's depth, reported so a whole-store purge can
          PROVE it cleared the registry rather than assert it (D-113). */
       entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),

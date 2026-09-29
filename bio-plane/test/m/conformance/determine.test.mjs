@@ -4,6 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { scene, V, MACHINE, F, DOC } from "./fixture.mjs";
 import { CONFORMANCE_CHECKS, OUTCOMES, SIGNIFICANCE_KEYS, REASON_MAX, LIMITS } from "../../../src/conformance/index.mjs";
+import { noSuchProject } from "../../../src/membership/index.mjs";
+import { MEMBERSHIP_CHECKS } from "../../../src/membership/checks.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -69,7 +71,12 @@ test("R1: NO_SUCH_PROJECT for an absent id, a bundle that is not a project and a
   const unseen = nothing(w, () => w.c.determine(input({ project: hidden, author: V("quinn"), viewer: V("quinn") })));
   const absent = w.c.determine(input({ project: "PROJ-2026-9999-none", author: V("quinn"), viewer: V("quinn") }));
   refused(unseen, "NO_SUCH_PROJECT");
-  assert.deepEqual({ ...unseen, project: null, detail: null }, { ...absent, project: null, detail: null }, "absent and unseen alike");
+  assert.deepEqual({ ...unseen, project: null }, { ...absent, project: null }, "absent and unseen alike");
+  /* N274: answered through membership's noSuchProject (its R78), its one row C-70.5; this module keeps no row of its own */
+  assert.equal("NO_SUCH_PROJECT" in CONFORMANCE_CHECKS, false);
+  assert.deepEqual(unseen, noSuchProject(hidden));
+  assert.equal(unseen.check, MEMBERSHIP_CHECKS.NO_SUCH_PROJECT.check);
+  for (const project of ["PROJ-2026-9999-none", DOC, F]) assert.deepEqual(w.c.determine(input({ project })), noSuchProject(project));
   const ex = w.c.determine(input({ project: open, author: V("quinn"), viewer: V("quinn") }));
   assert.equal(ex.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
 });
@@ -333,9 +340,12 @@ test("R7: a determination is never edited; a later one names the act by its id; 
   /* the same act is the id's equality, never the description's */
   const twin = w.c.determine(input());
   assert.notEqual(twin.act.id, first.act.id);
-  refused(nothing(w, () => w.c.determine(input({ supersedes: first.id }))), "BAD_REASON");
-  refused(w.c.determine(input({ supersedes: first.id, reason: "x".repeat(REASON_MAX + 1) })), "BAD_REASON");
-  refused(w.c.determine(input({ supersedes: first.id, reason: "   " })), "BAD_REASON");
+  /* N233: an absent reason is NO_REASON; BAD_REASON stays the malformed code (over REASON_MAX, or not text) */
+  for (const reason of [undefined, null, "", "   "])
+    refused(nothing(w, () => w.c.determine(input({ supersedes: first.id, reason }))), "NO_REASON");
+  for (const reason of ["x".repeat(REASON_MAX + 1), 42, ["why"], { why: "x" }])
+    refused(nothing(w, () => w.c.determine(input({ supersedes: first.id, reason }))), "BAD_REASON");
+  assert.notEqual(CONFORMANCE_CHECKS.NO_REASON.translation, CONFORMANCE_CHECKS.BAD_REASON.translation);
   const other = w.c.determine(input({ act: { id: twin.act.id }, supersedes: first.id, reason: "the act was misdated" }));
   refused(other, "SUPERSEDES_ANOTHER_ACT");
   assert.deepEqual([other.act, other.predecessor_act], [twin.act.id, first.act.id]);
@@ -350,6 +360,9 @@ test("R7: a determination is never edited; a later one names the act by its id; 
   refused(w.c.determine(input({ supersedes: theirs.id, reason: "r" })), "NO_SUCH_DETERMINATION");
   /* the supersession: the act carried from the predecessor, the reason recorded, the earlier one readable */
   const firstText = w.text(first.id);
+  /* a reason at the bound is accepted (a determination of another act, superseded once, is the control) */
+  const bound = w.c.determine(input({ act: { id: twin.act.id }, supersedes: twin.id, reason: "r".repeat(REASON_MAX) }));
+  assert.deepEqual([bound.ok, bound.reason], [true, "r".repeat(REASON_MAX)]);
   const next = w.c.determine(input({ act: undefined, supersedes: first.id, reason: "a second notice rule applies",
                                      standards: [{ standard: std, outcome: "compliant" }],
                                      rows: [{ ...input().rows[0], reading: "aligns" }] }));
@@ -412,8 +425,13 @@ test("R1 R18: a determination carries at most the bounded number of findings, st
   const r = w.c.determine(input({ act: { ...input().act, evidence: Array(LIMITS.evidence + 1).fill(ev.content) } }));
   refused(r, "DETERMINATION_TOO_LARGE");
   assert.equal(r.part, "evidence");
-  /* at the bound it is accepted */
+  /* at the bound it is accepted, each part */
   assert.equal(w.c.determine(input({ findings: Array(LIMITS.findings).fill(F) })).ok, true);
+  assert.equal(w.c.determine(input({ standards: Array(LIMITS.standards).fill({ standard: std, outcome: "noncompliant" }) })).ok, true);
+  assert.equal(w.c.determine(input({ rows: Array(LIMITS.rows).fill(input().rows[0]) })).ok, true);
+  assert.equal(w.c.determine(input({ questions: Array(LIMITS.questions).fill({ question: "Q?" }) })).ok, true);
+  assert.equal(w.c.determine(input({ act: { ...input().act, evidence: Array(LIMITS.evidence).fill(ev.content) } })).ok, true);
+  assert.deepEqual(LIMITS, { findings: 50, standards: 50, rows: 200, questions: 20, evidence: 50 });
 });
 
 test("R13: nothing a machine writes is a determination or an outcome: the act refuses a machine, and a raw promotion or a revision of a determination is refused", () => {

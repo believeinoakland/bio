@@ -463,8 +463,10 @@ console.log("\n--- 8. (b) evidence a ratified case's finding RESTS ON crosses, s
   const fin = await ratify(IRIS, "iris", G.lead);
   t("ALLOWED (finding after its evidence): iris ratifies G's pinned finding — PUBLISHED",
     [fin && fin.ok, fin && fin.attestor, await editionsOf(G.lead)], [true, "iris", 1]);
-  t("IDENTITY (ALLOWED finding's graph): the published graph's serve-class edges from G's finding are EXACTLY the four bundles the refusal treats as resting on it (served + dropped = 4), it serves the one already published (G3), and names nothing name-only",
-    fin && fin.graph, { serve: 1, name: 0, dropped: 3 });
+  /* RE-PINNED 2026-09-29 (legacy-tests T11; N256, K283 (Bob); publication R22, R35): a serve-class edge to a target
+     not yet published is HELD privately (`held`), no longer dropped; `dropped` stays in the answer, always 0. */
+  t("IDENTITY (ALLOWED finding's graph): the published graph's serve-class edges from G's finding are EXACTLY the four bundles the refusal treats as resting on it (served + held = 4), it serves the one already published (G3), holds the three unpublished privately, drops nothing and names nothing name-only",
+    fin && fin.graph, { serve: 1, name: 0, held: 3, dropped: 0 });
   const served = await GET(`op=publishedcase&id=${encodeURIComponent(G.case_id)}`);
   const gf = ((served && served.findings) || []).find((x) => x.bundle_id === G.lead) || {};
   t("IDENTITY (ALLOWED finding's graph): read back through op=publishedcase, the one SERVED edge is to G3",
@@ -485,6 +487,13 @@ console.log("\n--- 8. (b) evidence a ratified case's finding RESTS ON crosses, s
   const after = await ratify(FOUNDER, "iris", G.info);
   t("EVIDENCE ALLOWED: the FOUNDER delivers iris's signature over G's own basis information, AFTER the finding — PUBLISHED",
     [after && after.ok, after && after.attestor, await editionsOf(G.info)], [true, "iris", 1]);
+  /* ADDED 2026-09-29 (legacy-tests T11; N256, K283): the held reference becomes a `serve` edge once its target is
+     published, and the two refused bundles stay held, their ids unpublished. */
+  const servedAfter = await GET(`op=publishedcase&id=${encodeURIComponent(G.case_id)}`);
+  const gfAfter = ((servedAfter && servedAfter.findings) || []).find((x) => x.bundle_id === G.lead) || {};
+  t("HELD THEN SERVED (N256): once G's own basis information is published, the finding's held reference to it is a SERVED edge, beside G3; G2a and G2b, still unpublished, are not named",
+    [(gfAfter.serves || []).map((e) => e.to).sort(), JSON.stringify(servedAfter).includes(G2a), JSON.stringify(servedAfter).includes(G2b)],
+    [[G3, G.info].sort(), false, false]);
 
   /* RE-ANCHORED 2026-09-28 (legacy-tests T8, PUBLICATION #1 J4.6): `static publishedGraphEdges` is now the module
      function `publishedGraphEdges` exported by `src/publication/index.mjs`, where the refusal's rests-on

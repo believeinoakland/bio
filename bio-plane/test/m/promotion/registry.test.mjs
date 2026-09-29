@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, T0 } from "./fixtures.mjs";
-import { runCaseGate, runGate } from "../../../src/promotion/index.mjs";
+import { runCaseGate, runGate, GATE_VERSION } from "../../../src/promotion/index.mjs";
 import { PROMOTED_TYPE_CHECKS, ACT_SHAPE_CHECKS, PROJECT_ID_CHECKS, BIAS_CHECKS, projectNameKey, STATES, vocabFor }
   from "../../../checks/bio-checks.mjs";
 
@@ -337,6 +337,10 @@ test("R33: the case gate never throws: a registered catalogue that throws or ans
       assert.equal(r.ok, false);
       assert.deepEqual(r.findings.map((f) => f.check), ["CASE_CATALOGUE_FAILED"]);
       assert.equal(typeof r.findings[0].detail, "string");
+      /* R29's shape, whole (N275): the one finding, no warnings, the one GATE_VERSION. */
+      assert.deepEqual(Object.keys(r), ["gateVersion", "ok", "findings", "warnings"]);
+      assert.deepEqual(Object.keys(r.findings[0]), ["check", "detail"]);
+      assert.deepEqual([r.gateVersion, r.warnings], [GATE_VERSION, 0]);
     }
   }
 });

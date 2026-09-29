@@ -18,6 +18,9 @@ function producers({ debtDue = null } = {}) {
     promotion: { onCommitted: reg("promotion") },
     capture: { on: reg("capture") },
     progressions: { onThreaded: reg("progressions") },
+    calibration: { onSubjectRegistered: reg("calibrationSubject"), onSignalRecorded: reg("calibrationSignal") },
+    aiRuns: { onRunOpened: reg("aiRuns") },
+    captureRequests: { onRequestFiled: reg("captureRequests") },
   };
   return { p, heard, fire: async (name, payload, event = null) => {
     const l = (heard[name] || []).find((x) => x.event === event);
@@ -31,7 +34,9 @@ test("R9: it registers arm with each earlier producer's notice, under its own na
   s.listenTo(p);
   assert.deepEqual(Object.fromEntries(Object.entries(heard).map(([k, v]) => [k, v.map((x) => [x.module, x.event])])), {
     retrieval: [["scheduler", null]], bias: [["scheduler", null]], promotion: [["scheduler", null]],
-    capture: [["scheduler", "source-outcome"]], progressions: [["scheduler", null]] });
+    capture: [["scheduler", "source-outcome"]], progressions: [["scheduler", null]],
+    calibrationSubject: [["scheduler", null]], calibrationSignal: [["scheduler", null]], aiRuns: [["scheduler", null]],
+    captureRequests: [["scheduler", null]] });
 });
 
 test("R9: on an idle instance each notice leaves the alarm armed at the consumer's wake", async () => {
@@ -42,15 +47,25 @@ test("R9: on an idle instance each notice leaves the alarm armed at the consumer
     ["a promotion that leaves a bundle monitored (promotion R45)", "promotion", "monitor-cadence", { bundleId: "B" }, null, {}],
     ["a promotion while a bias debt is due (promotion R45)", "promotion", "bias-debt", { bundleId: "C" }, null, { debtDue: NOW }],
     ["a counted source failure, monitoring configured (capture R44)", "capture", "archive-monitor", { counted: true, outcome: "fetch_failed" }, "source-outcome", {}],
+
+    ["a calibration subject registered (calibration R18)", "calibrationSubject", "calibration-reprobe", { engine: "e", probe_id: "p", next_probe: 9 }, null, {}],
+    ["a calibration signal recorded (calibration R19)", "calibrationSignal", "calibration-reprobe", { engine: "e", next_probe: 9 }, null, {}],
+    ["a run opened (ai-runs R43)", "aiRuns", "ai-run-reap", { run: "R", contextType: "inquiry", contextId: "I", expires: 9 }, null, {}],
+    ["a capture request filed (capture-requests R44)", "captureRequests", "capture-request-drain", { request: "Q", run: null, expires: 9 }, null, {}],
   ];
   for (const [what, notice, cons, payload, event, opts] of cases) {
     const wake = NOW + 4321;
-    const { s, st } = world({ [cons]: { wake }, monitoring: { configured: true } });
+    /* The drain's wake is now + its interval while a request is pending (capture-requests R37). */
+    const set = cons === "capture-request-drain" ? { due: 1, wake: 4321 } : { wake };
+    const { s, st } = world({ [cons]: set, monitoring: { configured: true } });
     const { p, fire } = producers(opts);
     s.listenTo(p);
     assert.equal(st.alarm, null, `${what}: idle before`);
+    const before = Date.now();
     await fire(notice, payload, event);
-    assert.equal(st.alarm, wake, what);
+    if (cons === "capture-request-drain") {   /* armed at the notice's own instant plus the drain's interval */
+      assert.ok(st.alarm >= before + 4321 && st.alarm <= Date.now() + 4321, what);
+    } else assert.equal(st.alarm, wake, what);
   }
 });
 
@@ -93,10 +108,6 @@ test("R9: a producer later than this module arms by calling arm itself (R4), its
   assert.equal(st.alarm, NOW + 86400000);
 });
 
-test.todo("R9: a capture request filed arms the drain on an idle instance (not yet met: capture-requests offers no notice after captureRequest writes; REPORT to BOB)");
-test.todo("R9: a run opened arms the reaper on an idle instance (not yet met: ai-runs offers no notice after open writes; REPORT to BOB)");
-test.todo("R9: a calibration subject registered arms the re-probe on an idle instance (not yet met: calibration offers no notice after calibrationSubjectRegister; REPORT to BOB)");
-test.todo("R9: a calibration signal recorded arms the re-probe on an idle instance (not yet met: calibration offers no notice after calibrationSignalRecord, whose answer says armed; REPORT to BOB)");
 test.todo("R9: a resolution that marks an entity arms the connection sweep through entities' notice (not yet met: entities R13's onResolved runs inside the resolving transaction, where the alarm cannot be set; legacy-store's resolve route arms after it, J1 (3))");
 
 test("R17: every notice it registers only schedules: no tick runs and nothing but the alarm is written", async () => {
@@ -107,7 +118,9 @@ test("R17: every notice it registers only schedules: no tick runs and nothing bu
   st.log.length = 0;
   await fire("retrieval", {}); await fire("bias", {}); await fire("promotion", { bundleId: "B" });
   await fire("capture", { counted: true, outcome: "source_refused" }, "source-outcome"); await fire("progressions", {});
-  assert.deepEqual(calls.filter(([m]) => ["bias.biasDebtSweep", "retrieval.sweepSelections", "connections.sweep"].includes(m)), []);
+  await fire("calibrationSubject", {}); await fire("calibrationSignal", {}); await fire("aiRuns", {}); await fire("captureRequests", {});
+  assert.deepEqual(calls.filter(([m]) => ["bias.biasDebtSweep", "retrieval.sweepSelections", "connections.sweep",
+    "calibration.calibrationTick", "aiRuns.reap", "aiRuns.wake", "captureRequests.drain"].includes(m)), []);
   assert.deepEqual(writes(st).map(([m]) => m), ["setAlarm"], "set once, then never pushed later");
 });
 

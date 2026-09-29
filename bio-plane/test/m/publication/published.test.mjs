@@ -3,7 +3,7 @@
    module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, SIG, NOW } from "./fixture.mjs";
+import { planeWorld as world, cursor, V, SIG, NOW } from "./fixture.mjs";
 import { rowOf } from "../../../src/publication/checks.mjs";
 import { delivererOf, deliveringPrincipal, DELIVERER_UNDETERMINED_DETAIL } from "../../../src/deliverer.mjs";
 
@@ -355,6 +355,69 @@ test("R35 publishing a target turns every name edge a published finding holds to
                     { from_bundle: F, kind: "division_sibling", disclosure: "name" },
                     { from_bundle: "UNPUBLISHED-1", kind: "cites", disclosure: "name" }]);
   assert.deepEqual(w.p.publishedCase({ id: "CASE-2026-0001" }).findings[0].serves.map((s) => s.to), [G]);
+});
+
+test("R22 (N256) a reference to evidence not yet published is held privately, never in the published graph, and becomes a serve edge when the evidence is published", () => {
+  /* F is published citing DOC, which is not published yet */
+  const { w } = published();
+  const edgesTo = (to) => w.rows(`SELECT from_bundle, kind, disclosure FROM published_edges WHERE to_bundle=? ORDER BY from_bundle`, to);
+  assert.deepEqual(w.rows(`SELECT from_bundle, to_bundle, kind, linked_at FROM published_held_references`),
+                   [{ from_bundle: F, to_bundle: DOC, kind: "cites", linked_at: null }]);
+  assert.deepEqual(edgesTo(DOC), [], "held, not in the published graph");
+  const retry = w.signFinding(F, { edges: [{ to: DOC, kind: "cites", disclosure: "serve" }] });
+  assert.deepEqual([retry.existed, retry.edges], [true, { serve: 0, name: 0, held: 1, dropped: 0 }]);
+  assert.equal(w.count("published_held_references"), 1, "held once");
+  /* the id is never published while held: no public read names it */
+  const f = w.p.publishedCase({ id: "CASE-2026-0001" }).findings[0];
+  for (const list of [f.serves, f.names, f.unresolved]) assert.equal(list.some((e) => e.to === DOC), false);
+  /* (the case's own signed document names DOC among its exclusions: that is the case's statement, not the graph's) */
+  for (const read of [w.op("publishedmanifest"), w.op("publishedlist"), w.op("publishedtargets", { ids: F })])
+    assert.equal(JSON.stringify(read).includes(DOC), false);
+  /* a held reference to another target stays held when DOC is published */
+  w.record.transact(() => w.p.publishEdges(F, [{ to: G, kind: "cites", disclosure: "serve" }], NOW));
+  w.clock.now = "2026-09-29T00:00:00Z";
+  const pub = w.signFinding(DOC, { sig: SIG(7), at: "2026-09-29T00:00:00Z" });
+  assert.deepEqual([pub.ok, pub.heldLinked], [true, 1]);
+  assert.deepEqual(edgesTo(DOC), [{ from_bundle: F, kind: "cites", disclosure: "serve" }]);
+  assert.deepEqual(w.rows(`SELECT to_bundle, linked_at FROM published_held_references ORDER BY to_bundle`),
+                   [{ to_bundle: G, linked_at: null }, { to_bundle: DOC, linked_at: "2026-09-29T00:00:00Z" }]
+                     .sort((a, b) => (a.to_bundle < b.to_bundle ? -1 : 1)));
+  assert.deepEqual(w.p.publishedCase({ id: "CASE-2026-0001" }).findings[0].serves.map((e) => e.to), [DOC]);
+  /* publishing it again links nothing more */
+  assert.equal("heldLinked" in w.signFinding(DOC, { sig: SIG(7) }), false);
+  assert.equal(edgesTo(G).length, 0);
+});
+
+test("R35 turns every name edge and every held reference to a target set-wise, over many edges, reading none into the worker's memory, and counts what it turned (N237, N277)", () => {
+  const { w } = published();
+  const N = 400;
+  for (let i = 0; i < N; i++) {
+    const id = `INQ-2026-9${String(i).padStart(3, "0")}`;
+    w.st.sql.exec(`INSERT INTO published_bundles (bundle_id, edition, bundle_sha, ratified_at, attestor_key, gate_version, sig_armored)
+                   VALUES (?, 1, ?, ?, 'k', 'g', 's')`, id, `s${i}`, NOW);
+    w.st.sql.exec(`INSERT INTO published_edges (from_bundle, to_bundle, kind, disclosure, published) VALUES (?,?,?,?,?)`,
+                  id, G, "cites", "name", NOW);
+    w.st.sql.exec(`INSERT INTO published_held_references (from_bundle, to_bundle, kind, held_at) VALUES (?,?,?,?)`,
+                  id, G, "supports", NOW);
+  }
+  /* a name edge from an unpublished finding and a division's disclosure never turn; a held row from one is never linked */
+  w.st.sql.exec(`INSERT INTO published_edges (from_bundle, to_bundle, kind, disclosure, published) VALUES ('UNPUB-1', ?, 'cites', 'name', ?)`, G, NOW);
+  w.st.sql.exec(`INSERT INTO published_edges (from_bundle, to_bundle, kind, disclosure, published) VALUES (?, ?, 'division_sibling', 'name', ?)`, F, G, NOW);
+  w.st.sql.exec(`INSERT INTO published_held_references (from_bundle, to_bundle, kind, held_at) VALUES ('UNPUB-1', ?, 'supports', ?)`, G, NOW);
+  w.inquiry(G);
+  /* every read the commit makes, measured at the storage: the most rows any one statement handed the worker */
+  const exec = w.st.sql.exec;
+  let most = 0;
+  w.st.sql.exec = (q, ...a) => { const rows = exec.call(w.st.sql, q, ...a).toArray(); most = Math.max(most, rows.length); return cursor(rows); };
+  const r = w.record.transact(() => w.p.commitEdition({ bundleId: G, bundleSha: w.head(G), shas: [], attestorKey: "k",
+    gateVersion: "g", sigArmored: SIG(6), edges: [], at: NOW }));
+  w.st.sql.exec = exec;
+  assert.deepEqual([r.ok, r.namesServed, r.heldLinked], [true, N, N]);
+  assert.ok(most <= 2, `no statement read the edges into memory (most rows handed back: ${most})`);
+  const by = (d, k) => w.row(`SELECT COUNT(*) AS n FROM published_edges WHERE to_bundle=? AND disclosure=? AND kind=?`, G, d, k).n;
+  assert.deepEqual([by("serve", "cites"), by("serve", "supports"), by("name", "cites"), by("name", "division_sibling")], [N, N, 1, 1]);
+  assert.deepEqual(w.rows(`SELECT from_bundle FROM published_held_references WHERE to_bundle=? AND linked_at IS NULL`, G),
+                   [{ from_bundle: "UNPUB-1" }], "the unpublished finding's stays held");
 });
 
 test("R36 one evidence-package block, filled once, computed at the read beside the case; with none, the package says it carries none", () => {

@@ -1,5 +1,7 @@
 /* actions over the modules it uses, each the real one where it writes or reads the record (record-core, membership,
-   promotion, provenance), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. What
+   promotion, provenance), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage, answering
+   as workerd's does (a cursor, and its LIKE/GLOB cap; K313, K316). Retrieval's projection table is made by retrieval's
+   own `migrate()` (its R61, K354); what
    actions registers with retrieval, the capture content presents for a document (R11), connections' `refs` projection
    (R25's `responses`) are stand-ins the test controls; conformance is the real module (it brings reevaluation and
    inquiry, whose columns on `bundles` are added here), or a stand-in in its R9 shape where a test passes one (R8). Every test drives
@@ -13,18 +15,41 @@ import { actionsOf } from "../../../src/actions/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
+import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 import { DatabaseSync } from "node:sqlite";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+/* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
+   and `[0]` or `.length` of it is undefined. It also refuses a LIKE or GLOB pattern over 50 bytes ("LIKE or GLOB
+   pattern too complex"), which node:sqlite does not (K313). This storage answers as workerd does (K316). */
+export const WORKERD_PATTERN_CAP = 50;
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
 /** A Durable Object's storage over an in-memory SQLite database. */
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -52,14 +77,15 @@ export function actionMd(id, lines = [], { state = "planned" } = {}) {
 }
 export const CP = ["counterparty:", "  state: named", "  role: Town Clerk", "  body: Town of Port Ellery"];
 
-export function world({ profiles = ["test-port-ellery"], retrieval = true, conformance = null } = {}) {
+/* `recordAs(record)`, when given, is the record-core instance `actions` is handed (a test's spy over the real one). */
+export function world({ profiles = ["test-port-ellery"], retrieval = true, conformance = null, recordAs = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  /* retrieval's projection columns this module reads for R31 (retrieval writes them from R12's facts). */
-  for (const c of ["action_clock_next TEXT", "fm_json TEXT", "inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT",
-                   "inquiry_superseded_by TEXT"]) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
+  /* inquiry's columns on `bundles`, as the store's boot migrates them. */
+  for (const c of ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"])
+    st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   /* connections' `refs` projection, as far as R25 joins it. */
   if (conformance) st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
   const clock = { ms: NOW_MS };
@@ -69,6 +95,9 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
+  /* retrieval's projection table, made by retrieval's own migrate (R31 seeks it; K354). Its registrations below are
+     the test's, so this instance joins no promotion. */
+  new Retrieval({ storage: st, record, membership, promotion, extraction: {}, observation: {} }).migrate();
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
   prov.migrate();
@@ -78,14 +107,16 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
     registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },
     registerProjectionDecoration: (m, fn) => { reg.decorations.push({ m, fn }); return { ok: true }; },
   } : null;
-  /* retrieval's projection as far as R31 reads it: the clock column, written after each promotion from R12's facts. */
+  /* retrieval's projection as far as R31 reads it: the clock column of its row, written after each promotion from R12's
+     facts. */
   promotion.registerStep("retrieval", { project: (c) => {
     const md = (c.files || []).find((f) => f.path === "bundle.md");
     const f = reg.facts[0] ? reg.facts[0].fn(md && md.text, clock.ms) : null;
-    st.sql.exec(`UPDATE bundles SET action_clock_next=? WHERE bundle_id=?`, f ? f.clock_next : null, c.bundleId);
+    st.sql.exec(`INSERT INTO ${PROJECTION_TABLE} (bundle_id, action_clock_next) VALUES (?, ?)
+      ON CONFLICT(bundle_id) DO UPDATE SET action_clock_next=excluded.action_clock_next`, c.bundleId, f ? f.clock_next : null);
     return null;
   } });
-  const a = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
+  const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalStub, conformance,
                               content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms });
   /* the real conformance (the default dep) brings inquiry onto this host through reevaluation: its tables, as the
      store's boot migrates them. */
@@ -112,8 +143,8 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, a, clock, reg, captures,
-    rows: (q, ...x) => st.sql.exec(q, ...x),
-    row: (q, ...x) => st.sql.exec(q, ...x)[0] ?? null,
+    rows: (q, ...x) => st.sql.exec(q, ...x).toArray(),
+    row: (q, ...x) => st.sql.exec(q, ...x).toArray()[0] ?? null,
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
     fm: (id) => { const t = w.text(id); return t ? parseFrontmatter(t).data : null; },
     /** A promotion of `id` with `text` as its bundle.md, by `author` (default a member). */

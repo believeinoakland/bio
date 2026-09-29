@@ -101,6 +101,12 @@ const TOK = "mem-is6";
 const BUNDLE = "INQ-2026-0801-sewer-fund-transfers";
 const SHA_A = "a".repeat(64);
 const T0 = "2026-08-07T09:00:00Z";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T11; scheduler N223, ai-runs R43): a run's open now ARMS the one alarm, whose
+   reconcile reads the reaper's wake, so a run opened at 2026-08-07 with a 60 s lease is reaped by the REAL alarm
+   (wall clock) before its first tick. The runs this suite drives are pinned into the FUTURE, as
+   `airun-contextkind.test.mjs`' RUN_AT is, so the real alarm never fires inside the test and ARM K's reaper is still
+   driven by `onAlarm` at a virtual clock. T0 stays the fixtures' authored date. */
+const RUN_T0 = new Date(Math.floor(Date.now() / 3600000) * 3600000 + 86400000).toISOString().replace(/\.\d{3}Z$/, "Z");
 const ms = (iso) => Date.parse(iso);
 const at = (baseIso, plusMs) => new Date(ms(baseIso) + plusMs).toISOString().split(".")[0] + "Z";
 
@@ -303,13 +309,16 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
      (`AI_LOG_NEVER_LOOKED_STORED` — a NEVER_LOOKED stored as a look at a subject, observation-log R3, K148), minted by
      LEGACY-CHECKS #2 in the T6 catalogue, so the family holds SEVENTEEN. Read here through `airun.mjs`'s merged
      `AI_RUN_CHECKS`, since C-22.5, .8 and .11–.16 now live in `src/ai-runs/checks.mjs`. */
-  t("ARM D1: the C-22 family is SEVENTEEN C-numbers — IS-6's six, SK-1's skill-version condition, "
+  /* CORRECTED A TENTH TIME 2026-09-29 (legacy-tests T11; ai-runs N293, R45, K358), read off this arm's own failure
+     output: C-22.18 (`AI_RUN_STATE_TOO_LARGE` — a run's `state` over `AI_RUN_STATE_MAX_BYTES`, 262,144, refused at the
+     open and the tick by `checkRunState`), a fact about the run, held in ai-runs' own table; EIGHTEEN. */
+  t("ARM D1: the C-22 family is EIGHTEEN C-numbers — IS-6's six, SK-1's skill-version condition, "
     + "PL-18's project-membership gate, REC-93's two for the folded observation log, REC-153's "
     + "context-kind check, REC-152's principal, REC-169's two budget figures, REC-172's unknown bound, "
-    + "REC-177's unstated allowance and observation-log's stored NEVER_LOOKED",
+    + "REC-177's unstated allowance, observation-log's stored NEVER_LOOKED and ai-runs' state ceiling",
     codes.map((c) => AI_RUN_CHECKS[c].check).sort(),
-    ["C-22.1", "C-22.10", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16", "C-22.17", "C-22.2", "C-22.3",
-     "C-22.4", "C-22.5", "C-22.6", "C-22.7", "C-22.8", "C-22.9"]);
+    ["C-22.1", "C-22.10", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16", "C-22.17", "C-22.18", "C-22.2",
+     "C-22.3", "C-22.4", "C-22.5", "C-22.6", "C-22.7", "C-22.8", "C-22.9"]);
   t("ARM D2: every code carries a CANNED TRANSLATION — an untranslated code must not exist to be sent",
     codes.filter((c) => typeof AI_RUN_CHECKS[c].translation !== "string"
                      || AI_RUN_CHECKS[c].translation.length < 40), []);
@@ -325,7 +334,10 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
        rows (C-22.1–.4, .6, .9, .10, .17) name `checkObservation`/`checkCondition`, which N49 moved out of `airun.mjs`
        into observation-log's pure `src/observation-log/vocabulary.mjs`. A third pure check module, named, not an
        open `where`. */
-    codes.filter((c) => !/^src\/(airun|skillpack|observation-log\/vocabulary)\.mjs /.test(AI_RUN_CHECKS[c].where || "")), []);
+    /* WIDENED BY NAME 2026-09-29 (legacy-tests T11; N289, K348, K358, ai-runs R35): C-22.7's row, held in ai-runs' own
+       table, names `src/ai-runs/skill-version.mjs checkSkillVersion` (its one minting site, R8), a pure module that
+       imports only that table; `skillpack.mjs`' copy was deleted by N156. A fourth pure check module, named. */
+    codes.filter((c) => !/^src\/(airun|skillpack|observation-log\/vocabulary|ai-runs\/skill-version)\.mjs /.test(AI_RUN_CHECKS[c].where || "")), []);
   /* THE MAP IS READ FROM ONE PLACE. airun.mjs must not spell a translation of
      its own — a hand copy agrees at zero cost, measured five times. */
   t("ARM D4: airun.mjs holds NO second copy of any translation",
@@ -482,7 +494,7 @@ const KILLED = "RUN-2026-0807-killed";
     bounds: [{ bound: "fetches", allowed: 40, unit: "requests" },
              { bound: "subsessions", allowed: 4, unit: "sessions" }],
     state: { queue: ["budget-2024", "budget-2025"] },
-    leaseMs: 60000, at: T0,
+    leaseMs: 60000, at: RUN_T0,
   });
   t("ARM K1: the run starts, running, on tick one",
     [started.started, started.status, started.ticks], [true, "running", 1]);
@@ -490,7 +502,7 @@ const KILLED = "RUN-2026-0807-killed";
   /* It does REAL work first, so what the arms below prove is that the log
      SURVIVED the kill (§14b.7) and not merely that a terminal row appeared. */
   const ticked = await POST(`op=airuntick&token=${TOK}`, {
-    run: KILLED, at: at(T0, 5000), leaseMs: 60000,
+    run: KILLED, at: at(RUN_T0, 5000), leaseMs: 60000,
     state: { queue: ["budget-2025"] },
     consume: { fetches: 7, subsessions: 1 },
     log: [
@@ -525,7 +537,7 @@ const KILLED = "RUN-2026-0807-killed";
   /* Driven exactly as scheduler.test.mjs drives it: `onAlarm(now)` with a pinned
      virtual clock, which is what workerd calls. Nothing here is a stand-in for
      the alarm — it IS the alarm's body. */
-  const alarm = await obj.onAlarm(ms(at(T0, 120000)));
+  const alarm = await obj.onAlarm(ms(at(RUN_T0, 120000)));
   t("ARM K2b: the alarm's own account of itself NAMES the reaper rather than reporting it as a probe",
     !!(alarm && alarm.airunreap), true);
   t("ARM K2c: and it reports exactly one lapsed run reaped, by name",
@@ -560,7 +572,7 @@ const KILLED = "RUN-2026-0807-killed";
   t("ARM K8: op=airun publishes the condition a surface renders",
     read.session.condition && read.session.condition.bound, "lease");
   t("ARM K9: a tick arriving after the run ended is a STATED no-op and does not reopen it",
-    (await POST(`op=airuntick&token=${TOK}`, { run: KILLED, at: at(T0, 200000) })).ticked, false);
+    (await POST(`op=airuntick&token=${TOK}`, { run: KILLED, at: at(RUN_T0, 200000) })).ticked, false);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -583,10 +595,10 @@ const SPENT = "RUN-2026-0807-spent";
     principalClaude: "member", principalClaudeRef: "ruth@believe-in-oakland",
     skillVersion: "investigative-session@1",
     bounds: [{ bound: "fetches", allowed: 3, unit: "requests" }],
-    state: {}, leaseMs: 3600000, at: T0,
+    state: {}, leaseMs: 3600000, at: RUN_T0,
   });
   const spend = await POST(`op=airuntick&token=${TOK}`, {
-    run: SPENT, at: at(T0, 1000), consume: { fetches: 3 },
+    run: SPENT, at: at(RUN_T0, 1000), consume: { fetches: 3 },
     log: [{ level: "internet", subject: "observation:portal-search", state: "LOOKED_ABSENT",
             detail: "three searches of the controller portal returned nothing naming the transfers" }],
   });
@@ -626,8 +638,8 @@ console.log("\n--- ARM C/F · the two endings that are not bounds ---");
     run: CANCELLED, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "instance", skillVersion: "investigative-session@1",
     bounds: [{ bound: "wallclock", allowed: 600000, unit: "ms" }],
-    state: {}, at: T0 });
-  const c = await POST(`op=airunclose&token=${TOK}`, { run: CANCELLED, bound: "cancelled", at: at(T0, 9000) });
+    state: {}, at: RUN_T0 });
+  const c = await POST(`op=airunclose&token=${TOK}`, { run: CANCELLED, bound: "cancelled", at: at(RUN_T0, 9000) });
   t("ARM C1: a member stopping a run is an ENDING and is accepted", [c.terminated, c.bound], [true, "cancelled"]);
   const cl = await GET(`op=airunlog&token=${TOK}&run=${CANCELLED}`);
   t("ARM C2: a cancelled run with no observations at all still leaves a log", cl.entries.length, 1);
@@ -639,12 +651,12 @@ console.log("\n--- ARM C/F · the two endings that are not bounds ---");
   await POST(`op=airunopen&token=${TOK}`, {
     run: DONE, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "instance", skillVersion: "investigative-session@1",
-    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: T0 });
-  await POST(`op=airuntick&token=${TOK}`, { run: DONE, at: at(T0, 1000), consume: { fetches: 2 },
+    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: RUN_T0 });
+  await POST(`op=airuntick&token=${TOK}`, { run: DONE, at: at(RUN_T0, 1000), consume: { fetches: 2 },
     log: [{ level: "content", subject: "observation:budget-2024-table", state: "partial",
             condition: "text-undetermined",
             detail: "the transfer table extracted at 88 per cent; the remaining rows are over the envelope" }] });
-  const f = await POST(`op=airunclose&token=${TOK}`, { run: DONE, bound: "completed", at: at(T0, 2000) });
+  const f = await POST(`op=airunclose&token=${TOK}`, { run: DONE, bound: "completed", at: at(RUN_T0, 2000) });
   t("ARM F1: a completed run closes on `completed`", [f.terminated, f.bound], [true, "completed"]);
   t("ARM F2: and its search state is `partial`, taken from what it actually recorded rather than "
     + "declared about itself", f.state, "partial");
@@ -668,9 +680,9 @@ console.log("\n--- ARM C/F · the two endings that are not bounds ---");
   await POST(`op=airunopen&token=${TOK}`, {
     run: REFUSEDMODE, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "instance", skillVersion: "investigative-session@1",
-    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: T0 });
+    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: RUN_T0 });
   const g = await POST(`op=airunclose&token=${TOK}`,
-    { run: REFUSEDMODE, bound: "mode-not-deployed", at: at(T0, 500) });
+    { run: REFUSEDMODE, bound: "mode-not-deployed", at: at(RUN_T0, 500) });
   t("ARM G1 (FL-7, THROUGH THE OP): a run refused by the deployment gate can actually be CLOSED on "
     + "`mode-not-deployed` by a caller — C-22.5 admits it, and the op returns it. A catalogue entry no "
     + "caller can reach would be the `op=invitelook` defect wearing a vocabulary",
@@ -699,9 +711,9 @@ console.log("\n--- ARM C/F · the two endings that are not bounds ---");
   await POST(`op=airunopen&token=${TOK}`, {
     run: MISATTR, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "instance", skillVersion: "investigative-session@1",
-    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: T0 });
+    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: RUN_T0 });
   const m = await POST(`op=airunclose&token=${TOK}`,
-    { run: MISATTR, bound: "cancelled", at: at(T0, 500) });
+    { run: MISATTR, bound: "cancelled", at: at(RUN_T0, 500) });
   const ml = await GET(`op=airunlog&token=${TOK}&run=${MISATTR}`);
   t("ARM G4 (THE NAMED MISATTRIBUTION ARM): a gate-refused run closed as `cancelled` puts 'a member "
     + "stopped it' on the record about a run no member touched. The plane ACCEPTS it — `cancelled` is a "
@@ -864,14 +876,14 @@ const REFUSED = "RUN-2026-0807-refusals";
   await POST(`op=airunopen&token=${TOK}`, {
     run: REFUSED, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "instance", skillVersion: "investigative-session@1",
-    bounds: [], state: {}, at: T0 });
+    bounds: [], state: {}, at: RUN_T0 });
   /* NULL-TOLERANT ON PURPOSE. Under a negative control the run this ticks may
      already have ended, and `refused` is then absent — a bare `r.refused[0]`
      throws on undefined and takes every arm behind it with it, which is how a
      control stops NAMING what it broke and starts hiding it. Measured here: the
      C-22.4 arm's first control threw at this line. */
   const tryEntry = async (entry, run = REFUSED) => {
-    const r = await POST(`op=airuntick&token=${TOK}`, { run, at: at(T0, 1000), log: [entry] });
+    const r = await POST(`op=airuntick&token=${TOK}`, { run, at: at(RUN_T0, 1000), log: [entry] });
     return (r && Array.isArray(r.refused) && r.refused[0]) || null;
   };
 
@@ -909,9 +921,9 @@ const REFUSED = "RUN-2026-0807-refusals";
   await POST(`op=airunopen&token=${TOK}`, {
     run: R4RUN, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "instance", skillVersion: "investigative-session@1",
-    bounds: [], state: {}, at: T0 });
+    bounds: [], state: {}, at: RUN_T0 });
   const r4 = await POST(`op=airunclose&token=${TOK}`,
-    { run: R4RUN, bound: "completed", condition: "the-portal-was-being-difficult", at: at(T0, 2000) });
+    { run: R4RUN, bound: "completed", condition: "the-portal-was-being-difficult", at: at(RUN_T0, 2000) });
   t("ARM R4 (C-22.4, door one — a RUN's ending): a condition outside the record's vocabulary is refused",
     [r4.check, r4.code, r4.terminated], ["C-22.4", "AI_RUN_CONDITION_UNKNOWN", false]);
   const r4b = await tryEntry({ level: "document", subject: "x", state: "LOOKED_INDETERMINATE",
@@ -932,8 +944,8 @@ const REFUSED = "RUN-2026-0807-refusals";
   await POST(`op=airunopen&token=${TOK}`, {
     run: R5RUN, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "instance", skillVersion: "investigative-session@1",
-    bounds: [], state: {}, at: T0 });
-  const r5 = await POST(`op=airunclose&token=${TOK}`, { run: R5RUN, bound: "", at: at(T0, 2000) });
+    bounds: [], state: {}, at: RUN_T0 });
+  const r5 = await POST(`op=airunclose&token=${TOK}`, { run: R5RUN, bound: "", at: at(RUN_T0, 2000) });
   t("ARM R5 (C-22.5): a run may not leave `running` without saying what stopped it — THE ITEM'S "
     + "own refusal", [r5.check, r5.code, r5.terminated], ["C-22.5", "AI_RUN_BOUND_UNNAMED", false]);
   t("ARM R5b: and the refusal names both vocabularies, so the caller learns what it may say",
@@ -945,8 +957,8 @@ const REFUSED = "RUN-2026-0807-refusals";
   await POST(`op=airunopen&token=${TOK}`, {
     run: R5RUN2, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "instance", skillVersion: "investigative-session@1",
-    bounds: [], state: {}, at: T0 });
-  const r5c = await POST(`op=airunclose&token=${TOK}`, { run: R5RUN2, at: at(T0, 2000) });
+    bounds: [], state: {}, at: RUN_T0 });
+  const r5c = await POST(`op=airunclose&token=${TOK}`, { run: R5RUN2, at: at(RUN_T0, 2000) });
   t("ARM R5c: a close that names NOTHING is refused identically — silence is not `completed`",
     [r5c.check, r5c.terminated], ["C-22.5", false]);
 
@@ -959,7 +971,7 @@ const REFUSED = "RUN-2026-0807-refusals";
   /* THE OVER-STRICTNESS ARM. A genuinely correct alternative, phrased unlike
      anything above, must PASS — otherwise these six are a wall rather than a
      set of rules. */
-  const okEntry = await POST(`op=airuntick&token=${TOK}`, { run: REFUSED, at: at(T0, 3000), log: [
+  const okEntry = await POST(`op=airuntick&token=${TOK}`, { run: REFUSED, at: at(RUN_T0, 3000), log: [
     { level: "content", subject: "observation:minutes-2023", state: "partial",
       governed: false, condition: "text-undetermined",
       detail: "a scanned minute book yielded most of its text and CID fonts defeated the rest" },
@@ -969,7 +981,7 @@ const REFUSED = "RUN-2026-0807-refusals";
   t("ARM R8 (over-strictness): two correct observations phrased unlike anything above are ACCEPTED",
     [okEntry.appended, Array.isArray(okEntry.refused) ? okEntry.refused.length : null], [2, 0]);
   await POST(`op=airunclose&token=${TOK}`, { run: REFUSED, bound: "runtime",
-    condition: "runtime-ceiling-reached", at: at(T0, 4000) });
+    condition: "runtime-ceiling-reached", at: at(RUN_T0, 4000) });
 }
 
 /* ------------------------------------------------------------------------- *
@@ -1022,8 +1034,8 @@ const RESUMED = "RUN-2026-0807-resumed";
     run: RESUMED, contextType: "inquiry", contextId: BUNDLE,
     principalClaude: "project", skillVersion: "investigative-session@1",
     bounds: [{ bound: "fetches", allowed: 50 }],
-    state: { queue: ["a", "b", "c"], done: [] }, leaseMs: 60000, at: T0 });
-  await POST(`op=airuntick&token=${TOK}`, { run: RESUMED, at: at(T0, 1000), leaseMs: 60000,
+    state: { queue: ["a", "b", "c"], done: [] }, leaseMs: 60000, at: RUN_T0 });
+  await POST(`op=airuntick&token=${TOK}`, { run: RESUMED, at: at(RUN_T0, 1000), leaseMs: 60000,
     state: { queue: ["b", "c"], done: ["a"] }, consume: { fetches: 1 },
     /* The referent is REC-100's correction (2026-09-18, IC-130), not an
        exemption: C-22.10's `run` carve-out is deleted, so a run's PRESENT names
@@ -1041,13 +1053,13 @@ const RESUMED = "RUN-2026-0807-resumed";
   t("ARM P1: a resuming invocation reads the run and finds it still running", seen.session.status, "running");
   t("ARM P2: and reads its own log rather than restarting — the work already done is legible",
     priorLog.entries.map((e) => e.subject), ["observation:a"]);
-  const resumed = await POST(`op=airuntick&token=${TOK}`, { run: RESUMED, at: at(T0, 30000), leaseMs: 60000,
+  const resumed = await POST(`op=airuntick&token=${TOK}`, { run: RESUMED, at: at(RUN_T0, 30000), leaseMs: 60000,
     state: { queue: ["c"], done: ["a", "b"] }, consume: { fetches: 1 },
     log: [{ level: "document", subject: "observation:b", state: "LOOKED_ABSENT",
             detail: "the second document on the work list is not in the store and the source has none" }] });
   t("ARM P3: the resumed run CONTINUES — ticks accumulate rather than resetting", resumed.ticks, 3);
   t("ARM P4: and the lease moved out with it, so a live run is not reaped",
-    resumed.expires, at(T0, 90000));
+    resumed.expires, at(RUN_T0, 90000));
   const after = await GET(`op=airunlog&token=${TOK}&run=${RESUMED}`);
   t("ARM P5: the log is the union of both invocations, in order",
     after.entries.map((e) => e.subject), ["observation:a", "observation:b"]);

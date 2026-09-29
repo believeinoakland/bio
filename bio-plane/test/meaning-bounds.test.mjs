@@ -1917,7 +1917,11 @@ const RUN = "RUN-2026-0807-rec70";
     principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
     skillVersion: "investigative-session@1", biasManifest: null,
     bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }],
-    leaseMs: 600000, at: NOW,
+    /* CORRECTED 2026-09-29 (legacy-tests T11; N223, ai-runs R43, scheduler R9): the open and the tick were stamped
+       `at: NOW` (2026-07-16), so the lease lapsed on the wall clock the moment it was written. Opening a run now arms
+       the scheduler, whose reaper (ai-runs R15) reads the real clock and stopped the run before its tick. The run is
+       opened and ticked on the wall clock; the fixture's subject, six rows to cut, is unchanged. */
+    leaseMs: 600000,
   });
   t("REC-70 FIXTURE: the run opens — the arms below are over a REAL run, not an empty answer",
     opened?.started, true);
@@ -1932,7 +1936,7 @@ const RUN = "RUN-2026-0807-rec70";
        is refused. The fixture's subject — six rows to cut — is unchanged. */
     result_kind: "capture", result_ref: String(i).repeat(64),
     detail: `REC-70 fixture observation ${i} — the log grows one row per tick and nothing capped it` });
-  const ticked = await POST("op=airuntick&token=mem-r60", { run: RUN, at: NOW, leaseMs: 600000, log: entries });
+  const ticked = await POST("op=airuntick&token=mem-r60", { run: RUN, leaseMs: 600000, log: entries });
   t("REC-70 FIXTURE: and it records SIX observations, so a bound of 2 CUTS and a bound of 5000 does not",
     ticked?.ticked, true);
 

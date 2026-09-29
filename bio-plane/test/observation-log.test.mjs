@@ -431,6 +431,13 @@ const SHA_A = "a".repeat(64);
 const SHA_B = "b".repeat(64);
 const T0 = "2026-09-14T09:00:00Z";
 const at = (plus) => new Date(Date.parse(T0) + plus).toISOString().split(".")[0] + "Z";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T11; scheduler N223, ai-runs R43): a run's open now ARMS the one alarm, and the
+   reconcile reads the reaper's wake, so a run dated `T0` (or 2020) with a 10-minute lease is reaped by the REAL alarm
+   before its first tick (C2's fourth, terminal entry; L, K and M9 read a run already stopped). The runs' leases reach
+   past the wall clock, K6's KL_LEASE precedent (T8), with a week's margin so K4's day-ahead reap takes only its own run.
+   Each arm's subject (the fold, the referent, the watermark) is unchanged. */
+const liveLease = (fromIso) => Math.max(600000, Date.now() - Date.parse(fromIso) + 7 * 86400000);
+const LIVE_LEASE = liveLease(T0);
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -739,10 +746,10 @@ await POST(`op=airunopen&token=${TOK}`, {
   run: RUN, contextType: "inquiry", contextId: BUNDLE, label: "the fold's fixture", mode: "check",
   principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
   skillVersion: "investigative-session@1", biasManifest: null,
-  bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: 600000, at: T0,
+  bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: LIVE_LEASE, at: T0,
 });
 const ticked = await POST(`op=airuntick&token=${TOK}`, {
-  run: RUN, at: at(5000), leaseMs: 600000, consume: { fetches: 3 },
+  run: RUN, at: at(5000), leaseMs: LIVE_LEASE, consume: { fetches: 3 },
   log: [
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R3, K148): this was NEVER_LOOKED, which R3 now
        refuses at the append as a look at a subject (only a run's terminal rollup may carry it). The fold's claim is
@@ -1250,7 +1257,7 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
       run, contextType: ctxType, contextId: ctx, label: "REC-103's fence fixture", mode: "check",
       principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
       skillVersion: "investigative-session@1", biasManifest: null,
-      bounds: [{ bound: "fetches", allowed: 4, unit: "requests" }], leaseMs: 600000, at: at(90000) });
+      bounds: [{ bound: "fetches", allowed: 4, unit: "requests" }], leaseMs: LIVE_LEASE, at: at(90000) });
     if (!o || o.started !== true) throw new Error(`airunopen ${run}: ${JSON.stringify(o).slice(0, 300)}`);
     await obj.recordCapturedLocator({
       address: `https://example.gov/rec103-run-${ctxType}`,
@@ -1336,7 +1343,7 @@ console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) --
     run: R2, contextType: "inquiry", contextId: B2, label: "REC-100's fixture", mode: "check",
     principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
     skillVersion: "investigative-session@1", biasManifest: null,
-    bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: 600000, at: T0,
+    bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: LIVE_LEASE, at: T0,
   });
 
   /* L1 — THE WRITE DOOR IS ALREADY OPEN, and nothing in the record said so.
@@ -1346,7 +1353,7 @@ console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) --
      needs NO plane change — which is exactly the kind of already-built
      precondition a decomposition rests a deferral on without checking. */
   const withRef = await POST(`op=airuntick&token=${TOK}`, {
-    run: R2, at: at(5000), leaseMs: 600000, consume: { fetches: 1 },
+    run: R2, at: at(5000), leaseMs: LIVE_LEASE, consume: { fetches: 1 },
     log: [{ level: "document", subject: "observation:budget-2026", state: "PRESENT",
             result_kind: "capture", result_ref: SHA_B,
             detail: "a run PRESENT that DOES name what it found" }],
@@ -1408,7 +1415,7 @@ console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) --
      section K6, which writes the row with a build carrying the old rule and reads
      it back through this one over the SAME persisted store. */
   const bare = await POST(`op=airuntick&token=${TOK}`, {
-    run: R2, at: at(6000), leaseMs: 600000, consume: { fetches: 1 },
+    run: R2, at: at(6000), leaseMs: LIVE_LEASE, consume: { fetches: 1 },
     log: [{ level: "document", subject: "observation:budget-2025", state: "PRESENT",
             detail: "a run PRESENT that names NOTHING — the carve-out's own shape" }],
   });
@@ -1445,7 +1452,7 @@ console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) --
      that third value, and it is why this item did not simply answer
      "undetermined whenever `result_ref` is null". */
   await POST(`op=airuntick&token=${TOK}`, {
-    run: R2, at: at(7000), leaseMs: 600000, consume: { fetches: 1 },
+    run: R2, at: at(7000), leaseMs: LIVE_LEASE, consume: { fetches: 1 },
     log: [{ level: "document", subject: "observation:never-existed", state: "LOOKED_ABSENT",
             detail: "positively gone, 404 from the origin" }],
   });
@@ -1784,12 +1791,12 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
               bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
     register: [],
   });
-  const openRun = (run, plus, leaseMs = 600000) => POST(`op=airunopen&token=${TOK}`, {
+  const openRun = (run, plus, leaseMs = LIVE_LEASE) => POST(`op=airunopen&token=${TOK}`, {
     run, contextType: "inquiry", contextId: KB, label: "REC-100's build fixture", mode: "check",
     principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
     skillVersion: "investigative-session@1", biasManifest: null,
     bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs, at: at(plus) });
-  const tick = (run, plus, log, leaseMs = 600000) => POST(`op=airuntick&token=${TOK}`,
+  const tick = (run, plus, log, leaseMs = LIVE_LEASE) => POST(`op=airuntick&token=${TOK}`,
     { run, at: at(plus), leaseMs, consume: { fetches: 1 }, log });
   const logOf = (run) => GET(`op=airunlog&token=${TOK}&run=${run}`);
   const refusedAs = (tk) => (tk?.refused || []).map((r) => [r.code, r.check, r.referent_fault ?? null]);
@@ -1906,10 +1913,14 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
      and never reached, because it needs an expired lease. It is reached here
      through the alarm's own body — `onAlarm(now)`, which is what workerd calls —
      exactly as `airun.test.mjs` arm K drives it. */
-  await openRun(KR, 200000, 60000);
-  await tick(KR, 201000, [{ level: "document", subject: "observation:k-r1", state: "PRESENT",
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T11; scheduler N223, ai-runs R43): the open arms the REAL alarm, which reaps
+     a run whose lease lapsed in wall-clock time before `onAlarm` below is called. KR is opened a day past the wall
+     clock (as `airun-contextkind.test.mjs`' RUN_AT is), so only this arm's virtual clock can reap it. */
+  const KR_AT = Date.now() - Date.parse(T0) + 86400000;
+  await openRun(KR, KR_AT, 60000);
+  await tick(KR, KR_AT + 1000, [{ level: "document", subject: "observation:k-r1", state: "PRESENT",
     result_kind: "capture", result_ref: SHA_A, detail: "the look the run made before it died" }], 60000);
-  const alarm = await obj.onAlarm(Date.parse(at(400000)));
+  const alarm = await obj.onAlarm(Date.parse(at(KR_AT + 200000)));
   const logR = await logOf(KR);
   const termR = logR.entries.filter((e) => e.terminal === true);
   const r1 = logR.entries.find((e) => e.subject === "observation:k-r1");
@@ -2357,9 +2368,9 @@ t("M1b: NO READER TESTS THE THREE-WAY ANSWER AS A BOOLEAN — every one of its t
       principalClaudeRef: "believe-in-oakland/claude",
       skillVersion: "investigative-session@1", biasManifest: null,
       bounds: [{ bound: "fetches", allowed: 4, unit: "requests" }],
-      leaseMs: 600000, at: "2020-01-01T00:00:00Z" });
+      leaseMs: liveLease("2020-01-01T00:00:00Z"), at: "2020-01-01T00:00:00Z" });
     const tickM = await sPOST(`op=airuntick&token=${TOK}`, {
-      run: RUN_M, at: "2020-01-01T00:00:00Z", leaseMs: 600000, consume: { fetches: 1 },
+      run: RUN_M, at: "2020-01-01T00:00:00Z", leaseMs: liveLease("2020-01-01T00:00:00Z"), consume: { fetches: 1 },
       log: [{ level: "content", subject: "observation:d500-watermark",
               state: "LOOKED_ABSENT", detail: "the first content-level row this log holds" }] });
     t("M6b: THE ARM IS ARMED — the watermark row really was appended, so the read "
@@ -2489,7 +2500,7 @@ t("M1b: NO READER TESTS THE THREE-WAY ANSWER AS A BOOLEAN — every one of its t
       principalClaudeRef: "believe-in-oakland/claude",
       skillVersion: "investigative-session@1", biasManifest: null,
       bounds: [{ bound: "fetches", allowed: 4, unit: "requests" }],
-      leaseMs: 600000, at: "2020-01-01T00:00:00Z" });
+      leaseMs: liveLease("2020-01-01T00:00:00Z"), at: "2020-01-01T00:00:00Z" });
     const tickB = await bPOST(`op=airuntick&token=${TOK}`, {
       run: RUN_B, at: AT_BAND, leaseMs: 600000, consume: { fetches: 1 },
       log: [{ level: "content", subject: "observation:d516-band-content",

@@ -21,13 +21,35 @@ import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
+/* The plane's shape (K316, K313): workerd's `sql.exec` answers a cursor (iterable once, `toArray()`, `one()`), not an
+   array, so `[0]` or `.length` of it is undefined; and it refuses a LIKE or GLOB pattern over 50 bytes ("LIKE or GLOB
+   pattern too complex"), which node:sqlite does not. This storage answers as workerd does, so code that indexes a
+   cursor or writes a long pattern fails here as it would in the Durable Object. */
+export const WORKERD_PATTERN_CAP = 50;
+export function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      if (literal.some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP)) throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -119,13 +141,13 @@ export function world({ group = "test-group" } = {}) {
   let n = 0;
   const w = {
     st, host, record, membership, promotion, content, k, strength, reevaluation, publication, standards, c, clock, ex,
-    row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
+    rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
+    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     snapshot(tables = null) {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        if (!tables || tables.includes(name)) out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM "${name}"`));
+        if (!tables || tables.includes(name)) out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM "${name}"`).toArray());
       return out;
     },
     /** An op, as the store's op map runs it: `query` the control plane's search params, `body` its JSON. */

@@ -1,0 +1,19 @@
+# BOB to affordances (T11)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entries are the affordances bullet of `build/plan/current.md` (layer 11); read the plan's opening paragraph first (its rules hold). An `N` entry's text is in `build/plan/next.md`. Below you (K348–K374), T11 changed: layer 1 catalogue comments (C-22.7's copy stays, N299); layer 2 record-core R37, `CATALOG_VERSION` 1.41.0; layer 4 extraction R61–R62 `indexTestimony`/`onIndexed`, calibration R18–R19; layer 5 retrieval's projection columns into `bundle_projection`, observation-log R7; layer 6 ai-runs R30/R45 (C-22.18), C-22.7 in ai-runs' table, capture-requests R14, agent-worker R49; layer 7 intent through membership `noSuchProject`, bounds R12/R13; reevaluation `listeners_failed`, case notices by capture (K359, K365); layer 8 publication R41/R43 registered with reevaluation, R42, held references; case-authoring and review regions; layer 9 standards `STANDARD_NO_ID`, conformance and consequences codes and rows, actions R43 `noSuchAction`, R42 `kinds()` (op `actionkinds`), R31 over `bundle_projection`, codes `ACTION_MOVE_NO_REASON`, `PENDING_CLOCKS_BAD_BEFORE`, `ACTION_TOO_LARGE`, `ACTION_NO_DETERMINATION` (K368); filings and escalation through actions R43; layer 10 monitoring's ticks in process with no credential (R24 retired, K372), `pause`, `slate`, DO routes `monitorpause`/`monitorslate`, `counts()` (R46), `monitorOp` taking a handed `doAnswer`; scheduler arms from calibration, ai-runs and capture-requests; legacy-store builds `publicationOf` at construction, calls `indexTestimony` and monitoring's `counts()`. The old battery on the merged tree: 361 of 383 suites green before layer 11 (legacy-store's measure). Your entries and T11's reports for you: N310: `JUSTIFICATION_REFUSALS` (`src/affordances.mjs` ~453) names `ACTION_MOVE_NO_REASON` for `actionmove` in place of `NO_REASON` (actions R13, K368), so your R19 test (72/1 on actions' branch) is green again; grade conformance's `determine` `reasoned` (its N233: it now refuses `NO_REASON`/`BAD_REASON`), with R19's test covering it. Nothing else of N310 or of the queue is yours in T11. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour; test SQL at the plane's shape (a cursor-returning fixture, K316) and keep each LIKE/GLOB pattern within 50 bytes (K313). Strike each `not yet met` mark your work meets. Suites that need re-anchoring are legacy-tests', reported. A generated artifact you make stale is reported, not rebuilt. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · CHANGE
+
+**Re-opened (P10; LEGACY-INDEX #8 J2, K377).** The control plane gains `monitorpause`: a mutating op of the root of trust with a NEEDS row of `null`, like `governorconfig` (monitoring R30). Two of your totality guards now name it:
+1. `NON_ACTS`: add it, with the reason "a machine-directed setting over the instance's own fetching, not an act on an object".
+2. `RUNG_ABSENT`: give it the ground your vocabulary holds true for it. My reading is `substrate`, as for `governorconfig`; if `governorconfig` sits under another ground, use that one.
+
+The failing tests are `affordances.test` "every op in NEEDS is a published act or a named NON_ACT" and `rung-ladder`'s FORWARD arm and exact-count arm (want 169). Legacy-index's branch holds the op, so test against `origin/job/T11/legacy-index` merged into a scratch tree, and commit only your own paths. Your R26 mark (N231) is struck by me once legacy-index lands; nothing for you there. Then COMPLETE again.
+
+## B3 · CHANGE
+
+Legacy-index is merged into `tranche/T11` (§4). Merge the tranche now and apply B2 against it: `monitorpause`'s `NON_ACTS` entry and its `RUNG_ABSENT` ground. Correction to B2: your R26 mark is N65's, not N231's, and it stays.

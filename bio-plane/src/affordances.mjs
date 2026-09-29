@@ -465,6 +465,9 @@ export const JUSTIFICATION_REFUSALS = [
   /* K219 (T7): a member's recorded re-evaluation carries its note, "what was looked at and what was decided"
      (reevaluation R16); the code refuses it absent as well as malformed, as RISK_TIER_REASON_REFUSED does. */
   "REEVALUATION_NOTE_MALFORMED",
+  /* N310 (K368): `op=actionmove` answers its absent reason with its own code (actions R13), the family's requirement
+     in actions' word for it. */
+  "ACTION_MOVE_NO_REASON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -708,7 +711,7 @@ export const RUNGS = {
   reopen:             "reasoned",   // NO_REASON
   inquirydivide:      "reasoned",   // NO_REASON (one authored reason per division, DEC-29)
   inquiryground:      "reasoned",   // NO_REASON
-  actionmove:         "reasoned",   // NO_REASON
+  actionmove:         "reasoned",   // ACTION_MOVE_NO_REASON (actions R13; N310)
   discharge:          "reasoned",   // NO_REASON (a lawful skip says why it was lawful)
   proposedispose:     "reasoned",   // NO_REASON (D-79: a finding AGES with a recorded reason)
   relationdeclare:    "reasoned",   // NO_JUSTIFICATION (D-83: relations carry one, NOT NULL)
@@ -741,6 +744,9 @@ export const RUNGS = {
   escalationadvance:  "reasoned",   // NO_REASON (escalation R13: an edge is taken with a reason)
   escalationdecline:  "reasoned",   // NO_REASON (escalation R13: a proposed stage is declined with a reason)
   escalationsuspend:  "reasoned",   // NO_REASON (escalation R15; escalationresume takes it back, and the higher rung is stated)
+  /* N310 (with conformance's N233): superseding a determination asks its reason and refuses an absent one NO_REASON
+     (conformance R7); a first determination replaces nothing and asks none, `inquiryground`'s shape (K212). */
+  determine:          "reasoned",   // NO_REASON (conformance R7: a supersession says why)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -848,6 +854,8 @@ export const RUNG_ABSENT = {
   signeradd:            { ground: "credential", is: "signer governance — the KEY, not what is signed with it" },
   signerset:            { ground: "credential", is: "signer governance" },
   governorconfig:       { ground: "credential", is: "operator tuning of the per-host governor" },
+  /* K377 (monitoring R30): the administrator's pause of the monitoring daemon, on `governorconfig`'s ground beside it. */
+  monitorpause:         { ground: "credential", is: "an administrator's setting over the instance's own fetching: pauses or resumes the monitoring daemon" },
   expertisedeclare:     { ground: "credential", is: "a member's own declaration about themselves" },
   expertiseconfirm:     { ground: "credential", is: "administrator act on a declaration" },
   enroll:               { ground: "credential", is: "an invitee becoming a member" },
@@ -1035,13 +1043,12 @@ export const RUNG_ABSENT = {
      them), keyed to layer 9's op maps (legacy-index's names for escalation's services), on R27's rule:
      each is a member's act on the record, or a proposal stored apart that settles nothing, corrected forward, that asks
      no authored reason, or asks one only as a proposal's why (`actionlawspropose` and `contradictionpropose`'s
-     precedent), and that no published act takes back. `determine` asks a reason only where it supersedes, under a
-     code (`BAD_REASON`) outside JUSTIFICATION_REFUSALS, so it is stated `undetermined` here (K264 (2); N233).
-     actions R28's proposal beside them, on `actionlawspropose`'s ground. */
+     precedent), and that no published act takes back. `determine` left this block for RUNGS (N310): since N233 its
+     supersession refuses an absent reason NO_REASON. actions R28's proposal beside them, on `actionlawspropose`'s
+     ground. */
   standarddeclare:      { ground: "undetermined", is: "a member records a standard the record holds — citation, kind, issuer, its own words as captured and its period; never edited, corrected by a later standard that supersedes it (standards R1, R6)" },
   standardpropose:      { ground: "undetermined", is: "a member or a machine PROPOSES a standard with its why, stored apart and labelled; never a standard until a member adopts it (standards R9)" },
   standardadopt:        { ground: "undetermined", is: "a member adopts a proposal as a standard, the standard naming the proposal and the proposal its adoption, at most once (standards R10)" },
-  determine:            { ground: "undetermined", is: "a member determines a government act compliant, noncompliant or unclear against named standards, resting on published findings; never edited, superseded once by a later determination with its reason (conformance R1, R7)" },
   comparisonpropose:    { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled; never a determination (conformance R12)" },
   consequencerecord:    { ground: "undetermined", is: "a member records what a breach did and to whom — a part computed from the record's figures, assessed with a rationale, or undetermined with why; never edited, revised by a successor (consequences R1–R6)" },
   filingprepare:        { ground: "undetermined", is: "a machine or a member prepares a filing draft from the record, every filled blank naming its source and every unfilled one marked; never sent until a member approves it (filings R1–R5)" },
@@ -2202,6 +2209,8 @@ export const NON_ACTS = {
   signeradd: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   signerset: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   governorconfig: "operator tuning of the per-host governor",
+  /* K377 (monitoring R30). */
+  monitorpause: "a machine-directed setting over the instance's own fetching, not an act on an object",
   /* Task acts: their subject is a TASK row, assignee-fenced by the store
      (NOT_YOURS), published with the task itself via op=tasks. */
   taskforward: "task act, assignee-fenced; travels with the task via op=tasks",

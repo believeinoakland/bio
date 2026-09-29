@@ -587,6 +587,28 @@ export function checkConsume(entries, { seed = false, allowance = false, map = f
   return null;
 }
 
+/* N293, R45 (REC-169's rule, one figure over) — THE MOST A RUN'S `state` MAY HOLD, in bytes: the UTF-8 length of its
+   JSON, which is exactly what `ai_runs.state` stores and what every read of the run publishes (R19). A quarter of a
+   mebibyte: the work list of a resumable run, never a transcript (DEC-61) and never the pages it read, which live in
+   the record and the observation log. */
+export const AI_RUN_STATE_MAX_BYTES = 262144;
+
+/** C-22.18 — MAY THE RUN KEEP THIS STATE? Null when `state` is absent or null (a tick that sends none leaves the held
+ *  state standing, R12, and an open that sends none stores the empty work list) or when its JSON is within
+ *  AI_RUN_STATE_MAX_BYTES; else the refusal, naming `bytes` and `limit`. The ONE site that mints the code; the open and
+ *  the tick relay it. A value JSON cannot hold (no body sent over the wire can carry one) is not measured here. */
+export function checkRunState(state) {
+  if (state == null) return null;
+  let json;
+  try { json = JSON.stringify(state); } catch { return null; }
+  if (typeof json !== "string") return null;
+  const bytes = new TextEncoder().encode(json).length;
+  if (bytes <= AI_RUN_STATE_MAX_BYTES) return null;
+  return refusal("AI_RUN_STATE_TOO_LARGE",
+    `the run's state is ${bytes} bytes as JSON, over the ${AI_RUN_STATE_MAX_BYTES} a run may keep: \`state\` is the `
+    + "run's resumable work list (§14b.7), not what it read. Nothing was written", { bytes, limit: AI_RUN_STATE_MAX_BYTES });
+}
+
 /* ------------------------------------------------- DEC-63's gate (PL-18)
 
    THE THREE GROUNDS ON WHICH THE PROJECT GATE CAN PERMIT, as a CLOSED
