@@ -3,19 +3,21 @@
  * translation. The codes are the requirements' (R1's in its order, then R3's, R6's and R9's) and K249's lower-level
  * choices (`NO_RATIONALE`, `BAD_RATIONALE`, `BASIS_UNREADABLE`, `NO_SUCH_EVIDENCE`, `NO_SUCH_PART`,
  * `ALREADY_SUPERSEDED`, `NO_REASON`, `BAD_REASON`, `ADDRESSED_UNKNOWN_STATE`). Each code is minted at one site, the
- * function its row's `where` names (K231): a code more than one act answers is minted by one helper, which they call. */
+ * function its row's `where` names (K231): a code more than one act answers is minted by one helper, which they call.
+ * `NO_SUCH_DETERMINATION` and `DETERMINATION_SUPERSEDED` are conformance's own (its R19 `noSuchDetermination` and R20
+ * `determinationSuperseded`, N309, K275), which R1, R7 and R9 answer through: C-114.1 is retired (K380) and its number
+ * is not reused. R1's two codes of this module's own conditions are named for it (K380): `CONSEQUENCE_NOT_NONCOMPLIANT`
+ * (C-114.2) and `CONSEQUENCE_NOT_A_PARTICIPANT` (C-114.3). */
 
 const at = (fn) => `src/consequences/index.mjs ${fn}`;
 const row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at(fn), translation });
 
 export const CONSEQUENCES_CHECKS = Object.freeze({
-  NO_SUCH_DETERMINATION: row(1, "noSuchDetermination", "A consequence is recorded against a determination you can see. One you may not "
-    + "see is answered exactly as one that does not exist."),
-  NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a standard the live "
-    + "determination found noncompliant. A superseded determination's parts stay readable and are not carried forward."),
-  NOT_A_PARTICIPANT: row(3, "#participantRefusal", "Recording a consequence, or whether it has been addressed, is work "
-    + "inside the determination's project, done by a member who has joined it. A machine may prepare a computed part "
-    + "and answers no project's authority."),
+  CONSEQUENCE_NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a "
+    + "standard the determination found noncompliant."),
+  CONSEQUENCE_NOT_A_PARTICIPANT: row(3, "#participantRefusal", "Recording a consequence, or whether it has been "
+    + "addressed, is work inside the determination's project, done by a member who has joined it. A machine may prepare "
+    + "a computed part and answers no project's authority."),
   AFFECTED_UNKNOWN_KIND: row(4, "checkAffected", "Who or what is affected is a class, a fund, a program, a service, a "
     + "body or other, with a description."),
   AFFECTED_INDIVIDUAL: row(5, "checkAffected", "People are counted as a class or named in their official role, never "

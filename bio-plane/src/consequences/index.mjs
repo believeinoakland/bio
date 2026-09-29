@@ -20,7 +20,9 @@
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `declarePurge`, `head`, `readFile`, `bundleInfo`;
  *                                   `sight`, `inSight`, `projectAuthority`; `promote`.
  *   conformance    `determinationRead` (conformance R9; R1 here); default `conformanceOf(host)`. With neither a host nor
- *                  a `conformance`, every determination reads as absent (fail closed).
+ *                  a `conformance`, every determination reads as absent (fail closed). Its module-level
+ *                  `noSuchDetermination` and `determinationSuperseded` (its R19, R20) answer those two conditions
+ *                  (R1, R7, R9; N309): this module mints neither code.
  *   content        `contentRow` (R2's operands, R9's evidence), `passageNotice` (R8).
  *   passageText    `(contentId) → text | null`, the passage an operand's figure is read from (R2); default
  *                  `content.passageText` (content R46), whose null is "held in a form not read" (R4).
@@ -38,7 +40,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
-import { conformanceOf } from "../conformance/index.mjs";
+import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
 import { isMachineIdentity, normalizeType, MACHINE_CLASS_PREFIX, BASIS_GRADES } from "../../checks/bio-checks.mjs";
 import { OPS, parseFigure, passageHolds, compute, addMeasures } from "./figures.mjs";
 import { CONSEQUENCES_TABLES, migrateConsequences } from "./schema.mjs";
@@ -97,12 +99,6 @@ function refuse(code, detail, extra = {}) {
 /* One code, one site (K231): each refusal minted by more than one act of this module is minted by one helper here,
    and its row's `where` names that helper. `wrote` adds the sentence an act that writes ends its refusal with. */
 const NOTHING = " Nothing was written.";
-
-/** R1, R7, R9, R13: no determination answers to the id, or the reader may not see it: one answer. */
-function noSuchDetermination(determination, wrote = false) {
-  return refuse("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered "
-    + `exactly as one that does not exist.${wrote ? NOTHING : ""}`, { determination: determination ?? null });
-}
 
 /** R6, R9, R13: no part answers to the id, or the reader may not see it: one answer. */
 function noSuchPart(id, wrote = false) {
@@ -260,7 +256,8 @@ export class Consequences {
     return this.membership.sight(project, viewer) === "full";
   }
 
-  /* R1: the determination through conformance's read (its R9), as `{id, project, outcome(standard), live}`; null when
+  /* R1: the determination through conformance's read (its R9), as `{id, project, outcome(standard), live,
+     supersededBy}`; null when
      absent, invisible, or conformance is not here to answer (fail closed). Read through one adapter so the spelling of
      conformance's answer lives in one place. */
   #determination(id, viewer) {
@@ -281,7 +278,8 @@ export class Consequences {
     };
     const sup = body.superseded_by ?? body.supersededBy ?? body.links?.superseded_by ?? null;
     const live = body.live === false ? false : !(Array.isArray(sup) ? sup.length : sup);
-    return { id, project: body.project ?? null, outcome, live };
+    const supersededBy = (Array.isArray(sup) ? sup[0] : isObj(sup) ? sup.id : sup) ?? null;
+    return { id, project: body.project ?? null, outcome, live, supersededBy: str(supersededBy) };
   }
 
   /* A part's row, or null when absent or in a project the viewer may not see (R13: one answer). */
@@ -349,8 +347,8 @@ export class Consequences {
     if (!project) return null;
     const denied = this.membership.projectAuthority(project, str(author), "joined", act);
     if (!denied) return null;
-    return refuse("NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and ${str(author)} has not `
-      + `joined it.${NOTHING}`, { project });
+    return refuse("CONSEQUENCE_NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and `
+      + `${str(author)} has not joined it.${NOTHING}`, { project });
   }
 
   /* ===================================================================== *
@@ -386,15 +384,13 @@ export class Consequences {
             causation = null, author = null, viewer = null } = {}, rev) {
     const who = viewer ?? (str(author) || null);
     const byMachine = machine(author);
-    /* R1, in order. */
+    /* R1, in order: the determination's two conditions answered through conformance's helpers (its R19, R20). */
     const d = this.#determination(determination, who);
-    if (!d || !this.#seesProject(d.project, who)) return noSuchDetermination(determination, true);
-    if (!str(standard) || d.outcome(standard) !== "noncompliant" || !d.live)
-      return refuse("NOT_NONCOMPLIANT", !d.live
-        ? `${d.id} has been superseded: a consequence is recorded against a live determination, and the parts of the `
-          + "earlier one stay readable, not carried forward. Nothing was written."
-        : `${d.id}'s outcome for ${str(standard) ?? "that standard"} is ${d.outcome(standard) ?? "not stated"}, not `
-          + "noncompliant: a consequence is what a breach did. Nothing was written.",
+    if (!d || !this.#seesProject(d.project, who)) return noSuchDetermination(determination ?? null);
+    if (!d.live) return determinationSuperseded(d.id, d.supersededBy);
+    if (!str(standard) || d.outcome(standard) !== "noncompliant")
+      return refuse("CONSEQUENCE_NOT_NONCOMPLIANT", `${d.id}'s outcome for ${str(standard) ?? "that standard"} is `
+        + `${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did.${NOTHING}`,
         { determination: d.id, standard: standard ?? null });
     /* A member author has joined the determination's project; a machine's computed part answers no project authority
        (K171 (9)), and a machine may record nothing else (R3, below). K171 (11): membership's refusal, translated. */
@@ -652,7 +648,7 @@ export class Consequences {
    *  are undetermined or unproven, in front of the member. */
   consequencesOf({ determination = null, standard = null, viewer = null } = {}) {
     const d = this.#determination(determination, viewer);
-    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination);
+    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination ?? null);
     const rows = this.#liveParts(d.id, str(standard)).filter((r) => this.#seesProject(r.project, viewer));
     const parts = rows.map((r) => this.#answer(r, viewer));
     const groups = new Map();
@@ -710,7 +706,7 @@ export class Consequences {
    *  for a superseded determination too (escalation R14). */
   addressed({ determination = null, viewer = null } = {}) {
     const d = this.#determination(determination, viewer);
-    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination);
+    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination ?? null);
     const parts = this.#liveParts(d.id).filter((r) => this.#seesProject(r.project, viewer)).map((r) => {
       const a = this.#addressedOf(r.bundle_id);
       return { id: r.bundle_id, standard: r.standard, part_state: r.state, causation: r.causation_state,

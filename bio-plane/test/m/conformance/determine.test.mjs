@@ -8,6 +8,7 @@ import { CONFORMANCE_CHECKS, OUTCOMES, SIGNIFICANCE_KEYS, REASON_MAX, LIMITS, no
 import { noSuchProject } from "../../../src/membership/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/checks.mjs";
 import { STANDARDS_CHECKS } from "../../../src/standards/checks.mjs";
+import { noSuchStandard } from "../../../src/standards/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -188,6 +189,7 @@ test("R1 R3 R14: each standard is one the record holds, read through standards.i
     assert.deepEqual([r.code, r.check, r.translation, r.standard],
       ["NO_SUCH_STANDARD", STANDARDS_CHECKS.NO_SUCH_STANDARD.check, STANDARDS_CHECKS.NO_SUCH_STANDARD.translation, standard]);
     assert.equal(r.check, "C-112.10");
+    assert.deepEqual(r, noSuchStandard(standard), "answered through standards' noSuchStandard (its R17)");
     const alike = w.c.determine(input({ standards: [{ standard: "STD-2026-0098-none", outcome: "compliant" }] }));
     assert.deepEqual({ ...r, standard: null }, { ...alike, standard: null }, "one fixed answer, whatever the id");
   }
