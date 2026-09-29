@@ -150,7 +150,10 @@ const adminBytes = async () => {
     return tree;
   };
   const baseTree = mk("base", (tree) => {
-    const tar = execFileSync("git", ["archive", base, "bio-plane/src", "bio-plane/checks", "docprofile", "jurisdictions"],
+    /* 2026-09-29 (legacy-tests T12): the base's plane imports pdf-pixels' crop from beside it (content R32, T5), so the
+       archive carries `pdf-worker/src` as the head tree's mirror already does. */
+    const tar = execFileSync("git", ["archive", base, "bio-plane/src", "bio-plane/checks", "docprofile", "jurisdictions",
+                                     "pdf-worker/src"],
                              { cwd: REPO, maxBuffer: 256 << 20 });
     execFileSync("tar", ["-x", "-C", tree], { input: tar });
   });
@@ -190,14 +193,27 @@ const adminBytes = async () => {
       const iris = JSON.parse(await raw("op=login", { role: "member:iris", password: "iris-bytes-pass" }));
       const IRIS = (iris.result || iris).token;
       const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
-      const text = projectFixtureMd(chosen, { created: NOW, updated: LATER, name: "PROJ-2026-9132-bytes" });
-      const made = JSON.parse(await raw(`op=promote&${A}`, { ...(chosen === null ? {} : { bundleId: chosen }),
+      /* 2026-09-29 (legacy-tests T12): a base that ALSO mints (any base after REC-141) refuses the chosen id
+         PROJECT_ID_SUPPLIED (C-59.1); it is then asked to mint from the SAME id-less bytes. A minted id is random, so
+         it is a per-run value like a lead id and is normalised below (`PROJ-X`) on both sides — the stored bytes and
+         their sha are identical, and nothing else is normalised away. */
+      const create = async (id) => {
+        const text = projectFixtureMd(id, { created: NOW, updated: LATER, name: "PROJ-2026-9132-bytes" });
+        return JSON.parse(await raw(`op=promote&${A}`, { ...(id === null ? {} : { bundleId: id }),
         base: null, snapKey: "20260918T132000Z_bytes001",
-        meta: { object_type: "project", group: "believe-in-oakland", title: "t", current_state: "investigating",
+        /* CORRECTED 2026-09-29 (legacy-tests T12; D-563, C-86.3): the envelope's title must agree with the document's own
+           (`projectFixtureMd` titles it "Project <name>"); "t" was refused ENVELOPE_TITLE_DISAGREES before any read. */
+        meta: { object_type: "project", group: "believe-in-oakland", title: "Project PROJ-2026-9132-bytes", current_state: "investigating",
                 created: NOW, last_updated: LATER },
         files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [] }));
-      const P = (made.result || made).bundleId;
-      if (typeof P !== "string" || (chosen !== null && P !== chosen))
+      };
+      let made = await create(chosen);
+      let minted = chosen === null;
+      if (!minted && (made.result || made).reason === "PROJECT_ID_SUPPLIED") { made = await create(null); minted = true; }
+      const P = (made.result || made).bundleId;   /* its serial `PROJ-YYYY-NNNN` is normalised too: a snippet cuts the id */
+      /* The plane writes the minted id INTO the stored bytes, so their sha is per-run with it and is normalised too. */
+      const PSHA = String((made.result || made).bundleSha || "no-sha");
+      if (typeof P !== "string" || (!minted && P !== chosen))
         throw new Error(`admin-bytes: project creation (${chosen === null ? "minted" : "chosen " + chosen}): ${JSON.stringify(made).slice(0, 400)}`);
       const ns = await mf.getDurableObjectNamespace("STORE");
       await (await ns.get(ns.idFromName("bio")).fetch("http://x/projectclaimowner",
@@ -212,14 +228,44 @@ const adminBytes = async () => {
         `op=memberadd&${A}`, /* an empty memberadd: the refusal it answered before */
       ];
       const out = {};
-      for (const q of reads) out[q.replace(LID, "LEAD-X")] = (await raw(q, q.startsWith("op=memberadd") ? {} : undefined))
-        .replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z/g, "T").replace(/LEAD-\d{4}-\d{4}-[0-9a-f]+/g, "LEAD-X");
+      for (const q of reads) out[q.replace(LID, "LEAD-X").split(P).join("PROJ-X")] = (await raw(q, q.startsWith("op=memberadd") ? {} : undefined))
+        .replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z/g, "T").replace(/LEAD-\d{4}-\d{4}-[0-9a-f]+/g, "LEAD-X").split(P).join("PROJ-X").split(PSHA).join("SHA-X").split(P.slice(0, 14)).join("PROJ-X");
       return { out, P };
     } finally { await mf.dispose(); }
   };
   try {
     const head = await drive(headTree, null), h = head.out, b = (await drive(baseTree, head.P)).out;
-    const differ = Object.keys(b).filter((k) => b[k] !== h[k]);
+    /* RE-DECLARED 2026-09-29 (legacy-tests T12): the base is this branch's merge-base with origin/main, no longer the
+       build just before REC-132, so an admin read here also carries every RULED, ADDITIVE interface change the branch
+       makes (a tranche's, e.g. queue N301's `class_labels`, R40's `snoozed_until`, its `resolved` block). The claim
+       the arm holds is REC-132's: the admin token loses and changes NOTHING it answered before. So a read passes when
+       it is byte-identical OR the base's answer is contained in this tree's — every key the base answered is present
+       with the same value (arrays element for element), and this tree may only ADD keys. The added paths are printed,
+       never hidden; a changed or removed value still fails. */
+    const added = (x, y, at = "") => {
+      if (x && y && typeof x === "object" && typeof y === "object" && !Array.isArray(x) && !Array.isArray(y)) {
+        const out = [];
+        for (const k of Object.keys(x)) { if (!(k in y)) return null; const r = added(x[k], y[k], `${at}.${k}`); if (r === null) return null; out.push(...r); }
+        for (const k of Object.keys(y)) if (!(k in x)) out.push(`${at}.${k}`);
+        return out;
+      }
+      if (Array.isArray(x) && Array.isArray(y)) {
+        if (x.length !== y.length) return null;
+        const out = [];
+        for (let i = 0; i < x.length; i++) { const r = added(x[i], y[i], `${at}[${i}]`); if (r === null) return null; out.push(...r); }
+        return out;
+      }
+      return JSON.stringify(x) === JSON.stringify(y) ? [] : null;
+    };
+    const parse = (v) => { try { return JSON.parse(v); } catch { return undefined; } };
+    const additive = {};
+    const differ = Object.keys(b).filter((k) => {
+      if (b[k] === h[k]) return false;
+      const r = added(parse(b[k]), parse(h[k]));
+      if (r === null || r.length === 0) return true;
+      additive[k] = r; return false;
+    });
+    for (const [k, r] of Object.entries(additive)) console.log(`  ADDITIVE ONLY  ${k}: this tree adds ${r.join(", ")}`);
     console.log(`admin-bytes: base ${base.slice(0, 8)} vs this tree — ${Object.keys(b).length} admin-token reads, `
       + `${differ.length} differ`);
     for (const k of differ) console.log(`  DIFFERS  ${k}\n    base ${b[k].slice(0, 300)}\n    head ${h[k].slice(0, 300)}`);
@@ -233,7 +279,7 @@ const want = process.argv[2];
 const names = want ? [want] : [...Object.keys(ARMS), "admin-bytes"];
 let allOk = true;
 for (const n of names) {
-  if (n === "admin-bytes") { const ok = await adminBytes(); console.log(`ARM admin-bytes: ${ok ? "AS DECLARED (byte-identical)" : "NOT AS DECLARED"}`); allOk &&= ok; continue; }
+  if (n === "admin-bytes") { const ok = await adminBytes(); console.log(`ARM admin-bytes: ${ok ? "AS DECLARED (every admin read byte-identical or additive only)" : "NOT AS DECLARED"}`); allOk &&= ok; continue; }
   if (!ARMS[n]) { console.log(`no arm ${n}; arms: ${Object.keys(ARMS).join(", ")}, admin-bytes`); process.exit(2); }
   const r = runArm(n);
   if (!r.armed) { console.log(`ARM ${n}: DID NOT ARM — ${r.why}`); allOk = false; continue; }
