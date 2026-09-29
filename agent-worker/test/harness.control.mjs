@@ -751,7 +751,10 @@ arm({
  * written twice.
  * ========================================================================== */
 
-const STORE = join(PLANE, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-29 BY AGENT-WORKER #4 (T12, N304): `#aiRunTerminate` moved whole from `store.mjs` into
+   ai-runs' own `src/ai-runs/index.mjs` (T7), and airun's ARM W1 reads it there; G2's anchor moved with it and
+   matched ZERO times until now. The arm's subject is unchanged. */
+const AI_RUNS = join(PLANE, "src", "ai-runs", "index.mjs");
 
 arm({
   id: "G1", subject: "THE DEFECT ITSELF RESTORED — a gate-refused run recorded as one that FINISHED",
@@ -782,7 +785,7 @@ arm({
   what: "the store stops ASKING airun.mjs and decides the status itself, with a copy that returns IDENTICAL answers for every bound and every ending. Nothing a caller can observe changes; only where the rule lives does",
   mustFail: "airun ARM W1, and EXACTLY THAT ONE. It is the whole point of this arm: a source-agreement assertion that failed here together with the behavioural arms would be the same comparison written twice, which is what FL-7's F3 measured one item ago",
   mustNot: "every other assertion in the suite — H1, H2, H3, H4, V9, W2, W3, W4, W5 — because the record a caller reads is byte-for-byte what it was",
-  file: STORE,
+  file: AI_RUNS,
   find: `      const status = runStatusFor(bound);`,
   replace: `      const status = bound === "mode-not-deployed" ? "never-started"\n                   : (stoppedByBound ? "stopped" : "finished");`,
   run() {
