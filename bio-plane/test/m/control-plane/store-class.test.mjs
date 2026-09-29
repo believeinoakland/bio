@@ -168,4 +168,21 @@ test("R35: a throwing instance-setup route answers R25's STORE_INTERNAL_ERROR (C
   assert.match(old, /secret-value/);
 });
 
-test.todo("R35: the instance exports this class unwrapped, so no module answers a store route outside the frame — not yet met: legacy-index still exports `instanceSetupStore(Store)`, whose wrapper answers instance-setup's routes first (`src/index.mjs`:111–112), until legacy-index's N348 share exports this module's Store");
+test("R35: the instance exports this class unwrapped, so no module answers a store route outside the frame — the instance's Store is this module's, and instance-setup's routes reached through it pass R26's body read and R25's catch", async () => {
+  const I = await import("../../../src/index.mjs");
+  assert.equal(I.Store, D.Store, "the Durable Object class the instance exports is dispatch.mjs' Store itself");
+  assert.equal(Object.hasOwn(I.Store.prototype, "fetch") && I.Store.prototype.fetch, D.Store.prototype.fetch);
+  const o = object();
+  const store = new I.Store(o.ctx, o.env);
+  const s = started(await settle(o));
+  assert.deepEqual(s.map((x) => x.started), [true], "instance-setup started once, by this class alone");
+  const bad = await store.fetch(new Request("http://do/instancegroupseed?author=token:admin", { method: "POST", body: "{" }));
+  assert.deepEqual([bad.status, (await bad.json()).reason], [400, "BAD_JSON"]);
+  o.failWith((q) => /instance_group/.test(q));
+  const was = console.error;
+  console.error = () => {};
+  let r, text;
+  try { r = await store.fetch(new Request("http://do/instancegroup")); text = await r.text(); } finally { console.error = was; }
+  assert.deepEqual([r.status, JSON.parse(text).reason], [500, "STORE_INTERNAL_ERROR"]);
+  assert.equal(/secret-value|SQLITE/.test(text), false);
+});
