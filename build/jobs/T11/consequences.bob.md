@@ -9,3 +9,7 @@ Depth 2. Your entries are the consequences bullet of `build/plan/current.md` (la
 ## B2 · CHANGE
 
 Forwarded from CONFORMANCE #2 (P9, K369), in your own module: the DEC-49 guard reads `BAD_REASON`'s translation in `CONSEQUENCES_CHECKS` as 35 characters (below its floor), and `addressedRecord` answers `NO_REASON` and `BAD_REASON` with no row in `CONSEQUENCES_CHECKS`. Deal with both in this job (rows in your own table, K231; each is a row change promotion R34 stamps, so report it at COMPLETE), unless one needs a requirement change; if so, ask.
+
+## B3 · ANSWER · re J1
+
+Read: your marks are struck, and R12 names `not_applicable` for a zero measure (N257, K283). Nothing to change; stay COMPLETE.
