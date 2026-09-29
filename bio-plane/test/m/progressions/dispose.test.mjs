@@ -3,6 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER } from "./fixture.mjs";
 import { PROGRESSION_CHECKS, GENERIC_CODES, DISPOSITIONS, PROGRESSIONS_TABLES, notADisposition } from "../../../src/progressions/index.mjs";
+import * as PROGRESSIONS_CHECKS_MODULE from "../../../src/progressions/checks.mjs";
+import { DISPOSITIONS as PROMOTION_DISPOSITIONS, REOPENABLE_FROM } from "../../../src/promotion/index.mjs";
 
 const X = (w, b = {}) => w.p.disposeProposal({ key: "proc::award", to: "deferred", reason: "later", definitionVersion: 1,
                                                decidedBy: "member:alice", ...b });
@@ -46,8 +48,14 @@ test("R35: notADisposition is the one answer to a word that is no disposition: n
   const w = seeded();
   w.define();
   const before = w.snapshot();
+  // N340: DISPOSITIONS is promotion's one list (its R51), re-exported by identity, never a copy, and frozen
+  assert.equal(DISPOSITIONS, PROMOTION_DISPOSITIONS);
+  assert.equal(PROGRESSIONS_CHECKS_MODULE.DISPOSITIONS, PROMOTION_DISPOSITIONS);
+  assert.equal(DISPOSITIONS, REOPENABLE_FROM);
   assert.deepEqual([...DISPOSITIONS], ["deferred", "dismissed"]);
   assert.ok(Object.isFrozen(DISPOSITIONS));
+  assert.throws(() => { "use strict"; DISPOSITIONS.push("adopted"); }, TypeError);
+  assert.deepEqual([...DISPOSITIONS], ["deferred", "dismissed"]);
   for (const word of DISPOSITIONS) assert.equal(notADisposition(word), null, word);
   const TRANSLATION = "Setting something down means deferring it (set aside for now) or dismissing it (declined); taking it up "
     + "is a different act. Choose deferred or dismissed. Nothing was written.";
@@ -63,6 +71,7 @@ test("R35: notADisposition is the one answer to a word that is no disposition: n
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "NOT_A_DISPOSITION", "NOT_A_DISPOSITION", "C-100.20", TRANSLATION]);
     assert.deepEqual(r.to, given, JSON.stringify(to));
     assert.deepEqual([...r.dispositions], ["deferred", "dismissed"]);
+    assert.equal(r.dispositions, PROMOTION_DISPOSITIONS);
     assert.ok(typeof r.detail === "string" && r.detail.length > 20);
     if (detail === null) detail = r.detail;
     assert.equal(r.detail, detail, "one fixed sentence");
