@@ -84,3 +84,7 @@ Found in other modules and generated artifacts by CONTROL-PLANE #2 (nothing of t
 ## J5 · COMPLETE
 
 The job's Open list is done (record, "Work (CONTROL-PLANE #2)"): R28's replay order; R32's rows in `src/control-plane/checks.mjs`; the store's door, the existence read and the Durable Object class in `src/control-plane/dispatch.mjs` (R26, R27); D-629 (R25, C-69.3/.4) and D-679 (R24) judged and taken; N53's pin held by R34; each OPS row's reason in one sentence; the reports (J4). Tests 41/41, no todo; coverage 34/34; format and architecture 0 failures; ownership 3 named headers (legacy-index `publicOp`/`gatedOp`, legacy-store `routes`). Open with you: J3 (Q1 the store door's consequence for promotion's write-path test, Q2 membership's `visibilityOf`, Q3 the `queue` edge). The R24, R25, R26, R27 and R19 marks are yours to strike.
+
+## J6 · COMPLETE
+
+B6 (K412) applied at 6ce8267b0b: the store's door reverted to legacy-store (commit d2bbae2f75 holds the move for N333, named in the record); R25's Worker half kept with PLANE_INTERNAL_ERROR renumbered C-69.3 (the store's row goes with N333), R24's relay kept; R25's store half, R26, R27 are test.todo naming N333; queue's checks.mjs in MODULE_CHECK_FILES. Control-plane 39 pass, 0 fail, 3 todo; every module's tests 2,645 pass, 0 fail (promotion's write-path green again); format, architecture, coverage 0 failures; ownership the two J1 headers only, legacy-store untouched. N318: the only new row is C-69.3 PLANE_INTERNAL_ERROR; the moved rows as J4.
