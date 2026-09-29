@@ -8,7 +8,7 @@
 - `JUSTIFICATION_REFUSALS` names `ACTION_MOVE_NO_REASON` (actions R13, K368); `NO_REASON` stays, the code of the other reasoned ops. `RUNGS.actionmove`'s backing comment names the new code. R19's plane drive of `actionmove` is green again.
 - `determine` is graded `reasoned` (with conformance's N233): it left `RUNG_ABSENT` (`undetermined`) for `RUNGS`; the layer-9 comment in `RUNG_ABSENT` says so. R19's backing is driven at conformance's interface over its fixture's scene (`backing.test.mjs`): a first determination asks no reason (K212); a supersession with an absent reason (`undefined`, `""`, blanks) is refused `NO_REASON`, and with one accepted. The tests of R2 (reasoned list), R19 (family; the drives reach every `reasoned` op), R27 (the undetermined list) and the layer-9 table (R3 R7 R12) carry the change.
 
-**Deferred:** nothing. No `not yet met` mark is met by this job (R26 stays not yet met, N231; its `test.todo` names the cause).
+**Deferred:** nothing. No `not yet met` mark is met by this job (R26 stays not yet met, N65, per B3).
 
 **Found for BOB** (in J1 REPORT):
 - `build/requirements/affordances.md` R2's `reasoned` list does not name `determine`, and R27's count ("the 57 ops graded `undetermined`", "the action acts") predates it; the code and tests now grade `determine` `reasoned` (N310). BOB's wording.
@@ -28,4 +28,14 @@ Two findings outside my paths. (1) build/requirements/affordances.md: R2's `reas
 
 ## J2 · COMPLETE
 
-N310 applied: JUSTIFICATION_REFUSALS names ACTION_MOVE_NO_REASON (actions R13); determine graded reasoned, its R19 backing driven at conformance's interface. Module tests 74 pass, 0 fail, 1 todo (R26, N231); queue 10/10; format, architecture, coverage (27/27), ownership: 0 failures. Record has the detail; findings in J1.
+N310 applied: JUSTIFICATION_REFUSALS names ACTION_MOVE_NO_REASON (actions R13); determine graded reasoned, its R19 backing driven at conformance's interface. Module tests 74 pass, 0 fail, 1 todo (R26, N65); queue 10/10; format, architecture, coverage (27/27), ownership: 0 failures. Record has the detail; findings in J1.
+
+## CHANGE B2, B3 (K377)
+
+Merged `tranche/T11` (legacy-index landed). `monitorpause` (monitoring R30) added to `NON_ACTS` ("a machine-directed setting over the instance's own fetching, not an act on an object") and to `RUNG_ABSENT` with `governorconfig`'s ground, `credential` (B2: "if `governorconfig` sits under another ground, use that one").
+
+- `node --test test/m/affordances/`: tests 75, pass 74, fail 0, todo 1. `test/m/queue/`: pass 10, fail 0.
+- Legacy `test/affordances.test.mjs`: passes (NEEDS totality). Legacy `test/rung-ladder.test.mjs`: FORWARD and the exact-count arm (169 mutating: 51 rungs, 118 absences) now PASS; one FAIL remains, "escalationresume's way back is published and moves exactly the other way", present identically without this change (stash-checked): not this module's, legacy-tests'/escalation's to re-anchor.
+- format, architecture, coverage (27/27), ownership (2 files; legacy-store 0/0, legacy-index 0/0): 0 failures.
+
+Size (session_01B7kiVs24JbVTE4P4CTC88x): test runs 10, module lines 2717
