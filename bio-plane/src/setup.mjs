@@ -2450,9 +2450,20 @@ export function instanceSetupStore(Base) {
 
 /* ============================================================================================================
  * THE INSTANCE'S REPORTS, WORKER SIDE (R17–R19, R37, R38). The credential, the namespace and the envelope are the
- * control plane's: each function takes the `{json, storeSilent, doAnswer}` it hands them (capture's `knockOp`
- * pattern) and the store it resolved, and answers a Response.
+ * control plane's: each function takes the `{json, storeSilent, doAnswer, storeRefusal}` it hands them (capture's
+ * `knockOp` pattern) and the store it resolved, and answers a Response.
  * ============================================================================================================ */
+
+/* R43 (N339, N349; control-plane R23, R25): what a relay answers for a store reply `doAnswer` did not read as an
+   answer. The store's own refusal (`ok: false` below 500) is relayed with its status, code and sentence, through the
+   plane's `storeRefusal` when it is handed one, else as that function answers it (`json(body, status)`); anything
+   else is a silence, carrying the correlation id `doAnswer` read from the store's internal error, when it gave one.
+   One rule for every relay, a sub-read inside a longer act included (K444). */
+function notAnswered(out, op, { json, storeSilent, storeRefusal }) {
+  if (out && out.refused === true && out.reply)
+    return typeof storeRefusal === "function" ? storeRefusal(out) : json(out.reply.body, out.reply.status);
+  return storeSilent(op, out ? out.correlation : undefined);
+}
 
 /* REC-163 / IC-174 / D-596 — THE PUBLIC READ OF THE PRODUCING GROUP, ONE READER FOR THE SURFACES THAT SHOW IT TO A
    STRANGER: op=instancegroup's and op=groupidentity's public arms and the setup page served at `/` (R3, R10, R20).
@@ -2469,31 +2480,33 @@ export async function publicInstanceGroup(env, storeName, projection = "instance
 
 /** R3 over the wire: a credentialed reader (`viewer` set by the control plane) is answered the whole row; anybody
  *  else the public projection. A silence is a silence (REC-52), never "no group is recorded". */
-export async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, { json, storeSilent, doAnswer }) {
+export async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, io) {
+  const { json, doAnswer } = io;
   if (viewer) {
     const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/instancegroup"));
-    if (!out.answered) return storeSilent("instancegroup");
+    if (!out.answered) return notAnswered(out, "instancegroup", io);
     return json({ ok: true, result: out.result, store: storeName, tokenClass: cls }, 200);
   }
   const pub = await publicInstanceGroup(env, storeName, "instancegrouppublic", doAnswer);
-  if (!pub.answered) return storeSilent("instancegroup");
+  if (!pub.answered) return notAnswered(pub, "instancegroup", io);
   return json({ ok: true, result: pub.result, store: storeName }, 200);
 }
 
 /** R10, R11 over the wire: the credentialed read (R11) or the public projection (R10). */
-export async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, { json, storeSilent, doAnswer }) {
+export async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, io) {
+  const { json, doAnswer } = io;
   const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
     .fetch(viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
-  if (!out.answered) return storeSilent("groupidentity");
+  if (!out.answered) return notAnswered(out, "groupidentity", io);
   return json({ ok: true, result: out.result, store: storeName, ...(viewer ? { tokenClass: cls } : {}) }, 200);
 }
 
 /** R17, op=bootstrap: this isolate's `version`, `bootstrapConfigured` (a live ADMIN_TOKEN), membership's
  *  `bootstrapState` and the store's own `storeVersion` from the Durable Object's route, and with `members` each
  *  member's own build (D-116: THREE BUILDS, EACH READ FROM WHERE IT RUNS — `storeVersion` is never written here). */
-export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer }) {
+export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal }) {
   const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
-  if (!out.answered) return storeSilent("bootstrap");
+  if (!out.answered) return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal });
   return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
                 bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...out.result,
                 ...(members ? { memberVersions: await memberVersions(env) } : {}) }, 200);
@@ -2561,12 +2574,15 @@ export const RUNTIME_ASYMMETRY = "a refused subrequest throws and is caught, so 
   + "is measured on every run and the ceiling is found by op=cpuprobe, whose checkpoints survive the kill.";
 
 /** R37, op=runtime: R34's measurements, R36's probe state and capture's subrequest ceiling (capture R23), through one
- *  surface. When any of the three reads does not answer, the op answers the store-silence refusal (REC-52). */
-export async function runtimeOp(stub, { json, storeSilent, doAnswer }) {
+ *  surface. When any of the three reads does not answer, the op answers the store-silence refusal (REC-52); the first
+ *  of them, in read order, that is the store's own refusal or a silence is relayed as R43 says (K444). */
+export async function runtimeOp(stub, io) {
+  const { json, doAnswer } = io;
   const obsOut = await doAnswer(stub.fetch("http://x/runtimeobservations"));
   const probeOut = await doAnswer(stub.fetch("http://x/cpuprobestate"));
   const limOut = await doAnswer(stub.fetch("http://x/capturelimit?runtime=subrequests"));
-  if (!obsOut.answered || !probeOut.answered || !limOut.answered) return storeSilent("runtime");
+  const miss = [obsOut, probeOut, limOut].find((o) => !o.answered);
+  if (miss) return notAnswered(miss, "runtime", io);
   return json({ ok: true, measured: obsOut.result, cpu_probe: probeOut.result, subrequests: limOut.result,
                 asymmetry: RUNTIME_ASYMMETRY });
 }
@@ -2575,9 +2591,11 @@ export async function runtimeOp(stub, { json, storeSilent, doAnswer }) {
  *  burns nothing); a new run is started under its own id, each completed step is written, and CONFIRMED, before the
  *  next begins (R39: an unconfirmed checkpoint ends the probe); its end is written when it returns. */
 export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = null, probe = cpuProbe } = {},
-                                 { json, storeSilent, doAnswer }) {
+                                 io) {
+  const { json, storeSilent, doAnswer } = io;
   const beforeOut = await doAnswer(stub.fetch("http://x/cpuprobestate"));
-  if (!beforeOut.answered || !beforeOut.result) return storeSilent("cpuprobe");
+  if (!beforeOut.answered) return notAnswered(beforeOut, "cpuprobe", io);
+  if (!beforeOut.result) return storeSilent("cpuprobe");
   const iters = Math.max(100000, Number(iterations) || 2000000);
   const budget = Math.max(50, Number(budget_ms) || 20000);
   const id = typeof run === "string" && run ? run
@@ -2585,7 +2603,8 @@ export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, ru
   const post = (path, body) => doAnswer(stub.fetch(`http://x/${path}`, { method: "POST",
     headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
   const started = await post("cpuprobestart", { run: id, iterations: iters, budgetMs: budget });
-  if (!started.answered || !started.result || started.result.recorded !== true) return storeSilent("cpuprobe");
+  if (!started.answered) return notAnswered(started, "cpuprobe", io);
+  if (!started.result || started.result.recorded !== true) return storeSilent("cpuprobe");
   let confirmed = 0;
   const UNCONFIRMED = Symbol("unconfirmed");
   let r;
@@ -2607,7 +2626,7 @@ export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, ru
   if (!complete) r = { completed: confirmed, elapsed_ms: null, reason: null };
   if (complete) await post("cpuprobeend", { run: id, completed: r.completed, elapsedMs: r.elapsed_ms, reason: r.reason });
   const afterOut = await doAnswer(stub.fetch("http://x/cpuprobestate"));
-  if (!afterOut.answered) return storeSilent("cpuprobe");
+  if (!afterOut.answered) return notAnswered(afterOut, "cpuprobe", io);
   return json({ ok: true, run: { ...r, id }, state: afterOut.result, trail_complete: complete,
     ...(complete ? {} : { last_confirmed_step: confirmed }),
     note: complete
