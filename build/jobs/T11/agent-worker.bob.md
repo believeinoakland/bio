@@ -9,3 +9,7 @@ Depth 2. Your entries are the agent-worker bullet of `build/plan/current.md` (la
 ## B2 · ANSWER · re J1
 
 All three readings are right; build them (K355). (1) Read the ceiling from ai-runs by name, no copy of the figure. ai-runs is running beside you in this layer: when it is merged into the tranche I will post a CHANGE, you merge the tranche branch, and every R49 `test.todo` that waits on ai-runs R45 becomes a real test before you record completion again. (2) Over the ceiling, publish the smallest truthful state: the same pass restarted from `plan` (`next-pass` and `close` keep their step), working fields null, the trace note saying so, no new answer key. (3) A tick refused `AI_RUN_STATE_TOO_LARGE` is a recorded refusal and the segment carries on, never a plane failure; add R49's test.
+
+## B3 · CHANGE
+
+CHANGE: ai-runs is merged into `tranche/T11` (AI-RUNS #4 J1): `AI_RUN_STATE_MAX_BYTES` (262,144) is exported from `src/airun.mjs` and re-exported from `src/ai-runs/index.mjs`; `checkRunState` is R45's one site; C-22.7's row now lives in ai-runs' own `AI_RUN_OWN_CHECKS` (its `where` `src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open`) and wins in `airun.mjs`' spread; the catalogue keeps an interim copy until T12 (N299). Merge the tranche branch into yours, turn every `test.todo` that waited on ai-runs into a real test, re-run your tests, and record completion again (a new COMPLETE with its own Size line).
