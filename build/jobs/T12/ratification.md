@@ -19,3 +19,7 @@
 **Deferred.** None. **Found elsewhere.** None beyond the re-anchoring above.
 
 Size (session_01WpDgkzKHXhpC2PuizXicGz): test runs 6, module lines 3051
+
+## J1 · COMPLETE
+
+N308 applied against a local stub of R38's cursor answer: R5's scope arm pages ratifiedFindingsRestingOn(id, {after}) from the start through each cursor to null, stopping once a resting project admits; outcome unchanged (tested: 2,500 pins over 3 pages; stop at the first admitting page; paged refusal deep-equals the one-page refusal). Module tests 70/0; format, architecture, coverage (16/16), ownership 0 failures. Pending your CHANGE: publication's real R38 still returns an array, so legacy ratify-authority is 35/18 on this branch (53/0 on the tranche) until it lands; I re-run then. Reported: ratify-authority.control's RESTING anchor (arm readmit-unpinned-finding) needs re-anchoring (legacy-tests'); R5's 'not yet met: N308' mark is yours to strike (outside my paths). Record: build/jobs/T12/ratification.md.
