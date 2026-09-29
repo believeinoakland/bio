@@ -630,6 +630,16 @@ const CATALOG_CENSUS = {
   "1.40.0": { count: 397, digest: "e1c688c54da82c743a275e01ee65f060341edbe145a34494dfc1001ec934b007",
               changed: ["C-105.8", "C-105.9"],
               source: "9927c1ad88a362754324cc4ab86f6a9850502a8366a0cf6567442ec5f6720c1e" },
+  /* 1.41.0 (PROMOTION #11, T11 layer 2, 907fb5feac; N281, K350, K352), RECORDED 2026-09-29 by legacy-tests T11 as
+     PROMOTION #11 J2 printed it (its record, which replaces J1's 396) and re-measured identical on the T11 tree after
+     layer 10: the catalogue FILE did not move (C-22.7's row restored there, K350, until N299), so census and source
+     equal 1.40.0's; every arrival and departure 1.41.0 stamps sits in a module's own table (R34, R47). `changed` is
+     C-22.1 and C-22.17 (observation-log's `checkObservation` answers a stored never-looked look C-22.17), which also
+     keeps this row apart from 1.40.0's under A4. NOT stamped here: C-22.18 (ai-runs N293) and C-22.7's `where` (N289),
+     which T11 layer 6 moved after 1.41.0; both are promotion's N302 (T12), and neither is in the catalogue file. */
+  "1.41.0": { count: 397, digest: "e1c688c54da82c743a275e01ee65f060341edbe145a34494dfc1001ec934b007",
+              changed: ["C-22.1", "C-22.17"],
+              source: "9927c1ad88a362754324cc4ab86f6a9850502a8366a0cf6567442ec5f6720c1e" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -837,9 +847,10 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    UPDATED 2026-09-28 (LEGACY-TESTS #4, T7): 1.35.0 -> 1.36.0, PROMOTION #5's T6 move (LEGACY-CHECKS #2 REPORT 7).
    UPDATED 2026-09-28 (legacy-tests T8): 1.36.0 -> 1.38.0, PROMOTION #6's 1.37.0 (T8 layer 2) and #7's 1.38.0 (after
    layer 9), N147.
-   UPDATED 2026-09-28 (legacy-tests T9): 1.38.0 -> 1.40.0, PROMOTION #9's 1.39.0 (N240) and #10's 1.40.0 (K288). */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.40.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.40.0)", "1.40.0"]);
+   UPDATED 2026-09-28 (legacy-tests T9): 1.38.0 -> 1.40.0, PROMOTION #9's 1.39.0 (N240) and #10's 1.40.0 (K288).
+   UPDATED 2026-09-29 (legacy-tests T11): 1.40.0 -> 1.41.0, PROMOTION #11's N281 (K352). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.41.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.41.0)", "1.41.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue
