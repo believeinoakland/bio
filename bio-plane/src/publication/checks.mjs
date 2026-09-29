@@ -2,12 +2,14 @@
  * refusal this module answers carries its code, its catalogue row and the member's (or the stranger's) translation.
  *
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R33): C-44.2 (the read's half
- * of D-309, raised by `#resolveOneCase`; C-44.1 and C-44.3–.5 stay in the catalogue's `CASE_DERIVATION_CHECKS` as
- * case-authoring's), C-68.5 (the published-store complaint, held here as its earliest raiser; the rest of C-68 stays
- * in `INSTALLATION_CHECKS`, and `control-plane` imports this row, K93 (3)), the whole of C-98 (the public door; C-98.9 added at the move, K245) and
- * C-92.1–.9 (the attribution act; C-92.10–.12 are ratification's and stay in the catalogue's `ATTRIBUTION_CHECKS`).
+ * of D-309, raised by `#resolveOneCase`; C-44.1 and C-44.3–.5 are case-authoring's, in its `CASE_DERIVATION_CHECKS`),
+ * C-68.5 (the published-store complaint, held here as its earliest raiser; the rest of C-68 stays in the catalogue's
+ * `INSTALLATION_CHECKS`, and `control-plane` imports this row, K93 (3)), the whole of C-98 (the public door; C-98.9
+ * added at the move, K245) and C-92.1–.9 (the attribution act; C-92.10–.12 are ratification's, in its
+ * `RATIFY_ATTRIBUTION_CHECKS`).
  * Each family keeps its catalogue name where it moved whole (`PUBLISHED_READ_CHECKS`) and takes a name of its own
- * where the catalogue keeps the rest of the family, so no two families share a name.
+ * where the rest of the family is held elsewhere (the catalogue, case-authoring or ratification), so no two families
+ * share a name.
  *
  * R20, the case document's grammar (`CASE_DOCUMENT_FORMAT` … and its three predicates), is this module's too, and it
  * is re-exported from the catalogue here: the catalogue's own `checkCaseDocument` (C-41, ratification's) still reads
@@ -163,8 +165,8 @@ export const PUBLISHED_READ_CHECKS = {
  *   is-attribute-edition  that the edition is a prepared, unsigned one that reaches the observation, and that
  *                         `name` has a handle to publish (§4.6)
  *
- * The gate's three (C-92.10–.12, `is-attribution-gate`, `is-attribution-ratify`) are ratification's and stay in the
- * catalogue's `ATTRIBUTION_CHECKS`. PROVISIONAL, carried to Bob: §4.6's reading of `name` as the handle (C-92.9).
+ * The gate's three (C-92.10–.12, `is-attribution-gate`, `is-attribution-ratify`) are ratification's, in its
+ * `RATIFY_ATTRIBUTION_CHECKS`. PROVISIONAL, carried to Bob: §4.6's reading of `name` as the handle (C-92.9).
  * ===================================================================== */
 export const ATTRIBUTION_ACT_CHECKS = {
   ATTRIBUTION_NOT_A_MEMBER: {

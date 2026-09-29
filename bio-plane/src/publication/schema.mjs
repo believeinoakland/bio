@@ -4,8 +4,9 @@
  *
  * The published projection (`published_bundles`, `published_shas`, `published_cases`, `published_case_members`,
  * `cases`) and `export_log` are append-only and exempt from purge (R24, R31): an edition answers forever. The derived
- * and working tables (`published_edges`, unsigned `case_documents` and their `case_exclusions`, `case_revision_flags`,
- * `observation_attributions`) are declared to record-core's purge as the store declared them (K23). */
+ * and working tables (`published_edges`, `published_held_references`, unsigned `case_documents` and their
+ * `case_exclusions`, `case_revision_flags`, `observation_attributions`) are declared to record-core's purge as the
+ * store declared them (K23); the held references (N256) as `published_edges` is. */
 
 export const PUBLICATION_SCHEMA = `
 -- The published projection: the ONLY tables the public doorbell reads.
@@ -141,6 +142,22 @@ CREATE TABLE IF NOT EXISTS published_edges (
   PRIMARY KEY (from_bundle, to_bundle, kind)
 );
 CREATE INDEX IF NOT EXISTS published_edges_to ON published_edges(to_bundle);
+-- N256 / K283 (Bob, 2026-09-28): A REFERENCE FROM A PUBLISHED FINDING TO A TARGET NOT YET PUBLISHED, HELD PRIVATELY.
+-- A serve-class edge (publishedGraphEdges' serve class, read out of the ratified bytes) whose target has no
+-- published edition was DROPPED, so a case's evidence published after its finding was never linked. It is held here
+-- instead: NOT in published_edges, which the public read path serves (a name row would print the target's id,
+-- and the target's id is not published until the target is). When the target is published (commitEdition), every
+-- row held for it becomes a serve row of published_edges in the same transaction (R22, R35), and linked_at says
+-- when; the row is never read by the public path. Working material, so it is declared to purge by either end (D-113).
+CREATE TABLE IF NOT EXISTS published_held_references (
+  from_bundle TEXT NOT NULL,
+  to_bundle   TEXT NOT NULL,
+  kind        TEXT NOT NULL,
+  held_at     TEXT NOT NULL,
+  linked_at   TEXT,            -- NULL while held, else the instant the target was published and the serve edge written
+  PRIMARY KEY (from_bundle, to_bundle, kind)
+);
+CREATE INDEX IF NOT EXISTS published_held_references_to ON published_held_references(to_bundle);
 -- REC-44 / DEC-44 / D-187: THE PUBLISHED CASE, which is the object this record
 -- always meant and never had. A case is a CONTAINER OVER ONE OR MORE FINDINGS,
 -- scoped to the project's own question. Before this table a case WAS an
@@ -566,6 +583,7 @@ CREATE TABLE IF NOT EXISTS export_log (
 export const PUBLICATION_TABLES = Object.freeze([
   "case_revision_flags", "observation_attributions",
   { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
+  { name: "published_held_references", keys: ["from_bundle", "to_bundle"] },
   { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
   { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
 ]);
