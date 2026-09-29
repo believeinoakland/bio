@@ -1324,3 +1324,19 @@ response: **As recommended, with browser signing (option b), Bob, 2026-09-29.**
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Publication_v0_1.md` §5.
 owed: the ceremony's requirements (the pre-flight read, R12's refusal, the browser key's registration and signing) in `case-authoring`, `ratification`, `membership`, `affordances` and the interface, for Bob's approval; a tranche entry; the UX page's open question 4 marked ruled.
+
+### DEC-81 · answered
+raised: 2026-09-29 · the same design session with Bob (from the measures map: "no route builds a Grade A capture yet")
+for: bob
+question: Intake Doctrine §3 required Grade A before external distribution of any work product resting on a document, but no requirement enforces it and no route can produce A (the plane is a Worker: no browser, no raw exchange, no WARC writer). With the ceremony undeferred (DEC-80), what grade is enough to publish, and do we pursue A?
+why it is Bob's: doctrine (what the published record may rest on).
+provisional: no case has been published by a member; the rule was unenforced.
+alternative: keep the rule and build an A route before the first publication.
+recommendation: a co-attested B is enough to publish, disclosed on the case; research and measure a route to A in parallel.
+reversal cost: low before the first member publication; afterwards a case published under the amended rule stays published, so a stricter rule applies only to later editions.
+response: **As recommended, Bob, 2026-09-29.**
+  1. A CO-ATTESTED Grade B (a trusted RFC 3161 timestamp over the capture's digest and a third-party co-archive of its locator, as capture R20 and provenance R32–R33 already produce) is sufficient to publish a work product resting on the document. The published case discloses each document's capture grade and whether it is co-attested. Grade A stays the ceiling for adversarial or legal use. Intake Doctrine §3's "required before external distribution" is corrected in place.
+  2. WHETHER AND HOW TO SUPPORT GRADE A is researched now: what a credible WARC/WACZ capture must contain, the candidate routes (a hosted headless browser in the group's own Cloudflare account writing WACZ with Webrecorder's open-source tools; Browsertrix run elsewhere; hosted services), their fidelity, cost, sovereignty and verifiability, and a measurement plan on real city pages. The findings come back to Bob.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §3 (Grades A and B).
+owed: the case document's per-document grade disclosure and the ceremony's check (case-authoring, publication), for Bob's approval; what a load-bearing Grade B whose co-attestation failed (a site that refuses the co-archive, a timestamp authority that did not answer) may do at publication, put to Bob with the research; the Grade A research report.
