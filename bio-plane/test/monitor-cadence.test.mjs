@@ -114,6 +114,7 @@ import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { GOVERNOR } from "../src/host-governor/index.mjs";
 import { MONITOR_FREQ } from "../checks/bio-checks.mjs";
+import { MONITOR_ROOT_OF_TRUST } from "../src/monitoring/index.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SOURCE = readFileSync(SRC, "utf8");
@@ -435,10 +436,16 @@ const pkg = (id, n, frequency) => {
       [typeof a.nextAt === "number", (await obj.schedAlarmAt()) === a.nextAt], [true, true]);
 
     console.log("\n--- the administrator's PAUSE is the one way to make it inert (R30, K372 (a)) ---");
-    const DO = async (route, body, qs = "") => (await (await obj.fetch(`http://x/${route}?${qs}`,
+    /* RE-ANCHORED 2026-09-29 (T12, legacy-tests; N314, K403, K404; monitoring R30): the pause and resume were asked of
+       the DO directly with the stamp `actor=admin:mc`, which names nobody membership R64 calls an administrator, so
+       R30 now refuses it NOT_AN_ADMIN with nothing written. They are asked instead through the Worker's own
+       `op=monitorpause` with the ADMIN_TOKEN, so the stamp is the one the control plane sets for the root of trust
+       (`class:admin`, monitoring's MONITOR_ROOT_OF_TRUST) and a caller-chosen stamp is no longer the arm's input. */
+    const DO = async (route, body) => (await (await mf.dispatchFetch(`http://x/api/?op=${route}&token=adm-nb`,
       { method: "POST", body: JSON.stringify(body ?? {}) })).json()).result;
-    const p = await DO("monitorpause", { paused: true }, "actor=admin:mc");
-    t("the pause is taken and stated", [p.ok, p.paused, p.by], [true, true, "admin:mc"]);
+    const p = await DO("monitorpause", { paused: true });
+    t("the pause is taken and stated, by the root of trust the Worker stamps", [p.ok, p.paused, p.by],
+      [true, true, MONITOR_ROOT_OF_TRUST]);
     const before = fetched;
     const TP = T0 + 2 * 3600000;
     const paused = await obj.onAlarm(TP);
@@ -447,7 +454,7 @@ const pkg = (id, n, frequency) => {
     t("and nothing was fetched", fetched - before, 0);
     t("a paused instance never spins the alarm: its next look at the pause is one archive interval on",
       paused.nextAt === null || paused.nextAt - TP >= 3600000, true);
-    const q = await DO("monitorpause", { paused: false }, "actor=admin:mc");
+    const q = await DO("monitorpause", { paused: false });
     t("the pause is lifted", [q.ok, q.paused], [true, false]);
     const resumed = (await obj.onAlarm(TP + 1000)).monitorcadence || { ticked: [] };
     t("resumed, the overdue document is checked again",

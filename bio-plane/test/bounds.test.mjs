@@ -777,7 +777,15 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      the roster DIFFED BY NAME against T10's close (777083f36d). NO DEPARTURE. ONE ARRIVAL: op=monitorslate (`slate`,
      K372, monitoring R30: the due slate, capped at MONITORING_READ_MAX, `limit` and `truncated` published), driven in
      the loop below with a real bite. */
-  OPS.size, 72);
+  /* RE-PINNED 2026-09-29 (legacy-tests T12; N300, K395, publication R44–R47): 72 -> 73 from this suite's print
+     (`93 carrying a cap, reaching 73 ops`), the roster DIFFED BY NAME against T11's close. NO DEPARTURE. ONE ARRIVAL:
+     op=projectstage (`projectStage`, publication R46: at most WORK_PRODUCTS_MAX (200) work products, `LIMIT ?` at
+     cap + 1, `work_products_limit` and `work_products_truncated` published; R45's held-question read capped at
+     STAGE_QUESTIONS_MAX, `questions.truncated`), on the roster by the `clamp` shape: its segment pages the held
+     questions with `limit: Math.min(PROJECT_QUESTIONS_MAX, …)`. Its bites are
+     driven at publication's interface (DRIVEN_ELSEWHERE) and its envelope below. The other T12 bounds (publication R38's
+     pin cursor, R42, actions R31's entry cursor, intent K391) moved no op on or off this roster. */
+  OPS.size, 73);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1765,7 +1773,16 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      force at most 1,000 (DEPARTURES_MAX) …", op=intentproposals "R16 proposals lists at
                                      most 200 set-aside proposals … (SET_ASIDE_MAX)" — each at its bound with `truncated`
                                      false and one past it true. Their envelopes stay driven here (`answersByOp`). */
-                                  "objectiveprogress", "aspirations", "intentproposals"]);
+                                  "objectiveprogress", "aspirations", "intentproposals",
+                                  /* ADDED 2026-09-29 (legacy-tests T12; N300, K395, publication R45/R46): op=projectstage
+                                     takes no caller `limit` (versionstrength's reason: a stage is a fact about the whole
+                                     project), and its bites need WORK_PRODUCTS_MAX + 1 cases and STAGE_QUESTIONS_MAX + 1 held
+                                     questions, which `test/m/publication/stage.test.mjs` builds: "R46 at most 200 work
+                                     products … with truncated" (`work_products_truncated` true at 201, false at 200, the
+                                     bound published as `work_products_limit`) and "R45 at the held-question cap …"
+                                     (`questions.truncated` true past 2,000, false at it). Its envelope is below, asked at the
+                                     Durable Object: its control-plane route is legacy-index's (N321, layer 11). */
+                                  "projectstage"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -2315,6 +2332,15 @@ t("op=memberpairings: AN OVER-ASK IS ANSWERED AT THE CEILING, and the CEILING is
  * anywhere in `store.mjs` puts a member into this set and fails here, with no
  * list for it to be quietly added to.
  * ========================================================================== */
+/* ADDED 2026-09-29 (legacy-tests T12; N300, K395): op=projectstage's envelope over one of D-479's owned projects, read
+   by its owner, the one arrival the T12 roster gained. It has no control-plane row yet (N321), so it is asked at the
+   Durable Object, `reindexnames`' precedent; the bite is publication's interface test (DRIVEN_ELSEWHERE). */
+const STAGE_WHOLE = await DO(`projectstage?project=${encodeURIComponent(D479_PROJECTS[0])}&viewer=member:d479own`);
+t("op=projectstage: an answer object that PUBLISHES its work-product bound, and a project holding none says it is whole",
+  [STAGE_WHOLE?.ok, Array.isArray(STAGE_WHOLE), STAGE_WHOLE?.work_products_limit, STAGE_WHOLE?.work_products_truncated,
+   STAGE_WHOLE?.questions?.truncated],
+  [true, false, Number((/\bWORK_PRODUCTS_MAX = (\d+)/.exec(readFileSync(new URL("../src/publication/index.mjs",
+    import.meta.url), "utf8")) || [])[1]), false, false]);
 const answersByOp = new Map([
   ...await Promise.all(DRIVEN.map(async (d) => [d.op, await d.drive(d.whole)])),
   /* Driven above and REUSED rather than re-driven: both backfills CLEAR a
@@ -2435,6 +2461,8 @@ const answersByOp = new Map([
   ["intentproposals", PROPOSALS_WHOLE],
   /* ADDED 2026-09-28 by legacy-tests (T9): membership's two (R82), driven above with a real bite and REUSED here. */
   ["hostingaccess", HA_WHOLE], ["memberpairings", MP_WHOLE],
+  /* ADDED 2026-09-29 (legacy-tests T12; N300): publication's stage read, driven above and REUSED here. */
+  ["projectstage", STAGE_WHOLE],
   ["linksto", await DO(`linksto?address=${encodeURIComponent(VC_ADDR)}&limit=1`)],
   ["chromeof", await DO("chromeof?host=example.gov&limit=1")],
   ["sitechrome", await DO("sitechrome?host=example.gov&limit=1")],
