@@ -1451,3 +1451,18 @@ response: **As recommended, Bob, 2026-09-29.** The assistant is a panel docked b
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the assistant panel in the redesign; the UX page's open question 10 marked ruled.
+
+### DEC-90 · deferred
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 11)
+for: bob
+question: What does a newcomer learn first, and how do starter materials and onboarding fit a first session (Design Requirement 11: usable within one session)?
+why it is Bob's: what a newcomer must learn first, and whether the starter kit is part of the product or the group's website, is a requirement and a UX principle.
+provisional: no onboarding path or starter kit exists; the measures map (DEC-82) already rules that a newcomer meets strength against the bar and "Undetermined" first, everything else taught at the act.
+alternative: decide the onboarding path now, before the redesign exists.
+recommendation (not taken now): a short guided first-session path, with teaching at the act everywhere else, and local guides kept in jurisdiction profiles rather than in the product.
+reversal cost: none; nothing is built.
+response: **DEFERRED by Bob, 2026-09-29:** "this needs to be deferred until the new UX is in place and stabilized." Onboarding is designed against the product members will actually use, so it waits for the redesign.
+trigger: the redesigned member surfaces are built and have been stable in use (no major layout changes) for a period BOB judges sufficient; or Bob asks.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the UX page's open question 11 marked deferred, with this trigger.
