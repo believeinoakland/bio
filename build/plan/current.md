@@ -1,6 +1,6 @@
 # Plan: tranche T11
 
-**Status** · OPEN · BOB #60 · session_01WyqsvSMY5LXG8j99R4J6Mp · depth 1
+**Status** · OPEN · BOB #61 · session_01NdEozCriVs1kqon1xwEhJ2 · depth 1
 
 Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB #57, K305; arising entries BOB #58 and #59) at once after T10 closed (K346; K340: no pacing). Branch `tranche/T11` starts at `main` @ 8cf1ffb937. Cut to 28 jobs (K347): the N285 shared-code cluster and the queue, instance-setup and control-plane extractions go to `draft-T12.md`. Every provider side this plan needs was worded on T10's tranche before it closed (K338, K343, K344) and re-read against T10's close (K170): layers 1–6 and 10–11 of T10 changed nothing they word. Bob's weekly meter at the opening: asked.
 
