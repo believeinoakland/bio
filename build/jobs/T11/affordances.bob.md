@@ -13,3 +13,7 @@ Depth 2. Your entries are the affordances bullet of `build/plan/current.md` (lay
 2. `RUNG_ABSENT`: give it the ground your vocabulary holds true for it. My reading is `substrate`, as for `governorconfig`; if `governorconfig` sits under another ground, use that one.
 
 The failing tests are `affordances.test` "every op in NEEDS is a published act or a named NON_ACT" and `rung-ladder`'s FORWARD arm and exact-count arm (want 169). Legacy-index's branch holds the op, so test against `origin/job/T11/legacy-index` merged into a scratch tree, and commit only your own paths. Your R26 mark (N231) is struck by me once legacy-index lands; nothing for you there. Then COMPLETE again.
+
+## B3 · CHANGE
+
+Legacy-index is merged into `tranche/T11` (§4). Merge the tranche now and apply B2 against it: `monitorpause`'s `NON_ACTS` entry and its `RUNG_ABSENT` ground. Correction to B2: your R26 mark is N65's, not N231's, and it stays.
