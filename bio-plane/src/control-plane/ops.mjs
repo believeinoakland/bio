@@ -44,29 +44,15 @@ const OPS = {
   //  op          class allowed              mutating
   selftest:   { classes: ["admin", "member", "probe"],           mutating: false },
   livefire:   { classes: ["admin", "probe"],                     mutating: true  },
-  /* op=index reads the `bundles` table, which is WORKING corpus, so it is not a
-     published-scope read and the public class must not have it. A title is the
-     leak that matters: it names what the group is looking into, and the state
-     says how far along they are, both before there is anything to answer. The
-     public surface for a listing is `publishedlist`, which reads the projection
-     that has never held unratified material. Asserted in test/fence.test.mjs. */
+  /* Working corpus (`bundles`): a title names what the group is looking into, so never public; the public list is
+     `publishedlist` (D-30). */
   index:      { classes: ["admin", "member", "probe"],           mutating: false },
-  /* S-10 step 1. The metadata projection the retrieval surface filters and sorts
-     on, including source.locator and source.authority, which Bob settled as
-     searchable. Working corpus, so member class and above, never public: the
-     same fence that governs op=index governs this. */
+  /* S-10 step 1: the metadata projection retrieval filters on; working corpus, op=index's fence. */
   projection: { classes: ["admin", "member", "probe"],           mutating: false },
   reproject:  { classes: ["admin", "probe"],                     mutating: true  },
 
-  /* Section 7 participation. These existed in the Durable Object's route map
-     and were absent HERE, so every real caller got "unknown op": 7.2, 7.4, 7.6,
-     7.7 and 7.8 were shipped and unreachable. Standing lesson 5 one level
-     worse, since they were not merely tested at the DO but reachable only
-     there. `by` is stamped server-side below from the session.
-
-     A machine credential reaches these and is refused by the store, because
-     `class:member` is not a member id and matches no participation row. Fail
-     closed rather than fail open. */
+  /* Section 7 participation (REC-138): `by` and `viewer` are stamped; a machine class reaches them and matches no
+     roster row, so the store refuses it (fail closed). */
   projectinvite:       { classes: ["admin", "member", "probe"], mutating: true  },
   projectjoin:         { classes: ["admin", "member", "probe"], mutating: true  },
   projectleave:        { classes: ["admin", "member", "probe"], mutating: true  },
@@ -74,1103 +60,398 @@ const OPS = {
   projectowneradd:     { classes: ["admin", "member", "probe"], mutating: true  },
   projectownerremove:  { classes: ["admin", "member", "probe"], mutating: true  },
   projectfork:         { classes: ["admin", "member", "probe"], mutating: true  },
-  /* 7.13. The single exception to administrators holding no authority over
-     projects, and only when EVERY owner of that project is inactive. The store
-     enforces both halves; `by` is stamped server-side below. */
+  /* 7.13: the one administrator authority over a project, only when every owner is inactive; the store enforces both
+     halves. The roster read beside it. */
   projectownerrescue:  { classes: ["admin", "member", "probe"], mutating: true  },
   projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
-  /* REC-149 (Membership v2 §7.14): DISCOVERABLE or HIDDEN. The setting is an OWNER's recorded act (the store
-     refuses every other caller, machines included, by C-70.2); its read serves the setting and its history to a
-     caller who can see the project; the directory lists, for a member session, the discoverable projects it is
-     not in (a credential with no member is refused, C-70.4). */
+  /* REC-149 (§7.14): DISCOVERABLE or HIDDEN, an owner's act (C-70.2); its read to whoever sees the project; the
+     directory for a member session (C-70.4). */
   projectvisibilityset: { classes: ["admin", "member", "probe"], mutating: true  },
   projectvisibility:    { classes: ["admin", "member", "probe"], mutating: false },
   projectdirectory:     { classes: ["admin", "member", "probe"], mutating: false },
-  /* REC-150 (Membership v2 §7.14, the request to join): ASK and WITHDRAW are a member session's own acts (the store
-     refuses a credential with no active member behind it, C-95.1); ANSWER — grant, which writes `invited`, or
-     decline — is an OWNER's (C-95.5 for everyone else, administrators and machines included); the read serves a
-     project's requests to its owners and administrators, and a member its own. */
+  /* REC-150 (§7.14): asking and withdrawing are a member session's acts (C-95.1), answering an owner's (C-95.5); the
+     read to owners, administrators and the asker. */
   projectrequest:         { classes: ["admin", "member", "probe"], mutating: true  },
   projectrequestwithdraw: { classes: ["admin", "member", "probe"], mutating: true  },
   projectrequestanswer:   { classes: ["admin", "member", "probe"], mutating: true  },
   projectrequests:        { classes: ["admin", "member", "probe"], mutating: false },
-  /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
-     tell a group what a change would take BEFORE they start one. op=adminarith
-     is the same thing for section 4.7, and the two differ at n=2 on purpose. */
+  /* The 7.10 arithmetic, computed rather than transcribed, so an interface can say what a change would take
+     (`adminarith` is §4.7's). */
   projectownerarith:   { classes: ["admin", "member", "probe"], mutating: false },
-  /* Section 1.3. A member declares their own; an administrator confirms. Both
-     stamped server-side below, because a declaration a caller can address to
-     someone else is not a declaration, and a confirmation a caller can sign as
-     an administrator is not a confirmation. GATES NOTHING: these appear in no
-     capability check and no session. */
+  /* Section 1.3: a member declares their own expertise and an administrator confirms, both stamped; it gates nothing. */
   expertisedeclare:    { classes: ["admin", "member", "probe"], mutating: true  },
   expertiseconfirm:    { classes: ["admin", "member", "probe"], mutating: true  },
   expertiselist:       { classes: ["admin", "member", "probe"], mutating: false },
-  /* D-98, the task inbox. Note what is NOT here: `taskenqueue`. The producer is
-     the capture path and reaches the queue through the Durable Object directly,
-     so there is no control-plane route by which any credential can put an event
-     in the queue on its own account. The consumer, `taskdrain`, is the sole
-     writer of tasks, and `actor` on every one of these is stamped server-side
-     below: a forward a caller can sign as someone else is not a forward. */
-  /* D-104. The counter the archive fallback will read, exposed so an operator can
-     see WHY a document is or is not eligible, including the governed refusals
-     that are deliberately excluded from the verdict. */
+  /* D-98's task inbox has no `taskenqueue` route: the capture path is the producer, `taskdrain` the sole writer,
+     `actor` stamped. D-104: `sourcereach` shows why a document is or is not archive-eligible. */
   sourcereach:         { classes: ["admin", "member", "probe"], mutating: false },
-  /* The archive fallback's DECISION half. Non-mutating: it asks the Internet
-     Archive what it holds and applies the rules; capturing the bytes is a
-     separate, ordinary op=acquire carrying via=archive.org. Keeping them apart
-     means the eligibility fence and the capture path each do one thing, and the
-     lookup can be run to ask "would this fire, and why" without fetching
-     anything into the record. */
+  /* The archive fallback's decision half, a read: asks the Archive and applies the rules; capturing is op=acquire with
+     via=archive.org. */
   archivelookup:       { classes: ["admin", "member", "probe"], mutating: false },
   tasks:               { classes: ["admin", "member", "probe"], mutating: false },
   taskdrain:           { classes: ["admin", "member", "probe"], mutating: true  },
-  /* REC-28 / D-151: NO PROBE CLASS on the two MEMBER verbs, and the class list is
-     the smaller half of that fix. A probe credential has no business forwarding
-     or resolving anything — it is the unattended prober, and these two verbs are
-     a person's acts — so the table stops advertising it and answers "forbidden
-     for token class".
-     What the class list CANNOT do is the reason the real fence is in the store:
-     `classes` is checked against the caller's CLASS, and a member/admin SESSION
-     arrives as exactly that class (index.mjs sets `cls = kind` from the session),
-     so "admin"/"member" must stay for the Tasks screen to work at all — and a
-     MEMBER_TOKEN or ADMIN_TOKEN machine credential is INDISTINGUISHABLE here from
-     the session it must admit. Both still REACH the ops and are refused by the
-     store BY SHAPE on the server-stamped actor (MACHINE_CANNOT_FORWARD /
-     MACHINE_CANNOT_RESOLVE), the same way release/conclude/reopen are. Removing
-     probe narrows who knocks; the act refusal is what answers the door. */
+  /* REC-28 / D-151: no probe on a person's two task verbs; a member binding reaches them and the store refuses a
+     machine actor by shape (MACHINE_CANNOT_FORWARD/RESOLVE). */
   taskforward:         { classes: ["admin", "member"],          mutating: true  },
   taskresolve:         { classes: ["admin", "member"],          mutating: true  },
-  /* Section 8.1. Admin class ONLY, and additionally refused to a SESSION below:
-     "the ADMIN_TOKEN-class credential" is not satisfied by a session belonging
-     to an administrator, because a session is password-derived and the root of
-     trust is the token set in the hosting dashboard. Mutating, because it writes
-     the export log: an export that left no trace would defeat the recording. */
+  /* Section 8.1: the ADMIN_TOKEN credential only, never a session (refused at the gate); mutating because it writes
+     the export log. */
   export:              { classes: ["admin"],                    mutating: true  },
-  /* The log is READ by in-app administrators who cannot run an export. They must
-     be able to see that one happened even though they cannot cause it. */
+  /* Read by administrators who cannot export, so they see that one happened. */
   exportlog:           { classes: ["admin", "member", "probe"], mutating: false },
-  /* D-436 / IC-172 — THE INSTANCE'S PRODUCING GROUP (State Rules v1.5 §3.1), the one value every bundle this
-     instance writes names as its `group`. The READ is open to every class that reads the record, AND SINCE
-     REC-163 (IC-174) TO THE PUBLIC: `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21) rules THE SLUG
-     PUBLIC — it travels in every published bundle's signed `group` and names the worker, so a stranger learns
-     nothing the group has not already published or served. `classes: null` is how this table says public (there
-     is deliberately no public CLASS — see the header above), so the op answers through its own handler in the
-     unauthenticated branch: a stranger is told the slug, or that none is recorded, and NOTHING ELSE — when and by
-     which act it was recorded are not published anywhere, and §7 rules only the slug; a caller whose credential
-     the admission gate would admit (a machine class in its namespace, a session, an agent credential in scope)
-     is answered the whole row exactly as before. It answers what the store records, and when it records nothing
-     it says so. The SEED is the other half of decision (b):
-     a store that already held documents when the value arrived records nothing at boot, and is given its group
-     by this act, once. RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN
-     CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO
-     SESSION OF ANY ROLE REACHES IT: it is named in no SESSION_OPS set, and UNATTENDED_BY_DECISION cites this
-     row, so a session is told which credential the verb is addressed to rather than an invented reason. */
+  /* D-436 / REC-163: the producing group's slug is public (Publication §7 point 1); a credentialed caller gets the
+     whole row. RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD
+     IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION OF ANY ROLE REACHES
+     IT. */
   instancegroup:       { classes: null,                         mutating: false },
   instancegroupseed:   { classes: ["admin"],                    mutating: true  },
-  /* REC-164 / Publication §7 points 2 and 3. `groupidentity` is PUBLIC on point 1's reasoning, and answers a stranger
-     the slug, the display name only beside it, and the domain only while its latest verdict is `verified`; a
-     credential the admission gate admits is answered the claim, its state and both dated histories too. The two SET
-     acts are an administrator's own session act (`IDENTITY_ACTIONS`): admitted to the three bearer classes only so
-     the fence can refuse a bearer BY NAME (C-64.4) rather than by a class list, exactly as the §4 governance acts. */
+  /* REC-164 (Publication §7 points 2–3): the identity read is public; the two sets are an administrator's session act,
+     bearers refused by name (C-64.4). */
   groupidentity:       { classes: null,                         mutating: false },
   groupnameset:        { classes: ["admin", "member", "probe"], mutating: true  },
   groupdomainset:      { classes: ["admin", "member", "probe"], mutating: true  },
-  /* Section 8.2. classes: null, because published-record reconstruction requires
-     NOTHING: the hashes are public and verifiable by any stranger without this
-     instance's cooperation or continued existence. It reads the published
-     projection and never the working corpus, which is the whole of its safety,
-     exactly as op=verify does. */
+  /* Section 8.2: published-record reconstruction needs nothing; it reads the published projection only, as op=verify
+     does. */
   publishedmanifest:   { classes: null,                         mutating: false },
-  /* What the caller may DO, so an interface builds its controls from the plane
-     rather than from a copy that drifts, exactly as op=searchfields does for the
-     query language. Section 5's "absent from their interface" is implementable
-     only if the interface can ask. */
+  /* What the caller may do, so an interface builds its controls from the plane (section 5's absence). */
   whoami:              { classes: ["admin", "member", "probe"], mutating: false },
-  /* REC-19, standing doctrine DEC-8: what may be DONE to an object, published
-     by the plane so an act surface renders options it received and never
-     computes one — whoami's pattern for capabilities, searchfields' for the
-     query language, extended to the act construct. Reads the working corpus
-     (an object's state and edges), so member class and above, never public;
-     when REC-25 stamps the D-15 viewer gate onto the read paths this op should
-     take the same stamp. */
+  /* REC-19 / DEC-8: what may be done to an object, published by the plane; working corpus, member and above,
+     viewer-stamped. */
   affordances:         { classes: ["admin", "member", "probe"], mutating: false },
-  /* S-10 steps 2 to 4: the retrieval surface. It reads the WORKING corpus, so it
-     is member class and above and never public, exactly like op=index and
-     op=projection. There is no public token class to grant it to and there must
-     never be one: a search result carries titles, states, locators and
-     authorities, which together name what the group is looking into and how far
-     along it is, before there is anything to answer.
-     `viewer` is stamped below from the authenticated identity and a
-     caller-supplied value is overwritten, because the D-15 visibility gate is
-     only a gate if the caller cannot choose whose view it compiles. */
+  /* S-10: the retrieval surface reads the working corpus, never public; `viewer` is stamped (D-15). */
   search:     { classes: ["admin", "member", "probe"],           mutating: false },
-  /* PL-9 / D-222 option C: the SAME query compiler, read at MEANING grain — the
-     legs a claim rests on and the resolutions a document carries, for the
-     bundles `q` selects. Fenced exactly as op=search is and for a STRONGER
-     reason: a search result names what the group is looking into, and this names
-     what it thinks the evidence establishes. `viewer` is stamped below from the
-     authenticated identity, because a gate the caller can choose the view of is
-     not a gate. */
+  /* PL-9 / D-222: op=search's compiler at meaning grain, fenced as op=search and viewer-stamped. */
   meaningrows: { classes: ["admin", "member", "probe"],          mutating: false },
-  /* The vocabulary of the query language, so a UI builds its controls from the
-     plane rather than from a copy that drifts. Working-corpus field names, so
-     the same fence applies. */
+  /* The query language's vocabulary, so a UI builds controls from the plane; working-corpus field names. */
   searchfields:{ classes: ["admin", "member", "probe"],          mutating: false },
-  /* The verifier for "the index cannot diverge from the corpus": it re-derives
-     the expected text row for every bundle and compares. Read-only. */
+  /* The verifier that the text index cannot diverge from the corpus; a read. */
   searchindexcheck: { classes: ["admin", "member", "probe"],     mutating: false },
-  /* S-10 step 5. A selection is a server-side construct so the set an operator
-     selected is the set an action lands on. Two kinds: a QUERY selection, where
-     the operator picked a criterion and the current answer to it is the correct
-     set by definition, and an ENUMERATED one, where they picked specific items
-     and membership is frozen. `select` is mutating because it writes a snapshot;
-     it writes nothing about the corpus and a probe-class caller is still
-     confined to scratch. */
+  /* S-10 step 5: a server-side selection, the set an action lands on; `select` writes a snapshot, nothing about the
+     corpus. */
   select:          { classes: ["admin", "member", "probe"],      mutating: true  },
   selection:       { classes: ["admin", "member", "probe"],      mutating: false },
   selectionlist:   { classes: ["admin", "member", "probe"],      mutating: false },
   selectionrelease:{ classes: ["admin", "member", "probe"],      mutating: true  },
-  /* The first action that refers to a selection: citing Information in a
-     Project, at weight `report`. Mutating, because it promotes the Project with
-     the new edges written into its bundle.md; `refs` is a projection of that
-     document and is never written directly (D-21). Member class and above like
-     every other reader of the working corpus, and there is no public class to
-     grant it to. */
+  /* Citing Information in a Project (weight `report`): promotes the Project with the new edges (D-21). */
   cite:            { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* S-11 step 3: bulk disposition of Problems, weight `refuse`. Contribute-gated
-     like every other corpus write. */
+  /* S-11: bulk disposition of Problems, weight `refuse`, contribute-gated. */
   dispose:         { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* S-11 step 4: bulk retirement of Information, weight `refuse`. Heavier than
-     dispose because `retired` is TERMINAL, and it additionally refuses anything
-     a live `cites` edge still points at: stranding citations manufactures the
-     C-6.2 error condition at whatever scale the operator selected. */
+  /* S-11: bulk retirement, heavier than dispose (`retired` is terminal); refuses anything a live `cites` edge points
+     at (C-6.2). */
   retire:          { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* S-11 step 5, the last rung. A machine class REACHES it and is refused by
-     the store (MACHINE_CANNOT_RELEASE), fail closed like participation: the
-     collected-to-verified transition is a named member's decision (Intake
-     Doctrine section 4, C-18.1), and the author stamp below is `token:<class>`
-     for a machine, which the store refuses by shape. */
+  /* S-11: collected-to-verified is a named member's decision (C-18.1); a machine reaches it and the store refuses the
+     stamp (MACHINE_CANNOT_RELEASE). */
   release:         { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-13: CONCLUDING an inquiry, open -> concluded. Release's shape and
-     release's class list for release's reason — a machine class REACHES it and
-     is refused by the store (MACHINE_CANNOT_CONCLUDE) rather than being absent,
-     fail closed, because "a machine may surface a question and may never author
-     the conclusion" is a rule about who the caller IS and is enforced on the
-     author stamp below. Unlike its state-action siblings it takes a single
-     `target` rather than a selection: one conclusion answers one question, and
-     a bulk conclude would be the checkbox the construct exists to refuse. */
+  /* REC-13: concluding is a member's; a machine reaches it and is refused by the store (MACHINE_CANNOT_CONCLUDE); one
+     target, never a bulk act. */
   conclude:        { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: A PROJECT WITHDRAWS ITS
-     CONCLUSION — an act that APPENDS to the relationship's history and never
-     overwrites it. Conclude's class list for conclude's reason: a machine
-     class REACHES it and is refused by the store (MACHINE_CANNOT_CONCLUDE,
-     the same condition) rather than being absent. One `target` and one
-     `project`: one project's stance on one question moves at a time. */
+  /* REC-136: a project withdraws its conclusion, appending to its history; conclude's cut and refusal. */
   withdrawconclusion: { classes: ["admin", "member", "probe"],   mutating: true  },
-  /* REC-31: REOPENING an inquiry the group set down, deferred|dismissed ->
-     open. Conclude's class list for conclude's reason — a machine class
-     REACHES it and is refused by the store (MACHINE_CANNOT_REOPEN) rather
-     than being absent, fail closed, because overturning the group's own
-     disposition is a rule about who the caller IS and is enforced on the
-     author stamp below. One `target`, like conclude: one question is picked
-     back up at a time. */
+  /* REC-31: reopening overturns the group's own disposition; conclude's cut, MACHINE_CANNOT_REOPEN, one target. */
   reopen:          { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-16: DIVIDING an inquiry, open|surfaced|concluded -> divided. Conclude's
-     class list for conclude's reason — a machine class REACHES it and is
-     refused by the store (MACHINE_CANNOT_DIVIDE) rather than being absent, fail
-     closed, because deciding that a question was two questions is a member's
-     judgement about the record and the rule is about who the caller IS. One
-     `target`, like conclude and reopen: one question is divided at a time, and
-     the CHILDREN arrive in the POST body because the apportionment is an array
-     of arrays and a query string cannot express one honestly (op=publish's
-     precedent exactly). */
+  /* REC-16: dividing a question is a member's judgement; conclude's cut, MACHINE_CANNOT_DIVIDE; the children in the
+     POST body. */
   inquirydivide:   { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-45: AUTHORING THE GROUNDS PARTITION on an inquiry (DEC-32). Conclude's
-     class list for conclude's reason — a machine class REACHES it and is
-     refused by the store (MACHINE_CANNOT_GROUND) rather than being absent, fail
-     closed, because "these reasons are enough on their own" is a member's
-     authored judgement about their own argument and the rule is about who the
-     caller IS. One `target`, like conclude, reopen and inquirydivide: one
-     question's structure is authored at a time. The PARTITION arrives in the
-     POST body because it is an array of objects each holding an array of
-     ordinals, which a query string cannot express honestly — op=publish's and
-     op=inquirydivide's precedent exactly. */
+  /* REC-45 (DEC-32): authoring the grounds partition is a member's judgement; conclude's cut, MACHINE_CANNOT_GROUND;
+     the partition in the body. */
   inquiryground:   { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* PL-2 / IS-2: THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE — the acts that
-     settle which reading of the evidence a question's answer rests on.
-     Conclude's class list for conclude's reason: a machine class REACHES all six
-     and is refused BY THE STORE (MACHINE_CANNOT_MOVE_VERSION) rather than being
-     absent from this table, fail closed, because "the AI holds no op that
-     accepts" (INVESTIGATIVE-SESSION.md section 4) is a rule about who the caller IS
-     and is enforced on the author stamp below.
-     One `target` and one `version` each, like conclude and reopen: one reading
-     is settled at a time, and a bulk version would be the checkbox these
-     constructs exist to refuse. The REASON arrives in the POST body because it
-     is prose and a query string is a poor place for a sentence a member wrote. */
+  /* PL-2 / IS-2: the six version acts settle which reading an answer rests on; a machine reaches them and the store
+     refuses it (MACHINE_CANNOT_MOVE_VERSION). */
   versionaccept:   { classes: ["admin", "member", "probe"],      mutating: true  },
   versionreject:   { classes: ["admin", "member", "probe"],      mutating: true  },
   versionconsider: { classes: ["admin", "member", "probe"],      mutating: true  },
   versionrevert:   { classes: ["admin", "member", "probe"],      mutating: true  },
   versioncurrent:  { classes: ["admin", "member", "probe"],      mutating: true  },
   versionhide:     { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-24 (c)/(d): THE TWO OPS THAT OPERATE AN ACTION — the first ops in this
-     table whose subject is an action at all. `STATES.action` has carried five
-     states and seven edges since the catalog was written and nothing wrote them,
-     so IMPACTING had zero reachable processes.
-     Conclude's class list for conclude's reason: a machine class REACHES both
-     and is refused BY THE STORE (MACHINE_CANNOT_MOVE_ACTION,
-     MACHINE_CANNOT_CORRESPOND) rather than being absent from the table, so the
-     refusal says what is wrong instead of saying "requires a credential you
-     have". An action reaches OUTSIDE this system and touches people who never
-     agreed to be in it, and testimony about an exchange is somebody's — neither
-     is a scheduler's to author.
-     One `target` each, like conclude and reopen: one action moves at a time and
-     one entry is appended at a time, and a bulk version of either would be the
-     checkbox these constructs exist to refuse. */
+  /* REC-24: the two acts that operate an action; a machine reaches them and the store refuses it
+     (MACHINE_CANNOT_MOVE_ACTION, MACHINE_CANNOT_CORRESPOND). */
   actionmove:      { classes: ["admin", "member", "probe"],      mutating: true  },
   actioncorrespond:{ classes: ["admin", "member", "probe"],      mutating: true  },
-  /* D-149: stating the laws that govern an action's request. Conclude's class list for conclude's reason: a
-     machine class REACHES it and is refused BY THE STORE (MACHINE_CANNOT_SET_LAWS), so the refusal says what
-     is wrong. One `target`; the list arrives in the POST body. */
+  /* D-149: the laws an action's request is made under; a machine is refused by the store (MACHINE_CANNOT_SET_LAWS);
+     the list in the body. */
   actionlaws:      { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-214 (BOB #33, 2026-09-24): a member's revision of an action's risk tier — an authored, append-only act with
-     a REQUIRED reason. `actionlaws`' class list for its reason: a machine class REACHES it and is refused BY THE
-     STORE (MACHINE_CANNOT_SET_RISK_TIER, C-32.19), so the refusal says what is wrong. */
+  /* REC-214: a member's revision of an action's risk tier with a reason; a machine is refused
+     (MACHINE_CANNOT_SET_RISK_TIER, C-32.19). */
   actionrisktier:  { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-195: the PROPOSAL of that list — D-149's remaining half. `themepropose`'s class cut, for its reason:
-     proposing is the MACHINE's half of the ruling, so the `ai` class reaches it through the DEC-55 floor when
-     its minted `writes` name it, and the store refuses NOBODY by class here. The fence that matters is one op
-     up: a machine is refused at `actionlaws` BY NAME (C-32.18), and this op writes no list at all. */
+  /* REC-195: proposing the laws is the machine's half of D-149, so nobody is refused by class; the fence is
+     `actionlaws` (C-32.18). */
   actionlawspropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
-  /* T8 (actions R28, ACTIONS #1 J2.5): a proposed RISK TIER, stored apart and labelled, never touching `risk_tier` —
-     `actionlawspropose`'s class cut and reason: proposing is the machine's half, so the store refuses nobody by class,
-     and the fence is one op up, at `actionrisktier` (C-32.19). */
+  /* T8 (actions R28): a proposed risk tier, labelled and stored apart; the fence is `actionrisktier` (C-32.19). */
   actionriskpropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
-  /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
-     therefore the first callers of selectionResolve's REFUSING arm. Severing
-     withdraws a citation without deleting it and reinstating restores one; both
-     require a reason, because the catalog's own remediation for a bad reference
-     is "sever with reason" and an edge moved with no reason is an unexplained
-     change wearing a status field. */
+  /* S-11: sever and reinstate move a citation with a reason, never deleting it. The corpus reads beside them are
+     viewer-stamped. */
   sever:           { classes: ["admin", "member", "probe"],      mutating: true  },
   reinstate:       { classes: ["admin", "member", "probe"],      mutating: true  },
   list:       { classes: ["admin", "member", "probe"],           mutating: false },
   image:      { classes: ["admin", "member", "probe"],           mutating: false },
   file:       { classes: ["admin", "member", "probe"],           mutating: false },
-  /* REC-25: the plane-side gated BACKLINK read — every edge INTO a bundle,
-     with the citing bundle filtered by the viewer's position (Membership
-     Architecture 7.9). Exists so the UI can delete its client-side
-     reverseRefs walk, which rebuilt the reverse-edge leak by walking every
-     project's projection. Working corpus, so member class and above; the
-     viewer is stamped server-side below like every retrieval read. */
+  /* REC-25: every edge INTO a bundle, the citing bundle filtered by the viewer (7.9); viewer-stamped. */
   backlinks:  { classes: ["admin", "member", "probe"],           mutating: false },
-  /* REC-17 / P-64: the RE-EVALUATION OBLIGATION, derived on read. Which
-     inquiries rest on something that has MOVED — superseded, republished at a
-     new edition, deferred, reopened or dismissed — as a query over REC-11's
-     reverse index and the supersession reverse column, never a stored flag and
-     never a verdict computed from strength. Working corpus, so member class and
-     above; the viewer is stamped server-side below like every retrieval read.
-     NO `NEEDS` ENTRY, deliberately and on op=governorstate's precedent: a read
-     carries no working capability, so REC-19's NEEDS/NON_ACTS totality neither
-     gains nor loses a row. */
+  /* REC-17: the re-evaluation obligation, derived on read; viewer-stamped; no NEEDS entry (a read carries no
+     capability). */
   reevaluations: { classes: ["admin", "member", "probe"],        mutating: false },
-  /* REC-34: REC-12's derived PAIR for one inquiry, GATED — UI-11's delegation
-     and UI-12's hard blocker. It answers from `strengthOf()`, the authority,
-     and never from the five cached columns (a stale cache must not impersonate
-     the derivation). Working corpus, so member class and above, exactly as
-     op=backlinks and op=reevaluations are: the pair is what a member reading a
-     question needs in order to weigh it, and fencing it to admin would fence a
-     member off the one number the whole page is about. The viewer is stamped
-     server-side below like every retrieval read. It carries a NEEDS entry of
-     null rather than no entry at all — op=queue's precedent, not
-     op=reevaluations' — so REC-19's totality guard SEES the op and its
-     NON_ACTS row states why a read is not an act on an object. */
+  /* REC-34: the derived strength pair from `strengthOf()`, never the cache; member and above, viewer-stamped; NEEDS
+     null with a NON_ACTS row. */
   inquirystrength: { classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-18: what the RECORD earns for each candidate basis leg, GATED. It is
-     part of the earned rule rather than a convenience beside it: op=promote
-     refuses a leg whose earned grade is not the value the record holds, and a
-     member with no way to LEARN that value is a member the refusal pressures
-     into guessing — "a gate that pressures someone into inventing one is a bug
-     in the gate" (CLAUDE.md). The refusal and this answer come from ONE store
-     function, so they cannot disagree. Member class and above on
-     op=inquirystrength's reasoning exactly, and the viewer is stamped
-     server-side below. NEEDS entry of null with a NON_ACTS row, same shape. */
+  /* REC-18: what the record earns for a candidate leg, from the one function promote's refusal uses; NEEDS null with a
+     NON_ACTS row. */
   earnedbasis: { classes: ["admin", "member", "probe"],          mutating: false },
-  /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ — one content row by
-     `content_id`: its extent, its human `ref`, the chain and cap it was minted
-     under, whether the transcription has since moved (`stale`), and the
-     attestations that COVER it.
-
-     MEMBER CLASS AND ABOVE, on op=textattest's reasoning exactly rather than by
-     resemblance: what a citation points at, and whether the text under it has
-     been checked, is a fact about the record that a view-only member weighing a
-     case needs precisely as a contributor does. A probe may ask, because "is
-     anything in this store cited at a grain nobody has attested" is a question
-     an operator should be able to answer without a session.
-
-     `mutating: false` AND IT WRITES NOTHING — unlike its sibling op=earnedbasis,
-     whose backfill arm is declared at its own site. This op resolves a row that
-     already exists and mints nothing: an id nothing has cited does not exist,
-     and answering NO_SUCH_CONTENT is the whole of what it does about that.
-
-     FIXED-KEY, AND THE REFUSAL IS PART OF THE CONTRACT (D-222): the
-     content-grain QUERY arm is stage C, behind D-225's caps. This op takes its
-     key and the server-stamped viewer and REFUSES every other parameter by
-     name — a predicate or a page is not ignored here, because a parameter
-     silently dropped is a filter the caller believes was applied.
-
-     `viewer` is stamped server-side below like every read that names a bundle;
-     the store fails closed on an absent stamp and answers a row the caller may
-     not see EXACTLY as one that does not exist. That matters more here than on
-     most reads: the id is a hash of a capture, an extent and a chain, so an
-     answer that distinguished hidden from absent would let a caller confirm a
-     passage exists in a project they were never invited to by guessing its
-     address. NEEDS entry of null with a NON_ACTS row, op=earnedbasis' shape. */
+  /* REC-83: the fixed-key content read; writes nothing, refuses any unnamed parameter (D-222); a hidden row answers as
+     an absent one; NEEDS null. */
   content:     { classes: ["admin", "member", "probe"],          mutating: false },
-  /* D-419 (T5-11, content R32): THE CROP OF A CITED PDF IMAGE, `content`'s `cropOf`, cut in the store through
-     `pdf-pixels`. A READ on op=content's class cut and for its reason: the crop is what a viewer SHOWS for an image
-     citation, which a view-only member weighing a case needs as a contributor does. It writes nothing. `viewer` is
-     stamped below, and the store answers a row the caller may not see exactly as one that does not exist
-     (NO_SUCH_CONTENT). NEEDS null, op=content's shape. */
+  /* D-419: the crop a viewer shows for an image citation, op=content's cut and stamp; NEEDS null. */
   contentcrop: { classes: ["admin", "member", "probe"],          mutating: false },
-  /* SK-7 / framework Part II §14.4 (Bob's 5.7): MARKING A PASSAGE AS CITABLE.
-     *"The assistant may mark passages as citable on its own, every such row
-     labelled as machine work, never attested by it, and part of a finding only
-     when a member cites it."*
-
-     BEFORE THIS OP THERE WAS NO DOOR AT ALL. A content row came into being only
-     inside `op=promote`'s projection, which means a passage became addressable
-     at the instant a member had ALREADY cited it — so the EXTRACT role §14.4
-     gives the machine had nowhere to land, and `minted_by` (IC-83's column,
-     landed with REC-82) could only ever read `plane`.
-
-     `probe` IS ADMITTED, and the cut is a different one from `attesttext`'s two
-     lines up rather than a looser one. EXTRACTING is what §14.4 says the machine
-     may do — *"document → content … the role that makes everything else
-     addressable"* — and the recognisers and fleet members that do it today are
-     probe-class by construction. ATTESTING is testimony and is refused to every
-     machine credential (C-35.10, UNCHANGED). The two acts sit on opposite sides
-     of the one fence this item is about, so they take opposite class cuts and
-     the reasoning is written out rather than inherited by proximity.
-
-     `member` IS IN THE LIST AND THAT IS WHAT LETS AN AGENT REACH IT AT ALL —
-     `aiReachesAsMember` is the ONLY door for the `ai` class, so this row admits
-     no `ai` (no row does) and FL-6's cascade reaches it exactly when the member
-     who minted the credential named this op in its declared `writes`. Nothing
-     about the class list is special-cased for machines; the floor does it.
-
-     THE MINTER IS STAMPED SERVER-SIDE below and the body's is never read, which
-     is the impostor rule at a field whose entire subject is who acted. */
+  /* SK-7 (§14.4): marking a passage citable; probe admitted (EXTRACT is a machine's to do), never attesting (C-35.10);
+     the minter is stamped. */
   contentmint: { classes: ["admin", "member", "probe"],          mutating: true  },
-  /* SK-8 / `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 — THE EXTRACT RUN'S
-     PRODUCTIONS, and the class cut is the one directly above rather than a new
-     one. D-358's answer was that EXTRACT runs in DEC-62's RUN with **no new
-     runtime, no new credential class, no new fence**, so these two sit in
-     `contentmint`'s classes because the write performs `contentmint`'s act
-     inside a bounded object. The `ai` class reaches them through the DEC-55
-     floor exactly as it reaches that one — the credential's own declared
-     `writes` is what admits it, and nothing here is special-cased for machines.
-
-     THE REAL NARROWING IS NOT IN THIS TABLE AND IS NOT IN A CLASS LIST: it is
-     the STORE's, where the run object is. `extractPropose` refuses a production
-     with no live EXTRACT run by name, and refuses one whose run declares no
-     `mints` bound — because a run begins on a member's act (§7.3 (4)) and its
-     productions are budgeted in the bounds table it already has (§7.3 (5)).
-     `extractpropose` is named in `AI_RUN_ACTIONS` to say what KIND of act it is;
-     that array gates nothing. The proposer is stamped server-side below and the
-     body's is never read. */
+  /* SK-8 (§7.3): the EXTRACT run's productions, contentmint's cut; the store narrows by the run (a live EXTRACT run, a
+     `mints` bound). */
   extractpropose:   { classes: ["admin", "member", "probe"],     mutating: true  },
   extractproposals: { classes: ["admin", "member", "probe"],     mutating: false },
-  /* REC-86 / IC-123 — NARROW (Bob's 5.3). The ACT and its candidate READ, and
-     the class cut is `contentmint`'s: a member (or an admin, or the probe) may
-     reach both. What the ACT refuses to a machine is not decided here — it is
-     the store's `NARROW_NOT_A_MEMBER` (C-50.5), on the author the control plane
-     stamps below, because a machine arrives honestly named `token:<class>` and
-     is refused BY SHAPE rather than by a class list that would also have to
-     keep the probe out. The READ is open to every class that may read: a
-     machine's proposals are listed to whoever may see the question. */
+  /* REC-86: NARROW and its candidates, contentmint's cut; the store refuses a machine author by shape (C-50.5). */
   narrow:           { classes: ["admin", "member", "probe"],     mutating: true  },
   narrowcandidates: { classes: ["admin", "member", "probe"],     mutating: false },
-  /* REC-122 / IC-232 — A MEMBER CHOOSES THE ON-POINT MENTION of one end of a connection
-     (D-161 act 3). `narrow`'s class cut and `narrow`'s reasoning: what the act refuses to a
-     machine is decided by the store on the author the control plane stamps below
-     (`CONNECTION_CHOICE_NOT_A_MEMBER`, C-74.1), so a machine arriving honestly named
-     `token:<class>` is refused BY SHAPE and the probe with it. */
+  /* REC-122: choosing a connection's on-point mention; the store refuses a machine author by shape (C-74.1). */
   connectionchoose: { classes: ["admin", "member", "probe"],     mutating: true  },
-  /* T5-11 (K145, connections R53–R57): connections' ops for the connections derivation does not make.
-     `connectionassert` is a MEMBER's assertion of a connection between two documents (R31, R53), and
-     `filemembershipjudge` a member's confirmation or rejection of a stored containment (R57): `connectionchoose`'s
-     class cut and reasoning, the store refusing a machine BY SHAPE on the `author` the control plane stamps below.
-     `filemembershipstore` stores an agenda capture's item-to-file containments as SYSTEM-asserted connections (R49,
-     R55); it asserts nothing of the caller's, so it takes the same cut and any credential that reaches it may run
-     it. The two reads (R54, R56) are open to every class that may read. All five take the viewer stamp below. */
+  /* T5-11 (connections R53–R57): assertion and containment judgement are a member's (refused a machine by shape);
+     storing containments and the reads any credential's. */
   connectionassert:    { classes: ["admin", "member", "probe"],  mutating: true  },
   connectionsasserted: { classes: ["admin", "member", "probe"],  mutating: false },
   filemembershipstore: { classes: ["admin", "member", "probe"],  mutating: true  },
   filemembership:      { classes: ["admin", "member", "probe"],  mutating: false },
   filemembershipjudge: { classes: ["admin", "member", "probe"],  mutating: true  },
-  /* REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A pure read on
-     `narrowcandidates`' class cut exactly: whoever may READ the record may ask which of
-     its assertions are worth comparing. It writes nothing, judges nothing and mints
-     nothing, so there is no act here to fence to a person — what it DOES need is the
-     viewer, which it takes fail-closed in the stamp block below, because the pairing
-     runs AS A MEMBER and pairs only what that member may see. */
+  /* REC-146: the pairing read writes nothing; viewer-stamped fail-closed, since it pairs only what that member may
+     see. */
   contradictionpairs: { classes: ["admin", "member", "probe"], mutating: false },
-  /* REC-147 / IC-318 — CONTRADICTION'S IDENTIFY, THE JUDGEMENT'S WRITE. `extractpropose`'s class cut and for its
-     reason: a run's production, reached by the `ai` class through AI_RUN_ACTIONS and by a member or admin session,
-     and narrowed where the run object is — the STORE refuses a proposal with no live run in sight, one whose run
-     is not the caller's (REC-152's gate), and any proposal over a pair the plane does not itself form for the
-     viewer (C-93). The proposer is stamped server-side below and the body's is never read. */
+  /* REC-147: the judgement's write, extractpropose's cut; the store refuses a proposal with no run of the caller's in
+     sight (C-93). */
   contradictionpropose: { classes: ["admin", "member", "probe"], mutating: true },
-  /* D-148: A FEE QUOTE IS EVIDENCE — the read that sets quotes side by side, by
-     counterparty or by request. A pure read on `contradictionpairs`' cut: whoever
-     may read the record may read what a body quoted. It takes the viewer
-     fail-closed in the stamp block below, because it ENUMERATES across actions. */
+  /* D-148: a fee quote is evidence; a read across actions, viewer-stamped fail-closed. */
   actionquotes:     { classes: ["admin", "member", "probe"],     mutating: false },
-  /* N231 (actions R42, K262): the kinds this instance accepts NOW, actions' `kinds()` through the Durable Object route
-     `actionkinds`. A READ open to every signed-in class, `actionquotes`' cut: it writes nothing and names no bundle, so
-     it takes no viewer stamp and no NEEDS entry (`reevaluations`' precedent). */
+  /* N231: the action kinds this instance accepts now; a read naming no bundle, so no viewer stamp and no NEEDS entry. */
   actionkinds:      { classes: ["admin", "member", "probe"],     mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
-  /* REC-176: the census of manifest rows a repeated snap key overwrote before `op=promote` refused one
-     (`SNAP_KEY_TAKEN`, C-67.1) — per bundle, promotions (row_version) against manifest rows, counted and listed,
-     NEVER rewritten. The method a deployed instance runs to learn whether its own history lost a row. Admin and
-     probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
+  /* REC-176: the census of manifest rows a repeated snap key overwrote; counts and lists, never rewrites;
+     registeraudit's fence. */
   snapkeycensus: { classes: ["admin", "probe"],                    mutating: false },
-  /* D-256: every "changed from" sentence the pre-2026-08-08 `addGo` wrote, each resolved through the version chain
-     (`op=versionchain`, PL-10) and classed wrong / right / undetermined with the three totals apart. WRITES NOTHING:
-     BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as written and the correction is the read. Admin and
-     probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
+  /* D-256: every old "changed from" sentence classed through the version chain; writes nothing (BOB #31);
+     registeraudit's fence. */
   changedfromaudit: { classes: ["admin", "probe"],                 mutating: false },
-  /* REC-130's sweep said here that `allocid` with `prefix=CASE` disclosing how
-     many case identities this year had minted was acceptable — instance-level
-     knowledge a member already holds. SUPERSEDED 2026-09-19 by BOB #16 (Membership
-     v2 §7, *"A MINTED ID CARRIES NO COUNT"*): a count is a disclosure of existence,
-     and "`op=allocid` exposing the same counts … is the same defect, not a reason
-     to accept it". REC-151: the plane mints every GATED prefix (PROJ, CASE, DRAFT,
-     RVG, TASK) opaque, and this op REFUSES those prefixes (`Store#allocIdOp`,
-     C-59.5). A shared prefix (INFO, INQ, …) still counts: everyone may see those
-     objects, so counting them discloses nothing. */
+  /* REC-151: the plane mints every gated prefix opaque and refuses those prefixes here (C-59.5); shared prefixes still
+     count. */
   allocid:    { classes: ["admin", "member", "probe"],           mutating: true  },
   lease:     { classes: ["admin", "member", "probe"],           mutating: true  },
   purge:      { classes: ["admin", "probe"],                     mutating: true  },
   capture:    { classes: ["admin", "member", "probe"],           mutating: true  },
-  /* A pure read, and computed at read time on purpose: which partition a link
-     falls in depends on what the record holds today, not on what it held when
-     the document was captured. */
+  /* Which partition a link falls in depends on what the record holds today, so it is computed at read. */
   links:      { classes: ["admin", "member", "probe"],           mutating: false },
-  /* PL-10 / D-220: the DOCUMENT-VERSION CHAIN — every version at one address,
-     in date order, with its bundle. A pure read, and it adds no state of its
-     own: the answer is a JOIN over `captured_locators` and `register`, both of
-     which the record has always held, asked through the index that has always
-     existed. It sits beside op=links because it is the same kind of question
-     asked of the same address key — op=links asks what pointed AT an address,
-     this asks what we have HELD at one.
-     `viewer` is stamped below from the authenticated identity: the answer names
-     a bundle per version, so a member must not be able to learn from a version
-     chain what op=list would not tell them. */
+  /* PL-10 / D-220: every version held at one address with its bundle; a join over existing tables; viewer-stamped. */
   versionchain: { classes: ["admin", "member", "probe"],         mutating: false },
-  /* D-394 — THE CROSS-VERSION NOTICE (framework §18.1): does a newer capture exist at
-     the address of a document a citation rests on, and is a passage at the same extent
-     in it. A pure READ on `versionchain`'s class cut, because it IS that chain asked
-     from a citation's side; it writes nothing, so there is no act to fence. `viewer`
-     is stamped below, fail-closed, like the chain it reads. */
+  /* D-394: the cross-version notice, versionchain's cut; viewer-stamped fail-closed. */
   versionnotice: { classes: ["admin", "member", "probe"],        mutating: false },
-  /* T6-13 (reevaluation R8, R9, R14–R16; K199): reevaluation's six ops beyond the three above.
-     `reevaluationraise` is R14's BOUNDED SWEEP that raises the pushed notices, called by `scheduler` or `monitoring`:
-     the unattended path, so admin and daemon, `capturerequestdrain`'s cut and reason (K199 records the decision, and
-     UNATTENDED_BY_DECISION cites it); it reads under the store's own machine viewer and stamps nothing.
-     `reevaluationnotices` (R14's notices, for the queue that renders them) and `reevaluationchanges` (R9's pull read)
-     are READS on `reevaluations`' cut, viewer-stamped, and no NEEDS entry, `reevaluations`' precedent.
-     `versionadopt`, `versionkeep` (R15) and `reevaluationrecord` (R16) are a member's acts on a reference they hold:
-     `conclude`'s cut and reason — a machine REACHES them and the store refuses it BY NAME on the author stamped
-     below (MACHINE_CANNOT_ADOPT_VERSION, MACHINE_CANNOT_KEEP_VERSION, MACHINE_CANNOT_RECORD_REEVALUATION) — `contribute` in NEEDS, the
-     version acts' capability, and a session op in both sets. */
+  /* T6-13 (K199): `reevaluationraise` is R14's unattended sweep (admin, daemon); the two reads are reevaluations' cut;
+     adopt, keep and record are a member's, refused a machine by name. */
   reevaluationraise:   { classes: ["admin", "daemon"],                    mutating: true  },
   reevaluationnotices: { classes: ["admin", "member", "probe"],          mutating: false },
   reevaluationchanges: { classes: ["admin", "member", "probe"],          mutating: false },
   versionadopt:        { classes: ["admin", "member", "probe"],          mutating: true  },
   versionkeep:         { classes: ["admin", "member", "probe"],          mutating: true  },
   reevaluationrecord:  { classes: ["admin", "member", "probe"],          mutating: true  },
-  /* PL-1 / IS-1: THE BASIS VERSIONS OF ONE INQUIRY — every alternative account
-     of the evidence for a question, with its ground partition, the AND/OR
-     relationship it states, the derivation edge it came along, and the run that
-     proposed it. A pure read, and there is deliberately NO write op beside it:
-     versions are authored in `bundle.md` and land through op=promote's own
-     projection, so a version table an op could append to directly would be a
-     second place to state a fact `bundle.md` already holds (D-21).
-     `viewer` is stamped below from the authenticated identity: the answer names
-     an inquiry and the bundles its versions rest on, so a member must not learn
-     from a version set what op=list would not tell them. */
+  /* PL-1 / IS-1: every account of a question's evidence; authored in bundle.md, so no write op (D-21); viewer-stamped. */
   basisversions: { classes: ["admin", "member", "probe"],        mutating: false },
-  /* PL-14 / IS-7: THE STRENGTH PAIR over ONE reading of a question's evidence
-     (§12) — per axis, over two populations, never composed into one number. A
-     pure read: it writes nothing, adopts nothing and makes nothing current,
-     which is §6 rule 6 as a mechanism rather than a promise (exploring an
-     unaccepted reading is CALCULATING OVER IT, never designating it). The
-     state-set argument defaults to `accepted` inside the store, so a caller who
-     says nothing gets the record's own answer rather than a permissive one.
-     `viewer` is stamped below from the authenticated identity: the answer names
-     a question and every document its legs rest on, so a member must not learn
-     from a strength what op=list would not tell them. */
+  /* PL-14 / IS-7: the strength pair over one reading, never composed; writes nothing; viewer-stamped. */
   versionstrength: { classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-161 / §12 clause (c): D-195's independence derivation over a PROPOSED
-     partition of a question's reasons — the read the elicitation's read-back
-     makes BEFORE the member's answers are written. A pure read through the one
-     `#independenceOf`; it shows no strength and writes nothing. Same classes and
-     the same fail-closed `viewer` stamp as versionstrength, below, because it
-     names a question and every document its reasons rest on. REC-192: `version=`
-     reads a STORED version's independence ON ITS OWN, with no strength key (BOB #31,
-     2026-09-23 22:22Z), under the same classes and stamp. */
+  /* REC-161: independence over a proposed partition, and REC-192 a stored version's; versionstrength's classes and
+     stamp. */
   partitionindependence: { classes: ["admin", "member", "probe"], mutating: false },
 
-  /* PL-12 / D-84: the bias object's three ops.
-     `biasmanifest` is a READ and is gated on the viewer below, like every read
-     in this table that names a bundle.
-     `biasadopt` is MUTATING and is deliberately reachable by `member` and not
-     only by `admin`: the doctrine puts instance bias in the admins' hands and
-     PROJECT bias in the project managers', and a project manager is a member.
-     What stops a member adopting on the instance's behalf is not this list — it
-     is that the act is ATTRIBUTED, published with the group's work, and refused
-     outright to a credential with no name (C-26.9).
-     `biasinhale` is MUTATING: FALSE, and that is not an accident of shape, it
-     is DEC-54 (c). Reading a policy proposes; it never installs. The method
-     holds no write path at all and `test/bias.test.mjs` asserts that off the
-     source — this row is the second, weaker statement of the same fence, and it
-     is here so that a caller reading the op table learns the fact too. */
+  /* PL-12 / D-84: the manifest is a gated read; adopting is a member's attributed act (C-26.9); inhaling proposes and
+     never installs (DEC-54 c). */
   biasmanifest: { classes: ["admin", "member", "probe"],         mutating: false },
   biasadopt:    { classes: ["admin", "member", "probe"],         mutating: true  },
   biasinhale:   { classes: ["admin", "member", "probe"],         mutating: false },
-  /* CONTENT-PDF's structure extractor (D-91), exposed as a READ over already-
-     captured bytes. It reads the exact R2 object op=capture serves and parses
-     it; it writes nothing and holds no PUT arm, so unlike op=capture it is
-     genuinely non-mutating. That gives it the SAME effective posture as an
-     op=capture GET — admin/member/probe class, a signed-in session reaches it
-     with no capability, no write gate — without the GET special-case op=capture
-     needs only because op=capture also writes. No new permission is invented. */
+  /* D-91: PDF structure is a read over captured bytes, holding no PUT arm; op=capture's GET posture. */
   pdfstructure: { classes: ["admin", "member", "probe"],         mutating: false },
   runtime:    { classes: ["admin", "member", "probe"],           mutating: false },
-  /* Turning resolved links into traversable edges WRITES, so it is its own op
-     rather than a flag on the read. A mutating arm hiding inside a
-     non-mutating op would pass the gate that exists to stop exactly that. */
+  /* Turning resolved links into edges writes, so it is its own op rather than a flag on the read. */
   linkproject:{ classes: ["admin", "member", "probe"],           mutating: true  },
-  /* Burns compute deliberately to find where the runtime cuts it off. Probe and
-     admin only: it belongs nowhere near a member's session. */
+  /* Burns compute deliberately to find where the runtime cuts it off. Probe and admin only: it belongs nowhere near a
+     member's session. */
   cpuprobe:   { classes: ["admin", "probe"],                     mutating: true  },
-  /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
-     and no bundle state, because the doctrine is explicit that no intake path
-     writes live state and the daemon and the member are writers like any other. */
-  /* REC-33: `daemon` is admitted HERE so the class can reach the op at all, and
-     is then confined to the ARCHIVE ARM inside the handler — the direct arm
-     refuses it by name. The confinement cannot live in this table, which knows
-     only the op, so the two halves are asserted together in
-     test/daemon-token.test.mjs: admitted here, refused there. */
+  /* M2', the fetch layer; REC-33: `daemon` is admitted so the class can reach the archive arm, and the direct arm
+     refuses it in the handler. */
   acquire:    { classes: ["admin", "member", "probe", "daemon"], mutating: true  },
-  /* Co-attestation. Asks a timestamp authority to attest that a capture existed
-     at a claimed instant, which is the one part of provenance a group cannot
-     fabricate for itself. */
+  /* Co-attestation: a timestamp authority attests a capture existed at an instant. */
   attest:     { classes: ["admin", "member", "probe"],           mutating: true  },
-  /* The monitor. Checks whether a monitored source still serves what was
-     captured and records the answer as a mechanical monitor-tick, inside the
-     field set C-20.1 holds that operation to. */
-  /* REC-33: the FIRST of the daemon class's two verbs, and the whole of it —
-     op=monitor is admitted wholesale because the op IS the unattended job; it
-     has no second arm to confine the class to. */
+  /* The monitor records whether a source still serves what was captured (C-20.1); REC-33: the op IS the daemon's
+     unattended job. */
   monitor:    { classes: ["admin", "member", "probe", "daemon"], mutating: true  },
-  /* A conformance pass over the whole store, run inside the Durable Object where
-     the images already are. Read-only, paginated, and resumable by cursor. */
+  /* A conformance pass inside the Durable Object: read-only, paginated, resumable. */
   audit:      { classes: ["admin", "member", "probe"],           mutating: false },
-  /* REC-54 / D-200. Rebuild a document's provenance chain FROM THE EVIDENCE the
-     capture record already holds, or refuse and name what is missing. Mutating,
-     but it REPORTS by default and writes only on `apply=1`, because every use of
-     it is a correction to the real record. NOT open to `daemon`: deciding that
-     the evidence supports a route is a named member's judgement, which is the
-     same line op=release and op=reopen already draw, and the whole risk this op
-     carries is a chain nobody witnessed being written by something unattended. */
+  /* REC-54 / D-200: rebuild a provenance chain from the evidence or name what is missing; reports by default; not the
+     daemon's (a member's judgement). */
   provenancechain: { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-63 / DEC-56 / D-204. ASSESS a document's provenance route and record
-     what was found — the standing MARKER Bob's ruling licenses, at the state the
-     document already sits in. Mutating because it writes a marker row, and it is
-     the ONLY thing it writes: no state moves, no file changes, no sha changes.
-     NOT open to `daemon`, on op=provenancechain's own line: deciding that the
-     evidence does not support a route is a named member's judgement about the
-     record, and a standing statement in the record with nobody's name on it is
-     not a statement. */
+  /* REC-63 / DEC-56: assess a route and record the standing marker, nothing else; not the daemon's (a member's
+     judgement). */
   provenanceroute: { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* REC-116 / IC-120: the READ half. `mutating: false` is the whole point of the
-     row — for 39 days the only op over this table was the WRITE above. */
+  /* REC-116: the read over the route markers. */
   provenanceroutes: { classes: ["admin", "member", "probe"],     mutating: false },
-  /* Write arc. Ratification's authority is the SSHSIG itself, checked
-     against the registered signers; the token or session only reaches the
-     surface. Member and signer administration is admin-only. Probe class
-     reaches everything so the whole write arc is exercisable against
-     scratch, whose Durable Object is a different instance with its own
-     member tables, so scratch enrollment can never touch the live roster. */
+  /* The write arc: ratification's authority is the SSHSIG against registered signers; probe reaches it in scratch's
+     own tables. */
   ratify:       { classes: ["admin", "member", "probe"],           mutating: true  },
-  /* REC-14. The state act that AUTHORS a case: it writes the completeness
-     assertion, the declared subject position, both frozen strengths and the
-     declared bar into the bytes op=ratify then signs. Separate from ratify
-     because authoring the assertion CHANGES THE SHA -- you cannot sign first
-     and write the caveat later. */
+  /* REC-14: authoring a case writes what op=ratify then signs, so it is separate from ratify. The bar and editions
+     beside it. */
   publish:      { classes: ["admin", "member", "probe"],           mutating: true  },
   strengthbar:  { classes: ["admin", "member", "probe"],           mutating: true  },
   strengthbarof:{ classes: ["admin", "member", "probe"],           mutating: false },
   publishededitions: { classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-22, the PUBLIC READ PATH. `classes: null` — NO credential of any kind,
-     and it is the same argument op=verify and op=publishedmanifest already make
-     rather than a new one: both read the PUBLISHED PROJECTION ONLY
-     (published_bundles, published_shas, published_edges and the PUBLISHED
-     bucket), all of which are written by ratification alone, so there is no
-     working material for a missing predicate to leak. That is the property
-     schema.mjs:172 says those tables exist to guarantee, and REC-30's sweep
-     records both ops as deliberately ungated for exactly this reason.
-
-     publishedcase answers by BUNDLE ID (with an optional edition, latest by
-     default) or by BUNDLE SHA, which resolves to ITS OWN edition — DEC-12's
-     "edition 1 still answers after edition 2 lands", checkable rather than
-     stated. publishedbytes answers BY HASH AND NEVER BY PATH, so the published
-     corpus cannot be walked: a sha with no published_shas row 404s, and it 404s
-     identically whether it was never ratified or never existed. */
+  /* REC-22: the public read path answers from the published projection only; bytes by hash, never by path. */
   publishedcase:  { classes: null,                                 mutating: false },
   publishedbytes: { classes: null,                                 mutating: false },
-  /* CASE-4 / DEC-72: THE REVISION FLAGS ON A PUBLISHED CASE. A case is a frozen,
-     signed edition honest as of its date; when a member finding is later revised
-     the containing cases are FLAGGED, set-but-never-clear until each owning
-     project acts. This is where a reader — a member deciding whether to publish
-     a new edition, or a stranger weighing how current a case is — sees which
-     flags stand and which were discharged.
-
-     `classes: null` — UNGATED, on publishedcase's own reasoning above and not on
-     a new one. Every fact in the answer is already public: the case editions and
-     their rosters come out of op=publishedcase, the pinned hash is in the
-     container manifest a stranger verifies against, and the revised hash is a
-     published version's own. Nothing here reads working material, so there is no
-     working material for a missing predicate to leak — and gating it would
-     withhold from a member exactly what the published record already tells
-     anybody. NO `NEEDS` ENTRY, on op=reevaluations' precedent: a read carries no
-     working capability, so REC-19's NEEDS/NON_ACTS totality neither gains nor
-     loses a row. */
+  /* CASE-4 / DEC-72: a published case's revision flags, every fact already public; ungated, no NEEDS entry. */
   caseflags:      { classes: null,                                 mutating: false },
-  /* CASE-5b / DEC-72: THE CASE-LEVEL SIGNING CEREMONY, and it is two ops
-     because reviewing and signing are two acts.
-
-     `casedocument` is UNGATED (`classes: null`) on op=publishedcase's own
-     reasoning and not a new one. A RATIFIED case document is signed published
-     bytes a stranger is entitled to check — it is the artifact the container
-     carries, and gating it would make the stranger-verification path depend on
-     this instance's goodwill, which is the one thing that path exists to refute.
-     AN UNRATIFIED one is working material and — CORRECTED by REC-130 / IC-141,
-     2026-09-18 — it answers ONLY to standing in the owning project. This comment
-     used to say it was answered to anybody, "deliberately", because the answer
-     says `ratified: false`; that was a mechanism choice with no ruling behind it,
-     and it handed a stranger the group's scope, roster, exclusions and bias
-     acknowledgement before any member had signed them, over ids that come off a
-     sequence. BOB #14 ruled it as the publication fence applied: every caller
-     without standing is answered EXACTLY as for a case that does not exist, so
-     enumeration learns nothing. The op stays `classes: null` because the signed
-     half must stay public; `caseReader` resolves who is asking without refusing
-     anybody, and the store's `caseDocumentFacts` decides.
-
-     `caseratify` is GATED like `ratify`, and to the same classes: it is the
-     publication surface, and the registered signing key governs the authority on
-     top of the capability. No fifth capability token is minted. */
+  /* CASE-5b / REC-130: a ratified case document is public, an unsigned one answers only to standing (`caseReader`);
+     caseratify is gated as ratify. */
   casedocument:   { classes: null,                                 mutating: false },
   caseratify:     { classes: ["admin", "member", "probe"],           mutating: true  },
-  /* REC-126 / DEC-31 / IC-145: THE REVIEW COPY (`BIO_Publication_v0_1.md` §6A),
-     an addressed act BESIDE publish that never leaves the instance.
-
-     `casedraft`, `reviewgrant` and `reviewrevoke` are GATED to the classes that
-     reach `publish`. Their capabilities and authority are §6A.2's (BOB #15, built
-     by REC-133; the NEEDS rows carry the reasoning): AUTHOR = the project's edit
-     permission (`contribute` in NEEDS, owner-or-joined in the store); ISSUE = the
-     project OWNER (`publish` in NEEDS, `publishCase`'s owner predicate in the
-     store, no administrator bypass); REVOKE = the same, unchanged (§6A.2 as
-     corrected: administrators direct nothing). The store refuses a machine by name,
-     so a machine class reaching the op is refused at the act rather than here.
-
-     `reviewcopy` and `reviewcomment` are UNGATED (`classes: null`) on
-     `casedocument`'s reasoning, because their whole point is a RECIPIENT who
-     holds no credential of this instance — only the grant's read SECRET, which is
-     not a token, is never classified, and cannot reach any other op. A member
-     reaches both with an ordinary session through the same `caseReader` the
-     unsigned case document uses. Both answer every caller without a live grant or
-     standing with ONE set of bytes. `reviewcomment` is `mutating: true` because it
-     writes a row; its NEEDS entry is below with its reason. */
+  /* REC-126 (§6A): the review copy — authoring, issuing and revoking gated, the store refusing a machine; reading and
+     commenting ungated for a grant's holder. */
   casedraft:      { classes: ["admin", "member", "probe"],           mutating: true  },
   reviewgrant:    { classes: ["admin", "member", "probe"],           mutating: true  },
   reviewrevoke:   { classes: ["admin", "member", "probe"],           mutating: true  },
   reviewcopy:     { classes: null,                                   mutating: false },
   reviewcomment:  { classes: null,                                   mutating: true  },
-  /* D-150 / BIO_Publication_v0_1.md §3 rule 11: THE EXCLUSION STATEMENT'S ACKNOWLEDGEMENT.
-     UNGATED on `reviewcomment`'s reasoning and through its two doors, because one of the two
-     people rule 11 names — a review-copy recipient — holds no credential of this instance, only
-     the grant's read secret. A member acknowledges with an ordinary session, of a draft or of an
-     unsigned case document; the store asks the POSITION (a joined participant, not the author).
-     `mutating: true`: it writes a row. It gates nothing, and nothing gates on it. */
+  /* D-150 (§3 rule 11): the exclusion statement's acknowledgement, through the review copy's two doors; writes a row,
+     gates nothing. */
   statementack:   { classes: null,                                   mutating: true  },
-  /* REC-198 / BOB #32 (2026-09-23 23:08Z; BIO_Publication §3 rule 15 (a)): the LIST of a project's drafts, fenced exactly
-     like reading one draft. GATED, unlike `reviewcopy`: the list has no recipient door — a grant reads ONE
-     draft and names it — so only the member door exists here, and a caller holding no credential of this
-     instance has no business at it. The fence is the store's `#seesProjectDrafts`, the very predicate the
-     single read's member door calls, fed the same server-stamped `viewer`. */
+  /* REC-198: the list of a project's drafts, fenced like reading one (the member door only). The inbox reads and
+     resolve beside it. */
   casedrafts:     { classes: ["admin", "member", "probe"],           mutating: false },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },
-  /* REC-159 (Membership v2 §4.9: each custodial act is EVERY administrator's): `member` joins
-     the four rows below so an ENROLLED administrator's session, whose `kind` is `member`,
-     passes this table; the roster then decides (`CUSTODIAL_ACTIONS`). `machineClasses` is
-     what keeps that from being a widening for anybody else: a caller that did NOT arrive by
-     a session is judged against it instead of `classes`, so the MEMBER_TOKEN bearer and an
-     `ai` credential stay refused exactly as they were, and the operator's `admin` and
-     `probe` bearers keep the reach BOB #22 ruled they keep. */
+  /* REC-159 (§4.9): `member` admits an enrolled administrator's session; `machineClasses` keeps the MEMBER_TOKEN
+     bearer and `ai` out. */
   memberadd:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   memberlist:   { classes: ["admin", "member", "probe"],           mutating: false },
   memberset:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
-  /* The membership model's member half. `memberadd`, `memberset`, `membercaps`,
-     `adminendorse` and `adminremove` are ADMINISTRATOR acts: section 4 governance,
-     decided by the roster (REC-159 moved the first two, with `signeradd` and
-     `signerset`, onto D-136's footing below).
-     D-136: the last three gain `member` and a server-stamped `by`
-     (`GOVERNANCE_ACTIONS` below), and the grant is `expertiseconfirm`'s six
-     rows up rather than a new idea — an ADMINISTRATOR-ONLY act carrying
-     `["admin","member","probe"]` because `kind` for every signed-in person but
-     the founder is `member`, so a class list without it refuses every real
-     administrator's browser with CLASS_FORBIDDEN before the session gate is
-     ever reached. MEASURED, not reasoned: the first draft of this item left
-     these three lists alone and ruth, an enrolled administrator, was refused
-     CLASS_FORBIDDEN at her own endorsement.
-     **THE GRANT IS NOT A WIDENING OF WHO MAY GOVERN.** What decides these acts
-     is the ROSTER: the `by` stamp names whoever is signed in and the store
-     refuses a `by` that is not an active administrator, by name. An ordinary
-     member reaching them is told NOT_AN_ADMIN — the thing that is true — which
-     is `expertiseconfirm`'s ADMIN_ONLY and `conclude`'s fail-closed posture. The
-     `member` CLASS also admits the MEMBER_TOKEN bearer, which
-     `is-operator-governance-act` refuses along with every other bearer, keyed on
-     how the caller arrived rather than on a class list that would go stale.
-     `memberlist` is NOT, and this comment used to say it was — the second of
-     D-157's three self-contradicting sites, sitting two lines under the entry
-     that is the first: a grant of admin, member AND probe, which was the
-     TRUTHFUL one. Section 3 gives members and the public the
-     HANDLE roster ("Members and the public see handles"); what only
-     administrators see is the cover↔handle PAIRING ("Pairing. Only
-     administrators see cover and handle together"). That distinction cannot be
-     expressed by a class ACL — the op must stay reachable by the callers who
-     must not see the pairing — so it is a PROJECTION in Store.memberList(),
-     driven by the `administer` stamp set beside the D-15 viewer stamp below.
-     `adminarith` is a read of the rule itself, so a UI can tell a group what a
-     removal would take before they begin one. */
+  /* D-136: section 4 governance, decided by the roster on the stamped `by` (NOT_AN_ADMIN); `member` admits an
+     administrator's session and the operator fence refuses bearers. `memberlist` projects the pairing on the
+     `administer` stamp (D-157). */
   membercaps:   { classes: ["admin", "member", "probe"],           mutating: true  },
   adminendorse: { classes: ["admin", "member", "probe"],           mutating: true  },
   adminremove:  { classes: ["admin", "member", "probe"],           mutating: true  },
   adminarith:   { classes: ["admin", "member", "probe"],           mutating: false },
-  /* N43 (T4): membership's three rules built in T3 (N18) — an administrator's resignation (R10), the record of who
-     holds hosting access (R11) and a member's published cover-and-handle pairing (R19). They were routed in the
-     store and absent HERE, so every caller got "unknown op": this file's own standing lesson 5 again. The three
-     acts are `ROSTER_SELF_ACTIONS` below: both session sets and a server-stamped `by`, and the ROSTER decides
-     (the store refuses a `by` that may not act, by name). `member` in `classes` for `memberadd`'s reason — an
-     enrolled administrator's session is a `member` kind — and `machineClasses` keeps the MEMBER_TOKEN bearer and
-     an `ai` credential out as REC-159 does. The two reads serve the record as membership answers it. */
+  /* N43 (membership R10, R11, R19): a person's own roster acts in both session sets with a stamped `by`;
+     `machineClasses` as REC-159. */
   adminresign:      { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   hostingaccessset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   hostingaccess:    { classes: ["admin", "member", "probe"],           mutating: false },
   memberpairingset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   memberpairings:   { classes: ["admin", "member", "probe"],           mutating: false },
-  /* D-9: why a register row is unreferenced. A read that classifies every row
-     against what the store actually holds, so the 20 unexplained rows on the
-     live instance stop being a plausible story and become a measured one.
-     Admin, because the register is intake provenance for the working corpus. */
+  /* D-9: why a register row is unreferenced, classified against what the store holds; admin and probe. */
   registeraudit:{ classes: ["admin", "probe"],                     mutating: false },
-  /* REC-175: the digest census — every row already held (the live image and the history) whose stored sha256
-     disagrees with its own stored bytes, counted and listed, NEVER rewritten. The method a deployed instance runs
-     to learn whether `op=promote`'s old unchecked digest left a false one behind. Admin and probe, as
-     `registeraudit` beside it: it is an audit of the working corpus, and it lists paths. */
+  /* REC-175: the census of held rows whose stored sha disagrees with their bytes; lists, never rewrites;
+     registeraudit's fence. */
   digestcensus: { classes: ["admin", "probe"],                     mutating: false },
-  /* REC-190: the census of displaced homes — every `files` / `history` row whose sha the register assigns to a
-     DIFFERENT bundle that still exists (D-179's residue: the pre-fence promote MOVED a register row), both bundles
-     named, NEVER repaired; which bundle held it first is undetermined and the answer says so. Admin and probe, as
-     `digestcensus` beside it: an audit of the working corpus that lists bundle ids and paths. */
+  /* REC-190: the census of displaced homes (D-179's residue); lists both bundles, never repairs; registeraudit's
+     fence. */
   homecensus:   { classes: ["admin", "probe"],                     mutating: false },
-  /* CONSTRUCTS Step 3 (FW-5): the reading persisted at promote. `reading` reads
-     one captured document's reading (entities + document facts) by its capture
-     sha; `readingref` is the reverse index — which documents' readings carry a
-     raw entity reference (kind:key, as it appears, unresolved). Both read-only:
-     a member watching the record may see what kind of thing the plane read out of
-     a document and which other documents mention the same reference. */
+  /* FW-5: a captured document's reading, and the reverse index of a raw reference; read-only. */
   reading:      { classes: ["admin", "member", "probe"],           mutating: false },
   readingref:   { classes: ["admin", "member", "probe"],           mutating: false },
-  /* REC-36: the same reverse question asked by NAME. Entity-driven and not
-     name-driven on purpose: the measurement (MEASUREMENTS.md 2026-08-04) found
-     abbreviations in the corpus whose full names appear in no label, and only a
-     name somebody registered reaches those. Read-only, and it establishes nothing:
-     it offers CANDIDATES for a member to confirm, and op=resolve is still the only
-     thing that grades.
-
-     REC-40 WIDENED IT TO EVERY TIER, and the two ops are no longer split by which
-     tier they can reach. As REC-36 shipped, `readingname` answered on the NAME a
-     reading recorded (8.1's grade C) and `readingref` on the REFERENCE STRING, so
-     the A and B tiers — a document whose reference, or whose reference key, is
-     spelled like one of the subject's registered names — were proposable only by a
-     caller who already knew the exact string to ask for, and after UI-26 traded the
-     per-name loop away they were proposable from no surface at all. The term index
-     now carries all three of the strings `#recognise` grades on, each under its own
-     source, so ONE `readingname` call answers every tier at one indexed lookup,
-     gated identically, and each candidate says which string carried the name and
-     what op=resolve WOULD mint for it.
-
-     THE TWO OPS ANSWER DIFFERENT QUESTIONS AND ARE DELIBERATELY NOT COLLAPSED.
-     `readingref` takes a raw reference string FROM THE CALLER and answers which
-     documents carry exactly it, knowing nothing about the registry; `readingname`
-     takes a REGISTERED SUBJECT and walks its own aliases into the index. A caller
-     holding a reference string and no entity still has only the first, and one
-     answering on behalf of a subject wants the second. `readingref` is unchanged. */
+  /* REC-36 / REC-40: which documents name a registered subject, at every tier, as candidates only; op=resolve still
+     grades; NEEDS null. */
   readingname:  { classes: ["admin", "member", "probe"],           mutating: false },
-  /* CPDF-10 — THE TRANSCRIPTION PROVENANCE SURFACE, and the three-way split is
-     the item's doctrine expressed as a capability boundary rather than as a
-     comment.
-
-     `textprovenance` and `textattest` are READS on the same terms every other
-     reading read is on: what a document's text was produced BY is a fact about
-     the record, and a view-only member weighing a case needs it precisely as a
-     contributor does — op=earnedbasis' reasoning, one axis over. A probe may
-     ask, because "is anything in this store OCR'd" is exactly the question an
-     operator should be able to answer without a session.
-
-     `attesttext` IS DIFFERENT IN KIND, and the difference is the whole item.
-     Attesting is a person saying they compared this text against the image of
-     the page — it is testimony, it carries their name for as long as the record
-     lasts, and there is no version of it a token can perform. So it is
-     `mutating: true` (SESSION_OPS therefore keeps a machine credential off the
-     session route) AND `checkAttestation` refuses a machine stamp at the store.
-     TWO FENCES ON PURPOSE: REC-45 measured that the gate accepted
-     `asserted_by: token:member` while eleven hand-typed copies of the same
-     question disagreed, so an act this consequential is refused at the door it
-     is asked at and again at the door it is written through. */
+  /* CPDF-10: the two provenance reads are reads; attesting is a person's testimony, refused a machine at the gate and
+     at the store (C-35.10). */
   textprovenance: { classes: ["admin", "member", "probe"],         mutating: false },
   textattest:   { classes: ["admin", "member", "probe"],           mutating: false },
   attesttext:   { classes: ["admin", "member"],                    mutating: true  },
-  /* REC-87 / IC-128 — TRANSCRIBE (Bob's 5.2), and the class cut is `attesttext`'s
-     one row up for `attesttext`'s reason: typing what a page says, and attesting
-     somebody else's typing, are both a person's word carrying their name for as
-     long as the record lasts. `mutating: true` keeps a machine credential off
-     the session route, and the store refuses a machine stamp BY NAME again
-     (C-52.1 for the typist, C-35.10 for the attestor) — two fences on purpose.
-     The READ is open to every class that may read, on `op=content`'s terms. */
+  /* REC-87: typing and attesting a typing are a person's word, attesttext's cut and two fences (C-52.1, C-35.10); the
+     read is open. */
   transcribe:          { classes: ["admin", "member"],             mutating: true  },
   transcriptionattest: { classes: ["admin", "member"],             mutating: true  },
   transcription:       { classes: ["admin", "member", "probe"],    mutating: false },
-  /* MK-1 / D-184 / IC-133 — TESTIFY: a member records a firsthand observation,
-     which becomes an authored INFO bundle whose bytes are their words
-     (MEMBER-KNOWLEDGE-DESIGN.md section 2). The class cut is `transcribe`'s one
-     row up and for its reason: a person's word in their own name. NAMED `testify`
-     because `op=claim` is the instance-claim op and the design's own word for
-     the route is "the testimony path"; `resolvetestify` is a DIFFERENT act (a
-     member's grade-D testimony that a document concerns a subject), and the two
-     share the verb because both are a member's word standing on their trust. The
-     store refuses a machine stamp BY NAME (C-53.1) — two fences, `transcribe`'s. */
+  /* MK-1: a member's firsthand observation, transcribe's cut; the store refuses a machine by name (C-53.1). */
   testify:             { classes: ["admin", "member"],             mutating: true  },
-  /* MK-4 / IC-136 — THE LEAD (D-194, MEMBER-KNOWLEDGE-DESIGN.md §5). Writing a
-     lead and recording that you followed it are a PERSON's acts in their own
-     name — what they were told, where they looked — so both are `transcribe`'s
-     class cut: `mutating: true` keeps a machine credential off the session route
-     and the store refuses a machine stamp BY NAME again (C-54.2, C-54.8). The
-     READ is open to every class that may read; the store answers a lead the
-     viewer may not read exactly as one that does not exist (C-54.5). */
+  /* MK-4: a lead and a look against it are a person's acts, transcribe's cut (C-54.2, C-54.8); a hidden lead answers
+     as absent (C-54.5). */
   lead:                { classes: ["admin", "member"],             mutating: true  },
   leadlook:            { classes: ["admin", "member"],             mutating: true  },
-  /* BOB #14's ruling (2026-09-18): the AUTHOR shares a lead to a project, an
-     authored dated act — `lead`'s class cut and reason. */
+  /* BOB #14: the author shares a lead to a project, lead's cut. */
   leadshare:           { classes: ["admin", "member"],             mutating: true  },
-  /* MK-7 — THE ATTRIBUTION ACT (MEMBER-KNOWLEDGE-DESIGN.md §4.2–§4.6): an observation's AUTHOR chooses
-     what one case edition publishes of who said it. A person's decision about their own words, in their
-     own name — `testify`'s class cut and reason; the store refuses a machine stamp BY NAME (C-92.1). */
+  /* MK-7: the author chooses what an edition publishes of who said it, testify's cut (C-92.1). The lead read beside
+     it. */
   attribute:           { classes: ["admin", "member"],             mutating: true  },
   leadread:            { classes: ["admin", "member", "probe"],    mutating: false },
-  /* D-681 (T5-11, observation-log R20): the leads THIS viewer may read, each once — `leadread`'s class cut and fence. */
+  /* D-681: the leads this viewer may read, leadread's cut and fence. */
   leadlist:            { classes: ["admin", "member", "probe"],    mutating: false },
-  /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
-     DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
-     and a judgement against its test — so both take `lead`'s class cut: `mutating: true` keeps a
-     machine credential off the session route, and the store refuses a machine stamp BY NAME again
-     (C-81.2, C-81.7). PROPOSING is the machine's half of fence 3 and takes `contentmint`'s cut
-     instead: admin, member and probe, and the `ai` class through the DEC-55 floor when its minted
-     `writes` name it — the proposal is a HUNCH, never membership, whoever proposes it. The READ is
-     open to every class that may read; placements are gated per document by the viewer stamp. */
+  /* D-162 (§8.4): declaring and placing are a person's acts (C-81.2, C-81.7); proposing is the machine's half,
+     contentmint's cut; the read is open. */
   themedeclare:        { classes: ["admin", "member"],             mutating: true  },
   themeplace:          { classes: ["admin", "member"],             mutating: true  },
   themepropose:        { classes: ["admin", "member", "probe"],    mutating: true  },
   themeread:           { classes: ["admin", "member", "probe"],    mutating: false },
-  /* T5-11 (connections R43): WITHDRAWING a membership or REJECTING a hunch is a person's act in their own name, with a
-     reason, so it takes `themeplace`'s class cut; the store refuses a machine actor by name (C-81.11). */
+  /* T5-11 (connections R43): withdrawing or rejecting is a person's act, themeplace's cut (C-81.11). */
   themewithdraw:       { classes: ["admin", "member"],             mutating: true  },
-  /* REC-203: the identifier-space judgement (Framework §8.3). A READ: it writes nothing, and a pair's two
-     captures are gated by the viewer stamp, `themeread`'s posture. */
+  /* REC-203: the identifier-space judgement, a read; each capture viewer-gated. */
   idmatch:             { classes: ["admin", "member", "probe"],    mutating: false },
-  /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
-     different cut from CPDF-10's above because a different thing is at stake.
-
-     THE TWO READS are on the same terms every reading read is: what an engine
-     was measured at, and which transcriptions rest on a measurement that has
-     since moved, are facts about the record. `calibrationdrift` in particular
-     is the answer to "is anything in this store graded against a number nobody
-     stands behind any more", and withholding that from a view-only member
-     weighing a case would be the record knowing something about its own
-     reliability that the person relying on it may not ask.
-
-     `calibrate` IS THE CONSEQUENTIAL WRITE and is nonetheless open to `probe`,
-     which is the opposite of `attesttext` beside it — so the reasoning is
-     written out rather than assumed. ATTESTING IS TESTIMONY: a person says they
-     compared this text against the image, it carries their name for as long as
-     the record lasts, and there is no version of it a token can perform.
-     CALIBRATING IS MEASURING: a probe ran, over stated inputs, and produced
-     stated scores, and a machine is exactly the right thing to do that — the
-     scheduled re-probe this item builds is a machine act by construction. The
-     fence that matters here is therefore NOT about who may measure; it is that
-     a measurement may never move a GRADE, and that is enforced structurally at
-     the store (`CAL_CANNOT_REGRADE`) and by the drift handler writing nothing.
-     Admitting `probe` and then refusing the grade move is the honest shape;
-     refusing the machine and letting the grade move would be the fence in the
-     wrong place, which is the defect this project meets most.
-
-     `calibrationsignal` is the WEAKEST act in the plane and is open for the
-     same reason: it records that a vendor announced something, carries no
-     fidelity, and can only ever pull the next probe EARLIER. */
+  /* CPDF-13: the two reads are open; calibrating is measuring, a machine's to do (probe admitted), and a measurement
+     never moves a grade (CAL_CANNOT_REGRADE); a vendor signal only pulls a probe earlier. */
   calibrations: { classes: ["admin", "member", "probe"],           mutating: false },
   calibrationdrift: { classes: ["admin", "member", "probe"],       mutating: false },
   calibrate:    { classes: ["admin", "member", "probe"],           mutating: true  },
   calibrationsubject: { classes: ["admin", "member", "probe"],     mutating: true  },
   calibrationsignal: { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis (D-83 —
-     the framework's entity axis and the bias doctrine's safeguard-4 subject registry
-     are ONE construct). Members BUILD the registry: entitycreate registers a subject
-     (with inline aliases), entityalias attaches an alias, relationdeclare declares a
-     CONSTITUTIVE relation (proxy_for/member_of/overlaps) carrying a justification +
-     citation and NO connection grade (a declared relation is not on the §8.1 grade
-     axis; grading it Grade D is the category error D-83 names). The three writes
-     stamp declared_by from the session, like expertisedeclare. The reads (entity by
-     key, entitybyalias, relation by id) are read-only. Members author and read the
-     registry; probe is admitted so the surface is exercisable. */
+  /* FW-6: building the subject registry; the writes stamp `declared_by` (DEC-52: a machine may declare, and is named). */
   entitycreate: { classes: ["admin", "member", "probe"],           mutating: true  },
   entityalias:  { classes: ["admin", "member", "probe"],           mutating: true  },
   relationdeclare:{ classes: ["admin", "member", "probe"],         mutating: true  },
-  /* T5-11 (entities R8, K106): the registry CORRECTED without being erased — an alias or a relation withdrawn with a
-     reason, kept and shown as withdrawn. A registry write on the three writes' class cut, stamped below with the
-     withdrawing member as they are with the declaring one. */
+  /* T5-11 (entities R8): an alias or relation withdrawn with a reason, stamped as the writes are. The registry reads
+     beside them. */
   aliaswithdraw:  { classes: ["admin", "member", "probe"],         mutating: true  },
   relationwithdraw:{ classes: ["admin", "member", "probe"],        mutating: true  },
   entity:       { classes: ["admin", "member", "probe"],           mutating: false },
   entitybyalias:{ classes: ["admin", "member", "probe"],           mutating: false },
   relation:     { classes: ["admin", "member", "probe"],           mutating: false },
-  /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISERS. `resolve` runs the recogniser
-     over a captured document's reading references and stores each resolution with its
-     §8.1 connection grade (A source's own composite identifier, B the source's bare
-     identifier in content, C name correspondence — never D, which the machine never
-     mints); `resolvetestify` is the member's grade-D TESTIMONY path (an author and a
-     date, the member's stated basis, no captured document). Both mutate and stamp
-     resolved_by from the session below.
-     `resolutions` reads a document's resolutions; `concerns` is the REVERSE INDEX —
-     every document that concerns an entity, joined on entity_id, never through a
-     declared relation. Both read-only; probe admitted so the surface is exercisable. */
+  /* FW-7: resolving (grades A–C, never D) and grade-D testimony, both stamped `resolved_by`; the reads are open. */
   resolve:        { classes: ["admin", "member", "probe"],         mutating: true  },
   resolvetestify: { classes: ["admin", "member", "probe"],         mutating: true  },
   resolutions:    { classes: ["admin", "member", "probe"],         mutating: false },
   concerns:       { classes: ["admin", "member", "probe"],         mutating: false },
-  /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA and the PROGRESSION
-     DEFINITION as data (framework §8/§8.1/§8.2 — absorbs D-67 storage + D-72 grade).
-     `connect` DERIVES and persists the connections among the documents that concern one
-     entity, each carrying the §8.1 grade of its WEAKER end (the two-node base case of a
-     progression); `connections` reads them by entity or by capture; `progressiondefine`
-     authors a progression's ordered stages as data (both example progressions expressible
-     as rows), stamping the declaring member below; `progression` reads one. The two writes
-     mutate; the two reads are ungated like the FW-7 reads. Probe admitted so the surface is
-     exercisable. */
+  /* FW-8: connections derived with the weaker end's grade, and progression definitions as data, stamped; the reads are
+     open. */
   connect:          { classes: ["admin", "member", "probe"],       mutating: true  },
   connections:      { classes: ["admin", "member", "probe"],       mutating: false },
   progressiondefine:{ classes: ["admin", "member", "probe"],       mutating: true  },
   progression:      { classes: ["admin", "member", "probe"],       mutating: false },
-  /* CONSTRUCTS Step 5, SLICE B (FW-9): PROGRESSION INSTANCES and the MISSING-PREDECESSOR
-     finding (M4's acceptance). `thread` threads REAL captured documents through a definition's
-     stages by a threading entity — only documents that RESOLVE to it (FW-7) — and stamps the
-     threading member below; `instance` reads the instance with its grade (the WEAKEST
-     connection along the N-stage chain, D-73 pair→chain) and its missing-predecessor findings,
-     both DERIVED on read. `thread` mutates; `instance` is ungated like the other reads. */
+  /* FW-9: threading documents that resolve to the entity into an instance, stamped; the instance read derives its
+     grade and findings. */
   thread:           { classes: ["admin", "member", "probe"],       mutating: true  },
   instance:         { classes: ["admin", "member", "probe"],       mutating: false },
-  /* CONSTRUCTS Step 5, SLICE C (FW-10): EXCEPTION DOCUMENTS that discharge a lawful skip
-     (framework §8.2). `discharge` records an exception document against an instance's stage — a
-     real captured document that RESOLVES to the threading entity (FW-7) and NAMES a real stage,
-     carrying reason + citation — and stamps the declaring member below; op=instance then renders
-     that missing required stage as a "discharged" state, not a missing-predecessor finding.
-     `exceptions` reads the raw discharge rows. `discharge` mutates; `exceptions` is ungated like
-     the other progression reads. */
+  /* FW-10: an exception document discharges a lawful skip, stamped; the raw discharges read. */
   discharge:        { classes: ["admin", "member", "probe"],       mutating: true  },
   exceptions:       { classes: ["admin", "member", "probe"],       mutating: false },
-  /* REC-6: the DISCOVERY feed for DERIVED findings (UI-5's delegation). `proposals` walks every
-     progression instance at READ time for its missing-predecessor findings and returns them BOTH
-     raw-per-instance (the shape UI-5's loadProposals already consumes) and D-79-aggregated (one
-     proposal per (progression_key, stage_key), N instances, weakest grade, surfaced_by machine).
-     It REPORTS and never mutates — derived things inform — and is ungated like the other
-     progression reads (op=instance / op=exceptions): a member session reads the record's own
-     questions. It needs no scheduled alarm; the PUSH walking-task is a separate later item. */
+  /* REC-6: the discovery feed of derived findings, read-time and never mutating. */
   proposals:        { classes: ["admin", "member", "probe"],       mutating: false },
-  /* REC-7: record a member's DEFER/DISMISS of a derived proposal WITHOUT minting a bundle (UI-5's
-     second delegation). op=dispose disposes a focus BUNDLE; a proposal is not a bundle, and D-79
-     settles that declining ages a finding with a recorded reason — it does not author. So this
-     MUTATES (it writes one disposition row) but mints no bundle, opens no focus, attributes nothing
-     beyond the disposition. Contribute-gated like the other progression writes; the deciding member
-     is stamped server-side below, and op=proposals then ages the disposed proposal out of open. */
+  /* REC-7: deferring or dismissing a derived proposal writes one disposition row and mints no bundle (D-79); the
+     decider is stamped. */
   proposedispose:   { classes: ["admin", "member", "probe"],       mutating: true  },
-  /* REC-9: the per-document progression lookup (UI-9's delegation). `captureprogressions` maps a
-     CAPTURE back to the progression instances it is threaded into, its stage in each, and each
-     instance's missing_predecessor + overdue_successor findings — the ONE derivation point
-     (#assembleInstance + REC-8's #overdueFindings), keyed by capture instead of by (progression,
-     entity). No existing op answers it: op=instance needs BOTH (progression_key, entity_id), and
-     op=proposals walks every instance but carries no capture_sha. It REPORTS and never mutates —
-     derived things inform — and is ungated like the other progression reads (op=instance /
-     op=proposals): a member session reads this document's place in the record's processes. Takes the
-     same optional `now` as-of clock op=proposals takes. */
+  /* REC-9: a capture's place in the progression instances it is threaded into, from the one derivation; a read. */
   captureprogressions:{ classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-20 / DEC-16: the member's ONE queue. OBLIGATIONs (from `tasks`) and
-     FINDINGs (from the proposals derivation) in ONE contract, each carrying its
-     `class`, its `options[]` (REC-19's derivation, never a surface's copy) and
-     its `case` — EVERY ancestor over a bounded walk of the basis and citation
-     edges. It REPORTS and never mutates. Member class and above and never
-     public: a queue names what the group is working on and who owes what, which
-     is the working corpus. `member` AND `viewer` are stamped server-side below
-     — whose queue this is, and whose view its case names are compiled for, are
-     server decisions or they are not decisions at all (D-15 §7.9: the queue is
-     the one surface every member opens by habit, so it is the one that must not
-     leak a project identity). */
+  /* REC-20 / DEC-16: the member's one queue, never public; `member` and `viewer` are stamped (D-15 §7.9). */
   queue:              { classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-21 / D-125: the queue's PERSONAL half, and NO PROBE CLASS on either —
-     which is the deliberate part. A machine credential has no member behind it,
-     so there is no attention for it to be a preference ABOUT; admitting probe
-     and refusing inside would be inventing a member in order to refuse them.
-     This is not the D-151 fence-versus-act question (an unassigned task is a
-     real object a machine could reach and must not resolve); it is that a mute
-     with no member is not a thing that exists. The store refuses NO_MEMBER too,
-     so a bypass fails closed rather than writing a row keyed on nothing.
-     BOTH MUTATE, and they mutate ONE table: `queue_state`. Neither writes to
-     `tasks` or `proposal_dispositions` and neither mints a bundle — the
-     op=proposedispose precedent carried one step on. Declining is not
-     authoring; a preference is not even a disposition. */
+  /* REC-21 / D-125: the queue's personal writes, no probe (a mute with no member is not a thing); they write
+     `queue_state` only. */
   queuemute:          { classes: ["admin", "member"],               mutating: true  },
   queuesnooze:        { classes: ["admin", "member"],               mutating: true  },
-  /* T6-13 (intent R2–R18, K207; INTENT #1 REPORT J4.2): INTENT's seventeen ops — the objective's condition, progress
-     and gaps; goals; aspirations; the discovery loop's proposals and triage; working an objective.
-     THE TEN ACTS take `conclude`'s cut for `conclude`'s reason: a machine REACHES each and the store refuses it BY
-     NAME on the `author` stamped into the body below (MACHINE_CANNOT_SET_OBJECTIVE, MACHINE_CANNOT_DECLARE_GOAL,
-     MACHINE_CANNOT_DECLARE_ASPIRATION, MACHINE_CANNOT_TRIAGE, MACHINE_CANNOT_CHOOSE_THE_QUESTION) — except
-     `triage`'s `question`, the one act R16 gives a machine, which is why the cut must admit one. Each rides
-     `contribute` (a revision of a project document, a record document, an adoption, a question or a run) and is a
-     session op in both sets (INTENT_ACTIONS). THE SEVEN READS are open to every class that reads the record, and
-     what a caller may see is the store's, on the viewer stamped below (intent R23); each carries a NEEDS entry of
-     null, op=queue's precedent (B3). */
+  /* T6-13 (intent R2–R18): the ten acts take conclude's cut (a machine refused by name, but `triage`'s `question`);
+     the seven reads are viewer-stamped. */
   objectivecondition:  { classes: ["admin", "member", "probe"],      mutating: true  },
   objectiveprogress:   { classes: ["admin", "member", "probe"],      mutating: false },
   objectivegaps:       { classes: ["admin", "member", "probe"],      mutating: false },
@@ -1188,15 +469,8 @@ const OPS = {
   intentproposals:     { classes: ["admin", "member", "probe"],      mutating: false },
   triage:              { classes: ["admin", "member", "probe"],      mutating: true  },
   workobjective:       { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* T8–T9 (layer 9, K248, K250, K263): THE ACTION LAYER'S OPS — standards (R1–R10), conformance (R1–R12), consequences (R1–R9),
-     filings (R1–R11) and escalation (R1–R16). THE ACTS take `conclude`'s cut for `conclude`'s reason: a machine REACHES
-     each and the module refuses it BY NAME on the author stamped below (MACHINE_CANNOT_DECLARE_STANDARD,
-     MACHINE_CANNOT_DETERMINE, MACHINE_CANNOT_APPROVE, MACHINE_CANNOT_OPEN, …) — except the PROPOSALS (`standardpropose`,
-     `comparisonpropose`, `filingprepare`, `theorypropose`), which any credential may make, each labelled with who made
-     it and whether it is machine work; the cut must admit a machine for those. Each act rides `contribute` and is a
-     session op in both sets. THE READS are open to every class that reads the record, and what a caller may see is the
-     module's, on the viewer stamped below. The durable object constructs the modules and dispatches each of
-     these through its module's op map (N216, T9; escalation's ten named in the store's map). */
+  /* T8–T9 (layer 9): the acts take conclude's cut (a machine refused by name), the proposals any credential's,
+     labelled; the reads are viewer-stamped. */
   standarddeclare:     { classes: ["admin", "member", "probe"],      mutating: true  },
   standardpropose:     { classes: ["admin", "member", "probe"],      mutating: true  },
   standardadopt:       { classes: ["admin", "member", "probe"],      mutating: true  },
@@ -1233,202 +507,68 @@ const OPS = {
   escalationresume:    { classes: ["admin", "member", "probe"],      mutating: true  },
   escalation:          { classes: ["admin", "member", "probe"],      mutating: false },
   escalationsdue:      { classes: ["admin", "member", "probe"],      mutating: false },
-  /* IS-6 / INVESTIGATIVE-SESSION.md §11: THE INVESTIGATIVE RUN. Three writes
-     and two reads, and the class lists say two things worth stating.
-
-     PROBE IS ADMITTED on all five, unlike the queue pair above, and the
-     distinction is the same one D-151 drew: a mute with no member behind it is
-     not a thing that exists, whereas a RUN is a real object with a real subject
-     that a machine credential legitimately drives — the whole design has the run
-     executing in a FLEET MEMBER (§14a), which is a machine. What bounds it is
-     not the class list but `scopeFor`, which confines probe to the scratch
-     namespace, and the store's own two-principal requirement.
-
-     NO `ai` CLASS IS MINTED HERE. D-199's `ai` credential class is IS-5's, and
-     inventing one now would be choosing its shape before the item that owns it
-     measures anything. These ops ride the existing classes and IS-5 narrows
-     them; that direction is safe and the other is not.
-
-     THE TWO READS ARE GATED (D-15) on the run's context, which is an inquiry or
-     a project bundle — classified in test/gate-reads.test.mjs, where every read
-     op must be. `viewer` is stamped server-side below. */
+  /* IS-6 (§11): the investigative run; probe admitted (a run is a real object a fleet member drives); the reads gated
+     on the run's context. */
   airunopen:          { classes: ["admin", "member", "probe"],      mutating: true  },
   airuntick:          { classes: ["admin", "member", "probe"],      mutating: true  },
   airunclose:         { classes: ["admin", "member", "probe"],      mutating: true  },
   airun:              { classes: ["admin", "member", "probe"],      mutating: false },
   airunlog:           { classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-207 (BOB #32, 2026-09-23 23:42Z): the two doors that settle a bias-debt obligation and read what
-     settled it.
-
-     `biasdebtresolve` HAS NO PROBE CLASS, and the reason is the one `queuemute` records two blocks up
-     rather than a new one: settling a bias debt is a member's judgement that a lens change does not bear
-     on a finding, so a credential with no person behind it has no judgement to record. The store refuses
-     a machine BY SHAPE as well (BIAS_DEBT_MACHINE_CANNOT_RESOLVE, `taskResolve`'s precedent), so a bypass
-     of this list fails closed rather than writing a row attributed to a token.
-
-     `biasdebt` IS a read and carries the run reads' classes: it names a RUN and answers about the
-     obligation on it, so it is gated on the run's context exactly as op=airun and op=airunlog are, and a
-     debt on a run the caller cannot open answers byte-identically to a run that never carried one. It is
-     classified in test/gate-reads.test.mjs, where every read op must be. */
+  /* REC-207: settling a bias debt is a member's judgement, no probe (refused by shape too); the read carries the run
+     reads' classes. */
   biasdebtresolve:    { classes: ["admin", "member"],               mutating: true  },
   biasdebt:           { classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-93 / IC-92 — THE FRONTIER READ (`OBSERVATION-LOG-DESIGN.md` §6 row 1):
-     *what have we looked for at this level, and what came of it* — the candidate
-     list for FETCH / EXTRACT / DERIVE. A READ, so `mutating: false`.
-     THE CLASSES ARE THE RUN LOG'S, and that is deliberate rather than copied: §6
-     says *"a subject discloses a project's interest, so REC-36's withholding
-     applies row-whole across the fence"*. What a caller may SEE is decided by
-     the D-15 viewer stamp in the store, never by the class here — the same line
-     `airuns` draws two rows down. */
+  /* REC-93: the frontier read; what a caller may see is the viewer stamp's, the run log's classes. */
   frontier:           { classes: ["admin", "member", "probe"],      mutating: false },
-  /* D-525 — THE DRIVE SHELL SWEEP: which Drive-linked bundles hold a baseline
-     captured from Google's application page rather than the export (a pre-CAP-8
-     acquire), so their monitor reads `modified` on every tick. A READ that lists
-     and names the remedy; it never re-acquires. Classes and the D-15 stamp are
-     op=index's, because it walks the same working corpus and names bundle ids. */
+  /* D-525: the Drive shell sweep lists bundles whose baseline is Google's page; op=index's classes and stamp. */
   driveshells:        { classes: ["admin", "member", "probe"],      mutating: false },
-  /* T8 (monitoring R32, MONITORING #1 J3.6): what the group monitors and how each watch stands, the DO route
-     `monitoring`. A READ on `driveshells`' cut and for its reason — it walks the working corpus and names bundle ids —
-     so the viewer is stamped below and the store answers only what the viewer may see. */
+  /* T8 (monitoring R32): what the group monitors, driveshells' cut; viewer-stamped. */
   monitoring:         { classes: ["admin", "member", "probe"],      mutating: false },
-  /* K372 (monitoring R30): the administrator's PAUSE of the daemon, the DO route `monitorpause` — `paused: true` or
-     `false` in the POST body, and who set it the control plane's `actor` stamp below, never the caller's. The root of
-     trust's act and an administrator's (N314, T12): the ADMIN_TOKEN bearer (`machineClasses`, so no other bearer) and
-     EVERY member session (both `SESSION_OPS` sets), and monitoring R30 refuses a stamp that is not an administrator
-     (membership R64) NOT_AN_ADMIN at its own site; the control plane only stamps who asked.
-     The DUE SLATE (`monitorslate`) is a READ on `monitoring`'s cut and for its reason: it names bundles, so the viewer
-     is stamped below and the store answers only what the viewer may see. */
+  /* K372, N314: the daemon's pause — the ADMIN_TOKEN bearer and every member session; `actor` stamped; monitoring
+     refuses a non-administrator. The slate is a viewer-stamped read. */
   monitorpause:       { classes: ["admin", "member"], machineClasses: ["admin"], mutating: true  },
-  /* K407 (INSTANCE-SETUP #1 J2): the instance's active jurisdiction profiles (instance-setup R12–R15). `profiles` is a
-     READ open to the admin bearer and every session; `profilesset` is an administrator's own session act: every session
-     reaches it (both sets) and `machineClasses: []` refuses every bearer CLASS_FORBIDDEN, `by` stamped below from the
-     session, and instance-setup refuses a `by` that is not an administrator. */
+  /* K407: the profiles read (admin bearer and sessions); the set a session act, every bearer refused (`machineClasses:
+     []`), `by` stamped. */
   profiles:           { classes: ["admin", "member"],               mutating: false },
   profilesset:        { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   monitorslate:       { classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS READ (`OBSERVATION-LOG-DESIGN.md`
-     section 4.2, section 6 row 2): *which of the four content-axis states is this
-     capture in, and why*. A READ, so `mutating: false`.
-     THE CLASSES AND THE GATE ARE `frontier`'S, for the reason section 6 gives one
-     row up: this answers whether a particular document's text was ever extracted,
-     which discloses that this project holds that document at all — the same
-     disclosure a frontier subject makes, one capture at a time. The viewer stamp
-     below decides what a caller may see; the class list here never does. */
+  /* REC-94: a capture's content-axis state; frontier's classes and gate. */
   contentaxis:        { classes: ["admin", "member", "probe"],      mutating: false },
-  /* REC-69 / UI-49's delegation: the CONTEXT-keyed read. Same classes as its
-     three run-id-keyed siblings, because what a caller may see is decided by
-     the D-15 viewer stamp in the store and never by the class here. */
+  /* REC-69: the context-keyed run read; the viewer stamp decides what a caller sees. */
   airuns:             { classes: ["admin", "member", "probe"],      mutating: false },
-  /* PL-3 / IS-4 — THE SUGGEST ENDPOINT, the ONE write the investigative
-     session holds (§4 group 2: it REQUESTS acquisition, it SUGGESTS, and it
-     ACCEPTS nothing). It rides the SAME classes as the run ops above and for
-     the same recorded reason: PL-11 mints the `ai` class and NARROWS these, and
-     widening later is the safe direction while shipping a class nothing
-     measures is not. Its own fence is not the class list — it is that the sole
-     state it can write is `suggested`, written as a literal with no parameter
-     behind it, and that the six pre-write checks run PLANE-SIDE. */
+  /* PL-3 (§4 group 2): the session's one write, `suggested` only, with its six checks plane-side; the run ops'
+     classes. */
   suggest:            { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* PL-4 / IS-4 / SWEEP 4b.1 — THE CAPTURE-REQUEST DOOR, and the split between
-     the rows below IS the item.
-
-     `capturerequest` is §4 group 1: *"It REQUESTS acquisition — it does not
-     perform it."* It writes a row and holds no fetch, so it rides the same
-     classes as the run ops and PL-11 narrows them.
-
-     `capturerequestdrain` is the DAEMON'S verb and carries NO MEMBER CLASS. It
-     is the one thing in this plane that turns a request into a fetch, and a
-     member reaching for it by hand would be a person doing the daemon's job with
-     the daemon's conduct rules applied to them — the same line op=taskdrain
-     draws between a producer and a consumer, one door over. `daemon` is here
-     BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening
-     the class *"by decision, not by drift"*, and test/daemon-token.test.mjs's
-     totality assertion is corrected in the same turn rather than exempted.
-
-     `capturerequests` is a READ, and it DOES NOT ADMIT THE DAEMON CLASS. That
-     is deliberate and it is the narrower half of the widening: op=acquire's
-     capture-request arm asks the DURABLE OBJECT directly, not through this
-     table, so the daemon needs no read here — and a credential that sits
-     unattended in a config file has no business enumerating the queue of
-     addresses this group is about to fetch. The class therefore reaches exactly
-     THREE ops here, one more than DEC-37 scoped it to and that one by decision
-     (and `reevaluationraise` below, by K199's).
-     T6-13 (K181 (6)): `capturerequestdraining` is RETIRED — capture-requests
-     removed its function and its store route (its R16), so its row went with
-     them rather than answering admin and probe an `unknown op` from the store. */
+  /* PL-4: the door requests and holds no fetch; `daemon` is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37
+     required for widening the class *"by decision, not by drift"*; the queue read admits no daemon. */
   capturerequest:      { classes: ["admin", "member", "probe"],           mutating: true  },
   capturerequestdrain: { classes: ["admin", "probe", "daemon"],           mutating: true  },
   capturerequests:     { classes: ["admin", "member", "probe"],           mutating: false },
-  /* T6-13 (capture-requests R42, K181 (6)): RETRYING a request the SOURCE refused, once a member has supplied what it
-     asked for. A member's act on the group's queue: admin and member, `contribute` in NEEDS, a session op; the store
-     asks the stamped viewer's sight of the request's question and relays the stamped principal as the caller. */
+  /* T6-13 (capture-requests R42): retrying a request the source refused, a member's act on the group's queue. */
   capturerequestretry: { classes: ["admin", "member"],                    mutating: true  },
-  /* PL-11 / IS-5 / D-199 — MINTING AN AI CREDENTIAL, AND THE CLASS LIST IS THE
-     ENFORCEMENT RATHER THAN A NOTE ON IT.
-
-     NO `ai` CLASS APPEARS IN ANY ROW OF THIS TABLE, INCLUDING THESE. That is
-     not an omission and it is asserted structurally in
-     test/aicredential.test.mjs: the `ai` class is admitted by a SHAPE over this
-     table (`aiTaskScope` below), never by being named in it, so adding "ai" to
-     a row would grant nothing and removing one would take nothing away. PL-4
-     delegated exactly this constraint — op=capturerequestdrain must never gain
-     the class — and this is how it is made structurally true rather than
-     remembered.
-
-     `probe` IS ABSENT FROM ALL THREE, unlike almost everything around them, and
-     the reason is D-199 (3). A probe credential is a MACHINE, and minting is a
-     member act; admitting probe here so the surface were exercisable would be
-     the `index.mjs:668` hole DEC-52 measured — *"probe is admitted so the
-     surface is exercisable"* — arriving at the one act that decides what
-     machines may do. The store refuses a machine stamp anyway (C-29.1), so this
-     is the second of two fences and neither is load-bearing alone; what it buys
-     is that the refusal a probe gets says the true thing.
-
-     THE READ IS WIDER THAN THE WRITES ON PURPOSE. What agents this group has
-     running, under whose name, and what they may touch is exactly the sort of
-     thing a member should not have to ask an administrator for. It carries no
-     value and no hash. */
+  /* PL-11 / D-199: no row names `ai` (asserted); no probe (minting is a member act, C-29.1); the read is wider and
+     carries no value. */
   aicredentialmint:    { classes: ["admin", "member"],                    mutating: true  },
   aicredentialrevoke:  { classes: ["admin", "member"],                    mutating: true  },
   aicredentials:       { classes: ["admin", "member"],                    mutating: false },
-  /* PL-12 / §14: THE FENCE, and it is an op so that it can be POINTED AT. The
-     spawn contract for a search sub-session omits the bias manifest BY
-     CONSTRUCTION; before this it existed only as a sentence in a design
-     document, where no assertion could read it and no negative control could
-     break it. A THIRD gated read on the run's context, like its two siblings. */
+  /* PL-12 §14: the spawn contract's fence as an op, so it can be pointed at; a gated read on the run's context. */
   airunspawn:         { classes: ["admin", "member", "probe"],      mutating: false },
-  /* D-103: the per-host governor's operator surface. governorstate is a read of
-     which hosts are held and why (admin and member: a member watching a capture
-     stall deserves to see the governor is the reason, not a broken source);
-     governorconfig sets a host's appetite and is admin/probe because tuning how
-     hard we lean on a counterparty is an operator decision, not a member one —
-     and not an administrator's either (§4.9, RULED by BOB #23). CORRECTED
-     2026-09-23 by REC-159: this ended "the same line memberset and signerset
-     draw", which that landing made false — both are EVERY administrator's now,
-     and governorconfig is the one op the founder's session alone reaches. Neither is a capacity FINDING:
-     a refusal still teaches capacity through governorReport on the fetch path.
-     This only exposes what the DO already tracks; it discovers nothing new. */
+  /* D-103: the governor's state is readable by members; its config is the operator's, the founder's session alone
+     (§4.9, BOB #23). */
   governorstate:  { classes: ["admin", "member", "probe"],           mutating: false },
   governorconfig: { classes: ["admin", "probe"],                     mutating: true  },
-  /* REC-159: `member` and `machineClasses` for the reason written at `memberadd`. */
+  /* REC-159: `member` and `machineClasses` for memberadd's reason. */
   signeradd:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   signerlist:   { classes: ["admin", "member", "probe"],           mutating: false },
   signerset:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
-  /* The bootstrap trio and the doorbell are the unauthenticated surface.
-     Each enforces its own gate: bootstrap reveals nothing but
-     claimed/unclaimed, claim requires the bootstrap secret and refuses once
-     spent, login requires the password, enroll requires a live one-time
-     invite. verify answers only from the published projection, which has
-     never seen unratified material, so there is nothing to leak. knock
-     lands in a quarantined inbox, size-capped and rate-limited; the worst
-     case under attack is a full inbox. */
+  /* The unauthenticated surface, each gating itself: bootstrap reveals claimed or not, claim needs the bootstrap
+     secret, login the password, enroll a live invitation. */
   bootstrap:  { classes: null,                                   mutating: false },
   claim:      { classes: null,                                   mutating: true  },
   login:      { classes: null,                                   mutating: false },
   enroll:     { classes: null,                                   mutating: true  },
-  /* What a burner URL resolves to. Unauthenticated by necessity: the invitee
-     holds no credential yet, which is the whole point of an invitation. It
-     answers only for a LIVE invitation, and a spent token is indistinguishable
-     from one that never existed, so it leaks nothing about who was invited. */
+  /* An invitation's look answers only a live one; verify reads the published projection; knock lands in a quarantined,
+     capped inbox. */
   invitelook: { classes: null,                                   mutating: false },
   verify:     { classes: null,                                   mutating: false },
   knock:      { classes: null,                                   mutating: true  },
