@@ -173,7 +173,8 @@ export function world({ group = "test-group", workerd = false } = {}) {
       if (!res.ok) throw new Error(`fixture doc refused: ${JSON.stringify(res).slice(0, 400)}`);
       return res;
     },
-    /** An inquiry through promotion (so inquiry's check and projection run); `legs` as inquiry's grammar. */
+    /** An inquiry through promotion (so inquiry's check and projection run); `legs` as inquiry's grammar (a leg's `date`
+     is its authored instant). */
     inquiry(id, opts = {}) {
       const res = w.promote(id, inquiryMd(id, opts));
       if (!res.ok) throw new Error(`fixture inquiry refused: ${JSON.stringify(res).slice(0, 600)}`);
@@ -264,7 +265,8 @@ export function inquiryMd(id, { question = `Is ${id} answered?`, legs = [], refs
           `    status: ${r.status || "confirmed"}`])]
       : ["references: []"]),
     "state_history: []", "surfaced_by: human", 'disposition_reason: ""',
-    ...(legs.length ? ["basis:", ...legs.flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role || "supports"}`])] : []),
+    ...(legs.length ? ["basis:", ...legs.flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role || "supports"}`,
+                                                         ...(l.date ? [`    date: "${l.date}"`] : [])])] : []),
     ...extra,
     "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
     "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");

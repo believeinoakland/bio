@@ -6,7 +6,13 @@
  * THE PLANE'S HELPERS ARE BOUND, NOT IMPORTED: the control plane (`legacy-index`, later in the order) owns `json()`
  * (its DEC-49 decoration), the Durable Object envelope reader (`doAnswer`), the silence refusal (`storeSilent`), the
  * required-argument refusal and the published store's namespace. It binds them once at load (`bindPublishedPlane`),
- * so this file reads every answer the way the rest of the plane does and restates none of it. */
+ * so this file reads every answer the way the rest of the plane does and restates none of it.
+ *
+ * R48 (N339, N349; K421, K444): every relay here answers the store's own refusal (`control-plane` R23: `ok: false`
+ * below 500, which `doAnswer` answers `refused`) with the store's status, code and sentence, through the plane's
+ * `storeRefusal` when it binds one; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, carrying the correlation
+ * id `doAnswer` read from the store's internal error when it gave one (`control-plane` R25). The post-commit report in
+ * `assembleCaseContainer` states an exchange inside an act that has committed, and is no relay. */
 
 import { parseFrontmatter, normalizeType, sectionText } from "../../checks/bio-checks.mjs";
 import { NS_RATIFY, ratifyStatement, caseRatifyStatement } from "../sshsig.mjs";
@@ -15,20 +21,40 @@ import { inbandQuartet } from "../inband.mjs";
 import { rowOf, caseDocumentStatesMemberBlocks } from "./checks.mjs";
 
 let PLANE = null;
-const PLANE_KEYS = ["json", "doAnswer", "storeSilent", "requiredArgument", "StoreSilent", "STORE_SILENT_REASON",
-                    "STORE_SILENT_DETAIL", "PUBLISHED_STORE"];
+const PLANE_KEYS = ["json", "doAnswer", "storeSilent", "requiredArgument", "STORE_SILENT_REASON", "STORE_SILENT_DETAIL",
+                    "PUBLISHED_STORE"];
+/* R48: bound when the plane hands it; absent, a refusal is answered as it answers one (below). */
+const PLANE_OPTIONAL = ["storeRefusal"];
 
 /** Binds the control plane's helpers, once, at the control plane's load. A second binding replaces the first (a test
  *  binds its own); one missing a helper throws, loudly, since every public read depends on them. */
 export function bindPublishedPlane(helpers) {
   const missing = PLANE_KEYS.filter((k) => !helpers || helpers[k] === undefined);
   if (missing.length) throw new Error(`bindPublishedPlane: missing ${missing.join(", ")}`);
-  PLANE = Object.freeze(Object.fromEntries(PLANE_KEYS.map((k) => [k, helpers[k]])));
+  PLANE = Object.freeze(Object.fromEntries([...PLANE_KEYS, ...PLANE_OPTIONAL]
+    .filter((k) => helpers[k] !== undefined).map((k) => [k, helpers[k]])));
   return PLANE;
 }
 function plane() {
   if (!PLANE) throw new Error("publication/worker.mjs: the control plane has not bound its helpers (bindPublishedPlane)");
   return PLANE;
+}
+
+/* R48: the answer to a store reply that was not an answer. The store's own refusal is relayed with its status, code
+   and sentence, through the plane's `storeRefusal` when bound, else as the same answer composed here
+   (`json(reply.body, reply.status)`, which is what `storeRefusal` answers); anything else is the silence, carrying the
+   store's correlation id when `doAnswer` read one. */
+function relayUnanswered(out, op) {
+  const P = plane();
+  if (out && out.refused && out.reply)
+    return typeof P.storeRefusal === "function" ? P.storeRefusal(out) : P.json(out.reply.body, out.reply.status);
+  return P.storeSilent(op, out ? out.correlation : undefined);
+}
+
+/* R48: a relay inside the per-finding renderer, thrown so the whole read answers it (a case rendered from a registry
+   never consulted asserts what nobody checked). Carries the unanswered reply, refusal or silence. */
+class Unanswered extends Error {
+  constructor(op, out) { super(`the store did not answer ${op}`); this.op = op; this.out = out; }
 }
 
 /* THE PUBLISHED-STORE COMPLAINT (C-68.5, D-549). A copy installed with no store
@@ -389,7 +415,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
        two are now separated: a silence is a silence, and the guard below
        keeps its whole meaning for the answers that reach it. */
     const vOut = await P.doAnswer(stub.fetch(`http://do/verify?sha256=${shaParam}`));
-    if (!vOut.answered) return P.storeSilent("publishedbytes");
+    if (!vOut.answered) return relayUnanswered(vOut, "publishedbytes");
     const v = vOut.result;
     /* D-561: NO_PUBLISHED_PART (C-98.1) from its one governed site; it was `NOT_FOUND`. */
     if (!v || !v.published) return P.json(noPublishedPart(shaParam), 404);
@@ -402,7 +428,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
        hash IS published, and NO_PUBLISHED_PART's sentence would call it never ratified. */
     if (v.matches.some((m) => m.kind === "case_document") && (url.searchParams.get("format") || "") !== "zip") {
       const dOut = await P.doAnswer(stub.fetch(`http://do/publishedcasedoctext?sha256=${shaParam}`));
-      if (!dOut.answered) return P.storeSilent("publishedbytes");
+      if (!dOut.answered) return relayUnanswered(dOut, "publishedbytes");
       const d = dOut.result || {};
       const docBytes = d.found && typeof d.text === "string" ? new TextEncoder().encode(d.text) : null;
       const docSha = docBytes ? [...new Uint8Array(await crypto.subtle.digest("SHA-256", docBytes))]
@@ -519,7 +545,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
      caller verbatim on the branch below — the two must not collapse in
      either direction, and both directions have their own arm. */
   const cOut = await P.doAnswer(stub.fetch(`http://do/publishedcase?${q}`));
-  if (!cOut.answered) return P.storeSilent("publishedcase");
+  if (!cOut.answered) return relayUnanswered(cOut, "publishedcase");
   const c = cOut.result;
   /* MEASURED, not assumed: `Store.publishedCase` returns an object on
      every path — its own `{ok:false, reason:"NOT_PUBLISHED", detail}`
@@ -630,7 +656,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
          store's own answer. */
       const rtOut = await P.doAnswer(stub.fetch(
         `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`));
-      if (!rtOut.answered) throw new P.StoreSilent("publishedcase/publishedtargets");
+      if (!rtOut.answered) throw new Unanswered("publishedcase/publishedtargets", rtOut);
       const rt = rtOut.result;
       registry = (rt && rt.registry) || {};
     }
@@ -668,7 +694,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
        rendered from a registry that was never consulted asserts things
        about its own basis that nobody checked. Anything else is re-thrown
        untouched — a real crash must not arrive dressed as a silence. */
-    if (e instanceof P.StoreSilent) return P.storeSilent(e.op);
+    if (e instanceof Unanswered) return relayUnanswered(e.out, e.op);
     throw e;
   }
 
