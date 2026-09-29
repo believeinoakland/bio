@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS reevaluation_records (
 );
 CREATE INDEX IF NOT EXISTS reevaluation_records_dependent ON reevaluation_records (dependent, target, source);
 -- R14's case half, R26 (N210): ONE NOTICE PER (case, cited part, pinned
--- capture, newer capture). A cited part is a case member at its pin (publication
--- R41); its pinned capture is the one its bundle.md at the pin names, and the
+-- capture, newer capture). A cited part is a document the edition cites, at
+-- the capture it pinned (publication R41's capture_sha; K365), and the
 -- newer capture is graded as the leg half grades a passage (the whole
 -- document). owners is the JSON list of the owning project's owners read when
 -- it was raised: they are the ones told, and nobody else is. ord is the part's
@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS reevaluation_case_notices (
   project          TEXT,
   ord              INTEGER NOT NULL,
   part             TEXT NOT NULL,
-  part_sha         TEXT NOT NULL,
   capture_sha      TEXT NOT NULL,
   newer_capture    TEXT NOT NULL,
   newer_bundle     TEXT,

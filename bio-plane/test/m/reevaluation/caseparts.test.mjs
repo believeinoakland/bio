@@ -1,10 +1,11 @@
 /* reevaluation: R14's case half through the registration publication fills (R26, N210): a ratified case's owners are
-   told once per affected or undetermined cited part, a cited part being a case member at its pin, graded at its pinned
-   capture; nobody else is told; with none registered the answer says so. `publication` is a stand-in here (it fills the
-   registration in layer 8): `parts` answers publication R41's shape and `cases` lists the cases with a ratified edition. */
+   told once per affected or undetermined cited part, a cited part being a document the edition cites at the capture it
+   pinned (publication R41's `{bundle_id, capture_sha}`, K365), graded directly at that capture; nobody else is told;
+   with none registered the answer says so. `publication` is a stand-in here (it fills the registration in layer 8):
+   `parts` answers publication R41's shape and `cases` lists the cases with a ratified edition. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, U, sha } from "./fixture.mjs";
+import { world, V, U } from "./fixture.mjs";
 import { CASE_CURSOR, REEVALUATION_ACT_CHECKS } from "../../../src/reevaluation/index.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 
@@ -12,7 +13,7 @@ const OLD = "INFO-2026-0001-old", NEW = "INFO-2026-0002-new", SAME = "INFO-2026-
 const CASE = "CASE-2026-0001-one", CASE2 = "CASE-2026-0002-unratified", CASE3 = "CASE-2026-0003-three";
 const ADMIN = "class:admin";
 
-/** Part OLD (capture a) cited by CASE at its pin; a newer capture b of the same address that rewrites it; owners owen
+/** Part OLD cited by CASE at its pinned capture a; a newer capture b of the same address that rewrites it; owners owen
  *  of project P; ann, a member who owns nothing. `register: false` leaves the slot empty. */
 function setup({ newText = "something else entirely", address = true, register = true, extra = [] } = {}) {
   const w = world();
@@ -23,10 +24,9 @@ function setup({ newText = "something else entirely", address = true, register =
   if (address) { w.at(a.sha, "ex.org/doc", "2026-09-01T00:00:00Z"); w.at(b.sha, "ex.org/doc", "2026-09-20T00:00:00Z"); }
   w.member("owen"); w.member("ann");
   const P = w.project("Case work", "owen");
-  const pin = sha(w.text(OLD));
   const asked = [];
   const pub = {
-    ratified: { [CASE]: { case: CASE, edition: 1, project: P, parts: [{ bundle_id: OLD, bundle_sha: pin }] } },
+    ratified: { [CASE]: { case: CASE, edition: 1, project: P, parts: [{ bundle_id: OLD, capture_sha: a.sha }] } },
     parts: ({ case: c }) => { asked.push(c); return pub.ratified[c] || { ok: false, reason: "NO_CASE_EDITION" }; },
     cases: ({ after = "", limit = 200 }) => {
       const ids = [CASE, CASE2, CASE3].filter((c) => c > after).slice(0, limit);
@@ -34,7 +34,7 @@ function setup({ newText = "something else entirely", address = true, register =
     },
   };
   if (register) assert.deepEqual(w.r.registerCaseParts("publication", pub), { ok: true, module: "publication" });
-  return { w, a, b, P, pin, pub, asked };
+  return { w, a, b, P, pub, asked };
 }
 const caseNotices = (w) => w.rows(`SELECT * FROM reevaluation_case_notices ORDER BY notice_id`);
 
@@ -66,14 +66,14 @@ test("R26: with none registered, no case owner is told and the answer says so (c
 });
 
 test("R14 R26: an affected cited part tells the case's owners once per (case, part, newer capture); nobody else is told; a re-sweep tells nobody again", () => {
-  const { w, a, b, P, pin, asked } = setup();
+  const { w, a, b, P, asked } = setup();
   const heard = [];
   w.r.onBasisChanged("conformance", (e) => heard.push(e));
   const r = w.r.raiseNotices({});
   assert.deepEqual([r.count, r.cursor, r.truncated], [1, null, false]);
   const [n] = r.raised;
-  assert.deepEqual([n.kind, n.case, n.edition, n.project, n.part, n.part_sha, n.capture_sha, n.newer_capture, n.grade,
-                    n.affects, n.owners], ["case", CASE, 1, P, OLD, pin, a.sha, b.sha, "NOT_FOUND", "affected", ["owen"]]);
+  assert.deepEqual([n.kind, n.case, n.edition, n.project, n.part, n.capture_sha, n.newer_capture, n.grade,
+                    n.affects, n.owners], ["case", CASE, 1, P, OLD, a.sha, b.sha, "NOT_FOUND", "affected", ["owen"]]);
   assert.deepEqual(asked, [CASE, CASE2, CASE3], "each listed case is asked for its parts; one not ratified is passed over");
   assert.deepEqual(heard.map((e) => [e.kind, e.subject, e.source, e.affects, e.case.case, e.case.owners, e.notice]),
     [["passage", OLD, "newer_capture", "affected", CASE, ["owen"], n.notice]]);
@@ -82,7 +82,7 @@ test("R14 R26: an affected cited part tells the case's owners once per (case, pa
   const owen = w.r.notices({ viewer: V("owen") });
   assert.deepEqual([owen.count, owen.notices[0].notice, owen.notices[0].kind, owen.notices[0].holder,
                     owen.notices[0].target, owen.notices[0].case], [1, n.notice, "case", CASE, OLD,
-    { case: CASE, edition: 1, project: P, part: OLD, part_sha: pin }]);
+    { case: CASE, edition: 1, project: P, part: OLD }]);
   assert.deepEqual([owen.notices[0].newer_capture, owen.notices[0].affects], [b.sha, "affected"]);
   assert.equal(w.r.notices({ viewer: V("ann") }).count, 0, "a member who owns nothing is not told");
   assert.equal(w.r.notices({ viewer: "nobody" }).count, 0);
@@ -109,32 +109,33 @@ test("R14 R26: a newer capture that leaves the part unaffected tells nobody; und
   }
 });
 
-test("R26: a cited part is graded at its pinned capture, the one its bundle.md at the pin names, not today's", () => {
+test("R26: a cited part is graded directly at the capture the edition pinned (its capture_sha), not today's", () => {
   const w = world();
   const x = w.cap("x", "first-held"), a = w.cap("a", "old"), b = w.cap("b", "new");
-  w.doc(OLD, [x, a], { extra: [`content_hash: "${a.sha}"`] });
+  w.doc(OLD, [x, a], { extra: [`content_hash: "${x.sha}"`] });
   w.doc(NEW, [b]);
   w.read(a.sha, [U(0, "alpha"), U(1, "the budget was cut")]);
   w.read(b.sha, [U(0, "alpha"), U(1, "something else entirely")]);
   w.at(a.sha, "ex.org/doc", "2026-09-01T00:00:00Z"); w.at(b.sha, "ex.org/doc", "2026-09-20T00:00:00Z");
   w.member("owen");
   const P = w.project("Case work", "owen");
-  const pin = sha(w.text(OLD));
-  /* the part moves on after the pin: its live document now names the first-held capture */
-  w.redoc(OLD, [`content_hash: "${x.sha}"`]);
-  assert.notEqual(sha(w.text(OLD)), pin);
+  /* the part's live document names another capture (x); the edition pinned a, in any spelling of its hex */
   w.r.registerCaseParts("publication", {
-    parts: () => ({ case: CASE, edition: 2, project: P, parts: [{ bundle_id: OLD, bundle_sha: pin }] }),
+    parts: () => ({ case: CASE, edition: 2, project: P, parts: [{ bundle_id: OLD, capture_sha: ` ${a.sha.toUpperCase()} ` }] }),
     cases: ({ after = "" }) => ({ cases: [CASE].filter((c) => c > after), cursor: null }) });
   const r = w.r.raiseNotices({});
-  assert.deepEqual(r.raised.map((n) => [n.capture_sha, n.newer_capture, n.edition]), [[a.sha, b.sha, 2]]);
-  /* a pin the record does not hold names no capture: nothing is graded, nothing told */
-  const w2 = setup({ register: false }).w;
-  w2.r.registerCaseParts("publication", {
-    parts: () => ({ case: CASE, edition: 1, project: null, parts: [{ bundle_id: OLD, bundle_sha: "0".repeat(64) }] }),
-    cases: ({ after = "" }) => ({ cases: [CASE].filter((c) => c > after), cursor: null }) });
-  const r2 = w2.r.raiseNotices({});
-  assert.deepEqual([r2.count, r2.chain_unread], [0, 1]);
+  assert.deepEqual(r.raised.map((n) => [n.part, n.capture_sha, n.newer_capture, n.edition]), [[OLD, a.sha, b.sha, 2]]);
+  /* a part naming no whole capture (none, not a sha-256, or only a bundle sha, the shape before K365) is passed over:
+     nothing is graded, nobody told */
+  for (const bad of [{ bundle_id: OLD }, { bundle_id: OLD, capture_sha: "abc" }, { bundle_id: OLD, bundle_sha: a.sha },
+                     { capture_sha: a.sha }, null]) {
+    const w2 = setup({ register: false }).w;
+    w2.r.registerCaseParts("publication", {
+      parts: () => ({ case: CASE, edition: 1, project: null, parts: [bad] }),
+      cases: ({ after = "" }) => ({ cases: [CASE].filter((c) => c > after), cursor: null }) });
+    const r2 = w2.r.raiseNotices({});
+    assert.deepEqual([r2.count, caseNotices(w2).length], [0, 0], JSON.stringify(bad));
+  }
 });
 
 test("R26 R25: the case half follows the legs in the sweep's cursor, one case counting one toward the limit, and a pass reads it to its end", () => {
