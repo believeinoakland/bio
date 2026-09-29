@@ -19,4 +19,16 @@ export const RECORD_CORE_CHECKS = Object.freeze({
       + 'one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs '
       + 'this instance.',
   }),
+  COUNTS_DECLARED: Object.freeze({
+    check: 'C-102.13', where: at("registerCounts", "is-counts-registration"),
+    translation: 'A part of this instance tried to report a figure another part already reports, or to register its '
+      + 'figures twice, so the second registration was refused and the first still stands. This is a fault in how the '
+      + 'instance was built, not in the record, and nothing in the record changed.',
+  }),
+  COUNTS_MALFORMED: Object.freeze({
+    check: 'C-102.14', where: at("registerCounts", "is-counts-registration"),
+    translation: 'A part of this instance tried to register its figures without naming itself, the figures or a '
+      + 'function to count them, so nothing was registered. This is a fault in how the instance was built, not in the '
+      + 'record, and nothing in the record changed.',
+  }),
 });

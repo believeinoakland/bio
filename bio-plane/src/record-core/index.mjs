@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R62).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R63).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -253,6 +253,7 @@ export class RecordCore {
 
   #storage; #sql; #depth = 0; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
   #auditChecks = [];      // R59: {module, check}, in registration order
+  #countsBy = [];         // R63: {module, keys, counts}, in registration order
 
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
@@ -755,6 +756,61 @@ export class RecordCore {
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { bundleSha: after.bundle_sha, rowVersion: after.row_version };
     });
+  }
+
+  /* ---- the store's counts (R63) ---- */
+
+  /** R63 (N342, K435; the R59 pattern, with its keys named up front as `declarePurge` names its tables): a module that
+   *  owns tables registers once, at start, the figures it reports and `counts(hid)`, a synchronous function answering
+   *  them, so `op=stats` and purge's proof read every module's figures without calling a later module. Two modules
+   *  never report one key: a key already held, or named twice in one list, is `COUNTS_DECLARED` naming its holder, and
+   *  so is a module's second registration; no module name, no non-empty list of names, or no function is
+   *  `COUNTS_MALFORMED`. A refused registration registers nothing. It writes nothing. */
+  registerCounts(module, keys, counts) {
+    const refuse = (code, detail, more) => {
+      const row = RECORD_CORE_CHECKS[code];
+      return { ...more, ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+    };
+    /* DEC-49 REGION is-counts-registration */
+    if (typeof module !== "string" || !module.trim() || !Array.isArray(keys) || keys.length === 0
+        || !keys.every((k) => typeof k === "string" && k.trim() !== "") || typeof counts !== "function")
+      return refuse("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and "
+        + "a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
+    /* The one conflict, found before anything is registered: the module's own earlier registration, else the first
+       key already held (by another module, or earlier in this same list). */
+    let clash = this.#countsBy.some((r) => r.module === module) ? { heldBy: module } : null;
+    for (let i = 0; !clash && i < keys.length; i++) {
+      const held = keys.indexOf(keys[i]) < i ? module : this.#countsBy.find((r) => r.keys.includes(keys[i]))?.module;
+      if (held) clash = { key: keys[i], heldBy: held };
+    }
+    if (clash)
+      return refuse("COUNTS_DECLARED", clash.key === undefined
+        ? `${module} has already registered its figures; nothing more was registered.`
+        : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+    /* END DEC-49 REGION is-counts-registration */
+    this.#countsBy.push({ module, keys: [...keys], counts });
+    return { ok: true, module, keys: [...keys] };
+  }
+
+  /** R63: every registered figure, in registration order, each the number its module's function gave for it, or null
+   *  when that function threw or gave no finite number for it: a figure that could not be read is never zero. `hid`
+   *  (`{sql, args}`, the bundles the caller may not see, or null) is passed to each function as it was given, never
+   *  read here. Each function is asked once per answer. Writes nothing; never throws. */
+  counts(hid = null) {
+    const out = [];
+    for (const { keys, counts } of this.#countsBy) {
+      let got = null;
+      try { got = counts(hid); } catch { got = null; }
+      /* A promise is no figure: it is answered null, and its rejection, if any, is handled here, never left unhandled. */
+      try { if (got !== null && typeof got === "object" && typeof got.then === "function") { got.then(null, () => {}); got = null; } }
+      catch { got = null; }
+      for (const key of keys) {
+        let v = null;
+        try { v = got !== null && typeof got === "object" ? got[key] : null; } catch { v = null; }
+        out.push([key, typeof v === "number" && Number.isFinite(v) ? v : null]);
+      }
+    }
+    return Object.fromEntries(out);
   }
 
   /* ---- the audit sweep (R18–R20, R45, R59) ---- */
