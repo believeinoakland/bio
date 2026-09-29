@@ -41,4 +41,4 @@
   - coverage: 0 of 0 live ids; 0 failures.
   - ownership: 2 files changed; 0 failures.
 
-Size (session_01JVGpG2wpwFQ4tzDwuNQZaq): test runs 2, module lines 7,613
+Size (session_01JVGpG2wpwFQ4tzDwuNQZaq): test runs 16 (2 whole batteries, 2 targeted batteries, 12 Miniflare driver runs), module lines 7,613
