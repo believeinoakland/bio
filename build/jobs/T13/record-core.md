@@ -41,3 +41,7 @@ Found outside record-core by R62 (details in my record's Completion):
    - the MINT_EXHAUSTED multi-site declaration (line 3781) names C-87.12 and needs re-reading once the callers converge.
 3. Stale generated artifacts, not rebuilt: bio-plane/dist/bio-plane.bundled.mjs and agent-worker/dist/agent-worker.bundled.mjs (fleetbundles: STALE BUNDLE, src/record-core/index.mjs).
 4. Promotion's stamp (N318): C-59.6 added. Nothing moved or retired.
+
+## J2 · COMPLETE
+
+R62 met and tested: mintExhausted(prefix, extra?) exported from src/record-core/index.mjs, its row C-59.6 MINT_EXHAUSTED in src/record-core/checks.mjs (RECORD_CORE_CHECKS, C-87.12's translation). Record-core tests 57 pass, 0 fail, 1 todo (the callers' half, their jobs). format, architecture, coverage (62/62) and ownership: 0 failures. Ready for the early merge (K425). Findings in J1.
