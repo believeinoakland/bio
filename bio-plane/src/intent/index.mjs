@@ -19,13 +19,14 @@
  *   progressions through its factory on the same host, reached on first use (N179: the plane's own instance, built
  *                with the plane's `env`, is the one read), unless a test passes its own.
  *   inquiry      `dispose` (R17); aiRuns `open` (R18); retrieval `selectionCreate` (R17: inquiry's dispose takes a
- *                selection, K198); captureRequests `captureRequests`, a request's outcome (R14, K200). Each through its
+ *                selection, K198); captureRequests `requestById`, one request's outcome by key (R14, its R43; N291),
+ *                and `captureRequests` and `bundlesOf`, a request's address and target (R28). Each through its
  *                factory on the same host, reached lazily on first use, unless a test passes its own.
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
 import { isMachineIdentity, normalizeType } from "../../checks/bio-checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf } from "../membership/index.mjs";
+import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { entitiesOf, gradeRank } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
@@ -59,9 +60,10 @@ export const REASON_MAX = 160;
  *  page of `watchSet` answers (R7), followed with its cursor; DEPARTURES_MAX: one project's departures in force (R10);
  *  GOALS_MAX, TRIAGED_MAX: the goals and triage acts one pursuit record answers (R14); SET_ASIDE_MAX: the proposals
  *  set aside that `proposals` lists beside the open ones, newest first (R16); SERVES_MAX: the subjects one `servesOf`
- *  call answers (R28). */
+ *  call answers (R28); ASPIRATIONS_MAX: the held aspirations `aspirationsFor` reads and `contacts` pairs, the first in
+ *  id order (R12, R13; N209, K338); CONTACTS_MAX: the pairs `contacts` lists (R13). */
 export const MEASURE_MAX = 1000, WATCH_LIMIT_MAX = 1000, DEPARTURES_MAX = 1000, GOALS_MAX = 200, TRIAGED_MAX = 1000,
-             SET_ASIDE_MAX = 200, SERVES_MAX = 1000;
+             SET_ASIDE_MAX = 200, SERVES_MAX = 1000, ASPIRATIONS_MAX = 1000, CONTACTS_MAX = 1000;
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -125,8 +127,7 @@ export class Intent {
       if (seen) return { refused: seen };
     }
     if (!d || d.type !== "project" || (viewer !== null && viewer !== undefined && !this.membership.inSight(projectId, viewer)))
-      return { refused: refuseNoSuchProject("no project answers to that id here; one you cannot see is answered "
-                                + "exactly as one that does not exist.", { project: typeof projectId === "string" ? projectId : null }) };
+      return { refused: noSuchProject(typeof projectId === "string" ? projectId : null) };
     return { doc: d };
   }
 
@@ -807,6 +808,25 @@ export class Intent {
     return out;
   }
 
+  /* R12, R13 (N209, K338): the first ASPIRATIONS_MAX held aspirations the viewer may see, in id order, walked a page
+     at a time and read one past so a cut says so. */
+  #heldAspirations(viewer) {
+    const out = [];
+    let after = "", truncated = false;
+    for (;;) {
+      const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
+      for (const id of page.ids) {
+        const a = this.#pursuit(id, ASPIRATION, viewer);
+        if (!a || a.head.currentState !== "held") continue;
+        if (out.length === ASPIRATIONS_MAX) { truncated = true; break; }
+        out.push(this.#aspirationView(a));
+      }
+      if (truncated || page.ids.length < 200 || !page.cursor) break;
+      after = page.cursor;
+    }
+    return { held: out, truncated };
+  }
+
   #aspirationView(a) {
     const list = (v) => (Array.isArray(v) ? v.map(String).filter((x) => x !== "") : []);
     return { id: a.id, scope: a.fm.scope ?? null, owner: a.fm.owner ?? null, statement: readSection(a.text, "Statement"),
@@ -835,7 +855,7 @@ export class Intent {
       const p = this.#project(project, viewer);
       if (p.refused) return p.refused;
     }
-    const held = this.#aspirations(viewer).filter((a) => a.state === "held");
+    const { held, truncated } = this.#heldAspirations(viewer);
     const dep = project ? this.#departures(project) : { latest: new Map(), truncated: false };
     const departed = dep.latest;
     const group = held.filter((a) => a.scope === "group" && !departed.has(a.id));
@@ -843,24 +863,29 @@ export class Intent {
     const mine = member ? held.filter((a) => a.scope === "member" && a.owner === str(member)) : [];
     const departures = [...departed.values()].filter((d) => held.some((a) => a.id === d.aspiration));
     return { ok: true, project: project || null, member: member || null, aspirations: [...group, ...own, ...mine],
-             departures, departures_limit: DEPARTURES_MAX, departures_truncated: dep.truncated, precedence: null,
+             limit: ASPIRATIONS_MAX, truncated, departures, departures_limit: DEPARTURES_MAX,
+             departures_truncated: dep.truncated, precedence: null,
              says: "these are held side by side; the record states no order among them and resolves nothing between them" };
   }
 
-  /** R13: each pair of held aspirations naming a common entity or progression, with what they share. */
+  /** R13: each pair of held aspirations naming a common entity or progression, with what they share. The first
+   *  ASPIRATIONS_MAX held aspirations in id order are paired, and at most CONTACTS_MAX pairs are listed, in the order of
+   *  their first and then second aspiration's id; `truncated` says either was cut (N209, K338). */
   contacts({ viewer = null } = {}) {
-    const held = this.#aspirations(viewer).filter((a) => a.state === "held");
+    const { held, truncated: cut } = this.#heldAspirations(viewer);
     const pairs = [];
-    for (let i = 0; i < held.length; i++)
+    let truncated = cut;
+    outer: for (let i = 0; i < held.length; i++)
       for (let j = i + 1; j < held.length; j++) {
         const a = held[i], b = held[j];
         const entities = a.entities.filter((e) => b.entities.includes(e));
         const progressions = a.progressions.filter((k) => b.progressions.includes(k));
-        if (entities.length || progressions.length)
-          pairs.push({ a: a.id, b: b.id, shared: { entities, progressions },
-                       says: "both name what is listed; the record does not say whether they agree" });
+        if (!entities.length && !progressions.length) continue;
+        if (pairs.length === CONTACTS_MAX) { truncated = true; break outer; }
+        pairs.push({ a: a.id, b: b.id, shared: { entities, progressions },
+                     says: "both name what is listed; the record does not say whether they agree" });
       }
-    return { ok: true, contacts: pairs };
+    return { ok: true, contacts: pairs, limit: CONTACTS_MAX, truncated };
   }
 
   /** R14: an aspiration's pursuit record: the goals opened under it and their objectives, the proposals triaged under
@@ -895,20 +920,13 @@ export class Intent {
                      inquiry: r.inquiry_id, reason: r.reason, grade: r.grade, basis: safeJson(r.basis_json),
                      author: r.author, at: r.at }));
     const named = [...new Set(triaged.flatMap((t) => captureRequestsNamed(t.basis)))];
-    let held = new Map(), readCut = false;
-    if (named.length) {
-      /* capture-requests' read (its R23), under the viewer's sight: a request it does not answer is not held, or is one
-         the viewer may not see, and reads so; never a guessed outcome. Its own cut is relayed as it said it. */
-      const read = this.#lazy(this.captureRequests).captureRequests({ viewer, limit: 1000 });
-      const rows = read && Array.isArray(read.requests) ? read.requests : [];
-      held = new Map(rows.map((r) => [r.request, r]));
-      readCut = read ? read.truncated === true : false;
-    }
+    /* capture-requests' one read by key (its R43; N291), under the viewer's sight: a request it answers null for is not
+       held, or is one the viewer may not see, and reads so; never a guessed outcome. */
+    const byId = named.length ? this.#lazy(this.captureRequests) : null;
     const capture_requests = named.map((id) => {
-      const r = held.get(id);
-      if (!r) return { request: id, outcome: null,
-                       why: readCut ? "not among the requests the read answered (it was cut at its bound)"
-                                    : "no such request is held, or it is one you may not see" };
+      let r = null;
+      try { r = byId.requestById({ request: id, viewer }); } catch { r = null; }
+      if (!r) return { request: id, outcome: null, why: "no such request is held, or it is one you may not see" };
       return { request: id, outcome: { state: r.state, code: r.code ?? null, capture_sha: r.capture_sha ?? null,
                                        captured_at: r.captured_at ?? null } };
     });
@@ -1064,8 +1082,7 @@ export class Intent {
     if ((act === "defer" || act === "dismiss") && !why)
       return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
     if (act === "adopt" && !proj)
-      return refuseNoSuchProject("a proposal is adopted into a named project's objective; name the project. "
-                     + "Nothing was written.", { project: null });
+      return noSuchProject(null);
     if (proj && !isMachine) {
       const denied = this.membership.projectAuthority(proj.id, author, "joined", `triage:${act}`);
       if (denied) return denied;
@@ -1231,15 +1248,8 @@ export class Intent {
 }
 
 /* DEC-49: a code several acts answer is minted at one site, its own function here, which builds the refusal whole
-   from its row (D-484's shape); each act relays it with its own detail. */
-function refuseNoSuchProject(detail, extra) {
-  /* DEC-49 REGION is-project-seen */
-  const row = INTENT_CHECKS.NO_SUCH_PROJECT;
-  return { ok: false, reason: "NO_SUCH_PROJECT", code: "NO_SUCH_PROJECT", check: row.check,
-           translation: row.translation, detail, ...(extra || {}) };
-  /* END DEC-49 REGION is-project-seen */
-}
-
+   from its row (D-484's shape); each act relays it with its own detail. `NO_SUCH_PROJECT` is not one of them: it is
+   one condition across modules, answered through membership's `noSuchProject` (its R78; N208, K275). */
 function refuseNoSuchGoal(detail, extra) {
   /* DEC-49 REGION is-goal-held */
   const row = INTENT_CHECKS.NO_SUCH_GOAL;

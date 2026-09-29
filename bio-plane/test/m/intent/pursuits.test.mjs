@@ -193,6 +193,7 @@ test("R14 pursuitOf answers the goals and objectives opened under the aspiration
   w.i.registerSource("monitoring", () => [{ key: "fetch-1", kind: "capture-failed", grade: null,
     basis: { capture_requests: ["CREQ-1", "CREQ-2"] }, instances: [{ url: "https://example.org/a" }] }]);
   w.requests.push({ request: "CREQ-1", state: "captured", code: null, capture_sha: "abc", captured_at: w.clock.now });
+  w.requests.push({ request: "CREQ-2", state: "refused", code: "HTTP_404", capture_sha: null, captured_at: null, seenBy: [V("alice")] });
   const open = w.i.proposals({ project: w.P, viewer: V("bob") }).proposals;
   const prog = open.find((p) => p.source === "progressions");
   const mon = open.find((p) => p.source === "monitoring");
@@ -205,9 +206,20 @@ test("R14 pursuitOf answers the goals and objectives opened under the aspiration
   assert.deepEqual(p.triaged.map((t) => [t.proposal, t.act, t.reason]), [[prog.key, "defer", "After the audit."], [mon.key, "dismiss", "Known outage."]]);
   assert.deepEqual(p.capture_requests[0], { request: "CREQ-1", outcome: { state: "captured", code: null, capture_sha: "abc", captured_at: w.clock.now } });
   assert.equal(p.capture_requests[1].request, "CREQ-2");
-  assert.equal(p.capture_requests[1].outcome, null, "a request the read does not answer has no outcome, never a guess");
+  assert.equal(p.capture_requests[1].outcome, null, "a request the viewer may not see has no outcome, never a guess");
   assert.match(p.capture_requests[1].why, /not held|may not see/);
-  assert.deepEqual(w.calls.requests.at(-1), { viewer: V("bob"), limit: 1000 }, "read under the viewer's sight");
+  /* N291: each named request is one read by key (capture-requests R43) under the viewer's sight, never the bounded list */
+  assert.deepEqual(w.calls.requestById.slice(-2), [{ request: "CREQ-1", viewer: V("bob") }, { request: "CREQ-2", viewer: V("bob") }]);
+  assert.equal(w.calls.requests.length, 0, "the bounded list is not read");
+  const alice = w.i.pursuitOf({ aspiration: a, viewer: V("alice") });
+  assert.deepEqual(alice.capture_requests[1], { request: "CREQ-2", outcome: { state: "refused", code: "HTTP_404", capture_sha: null, captured_at: null } },
+                   "exact for a viewer who may see it");
+  /* past any bound of the list: a request is answered exactly however many others are held */
+  for (let n = 0; n < 1100; n++) w.requests.unshift({ request: `CREQ-X${n}`, state: "requested" });
+  assert.deepEqual(w.i.pursuitOf({ aspiration: a, viewer: V("bob") }).capture_requests[0].outcome.state, "captured");
+  /* an unknown one reads as not held */
+  w.requests.length = 0;
+  assert.equal(w.i.pursuitOf({ aspiration: a, viewer: V("bob") }).capture_requests[0].outcome, null);
   assert.deepEqual(p.dead_ends.map((d) => d.note), ["No index exists."]);
   assert.ok(!/progress|percent|complet|share/i.test(Object.keys(p).join(" ")), "no completion figure");
   assert.equal(w.i.pursuitOf({ aspiration: "ASP-2026-0099", viewer: V("bob") }).reason, "NO_SUCH_ASPIRATION");
