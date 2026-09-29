@@ -85,7 +85,7 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - **R31** No place is named in this module's behaviour or outward text; local facts come only through R12.
 - **R41** The runtime observations and the probe trail (R33–R40) are measurements of the runtime, not of the corpus: `purge` never clears them, in either form (declared to record-core exempt, record-core R21, R23).
 - **R42** At start this module registers with `capture` (its R55) a listener that records each walk's compute measurement through R33 (`metric` `capture_work_bytes`, the value as `ms` until R34's unit is recorded, the detail as given). *(met in substance: `legacy-store` registers this listener on capture's R55 today, and this module takes the registration at its extraction; the store route `recordruntime` is left with no product caller and goes with it)*
-- **R43** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349). *(not yet met: N339, N349)*
+- **R43** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349).
 
 ### Satisfies
 

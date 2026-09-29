@@ -30258,6 +30258,10 @@ function noSha(detail = null) {
 }
 
 // src/capture/checks.mjs
+var checks_exports7 = {};
+__export(checks_exports7, {
+  CAPTURE_CHECKS: () => CAPTURE_CHECKS
+});
 var at3 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
@@ -33909,8 +33913,8 @@ function registerChecks({ files, fm, elided = null }) {
 }
 
 // src/provenance/checks.mjs
-var checks_exports7 = {};
-__export(checks_exports7, {
+var checks_exports8 = {};
+__export(checks_exports8, {
   REGISTER_ENTRY_CHECKS: () => REGISTER_ENTRY_CHECKS
 });
 var REGISTER_ENTRY_CHECKS = {
@@ -36071,8 +36075,8 @@ function provenanceOf(host, deps) {
 }
 
 // src/observation-log/checks.mjs
-var checks_exports8 = {};
-__export(checks_exports8, {
+var checks_exports9 = {};
+__export(checks_exports9, {
   LEAD_CHECKS: () => LEAD_CHECKS2,
   OBSERVATION_CHECKS: () => OBSERVATION_CHECKS,
   OBSERVATION_CHECK_KEYS: () => OBSERVATION_CHECK_KEYS
@@ -45984,8 +45988,8 @@ WHERE ${gate.sql}`,
 }
 
 // src/retrieval/checks.mjs
-var checks_exports9 = {};
-__export(checks_exports9, {
+var checks_exports10 = {};
+__export(checks_exports10, {
   MEANING_READ_CHECKS: () => MEANING_READ_CHECKS,
   SELECTION_CHECKS: () => SELECTION_CHECKS
 });
@@ -52936,8 +52940,8 @@ var WITHDRAWAL_COLUMNS = Object.freeze([
 ]);
 
 // src/entities/checks.mjs
-var checks_exports10 = {};
-__export(checks_exports10, {
+var checks_exports11 = {};
+__export(checks_exports11, {
   ENTITY_CHECKS: () => ENTITY_CHECKS,
   IDSPACE_CHECKS: () => IDSPACE_CHECKS,
   idspaceRefusal: () => idspaceRefusal
@@ -56973,8 +56977,8 @@ function migrateProgressions(sql) {
 }
 
 // src/progressions/checks.mjs
-var checks_exports11 = {};
-__export(checks_exports11, {
+var checks_exports12 = {};
+__export(checks_exports12, {
   DISPOSITIONS: () => DISPOSITIONS,
   GENERIC_CODES: () => GENERIC_CODES,
   PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
@@ -58526,8 +58530,8 @@ function progressionsOf(host, deps) {
 }
 
 // src/bias/checks.mjs
-var checks_exports12 = {};
-__export(checks_exports12, {
+var checks_exports13 = {};
+__export(checks_exports13, {
   BIAS_BAR_PHRASING: () => BIAS_BAR_PHRASING,
   BIAS_CHECKS: () => BIAS_CHECKS2,
   BIAS_STATEMENT_KINDS: () => BIAS_STATEMENT_KINDS,
@@ -60316,8 +60320,8 @@ CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candida
 `;
 
 // src/contradiction/checks.mjs
-var checks_exports13 = {};
-__export(checks_exports13, {
+var checks_exports14 = {};
+__export(checks_exports14, {
   CONTRADICTION_CANDIDATE_CHECKS: () => CONTRADICTION_CANDIDATE_CHECKS,
   CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS
 });
@@ -61197,8 +61201,8 @@ function contradictionOps(c, url, body) {
 }
 
 // src/ai-runs/checks.mjs
-var checks_exports14 = {};
-__export(checks_exports14, {
+var checks_exports15 = {};
+__export(checks_exports15, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -67714,8 +67718,8 @@ function migrateCaptureRequests(sql) {
 }
 
 // src/capture-requests/checks.mjs
-var checks_exports15 = {};
-__export(checks_exports15, {
+var checks_exports16 = {};
+__export(checks_exports16, {
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS
 });
 var CAPTURE_SOURCE_CHECKS = Object.freeze({
@@ -69005,8 +69009,8 @@ function captureRequestsOps(c, url, body) {
 }
 
 // src/intent/checks.mjs
-var checks_exports16 = {};
-__export(checks_exports16, {
+var checks_exports17 = {};
+__export(checks_exports17, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal12
 });
@@ -73623,8 +73627,8 @@ function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
 }
 
 // src/strength/checks.mjs
-var checks_exports17 = {};
-__export(checks_exports17, {
+var checks_exports18 = {};
+__export(checks_exports18, {
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
   STRENGTH_BAR_CHECKS: () => STRENGTH_BAR_CHECKS,
   VERSION_STRENGTH_CHECKS: () => VERSION_STRENGTH_CHECKS,
@@ -74793,8 +74797,8 @@ function strengthOf(host, deps) {
 }
 
 // src/reevaluation/checks.mjs
-var checks_exports18 = {};
-__export(checks_exports18, {
+var checks_exports19 = {};
+__export(checks_exports19, {
   REEVALUATION_ACT_CHECKS: () => REEVALUATION_ACT_CHECKS,
   REEVAL_POLICY_AGE_DAYS: () => REEVAL_POLICY_AGE_DAYS,
   REEVAL_SOURCES: () => REEVAL_SOURCES,
@@ -76632,8 +76636,8 @@ function delivererOf(stored) {
 }
 
 // src/publication/checks.mjs
-var checks_exports19 = {};
-__export(checks_exports19, {
+var checks_exports20 = {};
+__export(checks_exports20, {
   ATTRIBUTION_ACT_CHECKS: () => ATTRIBUTION_ACT_CHECKS,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
@@ -80956,8 +80960,8 @@ function publicationOps(p, url, body) {
 }
 
 // src/standards/checks.mjs
-var checks_exports20 = {};
-__export(checks_exports20, {
+var checks_exports21 = {};
+__export(checks_exports21, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal13
 });
@@ -81804,8 +81808,8 @@ function standardsOf(host, deps) {
 }
 
 // src/conformance/checks.mjs
-var checks_exports21 = {};
-__export(checks_exports21, {
+var checks_exports22 = {};
+__export(checks_exports22, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal14
 });
@@ -86197,8 +86201,8 @@ function migrateConsequences(sql) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports22 = {};
-__export(checks_exports22, {
+var checks_exports23 = {};
+__export(checks_exports23, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at11 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -87251,8 +87255,8 @@ function migrateFilings(sql) {
 }
 
 // src/filings/checks.mjs
-var checks_exports23 = {};
-__export(checks_exports23, {
+var checks_exports24 = {};
+__export(checks_exports24, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf4
 });
@@ -89038,8 +89042,8 @@ function migrateEscalation(sql) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports24 = {};
-__export(checks_exports24, {
+var checks_exports25 = {};
+__export(checks_exports25, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal15
 });
@@ -95536,6 +95540,11 @@ function instanceSetupStore(Base) {
     }
   };
 }
+function notAnswered(out, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+  if (out && out.refused === true && out.reply)
+    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json5(out.reply.body, out.reply.status);
+  return storeSilent2(op, out ? out.correlation : void 0);
+}
 var PUBLIC_GROUP_PROJECTIONS = Object.freeze(["instancegrouppublic", "groupidentitypublic"]);
 async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic", doAnswer2) {
   if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: void 0 };
@@ -95548,24 +95557,26 @@ async function publicInstanceGroup(env, storeName, projection = "instancegrouppu
   if (!stub) return { answered: false, result: void 0 };
   return doAnswer2(stub.fetch(`http://do/${projection}`));
 }
-async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, io) {
+  const { json: json5, doAnswer: doAnswer2 } = io;
   if (viewer) {
     const out = await doAnswer2(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/instancegroup"));
-    if (!out.answered) return storeSilent2("instancegroup");
+    if (!out.answered) return notAnswered(out, "instancegroup", io);
     return json5({ ok: true, result: out.result, store: storeName, tokenClass: cls }, 200);
   }
   const pub = await publicInstanceGroup(env, storeName, "instancegrouppublic", doAnswer2);
-  if (!pub.answered) return storeSilent2("instancegroup");
+  if (!pub.answered) return notAnswered(pub, "instancegroup", io);
   return json5({ ok: true, result: pub.result, store: storeName }, 200);
 }
-async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, io) {
+  const { json: json5, doAnswer: doAnswer2 } = io;
   const out = await doAnswer2(env.STORE.get(env.STORE.idFromName(storeName)).fetch(viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
-  if (!out.answered) return storeSilent2("groupidentity");
+  if (!out.answered) return notAnswered(out, "groupidentity", io);
   return json5({ ok: true, result: out.result, store: storeName, ...viewer ? { tokenClass: cls } : {} }, 200);
 }
-async function bootstrapReport(env, fp, { members = false, stub, json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function bootstrapReport(env, fp, { members = false, stub, json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2, storeRefusal: storeRefusal2 }) {
   const out = await doAnswer2(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
-  if (!out.answered) return storeSilent2("bootstrap");
+  if (!out.answered) return notAnswered(out, "bootstrap", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   return json5({
     ok: true,
     service: "bio-plane",
@@ -95630,11 +95641,13 @@ async function selftest(env, storeName, { cls = null, viewer = "", scratch = "sc
   return json5(out, out.ok ? 200 : 500);
 }
 var RUNTIME_ASYMMETRY = "a refused subrequest throws and is caught, so the subrequest ceiling is known by having hit it. Exceeding the CPU limit TERMINATES the isolate, so no run can report its own death: consumption is measured on every run and the ceiling is found by op=cpuprobe, whose checkpoints survive the kill.";
-async function runtimeOp(stub, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function runtimeOp(stub, io) {
+  const { json: json5, doAnswer: doAnswer2 } = io;
   const obsOut = await doAnswer2(stub.fetch("http://x/runtimeobservations"));
   const probeOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
   const limOut = await doAnswer2(stub.fetch("http://x/capturelimit?runtime=subrequests"));
-  if (!obsOut.answered || !probeOut.answered || !limOut.answered) return storeSilent2("runtime");
+  const miss = [obsOut, probeOut, limOut].find((o) => !o.answered);
+  if (miss) return notAnswered(miss, "runtime", io);
   return json5({
     ok: true,
     measured: obsOut.result,
@@ -95643,9 +95656,11 @@ async function runtimeOp(stub, { json: json5, storeSilent: storeSilent2, doAnswe
     asymmetry: RUNTIME_ASYMMETRY
   });
 }
-async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = null, probe = cpuProbe } = {}, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = null, probe = cpuProbe } = {}, io) {
+  const { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 } = io;
   const beforeOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
-  if (!beforeOut.answered || !beforeOut.result) return storeSilent2("cpuprobe");
+  if (!beforeOut.answered) return notAnswered(beforeOut, "cpuprobe", io);
+  if (!beforeOut.result) return storeSilent2("cpuprobe");
   const iters = Math.max(1e5, Number(iterations) || 2e6);
   const budget = Math.max(50, Number(budget_ms) || 2e4);
   const id = typeof run === "string" && run ? run : `${(/* @__PURE__ */ new Date()).toISOString().slice(0, 19)}Z~${crypto.randomUUID().slice(0, 8)}`;
@@ -95655,7 +95670,8 @@ async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = nul
     body: JSON.stringify(body)
   }));
   const started = await post("cpuprobestart", { run: id, iterations: iters, budgetMs: budget });
-  if (!started.answered || !started.result || started.result.recorded !== true) return storeSilent2("cpuprobe");
+  if (!started.answered) return notAnswered(started, "cpuprobe", io);
+  if (!started.result || started.result.recorded !== true) return storeSilent2("cpuprobe");
   let confirmed = 0;
   const UNCONFIRMED = Symbol("unconfirmed");
   let r;
@@ -95678,7 +95694,7 @@ async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = nul
   if (!complete) r = { completed: confirmed, elapsed_ms: null, reason: null };
   if (complete) await post("cpuprobeend", { run: id, completed: r.completed, elapsedMs: r.elapsed_ms, reason: r.reason });
   const afterOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
-  if (!afterOut.answered) return storeSilent2("cpuprobe");
+  if (!afterOut.answered) return notAnswered(afterOut, "cpuprobe", io);
   return json5({
     ok: true,
     run: { ...r, id },
@@ -96420,8 +96436,8 @@ async function publishedRoutes({ op, url, env, stub }) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports25 = {};
-__export(checks_exports25, {
+var checks_exports26 = {};
+__export(checks_exports26, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS2,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY2,
@@ -98064,8 +98080,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/citation/checks.mjs
-var checks_exports26 = {};
-__export(checks_exports26, {
+var checks_exports27 = {};
+__export(checks_exports27, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -101185,8 +101201,8 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 `;
 
 // src/queue/checks.mjs
-var checks_exports27 = {};
-__export(checks_exports27, {
+var checks_exports28 = {};
+__export(checks_exports28, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
@@ -105299,8 +105315,8 @@ function mintRatio({ minted = 0, cited = 0 } = {}) {
 }
 
 // src/run-productions/checks.mjs
-var checks_exports28 = {};
-__export(checks_exports28, {
+var checks_exports29 = {};
+__export(checks_exports29, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS2,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -106372,8 +106388,8 @@ function runProductionsOps(p, url, body) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports30 = {};
+__export(checks_exports30, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
 });
@@ -108336,8 +108352,8 @@ function caseAuthoringOps(c, url, body) {
 }
 
 // src/review/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
+var checks_exports31 = {};
+__export(checks_exports31, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at16 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -112561,8 +112577,8 @@ Mitigation: ${mit}
 };
 
 // src/control-plane/checks.mjs
-var checks_exports31 = {};
-__export(checks_exports31, {
+var checks_exports32 = {};
+__export(checks_exports32, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   BOOTSTRAP_CHECKS: () => BOOTSTRAP_CHECKS,
@@ -113028,8 +113044,15 @@ async function dispatch(req, store) {
 var Store2 = class extends Store {
   static PROJECT_NAMING_READS = PROJECT_NAMING_READS;
   static PROJECT_NAMING_READS_NOT = PROJECT_NAMING_READS_NOT;
+  constructor(ctx, env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
+  }
   async fetch(req) {
-    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx) });
+    return dispatch(req, {
+      routes: (url, body) => ({ ...this.routes(url, body), ...instanceSetupOps(instanceSetupOf(this.ctx, this.env), url, body) }),
+      membership: () => membershipOf(this.ctx)
+    });
   }
 };
 
@@ -115569,7 +115592,7 @@ async function aiCredentialPresented(url, env) {
   if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex12(t)}`));
-  if (!out.answered) return { silent: "aicredentiallook" };
+  if (!out.answered) return { silent: "aicredentiallook", correlation: out.correlation };
   return { cred: out.result?.found ? out.result.credential : null };
 }
 function aiConfinementDeclaration(confinedTo) {
@@ -115708,7 +115731,7 @@ async function caseReader(url, env, storeName, presentedAi) {
     let cred = presentedAi === void 0 ? void 0 : presentedAi;
     if (cred === void 0) {
       const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex12(t)}`));
-      if (!aOut.answered) return { silent: "aicredentiallook" };
+      if (!aOut.answered) return { silent: "aicredentiallook", correlation: aOut.correlation };
       cred = aOut.result?.found ? aOut.result.credential : null;
     }
     const scoped = cred ? aiTaskScope(cred, "index", OPS2.index) : null;
@@ -115716,7 +115739,7 @@ async function caseReader(url, env, storeName, presentedAi) {
   }
   if (/^[0-9a-f]{64}$/.test(t)) {
     const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
-    if (!sOut.answered) return { silent: "session" };
+    if (!sOut.answered) return { silent: "session", correlation: sOut.correlation };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
     return { viewer: resolveSession(sess).viewer, cls: sess.role === "admin" ? "admin" : "member" };
@@ -115729,41 +115752,42 @@ var json4 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), nul
 });
 var MODULE_CHECK_FILES = [
   checks_exports,
-  checks_exports14,
-  checks_exports12,
-  checks_exports5,
   checks_exports15,
-  credentials_exports,
-  checks_exports29,
-  checks_exports26,
-  checks_exports21,
-  themes_exports,
-  checks_exports22,
-  extent_exports,
   checks_exports13,
-  checks_exports31,
-  checks_exports10,
-  checks_exports24,
-  checks_exports6,
-  checks_exports23,
-  inquiry_exports,
+  checks_exports5,
   checks_exports16,
-  checks_exports3,
-  checks_exports8,
-  checks_exports11,
-  checks_exports4,
+  credentials_exports,
   checks_exports7,
-  checks_exports19,
-  checks_exports27,
-  checks_exports25,
-  checks_exports2,
-  checks_exports18,
-  checks_exports9,
   checks_exports30,
-  checks_exports28,
-  skilldoctrine_exports,
+  checks_exports27,
+  checks_exports22,
+  themes_exports,
+  checks_exports23,
+  extent_exports,
+  checks_exports14,
+  checks_exports32,
+  checks_exports11,
+  checks_exports25,
+  checks_exports6,
+  checks_exports24,
+  inquiry_exports,
+  checks_exports17,
+  checks_exports3,
+  checks_exports9,
+  checks_exports12,
+  checks_exports4,
+  checks_exports8,
   checks_exports20,
-  checks_exports17
+  checks_exports28,
+  checks_exports26,
+  checks_exports2,
+  checks_exports19,
+  checks_exports10,
+  checks_exports31,
+  checks_exports29,
+  skilldoctrine_exports,
+  checks_exports21,
+  checks_exports18
 ];
 var DEC49_ROWS = null;
 function dec49Row(code) {
@@ -116059,7 +116083,7 @@ function makeFetch(hooks = {}) {
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
     const presentedAi = await aiCredentialPresented(url, env);
-    if (presentedAi.silent) return storeSilent(presentedAi.silent);
+    if (presentedAi.silent) return storeSilent(presentedAi.silent, presentedAi.correlation);
     const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
     if (confinedNamespace) return confinedNamespace;
     const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
@@ -116110,7 +116134,7 @@ function makeFetch(hooks = {}) {
           q6.set("secretSha", await sha256Hex12(url.searchParams.get("secret") || ""));
         } else {
           const reader = await caseReader(url, env, "bio", presentedAi.cred);
-          if (reader.silent) return storeSilent(reader.silent);
+          if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q6.set("viewer", reader.viewer);
         }
         let commentBody = null;
@@ -116145,7 +116169,7 @@ function makeFetch(hooks = {}) {
       if (t && /^[0-9a-f]{64}$/.test(t)) {
         const st = env.STORE.get(env.STORE.idFromName("bio"));
         const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
-        if (!sOut.answered) return storeSilent("session");
+        if (!sOut.answered) return storeSilent("session", sOut.correlation);
         const sess = sOut.result?.session;
         if (sess) {
           const kind = sess.role === "admin" ? "admin" : "member";
@@ -116708,7 +116732,7 @@ function makeFetch(hooks = {}) {
         }) }
       )));
       if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
-      if (!minted.answered) return storeSilent("aicredentialmint");
+      if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
       if (!minted.result || minted.result.ok !== true)
         return json4({ ok: false, ...minted.result || {}, op, store: storeName, tokenClass: cls }, 403);
       return json4({ ok: true, result: {
@@ -116728,7 +116752,7 @@ function makeFetch(hooks = {}) {
       inner.searchParams.set("secretSha", await sha256Hex12(secret));
       const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
-      if (!issued.answered) return storeSilent("reviewgrant");
+      if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
         return json4({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls }, 403);
       return json4({ ok: true, result: {
