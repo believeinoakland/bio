@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
-import { consequencesOwns, CONSEQUENCES_TABLES, AFFECTED_KINDS, UNITS } from "../../../src/consequences/index.mjs";
+import { consequencesOwns, CONSEQUENCES_TABLES, CONSEQUENCES_CHECKS, AFFECTED_KINDS, UNITS } from "../../../src/consequences/index.mjs";
 
 const S = "STD-2026-0001-law";
 const S2 = "STD-2026-0002-other";
@@ -42,6 +42,8 @@ test("R1: a valid part lands; each refusal holds in the requirement's order, wit
     const r = w.c.consequenceRecord({ ...w.base, ...over });
     assert.equal(r.ok, false, code);
     assert.equal(r.reason, code, `${code}: ${JSON.stringify(r)}`);
+    assert.deepEqual([r.code, r.check, r.translation], [code, CONSEQUENCES_CHECKS[code].check, CONSEQUENCES_CHECKS[code].translation],
+                     `${code} carries its own row (DEC-49)`);
     assert.deepEqual(w.snapshot(), before, `${code} writes nothing`);
   }
   /* NO_SUCH_DETERMINATION: an invisible determination is the same answer as an absent one. */

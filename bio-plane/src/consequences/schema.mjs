@@ -14,7 +14,8 @@ export const CONSEQUENCES_SCHEMA = `
 -- weakest link; op the computation. rationale and rests_on are an assessment's;
 -- undetermined_why an undetermined part's reason code and words. causation is
 -- the inquiry named (or null) and causation_state what it was when recorded
--- (established or unproven), causation_why the words. machine is 1 for a
+-- (established or unproven; not_applicable for a zero measure, N257),
+-- causation_why the words. machine is 1 for a
 -- machine's computed part (R2). supersedes names the part this one revises
 -- (R6), at most once (UNIQUE), with its reason.
 CREATE TABLE IF NOT EXISTS consequence_parts (
