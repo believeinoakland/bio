@@ -34,3 +34,7 @@ Then `readAnswer` and `jsonAnswer` in `ops.mjs` can go (a later extraction job).
 - Old suites calling these handlers (for the report above): `refusal-wire` 1/1, `acquire` 1/1, `pdfstructure-op` 0/1 (N347, legacy-tests'). `fleetbundles.test.mjs`: bio-plane stale (above).
 
 Size (session_019uPfohVPcH6PyD4QySrBc3): test runs 9, module lines 3,534
+
+## J1 · COMPLETE
+
+Complete at d00a061158 (record's Completion section). N347: R31 re-anchored (pdfstructure.test.mjs:55, :68 read EVIDENCE_NOT_HELD); no code change needed. N339+N349 (R64): ops.mjs relays take doAnswer and storeRefusal when handed, relay a store refusal at its status, silence with the correlation; a local reader keeps the same answer until legacy-index hands doAnswer, storeRefusal (and json for acquireReadingOp) at layer 11 (call sites :682, :696 listed). Marks to strike: R31 (N347), R64 (N339, N349; production read through doAnswer at L11). No rows. Stale: bio-plane/dist bundle. legacy-tests: pdfstructure-op.test.mjs:126 (N347, already listed). Tests 91/91; format, architecture, coverage (59/59), ownership: 0 failures.
