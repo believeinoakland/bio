@@ -1,9 +1,13 @@
-"""Render INVENTORY.md to inventory.html (the page shown to Bob). Needs the `markdown` package:
-PYTHONPATH=<dir with markdown> python3 build_view.py"""
-import pathlib, re, markdown
+"""Render a design note to the HTML page shown to Bob. Needs the `markdown` package:
+PYTHONPATH=<dir with markdown> python3 build_view.py [INVENTORY|ACTION-PLAN]"""
+import pathlib, re, sys, markdown
 
+PAGES = {"INVENTORY": ("inventory.html", "Action Layer Inventory"),
+         "ACTION-PLAN": ("action-plan.html", "The Action Plan")}
 here = pathlib.Path(__file__).parent
-src = (here / "INVENTORY.md").read_text()
+name = sys.argv[1] if len(sys.argv) > 1 else "INVENTORY"
+out, title = PAGES[name]
+src = (here / f"{name}.md").read_text()
 body = markdown.markdown(src, extensions=["tables"])
 
 # The verdict column: a chip for each verdict's first bold phrase.
@@ -15,8 +19,7 @@ body = body.replace("<table>", '<div class="tw"><table>').replace("</table>", "<
 # The status paragraph becomes the lede.
 body = body.replace("<p><strong>Status</strong> · ", '<p class="lede"><span class="eyebrow">Status</span> ', 1)
 
-page = """<title>Action Layer Inventory</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+page = f"<title>{title}</title>\n" + """<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
 <style>
 /* One reading column; tables break out to a wider measure. Tokens from build/layers-view.html. */
@@ -59,5 +62,5 @@ td:first-child{min-width:150px}
 </style>
 <div class="wrap">
 """ + body + "\n</div>\n"
-(here / "inventory.html").write_text(page)
+(here / out).write_text(page)
 print("wrote", len(page), "bytes")
