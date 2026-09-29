@@ -39,3 +39,7 @@
 - `ownership` (against `tranche/T13`): 5 files, legacy-store and legacy-checks 0 lines added or removed, 0 failures.
 
 Size (session_01P7YNYC4HwY5uqrXFyjyZpM): test runs 7, module lines 1010
+
+## J1 · COMPLETE
+
+N322 applied as R27: draft's new draft and grant answer MINT_EXHAUSTED through record-core.mintExhausted (prefix DRAFT or RVG, row C-59.6), byte-identical and writing nothing. C-87.12 is retired from REVIEW_COPY_CHECKS and its number is not reused: awaiting stamp: C-87.12 retired. Module tests 30/30, no todo. format, architecture, coverage and ownership all 0 failures. For you: (1) strike R27's not-yet-met mark, and R23 should read C-87.1–C-87.11 (both outside my scope); (2) legacy-tests: d448 now needs its family re-pinned from 12 to 11 (red here, green on base); the DEC-49 guard goes from 16 failures to 13 (the identical-translation failure is gone, and regions and refusalsJudged are back at floor); (3) gate.mjs comments 304-305 and 321 still say C-87.12 retires later; (4) bio-plane.bundled.mjs is stale and was not rebuilt; (5) no hits in civicos-ui/ or affordances. Details are in the record's Completion section.
