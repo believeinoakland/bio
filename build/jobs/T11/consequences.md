@@ -31,3 +31,7 @@
 - `civicos-ui/check-refusal-codes.mjs`: 49 failures (64 before), none of them this module's own; the four cross-module ones above name it.
 
 Size (session_014niSbgTxMSArkDJwhCLLE4): test runs 14, module lines 1034
+
+## J1 · COMPLETE
+
+Job complete (record § Completion, pushed). N257: a zero measure (value 0 or range [0,0], computed or assessed) answers causation not_applicable; consequencesOf and addressed do not count it unproven, so an addressed no-consequence part reads addressed (tested; the literal K249 (3) arm replaced). N297: two translations lengthened (C-114.10, .17); every code minted at one site, its row's where naming the helper (K231); the guard names no arm C, translation or in-module arm G failure of consequences (64 -> 49 over the tree). N296: all 15 not-yet-met marks hold (R1-R14 and the Status sentence), listed with their tests for you to strike. Also: conformance defaults to conformanceOf(host); an unseen causation inquiry is never named (R13); fixture workerd-shaped (K313, K316). For BOB: R12's wording lacks N257's not_applicable; C-114 rows changed (where of .1 .3 .12-.17, translations .3 .10 .12 .17) for promotion R34's stamp; legacy-tests re-pins the guard (codesChecked 864 < 866, return outcomes 259 < 261); cross-module arm G left (NO_SUCH_DETERMINATION conformance's helper, NOT_NONCOMPLIANT with escalation, NOT_A_PARTICIPANT, ALREADY_SUPERSEDED with conformance; K275/N217); plane bundle stale. Tests 24/0; filings 33/0, escalation 28/0, actions 30/0; format, architecture, coverage (14/14), ownership: 0 failures.
