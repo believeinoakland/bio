@@ -21,7 +21,7 @@ Opened by BOB #62, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ b1febba320, T
 - **publication** (layer 8) · N300 (R44–R47 `projectStage`, K379); N308 (R38 by a cursor, K380); N315 (R42's per-capture and per-page bounds, K380). **ratification** (layer 8) · N308 (R5 reads R38 through its cursor). **review** (layer 8) · N306 (`MINT_EXHAUSTED` rows).
 - **standards** (layer 9) · N309 (R17 `noSuchStandard`). **conformance** · N309, N312 (R19 `noSuchDetermination`, R20 `determinationSuperseded`; renames). **consequences** · N309 (through R19/R20; `CONSEQUENCE_NOT_NONCOMPLIANT`, `CONSEQUENCE_NOT_A_PARTICIPANT`). **actions** · N311 (R31's entry cursor), N312 (R8 through conformance R20). **escalation** · N309, N312 (through R19/R20; `ESCALATION_NOT_A_PARTICIPANT`, `EDGE_NOT_PROPOSED`). All worded K380 (`draft-T12-wordings.md`'s table); membership and intent unchanged.
 - **monitoring** (layer 10) · N313 (`openEnvelope` goes, reading `doAnswer` through `monitorOp`, K372); N314 (R30's pause refuses a non-administrator, K380).
-- **agent-worker** (layer 6) · N304 (control arms re-anchored).
+- **agent-worker** (layer 6) · N304 (control arms re-anchored). **skills** (layer 6) · `test/m/skills/doctrine.test.mjs` R15's `keyedNumbers()` also reads ai-runs' own `AI_RUN_CHECKS`, where C-22.7 now lives (N299's consequence, LEGACY-CHECKS #7 J1; K381).
 - **legacy-index** (layer 11) · N314 (the Worker opens `monitorpause` to every member session, stamping `actor`). **affordances** (layer 11) · every code K380 renames that its `reasoned`, `JUSTIFICATION_REFUSALS` or `NON_ACTS` lists name (K370's lesson).
 - Met in T11, not carried: N307 (K369), N310 (K370).
 
