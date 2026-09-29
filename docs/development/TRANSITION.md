@@ -149,6 +149,8 @@ Each: what it is, and how the plan handles it.
 
 ## 6. Handoff (BOB #67 to BOB #68, 2026-09-29 ~23:50 UTC)
 
+**BOB #68 took over 23:51 UTC** (depth 1): LEGACY-TESTS #12 `session_019CY4XgfPJPBSXghWdbPkGG` started; backstop `trig_01E6qT97XrCTN6noS61BPVtw`, `WATCH #68` `trig_011eiynN7ivo3KhnLorra24F`. BOB #67's backstop deleted. **NEEDS BOB: archive BOB #67 (`session_019iV4d3YVE4NGg67gtwYeAT`) and delete `WATCH #67` (`trig_01WjYU7hQZ5Rnxg5zKrjAzcA`, into ROOT), both refused in BOB #68 by the auto-mode safety check; approval to type in BOB #68's session.**
+
 Replaced at each handoff; the progress log (§4) is the history.
 
 **Where things stand.** **T14 is open** on `tranche/T14` (`build/plan/current.md`; rulings K460–K476). Layers 1–11 are closed and merged (K458, K460, K465–K468, K470, K471, K474, K476); every job session archived and its row in `build/metrics/T14.csv`; `test/m/` whole on the tranche 2,830/0, 15 todo; bundles fleetbundles 96/0. **Only legacy-tests remains** (K420, K427: alone, last). Its START is ready and complete: `build/plan/starts-T14/legacy-tests.txt` (K457 first; K458's re-pins; promotion's 1.44.0 re-pins; every layer's old-battery reds and DEC-49 guard ratchets, each named with its layer; T15's `awaiting stamp` rows: C-118.1 re-key, C-26.20 and C-111.16 retired, C-19.2 and the gate's composition, K464). Armed: backstop `trig_012KJDjQCdP6YsyVdBmbfCS3` (into BOB #67; re-create yours), `WATCH #67 (T14)` `trig_01WjYU7hQZ5Rnxg5zKrjAzcA` into ROOT (delete once BOB #67 is archived; create yours).
