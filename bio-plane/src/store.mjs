@@ -2333,7 +2333,7 @@ export class Store extends DurableObject {
          opening one. A COUNT AND NOTHING ELSE — what a group's declared bias
          SAYS is the group's business and travels with their published work,
          not an operator surface, the same line queueState and aiRuns draw. */
-      biasStatements: biasOf(this.ctx).counts(hid).biasStatements, biasAdoptions: biasOf(this.ctx).counts(hid).biasAdoptions,
+      biasStatements: n("bias_statements", "bundle_id"), biasAdoptions: n("bias_adoptions", "bundle_id", "scope_id"),
       /* REC-63 / DEC-56: the standing route markers, reported so a whole-store
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
