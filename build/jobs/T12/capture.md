@@ -1,3 +1,26 @@
 # capture (T12)
 
 **Status** · session_0195mhRMLSwyJgRodhjV2CEg · depth 2 · WORKING · handled B1
+
+## Completion
+
+**Applied.** N285 (capture's share, B1): R63 `evidenceAbsent(sha, store, extra?)` in `src/capture/ops.mjs`, the one site of "no evidence object is held under a digest". It answers `{status: 404, body}`, the body `{ok: false, reason: "NOT_FOUND", code: "NOT_FOUND", check, translation, sha256, store}` with a caller's `extra` fields beside and never over them (the shape `archiveLookup` already answers, so the control plane's envelope sends it); it writes nothing and never throws (a hostile `extra` is dropped). Its row is in capture's own new table, `src/capture/checks.mjs` `CAPTURE_CHECKS.NOT_FOUND`: **C-118.1** (the evidence store had no family; C-118 is the next free family number, K107 (3), K174), `where` `src/capture/ops.mjs evidenceAbsent > is-evidence-held`, the worded translation. R21's get answers through it, keeping `tokenClass` as its extra. Extraction (R31) can import it from `../capture/ops.mjs`, which it already imports from.
+
+**Deferred.** None of my entry. One flaw in this module left for a wording (below, 2).
+
+**Found (reported to BOB).**
+1. The plane bundle `bio-plane/dist/bio-plane.bundled.mjs` is stale: `src/capture/ops.mjs` is one of its inputs, and `src/capture/checks.mjs` is new. Not rebuilt (mechanics §14). The fleet bundles are unaffected (fleetbundles all PASS).
+2. capture's own `inboxGet` / `inboxResolve` (`src/capture/index.mjs` ~365, ~370) answer an unknown knock as a bare `NOT_FOUND` with no row: a different condition (no such knock) under the same code, which K275 says is renamed with its own row. R32 names no code for it, so a code and row need a wording (e.g. `NO_SUCH_KNOCK`); the legacy-ui keys would follow. Not changed without that wording.
+3. Legacy tests: `bio-plane/test/pdfstructure-op.test.mjs` "identical to op=capture's own 404 body" now fails (28/1; 29/0 on `tranche/T12`): R21's absent body now carries R63's `code`, `check`, `translation`, and op=pdfstructure's does not until extraction's R31 answers through `evidenceAbsent` (layer 4, N285). It passes again then; if not, it is legacy-tests'.
+4. DEC-49 guard (`civicos-ui/check-refusal-codes.mjs --strict`), diffed against `tranche/T12` @ c09f40fb8a's tree: no new failure kind; ratchets moved by exactly this job's one family, row and region: families 99→100, rows 783→784, governedSites 494→495, regions 455→456, regionLines 5462→5468, refusalsJudged 857→858, outcomeReturns 257→258, codesChecked 881→883 (legacy-tests' re-pin, layer 11). Arm G's `NOT_FOUND` stays at 7 sites (the old op=capture literal replaced by R63's); the guard files `NOT_FOUND` under progressions' `PROGRESSION_CHECKS.NOT_FOUND` row, a different condition of the same code (K275's rename, progressions' side).
+5. `build/requirements/capture.md` R63's "(not yet met: N285)" mark can be struck (BOB's file).
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/capture/`: tests 69, pass 69, fail 0 (5 new, `evidence-absent.test.mjs`: R63 ×5, R21 through R63).
+- `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures.
+- `node checks/architecture.mjs … capture`: 11 product files, 49 relative imports; 0 failures.
+- `node checks/coverage.mjs … capture`: 63 of 63 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs … capture tranche/T12`: legacy-store 0/0, legacy-index 0/0; 0 failures.
+- Also: `bio-plane/test/refusal-wire.test.mjs` 42 pass, 0 fail; `bio-plane/test/fleetbundles.test.mjs` all PASS; `pdfstructure-op.test.mjs` 28/1 (item 3).
+
+Size (session_0195mhRMLSwyJgRodhjV2CEg): test runs 9, module lines 3053
