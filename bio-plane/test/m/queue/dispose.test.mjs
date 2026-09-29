@@ -2,7 +2,7 @@
    refusals (R27), the class bridge (R28), and the catalogued no-scope refusal (R29). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world } from "./world.mjs";
+import { world, NOW } from "./world.mjs";
 import { QUEUE_ACT_CHECKS } from "../../../src/queue/index.mjs";
 import { notADisposition } from "../../../src/progressions/index.mjs";
 
@@ -46,11 +46,12 @@ test("R27: the project arm's refusals in order, as progressions R21 words the sh
   assert.equal(w.all(`SELECT count(*) c FROM finding_dispositions`)[0].c, 0, "a refusal writes nothing");
 });
 
-test("R27: success keeps one decision per (project, finding), replaced on re-decision; no bundle is written", () => {
+test("R27: success keeps one decision per (project, finding), replaced on re-decision, at the instance's clock; no bundle is written", () => {
   const w = setup();
   const bundles = w.all(`SELECT count(*) c FROM bundles`)[0].c;
   const a = pd(w, { project: "PRJ-1", finding: F, kind: "stance-changed-here-not-elsewhere", to: "deferred", reason: "later" });
   assert.deepEqual([a.ok, a.scope, a.key, a.state, a.decided_by, a.bundle], [true, "project", `PRJ-1::${F}`, "deferred", "alice", null]);
+  assert.equal(a.at, new Date(NOW).toISOString(), "stamped at the instance's clock");
   pd(w, { project: "PRJ-1", finding: F, to: "dismissed", reason: "no" });
   const rows = w.all(`SELECT * FROM finding_dispositions`);
   assert.equal(rows.length, 1);
