@@ -54,3 +54,9 @@ R45 bounds units (cells given at addresses, hidden row ranges, `text:c` spaces) 
 `text:c` spaces cost once per expansion. A cell given at N addresses expands its text N times, so its spaces cost N times.
 
 R45's wording would need both additions. If BOB prefers other rules, I will bring the code in line. Everything else in N30 does not depend on this answer.
+
+## J3 · REPORT
+
+Two items outside my module, from N30 (details in my record's Completion):
+1. **legacy-tests**: `bio-plane/test/formats-odf.test.mjs:461` pins the old R16 shape (`hRows.rows` = `[3]`). With R16's ranges it now fails 1 of 171: it gets `[{"min":3,"max":3,"visibility":"collapse"}]`. It passes on `tranche/T13`. It needs re-anchoring to R16's range shape. Not edited: it is legacy-tests' suite.
+2. **Generated artifacts made stale** (not rebuilt): `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) and `agent-worker/dist/agent-worker.bundled.mjs`. Both carry `src/odf.mjs`. The pdf-worker and ocr-worker bundles do not carry it.
