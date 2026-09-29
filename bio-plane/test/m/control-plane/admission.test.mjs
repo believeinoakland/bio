@@ -359,16 +359,15 @@ test("R16: an asserted replay is kept only for the admin class without a session
   assert.equal("replay" in promoteCalls(plain.env)[0].body, false);
 });
 
-test("gate order: R3, R4, R5, the public ops, R7–R8 with R10's session gate, R9, R11/R12, R13, R6's scope refusal, then R14 and R16 — and nothing is forwarded when a gate refuses", async () => {
+test("R28: the gates run in one order — R3, R4, R5, the public ops, R7–R8 with R10's session gate, R9, R11/R12, R13, R6's scope refusal, then R14 and R16 — and nothing is forwarded when a gate refuses", async () => {
   const { env, S, A } = world();
   const log = [];
   const hooks = defaultHooks(log);
-  /* `late`: a refusal of R14 or R16, which today runs after the op's module hook was asked (the todo below) */
-  const drive = async (req, code, late = false) => {
+  const drive = async (req, code) => {
     env.calls.length = 0; log.length = 0;
     const r = await call(env, { hooks, method: "POST", body: {}, ...req });
     assert.equal(r.json?.reason, code, `${JSON.stringify(req.params ?? {})} ${req.op}: ${r.text.slice(0, 200)}`);
-    assert.equal(opCalls(env).length + (late ? 0 : log.length), 0, "nothing forwarded and no handler ran");
+    assert.equal(opCalls(env).length + log.length, 0, "nothing forwarded and no handler ran");
     return r;
   };
   /* R3 before R4 (and before the credential is even looked up) */
@@ -407,12 +406,33 @@ test("gate order: R3, R4, R5, the public ops, R7–R8 with R10's session gate, R
   await drive({ op: "adminendorse", token: env.PROBE_TOKEN, params: { store: "bio" } }, "SCOPE_REFUSED");
   await drive({ op: "promote", token: env.PROBE_TOKEN, params: { store: "bio" }, body: { replay: true } }, "SCOPE_REFUSED");
   /* negative controls: each request with its first failing condition removed meets the next gate, not the first */
-  await drive({ op: "adminendorse", token: env.PROBE_TOKEN, params: { store: "scratch" } }, "OPERATOR_TOKEN_CANNOT_GOVERN", true);
+  await drive({ op: "adminendorse", token: env.PROBE_TOKEN, params: { store: "scratch" } }, "OPERATOR_TOKEN_CANNOT_GOVERN");
   env.calls.length = 0;
   assert.equal((await call(env, { op: notProbe, token: env.MEMBER_TOKEN, params: { store: "bio" } })).status, 200);
 });
 
-test.todo("R28 then R14 and R16, and then the op (not yet met: found — control-plane/index.mjs:1631 calls `hooks.gatedOp` "
-  + "(an op's module handler) before R14's fences (:2505, :2519) and R16's replay check (:2832), so a module handler serving "
-  + "a governance or identity act, or promote, would run for a bearer or an unverified replay; driven: a gatedOp hook that "
-  + "answers every op answers adminendorse for the ADMIN_TOKEN bearer with 200)");
+test("R28: R14's refusals come before the op — a module handler (hooks.gatedOp) willing to serve every op is never asked when a fence refuses", async () => {
+  const w = replayWorld({ holdBytes: false });
+  const { env } = w;
+  const asked = [];
+  const hooks = { publicOp: async () => M.json({ ok: true }),
+                  gatedOp: async (c) => { asked.push(c.op); return M.json({ ok: true, servedBy: "hook", op: c.op }); } };
+  for (const [op, token, params, code] of [["adminendorse", env.ADMIN_TOKEN, {}, "OPERATOR_TOKEN_CANNOT_GOVERN"],
+                                           ["membercaps", env.MEMBER_TOKEN, {}, "OPERATOR_TOKEN_CANNOT_GOVERN"],
+                                           ["groupnameset", env.PROBE_TOKEN, { store: "scratch" }, "GROUP_IDENTITY_NEEDS_SESSION"]]) {
+    asked.length = 0; env.calls.length = 0;
+    const r = await call(env, { op, token, params, hooks, method: "POST", body: w.body });
+    assert.equal(r.json.reason, code, op);
+    assert.deepEqual(asked, [], `${op}: the handler ran before the refusal`);
+    assert.equal(opCalls(env).length, 0);
+  }
+  /* negative controls: with the fence's condition removed the handler is asked */
+  asked.length = 0;
+  assert.equal((await call(env, { op: "adminendorse", token: w.S.founder, hooks, method: "POST", body: {} })).json.servedBy, "hook");
+});
+
+test.todo("R28 R16's replay refusal comes before the op (not yet met: control-plane/index.mjs still asks hooks.gatedOp "
+  + "(after the R14 fences) before R16's REPLAY_UNVERIFIED check in the promote block, so a module handler serving promote "
+  + "would run for an unverified replay; driven: a gatedOp hook answering every op answers promote with replay:true and "
+  + "no provenance for the ADMIN_TOKEN bearer. Harmless while no gated arm serves promote, but the order is not the "
+  + "module's to rely on)");

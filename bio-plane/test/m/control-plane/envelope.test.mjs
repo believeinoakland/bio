@@ -87,7 +87,7 @@ test("R22: through the door — a forwarded store refusal under result, and the 
   assert.deepEqual([h.status, h.json.check], [403, "C-38.6"]);
 });
 
-test("store silence at the credential lookups and the module's own reads: an answer that is not JSON with ok:true is 502 STORE_DID_NOT_ANSWER (C-69.2) naming the op, never an absence, refusal or success", async () => {
+test("R23: an answer that is not JSON with ok:true is 502 STORE_DID_NOT_ANSWER (C-69.2) naming the op, never an absence, refusal or success", async () => {
   /* doAnswer: `answered` is ok === true and nothing else */
   const ans = async (x) => M.doAnswer(x);
   for (const result of [null, [], {}, 0, "", { ok: false }]) {
@@ -113,6 +113,12 @@ test("store silence at the credential lookups and the module's own reads: an ans
       ["casedrafts", (w) => ({ op: "casedrafts", token: w.S.ann })],
       ["aicredentialmint", (w) => ({ op: "aicredentialmint", token: w.S.ann, method: "POST", body: { writes: [] } })],
       ["reviewgrant", (w) => ({ op: "reviewgrant", token: w.S.founder, method: "POST", body: {} })],
+      /* the generic forward, for reads and acts, every kind of caller */
+      ["index", (w) => ({ op: "index", token: w.env.ADMIN_TOKEN })],
+      ["index", (w) => ({ op: "index", token: w.A.ann })],
+      ["cite", (w) => ({ op: "cite", token: w.S.ann, method: "POST", body: {} })],
+      ["monitor", (w) => ({ op: "monitor", token: w.env.DAEMON_TOKEN, method: "POST", body: {} })],
+      ["list", (w) => ({ op: "list", token: w.env.PROBE_TOKEN })],
     ]) {
       const w = world({ answer: (c) => (c.route === route ? bad() : null) });
       const r = await call(w.env, drive(w));
@@ -124,26 +130,27 @@ test("store silence at the credential lookups and the module's own reads: an ans
   }
 });
 
-test.todo("R23 a store answer that is not JSON with ok:true is refused 502 STORE_DID_NOT_ANSWER naming the op — on the "
-  + "generic forward too (not yet met: found — the forward (control-plane/index.mjs:3389-3394) reads `await res.json()` "
-  + "unguarded, so a non-JSON store answer throws out of fetch with no answer at all, and relays an envelope with "
-  + "ok:false (the store's thrown error, an unknown route, BAD_JSON) to the caller as the handler's answer with the "
-  + "store's status; the credential lookups, the review door, casedrafts, the mint and the grant hold, driven above)");
-
 test.todo("R24 a public op relaying the store's answer answers the store's own status, and R23 on a store failure, never 200 "
   + "(not yet met: D-679 — claim, login, invitelook and enroll read the store answer without its `ok`; claim's is this "
   + "module's, control-plane/index.mjs:1335)");
 
 test.todo("R25 an error thrown in either door is answered with a named internal-error code (PLANE_INTERNAL_ERROR / "
   + "STORE_INTERNAL_ERROR) and a correlation id, never the stack, message, path or line (not yet met: D-629 — no such code "
-  + "exists; the store's catch answers String(e.stack), and a throw in the Worker door, e.g. the forward's unguarded "
-  + "res.json() or GET /'s missing publicInstanceGroup, escapes fetch unanswered)");
+  + "exists; the store's catch answers String(e.stack), and a throw in the Worker door escapes fetch unanswered)");
 
-test("the answers carry no credential, session token or secret — the one minting answer of R19 excepted — and none of the module's own answers carries a stack", async () => {
+test("R30: no credential, session token, secret or stack appears in any answer — the one minting answer of R19 excepted — a store's stack included", async () => {
   const w = world();
   const secrets = [w.env.ADMIN_TOKEN, w.env.MEMBER_TOKEN, w.env.PROBE_TOKEN, w.env.DAEMON_TOKEN, ...Object.values(w.S), ...Object.values(w.A)];
   for (const { op, r } of await sweep(w)) {
     for (const s of secrets) assert.equal(r.text.includes(s), false, `${op} leaks a credential`);
+    assert.doesNotMatch(r.text, /\n\s+at \S+ \(|\.mjs:\d+/, op);
+  }
+  /* a store that throws answers its stack; it never reaches the caller, through the forward or the module's own reads */
+  const STACK = "Error: boom at /srv/store.mjs:4242\n    at Store.fetch (file:///srv/store.mjs:4242:7)";
+  const thrown = world({ answer: (c) => (c.route !== "session" && c.route !== "aicredentiallook"
+    ? new Response(JSON.stringify({ ok: false, error: STACK }), { status: 500 }) : null) });
+  for (const { op, r } of await sweep(thrown)) {
+    assert.equal(r.text.includes("boom") || r.text.includes("/srv/"), false, op);
     assert.doesNotMatch(r.text, /\n\s+at \S+ \(|\.mjs:\d+/, op);
   }
   const t = await call(w.env, { op: "aicredentialmint", token: w.S.ann, method: "POST", body: { writes: [] } });
@@ -154,10 +161,6 @@ test("the answers carry no credential, session token or secret — the one minti
   assert.equal(later.json.result.tokenClass, "ai");
   assert.equal(later.text.includes(minted), false);
 });
-
-test.todo("R30 no stack appears in any answer (not yet met: found with D-629 — the generic forward relays the store's "
-  + "envelope as its answer, so the store's catch `{ok:false, error: String(e.stack)}` reaches the caller verbatim, e.g. "
-  + "op=index for any admitted caller; credentials, session tokens and secrets are never answered, driven above)");
 
 test("R32: each check the module raises carries its C-number on the wire — C-38.1–.8, C-69.1–.2, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4, C-68.2–.4, C-66.6", async () => {
   const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x") : null) });

@@ -57,7 +57,7 @@ test("R31: every op spec is well-formed {classes, machineClasses?, mutating}: cl
 
 test("R34: ACT_GATE is {needs(id), mode(id)} read from NEEDS and SESSION_OPS for every op and act id; decorateAct(act) is affordances.decorate(act, ACT_GATE)", () => {
   assert.deepEqual(Object.keys(ACT_GATE).sort(), ["mode", "needs"]);
-  const ids = [...Object.keys(OPS), ...[...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id), "nosuchop"];
+  const ids = [...Object.keys(OPS), ...[...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id), "nosuchop", "toString", "constructor", "__proto__"];
   for (const id of ids) {
     assert.equal(ACT_GATE.needs(id), Object.hasOwn(NEEDS, id) ? (NEEDS[id] ?? null) : null, id);
     assert.equal(ACT_GATE.mode(id), SESSION_OPS.member.has(id) ? "session" : SESSION_OPS.admin.has(id) ? "admin-session" : "machine", id);

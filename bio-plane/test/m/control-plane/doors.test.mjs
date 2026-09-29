@@ -32,11 +32,33 @@ test("routing: OPTIONS answers 204 with access-control-allow-origin *, /version 
   assert.equal(env.calls.length, 0);
 });
 
-test.todo("R1 GET / with no op answers instance-setup's page from the namespace addressed, served cache-control: no-store "
-  + "(not yet met: found — control-plane/index.mjs:1270 calls `publicInstanceGroup`, which the module neither defines nor "
-  + "imports (it stayed in src/index.mjs:170), so every GET / throws ReferenceError; OPTIONS, /version and /sign hold)");
+test("R1: GET / with no op answers instance-setup's page, built from its public read of the namespace addressed (store=scratch reads scratch, anything else bio, R6's gate first), served cache-control: no-store", async () => {
+  for (const [params, ns] of [[{}, "bio"], [{ store: "bio" }, "bio"], [{ store: "scratch" }, "scratch"]]) {
+    const { env } = world({ group: { ok: true, group: "grp-rivertown" } });
+    const log = [];
+    const r = await call(env, { path: "/", params, hooks: defaultHooks(log) });
+    assert.equal(r.status, 200);
+    assert.match(r.headers.get("content-type"), /^text\/html/);
+    assert.equal(r.headers.get("cache-control"), "no-store");
+    assert.match(r.text, /^<!doctype html>/i);
+    assert.ok(r.text.includes("grp-rivertown"), "the page names the group its record records");
+    assert.deepEqual(log, [{ kind: "group", ns, projection: "groupidentitypublic" }]);
+    assert.deepEqual(env.calls.map((c) => [c.ns, c.route]), [[ns, "groupidentitypublic"]]);
+  }
+  /* a record that did not answer is stated as such, never as a name */
+  const silent = world({ answer: (c) => (c.route === "groupidentitypublic" ? new Response("x") : null), group: { ok: true, group: "grp-rivertown" } });
+  const s = await call(silent.env, { path: "/" });
+  assert.equal(s.status, 200);
+  assert.equal(s.text.includes("grp-rivertown"), false);
+  /* R3 applies first: nothing is read */
+  const { env } = world();
+  refused(await call(env, { path: "/", params: { store: "elsewhere" } }), 400, "NAMESPACE_UNKNOWN", "C-78.1");
+  assert.equal(env.calls.length, 0);
+  /* an op parameter is not the page */
+  assert.equal((await call(env, { path: "/", params: { op: "index", token: env.ADMIN_TOKEN } })).json.store, "bio");
+});
 
-test("op routing: the op is `op`, else the path after /api/ (or /), else selftest; an op with no spec is refused 400 UNKNOWN_OP (C-69.1) with error \"unknown op\" first after ok", async () => {
+test("R2: the op is `op`, else the path after /api/ (or /), else selftest; an op with no spec is refused 400 UNKNOWN_OP (C-69.1) with error \"unknown op\" first after ok", async () => {
   const { env } = world();
   const t = env.ADMIN_TOKEN;
   const route = async (req) => { env.calls.length = 0; const r = await call(env, { token: t, ...req }); return [r.status, opCalls(env).map((c) => c.route)]; };
@@ -46,7 +68,7 @@ test("op routing: the op is `op`, else the path after /api/ (or /), else selftes
   assert.deepEqual(await route({ path: "/api" }), [200, ["selftest"]]);
   assert.deepEqual(await route({ path: "/api/" }), [200, ["selftest"]]);
   assert.deepEqual(await route({ path: "/", method: "POST", body: {} }), [200, ["selftest"]]);
-  for (const bad of ["nosuchop", "INDEX", "index ", "selftest2"]) {
+  for (const bad of ["nosuchop", "INDEX", "index ", "selftest2", "__proto__", "constructor", "toString", "hasOwnProperty"]) {
     env.calls.length = 0;
     assert.equal((await call(env, { op: bad, token: t })).json.op, bad);
     for (const r of [await call(env, { op: bad, token: t }), await call(env, { op: bad }),
@@ -61,7 +83,7 @@ test("op routing: the op is `op`, else the path after /api/ (or /), else selftes
   assert.equal((await call(env, { op: "index", token: t })).status, 200);
 });
 
-test("op routing: an op with a spec is answered by the handler its module provides (the hooks), or else forwarded to the store's route of that name", async () => {
+test("R2: an op with a spec is answered by the handler its module provides (the hooks), or else forwarded to the store's route of that name", async () => {
   const { env } = world();
   const log = [];
   const hooks = {
@@ -78,11 +100,6 @@ test("op routing: an op with a spec is answered by the handler its module provid
   assert.equal(pub.json.by, "publicOp");
   assert.deepEqual(log, [["gated", "links"], ["gated", "index"], ["public", "knock"]]);
 });
-
-test.todo("R2 a name with no spec is refused 400 UNKNOWN_OP (not yet met: found — control-plane/index.mjs:1276 reads "
-  + "`OPS[op]` without an own-property check, so `op=__proto__`, `constructor`, `toString` or `hasOwnProperty` find an "
-  + "inherited value as their spec: with a credential the admission throws TypeError at :1535 (no answer), without one "
-  + "it answers 401 NOT_AUTHENTICATED; every other part of R2 holds, driven by the two tests above)");
 
 test("R3: a store= present and not exactly bio or scratch is refused 400 NAMESPACE_UNKNOWN (C-78.1), naming the namespaces, for every caller and for the / page; nothing is read", async () => {
   const { env, S, A } = world();

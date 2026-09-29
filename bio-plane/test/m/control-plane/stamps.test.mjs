@@ -38,7 +38,7 @@ const stampsOf = (c) => {
   return out;
 };
 
-test("declared stamps: every stamp an op sets is the server's value from the authenticated caller — the same whether or not the caller sent its own (query and body) — and never the caller's", async () => {
+test("R17: every stamp an op declares is the server's value from the authenticated caller — the same whether or not the caller sent its own (query and body) — and never the caller's", async () => {
   const { w, list } = callers();
   const env = w.env;
   const forgedQ = Object.fromEntries(QUERY_STAMPS.map((k) => [k, FORGED]));
@@ -76,7 +76,7 @@ test("declared stamps: every stamp an op sets is the server's value from the aut
     assert.ok([...seen].some((s) => s.endsWith(k)), k);
 });
 
-test("declared stamps: the founder's session author is `admin`, a member's its id; origin is the origin the request reached; ownerMemberId and migrationReplay are the server's alone", async () => {
+test("R17: the founder's session author is `admin`, a member's its id; origin is the origin the request reached; ownerMemberId and migrationReplay are the server's alone", async () => {
   const { env, S } = world();
   for (const [token, want] of [[S.founder, "admin"], [S.ann, "ann"]]) {
     env.calls.length = 0;
@@ -103,22 +103,58 @@ test("declared stamps: the founder's session author is `admin`, a member's its i
   assert.deepEqual(["ownerMemberId" in m, "actorMemberId" in m, m.author, m.assistantPrincipal], [false, false, "token:member", "class:member"]);
 });
 
-test.todo("R17 for every op, any stamp the caller sends (query or body) is deleted before the declared stamps are set "
-  + "(not yet met: found — the generic forward copies every caller parameter but token and op into the inner request "
-  + "(control-plane/index.mjs:1645) and deletes only `identity` (:1649), and passes the caller's body through untouched "
-  + "except promote's and the listed body-stamp ops, so e.g. op=index receives the caller's author, by, actor, who, "
-  + "origin and administer, and op=cite the caller's body actorIdentity; every DECLARED stamp is the server's (the two "
-  + "tests above). Also, against R17's list of values: many binding-class authors are stamped `class:<cls>` (testify, "
-  + "lead, the action layer's author, intent's and standards' body author) where R17 says `token:<cls>`; an ai "
-  + "credential's author is `class:ai/<tokenId>`, not its principal; the founder's author on the action-layer acts is "
-  + "`member:admin`, not `admin` — BOB to rule whether R17's wording or the code moves)");
+/* Note for BOB (not a test): R17's list of stamped values and the code differ in wording — many binding-class authors are
+   stamped `class:<cls>` (testify, lead, the action layer's author, intent's and standards' body author) where R17 says
+   `token:<cls>`; an ai credential's author is `class:ai/<tokenId>`, not its principal; the founder's author on the
+   action-layer acts is `member:admin`, not `admin`. The tests above accept any value derived from the credential. */
 
-test.todo("R29 no handler receives a caller-supplied value for any stamp, tested for every op that declares a stamp "
-  + "(not yet met: found — the same cause as R17's todo: an op that declares one stamp still receives the caller's "
-  + "value for every stamp it does not declare, e.g. op=index (declares viewer) receives the caller's `author`; the "
-  + "declared stamps themselves are never the caller's, driven for every op and every caller above)");
+/* Every stamp field sent, forged, in the query and in the body; the inner request must carry none of them. */
+async function forgedSweep(onlyDeclaring) {
+  const { w, list } = callers();
+  const env = w.env;
+  const q = Object.fromEntries(QUERY_STAMPS.map((k) => [k, FORGED]));
+  const b = Object.fromEntries(BODY_STAMPS.map((k) => [k, FORGED]));
+  let ops = 0;
+  const leaks = [];
+  for (const c of list) for (const op of GATED) {
+    if (onlyDeclaring) {
+      env.calls.length = 0;
+      await call(env, { op, token: c.token, params: c.params, method: "POST", body: {} });
+      if (!opCalls(env).some((x) => Object.keys(stampsOf(x)).length)) continue;
+    }
+    env.calls.length = 0;
+    await call(env, { op, token: c.token, params: { ...c.params, ...q }, method: "POST", body: { ...b, note: "kept" } });
+    const inner = opCalls(env);
+    if (!inner.length) continue;
+    ops++;
+    for (const x of inner) {
+      for (const k of QUERY_STAMPS) if (x.params[k] === FORGED) leaks.push(`${op}?${k} (${c.name})`);
+      if (x.body && typeof x.body === "object") {
+        for (const k of BODY_STAMPS) if (x.body[k] === FORGED) leaks.push(`${op}#${k} (${c.name})`);
+        if (x.route === op && !["aicredentialmint"].includes(op)) assert.equal(x.body.note, "kept", `${op}: the rest of the body is the caller's`);
+      }
+    }
+  }
+  return { ops, leaks };
+}
 
-test("administer and whoami: memberlist's administer is 1 exactly for a session that administers and the admin binding; whoami answers the session's fields, sorted capabilities (null for a credential), the vocabulary and confinedTo", async () => {
+test("R17: for every op, every stamp the caller sends (query or body) is deleted before the op's declared stamps are set", async () => {
+  const { ops, leaks } = await forgedSweep(false);
+  assert.ok(ops > 1000, String(ops));
+  assert.deepEqual(leaks, []);
+  /* negative control: a parameter that is not a stamp still reaches the op */
+  const { env } = world();
+  await call(env, { op: "index", token: env.ADMIN_TOKEN, params: { limit: "5", viewer: FORGED } });
+  assert.deepEqual([opCalls(env)[0].params.limit, opCalls(env)[0].params.viewer], ["5", "class:admin"]);
+});
+
+test("R29: no handler receives a caller-supplied value for any stamp — driven for every op that declares a stamp, for every kind of caller", async () => {
+  const { ops, leaks } = await forgedSweep(true);
+  assert.ok(ops > 500, String(ops));
+  assert.deepEqual(leaks, []);
+});
+
+test("R18: memberlist's administer is 1 exactly for a session that administers and the admin binding; whoami answers the session's fields, sorted capabilities (null for a credential), the vocabulary and confinedTo", async () => {
   const { list, w } = callers();
   const env = w.env;
   for (const c of list) {
@@ -137,24 +173,26 @@ test("administer and whoami: memberlist's administer is 1 exactly for a session 
   const a = await who(w.S.ann);
   assert.deepEqual([a.tokenClass, a.session, a.member, a.handle, a.administer, a.rootOfTrust, a.confinedTo],
                    ["member", true, "ann", "ann", false, false, null]);
-  for (const [token, c, params] of [[env.MEMBER_TOKEN, "member", {}], [env.PROBE_TOKEN, "probe", { store: "scratch" }]]) {
+  for (const [token, c, params, adm] of [[env.ADMIN_TOKEN, "admin", {}, true], [env.MEMBER_TOKEN, "member", {}, false],
+                                         [env.PROBE_TOKEN, "probe", { store: "scratch" }, false]]) {
     const m = await who(token, params);
     assert.deepEqual([m.tokenClass, m.session, m.member, m.handle, m.administer, m.rootOfTrust, m.capabilities, m.confinedTo],
-                     [c, false, null, null, false, false, null, null]);
+                     [c, false, null, null, adm, false, null, null]);
+    /* whoami and the memberlist stamp say the same thing for one caller */
+    env.calls.length = 0;
+    await call(env, { op: "memberlist", token, params });
+    assert.equal(opCalls(env)[0].params.administer, adm ? "1" : "0", c);
   }
+  const dee = list.find((c) => c.name.startsWith("dee"));
+  assert.equal((await who(dee.token)).administer, true);
   const ag = await who(list.find((c) => c.name === "agent").token);
-  assert.deepEqual([ag.tokenClass, ag.session, ag.capabilities, ag.confinedTo], ["ai", false, null, null]);
+  assert.deepEqual([ag.tokenClass, ag.session, ag.administer, ag.capabilities, ag.confinedTo], ["ai", false, false, null, null]);
   assert.equal((await who(w.A.confined, { store: "scratch" })).confinedTo, "scratch");
   /* whoami forwards nothing */
   env.calls.length = 0;
   await who(env.ADMIN_TOKEN);
   assert.equal(opCalls(env).length, 0);
 });
-
-test.todo("R18 op=whoami's `administer` is true for the admin binding class (not yet met: found — "
-  + "control-plane/index.mjs:1610 answers `administer: viaSession ? !!sessRights.administer : false`, so whoami tells the "
-  + "ADMIN_TOKEN bearer `administer: false` while the same request's memberlist stamp (:2114) is `administer=1`; every "
-  + "other field and caller is driven by the test above)");
 
 test("R19: an agent credential's scope and confinement are judged at the mint — AI_SCOPE_UNKNOWN_OP (C-29.8), AI_SCOPE_BEYOND_MEMBER_REACH (C-29.9, the governance and identity acts included), AI_CONFINEMENT_NOT_SCRATCH (C-29.10) — and its value is returned once and passed on only as its SHA-256", async () => {
   const code = (o, c, chk) => { assert.equal(o.error.reason, c); assert.equal(o.error.code, c); assert.equal(o.error.check, chk); assert.ok(o.error.translation); };
