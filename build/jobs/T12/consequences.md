@@ -24,7 +24,7 @@
 - Tests (real helpers): `test/m/consequences/` tests 24, pass 24, fail 0, todo 0; users: `test/m/conformance/` 36/0, `test/m/filings/` 34/0, `test/m/escalation/` 28/0, `test/m/affordances/catalogue.test.mjs` 26/0, `test/gate-reads.test.mjs` 1/0. No layer tests are named in the manifest.
 - Checks: format 0 failures; architecture 10 product files, 0 failures; coverage 14 of 14 live ids, 0 failures; ownership 7 files, 0 failures.
 
-Size (session_01UQSjUGxLUNtpem1MJpHfiF): test runs 3, module lines 1100
+Size (session_01UQSjUGxLUNtpem1MJpHfiF): test runs 4, module lines 1032
 
 ## J1 · REPORT
 
