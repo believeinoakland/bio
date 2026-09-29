@@ -1437,3 +1437,17 @@ response: **As recommended, Bob, 2026-09-29.** (1) Opening an escalation (`escal
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the requirement changes in `escalation` (the required opening reason; the decline act and its read) and `conformance` (a determination shows whether it was escalated, declined or neither), with the decline act's rung (reasoned) in `affordances`, for Bob's approval; the UX page's open question 8 marked ruled.
+
+### DEC-89 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 10)
+for: bob
+question: What does the assistant dialog look like on each surface, and how is "the machine did the looking, you do the concluding" made felt?
+why it is Bob's: UX, within DEC-24, DEC-27 and ASSISTANT-PILOT.
+provisional: the pilot flow and wizard are unbuilt; only CHECK runs are deployed.
+alternative: a modal dialog that navigates away and returns (simple on phones, but it hides the surface the member is meant to act on).
+recommendation: a side panel docked beside the owning surface, with one visible "machine work" treatment shared with every other machine output, and acts always performed on the real surface.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29.** The assistant is a panel docked beside the surface it serves. Its text carries the one "machine work" treatment every machine output shares, with attribution ("the assistant did this, at <member>'s request"). A wizard step highlights the real control and never fills it or presses it; every act is performed by the member on the real surface. Bob asked whether the panel may also be undocked to float; that is put to him with its downsides and a recommendation (open).
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the assistant panel in the redesign; the UX page's open question 10 marked ruled.
