@@ -2,12 +2,12 @@
    `build/requirements/entities.md`). The registry (R1–R8), the recogniser and testimony (R9–R13), the reverse
    reads (R14–R16), the name lookup (R17–R19) and the identifier-space judgement (R20–R25), reached through
    `entitiesOf(ctx)` (K61); the grade order (R33–R34) and the one `NO_SUCH_ENTITY` answer (R36, `noSuchEntity`) are
-   module-level. R35's read contract is the `entities` and `resolutions` columns `schema.mjs` names. Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their
+   module-level, as is the one `NO_ENTITY` answer (R37, `noEntity`). R35's read contract is the `entities` and `resolutions` columns `schema.mjs` names. Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their
    dispatch), `bio-checks.mjs` (C-91, now `checks.mjs`) and `schema.mjs` (the four tables, now `schema.mjs` here),
    with the rows this job applied named at their sites. It derives no connection: that is `connections`'. */
 import { recordOf, perItem } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
-import { normAlias, labelTerms } from "../extraction/index.mjs";
+import { normAlias, labelTerms, noSha } from "../extraction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { spaces as idSpaces, recognise as recogniseId, parcelStanding, systemOf, judgePair } from "../idspaces.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -74,6 +74,21 @@ export function noSuchEntity(entityId, extra = null) {
            translation: row.translation, entity_id: entityId ?? null, ...Object.fromEntries(own),
            detail: NO_SUCH_ENTITY_DETAIL };
   /* END DEC-49 REGION is-entity-registered */
+}
+
+/* R37 (N285, K275, K343): THE ONE ANSWER TO ONE CONDITION, a request names no entity id (absent, not a string, or
+   empty). Every act of any module that answers that condition answers through here (this module's R2, R5, R12, R15,
+   R17 and alias withdrawal, connections' R1, progressions' R6, R9, R14 and R15), so `NO_ENTITY` is minted at one site
+   and its one row is this module's (C-91.5). `detail` is the caller's sentence naming what the id was for, else the
+   fixed default. Writes nothing and never throws. */
+export const NO_ENTITY_DETAIL = "this request is about one registered subject, named by its entity id, and none was named";
+
+export function noEntity(detail = null) {
+  /* DEC-49 REGION is-entity-named */
+  const row = ENTITY_CHECKS.NO_ENTITY;
+  return { ok: false, reason: "NO_ENTITY", code: "NO_ENTITY", check: row.check, translation: row.translation,
+           detail: typeof detail === "string" && detail.trim() ? detail : NO_ENTITY_DETAIL };
+  /* END DEC-49 REGION is-entity-named */
 }
 
 /* The label as kept (R1): trimmed, whitespace collapsed, at most 200 characters. */
@@ -233,7 +248,13 @@ export class Entities {
               + "framework's entity axis): one of " + ENTITY_KINDS.join(", ")
               + ". Introducing a new kind is a doctrine change, not a write." };
     const lab = cleanLabel(label);
-    if (!lab) return { ok: false, reason: "NO_LABEL", detail: "an entity needs a canonical label, such as 'City Clerk'" };
+    /* DEC-49 REGION is-entity-labelled — R1 (N285): the registry's own code and row (C-91.6). */
+    if (!lab) {
+      const row = ENTITY_CHECKS.ENTITY_NO_LABEL;
+      return { ok: false, reason: "ENTITY_NO_LABEL", code: "ENTITY_NO_LABEL", check: row.check, translation: row.translation,
+               detail: "an entity needs a canonical label, such as 'City Clerk'" };
+    }
+    /* END DEC-49 REGION is-entity-labelled */
     const extra = Array.isArray(aliases) ? aliases : [];
     const at = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
@@ -261,7 +282,7 @@ export class Entities {
    *  entity, so re-adding it answers ALREADY_ALIASED, saying it is withdrawn: nothing is deleted. */
   addAlias({ entityId, alias, declaredBy = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "an alias is attached to an entity by its id" };
+      return noEntity("an alias is attached to an entity by its id");
     /* DEC-49 REGION is-alias-named — REC-64/C-33.25; N126: the whole refusal, the alias's fold with it. */
     const norm = normAlias(alias);
     if (!norm) return actShapeRefusal("NO_ALIAS", "an alias needs a name: the one given folds to nothing (it is empty, or "
@@ -312,7 +333,7 @@ export class Entities {
    *  declared relation it is an end of, oldest first, each with its direction and none with a grade. */
   readEntity({ entityId } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "an entity is read by its id (op=entity&id=ENT-...)" };
+      return noEntity("an entity is read by its id (op=entity&id=ENT-...)");
     const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at FROM entities WHERE entity_id=?`, entityId);
     if (!e) return { ok: true, found: false, entity_id: entityId, entity: null };
     return { ok: true, found: true, entity: this.#entityView(e) };
@@ -351,7 +372,7 @@ export class Entities {
    *  by R5, shown as withdrawn with who, when and why. A repeat answers `already: true` and writes nothing. */
   withdrawAlias({ entityId, alias, reason, withdrawnBy = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "an alias is withdrawn from an entity named by its id" };
+      return noEntity("an alias is withdrawn from an entity named by its id");
     const norm = normAlias(alias);
     const why = typeof reason === "string" ? reason.trim().slice(0, WITHDRAW_REASON_MAX) : "";
     if (!why) return { ok: false, reason: "NO_REASON",
@@ -488,7 +509,7 @@ export class Entities {
 
   #resolveOne({ captureSha, ref = null, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "a resolution is over a captured document, named by its capture sha256" };
+      return noSha("a resolution is over a captured document, named by its capture sha256");
     let refs;
     if (ref != null) {
       if (typeof ref !== "string" || !ref)
@@ -528,11 +549,11 @@ export class Entities {
    *  must exist; it never lowers a stronger resolution (R10). `resolvedBy` is the control plane's stamp. */
   testify({ captureSha, ref, entityId, basis, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "testimony is about a captured document, named by its capture sha256" };
+      return noSha("testimony is about a captured document, named by its capture sha256");
     if (typeof ref !== "string" || !ref)
       return { ok: false, reason: "NO_REF", detail: "testimony names the raw reference (kind:key) the document carries" };
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
+      return noEntity("testimony names the entity the reference concerns, by id");
     const b = typeof basis === "string" ? basis.trim() : "";
     if (!b) return actShapeRefusal("NO_BASIS", "grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`, captureSha, ref);
@@ -594,7 +615,7 @@ export class Entities {
    *  more; R32's withholding; R8's `withdrawn_name`. */
   resolutionsFor({ captureSha, limit = null, viewer = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "resolutions are read for a captured document, by its capture sha256" };
+      return noSha("resolutions are read for a captured document, by its capture sha256");
     const cap = this.#clamp(limit);
     const rows = this.#rows(`SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
                                FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`, captureSha, cap + 1);
@@ -628,7 +649,7 @@ export class Entities {
    *  bounded over the resolution rows the join reads (`limit`, `resolution_count`, `truncated`). */
   concerns({ entityId, limit = null, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "the reverse index answers by entity id (op=concerns&id=ENT-...)" };
+      return noEntity("the reverse index answers by entity id (op=concerns&id=ENT-...)");
     const keep = this.#redactor(viewer);
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const cap = this.#clamp(limit);
@@ -667,9 +688,8 @@ export class Entities {
   /** R17, R18. */
   namingDocuments({ entityId = null, limit = NAMING_LIMIT_DEFAULT, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY",
-        detail: "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). "
-              + "It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates." };
+      return noEntity("the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). "
+        + "It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates.");
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return noSuchEntity(entityId);
     const aliases = this.#rows(`SELECT alias, alias_norm, canonical FROM entity_aliases WHERE entity_id=? AND withdrawn_at IS NULL
