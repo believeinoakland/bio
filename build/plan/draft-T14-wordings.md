@@ -82,7 +82,7 @@ Each tests `isAdministrator` (R64) of the stamped caller for an act that belongs
 **How "keeping its translation where it says more" fits R84.** R84's `extra` never replaces `check` or `translation`. So the translation becomes C-96.1's. What the old row said beyond that (the remedy) travels as a fixed `remedy` field in `extra`, which R84 already allows. R84 is not amended except for its list of callers.
 
 **membership.md:**
-- **R84**, its list of callers becomes: "R6, R7, R9, R10, R11, R12, R20, R22, R25, R26, R41 (and R75), R62 here, `monitoring` R30, `intent` R9 and `bias` R11. A caller whose former row said more passes it as `extra.remedy`, one fixed sentence."
+- **R84**, its list of callers becomes: "R6, R7, R9, R10, R11, R12, R20, R22, R25, R26, R41 (and R75), R62 here, `monitoring` R30, `intent` R9 and `bias` R11. A caller whose act has a next step or an alternative passes it as `remedy`, one fixed sentence; the answer's member-facing text is C-96.1's translation followed by that sentence (`message`), so the member reads the standard sentence and then what to do next or instead (DEC-83)."
 - **R22** "`ADMIN_ONLY`" becomes "`NOT_AN_ADMIN` (R84)".
 - **R41** and **R75**: "`ADMIN_ONLY`" becomes "`NOT_AN_ADMIN` (R84)". R75 stays byte for byte with R41.
 - **R62** "refused `AI_CREDENTIAL_ORG_NOT_ADMIN`" becomes "refused `NOT_AN_ADMIN` (R84), its `remedy` naming the member-scoped credential open to every member".
@@ -111,7 +111,7 @@ Each tests `isAdministrator` (R64) of the stamped caller for an act that belongs
 - promotion stamps
 - legacy-tests re-anchors `test/capability.test.mjs`:221, `machine-attest.test.mjs`:468 and `aicredential.test.mjs`:350
 
-**MEANING?** (to Bob, UX): the words a member reads change.
+**Ruled by Bob, DEC-83 (2026-09-29):** the standard sentence, followed by the act's specific recommendation, shown to the member. Interface test added: each site's `message` is C-96.1's translation, a space, then its `remedy`. *(The question as put:)* the words a member reads change.
 - Four specific sentences become C-96.1's general one.
 - The remedy moves to a separate field, which today's surfaces do not show.
 - If Bob wants the specific sentence to stay the one shown, the alternative is to keep each code and row. That is K275's exception for conditions that differ, and it holds only if Bob rules they are different conditions.

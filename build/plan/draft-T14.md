@@ -11,7 +11,7 @@
 ## Layer 2
 
 - **record-core** · N342 (R63 `registerCounts`; C-102.13, C-102.14). Merged early for promotion (K425).
-- **membership** · N128 (R81: C-102.11, C-102.12 in its table). N329 (R86 `activeAdmins` ordered). N335 (R87 `notAParticipant`; C-56.3–.5, C-96.14). N327 only if Bob has ruled it by the opening; else it stays in `next.md`. Merged early for promotion (K425).
+- **membership** · N128 (R81: C-102.11, C-102.12 in its table). N329 (R86 `activeAdmins` ordered). N335 (R87 `notAParticipant`; C-56.3–.5, C-96.14). N327 (R84 with DEC-83's `remedy` after the translation; R22, R41, R75, R62). Merged early for promotion (K425).
 - **promotion** · N335 (R43 through membership R87). N340 (R51 `DISPOSITIONS`, frozen). N341 (`gate.mjs` comments). The stamp, last (K425): every row change since 1.43.0 (T13's C-87.12 retirement (K434) and C-69.4 (K442), then T14's layer-1 and layer-2 rows, N342's among them), with `ROW_CENSUS` (R50) re-pinned.
 
 ## Layer 3
@@ -25,8 +25,12 @@
 
 ## Layer 5
 
-- **bias** · N326 (R44 `settled`). N343 (owns `settled_kind`). N242's share (`#promotionCheck`), if still owed.
+- **bias** · N326 (R44 `settled`). N327 (R11 through membership R84, with its remedy). N343 (owns `settled_kind`). N242's share (`#promotionCheck`), if still owed.
 - **progressions** · N340 (R35 re-exports promotion's list; `uses` gains promotion).
+
+## Layer 7
+
+- **intent** · N327 (R9 through membership R84, with its remedy).
 
 ## Layer 8
 
@@ -51,8 +55,8 @@
 
 ## Last: legacy-tests (K420, K427)
 
-- **legacy-tests** · the re-anchors each wording names (N327's three if carried; N325's two; N335's), the d470 re-pin after legacy-checks' removals, the census suite over promotion's new stamp, and whatever T14's layers break, each named with its owner.
+- **legacy-tests** · the re-anchors each wording names (N327's three; N325's two; N335's), the d470 re-pin after legacy-checks' removals, the census suite over promotion's new stamp, and whatever T14's layers break, each named with its owner.
 
 ## Not in T14
 
-Bob's first: N344 (the PRESENT/RESOLVE design, BOB's to write), N345 (requirement changes for Bob's approval), N346 (publication's wording for DEC-79's display), N317, N303's remainder, N320. T15 owes: legacy-checks C-29.12 (if N327 carries) and N325's export; legacy-store N342's drop; instance-setup N348's wrapper; promotion's stamp of C-118.1's key. Waiting as in T13's plan.
+Bob's first: N344 (the PRESENT/RESOLVE design, BOB's to write), N345 (requirement changes for Bob's approval), N346 (publication's wording for DEC-79's display), N317, N303's remainder, N320. T15 owes: legacy-checks C-29.12 (N327) and N325's export; legacy-store N342's drop; instance-setup N348's wrapper; promotion's stamp of C-118.1's key. Waiting as in T13's plan.
