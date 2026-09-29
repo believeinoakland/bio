@@ -1,6 +1,6 @@
 # filings (T11)
 
-**Status** · session_01Bokq8y9ZX2oFtuYKbqK3YF · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01Bokq8y9ZX2oFtuYKbqK3YF · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
