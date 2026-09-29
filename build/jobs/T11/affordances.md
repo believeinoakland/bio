@@ -10,7 +10,7 @@
 
 **Deferred:** nothing. No `not yet met` mark is met by this job (R26 stays not yet met, N231; its `test.todo` names the cause).
 
-**Found for BOB** (in J2 REPORT):
+**Found for BOB** (in J1 REPORT):
 - `build/requirements/affordances.md` R2's `reasoned` list does not name `determine`, and R27's count ("the 57 ops graded `undetermined`", "the action acts") predates it; the code and tests now grade `determine` `reasoned` (N310). BOB's wording.
 - `bio-plane/test/rung-ladder.test.mjs` (legacy) fails at file level, identically before and after this change (checked by stashing): legacy-tests' to re-anchor.
 - No generated artifact read by this change is stale beyond the plane bundle, which is `not_product` and rebuilt by BOB at the layer close (`affordances.mjs` is its input).
@@ -28,4 +28,4 @@ Two findings outside my paths. (1) build/requirements/affordances.md: R2's `reas
 
 ## J2 · COMPLETE
 
-N310 applied: JUSTIFICATION_REFUSALS names ACTION_MOVE_NO_REASON (actions R13); determine graded reasoned, its R19 backing driven at conformance's interface. Module tests 74 pass, 0 fail, 1 todo (R26, N231); queue 10/10; format, architecture, coverage (27/27), ownership: 0 failures. Record has the detail; findings in J2.
+N310 applied: JUSTIFICATION_REFUSALS names ACTION_MOVE_NO_REASON (actions R13); determine graded reasoned, its R19 backing driven at conformance's interface. Module tests 74 pass, 0 fail, 1 todo (R26, N231); queue 10/10; format, architecture, coverage (27/27), ownership: 0 failures. Record has the detail; findings in J1.
