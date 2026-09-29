@@ -33,3 +33,7 @@ Entries applied: N309, N312 (R1 through conformance R19/R20; renames C-116.6 `ES
 - `checks/ownership.mjs escalation tranche/T12`: 7 files changed; 0 failures.
 
 Size (session_01Tt8xQRrVDzqdXdqgxzdFMT): test runs 5, module lines 1421
+
+## J2 · COMPLETE
+
+B2 applied: tranche/T12 merged; R1 answers through conformance's real noSuchDetermination/determinationSuperseded (stand-in removed); R13's mark strike reverted, marks left to you (R1 and R13 are met). Tests 29 pass, 0 fail, 0 todo (R1's real-helper test now runs). format, architecture, coverage (21/21), ownership: 0 failures. Reports unchanged from J1 (stale plane bundle; N318 rows; legacy-tests' guard figures), minus the stand-in's arm-G site. Record updated with completion.
