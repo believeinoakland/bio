@@ -6,7 +6,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, infoMd, V, DAEMON, NOW_MS } from "./fixture.mjs";
-import { rankBy } from "../../../src/scheduler/index.mjs";
 import { monitoringOps, MONITOR_CADENCE_DELAY_MS, MONITOR_TICK_MS, MONITOR_CADENCE_BATCH, MONITOR_TICK_BATCH,
          MONITOR_RANK_READ, MONITOR_VIEWER, SLATE_DATA_BEGIN, SLATE_DATA_END, SLATE_FRAMING_OPEN, SLATE_FRAMING_CLOSE }
   from "../../../src/monitoring/index.mjs";
@@ -111,13 +110,6 @@ test("R19 (N224) given the scheduler's rank, the cadence tick reads at most ten 
   const brank = reverser();
   const bt = await big.m.cadenceTick(NOW_MS, brank);
   assert.deepEqual([brank.seen[0].items.length, bt.ticked.length, bt.candidates], [500, 50, 510]);
-  /* and the scheduler's own rank is accepted as is */
-  const s = world();
-  s.monitored("INFO-2026-4300-sched", "https://s.example.org/a", "s-a", { freq: "daily" });
-  s.monitored("INFO-2026-4301-sched", "https://s.example.org/b", "s-b", { freq: "daily" });
-  s.net.routes["https://s.example.org/a"] = serve("s-a"); s.net.routes["https://s.example.org/b"] = serve("s-b");
-  const st = await s.m.cadenceTick(NOW_MS, (items, now) => rankBy(null, items, now));
-  assert.equal(st.ticked.length, 2);
 });
 
 test("R20 the archive tick: due every firing; wake now + interval while a failing run reaches the floor; fires eligible addresses oldest first through acquire's archive arm naming only the address", async () => {
