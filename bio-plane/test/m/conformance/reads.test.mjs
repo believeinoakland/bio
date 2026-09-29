@@ -3,7 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { scene, V, U, MACHINE, F, DOC } from "./fixture.mjs";
-import { Conformance, CONFORMANCE_CHECKS, DETERMINATIONS_PAGE_MAX, FLAG_SAYS } from "../../../src/conformance/index.mjs";
+import { Conformance, CONFORMANCE_CHECKS, DETERMINATIONS_PAGE_MAX, FLAG_SAYS,
+         noSuchDetermination } from "../../../src/conformance/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -12,7 +13,7 @@ const refused = (r, code) => {
 };
 const quiet = (w, fn) => { const before = w.snapshot(); const r = fn(); assert.deepEqual(w.snapshot(), before, "a read writes nothing"); return r; };
 
-test("R9: determinationRead answers R1's fields, the per-standard outcomes, each finding's pinned edition with its frozen pair beside its live pair per axis (never composed), the author and time, the links and R10's flag", () => {
+test("R9 R19: determinationRead answers R1's fields, the per-standard outcomes, each finding's pinned edition with its frozen pair beside its live pair per axis (never composed), the author and time, the links and R10's flag", () => {
   const { w, proj, pin, std, ev, input } = scene();
   const d = w.c.determine(input({ questions: [{ question: "Was a sign posted?" }] }));
   const r = quiet(w, () => w.c.determinationRead({ id: d.id, viewer: V("pat") }));
@@ -42,7 +43,9 @@ test("R9: determinationRead answers R1's fields, the per-standard outcomes, each
     refused(w.c.determinationRead({ id, viewer }), "NO_SUCH_DETERMINATION");
   const a = w.c.determinationRead({ id: "CONF-2026-0099-determination", viewer: V("quinn") });
   const b = w.c.determinationRead({ id: d.id, viewer: V("quinn") });
-  assert.deepEqual({ ...a, id: null }, { ...b, id: null });
+  assert.deepEqual(a, noSuchDetermination("CONF-2026-0099-determination"), "R19: answered through noSuchDetermination");
+  assert.deepEqual(b, noSuchDetermination(d.id));
+  assert.deepEqual({ ...a, determination: null }, { ...b, determination: null });
   /* a machine credential and an administrator see it */
   assert.equal(w.c.determinationRead({ id: d.id, viewer: MACHINE }).ok, true);
   assert.equal(w.c.determinationRead({ id: d.id, viewer: V("ron") }).ok, true);

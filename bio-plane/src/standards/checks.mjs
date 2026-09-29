@@ -54,7 +54,7 @@ export const STANDARDS_CHECKS = Object.freeze({
       + 'superseded once; supersede the later one instead. Nothing was written.',
   },
   NO_SUCH_STANDARD: {
-    check: 'C-112.10', where: at("refuseNoSuchStandard", "is-standard-held"),
+    check: 'C-112.10', where: at("noSuchStandard", "is-standard-held"),
     translation: 'No standard answers to that id here. Nothing was written.',
   },
   STANDARD_NO_ID: {

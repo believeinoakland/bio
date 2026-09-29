@@ -1,11 +1,17 @@
-/* conformance's refusal rows (requirements: `build/requirements/conformance.md`, R1, R6–R8, R12). DEC-49: every
- * refusal this module answers carries its code, its row and the member's translation, so a surface shows the same
+/* conformance's refusal rows (requirements: `build/requirements/conformance.md`, R1, R6–R8, R12, R18–R20). DEC-49:
+ * every refusal this module answers carries its code, its row and the member's translation, so a surface shows the same
  * sentence wherever the act is reached. The family is C-113, this module's own, minted with the module (K107 (3)'s
- * rule: the job names a new code's row; K174: a module holds its new family). `NOT_A_PARTICIPANT` is this module's
- * code, translated in one line from membership's `PROJECT_ACT_NOT_A_PARTICIPANT` (K171 (11)); membership's existence
- * answer (C-70.1) is relayed with its own row and not restated here. `NO_SUCH_PROJECT` is membership's one row (C-70.5,
- * answered through its `noSuchProject`, R78); this module's C-113.2 is retired (N274, N208, K275) and its number is not
- * reused. An absent supersession reason is `NO_REASON` (C-113.22), a malformed one `BAD_REASON` (N233, K264). */
+ * rule: the job names a new code's row; K174: a module holds its new family). K275, K380 (N309, N312): a code names one
+ * condition, minted at one site. `DETERMINATION_NOT_A_PARTICIPANT` (was `NOT_A_PARTICIPANT`) is this module's code,
+ * translated in one line from membership's `PROJECT_ACT_NOT_A_PARTICIPANT` (K171 (11)); `NO_SUCH_COMPARISON` (was
+ * `NO_SUCH_PROPOSAL`, the proposal code being intent's) names a comparison. `NO_SUCH_DETERMINATION` (R19) and
+ * `DETERMINATION_SUPERSEDED` (R20) are minted only by this module's `noSuchDetermination` and `determinationSuperseded`,
+ * which every later module calls. Membership's existence answer (C-70.1) is relayed with its own row and not restated
+ * here. `NO_SUCH_PROJECT` is membership's one row (C-70.5, its `noSuchProject`, R78) and `NO_SUCH_STANDARD` standards'
+ * (C-112.10, its `noSuchStandard`, R17). Retired, their numbers never reused: C-113.2 (N274, N208, K275), C-113.9
+ * (`NO_SUCH_STANDARD`, standards R17) and C-113.18 (`ALREADY_SUPERSEDED`, now R20's `DETERMINATION_SUPERSEDED`,
+ * C-113.23) (K380). An absent supersession reason is `NO_REASON` (C-113.22), a malformed one `BAD_REASON` (N233,
+ * K264). */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -15,7 +21,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     translation: 'Whether a government act complied is a member\'s judgment. An assistant may prepare the comparison; '
       + 'it may not determine. Sign in as a member. Nothing was written.',
   },
-  NOT_A_PARTICIPANT: {
+  DETERMINATION_NOT_A_PARTICIPANT: {
     check: 'C-113.3', where: at("#participantRefusal", "is-project-joined"),
     translation: 'Only a member who has joined this project records its determinations. Join the project first. '
       + 'Nothing was written.',
@@ -45,11 +51,6 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     translation: 'A determination measures the act against at least one standard the record holds. Name the '
       + 'standards. Nothing was written.',
   },
-  NO_SUCH_STANDARD: {
-    check: 'C-113.9', where: at("#readStandards", "is-standard-held"),
-    translation: 'A standard named is not one the record holds. Record the standard first, or name one that is held. '
-      + 'Nothing was written.',
-  },
   STANDARD_NOT_IN_FORCE: {
     check: 'C-113.10', where: at("#readStandards", "is-standard-in-force"),
     translation: 'A standard named was not in force when the act was done, by the period the record states for it. '
@@ -77,7 +78,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
       + 'Nothing was written.',
   },
   NO_SUCH_DETERMINATION: {
-    check: 'C-113.15', where: at("refuseNoSuchDetermination", "is-determination-seen"),
+    check: 'C-113.15', where: at("noSuchDetermination", "is-determination-seen"),
     translation: 'No determination answers to that id here. One you cannot see is answered exactly as one that does '
       + 'not exist.',
   },
@@ -95,20 +96,20 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     check: 'C-113.22', where: at("#supersession", "is-reason-given"),
     translation: 'Superseding a determination says why it is superseded. Give the reason. Nothing was written.',
   },
-  ALREADY_SUPERSEDED: {
-    check: 'C-113.18', where: at("#supersession", "is-supersedable"),
-    translation: 'That determination has already been superseded, and a determination is superseded once. Supersede '
-      + 'the one that replaced it. Nothing was written.',
-  },
   PROPOSAL_CANNOT_DETERMINE: {
     check: 'C-113.19', where: at("comparisonPropose", "is-proposal-outcomeless"),
     translation: 'A comparison sets out rows and questions for members; it never states whether the act complied. '
       + 'Remove the outcome. Nothing was written.',
   },
-  NO_SUCH_PROPOSAL: {
-    check: 'C-113.20', where: at("refuseNoSuchProposal", "is-proposal-seen"),
+  NO_SUCH_COMPARISON: {
+    check: 'C-113.20', where: at("refuseNoSuchComparison", "is-comparison-seen"),
     translation: 'No comparison answers to that id in this project. One you cannot see is answered exactly as one '
       + 'that does not exist. Nothing was written.',
+  },
+  DETERMINATION_SUPERSEDED: {
+    check: 'C-113.23', where: at("determinationSuperseded", "is-determination-live"),
+    translation: 'That determination has been superseded, and a superseded determination is not acted on or superseded '
+      + 'again. Use the determination that replaced it. Nothing was written.',
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: 'C-113.21', where: at("check", "is-determination-act"),
