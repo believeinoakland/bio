@@ -1,5 +1,7 @@
 # T14 wordings: N128 (with N202), N325, N326, N327, N329, N330, N331, N335, N339, N340 (a worker for BOB #65, 2026-09-29; P18)
 
+**Reviewed** · by BOB #66, 2026-09-29 (K444): claims rechecked on the merged tranche; every BOB-level MEANING? point ruled as drafted. N327 waits on Bob.
+
 Read on `tranche/T13` @ ff11386715 (T13 open, no job merged). Not folded. Each id below is the next free one in its file, counted after T13's folded wordings (membership R85 is N332's). None of these files marks a retired id at or above those numbers. Publication's R48–R61 appear only in its pre-approval "Old ids" map (README 6), so they are not retired ids.
 
 | file | next free id | used by |
