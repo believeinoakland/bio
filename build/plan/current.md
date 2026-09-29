@@ -1,6 +1,6 @@
 # Plan: tranche T14
 
-**Status** · OPEN · BOB #67 · session_019iV4d3YVE4NGg67gtwYeAT · depth 1
+**Status** · OPEN · BOB #68 · session_01F6nxZGyhi9Jo7LvgyNVXpS · depth 1
 
 Opened by BOB #66, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ 5bb688333c, T13 closed (K449). Cut from `draft-T14.md`, re-read against T13's close (K451); its wordings folded before opening (K452). Bob's weekly meter at the opening: 22% (given ~18:55 UTC, T13's last stage). An `N` entry's text is in `build/plan/next.md`.
 
