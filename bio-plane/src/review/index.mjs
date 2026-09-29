@@ -127,6 +127,15 @@ function notReviewOwner(act) {
   /* END DEC-49 REGION is-review-authority */
 }
 
+/* R27 (N306, K392): NO FREE OPAQUE ID IS ONE ANSWER, C-87.12, for both acts that mint one. The DETAIL names the id the
+   act could not mint (`what`, chosen by this module's own call, never by the caller) and says nothing was written. */
+function mintExhausted(what) {
+  /* DEC-49 REGION is-review-mint-exhausted */
+  return refusal("MINT_EXHAUSTED",
+           `the plane could not find a free ${what} id: every one it drew was already taken. Nothing was written.`);
+  /* END DEC-49 REGION is-review-mint-exhausted */
+}
+
 /** R5 (D-568): THE EDITION A DRAFT'S ANSWERS STATE IS NULL WHERE ITS CASE IS DERIVED. The identity's edition 1 for a
  *  draft naming no case is the edition a MINTED case has, and it stays the INTERNAL key (grants and acknowledgements are
  *  written and matched at (case_id NULL, edition 1), so moving it would orphan every grant and reading already given).
@@ -424,8 +433,7 @@ export class Review {
       id = this.record.mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) =>
         !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d)
           || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
-      if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
-                        detail: "the plane could not find a free draft id; nothing was written" };
+      if (!id) return mintExhausted("draft");
       this.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
                      updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
                     id, owning, named, json, who, when, who, when, statementBy);
@@ -461,8 +469,7 @@ export class Review {
     this.seedLedger();
     const id = this.record.mintOpaqueId("RVG", when.slice(0, 4), "",
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g));
-    if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
-                      detail: "the plane could not find a free grant id; nothing was issued" };
+    if (!id) return mintExhausted("grant");
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, who, when);
     /* D-568: the ROW binds at the internal key; the ANSWER states the edition only where the record holds one. */

@@ -44,6 +44,13 @@ function drive(w, code, draftId) {
     case "REVIEW_NO_SECRET": return w.r.act({ act: "grant", author: "ann", draft: draftId, recipient: "R", secretSha: "x" });
     case "REVIEW_NO_GRANT": return w.r.act({ act: "revoke", author: "ann" });
     case "REVIEW_NO_COMMENT_TEXT": return w.r.comment({ draft: draftId, viewer: V("ann"), text: "" });
+    case "MINT_EXHAUSTED": {
+      /* record-core's minter answering none (its R9), for this one call */
+      const mint = w.record.mintOpaqueId;
+      w.record.mintOpaqueId = () => null;
+      try { return w.r.act({ act: "draft", author: "ann", project: P, statement: "S" }); }
+      finally { w.record.mintOpaqueId = mint; }
+    }
     default: throw new Error(`no driver for ${code}`);
   }
 }
@@ -83,11 +90,11 @@ test("R21: no secret's value is received or stored, only its fingerprint", () =>
     assert.equal(JSON.stringify(r).includes(VALUE), false);
 });
 
-test("R23: C-87.1–C-87.11 and C-32.16 moved here with their ids and translations, each refused at its interface", () => {
+test("R23: C-87.1–C-87.12 and C-32.16 held here with their ids and translations, each refused at its interface", () => {
   const want = { MACHINE_CANNOT_REVIEW: "C-32.16", NO_REVIEW_COPY: "C-87.1", REVIEW_UNKNOWN_ACT: "C-87.2",
     REVIEW_NOT_PROJECT_OWNER: "C-87.3", REVIEW_NO_PROJECT: "C-87.4", REVIEW_DRAFT_CHANGES_PROJECT: "C-87.5",
     REVIEW_NO_SUCH_CASE: "C-87.6", REVIEW_DRAFT_TOO_LARGE: "C-87.7", REVIEW_NO_RECIPIENT: "C-87.8", REVIEW_NO_SECRET: "C-87.9",
-    REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11" };
+    REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11", MINT_EXHAUSTED: "C-87.12" };
   assert.deepEqual(Object.fromEntries(Object.entries(REVIEW_COPY_CHECKS).map(([k, v]) => [k, v.check])), want);
   assert.ok(Object.isFrozen(REVIEW_COPY_CHECKS));
   /* moved, never copied: the catalogue holds neither the family nor the machine row */
