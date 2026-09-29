@@ -26,3 +26,7 @@
 - `node checks/ownership.mjs … strength tranche/T12`: 3 files changed; legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_01C7KuT5Ve2TXwNG6xNQHedA): test runs 6, module lines 1447
+
+## J1 · COMPLETE
+
+N303 applied: R6 withholds unseen members whole (lists, weakest, through, prose), withholds the counts when any leg is unseen, and states only out_of_view; a new test shows 1 vs 3 unseen legs answer byte-identically. Module tests 45/0; format, architecture, coverage (27/27), ownership all 0 failures. Stale: agent-worker and bio-plane bundles (strength/index.mjs). Broken legacy-tests by design: inquirystrength.test.mjs 5 fails, grounds.test.mjs §6 throws (both assert the old null placeholder). Same placeholder pattern noted in conformance, consequences, escalation, filings for Bob's DEC-36 question. Details in the record.
