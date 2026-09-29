@@ -21,3 +21,7 @@
 - `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures. `architecture.mjs … affordances`: 7 product files, 52 relative imports; 0 failures. `coverage.mjs … affordances`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership.mjs … affordances tranche/T11`: 5 files changed by affordances; legacy-store 0/0, legacy-index 0/0; 0 failures.
 
 Size (session_01B7kiVs24JbVTE4P4CTC88x): test runs 5, module lines 2713
+
+## J1 · REPORT
+
+Two findings outside my paths. (1) build/requirements/affordances.md: R2's `reasoned` list does not name `determine`, and R27's "57 ops graded `undetermined`" (naming the action acts) predates it; with N310 the code and tests grade `determine` `reasoned` (conformance R7 refuses an absent supersession reason NO_REASON; a first determination asks none, K212). Your wording. (2) Legacy bio-plane/test/rung-ladder.test.mjs fails at file level, identically before and after my change (checked by stashing): legacy-tests' to re-anchor. No generated artifact other than the plane bundle (not_product, rebuilt at your layer close) takes affordances.mjs as input.
