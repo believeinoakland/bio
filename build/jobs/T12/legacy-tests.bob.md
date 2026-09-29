@@ -13,3 +13,7 @@ From INSTALLER #2 J1 (K405): `bio-plane/test/instance-group.test.mjs`:232 reads 
 ## B3 · CHANGE
 
 From LEGACY-UI #1 J1 (N301, merged at the layer close): the queue class FINDING now shows as **Noticed** ("noticed item" in the queue, set-aside ledgers and the decision sentences; "finding" kept for concluded questions). Re-anchor these text pins of the old wording at the interface: `civicos-ui/test/notifications.test.mjs`:894, :923; `queue.test.mjs`:725; `queue-projectscope.test.mjs`:397; `document-decided-finding.test.mjs`:254, 277, 285, 327–330; `progression-decided-finding.test.mjs`:224, 247, 253. Merge `job/T12/legacy-ui` into your branch to see the new text (it touches only `civicos-ui/`, outside your paths but for these tests).
+
+## B4 · CHANGE
+
+Correction to B3: do NOT merge `job/T12/legacy-ui`. I have merged it into the tranche branch; merge `tranche/T12` into yours instead, then re-anchor the pins B3 lists.
