@@ -1,7 +1,7 @@
-/* D-442's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in one step from `bio-plane/`.
+/* D-442's NEGATIVE CONTROL DRIVER — five arms plus a baseline ((a) retired 2026-09-30, (b)–(f) remain), re-runnable in one step from `bio-plane/`.
  *
  *     node test/d442-publish-writes-nothing.control.mjs        # every arm, in order
- *     node test/d442-publish-writes-nothing.control.mjs a      # one arm
+ *     node test/d442-publish-writes-nothing.control.mjs b      # one arm
  *
  * Built on `current-shared-question.control.mjs` (REC-166's), whose rules it keeps: DELIBERATELY NOT A
  * `.test.mjs`, because it EDITS REAL SOURCES. Pristine copies live INSIDE THIS WORKTREE
@@ -13,7 +13,13 @@
  *
  * THE ARMS (declared 2026-09-23 by the D-442 worker, before the first run; (f) and (a)'s S3_AGAIN, S4_PC,
  * S4_CONT and S4_EX1 were declared before the first run too, when the excludedby arms joined the suite):
- *  (a) RESTORE THE MEMBER PROMOTION — THE ROW'S OWN NAMED CONTROL. op=publish promotes each member again
+ *  RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15): every arm's subject moved out of `src/store.mjs`,
+ *  `src/index.mjs` and the catalogue with the extraction. (b) now edits `src/publication/worker.mjs`, (c) and (f)
+ *  `src/publication/index.mjs`, (d) `src/ratification/checks.mjs` (the LIVE gate, ratification R8; the catalogue's
+ *  copy in `checks/bio-checks.mjs` is no longer what op=caseratify runs, so arming it bit nothing), (e)
+ *  `src/case-authoring/document.mjs`. (a) is RETIRED (K457; the reason is at its constants below): case-authoring
+ *  holds no promotion to restore, and case-authoring R13/R23 cover the property. Declarations unchanged.
+ *  RETIRED (a) RESTORE THE MEMBER PROMOTION — THE ROW'S OWN NAMED CONTROL. op=publish promotes each member again
  *      (a Session Log receipt and `last_updated` written into the finding, the pin taken off the new
  *      sha), everything else of rule 12 left in place. MUST FAIL, BY NAME: the unmoved-sha arms (A's own
  *      prepare; "THE PIN: B's prepare"; "THE PIN, SAME PROJECT"), the byte-identical arm, the no-flag arm,
@@ -262,4 +268,16 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
      (e)       35 pass, 0 fail    AS DECLARED  over-strictness: the receipt re-worded, green
      (f)       33 pass, 2 fail    AS DECLARED  excludedby off the members' bytes alone: the two excludedby arms
 
-   Arm (a) is the row's named control and it fails at the unmoved-sha arm BY NAME, as rule 12's accepts-when asks. */
+   Arm (a) is the row's named control and it fails at the unmoved-sha arm BY NAME, as rule 12's accepts-when asks.
+
+   RE-MEASURED 2026-09-30 by LEGACY-TESTS #13 (T15) after the re-anchor, on a SCRATCH COPY of the tree (never the
+   shared one: other jobs run suites in it), `node test/d442-publish-writes-nothing.control.mjs` from its
+   `bio-plane/`. Preflight: all five anchors LIVE. Every restore sha256 MATCH, content IDENTICAL, cmp SAME.
+
+     baseline  35 pass, 0 fail    AS DECLARED
+     (a)       RETIRED (K457): no promotion in case-authoring to restore; case-authoring R13, R23
+     (b)       34 pass, 1 fail    AS DECLARED  publishedcase's exclusions off the finding's bytes (publication/worker.mjs)
+     (c)       34 pass, 1 fail    AS DECLARED  the committer's pair off the finding's bytes (publication/index.mjs)
+     (d)       32 pass, 3 fail    AS DECLARED  C-2.8 not run per member in ratification's gate: the three catalogue arms
+     (e)       35 pass, 0 fail    AS DECLARED  over-strictness: the receipt re-worded (case-authoring/document.mjs), green
+     (f)       33 pass, 2 fail    AS DECLARED  excludedby off the members' bytes alone (publication/index.mjs) */

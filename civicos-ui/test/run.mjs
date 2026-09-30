@@ -85,7 +85,8 @@ catch(_){ fail++; }
    here, in the loop the reader actually runs, because a guard that is documented
    and not in the loop is not a mechanism (CLAUDE.md). Its own suite is
    test/refusal-codes.test.mjs, which runs it over fixture trees. */
-/* VF-2 CONTROL (c): the guard removed from the loop. */
+try{ execFileSync("node", [new URL("../check-refusal-codes.mjs", import.meta.url).pathname], {stdio:"inherit"}); }
+catch(_){ fail++; }
 /* THE D-173 GUARD (UI-23). It re-runs every suite above with an envelope probe
    preloaded, so it costs a second pass; that is deliberate and it is the only
    way to see what shape a mock ANSWERED rather than what its source looks like.
