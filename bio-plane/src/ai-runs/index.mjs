@@ -154,6 +154,9 @@ export class AiRuns {
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
   #membership() { return membershipOf(this.ctx); }
+  /** N418 (K650): every write this module makes goes through record-core's `transact` (its R32), so the store's one
+   *  transaction, its savepoints and its `afterCommit` (R66) hold over them; never `transactionSync` directly. */
+  #transact(fn) { return recordOf(this.ctx).transact(fn); }
   #connections() { return connectionsOf(this.ctx); }
   #bias() { return biasOf(this.ctx); }
   #observations() { return observationLogOf(this.ctx); }
@@ -413,7 +416,7 @@ export class AiRuns {
         WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
         ORDER BY seq DESC LIMIT 1`, run);
 
-    return this.ctx.storage.transactionSync(() => {
+    return this.#transact(() => {
       /* THE TERMINAL ENTRY FIRST, then the status. The order is deliberate: if
          anything could fail it is the append, and a run left `running` with its
          log written is recoverable by the reaper, while a run marked finished
@@ -902,7 +905,7 @@ export class AiRuns {
     }
 
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : AiRuns.AI_RUN_LEASE_MS;
-    this.ctx.storage.transactionSync(() => {
+    this.#transact(() => {
       this.sql.exec(
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
@@ -1064,7 +1067,7 @@ export class AiRuns {
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : AiRuns.AI_RUN_LEASE_MS;
     const refused = [];
     let appended = 0;
-    this.ctx.storage.transactionSync(() => {
+    this.#transact(() => {
       for (const e of Array.isArray(log) ? log : []) {
         /* `row.principal_claude` is the run's machine identity and this method
            already holds the row — see #aiRunAppend's note on why it is passed
@@ -1348,7 +1351,7 @@ export class AiRuns {
        hold-and-wake section below, so that section stays one uninterrupted read-and-write. */
     const resumer = this.#aiRunWakeRuns().length ? await this.#aiRunResumer() : null;
     for (const r of this.#aiRunWakeHolds(iso)) {
-      this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
+      this.#transact(() => { this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run); });
       holds.push({ run: r.run, outstanding: r.outstanding, expires: until });
     }
 
@@ -1366,7 +1369,7 @@ export class AiRuns {
       const refused = done.length - captured - expired;
       /* D-260 — THE DECISION IS MADE BEFORE THE ENTRY IS WRITTEN, so the entry can say which it was. */
       const decision = this.#aiRunResumeDecision(r, resumer);
-      const bad = this.ctx.storage.transactionSync(() => {
+      const bad = this.#transact(() => {
         /* THE ENTRY FIRST, then the lease and the stamp — `#aiRunTerminate`'s
            order and its reasoning: if anything could fail it is the append, and
            a run left unwoken with nothing written is retried on the next tick,
@@ -1410,7 +1413,7 @@ export class AiRuns {
     }
 
     /* D-260 — THE DISPATCH, AFTER EVERY WAKE IS WRITTEN AND OUTSIDE ANY TRANSACTION: a network call inside
-       `transactionSync` is impossible, and a wake whose entry and stamp waited on another Worker would put the
+       a transaction is impossible, and a wake whose entry and stamp waited on another Worker would put the
        delivery-exactly-once property at the mercy of that Worker's latency. */
     for (const d of dispatches) {
       const outcome = await this.#aiRunDispatch(d, resumer, iso);
@@ -1551,11 +1554,11 @@ export class AiRuns {
         : { state: "SILENT", status: null, reason: "the call did not complete" };
     } finally { clearTimeout(timer); }
     if (outcome.state !== "DISPATCHED" && outcome.state !== "RUNNING") {
-      const refusal = this.#aiRunAppend(d.run, {
+      const refusal = this.#transact(() => this.#aiRunAppend(d.run, {
         level: "internet", subject: d.context_id, ...this.#aiRunRestatedState(d.run), governed: false,
         detail: `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). `
               + `The run was woken and is still resumable by its own principal; nothing it established is lost`,
-      }, iso, 0);
+      }, iso, 0));
       if (refusal) outcome.unwritable = refusal;
     }
     return outcome;
@@ -2345,9 +2348,11 @@ export class AiRuns {
     const bad = checkConsume([[b, figure ? 0 : n]], { seed: false });
     if (bad) return bad;
     if (n === 0) return null;
-    this.sql.exec(
-      `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
-       ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`, String(run), String(bound), n, n);
+    this.#transact(() => {
+      this.sql.exec(
+        `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
+         ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`, String(run), String(bound), n, n);
+    });
     return null;
   }
 
@@ -2440,9 +2445,11 @@ export class AiRuns {
     if (!AiRuns.#surfacing(c)) return null;
     const run = String(c.pkg.run).trim(), principal = c.pkg.assistantPrincipal.trim();
     const at = new Date().toISOString();
-    this.sql.exec(`INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
-      c.bundleId, run, principal, at);
-    this.consumeBound(run, "surfaces", 1);
+    this.#transact(() => {
+      this.sql.exec(`INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
+        c.bundleId, run, principal, at);
+      this.consumeBound(run, "surfaces", 1);
+    });
     const left = this.boundOf(run, "surfaces");
     return { surfaced_in: { run, at, bound: { bound: "surfaces", allowed: left.allowed, consumed: left.consumed } } };
   }
