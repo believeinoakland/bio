@@ -193,9 +193,10 @@ reported "unchanged") (**R29**).
     under (for example a Legistar file number's two-digit-year–dash–four-digit-serial shape),
     used as an entity key. This is a DIFFERENT fact from an `id-spaces` identifier space's forms
     (see Suggestions) and is not assumed to be one without a ruling saying so;
-  - **directory recognition floors** — the minimum count of distinct contact addresses and the
-    share of them that must sit at one organisation's domain for a document to be read as a staff
-    directory, and the words ("directory", "staff", "roster", "contacts") that self-name one;
+  - **directory self-naming words** — the words ("directory", "staff", "roster", "contacts")
+    that self-name a staff directory; the recognition floors themselves (the minimum count of
+    distinct contact addresses and the share at one organisation's domain) are measured structural
+    floors and stay in code, as R6 states (K574);
   - **measured local practice thresholds** — for example, how long a habitually late document of
     a given kind may go before its lateness is worth RAISING a question (never asserting one),
     each fact carrying its own measurement, per `layers.md`'s rule that a profile names the
