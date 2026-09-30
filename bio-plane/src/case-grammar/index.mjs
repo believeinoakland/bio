@@ -12,6 +12,7 @@
 
 import { parseFrontmatter } from "../../checks/bio-checks.mjs";
 import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
+import { fmSafe } from "./blocks.mjs";
 
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
@@ -19,13 +20,10 @@ export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          caseDocumentRequiresTensionSection } from "./formats.mjs";
 export { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
          sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
-         BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED } from "./blocks.mjs";
+         BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED, fmSafe } from "./blocks.mjs";
 export { caseTensionsOf, disclosedCandidates, TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE,
          TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE } from "./tensions.mjs";
 
-/* R2: a value written into a case document's front matter on one line: line breaks folded, quotes and backslashes
-   made apostrophes (the store's `#fmSafe`, one spelling for the attribution run). */
-export const fmSafe = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 
 /** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST (R2).
  *  `group` is the floor every level shares (§4.3): every published case is the group's. `name`
