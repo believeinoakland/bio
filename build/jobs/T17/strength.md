@@ -39,3 +39,13 @@ Negative control, run by hand and reverted: restoring D-269's wording split acro
 **Tests and checks.** `node --test bio-plane/test/m/strength/`: tests 52, pass 52, fail 0. No layer tests (manifest). No service changed, so no user module's tests to run. format: 72 modules, 67 requirements files; 0 failures. architecture: 11 product files, 38 relative imports; 0 failures. coverage: 28 of 28 live requirement ids named by a test; 0 failures. ownership: 3 files changed by strength; legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_01UQzJEssZnj9YKdrsGCXFxL): test runs 8, module lines 1447
+
+## J3 · COMPLETE
+
+B3 applied (INQUIRY #6's forward). `bio-plane/test/content-capture-bound.test.mjs` §7 is carried as `test/m/strength/version.test.mjs` "R9: a version's capture leg on an unmeasured transcription is inert and says the fidelity is unmeasured, never that no bytes are held". The fixture's earned capture entry has inquiry R13's shape for this case (a ceiling with no letter, `undetermined_because: CAPTURE_FIDELITY_UNMEASURED`, its why). The test drives `versionStrength` over a suggested reading asked as a what-if, as §7 did. It checks §7's leg (no letter) and one stating B: both are in `ungraded` and none is in `graded`, each why says "every transcription of its text is UNMEASURED" and never "holds no captured bytes", and the capture axis is unrated with both not load-bearing. A leg on a document with no bytes keeps the no-bytes sentence, as the contrast. Negative control, run by hand and restored from a copy: removing the `undetermined_because` branch in `#versionLegsAsMembers` turns it red. The module's source is unchanged.
+
+§7's other assertion, that the version promotes through `op=promote`, is basis-versions' write (its R6), not mine. §§1–6 of that suite (the write's C-2.8 refusals, `op=earnedbasis`, `op=textprovenance`) are inquiry's and provenance's.
+
+**Tests and checks.** `node --test bio-plane/test/m/strength/`: tests 53, pass 53, fail 0. format: 0 failures. architecture: 11 product files, 38 relative imports; 0 failures. coverage: 28 of 28; 0 failures. ownership: 4 files changed by strength; legacy-store 0/0, legacy-checks 0/0; 0 failures.
+
+Size (session_01UQzJEssZnj9YKdrsGCXFxL): test runs 11, module lines 1447
