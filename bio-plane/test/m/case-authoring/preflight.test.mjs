@@ -371,3 +371,24 @@ test("R34: it raises no re-evaluation for a member's new edition (R15's listener
   assert.equal(pub.ok, true);
   assert.deepEqual(told.map((e) => [e.subject, e.source]), [[Q, "edition"]], "op=publish itself still raises");
 });
+
+test("R34: against the real ratification R18, its list is read over the text op=publish would store, with the author as signer, and folded into blockers as ratification answers it", () => {
+  const { w, P, b } = setup();
+  const a = args(P, [Q], { selfAttested: [{ capture: b, reason: REASON }] });
+  const before = w.snapshot();
+  const pre = w.ca.publishPreflight(a);
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  assert.equal(pre.first, null);
+  assert.equal(pre.steps[4].ratification.reached, true);
+  /* the same answer ratification gives over the document op=publish then stores, but for the minted case id */
+  const r = w.ca.publishCase(a);
+  const direct = w.ratification.caseRatifyPreflight({ text: docOf(w, r).text, signer: "alice", viewer: V("alice") });
+  assert.equal(direct.ok, true, JSON.stringify(direct).slice(0, 300));
+  const strip = (x) => JSON.parse(JSON.stringify(x).split(r.caseId).join("CASE"));
+  const idOf = (x) => /CASE-\d{4}-\d{4}/.exec(JSON.stringify(x))?.[0];
+  const pr = pre.steps[4].ratification.refusals;
+  const id = idOf(pr);
+  assert.deepEqual(id ? JSON.parse(JSON.stringify(pr).split(id).join("CASE")) : pr, strip(direct.refusals));
+  assert.deepEqual(pre.blockers, pr, "ratification's refusals are the blockers here");
+  assert.equal(pre.ready, direct.refusals.length === 0);
+});
