@@ -26,3 +26,21 @@ Replaces J1 (the design moved; best reading, built and green).
    "**R42** `basisVersionsOf` registers with the `retrieval` its host hands it (its R56, module name `basis-versions`) the single-bundle projection's `no_project_conclusion`: for an inquiry, exactly R11's `no_project_conclusion` for the same viewer (R23's answer when the viewer may see it, else null); null for every other type; never throws. *(N392, K593)*"
 
 My tests name R42, R11, R23 (and R33 for the invisible arm).
+
+## J3 · COMPLETE
+
+Completion on J2's best reading (J2 still open; a `CHANGE` re-opens me). Commit `1516cc89d3`.
+
+**Entries applied.** B1 / N392's share (K573, K593): basis-versions registers its own R56 decoration, module name `basis-versions` (`projectionDecoration(row, {viewer})`: for an inquiry the viewer may see, `noProjectConclusionOf` exactly as `basisVersions` answers `no_project_conclusion`; null otherwise; never throws), with the `retrieval` its host hands `basisVersionsOf` (J2 §1). legacy-store: the `no_project_conclusion` key and the `#noProjectConclusionOf` delegate removed; the `surfaced_in` arm and `#surfacedIn` left for inquiry (N405); one line hands retrieval to the factory (`store.mjs`:536).
+
+**Old suite (`test/projection-noproject.test.mjs`), what I carry** in `bio-plane/test/m/basis-versions/projection.test.mjs` (6 tests, real retrieval): §1 whole: the fixture is real (the act concluded with no project, adopting the claim); per viewer (two members and the machine) the row is the concluded inquiry, the field present and non-null on both reads with the claim state (adopted / undetermined), byte-identical to `op=basisversions`, over 200 bytes; the adopted answer's content (`relationship`, `project`, `relationship_established`, the claim verbatim, its version, the conclusion text), plus the legacy answer never back-filled. §2 (null, key present, open inquiry and two non-inquiries) and §3 (never on the list form, paged or filtered), since the null is my answer. Added: an invisible viewer gets no row and R11's null; a second registration is refused; a host with no retrieval registers nothing. **Not carried:** §4 (source-text reads). The old suite is left for legacy-tests; on this branch it runs 23 pass, 3 fail: exactly §4's three source pins of the old location, every behavioural arm passing on the real plane.
+
+**For BOB's review (ownership).** One added line in legacy-store that is not an import or a use of my names: `store.mjs`:552 `return migrated ? { surfaced_in: migrated } : {};`. It is the minimum rewrite once the key leaves the object literal (the old `const one = { no_project_conclusion: … };` and `{ ...one, … } : one`); legacy-store's net change is −5 lines (2 added, 7 removed). The other added line (:536) uses `basisVersionsOf` only. The removed comment described blocks that have all moved (the action block is actions').
+
+**Deferred.** None in this module. R42's text awaits J2 §3.
+
+**Found in other modules.** inquiry: legacy-store still registers the migrated `surfaced_in` arm (N405, T18), known.
+
+**Tests and checks.** `node --test test/m/basis-versions/`: 53 pass, 0 fail (negative control: with the registration disabled, 4 of the 6 new tests fail). Modules that build basis-versions, unchanged: retrieval 70/0, strength 45/0, contradiction 89/0, case-authoring 68/0, publication 108/0, run-productions 35/0, reevaluation 67/0, affordances 106/0, ratification 86/0, review 30/0, inquiry 78/0. No layer tests. `format`: 72 modules, 67 requirements files; 0 failures. `architecture basis-versions`: 11 product files, 43 imports; 1 failure, the fixture's import of retrieval (J2 §2's `uses` edge). `coverage basis-versions`: 41 of 41 live ids named; 0 failures (R42 named once live). `ownership basis-versions tranche/T17`: legacy-store 2 added, 7 removed; 1 failure, the line above.
+
+Size (session_01FcozLKDUr1LfW1f9JGHiug): test runs 9, module lines 2055
