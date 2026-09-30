@@ -35,3 +35,7 @@ For control-plane (runs beside me in layer 11): removing `instanceSetupStore` an
 **Checks** (civicos-process @ a7155f0c4a): `format`: 69 modules, 64 requirements files; 0 failures. `architecture instance-setup`: 12 product files, 41 relative imports; 0 failures. `coverage instance-setup`: 43 of 43 live requirement ids named by a test; 0 failures. `ownership instance-setup tranche/T15`: 5 files changed; legacy-store, legacy-checks, legacy-index 0 lines added, 0 removed; 0 failures.
 
 Size (session_01MPeZXWNffPSns1vrpkvF5F): test runs 8, module lines 2863
+
+## J3 · REPORT
+
+(1) Generated artifact made stale: bio-plane/dist/bio-plane.bundled.mjs (not_product; its input includes src/setup.mjs, which lost instanceSetupRoute and instanceSetupStore). Not rebuilt. (2) build/requirements/instance-setup.md looks stale: its Status line still lists R12-R16, R24's counterparty shape and R25 as not yet met, and R34 keeps its inline (not yet met: K98) mark, though K417/K441 struck R12-R16, R24, R25 and the Status line says R34 met (K417); each has a passing test at the interface. Yours to strike if so. (3) Comment-only mentions of the removed names, legacy-tests': bio-plane/test/bounds.test.mjs:182, bio-plane/test/identity-claims.test.mjs:183.
