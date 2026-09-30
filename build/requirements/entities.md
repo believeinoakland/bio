@@ -69,7 +69,7 @@ Terms. An **entity** is `{entity_id, kind, label, note, declared_by, at, aliases
   - `NO_ENTITY` (R37)
   - `NO_REASON`
   - `NO_SUCH_RESOLUTION` (C-91.7), when no resolution is held under that key.
-- **R39** (N351, K477) Every collection keyed on one entity that R5 and R8's alias withdrawal answer (the entity's aliases, its relations, and the resolutions resting on a withdrawn name, `resolutions_resting`) is bounded: at most 500 each, in its stated order, with `truncated` per collection by reading one past; a truncated collection never answers a count as whole. *(not yet met)*
+- **R39** (N351, K477) Every collection keyed on one entity that R5 and R8's alias withdrawal answer (the entity's aliases, its relations, and the resolutions resting on a withdrawn name, `resolutions_resting`) is bounded: at most 500 each (relations at most 1,000, the walk bound `intent` R4 reads through R5, K433, K485), in its stated order, with `truncated` per collection by reading one past; a truncated collection never answers a count as whole. *(not yet met)*
 
   Otherwise one report is appended: the reason (trimmed, at most 2,000 characters); `source` (`{module, id}`, such as a contradiction candidate, or null for a member's own report); `by`, the control plane's stamp (R4); and the instant. A repeat by the same `by` from the same `source` answers `already: true` and writes nothing.
 

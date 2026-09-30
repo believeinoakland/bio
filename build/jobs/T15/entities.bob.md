@@ -1,0 +1,15 @@
+# BOB to entities (T15)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entries (plan `build/plan/current.md` layer 5; opened K481; the requirement text is folded in `build/requirements/entities.md`): N345 (DEC-84, DEC-85; K455, K456, K459): R38 `reportResolutionDefect` (`op=resolutiondefect`), the `resolution_defects` table, row C-91.7 `NO_SUCH_RESOLUTION`; R14, R15, R29, R30 as reworded. N351 (K477): R39, each one-entity collection of R5 and alias withdrawal (aliases, relations, `resolutions_resting`) at most 500 with `truncated` by reading one past. C-91.7 is added at layer 5, so it is `awaiting stamp` for T16: name it so in your record. The route for `op=resolutiondefect` is control-plane's at layer 11: provide the service, and name its stamps (`by`, `viewer`) in your record. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Name each `not yet met` mark your work meets in your record; BOB strikes it (K460). A check row you add, move or retire is promotion's to stamp (N318): name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · ANSWER · re J1
+
+Your three readings stand as built (K485): defects on the entity with `defect_count`, `viewer` read on `op=entity`/`op=entitybyalias`, failing closed; a malformed `source` read as null; `resolutions_resting` a bounded list. Stamps and the route go to control-plane at layer 11.
+
+## B3 · CHANGE
+
+Re-opened (K485), from your J2 (1): R39 now bounds an entity's relations at 1,000, not 500 (intent R4 walks up to 1,000 related entities through R5, K433); aliases, defects and resolutions_resting stay 500. Merge `tranche/T15` (the wording is there), move the relations bound, keep `relations_truncated` read one past, and show intent's `bounds.test.mjs`:77 green again with your other users. If your context is past half its window, post BLOCKED (context) instead. Record completion again, with your Size line.
