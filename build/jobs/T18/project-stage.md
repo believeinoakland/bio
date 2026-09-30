@@ -20,3 +20,7 @@
 - `format`: 82 modules, 77 requirements files; 0 failures. `architecture`: 3 product files, 9 relative imports; 0 failures. `coverage`: 9 of 9 live requirement ids named by a test; 0 failures. `ownership` (vs `tranche/T18`): 4 files; 0 failures.
 
 Size (session_011HnmSxiV9LVGXBFeomYniz): test runs 2, module lines 382
+
+## J1 · COMPLETE
+
+project-stage done: the split by copy (K651) into bio-plane/src/project-stage/ with projectStageOf and projectStageOps, R1–R9; stage.test copied and renamed plus one new test (23 pass); format, architecture, coverage (9/9), ownership all 0 failures. Nothing in publication's paths or store.mjs touched; ready to merge early for publication. One flaw fixed here and REPORTED: publication's copy throws when its case tables cannot be read (against its R44 'never throws'); this copy answers undetermined whole, as for an unread document (test 'R1 R7 R3 never thrown'). No catalogue row moved, none awaiting stamp. Record: build/jobs/T18/project-stage.md on job/T18/project-stage.
