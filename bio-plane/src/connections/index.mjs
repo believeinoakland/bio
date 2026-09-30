@@ -71,6 +71,8 @@ export const ASSERTED_LIMIT_DEFAULT = 200;
 export const ASSERTED_LIMIT_MAX = 2000;
 /** R31: a member's stated basis, stored whole up to this bound and refused over it. */
 export const ASSERT_BASIS_MAX = 4000;
+/** R28 (C-6.1): the contemporaneity verdicts a links_to entry may carry; any other is written as undetermined. */
+const LINK_VERDICTS = ["contemporaneous", "superseded", "undetermined"];
 /** R29: the machine viewer the system's own re-projection reads through. */
 const SYSTEM_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
 
@@ -961,9 +963,12 @@ export class Connections {
     const add = edges.filter((e) => !held.has(e.to));
     if (!add.length) return { ok: true, promoted: false, added: 0 };
     const when = this.now();
+    /* C-6.1's links_to arm: the entry is the SOURCE's on its face (`asserted_by: source`), carries the address the
+       source wrote and a contemporaneity verdict, `undetermined` its resting state and stated rather than omitted. */
+    const quoted = (v) => cut(String(v || "").replace(/["\\\n\r]/g, ""), 400);
     let text = spliceReferences(md.text, add.map((e) => ({
-      rel: "links_to", target: e.to, status: "confirmed",
-      note: cut(String(e.address || "").replace(/["\\\n\r]/g, ""), 400) })));
+      rel: "links_to", target: e.to, status: "confirmed", asserted_by: "source", address: quoted(e.address),
+      verdict: LINK_VERDICTS.includes(e.verdict) ? e.verdict : "undetermined", note: quoted(e.address) })));
     if (!text) return { ok: false, reason: "UNSPLICEABLE_REFERENCES",
                         detail: "the source document's references block is not in a shape this act can extend in place" };
     text = setScalar(text, "last_updated", `"${when}"`);
@@ -1298,7 +1303,11 @@ function spliceReferences(text, additions) {
   const end = lines.indexOf("---", 1);
   if (end === -1) return null;
   const block = additions.map((a) =>
-    `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`);
+    `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}`
+    + (a.asserted_by ? `\n    asserted_by: ${a.asserted_by}` : "")
+    + (a.address != null ? `\n    address: "${a.address}"` : "")
+    + (a.verdict ? `\n    verdict: ${a.verdict}` : "")
+    + `\n    note: "${a.note ?? ""}"`);
   let ref = -1;
   for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
   if (ref === -1) return [...lines.slice(0, end), "references:", ...block, ...lines.slice(end)].join("\n");
