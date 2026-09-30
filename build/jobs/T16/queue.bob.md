@@ -20,3 +20,7 @@ CHANGE (K561). QUEUE-PRODUCERS has merged early. Merge `tranche/T16`, remove the
 - Concluded-elsewhere's basis now has a `detail`.
 - The lead carries only the take-up option. The set-aside stays yours, at the mint (R18).
 TASKS has not merged yet: its CHANGE follows.
+
+## B4 · CHANGE
+
+CHANGE (K562). TASKS has merged early. Merge `tranche/T16`, remove the inbox code from your files, and rewire to `tasks` R6 (`recentTasks`, `resolvedTasks`, `taskExists`, answering in `taskList`'s shape). TASKS #1 J1 (1) lists everything to drop: `tasks` from your purge declaration, `COUNT_KEYS`/`counts`, the audit check, the promotion step, the `task-drain` consumer, `capture.on("task")`, `QUEUE_TABLES`/`QUEUE_SCHEMA`'s tasks part, `queueOps`' four task ops, and the four moved rows plus `checkInboxGrammar` from `queue/checks.mjs`. Once your purge declaration no longer holds `tasks`, tasks' registrations become the live ones by themselves. Both splits are now on the tranche. Complete when every entry is met and `test/m/` is whole-green on your branch.
