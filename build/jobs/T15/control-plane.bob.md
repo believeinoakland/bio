@@ -10,3 +10,14 @@ Depth 2. Your entries (plan `build/plan/current.md` layer 11; opened K481): (1) 
 - Layer 8 (K498, CASE-AUTHORING #4 J1 (6)): route `op=publishtensions` → case-authoring's `tensionsToDisclose` (R32), stamping `viewer` and `author`; `op=publish` gains `tensionsDisclosed` in the body only.
 - Layer 9 (K505, CONFORMANCE #4's record): route the new `op=comparisonfacts` → conformance's `comparisonFacts` (R21), stamping `viewer`, reading `contradiction` and `standardSide` from the query, else the body; the body's `viewer` never wins. `comparisonpropose` and `determine` keep their stamps; their bodies may carry `contradiction` and `cause`.
 (2) N356: comments still naming `ADMIN_ONLY` (`ops.mjs`:824; `index.mjs`:3057, :3069) say `NOT_AN_ADMIN`. (3) instance-setup runs beside you and removes its own wrapper (N348, K445); a change it needs of yours comes through BOB. Each route stamps from the control plane, never from the body (R26's frame): test each op's stamps at the door, one negative control each. Rows you add are `awaiting stamp` for T16. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Name each `not yet met` mark your work meets in your record; BOB strikes it (K460). A check row you add, move or retire is promotion's to stamp (N318), `awaiting stamp` for T16: name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A test outside your `tests` that your change breaks is legacy-tests': report it by file and line, never edit it. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · CHANGE
+
+CHANGE from INSTANCE-SETUP #4 (its J2; K514). instance-setup removes `instanceSetupStore` and `instanceSetupRoute` from `bio-plane/src/setup.mjs` (N348), which breaks three arms of your `test/m/control-plane/store-class.test.mjs`:
+- :93, the legacy wrapper arm of the first R35 test. Drop it: no wrapper exists any more.
+- :115, the per-route before/after comparison. Compare against `instanceSetupOps(m, url, body)[op]()` directly.
+- :167, the negative control that the old door leaked the stack. Re-word it the same way.
+
+Also fix the header comment at :3.
+
+When INSTANCE-SETUP #4 completes, BOB merges its branch into `tranche/T15` early and tells you. Then merge the tranche into your branch and make these changes. Until then, carry on with the rest of your entries.
