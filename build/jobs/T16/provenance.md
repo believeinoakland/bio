@@ -30,3 +30,7 @@ Size (session_01VKXANZkXWm7m6KERHYiYdY): test runs 5, module lines 3257
 ## J1 · REPORT
 
 R51's precedence, my reading (applied; say if otherwise): authored (R27) first; a fetched route this instance recorded (direct R24, then archive R25) is measured and answers before the doorbell; the doorbell answers before a via no ruling names (R26 CAPTURE_GRADE_VIA_UNRULED). Found in inquiry (src/inquiry/index.mjs ~2230): it maps only CAPTURE_ROUTE_UNRECORDED to the author's letter under the ceiling, so a doorbell capture (CAPTURE_RECEIVED_NOT_FETCHED) counts as unruled and contributes no byte grade, where R51 gives it the author's letter under the ceiling. No regression: today the same capture answers CAPTURE_GRADE_VIA_UNRULED and is unruled there too. captureGrade's doorbell answer carries ceiling for that reader.
+
+## J2 · COMPLETE
+
+R51 met: captureGrade answers a doorbell receipt with route doorbell, determined false, basis CAPTURE_RECEIVED_NOT_FETCHED, grade null, ceiling, and received {address, address_norm, at} from the earliest doorbell receipt. DOORBELL_VIA exported for capture R65. R15 unchanged at this interface. Marks met: R51 (N364) and the Status line's N364 clause. No check rows; no UI or affordances hits; no generated artifact stale. provenance 64/64; capture 75/75, inquiry 74 pass + 1 todo, consequences 24/24; format, architecture, coverage (51/51), ownership: 0 failures. Record: build/jobs/T16/provenance.md.
