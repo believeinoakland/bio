@@ -23,3 +23,7 @@
 - No generated artifact is made stale by this job's own paths. `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) bundles `index.mjs`, so BOB's layer-close regeneration picks it up.
 
 Size (session_01MwgW222syZfXr1tpQiVafD): test runs 4, module lines 433
+
+## J1 · COMPLETE
+
+Complete. §4.4 move: the governorOp block is governorOpResponse + GOVERNOR_OPS in host-governor; index.mjs rewired (+2/-5, the import and one dispatch line). queue-conditions' share converted: test/m/host-governor/holding.test.mjs (4 tests) and one whole-plane test in ops.test.mjs. No catalogue or store row moved, none awaiting stamp. Module tests 39/39; format, architecture, coverage (27/27), ownership: 0 failures. test/system/refusal-wire.test.mjs HALTS below its catalogue floor, identically on origin/tranche/T18 (K619). Record: build/jobs/T18/host-governor.md.
