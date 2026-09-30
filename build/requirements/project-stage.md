@@ -53,7 +53,7 @@ A project's stage, what each stage has earned and still needs, and its work prod
 
 ### Suggestions
 
-- **The seam (K651).** Nothing calls `projectStage` but its op, and its constants are imported only by `stage.test`, so the copy runs against `publication` as it stands and merges early; `publication`'s job deletes its copy and spreads `projectStageOps`. `publication` R40 already names every column R3 reads.
+- **The seam (K651).** Nothing calls `projectStage` but its op, and its constants are imported only by `stage.test`, so the copy runs against `publication` as it stands and merges early; `publication`'s job deletes its copy, and `legacy-store`'s job spreads `projectStageOps` in the dispatch (K671). `publication` R40 already names every column R3 reads.
 - **For callers.** The control plane routes `op=projectstage`, stamps `viewer` and keeps the route. The redesign shows `stages` on the project's home screen (DEC-79's bars, each named). It states each unmet stage's `why` and each unmet rung's `why`, never hiding them, and shows no need that the answer does not carry (N300, N346).
 - **Tests.** `test/m/publication/stage.test.mjs` whole, copied here and renamed to this module's ids. Take one project through the four stages by its inputs alone (cite a question, add a leg, conclude, withdraw, ratify); a `current_state: matured` written in a document holding no question still reads `forming` (R5's negative control); the three refusals byte-identical (R8); the page cap reading `undetermined`. R4: the stage walk re-run asserting `stages` at every step, and each listed need added alone; withdrawing the earning conclusion moves `matured`'s `since` or unreaches it (K448).
 
