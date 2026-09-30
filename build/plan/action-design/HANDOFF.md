@@ -24,6 +24,11 @@
 - **The requirement drafts** (`drafts/action-plans.md`, `drafts/deltas.md`) are "correct and complete enough" (Bob); staged under K591.
 - **UX:** the plan-page view (`views/plan-page.html`) is approved; `UX-ANSWERS.md` is approved: OQ-8, OQ-9, OQ-25 answered, and OQ-14 answered by the earlier rulings DEC-10, DEC-69 and DEC-70, which the drafts now cite instead of restating.
 
+## Bob's words on reminders and nagging, from this session (K615 asks they be recorded here)
+
+- Bob, 2026-09-30, answering whether the queue may repeat a deadline item: *"We've addressed questions related to 'nagging' already. Refer to those answers rather than us risking conflicting responses."* The drafts therefore cite the existing rulings (DEC-10 as recorded at D-125 in `NOTIFICATIONS.md`, DEC-69, DEC-70, and DEC-94 per K614) and restate none of them.
+- Folded at `drafts/` after K613–K615: `action-plans` R29 (reminders set when an option is chosen, fired as asked, another or none on response, display-only nearing, overdue once, no outside channel); `actions`' reminders; the queue's kinds rewritten on DEC-94; the litigation-hold item stays open until cleared (K613 (2)); `filings`' template library with assistant drafts adopted by a member (K613 (3)); the profile's template task narrowed. Requirement numbers follow K611's fold (actions R45–R50 etc.).
+
 ## Found on the way (BOB's to plan)
 
 - Monitoring's `deadlineRecheck` has no caller outside tests, and the queue has no kind for an overdue clock or a due stage: `monitoring` R34–R35 never reach a member.
