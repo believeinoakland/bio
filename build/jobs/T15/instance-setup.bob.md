@@ -1,7 +1,13 @@
 # BOB to instance-setup (T15)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
 Depth 2. Your entries (plan `build/plan/current.md` layer 11; opened K481): N348's remainder (K445): `instanceSetupStore` and `instanceSetupRoute` (`bio-plane/src/setup.mjs`:2439, :2420) go, with the fixture's frame (`test/m/instance-setup/fixture.mjs`:9, :137). control-plane R35 already holds the DO class and routes `instanceSetupOps` through R26's frame, so every setup route passes the one frame (`BAD_JSON`, the existence read, the internal-error catch); your routes' behaviour at the door is unchanged except that it now gains that frame, which your tests confirm through control-plane's door. CONTROL-PLANE runs beside you in this layer: a change it must make for your removal goes through BOB. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Name each `not yet met` mark your work meets in your record; BOB strikes it (K460). A check row you add, move or retire is promotion's to stamp (N318), `awaiting stamp` for T16: name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A test outside your `tests` that your change breaks is legacy-tests': report it by file and line, never edit it. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · ANSWER · re J1
+
+J1: your reading stands (K514). The fixture builds its own frame over `instanceSetupOps`, as N348's wording says. No test of yours imports control-plane, which comes later in the order. The real door is confirmed by control-plane's `store-class.test.mjs` (R35).
+
+J2 is forwarded to CONTROL-PLANE #6. When you post COMPLETE, BOB merges your branch into `tranche/T15` early (§4), so control-plane can re-word its three arms against the removal.

@@ -2394,7 +2394,9 @@ export function instanceSetupOf(ctx, env = null, deps = {}) {
 }
 
 /** This module's Durable Object routes (the `membershipOps` pattern). The stamps (`author`, `by`, `origin`) are the
- *  control plane's, read from the query AFTER the body is spread, so a body naming its own is overwritten (R29). */
+ *  control plane's, read from the query AFTER the body is spread, so a body naming its own is overwritten (R29).
+ *  The map joins `control-plane`'s one route map (its R35; N348), so every route passes its frame: R26's body read,
+ *  R27's existence read, the envelope and R25's catch. This module keeps no door or Durable Object class of its own. */
 export function instanceSetupOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -2412,39 +2414,6 @@ export function instanceSetupOps(m, url, body) {
     cpuprobestart: () => m.recordCpuProbeStart(body || {}),
     recordcpuprobestep: () => m.recordCpuProbeStep(body || {}),
     cpuprobeend: () => m.recordCpuProbeEnd(body || {}),
-  };
-}
-
-/** The Durable Object's door for this module's ops: `null` for any other op, so the caller hands the request on
- *  untouched; else the store's own envelope (`{ok: true, result}`, `BAD_JSON` 400, a throw 500). */
-export async function instanceSetupRoute(m, req) {
-  const url = new URL(req.url);
-  const op = url.pathname.slice(1);
-  if (!Object.prototype.hasOwnProperty.call(instanceSetupOps(m, url, null), op)) return null;
-  let body = null;
-  if (req.method === "POST") {
-    const raw = await req.text();
-    if (raw.trim() !== "") {
-      try { body = JSON.parse(raw); }
-      catch { return Response.json({ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, { status: 400 }); }
-    }
-  }
-  try { return Response.json({ ok: true, result: await instanceSetupOps(m, url, body)[op]() }); }
-  catch (e) { return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 }); }
-}
-
-/** The Durable Object class the plane exports: `Base` (legacy-store's, earlier, which cannot call this module)
- *  started with this module after its own schema pass, and routing this module's ops before its own map (K93; the
- *  map's §3). Moves to `control-plane` when it becomes the composition root. */
-export function instanceSetupStore(Base) {
-  return class Store extends Base {
-    constructor(ctx, env) {
-      super(ctx, env);
-      ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
-    }
-    async fetch(req) {
-      return (await instanceSetupRoute(instanceSetupOf(this.ctx, this.env), req)) ?? super.fetch(req);
-    }
   };
 }
 

@@ -1,15 +1,27 @@
 # Plan: tranche T16
 
-**Status** · DRAFT · reviewed by BOB #69, points 1–5 ruled (K494); written by a worker for BOB #69, 2026-09-30, read on `tranche/T15` @ fd35ffcc8f (layers 1, 2, 5, 6 closed, K482, K483, K486, K492; layer 7 running; layers 8–11 and legacy-tests still to run). Re-read against T15's close before opening (K424's and K451's practice): whatever T15's layers 7–11 and legacy-tests defer, report or name `awaiting stamp` folds in then.
+**Status** · DRAFT · re-cut by BOB #70 2026-09-30 for N361 and N364 (K517; N362 to Bob; N359, N360, N363 already carried) · reviewed by BOB #69, points 1–5 ruled (K494); written by a worker for BOB #69, 2026-09-30, read on `tranche/T15` @ fd35ffcc8f (layers 1, 2, 5, 6 closed, K482, K483, K486, K492; layer 7 running; layers 8–11 and legacy-tests still to run). Re-read against T15's close before opening (K424's and K451's practice): whatever T15's layers 7–11 and legacy-tests defer, report or name `awaiting stamp` folds in then.
 
 Cut from T15's "Not in T15" (`current.md`), `next.md`'s open entries, rulings K470–K493 and the T15 job records (`build/jobs/T15/*.md`). An `N` entry's text is in `build/plan/next.md`. Line numbers are as read on `tranche/T15` today; a job re-finds them.
 
 **Rules at the opening.** T15's rules hold (`current.md`): long batteries in the foreground, in chunks under ten minutes, the record pushed after each; a provider a later job of its layer needs merges early (§4, K425); promotion stamps at layer 2, last in it, every row change from T15's layers 3+ and T16's layers 1–2 (N318, K425), and rows added at T16's layers 3+ are named `awaiting stamp` for T17; legacy-tests runs alone, last (K420, K427), retiring a covered extracted suite before re-anchoring anything (K457); a job names each `not yet met` mark its work meets and BOB strikes it (K460); after each extraction merge BOB runs `test/m/` whole on the tranche.
 
+## Layer 1
+
+- **legacy-checks** · N361 (K498, K500): retire the catalogue's `checkCaseDocument` fallback (`gate.mjs`:491, used when no promotion instance registers ratification's), which accepts only `bio-case-document/4` and older; the live path is ratification's over publication R20. Its parity test `test/m/ratification/checks.test.mjs`:133, accepted red by name since K500, is ratification's to retire or re-anchor (report it).
+
 ## Layer 2
 
+
 - **membership** · N357, only if BOB rules the wording below (W1) before the opening: `viewerPredicate`'s member arm (`membership/index.mjs`:36–53) reads a `members` row only, so `member:admin` (the founder's spelling elsewhere, :478, :895) sees no project it does not join while bare `admin` sees all (:41). Merged early for promotion (K425).
+- **membership** · N364 (DEC-80 item 4; K509 (2)): R89–R91 (a member registers their own browser-held attesting key from a signed-in session, every administrator notified and able to revoke), R27 amended, row C-96.15; draft `draft-N345-dec78-80-81.md` §3.
 - **promotion** · The stamp, last (K425): `CATALOG_VERSION` 1.45.0 → 1.46.0 (`gate.mjs`:360) over every row change since 1.45.0 (K483). T15's layers 3+, named `awaiting stamp` in their records: entities C-91.7 `NO_SUCH_RESOLUTION` added (`jobs/T15/entities.md`:31); inquiry C-2.11–C-2.17 added in `INQUIRY_CONTRADICTION_CHECKS` (`inquiry.md`:16, :38); contradiction C-60.2, C-60.3, C-93.8–C-93.39 added (34 rows) and C-93.1–C-93.3's `where` moved to `#runRefusals` (`contradiction.md`:17); case-authoring C-120.1–C-120.3 (layer 8) and conformance C-113.24–C-113.27 (layer 9), once their records name them; any other row a T15 record of layers 7–11 names. The gate's composition: inquiry's registered step now runs R47's arm and C-2.17 (`inquiry/index.mjs`:2715), and contradiction registers a step of its own (R38; `contradiction/index.mjs`:225–226). T16's layers 1–2, if any (none planned). `ROW_CENSUS` (R50) re-pinned. Optional, N242's promotion share (the DEC-49 guard's carried red, LEGACY-TESTS #12 (4), N275): C-102.9's region at `gate.mjs`:480–483 carries no code.
+
+## Layer 3
+
+- **capture** · N364 (DEC-78, DEC-81 3(c); K509 (3)): R65–R70 (the pulled knock filed as a capture with its receipt, route `doorbell`; the keyed contact digest; R69 through `signatures`), R16 (the capturing member), R20 (clear its stale co-attestation mark if the code meets it, K497), R32, R37, R53, R54 amended; rows C-118.3–C-118.6; draft §1. `uses` gains signatures.
+- **sources** · N364, a new product module (K509 (1)), placed after `capture`: R1–R14, a source's dated, attributed disclosure history, sight-restricted and read-logged, pseudonym consent by knocker secret (at least 20 characters, K497) or a member's evidenced record, hand-carried material's rule (R12, not built); rows C-121.1–C-121.6; draft §2. Enters `modules.json` at the opening with `uses` capture, membership, record-core, legacy-checks.
+- **provenance** · N364's flagged share (K509 (3)): `captureGrade` for route `doorbell`, received not fetched, chain of custody from the knock's receipt; BOB words the requirement at the opening (draft §9).
 
 ## Layer 6
 
@@ -20,15 +32,20 @@ Cut from T15's "Not in T15" (`current.md`), `next.md`'s open entries, rulings K4
 
 ## Layer 7
 
-- **reevaluation** · N359's share, after contradiction merges: R27's `corrected` cause reads the mark's instant as `since` (K493 (4) set it null with a stated sentence); the null-`since` test re-anchors, and whether R16's null-matching close still has a case is the job's report. Optional, N242's share: the DEC-49 guard's four unclassified outcomes (LEGACY-TESTS #12 (4)), if REEVALUATION #5 leaves them.
+- **reevaluation** · N364: R28 (DEC-78 item 5(e)), R2's terms; `uses` gains sources; draft §4. N359's share, after contradiction merges: R27's `corrected` cause reads the mark's instant as `since` (K493 (4) set it null with a stated sentence); the null-`since` test re-anchors, and whether R16's null-matching close still has a case is the job's report. Optional, N242's share: the DEC-49 guard's four unclassified outcomes (LEGACY-TESTS #12 (4)), if REEVALUATION #5 leaves them.
 
 ## Layer 8
 
-- **ratification** · N354 (R17, worded K477, `not yet met`): the `registerholds` probe (`ratification/ops.mjs`:512–520) reads an unanswered `doAnswer` as not held in parts, so the gate answers `PLANE_MISSING_BYTES`; silence answers `STORE_DID_NOT_ANSWER` with the correlation, a refusal the store's own (`storeRefusal`).
+- **publication** · N364 (DEC-81): R51–R52, R2, R10, R20 amended (each document's grade and co-attestation into `/5`, K497); row C-122.1; draft §5. `uses` gains sources.
+- **case-authoring** · N364 (DEC-80 item 3, DEC-81): R34–R37 (`op=publishpreflight`, write-free; `op=reattest` its own act, K497), R12, R14, R29, R32 amended; rows C-120.4–C-120.7; draft §7. `uses` gains sources, capture.
+
+- **ratification** · N364: R18–R19 (DEC-80 item 3; draft §6). N354 (R17, worded K477, `not yet met`): the `registerholds` probe (`ratification/ops.mjs`:512–520) reads an unanswered `doAnswer` as not held in parts, so the gate answers `PLANE_MISSING_BYTES`; silence answers `STORE_DID_NOT_ANSWER` with the correlation, a refusal the store's own (`storeRefusal`).
 
 ## Layer 11
 
 - **queue split** (N363, K507), first: the obligation inbox and the feed producers cut into two new modules before `queue`; then **queue** · T15's moved entry: N345 R1 amended, R43–R47; N352's share (`#hiddenBundles`, `queue/index.mjs`:167, reads membership R88).
+- **affordances** · N364: R28–R29 (the rung backing, through sources and capture), R2, R3, R5 amended; draft §8. `uses` gains sources, capture.
+- **control-plane** · N364's flagged share: `op=inboxpull` promotes capture R65's document as a new information bundle at `collected` in the same act, the puller its author (DEC-78 item 1; BOB words it at the opening, draft §9); routes, `NEEDS` rows and stamps for sources', membership's, case-authoring's and capture's new ops. `uses` gains sources.
 
 ## Outside a module
 
@@ -40,7 +57,7 @@ Cut from T15's "Not in T15" (`current.md`), `next.md`'s open entries, rulings K4
 
 ## Not in T16
 
-**Bob's first:** N345's DEC-78, DEC-80 and DEC-81 parts (BOB drafts, Bob approves; ids re-count at the fold, K454; `/5` shared with DEC-81); N317, N303's remainder, N320; N61 (a meaning change: `records_laws` levels); N71 (the word "bundle"); N144, N232, N241 (UX: surfaces, recipes, legacy-ui's six types); the queue split (draft-T15 point 6: a new product module, inbox and feed producers), unless Bob has approved it, when queue's entry is re-cut.
+**Bob's first:** N362 (conformance R21's sides gain `text`, the passage's words through `content.passageText`: an addition to a provided service, so his; recommended yes); N317, N303's remainder, N320; N61 (a meaning change: `records_laws` levels); N71 (the word "bundle"); N144, N232, N241 (UX: surfaces, recipes, legacy-ui's six types). (The queue split, K507, and N345's DEC-78/80/81 parts, K509, are approved and carried above.)
 
 **Needs a deployment or measurement no job can make:** contradiction R41, the K5 gate arm and R24/R27/R32/R33's K5 arms and R34 (a measured recommender run; `test.todo`, K488, K490; K5 candidates stay unshown); DIST-14, N75 (a deployed plane); N34 (a measured JPX bound, and BOB reviews pdf-worker's split first); N22 (a non-root container).
 
@@ -67,3 +84,5 @@ New ids and changed text wait here, not in the requirements files, until their j
 - **W1** membership **R43** (N357), added sentence: "The founder's viewer is spelled bare `admin` or `member:admin`; both see every bundle, and the member id the rule returns is `admin` for the second and null for the first." (`hiddenBundles`, R88, then answers null for both, as the complement of R43.)
 - **W2** inquiry **R36** (N358, on point 1's recommendation): drop "the columns this module writes on `bundles` today (…) move to a table of its own keyed by `bundle_id` (K75 (3));" and its `not yet met` mark; R40 stands as written, and N136 keeps the move.
 - **W3** contradiction **R27**'s `stale` bullet (N359), clarifying, meaning unchanged: "…the member and the instant (for a resolution concluded by a contradiction inquiry, R36's concluding member and the conclusion's instant)…".
+- **W4** provenance, new id after R46 (N364, K509 (3); ids re-count at the fold), under `captureGrade`: "A capture whose receipt is route `doorbell` answers `route: "doorbell"`, `determined: false`, `basis: "CAPTURE_RECEIVED_NOT_FETCHED"`: it earns no fetched letter; its grade is the member's authored letter under the ceiling, stated as authored, never as measured, and its existence at the pull's instant is proven by the receipt's timestamp (chain of custody from the knock's receipt)." *(not yet met: N364)*
+- **W5** control-plane, new id at the fold (N364, DEC-78 item 1): "`op=inboxpull` routes to capture's `pullKnock` (capture R65) stamping `by` from the session, and in the same act promotes the pulled document as a new information bundle at `collected`, the puller its author; a refusal of either leaves neither written." *(not yet met: N364)*
