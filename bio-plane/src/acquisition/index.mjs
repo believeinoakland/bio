@@ -871,11 +871,13 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
       if (pobj) { profileBytes = new Uint8Array(await pobj.arrayBuffer()); profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes); }
     } catch { /* an unreadable primary is not a failed capture */ }
   }
-  /* COFF-1: magic bytes first, from the first KiB read back when not already read; the declared type only for a
-     multipart or unreadable primary, with the absence stated. */
-  let formatBytes = profileBytes;
-  if (!formatBytes && !multipart && total > 0) {
-    try { const fobj = await ev.get(sha); if (fobj) formatBytes = new Uint8Array(await fobj.arrayBuffer()).subarray(0, 1024); }
+  /* COFF-1, R17 (K659): magic bytes first, from the stored bytes read back WHOLE up to ODF_DIGEST_MAX when not already
+     read, so an office package (whose central directory lies at its end) is judged from its bytes, and the same bytes
+     serve its container digest below; the declared type only for a multipart, oversized or unreadable primary, with
+     the absence stated. */
+  let formatBytes = profileBytes, readWhole = null;
+  if (!formatBytes && !multipart && total > 0 && total <= ODF_DIGEST_MAX) {
+    try { const fobj = await ev.get(sha); if (fobj) formatBytes = readWhole = new Uint8Array(await fobj.arrayBuffer()); }
     catch { /* detection falls back to the declared content type */ }
   }
   const profCtx = { headers, locator, content_type: ct || null, text: profileText };
@@ -895,10 +897,7 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
   };
   let containerBytes = null;
   const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
-  if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
-    try { const cobj = await ev.get(sha); if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer()); }
-    catch { /* unread is undetermined: the digest says so */ }
-  }
+  if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) containerBytes = readWhole;
   profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
   return profile;
 }
