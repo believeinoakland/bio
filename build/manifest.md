@@ -44,6 +44,6 @@ Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `write
 
 ## Starting a session
 
-- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. ROOT #1, `session_0183DmvWFhkpLgr7EBFwPZMr` (started by Bob 2026-09-27 ~14:17 UTC), archived 2026-09-30 ~23:22 by BOB #77 on Bob's direction (past 300k tokens; K693). **ROOT #2** is started by Bob; BOB #78 records its session id here at takeover.
+- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. ROOT #1, `session_0183DmvWFhkpLgr7EBFwPZMr` (started by Bob 2026-09-27 ~14:17 UTC), archived 2026-09-30 ~23:22 by BOB #77 on Bob's direction (past 300k tokens; K693). **ROOT #2**, `session_015QfrQQAdENFCG68uwrnxni` (started by Bob 2026-09-30 ~23:27 UTC), recorded by BOB #78 at takeover.
 - **BOB:** read `roles/BOB.md` in the process repository, then this file, then the latest handoff (TRANSITION.md §6 until the first tranche closes).
 - **A module job:** read `roles/JOB.md` in the process repository; BOB's first message names the module and the tranche.
