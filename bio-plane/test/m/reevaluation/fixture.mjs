@@ -1,8 +1,9 @@
 /* reevaluation over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   entities, connections, inquiry, basis-versions, strength, contradiction), on a real SQLite database (node:sqlite)
+   entities, connections, inquiry, basis-versions, strength, contradiction, sources), on a real SQLite database (node:sqlite)
    standing in for a Durable Object's storage. What a later module registers (legacy-store's facts `caseMember` and
    `publishedRegistry`), the readings content reads through extraction (its R30 `readingOf`, R36 `unitsOf`), retrieval's
-   selections and ai-runs' run gate (contradiction R21) are stand-ins the test controls. Every test drives
+   selections, ai-runs' run gate (contradiction R21) and capture's pulled knocks (`pulledKnocksOf`, its R72, the one read
+   `sources` makes of it) are stand-ins the test controls. Every test drives
    `reevaluation` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -16,6 +17,7 @@ import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
+import { sourcesOf } from "../../../src/sources/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
@@ -140,12 +142,16 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
   /* inquiry as this module reads it; a test may bound what the record earns (R5). */
   const inquiry = new Proxy(k, { get: (t, p) => (p === "earned" && earnedOverride
     ? earnedOverride : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+  /* sources (R28), the real one; the knocks capture pulled are the stand-in `knocks` (capture sha -> knock rows). */
+  const knocks = new Map();
+  const sources = sourcesOf(host, { record, membership, capture: { pulledKnocksOf: (s) => knocks.get(s) || [] },
+                                    now: () => Date.parse(clock.now) });
   const r = reevaluationOf(host, { record, membership, promotion, inquiry, content, provenance: prov, strength,
-                                   basisVersions, contradiction: c, now: () => clock.now });
+                                   basisVersions, contradiction: c, sources, now: () => clock.now });
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, entities, connections, k, basisVersions, strength, c, r,
-    clock, ex, selections, caseMembers, published,
+    clock, ex, selections, caseMembers, published, sources, knocks,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -238,6 +244,24 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
       st.sql.exec(`INSERT INTO inquiry_basis_versions (bundle_id, name, ord, description, relationship, state, hidden, claim, composition)
                    VALUES (?, ?, ?, 'd', 'and', 'accepted', 0, ?, 'c')`, inquiryId, name, ord, claim);
       if (subject) st.sql.exec(`UPDATE bundles SET inquiry_subject_entity=? WHERE bundle_id=?`, subject, inquiryId);
+    },
+    /** A knock pulled into capture `capSha` (capture R65), and its source read by a member (sources R1): the source id. */
+    knocked(capSha, { pseudonym = null, knockId = `K-${capSha.slice(0, 8)}-${++n}` } = {}) {
+      if (!st.sql.exec(`SELECT 1 AS x FROM members WHERE member_id='bob'`).length) w.member("bob");
+      const list = knocks.get(capSha) || [];
+      list.push({ knock_id: knockId, sha256: capSha, bytes: 10, received: "2026-09-27T00:00:00.000Z", pseudonym,
+                  knocker_digest: pseudonym ? `digest-${pseudonym}` : null });
+      knocks.set(capSha, list);
+      const a = sources.sourceOf({ captureSha: capSha, viewer: V("bob") });
+      if (!a.ok) throw new Error(`fixture sourceOf refused: ${JSON.stringify(a).slice(0, 300)}`);
+      return a.sources ? a.sources[a.sources.length - 1].sourceId : a.sourceId;
+    },
+    /** A disclosure about `source` by bob (sources R2): an attribute moves the rung to partly_known, a name further. */
+    disclose(source, revealed = { kind: "attribute", attribute: "role", value: "clerk" }, fields = {}) {
+      const e = sources.recordDisclosure({ source, revealed, how: "self", knownTo: "group", evidence: "told to bob",
+                                           sight: ["bob"], by: "bob", ...fields });
+      if (!e.ok) throw new Error(`fixture disclosure refused: ${JSON.stringify(e).slice(0, 300)}`);
+      return e;
     },
     /** A published edition of `id` in the registry the store provides (promotion's fact). */
     publish(id, edition, { capture = null, connection = null, testimony = null, at = "2026-09-27T12:00:00Z" } = {}) {
