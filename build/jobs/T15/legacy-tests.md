@@ -1,6 +1,6 @@
 # legacy-tests (T15)
 
-**Status** · session_01FwqkCarjLUHxQeHz5zzXyh · depth 2 · WORKING · handled B1
+**Status** · session_01FwqkCarjLUHxQeHz5zzXyh · depth 2 · RUNNING until 2026-09-30T08:35:04Z (six helper agents re-anchoring suites (case-document /5, contradiction, affordances, bounds/sight/UI, pins, DEC-49 guard)) · handled B1
 
 ## Progress (working notes; the COMPLETE entry supersedes)
 
