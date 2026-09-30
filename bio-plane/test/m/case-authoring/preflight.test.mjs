@@ -1,0 +1,370 @@
+/* case-authoring (N364): each document's grade and co-attestation and the owner's acknowledgement (R35, R36), what may be
+   said of a source (R37), the `/5` blocks in the document (R14), hunch debt's row (R12), the rows C-120.4–C-120.7 (R29),
+   and the ceremony's pre-flight (R34), which carries R32's read as its step three. Over the real provenance, capture and
+   sources modules; ratification's pre-flight (its R18) is a stand-in at its ruled interface (K552 (5)) where a test
+   must control its answer. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { world, V, T0, sha } from "./fixture.mjs";
+import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, SELF_ATTESTED_SENTENCE } from "../../../src/case-authoring/index.mjs";
+import { caseDocumentBlocks, unnamedSourceStatement, sourceStatement } from "../../../src/publication/index.mjs";
+
+const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
+const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
+/* A co-attestation as capture R20 and provenance R32–R33 record it at capture. */
+const CO_ATTESTED = { attestations: [{ kind: "rfc3161", service: "tsa.example", file: "snapshots/timestamp-abc.tsr",
+                                       sha256: "d".repeat(64) }],
+                      co_archive: { service: "archive.example", locator: "https://archive.example/web/x" } };
+const REASON = "the site refuses the archive's crawler";
+
+const docOf = (w, r) => w.row(`SELECT * FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition);
+const bodyOf = (text) => text.slice(text.indexOf("\n---\n", 4) + 5);
+function refused(r, code) {
+  assert.equal(r.ok, false, JSON.stringify(r).slice(0, 400));
+  assert.deepEqual([r.reason, r.code, r.check, r.translation],
+    [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
+}
+/* Q rests on a co-attested Grade B document (DOC) and on a Grade B one that is not co-attested (DOC2); Q2 rests on
+   DOC2 too. */
+function setup(opts) {
+  const w = world(opts);
+  for (const m of ["alice", "bo"]) w.member(m);
+  const a = w.graded(DOC, CO_ATTESTED), b = w.graded(DOC2);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }]);
+  w.finding(Q2, [{ target: DOC2 }]);
+  const P = w.project("Team", "alice", [Q, Q2]);
+  return { w, P, a, b };
+}
+const lateRow = (w, capture, seq, o) => w.st.sql.exec(`INSERT INTO late_attestations (capture_sha, seq, kind, service, ok, at,
+  by, outcome) VALUES (?, ?, ?, ?, ?, ?, 'alice', ?)`, capture, seq, o.kind, o.service, o.ok ? 1 : 0, o.at,
+  JSON.stringify({ late: true, proves: `proves the bytes existed by ${o.at}, not at capture`, ...o }));
+
+test("R29: C-120.4–C-120.7 are this module's rows, in the family 'a case's disclosures and its pre-flight', with the requirements' translations, each naming its region", () => {
+  const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(3);
+  assert.deepEqual(rows.map(([k, v]) => [k, v.check]),
+    [["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4"], ["SELF_ATTESTED_NO_REASON", "C-120.5"],
+     ["SELF_ATTESTATION_NOT_STANDING", "C-120.6"], ["UNCLEARED_HUNCH", "C-120.7"]]);
+  assert.deepEqual(rows.map(([, v]) => v.translation), [
+    "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written.",
+    "Publishing a document as self-attested only says why. Give the reason. Nothing was written.",
+    "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written.",
+    "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."]);
+  for (const [, v] of rows) assert.match(v.where, /^src\/case-authoring\/index\.mjs #\S+ > is-[a-z-]+$/);
+});
+
+test("R12: uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {
+  const w = world();
+  w.member("alice"); w.doc(DOC);
+  w.finding(Q, [{ target: DOC, grade: "B", grade_axis: "connection", grade_source: "hunch", author: "member:alice",
+                  date: "2026-09-27" }]);
+  const P = w.project("Team", "alice", [Q]);
+  const before = w.snapshot();
+  const r = w.publish(P, "alice", [Q]);
+  refused(r, "UNCLEARED_HUNCH");
+  assert.deepEqual(r.hunches, [{ target: Q, ord: 0, leg_target: DOC }]);
+  assert.deepEqual(w.snapshot(), before);
+  const pre = w.ca.publishPreflight({ project: P, targets: [Q], roles: { [Q]: "load_bearing" }, ...AUTH, viewer: V("alice") });
+  assert.deepEqual([pre.ready, pre.first], [false, r]);
+  assert.deepEqual(w.snapshot(), before);
+  /* negative control: cleared, it publishes */
+  w.finding(Q, [{ target: DOC }]);
+  assert.equal(w.publish(P, "alice", [Q]).ok, true);
+});
+const AUTH = { author: "alice", scope: "s", statement: "It does not cover the amendments.", subjectPosition: "not_sought",
+               subjectJustification: "A public record.", biasAcknowledgement: "We read the minutes as the account.",
+               excluded: [] };
+
+test("R35: each capture a member rests on is stated with its grade (provenance.captureGrade) and co-attestation (both a timestamp and a co-archive); a load-bearing Grade B capture not co-attested is CO_ATTESTATION_UNACKNOWLEDGED (C-120.4), naming each, and nothing is written", () => {
+  const { w, P, a, b } = setup();
+  const before = w.snapshot();
+  const r = w.publish(P, "alice", [Q]);
+  refused(r, "CO_ATTESTATION_UNACKNOWLEDGED");
+  assert.deepEqual(r.unacknowledged.map((u) => [u.capture, u.members, u.grade]), [[b, [Q], "B"]]);
+  assert.deepEqual(w.snapshot(), before, "no id drawn, nothing written");
+  /* acknowledged, it publishes, and every capture is stated */
+  const ok = w.publish(P, "alice", [Q], { selfAttested: [{ capture: b, reason: REASON }] });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  const blocks = caseDocumentBlocks(docOf(w, ok).text);
+  const byCap = Object.fromEntries(blocks.captures.map((c) => [c.capture, c]));
+  assert.deepEqual([byCap[a].member, byCap[a].grade, byCap[a].grade_basis, byCap[a].co_attested, byCap[a].co_archive,
+                    byCap[a].late, byCap[a].self_attested_only],
+    [Q, "B", w.prov.captureGrade(a).basis, true, "https://archive.example/web/x", false, false]);
+  assert.deepEqual([byCap[b].grade, byCap[b].co_attested, byCap[b].timestamp_at, byCap[b].co_archive, byCap[b].self_attested_only],
+    ["B", false, null, null, true]);
+  /* a supporting member's Grade B capture that is not co-attested needs no acknowledgement */
+  const w2 = setup();
+  w2.w.graded(DOC3, CO_ATTESTED);
+  w2.w.finding("INQ-2026-0003-c", [{ target: DOC3 }]);
+  const P2 = w2.w.project("Two", "alice", ["INQ-2026-0003-c", Q2]);
+  const sup = w2.w.publish(P2, "alice", ["INQ-2026-0003-c", Q2], { roles: { "INQ-2026-0003-c": "load_bearing", [Q2]: "supporting" } });
+  assert.equal(sup.ok, true, JSON.stringify(sup).slice(0, 300));
+  const s2 = caseDocumentBlocks(docOf(w2.w, sup).text).captures.find((c) => c.member === Q2);
+  assert.deepEqual([s2.co_attested, s2.self_attested_only], [false, false], "stated, not acknowledged");
+  /* a capture with no recorded route earns no letter, so none is asked */
+  const w3 = world(); w3.member("alice"); w3.doc(DOC); w3.finding(Q, [{ target: DOC }]);
+  const n = w3.publish(w3.project("Three", "alice", [Q]), "alice", [Q]);
+  assert.equal(n.ok, true);
+  assert.deepEqual(caseDocumentBlocks(docOf(w3, n).text).captures.map((c) => [c.grade, c.grade_basis, c.co_attested]),
+    [[null, "CAPTURE_ROUTE_UNRECORDED", false]]);
+});
+
+test("R35: a document leg names its content row's capture, else every capture its target registers; an inquiry leg names none; one level deep", () => {
+  const { w, P, a, b } = setup();
+  const c = w.graded(DOC3, CO_ATTESTED);
+  const cid = sha("a passage of DOC3");
+  w.st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at, stale)
+                 VALUES (?, ?, ?, 'pdf-page', '{}', 'page 1', 'plane', '2026-01-01', 0)`, cid, c, DOC3);
+  w.finding("INQ-2026-0004-d", [{ target: DOC3, content_id: cid }, { target: Q }]);
+  const P2 = w.project("Two", "alice", ["INQ-2026-0004-d"]);
+  const r = w.publish(P2, "alice", ["INQ-2026-0004-d"]);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.deepEqual(caseDocumentBlocks(docOf(w, r).text).captures.map((x) => [x.member, x.capture]),
+    [["INQ-2026-0004-d", c]], "Q's own documents are Q's to state when Q is published");
+  void a; void b; void P;
+});
+
+test("R35: a timestamp or co-archive obtained late (capture.lateAttestationsOf) counts, stated as late; a late co-archive whose replay holds other bytes, or a failed attempt, does not", () => {
+  const { w, P, b } = setup();
+  lateRow(w, b, 1, { kind: "timestamp", service: "tsa.example", ok: true, at: "2026-09-28T00:00:00Z" });
+  lateRow(w, b, 2, { kind: "co_archive", service: "archive.example", ok: true, at: "2026-09-28T00:01:00Z",
+                     archived_locator: "https://archive.example/web/late", matches: false });
+  const before = w.snapshot();
+  refused(w.publish(P, "alice", [Q]), "CO_ATTESTATION_UNACKNOWLEDGED");
+  assert.deepEqual(w.snapshot(), before);
+  lateRow(w, b, 3, { kind: "co_archive", service: "archive.example", ok: false, at: "2026-09-28T00:02:00Z" });
+  refused(w.publish(P, "alice", [Q]), "CO_ATTESTATION_UNACKNOWLEDGED");
+  lateRow(w, b, 4, { kind: "co_archive", service: "archive.example", ok: true, at: "2026-09-28T00:03:00Z",
+                     archived_locator: "https://archive.example/web/late2", matches: true });
+  const ok = w.publish(P, "alice", [Q]);
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  const row = caseDocumentBlocks(docOf(w, ok).text).captures.find((c) => c.capture === b);
+  assert.deepEqual([row.co_attested, row.late, row.timestamp_at, row.co_archive],
+    [true, true, "2026-09-28T00:00:00Z", "https://archive.example/web/late2"]);
+  assert.match(bodyOf(docOf(w, ok).text), /obtained LATE: it proves the bytes existed by then, not at capture/);
+});
+
+test("R35: an empty reason is SELF_ATTESTED_NO_REASON (C-120.5); an entry for a co-attested capture, or one not in the case, is SELF_ATTESTATION_NOT_STANDING (C-120.6); a malformed list is R3's BAD_COMPLETENESS naming the field; each writes nothing", () => {
+  const { w, P, a, b } = setup();
+  const before = w.snapshot();
+  for (const reason of [undefined, "", "   "]) {
+    const r = w.publish(P, "alice", [Q], { selfAttested: [{ capture: b, ...(reason === undefined ? {} : { reason }) }] });
+    refused(r, "SELF_ATTESTED_NO_REASON");
+    assert.deepEqual(r.no_reason, [{ capture: b, ord: 0 }]);
+  }
+  const co = w.publish(P, "alice", [Q], { selfAttested: [{ capture: b, reason: REASON }, { capture: a, reason: REASON }] });
+  refused(co, "SELF_ATTESTATION_NOT_STANDING");
+  assert.deepEqual(co.not_standing, [{ capture: a, ord: 1, why: "co_attested" }]);
+  const out = w.publish(P, "alice", [Q], { selfAttested: [{ capture: b, reason: REASON }, { capture: "e".repeat(64), reason: REASON }] });
+  refused(out, "SELF_ATTESTATION_NOT_STANDING");
+  assert.deepEqual(out.not_standing, [{ capture: "e".repeat(64), ord: 1, why: "not_in_case" }]);
+  for (const [list, field] of [[{ capture: b }, "selfAttested"], ["x", "selfAttested"], [[b], "selfAttested[0]"],
+                               [[{ reason: REASON }], "selfAttested[0]"], [[{ capture: b, reason: 5 }], "selfAttested[0].reason"],
+                               [[{ capture: b, reason: 'a "quote"' }], "selfAttested[0].reason"],
+                               [[{ capture: b, reason: "x".repeat(2001) }], "selfAttested[0].reason"]]) {
+    const r = w.publish(P, "alice", [Q], { selfAttested: list });
+    assert.deepEqual([r.reason, r.field], ["BAD_COMPLETENESS", field], JSON.stringify(list).slice(0, 60));
+  }
+  assert.deepEqual(w.snapshot(), before);
+  /* listed twice: acknowledged once, its first reason kept; the case is never refused for want of co-attestation */
+  const ok = w.publish(P, "alice", [Q], { selfAttested: [{ capture: b.toUpperCase(), reason: REASON }, { capture: b, reason: "later" }] });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  assert.equal(caseDocumentBlocks(docOf(w, ok).text).captures.find((c) => c.capture === b).acknowledgement.reason, REASON);
+});
+
+test("R36: an acknowledged capture is marked self_attested_only with {reason, acknowledged_by (the author stamp), at} and capture.captureAccountsOf's signed accounts, exact, and its block carries DEC-81 item 3's sentence", () => {
+  const { w, P, b } = setup();
+  const text = "I saved it from the council page myself.\nThe archive refused it that day.";
+  const signature = "-----BEGIN SSH SIGNATURE-----\nU1NIU0lH\n-----END SSH SIGNATURE-----";
+  w.st.sql.exec(`INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, 1, 'alice', ?, ?, 'AAAA', ?)`,
+                b, text, signature, "2026-09-27T12:00:00Z");
+  const url = new URL(`http://do/publishcase?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}`);
+  const r = caseAuthoringOps(w.ca, url, { ...AUTH, targets: [Q], roles: { [Q]: "load_bearing" }, author: "bo",
+                                         selfAttested: [{ capture: b, reason: REASON }] }).publishcase();
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const doc = docOf(w, r).text;
+  const row = caseDocumentBlocks(doc).captures.find((c) => c.capture === b);
+  assert.deepEqual([row.self_attested_only, row.acknowledgement],
+    [true, { reason: REASON, acknowledged_by: "alice", at: w.clock.now, sentence: SELF_ATTESTED_SENTENCE }]);
+  assert.deepEqual(row.accounts, [{ by: "alice", at: "2026-09-27T12:00:00Z", text, signature }], "exact bytes");
+  assert.equal(SELF_ATTESTED_SENTENCE, "Without co-attestation an outsider can verify the copy has not changed since capture "
+    + "and can follow the reasoning, but cannot independently verify that the source served those bytes, or when.");
+  const body = bodyOf(doc);
+  for (const s of [SELF_ATTESTED_SENTENCE, `SELF-ATTESTED ONLY, acknowledged by alice on ${w.clock.now}: ${REASON}`, text, signature])
+    assert.ok(body.includes(s), s.slice(0, 40));
+  /* the co-attested capture is not marked */
+  assert.equal(caseDocumentBlocks(doc).captures.find((c) => c.capture !== b).acknowledgement, undefined);
+});
+
+test("R37: a capture given to the group states only what sources.publishableAt answers for the public, with its basis; with nothing publishable, an unnamed source with the receipt's digest and time; a fetched capture states nothing; no source or entry id is written", () => {
+  const w = world();
+  for (const m of ["alice", "bo"]) w.member(m);
+  const k = w.graded(DOC, {}, { receipt: false });
+  const f = w.graded(DOC2, CO_ATTESTED);
+  w.knocked(k);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }]);
+  const P = w.project("Team", "alice", [Q]);
+  const r = w.publish(P, "alice", [Q]);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const src = caseDocumentBlocks(docOf(w, r).text).sources;
+  assert.deepEqual(src, [{ capture: k, stated: unnamedSourceStatement({ capture: k, received: T0 }), basis: null }],
+    "the fetched capture has no source row");
+  assert.ok(!src.some((x) => x.capture === f));
+  /* a name disclosed to the group and consented for the public is stated, with its basis; one not consented is not */
+  const sourceId = w.sources.sourceOf({ captureSha: k, viewer: V("alice") }).sourceId;
+  const name = w.sources.recordDisclosure({ source: sourceId, revealed: { kind: "name", value: "Pat Q. Example" }, how: "self",
+                                            knownTo: "group", evidence: "told to alice", sight: ["alice"], by: "alice" });
+  const role = w.sources.recordDisclosure({ source: sourceId, revealed: { kind: "attribute", attribute: "role", value: "clerk" },
+                                            how: "self", knownTo: "group", evidence: "told to alice", sight: ["alice"], by: "alice" });
+  assert.equal(name.ok && role.ok, true, JSON.stringify([name, role]).slice(0, 300));
+  assert.equal(w.sources.recordConsent({ source: sourceId, entry: name.entry, audience: "public", evidence: "a signed note",
+                                         by: "alice" }).ok, true);
+  w.finding(Q2, [{ target: DOC }]);
+  const P2 = w.project("Two", "alice", [Q2]);
+  const r2 = w.publish(P2, "alice", [Q2]);
+  assert.equal(r2.ok, true, JSON.stringify(r2).slice(0, 300));
+  const text = docOf(w, r2).text;
+  const entry = w.sources.publishableAt({ source: sourceId, audience: "public" }).entries;
+  assert.equal(entry.length, 1);
+  assert.deepEqual(caseDocumentBlocks(text).sources, [{ capture: k, stated: sourceStatement(entry[0]), basis: "consent" }]);
+  assert.match(caseDocumentBlocks(text).sources[0].stated, /Pat Q\. Example/);
+  for (const leak of [sourceId, name.entry, role.entry, "clerk"]) assert.equal(text.includes(leak), false, `names ${leak}`);
+  assert.ok(bodyOf(text).includes("## Sources Of Material Given To The Group"));
+});
+
+test("R14: the /5 document states the captures and sources blocks, always, empty included, read back through publication's caseDocumentBlocks", () => {
+  const w = world(); w.member("alice");
+  w.finding(Q, [{ target: Q2 }], {});
+  const n = w.publish(w.project("None", "alice", [Q]), "alice", [Q]);
+  assert.equal(n.ok, true, JSON.stringify(n).slice(0, 300));
+  const blocks = caseDocumentBlocks(docOf(w, n).text);
+  assert.deepEqual([blocks.captures, blocks.sources, blocks.detail], [[], [], null]);
+  assert.ok(bodyOf(docOf(w, n).text).includes("This case's findings rest on no document the record holds a capture of"));
+});
+
+/* ---- R34 ---- */
+const ratifyWith = (answer, calls = []) => (real) => new Proxy(real, { get: (t, p) => (p === "caseRatifyPreflight"
+  ? (a) => { calls.push(a); return typeof answer === "function" ? answer(a) : answer; }
+  : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+const args = (P, targets, over = {}) => ({ ...AUTH, project: P, targets, viewer: V("alice"),
+  roles: Object.fromEntries(targets.map((t) => [t, "load_bearing"])), ...over });
+
+test("R34: publishPreflight runs op=publish in a transaction it rolls back, then ratification's pre-flight over the text it would store with the author as signer; ready, first null, and nothing written", () => {
+  const calls = [];
+  const { w, P, b } = setup({ ratification: ratifyWith({ ok: true, ready: true, refusals: [] }, calls) });
+  const before = w.snapshot();
+  const a = args(P, [Q], { selfAttested: [{ capture: b, reason: REASON }] });
+  const pre = w.ca.publishPreflight(a);
+  assert.deepEqual([pre.ok, pre.wrote, pre.ready, pre.first, pre.blockers], [true, false, true, null, []]);
+  assert.deepEqual(w.snapshot(), before, "no document, no minted id, no source, nothing");
+  assert.equal(calls.length, 1);
+  assert.deepEqual([calls[0].signer, calls[0].viewer], ["alice", V("alice")]);
+  /* the text is the document op=publish then stores, but for the case id it mints */
+  const r = w.ca.publishCase(a);
+  const stored = docOf(w, r).text;
+  const id = /case_id: (CASE-\S+)/.exec(calls[0].text)[1];
+  assert.equal(calls[0].text.split(id).join(r.caseId), stored);
+});
+
+test("R34: first is exactly the refusal op=publish would give, and blockers every other refusal reachable independently — each bar shortfall (R6), hunch debt (R12), R35's, R31's as R32 reads it — each once", () => {
+  const cand = "c".repeat(64);
+  const side = (ref, bundle) => ({ kind: "leg", ref, source: { bundle, ref }, capture_sha: null, date: null, doctype: null });
+  const contradiction = { unresolvedRecordOn: ({ finding }) => ({ ok: true, truncated: false, candidates: finding === Q
+    ? [{ candidate: cand, key: "K1", a: side("page 1", DOC), b: side("page 2", DOC2), state: "open", kind: null, depth: 1 }] : [] }) };
+  const w = world({ deps: { contradiction }, ratification: ratifyWith({ ok: true, ready: true, refusals: [] }) });
+  for (const m of ["alice"]) w.member(m);
+  const b = w.graded(DOC2);
+  w.doc(DOC);
+  w.finding(Q, [{ target: DOC, grade: "C", grade_axis: "capture", grade_source: "capture" }, { target: DOC2 }]);
+  w.finding(Q2, [{ target: DOC, grade: "B", grade_axis: "connection", grade_source: "hunch", author: "member:alice", date: "2026-09-27" }]);
+  const P = w.project("Team", "alice", [Q, Q2], { extra: ["required_strength:", "  capture: B", "  connection: C"] });
+  const before = w.snapshot();
+  const a = args(P, [Q, Q2]);
+  const pre = w.ca.publishPreflight(a);
+  const pub = w.ca.publishCase(a);
+  assert.deepEqual(pre.first, pub, "exactly op=publish's refusal");
+  assert.equal(pub.reason, "BELOW_PROJECT_STRENGTH");
+  assert.deepEqual(w.snapshot(), before);
+  const kinds = pre.blockers.map((x) => [x.reason, x.target ?? null, x.axis ?? null]);
+  assert.deepEqual(kinds, [
+    ["BELOW_PROJECT_STRENGTH", Q, "connection"], ["BELOW_PROJECT_STRENGTH", Q2, "capture"], ["BELOW_PROJECT_STRENGTH", Q2, "connection"],
+    ["UNCLEARED_HUNCH", null, null], ["CO_ATTESTATION_UNACKNOWLEDGED", null, null], ["TENSION_NOT_DISCLOSED", null, null]]);
+  assert.ok(!pre.blockers.some((x) => JSON.stringify(x) === JSON.stringify(pub)), "first is not repeated");
+  assert.equal(pre.ready, false);
+  assert.equal(pre.steps[4].ratification.reached, false, "ratification's list needs the document, and op=publish refuses first");
+  /* negative control: each cause removed, ready */
+  const tension = { tensionsDisclosed: [{ candidate: cand }], selfAttested: [{ capture: b, reason: REASON }] };
+  w.finding(Q2, [{ target: DOC }]);
+  const P2 = w.project("Two", "alice", [Q, Q2]);
+  const ready = w.ca.publishPreflight(args(P2, [Q, Q2], tension));
+  assert.deepEqual([ready.ready, ready.first, ready.blockers], [true, null, []], JSON.stringify(ready.blockers).slice(0, 300));
+});
+
+test("R34: ratification R18's list is folded into blockers; its undetermined answer is itself a blocker; with no pre-flight offered the list is stated as not reached, and ready is false", () => {
+  const refusal = { ok: false, reason: "NO_ATTESTING_KEY", code: "NO_ATTESTING_KEY", detail: "register a key" };
+  const one = setup({ ratification: ratifyWith({ ok: true, ready: false, refusals: [refusal] }) });
+  const a = (s) => args(s.P, [Q], { selfAttested: [{ capture: s.b, reason: REASON }] });
+  const r1 = one.w.ca.publishPreflight(a(one));
+  assert.deepEqual([r1.ready, r1.first, r1.blockers, r1.steps[4].ratification], [false, null, [refusal],
+    { reached: true, refusals: [refusal] }]);
+  const und = { ok: false, reason: "PREFLIGHT_UNDETERMINED", detail: "the gate could not be read" };
+  const two = setup({ ratification: ratifyWith(und) });
+  const r2 = two.w.ca.publishPreflight(a(two));
+  assert.deepEqual([r2.ready, r2.blockers], [false, [und]]);
+  const three = setup({ ratification: (real) => new Proxy(real, { get: (t, p) => (p === "caseRatifyPreflight" ? undefined
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) }) });
+  const r3 = three.w.ca.publishPreflight(a(three));
+  assert.deepEqual([r3.ready, r3.first, r3.blockers, r3.steps[4].ratification.reached], [false, null, [], false]);
+});
+
+test("R34: steps gives the five steps' content — what becomes permanent; what this rests on (roles, pairs, bar); what you are leaving out (exclusions, searched section, bias, R32's tensions, R35's self-attested documents, R37's source statements); the edition this creates; and sign", () => {
+  const { w, P, b } = setup({ ratification: ratifyWith({ ok: true, ready: true, refusals: [] }) });
+  w.knocked(b);
+  const excluded = [{ description: "the side letter", reason: "not in hand" }];
+  const pre = w.ca.publishPreflight(args(P, [Q], { excluded, selfAttested: [{ capture: b, reason: REASON }] }));
+  assert.deepEqual(pre.steps.map((s) => [s.step, s.name]), [[1, "what becomes permanent"], [2, "what this rests on"],
+    [3, "what you are leaving out"], [4, "the edition this creates"], [5, "sign"]]);
+  const [one, two, three, four, five] = pre.steps;
+  assert.match(one.says, /never withdrawn or edited/);
+  assert.deepEqual([one.edition, one.pinned], [1, [{ target: Q, bundleSha: w.head(Q) }]]);
+  assert.deepEqual([two.roles, two.required.declared, two.pairs[0].target], [[{ target: Q, role: "load_bearing" }], false, Q]);
+  assert.deepEqual(three.excluded, [{ target: null, ...excluded[0] }], "as the act normalised it");
+  assert.equal(three.searched.summary.subject_source, "case_basis");
+  assert.deepEqual([three.bias.acknowledgement, three.bias.manifest.in_force], [AUTH.biasAcknowledgement, false]);
+  assert.deepEqual(three.tensions.candidates, w.ca.tensionsToDisclose({ project: P, targets: [Q], viewer: V("alice"), author: "alice" }).candidates);
+  assert.deepEqual(three.self_attested, [{ capture: b, member: Q, reason: REASON, sentence: SELF_ATTESTED_SENTENCE }]);
+  assert.deepEqual(three.sources, [{ capture: b, stated: unnamedSourceStatement({ capture: b, received: T0 }), basis: null }]);
+  assert.deepEqual([four.edition, four.minted, four.members], [1, true, [{ target: Q, edition: 1, crossed: false }]]);
+  assert.deepEqual([five.signer, five.ratification], ["alice", { reached: true, refusals: [] }]);
+  /* refused first: the parts that need the document say they were not reached, never filled */
+  const no = w.ca.publishPreflight(args(P, [Q]));
+  assert.equal(no.first.reason, "CO_ATTESTATION_UNACKNOWLEDGED");
+  assert.match(no.steps[0].stated, /^not reached: op=publish refuses first \(CO_ATTESTATION_UNACKNOWLEDGED\)/);
+  assert.ok(Array.isArray(no.steps[2].tensions.candidates), "R32's read is still carried");
+});
+
+test("R34: it raises no re-evaluation for a member's new edition (R15's listeners are never told of an edition a rolled-back run made), and op=publishpreflight takes its stamps from the query after the body", () => {
+  const { w, P, b } = setup({ ratification: ratifyWith({ ok: true, ready: true, refusals: [] }) });
+  const sa = { selfAttested: [{ capture: b, reason: REASON }] };
+  const a1 = w.publish(P, "alice", [Q], sa); w.ratify(a1);
+  assert.equal(w.publication.commitEdition({ bundleId: Q, edition: 1, bundleSha: w.head(Q), title: "q", attestorKey: "k",
+    gateVersion: "1.37.0", sigArmored: "s-q-1", shas: [], edges: [], at: "2026-09-28T02:00:00Z" }).ok, true);
+  const told = [];
+  assert.equal(w.reevaluation.onBasisChanged("monitoring", (e) => { told.push(e); }).ok, true);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }, { target: Q2 }]);
+  const fresh = { statement: "A second edition's limits.", subjectJustification: "Fresh.", biasAcknowledgement: "Ours, now.",
+                  excluded: [{ description: "x", reason: "y" }] };
+  const before = w.snapshot();
+  const pre = w.ca.publishPreflight(args(P, [Q], { caseId: a1.caseId, ...fresh, ...sa }));
+  assert.equal(pre.ready, true, JSON.stringify(pre.blockers).slice(0, 300));
+  assert.deepEqual(pre.steps[3].members, [{ target: Q, edition: 2, crossed: false }]);
+  assert.deepEqual(told, [], "no listener told");
+  assert.deepEqual(w.snapshot(), before);
+  /* the op: author and viewer stamped from the query; a body's own are overwritten */
+  const url = new URL(`http://do/publishpreflight?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}&caseId=${a1.caseId}`);
+  const viaOp = caseAuthoringOps(w.ca, url, { ...AUTH, ...fresh, ...sa, targets: [Q], roles: { [Q]: "load_bearing" },
+                                             author: "bo", viewer: V("bo") }).publishpreflight();
+  assert.deepEqual([viaOp.ready, viaOp.steps[4].signer], [true, "alice"]);
+  const pub = w.publish(P, "alice", [Q], { caseId: a1.caseId, ...fresh, ...sa });
+  assert.equal(pub.ok, true);
+  assert.deepEqual(told.map((e) => [e.subject, e.source]), [[Q, "edition"]], "op=publish itself still raises");
+});

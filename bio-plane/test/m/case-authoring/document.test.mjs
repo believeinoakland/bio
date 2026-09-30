@@ -203,7 +203,8 @@ test("R17: the searched section is computed from the observation log at authorin
   w.prov.recordReceipt({ address: "https://example.org/a", addressNorm: "example.org/a", captureSha: capA,
                          retrieved: "2026-09-27T00:00:00Z" });
   const P = w.project("Team", "alice", [Q]);
-  const r = w.publish(P, "alice", [Q]);
+  /* fetched direct, so Grade B, and not co-attested: published as self-attested only (R35) */
+  const r = w.publish(P, "alice", [Q], { selfAttested: [{ capture: capA, reason: "the site refuses the archive" }] });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const text = docOf(w, r).text;
   const fm = w.fm(text);

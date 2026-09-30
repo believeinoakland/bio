@@ -14,7 +14,8 @@
  * `bias_manifest` beside `bias_manifest_bundles`. */
 
 import { createSha256 } from "../../checks/bio-checks.mjs";
-import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines } from "../publication/index.mjs";
+import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
+         sourceBlockLines } from "../publication/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
 import { barAxisWords } from "../strength/index.mjs";
 
@@ -29,6 +30,65 @@ export function fmSafe(s) {
  *  document prints it (`fmSafe`, so a draft's text, an unsigned document's and the act's hash alike). */
 export function statementSha(s) {
   return createSha256().update(new TextEncoder().encode(fmSafe(s))).hex();
+}
+
+/* ===========================================================================
+ * EACH DOCUMENT'S GRADE AND CO-ATTESTATION, AND ITS SOURCE (R35–R37; N364: DEC-81 items 1 and 3, DEC-78 item 5). The
+ * `/5` blocks `captures:`, `capture_accounts:` and `sources:` are publication's spelling (its R20; K549, K552, K553),
+ * written only through its line builders, so the bytes are written one way and read one way. The body, which a person
+ * reads, is this module's: each capture's grade and co-attestation in words, and each signed account's text and
+ * armored signature verbatim.
+ * =========================================================================== */
+
+/** R36: DEC-81 item 3's reader sentence, verbatim, carried by every self-attested document's block. */
+export const SELF_ATTESTED_SENTENCE = "Without co-attestation an outsider can verify the copy has not changed since "
+  + "capture and can follow the reasoning, but cannot independently verify that the source served those bytes, or when.";
+const BASIS_WORDS = Object.freeze({ consent: "stated with the source's consent",
+  public_elsewhere: "stated because it is already public, as cited" });
+
+function captureBodyLines(captures, sources) {
+  const byCapture = new Map();
+  for (const c of captures) if (!byCapture.has(c.capture)) byCapture.set(c.capture, { ...c, members: [], accounts: [] });
+  for (const c of captures) {
+    const held = byCapture.get(c.capture);
+    held.members.push(c.member);
+    if (Array.isArray(c.accounts)) held.accounts.push(...c.accounts);
+  }
+  return ["## Each Document's Grade And Co-attestation", "",
+    ...(byCapture.size
+      ? ["Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a "
+         + "trusted timestamp and a third party's co-archive attest it. A co-attested Grade B document is enough to "
+         + "publish on; one that is not is published only as self-attested, by the owner's stated acknowledgement.", "",
+         ...[...byCapture.values()].flatMap((c) => [
+           `- ${c.capture} (under ${c.members.join(", ")}): `
+             + (c.grade ? `grade ${c.grade} (${c.grade_basis ?? "basis not stated"})`
+                        : `no capture letter (${c.grade_basis ?? "basis not stated"})`)
+             + (c.co_attested
+               ? `; co-attested: a timestamp${c.timestamp_at ? ` at ${c.timestamp_at}` : ""} and a co-archive at ${c.co_archive}`
+                 + (c.late ? ", obtained LATE: it proves the bytes existed by then, not at capture" : "")
+               : "; NOT CO-ATTESTED"
+                 + (c.timestamp_at ? ` (a timestamp at ${c.timestamp_at}, no co-archive)` : "")
+                 + (c.co_archive ? ` (a co-archive at ${c.co_archive}, no timestamp)` : ""))
+             + ".",
+           ...(c.grade_why ? [`  - ${c.grade_why}`] : []),
+           ...(c.self_attested_only
+             ? [`  - SELF-ATTESTED ONLY, acknowledged by ${c.acknowledgement.acknowledged_by} on ${c.acknowledgement.at}: `
+                + `${c.acknowledgement.reason}`, `  - ${SELF_ATTESTED_SENTENCE}`]
+             : []),
+           ...c.accounts.flatMap((a, k) => [
+             `  - The capturing member's signed account ${k + 1}, by ${a.by} on ${a.at}, in its own words:`, "",
+             "```", a.text, "```", "", "    Its signature:", "", "```", a.signature ?? "(none held)", "```", ""])])]
+      : ["This case's findings rest on no document the record holds a capture of, one level deep."]),
+    "",
+    "## Sources Of Material Given To The Group",
+    "",
+    ...(sources.length
+      ? ["What may be said of whoever gave the group a document this case rests on: only what the source consented to, "
+         + "or what is already public elsewhere. Nothing else is stated, and no identifier links this source to any "
+         + "other case.", "",
+         ...sources.map((x) => `- ${x.capture}: ${x.stated}` + (x.basis ? `, ${BASIS_WORDS[x.basis] ?? x.basis}.` : "."))]
+      : ["No document this case rests on was given to the group by a source: each was fetched, or brought in by a member."]),
+    ""];
 }
 
 /** R16: the words the document's prose gives each citation `version` (REC-219 / D-579(a)). */
@@ -284,14 +344,16 @@ export function withheldWriterStated(withheld, writerBy) {
  *  written as NOT IN FORCE with that sentence, never as a blank. `attributions` empty writes neither attribution run,
  *  so a case reaching no observation is authored byte for byte as before. `tensions` are the entries R31 disclosed,
  *  each `{candidate, finding, state, kind, unseen_other_side, a, b | side, explanation, words, acknowledged_by,
- *  acknowledged_at}` with its sides as `tensionSide` states them. */
+ *  acknowledged_at}` with its sides as `tensionSide` states them. `captures` are R35's rows (one per member and
+ *  capture, with R36's acknowledgement and, on a capture's first row, its signed accounts), `sources` R37's
+ *  `{capture, stated, basis}`. */
 export function caseDocumentText({ caseId, edition, project, scope, bias, bar, roster, roles, pins,
                                    statement, position, justification, excluded, author, at,
                                    statementBy = null, statementByStated = "",
                                    searched, conclusions = [], frozen, manifest = null,
                                    acks = { statementSha: null, truncated: false, rows: [] },
                                    citations = [], attributions = [], tensions = [],
-                                   tensionsUnread = [] }) {
+                                   tensionsUnread = [], captures = [], sources = [] }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
     : { in_force: manifest && manifest.in_force === null ? null : false,
@@ -361,6 +423,10 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
     ...roster.flatMap((m) => caseConclusionRowLines(m, concOf.get(m) || null)),
     /* R31 (N345): THE TENSIONS DISCLOSED and each member's tension sentences; always present, zero included. */
     ...tensionFrontmatterLines(tensions, tensionsUnread),
+    /* R35–R37 (N364): each document's grade and co-attestation, the signed accounts, and each source's statements;
+       always present, empty included. */
+    ...captureBlockLines(captures),
+    ...sourceBlockLines(sources),
     "completeness:",
     `  statement: "${fmSafe(statement)}"`,
     `  subject_position: ${position}`,
@@ -501,6 +567,7 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
         + "project concluded for itself and which it took as the record already answered.",
     "",
     ...tensionBodyLines(tensions, tensionsUnread),
+    ...captureBodyLines(captures, sources),
     ...(attributions.length ? attributionBodyLines(attributions) : []),
     "## What This Excludes",
     "",

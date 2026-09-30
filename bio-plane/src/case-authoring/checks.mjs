@@ -100,10 +100,14 @@ export const STATEMENT_ACK_CHECKS = Object.freeze({
   },
 });
 
-/* C-120 — A CASE'S DISCLOSURES (N345; DEC-76 item 4, DEC-84 items 11–13, DEC-85; R29, R31, R32). A new family held in
-   this module's own table (K343's pattern): a case discloses each unresolved conflict on what it rests on, one level
-   deep, and is never refused because a conflict exists. What refuses is an undisclosed one, a disclosure of something
-   that is not one, and a read that could not be made whole. Promotion stamps these rows (N318). */
+/* C-120 — A CASE'S DISCLOSURES AND ITS PRE-FLIGHT (N345; DEC-76 item 4, DEC-84 items 11–13, DEC-85; N364: DEC-80 item 3,
+   DEC-81 item 3; R12, R29, R31, R32, R34, R35). A family held in this module's own table (K343's pattern): a case
+   discloses each unresolved conflict on what it rests on, one level deep, and is never refused because a conflict
+   exists; it discloses each document's grade and co-attestation, and is never refused because a document is not
+   co-attested. What refuses is an undisclosed conflict, a disclosure of something that is not one, a read that could not
+   be made whole, a load-bearing Grade B document published as self-attested without its owner saying so and why, an
+   acknowledgement that stands on nothing, and an uncleared hunch. Promotion stamps these rows (N318); C-120.4–C-120.7 are
+   `awaiting stamp` (T17). */
 export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   TENSION_NOT_DISCLOSED: {
     check: 'C-120.1',
@@ -124,5 +128,31 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
     where: at('#undetermined', 'is-tensions-determined'),
     translation: 'The record could not be read completely for conflicts on this case\'s findings, so what must be '
       + 'disclosed is not known. Try again. Nothing was published.',
+  },
+  /* R35 (DEC-81 item 3 (b)): the owner's attributed acknowledgement, in the pattern of NO_FALSIFIER's override. */
+  CO_ATTESTATION_UNACKNOWLEDGED: {
+    check: 'C-120.4',
+    where: at('#selfAttestedJudged', 'is-co-attestation-acknowledged'),
+    translation: 'A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing '
+      + 'it as self-attested only, with a reason. Nothing was written.',
+  },
+  SELF_ATTESTED_NO_REASON: {
+    check: 'C-120.5',
+    where: at('#selfAttestedJudged', 'is-self-attested-reasoned'),
+    translation: 'Publishing a document as self-attested only says why. Give the reason. Nothing was written.',
+  },
+  SELF_ATTESTATION_NOT_STANDING: {
+    check: 'C-120.6',
+    where: at('#selfAttestedJudged', 'is-self-attestation-standing'),
+    translation: 'A document acknowledged as self-attested only is either co-attested already or not one this case rests '
+      + 'on, so it needs no acknowledgement. Remove it from the list. Nothing was written.',
+  },
+  /* R12 (Publication §3 rule 4; DEC-20): the one bias that must be cleared before publication. */
+  UNCLEARED_HUNCH: {
+    check: 'C-120.7',
+    where: at('#hunchDebt', 'is-hunch-cleared'),
+    translation: 'A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that '
+      + 'must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the '
+      + 'record earns, or take the hunch out of the basis, and publish again. Nothing was written.',
   },
 });

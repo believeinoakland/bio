@@ -60,10 +60,10 @@ function refused(r, code) {
     [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
 }
 
-test("R29: C-120.1–C-120.3, a case's disclosures, are this module's own family with the translations of the requirements, each naming its region", () => {
-  assert.deepEqual(Object.entries(CASE_DISCLOSURE_CHECKS).map(([k, v]) => [k, v.check]),
+test("R29: C-120.1–C-120.3, a case's disclosures, are this module's own family with the translations of the requirements, each naming its region (C-120.4–C-120.7: preflight.test.mjs)", () => {
+  assert.deepEqual(Object.entries(CASE_DISCLOSURE_CHECKS).slice(0, 3).map(([k, v]) => [k, v.check]),
     [["TENSION_NOT_DISCLOSED", "C-120.1"], ["DISCLOSURE_NOT_STANDING", "C-120.2"], ["TENSIONS_UNDETERMINED", "C-120.3"]]);
-  assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.translation), [
+  assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).slice(0, 3).map((v) => v.translation), [
     "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published.",
     "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published.",
     "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."]);
