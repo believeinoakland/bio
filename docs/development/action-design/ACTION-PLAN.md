@@ -15,6 +15,8 @@
 9. **The categories** are mitigation, legal, awareness, journalistic, grassroots, and other.
 10. **A plan may open when an inquiry begins**, before anything is published or determined. It is not tied to a publication.
 
+And on 2026-09-30 Bob agreed `MATRIX.md` §6, D1–D6: an action may be addressed to a reporter or outlet, an organisation, another civic group or a described audience, never a private individual (D1); the assistant drafts communications as proposals a member adopts (D2); `completed` joins the resolutions (D3); a project may declare the kind of work it does, which shapes suggestions only (D4); a started option may name the group's contact (D5); any group may use CivicOS, disclosing a stake (D6). The requirements draft is `drafts/action-plans.md`.
+
 ## Terms
 
 - **Subject:** what a plan addresses. Either a **suspected** matter (an open inquiry, with the government act and the standards the group suspects, where it can name them), or a **determined** one (one outcome of a live conformance determination: an act measured against one standard, found noncompliant, compliant or unclear). A suspected subject becomes determined when members record a determination on its act (ruling 10).
@@ -32,7 +34,7 @@
 
 **Options**
 - **A4** An option carries: a one-line summary; its detail; a category (mitigation, legal, awareness, journalistic, grassroots, or other); the subjects it serves (one or more of the plan's); whom it addresses (a government office, by role and body, or for awareness and journalistic options a described audience); its regulated dates, each naming the statute, order or commitment it comes from; for a legal option, its risk tier (1, 2, 3 or undetermined, never defaulted); for a lobbying option, which existing requirement it enforces or restores (ruling 6: without one it is refused).
-- **A5** The assistant suggests options, and each suggestion is stored apart from the plan and labelled as the machine's. It works from the plan's subjects, the standards' text, the recorded consequences, the profile's venues, deadlines and legal organisations, and earlier plans in this instance that addressed similar standards. There is no catalogue (ruling 2). A suggestion becomes an option only when a member adopts it.
+- **A5** The assistant suggests options, and each suggestion is stored apart from the plan and labelled as the machine's. It works from the plan's subjects, the standards' text, the recorded consequences, the profile's venues, deadlines and legal organisations, and earlier plans in this instance that addressed similar standards, and the project's declared kind of work (D4: reporting, fixing, legal, oversight, other), which shapes suggestions and nothing else. There is no catalogue (ruling 2). A suggestion becomes an option only when a member adopts it.
 - **A6** A member adds an option directly, or through the assistant, which asks for what the option needs and shows it before the member adds it. The assistant never adds one itself.
 - **A7** An option's disposition is `open` (the default), `chosen`, `declined` (with a reason), `done` or `blocked` (with a reason). Choosing and declining may be done singly or in bulk.
 
@@ -43,7 +45,7 @@
 - **A11** A scenario may branch on another subject's outcome: an option bound to one rule may depend on how another rule's track ends.
 
 **Acting on the plan**
-- **A12** Starting a chosen option creates an Action (the `actions` module), which records the plan and option it came from. It rests on what its subjects rest on: an inquiry for a suspected subject, a determination for a determined one. The gate is at the act, not the plan (DEC-26): an option that seeks evidence (a records request, a request for comment) may start on a suspected subject, while an action asserting a breach needs a live noncompliant determination, as `actions` already requires. A legal option on a noncompliant subject is attached to that determination's escalation as today; the plan never opens, advances or ends an escalation.
+- **A12** Starting a chosen option creates an Action (the `actions` module), which records the plan and option it came from, and may name the member who is the group's contact for it (D5). It rests on what its subjects rest on: an inquiry for a suspected subject, a determination for a determined one. The gate is at the act, not the plan (DEC-26): an option that seeks evidence (a records request, a request for comment) may start on a suspected subject, while an action asserting a breach needs a live noncompliant determination, as `actions` already requires. A legal option on a noncompliant subject is attached to that determination's escalation as today; the plan never opens, advances or ends an escalation.
 - **A13** The plan reads, for each option it started, the action's state and correspondence, and for each subject its escalation's stage, so the member sees where each track stands.
 
 **The machine**
@@ -51,6 +53,9 @@
 
 **What it is not**
 - **A15** Not a project-management system: no assignees, hours, costs or task lists (ruling 3). The canon's free-form resources note on a step stays a note. Not published, and never read by publication (DEC-25).
+
+**Closing**
+- **A17** A member closes a plan with a reason; a plan never closes itself. A closed plan stays readable, and its subjects may join another plan. *(recommended; for Bob with the module)*
 
 **Presenting it (UX)**
 - **A16** Options show collapsed as their summary, expanding to their detail. The list sorts by category, by regulated start or end date, by subject and by disposition.

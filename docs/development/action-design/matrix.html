@@ -45,7 +45,7 @@ table.wide{min-width:1180px}
 </style>
 <div class="wrap">
 <h1>The Action layer: completeness matrix</h1>
-<p class="lede"><span class="eyebrow">Status</span> DRAFT by ACTION_DESIGN #1, 2026-09-30. Step 3 of the week's Action design work: every purpose an action can serve, walked through every stage of the work, then every kind of actor and every role within a group, each cell traced to canon, an approved requirement, the action-plan design, or a gap. It decides nothing; its last two sections list the requirement changes it implies and the decisions that are Bob's. Sources: <code>INVENTORY.md</code> and its <code>sources/</code>, <code>ACTION-PLAN.md</code> (rules A1–A16, Bob's rulings 1–10), and <code>build/requirements/</code> at <code>main</code> @ <code>5bb688333c</code>.</p>
+<p class="lede"><span class="eyebrow">Status</span> DRAFT by ACTION_DESIGN #1, 2026-09-30. Step 3 of the week's Action design work: every purpose an action can serve, walked through every stage of the work, then every kind of actor and every role within a group, each cell traced to canon, an approved requirement, the action-plan design, or a gap. Its last two sections list the requirement changes it implies and Bob's decisions D1–D6, which Bob agreed on 2026-09-30 as recommended; the requirement drafts that follow from them are in <code>drafts/</code>. Sources: <code>INVENTORY.md</code> and its <code>sources/</code>, <code>ACTION-PLAN.md</code> (rules A1–A16, Bob's rulings 1–10), and <code>build/requirements/</code> at <code>main</code> @ <code>5bb688333c</code>.</p>
 <p><strong>How to read a cell.</strong> <strong class="v ok">Built</strong>: an approved requirement covers it and the code has it. <strong class="v wire">Wiring</strong>: built, but not connected, so it never reaches a member. <strong class="v design">Designed</strong>: in the action-plan design, not yet a requirement. <strong class="v part">Partly</strong>: some of it is covered; the cell says what is missing. <strong class="v gap">Gap</strong>: nothing covers it. References: <code>actions</code> R15 means requirement R15 of the <code>actions</code> module; A7 means rule A7 of the action plan.</p>
 <h2>1. In brief</h2>
 <ol>
@@ -300,7 +300,7 @@ table.wide{min-width:1180px}
 - <code>actions</code>: an op to create an action, and read ops for an action and its lists.
 - <code>skills</code>: an action-planning skill that suggests options (A5) and proposes standards and theories, driving the proposal ops that exist.
 - <code>jurisdictions</code>: the real profile's templates, holidays, measured offices and deadlines.</p>
-<h2>6. Bob's decisions</h2>
+<h2>6. Bob's decisions (agreed 2026-09-30, as recommended)</h2>
 <ul>
 <li><strong>D1 · Addressees beyond government offices.</strong> Recommended: an action may be addressed to a reporter or outlet, another civic group, or an organisation, each named by role and organisation, never as a private individual (Requirement 6); an awareness option may address a described audience ("residents of the district"). Without this, four of the ten purposes cannot be sent.</li>
 <li><strong>D2 · Preparing communications.</strong> Recommended: the assistant drafts a message or briefing for an option as a proposal, stored apart and labelled, from the published case and the plan; a member edits and adopts it; it leaves by the member's hand and carries the in-band stamp. This is Publication §6's "new action_kind and a rendering", placed in the Action layer.</li>

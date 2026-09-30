@@ -1,6 +1,6 @@
 # The Action layer: completeness matrix
 
-**Status** · DRAFT by ACTION_DESIGN #1, 2026-09-30. Step 3 of the week's Action design work: every purpose an action can serve, walked through every stage of the work, then every kind of actor and every role within a group, each cell traced to canon, an approved requirement, the action-plan design, or a gap. It decides nothing; its last two sections list the requirement changes it implies and the decisions that are Bob's. Sources: `INVENTORY.md` and its `sources/`, `ACTION-PLAN.md` (rules A1–A16, Bob's rulings 1–10), and `build/requirements/` at `main` @ `5bb688333c`.
+**Status** · DRAFT by ACTION_DESIGN #1, 2026-09-30. Step 3 of the week's Action design work: every purpose an action can serve, walked through every stage of the work, then every kind of actor and every role within a group, each cell traced to canon, an approved requirement, the action-plan design, or a gap. Its last two sections list the requirement changes it implies and Bob's decisions D1–D6, which Bob agreed on 2026-09-30 as recommended; the requirement drafts that follow from them are in `drafts/`. Sources: `INVENTORY.md` and its `sources/`, `ACTION-PLAN.md` (rules A1–A16, Bob's rulings 1–10), and `build/requirements/` at `main` @ `5bb688333c`.
 
 **How to read a cell.** **Built**: an approved requirement covers it and the code has it. **Wiring**: built, but not connected, so it never reaches a member. **Designed**: in the action-plan design, not yet a requirement. **Partly**: some of it is covered; the cell says what is missing. **Gap**: nothing covers it. References: `actions` R15 means requirement R15 of the `actions` module; A7 means rule A7 of the action plan.
 
@@ -71,7 +71,7 @@ Canon places actor differences in three places: the **project** (its bar, DEC-17
 - `skills`: an action-planning skill that suggests options (A5) and proposes standards and theories, driving the proposal ops that exist.
 - `jurisdictions`: the real profile's templates, holidays, measured offices and deadlines.
 
-## 6. Bob's decisions
+## 6. Bob's decisions (agreed 2026-09-30, as recommended)
 
 - **D1 · Addressees beyond government offices.** Recommended: an action may be addressed to a reporter or outlet, another civic group, or an organisation, each named by role and organisation, never as a private individual (Requirement 6); an awareness option may address a described audience ("residents of the district"). Without this, four of the ten purposes cannot be sent.
 - **D2 · Preparing communications.** Recommended: the assistant drafts a message or briefing for an option as a proposal, stored apart and labelled, from the published case and the plan; a member edits and adopts it; it leaves by the member's hand and carries the in-band stamp. This is Publication §6's "new action_kind and a rendering", placed in the Action layer.
