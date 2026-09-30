@@ -280,10 +280,72 @@ export function pdfPageBoxUndetermined(extent, ctx = {}) {
 }
 
 /** R8 (CPDF-22): one shape for "admitted, bound not held": `{level, why}`, or null. An image `{part}` (container kind
- *  or image list not held), an image `{page}` (painted-image list not held), a `pdf-page` rect (page box not held).
- *  Exclusive address forms, so at most one answers. Moved from the catalogue with its page-image arm. */
+ *  or image list not held), an image `{page}` (painted-image list not held), then every other container bound
+ *  (`containerBoundUndetermined`: the page set, the sheets and their grid, the paragraph count, the slides and their
+ *  shapes, the tables, an envelope item), then a `pdf-page` rect (page box not held). One answer, the first unheld
+ *  bound in that order. Moved from the catalogue with its page-image arm. */
 export function mintUndetermined(extent, ctx = {}) {
-  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx) || pdfPageBoxUndetermined(extent, ctx);
+  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx) || containerBoundUndetermined(extent, ctx)
+    || pdfPageBoxUndetermined(extent, ctx);
+}
+
+/** R8 — THE REST OF "ADMITTED, BOUND NOT HELD": every bound `checkContentExtent` skips because the context does not hold
+ *  it (R7's last sentence) is stated here, one level per address: a page with no page set (`page_set`); a cell or range
+ *  with no sheet list (`sheet_list`) or on a sheet whose grid is not held (`sheet_grid`, an .ods sheet's null grid
+ *  included); a paragraph with no paragraph count (`paragraph_count`); a slide with no slide list (`slide_list`) or a
+ *  shape on a slide whose shape count is not held (`shape_count`); a table with no table list (`table_list`) or a
+ *  table cell whose grid is not held (`table_grid`); an envelope item, whose anchor is asked first and whose own
+ *  existence the record holds no list to bound (`envelope_items`). Null for a document, for a bound held, and for the
+ *  catalogue's document-only pass. The image forms and a rect's page box are the arms above and below. */
+export function containerBoundUndetermined(extent, ctx = {}) {
+  const e = isObj(extent) ? extent : null;
+  if (!e || !ctx || ctx.known === false) return null;
+  const c = isObj(ctx.container) ? ctx.container : {};
+  const u = (level, why) => ({ level, why: `${why}, so whether ${describeExtent({ ...e, ref: undefined })} lies inside `
+    + `the document is UNDETERMINED, admitted and stated rather than guessed` });
+  const pages = Number.isInteger(ctx.pageCount) && ctx.pageCount > 0;
+  switch (e.kind) {
+    case "pdf-page":
+      return pages ? null : u("page_set", "this record holds no page set for this capture");
+    case "image":
+      return Number.isInteger(e.page) && !pages ? u("page_set", "this record holds no page set for this capture") : null;
+    case "sheet-cell": case "sheet-range": {
+      const sheets = Array.isArray(c.sheets) && c.sheets.length ? c.sheets : null;
+      if (!sheets) return u("sheet_list", "this record holds no sheet list for this capture's workbook");
+      const want = typeof e.sheet === "string" ? e.sheet.trim() : "";
+      const sheet = sheets.find((x) => x && x.name === want);
+      if (sheet && !(Number.isInteger(sheet.rows) && Number.isInteger(sheet.cols)))
+        return u("sheet_grid", `this record holds no row and column grid for sheet '${want.slice(0, 40)}' (a format `
+          + `that fixes no maximum table size states none)`);
+      return null;
+    }
+    case "doc-para":
+      return Number.isInteger(c.paragraphs) && c.paragraphs > 0 ? null
+        : u("paragraph_count", "this record holds no paragraph count for this capture");
+    case "slide-shape": {
+      const slides = Array.isArray(c.slides) && c.slides.length ? c.slides : null;
+      if (!slides) return u("slide_list", "this record holds no slide list for this capture's deck");
+      const slide = Number.isInteger(e.slide) ? slides[e.slide - 1] : null;
+      if (Number.isInteger(e.shape) && !(slide && Number.isInteger(slide.shapes)))
+        return u("shape_count", `this record holds no shape count for slide ${e.slide}`);
+      return null;
+    }
+    case "doc-table": {
+      if (!Array.isArray(c.tables)) return u("table_list", "this record holds no table list for this capture");
+      const t = c.tables[e.table];
+      if (typeof e.cell === "string" && e.cell.trim() && !(t && Number.isInteger(t.rows) && Number.isInteger(t.cols)))
+        return u("table_grid", `this record holds no row and column grid for table ${e.table}`);
+      return null;
+    }
+    case "envelope": {
+      const at = isObj(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? containerBoundUndetermined(e.at, ctx) : null;
+      return at || { level: "envelope_items",
+        why: "this record persists no list of a capture's envelope items to bound one against (they arrive as text "
+           + "units), so whether this item exists rests on the index that found it: UNDETERMINED, admitted and stated" };
+    }
+    default:
+      return null;
+  }
 }
 
 /** CPDF-22 — D-420's page form: an image `{page}` admitted because the record holds no list of the images this

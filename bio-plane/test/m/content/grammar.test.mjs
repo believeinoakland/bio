@@ -148,9 +148,34 @@ test("R8: an extent admitted without its bound held answers exactly one undeterm
   assert.deepEqual(Object.keys(u1).sort(), ["level", "why"]); assert.equal(u1.level, "container_kind");
   assert.equal(mintUndetermined({ kind: "image", part: H, cited_as: "bytes" }, ctxOf({ container: { office: true } })).level, "image_list");
   assert.equal(mintUndetermined({ kind: "image", page: 0 }, ctxOf({ container: { page_images_why: "no list held" } })).level, "page_images");
-  assert.equal(mintUndetermined({ kind: "pdf-page", page: 0, rect: [0, 0, 1, 1] }, ctxOf({ pageBoxes: null })).level, "page_box");
-  assert.equal(mintUndetermined({ kind: "pdf-page", page: 0 }, ctxOf()), null, "no rect: nothing unheld");
+  assert.equal(mintUndetermined({ kind: "pdf-page", page: 0, rect: [0, 0, 1, 1] }, ctxOf({ pageCount: 2, pageBoxes: null })).level, "page_box");
+  assert.equal(mintUndetermined({ kind: "pdf-page", page: 0 }, ctxOf({ pageCount: 2 })), null, "page set held, no rect: nothing unheld");
   assert.equal(mintUndetermined({ kind: "image", part: H, cited_as: "bytes" }, ctxOf({ container: { office: true, images: [] } })), null);
+  /* every other bound R7 skips because the context does not hold it is stated, one level, naming what was not held */
+  const lvl = (e, c) => { const u = mintUndetermined(e, ctxOf(c)); if (u) assert.deepEqual(Object.keys(u).sort(), ["level", "why"]); return u && u.level; };
+  const grid = { sheets: [{ name: "S", rows: 10, cols: 5 }, { name: "O", rows: null, cols: null }] };
+  const cases = [
+    [{ kind: "pdf-page", page: 0 }, {}, "page_set"], [{ kind: "pdf-page", page: 0 }, { pageCount: 1 }, null],
+    [{ kind: "pdf-page", page: 0, rect: [0, 0, 1, 1] }, {}, "page_set"],
+    [{ kind: "image", page: 0 }, { container: { container_name: "pdf", images: [] } }, "page_set"],
+    [{ kind: "sheet-cell", sheet: "S", cell: "A1" }, {}, "sheet_list"], [{ kind: "sheet-cell", sheet: "S", cell: "A1" }, { container: grid }, null],
+    [{ kind: "sheet-cell", sheet: "O", cell: "A1" }, { container: grid }, "sheet_grid"],
+    [{ kind: "sheet-range", sheet: "O", range: "A1:B2" }, { container: grid }, "sheet_grid"],
+    [{ kind: "sheet-range", sheet: "S", range: "A1:B2" }, { container: grid }, null],
+    [{ kind: "doc-para", para: 0 }, {}, "paragraph_count"], [{ kind: "doc-para", para: 0 }, { container: { paragraphs: 3 } }, null],
+    [{ kind: "slide-shape", slide: 1 }, {}, "slide_list"], [{ kind: "slide-shape", slide: 1 }, { container: { slides: [{ shapes: null }] } }, null],
+    [{ kind: "slide-shape", slide: 1, shape: 0 }, { container: { slides: [{ shapes: null }] } }, "shape_count"],
+    [{ kind: "slide-shape", slide: 1, shape: 0 }, { container: { slides: [{ shapes: 2 }] } }, null],
+    [{ kind: "doc-table", table: 0 }, {}, "table_list"], [{ kind: "doc-table", table: 0 }, { container: { tables: [{ rows: 2, cols: 2 }] } }, null],
+    [{ kind: "doc-table", table: 0, cell: "A1" }, { container: { tables: [{}] } }, "table_grid"],
+    [{ kind: "envelope", item: "comment", part: "word/comments.xml", n: 0, at: { kind: "doc-para", para: 1 } }, {}, "paragraph_count"],
+    [{ kind: "envelope", item: "comment", part: "word/comments.xml", n: 0, at: { kind: "doc-para", para: 1 } }, { container: { paragraphs: 3 } }, "envelope_items"],
+    [{ kind: "document" }, {}, null],
+  ];
+  for (const [e, c, want] of cases) assert.equal(lvl(e, c), want, JSON.stringify([e, c]));
+  assert.match(mintUndetermined({ kind: "sheet-cell", sheet: "O", cell: "A1" }, ctxOf({ container: grid })).why, /grid for sheet 'O'/);
+  /* the catalogue's document-only pass states nothing */
+  assert.equal(mintUndetermined({ kind: "doc-para", para: 0 }, CONTENT_EXTENT_DOCUMENT_ONLY), null);
 });
 
 test("R9: a pdf-page rect is bounded by its page's MediaBox, refused C-45.1 naming the box; no box held is undetermined, stated", () => {
