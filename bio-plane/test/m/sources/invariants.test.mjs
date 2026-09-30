@@ -76,7 +76,7 @@ test("R14 C-121.1–C-121.6 are held in this module's own table with their requi
   for (const [code, [check, translation]] of Object.entries(rows)) {
     assert.equal(SOURCES_CHECKS[code].check, check, code);
     assert.equal(SOURCES_CHECKS[code].translation, translation, code);
-    assert.match(SOURCES_CHECKS[code].where, /^src\/sources\/index\.mjs \S+ > is-[a-z-]+$/, `${code}: its one site`);
+    assert.match(SOURCES_CHECKS[code].where, /^src\/sources\/checks\.mjs \S+ > is-[a-z-]+$/, `${code}: its one site`);
     assert.ok(Object.isFrozen(SOURCES_CHECKS[code]));
   }
   /* no place: every outward sentence this module writes */

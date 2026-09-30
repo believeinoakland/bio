@@ -4,7 +4,7 @@
  * disclosures", held here and nowhere else (K174). Each code is minted at one site, the DEC-49 region its `where`
  * names. No translation names a place (R14, `layers.md` rule 1), and none carries a value (R13). */
 
-const at = (fn, region) => `src/sources/index.mjs ${fn} > ${region}`;
+const at = (fn, region) => `src/sources/checks.mjs ${fn} > ${region}`;
 
 export const SOURCES_CHECKS = Object.freeze({
   NO_SUCH_SOURCE: Object.freeze({
