@@ -13,12 +13,15 @@ const cand = (id, weight, state, a, b, extra = {}) => ({ candidate: id, key: "K2
 
 test("R4: one item per candidate candidatesFor answers on each joined project, counted once, keyed <CLASS>::contradiction::<candidate>, homed under both sides", () => {
   const asked = [];
+  const between = [{ project: "PRJ-1", opted_in: { member: "alice", at: iso(NOW), words: null }, asked_by_another: false, revealed: false,
+                     responses: [], responses_truncated: false },
+                   { project: "PRJ-2", opted_in: null, asked_by_another: true, revealed: false, responses: [], responses_truncated: false }];
   const byProject = {
-    "PRJ-1": [cand("c-duty", "duty", "open", claim("INQ-A", "x is 3"), claim("INQ-B", "x is 4")),
+    "PRJ-1": [cand("c-duty", "duty", "open", claim("INQ-A", "x is 3"), claim("INQ-B", "x is 4"), { between_projects: between }),
               cand("c-lead", "lead", "open", claim("INQ-A", "y"), claim("INQ-C", "z")),
               cand("c-gone", "duty", "resolved", claim("INQ-A", "p"), claim("INQ-B", "q")),
               cand("c-done", "lead", "dismissed", claim("INQ-A", "p"), claim("INQ-C", "q"))],
-    "PRJ-2": [cand("c-duty", "duty", "open", claim("INQ-A", "x is 3"), claim("INQ-B", "x is 4")),
+    "PRJ-2": [cand("c-duty", "duty", "open", claim("INQ-A", "x is 3"), claim("INQ-B", "x is 4"), { between_projects: between }),
               cand("c-plur", "plurality", "open", { kind: "stance", inquiry: "INQ-B", project: "PRJ-2", claim: "a" },
                    { kind: "stance", inquiry: "INQ-B", project: "PRJ-1", claim: "b" }),
               cand("c-taken", "duty", "taken_up", claim("INQ-B", "m"), claim("INQ-C", "n"), { inquiry: "INQ-T" }),
@@ -40,7 +43,10 @@ test("R4: one item per candidate candidatesFor answers on each joined project, c
     "OBLIGATION::contradiction::c-duty", "OBLIGATION::contradiction::c-expl", "OBLIGATION::contradiction::c-taken"]);
   const m = byId(r);
   const duty = m["OBLIGATION::contradiction::c-duty"];
-  assert.deepEqual([duty.class, duty.kind, duty.subject.id, duty.subject.weight], ["OBLIGATION", "contradiction-duty", "c-duty", "duty"]);
+  assert.deepEqual([duty.class, duty.kind], ["OBLIGATION", "contradiction-duty"]);
+  // R8 (K558): the subject queue R46's dispositions read
+  assert.deepEqual(duty.subject, { kind: "contradiction_candidate", id: "c-duty", state: "open", between_projects: between,
+    parties: [{ project: "PRJ-1", opted_in: between[0].opted_in }, { project: "PRJ-2", opted_in: null }] });
   assert.deepEqual(duty.basis.projects, ["PRJ-1", "PRJ-2"], "one item, however many of the member's projects it reaches");
   assert.deepEqual(duty.case.ancestors.map((a) => [a.id, a.depth]).sort(),
     [["INQ-A", 0], ["INQ-B", 0], ["PRJ-1", 1], ["PRJ-2", 1]], "homed under both sides");
@@ -48,8 +54,12 @@ test("R4: one item per candidate candidatesFor answers on each joined project, c
   assert.deepEqual(duty.age, { state: "determined", since: iso(NOW - 5000), ms: 5000 });
   assert.equal(m["FINDING::contradiction::c-lead"].kind, "contradiction-lead");
   assert.equal(m["FINDING::contradiction::c-plur"].kind, "contradiction-plurality");
-  assert.deepEqual(m["FINDING::contradiction::c-plur"].subject.bundles, ["INQ-B", "PRJ-2", "PRJ-1"]);
-  assert.equal(m["OBLIGATION::contradiction::c-taken"].subject.state, "taken_up");
+  assert.deepEqual(m["FINDING::contradiction::c-plur"].options, [{ id: "opt", on: ["INQ-B", "PRJ-2", "PRJ-1"] }]);
+  assert.deepEqual(m["FINDING::contradiction::c-plur"].subject, { kind: "contradiction_candidate", id: "c-plur", state: "open",
+    between_projects: [], parties: [] });
+  const taken = m["OBLIGATION::contradiction::c-taken"].subject;
+  assert.deepEqual([taken.state, taken.inquiry], ["taken_up", "INQ-T"], "its contradiction inquiry, when taken up");
+  assert.equal("inquiry" in duty.subject, false);
   assert.deepEqual(r.facts.contradiction, { bound: 50, truncated: false });
   // no member: every visible project is asked
   asked.length = 0; w.read(null, "class:admin");
@@ -154,6 +164,8 @@ test("R7, R11: two projects hidden from each other on two sides of one duty: eac
   assert.equal(a.length, 1, "one item, whatever number of the member's projects it reaches"); assert.equal(b.length, 1);
   assert.equal(a[0].id, "OBLIGATION::contradiction-unseen::cand-1"); assert.equal(a[0].class, "OBLIGATION");
   assert.deepEqual(a[0].basis.projects.map((p) => p.project), ["PRJ-A", "PRJ-A2"]);
+  assert.deepEqual(a[0].subject, { kind: "contradiction_notice", id: "cand-1",
+    parties: [{ project: "PRJ-A", opted_in: null }, { project: "PRJ-A2", opted_in: null }] }, "R8 (K558)");
   assert.deepEqual(a[0].case.ancestors.map((x) => x.id), ["INQ-A", "PRJ-A", "PRJ-A2"], "homed on alice's side only");
   assert.deepEqual(b[0].case.ancestors.map((x) => x.id), ["INQ-B", "PRJ-B"], "homed on bob's side only");
   const aText = JSON.stringify(a[0]), bText = JSON.stringify(b[0]);
@@ -168,6 +180,7 @@ test("R7, R11: two projects hidden from each other on two sides of one duty: eac
   state.optedB = true;
   a = unseen(w.read("alice"));
   assert.equal(a[0].basis.asked_by_another, true); assert.equal(a[0].basis.projects[0].revealed, false);
+  assert.deepEqual(unseen(w.read("bob"))[0].subject.parties, [{ project: "PRJ-B", opted_in: { member: "m", at: iso(NOW), words: null } }]);
   assert.ok(!JSON.stringify(a[0]).includes("PRJ-B"), "before the reveal no other party is named");
   // after both opt in, the parties' names appear; a response's chosen parts reach the other project, never a handle
   state.optedA = true;

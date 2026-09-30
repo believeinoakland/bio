@@ -1981,8 +1981,13 @@ export class QueueProducers {
         class: cls,
         kind,
         case: this.#homesAt(subjects, viewer),
-        subject: { kind: "contradiction", id: c.candidate, key: c.key ?? null, weight: c.weight, state: c.state,
-                   bundles: subjects.slice(0, QueueProducers.QUEUE_OPTION_SUBJECTS_MAX) },
+        /* R8 (K558): the shape queue R46's dispositions read. `between_projects` is contradiction R25's, which names
+           only the member's own party projects; `parties` is each of them with its opt-in. */
+        subject: { kind: "contradiction_candidate", id: c.candidate, state: c.state,
+                   ...(c.inquiry ? { inquiry: c.inquiry } : {}),
+                   between_projects: Array.isArray(c.between_projects) ? c.between_projects : [],
+                   parties: (Array.isArray(c.between_projects) ? c.between_projects : [])
+                     .map((b) => ({ project: b.project, opted_in: b.opted_in ?? null })) },
         summary: kind === "contradiction-duty"
           ? "two things the record holds conflict, and a member of this project must resolve it"
           : kind === "contradiction-plurality"
@@ -2197,8 +2202,9 @@ export class QueueProducers {
         class: cls,
         kind: duty ? "contradiction-duty-unseen" : "contradiction-plurality-unseen",
         case: this.#homesAt(subjects, viewer),
-        subject: { kind: "contradiction", id: candidate, weight: n.weight, state: n.state ?? null,
-                   bundles: subjects.slice(0, QueueProducers.QUEUE_OPTION_SUBJECTS_MAX) },
+        /* R8 (K558): the member's projects that hold R50's notice, each with its opt-in. */
+        subject: { kind: "contradiction_notice", id: candidate,
+                   parties: parties.map((p) => ({ project: p.project, opted_in: p.opted_in ?? null })) },
         summary: duty ? "something this project rests on is in conflict with a record you cannot see"
                       : "this project's conclusion may not hold together with a conclusion you cannot see",
         detail: n.says ?? null,
