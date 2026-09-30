@@ -178,4 +178,239 @@ table.wide{min-width:1180px}
 <li><code>build/plan/next.md</code>: drop N61, N129, N130 (applied in T8, K232).</li>
 <li>DEC-1 to DEC-67: bring <code>docs/archive/ledgers/DECISIONS-2026-08.md</code> back onto <code>main</code> from <code>coord</code>, since the canon cites them.</li>
 </ul>
+<h1>Tests the drafts require</h1>
+<p><strong>Status</strong> · DRAFT by ACTION_DESIGN #1, 2026-09-30, for the jobs that build <code>drafts/action-plans.md</code> and <code>drafts/deltas.md</code> (P7: every requirement tested at the module's interface, never its source text). Each line names the requirement, what the test shows, and its negative control (the same call with the one fact that should refuse it). Fixtures: the test profile only (<code>jurisdictions</code> test profile); a project with an owner, a joined participant, an invited non-joined member and a machine credential; one open inquiry; one published case with a live determination holding a <code>noncompliant</code>, a <code>compliant</code> and an <code>unclear</code> outcome.</p>
+<h2><code>action-plans</code></h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>req</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1</td>
+<td>each refusal fires, in order, one test per code (<code>MACHINE_CANNOT_PLAN</code>, <code>PLAN_NO_TITLE</code>, <code>NO_SUCH_PROJECT</code>, the joined-authority refusal, <code>PLAN_NO_SUBJECT</code> at 0 and 51, <code>SUBJECT_MALFORMED</code>, <code>NO_SUCH_INQUIRY</code>/<code>NO_SUCH_DETERMINATION</code> for absent and invisible alike, <code>SUBJECT_NOT_OF_PROJECT</code>, <code>SUBJECT_NOT_LIVE</code>, <code>SUBJECT_IN_ACTIVE_PLAN</code>)</td>
+<td>the valid call lands; two faults at once answer the earlier code</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>a plan opens with an inquiry subject (support <code>hypothetical</code>) and an outcome subject (<code>established</code>); the answer lists both</td>
+<td>a title of 201 characters refuses</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>a second plan in the same project naming the same outcome refuses, naming the first; another project's plan with the same subject lands; after R20 closes the first, the same project's second plan lands</td>
+<td>the same determination with a different standard lands</td>
+</tr>
+<tr>
+<td>R4</td>
+<td>add and remove land with a reason; removing a subject an option serves marks the option <code>subject_removed</code></td>
+<td>no reason refuses <code>PLAN_NO_REASON</code>; a closed plan refuses <code>PLAN_CLOSED</code></td>
+</tr>
+<tr>
+<td>R5</td>
+<td>after a determination is recorded on the inquiry's act, <code>planRead</code> shows <code>determined_since</code>; the plan's subjects are unchanged until R4</td>
+<td>before the determination, <code>determined_since</code> is absent</td>
+</tr>
+<tr>
+<td>R6</td>
+<td><code>planRead</code> returns every named part, including a started option's action state and a subject's escalation stage; history oldest first with who, when, why</td>
+<td>an invited non-joined member of another project gets <code>NO_SUCH_PLAN</code>, identical to an absent id</td>
+</tr>
+<tr>
+<td>R7</td>
+<td>pages of 200, <code>truncated</code> by reading one past; <code>subject</code> filter finds the plan</td>
+<td>a limit above 200 is capped</td>
+</tr>
+<tr>
+<td>R8</td>
+<td>superseding the determination shows <code>superseded</code> naming the successor; closing the inquiry shows <code>closed</code>; nothing is stored (read twice around the change)</td>
+<td>an untouched subject reads <code>live</code></td>
+</tr>
+<tr>
+<td>R9</td>
+<td>each refusal fires in order; a legal option with no tier reads <code>undetermined</code>; <code>optionRevise</code> keeps the prior revision readable</td>
+<td>a tier on an awareness option refuses <code>TIER_REFUSED</code></td>
+</tr>
+<tr>
+<td>R10</td>
+<td>each addressee arm lands (office, press, organisation, group, audience)</td>
+<td>a named person with no role and organisation refuses <code>ADDRESSEE_REFUSED</code></td>
+</tr>
+<tr>
+<td>R11</td>
+<td>a machine proposal is stored apart, labelled machine work, absent from options; a member adopts it once; the option names the proposal</td>
+<td>a second adoption refuses; a machine calling <code>optionAdopt</code> refuses</td>
+</tr>
+<tr>
+<td>R12</td>
+<td>a lobbying option naming a held standard in <code>enforces</code> lands</td>
+<td>the same option without <code>enforces</code> refuses <code>LOBBYING_NO_REQUIREMENT</code></td>
+</tr>
+<tr>
+<td>R13</td>
+<td>bulk choose of three options lands all; <code>declined</code> with a reason lands; history keeps each change</td>
+<td>bulk with one unknown option changes none (<code>NO_SUCH_OPTION</code>); <code>declined</code> without a reason refuses</td>
+</tr>
+<tr>
+<td>R14</td>
+<td>a three-phase scenario with a checkpoint and both branches lands; a fourth scenario refuses</td>
+<td>a phase holding an unchosen option refuses <code>PHASE_OPTION_NOT_CHOSEN</code>; a cycle refuses <code>PHASE_CYCLE</code></td>
+</tr>
+<tr>
+<td>R15</td>
+<td>a phase starting when another subject's escalation reaches stage 5 reads not started, then started after the escalation advances</td>
+<td>a subject not in the plan refuses <code>BRANCH_UNKNOWN</code></td>
+</tr>
+<tr>
+<td>R16</td>
+<td>on the checkpoint's day a member judges <code>not_met</code>; the scenario reads the <code>not_met</code> branch</td>
+<td>a day early refuses <code>CHECKPOINT_NOT_DUE</code>; judging twice refuses <code>CHECKPOINT_JUDGED</code>; a machine refuses</td>
+</tr>
+<tr>
+<td>R17</td>
+<td><code>checkpointsDue</code> lists the due, unjudged checkpoint once, oldest first, with days since due</td>
+<td>after judging, it is absent; a closed plan's checkpoint is absent</td>
+</tr>
+<tr>
+<td>R18</td>
+<td>starting a chosen option creates an action with the option's addressee, dated clock entries with bases, <code>rests_on</code> legs, <code>plan</code> and <code>option</code>, and <code>contact</code>; the plan records the link</td>
+<td>an unchosen option refuses <code>OPTION_NOT_CHOSEN</code>; <code>breach: true</code> on an inquiry-only subject is refused by <code>actions</code> R8</td>
+</tr>
+<tr>
+<td>R19</td>
+<td>each check appears with its reason (past date, unbranched outcome, dead subject, outward option on hypothetical subjects, superseded <code>enforces</code>) and changes nothing</td>
+<td>a plan with none of these answers no checks</td>
+</tr>
+<tr>
+<td>R20</td>
+<td>a member closes with a reason; the plan stays readable; its subjects join a new plan</td>
+<td>no reason refuses; closing twice refuses <code>PLAN_CLOSED</code>; a machine refuses; nothing closes a plan on its own (advance the clock a year: still open)</td>
+</tr>
+<tr>
+<td>R21</td>
+<td>an owner sets <code>work_kinds: ["reporting"]</code>; <code>planRead</code> shows it; a proposal made with and without it lands identically in R11's checks</td>
+<td>an unknown kind refuses <code>WORK_KIND_UNKNOWN</code>; a machine refuses</td>
+</tr>
+<tr>
+<td>R22</td>
+<td>every <code>NO_SUCH_PLAN</code> site answers through <code>noSuchPlan</code>, one code and sentence</td>
+<td>an existing visible plan never answers it</td>
+</tr>
+<tr>
+<td>R23</td>
+<td>a checkpoint passed unjudged produces no queue FINDING or CONDITION and no record fact (read <code>queue</code> and the record after the day passes)</td>
+<td>the reminder (R17) is present</td>
+</tr>
+<tr>
+<td>R24</td>
+<td>every act with a machine credential refuses, except <code>optionPropose</code></td>
+<td><code>optionPropose</code> by a machine lands</td>
+</tr>
+<tr>
+<td>R25</td>
+<td>the public read path and <code>publication</code> answer nothing for a plan id, exactly as for a non-existent id</td>
+<td>a joined member reads it</td>
+</tr>
+<tr>
+<td>R26</td>
+<td>each refused key (<code>budget</code>, <code>cost</code>, <code>assignee</code>, <code>hours</code>, <code>significance</code>, <code>priority</code>, <code>score</code>) refuses <code>OPTION_KEY_REFUSED</code></td>
+<td>an option without them lands</td>
+</tr>
+<tr>
+<td>R27</td>
+<td>no act rewrites a row (read history before and after each act); every table is declared to purge (purge a test instance: counts zero)</td>
+<td>not applicable</td>
+</tr>
+<tr>
+<td>R28</td>
+<td>against the test profile only; with no profile active, suggestions' deadlines read undetermined</td>
+<td>not applicable</td>
+</tr>
+</tbody>
+</table></div>
+<h2><code>actions</code> (deltas §2)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>req</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R9 amended</td>
+<td>each addressee arm lands; a written <code>{state: named, name}</code> action reads as written</td>
+<td>a breach action addressed to press refuses <code>ADDRESSEE_NOT_AN_OFFICE</code>; a private person refuses</td>
+</tr>
+<tr>
+<td>R7 amended</td>
+<td><code>completed</code> lands on a <code>media</code>-kind action and on a records request</td>
+<td><code>resolved</code> with no resolution still refuses <code>NO_RESOLUTION</code></td>
+</tr>
+<tr>
+<td>R44</td>
+<td>a member sets <code>contact</code>; the read shows it</td>
+<td>a machine refuses; a non-member id refuses <code>CONTACT_NOT_A_MEMBER</code></td>
+</tr>
+<tr>
+<td>R45</td>
+<td>an action created by <code>action-plans</code> R18 carries <code>plan</code> and <code>option</code></td>
+<td>changing either on a revision refuses <code>PLAN_LINK_REWRITTEN</code></td>
+</tr>
+<tr>
+<td>R46</td>
+<td><code>op=actioncreate</code> answers the id and writes what a promote would; <code>op=action</code> and <code>op=actions</code> answer R29's and R30's reads</td>
+<td>a malformed document refuses as promote does</td>
+</tr>
+</tbody>
+</table></div>
+<h2><code>filings</code> (deltas §3)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>req</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R22</td>
+<td>the approved bytes of a filing draft, a counsel-packet export and a communication draft each carry the in-band quartet, verifiable with <code>publication</code>'s R16</td>
+<td>a draft not yet approved carries none</td>
+</tr>
+<tr>
+<td>R23</td>
+<td>a machine prepares a communication draft for an action addressed to press; it is labelled machine work; a member approves; sending records the bytes</td>
+<td>a machine approving refuses (R6); sending before approval refuses <code>NOT_APPROVED</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2>Wiring (deltas §4)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>change</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scheduler <code>deadline-recheck</code></td>
+<td>a pending clock entry past its date is marked overdue within one cadence, and escalation is asked</td>
+<td>an entry dated today stays pending</td>
+</tr>
+<tr>
+<td>queue kinds</td>
+<td>one item each for an overdue clock (CONDITION), a proposed stage (OBLIGATION), a due checkpoint (OBLIGATION); none repeats for the same occurrence</td>
+<td>a checkpoint judged before its item is read removes the item</td>
+</tr>
+</tbody>
+</table></div>
 </div>
