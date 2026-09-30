@@ -8,10 +8,9 @@
  * `observationLogOf(ctx)` answers the one instance per Durable Object storage (K61). It reaches `record-core` and
  * `membership` through their factories, declares its tables to purge (R23, K23), and registers its writers with
  * `provenance` (the receipt, R5) and `extraction` (the reading notice, R6–R8, and the index notice, R7) on the same
- * `ctx` (K31).
- * `entities.onResolveAttempt` and `connections`' derivation notice are registered by `attachMeaning` once those
- * modules are extracted; until then the legacy store calls `observeResolutionAttempt` and
- * `observeConnectionDerivation` where they fire. */
+ * `ctx` (K31). `attachMeaning` registers the meaning-level writers with `entities.onResolveAttempt` and `connections`'
+ * derivation notice, and this module's derivation statement as connections' provider (its R5, R51), each under this
+ * module's own name. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -29,7 +28,7 @@ import {
 } from "./vocabulary.mjs";
 
 export * from "./vocabulary.mjs";
-export { LEAD_CHECKS, OBSERVATION_CHECKS, OBSERVATION_CHECK_KEYS } from "./checks.mjs";
+export { AI_RUN_CHECKS, LEAD_CHECKS, LEAD_ID_RE, OBSERVATION_CHECKS, OBSERVATION_CHECK_KEYS } from "./checks.mjs";
 export { OBSERVATION_LOG_SCHEMA, OBSERVATION_LOG_TABLES, observationLogOwns } from "./schema.mjs";
 
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
@@ -454,14 +453,18 @@ export class ObservationLog {
     return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
   }
 
-  /** Registers the meaning-level writers with `entities` and `connections` once those modules are extracted (R8): each
-   *  takes `(module, fn)` and refuses a second registration. Answers which were registered. */
+  /** Registers the meaning-level writers with `entities` (its R13) and `connections` (its R3) (R8), and this module's
+   *  derivation statement as connections' provider (its R5, R51), each under this module's own name: each takes
+   *  `(module, fn)` and refuses a second registration, whose refusal is answered. Answers which were registered. */
   attachMeaning({ entities = null, connections = null } = {}) {
     const out = {};
     if (entities && typeof entities.onResolveAttempt === "function")
       out.entities = entities.onResolveAttempt(OBSERVATION_LOG_MODULE, (e) => this.observeResolutionAttempt(e));
     if (connections && typeof connections.onDerived === "function")
       out.connections = connections.onDerived(OBSERVATION_LOG_MODULE, (e) => this.observeConnectionDerivation(e));
+    if (connections && typeof connections.registerDerivationProvider === "function")
+      out.derivationProvider = connections.registerDerivationProvider(OBSERVATION_LOG_MODULE,
+        (id, o) => this.derivationStatementFor(id, o));
     return out;
   }
 
