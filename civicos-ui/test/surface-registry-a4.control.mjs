@@ -154,11 +154,15 @@ const ARMS = [
     also: "found 0 distinct hosted act(s) across 0 placement(s)",
     edits: [[APP, neuterWalk]] },
 
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; the T15 record's deferred flaw): this arm handed the inquiry surface
+     `versionhide`, whose register row UI-42 struck on 2026-08-09 — so it drained nothing, and A4c could only fire for a
+     reason other than its subject. It now hands it `attesttext`, the register's oldest row still OWED (CPDF-10), and
+     must fail naming that row. The subject is unchanged: a paid row must be struck. */
   { id: "4", name: "THE DRAIN — a register row's act is given a surface; the ceiling must FALL",
     expect: "ARM A4c (DRAIN)",
-    also: "STRIKE THE ROW",
+    also: "attesttext (owed by",
     needsRegisterAct: true,
-    edits: [[APP, once(INQ_ACTS, `acts: ["conclude", "reopen", "inquirydivide", "inquiryground", "publish", "versionhide"],`)]] },
+    edits: [[APP, once(INQ_ACTS, `acts: ["conclude", "reopen", "inquirydivide", "inquiryground", "publish", "attesttext"],`)]] },
 ];
 
 /* ------------------------------------------------------- POLARITY, FIRST

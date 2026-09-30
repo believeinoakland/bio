@@ -754,10 +754,14 @@ const cat = await affordances(null);
    — the contradiction inquiry's one act on a BUNDLE, offered where `conclude` is withheld (affordances 1147dc9b3b).
    Corrected, not loosened: it moved by exactly the one object-directed act N345 added to ACTS; its other ops are
    NON_ACTS (R7). */
-t("no target -> the whole catalogue: thirty-one acts, each with id/label/weight/needs/mode/rung/prompt",
-  [cat.ok, cat.result.catalog.length,
-   cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 31, true]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #14, T16; K457): the count would have moved to THIRTY-TWO with `sourceconsent`
+   (N364, K530: an `ACTS` row, weight `single`, its prompt riding it). The arm's two properties are the module's own
+   now: that the catalogue holds exactly the object-directed acts, no act appearing or vanishing unannounced, is
+   `test/m/affordances/catalogue.test.mjs` "R1: ACTS holds exactly the object-directed acts, each at its weight" (the
+   list by name, a stronger pin than a count); that `op=affordances` with no target publishes exactly those acts, each
+   decorated with its id, label, weight, rung, rung_absence and prompt and a session mode, is
+   `test/m/affordances/plane.test.mjs` "R17: with no target, the catalogue …", with `services.test.mjs` "R11: …" for
+   the decorated shape's every key (needs included). `cat` stays: the arms below read it. */
 
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
@@ -776,9 +780,14 @@ t("no target -> the whole catalogue: thirty-one acts, each with id/label/weight/
    name EVERY act that carries a prompt and pin each to its own published
    constant, so an unattached prompt still fails and a prompt drifting from the
    module that owns it fails too. */
-t("every act that carries a PROMPT carries its own published wording, and no other act invents one (DEC-29(b))",
-  cat.result.catalog.filter((a) => a.prompt !== null).map((a) => a.id).sort(),
-  ["inquirydivide", "inquiryground"]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #14, T16; K457): the set would have moved to four — `publish` gains
+   `SELF_ATTESTED_PROMPT` (affordances R28, case-authoring's `SELF_ATTESTED_SENTENCE`, DEC-81 item 3) and
+   `sourceconsent` `CONSENT_PROMPT` (R29, N364). The property — every prompt is its published constant and no other act
+   carries one — is `test/m/affordances/catalogue.test.mjs` "R5: inquirydivide carries DIVIDE_PROMPT, inquiryground
+   GROUND_PROMPT, attest ATTEST_FENCE, publish SELF_ATTESTED_PROMPT and sourceconsent CONSENT_PROMPT, and every other
+   act's prompt is null" (the whole act set, capture and set acts too), and over the wire `plane.test.mjs` "R17: …"
+   (each catalogue act's prompt equal to its decorated row's). `test/d310.control.mjs` arm (3) still names this arm
+   as its mustFail; it is stale on its own account (the planted `prompt:` key is overridden by the act's own). */
 t("and each is the constant from the module that owns it, never a copy",
   [cat.result.catalog.find((a) => a.id === "inquirydivide").prompt === DIVIDE_PROMPT,
    cat.result.catalog.find((a) => a.id === "inquiryground").prompt === GROUND_PROMPT],

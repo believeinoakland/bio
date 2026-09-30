@@ -80,7 +80,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, STATES, parseFrontmatter } from "../checks/bio-checks.mjs";
-import { DIVIDE_PROMPT, ACTS } from "../src/affordances.mjs";
+import { DIVIDE_PROMPT } from "../src/affordances.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
@@ -669,8 +669,12 @@ console.log("\n--- 11. DEC-29(b): the divide surface's wording STATES the disclo
      notch sharper: OR takes the MAXIMUM, so grouping raises a grade with no new
      evidence at all. The assertion is NOT loosened to "at least one" — it names
      the whole set, so an unattached prompt still fails it. */
-  t("no act invents a prompt: the published set is exactly the two a ruling attaches one to",
-    ACTS.filter((a) => a.prompt).map((a) => a.id).sort(), ["inquirydivide", "inquiryground"]);
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #14, T16; K457): the set is four now — `publish` carries SELF_ATTESTED_PROMPT
+     (affordances R28, DEC-81 item 3) and `sourceconsent` CONSENT_PROMPT (R29, N364). That no act carries a prompt a
+     ruling did not attach, and each carries its own published constant, is affordances' own requirement, tested in
+     `test/m/affordances/catalogue.test.mjs` "R5: inquirydivide carries DIVIDE_PROMPT, inquiryground GROUND_PROMPT,
+     attest ATTEST_FENCE, publish SELF_ATTESTED_PROMPT and sourceconsent CONSENT_PROMPT, and every other act's prompt
+     is null". This block keeps what is division's: the act's published shape and DIVIDE_PROMPT clause by clause. */
 }
 
 console.log("\n--- 12. publication and refusal agree, in both directions (DEC-8) ---");

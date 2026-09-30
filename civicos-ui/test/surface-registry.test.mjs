@@ -816,6 +816,13 @@ const ACTS_AWAITING_SURFACE = [
      the contradiction turned out to be (contradiction R36), offered where `conclude` is withheld on such an inquiry. No
      surface hosts it, so it is a debt signed here, not an exemption; the surface is the UI's (owner legacy-ui). */
   { id: "contradictionresolve", published_by: "N345 (contradiction R36; affordances R1, R8, T15)", owed_by: "legacy-ui — the contradiction inquiry's conclude form, carrying the resolution (what the contradiction turned out to be) beside the conclusion", since: "2026-09-30" },
+  /* ADDED 2026-09-30 (LEGACY-TESTS #14, T16; N364, K530): ARM A4b fired naming `sourceconsent` on the T16 baseline. The
+     plane publishes it as an ACTS row (affordances R1, R5, R29): a member recording a source's consent to publish one
+     entry of its history to an audience, carrying `CONSENT_PROMPT` (consent is permanent for what is published; a
+     withdrawal governs only what is published after it). `applies` is false on every bundle, so it rides the no-target
+     catalogue for the surface that shows a source's history — and no surface does yet. A debt signed here, not an
+     exemption; the surface is the UI's (owner legacy-ui). */
+  { id: "sourceconsent", published_by: "N364 (sources R7; affordances R1, R5, R29, T16)", owed_by: "legacy-ui — a source's history, where a member records an entry's consent to publish to an audience with the act's own prompt", since: "2026-09-30" },
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls

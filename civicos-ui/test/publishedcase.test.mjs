@@ -2536,6 +2536,23 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
                    + "states them (null where it states none). A SURFACE GAP: not rendered yet.",
     tensions_detail: "publication R10: the plane's own sentence saying what `tensions` is (or, for a document before /5, "
                    + "that its format predates the disclosure). A SURFACE GAP: printed nowhere yet.",
+    /* ADDED 2026-09-30 (LEGACY-TESTS #14, T16; N364, publication R10, R20, R51, R52) — THIS ARM FIRING EXACTLY AS ARM
+       (d) WAS BUILT TO MAKE IT FIRE, answered by naming the keys rather than relaxing the arm. A `/5` case document
+       now carries its `captures:` and `sources:` blocks (with `capture_accounts:`, read into `captures`), and
+       `publishedCase()` answers them as signed, with the sentence for an older document or a loose bundle. This surface
+       reads none of them yet. Each is a SURFACE GAP, not an unconsumed publication: publication's module test drives the
+       read (test/m/publication/sources.test.mjs, "R10 publishedCase carries a /5 document's captures and sources blocks
+       as signed; …"). The day this page renders them, these entries are DELETED (the set is pinned in both directions). */
+    captures: "publication R10, R20 (N364, DEC-81 item 3): each capture the signed /5 document rests on, as its "
+            + "`captures:` block states it — how it came to the record, a self-attested capture's acknowledgement and "
+            + "sentence, and its signed accounts; null for a document before /5. A SURFACE GAP: the case page does not "
+            + "render it yet.",
+    sources: "publication R10, R20, R52 (N364, DEC-78): the signed /5 document's `sources:` block — each source detail "
+           + "exactly as `sources.publishableAt` answered it at the commit, and nothing beyond it; null for a document "
+           + "before /5. A SURFACE GAP: not rendered yet.",
+    blocks_detail: "publication R10: the plane's own sentence saying what `captures` and `sources` are, or why they are "
+                 + "null (an older format, a loose bundle, a block the document does not carry). A SURFACE GAP: printed "
+                 + "nowhere yet.",
     /* `bar` AND `bar_detail` CAME OFF THIS LIST AT CASE-6, 2026-09-10, AND THEY
        ARE THE ITEM. Both were declared here as SURFACE GAPS rather than as
        unconsumed publications — the entries said so, and named CASE-6 as the item
