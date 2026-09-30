@@ -32,3 +32,7 @@ My best reading: BOB adds `legacy-checks` to capture-requests' `from` (`["legacy
 ## J2 · COMPLETE
 
 Done on job/T18/capture-requests (tranche/T18 @ 8d070e74ec merged: run-rules and K673's from). C-28 less C-28.13 copied (awaiting stamp); ✱ CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible moved and deleted from the catalogue (28 lines removed, 0 added); civicosUserAgent and C-83 re-pointed to acquisition, runPrincipalGate to run-rules, drain.test's acquire to acquisition; leadslug's share converted. 63/63 module tests; format, architecture, coverage, ownership 0 failures. REPORT in the record: the agent-worker and bio-plane bundles are stale from the catalogue edit (regenerate at the close). Details in the record's Completion.
+
+## J3 · COMPLETE
+
+B3 was already applied before it arrived: run-rules' merge (8d070e74ec) was merged and runPrincipalGate re-pointed to run-rules in J2's work. Merged the tranche's latest (build files only); 63/63 module tests and ownership 0 failures unchanged. Nothing further; the record's Completion stands.
