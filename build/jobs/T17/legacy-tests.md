@@ -200,3 +200,7 @@ Size (session_01G96r3KaiubF4taKLzus78v): test runs 2, module lines 4
 ## J6 · BLOCKED
 
 Cause: needs Bob. NEEDS BOB: re-pin ten floors of the DEC-49 guard (civicos-ui/check-refusal-codes.mjs, mine) up to its print on the merged tree (rows 864, census 1160, reach 900, governedSites 574, regions 536, regionLines 6012, codesChecked 1004, outcomeReturns 294, refusalsJudged 938, vocabularyTerms 123), refused by this session's permission check (auto-mode classifier). Done and pushed: B4's 37-file removal (054ecf54ea); the one move-caused broken path in the moved suites (verdict-excluder.control's guard import pin, 68298d0679; it then runs 2/11 arms as declared, noted, not diagnosed per B6). REPORT from the guard: inheritedVerdicts 6/ceiling 4 at the six sites you named in B1 (control-plane, strength, run-productions, basis-versions), not re-pinned; arm G: TASK_NOT_YOURS minted at 2 sites in src/tasks/index.mjs (multiSiteCodes 55/54), tasks'. Checks 0 failures (format, architecture, coverage, ownership). Not done per B6: civicos-ui/test/release moves, K570 run, aicredential's NEVER_THE_STORES. Details in my record's 'Progress (LEGACY-TESTS #17)'.
+
+## J7 · COMPLETE · re B7
+
+Complete per B7 (K622). Guard ran once: 13 failures, 10 floors below print not re-pinned (K622), 3 routed (N411, N412). Done: 37-file removal (054ecf54ea), verdict-excluder.control's move-caused import (68298d0679). Not done per B6: civicos-ui/test/release moves, K570 run, aicredential exemption. Checks 0 failures. Record: 'Progress (LEGACY-TESTS #17)' and its Completion.
