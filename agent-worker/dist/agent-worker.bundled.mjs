@@ -26185,6 +26185,29 @@ var BIAS_ROW_BY_CHECK = new Map(Object.entries(BIAS_CHECKS2).map(([code, row]) =
 
 // ../bio-plane/src/contradiction.mjs
 var CONTRADICTION_LABELS = Object.freeze(["world", "record", "precision", "unrelated", "undetermined"]);
+var RECOMMEND_PROMPT = `You are recommending, for CONTRADICTIONS a civic research record holds, the RESPECTS in which the two sides
+of each pair may differ, so that they need not conflict. A member of the group will see your recommendation and
+decide; you decide nothing.
+
+Each pair carries its KEY (why the two were paired) and the RESPECTS you may name for it:
+- For K1-K4 pairs: time_or_occasion, scope, meaning, observer_or_method, subject.
+- For K5 pairs (two projects' conclusions on one question): scope, time_or_occasion, standard, evidence_set,
+  weighing.
+
+RULES:
+- Name only respects from the pair's own list. Never say which side is wrong. Never name a kind of conflict
+  (misquote, error, double-speak, reversal, a conflict of norms). Never assign a cause.
+- Name a respect only when something SHOWN in the two sides suggests they differ in it (e.g. different dates or
+  occasions; one about a part and one about the whole; a word used in two senses; two methods or observers; two
+  different subjects under one name). Give one sentence saying what you saw.
+- If nothing shown suggests a respect, name none for that pair. An empty answer is honest; never force one.
+- Use only what is shown. Do not assume facts not in the two sides and their context.
+
+OUTPUT: a JSON array, one object per pair, in input order:
+{"n": <pair number>, "coordinates": [{"coordinate": "<respect>", "reason": "<one sentence>"}]}.
+Output the JSON only.
+`;
+var RECOMMEND_PROMPT_SHA256 = null;
 
 // ../bio-plane/src/contradiction/schema.mjs
 var CONTRADICTION_COLUMNS = Object.freeze([
@@ -26866,6 +26889,10 @@ var SOURCING = {
   /* op=affordances .catalog */
   member_only: "driven",
   /* op=affordances .catalog, the mode field */
+  contradiction: "imported",
+  /* contradiction RECOMMEND_PROMPT + its measured digest (N345) */
+  contradiction_unmeasured: "absent",
+  /* while contradiction's RECOMMEND_PROMPT_SHA256 is null (R27) */
   recipes: "absent",
   /* absent until the plane publishes recipes — see the header */
   recipes_published: "driven",
@@ -26914,6 +26941,10 @@ function renderPack(published, catalogue) {
   const memberOnly = memberOnlyActs(catalog);
   if (memberOnly.length === 0)
     throw new Error("the machine/member boundary names the acts a machine credential cannot reach, read from the published `mode`: the catalogue published none");
+  if (typeof RECOMMEND_PROMPT !== "string" || RECOMMEND_PROMPT.trim() === "")
+    throw new Error("the pack carries contradiction's recommender prompt and writes none of its own: contradiction exported no RECOMMEND_PROMPT");
+  if (RECOMMEND_PROMPT_SHA256 !== null && sha256HexSync(RECOMMEND_PROMPT) !== RECOMMEND_PROMPT_SHA256)
+    throw new Error("the pack carries contradiction's recommender prompt only as it was measured: sha256(RECOMMEND_PROMPT) is not contradiction's RECOMMEND_PROMPT_SHA256");
   const levels = Object.keys(OBSERVATION_LEVELS);
   const states = Object.keys(OBSERVATION_STATES);
   if (levels.length === 0 || states.length === 0)
@@ -26995,6 +27026,20 @@ function disclosedLayers({ vocabularies, catalog, captureActs, recipes = null } 
       load_when: "the run is refused, and must surface the record's own words rather than its own",
       sourcing: SOURCING.refusals,
       body: Object.fromEntries(Object.entries(AI_RUN_CHECKS2).map(([code, row]) => [code, { check: row.check, says: row.translation }]))
+    },
+    /* N345, R27. The words a run recommends under on a contradiction candidate, contradiction's own and
+       unchanged, with the digest they were measured under; carried, never reworded, so the pack's version
+       moves when they do. */
+    contradiction: RECOMMEND_PROMPT_SHA256 !== null ? {
+      load_when: "the run judges or recommends on a contradiction candidate's two sides",
+      sourcing: SOURCING.contradiction,
+      body: { recommend_prompt: RECOMMEND_PROMPT, recommend_prompt_sha256: RECOMMEND_PROMPT_SHA256 }
+    } : {
+      load_when: "never, in this edition",
+      sourcing: SOURCING.contradiction_unmeasured,
+      body: {},
+      /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+      absent_because: "contradiction's recommender prompt has passed no measurement: its digest is null until the blind fixture of dissolved pairs is run under it and recorded, and a prompt no measurement vouches for is not given to a run as the words it recommends under."
     },
     recipes: Array.isArray(recipes) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",

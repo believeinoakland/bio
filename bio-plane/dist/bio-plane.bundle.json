@@ -1053,8 +1053,8 @@
     },
     {
       "path": "src/skillpack.mjs",
-      "bytes": 29579,
-      "sha256": "ac5c6c1db92326f839b0f641cbc390d2648f67917761417cb23ace24250baa06"
+      "bytes": 32285,
+      "sha256": "69648b7cf6ca2bdc850149d0df9b7510d3e6579168e6166ee4ff8892e1aee45f"
     },
     {
       "path": "src/sshsig.mjs",
