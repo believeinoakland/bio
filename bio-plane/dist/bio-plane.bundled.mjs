@@ -64625,7 +64625,7 @@ var BasisVersions = class _BasisVersions {
       bundleId
     ).map((r) => ({ version: r.name, ord: r.ord, target: r.target_id, content_id: r.content_id ?? null })) };
   }
-  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41) */
+  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41, R42) */
   /** D-235: the collections the record holds for one version, read once for `op=basisversions` and `op=suggest`'s
    *  answer. The ground labels come from the legs this answer carries, the blank label a legless part projects dropped.
    *  `composition_grades: "authored"` says the frozen string keeps what was AUTHORED while `legs[]` publishes what the
@@ -64867,6 +64867,17 @@ var BasisVersions = class _BasisVersions {
       falsifier: s(fm.falsifier) ?? "",
       claim
     };
+  }
+  /** R42 (N392, K593): the single-bundle projection's `no_project_conclusion` (retrieval R56), exactly as R11 answers
+   *  it for the same viewer: R23's answer for an inquiry the viewer may see, else null; null for every other type. */
+  projectionDecoration(row2, { viewer = null } = {}) {
+    const id = row2 && typeof row2.bundle_id === "string" ? row2.bundle_id : "";
+    const inquiry = !!id && normalizeType(row2.object_type) === "inquiry";
+    try {
+      return { no_project_conclusion: inquiry && this.#seen(id, viewer) ? this.noProjectConclusionOf(id) : null };
+    } catch {
+      return { no_project_conclusion: null };
+    }
   }
   /** R37 (N64): each project the viewer may see that draws on the inquiry — its document holds a `cites` reference to
    *  it not marked `severed`, R13's own test — in id order, `{id, title, current}`. Bounded at 32 projects, measured by
@@ -66242,6 +66253,7 @@ function basisVersionsOf(host, deps) {
     instances13.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
+    if (d.retrieval) d.retrieval.registerProjectionDecoration("basis-versions", (row2, o) => bv.projectionDecoration(row2, o));
   }
   return bv;
 }
@@ -66331,9 +66343,9 @@ var CONTRADICTION_SCHEMA = `
 -- changed side is a new row and the old one stays with its versions. A claim side is the inquiry and the reading
 -- it is held on, versioned by the sha256 of the claim text as compared. An extent side is its content row (or the
 -- capture where none is named), versioned by the capture, whose bytes never change.
--- state is only 'proposed' until PRESENT and RESOLVE are designed (section 9 item 4). origin is always 'machine'
--- (DEC-24: a proposal, labelled). a_bundle_id and b_bundle_id are the bundles each side lives in, so a purge of
--- either end takes the row (D-113), as connections do. Nothing reads this table to a member yet.
+-- state is always 'proposed': what a candidate is now is derived at the read from its acts (R26, R42), never
+-- written here. origin is always 'machine' (DEC-24: a proposal, labelled). a_bundle_id and b_bundle_id are the
+-- bundles each side lives in, so a purge of either end takes the row (D-113), as connections do.
 CREATE TABLE IF NOT EXISTS contradiction_candidates (
   candidate    TEXT PRIMARY KEY,
   key          TEXT NOT NULL,
@@ -67520,7 +67532,7 @@ var Contradiction = class _Contradiction {
     ];
   }
   /** op=contradictionpairs — THE PAIRING READ (R5–R12). A READ: it judges nothing and writes nothing, and both are
-   *  said in the answer: `judgement.state` is `NOT_REACHED` and `wrote` is false.
+   *  said in the answer: `judgement.state` is `HELD_APART` and `wrote` is false.
    *
    *  WHY `judgement` IS PUBLISHED AS A FIELD AT ALL: a list of pairs with no verdict beside it reads as a list of
    *  CONTRADICTIONS. NO LABEL VOCABULARY IS PUBLISHED HERE (R12): the five labels are the JUDGEMENT's output, and
@@ -67684,7 +67696,7 @@ var Contradiction = class _Contradiction {
    *
    *  THE LABEL IS A PROPOSAL (DEC-24): every row is `origin = 'machine'`, `state = 'proposed'`, and nothing here
    *  grades, edits or closes either side (R19). §7's over-strictness gate is a property of the JUDGEMENT (M-162
-   *  measured the prompt `../contradiction.mjs` pins, R2). */
+   *  measured the prompt `../contradiction.mjs` pins, R2, R57). */
   propose({ run, proposals, proposedBy, viewer = null, caller = null, at: at19 = null } = {}) {
     const refusal19 = (code, detail, extra) => {
       const row2 = CONTRADICTION_CANDIDATE_CHECKS[code];
@@ -118222,6 +118234,7 @@ var Store = class _Store extends DurableObject {
     observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
     observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
+    basisVersionsOf(ctx, { retrieval });
     aiRunsOf(ctx, env);
     reevaluationOf(ctx, { env });
     publicationOf(ctx);
@@ -118232,11 +118245,8 @@ var Store = class _Store extends DurableObject {
     });
     retrieval.registerProjectionDecoration("legacy-store", (row2, { viewer, nowMs }) => {
       const type = normalizeType(row2.object_type);
-      const one = {
-        no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row2.bundle_id) : null
-      };
       const migrated = type === "inquiry" ? this.#surfacedIn(row2.bundle_id) : null;
-      return migrated ? { ...one, surfaced_in: migrated } : one;
+      return migrated ? { surfaced_in: migrated } : {};
     });
     connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => observationLogOf(ctx).observeConnectionDerivation(e));
     connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
@@ -118894,9 +118904,6 @@ Mitigation: ${mit}
   /* REC-13 / REC-124 / REC-136: the conclusion and a project's conclusion record are basis-versions' (R16–R23). */
   conclude(a) {
     return basisVersionsOf(this.ctx).conclude(a);
-  }
-  #noProjectConclusionOf(...a) {
-    return basisVersionsOf(this.ctx).noProjectConclusionOf(...a);
   }
   actionMove(a) {
     return actionsOf(this.ctx).actionMove(a);

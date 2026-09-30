@@ -58,8 +58,8 @@
     },
     {
       "path": "../bio-plane/src/basis-versions/index.mjs",
-      "bytes": 108442,
-      "sha256": "995dec43772f3ad33a1b1d6918e0799da6354ab41b0eed8af13d7de73d8d8399"
+      "bytes": 109697,
+      "sha256": "d56145fd955e115bb65c2986996e3bd40b9c8398879640ad195fd52d43d29221"
     },
     {
       "path": "../bio-plane/src/basis-versions/schema.mjs",
@@ -203,8 +203,8 @@
     },
     {
       "path": "../bio-plane/src/contradiction.mjs",
-      "bytes": 8918,
-      "sha256": "5200284f7025c64590748b85279c6bafa4d9edae08a74a9dca620d8ba1743bba"
+      "bytes": 8921,
+      "sha256": "cb39e9c93a211e8f22efdf0c8c12d68f1aa44a7d242bf3314dab19fc4cd6137c"
     },
     {
       "path": "../bio-plane/src/contradiction/checks.mjs",
@@ -218,13 +218,13 @@
     },
     {
       "path": "../bio-plane/src/contradiction/index.mjs",
-      "bytes": 166721,
-      "sha256": "ea4285c9d2fe56979b67416fa17d9c0e09f4efefa657afe433a1217f30183f7a"
+      "bytes": 166741,
+      "sha256": "1727e2ee8c212e5ffc67f54a86f07088d2e66d728539d0ed88c8f5604e158f9e"
     },
     {
       "path": "../bio-plane/src/contradiction/schema.mjs",
-      "bytes": 5668,
-      "sha256": "8e0f5540094fc02c17e997bbbcf68e9f3481910a9236a8fae51ccfd09f0b6ce7"
+      "bytes": 5663,
+      "sha256": "0211fe0d1df73554bd47c0370ac136d0aaf554959eb8ddf243f065aa35576b13"
     },
     {
       "path": "../bio-plane/src/contradiction/text.mjs",
