@@ -119,7 +119,7 @@ import { join } from "node:path";
 const PLANE = fileURLToPath(new URL("../", import.meta.url));
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const SUITE = fileURLToPath(new URL("./doorbell.test.mjs", import.meta.url));
-const SWEEP = fileURLToPath(new URL("./dec49-onecode-twoconditions.sweep.mjs", import.meta.url));
+const SWEEP = fileURLToPath(new URL("./system/dec49-onecode-twoconditions.sweep.mjs", import.meta.url));
 const INDEX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const CATALOG = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
 const GUARD = fileURLToPath(new URL("../../civicos-ui/check-refusal-codes.mjs", import.meta.url));

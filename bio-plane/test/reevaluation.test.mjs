@@ -695,7 +695,7 @@ console.log("\n--- 7. op=reevaluations is a GATED read, and its viewer is the se
      here so a reader of this suite knows where the other half lives. */
   t("and gate-reads.test.mjs is where the classification is held, structurally",
     /reevaluations: "REC-17/.test(readFileSync(fileURLToPath(
-      new URL("./gate-reads.test.mjs", import.meta.url)), "utf8")), true);
+      new URL("./system/gate-reads.test.mjs", import.meta.url)), "utf8")), true);
 }
 
 /* ============================== 8. structural: a query, and not a flag */

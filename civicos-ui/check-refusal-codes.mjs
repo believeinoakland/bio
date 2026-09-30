@@ -138,7 +138,7 @@ import { readGitProvenance, repoPath, reportProvenance } from "../bio-plane/scri
    an observation (the same lexer `status.mjs` and `moduleclosure.mjs` read with). */
 import { stripComments, strip } from "../bio-plane/scripts/walkfloor.mjs";
 import { skipString, matchBrace, outcomeReturns, topLevelParts, topLevelProps, topLevelSpreads,
-         verdictKind, verdictOf } from "../bio-plane/test/verdict-reader.mjs";
+         verdictKind, verdictOf } from "../bio-plane/test/system/verdict-reader.mjs";
 /* D-550 — the one-code-one-site walk has ONE home, shared with the sweep that measured it first
    (`bio-plane/test/dec49-onecode-twoconditions.sweep.mjs`): arm G gates the figure that sweep prints. */
 /* c22-batch29: aliased at the union — D-485 imports walkfloor.mjs's `stripComments` for arm H and M0-148's walk, and

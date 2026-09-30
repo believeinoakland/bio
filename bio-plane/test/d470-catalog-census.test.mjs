@@ -711,6 +711,17 @@ const CATALOG_CENSUS = {
   "1.46.0": { count: 356, digest: "968acdfb95e0ea07805a2727b1095090bf760ac6adac654a0c9f5ed80ab57510",
               changed: ["C-102.9"],
               source: "b7d4112b8a54b44118429e5ffaa63683c8959423c38cd6cc563529b594060181" },
+  /* 1.47.0 (PROMOTION #18, T17 layer 2, 6645daa0e0; N318, N372, K575, K577, K579), RECORDED 2026-09-30 by LEGACY-TESTS
+     #16 (T17, last) as PROMOTION #18's record gives it (340, c56ccc26…, source 15465533…) and re-measured identical,
+     count, digest AND source, on `job/T17/legacy-tests` with every T17 job merged. 356 -> 340, sixteen departures, no
+     arrivals, read by diffing this census over 1dcde36e8b (1.46.0) against the tree: LEGACY-CHECKS #11 (N372, cce4d99e29)
+     deleted the catalogue's case-document gate, so C-41.1–C-41.15 (the file's copy of `CASE_DOCUMENT_FAMILY`;
+     ratification's table keeps the rows) and C-21.1 (its one literal site here was `checkCaseDocument`'s case-altitude
+     arm; case-authoring and ratification keep theirs) left the file. The `C41.*` spellings in RELAYS below are no longer
+     emitted here and are kept as history; A2 fails only an unaccounted spelling. No `changed`: the census alone keeps
+     this row apart from 1.46.0's under A4. */
+  "1.47.0": { count: 340, digest: "c56ccc26b13997c298dcc6fe0a7e6fe3f58548bd0164d2109505f9724f50cd4a",
+              source: "1546553323e10c1275e989d356c7467842a7e57470a7877f9383fa6dbc441462" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -789,8 +800,12 @@ say(`  the stamp: ${GATE_VERSION}`);
    will move the count floor and A3/A9 under T17's own version: this census is of the catalogue FILE, so its C-41 reads
    (`CASE_DOCUMENT_FAMILY` and the `C41.*` relays below) are not re-anchored on ratification's exports, which are
    `row-census`' (R50) to count. */
+/* RE-PINNED 2026-09-30 (LEGACY-TESTS #16, T17; N372, K575): the count floor 356 -> 340 and the literal-site floor
+   42 -> 41, this suite's print on the tree with every T17 job merged (1.47.0's row), compared by name against 1dcde36e8b:
+   C-41.1–C-41.15's catalogue copies and C-21.1's literal site left with `checkCaseDocument` (LEGACY-CHECKS #11). The
+   table floor (40; 43 now, `CASE_DOCUMENT_FAMILY` having left) is unmoved. */
 t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
-  [count >= 356, tables.size >= 40, literal.size >= 42], [true, true, true]);
+  [count >= 340, tables.size >= 40, literal.size >= 41], [true, true, true]);
 
 /* (A2) EVERY EMISSION SITE RESOLVES. A computed site is not scored zero: it is
    named here or it fails. */
@@ -985,9 +1000,10 @@ const movedOf = (entry) => (entry && Array.isArray(entry.moved) ? entry.moved : 
    UPDATED 2026-09-29 (LEGACY-TESTS #11, T13): 1.42.0 -> 1.43.0, PROMOTION #14's N318 (K425, K432).
    UPDATED 2026-09-30 (LEGACY-TESTS #12, T14): 1.43.0 -> 1.44.0, PROMOTION #15's N318 (K458, K464).
    UPDATED 2026-09-30 (LEGACY-TESTS #13, T15): 1.44.0 -> 1.45.0, PROMOTION #16's N318 (K425, K482, K483).
-   UPDATED 2026-09-30 (LEGACY-TESTS #14, T16): 1.45.0 -> 1.46.0, PROMOTION #17's N318 (K425, K483, K529). */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.46.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.46.0)", "1.46.0"]);
+   UPDATED 2026-09-30 (LEGACY-TESTS #14, T16): 1.45.0 -> 1.46.0, PROMOTION #17's N318 (K425, K483, K529).
+   UPDATED 2026-09-30 (LEGACY-TESTS #16, T17): 1.46.0 -> 1.47.0, PROMOTION #18's N318 (K575, K577, K579). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.47.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.47.0)", "1.47.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue
