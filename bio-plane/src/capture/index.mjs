@@ -2,7 +2,7 @@
  * the evidence store by digest, what capture learns about sources and sites (reachability, site assets, links and
  * the host's chrome, capture sessions, the platform's ceiling, the render allowance), the event queue an
  * undetermined capture raises, and the doorbell (`doorbell.mjs`). It writes no bundle: no intake path writes live
- * state (R33). Requirements: build/requirements/capture.md (R1–R70). Extracted from `legacy-store` and
+ * state (R33). Requirements: build/requirements/capture.md (R1–R72). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -20,7 +20,7 @@ import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "./acquire.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
-import { provenanceOf, attest as provenanceAttest } from "../provenance/index.mjs";
+import { provenanceOf, attest as provenanceAttest, DOORBELL_VIA } from "../provenance/index.mjs";
 import { viewerPredicate, GATE_MARK, listenerRefusal, membershipOf } from "../membership/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
@@ -374,6 +374,41 @@ export class Capture {
     return null;
   }
 
+  /* R31: the two windows one knock is asked against: the source's (a keyed fingerprint, R56) and the instance's, the
+     current bucket and the previous one, with how far into the current window `nowMs` is. */
+  async #rateWindows({ sourceAddress, nowMs, windowMs = KNOCK.windowMs, perIpLimit = KNOCK.perIp, globalLimit = KNOCK.global }) {
+    const win = Math.floor(nowMs / windowMs);
+    const fp = await this.sourceFingerprint(sourceAddress);
+    return { ipBucket: `ip:${fp}:${win}`, ipPrevBucket: `ip:${fp}:${win - 1}`, globalBucket: `all:${win}`,
+             globalPrevBucket: `all:${win - 1}`, elapsedFrac: (nowMs - win * windowMs) / windowMs, perIpLimit, globalLimit, win };
+  }
+
+  /* R31: ask the rate again and, when it admits, count one knock in both windows; in the caller's transaction, so a
+     race cannot slip past the caps. Answers the rate refusal, or null once counted. */
+  #countKnock(rate) {
+    const late = this.#knockRateRefusal(rate);
+    if (late) return late;
+    for (const b of [rate.ipBucket, rate.globalBucket])
+      this.#sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1) ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
+    /* The prune keeps win AND win-1 (D-496): the previous bucket is read by the estimate, so deleting it would
+       silently restore the fixed bucket at the edge. Part of the subject, not housekeeping. */
+    this.#sql.exec(`DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
+                   String(rate.win), String(rate.win - 1));
+    return null;
+  }
+
+  /** R71 (K539; for `sources` R11): an attempt that counts as a knock from its source. R31's two windows are asked
+   *  exactly as `knock` asks them: a refusal is R31's (`RATE_IP` or `RATE_GLOBAL`, with `stated`, the published bound)
+   *  and counts nothing; an admitted attempt is counted in both windows, in one transaction that asks again, and
+   *  answers null. Nothing else is written. */
+  async knockAttempt({ sourceAddress = null, now = null } = {}) {
+    const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const rate = await this.#rateWindows({ sourceAddress, nowMs });
+    const refusal = this.#knockRateRefusal(rate) || this.#storage.transactionSync(() => this.#countKnock(rate));
+    if (!refusal) return null;
+    return { ...refusal, stated: refusal.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal };
+  }
+
   /** R31, R32, R53, R54: an accepted knock. `sourceAddress` is the connecting address, reduced here to a keyed
    *  fingerprint. The rate is asked first and changes nothing when it refuses; the bytes (with an evidence store)
    *  are stored BEFORE the row, so a row never stands without its bytes (R54: a failed store answers a failure
@@ -391,11 +426,7 @@ export class Capture {
     /* R53, R66: a weak secret before the rate: nothing is stored and nothing is counted. */
     if (isWeakKnockerSecret(knockerSecret)) return knockerSecretWeak();
     const sha = hexOf(await crypto.subtle.digest("SHA-256", bytes));
-    const win = Math.floor(nowMs / windowMs);
-    const elapsedFrac = (nowMs - win * windowMs) / windowMs;
-    const fp = await this.sourceFingerprint(sourceAddress);
-    const rate = { ipBucket: `ip:${fp}:${win}`, ipPrevBucket: `ip:${fp}:${win - 1}`,
-                   globalBucket: `all:${win}`, globalPrevBucket: `all:${win - 1}`, elapsedFrac, perIpLimit, globalLimit };
+    const rate = await this.#rateWindows({ sourceAddress, nowMs, windowMs, perIpLimit, globalLimit });
     const early = this.#knockRateRefusal(rate);
     if (early) return early;
     const bucket = this.env && typeof this.env.CAPTURES?.put === "function" ? this.env.CAPTURES : null;
@@ -423,14 +454,8 @@ export class Capture {
     const knockId = `KNOCK-${new Date(nowMs).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
     const received = new Date(nowMs).toISOString();
     const answer = this.#storage.transactionSync(() => {
-      const late = this.#knockRateRefusal(rate);
+      const late = this.#countKnock(rate);
       if (late) return late;
-      for (const b of [rate.ipBucket, rate.globalBucket])
-        this.#sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1) ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
-      /* The prune keeps win AND win-1 (D-496): the previous bucket is read by the estimate, so deleting it would
-         silently restore the fixed bucket at the edge. Part of the subject, not housekeeping. */
-      this.#sql.exec(`DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
-                     String(win), String(win - 1));
       this.#sql.exec(
         `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status,knocker_digest,pseudonym,content_b64)
          VALUES (?,?,?,?,?,?,?,?,'new',?,?,?)`,
@@ -551,7 +576,7 @@ export class Capture {
     const receiptOf = (fn) => { try { return fn(); } catch (e) { return { recorded: false, error: String(e && e.message || e).slice(0, 200) }; } };
     const done = this.core.transact(() => {
       const receipt = receiptOf(() => this.provenance?.recordReceipt?.({ address, addressNorm: address, captureSha: sha, retrieved: when,
-                                                                          via: "doorbell", retrievalLocator: null }));
+                                                                          via: DOORBELL_VIA, retrievalLocator: null }));
       if (!receipt || receipt.recorded !== true)
         return { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502, knockId,
                  detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed" };
@@ -562,7 +587,7 @@ export class Capture {
     });
     if (!done.ok) return done;
     return { ok: true, existed: false, knockId, capture: { sha256: sha, bytes: bytes.length }, pulled_by: by, pulled_at: when,
-             receipt: { address, via: "doorbell", retrieved: when, observation: done.receipt.observation ?? null }, document };
+             receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null }, document };
   }
 
   /* R65, R16: the provenance document of a pulled knock. Received, not fetched (provenance R51): no fetched letter, no
@@ -581,7 +606,7 @@ export class Capture {
         asserts: `these bytes were received at this instance's doorbell as knock ${row.knock_id} at ${row.received}, `
                + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
-        bound: false, via: "doorbell",
+        bound: false, via: DOORBELL_VIA,
       }],
       capture: {
         method: "doorbell knock, received, hashed at receipt",
@@ -611,6 +636,17 @@ export class Capture {
     const knocks = found.slice(0, cap), truncated = found.length > cap, last = knocks[knocks.length - 1];
     return { ok: true, pseudonym, continuity: "the same knocker secret was presented", knocks, count: knocks.length,
              limit: cap, truncated, next: truncated ? cursorOf([last.received, last.knock_id]) : null };
+  }
+
+  /** R72 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
+   *  op's fence), never a contact (R70); `[]` for none. One keyed read (`inbox_capture`). Never throws. */
+  pulledKnocksOf(captureSha) {
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+      if (!HEX64.test(sha)) return [];
+      return this.#rows(`SELECT knock_id, sha256, bytes, received, pseudonym, knocker_digest FROM inbox
+                          WHERE capture_sha = ? ORDER BY received, knock_id`, sha).map((r) => ({ ...r }));
+    } catch { return []; }
   }
 
   /* ==================================================================== *
@@ -1741,6 +1777,7 @@ export function captureOps(c, url, body, env) {
     /* N364: the control plane stamps `by` (the member session); a stamp in the query wins over a body's copy. */
     inboxpull: () => c.pullKnock({ knockId: (body && body.knockId) || q("id"), by: q("by") ?? (body && body.by) }),
     knocksof: () => c.knocksOf({ pseudonym: q("pseudonym") ?? (body && body.pseudonym), ...page }),
+    pulledknocks: () => c.pulledKnocksOf(q("capture") ?? (body && body.captureSha)),
     reattest: () => c.reattest({ ...(body || {}), by: q("by") ?? (body && body.by) ?? null }),
     lateattestations: () => c.lateAttestationsOf(q("capture") ?? (body && body.captureSha)),
     captureaccount: () => c.recordCaptureAccount({ ...(body || {}), by: q("by") ?? (body && body.by) }),

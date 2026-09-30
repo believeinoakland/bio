@@ -11,6 +11,7 @@ import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { NS_RATIFY, NS_RELEASE } from "../../../src/sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../../../src/tsa.mjs";
+import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -175,7 +176,8 @@ test("R65 R16 R70 R33 R32: a pull holds the bytes under their own digest, writes
   assert.ok(b.held.has(`bio/captures/${d}`), "held under its own digest in the evidence store");
   assert.equal(sha(b.held.get(`bio/captures/${d}`)), d);
   assert.deepEqual(prov.receipts, [{ address: `knock:${k.knockId}`, addressNorm: `knock:${k.knockId}`, captureSha: d,
-                                     retrieved: "2026-09-30T10:00:00Z", via: "doorbell", retrievalLocator: null }]);
+                                     retrieved: "2026-09-30T10:00:00Z", via: DOORBELL_VIA, retrievalLocator: null }]);
+  assert.equal(DOORBELL_VIA, "doorbell", "provenance's export, the route its R51 grades");
   const row = rows(`SELECT status, resolved_by, capture_sha, pulled_by, pulled_at FROM inbox WHERE knock_id = ?`, k.knockId)[0];
   assert.deepEqual({ ...row }, { status: "pulled", resolved_by: "m1", capture_sha: d, pulled_by: "m1", pulled_at: "2026-09-30T10:00:00Z" });
   const doc = r.document;
@@ -451,4 +453,53 @@ test("R37: rows C-118.3–C-118.6 are in capture's own table with the translatio
     assert.ok(Object.isFrozen(row));
   }
   assert.equal(new Set(Object.values(CAPTURE_CHECKS).map((r) => r.check)).size, Object.keys(CAPTURE_CHECKS).length, "one row per check id");
+});
+
+test("R71 R31: knockAttempt asks the knock's two windows exactly as a knock does: RATE_IP or RATE_GLOBAL with the stated bound, an admitted attempt counted in both, nothing else written", async () => {
+  const { c, rows } = setup();
+  const W = KNOCK.windowMs, t0 = 3000 * W;
+  const others = () => everything(rows).filter(([t]) => !["knock_rate", "knock_key"].includes(t));
+  const before = others();
+  for (let i = 0; i < 11; i++) assert.equal(await c.knockAttempt({ sourceAddress: "6.6.6.6", now: t0 + i }), null);
+  assert.equal(rateRows(rows), 22, "each admitted attempt counted in the source's window and the instance's");
+  /* attempts and knocks share the windows: the twelfth from this source is a knock, the thirteenth anything is refused */
+  assert.equal((await c.knock({ content: "k", sourceAddress: "6.6.6.6", now: t0 + 20 })).ok, true);
+  const counted = rateRows(rows);
+  const r = await c.knockAttempt({ sourceAddress: "6.6.6.6", now: t0 + 30 });
+  const row = (await import("../../../checks/bio-checks.mjs")).KNOCK_CHECKS.RATE_IP;
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.stated], [false, "RATE_IP", "RATE_IP", row.check, row.translation, KNOCK.statedPerIp]);
+  assert.equal(rateRows(rows), counted, "a refused attempt counts nothing");
+  assert.equal((await c.knock({ content: "k2", sourceAddress: "6.6.6.6", now: t0 + 40 })).reason, "RATE_IP", "and the knock after it is refused alike");
+  assert.equal(await c.knockAttempt({ sourceAddress: "6.6.6.7", now: t0 + 50 }), null, "another source is unaffected");
+  /* the instance's window */
+  const g = setup();
+  for (let i = 0; i < 300; i++) await g.c.knockAttempt({ sourceAddress: `10.1.${i >> 8}.${i & 255}`, now: t0 });
+  const rg = await g.c.knockAttempt({ sourceAddress: "10.9.9.9", now: t0 });
+  assert.deepEqual([rg.reason, rg.stated], ["RATE_GLOBAL", KNOCK.statedGlobal]);
+  assert.equal((await g.c.knock({ content: "late", sourceAddress: "10.9.9.8", now: t0 })).reason, "RATE_GLOBAL");
+  /* nothing else written: no inbox row, no bytes, nothing outside the rate's own table and its key */
+  const after = others().map(([t, v]) => [t, t === "inbox" ? JSON.parse(v).filter((x) => x.sha256 !== sha("k")) : v]);
+  assert.deepEqual(after.map(([t, v]) => [t, t === "inbox" ? JSON.stringify(v) : v]), before);
+});
+
+test("R72 R70: pulledKnocksOf answers every knock pulled into a capture, oldest received first, with its pseudonym and digest and never its contact; [] for none", async () => {
+  const { c } = setup();
+  const W = KNOCK.windowMs;
+  const a = await c.knock({ content: "same memo", contact: "a@example.org", knockerSecret: SECRET, sourceAddress: "1", now: W * 20 + 2000 });
+  const b2 = await c.knock({ content: "same memo", contact: "b@example.org", sourceAddress: "2", now: W * 20 + 1000 });
+  const other = await c.knock({ content: "other memo", sourceAddress: "3", now: W * 20 + 3000 });
+  for (const k of [a, b2, other]) assert.equal((await c.pullKnock({ knockId: k.knockId, by: "m1" })).ok, true);
+  const got = c.pulledKnocksOf(sha("same memo"));
+  assert.deepEqual(got.map((k) => k.knock_id), [b2.knockId, a.knockId], "oldest received first");
+  assert.deepEqual(Object.keys(got[0]).sort(), ["bytes", "knock_id", "knocker_digest", "pseudonym", "received", "sha256"]);
+  assert.deepEqual([got[1].pseudonym, got[0].pseudonym], [a.pseudonym, null]);
+  assert.match(got[1].knocker_digest, /^[0-9a-f]{64}$/);
+  assert.ok(!JSON.stringify(got).includes("@example.org"), "never a contact");
+  assert.deepEqual(c.pulledKnocksOf(sha("other memo")).map((k) => k.knock_id), [other.knockId]);
+  assert.deepEqual(c.pulledKnocksOf(H("f")), []);
+  assert.deepEqual(c.pulledKnocksOf(sha("same memo").toUpperCase()).length, 2);
+  for (const bad of [undefined, null, "x", 42]) assert.deepEqual(c.pulledKnocksOf(bad), []);
+  const k4 = await c.knock({ content: "not pulled", sourceAddress: "4" });
+  assert.deepEqual(c.pulledKnocksOf(k4.sha256), [], "a knock not pulled is in no capture");
+  assert.equal(captureOps(c, new URL(`http://x/pulledknocks?capture=${sha("same memo")}`), null, c.env).pulledknocks().length, 2);
 });

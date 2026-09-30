@@ -425,6 +425,7 @@ CREATE TABLE IF NOT EXISTS knocker_key (
   created TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS inbox_pseudonym ON inbox(pseudonym, received);
+CREATE INDEX IF NOT EXISTS inbox_capture ON inbox(capture_sha, received);
 -- R16, R69: each member this module stamped as capturing a capture (a member session's acquire, a knock's pull).
 -- Several members who captured the same bytes are each its actor. Written once per pair, never removed but by purge.
 CREATE TABLE IF NOT EXISTS capture_actors (
