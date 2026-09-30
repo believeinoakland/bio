@@ -81,32 +81,6 @@ export function hiddenRuns(viewer, column = undefined) {
   }
 }
 
-/** R46 (K660): the planning run's own refusals, in order, after R40 and before anything else is asked: the plan named
- *  in its mode and only there, over a project, by a member, with no search allowance. Pure; the code and row come
- *  back as `{code, detail}` and `open` builds the refusal from the row. Null when the open may go on. */
-function planRefusal({ mode, plan, contextType, actor, bounds }) {
-  const named = typeof plan === "string" && plan.trim() !== "";
-  if (mode === "plan" && !named)
-    return { code: "AI_RUN_PLAN_REQUIRED", detail: "a planning run names the plan it works on: pass plan=<the plan's id>" };
-  if (mode !== "plan")
-    return plan == null ? null
-      : { code: "AI_RUN_PLAN_UNEXPECTED", detail: `a run in mode '${String(mode).slice(0, 60)}' names no plan; only a run `
-          + "in mode 'plan' works on one" };
-  if (String(contextType) !== "project")
-    return { code: "AI_RUN_PLAN_NEEDS_PROJECT", detail: "a planning run is over the project the plan belongs to: "
-      + "contextType=project" };
-  const who = actor == null ? "" : String(actor).trim();
-  if (!who || isMachineIdentity(who))
-    return { code: "AI_RUN_PLAN_NEEDS_MEMBER", detail: "only a member starts a planning run, for one plan at a time; "
-      + "nothing starts one by itself" };
-  const search = (Array.isArray(bounds) ? bounds : []).find((b) => b && typeof b === "object"
-    && (b.bound === "fetches" || b.bound === "subsessions") && typeof b.allowed === "number" && b.allowed > 0);
-  if (search)
-    return { code: "AI_RUN_PLAN_NO_SEARCH", detail: `a planning run works from what the record already holds, so it `
-      + `declares no '${search.bound}' allowance (it was given ${search.allowed})`, bound: search.bound };
-  return null;
-}
-
 export class AiRuns {
   #waitSource = null;
   #runListeners = [];     // R43: {module, fn, seq}, in the modules' total order
@@ -855,13 +829,28 @@ export class AiRuns {
     /* END DEC-49 REGION is-airun-open-mode */
     /* R46 (K660; BIO_Action_v0_1.md §4 rule 1): THE PLANNING RUN, asked after the mode is known deployed and before
        anything else about the run's shape: its plan named (and a plan named by no other mode), over a project, by a
-       member, with no search allowance. The code is decided by `planRefusal`; the row is read here by key. */
-    const planWrong = planRefusal({ mode: runMode, plan, contextType, actor, bounds });
+       member, with no search allowance, in that order. Each code is written once, at its refusal; the row is read by
+       key from run-rules' table. */
+    const planNo = (code, detail, extra = {}) => ({ run, started: false, code, check: ROW(code).check,
+      translation: ROW(code).translation, detail, ...extra, note: "Nothing was written" });
+    const planNamed = typeof plan === "string" && plan.trim() !== "";
+    const who = actor == null ? "" : String(actor).trim();
+    const search = (Array.isArray(bounds) ? bounds : []).find((b) => b && typeof b === "object"
+      && (b.bound === "fetches" || b.bound === "subsessions") && typeof b.allowed === "number" && b.allowed > 0);
     /* DEC-49 REGION is-airun-open-plan */
-    if (planWrong)
-      return { run, started: false, code: planWrong.code, check: ROW(planWrong.code).check,
-               translation: ROW(planWrong.code).translation, detail: planWrong.detail,
-               ...(planWrong.bound ? { bound: planWrong.bound } : {}), note: "Nothing was written" };
+    if (runMode === "plan" && !planNamed)
+      return planNo("AI_RUN_PLAN_REQUIRED", "a planning run names the plan it works on: pass plan=<the plan's id>");
+    if (runMode !== "plan" && plan != null)
+      return planNo("AI_RUN_PLAN_UNEXPECTED", `a run in mode '${runMode.slice(0, 60)}' names no plan; only a run in `
+        + "mode 'plan' works on one");
+    if (runMode === "plan" && String(contextType) !== "project")
+      return planNo("AI_RUN_PLAN_NEEDS_PROJECT", "a planning run is over the project the plan belongs to: contextType=project");
+    if (runMode === "plan" && (!who || isMachineIdentity(who)))
+      return planNo("AI_RUN_PLAN_NEEDS_MEMBER", "only a member starts a planning run, for one plan at a time; nothing "
+        + "starts one by itself");
+    if (runMode === "plan" && search)
+      return planNo("AI_RUN_PLAN_NO_SEARCH", `a planning run works from what the record already holds, so it declares `
+        + `no '${search.bound}' allowance (it was given ${search.allowed})`, { bound: search.bound });
     /* END DEC-49 REGION is-airun-open-plan */
     /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
        `ai_run_bounds`, and `Number(b.consumed) || 0` let a run OPEN already refunded (`consumed: -10`) or seed a
