@@ -382,7 +382,6 @@ __export(bio_checks_exports, {
   checkBundle: () => checkBundle,
   checkCaseDocument: () => checkCaseDocument,
   checkContentExtent: () => checkContentExtent,
-  checkInboxGrammar: () => checkInboxGrammar,
   checkInquiryBasis: () => checkInquiryBasis,
   checkLegExtentGrammar: () => checkLegExtentGrammar,
   checkProjectNameUniqueness: () => checkProjectNameUniqueness,
@@ -3252,106 +3251,6 @@ async function checkInfo2Contract(ctx, findings) {
     }
   }
 }
-var TASK_ID_RE = /^TASK-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-var TASK_KIND_ENUM = ["authority-undetermined"];
-var TASK_ROLE_ENUM = ["project-manager", "group-admin", "member"];
-var TASK_STATUS_ENUM = ["open", "resolved", "forwarded"];
-var TASK_EVENT_ENUM = ["created", "forwarded", "resolved", "folded"];
-var MEMBER_ID_RE = /^[a-z0-9][a-z0-9-]{1,40}$/;
-function checkInboxGrammar(ctx, findings) {
-  const raw = ctx.files.get("data/inbox.json");
-  if (!raw) return;
-  let g;
-  try {
-    g = JSON.parse(asText(raw));
-  } catch {
-    return;
-  }
-  if (typeof g !== "object" || g === null || Array.isArray(g)) {
-    findings.push(f("C-19.1", "error", "data/inbox.json must be a JSON object"));
-    return;
-  }
-  const tasks = Array.isArray(g.tasks) ? g.tasks : null;
-  if (g.tasks !== void 0 && !tasks) {
-    findings.push(f("C-19.1", "error", "inbox.json tasks must be an array"));
-    return;
-  }
-  const seen = /* @__PURE__ */ new Set();
-  for (let i = 0; i < (tasks || []).length; i++) {
-    const tk = tasks[i];
-    if (typeof tk !== "object" || tk === null) {
-      findings.push(f("C-19.1", "error", `inbox.json tasks[${i}] is not an object`));
-      continue;
-    }
-    if (!TASK_ID_RE.test(tk.id || "")) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].id '${tk.id}' does not match the TASK grammar`));
-    else if (seen.has(tk.id)) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}] repeats id '${tk.id}'`));
-    else seen.add(tk.id);
-    if (!TASK_KIND_ENUM.includes(tk.kind)) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].kind '${tk.kind}' must be one of: ${TASK_KIND_ENUM.join(", ")}`));
-    const sub = tk.subject;
-    if (!sub || typeof sub !== "object") findings.push(f("C-19.1", "error", `inbox.json tasks[${i}] missing subject block`));
-    else {
-      if (typeof sub.text !== "string" || sub.text.length === 0 || sub.text.length > 200 || /[\r\n]/.test(sub.text)) {
-        findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].subject.text must be a nonempty single-line string under 200 chars`));
-      }
-      if (sub.description !== void 0 && (typeof sub.description !== "string" || sub.description.length > 2e3)) {
-        findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].subject.description must be a string under 2000 chars`));
-      }
-    }
-    if (!BUNDLE_ID_RE.test(tk.refers_to || "")) {
-      findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].refers_to '${String(tk.refers_to).slice(0, 40)}' is not a canonical bundle ID`));
-    } else if (ctx.resolveTarget && !ctx.resolveTarget(tk.refers_to)) {
-      findings.push(f(
-        "C-19.1",
-        "error",
-        `inbox.json tasks[${i}].refers_to '${tk.refers_to}' does not resolve in the store`,
-        ["re-point the task at the successor bundle", "resolve the task with a reason if its subject is gone"]
-      ));
-    }
-    if (tk.locators !== void 0) {
-      if (!Array.isArray(tk.locators)) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].locators must be an array`));
-      else for (let L2 = 0; L2 < tk.locators.length; L2++) {
-        if (!isPublicHttpsLocator(tk.locators[L2])) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].locators[${L2}] '${String(tk.locators[L2]).slice(0, 40)}' is not an https public-host locator`));
-      }
-    }
-    if (tk.assignee !== "unassigned" && !MEMBER_ID_RE.test(tk.assignee || "")) {
-      findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].assignee '${tk.assignee}' must be a member_id or the literal 'unassigned'`));
-    }
-    if (!TASK_ROLE_ENUM.includes(tk.assignee_role)) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].assignee_role '${tk.assignee_role}' must be one of: ${TASK_ROLE_ENUM.join(", ")}`));
-    if (!TASK_STATUS_ENUM.includes(tk.status)) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].status '${tk.status}' must be one of: ${TASK_STATUS_ENUM.join(", ")}`));
-    if (!ISO_TS_RE.test(tk.created || "")) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].created must be an ISO 8601 UTC instant`));
-    if (tk.resolved_at !== void 0 && tk.resolved_at !== null && !ISO_TS_RE.test(tk.resolved_at)) {
-      findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].resolved_at must be an ISO 8601 UTC instant`));
-    }
-    if (tk.status === "resolved" && !ISO_TS_RE.test(tk.resolved_at || "")) {
-      findings.push(f("C-19.1", "error", `inbox.json tasks[${i}] is resolved but carries no resolved_at instant`));
-    }
-    const hist = tk.history;
-    if (!Array.isArray(hist) || hist.length === 0) {
-      findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].history must be a nonempty append-only array`));
-    } else {
-      let prev = "";
-      for (let h = 0; h < hist.length; h++) {
-        const e = hist[h];
-        if (typeof e !== "object" || e === null) {
-          findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is not an object`));
-          continue;
-        }
-        if (!ISO_TS_RE.test(e.at || "")) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].at must be an ISO 8601 UTC instant`));
-        else {
-          if (prev && e.at < prev) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is out of chronological order`));
-          prev = e.at;
-        }
-        if (!TASK_EVENT_ENUM.includes(e.event)) findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].event '${e.event}' must be one of: ${TASK_EVENT_ENUM.join(", ")}`));
-        if (typeof e.actor !== "string" || e.actor.length === 0 || e.actor.length > 64 || /[\r\n]/.test(e.actor)) {
-          findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].actor must be a nonempty single-line string under 64 chars`));
-        }
-      }
-      if (hist[0] && hist[0].event !== "created") {
-        findings.push(f("C-19.1", "error", `inbox.json tasks[${i}].history does not begin with its creation`));
-      }
-    }
-  }
-}
 var MECHANICAL_FIELD_SETS = {
   "monitor-tick": ["source_status", "monitoring.last_checked", "reeval_pending.flag", "reeval_pending.since", "reeval_pending.source", "last_updated"],
   "sweep": [],
@@ -4893,14 +4792,6 @@ var AI_CREDENTIAL_CHECKS = {
     check: "C-29.11",
     where: "src/membership/index.mjs aiCredentialMint > is-ai-credential-mint",
     translation: "A credential that acts for one member acts for the member who creates it, and nobody else. You named another member, and nobody can authorise an agent in someone else's name: it would see what they see and its work would be recorded as theirs. Nothing was created. The member it should act for can create it themselves."
-  },
-  /* Membership R62 (Bob, 2026-09-26): an organisation-scoped credential acts for the whole group, with nobody
-     individual behind it, so only an active administrator (the founder included) mints one. Until this row the
-     refusal carried `check: 'membership.R62'` and its own sentence. */
-  AI_CREDENTIAL_ORG_NOT_ADMIN: {
-    check: "C-29.12",
-    where: "src/membership/index.mjs aiCredentialMint > is-ai-credential-mint",
-    translation: "A credential that acts for the whole group is created by one of its administrators, and the account asking is not an active administrator here. Nothing was created. You can create a credential that acts for you alone, or ask an administrator to create this one."
   }
 };
 var MACHINE_FENCE_CHECKS = {
@@ -101173,7 +101064,7 @@ __export(checks_exports28, {
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
-  checkInboxGrammar: () => checkInboxGrammar2,
+  checkInboxGrammar: () => checkInboxGrammar,
   queueRefusal: () => queueRefusal
 });
 var at14 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
@@ -101257,13 +101148,13 @@ function asText7(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
-var TASK_ID_RE2 = /^TASK-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-var TASK_KIND_ENUM2 = ["authority-undetermined"];
-var TASK_ROLE_ENUM2 = ["project-manager", "group-admin", "member"];
-var TASK_STATUS_ENUM2 = ["open", "resolved", "forwarded"];
-var TASK_EVENT_ENUM2 = ["created", "forwarded", "resolved", "folded"];
-var MEMBER_ID_RE2 = /^[a-z0-9][a-z0-9-]{1,40}$/;
-function checkInboxGrammar2(ctx, findings) {
+var TASK_ID_RE = /^TASK-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+var TASK_KIND_ENUM = ["authority-undetermined"];
+var TASK_ROLE_ENUM = ["project-manager", "group-admin", "member"];
+var TASK_STATUS_ENUM = ["open", "resolved", "forwarded"];
+var TASK_EVENT_ENUM = ["created", "forwarded", "resolved", "folded"];
+var MEMBER_ID_RE = /^[a-z0-9][a-z0-9-]{1,40}$/;
+function checkInboxGrammar(ctx, findings) {
   const raw = ctx.files.get("data/inbox.json");
   if (!raw) return;
   let g;
@@ -101288,10 +101179,10 @@ function checkInboxGrammar2(ctx, findings) {
       findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}] is not an object`));
       continue;
     }
-    if (!TASK_ID_RE2.test(tk.id || "")) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].id '${tk.id}' does not match the TASK grammar`));
+    if (!TASK_ID_RE.test(tk.id || "")) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].id '${tk.id}' does not match the TASK grammar`));
     else if (seen.has(tk.id)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}] repeats id '${tk.id}'`));
     else seen.add(tk.id);
-    if (!TASK_KIND_ENUM2.includes(tk.kind)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].kind '${tk.kind}' must be one of: ${TASK_KIND_ENUM2.join(", ")}`));
+    if (!TASK_KIND_ENUM.includes(tk.kind)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].kind '${tk.kind}' must be one of: ${TASK_KIND_ENUM.join(", ")}`));
     const sub = tk.subject;
     if (!sub || typeof sub !== "object") findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}] missing subject block`));
     else {
@@ -101318,11 +101209,11 @@ function checkInboxGrammar2(ctx, findings) {
         if (!isPublicHttpsLocator(tk.locators[L2])) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].locators[${L2}] '${String(tk.locators[L2]).slice(0, 40)}' is not an https public-host locator`));
       }
     }
-    if (tk.assignee !== "unassigned" && !MEMBER_ID_RE2.test(tk.assignee || "")) {
+    if (tk.assignee !== "unassigned" && !MEMBER_ID_RE.test(tk.assignee || "")) {
       findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].assignee '${tk.assignee}' must be a member_id or the literal 'unassigned'`));
     }
-    if (!TASK_ROLE_ENUM2.includes(tk.assignee_role)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].assignee_role '${tk.assignee_role}' must be one of: ${TASK_ROLE_ENUM2.join(", ")}`));
-    if (!TASK_STATUS_ENUM2.includes(tk.status)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].status '${tk.status}' must be one of: ${TASK_STATUS_ENUM2.join(", ")}`));
+    if (!TASK_ROLE_ENUM.includes(tk.assignee_role)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].assignee_role '${tk.assignee_role}' must be one of: ${TASK_ROLE_ENUM.join(", ")}`));
+    if (!TASK_STATUS_ENUM.includes(tk.status)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].status '${tk.status}' must be one of: ${TASK_STATUS_ENUM.join(", ")}`));
     if (!ISO_TS_RE.test(tk.created || "")) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].created must be an ISO 8601 UTC instant`));
     if (tk.resolved_at !== void 0 && tk.resolved_at !== null && !ISO_TS_RE.test(tk.resolved_at)) {
       findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].resolved_at must be an ISO 8601 UTC instant`));
@@ -101346,7 +101237,7 @@ function checkInboxGrammar2(ctx, findings) {
           if (prev && e.at < prev) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is out of chronological order`));
           prev = e.at;
         }
-        if (!TASK_EVENT_ENUM2.includes(e.event)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].event '${e.event}' must be one of: ${TASK_EVENT_ENUM2.join(", ")}`));
+        if (!TASK_EVENT_ENUM.includes(e.event)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].event '${e.event}' must be one of: ${TASK_EVENT_ENUM.join(", ")}`));
         if (typeof e.actor !== "string" || e.actor.length === 0 || e.actor.length > 64 || /[\r\n]/.test(e.actor)) {
           findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].actor must be a nonempty single-line string under 64 chars`));
         }
@@ -104729,7 +104620,7 @@ var Queue = class _Queue {
    *  copy: a second grammar pretending to be the same one is the failure this reuse exists to avoid. */
   #refuseUngrammatical(task) {
     const findings = [];
-    checkInboxGrammar2(
+    checkInboxGrammar(
       {
         files: /* @__PURE__ */ new Map([["data/inbox.json", JSON.stringify({ tasks: [task] })]]),
         resolveTarget: (id) => this.#record.bundleInfo(id) !== null
@@ -104749,7 +104640,7 @@ var Queue = class _Queue {
     const inbox = replay ? null : files.find((f9) => f9 && f9.path === "data/inbox.json");
     if (!inbox || typeof inbox.text !== "string") return null;
     const found = [];
-    checkInboxGrammar2({ files: /* @__PURE__ */ new Map([["data/inbox.json", inbox.text]]) }, found);
+    checkInboxGrammar({ files: /* @__PURE__ */ new Map([["data/inbox.json", inbox.text]]) }, found);
     const errs = found.filter((x) => x.severity === "error");
     if (!errs.length) return null;
     return {
@@ -104768,7 +104659,7 @@ var Queue = class _Queue {
     const files = image && image.files instanceof Map ? image.files : null;
     if (!files) return [];
     const findings = [];
-    checkInboxGrammar2(
+    checkInboxGrammar(
       { files, resolveTarget: typeof image.resolveTarget === "function" ? image.resolveTarget : void 0 },
       findings
     );
