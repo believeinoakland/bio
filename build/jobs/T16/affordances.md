@@ -1,6 +1,6 @@
 # affordances (T16)
 
-**Status** · session_01YBYWCekcBYGpqvZ6aGXxFP · depth 2 · WORKING · handled B3
+**Status** · session_01YBYWCekcBYGpqvZ6aGXxFP · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
