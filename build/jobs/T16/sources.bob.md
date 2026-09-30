@@ -9,3 +9,7 @@ Depth 2. You are the first job of a new product module, `sources` (Bob's K509 (1
 ## B2 · ANSWER · re J1
 
 (1) and (2) ruled as capture's (K539): capture gains R71 `knockAttempt({sourceAddress, now})` exactly as you read it, and R72 `pulledKnocksOf(captureSha)`, one keyed read answering `{knock_id, sha256, bytes, received, pseudonym, knocker_digest}` per pulled knock, oldest received first. Use R72, not the `inboxList` page walk. CAPTURE #8 builds both before its early merge; build against these names until I send the CHANGE that it has merged. (3), (4) stand. (5) stands except: `publishableAt` answers each publishable entry's value (a `recorded: false` entry none), because case-authoring R37 and publication R52 state only what it answers; it is not a logged sight read (R5 and R8 re-worded on the tranche: merge `tranche/T16` into your branch).
+
+## B3 · CHANGE
+
+CAPTURE #8 has merged into tranche/T16 (R65–R67, R71 `knockAttempt`, R72 `pulledKnocksOf`, `knockerDigestOf`). Merge the tranche into your branch, switch the fixture to the real `Capture`, re-run steps 5–7, and record completion again (P10).
