@@ -1,8 +1,8 @@
-/* provenance: the capture axis for one capture, from its route (R24–R27), and a member's declared origin (R29, R30). */
+/* provenance: the capture axis for one capture, from its route (R24–R27, R51), and a member's declared origin (R29, R30). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V, infoMd } from "./fixture.mjs";
-import { ARCHIVE_CAPTURE_GRADE, ARCHIVE_VIA } from "../../../src/provenance/index.mjs";
+import { ARCHIVE_CAPTURE_GRADE, ARCHIVE_VIA, DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING, BASIS_GRADES, TESTIMONY_GRADE, PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
 
 const T = "2026-09-27T01:00:00Z";
@@ -57,6 +57,49 @@ test("R27: an authored observation earns no capture letter; its grade is testimo
     const got = w.prov.captureGrade(s).grade;
     if (got !== null) assert.ok(rank(got) >= rank(EARNED_CAPTURE_CEILING), `${via}: ${got}`);
   }
+});
+
+test("R51: a capture received through the doorbell earns no fetched letter; its receipt proves when it was held", () => {
+  assert.equal(DOORBELL_VIA, "doorbell", "the via capture R65 writes");
+  const w = world();
+  const s = sha("handed over");
+  /* As capture R65 writes it: one receipt at the knock's address, via doorbell. */
+  const k = w.prov.recordReceipt({ address: "knock:KNOCK-20260927-0a1b2c3d", addressNorm: "knock:KNOCK-20260927-0a1b2c3d",
+                                   captureSha: s, retrieved: "2026-09-27T04:05:06.789Z", via: DOORBELL_VIA });
+  assert.deepEqual([k.recorded, k.via], [true, "doorbell"]);
+  const g = w.prov.captureGrade(s);
+  assert.deepEqual({ ...g, why: undefined }, {
+    grade: null, route: "doorbell", determined: false, basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+    ceiling: EARNED_CAPTURE_CEILING,
+    received: { address: "knock:KNOCK-20260927-0a1b2c3d", address_norm: "knock:KNOCK-20260927-0a1b2c3d",
+                at: "2026-09-27T04:05:06Z" },
+    why: undefined });
+  /* Stated as authored, never as measured; existence proven by the receipt's timestamp. */
+  assert.match(g.why, /never fetched/);
+  assert.match(g.why, /stated as authored/);
+  assert.match(g.why, /2026-09-27T04:05:06Z/);
+  assert.match(g.why, /knock:KNOCK-20260927-0a1b2c3d/);
+  assert.equal(w.prov.captureGrade(`sha256:${s.toUpperCase()}`).route, "doorbell");
+  /* A second pull of the same bytes under another knock: the earliest receipt is the one that proves existence. */
+  w.prov.recordReceipt({ addressNorm: "knock:KNOCK-20260926-ffffffff", captureSha: s, retrieved: "2026-09-26T00:00:00Z",
+                         via: DOORBELL_VIA });
+  assert.deepEqual(w.prov.captureGrade(s).received,
+                   { address: "knock:KNOCK-20260926-ffffffff", address_norm: "knock:KNOCK-20260926-ffffffff",
+                     at: "2026-09-26T00:00:00Z" });
+  /* A route this instance fetched is measured and answers first; the doorbell never raises or lowers it. */
+  w.prov.recordReceipt({ addressNorm: "e.org/h", captureSha: s, retrieved: T, via: ARCHIVE_VIA });
+  assert.deepEqual([w.prov.captureGrade(s).route, w.prov.captureGrade(s).grade], ["archive", ARCHIVE_CAPTURE_GRADE]);
+  w.prov.recordReceipt({ addressNorm: "e.org/h", captureSha: s, retrieved: T });
+  assert.deepEqual([w.prov.captureGrade(s).route, w.prov.captureGrade(s).grade], ["direct", EARNED_CAPTURE_CEILING]);
+  /* The doorbell is a ruled route: beside a via no ruling names, it still answers as received. */
+  const m = sha("handed and mirrored");
+  w.prov.recordReceipt({ addressNorm: "knock:KNOCK-20260927-00000001", captureSha: m, retrieved: T, via: DOORBELL_VIA });
+  w.prov.recordReceipt({ addressNorm: "e.org/m", captureSha: m, retrieved: T, via: "some-mirror" });
+  assert.equal(w.prov.captureGrade(m).basis, "CAPTURE_RECEIVED_NOT_FETCHED");
+  /* A member's authored observation stays testimony even with a doorbell receipt naming its bytes (R27). */
+  const t = w.prov.testify({ words: "I saw it.", observedAt: "2026-09-20", author: V("ruth") });
+  w.prov.recordReceipt({ addressNorm: "knock:KNOCK-20260927-00000002", captureSha: t.capture_sha, retrieved: T, via: DOORBELL_VIA });
+  assert.equal(w.prov.captureGrade(t.capture_sha).basis, "CAPTURE_AXIS_AUTHORED");
 });
 
 test("R29: a member's attributed, dated, append-only declaration of a document's system", () => {
