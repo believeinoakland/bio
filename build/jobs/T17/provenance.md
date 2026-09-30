@@ -19,3 +19,7 @@
 **Checks.** `node --test test/m/provenance/`: 66 pass, 0 fail. `test/m/` whole: 3193 tests, 3169 pass, 1 fail (control-plane, above), 23 todo. Old battery: no test names the old kind list. `format`: 0 failures. `architecture provenance`: 13 product files, 41 imports, 0 failures. `coverage provenance`: 51 of 51 live ids named, 0 failures. `ownership provenance tranche/T17`: 4 files changed, legacy modules 0 added, 0 removed, 0 failures.
 
 Size (session_01YBB3FhBVLLqxoQXxXj1PVQ): test runs 8, module lines 3269
+
+## J1 · REPORT
+
+control-plane: test/m/control-plane/doorbell.test.mjs:365-371 asserts the refusal N381 removes (PROVENANCE_REGISTER_REFUSED from the pull's dry run), so it now fails: the one failure in test/m/ (3193 tests, 3169 pass, 1 fail, 23 todo). Measured with a scratch copy (not committed): through the record store's door with the real capture, promotion and provenance, inboxpullfile now pulls and files the knock (bundle INFO-2026-0001-doorbell-knock, register row homed there, receipt written). Control-plane's layer-11 entry (N381's share: R36's end-to-end test.todo runs, its mark goes) replaces the stale assertion.
