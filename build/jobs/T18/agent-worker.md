@@ -1,3 +1,16 @@
 # agent-worker (T18)
 
 **Status** · session_014mdDR3ixdrXqFseXAvfYyr · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Q1 (R51, R53: the plan-mode reads' op names). R51 names each read by the service behind it and says "through the op `op-declarations` declares for it"; op-declarations is layer 11 and not built, and no op answers `jurisdictions.combine`'s view today (`op=profiles` answers the active ids and conflicts, not `deadlines`, venues or `legal_organisations`). My best reading, which I am building on now, held as one data table (`PLAN_READS`) so a different answer is a one-line edit each:
+- the run's plan: `op=plan` `{id}`; earlier plans: `op=plans` `{project}` (the plan's project, from `op=plan`'s answer), the run's own plan left out.
+- per subject `{kind:"outcome", determination, standard}`: `op=determination` `{id}`, `op=standard` `{id}`, `op=consequencesof` `{determination, standard}`, `op=availableactions` `{determination}`.
+- per subject `{kind:"inquiry", inquiry, standards?}`: the inquiry's published findings through `op=publishededitions` `{id: inquiry}`, and `op=standard` for each named standard.
+- once per run: the profile's view through `op=profiles` (the one profile read the plane has). Its `deadlines`, venues and `legal_organisations` are absent from that answer today, so they are carried UNDETERMINED in `why` (R51), never as absence, until op-declarations declares a read that carries them.
+`PLANE_OPS` (R53) gains exactly `plan`, `plans`, `determination`, `standard`, `consequencesof`, `availableactions`, `publishededitions`, `profiles` (reads) and `optionpropose` (write). If you want other ops (or a new one op-declarations will add, e.g. a `profileview`), name them and I change the table.
+
+Q2 (R53, R44: `plan` deployed?). T7's record said R40 and R48 are met, and this job re-meets R48 by reading the pack from `op=affordances` (control-plane R41, layer 11). I read R53 and `run-rules` R14 as: `MODES.plan` stays `deployed: false` in T18 (the plane does not publish `pack` until control-plane's job, and action-plans' ops arrive in layer 9), matching the K660 test line "`MODES.plan` not deployed today". A plan-mode run therefore closes `mode-not-deployed` at the gate; I test PLAN_FLOW's rows by the pure table and by driving it with a test seam that treats `plan` as deployed (an exported `modesFor` flag set only by the suite, never a request parameter, R42). If you rule `plan` deployed now, say so.
+
+Q3 (N402, K668: the 14 source-parse arms). The arms that parsed the plane's OPS table, `AI_RUN_ACTIONS` and namespace set become interface arms here, following OCR-WORKER #2's precedent (R22 there): `PLANE_OPS` (R37) and a new exported `NAMESPACES` (from `harness.mjs`, not the Worker entry, since workerd refuses a non-handler named export there) are pinned exactly, floor and ceiling, with their `mutating` flags; the refusal's `namespaces` equals the export. The cross-checks against the plane (every op in the op table, the `mutating` flag agreeing, every mutating op in `AI_RUN_ACTIONS`, `SUBSESSION_OPS` non-mutating, `basisversions`/`versionchain` member-class reads, `NAMESPACES` equal to the gate's) go to control-plane's N402 pin (layer 11), which I will list in a REPORT. Tests cannot import control-plane from layer 6 (architecture check).
