@@ -496,7 +496,9 @@ export class BasisVersions {
   projectionDecoration(row, { viewer = null } = {}) {
     const id = row && typeof row.bundle_id === "string" ? row.bundle_id : "";
     const inquiry = !!id && normalizeType(row.object_type) === "inquiry";
-    return { no_project_conclusion: inquiry && this.#seen(id, viewer) ? this.noProjectConclusionOf(id) : null };
+    try {
+      return { no_project_conclusion: inquiry && this.#seen(id, viewer) ? this.noProjectConclusionOf(id) : null };
+    } catch { return { no_project_conclusion: null }; }   /* never throws: a failure reads null */
   }
 
   /** R37 (N64): each project the viewer may see that draws on the inquiry — its document holds a `cites` reference to
