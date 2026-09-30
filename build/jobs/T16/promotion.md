@@ -1,6 +1,6 @@
 # promotion (T16)
 
-**Status** · session_01SV3MUwaJQVfxezqBTByPmU · depth 2 · WAITING ON BOB (J2) · handled B3
+**Status** · session_01SV3MUwaJQVfxezqBTByPmU · depth 2 · WAITING ON BOB (J2) · handled B4
 
 ## Progress (working notes; the Completion section supersedes)
 
