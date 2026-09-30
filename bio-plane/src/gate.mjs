@@ -32,7 +32,7 @@
  * removed out of band.
  */
 
-import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
+import { checkBundle, REGISTRATION_CHECKS } from "../checks/bio-checks.mjs";
 import { recordChecks } from "./promotion/record-checks.mjs";
 
 /* 1.21.0 (D-470, 2026-09-24): THE VERSION CATCHES UP WITH THE CATALOG, AND IS
@@ -459,7 +459,7 @@ const te = new TextEncoder();
    that runs at two doors is a catalog whose two doors drift.
 
    IT RUNS THE CATALOG RATHER THAN REIMPLEMENTING IT, which is this file's whole
-   premise. `checkCaseDocument` is a pure function over the parsed frontmatter
+   premise. The registered catalogue is a pure function over the parsed frontmatter
    and two facts the document cannot carry about itself (which case and which
    edition the store is about to commit it as, and what the PREVIOUS edition of
    this case asserted, for C-21.1). Passing null for the prior case does not
@@ -475,23 +475,28 @@ const te = new TextEncoder();
    itself — its BODY (C-3.1's section followed the block into it) and each member's `basis` at the
    PINNED bytes (C-2.8's testimony-row and per-ground arms read it). Omitting `memberBasis` BLINDS
    those two arms rather than softening them; the store supplies it with the rest of the facts. */
-/* R33, N254, N275: the one refusal the case gate makes of its own, CASE_CATALOGUE_FAILED (C-102.9), when the catalogue
-   it runs threw `e` or answered no list of findings: it has judged nothing, so the document is not passed. It builds
-   the gate's whole answer, R29's shape with its verdict `ok: false` at the top, so the region C-102.9's `where` names
-   holds the refusal's verdict (the DEC-49 guard's arm C reads it there). */
+/* R33, N254, N275, N242: the one refusal the case gate makes of its own, CASE_CATALOGUE_FAILED (C-102.9), when no
+   case-document catalogue is registered, or the one registered threw `e` or answered no list of findings: nothing has
+   judged the document, so it is not passed. It builds the gate's whole answer, R29's shape with its verdict `ok: false`
+   at the top, and carries its code and row beside them as every refusal does (DEC-49), so the region C-102.9's `where`
+   names holds the refusal's verdict and its code. */
 function caseCatalogueFailed(e) {
-  return { gateVersion: GATE_VERSION, ok: false,
+  const row = REGISTRATION_CHECKS.CASE_CATALOGUE_FAILED;
+  return { gateVersion: GATE_VERSION, ok: false, reason: "CASE_CATALOGUE_FAILED", code: "CASE_CATALOGUE_FAILED",
+           check: row.check, translation: row.translation,
            findings: [{ check: "CASE_CATALOGUE_FAILED",
                         detail: `the case-document catalogue could not judge this document, so it is not passed: `
                               + String(e && e.message ? e.message : e).slice(0, 200) }],
            warnings: 0 };
 }
 
-/* R33, R47: `catalogue` is the case-document catalogue promotion runs, the one a later module registered with the
-   promotion instance (ratification's), else the catalogue's own `checkCaseDocument`. A catalogue that throws or does
-   not answer with findings has judged nothing, so the gate fails closed on it (never throws, never passes). */
-export function runCaseGate({ caseId, edition, fm, priorCase, body = null, memberBasis = null } = {},
-                            catalogue = checkCaseDocument) {
+/* R33, R47 (K529): `catalogue` is the case-document catalogue promotion runs, the one a later module registered with the
+   promotion instance (ratification's). There is no fallback: with none registered, nothing judges the document, and the
+   gate answers C-102.9. A catalogue that throws or does not answer with findings has judged nothing either, so the gate
+   fails closed on it (never throws, never passes). */
+export function runCaseGate({ caseId, edition, fm, priorCase, body = null, memberBasis = null } = {}, catalogue = null) {
+  if (typeof catalogue !== "function")
+    return caseCatalogueFailed(new Error("no case-document catalogue is registered with this instance"));
   let findings;
   try {
     findings = catalogue(fm, { caseId, edition, priorCase: priorCase || null, body, memberBasis });
