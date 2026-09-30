@@ -1236,6 +1236,31 @@ console.log("\n--- T16's project-naming reads (contradiction's candidates, case-
 }
 
 /* ------------------------------------------------------------------------- *
+ *  LEGACY-TESTS #15 (T17, 2026-09-30): N388 (CAPTURE #9, capture R69; CONTROL-PLANE #8 stamps `viewer` on it, K580).
+ *  `captureaccounts` moves from the ungated reads to the gated: a capture's accounts are its members' own words, which
+ *  can name a project, so capture answers them by the caller's SIGHT of the bundle that files the capture. Asked here
+ *  of PSHA, filed in carol's hidden project, by dave, and of a digest the record does not hold. This fixture records no
+ *  account (an account needs its capturing member's signature, R69), so the sight of a capture WITH accounts is driven
+ *  at capture's interface (test/m/capture/, "R69 (N388)"); what is driven here is the door: hidden answers as unknown,
+ *  and a forged viewer buys nothing.
+ * ------------------------------------------------------------------------- */
+console.log("\n--- T17's gated read (capture's captureaccounts), driven on the hidden project's capture ---");
+{
+  const flatten = (r, ...ids) => JSON.parse(ids.reduce((s, id) => s.split(id).join("<ASKED>"), JSON.stringify(r)));
+  const UNKNOWN = sha("t17-a-capture-the-record-never-held");
+  const [aH, aA] = [await GET(`op=captureaccounts&token=${dave}&capture=${PSHA}`),
+                    await GET(`op=captureaccounts&token=${dave}&capture=${UNKNOWN}`)];
+  t("op=captureaccounts: the hidden project's capture answers dave byte-identically to one the record does not hold, "
+  + "the digest aside (capture R69, N388)", flatten(aH, PSHA), flatten(aA, UNKNOWN));
+  t("op=captureaccounts: that answer names no member as capturing it and no account",
+    [aH.body.result?.actors, aH.body.result?.accounts], [[], []]);
+  t("op=captureaccounts: a forged `viewer=class:admin` buys dave nothing (the control plane stamps the viewer)",
+    await GET(`op=captureaccounts&token=${dave}&capture=${PSHA}&viewer=class:admin`), aH);
+  t("op=captureaccounts: the OWNER is answered her capture's record (the arm answers, never refuses)",
+    [aH.status, (await GET(`op=captureaccounts&token=${carol}&capture=${PSHA}`)).body.result?.captureSha], [200, PSHA]);
+}
+
+/* ------------------------------------------------------------------------- *
  *  THE DELIBERATELY UNGATED READS, AND WHY — recorded here rather than in a
  *  document, because a rule that is not in the loop the reader runs is not a
  *  rule. The assertion below is STRUCTURAL: it parses index.mjs's OPS table and
@@ -2077,6 +2102,16 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "administrator, and to any other member only for the entries whose sight list names them (`readLog`); a viewer "
       + "naming no active member answers NO_SUCH_SOURCE. Names no bundle. Tested at sources' interface "
       + "(test/m/sources/disclose.test.mjs R5).",
+    /* LEGACY-TESTS #15 (T17, 2026-09-30): MOVED HERE FROM THE UNGATED LIST once N388 (CAPTURE #9, K580) gated it and
+       CONTROL-PLANE #8 stamped its viewer; its reason read off src/capture/index.mjs `captureAccountsOf`, `#captureSeen`
+       and `#captureGate`, and src/control-plane/index.mjs's fail-closed viewer list, and DRIVEN in the T17 section above. */
+    captureaccounts: "capture R69 (N388, K580): the members recorded as capturing one capture and their signed accounts "
+      + "of it, by its digest. GATED by SIGHT of the bundle that files the capture: an account is its member's own "
+      + "words, which can name a project, so `captureAccountsOf` asks `#captureSeen` (D-701's `#captureGate`, the "
+      + "register's bundle through viewerPredicate) first, and a capture filed in a bundle the viewer may not see "
+      + "answers exactly as one the record does not hold (no actor, no account); a capture filed in no bundle names "
+      + "none and stays visible. The control plane stamps the viewer (its fail-closed list, beside `projectstage`), and "
+      + "capture fails closed without it. DRIVEN in the T17 section above. It writes nothing.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
@@ -2273,11 +2308,8 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     lateattestations: "NAMES NO BUNDLE: capture R68, the late co-attestations recorded for one capture, by its digest "
       + "— each outcome's instant, the member who asked, and what the fresh timestamp and co-archive prove (`late: true`). "
       + "A row about a CAPTURE, which REC-30's rule leaves standing for every reader (op=reading's row, op=pdfstructure's "
-      + "reason), and it carries no bundle reference to withhold. Capture R68 states no sight for it. It writes nothing.",
-    captureaccounts: "NAMES NO BUNDLE: capture R69, the members recorded as capturing one capture and their signed "
-      + "accounts of it, by its digest. A row about a CAPTURE, which REC-30's rule leaves standing (op=lateattestations' "
-      + "reason); it carries no bundle reference to withhold, and the accounts are what case-authoring R36 prints into "
-      + "a published case beside the capture. Capture R69 states no sight for it. It writes nothing.",
+      + "reason): every field is machine-made (the timestamp and the co-archive) beside `by`, and it carries no bundle "
+      + "reference to withhold. Capture R68 says so since N388 (K580): it takes no viewer. It writes nothing.",
     /* LEGACY-TESTS #14 (T16, 2026-09-30): SOURCES #1 R8, read off src/sources/index.mjs `publishableAt`. */
     sourcepublishable: "OPENS ONLY WHAT IS ALREADY OPEN: sources R8, each entry of a source that may be shown to an "
       + "AUDIENCE, with its basis — consent not withdrawn at `at`, or a `knownTo: public` entry whose evidence is a "
