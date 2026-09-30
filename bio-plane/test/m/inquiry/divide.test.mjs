@@ -119,3 +119,54 @@ test("R42 R25 a division carries the listener's own failures as reevaluation.lis
   assert.equal(t.ok, true); assert.equal(w2.fm(P).current_state, "divided");
   assert.deepEqual(t.reevaluation.listeners_failed, ["reevaluation"]); assert.deepEqual(t.reevaluation.raised, []);
 });
+
+test("R24 each child carries its legs verbatim: a leg naming a passage names the same passage on the child and rests on it there (N360)", () => {
+  const w = world(); const [capA] = w.doc(A); w.doc(B);
+  /* a passage of A: a content row other than the whole document, written as content's own row would be */
+  const PASSAGE = "e".repeat(64);
+  w.st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at, stale)
+                 VALUES (?, ?, ?, 'pdf-page', '{"kind":"pdf-page","page":0}', 'p. 1', 'plane', 't', 0)`, PASSAGE, capA, A);
+  const parent = inquiryMd(P, { legs: [{ target: A, content_id: PASSAGE, note: "the first page" }, { target: B, role: "cuts_against" }] })
+    .replace("    role: cuts_against\n", "    role: cuts_against\n    grade: C\n    grade_axis: connection\n    grade_source: hunch\n"
+      + "    author: member:alice\n    date: 2026-09-27\n");
+  assert.equal(w.promote(P, parent).ok, true);
+  const parentLeg = (ord) => w.row(`SELECT content_id FROM inquiry_basis WHERE bundle_id=? AND ord=?`, P, ord).content_id;
+  assert.equal(parentLeg(0), PASSAGE);
+  const r = div(w);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  /* the child's leg is the parent's, field for field, the passage among them */
+  assert.deepEqual(w.fm(C1).basis, [w.fm(P).basis[0]]);
+  assert.deepEqual(w.fm(C2).basis, [w.fm(P).basis[1]]);
+  assert.equal(w.fm(C1).basis[0].content_id, PASSAGE);
+  /* and the projection rests the child's leg on the parent leg's passage, not on the whole document */
+  assert.equal(w.row(`SELECT content_id FROM inquiry_basis WHERE bundle_id=? AND ord=0`, C1).content_id, PASSAGE);
+  assert.equal(w.row(`SELECT content_id FROM inquiry_basis WHERE bundle_id=? AND ord=0`, C2).content_id, parentLeg(1));
+  /* the leg's lines are the parent's bytes */
+  const lines = (id) => w.text(id).split("\n");
+  const legOf = (id, t) => { const ls = lines(id); const i = ls.indexOf(`  - target: ${t}`, ls.indexOf("basis:"));
+    const out = [ls[i]]; for (let j = i + 1; /^ {4}\S/.test(ls[j]); j++) out.push(ls[j]); return out; };
+  assert.deepEqual(legOf(C1, A), legOf(P, A)); assert.deepEqual(legOf(C2, B), legOf(P, B));
+});
+
+test("R24 R34 R8 a grouped question divides: a child given each of its groups whole carries them verbatim; a child given part of a group carries no partition", () => {
+  const w = world(); w.doc(A); w.doc(B); const Cx = "INFO-2026-0003-c"; w.doc(Cx);
+  w.inquiry(P, { legs: [{ target: A }, { target: B, role: "cuts_against" }, { target: Cx }] });
+  const g = w.k.ground({ target: P, grounds: [{ ground: "g1", legs: [0, 1] }, { ground: "g2", legs: [2] }], viewer: "admin", author: V("alice") });
+  assert.equal(g.ok, true, JSON.stringify(g).slice(0, 300));
+  w.clock.now = "2026-09-29T00:00:00Z";
+  const r = w.k.divide({ target: P, reason: "two questions", viewer: "admin", author: V("bob"),
+    children: [{ id: C1, question: "First half?", legs: [0, 1] }, { id: C2, question: "Second half?", legs: [0, 2] }] });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 600));
+  const pf = w.fm(P), f1 = w.fm(C1), f2 = w.fm(C2);
+  /* C1 holds all of g1: the group, its legs' labels and its row (who asserted it, when) travel unchanged */
+  assert.deepEqual(f1.basis, [pf.basis[0], pf.basis[1]]);
+  assert.deepEqual(f1.grounds, [pf.grounds[0]]);
+  assert.deepEqual(f1.grounds.map((x) => [x.ground, x.asserted_by, x.at]), [["g1", V("alice"), "2026-09-28T01:00:00Z"]]);
+  assert.equal(f1.basis[1].role, "cuts_against", "the leg that cuts against travels with its group (R34)");
+  /* C2 holds part of g1: no assertion about the part is made for anyone, so the child is ungrouped (its weakest leg) */
+  assert.equal(f2.grounds, undefined);
+  assert.ok(f2.basis.every((l) => l.ground === undefined));
+  assert.deepEqual(f2.basis.map((l) => l.target), [A, Cx]);
+  assert.deepEqual(w.rows(`SELECT ground FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, C1).map((x) => x.ground), ["g1", "g1"]);
+  assert.deepEqual(w.rows(`SELECT ground FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, C2).map((x) => x.ground), [null, null]);
+});

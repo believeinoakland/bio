@@ -134,6 +134,27 @@ export function spliceBasisGround(text, byOrd) {
   return [...lines.slice(0, starts[0]), ...segs.flat(), ...lines.slice(blockEnd + 1)].join("\n");
 }
 
+/** R24 (N360): the entries of a column-0 list block (`basis`, `grounds`) as the document writes them, each its own lines
+ *  byte for byte (its `  - ` line and every indented line under it), in order; null when the block is absent or not a
+ *  list of entries, so an act that carries entries verbatim never carries a guess. */
+export function blockEntries(text, key) {
+  const lines = String(text ?? "").split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let at = -1;
+  for (let i = 1; i < end; i++) if (lines[i].startsWith(key + ":")) { at = i; break; }
+  if (at === -1 || lines[at].slice(key.length + 1).trim() !== "") return null;
+  const out = [];
+  for (let i = at + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^ {2}- /.test(lines[i])) { out.push([lines[i]]); continue; }
+    if (/^\s/.test(lines[i]) && out.length) { out[out.length - 1].push(lines[i]); continue; }
+    break;
+  }
+  return out;
+}
+
 /** Frontmatter-safe for DERIVED strings (an authored field is refused by name instead): the restricted grammar has no
  *  escapes. */
 export function fmSafe(s) {

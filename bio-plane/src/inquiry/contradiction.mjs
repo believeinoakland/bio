@@ -145,56 +145,59 @@ export function contradictionFindings(fm) {
           "this contradiction inquiry is concluded and its `resolution` names no kind: a contradiction is concluded by "
           + "saying what the conflict turned out to be.", "kind");
       /* END DEC-49 REGION is-resolution-present */
-      else if (!isMap(block))
-        find("RESOLUTION_INCOMPLETE", "`resolution` is a block of fields (`kind` and what that kind needs), not a single "
-          + "value.", "resolution");
       else {
         /* DEC-49 REGION is-resolution-kind */
-        const family = resolutionFamily(kind);
-        if (!family)
+        const family = isMap(block) ? resolutionFamily(kind) : null;
+        if (isMap(block) && !family)
           find("RESOLUTION_KIND_UNKNOWN", `'${fmSafe(text(kind) ?? typeof kind)}' is not a resolution kind; the kinds `
             + `are ${RESOLUTION_KINDS.join(", ")}.`, "kind");
         /* END DEC-49 REGION is-resolution-kind */
         /* DEC-49 REGION is-resolution-complete */
         const incomplete = (field, detail) => find("RESOLUTION_INCOMPLETE", detail, field);
-        for (const k of Object.keys(block))
-          if (!RESOLUTION_FIELDS.includes(k))
-            incomplete(k, k === "qualifiers"
-              ? "`qualifiers` is written as `qualifier_a` and `qualifier_b` inside `resolution` (the frontmatter grammar "
-                + "holds no map inside a map); write it through the resolution's own lines."
-              : `\`${k}\` is not a field of a resolution; its fields are ${RESOLUTION_FIELDS.join(", ")}.`);
-        const coords = block.coordinates;
-        const coordsOk = Array.isArray(coords) && coords.length > 0 && coords.every((c) => DISSOLVED_BY.includes(c))
-          && new Set(coords).size === coords.length;
-        if (kind === "dissolved" && !present(coords))
-          incomplete("coordinates", "a `dissolved` resolution names the respects in which the sides differ: one or more "
-            + `distinct \`coordinates\` from ${DISSOLVED_BY.join(", ")}.`);
-        else if (present(coords) && !coordsOk)
-          incomplete("coordinates", "`coordinates` is a list of one or more distinct respects from "
-            + `${DISSOLVED_BY.join(", ")}.`);
-        const side = block.wrong_side;
-        if (family === "CORRECTED" && !present(side))
-          incomplete("wrong_side", "a corrected resolution names the side that is wrong: `wrong_side` is `a` or `b`.");
-        else if (present(side) && side !== "a" && side !== "b")
-          incomplete("wrong_side", "`wrong_side` is `a` or `b`.");
-        const reason = block.reason;
-        if (family === "CORRECTED" && blank(reason))
-          incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
-        else if (present(reason) && (text(reason) === null || text(reason).trim() === ""))
-          incomplete("reason", "`reason` is a non-empty statement.");
-        const canon = block.canon;
-        if (kind === "conflict_of_norms" && !present(canon))
-          incomplete("canon", `a conflict of norms names the canon that reconciles them, or says none does: \`canon\` from `
-            + `${NORM_CANONS.join(", ")}.`);
-        else if (present(canon) && !NORM_CANONS.includes(canon))
-          incomplete("canon", `\`canon\` is one of ${NORM_CANONS.join(", ")}.`);
-        for (const [key, name] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
-          const v = block[key];
-          if (!present(v)) continue;
-          const s = text(v);
-          if (s === null || s.length > QUALIFIER_MAX)
-            incomplete(`qualifiers.${name}`, `a qualifier on side ${name} is a statement of at most ${QUALIFIER_MAX} `
-              + `characters.`);
+        /* A resolution written as a single value gives none of the fields its kind needs, and is not in that form. */
+        if (!isMap(block))
+          incomplete("resolution", "`resolution` is a block of fields (`kind` and what that kind needs), not a single "
+            + "value.");
+        else {
+          for (const k of Object.keys(block))
+            if (!RESOLUTION_FIELDS.includes(k))
+              incomplete(k, k === "qualifiers"
+                ? "`qualifiers` is written as `qualifier_a` and `qualifier_b` inside `resolution` (the frontmatter grammar "
+                  + "holds no map inside a map); write it through the resolution's own lines."
+                : `\`${k}\` is not a field of a resolution; its fields are ${RESOLUTION_FIELDS.join(", ")}.`);
+          const coords = block.coordinates;
+          const coordsOk = Array.isArray(coords) && coords.length > 0 && coords.every((c) => DISSOLVED_BY.includes(c))
+            && new Set(coords).size === coords.length;
+          if (kind === "dissolved" && !present(coords))
+            incomplete("coordinates", "a `dissolved` resolution names the respects in which the sides differ: one or more "
+              + `distinct \`coordinates\` from ${DISSOLVED_BY.join(", ")}.`);
+          else if (present(coords) && !coordsOk)
+            incomplete("coordinates", "`coordinates` is a list of one or more distinct respects from "
+              + `${DISSOLVED_BY.join(", ")}.`);
+          const side = block.wrong_side;
+          if (family === "CORRECTED" && !present(side))
+            incomplete("wrong_side", "a corrected resolution names the side that is wrong: `wrong_side` is `a` or `b`.");
+          else if (present(side) && side !== "a" && side !== "b")
+            incomplete("wrong_side", "`wrong_side` is `a` or `b`.");
+          const reason = block.reason;
+          if (family === "CORRECTED" && blank(reason))
+            incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
+          else if (present(reason) && (text(reason) === null || text(reason).trim() === ""))
+            incomplete("reason", "`reason` is a non-empty statement.");
+          const canon = block.canon;
+          if (kind === "conflict_of_norms" && !present(canon))
+            incomplete("canon", `a conflict of norms names the canon that reconciles them, or says none does: \`canon\` from `
+              + `${NORM_CANONS.join(", ")}.`);
+          else if (present(canon) && !NORM_CANONS.includes(canon))
+            incomplete("canon", `\`canon\` is one of ${NORM_CANONS.join(", ")}.`);
+          for (const [key, name] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
+            const v = block[key];
+            if (!present(v)) continue;
+            const s = text(v);
+            if (s === null || s.length > QUALIFIER_MAX)
+              incomplete(`qualifiers.${name}`, `a qualifier on side ${name} is a statement of at most ${QUALIFIER_MAX} `
+                + `characters.`);
+          }
         }
         /* END DEC-49 REGION is-resolution-complete */
       }
@@ -206,9 +209,13 @@ export function contradictionFindings(fm) {
         + `most ${HYPOTHESIS_MAX} characters), and nothing else.`);
     /* END DEC-49 REGION is-explores-shape */
   } catch (e) {
-    out.push({ check: ROWS.CONTRADICTION_LINK_MALFORMED.check, code: "CONTRADICTION_LINK_MALFORMED",
-               detail: `the contradiction arm could not judge this document: ${e && e.message}`,
-               translation: ROWS.CONTRADICTION_LINK_MALFORMED.translation });
+    /* DEC-49 REGION is-contradiction-arm-judged — C-2.18 (N369): an arm that stopped with an error refuses the document
+       rather than passing it, under its own row: the error is in the check and says nothing yet about the link. */
+    out.push({ check: ROWS.CONTRADICTION_ARM_FAILED.check, code: "CONTRADICTION_ARM_FAILED",
+               detail: `the contradiction arm stopped with an error before it could judge this document's link, `
+                     + `resolution and explores: ${fmSafe(e && e.message)}`,
+               translation: ROWS.CONTRADICTION_ARM_FAILED.translation });
+    /* END DEC-49 REGION is-contradiction-arm-judged */
   }
   return out;
 }

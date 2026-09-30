@@ -41,7 +41,7 @@ import { INQUIRY_TABLES, migrateInquiry } from "./schema.mjs";
 import { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
-         spliceBasisGround, fmSafe, rand } from "./text.mjs";
+         spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
 
 export { INQUIRY_SCHEMA, INQUIRY_TABLES } from "./schema.mjs";
 export * from "./grammar.mjs";
@@ -85,6 +85,11 @@ export const INQUIRY_DISPOSE_CHECKS = {
       + 'project instead, which leaves the question where the other projects have it.',
   },
 };
+
+/** R13 (provenance R26, R51; K538): the capture-grade bases whose bytes no fetch measured, on which a leg keeps its
+ *  author's letter under the ceiling, stated as authored: no recorded route, and material received through the
+ *  doorbell. */
+export const AUTHORED_ROUTE_BASES = Object.freeze(["CAPTURE_ROUTE_UNRECORDED", "CAPTURE_RECEIVED_NOT_FETCHED"]);
 
 /* §8.1's rank (entities' `gradeRank`): A strongest. */
 const GRADE_RANK = gradeRank;
@@ -147,6 +152,20 @@ const mdFile = (text) => {
   const bytes = new TextEncoder().encode(text);
   return { path: "bundle.md", text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
 };
+
+/* R24 (N360): a leg's lines rebuilt from its parsed fields, for the one case `divide` cannot copy them from the parent's
+   bytes (a replayed shape whose block does not line up with its legs): every field of the leg grammar, the passage it
+   names (`content_id`, each `extent_*` field, the capture it was made against) among them. A list is written inline. */
+const LEG_FIELDS = ["target", "role", "grade", "grade_axis", "grade_source", "target_edition", "author", "date", "ground"];
+function legRebuilt(l) {
+  const val = (v) => (Array.isArray(v) ? `[${v.map((x) => fmSafe(x).replace(/[,[\]]/g, " ")).join(", ")}]`
+    : typeof v === "string" && /[:#"'\[\]{},]|^\s|\s$|^$/.test(v) ? `"${fmSafe(v)}"` : String(v));
+  const keys = [...LEG_FIELDS.filter((k) => k !== "target" && k !== "role"),
+                ...Object.keys(l).filter((k) => k === "content_id" || k.startsWith("extent_")).sort()];
+  return [`  - target: ${l.target}`, `    role: ${l.role ?? "supports"}`,
+    ...keys.filter((k) => l[k] !== undefined && l[k] !== null && l[k] !== "").map((k) => `    ${k}: ${val(l[k])}`),
+    ...(typeof l.note === "string" ? [`    note: "${fmSafe(l.note)}"`] : [])];
+}
 
 /* ------------------------------------------------------------------ the module */
 
@@ -1248,6 +1267,21 @@ export class Inquiry {
        projection in this file reads the document rather than restating it. What
        is REPLACED is everything the child must not inherit: the parent's answer,
        the parent's history, the parent's session log. */
+    /* R24 (N360): the parent's legs and groups as its bytes write them, lined up with the parsed ones (an entry of the
+       basis that is not a leg is not carried, as `legs` above does not count it); null when they cannot be lined up. */
+    const allBasis = Array.isArray(fm.basis) ? fm.basis : [];
+    const basisRows = blockEntries(parentText, "basis");
+    const rawLegs = basisRows && basisRows.length === allBasis.length
+      ? allBasis.flatMap((l, i) => (l && typeof l === "object" ? [basisRows[i]] : [])) : null;
+    const ordGround = legs.map((l) => (typeof l.ground === "string" && l.ground.trim() ? l.ground.trim() : null));
+    const groupOrds = new Map();
+    ordGround.forEach((g, i) => { if (g !== null) groupOrds.set(g, [...(groupOrds.get(g) || []), i]); });
+    const groundRows = blockEntries(parentText, "grounds");
+    const rawGrounds = groundRows && Array.isArray(fm.grounds) && groundRows.length === fm.grounds.length
+      ? groundRows.map((lines, i) => ({ lines,
+          label: fm.grounds[i] && typeof fm.grounds[i].ground === "string" ? fm.grounds[i].ground.trim() : null }))
+        .filter((r) => r.label !== null)
+      : null;
     const plans = [];
     for (let k = 0; k < kids.length; k++) {
       const id = ids[k];
@@ -1308,16 +1342,30 @@ export class Inquiry {
         ...refTargets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
         `  - target: ${target}`, "    rel: supersedes", "    status: confirmed",
         `    reason: "${fmSafe(why)}"`]);
-      text = setOrAddBlock(text, "basis", childLegs.flatMap((l) => [
-        `  - target: ${l.target}`,
-        `    role: ${l.role ?? "supports"}`,
-        ...(l.grade !== undefined && l.grade !== null ? [`    grade: ${l.grade}`] : []),
-        ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []),
-        ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []),
-        ...(l.target_edition !== undefined ? [`    target_edition: ${l.target_edition}`] : []),
-        ...(l.author ? [`    author: ${l.author}`] : []),
-        ...(l.date ? [`    date: ${l.date}`] : []),
-        ...(typeof l.note === "string" ? [`    note: "${fmSafe(l.note)}"`] : [])]));
+      /* R24 (N360): THE LEGS VERBATIM — each apportioned leg's own lines from the parent's bytes, so a leg that names
+         a passage (`content_id`, an extent, the capture it was made against) still names it on the child, and the
+         child inherits what rests on that passage (reevaluation's passage-level causes) rather than resting on the
+         whole document. Rebuilt from the parsed leg only when the parent's block cannot be lined up with its legs
+         (a replayed shape), and then every field the rebuild knows, the passage among them.
+         THE PARTITION TRAVELS ONLY WHOLE (R34, DEC-32). A group's row asserts that ITS legs are enough on their own,
+         under a name and a date; a child given every leg of each group its legs belong to carries those groups
+         verbatim, rows and labels. A child given part of a group would carry an assertion nobody made about the
+         part, so it carries no partition at all: the ungrouped reading, no stronger than its weakest leg, which the
+         child's own members may restructure (op=inquiryground). */
+      const grouped = ordGround.some((g) => g !== null);
+      const keepGroups = grouped && !!rawGrounds && mine.every((ord) => ordGround[ord] !== null
+        && groupOrds.get(ordGround[ord]).every((o) => mine.includes(o))
+        && rawGrounds.some((r) => r.label === ordGround[ord]));
+      const legLines = (ord) => {
+        const seg = rawLegs ? rawLegs[ord] : null;
+        const lines = seg || legRebuilt(legs[ord]);
+        return keepGroups ? lines : lines.filter((ln) => !/^\s+ground:/.test(ln));
+      };
+      text = setOrAddBlock(text, "basis", mine.flatMap(legLines));
+      if (keepGroups) {
+        const labels = new Set(mine.map((ord) => ordGround[ord]));
+        text = setOrAddBlock(text, "grounds", rawGrounds.filter((r) => labels.has(r.label)).flatMap((r) => r.lines));
+      } else text = removeBlock(text, "grounds");
       /* The parent's division block is the PARENT's, never the child's: a child
          carrying one would claim to have been divided itself. */
       text = removeBlock(text, "division");
@@ -2205,7 +2253,8 @@ export class Inquiry {
       JSON.stringify(ids), JSON.stringify(ids))) {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
-        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0, byteBest: null, unruled: 0 });
+        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0, byteBest: null, unruled: 0,
+                                     measured: 0, authoredRoutes: [] });
       const e = perBundle.get(r.bundle_id);
       /* MK-1 / D-184: A MEMBER'S AUTHORED WORDS ARE NOT A CAPTURE ON THIS AXIS.
          The capture axis measures the act of reading a document in (DEC-21's
@@ -2227,10 +2276,16 @@ export class Inquiry {
       /* N82 (K182): THE BYTE GRADE IS THE CAPTURE'S OWN, from how the bytes were fetched (provenance R24–R26): a direct
          receipt earns the ceiling, an archive replay one rank below, and bytes with no recorded route keep the ceiling
          as the most an author may state (R26). A route no ruling grades is UNDETERMINED and contributes no letter. */
+      /* K538 (provenance R51): bytes received through the doorbell, never fetched, are the second route no fetch
+         measures: like R26's unrecorded route, a leg on them keeps its author's letter under the ceiling, stated as
+         authored, never as measured. Which of the two it was is kept, so the entry can say so. */
       const cg = this.provenance.captureGrade(r.capture_sha) || {};
+      const authoredRoute = !(cg.determined && cg.grade) && AUTHORED_ROUTE_BASES.includes(cg.basis);
       const byteGrade = cg.determined && cg.grade ? cg.grade
-        : cg.basis === "CAPTURE_ROUTE_UNRECORDED" ? EARNED_CAPTURE_CEILING : null;
+        : authoredRoute ? (cg.ceiling || EARNED_CAPTURE_CEILING) : null;
       if (byteGrade == null) { e.unruled++; if (isTranscribed(chain)) e.transcribed++; continue; }
+      if (authoredRoute) { if (!e.authoredRoutes.includes(cg.basis)) e.authoredRoutes.push(cg.basis); }
+      else e.measured++;
       e.byteBest = e.byteBest == null ? byteGrade
         : (BASIS_GRADES.indexOf(byteGrade) < BASIS_GRADES.indexOf(e.byteBest) ? byteGrade : e.byteBest);
       const b = captureBound(chain, byteGrade);
@@ -2306,6 +2361,16 @@ export class Inquiry {
          leg on publisher-typed text must not move because the record learned to
          ask a question whose answer for it is "no change", and IC-84's §7
          over-strictness arm pins exactly that. No new key appears here. */
+      /* K538 (provenance R26, R51): no capture of this document came by a measured route, so the ceiling below is the
+         most an author may state, not a measurement: said so, beside the letter. */
+      const asAuthored = !e.measured && e.authoredRoutes.length ? {
+        stated_as: "authored", route_basis: [...e.authoredRoutes].sort(),
+        why: `${captureWord}, and none of them was fetched by a route that measures a capture grade (`
+           + `${e.authoredRoutes.includes("CAPTURE_RECEIVED_NOT_FETCHED") ? "received through the doorbell" : ""}`
+           + `${e.authoredRoutes.length > 1 ? "; " : ""}`
+           + `${e.authoredRoutes.includes("CAPTURE_ROUTE_UNRECORDED") ? "no fetch route recorded" : ""}), so a leg on `
+           + `it keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored `
+           + `and never as measured.` } : null;
       if (!e.transcribed && e.bound === EARNED_CAPTURE_CEILING) {
         out.earned.capture[bundleId] = {
           /* mode 'ceiling', and the difference from the connection axis is not a
@@ -2322,7 +2387,7 @@ export class Inquiry {
           why: `${captureWord}, so the strongest capture grade it can `
              + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
              + `receipt.`,
-          ceiling };
+          ceiling, ...(asAuthored || {}) };
         continue;
       }
       /* CASE 2 — EVERY TRANSCRIPTION OF THIS DOCUMENT IS UNMEASURED, so the
@@ -2379,7 +2444,7 @@ export class Inquiry {
           why: `${captureWord}, so the strongest capture grade it can `
              + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
              + `receipt.`,
-          ceiling };
+          ceiling, ...(asAuthored || {}) };
         continue;
       }
       if (!e.transcribed || e.bound === e.byteBest) {

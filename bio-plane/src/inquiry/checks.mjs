@@ -1,4 +1,4 @@
-/* inquiry's own rows (R38; N345, DEC-49; K343's pattern in the C-2 family): C-2.11–C-2.17, the contradiction inquiry's
+/* inquiry's own rows (R38; N345, DEC-49; K343's pattern in the C-2 family): C-2.11–C-2.18, the contradiction inquiry's
  * grammar arm (R47) and its one-candidate rule (R11). C-2.1–C-2.10 stay the catalogue's (`checks/bio-checks.mjs`), and so
  * do the rows `./grammar.mjs` names from it. Each row here is an invariant of this module with its test
  * (`test/m/inquiry/contradiction.test.mjs`); promotion stamps them. */
@@ -38,8 +38,9 @@ export const INQUIRY_CONTRADICTION_CHECKS = {
   RESOLUTION_INCOMPLETE: {
     check: 'C-2.15',
     where: 'src/inquiry/contradiction.mjs contradictionFindings > is-resolution-complete',
-    translation: 'This kind of resolution needs one more thing to be complete: the respect in which the sides differ, '
-      + 'which side is wrong and why, or the rule that reconciles them. The missing part is named. Nothing was written.',
+    translation: 'This resolution is not complete. A resolution gives its kind together with what that kind needs: '
+      + 'the respect in which the sides differ, which side is wrong and why, or the rule that reconciles them. The part '
+      + 'that is missing or not in that form is named. Nothing was written.',
   },
   EXPLORES_MALFORMED: {
     check: 'C-2.16',
@@ -53,5 +54,13 @@ export const INQUIRY_CONTRADICTION_CHECKS = {
     where: 'src/inquiry/index.mjs check > is-candidate-taken-up',
     translation: 'That contradiction has already been taken up as another question, which is named. Work on it there, '
       + 'so that one conflict has one place where it is resolved. Nothing was written.',
+  },
+  /* N369 (proposed in INQUIRY #5 J1; awaiting T17's stamp): the arm's own failure, which C-2.11's words are not true of. */
+  CONTRADICTION_ARM_FAILED: {
+    check: 'C-2.18',
+    where: 'src/inquiry/contradiction.mjs contradictionFindings > is-contradiction-arm-judged',
+    translation: 'The check of this question\'s contradiction fields (its link, its resolution, what it explores) stopped '
+      + 'with an error instead of answering, so the question is refused rather than let through. The error is in the '
+      + 'check and says nothing yet about the document. Nothing was written.',
   },
 };
