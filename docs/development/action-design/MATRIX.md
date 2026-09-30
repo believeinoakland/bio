@@ -58,7 +58,7 @@ Canon places actor differences in three places: the **project** (its bar, DEC-17
 
 ## 5. The changes this implies
 
-**For the action-plan requirements (a new module, Bob's approval as architecture):** A1–A16, plus the closing rule it lacks. Recommended: a member closes a plan with a reason; it never closes itself; a closed plan stays readable and a subject it held may join another plan.
+**For the action-plan requirements (a new module; adding it is BOB's, Bob 2026-09-30):** A1–A16, plus the closing rule it lacked, approved by Bob 2026-09-30: a member closes a plan with a reason; it never closes itself; a closed plan stays readable and a subject it held may join another plan.
 
 **For requirements, needing Bob's decision first (§6):**
 - `actions`: an addressee that is not a government office (§6 D1); the plan and option an action came from (A12); an outcome for actions that are not requests (§6 D3).

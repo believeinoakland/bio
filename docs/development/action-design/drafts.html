@@ -45,7 +45,7 @@ table.wide{min-width:1180px}
 </style>
 <div class="wrap">
 <h1>action-plans — requirements</h1>
-<p class="lede"><span class="eyebrow">Status</span> DRAFT by ACTION_DESIGN #1, 2026-09-30, from <code>docs/development/action-design/ACTION-PLAN.md</code> (rules A1–A17) and Bob's rulings of 2026-09-29 (1–10) and 2026-09-30 (D1–D6, <code>MATRIX.md</code> §6); for BOB's review and fold, and for Bob's approval of the module (a product module, P17). Layer 9 (Action), last, after <code>escalation</code>. A new module: no <code>from</code>, nothing moves. Code today: none; the nearest is <code>escalation</code>, whose record-object pattern it follows. Ids may renumber until Bob approves (conventions, rule 6).</p>
+<p class="lede"><span class="eyebrow">Status</span> DRAFT by ACTION_DESIGN #1, 2026-09-30, from <code>docs/development/action-design/ACTION-PLAN.md</code> (rules A1–A17) and Bob's rulings of 2026-09-29 (1–10) and 2026-09-30 (D1–D6, <code>MATRIX.md</code> §6); for BOB's review and fold. Adding the module is BOB's (Bob, 2026-09-30: a technical detail); the closing rule R20 was approved by Bob 2026-09-30. Layer 9 (Action), last, after <code>escalation</code>. A new module: no <code>from</code>, nothing moves. Code today: none; the nearest is <code>escalation</code>, whose record-object pattern it follows. Ids may renumber until Bob approves (conventions, rule 6).</p>
 <p><strong>Size (P6).</strong> New. Estimated 900–1,400 lines of code with its tables; one session reads it with the public parts of <code>conformance</code>, <code>consequences</code>, <code>actions</code>, <code>escalation</code>, <code>filings</code>, <code>inquiry</code>, <code>jurisdictions</code>, <code>membership</code>, <code>record-core</code> and <code>promotion</code>.</p>
 <h2>Public</h2>
 <h3>Purpose</h3>
@@ -80,7 +80,7 @@ table.wide{min-width:1180px}
 <p><strong>The checks (derived on read, R6)</strong>
 - <strong>R19</strong> <code>planRead</code> answers, each with its reason: an option whose regulated date is past, or falls before the phase that holds it can start in a scenario; a phase whose judgement has no branch for one outcome; an option bound only to subjects no longer live; an outward option (one that addresses anyone) bound only to hypothetical subjects; a lobbying option whose <code>enforces</code> target is superseded. A check informs; it never refuses or changes anything.</p>
 <p><strong>planClose({id, reason, author, viewer})</strong> (<code>op=planclose</code>)
-- <strong>R20</strong> A member closes a plan with a reason (R4's rule); a plan never closes itself. A closed plan stays readable; its subjects become free to join another plan (R3). <code>PLAN_CLOSED</code> if already closed. Closing does not change any action or escalation. <em>(for Bob with the module: the closing rule, <code>MATRIX.md</code> §5)</em></p>
+- <strong>R20</strong> A member closes a plan with a reason (R4's rule); a plan never closes itself. A closed plan stays readable; its subjects become free to join another plan (R3). <code>PLAN_CLOSED</code> if already closed. Closing does not change any action or escalation. <em>(Bob, 2026-09-30)</em></p>
 <p><strong>The project's kind of work (D4)</strong>
 - <strong>R21</strong> A project document may state <code>work_kinds</code>, a list from <code>reporting</code>, <code>fixing</code>, <code>legal</code>, <code>oversight</code>, <code>other</code>, set by an owner; this module registers a check with <code>promotion</code> refusing any other value <code>WORK_KIND_UNKNOWN</code> and a machine's change <code>MACHINE_CANNOT_SET_WORK_KIND</code>. It is read by the assistant's suggestions (R11's proposer may be given it) and shown in <code>planRead</code>; it gates, filters and orders nothing.</p>
 <p><strong>noSuchPlan(planId, extra?) → refusal</strong>
@@ -126,18 +126,16 @@ table.wide{min-width:1180px}
 <li>Tests: each refusal with a negative control; R3 across two projects; R15 with an escalation fixture; R17 at and past a checkpoint's day, and never twice; R23 by showing no queue FINDING or CONDITION is minted from a missed checkpoint; R26's refused keys.</li>
 </ul>
 <h2>Open for Bob</h2>
-<ul>
-<li>R20, the closing rule (recommended as written).</li>
-</ul>
+<p>None: R20 approved by Bob 2026-09-30; every other point follows his rulings of 2026-09-29 and 2026-09-30.</p>
 <h2>Decided (for BOB to confirm and record)</h2>
 <ul>
-<li>Placement last in layer 9, after <code>escalation</code>, since it reads every layer-9 module.</li>
+<li>Adding the module, last in layer 9 after <code>escalation</code> since it reads every layer-9 module (BOB's: Bob, 2026-09-30).</li>
 <li>Proposals follow <code>standards</code> R9's pattern with <code>proposalLabel</code> subject <code>plan_option</code>.</li>
 <li>Page cap 200; history cap none (a plan's history is short).</li>
 </ul>
 <h1>Changes to existing modules and build state</h1>
 <p><strong>Status</strong> · DRAFT by ACTION_DESIGN #1, 2026-09-30, from <code>MATRIX.md</code> §5 and Bob's decisions D1–D6 (agreed 2026-09-30); for BOB's review and fold. Wording is proposed; the requirement ids are the next free in each file as of <code>main</code> @ <code>5bb688333c</code>, for BOB to confirm. Items marked <strong>Bob</strong> change a layer contract, a module list or a vocabulary members see, and were approved in substance by Bob's rulings cited; items marked <strong>BOB</strong> are BOB's (P17).</p>
-<h2>1. <code>build/layers.md</code> and <code>modules.json</code> (Bob: rulings 1, 5, 10; D1)</h2>
+<h2>1. <code>build/layers.md</code> and <code>modules.json</code> (the contract wording follows Bob's rulings 1, 5, 10 and D1; adding the module is BOB's)</h2>
 <ul>
 <li><strong>Layer 9's contract</strong>, replacing "An action rests on a published finding and a standard held in the record; the group decides every act, the AI prepares and never files; compliance is recorded as carefully as noncompliance; every deadline names its basis." with: "An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis."</li>
 <li><strong>Layer 9's row</strong> gains <code>action-plans</code> after <code>escalation</code>. <code>modules.json</code> gains <code>action-plans</code> (layer 9; path <code>bio-plane/src/action-plans/</code>; tests <code>bio-plane/test/m/action-plans/</code>; uses as in <code>drafts/action-plans.md</code>, Uses). <code>queue</code> gains <code>action-plans</code> (R17's <code>checkpointsDue</code>).</li>

@@ -2,7 +2,7 @@
 
 **Status** · DRAFT by ACTION_DESIGN #1, 2026-09-30, from `MATRIX.md` §5 and Bob's decisions D1–D6 (agreed 2026-09-30); for BOB's review and fold. Wording is proposed; the requirement ids are the next free in each file as of `main` @ `5bb688333c`, for BOB to confirm. Items marked **Bob** change a layer contract, a module list or a vocabulary members see, and were approved in substance by Bob's rulings cited; items marked **BOB** are BOB's (P17).
 
-## 1. `build/layers.md` and `modules.json` (Bob: rulings 1, 5, 10; D1)
+## 1. `build/layers.md` and `modules.json` (the contract wording follows Bob's rulings 1, 5, 10 and D1; adding the module is BOB's)
 
 - **Layer 9's contract**, replacing "An action rests on a published finding and a standard held in the record; the group decides every act, the AI prepares and never files; compliance is recorded as carefully as noncompliance; every deadline names its basis." with: "An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis."
 - **Layer 9's row** gains `action-plans` after `escalation`. `modules.json` gains `action-plans` (layer 9; path `bio-plane/src/action-plans/`; tests `bio-plane/test/m/action-plans/`; uses as in `drafts/action-plans.md`, Uses). `queue` gains `action-plans` (R17's `checkpointsDue`).

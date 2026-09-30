@@ -1,6 +1,6 @@
 # action-plans — requirements
 
-**Status** · DRAFT by ACTION_DESIGN #1, 2026-09-30, from `docs/development/action-design/ACTION-PLAN.md` (rules A1–A17) and Bob's rulings of 2026-09-29 (1–10) and 2026-09-30 (D1–D6, `MATRIX.md` §6); for BOB's review and fold, and for Bob's approval of the module (a product module, P17). Layer 9 (Action), last, after `escalation`. A new module: no `from`, nothing moves. Code today: none; the nearest is `escalation`, whose record-object pattern it follows. Ids may renumber until Bob approves (conventions, rule 6).
+**Status** · DRAFT by ACTION_DESIGN #1, 2026-09-30, from `docs/development/action-design/ACTION-PLAN.md` (rules A1–A17) and Bob's rulings of 2026-09-29 (1–10) and 2026-09-30 (D1–D6, `MATRIX.md` §6); for BOB's review and fold. Adding the module is BOB's (Bob, 2026-09-30: a technical detail); the closing rule R20 was approved by Bob 2026-09-30. Layer 9 (Action), last, after `escalation`. A new module: no `from`, nothing moves. Code today: none; the nearest is `escalation`, whose record-object pattern it follows. Ids may renumber until Bob approves (conventions, rule 6).
 
 **Size (P6).** New. Estimated 900–1,400 lines of code with its tables; one session reads it with the public parts of `conformance`, `consequences`, `actions`, `escalation`, `filings`, `inquiry`, `jurisdictions`, `membership`, `record-core` and `promotion`.
 
@@ -50,7 +50,7 @@ Terms. A **subject** is `{kind: "inquiry", inquiry, act?, standards?}` (suspecte
 - **R19** `planRead` answers, each with its reason: an option whose regulated date is past, or falls before the phase that holds it can start in a scenario; a phase whose judgement has no branch for one outcome; an option bound only to subjects no longer live; an outward option (one that addresses anyone) bound only to hypothetical subjects; a lobbying option whose `enforces` target is superseded. A check informs; it never refuses or changes anything.
 
 **planClose({id, reason, author, viewer})** (`op=planclose`)
-- **R20** A member closes a plan with a reason (R4's rule); a plan never closes itself. A closed plan stays readable; its subjects become free to join another plan (R3). `PLAN_CLOSED` if already closed. Closing does not change any action or escalation. *(for Bob with the module: the closing rule, `MATRIX.md` §5)*
+- **R20** A member closes a plan with a reason (R4's rule); a plan never closes itself. A closed plan stays readable; its subjects become free to join another plan (R3). `PLAN_CLOSED` if already closed. Closing does not change any action or escalation. *(Bob, 2026-09-30)*
 
 **The project's kind of work (D4)**
 - **R21** A project document may state `work_kinds`, a list from `reporting`, `fixing`, `legal`, `oversight`, `other`, set by an owner; this module registers a check with `promotion` refusing any other value `WORK_KIND_UNKNOWN` and a machine's change `MACHINE_CANNOT_SET_WORK_KIND`. It is read by the assistant's suggestions (R11's proposer may be given it) and shown in `planRead`; it gates, filters and orders nothing.
@@ -101,10 +101,10 @@ Terms. A **subject** is `{kind: "inquiry", inquiry, act?, standards?}` (suspecte
 
 ## Open for Bob
 
-- R20, the closing rule (recommended as written).
+None: R20 approved by Bob 2026-09-30; every other point follows his rulings of 2026-09-29 and 2026-09-30.
 
 ## Decided (for BOB to confirm and record)
 
-- Placement last in layer 9, after `escalation`, since it reads every layer-9 module.
+- Adding the module, last in layer 9 after `escalation` since it reads every layer-9 module (BOB's: Bob, 2026-09-30).
 - Proposals follow `standards` R9's pattern with `proposalLabel` subject `plan_option`.
 - Page cap 200; history cap none (a plan's history is short).

@@ -55,7 +55,7 @@ And on 2026-09-30 Bob agreed `MATRIX.md` §6, D1–D6: an action may be addresse
 - **A15** Not a project-management system: no assignees, hours, costs or task lists (ruling 3). The canon's free-form resources note on a step stays a note. Not published, and never read by publication (DEC-25).
 
 **Closing**
-- **A17** A member closes a plan with a reason; a plan never closes itself. A closed plan stays readable, and its subjects may join another plan. *(recommended; for Bob with the module)*
+- **A17** A member closes a plan with a reason; a plan never closes itself. A closed plan stays readable, and its subjects may join another plan. *(Bob, 2026-09-30)*
 
 **Presenting it (UX)**
 - **A16** Options show collapsed as their summary, expanding to their detail. The list sorts by category, by regulated start or end date, by subject and by disposition.
@@ -68,6 +68,6 @@ The plan opens when the inquiry into the certification begins, with one suspecte
 
 ## Where it sits
 
-- **A new module, `action-plans`, last in layer 9** (after `escalation`), for Bob's approval as architecture. It uses `inquiry` (suspected subjects), `conformance` (determined subjects), `consequences` (what is at stake), `standards`, `actions` (a started option), `escalation` (each subject's track), `jurisdictions` (venues, deadlines, legal organisations), `membership` (who may act) and `ai-runs` (the assistant's suggestions). `monitoring` (layer 10) watches checkpoints; the queue carries one reminder per checkpoint.
+- **A new module, `action-plans`, last in layer 9** (after `escalation`). Adding it is a technical decision, BOB's (Bob, 2026-09-30). It uses `inquiry` (suspected subjects), `conformance` (determined subjects), `consequences` (what is at stake), `standards`, `actions` (a started option), `escalation` (each subject's track), `jurisdictions` (venues, deadlines, legal organisations), `membership` (who may act) and `ai-runs` (the assistant's suggestions). `monitoring` (layer 10) watches checkpoints; the queue carries one reminder per checkpoint.
 - **Changes elsewhere:** `actions` gains the plan and option an action came from. The layer contract widens with rulings 5 and 10: a plan may rest on an open inquiry or on any determination outcome, and an action it starts rests on what its subjects rest on; breach actions keep the stricter rule. "An action rests on a published finding" gives way to "an action rests on the record, and one asserting a breach rests on a published finding and a standard".
 - **Reconciled with Case Making:** its steps, dependencies, deadlines, outcome-keyed branches, dispositions, suggest-and-check machine and never-published rule are kept. Its support status is kept on each subject, and DEC-26's gate stays at the outward act. Changed by Bob's rulings: a plan is keyed to subjects (an inquiry, then its determinations) rather than to findings; options carry categories and the subjects they serve; scenarios are added; resources are not costed.
