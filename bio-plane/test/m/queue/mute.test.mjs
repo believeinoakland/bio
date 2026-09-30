@@ -117,7 +117,7 @@ test("R30: a mute writes only this member's rows and moves no other member's fee
   assert.equal(bob.mute.suppressed.length, 0); assert.deepEqual(bob.mute.cases, []);
   const n = () => w.all(`SELECT (SELECT count(*) FROM queue_state) + (SELECT count(*) FROM queue_item_mutes) AS c`)[0].c;
   const had = n();
-  assert.equal(w.q.taskResolve({ id: "TASK-2026-0002-b", actor: "alice" }).ok, true);
+  assert.equal(w.tasks.taskResolve({ id: "TASK-2026-0002-b", actor: "alice" }).ok, true);
   w.bundle("PRJ-2", "project"); w.join("PRJ-2", "alice");
   assert.equal(w.q.proposeDispose({ project: "PRJ-2", finding: "FINDING::x::y", to: "dismissed", reason: "no", decidedBy: "alice",
                                     viewer: "member:alice", identity: "member:alice" }).ok, true);

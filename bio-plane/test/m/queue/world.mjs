@@ -8,6 +8,7 @@ import { SCHEMA } from "../../../src/schema.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { queueOf } from "../../../src/queue/index.mjs";
+import { tasksOf } from "../../../src/tasks/index.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -54,9 +55,12 @@ export function world(fakes = {}, { bare = false } = {}) {
   if (!bare) boot();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
-  const q = queueOf(host, { record, membership, start: false, now: () => w.now, ...F });
+  /* `tasks` real (its R6 is what the feed reads), over the capture and provenance fakes; its table made at boot. */
+  const tasks = tasksOf(host, { record, membership, start: false, now: () => w.now, capture: F.capture, provenance: F.provenance });
+  if (!bare) tasks.migrate();
+  const q = queueOf(host, { record, membership, start: false, now: () => w.now, tasks, ...F });
   const w = {
-    db, sql, host, record, membership, q, fakes: F, statements, now: NOW, boot,
+    db, sql, host, record, membership, q, tasks, fakes: F, statements, now: NOW, boot: () => { boot(); tasks.migrate(); },
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     all: (s, ...a) => db.prepare(s).all(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {

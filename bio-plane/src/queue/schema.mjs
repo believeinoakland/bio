@@ -1,50 +1,14 @@
-/* queue's tables (requirements: `build/requirements/queue.md`, R36): the obligation inbox (`tasks`), the personal half
- * (`queue_state`, `queue_item_mutes`) and the project-scoped dispositions (`finding_dispositions`). Moved from
- * `schema.mjs` at the module's extraction (T12; K4, "each module owns its tables"); `schema.mjs` interpolates this text
- * where the first of them stood, so the store's schema pass creates them as before, and `queueOf(ctx).migrate()` runs
- * it on its own for a storage the store never reached. */
-export const QUEUE_TABLES = Object.freeze(["tasks", "queue_state", "queue_item_mutes", "finding_dispositions"]);
+/* queue's tables (requirements: `build/requirements/queue.md`, R36): the personal half (`queue_state`,
+ * `queue_item_mutes`) and the project-scoped dispositions (`finding_dispositions`). Moved from `schema.mjs` at the
+ * module's extraction (T12; K4, "each module owns its tables"); `schema.mjs` interpolates this text where the first of
+ * them stood, so the store's schema pass creates them as before, and `queueOf(ctx).migrate()` runs it on its own for a
+ * storage the store never reached. The inbox's `tasks` is `tasks`' (its R8; N363). */
+export const QUEUE_TABLES = Object.freeze(["queue_state", "queue_item_mutes", "finding_dispositions"]);
 
 /** A table in a purge list (a name, or `{name, …}`) that is one of queue's. */
 export const queueOwns = (t) => QUEUE_TABLES.includes(typeof t === "string" ? t : t && t.name);
 
-export const QUEUE_SCHEMA = `-- ---- D-98: the task inbox, and the queue that makes auto-creation safe ----
-
--- The inbox itself, the tasks array of data/inbox.json persisted. WORKING store
--- only: an inbox is the group talking to itself about what it has NOT
--- established, which is the opposite of ratified public material, so it never
--- crosses the publication fence.
---
--- history is a JSON array, append-only by the write path, shaped exactly like a
--- member_expertise row (at, event, actor). Who a task was taken FROM is as much
--- a fact as who holds it now, so a forward appends and never rewrites.
-CREATE TABLE IF NOT EXISTS tasks (
-  id            TEXT PRIMARY KEY,
-  kind          TEXT NOT NULL,
-  refers_to     TEXT NOT NULL,
-  capture_sha   TEXT,
-  subject_text  TEXT NOT NULL,
-  subject_desc  TEXT,
-  locators      TEXT,
-  assignee      TEXT NOT NULL,
-  assignee_role TEXT NOT NULL,
-  status        TEXT NOT NULL DEFAULT 'open',
-  created       TEXT NOT NULL,
-  resolved_at   TEXT,
-  history       TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS tasks_assignee ON tasks(assignee, status);
-CREATE INDEX IF NOT EXISTS tasks_refers ON tasks(refers_to);
--- The RULED dedup, enforced by the store rather than remembered by the writer:
--- one LIVE task per (refers_to, kind). Live means open OR forwarded, and the
--- distinction matters: a forwarded task is still somebody's work, so excluding
--- it here would let a re-capture spawn a second task for a subject already in
--- flight, which is the flood the dedup exists to prevent. Only 'resolved' is
--- exempt, because a subject that comes back undetermined after being resolved
--- is genuinely new and not a duplicate of a closed one.
-CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique ON tasks(refers_to, kind) WHERE status IN ('open', 'forwarded');
-
--- REC-21: the PERSONAL half of the queue, and it is a SEPARATE TABLE on
+export const QUEUE_SCHEMA = `-- REC-21: the PERSONAL half of the queue, and it is a SEPARATE TABLE on
 -- purpose. The record half of an item's state lives on the EVENT (DEC-16: a
 -- task's status, a proposal's disposition), so one member's resolution clears
 -- every member's queue. This table holds what must NOT work that way: what one

@@ -1,8 +1,9 @@
-/* queue — the member's one feed and the obligation inbox it reads (requirements: `build/requirements/queue.md`, R1–R42).
+/* queue — the member's one feed (requirements: `build/requirements/queue.md`).
  * Extracted from the legacy store, catalogue and control plane at T12 (K3, K49, K78 (2), P18; map
  * `build/extraction/queue.md`): the `op=queue` composition and its mint; the personal half (mute and snooze); the
- * dispose dispatch with its project arm and its class bridge; the tasks inbox and its drain. The feed's producers moved
- * to `queue-producers` (N363, K531): every item that is not a task comes from its one read, `feedItems` (its R8).
+ * dispose dispatch with its project arm and its class bridge. Split by N363 (K507, K531): the obligation inbox is
+ * `tasks`' (this module reads it through its R6) and the feed's producers are `queue-producers`' (every item that is
+ * not a task comes from its one read, `feedItems`, its R8).
  *
  *   queueFeed      op=queue: every item typed by class, homed under every case, with its options and its disposition
  *                  (R6–R18, R39, R40, R46); `queueAnswer` is the control plane's decoration of that answer (R17).
@@ -10,67 +11,49 @@
  *                  (R19–R22, R26, R30, R31).
  *   proposeDispose op=proposedispose: the set, the class bridge, the project arm; the progression arm is
  *                  `progressions.disposeProposal` (R27–R29).
- *   taskDrain, taskList, taskForward, taskResolve   the obligation inbox (R23–R25); the task grammar C-19.1 at the
- *                  write, in the audit and at the drain (R41); the four figures and the TASK ledger's seed (R42).
+ *   counts         its three figures, registered with record-core's counts (R42).
  *
  * REACHED as `queueOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call. At that
- * call it declares its tables to record-core's purge (R36), registers its four figures with record-core's counts and
- * seeds its TASK ledger row (R42), registers the task grammar with promotion and with record-core's audit (R41), and
- * registers its two scheduler consumers (`task-drain`, `queue-renotify`; R22, R23) and capture's task notice (capture
- * R44), unless `deps` says a test is driving it bare.
+ * call it declares its three tables to record-core's purge (R36) and registers its three figures with record-core's
+ * counts (R42), and registers its `queue-renotify` consumer with the scheduler (R22) unless `deps` says a test is
+ * driving it bare.
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
- *   record, membership, promotion, provenance, capture, connections, progressions, bias, affordances, scheduler,
+ *   record, membership, connections, progressions, bias, affordances, scheduler, tasks,
  *   producers   the providers (`producers` is `queue-producers`, handed whichever of its own providers were given
- *              here: governor, captureRequests, basisVersions, aiRuns, publication, reevaluation, intent, monitoring,
- *              contradiction and the shared ones);
- *   env       the instance bindings: `BIO_NOW_MS` (the clock) and `TASK_DRAIN_DELAY_MS` (R23);
+ *              here: governor, provenance, capture, captureRequests, basisVersions, aiRuns, publication, reevaluation,
+ *              intent, monitoring, contradiction and the shared ones);
+ *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
- *   start     false to skip the registrations (a test that drives the consumers itself).
+ *   start     false to skip the scheduler registration (a test that drives the consumer itself).
  * The ops are `queueOps`' entries, which the legacy store's dispatcher spreads in.
  *
  * N301 (K356): the class FINDING keeps its code and its meaning and is shown to members as **Noticed**: the answer
  * publishes `class_labels`, and no member-facing sentence this module owns calls a queue item a finding.
  */
 
-import { normalizeType, STATES, vocabFor, isMachineIdentity, isMachineStamp,
-         isPublicHttpsLocator } from "../../checks/bio-checks.mjs";
-import { recordOf, stampInstant, perItem, mintExhausted } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK, noSuchProject } from "../membership/index.mjs";
-import { promotionOf } from "../promotion/index.mjs";
-import { provenanceOf } from "../provenance/index.mjs";
-import { captureOf } from "../capture/index.mjs";
+import { normalizeType, STATES, vocabFor, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { recordOf, stampInstant, perItem } from "../record-core/index.mjs";
+import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { progressionsOf, notADisposition } from "../progressions/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
+import { tasksOf } from "../tasks/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
 import { affordancesOf, deriveActs, decorate, vocabulariesFor, PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, catalogueIdOf, classOfKind, MUTE_REFUSAL_DETAIL,
          PERSONALLY_MUTABLE_CLASSES, itemClassOf, mutedAsItem, serializeMutedKinds, parseMutedKinds,
          suppressedBy } from "../queuestate.mjs";
 import { QUEUE_SCHEMA, QUEUE_TABLES, queueOwns } from "./schema.mjs";
-import { QUEUE_MINT_CHECKS, QUEUE_MACHINE_CHECKS, QUEUE_ACT_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, queueRefusal,
-         checkInboxGrammar } from "./checks.mjs";
+import { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS, queueRefusal } from "./checks.mjs";
 
 export { QUEUE_SCHEMA, QUEUE_TABLES, queueOwns } from "./schema.mjs";
-export { QUEUE_MINT_CHECKS, QUEUE_MACHINE_CHECKS, QUEUE_ACT_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS,
-         checkInboxGrammar } from "./checks.mjs";
+export { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS } from "./checks.mjs";
 
 /* N301 (K356): how each class is shown to members. The codes are unchanged; the words are these. */
 export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "Obligation", FINDING: "Noticed", CONDITION: "Condition" });
 
-const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-
-/* The id suffix the TASK grammar requires: lowercase alphanumeric groups joined
-   by single dashes, never empty, never leading or trailing dashes. Derived from
-   the subject so an id is legible, but it is an IDENTIFIER and not a rendering:
-   the subject itself is carried in the bounded field the grammar checks. */
-const taskSlug = (subject) => {
-  const s = String(subject || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/g, "");
-  return s || "authority";
-};
-const isHttpsPublic = (u) => isPublicHttpsLocator(u);
-/* R6, R23, R24: a limit is clamped to 1–max; absent, blank or not a number, it is the default. */
+/* R6: a limit is clamped to 1–max; absent, blank or not a number, it is the default. */
 const clampLimit = (limit, dflt, max) => {
   const n = limit === null || limit === undefined || limit === "" ? NaN : Math.floor(Number(limit));
   return Number.isFinite(n) ? Math.max(1, Math.min(max, n)) : dflt;
@@ -99,8 +82,7 @@ export class Queue {
   }
   get #record() { return this.#dep("record", () => recordOf(this.#host)); }
   get #membership() { return this.#dep("membership", () => membershipOf(this.#host)); }
-  get #provenance() { return this.#dep("provenance", () => provenanceOf(this.#host)); }
-  get #capture() { return this.#dep("capture", () => captureOf(this.#host)); }
+  get #tasks() { return this.#dep("tasks", () => tasksOf(this.#host)); }
   get #connections() { return this.#dep("connections", () => connectionsOf(this.#host)); }
   get #progressions() { return this.#dep("progressions", () => progressionsOf(this.#host)); }
   get #bias() { return this.#dep("bias", () => biasOf(this.#host)); }
@@ -130,53 +112,16 @@ export class Queue {
     return Date.now();
   }
 
-  /* ------------------------------------------------------------------ the viewer gate (membership R43, R80)
-     membership offers the ONE predicate (`viewerPredicate`) and the one-id answer (`inSight`), not a SQL compiler
-     (its R80: "callers gate with R43 and R80"), so this module compiles its own gate from the predicate, as the
-     legacy store did (map §5.3). A machine credential (`scope: member`) is not filtered; an absent or unrecognised
-     viewer compiles to DENY. */
-  #bundleGate(col, viewer) {
-    if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
-      throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}). `
-        + "An unqualified name binds to `bundles` inside the gate's own subquery and passes everything.");
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
-    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
-    return {
-      sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
-              WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
-      args: gate.args,
-    };
-  }
-
   /* ------------------------------------------------------------------ the providers' services, by the names the moved
-     code already used (connections R22; basis-versions R22, R37; membership R44, R55, R64, R76, R77) */
+     code already used (connections R22; membership R44, R55, R76, R77) */
   #refEdgeSevered(...a) { return this.#connections.edgeSevered(...a); }
   #positionalMember(...a) { return this.#membership.positionalMember(...a); }
-  #isAdminMember(...a) { return this.#membership.isAdministrator(...a); }
-  #activeAdmins(...a) { return this.#membership.activeAdmins(...a); }
   #existenceAct(...a) { return this.#membership.existenceAct(...a); }
   #projectAuthority(...a) { return this.#membership.projectAuthority(...a); }
 
   /* R27's reason bound: progressions R21's words ("over 160 characters, or a quotation mark, backslash or line
      break"), which the project arm asks as the progression arm does. */
   static EDGE_REASON_MAX = 160;
-
-  /* D-109. The task queue drains on the SAME Durable Object alarm the selection
-     sweep uses: armed on enqueue, re-armed by the alarm while the queue is
-     non-empty, self-terminating when it drains — the mechanism #armSweep proved
-     for selections. DELAY is short so a burst of captures coalesces into one
-     drain rather than one alarm apiece. BACKSTOP is longer and used when a tick
-     drained nothing: every remaining event is then a capture not yet filed in a
-     bundle (taskDrain keeps those, it does not drop them), and retrying that at
-     the short cadence would be a hot loop against work that only a later promote
-     can unblock. BATCH bounds one tick; a deeper backlog re-arms and continues.
-     DELAY is overridable per instance through TASK_DRAIN_DELAY_MS: production
-     takes the short default, and a test that drives the consumer by hand pushes
-     the automatic one out of its own window so the two never race on the clock. */
-  static TASK_DRAIN_DELAY_MS = 1000;
-  static TASK_DRAIN_BACKSTOP_MS = 60000;
-  static TASK_DRAIN_ALARM_BATCH = 200;
 
 
   /* ========================= REC-20 · op=queue =======================   *
@@ -805,10 +750,8 @@ export class Queue {
        who by construction can see it. Withheld silently and with no count, for
        the reason `mute` states its own suppressions and this cannot: a count
        here would say a project exists. */
-    const taskSeen = this.#bundleGate("tk.refers_to", viewer);
-    for (const row of this.#rows(
-      `SELECT tk.* FROM tasks tk WHERE (${taskSeen.sql}) ORDER BY tk.created DESC, tk.id LIMIT ?`,
-      ...taskSeen.args, cap * 2)) {
+    /* tasks R6: the visible tasks of any status, newest first, each as `taskList` gives it (N363). */
+    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2 })) {
       if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
       const subject = row.refers_to;
       /* The homes are derived FIRST and the event's state is asked ONCE, for
@@ -828,8 +771,8 @@ export class Queue {
         kind: row.kind,
         case: homes,
         subject: { kind: "bundle", id: subject },
-        summary: row.subject_text,
-        detail: row.subject_desc ?? null,
+        summary: row.subject ? row.subject.text : null,
+        detail: row.subject && row.subject.description !== undefined ? row.subject.description : null,
         basis: { source: "tasks", refers_to: subject, routed_role: row.assignee_role,
                  status: row.status,
                  detail: "an obligation is a routed task: a named person must act for the record "
@@ -1380,12 +1323,9 @@ export class Queue {
   #resolvedLately(viewer, now) {
     const cap = Queue.QUEUE_RESOLVED_MAX;
     const since = stampInstant("second", now - Queue.QUEUE_RESOLVED_WINDOW_DAYS * 86400000);
-    const seen = this.#bundleGate("tk.refers_to", viewer);
-    const rows = this.#rows(
-      `SELECT tk.* FROM tasks tk WHERE tk.status='resolved' AND tk.resolved_at >= ? AND (${seen.sql})
-        ORDER BY tk.resolved_at DESC, tk.id LIMIT ?`, since, ...seen.args, cap + 1);
-    const tasks = rows.slice(0, cap).map((r) => {
-      const t = this.#taskOf(r);
+    /* tasks R6: the tasks resolved since then on visible subjects, one past the bound so the cut is observed. */
+    const rows = this.#tasks.resolvedTasks({ viewer, since, limit: cap + 1 });
+    const tasks = rows.slice(0, cap).map((t) => {
       const by = [...t.history].reverse().find((h) => h && h.event === "resolved");
       return { id: t.id, class: "OBLIGATION", kind: t.kind, refers_to: t.refers_to, summary: t.subject.text,
                resolved_by: by ? by.actor : null, resolved_at: t.resolved_at ?? (by ? by.at : null) };
@@ -1504,7 +1444,7 @@ export class Queue {
       /* R26: an OBLIGATION published under its own class segment (`OBLIGATION::bias-debt::<run>`, R8) is named
          OBLIGATION too, so it is refused as one rather than as unknown. */
       if (cls === null && /^OBLIGATION::\S/.test(itemId)) cls = "OBLIGATION";
-      if (cls === null && this.#one(`SELECT id FROM tasks WHERE id=?`, itemId)) cls = "OBLIGATION";
+      if (cls === null && this.#tasks.taskExists(itemId)) cls = "OBLIGATION";      // tasks R6
       subjects.push({ item: itemId, cls });
     } else {
       c = this.#queueCaseFor(caseId, viewer);
@@ -1890,132 +1830,12 @@ export class Queue {
     }
   }
 
-  /** The RULED routing order, resolved at write time by the consumer.
-   *
-   *  1. the referred bundle's project manager, 2. a group admin, 3. nobody.
-   *  A project's MANAGER is its owner in `project_participants`; the referred
-   *  bundle is usually Information rather than a project, so a project that
-   *  CITES it counts, which is what "the referred bundle's project" means in a
-   *  record where evidence is shared and projects point at it.
-   *
-   *  Returns a `basis` for the drain report but never stores it on the task:
-   *  the grammar is closed and a field invented here would be a second grammar. */
-  #routeTask(bundleId) {
-    const info = this.#record.bundleInfo(bundleId);
-    const b = info ? { object_type: info.type } : null;
-    /* membership R65 (the owners, in the order they became owners) and R68 (each one's status): the first active. */
-    const ownerOf = (projectId) => {
-      const id = this.#membership.projectOwners(projectId)
-        .find((m) => (this.#membership.memberFacts(m) || {}).status === "active");
-      return id ? { member_id: id } : null;
-    };
-    if (b && b.object_type === "project") {
-      const o = ownerOf(bundleId);
-      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: "owner of the referred project" };
-    }
-    /* D-280, site (b), and it is D-267's own harm one op over: `refs` carries
-       the RELATION and DROPS the STATUS, so the project this arm hands the
-       obligation to may be one that WITHDREW from the bundle it is being made
-       responsible for. Same ONE predicate as the bar read and the homes walk.
-       THE ARM'S OWN SHAPE IS PRESERVED DELIBERATELY: it took the FIRST citing
-       project by id and, if that project had no active owner, fell straight
-       through to the admin fallback rather than trying the second. That is
-       still what happens — the only change is that a WITHDRAWN citer is not
-       the one considered. Falling through costs a task a step down a chain
-       that already existed and ends at `unassigned`, which is visible and
-       routable by hand; addressing it to someone who left is not. */
-    const citeEdges = new Map();
-    for (const r of this.#rows(
-      `SELECT r.bundle_id AS project_id, r.kind FROM refs r
-         JOIN bundles pb ON pb.bundle_id = r.bundle_id AND pb.object_type = 'project'
-        WHERE r.target_id = ? ORDER BY r.bundle_id`, bundleId)) {
-      if (!citeEdges.has(r.project_id)) citeEdges.set(r.project_id, []);
-      citeEdges.get(r.project_id).push(r.kind);
-    }
-    const cite = [...citeEdges].find(([pid, kinds]) =>
-      !kinds.every((k) => this.#refEdgeSevered(pid, bundleId, k || null)));
-    if (cite) {
-      const o = ownerOf(cite[0]);
-      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this bundle` };
-    }
-    /* membership's active administrators, in the order the roster holds them, the founder (who is no member row, and
-       holds no task) aside: the earliest. */
-    const first = this.#activeAdmins().find((m) => m !== "admin");
-    const adm = first ? { member_id: first } : null;
-    if (adm) return { assignee: adm.member_id, assignee_role: "group-admin", basis: "no project manager; the RULED fallback to a group admin" };
-    /* Named honestly rather than assigned to someone who does not exist. An
-       unassigned task is still visible and still routable by hand; a task
-       addressed to a phantom is not. */
-    return { assignee: "unassigned", assignee_role: "group-admin", basis: "no project manager and no active administrator" };
-  }
+  /* ------------------------------------------------------------------ the store's counts (R42) */
 
-  #taskOf(row) {
-    let locators = null, history = [];
-    try { locators = row.locators ? JSON.parse(row.locators) : null; } catch { locators = null; }
-    try { history = JSON.parse(row.history); } catch { history = []; }
-    return {
-      id: row.id, kind: row.kind, refers_to: row.refers_to,
-      subject: { text: row.subject_text, ...(row.subject_desc ? { description: row.subject_desc } : {}) },
-      ...(locators && locators.length ? { locators } : {}),
-      assignee: row.assignee, assignee_role: row.assignee_role,
-      status: row.status, created: row.created,
-      ...(row.resolved_at ? { resolved_at: row.resolved_at } : {}),
-      history,
-    };
-  }
-
-  /** The C-19.1 grammar, run against a candidate task before it is stored.
-   *  R41: the ONE function `checks.mjs` holds, the same one the promotion check and the audit check below run, never a
-   *  copy: a second grammar pretending to be the same one is the failure this reuse exists to avoid. */
-  #refuseUngrammatical(task) {
-    const findings = [];
-    checkInboxGrammar(
-      { files: new Map([["data/inbox.json", JSON.stringify({ tasks: [task] })]]),
-        resolveTarget: (id) => this.#record.bundleInfo(id) !== null },
-      findings);
-    const errs = findings.filter((x) => x.severity === "error");
-    return errs.length ? { ok: false, reason: "UNGRAMMATICAL", findings: errs.map((e) => ({ check: e.check, detail: e.message })) } : null;
-  }
-
-  /** R41 (N325): C-19.1 at the WRITE, registered with promotion (its R39), as monitoring registers C-18.5 (its R27).
-   *  A task list is validated where it lands, not only by the audit: a malformed `data/inbox.json` never lands, so
-   *  nobody has to read it to find out it was junk. A replay is historical and not authorship, so it is exempt from
-   *  THIS check and nothing else, and the manifest marks it; a promotion carrying no `data/inbox.json` is not asked. */
-  inboxCheck(c) {
-    const files = Array.isArray(c && c.files) ? c.files : [];
-    const replay = !!(c && (c.replay || (c.pkg && c.pkg.replay)));
-    const inbox = replay ? null : files.find((f) => f && f.path === "data/inbox.json");
-    if (!inbox || typeof inbox.text !== "string") return null;
-    const found = [];
-    checkInboxGrammar({ files: new Map([["data/inbox.json", inbox.text]]) }, found);
-    const errs = found.filter((x) => x.severity === "error");
-    if (!errs.length) return null;
-    /* DEC-49 REGION is-inbox-refused — R41/C-19.2. */
-    return { ok: false, reason: "INBOX_REFUSED", code: "INBOX_REFUSED",
-             check: QUEUE_INBOX_CHECKS.INBOX_REFUSED.check, translation: QUEUE_INBOX_CHECKS.INBOX_REFUSED.translation,
-             findings: errs.map((x) => ({ check: x.check, detail: x.message })),
-             detail: `data/inbox.json does not meet the task grammar (C-19.1): ${errs.length} `
-                   + `error${errs.length === 1 ? "" : "s"}, each named in findings. Nothing was written.` };
-    /* END DEC-49 REGION is-inbox-refused */
-  }
-
-  /** R41 (N325): C-19.1 in the audit over one bundle image (record-core R59), as `checkBundle` ran it: each error is a
-   *  C-19.1 finding, a reference resolved against the whole store by the audit's own `resolveTarget`. */
-  audit(image) {
-    const files = image && image.files instanceof Map ? image.files : null;
-    if (!files) return [];
-    const findings = [];
-    checkInboxGrammar({ files, resolveTarget: typeof image.resolveTarget === "function" ? image.resolveTarget : undefined },
-      findings);
-    return findings;
-  }
-
-  /* ------------------------------------------------------------------ the store's counts and the id ledger (R42) */
-
-  /** R42 (N342; record-core R63): this module's four figures, each a row count with the rows naming a bundle in `hid`
-   *  (the caller's `{sql, args}`, or null) left out: `tasks` by `refers_to`, `findingDispositions` by `project_id`,
-   *  `queueState` by `case_id`; `queueItemMutes` names no bundle and is counted whole. A figure that cannot be read is
-   *  null, never zero. Synchronous; writes nothing; never throws. */
+  /** R42 (N342; record-core R63): this module's three figures, each a row count with the rows naming a bundle in `hid`
+   *  (the caller's `{sql, args}`, or null) left out: `findingDispositions` by `project_id`, `queueState` by `case_id`;
+   *  `queueItemMutes` names no bundle and is counted whole. A figure that cannot be read is null, never zero.
+   *  Synchronous; writes nothing; never throws. The `tasks` figure is `tasks`' (its R5; N363). */
   counts(hid = null) {
     const h = hid && typeof hid === "object" && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
     const c = (t, ...keys) => {
@@ -2027,364 +1847,10 @@ export class Queue {
         return Number.isFinite(n) ? n : null;
       } catch { return null; }
     };
-    return { tasks: c("tasks", "refers_to"), findingDispositions: c("finding_dispositions", "project_id"),
+    return { findingDispositions: c("finding_dispositions", "project_id"),
              queueState: c("queue_state", "case_id"), queueItemMutes: c("queue_item_mutes") };
   }
-  static COUNT_KEYS = Object.freeze(["tasks", "findingDispositions", "queueState", "queueItemMutes"]);
-
-  /** R42 (N342; record-core R40, review's `seedLedger` shape): the opaque minter's ledger learns every TASK id standing
-   *  in a live row, at start and again before this module's first mint, so an id a store minted before the ledger
-   *  existed is never drawn twice, even after a purge deletes the row it stood in. On a store whose ledger table (or
-   *  whose `tasks`) is not yet created it learns nothing and never throws: a throw at construction would take the
-   *  instance down, and the next call learns. */
-  seedLedger() {
-    if (this.#seeded) return;
-    try {
-      this.#record.seedMintLedger([["TASK", "tasks", "id"]]);
-      this.#seeded = true;
-    } catch { /* not yet: the next call learns */ }
-  }
-  #seeded = false;
-
-  /** CONSUMER, and the SOLE writer of tasks.
-   *
-   *  Drains queued events, resolves each capture to the bundle that filed it,
-   *  applies the routing order and the grammar, and folds a repeat into the
-   *  live task rather than spawning a duplicate. An event whose capture has not
-   *  been promoted into any bundle yet simply WAITS: at capture time no bundle
-   *  exists, and inventing a refers_to would be worse than being patient. */
-  taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
-    const cap = clampLimit(limit, 50, 500);
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs(null));
-    /* capture R45: the queued events oldest first, each `{kind, captureSha, subject, locator, enqueued, attempts}`;
-       provenance R4: the bundle a capture is filed in. */
-    const queued = this.#capture.taskEvents({ limit: cap })
-      .map((e) => ({ ...e, capture_sha: e.captureSha, attempts: Number(e.attempts) || 0 }));
-    const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
-    const drop = (q) => this.#capture.taskEventRemove({ kind: q.kind, captureSha: q.capture_sha });
-    for (const q of queued) {
-      const home = this.#provenance.homeOf(q.capture_sha);
-      const reg = home ? { bundle_id: home.bundleId } : null;
-      if (!reg) {
-        this.#capture.taskEventAttempt({ kind: q.kind, captureSha: q.capture_sha, at });
-        out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts + 1,
-          detail: "the capture is not yet filed in any bundle; the event is kept, not dropped" });
-        continue;
-      }
-      const live = this.#one(
-        `SELECT * FROM tasks WHERE refers_to=? AND kind=? AND status IN ('open','forwarded')`, reg.bundle_id, q.kind);
-      if (live) {
-        /* The RULED fold. The task already in front of a member is the one that
-           matters; a re-capture adds a dated note to it and nothing else. */
-        const hist = this.#taskOf(live).history;
-        hist.push({ at, event: "folded", actor });
-        this.sql.exec(`UPDATE tasks SET history=? WHERE id=?`, JSON.stringify(hist), live.id);
-        drop(q);
-        out.folded.push({ id: live.id, refers_to: reg.bundle_id });
-        out.drained++;
-        continue;
-      }
-      const route = this.#routeTask(reg.bundle_id);
-      const year = at.slice(0, 4);
-      const slug = taskSlug(q.subject);
-      /* REC-151: OPAQUE, never the TASK counter (Membership v2 §7) — a task naming a bundle the viewer cannot see
-         is withheld (REC-30), so a counted id told a member how many tasks existed that they could not read. On
-         exhaustion the event is KEPT, as an unfiled capture's is, never dropped, and its `waiting` entry carries the
-         one answer to that condition, record-core's `mintExhausted("TASK")` (its R62; R23, N322): its code, row and
-         sentence, minted there and nowhere here. */
-      this.seedLedger();     // R42: the ledger has learned every live TASK id before the first mint draws one
-      const taskId = this.#record.mintOpaqueId("TASK", year, `-${slug}`,
-        (id) => !!this.#one(`SELECT 1 FROM tasks WHERE id=?`, id));
-      if (!taskId) {
-        const exhausted = mintExhausted("TASK");
-        out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts,
-          code: exhausted.code, check: exhausted.check, detail: exhausted.detail });
-        continue;
-      }
-      const task = {
-        id: taskId,
-        kind: q.kind,
-        refers_to: reg.bundle_id,
-        subject: { text: q.subject },
-        ...(q.locator && isHttpsPublic(q.locator) ? { locators: [q.locator] } : {}),
-        assignee: route.assignee,
-        assignee_role: route.assignee_role,
-        status: "open",
-        created: at,
-        history: [{ at, event: "created", actor }],
-      };
-      const bad = this.#refuseUngrammatical(task);
-      if (bad) {
-        /* Refused rather than stored malformed, and the event is DROPPED rather
-           than retried forever: a grammar failure is deterministic, so retrying
-           it is a loop. The refusal is reported so it is visible. */
-        drop(q);
-        out.refused.push({ captureSha: q.capture_sha, refers_to: reg.bundle_id, findings: bad.findings });
-        out.drained++;
-        continue;
-      }
-      this.sql.exec(
-        `INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, subject_desc, locators,
-                            assignee, assignee_role, status, created, resolved_at, history)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        task.id, task.kind, task.refers_to, q.capture_sha, task.subject.text, null,
-        task.locators ? JSON.stringify(task.locators) : null,
-        task.assignee, task.assignee_role, task.status, task.created, null,
-        JSON.stringify(task.history));
-      drop(q);
-      out.created.push({ id: task.id, refers_to: task.refers_to, assignee: task.assignee,
-        assignee_role: task.assignee_role, basis: route.basis });
-      out.drained++;
-    }
-    out.remaining = this.#capture.taskEventCount();
-    /* REC-57: `remaining` was already here and is UNTOUCHED — it answers "is
-       this all of it" (a non-zero remainder says the queue is not drained), so
-       no `truncated` is minted beside it. The missing half is the bound: a
-       caller that sees work left needs to know what cap produced this pass to
-       decide between running it again and asking for a bigger one. */
-    out.limit = cap;
-    return { ok: true, ...out };
-  }
-
-  /** Read the inbox. Filterable by assignee and status, because the first thing
-   *  a member wants is their own open work.
-   *
-   *  REC-30: a task's `refers_to` IS a bundle id (taskDrain writes the registering
-   *  bundle's), and the row's whole subject is that bundle — its `subject_text`
-   *  describes the document, and `refersTo` lets a caller ASK about one. So the
-   *  D-15 predicate withholds the row, not a field, and it governs the `tasks`
-   *  filter too: an uninvited member asking `refers=<a hidden project>` gets the
-   *  same empty answer as for a bundle that does not exist.
-   *
-   *  The three task COUNTS are gated with the rows for REC-25's reason: a count
-   *  bigger than the list says something is hidden, which is half the leak.
-   *  `queued` is not — `task_queue` rows carry a capture sha and no bundle, so
-   *  the number names nothing. */
-  taskList({ assignee = null, status = null, refersTo = null, limit = 200, viewer = null } = {}) {
-    const cap = clampLimit(limit, 200, 1000);
-    /* `tk.` and not a bare column: see #bundleGate's refusal. */
-    const seen = this.#bundleGate("tk.refers_to", viewer);
-    const where = [`(${seen.sql})`], args = [...seen.args];
-    if (assignee) { where.push("tk.assignee = ?"); args.push(assignee); }
-    if (status) { where.push("tk.status = ?"); args.push(status); }
-    if (refersTo) { where.push("tk.refers_to = ?"); args.push(refersTo); }
-    /* REC-57: cap + 1 asked for, cap delivered. `counts` cannot answer this and
-       never could — the three figures are per STATUS over the whole visible set
-       and take no notice of `assignee` or `refers`, so a caller filtering by
-       either was comparing its rows against a population they are not drawn
-       from. UI-39 inferred the bound from that arithmetic and worded it as an
-       inference because it was one; asking for one row past the cap is what
-       makes it a fact. */
-    const page = this.#rows(
-      `SELECT tk.* FROM tasks tk WHERE ${where.join(" AND ")} ORDER BY tk.created DESC, tk.id LIMIT ?`,
-      ...args, cap + 1);
-    const rows = page.slice(0, cap);
-    const n = (st) => this.#one(
-      `SELECT count(*) c FROM tasks tk WHERE tk.status=? AND (${seen.sql})`, st, ...seen.args).c;
-    return {
-      ok: true,
-      tasks: rows.map((r) => this.#taskOf(r)),
-      /* REC-57: THE BOUND, AND WHETHER IT BIT — `op=queue`'s spelling exactly.
-         These two ops sit on the same surface and answer the same question, and
-         until now `queue` published `truncated` and `tasks` did not, so a
-         consumer that read one correctly read the other wrongly. One shape, one
-         name; `limit` is the cap after clamping, matching `op=search`. */
-      limit: cap,
-      truncated: page.length > cap,
-      counts: {
-        open: n("open"),
-        forwarded: n("forwarded"),
-        resolved: n("resolved"),
-        queued: this.#capture.taskEventCount(),
-      },
-    };
-  }
-
-  /** REC-4: the TASK-ACTOR FENCE, shared by taskForward and taskResolve.
-   *
-   *  The construct's accountability rule (BIO_Interaction_Constructs_v0_1.md,
-   *  T · TASK): a task is an obligation with an ASSIGNEE, and its refusal shape
-   *  is "this is not yours to resolve, and here is who it is with." Stamping the
-   *  actor honestly into history made the act TRACEABLE but did not PREVENT it,
-   *  so any member-class credential could resolve or forward ANY task by id. This
-   *  is the prevention. The UI (UI-1) hides the verb on another member's task,
-   *  but that gating is cosmetic until the plane enforces it — a caller that
-   *  reaches the op directly must be refused here.
-   *
-   *  Who may act, and why:
-   *   - the ASSIGNEE — it is theirs; a task is "mine" (the construct's word).
-   *   - an ADMIN MEMBER — `#isAdminMember` (the ROOT admin session, actor
-   *     "admin"; or any in-app member with role='admin'), the same "group admin"
-   *     the routing (#routeTask) falls back to. The admin override stays.
-   *   - any MEMBER, when the task is honestly `unassigned` — D-98's routing
-   *     intends an unassigned task to stay CLAIMABLE and "routable by hand". An
-   *     unassigned task exists PRECISELY because routing found no project manager
-   *     and no active admin (#routeTask's last arm), so requiring assignee-or-
-   *     admin would strand it forever — the exact over-fencing REC-4 warns
-   *     against. DEC-7 raises whether "claimable" should be narrowed to the
-   *     routed role (member_expertise → PM → group admin) rather than any actor,
-   *     and KEEPS it open: the routing that produced `unassigned` had already
-   *     exhausted PM and active admin, and member_expertise is doctrine'd as a
-   *     HINT for a human forward rather than an automatic gate.
-   *
-   *  WHAT THIS FENCE DOES NOT ANSWER, corrected 2026-08-04 (REC-28, D-151), and
-   *  the correction is the point of the item. This comment used to say that a
-   *  machine credential (`actor` = "token:member" / "token:probe" /
-   *  "token:admin") "is neither a member nor ROOT_ADMIN, so it is fenced off an
-   *  ASSIGNED task and can only act on an unassigned one", and cited D-98's "a
-   *  daemon cannot close somebody's work". Every clause of that was true and it
-   *  described a guarantee the code did not make: the FIRST line below allows on
-   *  `unassigned` BEFORE it has looked at the caller at all, so a machine could
-   *  RESOLVE an unassigned task and close an obligation with no member act. A
-   *  daemon cannot close somebody's work; it could close NOBODY'S work, and
-   *  closing is the act.
-   *
-   *  The hole is closed at the ACT and not here (taskForward/taskResolve refuse
-   *  `token:` actors BY SHAPE with MACHINE_CANNOT_FORWARD/MACHINE_CANNOT_RESOLVE,
-   *  the MACHINE_CANNOT_RELEASE precedent), so the refusal does not depend on
-   *  assignment state at all. BOTH fences stay, because they answer different
-   *  questions and the second is not derivable from the first: THIS one answers
-   *  *is this THIS member's task*, and the act refusal answers *is this a person
-   *  at all*. So the "anyone" above now honestly reads "any member" — not
-   *  because this function checks it, but because no machine reaches this
-   *  function on these two verbs any more.
-   *
-   *  Returns a NOT_YOURS refusal NAMING who it is with, or null to proceed. */
-  #refuseNotYours(row, actor, verb) {
-    if (row.assignee === "unassigned") return null;
-    if (actor === row.assignee) return null;
-    if (this.#isAdminMember(actor)) return null;
-    /* DEC-49 REGION is-task-actor-fence — D-126/C-76.1: `code`, `check` and `translation` added (a queue
-       selection now surfaces this refusal to a member); `reason`, `detail` and the assignee are unchanged. */
-    return {
-      ok: false,
-      reason: "NOT_YOURS",
-      code: "NOT_YOURS",
-      check: TASK_ACTOR_CHECKS.NOT_YOURS.check,
-      translation: TASK_ACTOR_CHECKS.NOT_YOURS.translation,
-      detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
-      assignee: row.assignee,
-      assignee_role: row.assignee_role,
-    };
-    /* END DEC-49 REGION is-task-actor-fence */
-  }
-
-  /** Forward a task to a member better placed to attest it.
-   *
-   *  A MEMBER action, never a daemon one: the ruling makes forwarding a human
-   *  judgement, and `member_expertise` is a hint for that human rather than an
-   *  automatic reassignment. The prior assignment stays in history, because who
-   *  a task was taken FROM is as much a fact as who holds it now.
-   *
-   *  REC-28 / D-151: "never a daemon one" is now ENFORCED and not only stated.
-   *  A machine credential's actor is stamped `token:<class>` by the control
-   *  plane, so it is refused BY SHAPE — the MACHINE_CANNOT_RELEASE / CONCLUDE /
-   *  REOPEN precedent, and the same one rule in a fifth place: a machine may
-   *  surface, route and prepare; a member authors, resolves and forwards. It is
-   *  checked BEFORE the row is read, so unlike the TASK-ACTOR FENCE it cannot
-   *  depend on assignment state — which is exactly how the hole existed.
-   *
-   *  The precedent's `who === "member"` arm does NOT carry over, deliberately:
-   *  on these two verbs the control plane stamps every machine credential
-   *  `token:<class>` (never a bare class word), while the bare string "admin" is
-   *  a LEGITIMATE actor here — it is ROOT_ADMIN's own session (`#isAdminMember`)
-   *  — so a bare-class arm would refuse the root administrator's browser.
-   *
-   *  REC-46 (2026-08-04): that difference SURVIVED the sweep rather than being
-   *  smoothed away, and it is the one site in this class that means something
-   *  narrower. These two verbs ask `isMachineStamp` — did the control plane
-   *  MINT this identity — while the nine act guards ask `isMachineIdentity`,
-   *  which additionally refuses a bare class word and a surface/AI name. Both
-   *  are derived from the SAME `MACHINE_STAMP_PREFIXES` in the catalog, so the
-   *  spelling still moves in one place and moves here too; what is deliberately
-   *  not shared is the bare-class arm, for the reason in the paragraph above. */
-  taskForward({ id = null, to = null, actor = null, now = null, items } = {}) {
-    /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor (the control plane's stamp) is forced
-       onto every item. */
-    if (items !== undefined)
-      return this.#perItem("taskforward", { items, to, now }, { actor }, (b) => this.taskForward(b));
-    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
-    /* DEC-49 REGION is-machine-forward — REC-64/C-32.10. The fence alone. REC-73
-       measured that this pair is the ONLY one of the twelve with a second
-       independent fence behind it, so the span stops before that one. */
-    if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
-      return { ok: false, reason: "MACHINE_CANNOT_FORWARD", code: "MACHINE_CANNOT_FORWARD",
-               check: QUEUE_MACHINE_CHECKS.MACHINE_CANNOT_FORWARD.check,
-               translation: QUEUE_MACHINE_CHECKS.MACHINE_CANNOT_FORWARD.translation,
-               detail: "forwarding a task hands an obligation to a named person, and deciding who is "
-                     + "better placed to answer it is a member's judgement. A machine credential may "
-                     + "surface a task and route it at drain time, and may not re-address one. "
-                     + "Sign in as a member." };
-    /* END DEC-49 REGION is-machine-forward */
-    const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
-    if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
-    if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
-    const fenced = this.#refuseNotYours(row, actor, "forward");
-    if (fenced) return fenced;
-    /* membership R68: an active member by that id. */
-    const facts = typeof to === "string" && to ? this.#membership.memberFacts(to) : null;
-    const target = facts && facts.status === "active" ? { member_id: to } : null;
-    if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
-    if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs(null));
-    const task = this.#taskOf(row);
-    task.history.push({ at, event: "forwarded", actor });
-    task.assignee = target.member_id;
-    task.assignee_role = "member";
-    task.status = "forwarded";
-    const bad = this.#refuseUngrammatical(task);
-    if (bad) return bad;
-    this.sql.exec(`UPDATE tasks SET assignee=?, assignee_role=?, status=?, history=? WHERE id=?`,
-      task.assignee, task.assignee_role, task.status, JSON.stringify(task.history), id);
-    return { ok: true, id, assignee: task.assignee, assignee_role: task.assignee_role, from: row.assignee, at };
-  }
-
-  /** Resolve a task. Also a member action — and, as of REC-28 (D-151), a member
-   *  action the code enforces rather than a comment that describes one.
-   *
-   *  RESOLVING IS THE CLOSING ACT: the obligation the record raised is answered
-   *  and stops asking. Before this refusal a machine credential could close an
-   *  UNASSIGNED task, because the TASK-ACTOR FENCE allows on `unassigned` before
-   *  it looks at the caller — an obligation discharged with `actor:
-   *  "token:probe"` in its history and no member anywhere in it. The refusal is
-   *  at the ACT and by SHAPE (the MACHINE_CANNOT_RELEASE / CONCLUDE / REOPEN
-   *  precedent), checked before the row is read, so it holds whatever the task's
-   *  assignment is.
-   *
-   *  `taskDrain` is deliberately untouched and is the daemon's path: draining
-   *  turns queued events into tasks and ROUTES them, which is surfacing work
-   *  rather than discharging it. Nothing a drain does closes an obligation. */
-  taskResolve({ id = null, actor = null, now = null, items } = {}) {
-    /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor is forced onto every item. */
-    if (items !== undefined)
-      return this.#perItem("taskresolve", { items, now }, { actor }, (b) => this.taskResolve(b));
-    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
-    /* DEC-49 REGION is-machine-resolve — REC-64/C-32.11. The fence alone. */
-    if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
-      return { ok: false, reason: "MACHINE_CANNOT_RESOLVE", code: "MACHINE_CANNOT_RESOLVE",
-               check: QUEUE_MACHINE_CHECKS.MACHINE_CANNOT_RESOLVE.check,
-               translation: QUEUE_MACHINE_CHECKS.MACHINE_CANNOT_RESOLVE.translation,
-               detail: "resolving a task says the obligation the record raised has been answered, and "
-                     + "that is a named member's act. A machine credential may surface a task, route it "
-                     + "and prepare what it needs, and may not close it — an unassigned task is nobody's "
-                     + "work, and closing nobody's work is still closing. Sign in as a member." };
-    /* END DEC-49 REGION is-machine-resolve */
-    const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
-    if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
-    if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
-    const fenced = this.#refuseNotYours(row, actor, "resolve");
-    if (fenced) return fenced;
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs(null));
-    const task = this.#taskOf(row);
-    task.history.push({ at, event: "resolved", actor });
-    task.status = "resolved";
-    task.resolved_at = at;
-    const bad = this.#refuseUngrammatical(task);
-    if (bad) return bad;
-    this.sql.exec(`UPDATE tasks SET status=?, resolved_at=?, history=? WHERE id=?`,
-      task.status, at, JSON.stringify(task.history), id);
-    return { ok: true, id, status: "resolved", resolved_at: at };
-  }
+  static COUNT_KEYS = Object.freeze(["findingDispositions", "queueState", "queueItemMutes"]);
 
   static PER_ITEM_MAX = PER_ITEM_MAX;   /* affordances.mjs: ONE number, published as set_acts[].max_items */
   #perItem(act, body, stamped, one) {
@@ -2392,29 +1858,8 @@ export class Queue {
     return perItem(act, body, stamped, one, { itemKeys: a && a.item_keys, sharedKeys: a && a.shared_keys });
   }
 
-  /* ------------------------------------------------------------------ the two scheduler consumers (R22, R23)
+  /* ------------------------------------------------------------------ the scheduler consumer (R22)
      `scheduler` is earlier and keeps its registry; this module registers into it at start (K31, scheduler R8). */
-
-  #drainDelayMs() {
-    const v = Number(this.#env && this.#env.TASK_DRAIN_DELAY_MS);
-    return Number.isFinite(v) && v >= 0 ? v : Queue.TASK_DRAIN_DELAY_MS;
-  }
-  #lastDrainProgress = true;     // did the last drain tick make progress — decides DELAY vs BACKSTOP on re-arm
-
-  /** capture's task notice (capture R44): a queued event re-arms the drain at its short delay. */
-  async armDrain() { this.#lastDrainProgress = true; return await this.#scheduler.arm(); }
-
-  /** R23: the `task-drain` consumer: due at every firing; its wake is the delay after a tick that drained something,
-   *  the backstop after one that drained nothing, and null with no event queued. */
-  drainConsumer() {
-    return { name: "task-drain", key: "drain",
-      due:  (now) => now,
-      wake: (now) => this.#capture.taskEventCount() > 0
-                       ? now + (this.#lastDrainProgress ? this.#drainDelayMs() : Queue.TASK_DRAIN_BACKSTOP_MS)
-                       : null,
-      tick: ()    => { const d = this.taskDrain({ limit: Queue.TASK_DRAIN_ALARM_BATCH, actor: "alarm" });
-                       this.#lastDrainProgress = d.drained > 0; return { drain: d }; } };
-  }
 
   /** R22: the `queue-renotify` consumer: due when a snooze has expired, waking at the earliest future one; it writes
    *  nothing. */
@@ -2430,9 +1875,9 @@ export class Queue {
 const OF = new WeakMap();
 
 /** K61: the one queue instance for this Durable Object's storage (`ctx`, or the storage itself). On first reaching it,
- *  its tables are declared to record-core's purge (R36), its four figures registered with record-core's counts and its
- *  TASK ledger seeded (R42), C-19.1 registered with promotion and with record-core's audit (R41), and, unless
- *  `deps.start` is false, its two scheduler consumers and capture's task notice are registered (R22, R23; capture R44). */
+ *  its three tables are declared to record-core's purge (R36) and its three figures registered with record-core's
+ *  counts (R42), and, unless `deps.start` is false, its `queue-renotify` consumer is registered (R22). The inbox's
+ *  registrations (the drain, the grammar, the TASK seed, its figure) are `tasks`' (N363, draft §3.3). */
 export function queueOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let q = OF.get(storage);
@@ -2442,24 +1887,14 @@ export function queueOf(ctx, deps = {}) {
     const record = (deps && deps.record) || recordOf(ctx);
     record.declarePurge("queue", [
       { name: "queue_state", keys: ["case_id"] },
-      { name: "tasks", keys: [] },
       { name: "queue_item_mutes", keys: [] },
       { name: "finding_dispositions", keys: [] },
     ]);
-    /* R42 (N342): the four figures `op=stats` and purge's proof read (record-core R63), and the TASK ledger's seed. */
+    /* R42 (N342): the three figures `op=stats` and purge's proof read (record-core R63). */
     record.registerCounts("queue", [...Queue.COUNT_KEYS], (hid) => q.counts(hid));
-    q.seedLedger();
-    /* R41 (N325): C-19.1 at the write (promotion R39) and in the audit (record-core R59), one function at both. */
-    record.registerAuditCheck("queue", (image) => q.audit(image));
-    const promotion = (deps && deps.promotion)
-      || promotionOf(ctx, { record, ...(deps && deps.membership ? { membership: deps.membership } : {}) });
-    promotion.registerStep("queue", { check: (c) => q.inboxCheck(c) });
     if (!deps || deps.start !== false) {
       const scheduler = (deps && deps.scheduler) || schedulerOf(ctx, deps && deps.env);
-      scheduler.register("queue", q.drainConsumer());
       scheduler.register("queue", q.renotifyConsumer());
-      const capture = (deps && deps.capture) || captureOf(ctx);
-      capture.on("task", "queue", async () => ({ armedAt: await q.armDrain() }));
     }
   }
   return q;
@@ -2475,11 +1910,6 @@ export function queueOps(q, url, body) {
     queuemute: () => q.queueMute({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     queuesnooze: () => q.queueSnooze({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     proposedispose: () => q.proposeDispose({ ...(body || {}), viewer: s("viewer"), identity: s("identity") }),
-    taskdrain: () => q.taskDrain(body || {}),
-    tasks: () => q.taskList({ assignee: s("assignee"), status: s("status"), refersTo: s("refers"),
-                              limit: s("limit"), viewer: s("viewer") }),
-    taskforward: () => q.taskForward(body || {}),
-    taskresolve: () => q.taskResolve(body || {}),
   };
 }
 
