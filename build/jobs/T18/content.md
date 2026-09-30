@@ -1,6 +1,6 @@
 # content (T18)
 
-**Status** · session_01YSoHhK3iM2dE9hknYcY6ai · depth 2 · COMPLETE · handled B2
+**Status** · session_01YSoHhK3iM2dE9hknYcY6ai · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
