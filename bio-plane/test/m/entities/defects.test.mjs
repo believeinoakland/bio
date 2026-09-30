@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
-import { Entities, ENTITY_CHECKS, ENTITY_COLLECTION_LIMIT, noEntity } from "../../../src/entities/index.mjs";
+import { Entities, ENTITY_CHECKS, ENTITY_COLLECTION_LIMIT, ENTITY_RELATIONS_LIMIT, noEntity } from "../../../src/entities/index.mjs";
 import { noSha } from "../../../src/extraction/index.mjs";
 
 /* One C resolution of `ref` ("doc:1" in capture "d1") to Alpha, and a second entity with none. */
@@ -138,32 +138,33 @@ test("R38 R39 one resolution's reports are answered at most 500, oldest first, w
   assert.deepEqual([ev.defects.length, ev.defect_count, ev.defects_truncated, ev.limit], [500, 500, true, 500]);
 });
 
-test("R39 readEntity's aliases and relations are each at most 500 in their stated order, truncated per collection by reading one past; exactly 500 is not truncated", () => {
+test("R39 readEntity's aliases are at most 500 and its relations at most 1,000, each in its stated order, truncated per collection by reading one past; exactly the bound is not truncated", () => {
   const { e } = world();
   const names = (n) => Array.from({ length: n }, (_, i) => `name ${String(i).padStart(4, "0")}`);
   const full = e.createEntity({ kind: "office", label: "Zed", aliases: names(ENTITY_COLLECTION_LIMIT - 1) }).entity_id;
   const over = e.createEntity({ kind: "office", label: "Zed Two", aliases: names(ENTITY_COLLECTION_LIMIT) }).entity_id;
   const f = e.readEntity({ entityId: full }).entity, o = e.readEntity({ entityId: over }).entity;
   assert.deepEqual([f.aliases.length, f.aliases_truncated], [500, false]);
-  assert.deepEqual([o.aliases.length, o.aliases_truncated, o.limit], [500, true, 500]);
+  assert.deepEqual([o.aliases.length, o.aliases_truncated, o.limit, o.relations_limit], [500, true, 500, 1000]);
+  assert.deepEqual([ENTITY_COLLECTION_LIMIT, ENTITY_RELATIONS_LIMIT], [500, 1000]);
   assert.deepEqual([o.aliases[0].alias, o.aliases[0].canonical], ["Zed Two", true], "canonical first");
   assert.deepEqual(o.aliases.slice(1).map((a) => a.alias), names(499), "then by alias");
   assert.equal(e.entitiesByAlias({ alias: "Zed Two" }).entities[0].aliases_truncated, true, "the same view through R6");
-  /* relations: oldest first */
+  /* relations: oldest first, at most 1,000 */
   const hub = e.createEntity({ kind: "body", label: "Hub" }).entity_id;
   const ids = [];
-  for (let i = 0; i <= ENTITY_COLLECTION_LIMIT; i++) {
+  for (let i = 0; i <= ENTITY_RELATIONS_LIMIT; i++) {
     const x = e.createEntity({ kind: "body", label: `Spoke ${i}` }).entity_id;
     ids.push(e.declareRelation({ relation: "member_of", fromEntity: i % 2 ? x : hub, toEntity: i % 2 ? hub : x,
                                  justification: "j", citation: "c" }).relation_id);
-    if (i === ENTITY_COLLECTION_LIMIT - 1) {
-      const at500 = e.readEntity({ entityId: hub }).entity;
-      assert.deepEqual([at500.relations.length, at500.relations_truncated], [500, false]);
+    if (i === ENTITY_COLLECTION_LIMIT || i === ENTITY_RELATIONS_LIMIT - 1) {
+      const at = e.readEntity({ entityId: hub }).entity;
+      assert.deepEqual([at.relations.length, at.relations_truncated], [i + 1, false], `${i + 1} relations`);
     }
   }
   const h = e.readEntity({ entityId: hub }).entity;
-  assert.deepEqual([h.relations.length, h.relations_truncated], [500, true]);
-  assert.deepEqual(h.relations.map((r) => r.relation_id), ids.slice(0, 500));
+  assert.deepEqual([h.relations.length, h.relations_truncated], [1000, true]);
+  assert.deepEqual(h.relations.map((r) => r.relation_id), ids.slice(0, 1000));
   assert.deepEqual([h.relations[0].direction, h.relations[1].direction], ["out", "in"]);
   assert.deepEqual([h.aliases_truncated, h.defects_truncated], [false, false]);
 });

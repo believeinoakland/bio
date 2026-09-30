@@ -118,7 +118,7 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
   assert.equal(got.found, true);
   const ent = got.entity;
   assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "declared_by", "defect_count", "defects",
-    "defects_truncated", "entity_id", "kind", "label", "limit", "note", "relations", "relations_truncated"]);
+    "defects_truncated", "entity_id", "kind", "label", "limit", "note", "relations", "relations_limit", "relations_truncated"]);
   assert.deepEqual(ent.aliases.map((x) => [x.alias, x.canonical]), [["Zed", true], ["alpha", false]]);
   for (const x of ent.aliases) assert.ok(x.declared_by === "member:ann" && x.at);
   assert.deepEqual(ent.relations.map((r) => [r.relation_id, r.direction]), [[r1, "out"], [r2, "in"]]);

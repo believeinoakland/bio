@@ -49,6 +49,8 @@ export const WITHDRAW_REASON_MAX = 2000;
    aliases, its relations, its defect reports, the resolutions resting on a withdrawn name), and on one resolution's
    reports (R38). Meaning-bounds' default, not a new figure; `truncated` is measured by reading one past. */
 export const ENTITY_COLLECTION_LIMIT = 500;
+/* R39 (K433, K485): an entity's relations are bounded higher, at the walk bound `intent`'s R4 reads through R5. */
+export const ENTITY_RELATIONS_LIMIT = 1000;
 /* R38: a defect report's reason, at most. */
 export const DEFECT_REASON_MAX = 2000;
 
@@ -449,32 +451,32 @@ export class Entities {
              withdrawn: r.withdrawn_at ? { by: r.withdrawn_by, at: r.withdrawn_at, reason: r.withdrawn_reason } : null };
   }
 
-  /* R39: one collection keyed on one entity, at most the bound in its stated order, `truncated` by reading one past. */
-  #bounded(q, ...a) {
-    const rows = this.#rows(`${q} LIMIT ?`, ...a, ENTITY_COLLECTION_LIMIT + 1);
-    const truncated = rows.length > ENTITY_COLLECTION_LIMIT;
-    return { rows: truncated ? rows.slice(0, ENTITY_COLLECTION_LIMIT) : rows, truncated };
+  /* R39: one collection keyed on one entity, at most `max` in its stated order, `truncated` by reading one past. */
+  #bounded(max, q, ...a) {
+    const rows = this.#rows(`${q} LIMIT ?`, ...a, max + 1);
+    const truncated = rows.length > max;
+    return { rows: truncated ? rows.slice(0, max) : rows, truncated };
   }
 
-  /* R5, R39, R38: the entity with its aliases (canonical first), the relations it is an end of (oldest first) and the
-     defect reports on its resolutions (oldest first), each bounded; `keep` is the viewer's redactor (R32). */
+  /* R5, R39, R38: the entity with its aliases (canonical first), the relations it is an end of (oldest first, at most
+     1,000) and the defect reports on its resolutions (oldest first), the others at most 500; `keep` is the viewer's redactor (R32). */
   #entityView(e, keep) {
-    const al = this.#bounded(
+    const al = this.#bounded(ENTITY_COLLECTION_LIMIT,
       `SELECT alias, canonical, declared_by, at, withdrawn_by, withdrawn_at, withdrawn_reason FROM entity_aliases
         WHERE entity_id=? ORDER BY canonical DESC, alias`, e.entity_id);
     const aliases = al.rows.map((a) => ({
         alias: a.alias, canonical: !!a.canonical, declared_by: a.declared_by, at: a.at,
         withdrawn: a.withdrawn_at ? { by: a.withdrawn_by, at: a.withdrawn_at, reason: a.withdrawn_reason } : null }));
-    const rel = this.#bounded(
+    const rel = this.#bounded(ENTITY_RELATIONS_LIMIT,
       `SELECT * FROM entity_relations WHERE from_entity=? OR to_entity=? ORDER BY at, relation_id`, e.entity_id, e.entity_id);
     const relations = rel.rows.map((r) => this.#relationView(r, e.entity_id));
-    const def = this.#bounded(
+    const def = this.#bounded(ENTITY_COLLECTION_LIMIT,
       `SELECT capture_sha, bundle_id, ref, reason, source_module, source_id, reported_by, at FROM resolution_defects
         WHERE entity_id=? ORDER BY at, defect_id`, e.entity_id);
     const defects = def.rows.map((d) => ({ capture_sha: d.capture_sha, ref: d.ref, ...Entities.#defectView(d, keep) }));
     return { entity_id: e.entity_id, kind: e.kind, label: e.label, note: e.note,
              declared_by: e.declared_by, at: e.at, aliases, relations, defects, defect_count: defects.length,
-             limit: ENTITY_COLLECTION_LIMIT, aliases_truncated: al.truncated, relations_truncated: rel.truncated,
+             limit: ENTITY_COLLECTION_LIMIT, relations_limit: ENTITY_RELATIONS_LIMIT, aliases_truncated: al.truncated, relations_truncated: rel.truncated,
              defects_truncated: def.truncated };
   }
 
