@@ -2,11 +2,8 @@ import { DurableObject } from "cloudflare:workers";
 /* The catalog's own frontmatter parser. References are read from the document
    with the same code that later checks them, so the store's projection and the
    checker's view cannot disagree about what the document says. */
-import { parseFrontmatter, MECHANICAL_FIELD_SETS,
+import { parseFrontmatter,
          checkBundle, createSha256,
-         /* D-50: 7.1's name key is the CATALOG's one function, held below as `Store.projectNameKey`, so the
-            write path's NAME_TAKEN and the catalog's C-77 cannot disagree about what a collision is. */
-         projectNameKey,
          /* REC-10: the type mapping and the inquiry state machine come from
             the catalog, so the store's view and the checker's view cannot
             disagree (the same reason this file already imports the catalog's
@@ -376,18 +373,13 @@ import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS, CUSTODIAL_CHECKS } from "../
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-149 / C-70: a DISCOVERABLE project's existence is seen; its doors are not (Membership v2 §7.14). */
-import { PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "../checks/bio-checks.mjs";
+import { PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
 import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* D-85 / C-66: an assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). */
 import { SURFACE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
 import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
-/* D-510: the one refusal of `promote`'s envelope-versus-document check, held in the catalogue with every
-   other DEC-49 row so the code, its check number and its canned translation live in one place. */
-import { PROMOTED_TYPE_CHECKS } from "../checks/bio-checks.mjs";
-/* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
-   is written into a document's bytes, which the suites judging a composer's bytes call too. */
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -2560,11 +2552,6 @@ export class Store extends DurableObject {
   forkProject({ projectId, newId, title, by, viewer = null, visibility = null } = {}) {
     return promotionOf(this.ctx).forkProject({ projectId, newId, title, by, viewer, visibility });
   }
-
-  /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same
-   *  function object, imported, never a copy), so `promote`'s and the fork's NAME_TAKEN and the catalog's C-77
-   *  corpus check cannot disagree about what a collision is. `test/d50-project-names.test.mjs` asserts identity. */
-  static projectNameKey = projectNameKey;
 
 
 

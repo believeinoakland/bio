@@ -2,9 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, T0 } from "./fixtures.mjs";
-import { runCaseGate, runGate, GATE_VERSION } from "../../../src/promotion/index.mjs";
-import { PROMOTED_TYPE_CHECKS, ACT_SHAPE_CHECKS, PROJECT_ID_CHECKS, BIAS_CHECKS, projectNameKey, STATES, vocabFor }
-  from "../../../checks/bio-checks.mjs";
+import { runCaseGate, runGate, GATE_VERSION, PROMOTED_TYPE_CHECKS, projectNameKey } from "../../../src/promotion/index.mjs";
+import { ACT_SHAPE_CHECKS, PROJECT_ID_CHECKS, BIAS_CHECKS, STATES, vocabFor } from "../../../checks/bio-checks.mjs";
 
 const ID = "INFO-2026-0001";
 
@@ -142,7 +141,7 @@ test("R37: every no names which kind of no, and an undetermined fact is never ro
 
 test("R38: a rule held at the door and in the catalogue is the catalogue's one function or row, never a second copy", () => {
   const env = makePromotion();
-  /* Name uniqueness is the catalogue's projectNameKey. */
+  /* Name uniqueness is the one projectNameKey (this module's since T18, the catalogue's before). */
   const names = ["Sewer Fund", "sewer  fund", " SEWER FUND ", "Sewer-Fund", "Sewer Funds"];
   const pd = (t) => doc({ object_type: "project", title: t, current_state: "forming", created: T0, last_updated: T0 });
   const first = env.p.promote({ base: null, snapKey: "a", author: "member:a", files: [{ path: "bundle.md", text: pd(names[0]) }], meta: {} });

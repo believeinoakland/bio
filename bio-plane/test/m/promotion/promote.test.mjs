@@ -4,8 +4,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from "./fixtures.mjs";
-import { INLINE_MAX, PROMOTION_CHECKS } from "../../../src/promotion/index.mjs";
-import { STATES, vocabFor, normalizeType, projectNameKey, ACT_SHAPE_CHECKS, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
+import { INLINE_MAX, PROMOTION_CHECKS, projectNameKey } from "../../../src/promotion/index.mjs";
+import * as P from "../../../src/promotion/index.mjs";
+import { STATES, vocabFor, normalizeType, ACT_SHAPE_CHECKS, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 import * as C from "../../../checks/bio-checks.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 
@@ -443,9 +444,10 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
   const absent = q.promote(revise("INFO-2026-0404", "f".repeat(64), infoDoc("INFO-2026-0404")));
   assert.deepEqual([absent.reason, absent.code, absent.check, absent.translation],
                    ["ABSENT", "ABSENT", ACT_SHAPE_CHECKS.ABSENT.check, ACT_SHAPE_CHECKS.ABSENT.translation]);
-  /* Every refusal this door answers with a code the catalogue holds carries that row's check and translation. */
+  /* Every refusal this door answers with a code a row table holds (the catalogue's, or this module's own since the
+     C-86 and C-97 families moved here) carries that row's check and translation. */
   const rows = new Map();
-  for (const table of Object.values(C))
+  for (const table of [...Object.values(C), ...Object.values(P)])
     if (table && typeof table === "object" && !Array.isArray(table))
       for (const [code, row] of Object.entries(table))
         if (row && typeof row === "object" && typeof row.check === "string" && typeof row.translation === "string")

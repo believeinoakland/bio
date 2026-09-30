@@ -9,6 +9,7 @@ import { Miniflare } from "miniflare";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import * as C from "../../../checks/bio-checks.mjs";
+import * as P from "../../../src/promotion/index.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../../../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -132,8 +133,11 @@ const RELAYED = [
 ];
 
 test("R18: every refusal the catalogue sites at the promote write is enforced there — each row is met by name", async () => {
+  /* The catalogue's tables, and the two families that moved from it to promotion whole in T18 (C-86, C-97): still
+     the catalogue's rows sited at this write, wherever the table lives. */
+  const moved = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS };
   const rows = [];
-  for (const [family, table] of Object.entries(C)) {
+  for (const [family, table] of [...Object.entries(C), ...Object.entries(moved)]) {
     if (!table || typeof table !== "object" || Array.isArray(table)) continue;
     for (const [code, row] of Object.entries(table))
       if (row && typeof row === "object" && typeof row.where === "string" && /promote\b/.test(row.where)

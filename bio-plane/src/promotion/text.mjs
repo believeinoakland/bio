@@ -1,5 +1,8 @@
-/* Small, line-oriented edits of a document's front matter, used by `reopen`. The repository has a front-matter
- * PARSER (the catalogue's) and no serializer, so a field is rewritten in place and every other byte is left alone. */
+/* Small, line-oriented edits of a document's front matter, used by `reopen`, `forkProject` and a creation's producing
+ * group (R13). The repository has a front-matter PARSER (the catalogue's) and no serializer, so a field is rewritten in
+ * place and every other byte is left alone. `withProducingGroup` moved here whole from the catalogue in T18 (K636). */
+
+import { parseFrontmatter } from "../../checks/bio-checks.mjs";
 
 /** Append one entry to `state_history`, for the inline-empty, absent and populated shapes. Null when the block is in
  *  a shape this grammar cannot extend, so the caller refuses rather than guesses. */
@@ -78,4 +81,23 @@ export function spliceReferences(text, additions) {
     break;
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+}
+
+/** D-436 — THE ONE DEFINITION of how a producing group is written into a document's bytes. `stampGroup` (`index.mjs`,
+ *  R13) calls it for every creation at the one write path, and a suite that judges a composer's bytes AS THE PLANE WILL HOLD THEM calls
+ *  the same function — so neither is a copy of the other, and a change to how the group is written moves both.
+ *  Replaces the top-level `group:` line (column 0, inside the front matter), or opens one immediately before the closing
+ *  fence, the convention every key the plane adds follows. Returns the text UNCHANGED when there is no front matter block
+ *  to write into, and when the document already names `slug` in any spelling the catalogue's parser reads as it — so a
+ *  correct document is never rewritten. */
+export function withProducingGroup(text, slug) {
+  if (typeof text !== 'string' || typeof slug !== 'string' || !slug) return text;
+  if (parseFrontmatter(text).data?.group === slug) return text;
+  const lines = text.split('\n');
+  if (lines[0] !== '---') return text;
+  const end = lines.indexOf('---', 1);
+  if (end === -1) return text;
+  for (let i = 1; i < end; i++)
+    if (lines[i].startsWith('group:')) { lines[i] = `group: ${slug}`; return lines.join('\n'); }
+  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join('\n');
 }

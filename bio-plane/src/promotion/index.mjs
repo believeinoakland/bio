@@ -15,21 +15,29 @@
  *               membership's `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
  */
 
-import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SETS,
-         deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity, projectNameKey, withProducingGroup,
-         ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
+import { parseFrontmatter, normalizeType, vocabFor, STATES,
+         deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity,
+         ACT_SHAPE_CHECKS, PROJECT_ID_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
          CUSTODIAL_CHECKS, REGISTRATION_CHECKS } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
-import { PROMOTION_CHECKS } from "./checks.mjs";
+import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
-import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
+import { MECHANICAL_FIELD_SETS } from "./history.mjs";
+import { projectNameKey } from "./names.mjs";
+import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences,
+         withProducingGroup } from "./text.mjs";
 import { runCaseGate as runCaseCatalogue } from "../gate.mjs";
 
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../gate.mjs";
-export { PROMOTION_CHECKS } from "./checks.mjs";
+export { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
+/* Moved here from the catalogue in T18 (K636): the name key and C-77 (R19, R38), the producing group's one writing
+   (R13), and the mechanical field sets R8 and C-20.1 read (a copy until T19 deletes the catalogue's). */
+export { projectNameKey, checkProjectNameUniqueness } from "./names.mjs";
+export { withProducingGroup } from "./text.mjs";
+export { MECHANICAL_FIELD_SETS } from "./history.mjs";
 /* R49 (K285): the one site of LISTENER_MALFORMED and LISTENER_DECLARED is membership's (its R81), re-exported for later
    modules, which call either spelling of the one function. */
 export { listenerRefusal } from "../membership/index.mjs";
