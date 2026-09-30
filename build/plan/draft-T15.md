@@ -73,3 +73,10 @@ Cut from T14's "Not in T14" (`current.md`, with K464's reading), `next.md`'s ope
 7. DONE (K478): the marks struck; basis-versions R41 (N300) looks met too, checked at the re-read.
 8. `next.md` housekeeping: entries carried in full (N10, N93, N112, N129, N130, N150, N154, N167, N170, N171, N192, N323; N202, N128, N344 met) move to `archive/next-applied.md`.
 9. Everything T14's layers 3–11 record (rows, reports, deferrals) is folded at the re-read.
+
+## Wordings to fold into the requirements when T15 opens (K477)
+
+New ids wait here, not in the requirements files, until their job's tranche opens (coverage: a live id is named by a test).
+
+- membership: **R88** (N352, K477) `hiddenBundles(viewer)` is the one spelling of the complement of R43's rule: `null` when R43 lets the viewer see every bundle (its machine and founder arms), otherwise `{sql, args}`, a subquery over record-core's `bundles` naming every bundle R43 does not pass for that viewer (every bundle, for a viewer R43 refuses). Every module that subtracts the bundles a viewer may not see reads it (`legacy-store`'s count subtraction, `queue`, `retrieval`); what an absent viewer means stays the caller's (the store's internal call reads whole and does not ask). It writes nothing and never throws. *(not yet met)*
+- entities: **R39** (N351, K477) Every collection keyed on one entity that R5 and R8's alias withdrawal answer (the entity's aliases, its relations, and the resolutions resting on a withdrawn name, `resolutions_resting`) is bounded: at most 500 each, in its stated order, with `truncated` per collection by reading one past; a truncated collection never answers a count as whole. *(not yet met)*
