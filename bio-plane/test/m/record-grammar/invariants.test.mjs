@@ -1,10 +1,19 @@
-/* record-grammar's invariants at its interface: pure (R24), the catalogue's re-exports the same bindings (R26), no
-   place named (R27). */
+/* record-grammar's invariants at its interface: pure (R24), one binding per name (R26's side here), no place named
+   (R27). The catalogue's re-exports are later in the order, so this module's tests cannot import them (P4); the
+   cross-module identity (`legacy-checks`' name === this module's) is for `legacy-checks`' tests, which may import this
+   module (T18's job record, J-QUESTION). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Worker } from "node:worker_threads";
 import * as RG from "../../../src/record-grammar/index.mjs";
-import * as CATALOGUE from "../../../checks/bio-checks.mjs";
+import * as IDS from "../../../src/record-grammar/ids.mjs";
+import * as TYPES from "../../../src/record-grammar/types.mjs";
+import * as FRONTMATTER from "../../../src/record-grammar/frontmatter.mjs";
+import * as JSON_ from "../../../src/record-grammar/json.mjs";
+import * as ACTORS from "../../../src/record-grammar/actors.mjs";
+import * as GRADES from "../../../src/record-grammar/grades.mjs";
+import * as LOCATOR from "../../../src/record-grammar/locator.mjs";
+import * as SHA256 from "../../../src/record-grammar/sha256.mjs";
 
 const MODULE = new URL("../../../src/record-grammar/index.mjs", import.meta.url).href;
 
@@ -53,14 +62,18 @@ const MOVED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_
   "EARNED_GRADE_SOURCES", "EARNED_CAPTURE_CEILING", "UNREACHABLE_CAPTURE_GRADE", "isPublicHttpsLocator", "createSha256",
   "sha256HexSync"];
 
-test("R26 every name the catalogue re-exports is the same binding as record-grammar's", () => {
+test("R26 one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
   assert.deepEqual(Object.keys(RG).sort(), [...MOVED, "b64ToBytes"].sort());
-  for (const n of MOVED) {
-    assert.ok(n in CATALOGUE, `${n} re-exported`);
-    assert.ok(CATALOGUE[n] === RG[n], `${n} is one binding`);
+  const parts = [IDS, TYPES, FRONTMATTER, JSON_, ACTORS, GRADES, LOCATOR, SHA256];
+  for (const n of Object.keys(RG)) {
+    const holders = parts.filter((p) => n in p);
+    assert.equal(holders.length, 1, `${n} is held once`);
+    assert.ok(holders[0][n] === RG[n], `${n} is one binding`);
   }
-  /* b64ToBytes is read only inside the catalogue, so it is not re-exported. */
-  assert.ok(!("b64ToBytes" in CATALOGUE));
+  /* A second import of the entry is the same module instance, so every reader gets the same objects. */
+  return import("../../../src/record-grammar/index.mjs").then((again) => {
+    for (const n of Object.keys(RG)) assert.ok(again[n] === RG[n], n);
+  });
 });
 
 test("R27 no place is named in anything the module provides", () => {
