@@ -134,6 +134,18 @@ test("R10 R28 a document before /5 answers `tensions: null` with the sentence th
   assert.match(loose.tensions_detail, /not a case/);
 });
 
+test("R10 K499 the member legs the conflict read could not examine are carried as the document states them; none is an empty list, and a document silent about them states null", () => {
+  const unread = [{ target: F, legs: 2 }];
+  const c = published({ tensions: { rows: ROWS, sentences: SENTENCES, unread } }).w.op("publishedcase", { id: "CASE-2026-0001" });
+  assert.deepEqual(c.tensions_unread, [{ member: F, legs: 2 }]);
+  const none = published({ tensions: { rows: [], sentences: [], unread: [] } }).w.op("publishedcase", { id: "CASE-2026-0001" });
+  assert.deepEqual(none.tensions_unread, []);
+  const silent = published().w.op("publishedcase", { id: "CASE-2026-0001" });
+  assert.equal(silent.tensions_unread, null);
+  const old = published({ tensions: null, format: "bio-case-document/4" }).w.op("publishedcase", { id: "CASE-2026-0001" });
+  assert.equal(old.tensions_unread, null);
+});
+
 test("R10 the tensions are read from the signed document, never live: what contradiction answers now does not change them", () => {
   const ctr = standIn({ [F]: { ok: true, candidates: [seen("c-new")], truncated: false } });
   const { w } = published({ contradiction: ctr });

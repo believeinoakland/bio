@@ -11,6 +11,8 @@
  *   case_tension_sentences:  one row per member sentence: `target`, `candidate`, `template` (`in_tension`, `explained`,
  *                            `irreconcilable`, `unseen`), `sentence`.
  *   tensions_depth_stated:   the sentence that a disclosure reaches one level.
+ *   case_tensions_unread:    one row per member with document legs the conflict read could not examine (no content
+ *                            row): `target`, `legs` (K499); stated, not refused (case-authoring R26). Empty when none.
  *
  * READ, NEVER LIVE: everything here comes from the signed bytes. A highlighted row answers its seen side, the fixed
  * sentence and nothing else, whatever else the bytes hold, so nothing names the unseen record (DEC-85). */
@@ -46,16 +48,17 @@ const stateWords = (row) => (row.state === "resolved" && row.kind === "irreconci
   : Object.prototype.hasOwnProperty.call(TENSION_STATE_WORDS, row.state) ? TENSION_STATE_WORDS[row.state]
   : row.state == null ? null : String(row.state));
 
-/** R10: the tensions one case document's bytes disclosed: `{tensions, highlighted, depth, members, detail}`. `tensions`
- *  is null (with `detail`) for a document before `/5` or one without a readable section; `members` maps each member to
- *  its attributed sentences. Pure; never throws. */
+/** R10: the tensions one case document's bytes disclosed: `{tensions, highlighted, depth, members, unread, detail}`.
+ *  `tensions` is null (with `detail`) for a document before `/5` or one without a readable section; `members` maps each
+ *  member to its attributed sentences; `unread` is the stated unread legs (`[{member, legs}]`, K499), null where the
+ *  document states none. Pure; never throws. */
 export function caseTensionsOf(text) {
   try {
     const fm = parseFrontmatter(String(text ?? "")).data || {};
     if (!caseDocumentRequiresTensionSection(fm))
-      return { tensions: null, highlighted: null, depth: null, members: {}, detail: TENSIONS_PREDATE_SENTENCE };
+      return { tensions: null, highlighted: null, depth: null, members: {}, unread: null, detail: TENSIONS_PREDATE_SENTENCE };
     if (!Array.isArray(fm.case_tensions))
-      return { tensions: null, highlighted: null, depth: null, members: {}, detail: TENSIONS_UNREADABLE_SENTENCE };
+      return { tensions: null, highlighted: null, depth: null, members: {}, unread: null, detail: TENSIONS_UNREADABLE_SENTENCE };
     const depth = typeof fm.tensions_depth_stated === "string" && fm.tensions_depth_stated.trim()
       ? fm.tensions_depth_stated.trim() : TENSION_DEPTH_SENTENCE;
     const tensions = fm.case_tensions.filter((r) => r && typeof r === "object").map((r) => {
@@ -79,9 +82,14 @@ export function caseTensionsOf(text) {
       (members[s.target] ||= []).push({ candidate: val(s.candidate), template: val(s.template),
                                         sentence: val(s.sentence), highlighted });
     }
-    return { tensions, highlighted: tensions.filter((t) => t.highlighted).length, depth, members, detail: null };
+    /* K499: each member's document legs the conflict read could not examine, as the document states them. */
+    const unread = Array.isArray(fm.case_tensions_unread)
+      ? fm.case_tensions_unread.filter((r) => r && typeof r === "object" && typeof r.target === "string")
+          .map((r) => ({ member: r.target, legs: val(r.legs) }))
+      : null;
+    return { tensions, highlighted: tensions.filter((t) => t.highlighted).length, depth, members, unread, detail: null };
   } catch {
-    return { tensions: null, highlighted: null, depth: null, members: {}, detail: TENSIONS_UNREADABLE_SENTENCE };
+    return { tensions: null, highlighted: null, depth: null, members: {}, unread: null, detail: TENSIONS_UNREADABLE_SENTENCE };
   }
 }
 

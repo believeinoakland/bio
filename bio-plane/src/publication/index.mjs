@@ -3189,7 +3189,7 @@ export class Publication {
        discloses nothing here and says so. */
     const disclosed = state.document && typeof state.document.text === "string"
       ? caseTensionsOf(state.document.text)
-      : { tensions: null, highlighted: null, members: {},
+      : { tensions: null, highlighted: null, members: {}, unread: null,
           detail: theCase ? "no signed case document is held for this edition, so it states no disclosure here"
                           : "this is not a case, so it discloses no contradiction" };
     for (const f of findings) f.tensions = disclosed.tensions === null ? null : disclosed.members[f.bundle_id] || [];
@@ -3277,6 +3277,8 @@ export class Publication {
              ...(asked ? { asked } : {}),
              findings,
              tensions: disclosed.tensions, highlighted: disclosed.highlighted,
+             /* K499: the member legs the conflict read could not examine, stated by the document; null where it states none. */
+             tensions_unread: disclosed.unread,
              tensions_detail: disclosed.detail
                ?? "each contradiction this edition's owner disclosed, read from the signed document: both sides as "
                 + "the publisher saw them, its state and who acknowledged it. One marked highlighted rests on a side in "

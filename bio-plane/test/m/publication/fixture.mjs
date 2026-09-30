@@ -228,7 +228,8 @@ export function world({ group = "test-group", workerd = false, contradiction = n
  *  description, reason}]; `attributions`: [{observation, level, shown, chosen_at_edition}] (a run is written only when
  *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given);
  *  `tensions`: the /5 section as case-authoring writes it (case-authoring J1's shape): `{rows, sentences, depth?}`, each
- *  row's and sentence's fields written as given (a string quoted); with it the format defaults to /5. */
+ *  row's and sentence's fields written as given (a string quoted), `unread` ({target, legs}, K499) when given; with it
+ *  the format defaults to /5. */
 export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findings = null, strength = [], excluded = [],
                                            attributions = null, citations = [], tensions = null, format = null,
                                            excludes = "Nothing else.", ack = false } = {}) {
@@ -256,6 +257,7 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
     ...(tensions ? [`tensions_disclosed: ${tensions.rows.length}`,
       `tensions_highlighted: ${tensions.rows.filter((r) => r.unseen_other_side).length}`,
       ...(tensions.depth ? [`tensions_depth_stated: "${tensions.depth}"`] : []),
+      ...(tensions.unread ? rowsOf("case_tensions_unread", tensions.unread) : []),
       ...rowsOf("case_tensions", tensions.rows), ...rowsOf("case_tension_sentences", tensions.sentences || [])] : []),
     "---"];
   const body = ["", "## Scope", "", "The question.", "",
