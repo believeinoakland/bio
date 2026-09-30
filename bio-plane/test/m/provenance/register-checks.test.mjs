@@ -167,3 +167,102 @@ test("R42–R46: the arms still run at the gate and in the audit, so moving them
   /* Registered once: a second registration by this module is refused by record-core. */
   assert.equal(w.record.registerAuditCheck("provenance", () => []).reason, "AUDIT_CHECK_DECLARED");
 });
+
+/* N381 (K560): capture R65's pulled-knock document, field for field as `capture.pullKnock` writes it (its
+   `#pulledDocument`; control-plane R36's provisional document is the same shape less `profile`, `provenance_chain` and
+   `knocker_note`). Copied, not imported: `capture` is later in the order than this module, so its tests cannot load it
+   (P4); control-plane's end-to-end filing runs this module and capture together (its R36). `profile` is capture's own
+   and the register arms read only its `digests` (C-18.3), so it carries what an undetermined profile carries. */
+function pulledKnock({ knockId = "KNOCK-20260930-0a1b2c3d", bytes = "handed in at the doorbell", by = "member:ruth",
+                       at = "2026-09-30T12:00:00Z", received = "2026-09-30T11:00:00Z" } = {}) {
+  const locator = `knock:${knockId}`;
+  return {
+    file: `snapshots/${knockId}`, locator, retrieved: at,
+    profile: { digests: { determined: false, evidentiary: null } },
+    authority_state: "undetermined",
+    authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
+    provenance_chain: [{
+      who: "instance test-instance (CivicOS/0.0.0)",
+      asserts: `these bytes were received at this instance's doorbell as knock ${knockId} at ${received}, `
+             + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
+      evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
+      bound: false, via: "doorbell",
+    }],
+    capture: {
+      method: "doorbell knock, received, hashed at receipt",
+      grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+      actor_class: "member", actor: by,
+      sha256: sha(bytes), encoding: "binary", bytes: Buffer.byteLength(bytes),
+    },
+    source: { kind: "knocker", named: false, pseudonym: null,
+              receipt: { knock_id: knockId, sha256: sha(bytes), bytes: Buffer.byteLength(bytes), received } },
+    knocker_note: { text: "about the budget", words_of: "the knocker", evidence_of_truth: false },
+    origin: { kind: "doorbell", knock_id: knockId },
+    attestation_attempts: [],
+  };
+}
+const at2 = (id, opts) => infoMd(id, opts).replace("schema: information@1", "schema: information@2");
+/* The arms over a pulled knock's bundle, its bytes held as a blob at the document's own `file`, as the pull files it. */
+const runPulled = (docs, md = at2("INFO-2026-0001-knock")) => registerChecks({
+  files: new Map([["bundle.md", md], ["data/provenance.json", JSON.stringify({ documents: docs })]]),
+  elided: docs.map((d) => d.file), fm: parseFrontmatter(md).data });
+
+test("R42, R51 (N381): C-18.1 admits capture R65's pulled-knock document: no letter on the doorbell basis, origin doorbell", () => {
+  const doc = pulledKnock();
+  assert.equal(provenance.RECEIVED_NOT_FETCHED, "CAPTURE_RECEIVED_NOT_FETCHED", "the one spelling of R51's basis");
+  assert.equal(provenance.DOORBELL_ORIGIN, "doorbell");
+  /* The document as the pull writes it passes every arm, at information@1 and @2, collected and verified (a named
+     member's release; its chain names its attestor, C-18.9). */
+  assert.deepEqual(runPulled([doc]), []);
+  assert.deepEqual(runPulled([doc], infoMd("INFO-2026-0001-knock")), []);
+  const hist = `  - timestamp: "2026-09-30T13:00:00Z"\n    from_state: collected\n    to_state: verified\n    author: member:sam`;
+  assert.deepEqual(runPulled([doc], at2("INFO-2026-0001-knock", { state: "verified", history: hist })), []);
+  /* `grade: null` stated, or absent: both are no letter. */
+  const { grade: _g, ...noGrade } = doc.capture;
+  assert.deepEqual(runPulled([{ ...doc, capture: noGrade }]), []);
+  /* Negative controls, each the one finding the rule names. A letter on received material; the basis absent or
+     another; a kind the register does not know. */
+  const one = (d) => { const f = runPulled([d]); assert.equal(f.length, 1, JSON.stringify(f)); assert.deepEqual(ids(f), ["C-18.1/error"]); return f[0].message; };
+  for (const g of ["B", "A", "C", "D", ""])
+    assert.match(one({ ...doc, capture: { ...doc.capture, grade: g } }), new RegExp(`received through the doorbell and carries capture.grade '${g}'`));
+  assert.match(one({ ...doc, capture: { ...doc.capture, grade_basis: undefined } }), /grade_basis is 'undefined', not 'CAPTURE_RECEIVED_NOT_FETCHED'/);
+  assert.match(one({ ...doc, capture: { ...doc.capture, grade_basis: "CAPTURE_ROUTE_UNRECORDED" } }), /not 'CAPTURE_RECEIVED_NOT_FETCHED'/);
+  /* A kind the register does not know is no doorbell document either, so it also owes a letter. */
+  assert.deepEqual(runPulled([{ ...doc, origin: { kind: "knocked" } }]).map((x) => x.message),
+    ["provenance documents[0].capture.grade 'null' is not one of: A, B, C",
+     "provenance documents[0].origin.kind must be one of: named_request, sweep, member, doorbell"]);
+  /* The doorbell basis excuses only a doorbell document: a fetched one stating it still owes a letter. */
+  assert.match(one({ ...doc, origin: { kind: "named_request" } }), /capture.grade 'null' is not one of: A, B, C/);
+  /* Received material is not a member's authored observation: an authored claim keeps the authored arm's rules. */
+  assert.match(runPulled([{ ...doc, authored: true }]).map((x) => x.message).join("\n"), /origin.kind is 'doorbell', not 'member'/);
+  /* A fetched document is judged as before. */
+  assert.deepEqual(run([good], { files: { [cap.path]: cap.text } }), []);
+});
+
+test("R42, R51 (N381): at the write, a pulled knock's bundle is filed with its register row; a letter on it is refused", () => {
+  const w = world();
+  const bytes = "handed in at the doorbell";
+  const id = "INFO-2026-0001-doorbell-knock";
+  const file = (doc) => ({
+    bundleId: id, base: null, snapKey: `k${Math.random().toString(16).slice(2)}`, author: "member:ruth",
+    meta: { object_type: "information" },
+    files: [{ path: "bundle.md", text: at2(id) }, { path: "data/provenance.json", text: JSON.stringify({ documents: [doc] }, null, 2) },
+            { path: doc.file, blobSha: sha(bytes), sha256: sha(bytes), bytes: Buffer.byteLength(bytes) }],
+    register: [{ sha256: sha(bytes), path: doc.file, encoding: "binary", bytes: Buffer.byteLength(bytes) }] });
+  /* A letter is refused, naming the finding, with nothing written. */
+  const before = w.snapshot();
+  const lettered = pulledKnock({ bytes });
+  const refused = w.promotion.promote(file({ ...lettered, capture: { ...lettered.capture, grade: "B" } }));
+  assert.deepEqual([refused.ok, refused.reason, refused.findings.map((x) => x.check)], [false, "PROVENANCE_REGISTER_REFUSED", ["C-18.1"]]);
+  assert.match(refused.findings[0].detail, /received through the doorbell/);
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* The document as the pull writes it is filed, and its capture registered to the bundle. */
+  const doc = pulledKnock({ bytes });
+  const r = w.promotion.promote(file(doc));
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(w.prov.homeOf(sha(bytes)).bundleId, id);
+  /* With the pull's receipt, the capture's grade is R51's: no fetched letter, on the same basis the document states. */
+  w.prov.recordReceipt({ address: doc.locator, addressNorm: doc.locator, captureSha: sha(bytes), retrieved: doc.retrieved, via: "doorbell" });
+  const g = w.prov.captureGrade(sha(bytes));
+  assert.deepEqual([g.grade, g.route, g.basis], [null, "doorbell", doc.capture.grade_basis]);
+});
