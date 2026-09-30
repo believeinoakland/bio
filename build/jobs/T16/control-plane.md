@@ -71,3 +71,7 @@ Job complete at job/T16/control-plane (record: Completion). Applied: R36's pull 
 **Tests and checks:** `test/m/control-plane/` 70 tests, 69 pass, 0 fail, 1 todo (R36's filing, N381). `test/m/` whole: 3196 tests, 3173 pass, 0 fail, 23 todo. format, architecture (15 files, 94 imports), coverage (36 of 36), ownership (7 files, legacy 0/0): 0 failures each.
 
 Size (session_01Lo4UbhM2msU4EuN9zSJ4eS): test runs 36, module lines 6604
+
+## J4 · COMPLETE
+
+B5 applied (K562): tranche merged, M_TASKS imported and in MODULE_CHECK_FILES, tested (R22, N363). Report: NOT_YOURS has two rows, intent's C-111.15 and tasks' C-76.1; the door reads intent's first, so a task refusal without its own row shows intent's sentence (pre-existing with queue's copy); renaming is intent's or tasks'. Module 69 pass 0 fail 1 todo (N381); test/m 3173 pass 0 fail 23 todo; four checks 0 failures. Record: 'Completion after B5'.
