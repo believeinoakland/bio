@@ -41,6 +41,133 @@ export const CASE_CITATION_WORDS = Object.freeze({
 });
 
 /* ===========================================================================
+ * THE TENSIONS DISCLOSED (R31, R33; N345: DEC-76 item 4, DEC-84 items 11–13, DEC-85). Fixed words: the templates a
+ * member's block carries per tension, the highlight's sentence in the document, the ceremony's sentence before the act
+ * (R32), and the words a refusal names a half-seen conflict with. A side the publisher could not see has no field here
+ * to be written into: every entry that is highlighted carries its seen side only.
+ * =========================================================================== */
+
+/** R31: the member block's sentence per tension, by the candidate's standing (`template`). */
+export const TENSION_TEMPLATES = Object.freeze({
+  in_tension: "In tension, not yet resolved: ",
+  explained: "Explained, not yet shown: ",
+  irreconcilable: "Held irreconcilable by the group: ",
+  unseen: "Rests on a side in conflict with a record not shown: ",
+});
+/** R31 (DEC-85): the highlighted entry's fixed sentence. */
+export const HIGHLIGHT_SENTENCE = "This finding rests on a side in conflict with a record not shown here. The record and "
+  + "who holds it are not named.";
+/** R32 (DEC-85): what the ceremony shows before the act for a highlighted candidate. */
+export const CEREMONY_HIGHLIGHT_SENTENCE = "A finding in this case rests on something in conflict with a record you "
+  + "cannot see. You can still publish. The published case will highlight that this finding rests on a side in "
+  + "conflict with a record not shown, and will not name that record or who holds it.";
+/** R31 (C-120.1): how a refusal names a candidate whose other side the owner may not see. */
+export const NOT_SHOWN_WORDS = "in conflict with a record not shown";
+/** R31, from `contradiction` R29: the disclosure reaches one level (DEC-84 item 12). */
+export const TENSIONS_DEPTH_STATED = "Each conflict disclosed here is on something a finding of this case rests on, "
+  + "one level deep: a finding it rests on in turn discloses its own when that finding is published.";
+
+/** A side as the document states it: its text verbatim (a claim's or stance's claim, a leg's note or reference, an
+ *  extent's reference), its source, stated date, doctype and capture, each null where the record states none. */
+export function tensionSide(side) {
+  const s = side && typeof side === "object" ? side : {};
+  const src = s.source && typeof s.source === "object" ? s.source : {};
+  const text = s.text ?? s.claim ?? s.note ?? s.ref ?? s.content_id ?? null;
+  return { kind: s.kind ?? null, text: text == null ? null : String(text),
+           source: src.inquiry ?? src.bundle ?? s.inquiry ?? s.target ?? null,
+           date: s.date ?? null, doctype: s.doctype ?? null, capture: s.capture_sha ?? null };
+}
+
+/** R31: which template a disclosed entry's member block carries. A highlighted entry carries the last one, and not its
+ *  state's own sentence. */
+export function tensionTemplate(t) {
+  if (t.unseen_other_side) return "unseen";
+  if (t.state === "resolved" && t.kind === "irreconcilable") return "irreconcilable";
+  if (t.state === "explained_not_shown") return "explained";
+  return "in_tension";
+}
+
+const quoted = (x) => (x.text == null ? "(no text stated)" : `'${x.text}'`) + (x.source ? ` (${x.source})` : "");
+
+/** R31: the member block's sentence for one disclosed entry, from its template, attributed to who disclosed it. It names
+ *  nothing of a side not seen (R33). */
+export function tensionSentence(t) {
+  const k = tensionTemplate(t);
+  const what = k === "unseen" ? quoted(t.side)
+    : k === "explained" ? `${t.explanation ?? "(no explanation stated)"} — ${quoted(t.a)} against ${quoted(t.b)}`
+    : `${quoted(t.a)} against ${quoted(t.b)}`;
+  return `${TENSION_TEMPLATES[k]}${what} (conflict ${t.candidate}). Disclosed by ${t.acknowledged_by} on `
+    + `${t.acknowledged_at}.`;
+}
+
+const STATE_WORDS = Object.freeze({ open: "open", explained_not_shown: "explained, not yet shown",
+  taken_up: "taken up as a question", resolved: "held irreconcilable, to be reopened by new evidence" });
+
+/** R26: a leg a conflict could not be looked for on (it names no content row), stated per member, never filled. */
+export function tensionsUnreadStated(unread) {
+  return unread.map((u) => `${u.legs} leg(s) of ${u.finding} name no passage the record holds, so a conflict on `
+    + "them could not be looked for; that is stated, not read as none.").join(" ");
+}
+
+function tensionFrontmatterLines(tensions, unread = []) {
+  const q = (v) => (v == null ? "null" : `"${fmSafe(v)}"`);
+  const sideLines = (prefix, x) => [
+    `    ${prefix}_kind: ${x.kind ?? "null"}`, `    ${prefix}_text: ${q(x.text)}`, `    ${prefix}_source: ${q(x.source)}`,
+    `    ${prefix}_date: ${q(x.date)}`, `    ${prefix}_doctype: ${q(x.doctype)}`, `    ${prefix}_capture: ${x.capture ?? "null"}`];
+  return [
+    `tensions_disclosed: ${tensions.length}`,
+    `tensions_highlighted: ${tensions.filter((t) => t.unseen_other_side).length}`,
+    `tensions_depth_stated: "${fmSafe(TENSIONS_DEPTH_STATED)}"`,
+    "case_tensions_unread:",
+    ...unread.flatMap((u) => [`  - target: ${u.finding}`, `    legs: ${u.legs}`]),
+    "case_tensions:",
+    ...tensions.flatMap((t) => [
+      `  - candidate: ${t.candidate}`,
+      `    finding: ${t.finding}`,
+      `    state: ${t.state}`,
+      `    kind: ${t.kind ?? "null"}`,
+      `    unseen_other_side: ${!!t.unseen_other_side}`,
+      "    depth: 1",
+      `    acknowledged_by: ${t.acknowledged_by}`,
+      `    acknowledged_at: "${t.acknowledged_at}"`,
+      `    words: ${q(t.words)}`,
+      ...(t.unseen_other_side
+        ? [...sideLines("side", t.side), `    highlight: "${fmSafe(HIGHLIGHT_SENTENCE)}"`]
+        : [`    explanation: ${q(t.explanation)}`, ...sideLines("a", t.a), ...sideLines("b", t.b)])]),
+    "case_tension_sentences:",
+    ...tensions.flatMap((t) => [
+      `  - target: ${t.finding}`,
+      `    candidate: ${t.candidate}`,
+      `    template: ${tensionTemplate(t)}`,
+      `    sentence: "${fmSafe(tensionSentence(t))}"`])];
+}
+
+function tensionBodyLines(tensions, unread = []) {
+  const side = (label, x) => `  - ${label}: ${x.text == null ? "(no text stated)" : x.text}`
+    + ` — source ${x.source ?? "not stated"}, dated ${x.date ?? "not stated"}, ${x.doctype ?? "doctype not stated"}`
+    + (x.capture ? `, capture ${x.capture}` : "");
+  return ["## Tensions Disclosed", "",
+    ...(tensions.length
+      ? ["Each unresolved conflict the record holds on what this case's findings rest on, disclosed by the "
+         + "publisher. A case is published with its conflicts disclosed, and never refused because one exists "
+         + "(DEC-76 item 4).", "",
+         ...tensions.flatMap((t) => [
+           `- **${t.finding}**, conflict ${t.candidate}: ${STATE_WORDS[t.state] ?? t.state}`
+             + `${t.unseen_other_side ? " — HIGHLIGHTED" : ""}.`,
+           ...(t.unseen_other_side
+             ? [side("the side this case rests on", t.side), `  - ${HIGHLIGHT_SENTENCE}`]
+             : [side("one side", t.a), side("the other side", t.b),
+                ...(t.explanation != null ? [`  - The explanation recorded: ${t.explanation}`] : [])]),
+           ...(t.words != null ? [`  - In the owner's words: ${t.words}`] : []),
+           `  - Acknowledged by ${t.acknowledged_by} on ${t.acknowledged_at}.`]),
+         "", TENSIONS_DEPTH_STATED]
+      : ["The record held no unresolved conflict on what this case's findings rest on when it was published, "
+         + "one level deep. " + TENSIONS_DEPTH_STATED]),
+    ...(unread.length ? ["", tensionsUnreadStated(unread)] : []),
+    ""];
+}
+
+/* ===========================================================================
  * THE TWO RENDERINGS OF THE ACKNOWLEDGEMENT LIST (R20), ONE SPELLING EACH: written into a document by
  * `caseDocumentText` when `op=publish` authors it, and spliced by `publication.reauthorSection` when an
  * acknowledgement lands on one authored and unsigned, so the list is never printed two ways. The frontmatter run starts
@@ -146,7 +273,7 @@ export function withheldWriterStated(withheld, writerBy) {
       + `hidden — everything recorded is shown or stated (§6A).`;
 }
 
-/** R14: THE CASE DOCUMENT, `bio-case-document/4`. Everything it asserts arrived as an argument (R22): the authored
+/** R14: THE CASE DOCUMENT, `publication`'s `CASE_DOCUMENT_FORMAT` (`bio-case-document/5`, N345). Everything it asserts arrived as an argument (R22): the authored
  *  sentences as the publisher typed them, and every fact the caller read from the record at the act (`searched`,
  *  `conclusions`, `frozen`, `manifest`, `acks`, `citations`, `attributions`, the writer). Nothing here is composed,
  *  summarised or inferred, and no case-level strength has anywhere to be written (R24).
@@ -155,13 +282,16 @@ export function withheldWriterStated(withheld, writerBy) {
  *  a document that cannot say what was searched fails the ceremony instead (R11). `frozen` maps each member to
  *  `{edition, pair, axes, grounds}` (rule 12 (b): stated once here instead of in the member). `manifest` absent is
  *  written as NOT IN FORCE with that sentence, never as a blank. `attributions` empty writes neither attribution run,
- *  so a case reaching no observation is authored byte for byte as before. */
+ *  so a case reaching no observation is authored byte for byte as before. `tensions` are the entries R31 disclosed,
+ *  each `{candidate, finding, state, kind, unseen_other_side, a, b | side, explanation, words, acknowledged_by,
+ *  acknowledged_at}` with its sides as `tensionSide` states them. */
 export function caseDocumentText({ caseId, edition, project, scope, bias, bar, roster, roles, pins,
                                    statement, position, justification, excluded, author, at,
                                    statementBy = null, statementByStated = "",
                                    searched, conclusions = [], frozen, manifest = null,
                                    acks = { statementSha: null, truncated: false, rows: [] },
-                                   citations = [], attributions = [] }) {
+                                   citations = [], attributions = [], tensions = [],
+                                   tensionsUnread = [] }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
     : { in_force: manifest && manifest.in_force === null ? null : false,
@@ -229,6 +359,8 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
        compares it with are written by one function. */
     "case_conclusions:",
     ...roster.flatMap((m) => caseConclusionRowLines(m, concOf.get(m) || null)),
+    /* R31 (N345): THE TENSIONS DISCLOSED and each member's tension sentences; always present, zero included. */
+    ...tensionFrontmatterLines(tensions, tensionsUnread),
     "completeness:",
     `  statement: "${fmSafe(statement)}"`,
     `  subject_position: ${position}`,
@@ -321,9 +453,11 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
     "",
     "## Findings In This Case",
     "",
-    ...roster.map((m, i) =>
+    ...roster.flatMap((m, i) => [
       `${i + 1}. ${m} — ${roleOf.get(m) === "load_bearing" ? "LOAD-BEARING" : "supporting"}, `
-      + `frozen at version ${pins.get(m) ?? "(unpinned)"}`),
+      + `frozen at version ${pins.get(m) ?? "(unpinned)"}`,
+      /* R31: its tension sentences, in its own block. */
+      ...tensions.filter((t) => t.finding === m).map((t) => `   - ${tensionSentence(t)}`)]),
     "",
     /* DEC-72 clause 4, in prose: a reader is told, in the document that asserts it, which half claims what. */
     "A LOAD-BEARING finding is one this case rests on, and the standard of evidence below was asked of it.",
@@ -366,6 +500,7 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
         + "no-project relationship's. A reader weighing this case should know which findings this "
         + "project concluded for itself and which it took as the record already answered.",
     "",
+    ...tensionBodyLines(tensions, tensionsUnread),
     ...(attributions.length ? attributionBodyLines(attributions) : []),
     "## What This Excludes",
     "",

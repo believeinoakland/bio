@@ -99,3 +99,30 @@ export const STATEMENT_ACK_CHECKS = Object.freeze({
       + 'be published either way.',
   },
 });
+
+/* C-120 — A CASE'S DISCLOSURES (N345; DEC-76 item 4, DEC-84 items 11–13, DEC-85; R29, R31, R32). A new family held in
+   this module's own table (K343's pattern): a case discloses each unresolved conflict on what it rests on, one level
+   deep, and is never refused because a conflict exists. What refuses is an undisclosed one, a disclosure of something
+   that is not one, and a read that could not be made whole. Promotion stamps these rows (N318). */
+export const CASE_DISCLOSURE_CHECKS = Object.freeze({
+  TENSION_NOT_DISCLOSED: {
+    check: 'C-120.1',
+    where: at('#publishCase', 'is-tension-disclosed'),
+    translation: 'A finding in this case rests on something the record holds in unresolved conflict, and a case may '
+      + 'be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you '
+      + 'cannot see is named by its finding, and the published case will highlight it without naming that record. '
+      + 'Disclose it, or resolve it first. Nothing was published.',
+  },
+  DISCLOSURE_NOT_STANDING: {
+    check: 'C-120.2',
+    where: at('#publishCase', 'is-disclosure-standing'),
+    translation: 'One of the conflicts disclosed is not an unresolved conflict on this case\'s findings: it may have '
+      + 'been resolved since. Read the list again. Nothing was published.',
+  },
+  TENSIONS_UNDETERMINED: {
+    check: 'C-120.3',
+    where: at('#undetermined', 'is-tensions-determined'),
+    translation: 'The record could not be read completely for conflicts on this case\'s findings, so what must be '
+      + 'disclosed is not known. Try again. Nothing was published.',
+  },
+});

@@ -39,6 +39,7 @@
  *   publication          `caseRelation`, `storeCaseDocument`, `reauthorSection`, `attributionStatements`,
  *                        `hasCaseStanding`, `reviewProvider` (its R4, R17, R21, R23).
  *   ratification         `caseConclusionFor`, `editionsRecordingConclusion` (its R1).
+ *   contradiction        `unresolvedRecordOn` (its R29; R31, R32: N345).
  *   now                  the clock for the instants it writes, `(precision) => ISO string` (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); publication's
@@ -56,19 +57,22 @@ import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
+import { contradictionOf } from "../contradiction/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, createSha256, OBJECT_TYPES, BASIS_GRADES,
          MACHINE_FENCE_CHECKS } from "../../checks/bio-checks.mjs";
-import { CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS } from "./checks.mjs";
+import { CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
 import { fmSafe, statementSha, caseDocumentText, ackFrontmatterLines, ackBodyLines, withheldWriterStated,
-         ACK_PROSE_HEAD } from "./document.mjs";
+         ACK_PROSE_HEAD, tensionSentence, HIGHLIGHT_SENTENCE, CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS,
+         TENSIONS_DEPTH_STATED, tensionSide } from "./document.mjs";
 
-export { CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS } from "./checks.mjs";
+export { CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 export { CASE_AUTHORING_SCHEMA, CASE_AUTHORING_TABLES } from "./schema.mjs";
 export { searchedSection, SEARCHED_LEVEL_OUTCOMES } from "./searched.mjs";
 export { caseDocumentText, statementSha, withheldWriterStated, fmSafe, ackFrontmatterLines, ackBodyLines,
-         ACK_PROSE_HEAD, CASE_CITATION_WORDS } from "./document.mjs";
+         ACK_PROSE_HEAD, CASE_CITATION_WORDS, TENSION_TEMPLATES, tensionSentence, HIGHLIGHT_SENTENCE,
+         CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED, tensionSide } from "./document.mjs";
 
 /** R3: the longest authored field (the statement, the subject justification, the scope, the bias acknowledgement, and
  *  each exclusion's description and reason). */
@@ -101,18 +105,20 @@ function refusal(family, key, extra = {}) {
    against the rows that govern it (N259, N275). */
 const derivationRefusal = (key, extra) => refusal(CASE_DERIVATION_CHECKS, key, extra);
 const fenceRefusal = (key, extra) => refusal(MACHINE_FENCE_CHECKS, key, extra);
+const disclosureRefusal = (key, extra) => refusal(CASE_DISCLOSURE_CHECKS, key, extra);
 
 export class CaseAuthoring {
   #deps;
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
-                now = null } = {}) {
+                contradiction = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification };
+    this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
+                   contradiction };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -125,6 +131,7 @@ export class CaseAuthoring {
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get ratification() { return this.#deps.ratification ||= ratificationOf(this.#deps.host); }
+  get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
@@ -160,7 +167,7 @@ export class CaseAuthoring {
   #publishCase({ target = null, targets = null, caseId = null, newCase = false, scope = "",
                  statement = "", excluded = null, subjectPosition = "",
                  subjectJustification = "", biasAcknowledgement = "",
-                 project = null, roles = null, draft = null,
+                 project = null, roles = null, draft = null, tensionsDisclosed = null,
                  viewer = null, author = null } = {}) {
     const who = str(author);
     /* DEC-49 REGION is-machine-publish — R1 / C-32.6. The fence alone, before anything else is read. */
@@ -171,34 +178,10 @@ export class CaseAuthoring {
               + "subject, both of which are declared bias. Sign in as a member." });
     /* END DEC-49 REGION is-machine-publish */
 
-    /* R2 — CASE-2 / DEC-72: PUBLICATION IS A PRODUCTION OF A PROJECT, wielded by an OWNER of it. These authority fences
-       fire first, beside the machine fence: a project-less caller is not making a legal call, and ordering their
-       diagnosis behind the ceremony would make them author a bias acknowledgement for a request that cannot succeed. */
-    const gate = viewerPredicate(viewer);
-    const proj = str(project);
-    if (!proj)
-      return { ok: false, reason: "NO_PUBLISHING_PROJECT",
-               detail: "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is "
-                     + "what supplies the standard of evidence this case is held to, read from that project "
-                     + "alone at this moment — so a publication naming no project is one whose bar nobody "
-                     + "declared, and an absent publisher is not a publisher of none." };
-    /* record-core R37's read contract, through membership's one sight rule (its R43). */
-    const pb = this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-                         proj, ...gate.args);
-    /* REC-149: at EXISTENCE the positional C-70.1 (membership R77); NONE is membership's one answer (its R78). */
-    if (!pb) { const existence = this.membership.existenceAct(proj, viewer); if (existence) return existence; }
-    if (!pb) return noSuchProject(proj);
-    if (normalizeType(pb.object_type) !== "project")
-      return { ok: false, reason: "NOT_A_PROJECT", project: proj, object_type: pb.object_type,
-               detail: `${proj} is a ${pb.object_type}, and only a PROJECT has a standard of evidence to hold a `
-                     + `case to (DEC-72). Publication is wielded at the top of a project's roster.` };
-    /* Membership's own owner predicate (its R54), never restated. No administrator arm: an administrator sees every
-       project and directs none of them (v2 4.9), and publishing is the most directing act there is. */
-    if (!this.membership.isProjectOwner(proj, who))
-      return { ok: false, reason: "NOT_THE_PROJECT_OWNER", project: proj, author: who,
-               detail: `publishing is ${proj}'s own production and is wielded by an OWNER of it (DEC-72). An `
-                     + `administrator sees every project and directs none of them, and a participant who is not `
-                     + `an owner contributes to the work without putting the project's name on it.` };
+    /* R2: the authority fences, beside the machine fence (`#authority`). */
+    const auth = this.#authority(project, viewer, who);
+    if (auth.refusal) return auth.refusal;
+    const { proj, gate } = auth;
 
     /* R3 — REC-44: THE SET. `targets` is the shape; `target` is the one-finding degenerate case (DEC-44 determination
        5), normalised here so nothing below has two arities. A comma-separated string is accepted because a query
@@ -301,72 +284,10 @@ export class CaseAuthoring {
                        + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
     }
 
-    /* R4 — EVERY MEMBER IS JUDGED BEFORE ANY MEMBER MOVES: a case that took two of three findings and then refused
-       the third would assert a case that does not exist. */
-    const prepared = [];
-    for (const id of members) {
-      /* record-core R37's read contract, gated by membership's rule: absent and invisible are one answer. */
-      const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
-                           WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
-      if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
-      if (normalizeType(b.object_type) !== "inquiry")
-        return { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: b.object_type,
-                 detail: "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a "
-                       + "member of a case." };
-      const text = this.#liveText(id);
-      if (text === null)
-        return { ok: false, reason: "NO_DOCUMENT", target: id,
-                 detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
-      const fm = parseFrontmatter(text).data || {};
-      const head = this.record.head(id);
-      /* CASE-4 / DEC-72 and REC-135 / §7.1 item 4: ONLY A CONCLUDED FINDING MAY BE A CASE MEMBER, and `concluded` is
-         asked of the PUBLISHING PROJECT'S relationship with the question (ratification R1), never of the shared
-         question's own word. THE RULE'S OWN SENTENCE LEADS EVERY BRANCH (CASE-AS-PRODUCTION's supersession table
-         verbatim); what the branch adds is WHICH fact was met, because "not concluded" is four different facts. */
-      const conc = this.ratification.caseConclusionFor(proj, id, viewer, b.current_state);
-      if (conc.state !== "concluded")
-        return { ok: false, reason: "NOT_CONCLUDED", target: id, project: proj,
-                 from: b.current_state, object_type: fm.object_type ?? b.object_type,
-                 relationship: conc.relationship, why: conc.why,
-                 stance: conc.stance, concluded_elsewhere: conc.concluded_elsewhere,
-                 concluded_elsewhere_bounds: conc.concluded_elsewhere_bounds,
-                 detail: "only a CONCLUDED finding may be a case member: a material set cannot be "
-                   + "asserted over a question with no conclusion, and `concluded` is asked of the "
-                   + "PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). "
-                   + (conc.why === "question_not_case_bearing"
-                   ? `This question is ${b.current_state}, and a case cannot be asserted over one the group `
-                     + `has set down or carried forward. Reopen it (op=reopen) or work the children a `
-                     + `division produced (DEC-28); a conclusion a project wrote while the question was `
-                     + `open does not survive the question leaving the states a case can rest on. `
-                   : conc.why === "project_withdrew_its_conclusion"
-                   ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none `
-                     + `today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the `
-                     + `stance). Conclude it again for this project (op=conclude&project=${proj}). `
-                   : conc.why === "project_stance_undetermined"
-                   ? `${proj}'s latest entry about this question names an act this plane does not know, so `
-                     + `what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. `
-                   : `${proj} has not concluded this question. A conclusion belongs to the project's `
-                     + `relationship with the inquiry (§7.1): another team's conclusion, and a conclusion `
-                     + `written in the question's own bytes with no project, are both readable here and `
-                     + `neither is this project's. Conclude it for this project `
-                     + `(op=conclude&project=${proj}&version=<reading>). `)
-                   + (conc.concluded_elsewhere.length
-                     ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE `
-                       + `concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) — `
-                       + `information, never this project's stance (§7.1 item 8). `
-                     : "")
-                   + "A finding already in a published case is REOPENED first (op=reopen) and concluded "
-                   + "again, which is what makes the next edition a separate document carrying its own "
-                   + "conclusion, its own falsifier and its own freshly authored completeness "
-                   + "(DEC-12, DEC-72)." };
-      /* R8 — REC-157 / §7.1 item 9: a finding in a case at its current bytes is asked whether some edition pinning
-         them ALREADY RECORDS the conclusion this act would record, compared on the SAME answer the gate above was
-         decided on (`conc`, never re-read). The refusal itself is asked below, once the case is known (D-442). */
-      const rel = this.publication.caseRelation(id);
-      const recorded = rel && rel.member ? this.ratification.editionsRecordingConclusion(id, rel, conc) : null;
-      prepared.push({ id, b, fm, bundleSha: head ? head.bundleSha : null, conclusion: conc, warrant: recorded,
-                      preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null });
-    }
+    /* R4: every member judged before any member moves (`#judgeMembers`). */
+    const judged = this.#judgeMembers(members, proj, viewer, gate);
+    if (judged.refusal) return judged.refusal;
+    const { prepared } = judged;
 
     /* R5 — CASE-2 / DEC-72 clause 4: THE AUTHORED LOAD-BEARING PARTITION. Both halves are authored and neither is a
        default: a member designated by omission was designated by nobody. A map keyed by member id, never a list,
@@ -451,6 +372,36 @@ export class CaseAuthoring {
                      + `). A hunch is temporary declared bias, and it is the one bias that must be cleared before `
                      + `publication (DEC-20): the case must still hold with the hunch removed. Give each leg a grade `
                      + `the record earns, or take the hunch out of the basis, and publish again. Nothing was written.` };
+
+    /* R31 — N345 (DEC-76 item 4, DEC-84 items 11–13, DEC-85): A CASE DISCLOSES EVERY UNRESOLVED CONFLICT ON WHAT IT RESTS
+       ON, ONE LEVEL DEEP, AND IS NEVER REFUSED BECAUSE ONE EXISTS. Asked after R12 and before the case identity is
+       derived, so a refusal draws no id and writes nothing. Each member is read at the bytes this act pins (R13), as the
+       viewer, so a side the publisher may not see comes back highlighted with nothing of it (R33). */
+    const listed = this.#disclosuresListed(tensionsDisclosed);
+    if (listed.refusal) return listed.refusal;
+    const read = this.#tensionsRead(prepared, viewer);
+    if (read.refusal) return read.refusal;
+    const undisclosed = read.entries.filter((e) => !listed.byCandidate.has(e.candidate));
+    /* DEC-49 REGION is-tension-disclosed */
+    if (undisclosed.length)
+      return disclosureRefusal("TENSION_NOT_DISCLOSED", {
+        undisclosed: undisclosed.map((e) => this.#namedInRefusal(e)),
+        detail: `${undisclosed.length} unresolved conflict(s) on what this case rests on are not disclosed (`
+              + undisclosed.map((e) => `${e.candidate} on ${e.finding}`
+                + (e.unseen_other_side ? `, ${NOT_SHOWN_WORDS}` : "")).join("; ")
+              + `). A case is published with its conflicts disclosed, never refused because one exists (DEC-76 `
+              + `item 4): list each in tensionsDisclosed, or resolve it first. Nothing was published.` });
+    /* END DEC-49 REGION is-tension-disclosed */
+    const standing = new Set(read.entries.map((e) => e.candidate));
+    const notStanding = [...listed.byCandidate.values()].filter((d) => !standing.has(d.candidate));
+    /* DEC-49 REGION is-disclosure-standing */
+    if (notStanding.length)
+      return disclosureRefusal("DISCLOSURE_NOT_STANDING", {
+        not_standing: notStanding.map((d) => ({ candidate: d.candidate, ord: d.ord })),
+        detail: `${notStanding.map((d) => d.candidate).join(", ")} is not an unresolved conflict on this case's `
+              + `findings at the bytes this act pins: it may have been resolved since, or it names nothing this `
+              + `case rests on. Read the list again (op=publishtensions). Nothing was published.` });
+    /* END DEC-49 REGION is-disclosure-standing */
 
     /* R7 — REC-44: THE CASE IDENTITY, DECIDED FROM THE RECORD. Name one, derive one from what the members already serve,
        or mint one; a caller never mints an identity. D-309 / DEC-72 clause 6: a finding may serve many cases, so the
@@ -736,6 +687,10 @@ export class CaseAuthoring {
       statementBy: writer.by, statementByStated: writer.stated,
       frozen, manifest, acks, citations,
       attributions: this.publication.attributionStatements(theCase, edition, proj, observations),
+      /* R31: each entry, the owner's words marked as the owner's, the acknowledgement the `author` stamp at this act. */
+      tensions: read.entries.map((e) => ({ ...e, words: listed.byCandidate.get(e.candidate).words,
+                                           acknowledged_by: who, acknowledged_at: when })),
+      tensionsUnread: read.unread,
     });
     const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
@@ -760,6 +715,11 @@ export class CaseAuthoring {
              bias_acknowledgement: back,
              bias_manifest: manifest,
              case_citations: citations,
+             /* R31: what the document discloses, as it states it (R33: a highlighted one carries its seen side only). */
+             tensions: read.entries.map((e) => ({ ...e, words: listed.byCandidate.get(e.candidate).words,
+                                                  acknowledged_by: who, acknowledged_at: when })),
+             tensions_highlighted: read.entries.filter((e) => e.unseen_other_side).length,
+             tensions_legs_unread: read.unread,
              completeness: { statement: stmt, subject_position: pos, subject_justification: just,
                              author: who, at: when, excluded: rows.length,
                              statement_sha: acks.statementSha, acknowledgements: acks.rows,
@@ -791,6 +751,229 @@ export class CaseAuthoring {
                  : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed `
                  + `on its own bytes because the finding is the unit of truth, and this case edition becomes `
                  + `servable as a container when the last of them lands.`) };
+  }
+
+  /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
+   *  `who`. Answers `{refusal}` or `{proj, gate}`. */
+  #authority(project, viewer, who) {
+      /* R2 — CASE-2 / DEC-72: PUBLICATION IS A PRODUCTION OF A PROJECT, wielded by an OWNER of it. These authority fences
+         fire first, beside the machine fence: a project-less caller is not making a legal call, and ordering their
+         diagnosis behind the ceremony would make them author a bias acknowledgement for a request that cannot succeed. */
+      const gate = viewerPredicate(viewer);
+      const proj = str(project);
+      if (!proj)
+        return { refusal: { ok: false, reason: "NO_PUBLISHING_PROJECT",
+                 detail: "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is "
+                       + "what supplies the standard of evidence this case is held to, read from that project "
+                       + "alone at this moment — so a publication naming no project is one whose bar nobody "
+                       + "declared, and an absent publisher is not a publisher of none." } };
+      /* record-core R37's read contract, through membership's one sight rule (its R43). */
+      const pb = this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+                           proj, ...gate.args);
+      /* REC-149: at EXISTENCE the positional C-70.1 (membership R77); NONE is membership's one answer (its R78). */
+      if (!pb) { const existence = this.membership.existenceAct(proj, viewer); if (existence) return { refusal: existence }; }
+      if (!pb) return { refusal: noSuchProject(proj) };
+      if (normalizeType(pb.object_type) !== "project")
+        return { refusal: { ok: false, reason: "NOT_A_PROJECT", project: proj, object_type: pb.object_type,
+                 detail: `${proj} is a ${pb.object_type}, and only a PROJECT has a standard of evidence to hold a `
+                       + `case to (DEC-72). Publication is wielded at the top of a project's roster.` } };
+      /* Membership's own owner predicate (its R54), never restated. No administrator arm: an administrator sees every
+         project and directs none of them (v2 4.9), and publishing is the most directing act there is. */
+      if (!this.membership.isProjectOwner(proj, who))
+        return { refusal: { ok: false, reason: "NOT_THE_PROJECT_OWNER", project: proj, author: who,
+                 detail: `publishing is ${proj}'s own production and is wielded by an OWNER of it (DEC-72). An `
+                       + `administrator sees every project and directs none of them, and a participant who is not `
+                       + `an owner contributes to the work without putting the project's name on it.` } };
+    return { proj, gate };
+  }
+
+  /** R4, asked by `op=publish` and by R32's read alike: each member in order, every one judged before any moves.
+   *  Answers `{refusal}` or `{prepared}`, each prepared member with its current pin (`bundleSha`, R13). */
+  #judgeMembers(members, proj, viewer, gate) {
+      /* R4 — EVERY MEMBER IS JUDGED BEFORE ANY MEMBER MOVES: a case that took two of three findings and then refused
+         the third would assert a case that does not exist. */
+      const prepared = [];
+      for (const id of members) {
+        /* record-core R37's read contract, gated by membership's rule: absent and invisible are one answer. */
+        const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+                             WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
+        if (!b) return { refusal: { ok: false, reason: "NO_SUCH_BUNDLE", target: id } };
+        if (normalizeType(b.object_type) !== "inquiry")
+          return { refusal: { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: b.object_type,
+                   detail: "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a "
+                         + "member of a case." } };
+        const text = this.#liveText(id);
+        if (text === null)
+          return { refusal: { ok: false, reason: "NO_DOCUMENT", target: id,
+                   detail: "this inquiry has no readable bundle.md, so its state cannot be moved" } };
+        const fm = parseFrontmatter(text).data || {};
+        const head = this.record.head(id);
+        /* CASE-4 / DEC-72 and REC-135 / §7.1 item 4: ONLY A CONCLUDED FINDING MAY BE A CASE MEMBER, and `concluded` is
+           asked of the PUBLISHING PROJECT'S relationship with the question (ratification R1), never of the shared
+           question's own word. THE RULE'S OWN SENTENCE LEADS EVERY BRANCH (CASE-AS-PRODUCTION's supersession table
+           verbatim); what the branch adds is WHICH fact was met, because "not concluded" is four different facts. */
+        const conc = this.ratification.caseConclusionFor(proj, id, viewer, b.current_state);
+        if (conc.state !== "concluded")
+          return { refusal: { ok: false, reason: "NOT_CONCLUDED", target: id, project: proj,
+                   from: b.current_state, object_type: fm.object_type ?? b.object_type,
+                   relationship: conc.relationship, why: conc.why,
+                   stance: conc.stance, concluded_elsewhere: conc.concluded_elsewhere,
+                   concluded_elsewhere_bounds: conc.concluded_elsewhere_bounds,
+                   detail: "only a CONCLUDED finding may be a case member: a material set cannot be "
+                     + "asserted over a question with no conclusion, and `concluded` is asked of the "
+                     + "PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). "
+                     + (conc.why === "question_not_case_bearing"
+                     ? `This question is ${b.current_state}, and a case cannot be asserted over one the group `
+                       + `has set down or carried forward. Reopen it (op=reopen) or work the children a `
+                       + `division produced (DEC-28); a conclusion a project wrote while the question was `
+                       + `open does not survive the question leaving the states a case can rest on. `
+                     : conc.why === "project_withdrew_its_conclusion"
+                     ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none `
+                       + `today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the `
+                       + `stance). Conclude it again for this project (op=conclude&project=${proj}). `
+                     : conc.why === "project_stance_undetermined"
+                     ? `${proj}'s latest entry about this question names an act this plane does not know, so `
+                       + `what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. `
+                     : `${proj} has not concluded this question. A conclusion belongs to the project's `
+                       + `relationship with the inquiry (§7.1): another team's conclusion, and a conclusion `
+                       + `written in the question's own bytes with no project, are both readable here and `
+                       + `neither is this project's. Conclude it for this project `
+                       + `(op=conclude&project=${proj}&version=<reading>). `)
+                     + (conc.concluded_elsewhere.length
+                       ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE `
+                         + `concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) — `
+                         + `information, never this project's stance (§7.1 item 8). `
+                       : "")
+                     + "A finding already in a published case is REOPENED first (op=reopen) and concluded "
+                     + "again, which is what makes the next edition a separate document carrying its own "
+                     + "conclusion, its own falsifier and its own freshly authored completeness "
+                     + "(DEC-12, DEC-72)." } };
+        /* R8 — REC-157 / §7.1 item 9: a finding in a case at its current bytes is asked whether some edition pinning
+           them ALREADY RECORDS the conclusion this act would record, compared on the SAME answer the gate above was
+           decided on (`conc`, never re-read). The refusal itself is asked below, once the case is known (D-442). */
+        const rel = this.publication.caseRelation(id);
+        const recorded = rel && rel.member ? this.ratification.editionsRecordingConclusion(id, rel, conc) : null;
+        prepared.push({ id, b, fm, bundleSha: head ? head.bundleSha : null, conclusion: conc, warrant: recorded,
+                        preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null });
+      }
+    return { prepared };
+  }
+
+  /** R31's input: `tensionsDisclosed`, `[{candidate, words?}]`, as a map by candidate (a candidate listed twice is
+   *  disclosed once, its first words kept). Absent or null is none. Any malformed shape is R3's `BAD_COMPLETENESS`
+   *  naming the field (K498): a list that is not one, an entry that is not an object naming a `candidate` string, and
+   *  words over `COMPLETENESS_MAX` or holding a character the grammar cannot carry (a double quote, a backslash, a line
+   *  break; an apostrophe is legal inside its quoted string). C-120.2 is only for a well-formed candidate. */
+  #disclosuresListed(list) {
+    const byCandidate = new Map();
+    const bad = (field, detail) => ({ refusal: { ok: false, reason: "BAD_COMPLETENESS", field, detail } });
+    if (list == null) return { byCandidate };
+    if (!Array.isArray(list))
+      return bad("tensionsDisclosed", "tensionsDisclosed is a list of {candidate, words?}, one per conflict disclosed");
+    for (let i = 0; i < list.length; i++) {
+      const d = list[i];
+      const candidate = d && typeof d === "object" && !Array.isArray(d) && typeof d.candidate === "string"
+        ? d.candidate.trim() : "";
+      if (!candidate)
+        return bad(`tensionsDisclosed[${i}]`, `tensionsDisclosed[${i}] is not {candidate, words?} naming a candidate`);
+      if (d.words != null && typeof d.words !== "string")
+        return bad(`tensionsDisclosed[${i}].words`, `tensionsDisclosed[${i}].words is the owner's words, a string`);
+      const words = typeof d.words === "string" ? d.words.trim() || null : null;
+      if (words !== null && (words.length > COMPLETENESS_MAX || /["\\\r\n]/.test(words)))
+        return bad(`tensionsDisclosed[${i}].words`, `tensionsDisclosed[${i}].words is at most ${COMPLETENESS_MAX} `
+          + `characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has `
+          + `no escapes`);
+      if (!byCandidate.has(candidate)) byCandidate.set(candidate, { candidate, ord: i, words });
+    }
+    return { byCandidate };
+  }
+
+  /** R31, R32: THE ONE READ of what a case over `prepared` must disclose: `contradiction.unresolvedRecordOn` (its R29)
+   *  for each member at its pin, as `viewer`. A read that fails or is truncated is C-120.3 (what cannot be read cannot
+   *  be disclosed). A leg the read could name no referent for (`undetermined_legs`: a document leg with no content row)
+   *  is stated, never filled (R26): counted per member in `unread`. Answers `{refusal}` or `{entries, unread}`, one
+   *  entry per candidate and member, each with its sides as the document states them, and a highlighted one with its
+   *  seen side only (R33). Never throws. */
+  #tensionsRead(prepared, viewer) {
+    const entries = [];
+    const failed = [];
+    const unread = [];
+    for (const p of prepared) {
+      let r = null;
+      try { r = this.contradiction.unresolvedRecordOn({ finding: p.id, sha: p.bundleSha, viewer }); }
+      catch (e) { r = { undetermined: true, why: String(e && e.message || e).slice(0, 160) }; }
+      if (!r || r.ok === false || r.undetermined || r.truncated || !Array.isArray(r.candidates)) {
+        failed.push({ finding: p.id, sha: p.bundleSha,
+                      why: !r ? "no answer" : r.truncated ? `more than ${r.bound ?? "its bound of"} candidates on it`
+                         : r.why || "the read failed" });
+        continue;
+      }
+      if (Number(r.undetermined_legs) > 0) unread.push({ finding: p.id, legs: Number(r.undetermined_legs) });
+      for (const c of r.candidates) {
+        if (c.unseen_other_side)
+          entries.push({ candidate: c.candidate, finding: p.id, state: c.state, kind: null, unseen_other_side: true,
+                         side: tensionSide(c.side), depth: 1 });
+        else
+          entries.push({ candidate: c.candidate, finding: p.id, state: c.state, kind: c.kind ?? null,
+                         unseen_other_side: false, a: tensionSide(c.a), b: tensionSide(c.b),
+                         explanation: c.explanation ?? null, depth: 1 });
+      }
+    }
+    if (failed.length) return { refusal: CaseAuthoring.#undetermined(failed) };
+    return { entries, unread };
+  }
+
+  /* C-120.3's one site: a read of conflicts that could not be made whole, naming each finding and why. */
+  static #undetermined(failed) {
+    /* DEC-49 REGION is-tensions-determined */
+    return disclosureRefusal("TENSIONS_UNDETERMINED", { undetermined: failed,
+      detail: `the record could not be read whole for conflicts on ${failed.map((f) => `${f.finding ?? "this case's "
+                + "findings"} (${f.why})`).join("; ")}, so what this case must disclose is not known. Nothing was `
+            + `published.` });
+    /* END DEC-49 REGION is-tensions-determined */
+  }
+
+  /* R31, R33: how C-120.1 names an undisclosed entry. A half-seen one by its candidate and its finding only. */
+  #namedInRefusal(e) {
+    return e.unseen_other_side
+      ? { candidate: e.candidate, finding: e.finding, unseen_other_side: true, says: NOT_SHOWN_WORDS }
+      : { candidate: e.candidate, finding: e.finding, state: e.state, kind: e.kind, a: e.a, b: e.b };
+  }
+
+  /* ==========================================================================================================
+   * op=publishtensions: tensionsToDisclose (R32; DEC-85: the ceremony tells the publisher before the act)
+   * ========================================================================================================== */
+  /** R32: the candidates `op=publish` would require this act to disclose, read exactly as R31 reads them. R2's
+   *  refusals, then R4's per member, then C-120.3. Writes nothing and never throws. */
+  tensionsToDisclose({ project = null, targets = null, target = null, viewer = null, author = null } = {}) {
+    try {
+      const who = str(author);
+      const auth = this.#authority(project, viewer, who);
+      if (auth.refusal) return auth.refusal;
+      const { proj, gate } = auth;
+      const set = Array.isArray(targets) ? targets
+                : typeof targets === "string" && targets.trim() ? targets.split(",")
+                : target ? [target] : [];
+      const members = [...new Set(set.map((x) => str(x)).filter(Boolean))];
+      const judged = this.#judgeMembers(members, proj, viewer, gate);
+      if (judged.refusal) return judged.refusal;
+      const read = this.#tensionsRead(judged.prepared, viewer);
+      if (read.refusal) return read.refusal;
+      const candidates = read.entries.map((e) => (e.unseen_other_side
+        ? { ...e, highlighted: true, sentence: CEREMONY_HIGHLIGHT_SENTENCE } : e));
+      return { ok: true, wrote: false, project: proj,
+               findings: judged.prepared.map((p) => ({ target: p.id, bundleSha: p.bundleSha })),
+               candidates, count: candidates.length,
+               highlighted: candidates.filter((c) => c.highlighted).length,
+               legs_unread: read.unread,
+               depth_stated: TENSIONS_DEPTH_STATED,
+               says: "publishing discloses each of these, and is never blocked by a conflict (DEC-76 item 4): list "
+                   + "each in tensionsDisclosed at op=publish, with your own words if you choose. A highlighted one "
+                   + "rests on a side in conflict with a record you cannot see; the published case will not name "
+                   + "that record or who holds it." };
+    } catch (e) {
+      return CaseAuthoring.#undetermined([{ finding: null, why: String(e && e.message || e).slice(0, 160) }]);
+    }
   }
 
   /* The project an unsigned preparation of a case names, or null (publication R40: `case_documents`). */
@@ -1452,6 +1635,13 @@ export function caseAuthoringOps(c, url, body) {
       })(),
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
+      viewer: q("viewer"),
+      author: q("author") }),
+    /* R32 (N345): the ceremony's read before op=publish; `viewer` and `author` are the stamps, as op=publish's. */
+    publishtensions: () => c.tensionsToDisclose({ ...b,
+      target: q("target") || b.target,
+      targets: b.targets || q("targets") || null,
+      project: q("project") || b.project || null,
       viewer: q("viewer"),
       author: q("author") }),
     /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). */
