@@ -41,7 +41,7 @@ Terms. An **act** is `{id?, description, actor: {role, body}, at | period, evide
 - **R20** The one answer to one condition: the determination `determinationId` names has been superseded (it is not live, R10). It answers `{ok: false, reason: "DETERMINATION_SUPERSEDED", code: "DETERMINATION_SUPERSEDED", check, translation, determination, superseded_by, detail}`: `superseded_by` the determination that superseded it (null when the caller cannot read it), `detail` one fixed sentence, the same for every caller, and `check` and `translation` its catalogue row's. `extra` adds a caller's own fields and never replaces these. R7's supersession of a determination already superseded answers through it, as does every act of a later module that answers this condition (`consequences` R1, `actions` R8, `escalation` R1), so the code is minted at one site; its one catalogue row is this module's, its `where` naming this function, and escalation's C-116.4 gives way to it. It writes nothing and never throws.
 
 **A comparison started from a contradiction, and the cause** (N345; DEC-76 item 3, DEC-84 item 10)
-- **R21** `comparisonFacts({contradiction, standardSide, viewer})` answers the rows a comparison may start from, as facts: `requires` from the side named `standardSide` (`a` or `b`, named by the member, never defaulted) and `did` from the other, each with its source, content id and date, labelled the record's and never an outcome. It answers the question's resolution when it is concluded. R12's refusal applies. It writes nothing. An absent or unnamed `standardSide` is `STANDARD_SIDE_UNNAMED` (C-113.28), asked after R12's `NO_SUCH_CONTRADICTION_INQUIRY` (K503).
+- **R21** `comparisonFacts({contradiction, standardSide, viewer})` answers the rows a comparison may start from, as facts: `requires` from the side named `standardSide` (`a` or `b`, named by the member, never defaulted) and `did` from the other, each with its source, content id, date and `text`: the passage's words as `content.passageText` answers them for that content id (its R46), or `null` where it answers `null` (N362, K569), labelled the record's and never an outcome. It answers the question's resolution when it is concluded. R12's refusal applies. It writes nothing. An absent or unnamed `standardSide` is `STANDARD_SIDE_UNNAMED` (C-113.28), asked after R12's `NO_SUCH_CONTRADICTION_INQUIRY` (K503). *(not yet met: N362's `text`, T17)*
 - **R22**
   - **The input.** `determine` takes `cause?: {statement, evidence}`, member-authored.
   - **Refusals.**
@@ -68,7 +68,7 @@ Rows C-113.24–C-113.28 (this module's C-113; N345), with their translations; p
 - `record-core`: `allocId`, `transact`, `stampInstant`.
 - `membership`: `sight`, `projectAuthority`, `viewerPredicate`; `noSuchProject` (its R78), through which R1's `NO_SUCH_PROJECT` is answered, its translation membership's C-70.5, in place of C-113.2 (N274, N208, K275).
 - `promotion`: `promote` (R6's new inquiry; and the determination itself, R17, K102). *(not declared)*
-- `content`: `contentRow`, `passageNotice` (R1's evidence, R10).
+- `content`: `contentRow`, `passageNotice` (R1's evidence, R10); `passageText` (its R46; R21's `text`, N362).
 - `inquiry`: `supersededBy`, `stateHistory` (R10); visibility of a named inquiry (R6); `contradictionLink` (its R48), for R12 and R21 (N345).
 - `contradiction` (N345): for R12 and R21.
 - `strength`: `inquiryStrength` (R9).

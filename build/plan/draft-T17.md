@@ -29,6 +29,10 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 
 - **reevaluation** · N378 (K556; CASE-AUTHORING #5 J2 (4)): R8's listeners are called after the act commits, never inside a caller that rolls back.
 
+## Layer 9
+
+- **conformance** · N362 (K569; CONFORMANCE #4 J2): R21's sides carry `text` from `content.passageText` (its R46), `null` where it answers `null`, only on a side R21 already answers the viewer; R21's mark goes.
+
 ## Layer 11
 
 - **tasks** · N374 (K565): R6's `taskExists({id, viewer})`, gated by R2's gate (R9), so a task the viewer may not see answers as no task (today `taskExists(id)`, `src/tasks/index.mjs`:456). N373's share (K566): R6's `recentTasks` takes an optional `statuses` filter. Merge it early for queue (K425). N382 (CONTROL-PLANE #7 J4): its `NOT_YOURS` (C-76.1) gets its own code, apart from intent's C-111.15, tested at the control plane's door. That is a row change in layer 11, so it is `awaiting stamp` for T18.
@@ -44,7 +48,7 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 
 ## Not in T17
 
-**Bob's first:** N362 (conformance R21's sides gain `text`; an addition to a provided service, recommended yes); N317, N303's remainder, N320; N61 (a meaning change: `records_laws` levels); N71 (the word "bundle"); N144, N232, N241, N371 (UX: surfaces, recipes, legacy-ui's types and writes).
+**Bob's first:** N317, N303's remainder, N320; N61 (a meaning change: `records_laws` levels); N71 (the word "bundle"); N144, N232, N241, N371 (UX: surfaces, recipes, legacy-ui's types and writes).
 
 **Needs a deployment or measurement no job can make:** contradiction R41, the K5 gate arm and R24/R27/R32/R33's K5 arms and R34 (a measured recommender run; `test.todo`, K488, K490); DIST-14, N75 (a deployed plane); N34 (a measured JPX bound, and BOB reviews pdf-worker's split first); N22 (a non-root container).
 
@@ -57,4 +61,4 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 1. **next.md housekeeping:** N342 (K476, K513), N348 (K476, K479), N355 (K505), N356 (K519) read applied in the rulings yet stay in `next.md`; N225 applied (K528); N357–N361 (N361's remainder is N372), N363–N370, N354 and N352 carried by T16 (N352: membership R88's `hiddenBundles` now read by the store (`store.mjs`:2070), retrieval (:747, :970) and queue-producers (:880); queue's copy removed, QUEUE #5; so no retrieval share remains). N364's remainders are their own entries (N375, N380, N381). N345 stays (contradiction R34, R41 marks). Checked, they move to `archive/next-applied.md` at the opening. N65 and N79, on T16's waiting list, are already in `archive/next-applied.md` (N79's capture mark struck, K540).
 2. **N375, N374:** worded (K565) and in layer 11; queue R1 names `signer-self-registered` (K566).
 3. **N352:** applied in full (point 1); no retrieval share remains.
-4. T17's jobs: legacy-checks, record-core, promotion, provenance, sources, capture, reevaluation, tasks, queue-producers, queue, control-plane, legacy-tests.
+4. T17's jobs: legacy-checks, record-core, promotion, provenance, sources, capture, reevaluation, tasks, queue-producers, queue, conformance, control-plane, legacy-tests.
