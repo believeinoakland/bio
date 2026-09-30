@@ -1140,6 +1140,8 @@ export class BasisVersions {
       return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
                detail: "a conclusion answers a question, and only an inquiry carries one." };
     const projRow = pid ? this.#visible(pid, viewer) : null;
+    /* REC-149: at EXISTENCE the positional C-70.1, as conclude and make-current answer (membership R44) */
+    if (pid && !projRow) { const existence = this.membership.existenceAct(pid, viewer); if (existence) return existence; }
     if (!projRow || normalizeType(projRow.object_type) !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", target, project: pid || null,
                detail: pid
