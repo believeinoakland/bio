@@ -169,7 +169,12 @@ const shaOf = async (id) => (parse(await RAW(`op=list&token=${ADM}&limit=1000`))
 const LEDGER = "INFO-2026-9138-ledger", MINUTES = "INFO-2026-9138-minutes";
 for (const d of [LEDGER, MINUTES]) must(d, await promoteAs(ADM, d, infoMd(d), "information", "collected"));
 const INQ = "INQ-2026-9138-transfer";
-must("inquiry", await promoteAs(ADM, INQ, inquiryMd(INQ, LEDGER), "inquiry", "open"));
+/* CORRECTED 2026-09-30 (LEGACY-TESTS #12, T14; N353, D-447's finding (2)): the question is created through the
+   FOUNDER's session, not the ADMIN deploy token. A deploy token's creation must name a surfacing run (REC-171's
+   `withSurfacingRun` opens one), and that run is read by the stamped `actorViewer`, so the control's
+   `promote-stamp-dropped` arm threw SURFACE_NO_RUN here before any arm it declares. No arm below reads who surfaced
+   the question; the store restamps `surfaced_by` from the caller (D-78), which is all that changes. */
+must("inquiry", await promoteAs(FOUNDER, INQ, inquiryMd(INQ, LEDGER), "inquiry", "open"));
 must("iris accepts v1", await POST(`op=versionaccept&token=${IRIS}&target=${E(INQ)}&version=v1&reason=${E("borne out")}`, {}));
 const BIAS = "BIAS-2026-9138-lens";
 const biasMd = (state) => ["---", `id: "${BIAS}"`, 'object_type: "bias"', 'schema: "bias@1"', 'title: "Project lens"',
