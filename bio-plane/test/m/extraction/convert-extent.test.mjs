@@ -10,8 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import { fresh, bundle, hold, doc, sha } from "./fixture.mjs";
-import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
-import { pptxEntry } from "../../../src/pptx.mjs";
+import { getFormat } from "../../../src/formats.mjs";
 
 /* ---- independent crc32 and zip assembler (the old suites' own; nothing here imports the container reader) ---- */
 function crc32(buf) {
@@ -177,7 +176,7 @@ test("R13 R45 (capture-container-extent §1): a real xlsx, docx and pptx each ca
     container: "pptx", levels: ["slides", "images"], sheets: null, paragraphs: null,
     slides: [{ shapes: 2 }, { shapes: 2 }, { shapes: 2 }], deckLength: 3, images: [] });
   /* the record holds the producer's own figures: the entry called directly over the same bytes */
-  const ps = (await produced(xlsxEntry, XLSX)).sheets, pd = (await produced(pptxEntry, PPTX)).slides;
+  const ps = (await produced(getFormat("xlsx"), XLSX)).sheets, pd = (await produced(getFormat("pptx"), PPTX)).slides;
   assert.deepEqual(book.container_extent.sheets.map((s) => [s.rows, s.cols, s.usedRows, s.usedCols]), ps.map((s) => [s.rows, s.cols, s.usedRows, s.usedCols]));
   assert.deepEqual(slides.container_extent.slides.map((s) => s.shapes), pd.map((s) => s.shapes));
 });
@@ -189,7 +188,7 @@ test("R13 R45 (capture-container-extent §4b, §4b'): the slide map is keyed on 
   const trailing = (await readAs(w, PPTX_TRAILING, "pptx", PPTX_CT)).reading.container_extent;
   assert.deepEqual([trailing.slides, trailing.deckLength], [[{ shapes: 3 }, { shapes: 1 }, { shapes: null }], TRAILING.length]);
   /* the fixture arms: the entry's readable list is one short of the deck it declares */
-  const tp = await produced(pptxEntry, PPTX_TRAILING);
+  const tp = await produced(getFormat("pptx"), PPTX_TRAILING);
   assert.deepEqual([tp.slides.map((s) => s.slide), tp.deckLength], [[1, 2], TRAILING.length]);
   const over = (await readAs(w, PPTX_OVERBOUND, "pptx", PPTX_CT)).reading.container_extent;
   assert.deepEqual([over.levels, over.slides, over.deckLength], [["slides", "images"], TRAILING.map(() => ({ shapes: null })), TRAILING.length]);
