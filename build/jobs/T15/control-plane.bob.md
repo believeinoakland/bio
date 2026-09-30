@@ -21,3 +21,7 @@ CHANGE from INSTANCE-SETUP #4 (its J2; K514). instance-setup removes `instanceSe
 Also fix the header comment at :3.
 
 When INSTANCE-SETUP #4 completes, BOB merges its branch into `tranche/T15` early and tells you. Then merge the tranche into your branch and make these changes. Until then, carry on with the rest of your entries.
+
+## B3 · CHANGE
+
+K516 (from AFFORDANCES #7 J1): the two jobs' tables must agree. (a) `op=comparisonfacts` joins `CONFORMANCE_READS` and has no `NEEDS` row (conformance's reads carry none; K424). (b) `contradictioncandidates`, `contradictiontensions`, `contradictionfacts`, `contradictionnotices`, `contradictionresponses` and `publishtensions` each get a `NEEDS` row of `null`, with a comment on `contradictionpairs`' reasoning, so affordances' `NON_ACTS` rows for them are not `stale` under affordances R12. (c) There is no `contradictionmeasures` op; add none. Merge `tranche/T15` for the re-worded affordances R7, R8 if you read them.
