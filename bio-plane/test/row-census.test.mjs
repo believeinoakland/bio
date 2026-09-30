@@ -58,13 +58,14 @@ const AWAITING_STAMP = [
      T17's rows changed at layers 3+, after the layer-2 stamp, for T18's stamp (N318): C-76.1's key renamed by tasks
      (N382, K606: `NOT_YOURS` departed, `TASK_NOT_YOURS` arrived, its line otherwise unchanged); C-120.1's and C-120.2's
      `where` re-pointed to `#tensionsJudged` by case-authoring (N383). Found by diffing the tree's census against the
-     1.47.0 fixture; nothing else moved. */
+     1.47.0 fixture; nothing else moved. CASE-AUTHORING #6 closed without naming them so; BOB's ruling K616
+     (`build/rulings.md`) names C-120.1 and C-120.2 `awaiting stamp` for T18 and is their record (LEGACY-TESTS #16). */
   { after: "1.47.0", kind: "departed", by: "TASKS #2 (N382, K606, key renamed)", record: "build/jobs/T17/tasks.md",
     line: ["C-76.1","NOT_YOURS","src/tasks/index.mjs #refuseNotYours > is-task-actor-fence","This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."] },
   { after: "1.47.0", kind: "arrived", by: "TASKS #2 (N382, K606, key renamed)", record: "build/jobs/T17/tasks.md", check: "C-76.1", code: "TASK_NOT_YOURS" },
-  { after: "1.47.0", kind: "changed", by: "CASE-AUTHORING #6 (N383, `where` re-pointed to #tensionsJudged)", record: "build/jobs/T17/case-authoring.md",
+  { after: "1.47.0", kind: "changed", by: "CASE-AUTHORING #6 (N383, `where` re-pointed to #tensionsJudged)", record: "build/rulings.md",
     line: ["C-120.1","TENSION_NOT_DISCLOSED","src/case-authoring/index.mjs #publishCase > is-tension-disclosed","A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published."] },
-  { after: "1.47.0", kind: "changed", by: "CASE-AUTHORING #6 (N383, `where` re-pointed to #tensionsJudged)", record: "build/jobs/T17/case-authoring.md",
+  { after: "1.47.0", kind: "changed", by: "CASE-AUTHORING #6 (N383, `where` re-pointed to #tensionsJudged)", record: "build/rulings.md",
     line: ["C-120.2","DISCLOSURE_NOT_STANDING","src/case-authoring/index.mjs #publishCase > is-disclosure-standing","One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published."] },
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
