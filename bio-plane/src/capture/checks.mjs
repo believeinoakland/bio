@@ -14,7 +14,10 @@
  *
  * C-118.1's code was `NOT_FOUND` until N347 (K440): a generic word any module could mint, so the door could not read
  * this table without lending the row to them. It is `EVIDENCE_NOT_HELD` (R63's own words); the row keeps its number and
- * its translation. */
+ * its translation.
+ *
+ * C-118.3–C-118.6 are new with N364 (K509): the knocker's secret (R66), bringing a knock in (R65), and the capturing
+ * member's signed account (R69), each minted at the one site its `where` names. */
 
 const at = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
@@ -27,5 +30,24 @@ export const CAPTURE_CHECKS = Object.freeze({
   NO_SUCH_KNOCK: Object.freeze({
     check: 'C-118.2', where: inIndex("#noSuchKnock", "is-knock-held"),
     translation: 'No knock in the inbox answers to this id. Nothing was changed.',
+  }),
+  KNOCKER_SECRET_WEAK: Object.freeze({
+    check: 'C-118.3', where: "src/capture/doorbell.mjs knockerSecretWeak > is-knocker-secret-strong",
+    translation: 'A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a '
+               + 'longer one, or ask the doorbell to make one. Nothing was received.',
+  }),
+  KNOCK_DISCARDED: Object.freeze({
+    check: 'C-118.4', where: inIndex("pullKnock", "is-knock-pullable"),
+    translation: 'This knock was set aside. Move it back to new before bringing it in. Nothing was written.',
+  }),
+  NOT_THE_CAPTURING_ACTOR: Object.freeze({
+    check: 'C-118.5', where: inIndex("recordCaptureAccount", "is-capturing-actor"),
+    translation: 'An account of how a document was captured is added only by the member who captured it, and that is '
+               + 'not you, or no member captured it. Nothing was written.',
+  }),
+  ACCOUNT_NO_TEXT: Object.freeze({
+    check: 'C-118.6', where: inIndex("recordCaptureAccount", "is-account-worded"),
+    translation: 'An account of how you captured a document says what happened in your own words, and this one is '
+               + 'empty. Write it. Nothing was written.',
   }),
 });

@@ -122,3 +122,34 @@ export function network(routes) {
 }
 
 export const H = (hex) => hex.padEnd(64, "0").slice(0, 64);
+
+/* An SSHSIG signer (PROTOCOL.sshsig), for R69's signed accounts: an Ed25519 key and a detached signature over a
+   message in a namespace, as `signatures.verifySshsig` verifies it. */
+const enc = (s) => new TextEncoder().encode(s);
+const cat8 = (...parts) => {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let o = 0; for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+};
+const u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
+const sstr = (v) => { const b = typeof v === "string" ? enc(v) : v; return cat8(u32(b.length), b); };
+const b64 = (bytes) => Buffer.from(bytes).toString("base64");
+export async function newKey() {
+  const kp = await crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+  const raw = new Uint8Array(await crypto.subtle.exportKey("raw", kp.publicKey));
+  return { priv: kp.privateKey, raw, keyB64: b64(cat8(sstr("ssh-ed25519"), sstr(raw))) };
+}
+export async function sshsign(key, message, namespace) {
+  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", typeof message === "string" ? enc(message) : message));
+  const signed = cat8(enc("SSHSIG"), sstr(namespace), sstr(new Uint8Array(0)), sstr("sha512"), sstr(h));
+  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", key.priv, signed));
+  const blob = cat8(enc("SSHSIG"), u32(1), sstr(cat8(sstr("ssh-ed25519"), sstr(key.raw))), sstr(namespace),
+    sstr(new Uint8Array(0)), sstr("sha512"), sstr(cat8(sstr("ssh-ed25519"), sstr(sig))));
+  return `-----BEGIN SSH SIGNATURE-----\n${b64(blob).replace(/(.{70})/g, "$1\n")}\n-----END SSH SIGNATURE-----\n`;
+}
+/* A member and a signer key in membership's tables, as its R25/R27 leave them (`status` of each). */
+export function signer(s, memberId, keyB64, { keyStatus = "active", memberStatus = "active" } = {}) {
+  s.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', 'member', ?, '2026-01-01', '2026-01-01')`,
+             memberId, memberStatus);
+  s.sql.exec(`INSERT INTO signers (key_b64, member_id, status, added) VALUES (?, ?, ?, '2026-01-01')`, keyB64, memberId, keyStatus);
+}

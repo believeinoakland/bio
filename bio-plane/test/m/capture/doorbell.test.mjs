@@ -45,7 +45,8 @@ test("R30 R54: anyone may knock with no account; an accepted knock answers 200 w
   const { send, rows, b } = setup();
   const r = await send(knock({ contentText: "a tip", note: "n", contact: "c" }));
   assert.equal(r.status, 200);
-  assert.deepEqual(Object.keys(r.body).sort(), ["bytes", "knockId", "ok", "received", "sha256"]);
+  assert.deepEqual(Object.keys(r.body).sort(), ["bytes", "knockId", "ok", "pseudonym", "received", "sha256"]);
+  assert.equal(r.body.pseudonym, null, "R54 (N364): no knocker secret, no pseudonym, and no secret shown");
   assert.equal(r.body.sha256, sha("a tip")); assert.equal(r.body.bytes, 5);
   assert.match(r.body.received, /inbox awaiting member review/);
   assert.match(r.body.knockId, /^KNOCK-\d{4}-\d{2}-\d{2}-[0-9a-f]{8}$/);
@@ -206,10 +207,14 @@ test("R32: one inbox row with the bounded note and contact and the bytes under b
   assert.equal(c.inboxGet(k.knockId).item.sha256, sha("hello"));
   assert.equal(c.inboxGet("KNOCK-none").reason, "NO_SUCH_KNOCK");
   assert.equal(c.inboxResolve({ knockId: k.knockId, status: "archived", by: "member:m" }).reason, "BAD_STATUS");
-  for (const st of ["pulled", "discarded", "new"]) assert.equal(c.inboxResolve({ knockId: k.knockId, status: st, by: "member:m" }).ok, true);
+  for (const st of ["discarded", "new"]) assert.equal(c.inboxResolve({ knockId: k.knockId, status: st, by: "member:m" }).ok, true);
   const res = rows(`SELECT status, resolved, resolved_by FROM inbox`)[0];
   assert.deepEqual([res.status, res.resolved_by, typeof res.resolved], ["new", "member:m", "string"]);
   assert.equal(c.inboxList("pulled").inbox.length, 0);
+  /* N364: `pulled` is R65's act (knocker.test.mjs): the resolve answers as the pull does */
+  const pulled = await c.inboxResolve({ knockId: k.knockId, status: "pulled", by: "member:m" });
+  assert.deepEqual([pulled.ok, pulled.existed, pulled.capture.sha256], [true, false, sha("hello")]);
+  assert.equal(c.inboxList("pulled").inbox.length, 1);
 });
 
 test("R32 (K383): a knock id no knock answers to, read or resolved, is NO_SUCH_KNOCK with its own row, the same answer both ways, and nothing is written", async () => {

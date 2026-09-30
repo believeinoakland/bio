@@ -138,7 +138,7 @@ const renderLocale = (view) => renderLocaleFor(view);
 /* R7, R36: every outbound fetch through the host governor (host-governor R15–R17), under the agent this module
    composes. The governor is reached in process (K72 (2)). `headers` are R61's conditional request headers;
    `credential` is R62's (capture-sources R56's entry), sent by `scopedFetch` to its own host only. */
-async function governedFetch(cap, target, purpose, delegated = null, { headers = null, credential = null } = {}) {
+export async function governedFetch(cap, target, purpose, delegated = null, { headers = null, credential = null } = {}) {
   const g = cap.governor;
   return hostGovernedFetch(target, { userAgent: userAgent(cap.env, purpose, delegated),
     fetch: headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose }) : (u, i) => fetch(u, i),
@@ -232,7 +232,7 @@ export async function archiveLookup(cap, { address } = {}) {
 
 /* R36: an outbound request that is not a plain GET of a document (the timestamp authorities' POSTs, the co-archive)
    still asks the host governor for admission and reports its outcome, under this instance's agent. */
-function governedCall(cap, purpose) {
+export function governedCall(cap, purpose) {
   const g = cap.governor;
   return async (u, init = {}) => {
     let host = null;
@@ -714,6 +714,12 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       addressNorm: addressIsDerived ? addrNorm : normalizeAddress(res.url || locator), captureSha: sha, retrieved,
       via, retrievalLocator: locator });
   } catch { /* an unfiled receipt is not a failed capture */ }
+  /* R16, R69: the member this capture's document names as its actor is recorded as one who captured these bytes. */
+  const actor = member && typeof sessMember === "string" && sessMember ? sessMember : null;
+  if (actor) {
+    try { cap.recordCaptureActor({ captureSha: sha, actor, at: retrieved }); }
+    catch { /* an unrecorded actor costs that member R69's account, never this capture */ }
+  }
   /* provenance R34 (K59): an archive-sourced capture's receipt is signed with the instance's own key. A signing that
      cannot be made (no key bound) is stated on the answer, never a failed capture. */
   /* R61: what the source said about these bytes, kept for a later conditional fetch of the same document. */
@@ -745,47 +751,13 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   }
 
   /* R17, CONSTRUCTS Step 1 (FW-3): THE PROFILE, docprofile read and never copied, over the bytes the record holds. */
-  let profileText = "", profileBytes = null;
-  if (profilesAsText(ct, total, multipart)) {
-    try {
-      const pobj = await ev.get(sha);
-      if (pobj) { profileBytes = new Uint8Array(await pobj.arrayBuffer()); profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes); }
-    } catch { /* an unreadable primary is not a failed capture */ }
-  }
-  /* COFF-1: magic bytes first, from the first KiB read back when not already read; the declared type only for a
-     multipart or unreadable primary, with the absence stated. */
-  let formatBytes = profileBytes;
-  if (!formatBytes && !multipart && total > 0) {
-    try { const fobj = await ev.get(sha); if (fobj) formatBytes = new Uint8Array(await fobj.arrayBuffer()).subarray(0, 1024); }
-    catch { /* detection falls back to the declared content type */ }
-  }
   const profHeaders = {};
   for (const [hk, hv] of res.headers) profHeaders[hk.toLowerCase()] = hv;
-  const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
-  const stackId = identify(profCtx);
-  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...(pv.view ? { view: pv.view } : {}) });
-  const profile = {
-    ...profileRecord(stackId, { now: retrieved }),
-    content_type: docType.type.key, content_type_label: docType.type.label, content_type_version: docType.type.version,
-    content_type_confidence: docType.confidence, content_type_signals: docType.signals, contract: docType.type.contract || null,
-    normalised: (typeof stackId.handler.rules === "function" ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
-    boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
-    source_content_type: ct || null,
-    profiled_from_text: !!profileText,
-    /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
-    jurisdiction_view: pv.ids,
-    format: detectFormat(formatBytes, ct || null),
-  };
+  const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
+                                    retrieved });
   /* R4, CAP-8: Google's hop, built from what this call established; the confirmation is the FORMAT registry's own
      detection over the bytes just hashed (`profile.format`), so the hop and the profile cannot disagree. */
   if (driveCapture) driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: res.url || null, detected: profile.format });
-  let containerBytes = null;
-  const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
-  if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
-    try { const cobj = await ev.get(sha); if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer()); }
-    catch { /* unread is undetermined: the digest says so */ }
-  }
-  profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
 
   /* R20: co-attestation at every capture (K60). */
   const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev });
@@ -822,6 +794,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
       ...(via === "archive.org" ? { authority: "Internet Archive" } : {}),
       actor_class: member ? "member" : (cls === "probe" ? "session" : "daemon"),
+      /* R16 (N364): which member captured it, the member stamp of a member session, else null (R69 reads it). */
+      actor,
       sha256: sha, encoding: "binary", bytes: total,
       ...(ct ? { content_type: ct } : {}),
       ...(renderRecorded ? {} : { transport }),
@@ -857,6 +831,52 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE,
   });
+}
+
+/** R17: the profile of a capture the store holds under `sha`: docprofile's `identify` over the headers, the document
+ *  address, the content type and (single-part, textual, within bound) the stored bytes read back; `doctypeFor` under
+ *  `view` (`profileView`); `profileRecord`; the normalisation rules and boundary; `format` from the bytes (the first
+ *  KiB read back when not already read), else the declared type with the absence stated; and `digests`. Every
+ *  unreadable byte is stated, never a failed capture. The acquisition act and the knock's pull (R65) call it. */
+export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved }) {
+  const pv = view || { view: undefined, ids: null };
+  let profileText = "", profileBytes = null;
+  if (profilesAsText(ct, total, multipart)) {
+    try {
+      const pobj = await ev.get(sha);
+      if (pobj) { profileBytes = new Uint8Array(await pobj.arrayBuffer()); profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes); }
+    } catch { /* an unreadable primary is not a failed capture */ }
+  }
+  /* COFF-1: magic bytes first, from the first KiB read back when not already read; the declared type only for a
+     multipart or unreadable primary, with the absence stated. */
+  let formatBytes = profileBytes;
+  if (!formatBytes && !multipart && total > 0) {
+    try { const fobj = await ev.get(sha); if (fobj) formatBytes = new Uint8Array(await fobj.arrayBuffer()).subarray(0, 1024); }
+    catch { /* detection falls back to the declared content type */ }
+  }
+  const profCtx = { headers, locator, content_type: ct || null, text: profileText };
+  const stackId = identify(profCtx);
+  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...(pv.view ? { view: pv.view } : {}) });
+  const profile = {
+    ...profileRecord(stackId, { now: retrieved }),
+    content_type: docType.type.key, content_type_label: docType.type.label, content_type_version: docType.type.version,
+    content_type_confidence: docType.confidence, content_type_signals: docType.signals, contract: docType.type.contract || null,
+    normalised: (typeof stackId.handler.rules === "function" ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
+    boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
+    source_content_type: ct || null,
+    profiled_from_text: !!profileText,
+    /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
+    jurisdiction_view: pv.ids,
+    format: detectFormat(formatBytes, ct || null),
+  };
+  let containerBytes = null;
+  const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
+  if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
+    try { const cobj = await ev.get(sha); if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer()); }
+    catch { /* unread is undetermined: the digest says so */ }
+  }
+  profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
+  return profile;
 }
 
 /* The answer's `subresources`, `snapshot` and `files` (R19). */
