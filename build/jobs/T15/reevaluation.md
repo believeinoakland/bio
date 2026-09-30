@@ -51,3 +51,8 @@ R27, my best reading; I am building on it now unless you answer otherwise.
 4. **`since`.** contradiction's `tensionsOn` answers `member` and `at` only for a `one_wrong` act; a stale mark set by a contradiction inquiry's CORRECTED conclusion carries `member: null, at: null` (contradiction/index.mjs:1430–1433), though its R27 says every stale mark carries "the member, the instant". I answer `since: null` there with a sentence saying the instant was not stated, and report contradiction's gap. R16 closes it (null matches null) until the mark's instant is readable.
 5. **Viewer.** I pass the reading viewer to `tensionsOn`, so a viewer who may not see both sides of the candidate gets no `corrected` cause from it (contradiction R10/R19); the dependent itself is withheld by R20 as today.
 6. **`correctedDependents`** lists the standing (not R16-closed) causes, one entry per (dependent, candidate), `after` being `<dependent>#<candidate>`; `changesOf` answers, for each named finding, the `corrected` causes it carries as a dependent (with each target), beside R2's arms of it as target.
+
+## J2 · REPORT
+
+1. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`): `src/reevaluation/index.mjs` changed (R27). Not rebuilt.
+2. **Observed in `inquiry`** (not a defect against a requirement I can name): `divide` gives a child the divided leg on the whole document, not the passage it named (its `content_id` is not carried). So a child inherits neither a passage-level `corrected` cause (R27) nor R14's pushed notice on that passage. Yours to judge whether inquiry's divide should carry the pin.
