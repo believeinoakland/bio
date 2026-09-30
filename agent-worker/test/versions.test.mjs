@@ -115,17 +115,15 @@ const { Miniflare } = await (async () => {
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
 const PLANE_IDX_PATH = fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url));
-const PLANE_INDEX = readFileSync(PLANE_IDX_PATH, "utf8");
+const PLANE_INDEX = readFileSync(PLANE_IDX_PATH, "utf8"); /* the real plane's entry, run under workerd below */
 
 console.log("\n--- B0 · the two reads are ones an `ai` credential can reach, by the plane's own shape ---");
 {
-  const row = (op) => new RegExp(String.raw`^  ${op}:\s*\{ classes: \[([^\]]*)\],\s*mutating: (true|false)`, "m").exec(PLANE_INDEX);
-  const rows = ["search", "versionchain"].map((op) => row(op));
-  t("B0: the plane's OPS table holds both rows (guard: an unparsed row would pass the next arm free)",
-    rows.map((r) => r !== null), [true, true]);
-  t("B0b: both are NON-mutating and reached by the member class — `aiTaskScope`'s floor, so no scope must "
-    + "declare them", rows.map((r) => r && [/"member"/.test(r[1]), r[2]]), [[true, "false"], [true, "false"]]);
-  t("B0c: and this member declares both as reads", [PLANE_OPS.search?.mutating, PLANE_OPS.versionchain?.mutating],
+  /* N402 (K575): B0 and B0b parsed the plane's OPS table from source for these two rows' class and flag; that text
+     moved and the parse came back empty. The shape (non-mutating, reached by the member class) is control-plane's pin
+     of this member's exported `PLANE_OPS` (layer 11); the real plane answering both below, under a member token, is
+     the behaviour. This member's own declaration stays pinned here. */
+  t("B0c (R37): this member declares both as reads", [PLANE_OPS.search?.mutating, PLANE_OPS.versionchain?.mutating],
     [false, false]);
 }
 

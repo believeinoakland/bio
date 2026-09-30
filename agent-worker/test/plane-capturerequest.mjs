@@ -25,7 +25,7 @@
  * NOT a `.test.mjs`: an instrument the suites share, not a suite.
  */
 import { CAPTURE_REQUEST_CHECKS, isPublicHttpsLocator } from "../../bio-plane/checks/bio-checks.mjs";
-import { runPrincipalGate } from "../../bio-plane/src/airun.mjs";
+import { runPrincipalGate } from "../../bio-plane/src/run-rules/index.mjs";
 import { INQUIRY_PREFIXES } from "./plane-suggest.mjs";
 
 export const CAPTURE_WIRE_CHECKS = {

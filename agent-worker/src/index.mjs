@@ -122,12 +122,14 @@ const PLANE_ORIGIN = "http://plane"; /* a binding ignores the host; this names t
 import {
   CONTROL_FLOW, FIRST_STEP, LEVELS, BUDGET_BOUNDS, MEANING_ARM,
   nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates, runContextTarget,
-  advance, publishableState, resumeFrom,
+  advance, publishableState, resumeFrom, NAMESPACES,
+  PLAN_FLOW, PLAN_MAX_PASSES, OPTION_KEYS, flowFor, nextPlanStep, planAdvance, applyPlanJudgement, planDedup,
+  PLAN_READS, PROFILE_FACTS, planSubjectReads, earlierPlans, whyWithUndetermined, resumeTargets,
 } from "./harness.mjs";
 
-/* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS ai-runs' (its R45), read from its own file and never copied.
- * `airun.mjs` is already in this bundle through `skills`' `skillpack.mjs`. */
-import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/airun.mjs";
+/* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS run-rules' (its R10), read from its own module and never
+ * copied. run-rules is pure (no storage, no clock), so this is the one plane module in the bundle beside `tokens.mjs`. */
+import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/run-rules/index.mjs";
 
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
  * PURE. What goes OUT to a sub-session and what may come BACK are shapes, not
@@ -150,14 +152,14 @@ import { resolveClaudeCascade, cascadeToken, CASCADE_NO_ACCOUNT } from "./cascad
  * decides no step; the table above still decides every one. */
 import {
   DEFAULT_MODEL, DEFAULT_MAX_SEGMENT_BYTES, SEGMENT_BYTES_SOURCE, segmentMeter, converse,
-  judgeTools, LOAD_LAYER, parentSystem, rowPrompt, rowFacts, subsessionSystem, subsessionTools,
+  judgeTools, planJudgeTools, LOAD_LAYER, parentSystem, rowPrompt, rowFacts, subsessionSystem, subsessionTools,
 } from "./model.mjs";
 import { LOOKED_STATES } from "./subsession.mjs";
 
-/* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is rendered here, by `skills`' own renderer, from what the plane
- * publishes (`op=affordances`) and the check catalogue, and its version is held to the one the run recorded. */
-import { renderPack } from "../../bio-plane/src/skillpack.mjs";
-import * as CATALOGUE from "../../bio-plane/checks/bio-checks.mjs";
+/* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is the one the plane renders and publishes on its untargeted
+ * `op=affordances` answer (`pack`, control-plane R41: `skills.renderPack` over the composed machine fences). This
+ * member renders nothing and imports neither the check catalogue nor `skills`' code (N157, §1a), so its bundle carries
+ * what it runs; it holds the pack's version to the one the run recorded. */
 
 /* ------------------------------------------------------ THE SEGMENT BOUND
  *
@@ -202,25 +204,11 @@ const BOUND_SOURCE = "FL-1 2026-08-08 curve, re-checked by D-312 2026-09-25 (M-1
    from the record, and it is never duplicated here. */
 const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 
-/* D-462 — THE NAMESPACES THIS MEMBER WILL NAME TO THE PLANE: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
- *
- * WHAT WAS WRONG. This read `/^[a-z0-9_-]+$/i` — "a namespace token, the same shape `pdf-worker` accepts" — so
- * `biosmoke-fleet`, `Scratch` and any other well-shaped name passed here and was handed to the plane as `store=`.
- * Until D-456 the plane answered `bio` for every name it did not know, so a run whose caller believed it was working
- * in some other namespace worked THE REAL RECORD (CLAUDE.md §5, D-325). D-456 closed that at the plane's front door
- * (`namespaceGate`, NAMESPACE_UNKNOWN, C-78.1); this member now refuses the same names itself, BEFORE the cascade and
- * before any plane call is spent, instead of relaying the plane's refusal from its first `whoami`.
- *
- * WHY THE PLANE'S SPELLING IS HONEST HERE. The plane's set is not per instance: `namespaceGate` holds
- * `Object.freeze(["bio", SCRATCH])` in code, so the fact this member states — "no such namespace exists" — is the
- * same fact on every instance it can be bound to. It is kept here as a COPY because a fleet member cannot import the
- * plane's `index.mjs`, and a copy ages; `test/agent-worker.test.mjs` §3 reads the plane's `NAMESPACES` from its
- * source and requires this set to equal it, so the day the plane gains a namespace this member's suite goes red.
- * The set is exact and case-sensitive for the plane's reason: a Durable Object name is an exact string.
- *
- * NOT NAMING ONE IS A DIFFERENT CONDITION and keeps its old code, BAD_STORE: the plane defaults an ABSENT `store=`,
- * and this member deliberately does not (see the refusal below). */
-const NAMESPACES = Object.freeze(["bio", "scratch"]);
+/* D-462, R4 — THE NAMESPACES THIS MEMBER WILL NAME TO THE PLANE: `NAMESPACES` in `harness.mjs`, exactly `bio` or
+ * `scratch`, exported there (a Worker entry may export only handlers) so control-plane pins it to its namespace gate
+ * (N402). A named namespace outside it is refused here, before the cascade and before any plane call is spent. NOT
+ * NAMING ONE is a different condition and keeps its old code, BAD_STORE: the plane defaults an ABSENT `store=`, and
+ * this member deliberately does not (see the refusal below). */
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
@@ -374,30 +362,32 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       + "level or this segment was handed the wrong accounts; both are the caller's to fix.",
       409, { run_id: runId, recorded: recordedPayer, resolved: cascade.level, levels: cascade.levels }) };
 
-  /* R48 — THE PACK, RENDERED AND HELD TO THE RUN'S RECORD, BEFORE ANY TURN. Only when model turns run: until
-     then the pack instructs nothing and this changes nothing. */
+  /* R48 — THE PACK, AS THE PLANE PUBLISHED IT, HELD TO THE RUN'S RECORD, BEFORE ANY TURN. Only when model turns run:
+     until then the pack instructs nothing and this changes nothing. */
   if (model) {
     const pub = planeAnswer(await call("affordances"), "affordances");
     if (pub.silent) return { refusal: planeSilent(pub.silent) };
     if (pub.refused)
       return { refusal: planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null }) };
-    let pack;
-    try { pack = renderPack(pub.result, CATALOGUE); }
-    catch (e) {
-      return { refusal: refusal("PACK_UNRENDERABLE",
-        "the skill pack a run's model is instructed by could not be rendered from what the plane published, so no "
-        + "model turn was taken: " + String((e && e.message) || e).slice(0, 300), 502, { run_id: runId }) };
-    }
+    const pack = publishedPack(pub.result);
     const recordedSkill = session.principal?.skill ?? null;
-    if (recordedSkill !== pack.version)
+    if (!pack.ok || recordedSkill !== pack.pack.version)
       return { refusal: refusal("SKILL_VERSION_MISMATCH",
-        "the run's record says it runs under one skill pack and the pack this member rendered is another, so its "
-        + "model would be instructed by words the record does not name. No turn was taken; the run is resumable "
-        + "once the two agree.", 409, { run_id: runId, recorded: recordedSkill, rendered: pack.version }) };
-    model.pack = pack;
+        (pack.ok
+          ? "the run's record says it runs under one skill pack and the pack the plane publishes is another, so its "
+            + "model would be instructed by words the record does not name."
+          : "the plane published no skill pack this member can instruct a model with, so the pack's version is "
+            + `UNDETERMINED and cannot be held to the one the run recorded (${pack.why}).`)
+        + " No turn was taken; the run is resumable once the two agree.", 409,
+        { run_id: runId, recorded: recordedSkill, rendered: pack.ok ? pack.pack.version : null,
+          ...(pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why }) }) };
+    const { pack: held } = pack;
+    model.pack = held;
     model.messages = [];
-    model.system = parentSystem(pack);
-    model.tools = [LOAD_LAYER(Object.keys(pack.disclosed || {})), ...judgeTools(LEVELS)];
+    model.system = parentSystem(held);
+    /* R52: a plan-mode run judges with `optionPropose`'s fields only; every other mode with the search table's. */
+    model.tools = [LOAD_LAYER(Object.keys(held.disclosed || {})),
+                   ...(session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS))];
   }
 
   /* §14b.7 — A RESUMED RUN READS ITS OWN LOG AND CONTINUES.
@@ -439,7 +429,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     mode: session.mode,
     target: seeded.target, targetBasis: seeded.basis,
     pass: 0,
-    maxPasses: Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES,
+    /* R50: mode `plan` walks one pass; R15's limit otherwise. */
+    maxPasses: session.mode === "plan" ? PLAN_MAX_PASSES
+      : (Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES),
+    /* R51: the plan a plan-mode run proposes to is the run's own (ai-runs R46, R19), never the caller's. */
+    planId: typeof session.plan === "string" && session.plan ? session.plan : null,
     resumedFrom,
     budget,
     targets: [], reports: [], candidates: [], queue: [],
@@ -449,7 +443,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   /* R11, N153 — A RESUMED RUN CONTINUES AT THE STATE ITS LAST TICK PUBLISHED (ai-runs R19's `state`), and starts from
      the `resume` row when there is none. The gate still comes first: the published state names where the table goes
      AFTER `resume`, and carries only the table's own fields (`resumeFrom`), never the mode, target, limit or budget. */
-  const resumed = resumeFrom(session.state ?? null);
+  const FLOW = flowFor(session.mode);
+  const planMode = FLOW === PLAN_FLOW;
+  const resumed = resumeFrom(session.state ?? null, FLOW);
   state = resumed.at
     ? { ...state, ...resumed.state, resumeAt: resumed.at, resumeBasis: null }
     : { ...state, resumeAt: null, resumeBasis: resumed.basis };
@@ -465,7 +461,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   while (steps < maxSteps) {
     steps += 1;
     const callsAtStepStart = calls;
-    const row = CONTROL_FLOW[state.step];
+    const row = FLOW[state.step];
 
     /* THE JUDGEMENT, AND THE ONE DOOR IT COMES THROUGH. Supplied by the caller in order, or (R40) made by a model
        turn at every judged row but `collect`, whose judgements are the sub-sessions' REPORTS (R41). */
@@ -492,7 +488,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       jx += 1;
     }
     if (judgement !== undefined) {
-      const applied = applyJudgement(state, judgement);
+      const applied = planMode ? applyPlanJudgement(state, judgement) : applyJudgement(state, judgement);
       if (!applied.ok)
         return { refusal: refusal("JUDGEMENT_OVERREACH", applied.detail, 400,
           { step: state.step, fields: applied.overreach }) };
@@ -500,7 +496,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     }
 
     /* WHAT THE ROW DOES, IN PLANE CALLS. */
-    const work = await performStep(call, state, runId, model, logSeq);
+    const work = planMode ? await performPlanStep(call, state, runId)
+      : await performStep(call, state, runId, model, logSeq);
     if (work.silent) return { refusal: planeSilent(work.silent) };
     if (work.model?.silent) return { refusal: modelSilent(work.model.silent, runId) };
     if (work.model?.refused) return { refusal: modelRefused(work.model.refused, runId) };
@@ -530,10 +527,15 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     if (work.refused) refusals.push(...(Array.isArray(work.refused) ? work.refused : [work.refused]));
     state = work.state;
     if (work.submitted) submitted += 1;
+    /* R52: the plane counts `proposals` (run-rules R13) and this member sends no figure for it; the copy here follows
+       the plane's count so the table stops on the bound (R50), and the record's figure is read again next segment. */
+    if (work.proposed && state.budget.proposals)
+      state = { ...state, budget: { ...state.budget,
+        proposals: { ...state.budget.proposals, consumed: state.budget.proposals.consumed + 1 } } };
     if (work.verbatim) verbatimResubmits += 1;
     if (state.step === "adjust" && state.adjusted) adjusted += 1;
 
-    const decision = nextStep(state);
+    const decision = planMode ? nextPlanStep(state) : nextStep(state);
     trace.push({ step: state.step, to: decision.step, why: decision.why,
                  ...(work.note ? { note: work.note } : {}) });
 
@@ -552,12 +554,12 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
     /* R11, N153: the tick also publishes where the table goes next, so a later segment continues there. The gate's
        tick publishes nothing: until `resume` has moved on, the resume point is the one the record already holds. */
-    const after = advance(state, decision);
+    const after = planMode ? planAdvance(state, decision) : advance(state, decision);
     /* R49: the state stays within ai-runs' ceiling; one that would not is published as its pass restarted, and the
        step's trace says so (the answer's keys are R28's). */
     let published = null;
-    if (CONTROL_FLOW.resume.to.includes(after.step)) {
-      published = publishableState(after, AI_RUN_STATE_MAX_BYTES);
+    if (resumeTargets(FLOW).includes(after.step)) {
+      published = publishableState(after, AI_RUN_STATE_MAX_BYTES, FLOW);
       if (published.restarted) {
         const last = trace[trace.length - 1];
         last.note = (last.note ? `${last.note}; ` : "")
@@ -641,9 +643,10 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
          terminated when the plane declined to terminate it is the record
          claiming more than it can support. The refusal is named and `ended`
          stays null, which is the honest "this segment did not end it". */
-      if (closed.refused) { refusals.push(closed.refused); state = { ...state, step: "close" }; break; }
+      /* The pass a close completes is counted (R50's one pass; `advance` leaves R15's count as it was). */
+      if (closed.refused) { refusals.push(closed.refused); state = { ...state, step: "close", pass: after.pass }; break; }
       ended = { bound: decision.bound || "completed", by: "the table" };
-      state = { ...state, step: "close" };
+      state = { ...state, step: "close", pass: after.pass };
       break;
     }
     /* THE ONE PLACE THE REFUSAL IS CARRIED FORWARD, AND IT IS CARRIED TO EXACTLY
@@ -748,6 +751,19 @@ function planeAnswer(asked, at) {
                             check: said.check ?? envelope.check ?? null,
                             plane: asked.body ?? null } };
   return { at, result: inner ?? envelope };
+}
+
+/** R48 — the pack on the plane's untargeted `op=affordances` answer (control-plane R41): `{ok, pack}` when it carries
+ *  one with a version, a resident layer and a disclosed map; otherwise `{ok: false, why}`, naming the plane's own
+ *  `pack_absent` when it gave one. A partial pack is never used: its version is undetermined. */
+function publishedPack(answer) {
+  const a = answer && typeof answer === "object" ? answer : {};
+  const p = a.pack;
+  if (p && typeof p === "object" && typeof p.version === "string" && p.version
+      && p.resident && typeof p.resident === "object" && p.disclosed && typeof p.disclosed === "object")
+    return { ok: true, pack: p };
+  if (typeof a.pack_absent === "string" && a.pack_absent) return { ok: false, why: a.pack_absent.slice(0, 300) };
+  return { ok: false, why: p == null ? "the answer carries no pack" : "the answer's pack has no version, resident layer or disclosed layers" };
 }
 
 /** THE ONE MEANING READER IN THIS MEMBER, AND THE OP IS NAMED IN EXACTLY ONE
@@ -1103,6 +1119,122 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       out.note = changed
         ? "the submission was changed in answer to the refusal"
         : "the refusal could not be answered by changing the submission; the candidate is dropped";
+      out.state = { ...state, adjusted: changed, queue };
+      return out;
+    }
+
+    default:
+      return out;
+  }
+}
+
+/** R50–R52 — WHAT EACH ROW OF `PLAN_FLOW` DOES AGAINST THE PLANE. `read` and `dedup` read; `submit` makes the one
+ *  write mode `plan` has, `op=optionpropose`; `adjust` is F10 unchanged. No row spawns, requests a capture, suggests
+ *  a version or fetches (R50, R53). */
+async function performPlanStep(call, state, runId) {
+  const out = { state, consume: {}, note: null };
+  switch (state.step) {
+    case "read": {
+      /* R51 — UNDER THE RUN'S CREDENTIAL AND NOTHING ELSE. A refused or silent read is UNDETERMINED, carried into every
+         proposal's `why`, never an absence and never the segment's end: the plan is proposed to on what could be read. */
+      const reads = [], undetermined = [];
+      const ask = async ({ op, query }) => {
+        const got = planeAnswer(await call(op, query), op);
+        const id = Object.values(query || {}).filter((v) => v != null && v !== "").join(" ") || null;
+        if (got.silent) { undetermined.push({ op, id, code: null, why: "the plane did not answer" }); return null; }
+        if (got.refused) { undetermined.push({ op, id, code: got.refused.code ?? null, check: got.refused.check ?? null }); return null; }
+        reads.push({ op, query, answer: got.result });
+        return got.result;
+      };
+      let planDoc = null, earlier = [];
+      if (!state.planId) undetermined.push({ op: "plan", id: null, code: null, why: "the run names no plan" });
+      else {
+        const answered = await ask(PLAN_READS.plan(state.planId));
+        planDoc = answered && typeof answered === "object" ? (answered.plan ?? answered) : null;
+      }
+      const project = planDoc && typeof planDoc.project === "string" && planDoc.project ? planDoc.project : null;
+      if (project) {
+        const plans = await ask(PLAN_READS.plans(project));
+        /* The earlier plans of the SAME project only: another project's plan is never read, and the run's own plan
+           is the one read above. */
+        earlier = plans ? earlierPlans(plans, project, state.planId) : [];
+      } else if (planDoc) undetermined.push({ op: "plans", id: null, code: null, why: "the plan names no project" });
+      for (const r of planDoc ? planSubjectReads(planDoc) : [PLAN_READS.profile()]) {
+        const answered = await ask(r);
+        if (r.op !== "profiles" || !answered) continue;
+        const view = answered.view && typeof answered.view === "object" ? answered.view : answered;
+        for (const fact of PROFILE_FACTS)
+          if (!(fact in view)) undetermined.push({ op: "profiles", id: fact, code: null,
+                                                   why: "the plane's profile answer does not publish it" });
+      }
+      out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED `
+               + "(refused, silent or not published) and carried into every proposal's why, never as an absence; "
+               + `${earlier.length} earlier plan(s) of the same project`;
+      out.state = { ...state, planDoc, earlier, reads, undetermined };
+      return out;
+    }
+
+    case "compose": {
+      out.note = `${(state.candidates || []).length} candidate proposal(s) composed, strongest first`;
+      return out;
+    }
+
+    case "dedup": {
+      /* R52 — BEFORE ANY WRITE, against the plan as the record holds it now: its options and proposals. A plan that
+         cannot be read is compared against NOTHING and the note says so; the plane still refuses a duplicate. */
+      const held = state.planId ? planeAnswer(await call("plan", { id: state.planId }), "plan") : null;
+      const candidates = state.candidates || [];
+      if (!held || held.silent || held.refused) {
+        if (held?.refused) out.refused = held.refused;
+        out.note = `the plan could NOT be read (${held?.refused ? `the plane refused '${String(held.refused.code ?? "?")}'`
+                   : held?.silent ? "the plane was silent" : "the run names no plan"}), so ${candidates.length} candidate(s) `
+                 + "were compared against NOTHING and say so rather than being reported new";
+        out.state = { ...state, queue: [...candidates] };
+        return out;
+      }
+      const doc = held.result && typeof held.result === "object" ? (held.result.plan ?? held.result) : {};
+      const { queue, dropped } = planDedup(candidates, doc);
+      out.note = `${candidates.length} candidate(s) compared against the plan's options and proposals; ${dropped.length} `
+               + `already held, dropped before any write; ${queue.length} to propose, in order`;
+      out.state = { ...state, queue };
+      return out;
+    }
+
+    case "submit": {
+      /* ONE PROPOSAL, OFF THE HEAD OF THE QUEUE, IN THE ORDER COMPOSED (R52): the plane stores the run's proposals in the
+         order they arrive, which is the assistant's order of strength. The table stamps what could not be read into
+         the `why` (R51); the run and the plan are the record's. */
+      const queue = [...(state.queue || [])];
+      const candidate = queue.shift();
+      if (!candidate) return out;
+      const body = { ...candidate, why: whyWithUndetermined(candidate.why, state.undetermined),
+                     plan: state.planId, run: runId };
+      const res = await call("optionpropose", null, body);
+      if (!res.reached) return { silent: res };
+      const answer = res.body?.result ?? res.body ?? {};
+      if (res.status === 200 && res.body?.ok === true && answer.ok !== false) {
+        out.submitted = true;
+        out.proposed = true;
+        out.note = `proposed '${String(candidate.summary ?? "").slice(0, 80)}'`;
+        out.state = { ...state, queue, refusal: null, submission: candidate };
+        return out;
+      }
+      if (answer.repeated === true) out.verbatim = true;
+      out.refused = { at: "optionpropose", code: answer.code ?? answer.reason ?? null, check: answer.check ?? null,
+                      repeated: answer.repeated === true, plane: answer };
+      out.note = `refused '${String(answer.code ?? answer.reason ?? "?")}' — routing to ADJUST, never to a retry`;
+      out.state = { ...state, queue, refusal: answer, submission: candidate };
+      return out;
+    }
+
+    case "adjust": {
+      /* R25 unchanged: resent only when changed, at the head of the queue, so it keeps its place. */
+      const changed = adjustedFrom(state.refusedSubmission ?? null, state.submission ?? null);
+      const queue = [...(state.queue || [])];
+      if (changed) queue.unshift(state.submission);
+      out.note = changed
+        ? "the proposal was changed in answer to the refusal, and keeps its place"
+        : "the refusal could not be answered by changing the proposal; it is dropped";
       out.state = { ...state, adjusted: changed, queue };
       return out;
     }

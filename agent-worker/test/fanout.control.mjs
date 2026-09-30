@@ -102,11 +102,7 @@ const runFanout  = () => runNamed("fanout.test.mjs", "fanout");
 const runHarness = () => runNamed("harness.test.mjs", "harness");
 const runMember  = () => runNamed("agent-worker.test.mjs", "agent-worker");
 
-function runCoverageStrict() {
-  const r = spawnSync(process.execPath, [join(PLANE, "scripts", "coverage.mjs"), "--strict"],
-    { cwd: PLANE, encoding: "utf8" });
-  return { code: r.status, out: (r.stdout || "") + (r.stderr || "") };
-}
+/* `scripts/coverage.mjs` is retired (legacy-index, K636 BOB-4): no arm spawns it any more. */
 
 /* --------------------------------------------------------- arm / restore ---- */
 
@@ -425,15 +421,14 @@ if (!only.length || only.includes("F9")) {
   console.log(`                     silent; every level NEVER_LOOKED; four citing one address; a`);
   console.log(`                     report with every optional field; a level reported twice; a thin`);
   console.log(`                     payload; a payload carrying plane-side fields nobody named here.`);
-  console.log(`                     All three member suites green and coverage --strict exit 0.`);
+  console.log(`                     All three member suites green.`);
   const rf = runFanout();
   const rh = runHarness();
   const rm = runMember();
-  const cov = runCoverageStrict();
-  const ok = rf.ran && rf.fail === 0 && rh.ran && rh.fail === 0 && rm.ran && rm.fail === 0 && cov.code === 0;
-  console.log(`    OBSERVED       : fanout ${rf.pass}/${rf.fail} · harness ${rh.pass}/${rh.fail} · member ${rm.pass}/${rm.fail} · coverage --strict exit ${cov.code}`);
+  const ok = rf.ran && rf.fail === 0 && rh.ran && rh.fail === 0 && rm.ran && rm.fail === 0;
+  console.log(`    OBSERVED       : fanout ${rf.pass}/${rf.fail} · harness ${rh.pass}/${rh.fail} · member ${rm.pass}/${rm.fail}`);
   if (ok) { armsAsDeclared++; console.log(`    VERDICT        : AS DECLARED`); }
-  else { console.log(`    VERDICT        : *** NOT AS DECLARED ***`); findings.push(`F9: fanout ${rf.fail} FAIL, harness ${rh.fail} FAIL, member ${rm.fail} FAIL, coverage exit ${cov.code}`); }
+  else { console.log(`    VERDICT        : *** NOT AS DECLARED ***`); findings.push(`F9: fanout ${rf.fail} FAIL, harness ${rh.fail} FAIL, member ${rm.fail} FAIL`); }
 }
 
 console.log(`\n${"=".repeat(78)}`);

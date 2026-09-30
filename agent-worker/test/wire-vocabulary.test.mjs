@@ -65,11 +65,11 @@ import "../../bio-plane/test/sandbox.mjs";
 
 import { LEVELS, REPORTING_LEVEL, emptyLevelCandidates } from "../src/harness.mjs";
 import { REPORT_KEYS, checkReport } from "../src/subsession.mjs";
-import {
-  VERSION_NAME_RE, SUGGEST_KINDS, SUGGEST_LEVELS, isBoilerplate,
-} from "../../bio-plane/checks/bio-checks.mjs";
+import { VERSION_NAME_RE, isBoilerplate } from "../../bio-plane/checks/bio-checks.mjs";
+/* N155 (K674, K679): the suggestion's kinds and levels are run-productions', the catalogue's copy going at T19. */
+import { SUGGEST_KINDS, SUGGEST_LEVELS } from "../../bio-plane/src/run-productions/checks.mjs";
 import { reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
-import { OBSERVATION_LEVELS } from "../../bio-plane/src/airun.mjs";
+import { OBSERVATION_LEVELS } from "../../bio-plane/src/run-rules/index.mjs";
 import { WIRE_KINDS, WIRE_LEVELS, DESCRIPTION_MIN } from "./plane-suggest.mjs";
 
 let pass = 0, fail = 0;

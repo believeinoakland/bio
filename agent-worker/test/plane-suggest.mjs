@@ -82,10 +82,11 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
-  VERSION_NAME_RE, SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECKS,
-  BASIS_VERSION_CHECKS, BOILERPLATE_FORMS, isBoilerplate, OBJECT_TYPES,
+  VERSION_NAME_RE, BASIS_VERSION_CHECKS, BOILERPLATE_FORMS, isBoilerplate, OBJECT_TYPES,
 } from "../../bio-plane/checks/bio-checks.mjs";
-import { runPrincipalGate } from "../../bio-plane/src/airun.mjs";
+/* N155 (K674, K679): the suggestion's kinds, levels and checks are run-productions', the catalogue's copy going at T19. */
+import { SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../bio-plane/src/run-productions/checks.mjs";
+import { runPrincipalGate } from "../../bio-plane/src/run-rules/index.mjs";
 
 /** The wire's real vocabulary, read out of the plane's catalog. Exported so a
  *  suite asserts against the PLANE rather than against this file's opinion. */

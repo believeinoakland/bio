@@ -71,7 +71,7 @@ import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
 import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
-import { OBSERVATION_STATES } from "../../bio-plane/src/airun.mjs";
+import { OBSERVATION_STATES } from "../../bio-plane/src/run-rules/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -83,8 +83,6 @@ const t = (label, got, want) => {
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
 const SUB_SRC = readFileSync(fileURLToPath(new URL("../src/subsession.mjs", import.meta.url)), "utf8");
-const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
-const PLANE_AIRUN = readFileSync(fileURLToPath(new URL("../../bio-plane/src/airun.mjs", import.meta.url)), "utf8");
 
 /* The comment stripper FL-2 had to correct and FL-3 reused: a naive "two slashes
    to end of line" deletes a `http://` literal AND the rest of its line. */
@@ -155,16 +153,13 @@ console.log("\n--- A1 · THE SPAWN CONTRACT: four levels, no write scope, NO FIE
   t("nothing in the contract is built by spreading the plane's payload",
     /\.\.\.\s*payload/.test(SUB_CODE), false);
 
-  /* NO WRITE SCOPE, AND IT IS COMPUTED AGAINST THE PLANE'S OWN OPS TABLE rather
-     than against a comment here. An op that turns mutating in the plane fails
-     this arm rather than a sub-session quietly gaining a write. */
-  const planeOps = new Map([...PLANE_INDEX.matchAll(/^  ([a-z][a-z0-9]*):\s*\{[^}\n]*mutating:\s*(true|false)/gm)]
-    .map((m) => [m[1], m[2] === "true"]));
-  t("the plane's OPS table parsed (guard: an empty parse would pass everything)", planeOps.size > 100, true);
-  t("every op a sub-session may name EXISTS in the plane's OPS table",
-    SUBSESSION_OPS.filter((op) => !planeOps.has(op)), []);
-  t("and the PLANE declares every one of them non-mutating — the sub-session has NO write",
-    SUBSESSION_OPS.filter((op) => planeOps.get(op) !== false), []);
+  /* NO WRITE SCOPE, R17, R37 (N402, K575): held against the op declaration this member EXPORTS (`PLANE_OPS`), which
+     control-plane pins op by op to its own table, `mutating` flag included (layer 11). This suite no longer parses the
+     plane's source: that text moved, and an empty parse passed everything. */
+  t("R17: every op a sub-session may name is one this member declares (PLANE_OPS)",
+    SUBSESSION_OPS.filter((op) => !PLANE_OPS[op]), []);
+  t("R17: and this member declares every one of them non-mutating — the sub-session has NO write",
+    SUBSESSION_OPS.filter((op) => PLANE_OPS[op]?.mutating !== false), []);
   t("the sub-session's scope is pinned, floor and ceiling", [...SUBSESSION_OPS].sort(), ["meaningrows"]);
   t("the contract publishes that scope and nothing wider",
     cs.map((c) => JSON.stringify(c.scope)).filter((s) => s !== JSON.stringify(SUBSESSION_OPS)), []);

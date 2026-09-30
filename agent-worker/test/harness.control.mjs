@@ -248,11 +248,7 @@ const runAirun = () => runPlane("airun.test.mjs", "airun");
 const runSeq = () => runPlane("skillsequencing.test.mjs", "skillsequencing");
 const AIRUN = join(PLANE, "src", "airun.mjs");
 
-function runCoverageStrict() {
-  const r = spawnSync(process.execPath, [join(PLANE, "scripts", "coverage.mjs"), "--strict"],
-    { cwd: PLANE, encoding: "utf8" });
-  return { code: r.status, out: (r.stdout || "") + (r.stderr || "") };
-}
+/* `scripts/coverage.mjs` is retired (legacy-index, K636 BOB-4): no arm spawns it any more. */
 
 /* --------------------------------------------------------- arm / restore ---- */
 
@@ -1028,14 +1024,13 @@ if (!only.length || only.includes("H10")) {
   console.log(`    MUST PASS      : a run with no judgements at all; MORE judgements than judged steps;`);
   console.log(`                     an empty judgement object; an explicit max_steps; a run id with`);
   console.log(`                     punctuation; a namespace with capitals and a hyphen; turns exactly`);
-  console.log(`                     at the bound. Both suites green and coverage --strict exit 0.`);
+  console.log(`                     at the bound. Both suites green.`);
   const rh = runHarness();
   const rm = runMember();
-  const cov = runCoverageStrict();
-  const ok = rh.ran && rh.fail === 0 && rm.ran && rm.fail === 0 && cov.code === 0;
-  console.log(`    OBSERVED       : harness ${rh.pass} pass / ${rh.fail} FAIL · member ${rm.pass} pass / ${rm.fail} FAIL · coverage --strict exit ${cov.code}`);
+  const ok = rh.ran && rh.fail === 0 && rm.ran && rm.fail === 0;
+  console.log(`    OBSERVED       : harness ${rh.pass} pass / ${rh.fail} FAIL · member ${rm.pass} pass / ${rm.fail} FAIL`);
   if (ok) { armsAsDeclared++; console.log(`    VERDICT        : AS DECLARED`); }
-  else { console.log(`    VERDICT        : *** NOT AS DECLARED ***`); findings.push(`H10: harness ${rh.fail} FAIL, member ${rm.fail} FAIL, coverage exit ${cov.code}`); }
+  else { console.log(`    VERDICT        : *** NOT AS DECLARED ***`); findings.push(`H10: harness ${rh.fail} FAIL, member ${rm.fail} FAIL`); }
 }
 
 console.log(`\n${"=".repeat(78)}`);

@@ -44,6 +44,7 @@ const REPO = join(MEMBER, "..");
 const PLANE = join(REPO, "bio-plane");
 
 const SRC = join(MEMBER, "src", "index.mjs");
+const HARNESS_SRC = join(MEMBER, "src", "harness.mjs");
 const MANIFEST = join(MEMBER, "fleet-member.json");
 const COVERAGE = join(PLANE, "scripts", "coverage.mjs");
 
@@ -130,6 +131,12 @@ function patch(file, find, replace) {
    restore before anything else runs. */
 function arm({ id, subject, what, mustFail, mustNot, file, find, replace, patches, swapManifest, run }) {
   if (only.length && !only.includes(id)) return;
+  /* V1–V4 are the controls of `scripts/coverage.mjs` itself (VF-3), which legacy-index retires (K636 BOB-4): once it is
+     gone they have no subject, and they say so rather than read the missing tool as a finding. */
+  if (/^V[1-4]$/.test(id) && !existsSync(COVERAGE)) {
+    console.log(`\n=== ARM ${id} · ${subject}\n    RETIRED        : scripts/coverage.mjs is gone (K636 BOB-4); this arm had it as its subject`);
+    return;
+  }
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
   console.log(`    WHAT IS BROKEN : ${what}`);
@@ -345,7 +352,7 @@ arm({
   id: "N1", subject: "D-462 — THE NAMESPACE SHAPE WIDENED AGAIN",
   what: "the member's namespace test goes back to `/^[a-z0-9_-]+$/i`, so `biosmoke`, `biosmoke-fleet`, `Scratch` and `BIO` pass it",
   mustFail: "the `store=biosmoke -> 400 NAMESPACE_UNKNOWN` arm BY NAME, the hyphenated and both case-variant arms, and the record-still-empty arm (the widened member WORKS a run through the plane under a name no instance holds)",
-  mustNot: "the set-equals-the-plane's pin (the constant is untouched), the BAD_STORE arms (absent / non-string), the empty-name and `a b` arms (the old shape refused both too), and section 7's over-strictness arms",
+  mustNot: "the exported-set pin (the constant is untouched), the BAD_STORE arms (absent / non-string), the empty-name and `a b` arms (the old shape refused both too), and section 7's over-strictness arms",
   file: SRC,
   find: `  if (!NAMESPACES.includes(store))`,
   replace: `  if (!/^[a-z0-9_-]+$/i.test(store))`,
@@ -355,7 +362,7 @@ arm({
     const byName = f(/^store=biosmoke -> 400 NAMESPACE_UNKNOWN/);
     const variants = f(/biosmoke-fleet\) -> 400/) && f(/\(Scratch\) -> 400/) && f(/\(BIO\) -> 400/);
     const wrote = f(/record is still empty after every refusal/);
-    const held = !f(/EQUALS the plane's `namespaceGate` set/) && !f(/-> 400 BAD_STORE/)
+    const held = !f(/exported namespace set is exactly/) && !f(/-> 400 BAD_STORE/)
       && !f(/named empty -> 400/) && !f(/not a token -> 400/) && !f(/-> accepted$/);
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · by-name arm ${byName ? "FAILED" : "held"} · variants ${variants ? "FAILED" : "held"} · record-empty ${wrote ? "FAILED" : "held"} · pin/BAD_STORE/old-shape/over-strictness ${held ? "held" : "ALSO FAILED"}`,
@@ -364,23 +371,25 @@ arm({
   },
 });
 
-/* The copy ages: this member's NAMESPACES is a copy of the plane's, so the pin is what notices the day they part. */
+/* The copy ages: this member's NAMESPACES is a copy of the plane's, EXPORTED from `harness.mjs` (N402) and pinned
+   exactly in the suite; control-plane pins the export to its own gate (layer 11), which notices the day they part. */
 arm({
   id: "N2", subject: "D-462 — THE MEMBER'S NAMESPACE SET PARTS FROM THE PLANE'S",
-  what: "the member's NAMESPACES gains `biosmoke`, a name the plane's `namespaceGate` does not hold",
-  mustFail: "the set-EQUALS-the-plane's pin, the refusal-lists-that-set arm, and the `store=biosmoke` refusal arms (the member now accepts it)",
-  mustNot: "the plane-set-was-read arm (the plane's source is untouched), the BAD_STORE arms, the Scratch/BIO/hyphenated arms, and section 7's over-strictness arms",
-  file: SRC,
-  find: `const NAMESPACES = Object.freeze(["bio", "scratch"]);`,
-  replace: `const NAMESPACES = Object.freeze(["bio", "scratch", "biosmoke"]);`,
+  what: "the member's exported NAMESPACES gains `biosmoke`, a name the plane's `namespaceGate` does not hold",
+  mustFail: "the exported-set pin, the `store=biosmoke` refusal arms and the refusal-lists-the-export arm (the member now accepts it, so no refusal lists anything), and the record-still-empty arm (it worked a run under that name)",
+  mustNot: "the BAD_STORE arms, the Scratch/BIO/hyphenated arms, and section 7's over-strictness arms",
+  file: HARNESS_SRC,
+  find: `export const NAMESPACES = Object.freeze(["bio", "scratch"]);`,
+  replace: `export const NAMESPACES = Object.freeze(["bio", "scratch", "biosmoke"]);`,
   run: () => {
     const r = runSuite();
     const f = (re) => r.failed.some((l) => re.test(l));
-    const pin = f(/EQUALS the plane's `namespaceGate` set/) && f(/lists exactly that set/);
-    const held = !f(/was READ from its source/) && !f(/-> 400 BAD_STORE/) && !f(/\(Scratch\) -> 400/)
+    const pin = f(/exported namespace set is exactly/) && f(/^store=biosmoke -> 400 NAMESPACE_UNKNOWN/)
+      && f(/refusal lists exactly the exported set/);
+    const held = !f(/-> 400 BAD_STORE/) && !f(/\(Scratch\) -> 400/)
       && !f(/\(BIO\) -> 400/) && !f(/biosmoke-fleet\) -> 400/) && !f(/-> accepted$/);
     return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · pin ${pin ? "FAILED" : "held"} · read/BAD_STORE/variants/over-strictness ${held ? "held" : "ALSO FAILED"}`,
+      observed: `${r.pass} pass, ${r.fail} FAIL · pin ${pin ? "FAILED" : "held"} · BAD_STORE/variants/over-strictness ${held ? "held" : "ALSO FAILED"}`,
       asDeclared: r.ran && pin && held,
     };
   },
@@ -394,7 +403,7 @@ arm({
    other fleet gate prints, and the clean tree already prints a FLEET FLOOR line of its own (the arm floor). So each
    arm is now measured against what `--strict` PRINTS ON THE CLEAN TREE, taken once before the first V arm: the
    plane's figures must be the clean run's, and a gate "fired" only when its line is not the clean run's line. */
-const wantsCoverage = !only.length || only.some((a) => /^V[1-4]$/.test(a));
+const wantsCoverage = existsSync(COVERAGE) && (!only.length || only.some((a) => /^V[1-4]$/.test(a)));
 const COVERAGE_CLEAN = wantsCoverage ? runCoverageStrict() : null;
 const planeFigures = (out) => (out.match(/^(OPS|CHECKS) {2}.*$/gm) || []).join("\n");
 const fleetGates = (out) => out.match(/^FLEET(?: FLOOR| SURFACE| RULE 2)?: .*$/gm) || [];
@@ -554,7 +563,6 @@ arm({
  * ONLY thing that sees it is the section that drives the REAL plane.
  * ========================================================================== */
 
-const HARNESS_SRC = join(MEMBER, "src", "harness.mjs");
 const MEANING_MOCK = join(HERE, "plane-meaning.mjs");
 
 /* The arm's exact spelling, as it stands in the source. */
@@ -722,12 +730,12 @@ if (!only.length || only.includes("O1")) {
   console.log(`    MUST PASS      : a request exactly at the bound; \`turns\` omitted; each namespace named`);
   console.log(`                     explicitly (\`bio\`, \`scratch\`); a run id carrying punctuation;`);
   console.log(`                     a DIFFERENT well-formed credential used alone. And --strict exit 0.`);
+  /* `scripts/coverage.mjs` is retired (legacy-index, K636 BOB-4): the suite alone is this arm's subject. */
   const r = runSuite();
-  const cov = runCoverageStrict();
-  const ok = r.ran && r.fail === 0 && cov.code === 0;
-  console.log(`    OBSERVED       : suite ${r.pass} pass, ${r.fail} FAIL · coverage --strict exit ${cov.code}`);
+  const ok = r.ran && r.fail === 0;
+  console.log(`    OBSERVED       : suite ${r.pass} pass, ${r.fail} FAIL`);
   if (ok) { armsAsDeclared++; console.log(`    VERDICT        : AS DECLARED`); }
-  else { console.log(`    VERDICT        : *** NOT AS DECLARED ***`); findings.push(`O1: suite ${r.fail} FAIL, coverage exit ${cov.code}`); }
+  else { console.log(`    VERDICT        : *** NOT AS DECLARED ***`); findings.push(`O1: suite ${r.fail} FAIL`); }
 }
 
 console.log(`\n${"=".repeat(78)}`);

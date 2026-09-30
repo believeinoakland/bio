@@ -109,7 +109,8 @@ import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
    drift again; arm A6c asserts the member can close on nothing the table lacks.
    Imported in the SUITE and not in the Worker: `harness.mjs`'s own header records
    why the member itself may not import the plane's module graph. */
-import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../bio-plane/src/airun.mjs";
+/* The run's vocabulary is run-rules' (the ai-runs split, K617, K649 (1)); the observation vocabulary it re-exports. */
+import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../bio-plane/src/run-rules/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -118,11 +119,15 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 
+/* R37, R53: the op declaration this member exports, pinned here floor and ceiling (N402: never parsed from the plane). */
+const PINNED_READS = ["affordances", "airun", "airunlog", "airunspawn", "availableactions", "basisversions",
+  "consequencesof", "determination", "meaningrows", "plan", "plans", "profiles", "publishededitions", "search",
+  "standard", "versionchain", "whoami"];
+const PINNED_WRITES = ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"];
 const HARNESS_SRC = readFileSync(fileURLToPath(new URL("../src/harness.mjs", import.meta.url)), "utf8");
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
 const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
-const PLANE_AIRUN = readFileSync(fileURLToPath(new URL("../../bio-plane/src/airun.mjs", import.meta.url)), "utf8");
 
 /* The comment stripper FL-2 had to correct, reused rather than re-derived: a
    naive "two slashes to end of line" DELETES a `http://` literal AND the rest of
@@ -291,7 +296,7 @@ console.log("\n--- A4 · loop termination and the pass count are the TABLE's, ne
   t("`lease` is nobody's to spend here", Object.keys(NOT_OUR_BOUNDS), ["lease"]);
   t("every bound this harness names is a bound the PLANE declares",
     [...BUDGET_BOUNDS, ...Object.keys(SPENT_NOT_WATCHED), ...Object.keys(NOT_OUR_BOUNDS)]
-      .filter((b) => !new RegExp(`^\\s{2}${b}:`, "m").test(PLANE_AIRUN.slice(PLANE_AIRUN.indexOf("export const RUN_BOUNDS")))),
+      .filter((b) => !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)),
     []);
 
   console.log("\n  -- SK-2's review criterion, as CODE: a judgement may not touch control flow --");
@@ -395,10 +400,10 @@ console.log("\n--- A6b · THE HEADER AND THE PLANE'S CATALOGUE AGREE, ASSERTED I
      nothing — three items shipped exactly that defect on 2026-08-10. So the
      catalogue is PARSED out of `bio-plane/src/airun.mjs`, the header is READ as
      text out of `../src/harness.mjs`, and the two are compared to each other. */
-  const blk = PLANE_AIRUN.match(/export const RUN_ENDINGS = \{([\s\S]*?)\n\};/);
-  t("the plane's RUN_ENDINGS block was actually found — a silent no-match would pass everything",
-    blk != null, true);
-  const planeEndings = [...(blk?.[1] ?? "").matchAll(/^\s{2}"?([\w-]+)"?\s*:/gm)].map((m) => m[1]);
+  /* The catalogue is run-rules' EXPORT, read at the interface (P7), no longer parsed out of the plane's text. */
+  t("the plane's RUN_ENDINGS was actually read — an empty import would pass everything",
+    RUN_ENDINGS != null && typeof RUN_ENDINGS === "object", true);
+  const planeEndings = Object.keys(RUN_ENDINGS || {});
   t("REACH: the parse found a non-trivial catalogue (floor 3), so neither direction below is vacuous",
     planeEndings.length >= 3, true);
 
@@ -516,17 +521,15 @@ console.log("\n--- A8 · log-always: every row logs, and the entry is in the PLA
 
 console.log("\n--- A9 · query-never-load: the ops are PINNED, and every one is the plane's ---");
 {
-  /* THE PLANE'S OWN OPS TABLE, PARSED — not a list retyped here. An op that
-     changes its `mutating` flag in the plane fails this arm rather than this
-     member quietly calling a write it believed was a read. */
-  const planeOps = new Map([...PLANE_INDEX.matchAll(/^  ([a-z][a-z0-9]*):\s*\{[^}\n]*mutating:\s*(true|false)/gm)]
-    .map((m) => [m[1], m[2] === "true"]));
-  t("the plane's OPS table parsed (guard: an empty parse would pass everything)", planeOps.size > 100, true);
-  t("every op this harness names EXISTS in the plane's OPS table",
-    Object.keys(PLANE_OPS).filter((op) => !planeOps.has(op)), []);
-  t("and this harness's `mutating` flag agrees with the plane's, op for op",
-    Object.keys(PLANE_OPS).filter((op) => PLANE_OPS[op].mutating !== planeOps.get(op)), []);
-
+  /* R37, N402 (K575): THE DECLARATION THIS MEMBER EXPORTS, pinned op by op with its `mutating` flag. It used to be
+     parsed against the plane's OPS table from source; that text moved, the parse came back empty and passed nothing.
+     The cross-check (every op in the plane's table, the flag agreeing, every write in `AI_RUN_ACTIONS`) is
+     control-plane's pin of this export (layer 11), which a layer-6 suite may not import. */
+  t("R37: every declared op states `mutating` as a boolean and a reason",
+    Object.entries(PLANE_OPS).filter(([, d]) => typeof d.mutating !== "boolean" || !(typeof d.why === "string" && d.why))
+      .map(([op]) => op), []);
+  t("R37, R53: the reads are exactly those R37 and R53 list",
+    Object.keys(PLANE_OPS).filter((op) => PLANE_OPS[op].mutating === false).sort(), PINNED_READS);
   /* FLOOR AND CEILING BOTH, exactly as FL-2 pinned `{whoami}`. A call this
      member gains is a call somebody decided to give it, and a call it loses is
      visible too. */
@@ -534,20 +537,18 @@ console.log("\n--- A9 · query-never-load: the ops are PINNED, and every one is 
      the member two READS, `search` and `versionchain` — the `collect` row resolves each citation to its document
      through the record's own version chain (INVESTIGATIVE-SESSION.md §3, consumer (3)), so a document is counted
      ONCE with its versions. Both are non-mutating in the plane's table, which the two arms above hold. */
-  /* R48 added the thirteenth: `affordances`, what the plane publishes, which the skill pack is rendered from. */
-  t("the pinned op set is exactly these thirteen",
-    Object.keys(PLANE_OPS).sort(),
-    ["affordances", "airun", "airunclose", "airunlog", "airunspawn", "airuntick",
-     "basisversions", "capturerequest", "meaningrows", "search", "suggest", "versionchain", "whoami"].sort());
+  /* R48 added the thirteenth: `affordances`, what the plane publishes, which carries the rendered skill pack.
+     R53 (K660) adds mode `plan`'s: `plan`, `plans`, its reads (R51) and the write `optionpropose`. */
+  t("R37, R53: the pinned op set is exactly the reads and the writes, nothing else",
+    Object.keys(PLANE_OPS).sort(), [...PINNED_READS, ...PINNED_WRITES].sort());
   t("every op the DRIVER actually names is in the pinned set",
     [...new Set([...WORKER_CODE.matchAll(/call\(\s*"([a-z]+)"/g)].map((m) => m[1]),
       )].filter((op) => !PLANE_OPS[op]), []);
   t("and the round trip's own op is too",
     [...new Set([...WORKER_CODE.matchAll(/askPlane\(\s*env\s*,\s*"([a-z]+)"/g)].map((m) => m[1]))]
       .filter((op) => !PLANE_OPS[op]), []);
-  t("every mutating op in the set is one PL-11's credential scope can declare (AI_RUN_ACTIONS)",
-    Object.keys(PLANE_OPS).filter((op) => PLANE_OPS[op].mutating)
-      .filter((op) => !new RegExp(`const AI_RUN_ACTIONS = \\[[^\\]]*"${op}"`).test(PLANE_INDEX)), []);
+  t("R37: and the writes are exactly the five the plane makes for it (control-plane pins them to AI_RUN_ACTIONS)",
+    Object.keys(PLANE_OPS).filter((op) => PLANE_OPS[op].mutating === true).sort(), PINNED_WRITES);
 
   /* QUERY, NEVER LOAD. The meaning-grain read is PL-9's op and this item
      CONSUMES it — there must be exactly one meaning reader named anywhere in

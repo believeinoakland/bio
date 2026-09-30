@@ -36,12 +36,11 @@ import { suggestBranch } from "./plane-suggest.mjs";
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
 
 /* THE PLANE'S OWN VOCABULARIES AND THE SKILL PACK, from their modules (uses: ai-runs, skills, legacy-checks). */
-import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_ENDINGS, RUN_BOUNDS, runStatusFor } from "../../bio-plane/src/airun.mjs";
-import * as AI_RUNS from "../../bio-plane/src/airun.mjs";
-import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
+import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_ENDINGS, RUN_BOUNDS, runStatusFor } from "../../bio-plane/src/run-rules/index.mjs";
+import * as RUN_RULES from "../../bio-plane/src/run-rules/index.mjs";
+import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, DEPLOYED_MODES } from "../../bio-plane/src/run-rules/index.mjs";
+import { reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
 import * as HARNESS from "../src/harness.mjs";
-import { renderPack } from "../../bio-plane/src/skillpack.mjs";
-import * as CATALOGUE from "../../bio-plane/checks/bio-checks.mjs";
 import { discoverMembers, verifyStatic, verifyFresh } from "../../bio-plane/scripts/fleet-bundle.mjs";
 
 const { Miniflare } = await (async () => {
@@ -81,7 +80,17 @@ const real = new Miniflare({
 });
 const PUBLISHED = (await (await real.dispatchFetch("http://x/api/?op=affordances&token=mem-req")).json());
 const PUBLISHED_ANSWER = PUBLISHED && typeof PUBLISHED === "object" && "result" in PUBLISHED ? PUBLISHED.result : PUBLISHED;
-const PACK = renderPack(PUBLISHED_ANSWER, CATALOGUE);
+/* R48 (N157, §1a): the member reads the pack the plane renders and publishes on this answer (`pack`, control-plane
+   R41) and renders nothing itself. The plane publishes it from layer 11 on, so the answer here is a STUB: the real
+   plane's answer with a stub pack beside it, carrying what the member reads (version, resident, disclosed). */
+const PACK = Object.freeze({
+  id: "investigative-session", edition: "stub", version: "investigative-session@stub+0123456789abcdef",
+  resident: { objective: { text: "find what the record holds, and state what it does not" },
+              disclosable: [{ layer: "prohibitions", load_when: "before composing a version" }] },
+  disclosed: { prohibitions: { load_when: "before composing a version", sourcing: "authored",
+                               body: [{ text: "no single confidence score" }] } },
+});
+const PUBLISHED_WITH_PACK = { ...PUBLISHED_ANSWER, pack: PACK };
 const planeNamespaces = (await (await real.dispatchFetch("http://x/api/?op=whoami&token=mem-req&store=biosmoke")).json()).namespaces;
 await real.dispose();
 
@@ -137,7 +146,7 @@ export default {
     if (op === "airun") {
       if (CFG.noSession) return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: false } });
       return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, session: {
-        id: url.searchParams.get("run"), mode: CFG.mode || "check", status: S.status, context: runCtx(CFG),
+        id: url.searchParams.get("run"), mode: CFG.mode === undefined ? "check" : CFG.mode, status: S.status, context: runCtx(CFG),
         ...(CFG.maxPasses != null ? { max_passes: CFG.maxPasses } : {}),
         principal: { plane: "member:ruth", claude: CFG.payer ?? null, ref: null, skill: CFG.skill ?? null },
         state: S.state,
@@ -150,7 +159,7 @@ export default {
     if (op === "airunspawn") {
       S.spawns += 1;
       if (CFG.noPayload) return Response.json({ ok: true, result: { found: true, half: "search" } });
-      const payload = { run: url.searchParams.get("run"), context: runCtx(CFG), mode: CFG.mode || "check",
+      const payload = { run: url.searchParams.get("run"), context: runCtx(CFG), mode: CFG.mode === undefined ? "check" : CFG.mode,
                         skill: CFG.skill ?? null, standard_pair: null, budget: [] };
       if (CFG.leakBias) payload.bias = { in_force: true, manifest: { statements_sha: "LENS-REQ" } };
       return Response.json({ ok: true, result: { found: true, half: "search", payload } });
@@ -293,7 +302,7 @@ const runOp = (mf, body) => call(mf, "run", { method: "POST", body: JSON.stringi
 const reset = async (mf, plane = {}, model = {}) => {
   await (await mf.getWorker("plane-mock")).fetch("http://plane/__mock/reset",
     { method: "POST", body: JSON.stringify({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-1",
-                                             skill: PACK.version, published: PUBLISHED_ANSWER, ...plane }) });
+                                             skill: PACK.version, published: PUBLISHED_WITH_PACK, ...plane }) });
   await (await mf.getWorker("model-mock")).fetch("http://model/__model/reset", { method: "POST", body: JSON.stringify(model) });
 };
 const planeState = async (mf) => (await (await (await mf.getWorker("plane-mock")).fetch("http://plane/__mock/state")).json());
@@ -474,7 +483,7 @@ section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its en
     [["gate-mode>resume", "resume>plan", "plan>fanout", "fanout>collect"], null, "collect", 0, 4]);
   const seg2 = await (async () => {
     await (await mf.getWorker("plane-mock")).fetch("http://plane/__mock/reset", { method: "POST", body: JSON.stringify({
-      mode: "check", maxPasses: 1, budget: wide, target: "INQ-1", skill: PACK.version, published: PUBLISHED_ANSWER,
+      mode: "check", maxPasses: 1, budget: wide, target: "INQ-1", skill: PACK.version, published: PUBLISHED_WITH_PACK,
       state: mid.state, priorLog: mid.runlog }) });
     return runOp(mf, { ...base, judgements: [{ reports: REPORTS }, { candidates: [] }, {}] });
   })();
@@ -561,7 +570,9 @@ section("R13 · the rows, their declared edges, and nextStep held to them");
 
 section("R14 · gate-mode is first; an undeployed mode closes mode-not-deployed before anything is spent");
 {
-  for (const mode of ["investigate", "extract", "sorcery"]) {
+  /* skillsequencing's agent-worker share (T17 convert): every held mode not deployed, an ABSENT mode and a mis-spelled
+     one each close mode-not-deployed; plan (R53) is held and not deployed. */
+  for (const mode of ["investigate", "extract", "plan", "sorcery", null, "", "Check"]) {
     await reset(mf, { mode });
     const r = await runOp(mf, { ...base, judgements: J() });
     const st = await planeState(mf);
@@ -574,8 +585,11 @@ section("R14 · gate-mode is first; an undeployed mode closes mode-not-deployed 
       [true, true]);
     t(`R14: …and the close was written (${mode})`, st.ended?.bound, "mode-not-deployed");
   }
-  t("R14: the first step is gate-mode, and check is deployed while investigate and extract are not",
-    [FIRST_STEP, MODES.check.deployed, MODES.investigate.deployed, MODES.extract.deployed], ["gate-mode", true, false, false]);
+  t("R14: the first step is gate-mode, and check is deployed while investigate, extract and plan are not",
+    [FIRST_STEP, MODES.check.deployed, MODES.investigate.deployed, MODES.extract.deployed, MODES.plan.deployed],
+    ["gate-mode", true, false, false, false]);
+  t("R14 (skillsequencing): MODES is exactly the recorded set, the one deployment order's members",
+    Object.keys(MODES), DEPLOYMENT_SEQUENCE.order);
 }
 
 section("R15 · stopBecause: fetches, subsessions, wallclock, then the pass limit");
@@ -917,7 +931,7 @@ section("R49 · the state a tick publishes stays within ai-runs' AI_RUN_STATE_MA
     [undefined, 0, -1].map((l) => publishableState(over, l).restarted), [null, null, null]);
 
   /* THROUGH THE OP, at the plane's ceiling: a mock that refuses as ai-runs R45 does receives no state it refuses. */
-  const CEILING = AI_RUNS.AI_RUN_STATE_MAX_BYTES;
+  const CEILING = RUN_RULES.AI_RUN_STATE_MAX_BYTES;
   {
     t("R49: the ceiling the member applies is ai-runs' own, the figure its R45 provides", CEILING, LIMIT);
     await reset(mf, { target: "INQ-R49", stateMax: CEILING });
@@ -1051,25 +1065,42 @@ section("R34 · SURFACE and fleet-member.json");
 }
 
 /* ============================================================ R40, R41, R48: model turns */
-section("R48 · in the model mode the pack is rendered, and a run under another pack is refused before any turn");
+section("R48 · in the model mode the pack is the one the plane publishes, and a run under another pack is refused before any turn");
 {
   await reset(mf, { payer: "project", skill: "investigative-session@1+0000000000000000" });
   const r = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
-  t("R48: the recorded skill version is not the rendered pack's -> 409 SKILL_VERSION_MISMATCH carrying both",
+  t("R48: the recorded skill version is not the published pack's -> 409 SKILL_VERSION_MISMATCH carrying both",
     [r.status, r.out.code, r.out.recorded, r.out.rendered], [409, "SKILL_VERSION_MISMATCH", "investigative-session@1+0000000000000000", PACK.version]);
-  t("R48: refused before any turn, after the payer check (R10), from op=affordances",
-    [(await modelState(mf)).calls.length, (await planeState(mf)).log.map((l) => l.op)], [0, ["whoami", "airun", "affordances"]]);
+  t("R48: refused before any turn, after the payer check (R10), from the untargeted op=affordances",
+    [(await modelState(mf)).calls.length, (await planeState(mf)).log.map((l) => l.op),
+     (await planeState(mf)).log.filter((l) => l.op === "affordances").map((l) => l.query.target ?? null)],
+    [0, ["whoami", "airun", "affordances"], [null]]);
   await reset(mf, { payer: "project", refuse_op: { affordances: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", check: "C-29.9" } } } });
   const ref = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
   t("R48: a refused op=affordances -> 403 PLANE_REFUSED, no turn", [ref.status, ref.out.reason, (await modelState(mf)).calls.length], [403, "PLANE_REFUSED", 0]);
-  await reset(mf, { payer: "project", published: { vocabularies: {}, catalog: [] } });
-  const empty = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
-  t("R48: a pack that cannot be rendered -> 502 PACK_UNRENDERABLE, no turn", [empty.status, empty.out.code, (await modelState(mf)).calls.length],
-    [502, "PACK_UNRENDERABLE", 0]);
+  await reset(mf, { payer: "project", published: { ...PUBLISHED_ANSWER, pack: null, pack_absent: "renderPack: no fences published" } });
+  const absent = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  t("R48: an answer whose pack the plane could not render -> 409 carrying both versions, the published one UNDETERMINED, no turn",
+    [absent.status, absent.out.code, absent.out.recorded, absent.out.rendered, absent.out.rendered_basis, absent.out.pack_absent,
+     (await modelState(mf)).calls.length],
+    [409, "SKILL_VERSION_MISMATCH", PACK.version, null, "UNDETERMINED", "renderPack: no fences published", 0]);
+  await reset(mf, { payer: "project", published: PUBLISHED_ANSWER });
+  const none = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  t("R48: an answer carrying no pack at all -> 409, its version UNDETERMINED, no turn",
+    [none.status, none.out.code, none.out.rendered, none.out.rendered_basis, (await modelState(mf)).calls.length],
+    [409, "SKILL_VERSION_MISMATCH", null, "UNDETERMINED", 0]);
+  await reset(mf, { payer: "project", published: { ...PUBLISHED_ANSWER, pack: { version: PACK.version } } });
+  const partial = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  t("R48: a partial pack (a version and no layers) is never used: 409, UNDETERMINED, no turn",
+    [partial.status, partial.out.rendered, (await modelState(mf)).calls.length], [409, null, 0]);
   await reset(mf, { payer: "project" });
   await runOp(mf, { ...base, claude_accounts: ACCOUNTS, judgements: J() });
   t("R48: until turns run it changes nothing: the supplied mode never asks for the pack",
     (await planeState(mf)).log.some((l) => l.op === "affordances"), false);
+  const bundle = JSON.parse(readFileSync(fileURLToPath(new URL("../dist/agent-worker.bundle.json", import.meta.url)), "utf8"));
+  const inputs = (bundle.inputs || []).map((i) => String(i.path ?? i.file ?? i));
+  t("R48: it renders nothing and imports neither the check catalogue nor skills' code: no such input in its bundle",
+    [inputs.length > 0, inputs.filter((f) => /bio-checks\.mjs$|skillpack\.mjs$|skilldoctrine\.mjs$/.test(f))], [true, []]);
 }
 
 section("R40 · model turns run under the resolved account and the run's pack, within the segment bound");
@@ -1104,12 +1135,14 @@ section("R40 · model turns run under the resolved account and the run's pack, w
     [three.status, three.out.ended, three.out.segment?.stopped, three.out.turns_run, (await planeState(mf)).log.some((l) => l.op === "airunclose")],
     [200, null, "turns", 3, false]);
 
-  const small = newMf({ MAX_SEGMENT_BYTES: "60000" });
+  /* The bound is half of what the whole run above sent, so it bites mid-run whatever the pack's size. */
+  const half = Math.floor(calls.reduce((n, c) => n + c.bytes, 0) / 2);
+  const small = newMf({ MAX_SEGMENT_BYTES: String(half) });
   await reset(small, { payer: "project" });
   const b = await runOp(small, { ...base, claude_accounts: ACCOUNTS });
   const sent = (await modelState(small)).calls.reduce((n, c) => n + c.bytes, 0);
   t("R40 (D-611): the byte bound stops the segment before a request would carry it past the bound",
-    [b.out.segment?.stopped, b.out.ended, sent <= 60000, b.out.segment?.bytes_sent === sent, b.out.segment?.bytes_bound], ["bytes", null, true, true, 60000]);
+    [b.out.segment?.stopped, b.out.ended, sent <= half, b.out.segment?.bytes_sent === sent, b.out.segment?.bytes_bound], ["bytes", null, true, true, half]);
   await small.dispose();
 
   await reset(mf, { payer: "project" }, { status: 529, errorType: "overloaded_error" });
@@ -1194,10 +1227,12 @@ section("R36 · it holds no credential; nothing it answers carries a token");
 
 section("R37 · it judges no scope; PLANE_OPS is exactly its ops, and it calls no other");
 {
-  t("R37: PLANE_OPS is exactly the reads and the writes the plane makes",
+  /* R53 (K660) adds mode plan's: plan, plans, the R51 reads, and the write optionpropose. */
+  t("R37, R53: PLANE_OPS is exactly the reads and the writes the plane makes",
     [Object.keys(PLANE_OPS).filter((o) => !PLANE_OPS[o].mutating).sort(), Object.keys(PLANE_OPS).filter((o) => PLANE_OPS[o].mutating).sort()],
-    [["affordances", "airun", "airunlog", "airunspawn", "basisversions", "meaningrows", "search", "versionchain", "whoami"],
-     ["airunclose", "airuntick", "capturerequest", "suggest"]]);
+    [["affordances", "airun", "airunlog", "airunspawn", "availableactions", "basisversions", "consequencesof", "determination",
+      "meaningrows", "plan", "plans", "profiles", "publishededitions", "search", "standard", "versionchain", "whoami"],
+     ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"]]);
   await seen(mf);
   t("R37: the ops the member called across this suite's last run are all in PLANE_OPS",
     [...OPS_SEEN].filter((o) => !PLANE_OPS[o]), []);
@@ -1228,8 +1263,8 @@ section("R42 · enabling a mode is an edit to MODES, never a request parameter")
   await reset(mf, { mode: "investigate" });
   const r = await runOp(mf, { ...base, mode: "check", modes: { investigate: { deployed: true } }, deployed: true, judgements: J() });
   t("R42: no request field enables an undeployed mode", r.out.ended?.bound, "mode-not-deployed");
-  t("R42: MODES holds which modes are deployed", Object.fromEntries(Object.entries(MODES).map(([k, v]) => [k, v.deployed])),
-    { check: true, investigate: false, extract: false });
+  t("R42, R53: MODES holds which modes are deployed: plan is held and not deployed", Object.fromEntries(Object.entries(MODES).map(([k, v]) => [k, v.deployed])),
+    { check: true, investigate: false, extract: false, plan: false });
 }
 
 section("R43 · a refusal reaching the member is never reworded");
@@ -1257,8 +1292,13 @@ section("R44 · its copies equal their sources, both ways");
     [Object.keys(REPORTING_LEVEL), LEVELS.map((l) => REPORTING_LEVEL[l] === reportsAs(l))], [LEVELS, LEVELS.map(() => true)]);
   t("R44: NAMESPACES is the plane's (the member's refusal and the real plane's list the same set)",
     (await runOp(mf, { run_id: "r", store: "x", credential: AIK })).out.namespaces, planeNamespaces);
-  t("R44: MODES' keys are DEPLOYMENT_SEQUENCE.order, and only its first member is deployed",
-    [Object.keys(MODES), Object.keys(MODES).filter((k) => MODES[k].deployed)], [DEPLOYMENT_SEQUENCE.order, [DEPLOYMENT_SEQUENCE.order[0]]]);
+  /* R44 as R53 reads it: only the order's first member is deployed, and `plan` once R40 and R48 are met (it is not in
+     T18, run-rules R14): MODES' deployed set is run-rules' DEPLOYED_MODES, both ways. */
+  t("R44, R53: MODES' keys are DEPLOYMENT_SEQUENCE.order, and its deployed modes are run-rules' DEPLOYED_MODES: the first member only",
+    [Object.keys(MODES), Object.keys(MODES).filter((k) => MODES[k].deployed), [...DEPLOYED_MODES]],
+    [DEPLOYMENT_SEQUENCE.order, [DEPLOYMENT_SEQUENCE.order[0]], [DEPLOYMENT_SEQUENCE.order[0]]]);
+  t("R44, R53: plan is the order's last member and deploys apart, not deployed with MODES.plan",
+    [DEPLOYMENT_SEQUENCE.order.at(-1), DEPLOYMENT_SEQUENCE.deploys_apart?.plan?.deployed, MODES.plan.deployed], ["plan", false, false]);
   t("R44: the mode-not-deployed ending is one of the plane's RUN_ENDINGS", Object.keys(RUN_ENDINGS).includes("mode-not-deployed"), true);
 }
 

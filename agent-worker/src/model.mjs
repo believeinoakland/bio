@@ -135,6 +135,25 @@ export function judgeTools(levels) {
   ];
 }
 
+/* R52 (K660) — MODE `plan`'s judgements: `compose` answers candidate proposals strongest first, each with only
+ * `optionPropose`'s fields, and `adjust` a changed proposal. No field for a score, a rank or a strength exists in
+ * either schema; `applyPlanJudgement` refuses one whatever the schema says. */
+export function planJudgeTools(optionKeys) {
+  const option = { type: "object", properties: Object.fromEntries(optionKeys.map((k) => [k, {}])),
+                   additionalProperties: false };
+  const obj = (properties, description, name) => ({
+    name, description, input_schema: { type: "object", properties, additionalProperties: false },
+  });
+  return [
+    obj({ candidates: { type: "array", items: option,
+                        description: "the proposals, STRONGEST FIRST: their order is the only sign of strength; each "
+                                   + "carries only optionPropose's fields, with why (at most 500 characters) and sources" } },
+        "compose: which options to propose to the plan, in order of strength, and why.", "judge_compose"),
+    obj({ submission: { ...option, description: "the changed proposal; the refused one unchanged drops it" } },
+        "adjust: how to answer the plane's refusal of a proposal.", "judge_adjust"),
+  ];
+}
+
 export const LOAD_LAYER = (disclosable) => ({
   name: "load_layer",
   description: "load one of the skill pack's disclosed layers when the work needs it",
@@ -161,6 +180,16 @@ export function rowPrompt(step, row, facts) {
 /** The facts a judged row judges over, taken from the table's state: what the row needs and nothing that would
  *  let a judgement reach control flow (it may still try; `applyJudgement` refuses it). */
 export function rowFacts(s, levels) {
+  if (s.mode === "plan")
+    switch (s.step) {
+      case "compose":
+        return { plan: s.planDoc ?? null, earlier_plans: s.earlier || [], reads: s.reads || [],
+                 undetermined: s.undetermined || [], candidates: s.candidates || [] };
+      case "adjust":
+        return { refusal: s.refusal ?? null, refused_submission: s.refusedSubmission ?? null };
+      default:
+        return {};
+    }
   switch (s.step) {
     case "plan":
       return { pass: Number(s.pass) + 1, max_passes: s.maxPasses, mode: s.mode, target: s.target ?? null,
