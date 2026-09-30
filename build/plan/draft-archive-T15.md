@@ -1,0 +1,128 @@
+# Plan: tranche T15
+
+*Draft of the archive (a worker for BOB #70, 2026-09-30); the Status line is BOB's to set at the close.*
+
+**Status** · OPEN · BOB #70 · session_01Fmkg2RxN11uJFvtGLniFrT · depth 1
+
+Opened by BOB #68, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ 302d008f0b, T14 closed (K480). Cut from `draft-T15.md`, re-read against T14's close (K479–K481); N345's contradiction part folded before opening (K481), with K477's wordings (membership R88, entities R39, ratification R17). An `N` entry's text is in `build/plan/next.md` (N345's in the requirements). Bob's weekly meter at the opening: 33% (given ~03:45 UTC, the reading for T14's close).
+
+**Jobs** · legacy-checks: LEGACY-CHECKS #9 session_01BG5RDjmnEGneGN6yySvn8f; membership: MEMBERSHIP #8 session_01Wczft1gsPUnco6CaLvEUg5; promotion: PROMOTION #16 session_01ND9SZzuGAjq4MyXXivuefV; entities: ENTITIES #4 session_01KSDYyzB5ig2GsNMmtWdu8B; retrieval: RETRIEVAL #4 session_01JyAyVDeMrxmFvfB74PUdqx; inquiry: INQUIRY #4 session_01Ew9rdcsPSSYPHdbKmBr6Hv; contradiction: CONTRADICTION #2 session_0171p4zErPrN1VgxXfWEhXn7; skills: SKILLS #5 session_018xQkkj4FkEcwbqR1dfGgvx; reevaluation: REEVALUATION #5 session_01BVhTdCZJui5ZfRQKTiN1bW; publication: PUBLICATION #5 session_016tDen5uWKPk2idprPvDn7o; case-authoring: CASE-AUTHORING #4 session_017F7CenwNVr8EttZdzGn7Pc; conformance: CONFORMANCE #4 session_01WyNRCH9tA6azzHVX8phB5R; filings: FILINGS #5 session_01X781cDNM8B9Gk9XTmbmYhE; legacy-store: LEGACY-STORE #7 session_01AciCMuth1cZd2DkRivax4t; affordances: AFFORDANCES #7 session_01G3caQxYgKYDvauywiLFZHC; instance-setup: INSTANCE-SETUP #4 session_01MPeZXWNffPSns1vrpkvF5F; control-plane: CONTROL-PLANE #6 session_01HUfzsqiRFUiyAQ3trjLmav; legacy-tests: LEGACY-TESTS #13 session_01FwqkCarjLUHxQeHz5zzXyh
+
+**Rules at the opening.** T14's rules hold (`archive/T14.md`): long batteries in the foreground, in chunks under ten minutes, the record pushed after each; a provider a later job of its layer needs merges early (§4, K425); promotion stamps at layer 2, last in it, every row change from T14's layers 3+ and T15's layers 1–2 (N318, K425), and rows added at T15's layers 3+ are named `awaiting stamp` for T16; legacy-tests runs alone, last (K420, K427), retiring a covered extracted suite before re-anchoring anything (K457); a job names each `not yet met` mark its work meets and BOB strikes it (K460); after each extraction merge BOB runs `test/m/` whole on the tranche.
+
+## Layer 1
+
+- **legacy-checks** · N325's remainder: the `checkInboxGrammar` export goes (`bio-checks.mjs`:4453; queue holds its own since T14's layer 11); the old battery's `test/inbox.test.mjs`:27 import is red from this merge until legacy-tests retires it, accepted by name at the layer's close; C-19.1's catalogue copy goes too: QUEUE #4 holds `checkInboxGrammar` whole in `src/queue/checks.mjs`, registered with promotion (its record; K476). N327's remainder: C-29.12 `AI_CREDENTIAL_ORG_NOT_ADMIN` retires (nothing mints it since MEMBERSHIP #7), with its family header (:6860–6867). PROMOTION #15's report: the stale comment at `bio-checks.mjs`:2168 (`REOPENABLE_FROM` is promotion R51's frozen `["deferred", "dismissed"]`). Optional, N128's header share: `REGISTRATION_CHECKS`' header (:11200–11205) names membership's C-102.11 and C-102.12.
+  **Outcome** · LEGACY-CHECKS #9 COMPLETE (K482): every entry applied, the optional N128 header share included; the export went with its six private vocabularies; C-29.12 retired; C-19.1's catalogue copy gone; census 358 → 356. `inbox.test.mjs` was not red (LEGACY-TESTS #12 had re-anchored it), so no red was accepted. Re-pins handed to promotion's START and legacy-tests.
+
+## Layer 2
+
+- **membership** · N352's provider: `hiddenBundles(viewer)` beside `viewerPredicate` (`membership/index.mjs`:35), the complement of the viewer's gate that store `#hiddenBundles`, queue's copy and retrieval `hiddenSet` each spell today (R88). Merged early for promotion (K425).
+  **Outcome** · MEMBERSHIP #8 COMPLETE (K483): R88 `hiddenBundles` applied, mark struck; no row moved, so the stamp stood. Its observation on the founder's `member:admin` viewer is N357 (T16, K494 W1).
+- **promotion** · The stamp, last (K425): `CATALOG_VERSION` 1.44.0 → 1.45.0 over every row change since 1.44.0: T14's layers 3+ (capture's C-118.1 re-keyed `EVIDENCE_NOT_HELD`, N347; bias's C-26.20 and intent's C-111.16 retired, N327; queue's C-19.2 `INBOX_REFUSED` and the gate's composition changed by queue's `registerStep` registration, N325, K462, K464; any other row a T14 record names `awaiting stamp`); T15's layer 1 (C-29.12's retirement; C-19.1's catalogue copy if it goes); T15's layer 2, if any. `ROW_CENSUS` (R50) re-pinned.
+  **Outcome** · PROMOTION #16 COMPLETE (K483): `CATALOG_VERSION` 1.45.0; in C-118.1 `EVIDENCE_NOT_HELD`, C-19.2; out C-118.1 `NOT_FOUND`, C-26.20, C-111.16, C-29.12; the gate gains queue's step; `ROW_CENSUS` 825. `gate.mjs`:191 is a history note, left. Layer 2 had no row change of its own. Its fixtures (row-census 1.45.0, d470's 1.45.0 row) handed to legacy-tests.
+
+## Layer 5
+
+- **entities** · N345: R38 `reportResolutionDefect` (`op=resolutiondefect`), the `resolution_defects` table, row C-91.7 `NO_SUCH_RESOLUTION`; R14, R15, R29, R30 reworded. N351 (R39): `op=aliaswithdraw`'s `resolutions_resting`, and `op=entity`'s aliases and relations, bounded with a stated limit and `truncated` (meaning-bounds' BARE ceiling).
+  **Outcome** · ENTITIES #4 COMPLETE (K485, K486): R38 (with `defects` on the entity and `viewer` on `op=entity`/`op=entitybyalias`), R14, R15, R29, R30, R39 applied; marks struck. R39's relations bound is 1,000, not 500 (K485), re-opened once (B3) after intent's bounds test went red. C-91.7 `awaiting stamp` (T16). Handovers: control-plane's route and stamps; legacy-tests' BARE roster.
+- **retrieval** · N352: `hiddenSet` (`retrieval/index.mjs`:73) reads membership's helper.
+  **Outcome** · RETRIEVAL #4 COMPLETE (K486): `hiddenSet` gone, its callers read R88, results identical. Its Uses wording and the stale R51–R53 mark corrected (K484).
+
+## Layer 6
+
+- **inquiry** · N345: R46 (frozen vocabularies, `resolutionFamily`, `resolutionLines`), R47 (the contradiction inquiry's grammar arm), R48 (`contradictionLink`, `inquiryOfCandidate`); R11 gains C-2.17 `CANDIDATE_ALREADY_TAKEN_UP`; R12, R36, R38 reworded; the module's first `checks.mjs` holds C-2.11–C-2.17.
+  **Outcome** · INQUIRY #4 COMPLETE, merged early for contradiction (K489): R46–R48, R11's C-2.17, R12, R38, R36's N345 clause; marks struck; qualifiers written `qualifier_a`/`qualifier_b` (K487). Not met: R36's older clause, N358 (T16; K494 drops it). C-2.11–C-2.17 `awaiting stamp` (T16). Accepted red by name: `fleetbundles`' agent-worker input-count pin (149 → 151) until legacy-tests re-pins it (K489). `divide`'s dropped `content_id` found later: N360 (T16, K495).
+- **contradiction** · N345 with DEC-85 (K455, K456, K459): R24–R55 (with K5's pairing of two projects' conclusions); R5, R7, R8, R10, R11, R14, R19, R20, R25, R27, R29, R42, R47 amended; tables `contradiction_acts`, `contradiction_recommendations`, `contradiction_optins`, `contradiction_responses`; promotion check R38; rows C-60.2, C-60.3, C-93.8–C-93.39; DEC-85's notice, opt-in, reveal, responses and relay (R49–R55) with the two-hidden-projects fixture; the K5 gate arm and the recommender's blind fixture, measured in `MEASUREMENTS.md` (R41). `uses` gains promotion.
+  **Outcome** · CONTRADICTION #2 COMPLETE, merged early for skills (K488, K490): R24–R55 and the amendments; 91 tests, 7 `test.todo`. Twelve new ops, not thirteen (K490). Left marked for want of a measured recommender run (K488): R41, R34, and the K5 arms of R24, R27, R32, R33 (carried in T16's "Needs a deployment or measurement no job can make": a measured recommender run; K5 candidates stay unshown meanwhile). C-60.2, C-60.3, C-93.8–C-93.39 `awaiting stamp` (T16), with C-93.1–C-93.3's `where` moved (its record). Its stale mark without member or instant is N359 (K493).
+- **skills** · N345: `RECOMMEND_PROMPT` packaged into the skill pack (agent-worker's bundle regenerated at the close).
+  **Outcome** · SKILLS #5 COMPLETE (K487, K491, K492): the `contradiction` layer after `refusals` (new R27; R5; R1), a stated absence while `RECOMMEND_PROMPT_SHA256` is null (K491, replacing K487's R1 clause); `JUDGEMENT_PROMPT` not packaged (K487). R27's imported form is live only once contradiction R41 is measured (its requirement says so). Agent-worker's bundle regenerated at the close (K492).
+
+## Layer 7
+
+- **reevaluation** · N345: R27 (the `corrected` cause, derived on read; `correctedDependents`); R2 and Terms reworded. `uses` gains contradiction (`tensionsOn`).
+  **Outcome** · REEVALUATION #5 COMPLETE (K493, K496): R27 on K493's readings (stance arm met vacuously; `since` null where the mark states no instant), `correctedDependents`, `changesOf`, R2's arm; 59 tests; R2's and R27's marks struck. Its findings: contradiction's gap N359 (K493), inquiry's `divide` N360 (K495), both T16.
+
+## Layer 8
+
+- **publication** · N345: R20 (`bio-case-document/5`; `/4` accepted as written; `caseDocumentRequiresTensionSection`), R10 (`tensions`, with DEC-85's highlight), R50. `uses` gains contradiction.
+  **Outcome** · PUBLICATION #5 COMPLETE, merged early for case-authoring (K498, K501): R20 `/5` with its grammar in `src/publication/checks.mjs`, R10 through `caseTensionsOf`, R50; 100 pass, 2 todo; marks struck. Deferred: the catalogue's `/4` fallback, N361 (T16, K498). Accepted red by name until N361: `test/m/ratification/checks.test.mjs`:133 (K500). Its report that `app.html`'s publish sends no disclosure (refused C-120.1 until DEC-80's ceremony step) was told to Bob (K501).
+- **case-authoring** · N345: R14 (`/5`), R31 (disclosure, with the highlight), R32 (`tensionsToDisclose`, `op=publishtensions`), R33; family C-120.1–C-120.3 (K343's pattern). `uses` gains contradiction.
+  **Outcome** · CASE-AUTHORING #4 COMPLETE (K498, K499, K502): R14 `/5` with the section (re-opened by B4 to turn its todo into a test, K501), R29, R31 with the highlight, R32, R33, R15's fields; a leg with no content row stated unread, never C-120.3 (K499); 53 pass; marks struck. C-120.1–C-120.3 `awaiting stamp` (T16). Review's drafts and `app.html` carry no disclosure: N345's DEC-80 part (N364).
+
+## Layer 9
+
+- **conformance** · N345: R1, R9, R12 amended; R21, R22 (a comparison started from a contradiction; a cause only when evidenced; no recommendation in a determination); rows C-113.24–C-113.27. `uses` gains contradiction.
+  **Outcome** · CONFORMANCE #4 COMPLETE (K503, K504, K505): R1, R9, R12, R21, R22; a new row C-113.28 `STANDARD_SIDE_UNNAMED` (K503); C-113.24's translation reworded (K504), re-opened once (B3); 46 pass; marks struck. C-113.24–C-113.28 `awaiting stamp` (T16). The passage text for R21 is N362, to Bob, recommended yes (K504, K517).
+- **filings** · N355: the no-promotion fallback (`src/filings/index.mjs`:138) carries no code for its internal `FACT_UNAVAILABLE`.
+  **Outcome** · FILINGS #5 COMPLETE (K505): N355 applied, the group undetermined with no promotion reachable, R3's arm; 35 pass. The DEC-49 guard's arm G entry for `FACT_UNAVAILABLE` handed to legacy-tests.
+
+## Layer 10
+
+- **legacy-store** · N342's drop (K445): its four reads of queue's tables go (now through record-core R63's spread), and `#MINT_LEDGER_LIVE`'s `TASK` row with its seed. N352's share: `#hiddenBundles` (`store.mjs`:2052) reads membership's helper.
+  **Outcome** · LEGACY-STORE #7 COMPLETE (K513): N342's drop, N352's share, and K500's unused `CASE_DOCUMENT_FORMAT` import; net −36 lines; `op=stats` and purge probed equal on the plane (the four queue keys now last in key order). Held, not restarted, while quiet (K506, K510, K512). Two size-floor re-pins and project-sight's arms handed to legacy-tests.
+
+## Layer 11
+
+- **affordances** · N345's rungs (wording, K447): R1–R4, R7, R8, R14 (the opt-in; the response graded `RUNG_ABSENT`; "resolve" for "conclude" on a contradiction inquiry). MEMBERSHIP #7's report: `affordances.mjs`:1834 names `ADMIN_ONLY`, now `NOT_AN_ADMIN`. Any code T14's layers 3+ retire or rename that their records find in affordances' lists.
+  **Outcome** · AFFORDANCES #7 COMPLETE (K516, K520, K521): R1–R4, R7, R8, R14 met and struck, on K516's wordings (`contradictionmeasures` dropped; `contradictionresolve` on conclude's state-machine arm; `comparisonfacts` in no registry); `NOT_AN_ADMIN`; the handovers (`contradictionpairs`' five keys, `comparisonpropose`). R27's count is 60 (K520). Deferred: the side-sight residue, N365 (T16, K520). Its legacy suites handed to legacy-tests.
+- **queue** · *Moved to T16 by Bob's approval of the split (K507): its N345 entry (R1 amended; R43–R47) and N352's share run there, after the split, on the smaller modules.*
+  **Outcome** · Not run in T15 (K507): its N345 and N352 shares go to T16 after the split, N363.
+- **instance-setup** · N348's remainder (K445): `instanceSetupStore` and `instanceSetupRoute` (`setup.mjs`:2439, :2420) go, with the fixture's frame (`test/m/instance-setup/fixture.mjs`:9, :137).
+  **Outcome** · INSTANCE-SETUP #4 COMPLETE, merged early (K514, K518): both exports gone, the fixture its own frame over `instanceSetupOps`; 58/58. Control-plane's `store-class.test.mjs` arms forwarded (K514); stale marks struck (K518); comment-only hits handed to legacy-tests.
+- **control-plane** · N345: routes, `NEEDS` rows and stamps (`author`, `viewer`, `proposedBy`, `caller`) for the fifteen new ops (contradiction's thirteen, entities' `resolutiondefect`, case-authoring's `publishtensions`). N356: comments still naming `ADMIN_ONLY` (`ops.mjs`:824; `index.mjs`:3057, :3069).
+  **Outcome** · CONTROL-PLANE #6 COMPLETE, merged early before affordances (K519): fifteen routes (contradiction's twelve, K490, with `resolutiondefect`, `publishtensions`, `comparisonfacts`), K516's `NEEDS` rows, `viewer` on `entity`/`entitybyalias`; N356; B2's `store-class` re-anchoring; 57/57. One noted limit, not deferred: the door does not read `contradictioncandidates`' body form `on: {project}` (its record).
+
+## Last: legacy-tests (K420, K427, K457)
+
+- **legacy-tests** · K457 first. Then: `test/inbox.test.mjs` retired (queue's `test/m/queue/inbox.test.mjs` covers it); C-29.12's acceptance by name in `check-refusal-codes` and the census suite retires; `mint-ledger.test.mjs` S8 (N342); `identity-claims.test.mjs`:183 and `bounds.test.mjs`:175–192 (N348); `d470-catalog-census` A1, A3, A9 and the R50 census suite over 1.45.0, declaring N345's rows `awaiting stamp` by name; meaning-bounds' BARE ceiling 40 → 38 after N351; project-sight's `stats-whole-store` arm widened after N352; N347's `civicos-ui` fixtures imitating `NOT_FOUND` (`test/snapshot-render.test.mjs`:93, :168; `test/artifact-fetch.test.mjs`:21, :44; `civicos-ui/test/` is legacy-tests', K458); N345's re-anchors (suites reading `bio-case-document/4` as current; the affordances totality); whatever T14's layers 3–11 and T15's layers break, each named with its owner.
+  **Outcome** · (running) LEGACY-TESTS #13 started alone after layer 11's close (K522).
+
+## Not in T15
+
+**Bob's first:** N345's DEC-78 part (capture's doorbell provenance; a source's disclosure-history home), DEC-80 part (the ceremony) and DEC-81 part (grade disclosure): BOB drafts, Bob approves; the contradiction part's ids re-count when they fold (K454), and its `/5` format move is shared with DEC-81's. N317, N303's remainder, N320.
+
+**T16 owes:** promotion's stamp of T15's layers 3+ rows (N345's: C-91.7, C-2.11–C-2.17, C-60.2–C-60.3, C-93.8–C-93.39, C-120.1–C-120.3, C-113.24–C-113.27) and anything else those layers add.
+
+**Outcome** · Moved into T16 during T15: queue's layer-11 entry (K507, N363). Added for T16: N357, N358 (K494), N359 (K493), N360 (K495), N361 (K498), N364 (K509, K517), N365 (K520); N362 to Bob (K517). T16's stamp also owes C-113.28 (K503), C-93.1–C-93.3's moved `where`s and the gate's inquiry-step composition (contradiction's and inquiry's records). Bob ruled the DEC-78/80/81 draft's five questions (K509); they fold at T16's opening (K517).
+
+**Waiting,** as in T13's list less what T14 and T15 carry: N13, N21, N22, N26, N31, N34, N57, N68, N70, N71, N75, N136, N137, N144, N155, N157, N175, N211, N221, N225, N232, N241, N245, N248, N249, N272, N279, N336, N337, DIST-14; and, marks still standing, N65 (3) (actions R40, tangled with REC-201 and N61) and N79 (capture R28: `subresources.mjs` has no containment).
+
+## Outcome by layer
+
+Each layer closed with ownership 0 failures per job, the job merged, the bundles regenerated (fleetbundles 96/0 through layer 5; 95/1 from layer 6, K489's accepted pin), and `test/m/` whole on the tranche.
+
+- **Layer 1** (K482): `test/m/` 2,830/0, 14 todo. **Layer 2** (K483): 2,836/0, 14 todo. Layers 3 and 4 had no entries.
+- **Layer 5** (K486): 2,845/0, 14 todo. **Layer 6** (K492): 2,924/0, 21 todo.
+- **Layer 7** (K496). **Layer 8** (K502): ratification's parity test red by name (K500). **Layer 9** (K505). **Layer 10** (K513).
+- **Layer 11** (K521): `test/m/` whole 2,988 tests, 1 fail (K500's accepted red, N361), 21 todo.
+- **Last**: (running) LEGACY-TESTS #13 (K522).
+
+Accepted red at the layers' closes, each by name: `fleetbundles`' agent-worker input-count pin (K489, legacy-tests'); `test/m/ratification/checks.test.mjs`:133 (K500, N361, T16).
+
+## Usage (P14)
+
+Tokens processed (cache reads + cache writes + input + output), per session from `metrics/T15.csv`, one session per job:
+
+| Job | Tokens |
+|---|---|
+| legacy-checks | 17,703,171 |
+| membership | 7,839,705 |
+| promotion | 5,035,319 |
+| entities | 10,073,161 |
+| retrieval | 10,055,081 |
+| inquiry | 14,160,600 |
+| contradiction | 73,554,381 |
+| skills | 15,913,254 |
+| reevaluation | 18,319,913 |
+| publication | 21,039,949 |
+| case-authoring | 23,242,454 |
+| conformance | 18,031,802 |
+| filings | 3,774,972 |
+| legacy-store | 15,445,513 |
+| affordances | 32,086,262 |
+| instance-setup | 10,869,223 |
+| control-plane | 28,618,789 |
+| legacy-tests | (running; no row yet) |
+
+17 job sessions 325.8M (325,763,549); BOB #68 88.6M (88,622,583, `BOB-final`, archived under T15, K508); BOB #69 73.7M (73,661,701, `BOB-final`, K515). **T15 in all so far: 488.0M (488,047,833), plus LEGACY-TESTS #13 and BOB #70**, whose rows are not yet written (BOB #70's by its successor). Bob's meter: 33% at the opening; at the close (BOB to confirm: the reading).
