@@ -3,6 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, k4World, sha, MACHINE, MEMBER, OUTSIDER } from "./fixture.mjs";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { canonicalJson } from "../../../checks/bio-checks.mjs";
 import { Contradiction, CONTRADICTION_CANDIDATE_CHECKS, CONTRADICTION_PAIR_CHECKS, CONTRADICTION_LABELS,
          CONTRADICTION_TABLES } from "../../../src/contradiction/index.mjs";
@@ -159,12 +161,16 @@ test("R15: the id is the SHA-256 of {v: 1, key, sides} with the sides ordered; t
   const c = r.candidates[0];
   const handles = ["extent|ca@capA", "extent|cb@capB"].sort();
   assert.equal(c.candidate, sha(canonicalJson({ v: 1, key: "K4", sides: handles })));
+  const formed = pairOf(w, "K4");
+  const { a: fa, b: fb, key: _k, ...context } = formed;
   assert.deepEqual(c, {
     new: true, candidate: c.candidate, key: "K4",
     a_kind: "extent", a_ref: "ca", a_version: "capA", a_bundle_id: "INFO-2026-0001",
     b_kind: "extent", b_ref: "cb", b_version: "capB", b_bundle_id: "INFO-2026-0002",
     run: RUN, proposed_by: "class:ai/tok1", label: "world", reason: "x".repeat(2000),
-    state: "proposed", origin: "machine", at: "2026-09-28T01:02:03Z" });
+    state: "proposed", origin: "machine", at: "2026-09-28T01:02:03Z",
+    /* both sides as the plane formed them, in the row's order, with the pair's own context */
+    a_side: JSON.stringify({ ...fa, context }), b_side: JSON.stringify({ ...fb, context }) });
   /* the sides given in the other order are the same candidate; the claim sides live in their inquiries */
   const swapped = propose(w, [{ ...p, a: p.b, b: p.a, label: "precision", reason: "another" }]);
   assert.deepEqual([swapped.written, swapped.unchanged, swapped.candidates[0].new], [0, 1, false]);
@@ -186,7 +192,7 @@ test("R16: the answer is {ok, run, proposed, written, unchanged, candidates} and
   assert.deepEqual(r.candidates.map((c) => c.new), [false, true]);
   assert.equal(r.candidates[0].candidate, first.candidates[0].candidate);
   for (const c of r.candidates) assert.deepEqual(c, { new: c.new, ...w.one(`SELECT candidate, key, a_kind, a_ref, a_version,
-    a_bundle_id, b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at
+    a_bundle_id, b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at, a_side, b_side
     FROM contradiction_candidates WHERE candidate=?`, c.candidate) });
   assert.match(r.says, /1 candidate\(s\) written as PROPOSED machine work; 1 named two referents/);
   assert.match(r.says, /never a finding/);
@@ -225,15 +231,27 @@ test("R19: no act here judges, grades, edits or closes a side, and no read shows
   assert.doesNotMatch(JSON.stringify(pairsAfter), /"candidate"|"proposed"|contradiction_candidates/);
 });
 
-test("R20: C-60.1 and C-93.1–C-93.7 are this module's invariants, each with its row and a refusal test above", () => {
-  assert.deepEqual(Object.values(CONTRADICTION_PAIR_CHECKS).map((r) => r.check), ["C-60.1"]);
-  assert.deepEqual(Object.entries(CONTRADICTION_CANDIDATE_CHECKS).map(([k, r]) => [k, r.check]), [
+test("R20: C-60.1–C-60.3 and C-93.1–C-93.39 are this module's invariants, each with its row, its translation, and a refusal test", () => {
+  assert.deepEqual(Object.entries(CONTRADICTION_PAIR_CHECKS).map(([k, r]) => [k, r.check]), [
+    ["CONTRADICTION_KEY_UNKNOWN", "C-60.1"], ["CANDIDATES_NO_SUBJECT", "C-60.2"], ["TENSIONS_TOO_MANY", "C-60.3"]]);
+  const codes = Object.entries(CONTRADICTION_CANDIDATE_CHECKS).map(([k, r]) => [k, r.check]);
+  assert.deepEqual(codes.slice(0, 7), [
     ["CANDIDATE_NO_PROPOSER", "C-93.1"], ["CANDIDATE_NO_RUN", "C-93.2"], ["CANDIDATE_RUN_NOT_RUNNING", "C-93.3"],
     ["CANDIDATE_NO_PROPOSALS", "C-93.4"], ["CANDIDATE_LABEL_UNKNOWN", "C-93.5"], ["CANDIDATE_NO_REASON", "C-93.6"],
     ["CANDIDATE_PAIR_NOT_FORMED", "C-93.7"]]);
-  for (const row of [...Object.values(CONTRADICTION_PAIR_CHECKS), ...Object.values(CONTRADICTION_CANDIDATE_CHECKS)]) {
-    assert.ok(row.translation.length > 60);
-    assert.match(row.where, /^src\/contradiction\/index\.mjs (pairs|propose) > is-/);
+  assert.deepEqual(codes.map(([, c]) => c), Array.from({ length: 39 }, (_, i) => `C-93.${i + 1}`));
+  /* The N345 rows and their translations are exactly the requirement's table (R20; N345). */
+  const req = readFileSync(fileURLToPath(new URL("../../../../build/requirements/contradiction.md", import.meta.url)), "utf8");
+  const table = [...req.matchAll(/^\| (C-(?:60|93)\.\d+) \| `([A-Z_]+)` \| "(.+)" \|$/gm)].map((m) => [m[1], m[2], m[3]]);
+  assert.equal(table.length, 34);
+  const all = { ...CONTRADICTION_PAIR_CHECKS, ...CONTRADICTION_CANDIDATE_CHECKS };
+  for (const [check, code, translation] of table) {
+    assert.equal(all[code]?.check, check, code);
+    assert.equal(all[code].translation, translation, code);
+  }
+  for (const row of Object.values(all)) {
+    assert.ok(row.translation.length > 40);
+    assert.match(row.where, /^src\/contradiction\/index\.mjs [A-Za-z]+ > is-[a-z-]+$/);
   }
 });
 
@@ -264,7 +282,7 @@ test("R21: the run gate is registered once; with none registered the run checks 
 
 test("R22: contradiction_candidates is declared to record-core's purge by a_bundle_id and b_bundle_id, once", () => {
   const w = proposeWorld();
-  assert.deepEqual([...CONTRADICTION_TABLES], ["contradiction_candidates"]);
+  assert.equal(CONTRADICTION_TABLES[0], "contradiction_candidates");
   assert.deepEqual(w.c.declarePurge(), { ok: true, already: true });
   w.c.migrate();   /* idempotent at every boot */
   assert.equal(propose(w, [one(w, "K4")]).written, 1);
