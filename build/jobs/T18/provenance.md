@@ -26,3 +26,7 @@
 - `format`: 0 failures · `architecture provenance`: 17 product files, 0 failures · `coverage provenance`: 51 of 51 live ids, 0 failures · `ownership provenance tranche/T18`: legacy-checks +0/−357, legacy-store +0/−10, legacy-index +5/−53, 0 failures.
 
 Size (session_01Rbs8QkxyTpLKJbAeaFkrcp): test runs 9, module lines 3714
+
+## J1 · COMPLETE
+
+Provenance T18 complete; record's Completion section. C-24, C-34, C-53, C-89, C-103 moved into provenance/checks.mjs, catalogue copy deleted, rows awaiting stamp; registeraudit and attest arms moved to provenance/ops.mjs; six converts carried (25 tests). 95/95 module tests; format, architecture, coverage, ownership 0 failures. Report: agent-worker bundle stale; provenance.md Uses re-wording proposed; membership MODULE_ORDER tests fail on tranche/T18 itself.
