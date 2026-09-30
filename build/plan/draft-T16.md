@@ -25,6 +25,8 @@ Cut from T15's "Not in T15" (`current.md`), `next.md`'s open entries, rulings K4
 
 ## Layer 6
 
+- **contradiction** · N366 first (K523): the candidate read's `reach` and `{project}` subject leak hidden projects; fix at the interface with the two-hidden-projects fixture.
+
 - **contradiction** · N359: R27's `stale` mark from a contradiction inquiry's CORRECTED conclusion answers `member: null, at: null` (`contradiction/index.mjs`:1430–1432, in `#marksOn`, not `#marksOf` as N359 says), though R36's resolve act already records `author` and the instant (`#appendAct`, :2038). Read them from that act. No row changes.
 - **inquiry** · N358, only if BOB chooses to move the columns (open point 1; not recommended): R36's older clause, `inquiry_basis_count`, `inquiry_subject_entity`, `inquiry_superseded_by` to a table of its own (written at `inquiry/index.mjs`:503; read :2040, :2578), with a read service `contradiction` K2 joins instead (`contradiction/index.mjs`:428–438). On the recommended ruling no job: R36's clause goes by wording and its mark is struck.
 
@@ -43,7 +45,7 @@ Cut from T15's "Not in T15" (`current.md`), `next.md`'s open entries, rulings K4
 
 ## Layer 11
 
-- **queue split** (N363, K507), first: the obligation inbox and the feed producers cut into two new modules before `queue`; then **queue** · T15's moved entry: N345 R1 amended, R43–R47; N352's share (`#hiddenBundles`, `queue/index.mjs`:167, reads membership R88).
+- **queue split** (N363, K507), first: the obligation inbox and the feed producers cut into two new modules before `queue`; then **queue** · N367 (a direct R41 grammar test over the 31 bounds); T15's moved entry: N345 R1 amended, R43–R47; N352's share (`#hiddenBundles`, `queue/index.mjs`:167, reads membership R88).
 - **affordances** · N364: R28–R29 (the rung backing, through sources and capture), R2, R3, R5 amended; draft §8. `uses` gains sources, capture.
 - **control-plane** · N364's flagged share: `op=inboxpull` promotes capture R65's document as a new information bundle at `collected` in the same act, the puller its author (DEC-78 item 1; BOB words it at the opening, draft §9); routes, `NEEDS` rows and stamps for sources', membership's, case-authoring's and capture's new ops. `uses` gains sources.
 
