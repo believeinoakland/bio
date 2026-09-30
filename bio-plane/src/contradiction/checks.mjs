@@ -51,19 +51,19 @@ export const CONTRADICTION_PAIR_CHECKS = {
 export const CONTRADICTION_CANDIDATE_CHECKS = {
   CANDIDATE_NO_PROPOSER: {
     check: 'C-93.1',
-    where: 'src/contradiction/index.mjs runRefusals > is-candidate-no-proposer',
+    where: 'src/contradiction/index.mjs #runRefusals > is-candidate-no-proposer',
     translation: 'A proposed contradiction records who proposed it, and this request arrived by a route that '
       + 'does not say. Rather than write a proposal nobody can be held to, nothing was written.',
   },
   CANDIDATE_NO_RUN: {
     check: 'C-93.2',
-    where: 'src/contradiction/index.mjs runRefusals > is-candidate-no-run',
+    where: 'src/contradiction/index.mjs #runRefusals > is-candidate-no-run',
     translation: 'A proposed contradiction is machine work, and machine work happens inside a run a member '
       + 'opened. No open run by that name is visible here, so nothing was written. Open a run, then propose.',
   },
   CANDIDATE_RUN_NOT_RUNNING: {
     check: 'C-93.3',
-    where: 'src/contradiction/index.mjs runRefusals > is-candidate-run-not-running',
+    where: 'src/contradiction/index.mjs #runRefusals > is-candidate-run-not-running',
     translation: 'That run has ended. Its work is read against the conditions it was formed under, and those '
       + 'stopped being current when it stopped, so nothing was written. Open a new run to go on working.',
   },
@@ -97,27 +97,27 @@ export const CONTRADICTION_CANDIDATE_CHECKS = {
      refusals common to every act (R30). */
   NO_CANDIDATE: {
     check: 'C-93.8',
-    where: 'src/contradiction/index.mjs noCandidate > is-no-candidate',
+    where: 'src/contradiction/index.mjs #noCandidate > is-no-candidate',
     translation: 'This act is about one contradiction candidate, named by its id, and it names none. Nothing was written.',
   },
   NO_SUCH_CANDIDATE: {
     check: 'C-93.9',
-    where: 'src/contradiction/index.mjs noSuch > is-no-such-candidate',
+    where: 'src/contradiction/index.mjs #noSuch > is-no-such-candidate',
     translation: 'No contradiction you can see answers to that id. One whose side you may not see is answered here exactly as one that does not exist. If it touches your project, it reaches you as a notice about your own side. Nothing was written.',
   },
   MACHINE_CANNOT_ACT_ON_CANDIDATE: {
     check: 'C-93.10',
-    where: 'src/contradiction/index.mjs machineRefusal > is-machine-cannot-act-on-candidate',
+    where: 'src/contradiction/index.mjs #machineRefusal > is-machine-cannot-act-on-candidate',
     translation: 'Saying what a contradiction turned out to be is a member\'s act, and a machine credential cannot take it. A machine may recommend in which respects the two sides may differ. Nothing was written.',
   },
   CANDIDATE_CLOSED: {
     check: 'C-93.11',
-    where: 'src/contradiction/index.mjs closed > is-candidate-closed',
+    where: 'src/contradiction/index.mjs #closed > is-candidate-closed',
     translation: 'That contradiction has already been dismissed or resolved, by the member named, and it stays as they left it. If something new bears on it, take it up as a question. Nothing was written.',
   },
   CANDIDATE_TAKEN_UP: {
     check: 'C-93.12',
-    where: 'src/contradiction/index.mjs closed > is-candidate-taken-up',
+    where: 'src/contradiction/index.mjs #closed > is-candidate-taken-up',
     translation: 'That contradiction has been taken up as a question, which is named, and it is resolved there by the question\'s conclusion. Nothing was written.',
   },
   RECORD_CANNOT_BE_DISMISSED: {
@@ -152,7 +152,7 @@ export const CONTRADICTION_CANDIDATE_CHECKS = {
   },
   EVIDENCE_NOT_SEEN: {
     check: 'C-93.19',
-    where: 'src/contradiction/index.mjs evidenceRefusal > is-evidence-not-seen',
+    where: 'src/contradiction/index.mjs #evidenceRefusal > is-evidence-not-seen',
     translation: 'Something named as evidence is not one you can see, or is a fact the record does not state. Name only what is shown to you. Nothing was written.',
   },
   WRONG_SIDE_UNNAMED: {
@@ -167,7 +167,7 @@ export const CONTRADICTION_CANDIDATE_CHECKS = {
   },
   PLURALITY_HAS_NO_WRONG_SIDE: {
     check: 'C-93.22',
-    where: 'src/contradiction/index.mjs clarify > is-plurality-has-no-wrong-side',
+    where: 'src/contradiction/index.mjs #noWrongSide > is-plurality-has-no-wrong-side',
     translation: 'These are two projects\' own conclusions, and neither is made to adopt the other\'s answer. Say how they differ, that they really conflict, or take the question up. Nothing was written.',
   },
   TAKE_UP_NO_QUESTION: {
@@ -182,17 +182,17 @@ export const CONTRADICTION_CANDIDATE_CHECKS = {
   },
   ACCEPTANCE_NOT_STANDING: {
     check: 'C-93.25',
-    where: 'src/contradiction/index.mjs acceptance > is-acceptance-not-standing',
+    where: 'src/contradiction/index.mjs #acceptanceRefusal > is-acceptance-not-standing',
     translation: 'The recommendation you accepted is no longer standing for this contradiction, or was never made for it. Read it again, and choose. Nothing was written.',
   },
   ACCEPTANCE_VALUE_DIFFERS: {
     check: 'C-93.26',
-    where: 'src/contradiction/index.mjs acceptance > is-acceptance-value-differs',
+    where: 'src/contradiction/index.mjs #acceptanceRefusal > is-acceptance-value-differs',
     translation: 'You accepted a recommendation for something this act does not record. Accept only what you are recording, or record it unaided. Nothing was written.',
   },
   NOT_A_CONTRADICTION_INQUIRY: {
     check: 'C-93.27',
-    where: 'src/contradiction/index.mjs resolve > is-not-a-contradiction-inquiry',
+    where: 'src/contradiction/index.mjs #notContradictionInquiry > is-not-a-contradiction-inquiry',
     translation: 'No question you can see answers to that id as one taken up from a contradiction. Nothing was written.',
   },
   RECOMMEND_NO_COORDINATES: {
@@ -217,22 +217,22 @@ export const CONTRADICTION_CANDIDATE_CHECKS = {
   },
   CANDIDATE_NOT_HELD: {
     check: 'C-93.32',
-    where: 'src/contradiction/index.mjs promotionCheck > is-candidate-not-held',
+    where: 'src/contradiction/index.mjs #notHeld > is-candidate-not-held',
     translation: 'This question names a contradiction the record does not hold, or one you cannot see both sides of. Take a contradiction up from where it is shown. Nothing was written.',
   },
   WORDS_MALFORMED: {
     check: 'C-93.33',
-    where: 'src/contradiction/index.mjs overCap > is-words-malformed',
+    where: 'src/contradiction/index.mjs #overCap > is-words-malformed',
     translation: 'A piece of text in this act is longer than it may be. The field and its limit are named. Nothing was written.',
   },
   NOT_A_PARTY: {
     check: 'C-93.34',
-    where: 'src/contradiction/index.mjs partyRefusals > is-not-a-party',
+    where: 'src/contradiction/index.mjs #partyRefusal > is-not-a-party',
     translation: 'The project named does not rest on the side of this conflict that you can see, so it cannot ask to resolve it or respond to it. Name the project the notice came to. Nothing was written.',
   },
   NOT_A_PROJECT_CONFLICT: {
     check: 'C-93.35',
-    where: 'src/contradiction/index.mjs partyRefusals > is-not-a-project-conflict',
+    where: 'src/contradiction/index.mjs #partyRefusal > is-not-a-project-conflict',
     translation: 'This is a lead the record noticed about the world, not a conflict the record holds between projects, so there is nothing to resolve between projects. Take it up as a question, or dismiss it with a reason. Nothing was written.',
   },
   RESPONSE_BEFORE_OPT_IN: {
@@ -247,12 +247,12 @@ export const CONTRADICTION_CANDIDATE_CHECKS = {
   },
   DISCLOSURE_MALFORMED: {
     check: 'C-93.38',
-    where: 'src/contradiction/index.mjs disclosure > is-disclosure-malformed',
+    where: 'src/contradiction/index.mjs #disclosureRefusal > is-disclosure-malformed',
     translation: 'What a response shares about you is your cover, an email address, or neither, and nothing else. The address must be one address. The part that is not one of these is named. Nothing was written.',
   },
   DISCLOSURE_NOT_YOURS: {
     check: 'C-93.39',
-    where: 'src/contradiction/index.mjs disclosure > is-disclosure-not-yours',
+    where: 'src/contradiction/index.mjs #disclosureRefusal > is-disclosure-not-yours',
     translation: 'A response may share only your own cover or your own email address. What was given is someone else\'s, so it was not shared. Share your own, or nothing. Nothing was written.',
   },
 };

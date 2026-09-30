@@ -914,8 +914,8 @@ export class Contradiction {
     };
     /* R13's first four: proposer, run (sight), principal, running, asked of the registered run gate (R21). */
     const gate = this.#runRefusals({ run, proposedBy, viewer, caller });
-    if (gate.refusal) return gate.refusal;
-    const runId = gate.run;
+    if (gate) return gate;
+    const runId = Contradiction.#runId(run);
     const list = Array.isArray(proposals) ? proposals : [];
     /* DEC-49 REGION is-candidate-no-proposals */
     if (list.length === 0)
@@ -1576,9 +1576,12 @@ export class Contradiction {
       const held = f && h ? this.#heldAt(f, h) : null;
       if (!held) return { ok: true, wrote: false, finding: f || null, sha: h || null, candidates: [], truncated: false,
                           undetermined: true, why: "no text of that finding answers to those bytes" };
-      const ids = this.#rows(`SELECT candidate, a_ref, a_version, b_ref, b_version FROM contradiction_candidates ORDER BY seq`)
-        .filter((r) => held.refs.has(`${r.a_ref}@${r.a_version}`) || held.refs.has(`${r.b_ref}@${r.b_version}`))
-        .map((r) => r.candidate);
+      /* Only the candidates with a side on a held referent, selected in SQL (never a scan of every candidate). */
+      const refs = JSON.stringify([...held.refs]);
+      const ids = this.#rows(`SELECT candidate FROM contradiction_candidates
+                               WHERE (a_ref || '@' || a_version) IN (SELECT value FROM json_each(?))
+                                  OR (b_ref || '@' || b_version) IN (SELECT value FROM json_each(?))
+                               ORDER BY seq`, refs, refs).map((r) => r.candidate);
       const out = [];
       let truncated = false;
       for (const id of ids) {
@@ -1701,24 +1704,39 @@ export class Contradiction {
    *  `standing` the recommendations standing at the act's instant. */
   #acceptance(row, view, accepted, recorded) {
     const standing = this.#standing(row, view);
-    const named = accepted === null || accepted === undefined || accepted === "" ? []
-      : (Array.isArray(accepted) ? accepted : [accepted]).map((x) => String(x ?? "").trim());
+    const named = Contradiction.#named(accepted);
+    const refusal = Contradiction.#acceptanceRefusal(standing, named, recorded);
+    if (refusal) return { refusal };
     const basis = {};
     for (const id of named) {
       const rec = standing.find((r) => r.recommendation === id);
-      /* DEC-49 REGION is-acceptance-not-standing */
-      if (!rec) return { refusal: Contradiction.#refuse("ACCEPTANCE_NOT_STANDING",
-        `recommendation '${id.slice(0, 64)}' is not standing for this contradiction`, { recommendation: id || null }) };
-      /* END DEC-49 REGION is-acceptance-not-standing */
-      /* DEC-49 REGION is-acceptance-value-differs */
-      if (!recorded.includes(rec.coordinate)) return { refusal: Contradiction.#refuse("ACCEPTANCE_VALUE_DIFFERS",
-        `the recommendation accepted names ${rec.coordinate}, which this act does not record`,
-        { recommendation: id, coordinate: rec.coordinate }) };
-      /* END DEC-49 REGION is-acceptance-value-differs */
       basis[rec.coordinate] = { basis: "accepted", recommendation: rec.recommendation };
     }
     for (const c of recorded) if (!basis[c]) basis[c] = { basis: "unaided" };
     return { basis, standing: standing.map((r) => ({ recommendation: r.recommendation, coordinate: r.coordinate })) };
+  }
+
+  /** The recommendation ids an act names as accepted. */
+  static #named(accepted) {
+    return accepted === null || accepted === undefined || accepted === "" ? []
+      : (Array.isArray(accepted) ? accepted : [accepted]).map((x) => String(x ?? "").trim());
+  }
+
+  /** R30's two acceptance refusals over the recommendations standing and the coordinates the act records, or null. */
+  static #acceptanceRefusal(standing, named, recorded) {
+    for (const id of named) {
+      const rec = standing.find((r) => r.recommendation === id);
+      /* DEC-49 REGION is-acceptance-not-standing */
+      if (!rec) return Contradiction.#refuse("ACCEPTANCE_NOT_STANDING",
+        `recommendation '${id.slice(0, 64)}' is not standing for this contradiction`, { recommendation: id || null });
+      /* END DEC-49 REGION is-acceptance-not-standing */
+      /* DEC-49 REGION is-acceptance-value-differs */
+      if (!recorded.includes(rec.coordinate)) return Contradiction.#refuse("ACCEPTANCE_VALUE_DIFFERS",
+        `the recommendation accepted names ${rec.coordinate}, which this act does not record`,
+        { recommendation: id, coordinate: rec.coordinate });
+      /* END DEC-49 REGION is-acceptance-value-differs */
+    }
+    return null;
   }
 
   /** The one append site of `contradiction_acts` (R30, R42). Answers the row as written. */
@@ -1858,10 +1876,7 @@ export class Contradiction {
       if (typeof reason !== "string" || !reason.trim())
         return Contradiction.#refuse("WRONG_SIDE_NO_REASON", "say why that side is wrong");
       /* END DEC-49 REGION is-wrong-side-no-reason */
-      /* DEC-49 REGION is-plurality-has-no-wrong-side */
-      if (row.key === "K5")
-        return Contradiction.#refuse("PLURALITY_HAS_NO_WRONG_SIDE", "two projects' conclusions have no wrong side");
-      /* END DEC-49 REGION is-plurality-has-no-wrong-side */
+      if (row.key === "K5") return Contradiction.#noWrongSide("two projects' conclusions have no wrong side");
       const acc = this.#acceptance(row, view, accepted, []);
       if (acc.refusal) return acc.refusal;
       const act = this.#record.transact(() => this.#appendAct(row, view, {
@@ -1953,14 +1968,14 @@ export class Contradiction {
     return this.#record.transact(() => {
       const id = `${this.#record.allocId("INQ", String(when).slice(0, 4)).id}-contradiction`;
       const doc = this.#takeUpDocument(id, row, question.trim(), frame, who, when);
-      if (!doc) return Contradiction.#refuse("NO_SUCH_CANDIDATE", "a side of this contradiction is no longer held");
+      if (!doc) return Contradiction.#noSuch("a side of this contradiction is no longer held");
       const promoted = p.promote({ bundleId: id, base: null, snapKey: `takeup_${String(when).replace(/[-:.]/g, "")}_${rand(4)}`,
         author: who, actorIdentity: who, actorViewer: viewer,
         files: [{ path: "bundle.md", text: doc.text }],
         meta: { object_type: "inquiry", title: doc.title, current_state: "open", prior_state: null,
                 created: when, last_updated: when } });
       /* A promotion refusal is relayed whole, and nothing is written (the transaction rolls back on it). */
-      if (!promoted || promoted.ok === false) return promoted || { ok: false, reason: "PROMOTE_FAILED" };
+      if (promoted.ok === false) return promoted;
       const act = this.#appendAct(row, view, { act: "take_up", author: who, inquiry: id, at: when,
                                                 words: question.trim() });
       return { ok: true, candidate: row.candidate, inquiry: id, state: "taken_up", frame, act,
@@ -1988,21 +2003,16 @@ export class Contradiction {
     const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id)
       && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
     const row = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
-    /* DEC-49 REGION is-not-a-contradiction-inquiry */
     if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer))
-      return Contradiction.#refuse("NOT_A_CONTRADICTION_INQUIRY", "no question you can see answers to that id as one taken up from a contradiction");
-    /* END DEC-49 REGION is-not-a-contradiction-inquiry */
+      return Contradiction.#notContradictionInquiry("no question you can see answers to that id as one taken up from a contradiction");
     const res = resolution && typeof resolution === "object" && !Array.isArray(resolution) ? resolution : {};
     const family = this.#family(res.kind);
     if (row.key === "K5" && (family === "CORRECTED" || res.kind === "double_speak_or_reversal"))
-      return Contradiction.#refuse("PLURALITY_HAS_NO_WRONG_SIDE", "two projects' conclusions have no wrong side and no double-speak");
+      return Contradiction.#noWrongSide("two projects' conclusions have no wrong side and no double-speak");
     const view = this.#view(row);
     const coords = Array.isArray(res.coordinates) ? res.coordinates.filter((c) => typeof c === "string") : [];
     const acc = this.#acceptance(row, view, accepted, coords);
     if (acc.refusal) return acc.refusal;
-    if (typeof i.resolutionLines !== "function")
-      return { ok: false, reason: "RESOLUTION_UNWRITABLE", code: "RESOLUTION_UNWRITABLE",
-               detail: "inquiry's resolutionLines is not reachable here, so no resolution can be written; nothing was written" };
     const who = author.trim();
     const when = at || this.#now();
     return this.#record.transact(() => {
@@ -2010,7 +2020,7 @@ export class Contradiction {
       const files = this.#liveFiles(id);
       const md = files.find((f) => f.path === "bundle.md");
       if (!head || !md || typeof md.text !== "string")
-        return Contradiction.#refuse("NOT_A_CONTRADICTION_INQUIRY", "the question's document is not held as text");
+        return Contradiction.#notContradictionInquiry("the question's document is not held as text");
       let lines = i.resolutionLines(res);
       lines = Array.isArray(lines) ? lines : String(lines ?? "").split("\n").filter(Boolean);
       if (!lines.length || !/^resolution:/.test(lines[0])) lines = ["resolution:", ...lines.map((l) => `  ${l.replace(/^\s*/, "")}`)];
@@ -2021,10 +2031,10 @@ export class Contradiction {
         author: who, actorIdentity: who, actorViewer: viewer,
         files: files.map((f) => (f.path === "bundle.md" ? { path: "bundle.md", text } : f)),
         meta: { object_type: "inquiry", last_updated: when } });
-      if (!written || written.ok === false) return written || { ok: false, reason: "PROMOTE_FAILED" };
+      if (written.ok === false) return written;
       const concluded = this.#b().conclude({ target: id, conclusion: conclusion ?? "", version: version ?? "",
         falsifier: falsifier ?? "", noFalsifier: !!noFalsifier, viewer, author: who, identity: who });
-      if (!concluded || concluded.ok === false) return concluded || { ok: false, reason: "CONCLUDE_FAILED" };
+      if (concluded.ok === false) return concluded;
       const act = this.#appendAct(row, view, { act: "resolve", author: who, inquiry: id, kind: res.kind ?? null,
         coordinates: coords.length ? coords : null, wrong_side: res.wrong_side ?? null, wrong_reason: res.reason ?? null,
         qualifiers: res.qualifiers ?? null, acceptance: acc.basis, standing: acc.standing, at: when });
@@ -2037,8 +2047,8 @@ export class Contradiction {
   /** op=contradictionrecommend — R37: the machine's one act. */
   recommend({ run = null, candidate = null, coordinates = null, proposedBy = null, viewer = null, caller = null, at = null } = {}) {
     const gate = this.#runRefusals({ run, proposedBy, viewer, caller });
-    if (gate.refusal) return gate.refusal;
-    const runId = gate.run;
+    if (gate) return gate;
+    const runId = Contradiction.#runId(run);
     const list = Array.isArray(coordinates) ? coordinates : [];
     /* DEC-49 REGION is-recommend-no-coordinates */
     if (!list.length)
@@ -2086,34 +2096,38 @@ export class Contradiction {
              says: "each is a machine's recommendation of a respect in which the two may differ: machine work, not a member's choice" };
   }
 
-  /** R13's first four refusals, shared by `propose` and `recommend` (R37): proposer, run, principal, running. */
+  /** R13's first four refusals, shared by `propose` and `recommend` (R37): proposer, run, principal, running. Answers
+   *  the refusal, or null. */
   #runRefusals({ run, proposedBy, viewer, caller }) {
     /* DEC-49 REGION is-candidate-no-proposer */
     if (typeof proposedBy !== "string" || !proposedBy.trim())
-      return { refusal: Contradiction.#refuse("CANDIDATE_NO_PROPOSER",
+      return Contradiction.#refuse("CANDIDATE_NO_PROPOSER",
         "machine work records who proposed it; the plane stamps that from the credential that asked, "
-        + "so an empty one means the act arrived by a route that does not attribute it") };
+        + "so an empty one means the act arrived by a route that does not attribute it");
     /* END DEC-49 REGION is-candidate-no-proposer */
-    const runId = typeof run === "string" ? run.trim() : "";
+    const runId = Contradiction.#runId(run);
     const r = runId && this.#runGate ? this.#runGate.gate(runId, viewer, caller) : null;
     /* DEC-49 REGION is-candidate-no-run */
     if (!r || r.found !== true)
-      return { refusal: Contradiction.#refuse("CANDIDATE_NO_RUN",
+      return Contradiction.#refuse("CANDIDATE_NO_RUN",
         runId ? `no run named '${runId.slice(0, 60)}' is open in this store`
               : "pass run=<the run whose work this is>: machine work names the run it came from",
-        { run: runId || null }) };
+        { run: runId || null });
     /* END DEC-49 REGION is-candidate-no-run */
     const np = r.refusal;
     if (np)
-      return { refusal: { ok: false, reason: np.code, code: np.code, check: np.check, translation: np.translation,
-                          detail: np.detail, run: runId, note: "machine work names a run its caller holds. Nothing was written" } };
+      return { ok: false, reason: np.code, code: np.code, check: np.check, translation: np.translation,
+               detail: np.detail, run: runId, note: "machine work names a run its caller holds. Nothing was written" };
     /* DEC-49 REGION is-candidate-run-not-running */
     if (r.running !== true)
-      return { refusal: Contradiction.#refuse("CANDIDATE_RUN_NOT_RUNNING",
-        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`, { run: runId }) };
+      return Contradiction.#refuse("CANDIDATE_RUN_NOT_RUNNING",
+        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`, { run: runId });
     /* END DEC-49 REGION is-candidate-run-not-running */
-    return { run: runId };
+    return null;
   }
+
+  /** A run named by a request, trimmed; empty when none. */
+  static #runId(run) { return typeof run === "string" ? run.trim() : ""; }
 
   /** R38: the promotion check registered with `promotion` (its R39). A non-replay promotion whose document names a
    *  candidate this module does not hold, or one with a side its author may not see, is refused `CANDIDATE_NOT_HELD`
@@ -2126,16 +2140,43 @@ export class Contradiction {
       if (!link || link.candidate === undefined || link.candidate === null) return null;
       const who = (c.pkg && (c.pkg.actorViewer || c.pkg.actorIdentity)) || c.author || null;
       const row = typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
-      /* DEC-49 REGION is-candidate-not-held */
       if (!row || !this.#sideSeen(row.a, who) || !this.#sideSeen(row.b, who))
-        return Contradiction.#refuse("CANDIDATE_NOT_HELD",
-          "this question names a contradiction the record does not hold, or one whose side its author may not see",
-          { candidate: typeof link.candidate === "string" ? link.candidate : null });
-      /* END DEC-49 REGION is-candidate-not-held */
+        return Contradiction.#notHeld(typeof link.candidate === "string" ? link.candidate : null,
+          "this question names a contradiction the record does not hold, or one whose side its author may not see");
       return null;
     } catch (e) {
-      return Contradiction.#refuse("CANDIDATE_NOT_HELD", `the candidate could not be read (${String(e && e.message || e).slice(0, 80)})`);
+      return Contradiction.#notHeld(null, `the candidate could not be read (${String(e && e.message || e).slice(0, 80)})`);
     }
+  }
+
+  /** R38's one refusal (C-93.32). */
+  static #notHeld(candidate, detail) {
+    /* DEC-49 REGION is-candidate-not-held */
+    const row = CONTRADICTION_CANDIDATE_CHECKS.CANDIDATE_NOT_HELD;
+    return { ok: false, reason: "CANDIDATE_NOT_HELD", code: "CANDIDATE_NOT_HELD",
+             check: row.check, translation: row.translation,
+             detail, candidate };
+    /* END DEC-49 REGION is-candidate-not-held */
+  }
+
+  /** R36's first refusal after the author's (C-93.27): absent, invisible and plain answer alike. */
+  static #notContradictionInquiry(detail) {
+    /* DEC-49 REGION is-not-a-contradiction-inquiry */
+    const row = CONTRADICTION_CANDIDATE_CHECKS.NOT_A_CONTRADICTION_INQUIRY;
+    return { ok: false, reason: "NOT_A_CONTRADICTION_INQUIRY", code: "NOT_A_CONTRADICTION_INQUIRY",
+             check: row.check, translation: row.translation,
+             detail };
+    /* END DEC-49 REGION is-not-a-contradiction-inquiry */
+  }
+
+  /** R33, R36 (C-93.22): two projects' conclusions have no wrong side. */
+  static #noWrongSide(detail) {
+    /* DEC-49 REGION is-plurality-has-no-wrong-side */
+    const row = CONTRADICTION_CANDIDATE_CHECKS.PLURALITY_HAS_NO_WRONG_SIDE;
+    return { ok: false, reason: "PLURALITY_HAS_NO_WRONG_SIDE", code: "PLURALITY_HAS_NO_WRONG_SIDE",
+             check: row.check, translation: row.translation,
+             detail };
+    /* END DEC-49 REGION is-plurality-has-no-wrong-side */
   }
 
   /* ===================================================================== *
@@ -2269,7 +2310,7 @@ export class Contradiction {
     }
   }
 
-  /** R51's refusals shared with R53 (its first seven), in order. Answers a refusal or `{row, view, project, member}`. */
+  /** R51's refusals shared with R53 (its first seven), in order. Answers `{refusal}` or `{row, view, project, member}`. */
   #partyRefusals({ candidate, project, viewer, author }) {
     const machine = this.#machineRefusal(author);
     if (machine) return { refusal: machine };
@@ -2280,20 +2321,26 @@ export class Contradiction {
     const row = this.#candidate(candidate);
     if (!row || (!this.#sideSeen(row.a, viewer) && !this.#sideSeen(row.b, viewer)))
       return { refusal: Contradiction.#noSuch("no contradiction you can see answers to that id") };
-    /* DEC-49 REGION is-not-a-party */
-    if (!this.#seenPartySide(row, g.project, viewer))
-      return { refusal: Contradiction.#refuse("NOT_A_PARTY",
-        "the project named does not rest on the side of this conflict you can see", { project: g.project }) };
-    /* END DEC-49 REGION is-not-a-party */
     const view = this.#view(row);
-    /* DEC-49 REGION is-not-a-project-conflict */
-    if (view.weight !== "duty" && view.weight !== "plurality")
-      return { refusal: Contradiction.#refuse("NOT_A_PROJECT_CONFLICT",
-        "a lead is not a conflict the record holds between projects") };
-    /* END DEC-49 REGION is-not-a-project-conflict */
+    const party = Contradiction.#partyRefusal(!!this.#seenPartySide(row, g.project, viewer), view.weight, g.project);
+    if (party) return { refusal: party };
     const closed = Contradiction.#closed(view, { takenUp: false });
     if (closed) return { refusal: closed };
     return { row, view, project: g.project, member: g.member };
+  }
+
+  /** R51's party refusals, in order: not a party through a side the viewer may see; not a conflict between projects. */
+  static #partyRefusal(isParty, weight, project) {
+    /* DEC-49 REGION is-not-a-party */
+    if (!isParty)
+      return Contradiction.#refuse("NOT_A_PARTY",
+        "the project named does not rest on the side of this conflict you can see", { project });
+    /* END DEC-49 REGION is-not-a-party */
+    /* DEC-49 REGION is-not-a-project-conflict */
+    if (weight !== "duty" && weight !== "plurality")
+      return Contradiction.#refuse("NOT_A_PROJECT_CONFLICT", "a lead is not a conflict the record holds between projects");
+    /* END DEC-49 REGION is-not-a-project-conflict */
+    return null;
   }
 
   /** op=contradictionoptin — R51, R52: a project asks to resolve the conflict; the opt-in that leaves every party opted
@@ -2340,32 +2387,51 @@ export class Contradiction {
     });
   }
 
-  /** R53's disclosures, as the responder chose them: `{cover?, email?}`, or a refusal. */
-  #disclosure(disclose, member, who) {
-    if (disclose === undefined || disclose === null) return { cover: null, email: null };
-    const bad = (part) => Contradiction.#refuse("DISCLOSURE_MALFORMED", `the part of the disclosure that is not one of cover or email: ${part}`, { part });
+  /** R53's disclosure refusals, in order: malformed, then someone else's. Answers the refusal, or null. */
+  #disclosureRefusal(disclose, member, who) {
+    if (disclose === undefined || disclose === null) return null;
     /* DEC-49 REGION is-disclosure-malformed */
-    if (typeof disclose !== "object" || Array.isArray(disclose)) return { refusal: bad("the disclosure itself") };
-    const extra = Object.keys(disclose).find((k) => k !== "cover" && k !== "email");
-    if (extra) return { refusal: bad(extra) };
-    const cover = disclose.cover;
-    if (cover !== undefined && cover !== true && typeof cover !== "string") return { refusal: bad("cover") };
-    const email = disclose.email;
-    if (email !== undefined && (typeof email !== "string" || email.length > EMAIL_MAX
-        || !/^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(email.trim())))
-      return { refusal: bad("email") };
+    const part = Contradiction.#malformedPart(disclose);
+    if (part) return Contradiction.#refuse("DISCLOSURE_MALFORMED",
+      `the part of the disclosure that is not one of cover or email: ${part}`, { part });
     /* END DEC-49 REGION is-disclosure-malformed */
-    const facts = this.#m() && typeof this.#m().memberFacts === "function" ? this.#m().memberFacts(member) : null;
-    const own = facts && typeof facts.cover === "string" ? facts.cover : null;
-    const e = typeof email === "string" ? email.trim() : null;
+    const own = this.#ownCover(member);
+    const e = typeof disclose.email === "string" ? disclose.email.trim() : null;
     const taken = e ? this.#one(`SELECT 1 AS x FROM contradiction_responses WHERE lower(email) = lower(?) AND author <> ?`,
                                 e, who) : null;
     /* DEC-49 REGION is-disclosure-not-yours */
-    if ((typeof cover === "string" && cover !== own) || taken)
-      return { refusal: Contradiction.#refuse("DISCLOSURE_NOT_YOURS",
-        "a response may share only your own cover or your own email address", { part: taken ? "email" : "cover" }) };
+    if ((typeof disclose.cover === "string" && disclose.cover !== own) || taken)
+      return Contradiction.#refuse("DISCLOSURE_NOT_YOURS",
+        "a response may share only your own cover or your own email address", { part: taken ? "email" : "cover" });
     /* END DEC-49 REGION is-disclosure-not-yours */
-    return { cover: cover === true ? own : (typeof cover === "string" ? cover : null), email: e };
+    return null;
+  }
+
+  /** The part of a disclosure that is not a cover or one email address, or null when it is well formed. */
+  static #malformedPart(disclose) {
+    if (typeof disclose !== "object" || Array.isArray(disclose)) return "the disclosure itself";
+    const extra = Object.keys(disclose).find((k) => k !== "cover" && k !== "email");
+    if (extra) return extra;
+    const cover = disclose.cover, email = disclose.email;
+    if (cover !== undefined && cover !== true && typeof cover !== "string") return "cover";
+    if (email !== undefined && (typeof email !== "string" || email.length > EMAIL_MAX
+        || !/^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(email.trim()))) return "email";
+    return null;
+  }
+
+  /** The author's own cover, as membership holds it (its R68), or null. */
+  #ownCover(member) {
+    const m = this.#m();
+    const facts = m && typeof m.memberFacts === "function" ? m.memberFacts(member) : null;
+    return facts && typeof facts.cover === "string" ? facts.cover : null;
+  }
+
+  /** What a well-formed disclosure shares: the author's own cover (filled from membership for `cover: true`, never
+   *  taken otherwise) and the email as stated. */
+  #disclosed(disclose, member) {
+    if (!disclose || typeof disclose !== "object") return { cover: null, email: null };
+    const cover = disclose.cover === true ? this.#ownCover(member) : typeof disclose.cover === "string" ? disclose.cover : null;
+    return { cover, email: typeof disclose.email === "string" ? disclose.email.trim() : null };
   }
 
   /** op=contradictionrespond — R53: a member responds to the notice, sharing only what they choose. */
@@ -2383,8 +2449,9 @@ export class Contradiction {
     /* END DEC-49 REGION is-response-no-text */
     const over = this.#overCap({ text });
     if (over) return over;
-    const d = this.#disclosure(disclose, g.member, author.trim());
-    if (d.refusal) return d.refusal;
+    const bad = this.#disclosureRefusal(disclose, g.member, author.trim());
+    if (bad) return bad;
+    const d = this.#disclosed(disclose, g.member);
     const who = author.trim();
     const when = at || this.#now();
     return this.#record.transact(() => {

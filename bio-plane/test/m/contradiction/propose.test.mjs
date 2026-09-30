@@ -251,7 +251,7 @@ test("R20: C-60.1–C-60.3 and C-93.1–C-93.39 are this module's invariants, ea
   }
   for (const row of Object.values(all)) {
     assert.ok(row.translation.length > 40);
-    assert.match(row.where, /^src\/contradiction\/index\.mjs [A-Za-z]+ > is-[a-z-]+$/);
+    assert.match(row.where, /^src\/contradiction\/index\.mjs #?[A-Za-z]+ > is-[a-z-]+$/);
   }
 });
 
