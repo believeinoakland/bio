@@ -530,11 +530,7 @@ export class Store extends DurableObject {
       const migrated = type === "inquiry" ? this.#surfacedIn(row.bundle_id) : null;
       return migrated ? { surfaced_in: migrated } : {};
     });
-    /* connections (K61): its projection of references[] and the fact citedBy join every promotion before legacy-store's
-       (R19, R23), and it marks its own dirt on entities' notice (R17). legacy-store registers observation-log's row per
-       derivation (its R8) and its derivation statement with connections (R3, R5) until observation-log does. */
-    connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => observationLogOf(ctx).observeConnectionDerivation(e));
-    connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
+    observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     /* inquiry (K31, K61): its check and projection join promotion before legacy-store's step; strength R28 here. */
     ratificationOf(ctx);   /* ratification (K61): its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
     strengthModule(ctx);   /* strength (K61): reaches inquiry and basis-versions itself, and registers its pair (R17) */
