@@ -67,9 +67,9 @@ export const CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
 const CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
                   WHERE p.fts_id IS NOT NULL`;
 
-/* R61: the second argument of every `compile` this module runs (query-language R25): the projection is read through
-   this module's own relation, never off `bundles`. */
-const VIA = Object.freeze({ projection: PROJECTION_RELATION });
+/* R62: a table, key or column a registration names is an SQL identifier, nothing else (query-language R7: no name
+   enters a statement that the caller did not state as one). */
+const SQL_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 /* A CPDF-10 column this module WROTE as JSON, read back: null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
@@ -106,6 +106,10 @@ export class Retrieval {
   #decorations = [];            // the single-bundle projection's decorations: {module, fn}
   #hiddenRuns = null;           // R39: {module, fn}
   #selectionListeners = [];     // R52: {module, fn, seq}
+  #fields = [];                 // R62: {module, field, table, key, col, seq}
+  /* R61, R62: the second argument of every `compile` this module runs: the projection through this module's own
+     relation (query-language R25), and each registered field through its owner's (its R26). */
+  #via = Object.freeze({ projection: PROJECTION_RELATION });
   #stepped = false;
 
   constructor({ storage, record, membership, promotion, extraction, observation = null, now = null, selectionNow = null,
@@ -257,6 +261,33 @@ export class Retrieval {
     }
     if (viewer !== undefined && viewerPredicate(viewer).scope === "member") return { sql: "", args: [] };
     return { sql: ` AND authority_kind <> 'run'`, args: [] };
+  }
+
+  /** R62 (N136, N137; K75 (2)): a later module that holds the column of one of `query-language`'s fields in a table
+   *  of its own registers it once at start, `{table, key, col}`, `key` equalling `bundles.bundle_id`. Every compile
+   *  this module runs then names the relation to `query-language` (its R26), so the field reads it there. A field
+   *  outside `FIELDS`, a projection column (R2, read through this module's own relation, R61), or a name that is not an
+   *  SQL identifier is refused FIELD_MALFORMED; a field registered twice, FIELD_DECLARED. Registrations apply in the
+   *  modules' total order. */
+  registerField(module, field, relation) {
+    const bad = (detail) => ({ ok: false, reason: "FIELD_MALFORMED", module, field, detail });
+    if (typeof module !== "string" || !module) return bad("a registration names its module");
+    if (typeof field !== "string" || !Object.prototype.hasOwnProperty.call(FIELDS, field))
+      return bad("a registration names one of the query language's fields");
+    if (FIELDS[field].proj || PROJECTION_COLS.includes(FIELDS[field].col))
+      return bad(`${field} is a projection column, which this module holds itself`);
+    const { table, key, col } = relation && typeof relation === "object" ? relation : {};
+    if (![table, key, col].every((n) => typeof n === "string" && SQL_IDENT.test(n)))
+      return bad("a relation is a table, a key and a column, each an SQL identifier");
+    const held = this.#fields.find((f) => f.field === field);
+    if (held) return { ok: false, reason: "FIELD_DECLARED", module, field, declaredBy: held.module,
+                       detail: "a field is registered once" };
+    this.#fields.push({ module, field, table, key, col, seq: this.#fields.length });
+    this.#fields.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    this.#via = Object.freeze({ projection: PROJECTION_RELATION,
+      fields: Object.freeze(Object.fromEntries(this.#fields.map((f) =>
+        [f.field, Object.freeze({ table: f.table, key: f.key, col: f.col })]))) });
+    return { ok: true, module, field };
   }
 
   /** R52 (N202): a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`, in
@@ -459,7 +490,7 @@ export class Retrieval {
   /** R6–R9: `op=search`. */
   search(input = {}) {
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
-    const plan = compile(input, VIA);
+    const plan = compile(input, this.#via);
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const out = {
@@ -488,7 +519,7 @@ export class Retrieval {
        is offered. It costs one extra query only in the case that already returned nothing. */
     out.widen = null;
     if (total === 0 && plan.widenable && input.widen !== false) {
-      const or = compile({ ...input, implicitOp: "or" }, VIA);
+      const or = compile({ ...input, implicitOp: "or" }, this.#via);
       const n = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
                                detail: "no bundle matches all of these terms; this many match any of them" };
@@ -554,7 +585,7 @@ export class Retrieval {
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked, rowLimit: input.limit, rowOffset: input.offset,
-    }, VIA);
+    }, this.#via);
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
     const total = this.runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
@@ -827,11 +858,11 @@ export class Retrieval {
       /* Chunked, because SQLite bounds how many variables one statement binds. Every chunk still goes through compile()
          and therefore through the viewer gate: an id the viewer may not see never enters the selection. */
       for (let i = 0; i < list.length; i += SELECTION_ID_CHUNK) {
-        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + SELECTION_ID_CHUNK) }, VIA);
+        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + SELECTION_ID_CHUNK) }, this.#via);
         members.push(...this.runQuery(plan.statements.snapshot(), tally));
       }
     } else {
-      const plan = compile({ q, viewer, sort, dir }, VIA);
+      const plan = compile({ q, viewer, sort, dir }, this.#via);
       members = this.runQuery(plan.statements.snapshot(), tally);
     }
     const handle = "sel-" + rand(12);
@@ -907,7 +938,7 @@ export class Retrieval {
       const idList = stored.map((r) => r.bundle_id);
       for (let i = 0; i < idList.length; i += SELECTION_ID_CHUNK) {
         const plan = compile({ q: "", viewer, sort: sel.sort_field, dir: sel.sort_dir,
-                               ids: idList.slice(i, i + SELECTION_ID_CHUNK) }, VIA);
+                               ids: idList.slice(i, i + SELECTION_ID_CHUNK) }, this.#via);
         for (const r of this.runQuery(plan.statements.snapshot(), tally)) visible.set(r.bundle_id, r.bundle_sha);
       }
       members = [];
@@ -925,7 +956,7 @@ export class Retrieval {
       drift.removed = drift.purged.length + drift.hidden.length;
       /* Never added: the operator picked items, not a criterion. */
     } else {
-      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir }, VIA);
+      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir }, this.#via);
       members = this.runQuery(plan.statements.snapshot(), tally);
       const digest = digestOf(members.map((m) => m.bundle_id));
       if (digest !== sel.digest) {
