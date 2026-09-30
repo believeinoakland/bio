@@ -27,3 +27,13 @@ control-plane: test/m/control-plane/doorbell.test.mjs:365-371 asserts the refusa
 ## J2 · COMPLETE
 
 N381 applied: C-18.1 admits capture R65's pulled-knock document (no letter, grade_basis CAPTURE_RECEIVED_NOT_FETCHED; doorbell among the origin kinds), one spelling of the basis shared with captureGrade. Tested at the arms and at the write with capture's document as the pull writes it; end to end the real door now files the pull (measured, scratch). No catalogue row changed, nothing awaiting stamp. Two requirement changes proposed for you (record, Deferred): R42's text to name the doorbell arm; R19 so a doorbell document with no chain is not reconstructed as a fetched hop. Checks: format, architecture, coverage (51/51), ownership all 0 failures; test/m/ 1 fail, control-plane's stale assertion (REPORT J1). Record: build/jobs/T17/provenance.md.
+
+## Completion again, after B2 · CHANGE (K581)
+
+**Applied.** Merged `tranche/T17` (R19 and R42 reworded by BOB, K581; deferred items 1 and 2 above are now requirements). R42's doorbell arm was already built (N381, above). R19: `chainFromEvidence` has a doorbell arm, asked before the fetched one: a document whose `origin.kind` is `doorbell` is never a fetched route (though its `knock:` locator, `retrieved` and `capture.method` are all present); with no chain, its one hop is read from the knock's receipt it states, "these bytes were received for knock:<knock_id> at <received>", `via: "doorbell"`, `bound: false`, `reconstructed.from` naming the receipt's fields; without a receipt carrying `knock_id` and `received` it is undetermined, `missing` naming `source.receipt`. R20 and R22 read it through R19, so the rebuild answers `reconstructed` (and applies the receipt's hop) or `EVIDENCE_INSUFFICIENT`/`undetermined`, and the route mark `derivable` (PRESENT) or `undetermined` (LOOKED_INDETERMINATE).
+
+**Tests** (`chain-route.test.mjs`): R19's arm, pure, with and without the receipt (and a partial one), a timestamp cited, and the same fields under a fetched origin still direct; R19, R20, R22 over filed doorbell bundles without chains, with and without the receipt, including the applied rebuild. Both fail without the change (6 pass, 2 fail), pass with it.
+
+**Checks.** `test/m/provenance/`: 68 pass, 0 fail. `test/m/` whole: 3195 tests, 3171 pass, 1 fail (control-plane's stale assertion, its layer-11 entry's, K581), 23 todo. `format`, `architecture provenance`, `coverage provenance` (51 of 51), `ownership provenance tranche/T17` (5 files; legacy modules 0 added, 0 removed): 0 failures each.
+
+Size (session_01YBB3FhBVLLqxoQXxXj1PVQ): test runs 12, module lines 3297
