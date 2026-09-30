@@ -4,7 +4,7 @@
 
 Opened by BOB #71, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ f5554232cb, T15 closed (K525). Cut from `draft-T16.md` (re-read at T15's close by BOB #70: N359–N371 folded, K517, K523, K524; points 1–5 ruled, K494). N364 (Bob's DEC-78/80/81 rulings, K509) and W1–W5 fold into the requirements before layer 2 starts (K527); `sources` entered `modules.json` at the opening. An `N` entry's text is in `build/plan/next.md`. Bob's weekly meter at the opening: asked.
 
-**Jobs** · legacy-checks: LEGACY-CHECKS #10 session_014rKpxqH7kUf2B2Gnkpa86U; membership: MEMBERSHIP #9 session_01Nism1JK1EosdBHAiFXkWHn; promotion: PROMOTION #17 session_01SV3MUwaJQVfxezqBTByPmU
+**Jobs** · legacy-checks: LEGACY-CHECKS #10 session_014rKpxqH7kUf2B2Gnkpa86U; membership: MEMBERSHIP #9 session_01Nism1JK1EosdBHAiFXkWHn; promotion: PROMOTION #17 session_01SV3MUwaJQVfxezqBTByPmU; capture: CAPTURE #8 session_01C2JRNr5dArDzZueoyT1MmF; sources: SOURCES #1 session_01BSkuuwEzNWD8dWMjWW2taW; provenance: PROVENANCE #6 session_01VKXANZkXWm7m6KERHYiYdY
 
 **Rules at the opening.** T15's rules hold (`archive/T15.md`): long batteries in the foreground, in chunks under ten minutes, the record pushed after each; a provider a later job of its layer needs merges early (§4, K425); promotion stamps at layer 2, last in it, every row change from T15's layers 3+ and T16's layers 1–2 (N318, K425), and rows added at T16's layers 3+ are named `awaiting stamp` for T17; legacy-tests runs alone, last (K420, K427), retiring a covered extracted suite before re-anchoring anything (K457); a job names each `not yet met` mark its work meets and BOB strikes it (K460); after each extraction merge BOB runs `test/m/` whole on the tranche. `main` is not releasable until N366 merges (K523).
 
@@ -27,7 +27,7 @@ Opened by BOB #71, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ f5554232cb, T
 ## Layer 6
 
 - **contradiction** · N366 first (K523): the candidate read's `reach` and `{project}` subject leak hidden projects; fix at the interface with the two-hidden-projects fixture. Then N368: bounds on `tensionsOn` and `contextFacts`; `contradictionnotices`' `truncated` driven at its cut. N359 (W3): R27's `stale` mark from a contradiction inquiry's CORRECTED conclusion reads the member and instant from R36's resolve act (`#appendAct`, :2038; the mark is built in `#marksOn`, :1430–1432); no row changes. N365's read: whether a viewer sees both sides of an inquiry's linked candidate (as worded, K527). Merged early for reevaluation (layer 7) and affordances (layer 11) only through the tranche.
-- **inquiry** · N369: the second `CONTRADICTION_LINK_MALFORMED` site (`src/inquiry/contradiction.mjs`:208–211), C-2.15 as re-worded (K527). N360 (K495): `divide` carries each apportioned leg's `content_id` to the child (R24's "verbatim"); a test that a child's leg names the parent leg's passage. N358 is settled by wording (W2): R36's older clause struck, no column move.
+- **inquiry** · N369: the second `CONTRADICTION_LINK_MALFORMED` site (`src/inquiry/contradiction.mjs`:208–211), C-2.15 as re-worded (K527). N360 (K495): `divide` carries each apportioned leg's `content_id` to the child (R24's "verbatim"); a test that a child's leg names the parent leg's passage. N358 is settled by wording (W2): R36's older clause struck, no column move. Provenance R51's doorbell basis read as the author's letter under the ceiling (K538; PROVENANCE #6 J1).
 
 ## Layer 7
 

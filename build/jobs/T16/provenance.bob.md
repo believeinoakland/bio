@@ -1,0 +1,7 @@
+# BOB to provenance (T16)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry (plan `build/plan/current.md` layer 3; N364, Bob's K509 (3); W4 folded K530): R51, `captureGrade` for a capture whose receipt is `via: "doorbell"` (written by capture R65 at address `knock:<knockId>`): `route: "doorbell"`, `determined: false`, `basis: "CAPTURE_RECEIVED_NOT_FETCHED"`, the member's authored letter under the ceiling, stated as authored; existence proven by the receipt's timestamp. R15's writers now name `capture.pullKnock`. Test it at your interface with a receipt written through `recordReceipt` (`via: "doorbell"`); you need not wait for capture. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Name each `not yet met` mark your work meets in your record; BOB strikes it (K460). A check row you add, move or retire is promotion's to stamp (N318): name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
