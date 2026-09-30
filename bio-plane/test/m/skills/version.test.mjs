@@ -46,7 +46,7 @@ test("R12 R13 checkSkillVersion and parseSkillVersion are ai-runs' own (its R8),
 
 test("R12 every well-formed value is accepted, including one this module never rendered, and a rendered version is", () => {
   for (const v of ACCEPTED) assert.equal(checkSkillVersion(v), null, v);
-  assert.equal(checkSkillVersion(renderPack(published(), catalogue).version), null);
+  assert.equal(checkSkillVersion(renderPack(published()).version), null);
   for (const v of [...REFUSED_BLANK, ...REFUSED_MALFORMED, ...ACCEPTED])
     assert.doesNotThrow(() => checkSkillVersion(v));
 });
@@ -58,7 +58,7 @@ test("R13 parseSkillVersion returns {pack, edition, digest} for an accepted valu
     { pack: "investigative-session", edition: "1", digest: "0123456789abcdef" });
   assert.deepEqual(parseSkillVersion("p@e+"), { pack: "p", edition: "e", digest: "" });
   assert.deepEqual(parseSkillVersion("p@e+d+e"), { pack: "p", edition: "e", digest: "d+e" });
-  const pack = renderPack(published(), catalogue);
+  const pack = renderPack(published());
   assert.deepEqual(parseSkillVersion(pack.version),
     { pack: pack.id, edition: pack.edition, digest: pack.version.split("+")[1] });
   for (const v of [...REFUSED_BLANK, ...REFUSED_MALFORMED]) assert.equal(parseSkillVersion(v), null, JSON.stringify(v));

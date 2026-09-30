@@ -146,6 +146,32 @@ test("R18 the deployment sequence is ai-runs' own, re-exported unchanged: check,
   assert.ok(foundIn(read(SEQUENCING_SOURCE), DEPLOYMENT_SEQUENCE.text), "§2's ruling, verbatim");
 });
 
+/* Converted from `test/skillsequencing.test.mjs` (T17 legacy-tests' CONVERT row, skills' share: ARM A5, C1, E2, F2, F3). */
+test("R18 the re-exported record names who owns each later mode's enabling condition, what no gate reaches and that it holds no gate, none with control-flow authority; the rendered layer is authored instruction holding no flag", () => {
+  const owned = DEPLOYMENT_SEQUENCE.enabling_condition_owned_by;
+  assert.equal(typeof owned, "string");
+  assert.ok(owned.trim().length > 0, "the enabling condition's owner is named");
+  assert.equal(DEPLOYMENT_SEQUENCE.verification_recorded, null, "and no live run is recorded as verified");
+  const reach = DEPLOYMENT_SEQUENCE.does_not_reach;
+  assert.equal(typeof reach, "string");
+  for (const c of DEPLOYMENT_SEQUENCE.enforced_by) assert.ok(reach.includes(c), `does_not_reach names ${c}, the refusal it qualifies`);
+  assert.match(reach, /a DEPLOYMENT/, "and the one thing no gate reaches");
+  assert.ok(reach.length > 400, "a partial fence states its residue in full");
+  const holds = DEPLOYMENT_SEQUENCE.holds_no_gate;
+  assert.equal(typeof holds, "string", "a sentence, never a flag");
+  assert.match(holds, /refuses nothing/);
+  for (const f of ["text", "role", "because", "satisfies", "also_named_in", "enabling_condition",
+                   "enabling_condition_owned_by", "enables_how", "does_not_reach", "holds_no_gate"])
+    assert.deepEqual(controlFlowAuthority(String(DEPLOYMENT_SEQUENCE[f] ?? "")), [], f);
+  assert.deepEqual(controlFlowAuthority(Object.values(GATE_ADDRESS).map(String).join(" ")), [], "the gate's address");
+  const layer = judgementLayers().deployment_sequence;
+  assert.equal(layer.sourcing, "authored");
+  assert.match(layer.body.note, /INSTRUCTION/);
+  assert.match(layer.body.note, /holds no flag/);
+  const rendered = pack.renderPack(published()).disclosed.deployment_sequence;
+  assert.deepEqual(rendered, layer, "the pack carries the layer as the doctrine renders it");
+});
+
 test("R19 absenceByLevel: one entry per level in order, the level's fact, the next level, both spellings, and the states split by the definitive set", () => {
   const facts = { meaning: "nothing derived", content: "nothing extracted", document: "no document", internet: "nobody looked" };
   const levels = Object.keys(OBSERVATION_LEVELS);
@@ -193,7 +219,7 @@ test("R21 every authored sentence is found in the canon document its source name
   assert.ok(s143.length > 0, "Part II §14.3 is where it was");
   assert.ok(foundIn(s143, pack.FOUR_LEVEL_RULE), "the four-level rule is §14.3's sentence");
   assert.ok(foundIn(s143, pack.SEARCH_COMPLETENESS), "the search-completeness rule is §14.3's sentence");
-  const resident = pack.renderPack(published(), catalogue).resident;
+  const resident = pack.renderPack(published()).resident;
   assert.equal(resident.four_level.section, "Part II §14.3");
   const levels = Object.keys(OBSERVATION_LEVELS);
   const facts = levels.map((l) => absenceByLevel()[l].states_when_absent);
@@ -259,7 +285,7 @@ test("R24 it holds no gate: across every export and every input, the only refusa
       }
     }
   assert.deepEqual([...refusals], ["AI_RUN_SKILL_VERSION_UNNAMED"]);
-  const rendered = pack.renderPack(published(), catalogue);
+  const rendered = pack.renderPack(published());
   const clauses = Object.values(rendered.disclosed).flatMap((l) => (l.body && Array.isArray(l.body.clauses) ? l.body.clauses : []));
   assert.equal(clauses.length, CLAUSES.length, "every clause is rendered");
   for (const c of clauses) assert.deepEqual(controlFlowAuthority(c.decides), [], c.id);

@@ -745,6 +745,158 @@ export const PERMITTED_AUTO_COMPOSITION = {
  * ========================================================================= */
 
 /* =========================================================================
+ * THE ACTION PLANNING LAYER (R28, R29; K608, K660)
+ *
+ * `BIO_Action_v0_1.md` §4, the rules a run works under when it proposes plan
+ * options, standards, comparisons, candidate theories or communication drafts.
+ * Each clause is the rule's own heading and sentences, quoted and pinned to §4
+ * by R21's normaliser, as the resident sentences are; nothing here rewords a
+ * rule. The layer holds no gate: every act it names is fenced by the module
+ * that performs it (the proposal is stored apart and labelled; the member's
+ * act refuses a machine), and a run ignoring every word here gets past nothing.
+ * ========================================================================= */
+
+/** Where the Action layer's rules are quoted from: canon, whole (K608 (1)). */
+export const ACTION_SOURCE = "docs/architecture/BIO_Action_v0_1.md";
+export const ACTION_SECTION = "§4";
+
+/** The rules of §4 the run works under (R28: rules 1–3, 6, 8–10, 13; R29: rule
+ *  12), each `{rule, heading, sentences}`, every string a span of §4. Rules 4,
+ *  5, 7 and 11 are the record's (compliance, reminders, the sending, the
+ *  profile), not a proposing run's. */
+export const ACTION_RULES = [
+  { rule: 1, heading: "Humans decide.",
+    sentences: [
+      "A member takes every act that commits the group: declaring a standard, determining, assessing a "
+      + "consequence, choosing an option, approving, sending, advancing a stage, resolving, closing.",
+      "The machine may find, compare, compute, propose and draft, always labelled as machine work, and never "
+      + "does any of these acts (DEC-24, DEC-27; Roadmap §10).",
+    ] },
+  { rule: 2, heading: "The gate is at the outward act, not the reasoning (DEC-26), and a member may pass it "
+      + "openly (Bob, 2026-09-30).",
+    sentences: [
+      "A plan may rest on premises not yet established, shown as hunch debt.",
+      "An action that asserts a breach is refused by default unless it rests on a live noncompliant "
+      + "determination; a member may proceed anyway only by an attributed act with a stated reason, and the "
+      + "action and everything prepared from it carry that disclosure.",
+      "An action that seeks evidence (a records request, a request for comment) is never gated.",
+    ] },
+  { rule: 3, heading: "No significance, no score.",
+    sentences: [
+      "Whether a matter warrants action, and how urgently, is a member's judgment, recorded only in acts and "
+      + "their reasons: a declined option's reason, an escalation stage declined with a reason.",
+      "No field holds significance, severity, priority or a score.",
+    ] },
+  { rule: 6, heading: "Addressees are roles, not people.",
+    sentences: [
+      "An action is addressed to a government office by role and body, a reporter or outlet, an organisation "
+      + "or another civic group by role and organisation, or a described audience; never a private individual "
+      + "(Requirement 6).",
+      "An action asserting a breach is addressed to an office.",
+    ] },
+  { rule: 8, heading: "No catalogue, no budgets.",
+    sentences: [
+      "Suggested options come from reasoning over the matter and from the group's own earlier plans, never "
+      + "from a fixed list; the plan holds no costs, assignees or hours (Bob, 2026-09-29).",
+    ] },
+  { rule: 9, heading: "The doctrine's limits.",
+    sentences: [
+      "CivicOS takes no position on what policy should be (Operational Principle 1).",
+      "Political accountability asks officials to act on a breach, requests oversight and audits, testifies, "
+      + "and supports legislation that restores or enforces an existing requirement; lobbying is an option "
+      + "only for that.",
+      "Policy advocacy and candidate support are not actions.",
+    ] },
+  { rule: 10, heading: "The work varies, not the person.",
+    sentences: [
+      "A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which "
+      + "shapes what the assistant suggests and nothing else.",
+      "No attribute of a person gates, filters or orders anything (DEC-17, DEC-54).",
+    ] },
+  /* R29 (K660): the planning skill's own addition, the hostile-response branch. */
+  { rule: 12, heading: "Hope for good faith; prepare for opposition",
+    sentences: [
+      "People are presumed to want better outcomes, and a bad actor is identified by evidence, never by role.",
+      "every plan is checked for a branch that answers a hostile response",
+    ] },
+  { rule: 13, heading: "The venue sets the standard of evidence",
+    sentences: [
+      "No action is refused for its evidence grade.",
+      "Where a filing rests on a grade the opposition could contest, it says so, so counsel and members can "
+      + "prepare (rule 12).",
+    ] },
+];
+
+/* THE ACTS THE LAYER NAMES, EACH BY THE REQUIREMENT THAT DEFINES IT (R28). The
+   modules that hold them are later in the order (P4), so no import can carry
+   them: each id is named once here as a SELECTOR over the published catalogue,
+   as `MACHINE_MODE` is in `skillpack.mjs`, and what the layer carries for it is
+   the catalogue's own entry, unchanged. `proposes` are the acts a run may use;
+   `leaves_to_a_member` the act a member takes on each proposal (§4 rule 1). */
+export const PLANNING_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "optionpropose",        defined_by: "action-plans R11" }),
+    Object.freeze({ id: "standardpropose",      defined_by: "standards R9" }),
+    Object.freeze({ id: "comparisonpropose",    defined_by: "conformance R12" }),
+    Object.freeze({ id: "theorypropose",        defined_by: "filings R14" }),
+    Object.freeze({ id: "communicationprepare", defined_by: "filings R23" }),
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "optionadopt",   defined_by: "action-plans R11" }),
+    Object.freeze({ id: "standardadopt", defined_by: "standards R9" }),
+    Object.freeze({ id: "determine",     defined_by: "conformance R12" }),
+    Object.freeze({ id: "filingapprove", defined_by: "filings R6" }),
+    Object.freeze({ id: "filingsent",    defined_by: "filings R7" }),
+  ]),
+});
+
+/** The act a planning run proposes through (R29): while the plane publishes it
+ *  not, the layer is a stated absence and a plan-mode run has nothing to work
+ *  under. */
+export const PLANNING_ACT = PLANNING_ACTS.proposes[0].id;
+
+/** THE `action_planning` LAYER over the published catalogue (R28, R29). Absent
+ *  in R9's form while the catalogue holds no `PLANNING_ACT`; with it, every
+ *  other act named above must be published too, or the render throws naming it
+ *  (R1): a half layer is never rendered as a whole one. */
+export function actionPlanningLayer(catalog) {
+  const byId = new Map((Array.isArray(catalog) ? catalog : [])
+    .filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  if (!byId.has(PLANNING_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${PLANNING_ACT} act, the one act a run in the `
+      + "plan mode proposes plan options through, so this layer carries no doctrine for work no run can do; a "
+      + "plan-mode run is refused before any turn.",
+  };
+  const read = (a) => {
+    if (!byId.has(a.id))
+      throw new Error(`the action planning layer names the act ${a.id} (${a.defined_by}) as the plane `
+        + "publishes it and invents none: op=affordances publishes the planning act but not this one");
+    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
+  };
+  return {
+    load_when: "the run proposes plan options, standards, comparisons, candidate theories or communication "
+      + "drafts for an action or a plan, in the plan mode",
+    sourcing: "authored",
+    body: {
+      rules: ACTION_RULES,
+      source: ACTION_SOURCE,
+      section: ACTION_SECTION,
+      acts: {
+        proposes: PLANNING_ACTS.proposes.map(read),
+        leaves_to_a_member: PLANNING_ACTS.leaves_to_a_member.map(read),
+      },
+      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
+        + "it: a proposal is stored apart and labelled as machine work, and the act a member takes on it "
+        + "refuses a machine. A run ignoring every word here gets past nothing.",
+    },
+  };
+}
+
+/* =========================================================================
  * THE FOUR-LEVEL SEARCH, AND WHICH ABSENCE IS STATED AT EACH
  * ========================================================================= */
 

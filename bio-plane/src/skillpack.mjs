@@ -61,7 +61,7 @@
  *                against the design document it is quoted from, so the slowest-
  *                drifting layer still cannot drift SILENTLY.
  *   `imported` — read from the module that ENFORCES the words (`observation-log`,
- *                `airun.mjs`, the check catalogue). No copy exists here to go
+ *                `airun.mjs`, `contradiction`). No copy exists here to go
  *                stale.
  *   `driven`   — read from what the plane PUBLISHES on the wire
  *                (`op=affordances`), passed in by the caller as the plane's own
@@ -120,11 +120,12 @@
  *     registry the PLANE publishes, and that is an interface item, not a skill
  *     one.
  *   - **THE MACHINE FENCE IS WIDER THAN ITS CANNED WORDS.** The boundary layer
- *     renders the fences that carry a DEC-49 canned translation. The plane can
- *     mint machine refusals that carry none; this pack names none of them and
- *     paraphrases none of them, and publishes the fact that it is rendering a
- *     SUBSET. The suite measures the size of that subset against the plane's own
- *     source and prints it every run, so the gap is visible rather than implied.
+ *     renders the fences that carry a DEC-49 canned translation, as the plane
+ *     PUBLISHES them (`op=affordances`' `fences`: `machineFences` below, run by
+ *     the control plane over every module's check families, K585 (1)). The
+ *     plane can mint machine refusals that carry none; this pack names none of
+ *     them and paraphrases none of them, and publishes the fact that it is
+ *     rendering a SUBSET.
  *   - **NO OP PUBLISHES THIS PACK, DELIBERATELY.** The pack is rendered by
  *     whatever RUNS under it — FL-3's harness, and this module's tests
  *     today — from the plane's existing published answer. An op returning the
@@ -146,7 +147,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./airun.mjs";
    defence (each sentence pinned to the document it is quoted from, and a
    source-scan proving it holds no control-flow authority). Two deliverables with
    two suites, and the pack composes them. */
-import { judgementLayers, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
+import { judgementLayers, actionPlanningLayer, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
    under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
@@ -226,7 +227,7 @@ export const SOURCING = {
   four_level:     "authored",
   levels:         "imported",   /* observation-log OBSERVATION_LEVELS */
   absence:        "imported",   /* observation-log OBSERVATION_STATES */
-  fences:         "imported",   /* checks/bio-checks.mjs, the MACHINE_CANNOT_ rows */
+  fences:         "driven",     /* op=affordances .fences: machineFences over every module's families (K585 (1)) */
   bounds:         "imported",   /* airun.mjs RUN_BOUNDS + RUN_ENDINGS */
   refusals:       "imported",   /* airun.mjs AI_RUN_CHECKS (ai-runs) */
   vocabularies:   "driven",     /* op=affordances .vocabularies */
@@ -234,6 +235,8 @@ export const SOURCING = {
   member_only:    "driven",     /* op=affordances .catalog, the mode field */
   contradiction:  "imported",   /* contradiction RECOMMEND_PROMPT + its measured digest (N345) */
   contradiction_unmeasured: "absent", /* while contradiction's RECOMMEND_PROMPT_SHA256 is null (R27) */
+  action_planning: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 (R28) */
+  action_planning_unpublished: "absent", /* while op=affordances publishes no planning act (R29) */
   recipes:        "absent",     /* absent until the plane publishes recipes — see the header */
   recipes_published: "driven",  /* op=affordances .recipes, validated against .surfaces and .catalog (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -247,7 +250,11 @@ export const SOURCING = {
 
 /** THE MACHINE / MEMBER BOUNDARY IN THE PLANE'S OWN PUBLISHED WORDS.
  *
- *  Harvested from the check catalogue by export name matching `_CHECKS$` — the
+ *  The control plane publishes its answer as `op=affordances`' `fences`, run over
+ *  every module's check families (K585 (1)), and the pack renders that answer
+ *  (R3); this module holds the harvest so the rule has one site.
+ *
+ *  Harvested from a catalogue namespace by export name matching `_CHECKS$` — the
  *  rule `civicos-ui/check-refusal-codes.mjs` already harvests families by, and
  *  stated the same way it states it: a family added later is picked up, and a
  *  family REMOVED takes its codes with it visibly rather than leaving a hand
@@ -258,9 +265,9 @@ export const SOURCING = {
  *  job is to SURFACE that text and route, never to paraphrase it. So the pack
  *  carries the text VERBATIM and holds no wording of its own for any fence.
  *
- *  `catalogue` is passed in rather than imported as a namespace so the suite can
- *  drive this function over a mutated catalogue through THE SAME function the
- *  real render uses. There is no second copy to mutate separately. */
+ *  `catalogue` is passed in rather than imported as a namespace: the control
+ *  plane passes its composed families and the suite a catalogue made for the
+ *  case, through THE SAME function. There is no second copy. */
 export function machineFences(catalogue) {
   const out = [];
   for (const [family, rows] of Object.entries(catalogue || {})) {
@@ -278,8 +285,8 @@ export function machineFences(catalogue) {
    than assembled to dodge the sourcing arm — an instrument its own subject has
    to be hidden from is an instrument with a hole. It is a SELECTOR over the
    catalogue, and what makes it honest is that it selects something: the render
-   below throws when the harvest is empty, so a prefix that stopped matching
-   fails loudly instead of rendering a boundary with no fences in it. */
+   below throws when the published harvest is empty, so a prefix that stopped
+   matching fails loudly instead of rendering a boundary with no fences in it. */
 const MACHINE_FENCE_PREFIX = "MACHINE_CANNOT_";
 
 /** THE ACTS A MACHINE CREDENTIAL CANNOT REACH, from the published catalogue.
@@ -310,8 +317,9 @@ const MACHINE_MODE = "machine";
 /* ------------------------------------------------------------- the render */
 
 /** THE PACK, RENDERED. `published` is the plane's OWN answer to `op=affordances`
- *  with no target — `{ catalog, vocabularies, capture_acts }` — passed straight
- *  in and never reshaped. `catalogue` is the check catalogue module namespace.
+ *  with no target — `{ catalog, vocabularies, capture_acts, fences }` — passed
+ *  straight in and never reshaped. It is the one input (§1a, K585 (1)): the
+ *  fences arrive published, so a caller renders the pack without the catalogue.
  *
  *  IT THROWS ON AN EMPTY SOURCE, and that is the item's empty-case guard rather
  *  than a defensive habit. A pack rendered over an empty published vocabulary
@@ -321,7 +329,7 @@ const MACHINE_MODE = "machine";
  *  precedent: it throws rather than compose a sentence it cannot compose
  *  truthfully. A control that passes while asserting nothing is the failure
  *  D-216's arm 3 measured, and an empty render is how it would arrive here. */
-export function renderPack(published, catalogue) {
+export function renderPack(published) {
   const p = published && typeof published === "object" ? published : {};
   const vocabularies = p.vocabularies && typeof p.vocabularies === "object" ? p.vocabularies : null;
   const catalog = Array.isArray(p.catalog) ? p.catalog : null;
@@ -333,10 +341,11 @@ export function renderPack(published, catalogue) {
     throw new Error("the pack renders the plane's PUBLISHED act catalogue and invents none, so it "
       + "cannot be rendered against an empty one: op=affordances published no acts");
 
-  const fences = machineFences(catalogue);
-  if (fences.length === 0)
-    throw new Error("the machine/member boundary is rendered from the check catalogue's own canned "
-      + "translations and this pack writes none of its own: no fence row was harvested");
+  const fences = Array.isArray(p.fences) ? p.fences : null;
+  if (!fences || fences.length === 0)
+    throw new Error("the machine/member boundary is rendered from the plane's PUBLISHED fences, in the "
+      + "check rows' own canned translations, and this pack writes none of its own: op=affordances "
+      + "published no fences");
 
   const memberOnly = memberOnlyActs(catalog);
   if (memberOnly.length === 0)
@@ -397,8 +406,7 @@ export function renderPack(published, catalogue) {
   const recipes = Array.isArray(p.recipes) ? p.recipes : null;
   if (recipes) validateRecipes(recipes, p.surfaces, catalog);
 
-  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, recipes },
-                                    catalogue);
+  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, recipes });
   resident.disclosable = Object.keys(disclosed).map((k) => ({ layer: k, load_when: disclosed[k].load_when }));
 
   const pack = { id: SKILL_PACK_ID, edition: DOCTRINE_EDITION, resident, disclosed,
@@ -409,7 +417,7 @@ export function renderPack(published, catalogue) {
 /** THE PROGRESSIVELY-DISCLOSED LAYERS (§14b.1). Each names the work that loads
  *  it, so "loads when the run reaches work that needs them" is a field a
  *  scheduler can read rather than a sentence a model must interpret. */
-export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = null } = {}, catalogue) {
+export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = null } = {}) {
   return {
     /* SK-2's judgement layers first, so `disclosable` lists what the run is
        INSTRUCTED BY before what it is given to work with. Spread from one
@@ -455,6 +463,10 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = 
         + "until the blind fixture of dissolved pairs is run under it and recorded, and a prompt no "
         + "measurement vouches for is not given to a run as the words it recommends under.",
     },
+    /* R28, R29 (K608, K660). The Action layer's rules a run proposing plan options works under, and the acts
+       it may use and must leave to a member, read from the published catalogue; a stated absence while the
+       plane publishes no planning act. Authored in `skilldoctrine.mjs`, as the judgement layers are. */
+    action_planning: actionPlanningLayer(catalog),
     recipes: Array.isArray(recipes) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.recipes_published,
