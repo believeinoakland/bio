@@ -55,7 +55,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 
 **`runCaseGate({caseId, edition, fm, priorCase, body?, memberBasis?}) → {gateVersion, ok, findings, warnings}`**
 
-- **R33** Runs the case-document catalogue registered by R47 over the parsed front matter, with the facts a case document cannot carry about itself: the case and edition it is about to become, the previous edition's assertions (`priorCase`, for C-21.1), the body, and each member's basis at its pinned bytes. Passing `null` for any of them blinds the checks that need it. The result has R29's shape. With no catalogue registered it answers C-102.9 `CASE_CATALOGUE_FAILED` and runs no fallback (K529). Never throws. *(its no-fallback arm not yet met: N361)*
+- **R33** Runs the case-document catalogue registered by R47 over the parsed front matter, with the facts a case document cannot carry about itself: the case and edition it is about to become, the previous edition's assertions (`priorCase`, for C-21.1), the body, and each member's basis at its pinned bytes. Passing `null` for any of them blinds the checks that need it. The result has R29's shape. With no catalogue registered it answers C-102.9 `CASE_CATALOGUE_FAILED` and runs no fallback (K529). Never throws.
 
 **`registerCaseCatalogue(module, fn) → void`**
 

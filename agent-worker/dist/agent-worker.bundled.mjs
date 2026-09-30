@@ -9774,7 +9774,13 @@ CREATE TABLE IF NOT EXISTS signers (
   status    TEXT NOT NULL DEFAULT 'active',
   added     TEXT NOT NULL,
   -- REC-159: the administrator whose act last set the key's status; NULL reads 'not recorded'.
-  status_by TEXT
+  status_by TEXT,
+  -- R27 (N364, DEC-80 item 4): how the key was registered, 'admin' by an administrator (R25) or 'self' by its own
+  -- member from a signed-in session (R89), and who registered it. A row written before these columns was
+  -- registered by R25, the only door there was, so a NULL origin reads 'admin'; NULL registered_by reads
+  -- 'not recorded'. Neither is back-filled. attests never reads origin (R91).
+  origin    TEXT,
+  registered_by TEXT
 );
 
 -- PL-11 / IS-5 / D-199: THE ai CREDENTIAL'S DECLARED TASK SCOPE, AND THE
@@ -10038,6 +10044,8 @@ var MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["members", "pairing_published", "INTEGER NOT NULL DEFAULT 0"],
   ["project_participants", "owner_order", "INTEGER"],
   ["signers", "status_by", "TEXT"],
+  ["signers", "origin", "TEXT"],
+  ["signers", "registered_by", "TEXT"],
   ["ai_credentials", "confined_to", "TEXT"]
 ];
 var MEMBERSHIP_EXEMPT_TABLES = [
@@ -10104,6 +10112,16 @@ var MEMBERSHIP_CHECKS = Object.freeze({
     where: at2("listenerRefusal", "is-listener-registration"),
     translation: "A part of this instance tried to register a listener it had already registered, or one that another part already holds, so the second registration was refused and the first still stands. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
   }),
+  SIGNER_KEY_HELD_BY_ANOTHER: Object.freeze({
+    check: "C-96.15",
+    where: at2("signerRegisterOwn", "is-signer-key-held"),
+    translation: "This key is registered to another member, so it cannot be yours. Make a new key in this browser. Nothing was changed."
+  }),
+  SIGNER_KEY_REVOKED: Object.freeze({
+    check: "C-96.16",
+    where: at2("signerRegisterOwn", "is-signer-key-revoked"),
+    translation: "This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an administrator. Nothing was changed."
+  }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: "C-96.13",
     where: at2("expertiseDeclare", "is-expertise-labelled"),
@@ -10119,7 +10137,8 @@ function viewerPredicate(viewer) {
   const m = new RegExp(`^(${CLS}(admin|member|probe|daemon|ai)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
   if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY", member: null };
   const memberId = m[3] || null;
-  if (!memberId) return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: null };
+  if (!memberId || memberId === Membership.ROOT_ADMIN)
+    return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: memberId };
   return {
     member: memberId,
     sql: `${GATE_MARK} (b.object_type <> 'project' OR EXISTS (
@@ -10233,6 +10252,7 @@ var MODULE_ORDER = Object.freeze([
   "provenance",
   "capture-sources",
   "capture",
+  "sources",
   /* 4 */
   "calibration",
   "extraction",
@@ -10277,6 +10297,8 @@ var MODULE_ORDER = Object.freeze([
   "legacy-store",
   /* 11 */
   "affordances",
+  "tasks",
+  "queue-producers",
   "queue",
   "instance-setup",
   "control-plane",
@@ -11469,12 +11491,13 @@ var Membership = class _Membership {
   /* THE PERSON ASKING: the stamped `by` names an active member AND the stamped viewer names the SAME person — the
      control plane stamps both from one session, so a disagreement is a caller that is not a member session (an
      `ai` credential stamps its principal as viewer and `class:ai` as `by`) and asks nothing. The founder's viewer
-     is the bare `admin` (index.mjs, the founder's session), `viewerPredicate`'s operator spelling, so it is
-     matched by that spelling; every other member by `viewerPredicate`'s own parse, never a second one. */
+     is spelled bare `admin` or `member:admin` (R43, N357), and both are the founder; every other member is matched
+     by `viewerPredicate`'s own parse, never a second one. */
   #requester(by, viewer) {
     const me = this.#activeMemberRow(by);
     if (!me) return null;
-    if (me.member_id === _Membership.ROOT_ADMIN) return viewer === _Membership.ROOT_ADMIN ? me : null;
+    if (me.member_id === _Membership.ROOT_ADMIN)
+      return viewer === _Membership.ROOT_ADMIN || viewerPredicate(viewer).member === _Membership.ROOT_ADMIN ? me : null;
     return viewerPredicate(viewer).member === me.member_id ? me : null;
   }
   /* C-95.1 and C-95.4 are each said at more than one act, so each is minted in ONE governed region and every act
@@ -13107,21 +13130,114 @@ var Membership = class _Membership {
     const barCust = this.#custodialBar(by, "registering a signing key");
     if (barCust) return barCust;
     const refusal5 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
-    if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
+    if (!_Membership.#keyShaped(keyB64))
       return refusal5("BAD_KEY", "expected the base64 field of an ssh-ed25519 public key");
     const barAdd = this.#signerMemberBar(memberId);
     if (barAdd) return barAdd;
     this.sql.exec(
-      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by) VALUES (?,?,?,'active',?,?)
+      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
+       VALUES (?,?,?,'active',?,?,'admin',?)
        ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
-         comment=excluded.comment, status='active', status_by=excluded.status_by`,
+         comment=excluded.comment, status='active', status_by=excluded.status_by,
+         origin='admin', registered_by=excluded.registered_by`,
       keyB64,
       memberId,
       comment ?? null,
       (/* @__PURE__ */ new Date()).toISOString(),
+      by || null,
       by || null
     );
     return { ok: true, keyB64, memberId, by: _Membership.#statusBy(by) };
+  }
+  /* The shape R25 and R89 both take: the base64 field of an ssh-ed25519 public key (the OpenSSH wire bytes, which
+     an Ed25519 WebCrypto key exports to as well; `sshsig.mjs` verifies either). One predicate, so the two doors
+     cannot disagree about what a key is. */
+  static #keyShaped(keyB64) {
+    return typeof keyB64 === "string" && /^AAAA[A-Za-z0-9+/=]+$/.test(keyB64);
+  }
+  /* ===== R89–R91 (N364; DEC-80 item 4, Bob's ruling K509 (2)) — A MEMBER REGISTERS THEIR OWN KEY =====
+   *
+   * The key is made in the member's own browser, never by another, and each use is confirmed on the device (that is
+   * the interface's to keep; the plane cannot test it). From a signed-in session the member registers its public
+   * half here, and it attests exactly as an administrator-registered key does (R91: `SIGNER_ATTESTS` never reads
+   * `origin`). Registration is no longer a custodial act, so what keeps it accountable is that every administrator
+   * is told (`notified`, R86's list at this instant, and the key's row, which the feed's notice reads: N375, K535)
+   * and any of them can revoke the key (R26).
+   *
+   * THE ORDER, and each step is the requirement's: who is asking (a machine credential, the operator's bearer or no
+   * stamp at all has no member to register for); the key's shape (R25's answer, RELAYED from R25's own region so
+   * C-96.8 keeps its one site); the member's standing (R25's bar, the gate's own question); and whether ANOTHER member
+   * holds the key. A held key is never rebound, and the refusal names no one: whose key it is, is not the caller's
+   * to learn. A key `by` already holds and that is active answers `existed: true` and is not rewritten: its origin
+   * and who registered it stay as first recorded. One `by` holds that was revoked is refused and stays revoked
+   * (K535): only an administrator re-activates a key (R26), so an administrator's revocation sticks. */
+  signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
+    if (by === null || by === void 0 || by === "" || isMachineIdentity(by))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_REGISTER_KEY",
+        by: by || null,
+        detail: "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written."
+      };
+    if (!_Membership.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });
+    const bar = this.#signerMemberBar(by);
+    if (bar) return bar;
+    const held = this.#one(`SELECT member_id, status, origin, registered_by FROM signers WHERE key_b64=?`, keyB64);
+    if (held && held.member_id !== by) {
+      const row = MEMBERSHIP_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
+      return {
+        ok: false,
+        reason: "SIGNER_KEY_HELD_BY_ANOTHER",
+        code: "SIGNER_KEY_HELD_BY_ANOTHER",
+        check: row.check,
+        translation: row.translation,
+        detail: "this key is registered to another member of this group, and a registered key is never rebound by its own member's act. Nothing was written."
+      };
+    }
+    if (held && held.status !== "active") {
+      const row = MEMBERSHIP_CHECKS.SIGNER_KEY_REVOKED;
+      return {
+        ok: false,
+        reason: "SIGNER_KEY_REVOKED",
+        code: "SIGNER_KEY_REVOKED",
+        check: row.check,
+        translation: row.translation,
+        detail: "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written."
+      };
+    }
+    if (!held)
+      this.sql.exec(
+        `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
+         VALUES (?,?,?,'active',?,?,'self',?)`,
+        keyB64,
+        by,
+        comment ?? null,
+        (/* @__PURE__ */ new Date()).toISOString(),
+        by,
+        by
+      );
+    return {
+      ok: true,
+      keyB64,
+      memberId: by,
+      status: "active",
+      origin: held ? held.origin === "self" ? "self" : "admin" : "self",
+      registered_by: held ? _Membership.#statusBy(held.registered_by) : by,
+      existed: !!held,
+      notified: this.activeAdmins(),
+      detail: held ? "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key." : "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key."
+    };
+  }
+  /* R90 (N364): a member revokes their own key, and this is never refused for a key they hold, whatever its state
+     or theirs (revoking narrows a claim, D-158). A key they do not hold answers NO_SUCH_KEY exactly as `signerSet`
+     answers a key no one holds, whoever holds it, so the answer never says whether a key is registered to somebody
+     else. A replacement is a new R89; an administrator revokes any key by R26. */
+  signerRevokeOwn({ keyB64, by = null } = {}) {
+    const row = typeof keyB64 === "string" && typeof by === "string" && by !== "" ? this.#one(`SELECT status FROM signers WHERE key_b64=? AND member_id=?`, keyB64, by) : null;
+    if (!row) return { ok: false, reason: "NO_SUCH_KEY" };
+    const already = row.status === "revoked";
+    if (!already) this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE key_b64=?`, by, keyB64);
+    return { ok: true, keyB64, status: "revoked", by, already };
   }
   /* D-158 — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN.
    *
@@ -13148,7 +13264,8 @@ var Membership = class _Membership {
    * up. Undetermined is first-class and gets said. */
   signerList() {
     return { signers: this.#rows(
-      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, s.status_by, m.status AS member_status,
+      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, s.status_by, s.origin, s.registered_by,
+              m.status AS member_status,
               CASE WHEN ${_Membership.SIGNER_ATTESTS} THEN 1 ELSE 0 END AS attests
          FROM signers s LEFT JOIN members m ON m.member_id = s.member_id
         ORDER BY s.added`
@@ -13160,6 +13277,9 @@ var Membership = class _Membership {
       added: r.added,
       status_by: _Membership.#statusBy(r.status_by),
       /* REC-159 */
+      /* R27 (N364): R25 was the only door before R89, so a row with no recorded origin is an administrator's. */
+      origin: r.origin === "self" ? "self" : "admin",
+      registered_by: _Membership.#statusBy(r.registered_by),
       member_status: r.member_status ?? null,
       attests: r.attests === 1,
       attests_why: r.attests === 1 ? null : r.status !== "active" ? "key_revoked" : r.member_status === null || r.member_status === void 0 ? "member_absent" : r.member_status !== "active" ? `member_${r.member_status}` : "undetermined"
@@ -13439,12 +13559,12 @@ var TSA_ENDPOINTS = Object.freeze([
 var te2 = new TextEncoder();
 
 // ../bio-plane/src/gate.mjs
-var CATALOG_VERSION = "1.45.0";
+var CATALOG_VERSION = "1.46.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 825,
-  digest: "dacbe36f6e5dda03bfaf6b13d8e721ffcb5794a0dcda55026cffc64f018a5fac"
+  rows: 877,
+  digest: "1002f8718b347437100c7a9a10f32edf76b9b27cda351c97b2a53fcdc0040caa"
 });
 var te3 = new TextEncoder();
 
