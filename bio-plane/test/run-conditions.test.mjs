@@ -394,7 +394,10 @@ const ROLE = {
   /* RETIRED 2026-09-28 (legacy-tests T10, B1 (7)), and ARM W3b named it: N191 deleted `#hiddenSets` (K341). The run
      half of D-486's subtraction is ai-runs' R42 `hiddenRuns` alone (its cell below), which legacy-store's
      `#hiddenRunTail` now CALLS for `op=stats`' run counters; what the store kept is D-464's bundle set,
-     `#hiddenBundles`, which reads no row of `ai_runs`. A caller, not a reader. */
+     `#hiddenBundles`, which reads no row of `ai_runs`. A caller, not a reader.
+     CORRECTED 2026-09-30 (LEGACY-TESTS #13, T15; N352): the store's `#hiddenBundles` is gone too; D-464's bundle set is
+     membership's exported `hiddenBundles` (its R88), which the store's `#counts` calls and which reads no row of
+     `ai_runs` either. */
   /* REC-207's, 2026-09-24, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on this
      item's first full battery, which is the sixth time this ratchet has caught a new reader rather than
      absorbing one in silence. `#biasDebtDischargeByRerun` reads `ai_runs` (`SELECT *`, for `rerun_of` and

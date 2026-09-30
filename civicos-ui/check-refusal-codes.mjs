@@ -3845,7 +3845,17 @@ const MULTI_SITE_CLOSED = new Map([
   /* DECLARED 2026-09-30 (LEGACY-TESTS #12, T14; FILINGS #4 N331, K471), READ at their sites: filings now reads the
      producing group through promotion's `fact("producingGroup")` (its R40), and arm G first met filings' literals. */
   ["FACT_FAILED", "T14 filings (N331, K471): minted once, in promotion's `fact` (R40, REGISTRATION_CHECKS.FACT_FAILED, a provider that throws); filings' second literal (`#group`, `g.reason === \"FACT_FAILED\"`) READS the code of promotion's answer to word R3's undetermined group — RATE_IP's shape, no second condition"],
-  ["FACT_UNAVAILABLE", "T14 filings (N331, K471): minted once as a refusal, in promotion's `factUnavailable` (R40, REGISTRATION_CHECKS.FACT_UNAVAILABLE, no provider registered); filings' second literal is its constructor's fallback when no promotion module is reachable at all, an internal answer `#group` reads at once and never relays (it carries no check or translation and reaches no caller), for the same condition — the fact has no provider here. REPORTED to filings: the fallback need not spell the code"],
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; FILINGS #5 N355, K505): FACT_UNAVAILABLE LEFT this map, stale (the guard's own
+     message): filings' no-promotion fallback spells no FACT_UNAVAILABLE now, so the code is minted once, in promotion's
+     `factUnavailable` (R40). The ceiling does NOT move for it: a closure is subtracted from the multi-site set before the
+     count, so a stale closure never stood in `CEILING.multiSiteCodes` (T14 declared it to keep the ceiling at 54, not to
+     lower it). The stale closure is kept as history: "FACT_UNAVAILABLE", "T14 filings (N331, K471): minted once as a refusal, in promotion's `factUnavailable` (R40, REGISTRATION_CHECKS.FACT_UNAVAILABLE, no provider registered); filings' second literal is its constructor's fallback when no promotion module is reachable at all, an internal answer `#group` reads at once and never relays (it carries no check or translation and reaches no caller), for the same condition — the fact has no provider here. REPORTED to filings: the fallback need not spell the code" */
+  /* DECLARED 2026-09-30 (LEGACY-TESTS #13, T15; K490, CONTRADICTION #2 J2 (4)), READ at its sites on job/T15/legacy-tests,
+     when arm G first met inquiry's R47 arm (`src/inquiry/contradiction.mjs` `contradictionFindings`). Its other code with
+     two literals, CONTRADICTION_LINK_MALFORMED, is NOT declared: its second literal is the arm's own `catch` (:208-211,
+     "the contradiction arm could not judge this document"), a second condition C-2.11's sentence (the link is not a
+     candidate's id) is false of. It fails by name, REPORTED to inquiry. */
+  ["RESOLUTION_INCOMPLETE", "T15 inquiry (R47, C-2.15; N345): two literals in `contradictionFindings`, both R47's one condition, `Each missing or ill-formed field is RESOLUTION_INCOMPLETE, naming the field`: the `incomplete` helper inside `is-resolution-complete` (a kind's missing or ill-formed field, or a field a resolution does not have, `qualifiers` among them by inquiry's J1), and :148-150, a concluded contradiction inquiry whose `resolution` is a single value rather than a block, naming the field `resolution`. Neither is a second condition; C-2.15's sentence (`needs one more thing to be complete ... The missing part is named`) fits the scalar case least well, which is wording for inquiry, not a borrowed code"],
 ]);
 const MULTI_SITE_CANDIDATES = new Set([
   "AI_BEYOND_TASK_SCOPE", "BAD_CITATION", "BIAS_ADOPTION_NOT_PROPOSED", "BOOTSTRAP_CREDENTIAL_UNSET",
@@ -4107,23 +4117,13 @@ for (const [check, h] of HELD_TWICE) {
     FAIL(`HELD TWICE: ${check} (${h.rows.join(" and ")}) is accepted by name, but this run met no ${missing.join(", no ")} `
        + `finding for it — the pair has changed or gone (${h.why}). Retire the acceptance in the same commit.`);
 }
-/* ALLOCATED, MINTED BY NOTHING, ACCEPTED BY NAME (ADDED 2026-09-30, LEGACY-TESTS #12, T14; N327, t14-reread "C-29.12
-   left unminted"). Membership's R62 answers a non-administrator's organisation credential through R84's NOT_AN_ADMIN,
-   so the catalogue's C-29.12 AI_CREDENTIAL_ORG_NOT_ADMIN is a row nothing mints until legacy-checks retires it in T15.
-   Printed every run; the acceptance is stale, and fails by name, the moment anything in the plane's source spells
-   the code again (a mint, a read or a table key outside the catalogue). Inert once the row is gone. */
-const UNMINTED_ACCEPTED = new Map([
-  ["AI_CREDENTIAL_ORG_NOT_ADMIN", { check: "C-29.12", why: "N327: membership R62 answers through R84's NOT_AN_ADMIN; legacy-checks retires the row in T15" }],
-]);
-for (const [code, u] of UNMINTED_ACCEPTED) {
-  const spelled = planeSourceFiles().filter((f) => {
-    const text = stripComments(fs.readFileSync(path.join(PLANE_SRC, f), "utf8"));
-    return new RegExp(`["'.]${code}\\b|\\b${code}\\s*:`).test(text);
-  });
-  if (spelled.length) FAIL(`UNMINTED, ACCEPTED BY NAME: ${u.check} ${code} is spelled again in ${spelled.join(", ")} (${u.why}); `
-    + `the acceptance is stale. Retire it in the same commit.`);
-  else NOTE(`UNMINTED, ACCEPTED BY NAME: ${u.check} ${code} is allocated in the catalogue and minted by nothing in bio-plane/src (${u.why})`);
-}
+/* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K482, LEGACY-CHECKS #9 J1, N327): ALLOCATED, MINTED BY NOTHING, ACCEPTED BY
+   NAME, and its staleness arm, both gone with the one acceptance they held: legacy-checks retired C-29.12
+   AI_CREDENTIAL_ORG_NOT_ADMIN from the catalogue's AI_CREDENTIAL_CHECKS in T15 (membership R62 answers through R84's
+   NOT_AN_ADMIN), so there is no allocated-and-unminted row left to accept. It read (LEGACY-TESTS #12, T14):
+     const UNMINTED_ACCEPTED = new Map([["AI_CREDENTIAL_ORG_NOT_ADMIN", { check: "C-29.12", why: "N327: … legacy-checks
+     retires the row in T15" }]]); and, per entry, FAILED if any plane source spelled the code again, else printed it.
+   The row's departure is on `rows`, `census` and `reach` (each -1 at legacy-checks' merge fe01d2fbb6). */
 for (const n of notes) console.log("  " + n);
 if (fails.length) {
   for (const f of fails) console.error("FAIL: " + f);

@@ -226,7 +226,8 @@ const ARMS = {
        The complement is membership's exported `hiddenBundles` (`if (gate.scope === "member") return null;`), which the
        store's `#counts` (op=stats) and retrieval's op=searchindexcheck `indexed` and op=selectionlist `bytes` all call, so
        the arm neuters it at that ONE source (it answers `null`, nothing subtracted, for every viewer). Queue still spells
-       its own private `#hiddenBundles` (queue/index.mjs), which this patch does not reach, so §10 stays green. */
+       its own private `#hiddenBundles` (queue/index.mjs), which this patch does not reach, so §10 stays green. Measured on
+       the armed copy: 246/8, the four declared before and the next two arms' four (below). */
     patches: [["membership/index.mjs", `  if (gate.scope === "member") return null;\n`, `  if (gate) return null;\n`]],
     /* DECLARATION EXTENDED 2026-09-24 BY D-486, never exempted: this arm breaks `op=stats` for EVERY key, and
        §9 now reads two of its keys, so §9's arms go red too. They are DECLARED rather than left as
