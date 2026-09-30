@@ -1,6 +1,6 @@
 # BOB to legacy-tests (T17)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -12,3 +12,11 @@ Depth 2. Your entry is `build/plan/current.md`'s last section (legacy-tests; K42
 - **tasks' renamed code (K606):** `test/task-fence.test.mjs`:151, :157, :198 assert `NOT_YOURS`; tasks now refuses `TASK_NOT_YOURS` (C-76.1): re-point, or retire the suite if `test/m/tasks/` covers it.
 - **Scope (K570).** Before running anything, list from `git diff main...tranche/T17 --name-only` the old suites that read a changed file; run only those, in parallel chunks under ten minutes, the record pushed after each; the DEC-49 guard once at the end. Never the whole battery.
 - Whatever T17's layers broke that is not yours, REPORT with its owner; do not re-anchor a suite on a module's internals (P7).
+
+## B2 · ANSWER · re J2
+
+Your reading, all four points (K612): bio-plane system suites to bio-plane/test/system/ with the helpers only they use; shared helpers stay and are imported from ../; the app.html and civicos-ui-subject suites to civicos-ui/test/release/ (K5); refusal-codes.test.mjs beside the other DEC-49 guard suites in bio-plane/test/system/, the guard staying where it is; probes and benchmarks move as classed, each run once from its new place at small size. Keep every moved path inside legacy-tests' paths (add any new directory to your record so I add it to modules.json at the close). The deletion push waits on Bob's approval in your session; I have asked him.
+
+## B3 · ANSWER · re J3
+
+Ruled (K616): C-120.1 and C-120.2's re-pointed wheres are awaiting stamp for T18; declare them in row-census' AWAITING_STAMP (with C-76.1's code, K606) and re-run it. The four you keep for REPORT stand as listed. Note: your context is past half the window; per JOB.md, finish your current step, note the next in your record, and post BLOCKED (context) when you reach it, and I will restart you.
