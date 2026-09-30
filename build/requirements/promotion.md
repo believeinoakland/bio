@@ -55,7 +55,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 
 **`runCaseGate({caseId, edition, fm, priorCase, body?, memberBasis?}) → {gateVersion, ok, findings, warnings}`**
 
-- **R33** Runs the case-document catalogue registered by R47 (until one is registered, `legacy-checks`' `checkCaseDocument`) over the parsed front matter, with the facts a case document cannot carry about itself: the case and edition it is about to become, the previous edition's assertions (`priorCase`, for C-21.1), the body, and each member's basis at its pinned bytes. Passing `null` for any of them blinds the checks that need it. The result has R29's shape. Never throws.
+- **R33** Runs the case-document catalogue registered by R47 over the parsed front matter, with the facts a case document cannot carry about itself: the case and edition it is about to become, the previous edition's assertions (`priorCase`, for C-21.1), the body, and each member's basis at its pinned bytes. Passing `null` for any of them blinds the checks that need it. The result has R29's shape. With no catalogue registered it answers C-102.9 `CASE_CATALOGUE_FAILED` and runs no fallback (K529). Never throws. *(its no-fallback arm not yet met: N361)*
 
 **`registerCaseCatalogue(module, fn) → void`**
 
@@ -116,7 +116,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 
 ### Uses
 
-- `legacy-checks`: the catalogues `checkBundle` and `checkCaseDocument`; the parser, `normalizeType`, `vocabFor`/`STATES`, `isMachineIdentity`, `MECHANICAL_FIELD_SETS`; and the check rows whose ids and translations this module's refusals carry (`ACT_SHAPE_CHECKS`, `PROMOTED_TYPE_CHECKS`, `PROJECT_ID_CHECKS`, `PROJECT_CREATION_VISIBILITY_CHECKS`, `BIAS_CHECKS`, and `INSTANCE_GROUP_CHECKS`' row C-64.1, `GROUP_UNDETERMINED`, which R13 raises; K93 (2)). `withProducingGroup` and `stampGroup` are already this module's (K69).
+- `legacy-checks`: the catalogue `checkBundle` (`checkCaseDocument` no longer, K529); the parser, `normalizeType`, `vocabFor`/`STATES`, `isMachineIdentity`, `MECHANICAL_FIELD_SETS`; and the check rows whose ids and translations this module's refusals carry (`ACT_SHAPE_CHECKS`, `PROMOTED_TYPE_CHECKS`, `PROJECT_ID_CHECKS`, `PROJECT_CREATION_VISIBILITY_CHECKS`, `BIAS_CHECKS`, and `INSTANCE_GROUP_CHECKS`' row C-64.1, `GROUP_UNDETERMINED`, which R13 raises; K93 (2)). `withProducingGroup` and `stampGroup` are already this module's (K69).
 - `record-core`: `transact` and `commit` (R2, R3; every row R3 writes goes through them), `mintOpaqueId` and `mintExhausted` (its R62) (a project's id, R19; N322), `bundleInfo`, and `readImage`, whose write order R30 depends on (record-core R16).
 - `membership`: the producing group (R13), project ownership and joined authority (R19), and the sight predicate (R20, R23); `notAParticipant` (R87), R43's `NOT_A_PARTICIPANT` (N335).
 - `signatures`: `verifySshsig` (R31). Listed in `modules.json` (K10, K62).
