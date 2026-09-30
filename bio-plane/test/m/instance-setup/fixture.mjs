@@ -239,6 +239,6 @@ export function pageOver({ html, hash = "", session = null, fetch }) {
   sandbox.window = sandbox;
   const ui = new Function(...Object.keys(sandbox), script + `
 ;return { mdFor, historyOrder, FIRST_STATE, HEADINGS, RISK_TIERS, riskTierState, SETTABLE_TIERS, deriveInquiryTitle,
-          profilesWarning, openProfiles, panel, chosenRiskTier, openBundle };`)(...Object.values(sandbox));
+          profilesWarning, openProfiles, panel, chosenRiskTier, openBundle, signerAddBody, describeKey, acquireWhy };`)(...Object.values(sandbox));
   return { ui, el, sandbox, replaced: () => replaced, picks };
 }
