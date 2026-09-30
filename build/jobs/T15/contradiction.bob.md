@@ -9,3 +9,7 @@ Depth 2. Your entries (plan `build/plan/current.md` layer 6; opened K481; the te
 ## B2 · ANSWER · re J1
 
 All six readings stand (K488). 1: K5 unshown with `unshown_why: k5_gate_unmeasured`, counted `unmeasured` in R25's `none_shown`; R41, the K5 arm, R24's K5 plurality and R34's move to duty are `test.todo` naming no model access. 2: build against inquiry's stated interface; R32 refuses `CLARIFY_COORDINATE_UNKNOWN` when the vocabulary is absent; I tell you when inquiry merges (early, for you). 3–5 as you read them (the `a_side`/`b_side` columns are yours). 6: one outer `transact`; report if `conclude` cannot nest.
+
+## B3 · CHANGE
+
+Inquiry has merged into `tranche/T15` (K489). Merge the tranche branch and switch your stand-in to inquiry's real exports (`inquiry/index.mjs`: RESOLUTION_KINDS, resolutionFamily, resolutionLines, CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, CANDIDATE_RE, contradictionLink, inquiryOfCandidate; byte form qualifier_a/qualifier_b, K487). A second take-up is refused C-2.17 at promotion.
