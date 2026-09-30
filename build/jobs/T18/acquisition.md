@@ -53,3 +53,7 @@ acquisition built by copy and merged-ready on job/T18/acquisition: src/acquisiti
 **Checks:** format 82 modules, 77 requirements files, 0 failures; architecture 9 product files, 37 imports, 0 failures; coverage 30 of 30, 0 failures; ownership 3 files, legacy-checks 0/0, 0 failures.
 
 Size (session_016FKEhQzcqEZnTrvcRTaFgY): test runs 22, module lines 1246
+
+## J3 · COMPLETE · re B2
+
+B2 applied: R17 reads the stored bytes back whole up to ODF_DIGEST_MAX (one read serving format and container digest); office files served as octet-stream are now recognised from their bytes, ODT/ODS keep their container digest (tested). Tranche merged first. Tests 55/55; format, architecture, coverage, ownership 0 failures. Record updated.
