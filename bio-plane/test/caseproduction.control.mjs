@@ -188,8 +188,10 @@ arm("A", "THE PROJECT-LESS PUBLICATION PATH, PUT BACK — CASE-1's handed-over a
   + "makes `cases.project_id NOT NULL` real through an OP rather than only in the schema. "
   + "DECLARED: §2's refusal arm MUST fail. §3's owner arms MUST stay green — armed apart on purpose, "
   + "because one fence covering for another is how a half-fix reads as a whole one.",
-  [["authoring", `    if (!proj)\n      return { ok: false, reason: "NO_PUBLISHING_PROJECT",`,
-             `    if (false)\n      return { ok: false, reason: "NO_PUBLISHING_PROJECT",`]],
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; CASE-AUTHORING #5, b06473d427): the refusal sits one block deeper in
+     `#publishCase` (two more spaces), and the anchor had stopped matching (preflight A:0). Same edit. */
+  [["authoring", `      if (!proj)\n        return { ok: false, reason: "NO_PUBLISHING_PROJECT",`,
+             `      if (false)\n        return { ok: false, reason: "NO_PUBLISHING_PROJECT",`]],
   [{ name: OWN,
      mustFail: ["A PUBLICATION NAMING NO PROJECT IS REFUSED BY NAME"],
      mustNotFail: ["A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED",
@@ -294,7 +296,12 @@ arm("E", "THE SUPPORTING EXEMPTION REMOVED — the bar is asked of EVERY member,
   + "publish. DECLARED: §5's SUPPORTING arm and everything downstream of it MUST fail. **§5's "
   + "REFUSAL arm MUST stay GREEN** — an over-strictness arm cannot be read off the headline, which "
   + "is the lesson D-280 paid for and this arm is where this item pays it.",
-  [["authoring", `      for (const m of loadBearing) {`, `      for (const m of memberRoles) {`]],
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; CASE-AUTHORING #5): the bar loop moved into `#barJudged(proj,
+     loadBearing)`, where `memberRoles` is not in scope, so the old edit armed a ReferenceError (the act threw, the suite
+     lost its tally) instead of the over-strict gate. The same property is armed at the call: every member is handed to
+     the bar. */
+  [["authoring", `    const barJudged = this.#barJudged(proj, loadBearing);`,
+                 `    const barJudged = this.#barJudged(proj, memberRoles);`]],
   [{ name: OWN,
      mustFail: ["THE SAME FINDING, THE SAME GRADES, THE SAME BAR"],
      mustNotFail: ["A LOAD-BEARING MEMBER BELOW THE PROJECT'S STANDARD IS REFUSED",
@@ -404,9 +411,10 @@ arm("J", "C-41.12 DEMANDS A GRADE ON BOTH AXES OF A DECLARED BAR AGAIN — the r
   + "DECLARED: §10's ceremony, op=ratify and cases-row arms MUST fail — op=publish authors a document the "
   + "catalogue then refuses. §10's publish arm and the fixture guards MUST stay green (the act admits a "
   + "one-axis bar; only the check moved), and so must §5/§8's two-axis case.",
-  [["checks", "} else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {",
-              "} else if (!BASIS_GRADES.includes(rq[axis])) {"],
-   ["ratchecks", "} else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {",
+  /* LEGACY-TESTS #14 (T16, 2026-09-30; N361, K529): the catalogue's copy of C-41.12 is no longer armed. Promotion's
+     `runCaseGate` has no fallback to it (PROMOTION #17) and the suite's §10 asks ratification's `checkCaseDocument`,
+     so ratification's copy is the one C-41.12 the plane runs; the catalogue's goes in T17 (N372). */
+  [["ratchecks", "} else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {",
               "} else if (!BASIS_GRADES.includes(rq[axis])) {"]],
   [{ name: OWN,
      mustFail: ["AND THE CASE CEREMONY COMPLETES", "AND op=ratify PUBLISHES ITS MEMBER",
@@ -442,3 +450,10 @@ console.log("Every file restored and verified by sha256, by content and by cmp a
           + "pristine copy and the pristine-of-record taken before any arm ran.");
 rmSync(PEN, { recursive: true, force: true });
 process.exit(armsWrong ? 1 : 0);
+
+/* MEASURED 2026-09-30 by LEGACY-TESTS #14 (T16, private worktree of job/T16/legacy-tests + the re-anchors above), each
+   arm run ALONE (`node test/caseproduction.control.mjs <id>`), because the all-arms run stops at its baseline:
+   `d280-strengthbar.test.mjs` is 32/2 on this tree (not this file's; its two FAILs are its own D-280 source pins).
+   caseproduction alone 86/0. (A) 84/2 · (B) 69/17 · (C) 83/3 · (D) 83/3 · (E) 75/11 · (F) 84/2 · (G) 84/2 · (H) 74/12 ·
+   (J) 82/4 · (K) 85/1 — 10 OF 10 AS DECLARED, every restore verified by sha256, content and cmp x2. Before arms A and E
+   were re-anchored, A did not arm (preflight A:0) and E armed a ReferenceError that cost the suite its tally. */

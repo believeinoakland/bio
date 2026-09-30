@@ -75,8 +75,15 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { checkBundle, STATES, SUBJECT_POSITIONS, checkCaseDocument,
+import { checkBundle, STATES, SUBJECT_POSITIONS,
          parseFrontmatter as parseFm } from "../checks/bio-checks.mjs";
+/* LEGACY-TESTS #14 (T16, 2026-09-30; N361, K529): `checkCaseDocument` is ratification's (R8), the catalogue promotion's
+   `runCaseGate` runs; the catalogue's own copy has no importer left in the plane and goes in T17 (N372). Blocks 1 and 6
+   ask it of the /5 document op=publish really authored. Kept, not retired (K457): `test/m/ratification/checks.test.mjs`
+   drives C-41.6 and C-21.1 over a hand-built /4 document, and C-21.1 only with both fields reprinted at once; the
+   per-field arms (the statement alone, the acknowledgement alone, the finding naming its field) and REC-47's pairing of
+   the act's refusal with the gate's, over the bytes a member is asked to sign, are driven only here. */
+import { checkCaseDocument } from "../src/ratification/checks.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { connectionAtC } from "./earned-connection.mjs";   /* T7: an EARNED connection leg (strength R5, K187) */
@@ -743,7 +750,12 @@ console.log("\n--- 2. DEC-13: the gate is the DECLARATION — never contact, nev
      show that ONE position was accepted. Nothing in the plane may branch on
      WHICH position was declared — that is what "never that contact happened"
      means as a property of the code rather than as an intention. */
-  const srcs = ["../src/store.mjs", "../src/index.mjs", "../checks/bio-checks.mjs", "../src/affordances.mjs"]
+  /* LEGACY-TESTS #14 (T16, 2026-09-30; N361): the scan also reads where the case document now lives — ratification's
+     catalogue (R8), publication's format and commit, case-authoring's act — since `checkCaseDocument` left this list's
+     catalogue for ratification; a position compared in any of them would be the branch this arm forbids. */
+  const srcs = ["../src/store.mjs", "../src/index.mjs", "../checks/bio-checks.mjs", "../src/affordances.mjs",
+                "../src/ratification/checks.mjs", "../src/ratification/index.mjs", "../src/publication/checks.mjs",
+                "../src/publication/index.mjs", "../src/case-authoring/index.mjs"]
     .map((f) => readFileSync(fileURLToPath(new URL(f, import.meta.url)), "utf8")).join("\n");
   t("NOTHING in the plane compares a declared position against a value: the position is carried, never consulted",
     (srcs.match(/subject_position\s*[=!]==?\s*['"]/g) || []).concat(

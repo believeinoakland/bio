@@ -105,7 +105,17 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CASE_MEMBER_ROLES, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* LEGACY-TESTS #14 (T16, 2026-09-30; N361, K529): `checkCaseDocument` and `CASE_MEMBER_ROLES` are ratification's (R8,
+   R9), the case gate promotion's `runCaseGate` runs and the vocabulary it refuses C-41.8 against; the catalogue's copy
+   of `checkCaseDocument` has no importer left in the plane and goes in T17 (N372). Kept, not retired (K457):
+   `test/m/ratification/checks.test.mjs` drives C-41.12 over a hand-built /4 document with a two-axis bar; §10's
+   one-axis document op=publish really authored (admitted as written, still firing on an omitted key, a non-grade and
+   a bar on neither axis) and §9's check of the vocabulary against the SCHEMA's own column comment are driven only here. */
+import { CASE_MEMBER_ROLES, checkCaseDocument } from "../src/ratification/checks.mjs";
+/* LEGACY-TESTS #14 (T16, 2026-09-30; AFFORDANCES #8, N364): §3a's DEC-69 arm reads `publish`'s prompt against
+   affordances' own R5 constant (R28), never a copy. Import added: affordances (layer 11, earlier). */
+import { SELF_ATTESTED_PROMPT } from "../src/affordances.mjs";
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): `published_case_members` (and its `role` comment,
    block 9's authority) moved out of `schema.mjs`'s SCHEMA into publication's own schema literal. */
 import { PUBLICATION_SCHEMA as SCHEMA } from "../src/publication/schema.mjs";
@@ -692,12 +702,20 @@ console.log("\n--- 3a. D-310: op=affordances offers `publish` exactly where the 
   const ruthAff = (await GET(`op=affordances&token=${RUTH}&target=${encodeURIComponent(INQ_STRONG)}`)).result;
   const pilarPub = ((await GET(`op=affordances&token=${PILAR}&target=${encodeURIComponent(INQ_STRONG)}`))
     .result?.acts ?? []).find((a) => a.id === "publish");
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; AFFORDANCES #8, N364, affordances R5, R28): the owner's `publish`
+     entry now carries a prompt by requirement — `SELF_ATTESTED_PROMPT`, DEC-81 item 3's reader sentence on a
+     self-attested capture (case-authoring's `SELF_ATTESTED_SENTENCE`), tested as such in
+     `test/m/affordances/catalogue.test.mjs` "R5" and "R28". That is a disclosure about the evidence, not a second
+     telling of the position narrowing, so the arm now demands exactly that prompt and still no confirmation, no
+     owner-shaped words and no position fact on the wire. Kept (K457): no module test drives the op=affordances answer
+     for a withheld caller beside the owner's. */
   t("DEC-69: the narrowing informs by ABSENCE and adds no second telling — the withheld caller gets "
-  + "no `publish` entry and no owner-shaped narration, the OWNER's own entry carries no prompt and "
-  + "no re-confirmation, and the position fact does not leak onto the wire as a thing to answer for",
+  + "no `publish` entry and no owner-shaped narration, the OWNER's own entry carries no prompt but R5's "
+  + "self-attested disclosure (R28) and no re-confirmation, and the position fact does not leak onto the wire as a "
+  + "thing to answer for",
     [(ruthAff.acts ?? []).some((a) => a.id === "publish"),
      (ruthAff.acts ?? []).some((a) => /owner|confirm|are you sure/i.test(JSON.stringify(a))),
-     pilarPub !== undefined && pilarPub.prompt === null && !("confirm" in pilarPub)
+     pilarPub !== undefined && pilarPub.prompt === SELF_ATTESTED_PROMPT && !("confirm" in pilarPub)
        && !/owner|confirm/i.test(JSON.stringify(pilarPub)),
      /NOT_THE_PROJECT_OWNER|project_owner/.test(JSON.stringify(ruthAff))],
     [false, false, true, false]);
@@ -1173,7 +1191,7 @@ console.log("\n--- 9. the expectations come from documents this item did not wri
   t("THE TWO TERMS ARE THE SCHEMA'S, PARSED OUT OF `published_case_members.role`'s own comment — not "
   + "restated here, and not compared against another copy of themselves",
     declared, ["load_bearing", "supporting"]);
-  t("and the check catalog's exported vocabulary is exactly those two, so the gate refuses against "
+  t("and the case gate's exported vocabulary (ratification's, R9) is exactly those two, so the gate refuses against "
   + "the terms the schema stores",
     CASE_MEMBER_ROLES, declared);
   t("and the store's is too — three sites, one spelling, checked against the SCHEMA and never "
@@ -1250,8 +1268,15 @@ console.log("\n--- 10. D-450: a bar declared on ONE axis publishes, ratifies, an
      a bar declared on NEITHER axis (it gates nothing while claiming a standard) — must still fire; the
      document as authored must draw no C-41.12 finding at all. */
   const fmOne = parseFrontmatter(docOne).data || {};
-  const bar12 = (mutate) => checkCaseDocument(mutate(structuredClone(fmOne)),
-    { caseId: one.caseId, edition: one.edition }).filter((x) => x.check === "C-41.12").length;
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): read defensively, for §5's and M0-78's reason — when §10's act fails (an
+     armed control) `fmOne` is empty, a mutation of its missing bar threw, and the module lost its tally beside the
+     named failures above; a throw is now this arm's failure, named. */
+  const bar12 = (mutate) => {
+    try {
+      return checkCaseDocument(mutate(structuredClone(fmOne)),
+        { caseId: one.caseId, edition: one.edition }).filter((x) => x.check === "C-41.12").length;
+    } catch (e) { return `threw: ${String(e && e.message || e).slice(0, 80)}`; }
+  };
   t("C-41.12 over the authored one-axis document: admitted as written (0), and it still FIRES on an omitted "
   + "key, a non-grade value, and a declared bar with no axis set (1 each)",
     [bar12((d) => d),

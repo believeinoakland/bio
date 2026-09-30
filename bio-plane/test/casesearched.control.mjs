@@ -57,8 +57,12 @@ const PEN = join(ROOT, ".nc-casesearched");        /* inside this worktree, rule
 /* RE-ANCHORED 2026-09-28 (legacy-tests T9, N248): R17's `#searchedForCase` left `store.mjs` for case-authoring
    (`src/case-authoring/index.mjs`, its own `SEARCHED_SUBJECT_MAX`, T8), so arm (a) edits it there. */
 const CASEAUTH = join(ROOT, "src", "case-authoring", "index.mjs");
-const AIRUN = join(ROOT, "src", "airun.mjs");
-const CHECKS = join(ROOT, "checks", "bio-checks.mjs");
+/* LEGACY-TESTS #14 (T16, 2026-09-30): arms (b) and (c) edit `searchedSection`'s one home, case-authoring's
+   `src/case-authoring/searched.mjs` (it left `airun.mjs` at T10, whose needles had since matched nothing); arm (d) edits
+   the case gate op=caseratify runs and the suite imports, ratification's `checkCaseDocument` (R8, N361, K529), not the
+   catalogue's copy, which nothing in the plane runs. The arms' edits are unchanged. */
+const AIRUN = join(ROOT, "src", "case-authoring", "searched.mjs");
+const CHECKS = join(ROOT, "src", "ratification", "checks.mjs");
 const SUITE = join(DIR, "casesearched.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -197,3 +201,8 @@ console.log("\n=== SUMMARY ===");
 for (const r of results) console.log(`  ${r.arm.padEnd(9)} ${r.tally}   (${r.failed} named failure(s))`);
 rmSync(PEN, { recursive: true, force: true });
 console.log(`\npen removed: ${PEN}`);
+
+/* MEASURED 2026-09-30 by LEGACY-TESTS #14 (T16, private worktree of job/T16/legacy-tests + the re-anchors above), 4
+   anchors LIVE at the preflight, every restore sha256 MATCH and content IDENTICAL, driver exit 0: baseline 26/0 ·
+   (a) 23/3 · (b) 24/2 · (c) 25/1 · (d) 1/1, the fixture aborting at op=caseratify with GATE_REFUSED — the figures
+   the suite's header records, arm (d) now armed on the gate op=caseratify really runs. */
