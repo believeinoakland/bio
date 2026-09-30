@@ -22,7 +22,9 @@ const R8 = {
      (J1 item 2: resolve concludes without a project, so it has no project arm) */
   conclude: (f, t) => t === "inquiry" && f.contradiction_inquiry !== true && (edgeTo(f, "concluded")
     || (f.current_state === "concluded" && f.concludes_for_project === true)),
-  contradictionresolve: (f, t) => t === "inquiry" && f.contradiction_inquiry === true && edgeTo(f, "concluded"),
+  /* N365: and not where the viewer is stated not to see both sides of the linked candidate */
+  contradictionresolve: (f, t) => t === "inquiry" && f.contradiction_inquiry === true && edgeTo(f, "concluded")
+    && f.contradiction_sides_seen !== false,
   reopen: (f, t) => t === "inquiry" && edgeTo(f, "open")
     && (REOPENABLE_FROM.includes(f.current_state) || f.case_member === true),
   publish: (f, t) => t === "inquiry" && (f.current_state === "concluded" || f.concluded_for_project === true)
@@ -62,7 +64,10 @@ const R9 = {
   projectownerrescue: (f, t) => t === "project" && f.roster?.rescue_open === true,
   projectvisibilityset: (f, t) => t === "project" && f.project_target_owner === true,
 };
-const ORACLE = { ...R8, ...R9 };
+/* N364 (R1, R5, K530): `sourceconsent` is an act on a source's entry, which no bundle's facts describe: never offered
+   beside a bundle, on any type, state or fact. */
+const SOURCE = { sourceconsent: () => false };
+const ORACLE = { ...R8, ...R9, ...SOURCE };
 /* R10: a machine is withheld what its class is refused, on a stated true only. */
 const expected = (f, id) => ORACLE[id](f, normalizeType(f.object_type))
   && !(f.actor_is_machine === true && id in MACHINE_REFUSALS);
@@ -108,11 +113,12 @@ const DIMS = {
   basis_versions: COUNT.map((v) => ({ basis_versions: v })),
   actor_is_machine: B.map((v) => ({ actor_is_machine: v })),
   contradiction_inquiry: B.map((v) => ({ contradiction_inquiry: v })),
+  contradiction_sides_seen: B.map((v) => ({ contradiction_sides_seen: v })),
 };
 const NAMES = {
   release: [], retire: ["cites_in"], dispose: ["case_member"],
   conclude: ["concludes_for_project", "contradiction_inquiry"],
-  contradictionresolve: ["contradiction_inquiry", "concludes_for_project"],
+  contradictionresolve: ["contradiction_inquiry", "concludes_for_project", "contradiction_sides_seen"],
   reopen: ["case_member"],
   publish: ["case_member", "concluded_for_project", "edition_warranted_for_project", "project_owner"],
   inquirydivide: ["case_member", "basis_legs", "rested_on"], inquiryground: ["basis_legs", "case_member"],
@@ -126,6 +132,7 @@ const NAMES = {
   projectinvite: ["roster"], projectremove: ["roster"], projectowneradd: ["roster"], projectjoin: ["roster"],
   projectleave: ["roster"], projectownerremove: ["roster"], projectownerrescue: ["roster"],
   projectvisibilityset: ["project_target_owner"],
+  sourceconsent: ["contradiction_inquiry", "case_member", "roster"],
 };
 const PERMISSIVE = { case_member: false, concludes_for_project: true, concluded_for_project: true,
   edition_warranted_for_project: true, project_owner: true, basis_legs: 2,
@@ -134,14 +141,15 @@ const PERMISSIVE = { case_member: false, concludes_for_project: true, concluded_
   project_participant: true, project_target_owner: true,
   roster: { owner: true, state: "joined", owner_floor_clear: true, other_owner_committed: true, rescue_open: true },
   basis_version_states: ["suggested", "considering", "accepted", "rejected"], basis_versions: 4, actor_is_machine: false,
-  contradiction_inquiry: false };
+  contradiction_inquiry: false, contradiction_sides_seen: true };
 const RESTRICTIVE = { case_member: true, concludes_for_project: false, concluded_for_project: false,
   edition_warranted_for_project: false, project_owner: false, basis_legs: 0,
   rested_on: { working: 3, frozen: 1, severed: 0 }, cites_in: { confirmed: 2, severed: 0 },
   cited_by_case: { confirmed: 0, severed: 0 }, cites_out: { confirmed: 0, severed: 0, severed_reinstatable: 0 },
   project_participant: false, project_target_owner: false,
   roster: { owner: false, state: null, owner_floor_clear: false, other_owner_committed: false, rescue_open: false },
-  basis_version_states: [], basis_versions: 0, actor_is_machine: true, contradiction_inquiry: true };
+  basis_version_states: [], basis_versions: 0, actor_is_machine: true, contradiction_inquiry: true,
+  contradiction_sides_seen: false };
 const ABSENT = {};
 const BACKGROUNDS = [["permissive", PERMISSIVE], ["restrictive", RESTRICTIVE], ["absent", ABSENT]];
 
@@ -190,11 +198,20 @@ test("R9: cite, sever, reinstate and the roster acts are returned exactly when R
   assert.deepEqual(wrong.slice(0, 5), []);
 });
 
-test("R8 R9: the corpus is not degenerate — every act is both returned and withheld somewhere in it", () => {
+test("R8 R9: the corpus is not degenerate — every act on a bundle is both returned and withheld somewhere in it", () => {
   const seen = Object.fromEntries(ACTS.map((a) => [a.id, new Set()]));
   for (const a of ACTS) for (const ts of typestates) for (const [, bg] of BACKGROUNDS)
     for (const over of cross(NAMES[a.id])) seen[a.id].add(deriveActs(make(ts, bg, over)).includes(a));
-  assert.deepEqual(ACTS.map((a) => a.id).filter((id) => seen[id].size !== 2), []);
+  assert.deepEqual(ACTS.map((a) => a.id).filter((id) => !(id in SOURCE) && seen[id].size !== 2), []);
+  /* and the act on a source's entry is withheld everywhere (the SOURCE oracle, checked row by row below) */
+  assert.deepEqual([...seen.sourceconsent], [false]);
+});
+
+test("R1 R8: sourceconsent, an act on a source's entry, is returned beside no bundle — on every type, state and "
+   + "combination of facts, on all three backgrounds", () => {
+  const { wrong, rows } = checkActs(Object.keys(SOURCE));
+  assert.ok(rows > 1000, `a real corpus (${rows} rows)`);
+  assert.deepEqual(wrong.slice(0, 5), []);
 });
 
 /* R10, stated as equivalences. A fact the catalogue NARROWS on (a stated count above zero, a stated `false`, a
@@ -205,6 +222,7 @@ const NULL_AS = {
   rested_on: { working: 0, frozen: 0, severed: 0 },
   concludes_for_project: false, concluded_for_project: false, edition_warranted_for_project: false,
   project_target_owner: false, actor_is_machine: false, contradiction_inquiry: false,
+  contradiction_sides_seen: true /* N365: only a stated false narrows */,
 };
 test("R10: a null fact never narrows an act, and never widens one: null (or absent) answers exactly as the value "
    + "that neither narrows nor widens", () => {
@@ -276,16 +294,36 @@ test("R8: conclude is withheld on a contradiction inquiry, and contradictionreso
    + "state-machine arm would be on one — never both", () => {
   const wrong = [];
   let offeredSomewhere = false;
-  for (const ts of typestates) for (const [, bg] of BACKGROUNDS) for (const cfp of B) for (const ci of B) {
-    const f = make(ts, bg, { concludes_for_project: cfp, contradiction_inquiry: ci, actor_is_machine: false });
+  for (const ts of typestates) for (const [, bg] of BACKGROUNDS) for (const cfp of B) for (const ci of B) for (const ss of B) {
+    const f = make(ts, bg, { concludes_for_project: cfp, contradiction_inquiry: ci, contradiction_sides_seen: ss,
+                             actor_is_machine: false });
     const got = deriveActs(f).map((a) => a.id);
     const plain = deriveActs({ ...f, contradiction_inquiry: false, concludes_for_project: false }).map((a) => a.id);
     if (got.includes("conclude") && got.includes("contradictionresolve")) wrong.push({ both: f });
     if (ci === true && got.includes("conclude")) wrong.push({ concludeOnContradiction: f });
-    const want = ci === true && normalizeType(f.object_type) === "inquiry" && plain.includes("conclude");
+    const want = ci === true && normalizeType(f.object_type) === "inquiry" && plain.includes("conclude")
+      && f.contradiction_sides_seen !== false;
     if (got.includes("contradictionresolve") !== want) wrong.push({ resolve: f, got });
     offeredSomewhere ||= want;
   }
   assert.deepEqual(wrong.slice(0, 5), []);
   assert.ok(offeredSomewhere);
+});
+
+/* N365 (R8, R10): `contradictionresolve` is withheld where the viewer is STATED not to see both sides of the linked
+   candidate, which is exactly where `resolve` refuses NOT_A_CONTRADICTION_INQUIRY (contradiction R36, R56; the
+   agreement is driven over contradiction's fixture in contradiction.test.mjs); a null narrows nothing. */
+test("R8 R10: contradictionresolve is withheld on a contradiction inquiry whose linked candidate's sides the viewer is "
+   + "stated not to see, offered where they are seen, and a null sides fact answers as seen", () => {
+  let offered = 0;
+  for (const ts of typestates) for (const [, bg] of BACKGROUNDS.slice(0, 2)) {
+    const f = make(ts, bg, { contradiction_inquiry: true, actor_is_machine: false });
+    const on = (v) => deriveActs({ ...f, contradiction_sides_seen: v }).some((a) => a.id === "contradictionresolve");
+    assert.equal(on(false), false, JSON.stringify(ts));
+    assert.equal(on(null), on(true), JSON.stringify(ts));
+    const { contradiction_sides_seen: _, ...unsent } = f;
+    assert.equal(deriveActs(unsent).some((a) => a.id === "contradictionresolve"), on(true), JSON.stringify(ts));
+    if (on(true)) offered++;
+  }
+  assert.ok(offered > 0, "offered somewhere, so the withholding is measured");
 });

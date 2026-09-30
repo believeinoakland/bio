@@ -11,8 +11,9 @@
  * `connections.citesInto` (retire's CITED guard), reinstatable edges through `citation.retiredNotCitable`
  * (`#edgeTransition`'s), what rests on a question through `inquiry.restsOnLive` (divide's CITED guard), the case
  * relation through `publication.caseRelation`, a project's conclusion through `basis-versions.conclusionOf` and
- * `ratification.caseConclusionFor` / `editionsRecordingConclusion` (publishCase()'s gates), and every position through
- * `membership`'s predicates.
+ * `ratification.caseConclusionFor` / `editionsRecordingConclusion` (publishCase()'s gates), whether the viewer sees both
+ * sides of a contradiction inquiry's candidate through `contradiction.candidateSidesSeen` (resolve's C-93.27 check), and
+ * every position through `membership`'s predicates.
  *
  * FACTS ARE COUNTS, NEVER IDS (R16): op=affordances answers about the TARGET, and handing back WHICH bundles cite it,
  * or rest on it, would be §7.9's reverse-edge walk arriving by a new door. `op=backlinks` is the gated read that
@@ -25,7 +26,7 @@
  * REACHED as `affordancesOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`). The modules it
  * asks are reached through their factories on the same host at the moment of the call, when the Durable Object has
  * already made each of them with its own options; `deps` (a test's) replaces any of `record`, `membership`,
- * `connections`, `citation`, `inquiry`, `publication`, `basisVersions`, `ratification`. */
+ * `connections`, `citation`, `inquiry`, `publication`, `basisVersions`, `ratification`, `contradiction`. */
 
 import { normalizeType, parseFrontmatter, isMachineIdentity } from "../../checks/bio-checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
@@ -36,6 +37,7 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
+import { contradictionOf } from "../contradiction/index.mjs";
 
 class AffordanceFacts {
   constructor(host, deps) {
@@ -50,6 +52,7 @@ class AffordanceFacts {
     this.publication = of("publication", publicationOf);
     this.basisVersions = of("basisVersions", basisVersionsOf);
     this.ratification = of("ratification", ratificationOf);
+    this.contradiction = of("contradiction", contradictionOf);
     const storage = host && host.storage ? host.storage : host;
     this.sql = d.sql || (storage && storage.sql);
   }
@@ -214,6 +217,11 @@ class AffordanceFacts {
                 the front matter; null on a type that is not an inquiry. */
              contradiction_inquiry: type !== "inquiry" ? null
                : docFm.contradiction !== undefined && docFm.contradiction !== null,
+             /* N365 (R14, R8): whether the VIEWER may see both sides of the candidate that contradiction inquiry names,
+                asked through the one predicate `contradictionresolve` refuses on (contradiction R56, its C-93.27 check),
+                so the offer and the act cannot disagree. Null wherever `contradiction_inquiry` is not true. */
+             contradiction_sides_seen: type !== "inquiry" || docFm.contradiction === undefined || docFm.contradiction === null
+               ? null : this.contradiction().candidateSidesSeen({ inquiry: id, viewer }) === true,
              rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length, severed: rested.severed.length },
              /* PL-2 / IS-2: which states this question's readings are in, from the document. */
              basis_version_states: versions.filter((v) => v && typeof v === "object" && typeof v.state === "string")

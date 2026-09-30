@@ -149,7 +149,8 @@ test("R13: no target is NO_TARGET; an absent bundle and one the viewer may not s
 
 const FACT_KEYS = ["ok", "target", "object_type", "declared_type", "current_state", "criticality", "case_member",
   "project_owner", "project_target_owner", "project_participant", "roster", "actor_is_machine", "concludes_for_project",
-  "concluded_for_project", "edition_warranted_for_project", "basis_legs", "contradiction_inquiry", "rested_on",
+  "concluded_for_project", "edition_warranted_for_project", "basis_legs", "contradiction_inquiry",
+  "contradiction_sides_seen" /* N365 */, "rested_on",
   "basis_version_states", "basis_versions", "cites_in", "cites_out", "cited_by_case"].sort();
 test("R14: the answer carries exactly R14's facts, with their sub-keys", async () => {
   for (const id of [W.INFO, W.INQ, W.ACTN, W.PA]) {
@@ -173,6 +174,9 @@ test("R14: declared_type, basis_legs and the reading states come from the docume
      over contradiction's fixture, contradiction.test.mjs) */
   assert.deepEqual([q.contradiction_inquiry, q2.contradiction_inquiry], [false, false]);
   for (const id of [W.INFO, W.ACTN, W.PA]) assert.equal((await facts(id)).contradiction_inquiry, null, id);
+  /* N365: contradiction_sides_seen is null wherever contradiction_inquiry is not true (its true and false arms are
+     driven over contradiction's fixture) */
+  for (const id of [W.INQ, W.INQ2, W.INFO, W.ACTN, W.PA]) assert.equal((await facts(id)).contradiction_sides_seen, null, id);
 });
 
 test("R14: the citation facts are the ones the acts refuse on — a live and a severed citation from a project, counted "
@@ -487,7 +491,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     "consequencerevise", "addressedrecord", "escalationevaluate", "escalationadvance", "escalationdecline", "escalationsuspend",
     "determine" /* N310: conformance's interface, backing.test.mjs */,
     /* N345: at contradiction's and entities' interfaces over contradiction's fixture, contradiction.test.mjs */
-    "contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve", "resolutiondefect"];
+    "contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve", "resolutiondefect",
+    /* N364: at sources' interface over its fixture, sources.test.mjs */
+    "sourcedisclose", "sourcelink", "sourceconsent"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 
@@ -540,7 +546,10 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
   };
   const ROSTER = ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
     "projectownerremove", "projectownerrescue"];
-  const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k));
+  /* N364: `sourceconsent` is offered beside no bundle and the durable object does not route sources' ops; its machine
+     answer is driven at sources' interface (sources.test.mjs) */
+  const AT_SOURCES = ["sourceconsent"];
+  const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k) && !AT_SOURCES.includes(k));
   assert.deepEqual(objectActs.filter((k) => !(k in DRIVE)), [], "every object-directed act is driven");
   /* the offer side first, before any drive moves an object */
   const leak = [];
