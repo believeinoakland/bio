@@ -816,7 +816,6 @@ export const RUNGS = {
   sourcedisclose:        "reasoned", // NO_EVIDENCE (sources R2: a disclosure names its evidence)
   sourcelink:            "reasoned", // NO_EVIDENCE (sources R6: a claim that two sources are one person, with evidence)
   sourceconsent:         "reasoned", // NO_EVIDENCE (sources R7: a member's evidenced record of the source's consent)
-  sourceconsentwithdraw: "reasoned", // R2's grade; sources R7's withdrawal asks no account yet (R19's todo, J1 (2))
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -858,6 +857,9 @@ export const RUNGS = {
   /* T8 layer 11: resuming asks no reason (escalation R15: an optional one is kept), and a further suspension takes it
      back. */
   escalationresume:     "reversible",  // escalationsuspend takes it back
+  /* N364 (K558), on R27's rule: a withdrawal of consent asks no reason — it is never made to justify itself — and a
+     published act takes it back: a further `sourceconsent` raises the standing it lowered (sources R7). */
+  sourceconsentwithdraw: "reversible", // sourceconsent takes it back
 };
 
 

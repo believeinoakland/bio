@@ -1,15 +1,17 @@
 /* affordances and N364's acts, driven at their own modules' interfaces over their fixtures: `sources` over its real
    record-core, membership and capture (test/m/sources/fixture.mjs), and `capture`'s late co-attestation and account over
    its own (test/m/capture/fixture.mjs), which the plane fixture does not reach (the durable object does not route
-   `sourcesOps`). Measured here: the backing of the source acts graded `reasoned` (R19), of the two capture acts graded
-   `attested` (R2), and that `sourceconsent`, an ACTS row, answers a machine with no MACHINE_* code, so it is rightly
+   `sourcesOps`). Measured here: the backing of the source acts graded `reasoned` (R19), of the withdrawal graded
+   `reversible` and the two capture acts graded `attested` (R2), and that `sourceconsent`, an ACTS row, answers a machine with no MACHINE_* code, so it is rightly
    absent from MACHINE_REFUSALS (R20). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET, OTHER_SECRET } from "../sources/fixture.mjs";
 import { fresh, bucket, governor, provenance, sha, newKey, sshsign, signer, H } from "../capture/fixture.mjs";
 import { captureAccountStatement } from "../../../src/capture/index.mjs";
-import { NS_RATIFY } from "../../../src/sshsig.mjs";
+/* The namespace capture signs an account in (capture R69; K539 read it as the signer page's, `bio-ratify`), written out
+   because `signatures` is not in affordances' uses: a change there fails the accepting arm below, loudly. */
+const NS_RATIFY = "bio-ratify";
 import { ACTS, JUSTIFICATION_REFUSALS, MACHINE_REFUSALS, RUNGS, CONSENT_PROMPT } from "../../../src/affordances.mjs";
 
 const NO_EVIDENCE = [undefined, "", "   ", null];
@@ -57,17 +59,25 @@ test("R19: sourceconsent, graded `reasoned` (R2, N364), is refused without its e
   assert.ok(CONSENT_PROMPT.startsWith(ok.statement));
 });
 
-/* R2 grades `sourceconsentwithdraw` `reasoned`, but sources R7's withdrawal asks no reason and no evidence
-   (`withdrawConsent({source, entry, audience, by})`), so no call without an account is refused for want of one: R19 does
-   not hold for it (J1 (2)). */
-test.todo("R19: sourceconsentwithdraw, graded `reasoned` (R2), refused without an authored account — not met: sources "
-        + "R7's withdrawal asks none, so nothing backs the rung (AFFORDANCES #8 J1 (2))");
-
-test("R19: sourceconsentwithdraw today — accepted with no reason and no evidence, which is why its backing is a todo", async () => {
+/* R2 (K558): `sourceconsentwithdraw` is `reversible` on R27's rule — it asks no reason (a withdrawal of consent is never
+   made to justify itself), and a published act takes it back: a further `sourceconsent` restores the standing. */
+test("R2: sourceconsentwithdraw, graded `reversible` (K558), asks no reason and is taken back by a published act — a "
+   + "further sourceconsent restores the standing it lowered", async () => {
   const { w, source, entry } = await scene();
+  assert.equal(RUNGS.sourceconsentwithdraw, "reversible");
+  const standing = (at) => w.s.publishableAt({ source, audience: "group", at }).entries.some((e) => e.entry === entry && e.basis === "consent");
   assert.equal(w.s.recordConsent({ source, entry, audience: "group", evidence: "in writing", by: "bob" }).ok, true);
+  w.tick();
+  assert.equal(standing(null), true);
   const r = w.s.withdrawConsent({ source, entry, audience: "group", by: "bob" });
-  assert.deepEqual([r.ok, r.act], [true, "withdraw"], JSON.stringify(r).slice(0, 300));
+  assert.deepEqual([r.ok, r.act, r.standing], [true, "withdraw", "member"], JSON.stringify(r).slice(0, 300));
+  w.tick();
+  assert.equal(standing(null), false, "the withdrawal lowered the standing");
+  w.tick();
+  const back = w.s.recordConsent({ source, entry, audience: "group", evidence: "consented again, in writing", by: "bob" });
+  assert.deepEqual([back.ok, back.act, back.standing], [true, "consent", "group"], JSON.stringify(back).slice(0, 300));
+  w.tick();
+  assert.equal(standing(null), true, "a further sourceconsent took the withdrawal back");
 });
 
 test("R20 R1: sourceconsent answers a machine credential with no MACHINE_* code (a machine names no member who may "

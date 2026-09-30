@@ -67,7 +67,7 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
     attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */],
     terminal: ["retire"],
     reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
-      "versionhide", "versionrevert"],
+      "versionhide", "versionrevert", "sourceconsentwithdraw" /* N364, K558 */],
     reasoned: ["actionmove", "actionrisktier", "addressedrecord", "adminremove", "aliaswithdraw", "aspirationdepart",
       "aspirationretire", "biasdebtresolve", "conclude", "connectionassert", "consequencerevise", "determine", "discharge", "dispose",
       "escalationadvance", "escalationdecline", "escalationevaluate", "escalationsuspend", "filemembershipjudge", "goalclose",
@@ -77,7 +77,7 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
       /* N345 (K447): contradiction's four member acts that ask an account, and entities' defect report */
       "contradictionclarify", "contradictiondismiss", "contradictionresolve", "contradictiontakeup", "resolutiondefect",
       /* N364: the member's acts on a source's history */
-      "sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"],
+      "sourcedisclose", "sourcelink", "sourceconsent"],
   };
   for (const k of Object.keys(want)) want[k].sort();
   const got = {};
@@ -551,7 +551,7 @@ import { sourcesOps } from "../../../src/sources/index.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
 const N364_RUNGS = { sourcedisclose: "reasoned", sourcelink: "reasoned", sourceconsent: "reasoned",
-  sourceconsentwithdraw: "reasoned", reattest: "attested", captureaccount: "attested" };
+  sourceconsentwithdraw: "reversible", reattest: "attested", captureaccount: "attested" };
 const N364_ABSENT = { signerregister: "credential", signerrevoke: "credential", knockerconsent: "credential",
   inboxpull: "undetermined" };
 const N364_READS = ["sourceof", "sourcerung", "sourcereadlog", "sourcepublishable", "knocksof", "pulledknocks",
