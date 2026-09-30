@@ -124,3 +124,36 @@ test("R15 R33 an inquiry the viewer may not see answers exactly as an absent one
   assert.deepEqual(w.k.earnedBasis({ id: P, viewer: V("bob") }), w.k.earnedBasis({ id: "INQ-2026-0098-none", viewer: V("bob") })
     .reason === "NO_SUCH_BUNDLE" ? { ok: false, reason: "NO_SUCH_BUNDLE", target: P } : null);
 });
+
+test("R13 R14 capture: bytes received through the doorbell, never fetched, keep the author's letter under the ceiling, stated as authored (provenance R51, K538)", () => {
+  const w = world();
+  w.doc(A);                                   /* direct: measured */
+  w.doc(B, ["b"], { via: "doorbell" });       /* received, not fetched */
+  w.doc(C, ["c"], { via: null });             /* no route recorded (R26): the same statement */
+  const [d1] = w.doc(D, ["d"], { via: "doorbell" });   /* also fetched directly: the measured route answers first */
+  w.prov.recordReceipt({ address: `https://example.org/${D}`, addressNorm: `example.org/${D}`, captureSha: d1,
+                         retrieved: "2026-09-27T00:00:00Z", via: "direct" });
+  assert.equal(w.prov.captureGrade(w.doc(E, ["e"], { via: "doorbell" })[0]).basis, "CAPTURE_RECEIVED_NOT_FETCHED");
+  const cap = w.k.earned(null, [A, B, C, D, E]).earned.capture;
+  for (const [id, basis] of [[B, "CAPTURE_RECEIVED_NOT_FETCHED"], [C, "CAPTURE_ROUTE_UNRECORDED"], [E, "CAPTURE_RECEIVED_NOT_FETCHED"]]) {
+    assert.equal(cap[id].grade, EARNED_CAPTURE_CEILING, id); assert.equal(cap[id].mode, "ceiling");
+    assert.equal(cap[id].stated_as, "authored", id); assert.deepEqual(cap[id].route_basis, [basis], id);
+    assert.match(cap[id].why, /stated as authored and never as measured/);
+    assert.doesNotMatch(cap[id].why, /as this instance fetched them/, "never worded as a fetch");
+    assert.equal(cap[id].undetermined_because, undefined, "counted, never as unruled");
+  }
+  assert.match(cap[B].why, /doorbell/);
+  for (const id of [A, D]) { assert.equal(cap[id].grade, EARNED_CAPTURE_CEILING); assert.equal(cap[id].stated_as, undefined, id); }
+  /* the grammar reads it so: the author's letter at or under the ceiling stands, above it is refused (R6, R14) */
+  const leg = (grade) => w.promote("INQ-2026-0001-q", [
+    "---", "id: INQ-2026-0001-q", "object_type: inquiry", "schema: inquiry@1", 'title: "q?"', "current_state: open", "prior_state: null",
+    'created: "2026-09-27T00:00:00Z"', 'last_updated: "2026-09-27T00:00:00Z"', "group: test-group",
+    "references:", `  - target: ${B}`, "    rel: cites", "    status: confirmed", "state_history: []", "surfaced_by: human",
+    'disposition_reason: ""', "basis:", `  - target: ${B}`, "    role: supports", `    grade: ${grade}`, "    grade_axis: capture",
+    "    grade_source: capture", "---", "", "## Question", "", "q?", ""].join("\n"));
+  assert.equal(leg("A").reason, "BASIS_REFUSED", "above the ceiling");
+  const ok = leg("C"); assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  assert.equal(leg(EARNED_CAPTURE_CEILING).ok, true);
+  assert.equal(legCapped("A", cap[B], B).grade, EARNED_CAPTURE_CEILING);
+  assert.equal(legCapped("C", cap[B], B), null);
+});
