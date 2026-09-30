@@ -41,7 +41,7 @@ Per K558 the store door does not dispatch `sourcesOps` (N379): the source ops ar
 
 **Found in other modules:**
 1. provenance: its register rules refuse capture R65's document (`src/provenance/register-checks.mjs`:206, :216): N381 (J2, K560).
-2. legacy-tests: `test/machine-attest.test.mjs`:187 (its census) now finds `reattest`, `lateattestations`, `signerregister`, `signerrevoke` unaccounted; they need driving or naming there. `test/affordances.test.mjs`:220 and `test/rung-ladder.test.mjs`:123, :136, :148 fail until AFFORDANCES #8's K558 table merges (they read my new gated and mutating ops). All five were green on `tranche/T16`; the other 57 legacy files reading my tables fail identically with and without my change (9 files red on both).
+2. legacy-tests: `test/machine-attest.test.mjs`:187 (its census) now finds `reattest`, `lateattestations`, `signerregister`, `signerrevoke` unaccounted; they need driving or naming there. `test/affordances.test.mjs`:220 and `test/rung-ladder.test.mjs`:123, :136, :148 fail until AFFORDANCES #8's K558 table merges (they read my new gated and mutating ops). All five were green on `tranche/T16`. Of the 62 legacy files that read my tables, the other 57 answer the same with and without my change (48 pass, 9 fail on both).
 3. The DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`): the same 19 failing verdicts with and without my change.
 4. Generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` is stale (control-plane's source changed); not rebuilt.
 5. Greps: `civicos-ui/test/publication-entry.test.mjs`:624 (a vocabulary guard naming `publishpreflight`; unaffected); `bio-plane/src/affordances.mjs`:7, :2143 (the deferred `publishpreflight`, affordances' R7/R29); no other hit for any new op or name.
