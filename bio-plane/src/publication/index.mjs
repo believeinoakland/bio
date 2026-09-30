@@ -29,6 +29,8 @@
  *   inquiry        `exclusionsNaming` (R12).
  *   basisVersions  `testimonyReach` (R2, R17).
  *   contradiction  `unresolvedRecordOn` (its R29), for R50 (N345).
+ *   sources        `publishableAt` (its R8), for R51 (N364); its `source_knocks` read contract (its R15) joined in
+ *                  this module's own SQL, the sources behind a capture.
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
  *
@@ -50,6 +52,8 @@ import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, migratePublication, registerCas
          caseDocumentPath } from "./schema.mjs";
 import { caseTensionsOf, disclosedCandidates } from "./tensions.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
+import { sourcesOf } from "../sources/index.mjs";
+import { caseDocumentBlocks, sourceRowsStanding } from "./blocks.mjs";
 
 export { CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS, ATTRIBUTION_ACT_CHECKS,
          CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
@@ -59,6 +63,10 @@ export { CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS, 
 export { caseTensionsOf, TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE,
          TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE } from "./tensions.mjs";
 export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, caseDocumentPath } from "./schema.mjs";
+export { CASE_SOURCES_CHECKS } from "./checks.mjs";
+export { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
+         CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES, BLOCKS_PREDATE_SENTENCE,
+         BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED } from "./blocks.mjs";
 
 /* CASE-4 / DEC-72 / REC-60: the page size for `op=caseflags` (R6). A CHOSEN CONSTANT and never a finding — the flag
    table grows with every revision of every published member and has no natural ceiling, so the read publishes `limit`
@@ -317,12 +325,12 @@ export class Publication {
   #evidenceBlock = null; // R36: {module, name, fn}, filled once
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
-                contradiction = null, now = null } = {}) {
+                contradiction = null, sources = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, basisVersions, contradiction };
+    this.#deps = { host, inquiry, basisVersions, contradiction, sources };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -330,6 +338,7 @@ export class Publication {
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
+  get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
 
   migrate() { migratePublication(this.sql); }
 
@@ -981,6 +990,20 @@ export class Publication {
                detail: `case ${id} is ${owner.project_id}'s production and this signed case document names `
                      + `${project}. A case does not change hands between editions (DEC-72).` };
     const when = str(at) || this.#when();
+    /* R51, R52 (N364; DEC-78 item 5(d)): WHAT THE DOCUMENT STATES OF ITS SOURCES IS RE-READ AT THE COMMIT. A consent
+       withdrawn binds only later publications, and this is one: every row of the `sources:` block must still be what
+       `sources.publishableAt({audience: "public", at})` answers now, or the capture's unnamed statement. Any other row
+       stops the commit, nothing written; the remedy is a new preparation. */
+    const lapsed = this.#sourcesLapsed(doc.text, when);
+    if (lapsed.length) {
+      /* DEC-49 REGION is-source-consent-withdrawn */
+      return { ok: false, reason: "SOURCE_CONSENT_WITHDRAWN", ...rowOf("SOURCE_CONSENT_WITHDRAWN"), caseId: id,
+               edition: ed, captures: [...new Set(lapsed.map((x) => x.capture))].slice(0, 200),
+               detail: `${lapsed.length} statement(s) this case document makes about a source are no longer what may be `
+                     + "published of that source, so nothing was committed. What is published under a consent stays "
+                     + "published; this edition was not, and a new preparation leaves the detail out." };
+      /* END DEC-49 REGION is-source-consent-withdrawn */
+    }
     if (!owner)
       this.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
                     id, project ?? null, when);
@@ -1012,6 +1035,28 @@ export class Publication {
        act and transaction that signs it, so op=verify answers for the one hash a member signed here. */
     registerCaseDocumentSha(this.sql, id, ed, doc.doc_sha, doc.text, when);
     return outcome(false);
+  }
+
+  /* R51: the `sources:` rows of one document that no longer hold at `at` (`sourceRowsStanding`). The sources behind a
+     capture are the pulled knocks `sources` minted for it (its `source_knocks` read contract, R15), each asked what the
+     public may be told at `at`; a source that cannot be read answers nothing, so its rows fail closed (R52). A document
+     before /5, or one stating no `sources:` block, states no source and has nothing to re-read. */
+  #sourcesLapsed(text, at) {
+    const { sources: rows } = caseDocumentBlocks(text);
+    if (!Array.isArray(rows) || !rows.length) return [];
+    const src = this.sources;
+    return sourceRowsStanding(rows, (capture) => {
+      const knocks = this.#rows(`SELECT source_id, received FROM source_knocks WHERE capture_sha=?
+                                  ORDER BY received, knock_id`, capture);
+      if (!knocks.length) return null;
+      const entries = [];
+      for (const s of [...new Set(knocks.map((k) => k.source_id))]) {
+        const r = src.publishableAt({ source: s, audience: "public", at });
+        if (!r || r.ok !== true || !Array.isArray(r.entries)) return null;
+        entries.push(...r.entries);
+      }
+      return { entries, received: knocks[0].received };
+    });
   }
 
   /* D-734: THE BYTES op=publishedbytes SERVES FOR A `case_document` HASH, read from `case_documents.text` — the signed
@@ -1916,6 +1961,10 @@ export class Publication {
          cannot produce is ABSENT from the map, which leaves those two arms unasked for it rather than
          asked of a basis nobody pinned — `checkCaseDocument` reads absence as absence. */
       memberBasis: this.#pinnedMemberBasis(doc.text),
+      /* R2, R20 (N364): a /5 document's `captures:` and `sources:` blocks, as its bytes state them; null (with
+         `blocks_detail`) for an older format or a block it does not carry. */
+      ...(() => { const b = caseDocumentBlocks(doc.text);
+                  return { captures: b.captures, sources: b.sources, blocks_detail: b.detail }; })(),
     };
   }
 
@@ -3193,6 +3242,13 @@ export class Publication {
           detail: theCase ? "no signed case document is held for this edition, so it states no disclosure here"
                           : "this is not a case, so it discloses no contradiction" };
     for (const f of findings) f.tensions = disclosed.tensions === null ? null : disclosed.members[f.bundle_id] || [];
+    /* R10, R20, R52 (N364): the `captures:` and `sources:` blocks as signed, from the same bytes and never live: what
+       the document states of a source is what `publishableAt` answered at the commit (R51), and nothing is added. */
+    const blocks = state.document && typeof state.document.text === "string"
+      ? caseDocumentBlocks(state.document.text)
+      : { captures: null, sources: null,
+          detail: theCase ? "no signed case document is held for this edition, so it states no capture or source here"
+                          : "this is not a case, so it states no capture or source" };
     const cRow = theCase
       ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
@@ -3279,6 +3335,11 @@ export class Publication {
              tensions: disclosed.tensions, highlighted: disclosed.highlighted,
              /* K499: the member legs the conflict read could not examine, stated by the document; null where it states none. */
              tensions_unread: disclosed.unread,
+             captures: blocks.captures, sources: blocks.sources,
+             blocks_detail: blocks.detail
+               ?? "each capture a member rests on, with its grade and co-attestation, and what may be told of the source "
+                + "behind it, read from the signed document: a source's detail is stated only as it could be published "
+                + "when the case was signed.",
              tensions_detail: disclosed.detail
                ?? "each contradiction this edition's owner disclosed, read from the signed document: both sides as "
                 + "the publisher saw them, its state and who acknowledged it. One marked highlighted rests on a side in "

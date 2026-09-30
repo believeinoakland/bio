@@ -13,7 +13,8 @@ import { connectionsOf } from "../../../src/connections/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
-import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
+import { sourcesOf } from "../../../src/sources/index.mjs";
+import { publicationOf, publicationOps, captureBlockLines, sourceBlockLines } from "../../../src/publication/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -129,14 +130,26 @@ export function world({ group = "test-group", workerd = false, contradiction = n
     inquiry: { earned: (s, t) => k.earned(s, t), legCapped, cyclePath: (id, t) => k.cyclePath(id, t) },
     now: () => clock.now });
   basisVersions.migrate();
+  /* sources (layer 3) over a stand-in for capture's one keyed read (`pulledKnocksOf`): the test pulls knocks with
+     `w.knock`. Its clock is the world's, in milliseconds. */
+  const knocks = [];
+  const src = sourcesOf(host, { record, membership, now: () => Date.parse(clock.now),
+    capture: { pulledKnocksOf: (captureSha) => knocks.filter((k) => k.sha256 === captureSha) } });
   /* reevaluation before publication, as legacy-store builds them: publication registers its cited parts with it (R41, R43). */
   const r = reevaluationOf(host, { record, membership, promotion, inquiry: k, content, connections, provenance: prov,
                                    basisVersions, now: () => clock.now });
   const p = publicationOf(host, { record, membership, promotion, inquiry: k, basisVersions, reevaluation: r,
-                                  ...(contradiction ? { contradiction } : {}), now: () => clock.now });
+                                  ...(contradiction ? { contradiction } : {}), sources: src, now: () => clock.now });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef,
+    st, host, record, membership, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef, src,
+    /** A knock pulled into the capture `captureSha` (capture R65), and its source minted as `sources` R1 mints it. */
+    knock(captureSha, { knockId = `KNOCK-${knocks.length + 1}`, pseudonym = null, received = NOW, viewer = V("olive") } = {}) {
+      knocks.push({ knock_id: knockId, sha256: captureSha, bytes: 10, received, pseudonym, knocker_digest: pseudonym ? `d-${pseudonym}` : null });
+      const r = src.sourceOf({ captureSha, viewer });
+      if (!r.ok) throw new Error(`fixture knock refused: ${JSON.stringify(r)}`);
+      return all(st.sql.exec(`SELECT source_id FROM source_knocks WHERE knock_id=?`, knockId))[0].source_id;
+    },
     row: (q, ...a) => all(st.sql.exec(q, ...a))[0] ?? null,
     rows: (q, ...a) => all(st.sql.exec(q, ...a)),
     count: (t) => all(st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`))[0].n,
@@ -229,11 +242,12 @@ export function world({ group = "test-group", workerd = false, contradiction = n
  *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given);
  *  `tensions`: the /5 section as case-authoring writes it (case-authoring J1's shape): `{rows, sentences, depth?}`, each
  *  row's and sentence's fields written as given (a string quoted), `unread` ({target, legs}, K499) when given; with it
- *  the format defaults to /5. */
+ *  the format defaults to /5. `blocks`: `{captures?, sources?}`, R20's /5 blocks through `captureBlockLines` and
+ *  `sourceBlockLines`; with it, too, the format defaults to /5. */
 export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findings = null, strength = [], excluded = [],
                                            attributions = null, citations = [], tensions = null, format = null,
-                                           excludes = "Nothing else.", ack = false } = {}) {
-  format ??= tensions ? "bio-case-document/5" : "bio-case-document/4";
+                                           excludes = "Nothing else.", ack = false, blocks = null } = {}) {
+  format ??= tensions || blocks ? "bio-case-document/5" : "bio-case-document/4";
   const scalar = (v) => (v === null || v === undefined ? "null" : typeof v === "string" ? `"${v}"` : String(v));
   const rowsOf = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Object.entries(r)
     .map(([k, v], i) => `${i ? "   " : "  -"} ${k}: ${scalar(v)}`))] : [`${key}: []`]);
@@ -259,6 +273,9 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
       ...(tensions.depth ? [`tensions_depth_stated: "${tensions.depth}"`] : []),
       ...(tensions.unread ? rowsOf("case_tensions_unread", tensions.unread) : []),
       ...rowsOf("case_tensions", tensions.rows), ...rowsOf("case_tension_sentences", tensions.sentences || [])] : []),
+    /* R20 (N364): the /5 blocks, written with this module's own line builders, as case-authoring writes them. */
+    ...(blocks && blocks.captures ? captureBlockLines(blocks.captures) : []),
+    ...(blocks && blocks.sources ? sourceBlockLines(blocks.sources) : []),
     "---"];
   const body = ["", "## Scope", "", "The question.", "",
     ...(ack ? ["**Who else read this statement.** Nobody yet.", ""] : []),

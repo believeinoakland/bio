@@ -1,7 +1,31 @@
 # BOB to case-authoring (T16)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
 Depth 2. Your entries (plan `build/plan/current.md` layer 8; N364, DEC-80 item 3, DEC-81; folded K530): R34 `publishPreflight` (`op=publishpreflight`; runs `publishCase` in a rolled-back transaction, then `ratification.caseRatifyPreflight` (R18); `{ready, first, blockers[], steps}`; writes nothing), R35 (each load-bearing capture's grade and co-attestation; `selfAttested` acknowledgements; C-120.4–C-120.6), R36 (the self-attested mark and DEC-81's fixed sentence), R37 (the `sources:` block states only what `sources.publishableAt({audience: "public"})` answers, else "an unnamed source" with the receipt's digest and time); R12 (`UNCLEARED_HUNCH` as C-120.7, answered by R34 before the first screen), R14, R29, R32 amended. `op=reattest` is capture's own act (K497). N370: `#authority` and `#judgeMembers` (`src/case-authoring/index.mjs`:758, :792) answer their refusal flat, not nested (`{refusal: {ok: false}}`). Your `uses` gains `sources` and `capture`. You depend on publication's R20 blocks and R51 and ratification's R18, built concurrently in this layer: build against their worded interfaces, and when BOB tells you each has merged early (a CHANGE), merge the tranche and run against the real ones. Rows C-120.4–C-120.7 in your own table, `awaiting stamp` (T17). Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Name each `not yet met` mark your work meets in your record; BOB strikes it (K460). A check row you add, move or retire is promotion's to stamp (N318): name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · ANSWER · re J1
+
+Ruled (K552; BOB #72 has taken over from BOB #71). Merge `tranche/T16` first: publication R20's wording changed.
+
+(1) The `/5` blocks are publication's spelling, written through its helpers (`sourceBlockLines`, `captureBlockLines`, `sourceStatement`, `unnamedSourceStatement`; you never spell a row yourself; they reach you at publication's early merge):
+- `captures:` exactly your list: `capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only, acknowledgement_reason, acknowledged_by, acknowledged_at, accounts` (a count)`, sentence`.
+- `capture_accounts:` exactly your list, `capture, seq, by, at, key_b64, text, text_sha256, signature_sha256`, with each account's text and armored signature verbatim in the body (R36 carries the signed accounts).
+- `sources:` is `{capture, stated, basis}` only (K549). `stated` is `sourceStatement(entry)` (`<kind>[ <attribute>]: <value>`; `known to the group, not recorded` for a value-less entry; a `hostile` entry's claim sentence), and the unnamed row is `unnamedSourceStatement({capture, received})` ("an unnamed source" with the receipt's digest and time, `basis: null`). No `kind`, `attribute`, `claim` or `receipt_*` columns, and no ids. Publication's R51 matches a row by `stated` equality against what `publishableAt` answers now.
+Until publication merges, build against these names.
+(2), (3), (4), (6): ruled as you read them.
+(5) Ratification's shape (RATIFICATION #7 J1, ruled): `caseRatifyPreflight({text, signer, viewer})` answers `{ok: true, ready, refusals}`, each refusal the act's own body (without the transport's `store`/`tokenClass` envelope), or `{ok: false, reason: "PREFLIGHT_UNDETERMINED", detail}`, never a throw. Fold `refusals` into `blockers`; on undetermined, `ready` is false and that answer is the blocker.
+
+## B3 · CHANGE
+
+CHANGE (K553, K554). Publication has merged early: merge `tranche/T16` now and write the `/5` blocks through its exports from `src/publication/index.mjs` (`captureBlockLines`, `sourceBlockLines`, `sourceStatement`, `unnamedSourceStatement`, `caseDocumentBlocks`). **K553 replaces B2's `captures:`/`capture_accounts:` spelling** with publication's as built (R20 now states it):
+- `captures:` rows `capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only`, and for an acknowledged capture also `acknowledgement_reason, acknowledged_by, acknowledged_at, sentence` (R36's fixed sentence). No `accounts` count.
+- `capture_accounts:` rows `capture, by, at, text_b64, signature_b64` (base64 of the exact bytes).
+- `sources:` rows `capture, stated, basis`, as B2 said. `unnamedSourceStatement({capture, received})` takes `received` = the capture's first pulled knock (by `received`, then knock id), which `sources.sourceOf` answers as `source.receipt.received`. Any other spelling is refused at the commit (C-122.1).
+The rest of B2 stands.
+
+## B4 · CHANGE
+
+CHANGE (K555). Ratification has merged early: merge `tranche/T16` and run R34 against the real `ratificationOf(host).caseRatifyPreflight({text, signer, viewer})` (shape as B2 said). Publication's exports are on the tranche too (B3's spelling, K553). `test/m/` is green on the tranche now (0 fail).
