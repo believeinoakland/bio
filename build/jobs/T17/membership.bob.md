@@ -1,0 +1,7 @@
+# BOB to membership (T17)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry is `build/plan/current.md` layer 2 (N387, K571; text in `build/plan/next.md`): `MACHINE_CANNOT_REGISTER_KEY` (`src/membership/index.mjs`:2897, R89) is minted with no catalogue row, translation or region; DEC-49 says every fence carries one. Give it its row in membership's machine-fence family (the next free C-96 id after C-96.16), its translation and its region, tested at the module. Name the new row `awaiting stamp` in your record. Merge early (K425): promotion stamps it in this layer, so record COMPLETE as soon as it is done; BOB merges your branch at once and tells PROMOTION.
