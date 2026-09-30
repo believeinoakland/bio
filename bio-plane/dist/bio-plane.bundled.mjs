@@ -9303,7 +9303,7 @@ function manifestFiles(filesJson) {
   }
   return Array.isArray(arr2) ? arr2.filter((f9) => f9 && typeof f9 === "object") : [];
 }
-var MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task" });
+var MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source" });
 function mintExhausted(prefix, extra) {
   const asked = typeof prefix === "string" ? prefix : "";
   const what = Object.hasOwn(MINTED_OBJECT, asked) ? `${MINTED_OBJECT[asked]} ` : "";
@@ -10775,6 +10775,11 @@ var MEMBERSHIP_CHECKS = Object.freeze({
     check: "C-96.16",
     where: at2("signerRegisterOwn", "is-signer-key-revoked"),
     translation: "This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an administrator. Nothing was changed."
+  }),
+  MACHINE_CANNOT_REGISTER_KEY: Object.freeze({
+    check: "C-96.17",
+    where: at2("signerRegisterOwn", "is-machine-register-key"),
+    translation: "A member registers their own signing key, from their own signed-in session. The credential that asked here has no member behind it: it is an automated one, the operator's token, or a call with nobody signed in. Sign in as yourself to register your key, or ask an administrator to register one for you. Nothing was changed."
   }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: "C-96.13",
@@ -13827,20 +13832,25 @@ var Membership = class _Membership {
    * and any of them can revoke the key (R26).
    *
    * THE ORDER, and each step is the requirement's: who is asking (a machine credential, the operator's bearer or no
-   * stamp at all has no member to register for); the key's shape (R25's answer, RELAYED from R25's own region so
-   * C-96.8 keeps its one site); the member's standing (R25's bar, the gate's own question); and whether ANOTHER member
+   * stamp at all has no member to register for: C-96.17, N387); the key's shape (R25's answer, RELAYED from R25's
+   * own region so C-96.8 keeps its one site); the member's standing (R25's bar, the gate's own question); and whether ANOTHER member
    * holds the key. A held key is never rebound, and the refusal names no one: whose key it is, is not the caller's
    * to learn. A key `by` already holds and that is active answers `existed: true` and is not rewritten: its origin
    * and who registered it stay as first recorded. One `by` holds that was revoked is refused and stays revoked
    * (K535): only an administrator re-activates a key (R26), so an administrator's revocation sticks. */
   signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
-    if (by === null || by === void 0 || by === "" || isMachineIdentity(by))
+    if (by === null || by === void 0 || by === "" || isMachineIdentity(by)) {
+      const row2 = MEMBERSHIP_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
       return {
         ok: false,
         reason: "MACHINE_CANNOT_REGISTER_KEY",
+        code: "MACHINE_CANNOT_REGISTER_KEY",
+        check: row2.check,
+        translation: row2.translation,
         by: by || null,
         detail: "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written."
       };
+    }
     if (!_Membership.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });
     const bar = this.#signerMemberBar(by);
     if (bar) return bar;
@@ -15247,12 +15257,12 @@ function spliceReferences(text4, additions) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.46.0";
+var CATALOG_VERSION = "1.47.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 877,
-  digest: "1002f8718b347437100c7a9a10f32edf76b9b27cda351c97b2a53fcdc0040caa"
+  rows: 879,
+  digest: "b8bbd059390f894eb419d10b40c4683bc0d5a85f022c3a354e9c67925cde3f11"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
