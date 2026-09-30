@@ -1446,10 +1446,18 @@ export class Contradiction {
     if (family === "CORRECTED") {
       const wrong = view.inquiry ? res.wrong_side : act.wrong_side;
       if (wrong !== which) return [];
-      return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind,
-                reason: view.inquiry ? res.reason ?? null : act.wrong_reason, member: view.inquiry ? null : act.author,
-                at: view.inquiry ? null : act.at, ...(view.inquiry ? { inquiry: view.inquiry } : { act: act.act_id }),
-                says: "this side was named wrong by a member's resolution; it still resolves, and says it was corrected" }];
+      const says = "this side was named wrong by a member's resolution; it still resolves, and says it was corrected";
+      if (!view.inquiry)
+        return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind, reason: act.wrong_reason,
+                  member: act.author, at: act.at, act: act.act_id, says }];
+      /* N359: concluded by its contradiction inquiry, the member and the instant are R36's concluding act's (the latest
+         `resolve` naming that inquiry). A conclusion reached only by basis-versions' own door has no act of this module,
+         and says so rather than guessing either. */
+      const concluding = [...view.acts].reverse().find((a) => a.act === "resolve" && a.inquiry === view.inquiry) || null;
+      return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind, reason: res.reason ?? null,
+                member: concluding ? concluding.author : null, at: concluding ? concluding.at : null,
+                inquiry: view.inquiry, ...(concluding ? { act: concluding.act_id }
+                  : { why: "concluded through basis-versions' own door; no concluding act of this module" }), says }];
     }
     if (view.kind === "dissolved")
       return [{ mark: "qualified", candidate: c,
@@ -2024,6 +2032,27 @@ export class Contradiction {
     });
   }
 
+  /** R36's C-93.27 check and R56's one predicate: the candidate a contradiction inquiry names, when the inquiry is held
+   *  and one the viewer may see, it names a candidate this module holds (`inquiry` R48's `contradictionLink`), and the
+   *  viewer may see both of its sides (R10); else null. */
+  #linkedCandidate(id, viewer) {
+    const i = this.#i();
+    const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id)
+      && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
+    const row = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
+    return row && this.#sideSeen(row.a, viewer) && this.#sideSeen(row.b, viewer) ? row : null;
+  }
+
+  /** R56 (N365; in-process, read as the viewer, for `affordances` R14): whether R36's `NOT_A_CONTRADICTION_INQUIRY`
+   *  check passes for this viewer, answered by the very predicate `resolve` applies, so the offer and the act cannot
+   *  disagree. `false` for an absent viewer and for anything it cannot read. Writes nothing; never throws. */
+  candidateSidesSeen({ inquiry = null, viewer = null } = {}) {
+    try {
+      const id = typeof inquiry === "string" ? inquiry.trim() : "";
+      return !!this.#linkedCandidate(id, viewer);
+    } catch { return false; }
+  }
+
   /** op=contradictionresolve — R36: a contradiction inquiry's conclusion, with its resolution. */
   resolve({ inquiry = null, resolution = null, conclusion = null, version = null, falsifier = null, noFalsifier = false,
             accepted = null, viewer = null, author = null, at = null } = {}) {
@@ -2031,10 +2060,8 @@ export class Contradiction {
     if (machine) return machine;
     const id = typeof inquiry === "string" ? inquiry.trim() : "";
     const i = this.#i();
-    const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id)
-      && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
-    const row = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
-    if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer))
+    const row = this.#linkedCandidate(id, viewer);
+    if (!row)
       return Contradiction.#notContradictionInquiry("no question you can see answers to that id as one taken up from a contradiction");
     const res = resolution && typeof resolution === "object" && !Array.isArray(resolution) ? resolution : {};
     const family = this.#family(res.kind);

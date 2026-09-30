@@ -292,7 +292,7 @@ test("R27: each mark over a claim, a leg and an extent — in_tension, lead, sof
   assert.deepEqual(marks(h, claimRef(IQ.a, "the fee rose")), [{ mark: "held_irreconcilable", candidate: c2, inquiry: up.inquiry }]);
 });
 
-test("R27: a CORRECTED resolution through the inquiry marks its wrong side stale; a taken-up duty stays in tension", () => {
+test("R27: a CORRECTED resolution through the inquiry marks its wrong side stale with R36's concluding member and instant (N359); a taken-up duty stays in tension", () => {
   const w = seeded();
   const id = cand(w, "K2", "record");
   const up = w.c.takeUp({ candidate: id, question: "Which is right?", frame: "a", viewer: M1, author: M1 });
@@ -303,6 +303,32 @@ test("R27: a CORRECTED resolution through the inquiry marks its wrong side stale
   const s = marks(w, claimRef(IQ.b, "the fee fell"))[0];
   assert.deepEqual([s.mark, s.kind, s.reason, s.inquiry], ["stale", "misquote", "the minutes misquote it", up.inquiry]);
   assert.deepEqual(marks(w, claimRef(IQ.a, "the fee rose")), []);
+  /* N359: R36's concluding member and the conclusion's instant, from its resolve act, never null */
+  assert.deepEqual([s.member, s.at, s.act, s.why], [M1, r.act.at, r.act.act_id, undefined]);
+  assert.equal(r.act.act, "resolve");
+  /* concluded by another member at another instant: the latest concluding act is the one read */
+  const t = seeded();
+  const id2 = cand(t, "K2", "record");
+  const up2 = t.c.takeUp({ candidate: id2, question: "Which is right?", frame: "a", viewer: M1, author: M1 });
+  t.clock.now = "2026-09-29T12:00:00Z";
+  const r2 = t.c.resolve({ inquiry: up2.inquiry, resolution: { kind: "superseded_version", wrong_side: "a", reason: "an older text" },
+                           conclusion: "the fee fell", viewer: M2, author: M2 });
+  assert.equal(r2.ok, true, JSON.stringify(r2).slice(0, 500));
+  const s2 = marks(t, claimRef(IQ.a, "the fee rose"))[0];
+  assert.deepEqual([s2.mark, s2.member, s2.at, s2.act], ["stale", M2, "2026-09-29T12:00:00Z", r2.act.act_id]);
+  /* a conclusion reached only by basis-versions' own door has no concluding act here: null, and says why */
+  const o = seeded();
+  const id3 = cand(o, "K2", "record");
+  const up3 = o.c.takeUp({ candidate: id3, question: "Which is right?", frame: "a", viewer: M1, author: M1 });
+  const head = o.record.head(up3.inquiry);
+  const text = o.text(up3.inquiry).replace(/^current_state: .*$/m, "current_state: concluded").replace(/^prior_state: .*$/m, "prior_state: open")
+    .replace(/\n---\n/, `\nconclusion: "the fee rose"\nfalsifier: "none"\nresolution:\n  kind: "misquote"\n  wrong_side: "b"\n  reason: "misquoted"\n---\n`);
+  const pr = o.promotion.promote({ bundleId: up3.inquiry, base: head.bundleSha, snapKey: "other-door", author: M1,
+                                   files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" } });
+  assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 600));
+  const s3 = marks(o, claimRef(IQ.b, "the fee fell"))[0];
+  assert.deepEqual([s3.mark, s3.inquiry, s3.member, s3.at, s3.act], ["stale", up3.inquiry, null, null, undefined]);
+  assert.match(s3.why, /basis-versions' own door/);
 });
 
 test("R27: plurality marks an open K5 candidate before no_difference", { todo: "K5 is unshown until its gate arm is measured (K488)" }, () => {});
