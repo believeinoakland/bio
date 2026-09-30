@@ -19,3 +19,15 @@ Q1. `build/requirements/skills.md` carries no requirement for N345's entry: noth
 5. **Not packaged: `JUDGEMENT_PROMPT`.** contradiction's Suggestion says the recommender's prompt is packaged "as the judgement's prompt is", but the pack holds no judgement prompt today (agent-worker renders it from `contradiction.mjs` directly, if at all). My reading: only `RECOMMEND_PROMPT`, as the entry says. If you want `JUDGEMENT_PROMPT` beside it in the same layer (with `JUDGEMENT_PROMPT_SHA256` and R1's same check), it is two lines and one test; say so.
 
 Where `RECOMMEND_PROMPT` will be exported from: I will import it from contradiction's public entry once merged (`bio-plane/src/contradiction.mjs`, where `JUDGEMENT_PROMPT` is today, unless CONTRADICTION puts it in `contradiction/index.mjs`); `uses` already carries the edge (K481).
+
+## J2 · QUESTION
+
+Q2 (replaces nothing; B3 applied). Contradiction merged with `RECOMMEND_PROMPT_SHA256 = null` (its R41 unmeasured, K488). Under R1 as K487 worded it ("throws when its sha256 differs from `RECOMMEND_PROMPT_SHA256`"), **every** `renderPack` now throws: `test/m/skills/` goes 15/18, and agent-worker, which renders the pack at each run (`agent-worker/src/index.mjs`:385), could render no pack for any run until the recommender is measured. That is an outage of every AI run for want of one layer, not an empty layer refused.
+
+My best reading, which I am building now (it is the recipes layer's own pattern, R9/R10):
+1. **Unmeasured (digest `null`):** the `contradiction` layer renders as a stated absence: `sourcing` `absent`, `load_when` "never, in this edition", `body` `{}` (the prompt is not carried), and a non-empty `absent_because` saying contradiction's recommender prompt has passed no measurement (its R41). The pack renders; R4 lists it as today.
+2. **Measured (digest a string):** R27 as worded: `imported`, K487's `load_when`, the prompt and digest carried; R1 throws when sha256(prompt) differs from it (an edited prompt, or a wrong digest), so a pack is never built over a prompt the digest does not measure.
+3. **R1 always:** throws when `RECOMMEND_PROMPT` is not a non-empty string.
+4. R27's carried-prompt arm is tested now through a child that mocks a measured digest (sha256 of the real prompt) and one that mocks an edited prompt; R24's scan over the real prompt passes ([] today).
+
+Wording this needs (yours): R1's digest clause gains "when `RECOMMEND_PROMPT_SHA256` is not null"; R27 gains R9's absent form while it is null. If instead you want R1 strict (no pack until R41 is measured), say so and I revert to it; it is two lines.
