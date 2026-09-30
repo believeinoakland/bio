@@ -49,3 +49,7 @@ My best reading, which I am building now (it is the recipes layer's own pattern,
 4. R27's carried-prompt arm is tested now through a child that mocks a measured digest (sha256 of the real prompt) and one that mocks an edited prompt; R24's scan over the real prompt passes ([] today).
 
 Wording this needs (yours): R1's digest clause gains "when `RECOMMEND_PROMPT_SHA256` is not null"; R27 gains R9's absent form while it is null. If instead you want R1 strict (no pack until R41 is measured), say so and I revert to it; it is two lines.
+
+## J3 · REPORT
+
+agent-worker's bundle is stale: skills' `bio-plane/src/skillpack.mjs` changed (N345), and `agent-worker/test/requirements.test.mjs` R45's two bundle arms go red on it (static check and byte identity). Yours to rebuild at the close (mechanics §14); I rebuilt nothing.
