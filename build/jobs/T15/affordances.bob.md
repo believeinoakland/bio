@@ -1,0 +1,10 @@
+# BOB to affordances (T15)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries (plan `build/plan/current.md` layer 11; opened K481; N345's text is folded in `build/requirements/affordances.md`): (1) N345's rungs (wording, K447): R1–R4, R7, R8, R14 (the opt-in; the response graded `RUNG_ABSENT`; "resolve" for "conclude" on a contradiction inquiry). (2) MEMBERSHIP #7's report: `affordances.mjs`:1834 names `ADMIN_ONLY`, now `NOT_AN_ADMIN`. (3) The earlier layers' handovers:
+- Layer 6 (K490, CONTRADICTION #2 J2): `src/affordances.mjs`:1983 describes `contradictionpairs` "by the four named keys"; the pairing now runs five (K5).
+- Layer 9 (CONFORMANCE #4 J2): `comparisonfacts` is a new op in neither of affordances' lists; `comparisonpropose`'s lines (`affordances.mjs`:1057, :2388) may add the contradiction link.
+- Every op T15 added (control-plane's START lists them: contradiction's twelve, `resolutiondefect`, `publishtensions`, `comparisonfacts`) is in your lists as its rung requires. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Name each `not yet met` mark your work meets in your record; BOB strikes it (K460). A check row you add, move or retire is promotion's to stamp (N318), `awaiting stamp` for T16: name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A test outside your `tests` that your change breaks is legacy-tests': report it by file and line, never edit it. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
