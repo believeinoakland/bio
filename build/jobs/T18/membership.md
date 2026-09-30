@@ -1,6 +1,6 @@
 # membership (T18)
 
-**Status** · session_016Q1XJGZoALi4j7bA6Be1aY · depth 2 · COMPLETE · handled B1
+**Status** · session_016Q1XJGZoALi4j7bA6Be1aY · depth 2 · COMPLETE · handled B2
 
 ## Completion (MEMBERSHIP #11)
 
