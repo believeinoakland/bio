@@ -9,9 +9,10 @@
  * Services: list() · get(id) · validate(profile) · combine(list). */
 import FIRST from "./profiles/oakland-alameda.mjs";
 import TEST from "./profiles/test-port-ellery.mjs";
+import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
 
 /* ------------------------------------------------------------------------------------------------ */
-/* The profile's shape (R1–R7, R23–R26, R31–R33; `locale` and `systems[].links`, N77 and N96).        */
+/* The profile's shape (R1–R7, R23–R26, R31–R33, R39; `locale` and `systems[].links`, N77 and N96). */
 
 export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces", "systems", "mixed_hosts",
   "crosswalks", "vocabulary", "practice", "search_terms", "records_laws", "standard_sources",
@@ -29,6 +30,9 @@ export const COUNTS = Object.freeze(["calendar", "business"]);
 export const STARTS = Object.freeze(["received", "filed", "act", "known"]);
 export const TIERS = Object.freeze([1, 2, 3]);
 export const CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
+/* R39: a venue's evidence standard is named in at most this many characters; the grades it admits are
+   letters of record-grammar's BASIS_GRADES (its R16; K624 (6)). */
+const EVIDENCE_STANDARD_MAX = 200;
 
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 const KIND_RE = /^[a-z][a-z0-9_]*$/;
@@ -115,7 +119,7 @@ function applyForm(form, raw, prefixes = []) {
 /* ------------------------------------------------------------------------------------------------ */
 /* validate (R10, R11, R28, R35).                                                                   */
 
-/** Judge a profile against R1–R7, R23–R26 and R31–R33. `{ok, errors}`, every error found. Never throws. */
+/** Judge a profile against R1–R7, R23–R26, R31–R33 and R37–R39. `{ok, errors}`, every error found. Never throws. */
 export function validate(profile) {
   const errors = [];
   try { validateInto(profile, errors); }
@@ -347,7 +351,7 @@ function validateInto(p, errors) {
     }
   }
 
-  /* The action sections (R23–R26, R28, R31–R33, R35). */
+  /* The action sections (R23–R26, R28, R31–R33, R35, R39). */
   const codeKeys = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.codes)
     ? p.vocabulary.codes.filter(isObj).map((c) => c.key) : []);
   if (own(p, "standard_sources")) list("standard_sources", p.standard_sources).forEach((s, i) => {
@@ -377,7 +381,7 @@ function validateInto(p, errors) {
   if (own(p, "action_kinds")) list("action_kinds", p.action_kinds).forEach((k, i) => {
     const at = `action_kinds[${i}]`;
     if (!entry(at, k)) return;
-    fields(at, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
+    fields(at, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "evidence", "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
     else if (kinds.has(k.kind)) err(`${at}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
     else { kinds.add(k.kind); if (k.tier === 3) tier3.add(k.kind); }
@@ -403,6 +407,32 @@ function validateInto(p, errors) {
     if (own(k, "advisory")) {
       if (!isStr(k.advisory)) err(`${at}.advisory`, "VALUE_INVALID", "an advisory note is text");
       if (k.tier !== 2) err(`${at}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
+    }
+    /* R39: the venue's evidence standard, and the grades it admits and those the opposition may contest. */
+    if (own(k, "evidence")) {
+      const ev = k.evidence;
+      const ea = `${at}.evidence`;
+      if (!isObj(ev)) err(ea, "VALUE_INVALID", "evidence is {standard, accepts, contestable?, basis}");
+      else {
+        fields(ea, ev, ["standard", "accepts", "contestable", "basis"]);
+        if (!own(ev, "standard") || ev.standard === undefined || ev.standard === null || ev.standard === "")
+          err(`${ea}.standard`, "EVIDENCE_NO_STANDARD", "evidence names the venue's standard in words");
+        else if (!isStr(ev.standard) || ev.standard.length > EVIDENCE_STANDARD_MAX)
+          err(`${ea}.standard`, "VALUE_INVALID", `the standard is text of at most ${EVIDENCE_STANDARD_MAX} characters`);
+        const grades = (path, v) => v.forEach((g, j) => {
+          const ga = `${path}[${j}]`;
+          if (!isObj(g)) { err(ga, "VALUE_INVALID", "an admitted grade is {grade, coattested?}"); return; }
+          fields(ga, g, ["grade", "coattested"]);
+          if (!BASIS_GRADES.includes(g.grade)) err(`${ga}.grade`, "GRADE_UNKNOWN", `grade is one of ${BASIS_GRADES.join(", ")}`);
+          if (own(g, "coattested") && typeof g.coattested !== "boolean") err(`${ga}.coattested`, "VALUE_INVALID", "coattested is true or false");
+        });
+        if (!own(ev, "accepts") || (Array.isArray(ev.accepts) && !ev.accepts.length))
+          err(`${ea}.accepts`, "EVIDENCE_NO_STANDARD", "accepts lists at least one grade the venue admits");
+        else if (!Array.isArray(ev.accepts)) err(`${ea}.accepts`, "VALUE_INVALID", "accepts is a list of {grade, coattested?}");
+        else grades(`${ea}.accepts`, ev.accepts);
+        if (own(ev, "contestable")) grades(`${ea}.contestable`, list(`${ea}.contestable`, ev.contestable));
+        basis(ea, ev);
+      }
     }
     basis(at, k);
   });
@@ -723,7 +753,7 @@ function merge(profiles) {
     view.counterparties = strip(v);
   }
 
-  /* action kinds, keyed by kind: tier, venue and template are one value each (R29). */
+  /* action kinds, keyed by kind: tier, venue, template, advisory and evidence are one value each (R29). */
   if (has("action_kinds")) {
     const byKind = new Map();
     for (const p of profiles) for (const k of p.action_kinds || []) {
@@ -735,12 +765,16 @@ function merge(profiles) {
       const e = { kind, label: [...new Set(given.map((g) => g.k.label))].join("; ") };
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
       if (given.some((g) => own(g.k, "laws"))) e.laws = laws;
-      for (const f of ["tier", "venue", "template", "advisory"]) {
-        const vals = given.filter((g) => own(g.k, f)).map((g) => ({ profile: g.profile, value: clone(g.k[f]), basis: g.k.basis }));
+      /* venue and evidence carry their own basis: the fact kept names every giver's (R13, R14). */
+      const WHAT = { tier: "risk tiers", venue: "venues", template: "templates", advisory: "advisory notes", evidence: "evidence standards" };
+      for (const f of ["tier", "venue", "template", "advisory", "evidence"]) {
+        const carriesBasis = f === "venue" || f === "evidence";
+        const vals = given.filter((g) => own(g.k, f)).map((g) => ({ profile: g.profile, value: clone(g.k[f]), basis: carriesBasis ? g.k[f].basis : g.k.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f] = f !== "venue" ? vals[0].value
-          : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
-        else conflict(`action_kinds[${kind}].${f}`, vals, `the active profiles give different ${f === "tier" ? "risk tiers" : f === "advisory" ? "advisory notes" : `${f}s`} for ${kind}, so none is given`);
+        if (agree(vals)) e[f] = !carriesBasis ? vals[0].value
+          : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.basis })) };
+        else conflict(`action_kinds[${kind}].${f}`, vals, `the active profiles give different ${WHAT[f]} for ${kind}, so none is given`
+          + (f === "evidence" ? ": the venue's standard is undetermined" : ""));
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;

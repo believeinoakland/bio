@@ -80,6 +80,7 @@ export function walkFacts(p, fn) {
   (p.action_kinds || []).forEach((k, i) => {
     fn(k, `action_kinds[${i}]`);
     if (k.venue) fn(k.venue, `action_kinds[${i}].venue`);
+    if (k.evidence) fn(k.evidence, `action_kinds[${i}].evidence`);
   });
 }
 /** The object at a walkFacts path. */

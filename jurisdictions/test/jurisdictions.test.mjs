@@ -4,6 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { list, get, validate, combine, LAW_LEVELS } from "../index.mjs";
 import { applyForm, recogniseIn, systemOf, walkFacts, legacy } from "./helpers.mjs";
+/* R39's grades are record-grammar's (its R16; K624 (6)). */
+import { BASIS_GRADES as GRADES } from "../../bio-plane/src/record-grammar/index.mjs";
 
 const FIRST = "oakland-alameda";
 const TEST = "test-port-ellery";
@@ -56,7 +58,9 @@ function sample() {
       { role: "Auditor", body: "Sample Town", level: "city", elected: true, oversight: true, basis: "DEC-2" }],
     action_kinds: [
       { kind: "records_request", label: "records request", tier: 1, laws: ["Records Law"], venue: { name: "clerk", how: "email", basis: "M-8" }, template: "Please send {{records}}.", basis: "M-8" },
-      { kind: "code_complaint", label: "complaint", tier: 3, laws: ["Sample Town Code"], venue: { name: "court", how: "court", basis: "M-8" }, basis: "M-8" },
+      { kind: "code_complaint", label: "complaint", tier: 3, laws: ["Sample Town Code"], venue: { name: "court", how: "court", basis: "M-8" },
+        evidence: { standard: "Evidence Rule 902: self-authenticating records", accepts: [{ grade: "A", coattested: true }, { grade: "B" }],
+          contestable: [{ grade: "C" }], basis: "M-13" }, basis: "M-8" },
       { kind: "records_petition", label: "petition", tier: 2, laws: ["Records Law"], advisory: "Have it reviewed first.", basis: "M-8" },
     ],
     deadlines: [{ rule: "answer", applies_to: "records_request", days: 10, count: "calendar", starts: "received",
@@ -273,6 +277,8 @@ test("R28 validate codes for the action sections", () => {
     LAW_UNKNOWN: [(p) => { p.action_kinds[0].laws = ["Unknown Act"]; }, "action_kinds[0].laws[0]"],
     DEADLINE_KIND_UNKNOWN: [(p) => { p.deadlines[0].applies_to = "appeal"; }, "deadlines[0].applies_to"],
     DUPLICATE_KIND: [(p) => { p.action_kinds.push(clone(p.action_kinds[0])); }, "action_kinds[3].kind"],
+    GRADE_UNKNOWN: [(p) => { p.action_kinds[1].evidence.accepts[0].grade = "E"; }, "action_kinds[1].evidence.accepts[0].grade"],
+    EVIDENCE_NO_STANDARD: [(p) => { delete p.action_kinds[1].evidence.standard; }, "action_kinds[1].evidence.standard"],
   };
   for (const [code, [fn, path]] of Object.entries(cases)) assert.ok(hasError(breakIt(fn), code, path), code);
   for (const tier of [0, "1", 1.5, null]) assert.ok(hasError(breakIt((p) => { p.action_kinds[0].tier = tier; }), "TIER_INVALID"), String(tier));
@@ -872,8 +878,10 @@ test("R29 K102 a kind's advisory and an office's oversight under one role and bo
   assert.equal(e.view.action_kinds.find((k) => k.kind === "records_petition").advisory, "Have it reviewed first.");
 });
 
-test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, legal organisations and holidays; the first holds what is measured or named", () => {
+test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, evidence with a contestable grade, legal organisations and holidays; the first holds what is measured or named", () => {
   const t = get(TEST);
+  assert.ok(t.action_kinds.some((k) => k.evidence && k.evidence.contestable && k.evidence.contestable.length
+    && k.evidence.contestable.every((g) => GRADES.includes(g.grade))), "evidence with a contestable grade (R39)");
   assert.deepEqual([...new Set([...t.records_laws, ...t.standard_sources].map((x) => x.level))].sort(), ["city", "county", "federal", "state"]);
   assert.ok(t.counterparties.some((c) => c.oversight === true));
   assert.ok(t.action_kinds.some((k) => k.tier === 2 && typeof k.advisory === "string"));
@@ -906,8 +914,9 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   /* the oversight and audit bodies the profile names; the others stay undetermined */
   assert.deepEqual(f.counterparties.filter((c) => c.oversight === true).map((c) => c.role).sort(), ["City Auditor", "Civil Grand Jury"]);
   assert.ok(f.counterparties.filter((c) => c.oversight !== true).every((c) => c.oversight === undefined));
-  /* no measurement names the closure days: the section is absent, never guessed */
+  /* no measurement names the closure days, nor any of its venues' evidence standards: absent, never guessed */
   assert.equal(f.holidays, undefined);
+  assert.ok(f.action_kinds.every((k) => k.evidence === undefined));
   for (const c of f.counterparties.filter((x) => x.oversight)) assert.equal(c.basis, "UNMEASURED", c.role);
 });
 
@@ -960,4 +969,82 @@ test("R38 systems[].links: {item, file} patterns over path and query; the first 
     }
   }
   assert.ok(get(TEST).systems.some((s) => s.links), "the test profile states shapes too");
+});
+
+/* ============================================================================================== */
+/* R39 (`action_kinds[].evidence`, K597 (3), K608): a venue's evidence standard.                   */
+
+test("R39 evidence: {standard (at most 200 characters), accepts (non-empty {grade, coattested?}), contestable?, basis}", () => {
+  assert.ok(validate(sample()).ok);
+  assert.ok(breakIt((p) => { delete p.action_kinds[1].evidence; }).ok, "evidence is optional");
+  assert.ok(breakIt((p) => { delete p.action_kinds[1].evidence.contestable; }).ok, "contestable is optional");
+  assert.ok(breakIt((p) => { p.action_kinds[1].evidence.contestable = []; }).ok, "contestable may list nothing");
+  assert.ok(breakIt((p) => { p.action_kinds[0].evidence = clone(p.action_kinds[1].evidence); }).ok, "on a kind of any tier");
+  /* standard: named in words, at most 200 characters */
+  assert.ok(breakIt((p) => { p.action_kinds[1].evidence.standard = "x".repeat(200); }).ok, "200 characters");
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence.standard = "x".repeat(201); }), "VALUE_INVALID", "action_kinds[1].evidence.standard"), "201 characters");
+  for (const bad of ["  ", 7, ["rule"]]) assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence.standard = bad; }), "VALUE_INVALID", "action_kinds[1].evidence.standard"), JSON.stringify(bad));
+  for (const fn of [(e) => { delete e.standard; }, (e) => { e.standard = ""; }, (e) => { e.standard = null; }])
+    assert.ok(hasError(breakIt((p) => fn(p.action_kinds[1].evidence)), "EVIDENCE_NO_STANDARD", "action_kinds[1].evidence.standard"));
+  /* accepts: a non-empty list; every grade a letter of BASIS_GRADES, and only those */
+  for (const fn of [(e) => { delete e.accepts; }, (e) => { e.accepts = []; }])
+    assert.ok(hasError(breakIt((p) => fn(p.action_kinds[1].evidence)), "EVIDENCE_NO_STANDARD", "action_kinds[1].evidence.accepts"));
+  for (const bad of [null, "A", { grade: "A" }]) assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence.accepts = bad; }), "VALUE_INVALID", "action_kinds[1].evidence.accepts"), JSON.stringify(bad));
+  for (const list of ["accepts", "contestable"]) {
+    const at = `action_kinds[1].evidence.${list}[0]`;
+    for (const grade of GRADES) assert.ok(breakIt((p) => { p.action_kinds[1].evidence[list] = [{ grade }]; }).ok, `${list} ${grade}`);
+    for (const grade of ["E", "a", "", "AB", 1, null, undefined, "UNMEASURED"])
+      assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence[list] = [{ grade }]; }), "GRADE_UNKNOWN", `${at}.grade`), `${list} ${String(grade)}`);
+    for (const coattested of [true, false]) assert.ok(breakIt((p) => { p.action_kinds[1].evidence[list] = [{ grade: "A", coattested }]; }).ok, `${list} coattested ${coattested}`);
+    for (const bad of ["yes", 1, null]) assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence[list] = [{ grade: "A", coattested: bad }]; }), "VALUE_INVALID", `${at}.coattested`), `${list} ${String(bad)}`);
+    assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence[list] = [{ grade: "A", weight: 1 }]; }), "UNKNOWN_SECTION", `${at}.weight`));
+    assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence[list] = ["A"]; }), "VALUE_INVALID", at));
+  }
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence.contestable = "C"; }), "VALUE_INVALID", "action_kinds[1].evidence.contestable"));
+  /* the rest of its shape, and its basis as every fact's */
+  for (const bad of [null, "Rule 902", [], 3]) assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence = bad; }), "VALUE_INVALID", "action_kinds[1].evidence"), JSON.stringify(bad));
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence.venue = "court"; }), "UNKNOWN_SECTION", "action_kinds[1].evidence.venue"));
+  assert.ok(hasError(breakIt((p) => { delete p.action_kinds[1].evidence.basis; }), "BASIS_MISSING", "action_kinds[1].evidence.basis"));
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence.basis = "TEST"; }), "BASIS_INVALID", "action_kinds[1].evidence.basis"));
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[1].evidence.basis = "Rule 902"; }), "BASIS_INVALID", "action_kinds[1].evidence.basis"));
+  /* every fault is reported, not only the first */
+  const r = breakIt((p) => { p.action_kinds[1].evidence = { accepts: [{ grade: "Z" }], contestable: [{ grade: "Q" }] }; });
+  assert.deepEqual(r.errors.map((e) => [e.path, e.code]).sort(), [["action_kinds[1].evidence.accepts[0].grade", "GRADE_UNKNOWN"],
+    ["action_kinds[1].evidence.basis", "BASIS_MISSING"], ["action_kinds[1].evidence.contestable[0].grade", "GRADE_UNKNOWN"],
+    ["action_kinds[1].evidence.standard", "EVIDENCE_NO_STANDARD"]]);
+  /* the view carries it on its kind, tagged; absent, the venue's standard is undetermined */
+  const v = combine([sample()]).view;
+  const e = v.action_kinds.find((k) => k.kind === "code_complaint").evidence;
+  assert.deepEqual({ ...e, bases: undefined, profile: undefined }, { ...sample().action_kinds[1].evidence, bases: undefined, profile: undefined });
+  assert.deepEqual([e.profile, e.basis, e.bases], ["sample-town", "M-13", [{ profile: "sample-town", basis: "M-13" }]]);
+  for (const k of v.action_kinds.filter((x) => x.kind !== "code_complaint")) assert.equal(k.evidence, undefined, k.kind);
+  /* the test profile's evidence reads as it is written */
+  const t = combine([TEST]).view.action_kinds.find((k) => k.evidence);
+  assert.equal(t.evidence.profile, TEST);
+});
+
+test("R29 R39 a kind's evidence is one value per key: withheld and reported when profiles disagree, kept with every giver's basis when they agree", () => {
+  const a = sample();
+  for (const change of [(e) => { e.standard = "Evidence Rule 901"; }, (e) => { e.accepts[0].coattested = false; }, (e) => { delete e.accepts[0].coattested; },
+    (e) => { e.accepts.push({ grade: "C" }); }, (e) => { delete e.contestable; }, (e) => { e.contestable = [{ grade: "D" }]; }]) {
+    const c = combine([a, two((b) => change(b.action_kinds[1].evidence))]);
+    assert.equal(c.ok, true);
+    assert.deepEqual(c.conflicts.map((x) => x.at), ["action_kinds[code_complaint].evidence"], change.toString());
+    const x = c.conflicts[0];
+    assert.deepEqual(x.values.map((y) => [y.profile, y.basis]), [["sample-town", "M-13"], ["sample-two", "M-13"]]);
+    assert.ok(typeof x.says === "string" && /undetermined/.test(x.says));
+    const k = c.view.action_kinds.find((y) => y.kind === "code_complaint");
+    assert.equal(k.evidence, undefined, "withheld: combine never chooses");
+    assert.equal(k.tier, 3, "the kind's other facts stand");
+  }
+  /* agreement, whatever the basis, keeps it with both givers */
+  const e = combine([a, two((b) => { b.action_kinds[1].evidence.basis = "K9"; })]);
+  assert.deepEqual(e.conflicts, []);
+  const ev = e.view.action_kinds.find((y) => y.kind === "code_complaint").evidence;
+  assert.deepEqual(ev.bases, [{ profile: "sample-town", basis: "M-13" }, { profile: "sample-two", basis: "K9" }]);
+  assert.deepEqual([ev.profile, ev.basis], ["sample-town", "M-13"]);
+  /* one profile only gives it: kept as that profile gives it */
+  const one = combine([a, two((b) => { delete b.action_kinds[1].evidence; })]);
+  assert.deepEqual(one.conflicts, []);
+  assert.equal(one.view.action_kinds.find((y) => y.kind === "code_complaint").evidence.standard, a.action_kinds[1].evidence.standard);
 });
