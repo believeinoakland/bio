@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #68 · session_01F6nxZGyhi9Jo7LvgyNVXpS · depth 1
 
-Opened by BOB #68, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ 302d008f0b, T14 closed (K480). Cut from `draft-T15.md`, re-read against T14's close (K479–K481); N345's contradiction part folded before opening (K481), with K477's wordings (membership R88, entities R39, ratification R17). An `N` entry's text is in `build/plan/next.md` (N345's in the requirements). Bob's weekly meter at the opening: asked (T14's close).
+Opened by BOB #68, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ 302d008f0b, T14 closed (K480). Cut from `draft-T15.md`, re-read against T14's close (K479–K481); N345's contradiction part folded before opening (K481), with K477's wordings (membership R88, entities R39, ratification R17). An `N` entry's text is in `build/plan/next.md` (N345's in the requirements). Bob's weekly meter at the opening: 33% (given ~03:45 UTC, the reading for T14's close).
 
 **Jobs** · legacy-checks: LEGACY-CHECKS #9 session_01BG5RDjmnEGneGN6yySvn8f; membership: MEMBERSHIP #8 session_01Wczft1gsPUnco6CaLvEUg5; promotion: PROMOTION #16 session_01ND9SZzuGAjq4MyXXivuefV; entities: ENTITIES #4 session_01KSDYyzB5ig2GsNMmtWdu8B; retrieval: RETRIEVAL #4 session_01JyAyVDeMrxmFvfB74PUdqx; inquiry: INQUIRY #4 session_01Ew9rdcsPSSYPHdbKmBr6Hv; contradiction: CONTRADICTION #2 session_0171p4zErPrN1VgxXfWEhXn7; skills: SKILLS #5 session_018xQkkj4FkEcwbqR1dfGgvx; reevaluation: REEVALUATION #5 session_01BVhTdCZJui5ZfRQKTiN1bW
 
