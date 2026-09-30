@@ -811,6 +811,11 @@ const ACTS_AWAITING_SURFACE = [
      page renders `action.risk_tier_history` (the intake author in the plane's own UNDETERMINED sentence) and offers
      the revise act with a REQUIRED reason and no tier preselected; `SURFACES.action.acts` names it in the same
      landing. Driven against a real plane by `ui104-risk-tier.test.mjs`. */
+  /* ADDED 2026-09-30 (LEGACY-TESTS #13, T15; N345): ARM A4b fired naming `contradictionresolve` on the T15 baseline. The
+     plane publishes it as an ACTS row (affordances R1, R8; 1147dc9b3b): a contradiction inquiry's conclusion WITH what
+     the contradiction turned out to be (contradiction R36), offered where `conclude` is withheld on such an inquiry. No
+     surface hosts it, so it is a debt signed here, not an exemption; the surface is the UI's (owner legacy-ui). */
+  { id: "contradictionresolve", published_by: "N345 (contradiction R36; affordances R1, R8, T15)", owed_by: "legacy-ui — the contradiction inquiry's conclude form, carrying the resolution (what the contradiction turned out to be) beside the conclusion", since: "2026-09-30" },
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls
