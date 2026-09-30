@@ -51,3 +51,18 @@ Two readings of N345's text, each my best reading; I am building on them now, so
 - `format`: 0 failures. `architecture`: 8 product files, 40 relative imports, 0 failures. `coverage`: 22 of 22 live requirement ids, 0 failures. `ownership`: 7 files, 0 failures.
 
 Size (session_01WyNRCH9tA6azzHVX8phB5R): test runs 10, module lines 1462
+
+## J3 · COMPLETE · re B3
+
+**B3 applied** (on `job/T15/conformance` @ 8b3f87d931, tranche/T15 merged in):
+- **C-113.24's translation** now matches K504, word for word with `conformance.md`'s table: "No question you can see answers to that id as one taken up from a contradiction, so no comparison starts from it. Nothing was written." The requirements now name C-113.28 and R21's refusal (K503), and the code already matched them.
+- **N362** (passage text for R21's `requires`): not added, as B3 says.
+
+J2 stands for everything else.
+
+**Tests and checks** (@ 8b3f87d931):
+- `node --test test/m/conformance/`: tests 46, pass 46, fail 0, todo 0.
+- `node civicos-ui/check-refusal-codes.mjs --strict`: 22 failures, the tranche's count. The identical-translation arm is clear. The remaining failures are floor slack, which is legacy-tests' to re-pin.
+- `format`: 0 failures. `architecture`: 9 product files, 0 failures. `coverage`: 22 of 22 live ids, 0 failures. `ownership`: 7 files, 0 failures.
+
+Size (session_01WyNRCH9tA6azzHVX8phB5R): test runs 11, module lines 1463
