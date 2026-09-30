@@ -2,6 +2,13 @@
 
 **Status** · session_019CY4XgfPJPBSXghWdbPkGG · depth 2 · WORKING · handled B1
 
+## Progress (working notes; the COMPLETE entry supersedes)
+
+- Read whole: `roles/JOB.md`; `build/manifest.md`; B1; the plan's "Last"; `t14-reread.md` (header, "Last", N350–N353); every `build/jobs/T14/*.md`; K457, K458, K464. A legacy module: no requirements file, no live ids.
+- Baseline @ 12e562af6d (everything merged; four at a time, foreground chunks): plane 352 of 371 green; red aicredential 95/2, airuns 53/2, bias 135/3, capability 62/1, capture 18/1, d134 11/5, d470 11/3, d484 31/1, derivation-bounds 71/5, identity-claims 32/1, machine-attest 35/2, machinefences-dec49 88/1 (carried, N337), meaning-bounds 97/2 (carried), mint-ledger 25/1 (N342, T15), pdfstructure-op 28/1, plane-envelope 61/3, project-sight 254/1, projects 114/2, row-census 4/4. civicos-ui 85 of 90: add-surface, bias-vocabulary 75/6, semantics-harvest 13/3 (carried), custodial-acts (K458), preauth-vocabulary 87/1 (new). The guard: 19 failures. gate-reads 168/0.
+- Done: d470 1.44.0 row, A1 358, A5 (14/0; control 12 arms as declared); bias store floor 212,573, TWENTY and K102 arms retired (K457: bias R29, R11) 136/0; d484 floor 212,573 32/0; capture:74 retired (capture R63/R21) 18/0; pdfstructure-op:126 retired (extraction R31) 28/0; plane-envelope CLOSED (i) retired (ratification R17), its other direction and REACH (D2) re-anchored on the correlation 63/0.
+- Next: derivation-bounds, airuns; then the N327/N335 suites; row-census; the guard; N353; N325; N348; preauth-vocabulary; final battery.
+
 ## J1 · QUESTION
 
 K457's grain (not blocking; I build on my reading). Baseline @ 12e562af6d: plane 352 of 371 green (19 red), civicos-ui 85 of 90, the guard 19 failures.

@@ -126,8 +126,11 @@ console.log(`\nCORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").
    N333: the store's door to `src/control-plane/dispatch.mjs`). `class Store` is still legacy-store's (control-plane's
    Durable Object extends it), so the store arms still read a real subject. Still a blindness floor at the measured
    figure, never below it. */
+/* RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; LEGACY-STORE #6) from this suite's own CORPUS print: 213,098 ->
+   212,573 characters (-525: N331's `filingsOf` line, N342's registered counts, N343's `migrate()` call and the
+   `settled_kind` line gone). Still a blindness floor at the measured figure, never below it. */
 t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
-  store.length >= 213_098 && /class Store\b/.test(store), true);
+  store.length >= 212_573 && /class Store\b/.test(store), true);
 
 const ROW_BASIS = ACT_SHAPE_CHECKS.NO_BASIS;
 const ROW_CITE = ACT_SHAPE_CHECKS.NO_CITATION;

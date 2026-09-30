@@ -123,7 +123,11 @@ const missingSha = "f".repeat(64);
 const missRes = await fetchRaw(`/api/pdfstructure?token=mem-pdfop-test&sha256=${missingSha}`);
 t("unknown sha is 404", missRes.status, 404);
 const miss = await missRes.json();
-t("reason NOT_FOUND", miss.reason, "NOT_FOUND");
+/* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "reason NOT_FOUND". The code is capture's `EVIDENCE_NOT_HELD`
+   (N347), and op=pdfstructure's absence is extraction's R31, tested at its interface in
+   `test/m/extraction/pdfstructure.test.mjs` (R31's two arms: `evidenceAbsent`'s answer, reason and code
+   EVIDENCE_NOT_HELD, C-118.1). The two arms below stay: they hold this op's 404 to op=capture's across the Worker,
+   which no module test reaches (two modules' answers through legacy-index's routing). */
 t("echoes the sha", miss.sha256, missingSha);
 /* Byte-for-byte the same 404 body op=capture returns for the same sha, proving
    this op mirrors op=capture's absence contract rather than inventing its own. */
