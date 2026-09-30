@@ -71,7 +71,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge: 
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.7 — and the new family C-120.1–C-120.3 is held here, every refusal carrying its check, code and translation; C-32.6 is the catalogue's row, which this module answers with", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.7 — and the family C-120.1–C-120.7 is held here, every refusal carrying its check, code and translation; C-32.6 is the catalogue's row, which this module answers with", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"]]);
@@ -79,7 +79,8 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
     [["STATEMENT_ACK_NO_SUBJECT", "C-82.2"], ["STATEMENT_ACK_ALREADY_SIGNED", "C-82.3"],
      ["STATEMENT_ACK_NOT_A_PARTICIPANT", "C-82.4"], ["STATEMENT_ACK_NO_STATEMENT", "C-82.5"],
      ["STATEMENT_ACK_BY_ITS_AUTHOR", "C-82.6"], ["STATEMENT_ACK_AUTHOR_UNDETERMINED", "C-82.7"]]);
-  assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check), ["C-120.1", "C-120.2", "C-120.3"]);
+  assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
+    ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7"]);
   for (const row of [...Object.values(CASE_DERIVATION_CHECKS), ...Object.values(STATEMENT_ACK_CHECKS),
                      ...Object.values(CASE_DISCLOSURE_CHECKS)]) {
     assert.match(row.where, /^src\/case-authoring\/index\.mjs \S+ > [a-z-]+$/, "each row names this module's region");

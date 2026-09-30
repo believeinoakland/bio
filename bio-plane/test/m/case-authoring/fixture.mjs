@@ -22,6 +22,8 @@ import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { ratificationOf, completenessFields } from "../../../src/ratification/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
+import { Capture } from "../../../src/capture/index.mjs";
+import { sourcesOf } from "../../../src/sources/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
@@ -109,7 +111,8 @@ function reviewProvider(w) {
   };
 }
 
-export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, deps = {} } = {}) {
+export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, ratification: ratWrap = null,
+                        deps = {} } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -126,6 +129,13 @@ export function world({ group = "test-group", provider = true, now = null, recor
      use it itself: the fixture reaches the one instance through inquiry's (below). */
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
+  /* capture (layer 3), its late attestations and signed accounts (its R68, R69) and its inbox (R72's read), and sources
+     (layer 3) over it, each the real one; nothing here fetches. Created before any module that reaches sources on this storage, so its
+     one instance keeps the test's clock. */
+  const capture = new Capture(st, { record, env: { INSTANCE_NAME: "test", VERSION: "0.0.0" }, governor: null,
+                                    provenance: prov, membership });
+  capture.migrate();
+  const sources = sourcesOf(host, { record, membership, capture, now: () => Date.parse(clock.now) });
   const ex = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
   ex.migrate();
   const readings = {};
@@ -181,6 +191,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const w = {
     st, host, record, membership, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
     bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
+    capture, sources,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -193,8 +204,9 @@ export function world({ group = "test-group", provider = true, now = null, recor
   };
   if (provider) publication.registerReviewProvider("review", reviewProvider(w));
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
-    strength, bias, observations, reevaluation, publication, ratification, contradiction,
-    now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
+    strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
+    contradiction, provenance: prov, capture,
+    sources, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
@@ -271,6 +283,29 @@ export function world({ group = "test-group", provider = true, now = null, recor
                   id, project, caseId, JSON.stringify(params), by, T0, by, T0, statementBy);
     },
     grant(secretSha, g) { w.grants.set(secretSha, { revoked: false, ...g }); },
+    /** An information bundle registering one capture whose provenance document carries `extra` (attestations, a
+     *  co-archive, attempts), fetched `direct` by this instance unless `receipt: false` (provenance R13: a Grade B
+     *  capture, R24); answers the capture's sha. */
+    graded(id, extra = {}, { receipt = true, text = `bytes of ${id}` } = {}) {
+      const c = { path: "snapshots/c0.txt", text, sha: sha(text) };
+      const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
+        files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
+                { path: "data/provenance.json", text: JSON.stringify({ documents: [{ ...provDoc(c), ...extra }] }) }],
+        meta: { object_type: "information" },
+        register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
+      if (!r.ok) throw new Error(`fixture graded refused: ${JSON.stringify(r).slice(0, 400)}`);
+      if (receipt) prov.recordReceipt({ address: `https://example.org/${id}`, addressNorm: `example.org/${id}`,
+                                        captureSha: c.sha, retrieved: T0, via: "direct" });
+      return c.sha;
+    },
+    /** A knock the doorbell received, already pulled into `captureSha` (capture R65, R72: the inbox row its read
+     *  answers). */
+    knocked(captureSha, { knockId = `KNOCK-2026-09-27-${captureSha.slice(0, 8)}`, received = T0, pseudonym = null } = {}) {
+      st.sql.exec(`INSERT INTO inbox (knock_id, sha256, bytes, received, status, capture_sha, pulled_by, pulled_at,
+                   pseudonym) VALUES (?, ?, 1, ?, 'pulled', ?, 'alice', ?, ?)`,
+                  knockId, captureSha, received, captureSha, received, pseudonym);
+      return knockId;
+    },
   });
   return w;
 }
