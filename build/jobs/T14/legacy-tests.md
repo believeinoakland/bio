@@ -15,6 +15,44 @@
 - Next: the final battery, checks, COMPLETE.
 - (superseded) Next: the N327/N335 suites; row-census; the guard; N353; N325; N348; preauth-vocabulary; final battery.
 
+
+## Completion (LEGACY-TESTS #12)
+
+**Entries applied** (B1, with B2's answer: K457 per red arm), on `job/T14/legacy-tests`; the Progress notes above give each suite's figures.
+- **K457 first. Retired** (each with a one-line comment naming the covering test):
+  - `bias` "TWENTY refusals" (bias R29, `m/bias/checks.test.mjs`) and "K102 … refused BY NAME" (bias R11, `m/bias/adopt-manifest.test.mjs`);
+  - `capture` :74 "unknown sha is NOT_FOUND" (capture R63/R21, `m/capture/evidence-absent.test.mjs`);
+  - `pdfstructure-op` :126 "reason NOT_FOUND" (extraction R31, `m/extraction/pdfstructure.test.mjs`);
+  - `plane-envelope` CLOSED (i) (ratification R17, `m/ratification/relays.test.mjs`);
+  - `aicredential` R62 (membership R62/R84, `m/membership/expertise-keys-ai.test.mjs`, `t14-rows-remedy-order.test.mjs`);
+  - `capability` "an ordinary member cannot confirm" (membership R22, `expertise-keys-ai.test.mjs`);
+  - `project-sight` "SEES, NO ROLE: olga — projectownerrescue" (membership R41/R84, `t14-rows-remedy-order.test.mjs`);
+  - `projects` :193 (membership R39, `m/membership/ownership.test.mjs`) and :497 (membership R41/R84);
+  - `d134-custodial-refusals`' three C-96.1 arms (membership R84, `m/membership/not-an-admin-visibility.test.mjs`).
+  No suite was retired whole: each is mixed.
+- **Re-anchored, kept, and why:** d470 1.44.0 row, A1 358, A5 (the catalogue's census; legacy-checks has no tests); bias and d484 store floor 212,573 (blindness floors); plane-envelope's other direction (an empty list read as an answer, which R17's tests do not drive) and REACH (D2) (the detector's own reach); derivation-bounds (census 207, rosters) and airuns (corpus widened to monitoring): whole-plane source walks; machine-attest and identity-claims (i) on NOT_AN_ADMIN (the `class:ai` stamp reaching membership's guard across the Worker); project-sight's POSITIONAL list (a sight matrix across modules); d134's family of eleven and civicos-ui `custodial-acts` on membership's row (the catalogue's family; a UI rendering); `inbox` on queue's `checkInboxGrammar` (its 31 per-bound violation fixtures, which queue's R41 tests do not drive); `preauth-vocabulary`'s op=verify pin and bounds'/identity-claims' N348 notes (legacy-index's source, no tests); the census suite and the DEC-49 guard (below); N348 as a new suite, `test/index-store-export.test.mjs` (control-plane cannot import `src/index.mjs`, legacy-index has no tests path).
+- **Census (N319, N350):** `row-census.test.mjs` over 1.44.0: fixture `row-census-1.44.0.jsonl` (827 lines) computed by this reader on the stamp commit 872f6d4bd8, equal to the pin (827, 5eae043f…); the sort's third key is the line; held-twice and open-tie assertions and 1.43.0's declarations retired; awaiting T15's stamp, each verified against its record and listed: C-118.1's re-key (capture), C-26.20 (bias), C-111.16 (intent), C-19.2 (queue), and the promote gate's composition (queue's registered step). The 1.43.0 fixture stays (promotion's `gate.mjs` note cites it). C-29.12 is still a row, so the census needs no acceptance for it.
+- **The DEC-49 guard:** 19 -> 3 failures (the carried three). Floors re-pinned from its print, every mover traced by running the guard at each of T14's 21 merges: families 110 (-1 legacy-checks, +1 queue), rows 796, census 1084, reach 831, governedSites 504, regions 466, regionLines 5576, codesChecked 913, outcomeReturns 275, refusalsJudged 869, untranslated 284 (membership), r3Fed 91 (capture). HELD TWICE retired. Arm G: NOT_FOUND's closure retired; FACT_FAILED and FACT_UNAVAILABLE declared closures (read at their sites: filings' literals read promotion's answer or are its internal no-provider fallback, never relayed), so the ceiling stays 54 rather than 56 (B2). C-29.12 accepted by name as unminted, with a staleness arm driven both ways. Fixture suites 173/0, 91/0, 14/0.
+- **N353:** project-sight's inquiry fixture is created through the founder's session; its control is 33 of 33 AS DECLARED (T13: 32 of 33), `promote-stamp-dropped` 91/5 with §7's fixture revision declared as its fifth.
+- **N325:** `inbox` re-anchored (above); `ratify-envelope`'s C-19.1 note. **N348:** the new suite, 2/0, its control red by name.
+- **Found at baseline, not in B1, root-caused:** civicos-ui `preauth-vocabulary` (legacy-index's N339/N349 changed op=verify's relay under a source pin: re-anchored); `airuns` 53/2 (the reader of `source_reach_failing` moved from queue to monitoring R47, outside the sweep's corpus: widened); the guard's FACT_* second sites (filings N331, K471: closures, above).
+
+**Own flaws fixed:** N353's arm; the stale N348 comments in `bounds` and `identity-claims`.
+**Deferred:** none.
+**Codes and rows:** no check row added, moved or retired by this job, so nothing of mine awaits stamp; no code added or retired in product code; the codes the tests now name (NOT_AN_ADMIN, TARGET_NOT_JOINED, EVIDENCE_NOT_HELD) are other jobs', already grepped in their records. No generated artifact made stale (tests and the guard only). No `not yet met` mark: a legacy module, no live ids.
+
+**Found in other modules** (REPORT, none edited):
+1. filings: `src/filings/index.mjs`:138's fallback spells `FACT_UNAVAILABLE` for an answer `#group` reads at once and never relays; it could carry no code (the closure then retires).
+2. control-plane: comments still name the old code: the IDENTITY-CLAIM marker `src/control-plane/index.mjs`:3057 (`ENFORCED-ELSEWHERE NO_SUCH_MEMBER ADMIN_ONLY`), :3069, and `ops.mjs`:824; op=expertiseconfirm answers NOT_AN_ADMIN (identity-claims (d) still pins the marker's words).
+3. legacy-ui: the guard's R3 FED half fell 92 -> 91 because `snapshot-render`/`artifact-fetch` still hand `NOT_FOUND` (t14-reread's omitted job); re-anchoring them to `EVIDENCE_NOT_HELD` restores it.
+4. Carried reds, unchanged, with owners: machinefences-dec49 ARM A4 (skills, N337); meaning-bounds 97/2 (D-240 (b), extraction's envelopes; the REACH residual, record-core's pair); mint-ledger S8 (queue and legacy-store, N342, T15 as B1 says); civicos-ui add-surface, bias-vocabulary 75/6, semantics-harvest 13/3 (legacy-ui); the guard's three (`gate.mjs`:465 codeless, promotion N275; 4 unclassified outcomes, reevaluation; 6 inherited verdicts, control-plane/strength/run-productions/basis-versions); check-semantics as at base (N241/K283 and app.html's docprofile copy).
+
+**Final battery** @ the commit carrying this record (four at a time, foreground chunks): plane **369 of 372 green** (owed-controls re-run 48/0 after the new suite's declaration); red machinefences-dec49 88/1, meaning-bounds 97/2, mint-ledger 25/1, all carried above. civicos-ui 87 of 90 (the carried three). The guard: 3 failures (carried). gate-reads 168/0. check-semantics: unchanged from base.
+
+**Checks** (civicos-process): format `69 modules, 64 requirements files; 0 failures`; architecture `876 product files, 2355 relative imports (73 naming no tracked file, not judged); 0 failures`; coverage `0 modules, 0 of 0 live requirement ids named by a test; 0 failures`; ownership `27 files changed by legacy-tests between tranche/T14 and HEAD; 0 failures`.
+
+Size (session_019CY4XgfPJPBSXghWdbPkGG): test runs about 1,100 (two whole batteries of 461 and 462 suites, the guard at 21 merges, the d470 and project-sight controls, and direct runs), module lines 1,361 (+1,204 −157 over 26 files, 827 of them the census fixture)
+
 ## J1 · QUESTION
 
 K457's grain (not blocking; I build on my reading). Baseline @ 12e562af6d: plane 352 of 371 green (19 red), civicos-ui 85 of 90, the guard 19 failures.
