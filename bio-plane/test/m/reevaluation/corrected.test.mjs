@@ -106,6 +106,16 @@ test("R27 R20: a dependent the viewer may not see is withheld and not counted; a
   const none = w.r.correctedDependents({ viewer: "nobody" });
   assert.deepEqual([none.count, none.entries, Object.keys(none).filter((k) => /withheld|hidden/.test(k))], [0, [], []]);
   assert.equal(w.r.reevaluations({ viewer: "nobody" }).count, 0);
+  /* the viewer is the one contradiction reads the marks for (its R10, R19): a stand-in that shows ann no mark */
+  const real = w.c;
+  const r = new Reevaluation({ storage: w.st, record: w.record, membership: w.membership, promotion: w.promotion,
+    inquiry: w.k, content: w.content, provenance: w.prov, strength: w.strength, basisVersions: w.basisVersions,
+    contradiction: { tensionsOn: (q) => (q.viewer === V("ann") ? { ok: true, wrote: false,
+      referents: q.referents.map((ref) => ({ referent: ref, marks: [] })) } : real.tensionsOn(q)) } });
+  assert.deepEqual(r.correctedDependents({ viewer: ADMIN }).entries.map((e) => e.dependent), [Q, D]);
+  assert.deepEqual([r.correctedDependents({ viewer: V("ann") }).count, r.reevaluations({ viewer: V("ann") }).count,
+                    r.changesOf({ findings: [D], viewer: V("ann") }).findings[0].causes], [0, 0, []],
+    "a viewer shown no mark on the side is told no cause, though the dependent itself is seen");
 });
 
 test("R27: correctedDependents lists each (dependent, candidate) in dependent then candidate order, paged by limit (1–200) with a cursor", () => {
