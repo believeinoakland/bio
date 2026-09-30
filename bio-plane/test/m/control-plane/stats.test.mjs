@@ -1,4 +1,4 @@
-/* control-plane: op=stats' two stamps (N399, K573; proposed R40). Converted from the old battery's
+/* control-plane: op=stats' two stamps (N399, K573, K607; R40). Converted from the old battery's
    `test/stats-disclosure.test.mjs`, the half this door answers. `op=stats` lives in legacy-store (`store.mjs`:2020, the
    route at :3033, J1 (1)): which counts each class receives (no `leads`, no `observations`, `observationsNonLead` for all,
    `dbBytes` only with `capacity`) is decided there over record-core's counts. What decides it is two stamps set here from
@@ -16,7 +16,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, call, opCalls, hex64, member } from "./harness.mjs";
 
-test("R40, R17 (proposed; N399): op=stats is stamped `capacity=1` exactly for the admin class — the admin binding and the founder's session — and `capacity=0` for every other caller, an administering member's session included, beside the caller's viewer; no `capacity` a caller sends reaches the store, in either direction", async () => {
+test("R40, R17 (N399): op=stats is stamped `capacity=1` exactly for the admin class — the admin binding and the founder's session — and `capacity=0` for every other caller, an administering member's session included, beside the caller's viewer; no `capacity` a caller sends reaches the store, in either direction", async () => {
   const dee = hex64();
   const { env, S } = world({ sessions: { [dee]: member("dee", ["contribute"], { administer: true }) } });
   const list = [

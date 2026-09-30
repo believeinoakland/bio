@@ -1,4 +1,4 @@
-/* control-plane: `surfaced_by` stamped at op=promote from the credential (D-78; proposed R37, N398, K573). Converted from
+/* control-plane: `surfaced_by` stamped at op=promote from the credential (D-78; R37, N398, K573, K607). Converted from
    the old battery's `test/surfaced-by.test.mjs`, over its own fixture: a focus `bundle.md` exactly as both bundle writers
    produce it, carrying the hardcoded literal `surfaced_by: human` whoever writes it. Driven through `makeFetch(hooks)`; what
    is checked is the body the store's `promote` route receives, which is what the store keeps byte for byte.
@@ -53,7 +53,7 @@ function callers() {
   ] };
 }
 
-test("R37 (proposed; D-78, N398): a creation of an inquiry records `surfaced_by` from the credential — `human` for a session, `agent` for every other caller — never the caller's own literal, with the bytes and digest of what the store keeps recomputed", async () => {
+test("R37 (D-78, N398): a creation of an inquiry records `surfaced_by` from the credential — `human` for a session, `agent` for every other caller — never the caller's own literal, with the bytes and digest of what the store keeps recomputed", async () => {
   const { w, list } = callers();
   for (const [name, token, params, want] of list) {
     /* both literals a caller could send: the writers' hardcoded `human`, and a session asserting `agent` */
@@ -72,7 +72,7 @@ test("R37 (proposed; D-78, N398): a creation of an inquiry records `surfaced_by`
   }
 });
 
-test("R37 (proposed; D-78, REC-10): every spelling the catalogue folds to an inquiry is stamped — the document's own `object_type` decides, the envelope's only where the document states none; a document of any other type is not touched", async () => {
+test("R37 (D-78, REC-10): every spelling the catalogue folds to an inquiry is stamped — the document's own `object_type` decides, the envelope's only where the document states none; a document of any other type is not touched", async () => {
   const { env, S } = world();
   for (const [type, stamped] of [["focus", true], ["problem", true], ["inquiry", true], ["information", false], ["project", false]]) {
     env.calls.length = 0;
@@ -93,7 +93,7 @@ test("R37 (proposed; D-78, REC-10): every spelling the catalogue folds to an inq
   assert.equal(surfacedBy(sent(env).text), "human");
 });
 
-test("R37 (proposed; D-78, REC-175): a revision is not restamped — the origin fact is not rewritten by a later editor — and a digest the caller sent that is not of its text is left as sent, so the store refuses the mismatch rather than the stamp papering over it", async () => {
+test("R37 (D-78, REC-175): a revision is not restamped — the origin fact is not rewritten by a later editor — and a digest the caller sent that is not of its text is left as sent, so the store refuses the mismatch rather than the stamp papering over it", async () => {
   const { env } = world();
   const id = "FOCUS-2026-0003-rev";
   const text = focusMd(id, "human");
@@ -122,7 +122,7 @@ test("R37 (proposed; D-78, REC-175): a revision is not restamped — the origin 
   assert.deepEqual([surfacedBy(sent(env).text), sent(env).sha256], ["agent", sha(sent(env).text)]);
 });
 
-test("R37, R16 (proposed; REC-173 (b)): an inquiry creation the plane verifies as a migration replay keeps its recorded `surfaced_by` although the admin binding is no session; unverified, the same creation is stamped `agent`", async () => {
+test("R37, R16 (REC-173 (b)): an inquiry creation the plane verifies as a migration replay keeps its recorded `surfaced_by` although the admin binding is no session; unverified, the same creation is stamped `agent`", async () => {
   for (const hold of [true, false]) {
     const id = "INQ-2026-0001-replayed";
     const text = focusMd(id, "human", "inquiry");

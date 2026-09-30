@@ -1,4 +1,4 @@
-/* control-plane: a lease's `actor` stamped from the credential (D-61; proposed R38, N398, K573). Converted from the old
+/* control-plane: a lease's `actor` stamped from the credential (D-61; R38, N398, K573, K607). Converted from the old
    battery's `test/unattended-lease.test.mjs`, Part A's control-plane half: a session starts an intake, a machine credential
    (the daemon, under a binding) takes the lease and completes it, and both acts are NAMED — the session by its member,
    the machine as `token:<class>`, never the caller-claimed `IMPOSTOR`.
@@ -27,7 +27,7 @@ function callers() {
   ] };
 }
 
-test("R38 (proposed; D-61, N398): op=lease's `actor` is the server's — a session's member, any other caller `token:<class>` — and never the caller's, in the query or not sent at all", async () => {
+test("R38 (D-61, N398): op=lease's `actor` is the server's — a session's member, any other caller `token:<class>` — and never the caller's, in the query or not sent at all", async () => {
   const { w, list } = callers();
   for (const [name, token, params, want] of list) {
     for (const sent of [{}, { actor: IMPOSTOR }, { actor: "" }, { actor: "ann" }]) {
@@ -44,7 +44,7 @@ test("R38 (proposed; D-61, N398): op=lease's `actor` is the server's — a sessi
   assert.equal(opCalls(w.env).length, 0);
 });
 
-test("R38, R17 (proposed; D-61): the walked-away capture — the session's start is attributed to its member, and the machine's completion names the machine as `token:<class>`, never the author the caller claimed", async () => {
+test("R38, R17 (D-61): the walked-away capture — the session's start is attributed to its member, and the machine's completion names the machine as `token:<class>`, never the author the caller claimed", async () => {
   const { w, list } = callers();
   const body = (base) => ({ bundleId: id, base, snapKey: base ? "20260731T010000Z_finish01" : "20260731T000000Z_start001",
     meta: { object_type: "information", title: "Walked-away capture", current_state: "collected" },
