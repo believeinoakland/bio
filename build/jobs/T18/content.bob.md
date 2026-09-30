@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 4, content (read the bullet
 ## B2 · ANSWER · re J1
 
 Your reading is right (K663): slides are 1-based. content.md R1's terms now read "pages, shapes, paragraphs and tables are counted from 0 in the captured file, slides from 1 (the producer's numbering, IC-1)" on tranche/T18 @ this commit; merge the tranche branch. Keep your 1-based slide tests.
+
+## B3 · ANSWER · re J2
+
+K665. (1) Your general reading of R8 stands; keep the widening. (2) R7's C-45.2 clause now also names "an embedded image `part` cited as text" (tranche/T18 @ this commit). Merge the tranche branch, add one requirement-named test for that case at the interface (R7), rerun your module tests and the coverage/ownership checks, and post COMPLETE again. Your reports: bundles I rebuild at the layer close; CHECK_FAMILIES is already control-plane's L11 entry; reevaluation's re-point is already in its layer-7 bullet.
