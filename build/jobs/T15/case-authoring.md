@@ -2,6 +2,41 @@
 
 **Status** · session_017F7CenwNVr8EttZdzGn7Pc · depth 2 · WORKING · handled B2
 
+## Completion
+
+**Applied** (N345; B2 and B3, K498, K499; on `tranche/T15`, merged in at 6a63e0b4ac):
+- **R31, disclosure** (`src/case-authoring/index.mjs`). `publishCase` takes `tensionsDisclosed: [{candidate, words?}]`. After R12 and before R7, `#tensionsRead` asks `contradiction.unresolvedRecordOn({finding, sha, viewer})` for each member at the bytes the act pins (R13), so no refusal draws an id.
+  - `TENSIONS_UNDETERMINED` (C-120.3) on `undetermined` or `truncated` (or a thrown read). A document leg with no content row (`undetermined_legs`) is not a failed read: it is stated as unread (`case_tensions_unread`, a body sentence, `tensions_legs_unread` in the answer).
+  - `TENSION_NOT_DISCLOSED` (C-120.1) names each undisclosed one. A conflict seen whole is named with both sides. A half-seen one is named only as `{candidate, finding, unseen_other_side: true, says: "in conflict with a record not shown"}`.
+  - `DISCLOSURE_NOT_STANDING` (C-120.2) applies only to a well-formed candidate the read does not answer. Any malformed shape is R3's `BAD_COMPLETENESS` naming `tensionsDisclosed`, `tensionsDisclosed[i]` or `tensionsDisclosed[i].words` (K498). An apostrophe is legal. A candidate listed twice is disclosed once.
+  - A case is never refused because a conflict exists.
+- **R14, the section** (`document.mjs`), in the shape of J1 item 1 plus J2 item 7. `tensions_disclosed`, `tensions_highlighted`, `tensions_depth_stated`, `case_tensions_unread`, `case_tensions` and `case_tension_sentences` are written after `case_conclusions` and are always present. The body gains `## Tensions Disclosed`. Each member's block in `## Findings In This Case` gains one sentence per tension, from `TENSION_TEMPLATES`, attributed "Disclosed by <author> on <instant>". `acknowledged_by` is the `author` stamp (R25).
+- **R31's highlight and R33** (DEC-85). A highlighted entry carries only `side_*`, `highlight` (`HIGHLIGHT_SENTENCE`), its state, `acknowledged_by`, the instant and the owner's words. It has no `a_*`, `b_*` or `explanation` field. Its member's block uses the `unseen` template, not the state's own. Sight is the stamped viewer at the act, so a reveal (contradiction R52) widens nothing.
+- **R32, `tensionsToDisclose`** (`op=publishtensions`). R2's refusals, then R4's per member, then C-120.3, through the same `#authority`, `#judgeMembers` and `#tensionsRead` that `op=publish` uses. `#authority` and `#judgeMembers` are R2 and R4 lifted out of `#publishCase` unchanged. A highlighted candidate carries `CEREMONY_HIGHLIGHT_SENTENCE`. The answer carries `count`, `highlighted`, `legs_unread`, `depth_stated` and `says` (disclose, never blocked). It writes nothing, and a throw answers C-120.3. No targets answers `[]`, and duplicates are read once.
+- **R15.** The answer gains `tensions`, `tensions_highlighted` and `tensions_legs_unread`.
+- **R29.** New family `CASE_DISCLOSURE_CHECKS` in `checks.mjs` (K343's pattern), picked up by control-plane's `import * as M_CASE_AUTHORING`. Its `where` values: `#publishCase > is-tension-disclosed`, `#publishCase > is-disclosure-standing`, `#undetermined > is-tensions-determined` (one literal site each).
+- **Uses:** `contradiction` (its R29 `unresolvedRecordOn`), reached through `contradictionOf(host)` unless given. The edge is in `modules.json` (K481).
+
+**Check rows (promotion's to stamp, N318): `awaiting stamp` for T16.** Added: C-120.1 `TENSION_NOT_DISCLOSED`, C-120.2 `DISCLOSURE_NOT_STANDING`, C-120.3 `TENSIONS_UNDETERMINED`. None moved or retired.
+
+**Stamps for control-plane (layer 11).** `op=publishtensions` takes `viewer` and `author` from the query, after the body, as `op=publish` does. `op=publish` gains `tensionsDisclosed` in its body; no new stamp.
+
+**Please strike** (my work meets these marks): R14 `*(not yet met: N345)*`, R29 `*(not yet met: N345)*`, R32 `*(not yet met: N345)*`, R33 `*(not yet met: N345)*`, R31's highlight `*(not yet met: N345)*`, and the Status line's N345 fold as met. R14's `/5` holds once publication's `CASE_DOCUMENT_FORMAT` moves (see Deferred).
+
+**Deferred.** R14's `bio-case-document/5`, read back through publication's `caseTensionsOf`, is a `test.todo` (K498). Both are publication's and land at PUBLICATION #5's merge. A `CHANGE` after that merge turns the todo into the test. The document already writes `format: ${CASE_DOCUMENT_FORMAT}`, so no code of mine changes.
+
+**Found in other modules** (also posted as REPORT):
+- **review** (its R13, the review copy's dry run of `op=publish`). Its draft params carry no `tensionsDisclosed`. A dry run over a case with an unresolved duty on it will now answer C-120.1, so its missing-list shows that refusal instead of the case. Review's fixture stubs `publishCase`, so its 30 tests still pass. What its drafts should carry is N345's DEC-80 part.
+- **civicos-ui** (`civicos-ui/app.html`, the publish ceremony, legacy-tests' per K458 for its tests). It sends `op=publish` with no `tensionsDisclosed` and never calls `op=publishtensions`. A publish over a case with a standing duty will be refused C-120.1 until the ceremony's DEC-80 step is built. Grep of `civicos-ui/` and `affordances.mjs` for the new codes, `publishtensions`, `tensionsDisclosed` and C-120: no hit. Affordances' `publish` entry (`affordances.mjs`:1469) is unchanged.
+- **Generated artifacts:** none made stale (no bundle takes case-authoring's files).
+
+**Tests and checks** (from `bio-plane/`, `node --test`):
+- `test/m/case-authoring/`: tests 53, pass 52, fail 0, todo 1. The new `tensions.test.mjs` runs over the real contradiction module (candidates laid through `pairs`, `propose`, `clarify`, `takeUp` and `optIn`), with stand-ins only for a failed, truncated, leg-unread or irreconcilable read.
+- `test/m/review/`: tests 30, pass 30, fail 0. `test/m/control-plane/`: tests 52, pass 52, fail 0 (the modules using mine).
+- `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures. `architecture.mjs … case-authoring`: 13 product files, 62 relative imports; 0 failures. `coverage.mjs … case-authoring`: 33 of 33 live requirement ids named by a test; 0 failures. `ownership.mjs … case-authoring tranche/T15`: 8 files; legacy-store and legacy-checks 0 added, 0 removed; 0 failures.
+
+Size (session_017F7CenwNVr8EttZdzGn7Pc): test runs 16, module lines 2610
+
 ## J1 · QUESTION
 
 Best readings, which I am building on now; the first one is shared with PUBLICATION #5 (its R10 reads what my R14/R31 write), so please relay or rule.
