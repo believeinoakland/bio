@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, hold, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration } from "./fixture.mjs";
 import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";
-import { pdfStructureOp, extractionOp } from "../../../src/extraction/ops.mjs";
+import { pdfStructureOp, extractionOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { OCR_INVOCATIONS_PER_REQUEST } from "../../../src/extraction/pipeline.mjs";
 import { unregisterFormat, registerFormat, getFormat } from "../../../src/formats.mjs";
@@ -46,7 +46,7 @@ test("R31: the control plane refuses a malformed digest (required argument) and 
   assert.equal(silent.silent, "pdfstructure");
 });
 
-test("R31 (K649 (7)): the control plane's dispatch reaches op=pdfstructure through extractionOp with its stamps, the store asked for only then; any other op answers null and asks for no store", async () => {
+test("R31 (K649 (7)): the control plane's dispatch reaches op=pdfstructure (EXTRACTION_OPS) through extractionOp with its stamps, the store asked for only then; any other op answers null and asks for no store", async () => {
   const json = (b, s = 200) => ({ b, s });
   let asked = null, stores = 0;
   const store = { fetch: async (p) => { asked = new URL(String(p)); return new Response(JSON.stringify({ ok: true, result: { status: 200, body: { ok: true, tier: 1 } } })); } };
@@ -54,6 +54,8 @@ test("R31 (K649 (7)): the control plane's dispatch reaches op=pdfstructure throu
   const stamps = { json, storeSilent: (op) => ({ silent: op }), storageAbsent: (op) => ({ absent: op }), requiredArgument: () => ({}),
                    cls: "member", session: true, caps: ["contribute"], viewer: "member:m1", author: "member:m1", storeName: "ns" };
   const env = { CAPTURES: { get() {} } };
+  assert.deepEqual([...EXTRACTION_OPS], ["pdfstructure"]);
+  assert.ok(Object.isFrozen(EXTRACTION_OPS));
   for (const op of ["acquire", "capture", "reading", "pdfstructurex", "", null])
     assert.equal(await extractionOp(op, new URL("http://p/?sha256=" + "a".repeat(64)), env, getStore, stamps), null, String(op));
   assert.equal(stores, 0);

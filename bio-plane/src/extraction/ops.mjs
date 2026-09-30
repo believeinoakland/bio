@@ -64,6 +64,9 @@ export async function pdfStructureOp(url, env, store, { json, storeSilent, store
   return unanswered(r, op, { json, storeSilent, storeRefusal }) ?? json(r.result.body, r.result.status);
 }
 
+/* The ops `extractionOp` answers, which the control plane routes here (host-governor's `GOVERNOR_OPS` precedent). */
+export const EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
+
 /** The control plane's dispatch of this module's op (legacy-index map §4.4, K649 (7)): `op=pdfstructure` (R31–R35),
  *  moved out of `src/index.mjs` with the stamps it hands, which stay the control plane's (the caller class, whether
  *  a member session asked and its capabilities, the viewer, the author). `getStore` answers the Durable Object stub
