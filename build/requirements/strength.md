@@ -38,7 +38,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - **R26** `candidatePair` answers R1–R5's three axes over `legs` given in place of the inquiry's live basis (each `{target, role, grade, grade_axis, grade_source, ground}`), walking inquiry legs to the depth bound exactly as `strengthOf` does; it writes nothing. A leg whose target cannot be read makes that axis `undetermined`, never an error; a failure of the arithmetic itself is answered as `{pair: null, error}` (the message, at most 200 characters), never thrown.
 - **R27** `candidateIndependence` answers R12's `independence` over `legs` grouped by their `ground` into `parts` declared parts, with the same origin limit (200) and the same `complete: false` when it is reached.
 
-**The cache: writeProjection(bundleId, isInquiry, subjectEntity)** (a projection registered with `promotion`, its R39)
+**The cache: writeProjection(bundleId, isInquiry)** (a projection registered with `promotion`, its R39)
 - **R13** In each inquiry's promotion, the capture and connection grade and state of R1–R5 are written for search (`retrieval`'s fields `capture:` and `connection:`), in the same transaction as the legs they summarise; they are a cache, marked so, and no read of strength answers from them.
 
 **The bar: projectBar(projectId), strengthBarSet({group, capture, connection, author}), strengthBarOf({group, target, project, viewer})** (`op=strengthbar`, `op=strengthbarof`)
@@ -57,6 +57,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - `record-core`: `recordOf(ctx)`, the `bundles` read contract.
 - `membership`: `viewerPredicate`, `inSight` (R80), `noSuchProject` (R78), and whether an author is an active administrator (R15). *(not declared)*
 - `promotion`: `registerStep` (R13); the fact `producingGroup`. *(not declared)*
+- `retrieval`: `registerField` (its R62), for R23's cache (K675).
 - `provenance`: the `register` and `captured_locators` read contract (R12).
 - `inquiry`: `basisFor`, `earned`, `legCapped`, `subjectEntityOf`, the registration R17 fills.
 - `basis-versions`: the version rows and legs, `currentOf` (R7, R8); `BASIS_VERSION_LEGS_MAX` (its R9), R8's bound (N184).

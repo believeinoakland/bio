@@ -253,3 +253,22 @@ test("R12 (K313): the ratio's machine-credential pattern stays within workerd's 
   assert.ok(w.st.patterns.length > 0, "the ratio's statements ran a pattern");
   assert.ok(w.st.patterns.every((p) => Buffer.byteLength(p) <= 50), JSON.stringify(w.st.patterns));
 });
+
+test("R10 (convert: extractrun): NO_SUCH_RUN names the run and says a run begins on a member's act; NOT_AN_EXTRACT_RUN echoes the run's mode, a mints bound declared or not", () => {
+  const { w, propose } = base();
+  const none = propose({ run: "RUN-nobody-opened" });
+  refusedAs(none, "NO_SUCH_RUN");
+  assert.equal(none.run, "RUN-nobody-opened");
+  assert.match(none.detail, /no run is open under RUN-nobody-opened/);
+  assert.match(none.detail, /A run begins on a MEMBER's act/);
+  w.run("RUN-CHECK", { mode: "check", principal_plane: AK, mints: 5 });
+  const check = propose({ run: "RUN-CHECK" });
+  refusedAs(check, "NOT_AN_EXTRACT_RUN");
+  assert.deepEqual([check.run, check.mode], ["RUN-CHECK", "check"]);
+  assert.match(check.detail, /opened in mode 'check'/);
+  w.run("RUN-NOMODE", { mode: null, principal_plane: AK, mints: 5 });
+  const unnamed = propose({ run: "RUN-NOMODE" });
+  refusedAs(unnamed, "NOT_AN_EXTRACT_RUN");
+  assert.equal(unnamed.mode, null);
+  assert.match(unnamed.detail, /opened in mode '\(none\)'/);
+});
