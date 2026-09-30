@@ -158,9 +158,9 @@ export function notAParticipant(projectId, by, extra = null) {
    (this module's R79; promotion, provenance and the later modules import it); this module's R83 test holds it equal to
    the file, so a change there fails the suite until the list follows. */
 export const MODULE_ORDER = Object.freeze([
-  /* 1 */ "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures", "id-spaces",
-          "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain",
-          "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
+  /* 1 */ "record-grammar", "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures",
+          "id-spaces", "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry",
+          "text-chain", "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
   /* 2 */ "record-core", "membership", "promotion",
   /* 3 */ "host-governor", "provenance", "capture-sources", "capture", "sources",
   /* 4 */ "calibration", "extraction", "content",
@@ -169,10 +169,11 @@ export const MODULE_ORDER = Object.freeze([
           "capture-requests", "skills", "agent-worker",
   /* 7 */ "intent", "reevaluation",
   /* 8 */ "publication", "ratification", "case-authoring", "review",
-  /* 9 */ "standards", "conformance", "consequences", "actions", "filings", "escalation",
+  /* 9 */ "standards", "conformance", "consequences", "actions", "action-clocks", "filings", "escalation",
+          "action-plans",
   /* 10 */ "monitoring", "scheduler", "legacy-store",
-  /* 11 */ "affordances", "tasks", "queue-producers", "queue", "instance-setup", "control-plane", "legacy-index",
-           "legacy-ui", "installer", "legacy-tests",
+  /* 11 */ "affordances", "tasks", "queue-producers", "queue", "instance-setup", "op-declarations", "admission",
+           "control-plane", "legacy-index", "legacy-ui", "installer", "legacy-tests",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
