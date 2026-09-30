@@ -3,8 +3,9 @@
    test; no network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, receipt, register, H } from "./fixture.mjs";
-import { captureOf, REACHABILITY_DEFAULTS, REACHABILITY_SETTINGS, TASK_KINDS } from "../../../src/capture/index.mjs";
+import { fresh, receipt, register, H, bucket, newKey, sshsign, signer } from "./fixture.mjs";
+import { captureOf, captureAccountStatement, REACHABILITY_DEFAULTS, REACHABILITY_SETTINGS, TASK_KINDS } from "../../../src/capture/index.mjs";
+import { NS_RATIFY } from "../../../src/sshsig.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const A = H("a"), B = H("b"), C = H("c"), D = H("d");
@@ -408,4 +409,110 @@ test("R59 (N166): source_reachability is a read contract: one row per address_no
     const r = c.sourceReachability({ addressNorm: x });
     assert.deepEqual([r.consecutive_failures, r.first_failure_since], [row(x)[0].consecutive_failures, row(x)[0].first_failure_since], x);
   }
+});
+
+/* R74 (N418, K650, K655): every write goes through record-core's `transact` (its R32), so a writer's own statements land
+   or roll back together, a write made inside a caller's transaction joins it, and `afterCommit` (its R66) called by a
+   listener inside a write is held until the outermost commit. Observed at the interface: every writer, each statement
+   it runs against the store and record-core's `transact` around it; a trigger that fails a writer's later statement; a
+   listener that asks `afterCommit`; and a caller's transaction that refuses. */
+test("R74 (N418): every statement that changes the store, from every writer this module provides, runs inside record-core's transact", async () => {
+  const b = bucket();
+  const { c, core, s } = fresh({ evidence: b, env: { INSTANCE_NAME: "i" } });
+  receipt(s, { address: "https://h.example/p", capture: A, first: "2026-01-01T00:00:00Z" });
+  receipt(s, { address: "https://h.example/q", capture: B, first: "2026-01-02T00:00:00Z" });
+  const key = await newKey();
+  signer(s, "m1", key.keyB64);
+  let depth = 0;
+  const outside = [], inside = new Set();
+  const transact = core.transact.bind(core);
+  core.transact = (fn) => transact(() => { depth++; try { return fn(); } finally { depth--; } });
+  const exec = s.sql.exec;
+  let writer = null;
+  s.sql.exec = (q, ...a) => {
+    if (/^\s*(INSERT|UPDATE|DELETE|REPLACE)\b/i.test(q)) (depth > 0 ? inside.add(writer) : outside.push(`${writer}: ${q.trim().slice(0, 70)}`));
+    return exec.call(s.sql, q, ...a);
+  };
+  const as = async (name, fn) => { writer = name; await fn(); writer = null; };
+  const nav = (a) => ({ ref: a, address: a, address_norm: a, type: "deferred", chrome: true, chrome_basis: "<nav>" });
+  await as("knock", () => c.knock({ content: "k1", sourceAddress: "1.1.1.1", knockerSecret: "a knocker secret of twenty-plus" }));
+  await as("knockAttempt", () => c.knockAttempt({ sourceAddress: "1.1.1.2" }));
+  const kid = c.inboxList(null).inbox[0].knock_id;
+  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "discarded", by: "m1" }));
+  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "new", by: "m1" }));
+  await as("pullKnock", () => c.pullKnock({ knockId: kid, by: "m1" }));
+  await as("recordCaptureActor", () => c.recordCaptureActor({ captureSha: C, actor: "m1" }));
+  await as("recordCaptureAccount", async () => {
+    const r = await c.recordCaptureAccount({ captureSha: C, text: "mine", signature: await sshsign(key, captureAccountStatement(C, "mine"), NS_RATIFY), by: "m1" });
+    assert.equal(r.ok, true);
+  });
+  b.held.set(`bio/captures/${D}`, new Uint8Array([1]));
+  await as("reattest", () => c.reattest({ captureSha: D, by: "m1" }));
+  await as("renderAdmit", () => c.renderAdmit({ allowanceMs: 1000, reserveMs: 10, cap: 2 }));
+  await as("renderSpend", () => c.renderSpend({ ms: 5, releaseMs: 10 }));
+  await as("recordLinks", () => c.recordLinks({ sourceCapture: A, capturedAt: "2026-01-01T00:00:00Z", links: [nav("https://h.example/n")] }));
+  await as("recordLinks", () => c.recordLinks({ sourceCapture: B, capturedAt: "2026-01-02T00:00:00Z", links: [nav("https://h.example/n")] }));
+  await as("recordLinkVerdict", () => c.recordLinkVerdict({ sourceCapture: A, addressNorm: "https://h.example/n", verdict: "undetermined", basis: "b" }));
+  await as("deriveSiteChrome", () => c.deriveSiteChrome({ host: "h.example" }));
+  await as("saveCaptureSession", () => c.saveCaptureSession({ session: "s1", locator: "l", primarySha: A, primaryFile: "f", base: "b", state: {} }));
+  await as("loadCaptureSession", () => c.loadCaptureSession({ session: "s1" }));
+  await as("dropCaptureSession", () => c.dropCaptureSession({ session: "s1" }));
+  await as("recordSiteAssets", () => c.recordSiteAssets({ host: "h.example", primarySha: A, observations: [{ address_norm: "https://h.example/a.css", sha256: H("1") }] }));
+  await as("recordSiteAssets", () => c.recordSiteAssets({ host: "h.example", primarySha: B, observations: [{ address_norm: "https://h.example/a.css", sha256: H("2") }] }));
+  await as("recordReuseVerdicts", () => c.recordReuseVerdicts({ bundleId: "INFO-1", verdicts: [{ source_capture: A, address_norm: "https://h.example/a.css", verdict: "confirmed", reused_sha: H("1") }] }));
+  await as("recordCaptureLimit", () => c.recordCaptureLimit({ runtime: "subrequests", observed: 40 }));
+  await as("recordCaptureLimit", () => c.recordCaptureLimit({ runtime: "subrequests" }));
+  await as("taskEnqueue", () => c.taskEnqueue({ captureSha: A, subject: "s" }));
+  await as("taskEventAttempt", () => c.taskEventAttempt({ kind: "authority-undetermined", captureSha: A }));
+  await as("taskEventRemove", () => c.taskEventRemove({ kind: "authority-undetermined", captureSha: A }));
+  await as("recordValidators", () => c.recordValidators({ addressNorm: "https://h.example/p", captureSha: A, etag: "e" }));
+  await as("recordSourceOutcome", () => c.recordSourceOutcome({ addressNorm: "https://h.example/p", outcome: "fetch_failed" }));
+  s.sql.exec = exec;
+  assert.deepEqual(outside, [], "no statement changed the store outside a transaction");
+  for (const w of ["knock", "knockAttempt", "inboxResolve", "pullKnock", "recordCaptureActor", "recordCaptureAccount", "reattest", "renderAdmit",
+                   "renderSpend", "recordLinks", "recordLinkVerdict", "deriveSiteChrome", "saveCaptureSession", "loadCaptureSession",
+                   "dropCaptureSession", "recordSiteAssets", "recordReuseVerdicts", "recordCaptureLimit", "taskEnqueue", "taskEventAttempt",
+                   "taskEventRemove", "recordValidators", "recordSourceOutcome"])
+    assert.ok(inside.has(w), `${w} wrote, through transact`);
+});
+
+test("R74 (N418): a writer's statements land or roll back as one, a listener's afterCommit waits for the commit, and a write inside a caller's refused transaction leaves nothing and runs nothing", async () => {
+  const { c, core, s, rows } = fresh();
+  /* one act: the second statement of each writer fails, and the first is undone with it */
+  s.db.exec(`CREATE TRIGGER fail_reach BEFORE UPDATE ON source_reachability BEGIN SELECT RAISE(ABORT, 'reach down'); END`);
+  await assert.rejects(c.recordSourceOutcome({ addressNorm: "https://x.example/", outcome: "fetch_failed" }), /reach down/);
+  assert.equal(rows(`SELECT count(*) n FROM source_reachability`)[0].n, 0, "the row inserted first is rolled back");
+  s.db.exec(`CREATE TRIGGER fail_chrome BEFORE INSERT ON site_chrome_refs BEGIN SELECT RAISE(ABORT, 'chrome down'); END`);
+  receipt(s, { address: "https://h.example/p", capture: A, first: "2026-01-01T00:00:00Z" });
+  assert.throws(() => c.recordLinks({ sourceCapture: A, capturedAt: "2026-01-01T00:00:00Z",
+    links: [{ ref: "n", address: "https://h.example/n", address_norm: "https://h.example/n", chrome: true, chrome_basis: "<nav>" }] }), /chrome down/);
+  assert.equal(rows(`SELECT count(*) n FROM links`)[0].n, 0, "no link filed without its chrome derivation");
+  s.db.exec(`CREATE TRIGGER fail_slot BEFORE INSERT ON render_slots BEGIN SELECT RAISE(ABORT, 'slots down'); END`);
+  assert.throws(() => c.renderAdmit({ allowanceMs: 1000, reserveMs: 10, at: "2026-04-01T00:00:00Z" }), /slots down/);
+  assert.equal(rows(`SELECT count(*) n FROM render_allowance`)[0].n, 0, "no reservation counted without its slot");
+  /* afterCommit asked by a listener inside a write waits until the write's statements are all committed */
+  const seen = [];
+  c.on("observation", "log", () => { core.afterCommit(() => seen.push(rows(`SELECT count(*) n FROM reuse_verdicts`)[0].n)); return null; });
+  const v = (i) => ({ source_capture: B, host: "x.example", address_norm: `https://x.example/${i}`, verdict: "confirmed", reused_sha: H("1") });
+  c.recordReuseVerdicts({ bundleId: "INFO-1", verdicts: [v(1), v(2), v(3)], at: "2026-01-01T00:00:00Z" });
+  assert.deepEqual(seen, [3, 3, 3], "each held call ran after all three verdicts were committed, in order");
+  /* inside a caller's transaction that refuses: nothing of the write stands and nothing held runs */
+  seen.length = 0;
+  const before = rows(`SELECT count(*) n FROM reuse_verdicts`)[0].n;
+  const out = core.transact(() => {
+    c.recordReuseVerdicts({ bundleId: "INFO-2", verdicts: [v(4)], at: "2026-01-02T00:00:00Z" });
+    c.recordCaptureLimit({ runtime: "subrequests", observed: 50 });
+    return { ok: false, reason: "CALLER_REFUSED" };
+  });
+  assert.deepEqual([out.reason, rows(`SELECT count(*) n FROM reuse_verdicts`)[0].n, rows(`SELECT count(*) n FROM capture_limits`)[0].n, seen],
+                   ["CALLER_REFUSED", before, 0, []]);
+  /* and inside one that commits, the held call runs once the caller's transaction commits, not before */
+  const order = [];
+  core.transact(() => {
+    c.on("observation", "order", () => { core.afterCommit(() => order.push("held")); return null; });
+    c.recordReuseVerdicts({ bundleId: "INFO-3", verdicts: [v(5)], at: "2026-01-03T00:00:00Z" });
+    order.push("caller still open");
+    return { ok: true };
+  });
+  assert.deepEqual(order, ["caller still open", "held"]);
 });

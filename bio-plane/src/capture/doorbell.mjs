@@ -4,9 +4,8 @@
  * capture and not a bundle: it lands in the inbox, which only a signed-in member reads. The response envelope,
  * `requiredArgument`, the store-silence refusal and the Durable Object envelope's reader (`doAnswer`, N247) are the
  * control plane's, passed in by the caller. */
-import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
 import { relayUnanswered } from "./ops.mjs";
-import { CAPTURE_CHECKS } from "./checks.mjs";
+import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 
 /* R31, R49, R50. The limits the instance runs, and D-496's published sentences BUILT FROM THEM, so the words and
    the numbers cannot drift apart (BOB #32: a published limit is a BOUND). "Estimated by a sliding window" because
@@ -133,4 +132,11 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
                 received: "Your material is in the group's inbox awaiting member review.",
                 pseudonym: typeof rec.pseudonym === "string" ? rec.pseudonym : null,
                 ...(typeof rec.secret === "string" ? { secret: rec.secret } : {}) }, 200);
+}
+
+/** The legacy-index map's §4.4 plain move (K649 (7)): the dispatch of this module's one public op, `knock` (the door
+ *  anyone may ring, with no token and no session), moved out of `src/index.mjs`. Kept apart from `captureOp` so that
+ *  nothing but the doorbell is reachable before authentication. Answers `knockOp`'s Response, or null for another op. */
+export function capturePublicOp(op, req, env, store, hooks) {
+  return op === "knock" ? knockOp(req, env, store, hooks) : null;
 }

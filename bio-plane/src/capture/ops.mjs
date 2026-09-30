@@ -6,6 +6,7 @@
  * decided (the caller class, the viewer, the member). `store` is the Durable Object stub the op is scoped to. */
 import { normalizeAddress } from "../subresources.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
+import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 
 /** R64 (N339, K421): the one way this module's handlers answer what `doAnswer` read that was not an answer. The
  *  store's own refusal (`refused`: `ok: false` below 500, control-plane R23) is relayed with the store's status, code
@@ -165,4 +166,32 @@ export function withReading(answer, { reading, textUnits, textUnitsOverBound }) 
   return { ...answer, document: { file, locator, retrieved, profile, reading,
     ...(textUnits ? { text_units: textUnits } : {}), ...(textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {}),
     ...rest } };
+}
+
+/** The legacy-index map's §4.4 plain move (K649 (7)): the dispatch of this module's gated ops, `links`, `capture`,
+ *  `archivelookup` and `acquire`, moved out of `src/index.mjs`. The control plane routes and authenticates and hands in
+ *  what it decided: its envelope helpers (`json`, `storeSilent`, `storeRefusal`, `doAnswer`, `storageAbsent`,
+ *  `requiredArgument`), its stamps (`cls`, `member`: a member session, `sessMember`, `viewer`, `storeName`), `key` (a
+ *  digest's object key in this store's namespace), `store()` (the Durable Object stub the op is scoped to, reached only
+ *  by an op that asks the store) and `readAcquired(answer, store)`, the reading of what an acquire filed, which is
+ *  `extraction`'s (its `acquireReadingOp`, a later module this one cannot import): the op forwards to the acquisition,
+ *  hands the filed document to the reader and adds only the grade note, running no reading of its own (K72 (8), N265).
+ *  Answers the op's Response, or null for an op that is not one of these four. */
+export async function captureOp(op, req, url, env, store, h) {
+  const { json, storeSilent, storeRefusal, doAnswer } = h;
+  if (op === "links") return linksOp(url, store(), { json, storeSilent, storeRefusal, doAnswer, viewer: h.viewer });
+  if (op === "capture")
+    return captureObjectOp(req, url, env, { json, storageAbsent: h.storageAbsent, requiredArgument: h.requiredArgument, key: h.key,
+                                            storeName: h.storeName, cls: h.cls });
+  if (op === "archivelookup") return archiveLookupOp(req, url, store(), { json, storeSilent, storeRefusal, doAnswer });
+  if (op === "acquire") {
+    const at = store();
+    const acquired = await acquireOp(req, env, at, { json, storeSilent, storeRefusal, storageAbsent: h.storageAbsent, doAnswer,
+                                                     cls: h.cls, member: h.member, sessMember: h.sessMember, storeName: h.storeName });
+    if (acquired.response) return acquired.response;
+    const read = await h.readAcquired(acquired.answer, at);
+    if (read.response) return read.response;
+    return json(Object.assign(read.body, { note: ACQUIRE_GRADE_NOTE }), 200);
+  }
+  return null;
 }
