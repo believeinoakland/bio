@@ -33,7 +33,12 @@ function hasFile_(ctx, path) {
 
 /* The letters a capture may declare: the basis grades but testimony's, which no capture carries (MK-2). */
 const CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
-const ORIGIN_KINDS = ['named_request', 'sweep', 'member'];
+/* R51 · N381 (K560): material handed in at the doorbell and brought in by a member's pull (capture R65) was RECEIVED,
+   never fetched, so its document carries no capture letter and says why: `grade: null` with this basis, the one
+   `captureGrade` answers for its receipt. The one spelling of the basis, and of the origin kind the pull writes. */
+export const RECEIVED_NOT_FETCHED = 'CAPTURE_RECEIVED_NOT_FETCHED';
+export const DOORBELL_ORIGIN = 'doorbell';
+const ORIGIN_KINDS = ['named_request', 'sweep', 'member', DOORBELL_ORIGIN];
 const CAPTURE_ENCODINGS = ['utf8', 'base64', 'binary'];
 const HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const RAW_SHA_RE = /^[0-9a-f]{64}$/;
@@ -203,6 +208,13 @@ function checkReleaseAuthority(ctx, findings) {
       if (d.authored === true) {
         if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md §3)`));
         if (cap.actor_class !== 'member') findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+      } else if (d.origin && typeof d.origin === 'object' && d.origin.kind === DOORBELL_ORIGIN) {
+        /* N381 (R51; K509 (3)): A PULLED KNOCK CARRIES NO FETCHED LETTER, and the basis is the statement. No instance
+           asked any address for these bytes, so a letter would read as a measurement of a fetch that never happened;
+           the document says instead that they were received, and a leg on them keeps its author's letter. As the
+           authored arm admits no letter, this one admits none, and asks the basis be stated rather than inferred. */
+        if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was received through the doorbell and carries capture.grade '${cap.grade}': received material was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)`));
+        if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was received through the doorbell and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
       } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(', ')}`));
     }

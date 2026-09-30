@@ -33,7 +33,7 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { migrateProvenance } from "./schema.mjs";
-import { registerChecks } from "./register-checks.mjs";
+import { registerChecks, RECEIVED_NOT_FETCHED } from "./register-checks.mjs";
 import { REGISTER_ENTRY_CHECKS } from "./checks.mjs";
 
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
@@ -41,7 +41,7 @@ export { PROVENANCE_SCHEMA } from "./schema.mjs";
 /** The tables this module owns (R41): no other module declares, writes or reshapes them. */
 export const PROVENANCE_TABLES = ["register", "captured_locators", "provenance_route_marks", "origin_declarations",
                                   "signed_receipts", "receipt_keys"];
-export { registerChecks } from "./register-checks.mjs";
+export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
 export { REGISTER_ENTRY_CHECKS } from "./checks.mjs";
 
 const te = new TextEncoder();
@@ -1331,7 +1331,7 @@ class Provenance {
       const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
                             WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
                           s, DOORBELL_VIA);
-      return { grade: null, route: "doorbell", determined: false, basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+      return { grade: null, route: "doorbell", determined: false, basis: RECEIVED_NOT_FETCHED,
                ceiling: EARNED_CAPTURE_CEILING,
                received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
                why: "these bytes were handed to the group through the doorbell and brought in by a member, never "
