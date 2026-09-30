@@ -16,7 +16,7 @@
 
 **Deferred.** None of skills'. Contradiction's R41 (the measurement) is the one thing that turns the layer on.
 
-**Reported (REPORT J4).** agent-worker's bundle stale (its requirements.test R45: `skillpack.mjs` changed); BOB rebuilds. No check row added, moved or retired (nothing for promotion to stamp). `civicos-ui/` and affordances' lists: no hit for anything added.
+**Reported (REPORT J3).** agent-worker's bundle stale (its requirements.test R45: `skillpack.mjs` changed); BOB rebuilds. No check row added, moved or retired (nothing for promotion to stamp). `civicos-ui/` and affordances' lists: no hit for anything added.
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/skills/`: 33 pass, 0 fail (was 31/0 before N345).
