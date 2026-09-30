@@ -66,13 +66,12 @@ export { QUEUE_CONDITION_KINDS };
  * so a suite can assert that every kind a live producer emits is classified.
  *
  * THE THREE LIVE SPELLINGS MATTER and are carried exactly as the producers emit
- * them: `authority-undetermined` is store.mjs TASK_KINDS' only member and the
- * one OBLIGATION any caller can actually raise today (D-98); `missing_predecessor`
- * and `overdue_successor` are the two kinds queueFeed's FINDING half emits from
- * proposalsFeed. If one of those were absent here the fence would refuse it as
+ * them: `authority-undetermined` is the kind `tasks`' drain routes (D-98);
+ * `missing_predecessor` and `overdue_successor` are the two kinds
+ * `queue-producers/proposals.mjs` emits from proposalsFeed. If one of those were absent here the fence would refuse it as
  * UNKNOWN rather than as MISCLASSED, which is a weaker and less true answer. */
 export const QUEUE_OBLIGATION_KINDS = {
-  "authority-undetermined":      "authority undetermined at capture (D-98, RULED: created automatically) — LIVE: capture's task kinds, drained by queue",
+  "authority-undetermined":      "authority undetermined at capture (D-98, RULED: created automatically) — LIVE: capture's task kinds, drained by tasks",
   /* CORRECTED 2026-08-05 (REC-47 / DEC-46 (d), D-188). This read "blocks a
      transition", which is the PRE-DEC-20 blanket rule and the opposite of the
      doctrine: ordinary bias debt is DISCLOSED and travels; only an uncleared
@@ -82,9 +81,9 @@ export const QUEUE_OBLIGATION_KINDS = {
      exactly why it had to be, since the producer would have been built to the
      sentence. The identical wording in NOTIFICATIONS.md is corrected with it.
      LIVE from 2026-09-23 (D-86): the `bias-debt` consumer on the one alarm raises one item per run whose lens
-     `moved`, read from aiRunRead and never compared again; queue #obligationsBiasDebt serves it on op=queue. */
+     `moved`, read from aiRunRead and never compared again; queue-producers #obligationsBiasDebt serves it on op=queue. */
   "bias-debt":                   "a re-run is owed after a lens change (D-86) — DISCLOSED, never blocking (DEC-20) "
-                              + "— LIVE: bias's debt sweep, served by queue #obligationsBiasDebt",
+                              + "— LIVE: bias's debt sweep, served by queue-producers #obligationsBiasDebt",
   "endorsement-owed":            "an endorsement is owed on a pending administrator or owner vote",
   "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
   "membership-request":          "a membership request is at the doorbell",
@@ -94,33 +93,37 @@ export const QUEUE_OBLIGATION_KINDS = {
   "contradiction-duty":          "a conflict the record holds that a member of this project must resolve (N345)",
   "contradiction-duty-unseen":   "something this project rests on is in conflict with a record you cannot see; "
                               + "your project can ask to resolve it (DEC-85)",
+  /* N375 (R1; membership R89, K535, K566): a key a member registered for themselves is a signer of the group's bundles
+     until an administrator decides otherwise, so it is an OBLIGATION of the administrators, never muted. Its producer is
+     `queue-producers`' (its R14), which offers membership's revoke. */
+  "signer-self-registered":      "a member registered their own signing key; you may revoke it (N375)",
 };
 
 export const QUEUE_FINDING_KINDS = {
-  "missing_predecessor":        "a required predecessor stage is absent (D-73) — LIVE: queueFeed's FINDING half",
-  "overdue_successor":          "a required successor is past its declared deadline (DEC-10) — LIVE: queueFeed's FINDING half",
-  /* N107 (K147): progressions R31's finding, aggregated one per (progression, stage) by `queue/proposals.mjs` in its
+  "missing_predecessor":        "a required predecessor stage is absent (D-73) — LIVE: queue-producers/proposals.mjs",
+  "overdue_successor":          "a required successor is past its declared deadline (DEC-10) — LIVE: queue-producers/proposals.mjs",
+  /* N107 (K147): progressions R31's finding, aggregated one per (progression, stage) by `queue-producers/proposals.mjs` in its
      own words, because it is not "required and absent". It decides nothing about which document belongs. */
   "cardinality_exceeded":       "a stage declared to hold at most one document holds more; noticed, which decides "
-                              + "nothing about which of them belongs (framework 8.2) — LIVE: queue/proposals.mjs",
+                              + "nothing about which of them belongs (framework 8.2) — LIVE: queue-producers/proposals.mjs",
   "temporal-expectation-due":   "a temporal expectation is coming due (framework 8.2, D-73)",
-  "source-modified":            "a monitor tick found the source modified — LIVE: queue #findingsSourceFlagged",
-  "source-removed":             "a monitor tick found the source removed (404/410) — LIVE: queue #findingsSourceFlagged",
+  "source-modified":            "a monitor tick found the source modified — LIVE: queue-producers #findingsSourceFlagged",
+  "source-removed":             "a monitor tick found the source removed (404/410) — LIVE: queue-producers #findingsSourceFlagged",
   "duplicate-document":         "a duplicate document was detected (D-60)",
   "link-verdict-changed":       "a link verdict was established or changed when a target landed (LINK-FIDELITY 8)",
   "reused-asset-changed":       "a reused asset was later found changed, post-hoc (CAP-4)",
   "assistant-surfaced-focus":   "an assistant surfaced a question (D-78, D-82 — must LOOK derived)",
   "grade-improvable":           "a connection's grade is improvable (D-72)",
-  "objective-gap":              "a gap derived from an objective's satisfaction condition (D-76) — LIVE: queue #findingsObjectiveGap",
+  "objective-gap":              "a gap derived from an objective's satisfaction condition (D-76) — LIVE: queue-producers #findingsObjectiveGap",
   "measure-decay":              "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)",
-  /* D-52, LIVE 2026-09-23: queue #findingsExportPerformed, derived on read from `export_log`
+  /* D-52, LIVE 2026-09-23: queue-producers #findingsExportPerformed, derived on read from `export_log`
      and raised to every administrator and to nobody else (Membership v2 §8.1). */
   "export-performed":           "an export was performed; every administrator is notified (D-52 8.1) "
-                              + "— LIVE: queue #findingsExportPerformed",
+                              + "— LIVE: queue-producers #findingsExportPerformed",
   "audit-finding":              "op=audit found something about the record",
   "register-unbacked":          "a register entry's bytes are unbacked (D-9, D-45)",
   /* PL-15 / D-213, ANSWERED 2026-08-06 by Bob and LIVE from this item:
-     queue #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
+     queue-producers #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
      while a run was working inquiry A, is CAPTURED — an entry to the store, and
      deliberately NOT an entry to any leg of any claim — and the OBSERVATION
      becomes this item.
@@ -134,11 +137,11 @@ export const QUEUE_FINDING_KINDS = {
      an authored record act carrying its author and its reason. */
   "out-of-inquiry-lead":        "evidence for ANOTHER question was met while working this one: captured, "
                               + "and deliberately not made part of any claim (D-213, DEC-60) "
-                              + "— LIVE: queue #findingsOutOfInquiryLead",
+                              + "— LIVE: queue-producers #findingsOutOfInquiryLead",
   /* PL-13 / IS-3, MINTED 2026-08-09, and BOTH ARRIVE WITH A PRODUCER. The plan
      row named these two slugs; UI-45 asserted them ABSENT so the gap would have
      an alarm on it rather than be a comment, and this is the item that sets the
-     alarm off on purpose. Neither is a word without a generator: see queue's
+     alarm off on purpose. Neither is a word without a generator: see queue-producers'
      `#findingsStanceDiverged` and `#findingsVersionFromAnotherTeam`.
 
      THEY EXIST BECAUSE D-216's ANSWER IS **PER-PROJECT** (measured 2026-08-08,
@@ -168,12 +171,12 @@ export const QUEUE_FINDING_KINDS = {
                                 "a project moved what it stands on for a SHARED question and the other "
                               + "projects drawing on it did not: one question, two live readings, "
                               + "refused by nothing (§7, D-216 — per-project stance) "
-                              + "— LIVE: queue #findingsStanceDiverged",
+                              + "— LIVE: queue-producers #findingsStanceDiverged",
   "new-version-arrived-from-another-team":
                                 "a new reading of a question this project draws on was proposed under "
                               + "ANOTHER project's work, so it arrived without anybody here authoring it "
                               + "(§7, D-216 — one question beneath several projects) "
-                              + "— LIVE: queue #findingsVersionFromAnotherTeam",
+                              + "— LIVE: queue-producers #findingsVersionFromAnotherTeam",
   /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
      another team concluding the question you share is a fact about the work,
      and no member may silence it for the team. */
@@ -182,12 +185,12 @@ export const QUEUE_FINDING_KINDS = {
   "newer-capture-affects-reference":
                                 "a newer capture of something your reference is pinned to may change what it says; "
                               + "adopt the newer version or keep the earlier one (reevaluation R14, R15) "
-                              + "— LIVE: queue #findingsNewerCapture",
+                              + "— LIVE: queue-producers #findingsNewerCapture",
   "shared-inquiry-concluded-by-another-project":
                                 "another project drawing on a SHARED question concluded it, adopting "
                               + "the claim of the reading it stands on; nothing this project stands on "
                               + "or concluded has moved (§7.1 — a conclusion is per-project) "
-                              + "— LIVE: queue #findingsConcludedElsewhere",
+                              + "— LIVE: queue-producers #findingsConcludedElsewhere",
   /* N345 (R1; DEC-76 item 3, DEC-84 items 1, 3, 7, 13; DEC-85): what the record noticed about conflicts, each leaving a
      list by an attributed act (R46), never by one member's preference alone. Their producers are `queue-producers`'
      (its R4–R7). */

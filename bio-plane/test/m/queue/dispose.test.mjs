@@ -69,11 +69,13 @@ test("R27: with items, each item on its own through record-core's perItem, the d
   assert.deepEqual(w.all(`SELECT decided_by FROM finding_dispositions`).map((x) => x.decided_by), ["alice", "alice"]);
 });
 
-test("R28: the bridge: a CONDITION or OBLIGATION key is CLASS_NOT_DISPOSED with instead; a FINDING key NO_PROJECT_SCOPE; nothing written", () => {
+test("R28: the bridge: a CONDITION or OBLIGATION key is CLASS_NOT_DISPOSED with instead, the per-kind door R12 names; a FINDING key NO_PROJECT_SCOPE; nothing written", () => {
   const w = setup();
   for (const [key, cls, kind, instead] of [["CONDITION::governor-holding-host::h", "CONDITION", "governor-holding-host", "queuemute"],
                                            ["render-deferred::CR-1", "CONDITION", "render-deferred", "queuemute"],
-                                           ["bias-debt::r1", "OBLIGATION", "bias-debt", "taskresolve"]]) {
+                                           ["bias-debt::r1", "OBLIGATION", "bias-debt", "biasdebtresolve"],
+                                           ["signer-self-registered::K1", "OBLIGATION", "signer-self-registered", "signerset"],
+                                           ["authority-undetermined::TASK-1", "OBLIGATION", "authority-undetermined", "taskresolve"]]) {
     const r = pd(w, { key, to: "deferred", reason: "r" });
     assert.deepEqual([r.reason, r.class, r.kind, r.instead, r.check, r.translation],
       ["CLASS_NOT_DISPOSED", cls, kind, instead, "C-33.44", QUEUE_ACT_CHECKS.CLASS_NOT_DISPOSED.translation], key);

@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS queue_item_mutes (
 -- (section 7, D-216), a dismissal is a judgment-layer act, and R5 makes forks at
 -- the judgment layer legitimate. So one team's dismissal of a stance-scoped
 -- finding governs THAT TEAM'S feed and nothing else -- exactly the boundary
--- queue/index.mjs #findingsStanceDiverged already enforces by refusing to offer
+-- queue-producers/index.mjs #findingsStanceDiverged already enforces by refusing to offer
 -- op=versioncurrent across projects.
 --
 -- WIDENING proposal_dispositions' OWN KEY WOULD HAVE ERASED THAT DISTINCTION,
