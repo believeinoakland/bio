@@ -2111,7 +2111,12 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
        setup:{migrate (PRAGMAs and the one-time unit and probe-trail migrations), runtimeObservations (R34: every metric,
        the instance's own measurements), cpuProbeState (R36/R40: every probe run's trail)}.
    200 - 10 + 16 = 206; no row source that had a LIMIT lost it. */
-const SCANNING_MEASURED_2026_09_15 = 206;
+/* RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; BIAS #3, N343, bias R45): 206 -> 207, READ FROM THE CENSUS ROSTER THIS
+   RUN PRINTED (207) on `tranche/T14` with every T14 job merged (12e562af6d) and DIFFED BY NAME against the same census
+   run on the T13 close 35c0d1bdcc (206), never 206 + 1: ONE ARRIVAL, NO DEPARTURE — bias/index:migrate (bias R45, the
+   host's boot step), whose one unbounded read is `PRAGMA table_info(bias_debts)`, the precedent of
+   ai-runs/index:migrate's PRAGMAs (T7) and retrieval/index:#moveOffBundles (T11). No row source that had a LIMIT lost it. */
+const SCANNING_MEASURED_2026_09_15 = 207;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -2376,12 +2381,10 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
    "extraction/index:capturesReadFor:page", "inquiry/index:#backfillLegContent:need",
    /* RE-PINNED 2026-09-29 (T12 B5, K409): `queueFeed`'s two claims MOVED with it into the queue, the same claims. */
    "intent/index:servesOf:named", "monitoring/index:monitoring:all", "queue/index:queueFeed:dispAll", "queue/index:queueFeed:items",
-   /* DECLARED 2026-09-29 (T12, legacy-tests; QUEUE #2, the source-modified / source-removed producer, queue R12's
-      project-scoped FINDING kinds), READ FROM THIS ARM'S OWN FAILURE OUTPUT: `#findingsSourceFlagged`'s
-      `truncated: ids.length > read.length`. An ARRIVAL, new code: `ids` is ASSEMBLED in memory (a Set over monitoring's
-      `subjects()` rows, a held service this walk does not read) and `read = ids.slice(0, QUEUE_MONITORED_MAX)` is the
-      page cut from it, so the claim is CUT GRADED against that page below and its source is OUT OF REACH. */
-   "queue/index:#findingsSourceFlagged:ids",
+   /* DEPARTED 2026-09-30 (LEGACY-TESTS #12, T14; QUEUE #4, N330, K391), READ FROM THIS ARM'S OWN FAILURE OUTPUT and
+      diffed by name against the T13 close: `queue/index:#findingsSourceFlagged:ids` (declared here in T12, ASSEMBLED from
+      monitoring's `subjects()` and cut at QUEUE_MONITORED_MAX) is gone: the method now reads monitoring's `flagged()`
+      (its R48), which bounds at its source, and republishes that page's `truncated` (in the unread-forms roster below). */
    "retrieval/frontier:#content:never", "retrieval/frontier:#document:never", "retrieval/frontier:#meaning:never",
    "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw",
    "publication/index:caseCitedParts:parts", "reevaluation/index:notices:rows",
@@ -2572,7 +2575,10 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [20, true]);  /* RE-PINNED 2026-09-29 (legacy-tests T12; QUEUE #2): 19 -> 20, from the printed `source bound 4 graded, 16
+  [19, true]);  /* RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; QUEUE #4, N330): 20 -> 19, from the printed `source bound
+                   4 graded, 15 OUT OF REACH`, diffed by name against the T13 close: the one departure,
+                   queue/index:#findingsSourceFlagged:ids (monitoring now bounds at its source, K391). No arrival.
+                   RE-PINNED 2026-09-29 (legacy-tests T12; QUEUE #2): 19 -> 20, from the printed `source bound 4 graded, 16
                    OUT OF REACH`, diffed by name: queueFeed's two claims MOVED (queue/index), and the one arrival,
                    queue/index:#findingsSourceFlagged:ids, is OUT OF REACH (ASSEMBLED). Source-graded unmoved at 4.
                    RE-PINNED 2026-09-29 (legacy-tests T11): 16 -> 19, from the printed `source bound 4 graded, 15 OUT OF
@@ -2699,8 +2705,9 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
    "entities/index:namingDocuments:merged", "extraction/index:capturesReadFor:page",
    "inquiry/index:#backfillLegContent:need", "intent/index:servesOf:named", "monitoring/index:monitoring:all",
    /* RE-PINNED 2026-09-29 (T12 B5, K409): `queueFeed`'s two claims MOVED into the queue, the same reason on each row;
-      and the arrival `#findingsSourceFlagged:ids`, ASSEMBLED (declared at REC-99's ungradeable pin above). */
-   "queue/index:#findingsSourceFlagged:ids",
+      and the arrival `#findingsSourceFlagged:ids`, ASSEMBLED (declared at REC-99's ungradeable pin above).
+      RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; QUEUE #4, N330): `#findingsSourceFlagged:ids` DEPARTED (15 -> 14
+      out of reach), as at REC-99's ungradeable pin above. */
    "queue/index:queueFeed:dispAll",
    "queue/index:queueFeed:items", "retrieval/frontier:#content:never", "retrieval/frontier:#document:never",
    "retrieval/frontier:#meaning:never", "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw",
@@ -2987,6 +2994,16 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
    "queue/index:#conditionsRecheckDue: plan.truncated === true",
    "queue/index:#findingsExportPerformed: log.truncated === true",
    "queue/index:#findingsNewerCapture: page.truncated === true",
+   /* DECLARED 2026-09-30 (LEGACY-TESTS #12, T14; QUEUE #4, N326, N330), from this run's print, diffed by name against
+      the T13 close: THREE ARRIVALS, each a REPUBLICATION of the kind declared above (`X.truncated === true`): a
+      provider's own bound passed through. `#conditionsArchiveEligible`'s `page.truncated` is monitoring's
+      `archiveEligible(now)` (its R47, one past MONITOR_TICK_BATCH); `#findingsSourceFlagged`'s `page.truncated` is
+      monitoring's `flagged({viewer})` (its R48, over flagged visible documents, K391); `#resolvedLately`'s
+      `settled.truncated` is bias's `settled({gate, since, limit})` (its R44, measured by reading one more). Each figure
+      is graded where it is computed; none is an unmeasured claim. */
+   "queue/index:#conditionsArchiveEligible: page.truncated === true",
+   "queue/index:#findingsSourceFlagged: page.truncated === true",
+   "queue/index:#resolvedLately: settled.truncated === true",
    "intent/index:contacts: cut } = this.#heldAspirations(viewer"].sort());
 
 /* REACH AS A DELTA, for this block's own readers. A walk that matches nothing reports zero

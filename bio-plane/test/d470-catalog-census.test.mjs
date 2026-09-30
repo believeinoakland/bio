@@ -682,6 +682,15 @@ const CATALOG_CENSUS = {
      keeps this row apart from 1.42.0's under A4. */
   "1.43.0": { count: 359, digest: "b28a8a91387ef629dab08baa025b766015f33d6a0a71eda9f392d0d6de2d2605",
               source: "3a8dae6c959d33b5f83e18dc592c0ccb5b77ecddf1adcd5f8b71c2047dca2a40" },
+  /* 1.44.0 (PROMOTION #15, T14 layer 2, 872f6d4bd8; N318, N350, K458, K464), RECORDED 2026-09-30 by LEGACY-TESTS #12
+     (T14, last) as PROMOTION #15's record gives it (358, 0586303a…) and re-measured identical, count, digest AND source,
+     on `tranche/T14` with every T14 job merged (12e562af6d); the file did not move after the stamp. 359 -> 358: C-96.1's
+     catalogue copy (`CUSTODIAL_CHECKS.NOT_AN_ADMIN`) left (K408 (4), LEGACY-CHECKS #8), membership's row standing. The
+     source moved with `checkBundle` no longer running C-19.1 (N325's layer-1 share, stamped here, K464); queue's layer-11
+     registration of C-19.1 at the promote gate is in queue's own table and T15's to stamp. No `changed`: the census
+     alone keeps this row apart from 1.43.0's under A4, and the composition change is the source pin's to carry. */
+  "1.44.0": { count: 358, digest: "0586303ad42e5af722030da5fdbbd2ff0aee5c956017a2d51b63c0cc3f40f98d",
+              source: "19ce939b4111972c509e9162f885622e2aad84d4834d2c837846686b91b85d64" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -749,8 +758,10 @@ say(`  the stamp: ${GATE_VERSION}`);
    in 1.42.0's `moved` declaration and verified by A12). The literal-site floor (43) and the table floor (40; 44 now,
    five whole families having left: QUEUE_MINT_CHECKS, TASK_ACTOR_CHECKS, ADMISSION_CHECKS, NAMESPACE_CHECKS,
    DISPATCH_CHECKS) are unmoved. */
+/* RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; K458): the count floor 359 -> 358, this suite's print on 12e562af6d,
+   C-96.1's catalogue copy having left (1.44.0's row). The literal-site and table floors are unmoved. */
 t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
-  [count >= 359, tables.size >= 40, literal.size >= 43], [true, true, true]);
+  [count >= 358, tables.size >= 40, literal.size >= 43], [true, true, true]);
 
 /* (A2) EVERY EMISSION SITE RESOLVES. A computed site is not scored zero: it is
    named here or it fails. */
@@ -942,9 +953,10 @@ const movedOf = (entry) => (entry && Array.isArray(entry.moved) ? entry.moved : 
    UPDATED 2026-09-28 (legacy-tests T9): 1.38.0 -> 1.40.0, PROMOTION #9's 1.39.0 (N240) and #10's 1.40.0 (K288).
    UPDATED 2026-09-29 (legacy-tests T11): 1.40.0 -> 1.41.0, PROMOTION #11's N281 (K352).
    UPDATED 2026-09-29 (LEGACY-TESTS #10, T12): 1.41.0 -> 1.42.0, PROMOTION #12's N302 (K369, K381).
-   UPDATED 2026-09-29 (LEGACY-TESTS #11, T13): 1.42.0 -> 1.43.0, PROMOTION #14's N318 (K425, K432). */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.43.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.43.0)", "1.43.0"]);
+   UPDATED 2026-09-29 (LEGACY-TESTS #11, T13): 1.42.0 -> 1.43.0, PROMOTION #14's N318 (K425, K432).
+   UPDATED 2026-09-30 (LEGACY-TESTS #12, T14): 1.43.0 -> 1.44.0, PROMOTION #15's N318 (K458, K464). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.44.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.44.0)", "1.44.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

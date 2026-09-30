@@ -327,8 +327,12 @@ t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning ca
    `counts(hid)`, bias's dead purge entries gone) to 221,831; CONTROL-PLANE #4 (881c24b76e, 4235c62a3d, -8,733, N333:
    the store's door moved to `src/control-plane/dispatch.mjs`, legacy-store keeps `routes()`). ops.mjs grew to 149,902;
    its floor stays at 149,682. Both still blindness floors at the measured figures, never below them. */
+/* RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; LEGACY-STORE #6): store.mjs 213,098 -> 212,573 characters, the
+   measured print (-525: N331's `filingsOf` without `producingGroup`, N342's `...recordOf(ctx).counts(hid)`, N343's
+   boot calling bias's `migrate()` with `settled_kind` gone from ADDITIVE_COLUMNS). ops.mjs's floor is unmoved.
+   Both still blindness floors at the measured figures, never below them. */
 t("CORPUS PRINTED — the size of what every source arm below is read over",
-  [STORE_SRC.length >= 213_098, OPS_SRC.length >= 149_682], [true, true]);
+  [STORE_SRC.length >= 212_573, OPS_SRC.length >= 149_682], [true, true]);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
           + `index.mjs ${INDEX_SRC.length}, control-plane/ops.mjs ${OPS_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, `
           + `src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);
@@ -578,37 +582,12 @@ console.log("\n--- 3. OVER-STRICTNESS: correct statements phrased unlike anythin
 console.log("\n--- 4. the refusals, each a C-number with a code and a canned translation from ONE place ---");
 {
   const rows = Object.entries(BIAS_CHECKS);
-  t("TWENTY refusals are allocated, and every one carries check + where + translation",
-    /* C-26, not C-25 — the family moved at the rebase because PL-1 landed first
-       and took C-25 (see the note at BIAS_CHECKS). THIS LINE IS WHY THE ARM IS
-       WORTH HAVING: the wholesale renumber was a regex on `C-25.<digits>`, and
-       this occurrence is written `C-25\.\d+` inside a REGEX LITERAL — the
-       backslash sits where the renumber expected a dot, so it was the one
-       reference in 102 that did not move, and the suite caught it on the first
-       run after the rebase rather than a reader catching it later. */
-    [rows.length, rows.every(([, r]) => /^C-26\.\d+$/.test(r.check) && r.where && r.translation.length > 60)],
-    /* ELEVEN, not ten: C-26.11 (BIAS_REFUSED) was added 2026-08-08 when VF-2's
-       DEC-49 guard measured that the write path's ENVELOPE code carried no
-       translation. Corrected here rather than exempted.
-       TWELVE, not eleven, since 2026-09-24: C-26.12 (BIAS_ILLEGAL_TRANSITION,
-       D-468) — `op=promote` now holds a bias set to the declared STATES edges
-       read from its head, which `STATES.bias`'s own comment had described and
-       nothing enforced. CORRECTED here rather than exempted, and the figure is
-       the one the gate PRINTED, not this number plus one.
-       EIGHTEEN, not eleven, 2026-09-24 (REC-207): BOB #32's ruling of 2026-09-23
-       23:42Z gave a bias debt two settling acts it did not have, and the member's
-       resolve brought SEVEN refusals with it (C-26.13 to C-26.19, the two regions
-       in `biasDebtResolve`). CORRECTED HERE RATHER THAN EXEMPTED, and the old
-       figure was not WRONG — it was true of its family on its day, which is what
-       a count like this one is for: it is the arm that made the C-25 -> C-26
-       renumber's one missed reference visible, and it can only do that while it
-       is moved by hand every time the family grows.
-       NINETEEN AT THE UNION (CONDUCT #21, c21-batch28): D-468's C-26.12 and REC-207's seven, renumbered
-       C-26.13 to C-26.19 off that collision, together — twelve plus seven.
-       RE-PINNED 2026-09-27 (T5-12, legacy-tests): TWENTY. One arrival, C-26.20 BIAS_ADOPTION_NOT_AN_ADMINISTRATOR
-       (K146, K102: an instance adoption is an administrator's act), no departure: the family is now read from
-       `src/bias/checks.mjs`, where C-26.12, whose row stays in the catalogue, is re-exported as one of its rows. */
-    [20, true]);
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "TWENTY refusals are allocated, and every one carries check +
+     where + translation". The family is extracted (`src/bias/checks.mjs`) and its count, shape and C-26.20's
+     retirement (N327) are bias's R29, tested at its interface in `test/m/bias/checks.test.mjs` ("R29: every C-26 row,
+     C-26.1–C-26.19, is here with its check, where and translation; … C-26.20 is retired and its number not reused").
+     The arms below (uniqueness, DEC-54's four numbers, the bar's sentence, one copy) stay: they read this suite's own
+     print of the same table and still pass. */
   t("the C-numbers are unique — an allocation reused is an allocation nobody can act on",
     new Set(rows.map(([, r]) => r.check)).size, rows.length);
   t("DEC-54's four scopes each have a NUMBER, which is what makes each a mechanism rather than a paragraph",
@@ -860,11 +839,13 @@ await block("8", async () => {
     [false, "BIAS_ADOPTION_NOT_AUTHORED", "C-26.9"]);
 
   /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; K102, K146, bias R11): an adoption over the whole instance is an
-     ADMINISTRATOR's act, so an ordinary member's is refused C-26.20 and adele, an administrator, adopts. The claim
-     is unchanged: a named member adopts, and the record names them. */
-  const byMember = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
-  t("K102: an ORDINARY member's instance adoption is refused BY NAME, and nothing is adopted",
-    [byMember.ok, byMember.reason, byMember.check, byMember.scope], [false, "BIAS_ADOPTION_NOT_AN_ADMINISTRATOR", "C-26.20", "instance"]);
+     ADMINISTRATOR's act, so adele, an administrator, adopts. The claim is unchanged: a named member adopts, and the
+     record names them.
+     RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "K102: an ORDINARY member's instance adoption is refused BY
+     NAME, and nothing is adopted". Its refusal is now membership's NOT_AN_ADMIN (C-96.1) with bias's remedy (N327),
+     and is bias's R11, tested at its interface in `test/m/bias/adopt-manifest.test.mjs` ("R11: refusals in order …
+     an instance scope's administrator authority (NOT_AN_ADMIN through membership R84, with its remedy)": each
+     non-administrator, the op, nothing written). */
   const adopted = await get("biasadopt", `bundleId=${INSTANCE_ID}`, ADMIN);
   t("a MEMBER adopts, and the record names them", [adopted.ok, adopted.author, adopted.reason ?? adopted.error ?? null], [true, "adele", null]);
   t("DEC-54 (d): THE PIN is taken at the authored moment — the revision adopted, frozen",

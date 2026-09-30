@@ -712,20 +712,21 @@ ok(`REACH (C), AS A DELTA — a NEW unconverted Durable Object read appears in t
    already taken and written down, not an oversight, and it is not this class:
    nothing is told to a caller. It STAYS held open, unchanged. */
 {
-  const listSite = /const listOut = await doAnswer\(stub\.fetch\(`http:\/\/do\/list\?viewer=\$\{ratViewer\}`\)\);/.test(SRC)
-    && /if \(!listOut\.answered\) return storeSilent\("ratify\/list"\);/.test(SRC);
-  ok("CLOSED (i) — op=ratify derives its known-id set from an `.answered`-guarded `do/list` read and "
-     + "REFUSES on a silence, so the gate is never handed an empty known-id set that makes every "
-     + "reference read as \"does not resolve in the store\". POLARITY INVERTED 2026-08-05 (REC-53): "
-     + "REC-52 wrote this pin to require the DEFECT, so unchanged it would have failed for the fix",
-     listSite);
-  /* AND THE OTHER DIRECTION AT THE SAME SITE, because a guard that also threw
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "CLOSED (i) — op=ratify derives its known-id set from an
+     `.answered`-guarded `do/list` read and REFUSES on a silence". The relay is ratification's (`src/ratification/ops.mjs`)
+     and its refusal on a silence is ratification's R17, tested at its interface in
+     `test/m/ratification/relays.test.mjs` ("R17 (N349): a reply that is no answer is 502 STORE_DID_NOT_ANSWER naming
+     the relay", over each of the seven relays, `ratify/list` among them, driven rather than read). */
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; RATIFICATION #6, N349): the guard now hands the store's
+     correlation, `storeSilent("ratify/list", listOut.correlation)`. KEPT under K457: ratification's R17 tests drive a
+     silence and a refusal, not a genuinely EMPTY list read as an answer, which is what this arm holds.
+     AND THE OTHER DIRECTION AT THE SAME SITE, because a guard that also threw
      away a real empty list would be REC-52's arm (f) collapse reversed: a viewer
      who can genuinely see no bundles is a real answer, and `|| []` must survive
      BEHIND the guard rather than in front of it. */
   ok("CLOSED (i), THE OTHER DIRECTION — the `|| []` survives BEHIND the answered-guard, so a "
      + "genuinely empty list is still a real answer and is not itself treated as a silence",
-     /if \(!listOut\.answered\) return storeSilent\("ratify\/list"\);\s*\n\s*const known = new Set\(\(listOut\.result \|\| \[\]\)/.test(SRC));
+     /if \(!listOut\.answered\) return storeSilent\("ratify\/list", listOut\.correlation\);\s*\n\s*const known = new Set\(\(listOut\.result \|\| \[\]\)/.test(SRC));
   const reusedSite = /const reusedOut = await doAnswer\(stub\.fetch\(`http:\/\/do\/reusedparts/.test(SRC)
     && /if \(!reusedOut\.answered\) \{/.test(SRC)
     && /op: "ratify\/reusedparts"/.test(SRC);
@@ -885,7 +886,9 @@ function rawInRatify(src) {
   /* Reach, as a delta and against the real defect: drop the real guard line at
      the site arm (e) drops it at, and D2 must name that binding. */
   /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the moved handler is indented one level less. */
-  const d2Plant = SRC.replace('if (!pubOut.answered) return storeSilent("ratify/publish");\n    ', "");
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; RATIFICATION #6, N349): the commit site's guard now hands the
+     store's correlation. KEPT under K457: this is detector D2's own reach, which no module test guards. */
+  const d2Plant = SRC.replace('if (!pubOut.answered) return storeSilent("ratify/publish", pubOut.correlation);\n    ', "");
   const d2Region = ratifyRegion(d2Plant);
   const d2Unchecked = [...d2Region.text.matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*await doAnswer\(/g)]
     .map((m) => m[1])

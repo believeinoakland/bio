@@ -13,6 +13,9 @@
  *                                    bundle failed `resolveTarget` and the
  *                                    ratification came back GATE_REFUSED with
  *                                    C-6.2 / C-8.1 / C-19.1 findings reading
+ *                                    (C-19.1 is queue's registered step at the
+ *                                    promote gate since T14, N325; no longer
+ *                                    in `checkBundle`)
  *                                    "does not resolve in the store". The
  *                                    publisher is told their case cites things
  *                                    that are not there, at the moment they

@@ -463,9 +463,13 @@ if (!dec || dec.ok === false) throw new Error(`expertisedeclare: ${JSON.stringif
 const me = await POST(`op=expertiseconfirm&token=${AI_A}`, { memberId: "sam", label: "CPA", by: "ruth" });
 TRACE.push(["expertiseconfirm", `${verdict(me, okTrue)} — by the membership guard, which a machine stamp can `
   + `never satisfy (\`class:ai\` is no administrator member); index.mjs's expertise block says why no fence is added`]);
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; MEMBERSHIP #7, N327): the membership guard answers NOT_AN_ADMIN
+   (C-96.1, R84) where it answered ADMIN_ONLY. KEPT under K457: what this arm holds is the WIRING across the Worker,
+   control-plane's `class:ai` stamp reaching membership's guard in place of the named principal, which neither
+   module's own tests reach (membership's R22 test hands `by` itself). */
 t("op=expertiseconfirm by an `ai` credential (principal: ruth, an administrator), naming ruth in the body: REFUSED, "
-  + "ADMIN_ONLY — the stamp is `class:ai`, never the principal",
-  codeOf(me), "ADMIN_ONLY");
+  + "NOT_AN_ADMIN — the stamp is `class:ai`, never the principal",
+  codeOf(me), "NOT_AN_ADMIN");
 const hx = await POST(`op=expertiseconfirm&token=${RUTH}`, { memberId: "sam", label: "CPA" });
 t("OVER-STRICTNESS, op=expertiseconfirm: ruth confirming it herself SUCCEEDS", [hx && hx.ok, hx && hx.by], [true, "ruth"]);
 
@@ -482,7 +486,7 @@ t("THE TABLE covers every DRIVEN op, and no machine attestation or ratification 
    ["attesttext", "REFUSED BY NAME TEXT_ATTEST_MACHINE"],
    ["transcriptionattest", "REFUSED BY NAME TEXT_ATTEST_MACHINE"],
    ["textattest", "A READ (mutating: false)"],
-   ["expertiseconfirm", "REFUSED BY ANOTHER GUARD ADMIN_ONLY"],
+   ["expertiseconfirm", "REFUSED BY ANOTHER GUARD NOT_AN_ADMIN"],   /* T14 (N327): was ADMIN_ONLY, as above */
    ["adminendorse", "REFUSED BY THE SCOPE CHECK ONLY AI_BEYOND_TASK_SCOPE"],
    ["signeradd", "REFUSED BY THE SCOPE CHECK ONLY AI_BEYOND_TASK_SCOPE"],
    ["signerset", "REFUSED BY THE SCOPE CHECK ONLY AI_BEYOND_TASK_SCOPE"]]);

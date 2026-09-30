@@ -71,7 +71,10 @@ t("probe reads its own back", (await fetchRaw(`/api/capture?token=prb-capture-te
 t("probe asking for bio is refused", (await j(`/api/capture?token=prb-capture-test&sha256=${pbSha}&store=bio`)).tokenClass, "probe");
 
 console.log("\n--- absence is declared ---");
-t("unknown sha is NOT_FOUND", (await j(`/api/capture?token=mem-capture-test&sha256=${"f".repeat(64)}`)).reason, "NOT_FOUND");
+/* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "unknown sha is NOT_FOUND". The absence is capture's, now
+   `EVIDENCE_NOT_HELD` (C-118.1 re-keyed, N347), and is capture's R63 with R21, tested at its interface in
+   `test/m/capture/evidence-absent.test.mjs` ("R63 R21: op=capture's get of an absent object answers through
+   evidenceAbsent, exactly its body and status, with the caller class beside"). */
 
 await mf.dispose();
 console.log(`\ncapture: ${pass} passed, ${fail} failed`);

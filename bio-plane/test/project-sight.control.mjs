@@ -165,11 +165,17 @@ const ARMS = {
      arm fails CLOSED for every stamped caller — machine credentials included. */
   "promote-stamp-dropped": {
     /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the promote stamp is the control plane's (cc81048f65, T12).
-       ARMED and still NOT AS DECLARED (0/1: the suite throws SURFACE_NO_RUN in REC-171's `surfacing-run.mjs`
+       (T13's reading, superseded below:) ARMED and still NOT AS DECLARED (0/1: the suite throws SURFACE_NO_RUN in REC-171's `surfacing-run.mjs`
        fixture before any arm) — PRE-EXISTING, D-447's finding (2) in the suite's header, unchanged; not re-declared. */
     patches: [["control-plane/index.mjs", "        delete b.actorViewer;\n        b.actorViewer = viaSession ? sessViewer",
                "        delete b.actorViewer;\n        if (false) b.actorViewer = viaSession ? sessViewer"]],
-    mustFail: ["olga — op=promote", "the FOUNDER's session", "JOINED: iris revises", "the ADMIN token still revises it"],
+    /* RE-DECLARED 2026-09-30 (LEGACY-TESTS #12, T14; N353): AS DECLARED, 91/5. The suite's inquiry fixture is now created
+       through the founder's session, so it no longer needs a deploy token's surfacing run, whose read (`runFor`, by
+       `actorViewer`) this arm's own planted defect closes: REC-171's fixture threw SURFACE_NO_RUN before any arm, not
+       through any fault of its own. The four revision arms fail by name, and the suite then stops at §7's fixture
+       revision (a stamped caller revising, which is the defect planted), declared below as the fifth. */
+    mustFail: ["olga — op=promote", "the FOUNDER's session", "JOINED: iris revises", "the ADMIN token still revises it",
+               "the hidden project is revised, heavy in both words"],
   },
 
   /* D-447 — THE BRIEF'S CONTROL: the raw index-wide `bm25(bundles_fts)` PUBLISHED again as `score`, the order left

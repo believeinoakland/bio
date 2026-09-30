@@ -217,8 +217,10 @@ console.log("\n--- 1.3: declared by the member, confirmed by an administrator, g
     (await POST(`op=expertisedeclare&${SAM}`, { memberId: "vera", label: "Lawyer" })).result?.memberId, "sam");
   t("so vera has none", (await GET(`op=expertiselist&memberId=vera&${SAM}`)).result?.expertise?.length, 0);
 
-  t("an ordinary member cannot confirm, not even their own",
-    (await POST(`op=expertiseconfirm&${SAM}`, { memberId: "sam", label: "CPA" })).result?.reason, "ADMIN_ONLY");
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "an ordinary member cannot confirm, not even their own". The
+     confirmation is membership's and its refusal is now NOT_AN_ADMIN (C-96.1) with its remedy (N327): membership's
+     R22 with R84, tested at its interface in `test/m/membership/expertise-keys-ai.test.mjs` ("R22 expertiseConfirm:
+     NOT_AN_ADMIN (R84), …", a member confirming their own declaration) and `t14-rows-remedy-order.test.mjs`. */
   /* An administrator cannot INTRODUCE a label. Confirming something never
      declared would make this an assignment rather than a confirmation, which is
      the whole distinction 1.3 rests on. */
