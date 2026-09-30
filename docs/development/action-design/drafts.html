@@ -76,7 +76,7 @@ table.wide{min-width:1180px}
 - <strong>R16</strong> <code>checkpointRecord</code> records a member's judgement (<code>met</code> or <code>not_met</code>) with a note of at most 500 characters: <code>CHECKPOINT_NOT_DUE</code> before the phase's start plus <code>after_days</code>, <code>CHECKPOINT_JUDGED</code> if judged already. The scenario then reads the branch the judgement names. The module never judges a condition.
 - <strong>R17</strong> <code>checkpointsDue({nowMs, limit?})</code> answers, for open plans, the checkpoints whose day has come and that no member has judged, oldest first, at most 500, with the plan, scenario, phase and days since due. It is the one read <code>queue</code> uses for its reminder (one item per checkpoint, never repeated for the same checkpoint). A checkpoint passed unjudged is never a finding about the government (R23).</p>
 <p><strong>optionStart({plan, option, kind, contact?, breach?, author, viewer})</strong> (<code>op=optionstart</code>)
-- <strong>R18</strong> Refusals: <code>MACHINE_CANNOT_START</code>; <code>NO_SUCH_PLAN</code>; <code>PLAN_CLOSED</code>; <code>NO_SUCH_OPTION</code>; <code>OPTION_NOT_CHOSEN</code>; <code>OPTION_STARTED</code> (it names the action); <code>CONTACT_NOT_A_MEMBER</code>; then any refusal of the action's write (<code>actions</code> R1–R11). Otherwise it composes an action document (kind, the option's addressee, the option's regulated dates as pending clock entries with their bases, a <code>rests_on</code> leg to each subject's inquiry or determination, <code>plan</code> and <code>option</code>, <code>contact</code> when given, <code>breach: true</code> when asked) and promotes it; an action asserting a breach is refused by <code>actions</code> R8 unless it rests on a live noncompliant determination. It records the link and answers the action's id. The plan never opens, advances or ends an escalation.</p>
+- <strong>R18</strong> Refusals: <code>MACHINE_CANNOT_START</code>; <code>NO_SUCH_PLAN</code>; <code>PLAN_CLOSED</code>; <code>NO_SUCH_OPTION</code>; <code>OPTION_NOT_CHOSEN</code>; <code>OPTION_STARTED</code> (it names the action); <code>CONTACT_NOT_A_MEMBER</code>; then any refusal of the action's write (<code>actions</code> R1–R11). Otherwise it composes an action document (kind, the option's addressee, the option's regulated dates as pending clock entries with their bases, a <code>rests_on</code> leg to each subject's inquiry or determination, <code>plan</code> and <code>option</code>, <code>contact</code> when given, <code>breach: true</code> when asked) and promotes it; an action asserting a breach is refused by <code>actions</code> R8 unless it rests on a live noncompliant determination or the member states an override with a reason (<code>actions</code> R8 as amended, Bob 2026-09-30), which the action and everything prepared from it disclose. It records the link and answers the action's id. The plan never opens, advances or ends an escalation.</p>
 <p><strong>The checks (derived on read, R6)</strong>
 - <strong>R19</strong> <code>planRead</code> answers, each with its reason: an option whose regulated date is past, or falls before the phase that holds it can start in a scenario; a phase whose judgement has no branch for one outcome; an option bound only to subjects no longer live; an outward option (one that addresses anyone) bound only to hypothetical subjects; a scenario whose outward options have no branch answering a hostile response (refusal, obstruction, retaliation; rule 12 of <code>BIO_Action_v0_1.md</code>, Bob 2026-09-30); a lobbying option whose <code>enforces</code> target is superseded. A check informs; it never refuses or changes anything.</p>
 <p><strong>planClose({id, reason, author, viewer})</strong> (<code>op=planclose</code>)
@@ -148,14 +148,20 @@ table.wide{min-width:1180px}
 <li><strong>New R44 (Bob: D5).</strong> An action may state <code>contact</code>, a member id, the group's contact for it; set or changed only by a member (<code>MACHINE_CANNOT_SET_CONTACT</code>), refused <code>CONTACT_NOT_A_MEMBER</code>; shown in the read (R25). It grants nothing.</li>
 <li><strong>New R45 (ruling 1; A12).</strong> An action may state <code>plan</code> and <code>option</code>, set only when created by <code>action-plans</code> R18 and never changed (<code>PLAN_LINK_REWRITTEN</code>); shown in the read.</li>
 <li><strong>New R47 (Bob, 2026-09-30: prepared for opposition).</strong> A received correspondence entry may be marked <code>pressure: true</code> with a note of at most 500 characters: a threat, retaliation, discrediting or legal harassment directed at the group or its supporters (Operational Principle 8, Design Requirement 13). Only a member marks it; the read (R25) lists an action's pressure entries apart; <code>actionsFor</code> can filter by it. It is evidence like any capture, and may be cited by a new inquiry.</li>
-<li><strong>New R48 (Bob, 2026-09-30: the venue sets the standard).</strong> No action, filing or packet is refused for the capture grade of what it rests on. <code>filings</code>' drafts and counsel packets show each exhibit's grade, and a profile kind may state its venue's standard of evidence (<code>jurisdictions</code>), shown beside the grades.</li>
+<li><strong>New R48 (Bob, 2026-09-30: the venue sets the standard).</strong> No action, filing or packet is refused for the capture grade of what it rests on. <code>filings</code>' drafts and counsel packets show each exhibit's grade and whether it is co-attested; a profile kind may state its venue's standard of evidence and the grades it accepts (<code>jurisdictions</code>), shown beside the grades; an exhibit below that standard, or at a grade the profile marks contestable, is flagged so counsel and members can prepare.</li>
+<li><strong>R8, amended (Bob, 2026-09-30: DEC-26 with Requirement 12, option (c)).</strong> An action stating <code>breach: true</code> without a live noncompliant determination is still refused <code>ACTION_NO_DETERMINATION</code>, unless it states <code>premise_override: {reason}</code> (at most 500 characters, R14's text rule), authored by a member (<code>MACHINE_CANNOT_OVERRIDE</code> for a machine). The override is stamped with who and when, never edited, shown in the read (R25), and carried as a disclosure on every filing, counsel packet and communication prepared from the action (<code>filings</code> R24). An overridden breach action is never attachable to an escalation (which exists only for a determined breach, <code>escalation</code> R9).</li>
 <li><strong>New R46 (BOB).</strong> <code>actionCreate({document, viewer, author})</code> (<code>op=actioncreate</code>): the same write as a promotion of an action document, answered with the action's id; and <code>op=action</code> (R29's <code>actionRead</code>) and <code>op=actions</code> (R30's <code>actionsFor</code>) routed.</li>
 <li><strong>Stale marks (BOB).</strong> Strike "not yet met" from R4–R11, R22, R28–R33, R40, R41: all built and tested (K253, K370).</li>
 </ul>
 <h2>3. <code>filings</code></h2>
 <ul>
 <li><strong>New R22 (BOB: Publication §3 rule 9).</strong> Every filing draft's approved bytes (R6), every counsel-packet export (R11) and every communication draft (R23) carries <code>publication.inbandQuartet</code> (its R16): hash, date, author and both threshold floors, in-band.</li>
-<li><strong>New R23 (Bob: D2).</strong> <code>communicationPrepare({action, text, purpose, preparer, viewer})</code> (<code>op=communicationprepare</code>): a draft message, briefing or statement for an action whose addressee is anyone, stored apart and labelled as R5's drafts are (<code>proposalLabel(preparer, "communication")</code>); a machine may prepare it from the published case and the plan; no template is needed. <code>filingApprove</code> (R6) and <code>filingRecordSent</code> (R7) apply to it unchanged: a member approves it, sends it by their own hand, and the sending is recorded with the bytes sent. Nothing is transmitted by the instance (R7). Placement: <code>filings</code> is "what the group sends"; this keeps one draft–approve–send path for every outward text (BOB to confirm).</li>
+<li>
+<p><strong>New R23 (Bob: D2).</strong> <code>communicationPrepare({action, text, purpose, preparer, viewer})</code> (<code>op=communicationprepare</code>): a draft message, briefing or statement for an action whose addressee is anyone, stored apart and labelled as R5's drafts are (<code>proposalLabel(preparer, "communication")</code>); a machine may prepare it from the published case and the plan; no template is needed. <code>filingApprove</code> (R6) and <code>filingRecordSent</code> (R7) apply to it unchanged: a member approves it, sends it by their own hand, and the sending is recorded with the bytes sent. Nothing is transmitted by the instance (R7). Placement: <code>filings</code> is "what the group sends"; this keeps one draft–approve–send path for every outward text (BOB to confirm).</p>
+</li>
+<li>
+<p><strong>New R24 (Bob, 2026-09-30).</strong> A filing draft, counsel packet or communication prepared from an action with a <code>premise_override</code> (<code>actions</code> R8) carries, on its face and in every export, "Rests on an unestablished premise:" with the override's reason, author and time.</p>
+</li>
 </ul>
 <h2>4. <code>monitoring</code>, <code>scheduler</code>, <code>queue</code> (BOB)</h2>
 <ul>
@@ -171,11 +177,15 @@ table.wide{min-width:1180px}
 <ul>
 <li>The first profile's templates for its Tier 1–2 kinds, a complete holiday calendar, and measured offices and deadlines (all five offices and the one deadline are <code>UNMEASURED</code> today).</li>
 </ul>
-<h2>7. Doctrine, no requirement change (Bob: D6)</h2>
+<h2>7. Deferred (Bob, 2026-09-30)</h2>
+<ul>
+<li>Joint action with another group: recorded in <code>BIO_Action_v0_1.md</code> §8 and deferred, including the near-term level (partner groups named on each group's own action, one jointly approved text). Trigger: a coalition asks.</li>
+</ul>
+<h2>8. Doctrine, no requirement change (Bob: D6)</h2>
 <ul>
 <li>Any group may use CivicOS. A group with a stake in a matter discloses it (Design Requirement 6, already carried by the published case's declared bias and disclosures); its lobbying is limited by ruling 6 (<code>action-plans</code> R12). BOB records this with the rulings.</li>
 </ul>
-<h2>8. Record-keeping (BOB)</h2>
+<h2>9. Record-keeping (BOB)</h2>
 <ul>
 <li><code>build/plan/next.md</code>: drop N61, N129, N130 (applied in T8, K232).</li>
 <li>DEC-1 to DEC-67: bring <code>docs/archive/ledgers/DECISIONS-2026-08.md</code> back onto <code>main</code> from <code>coord</code>, since the canon cites them.</li>
@@ -370,6 +380,11 @@ table.wide{min-width:1180px}
 <td>changing either on a revision refuses <code>PLAN_LINK_REWRITTEN</code></td>
 </tr>
 <tr>
+<td>R8 amended</td>
+<td>a member's breach action with no determination but a <code>premise_override</code> lands, stamped, shown in the read; a filing prepared from it carries the disclosure</td>
+<td>without the override it refuses <code>ACTION_NO_DETERMINATION</code>; a machine's override refuses; attaching it to an escalation refuses</td>
+</tr>
+<tr>
 <td>R47</td>
 <td>a member marks a received entry <code>pressure</code>; the read lists it apart; <code>actionsFor</code> filters by it</td>
 <td>a machine refuses; a <code>sent</code> entry refuses</td>
@@ -400,6 +415,11 @@ table.wide{min-width:1180px}
 <td>R22</td>
 <td>the approved bytes of a filing draft, a counsel-packet export and a communication draft each carry the in-band quartet, verifiable with <code>publication</code>'s R16</td>
 <td>a draft not yet approved carries none</td>
+</tr>
+<tr>
+<td>R24</td>
+<td>a draft and a packet prepared from an overridden action carry "Rests on an unestablished premise:" with reason, author and time, in every export</td>
+<td>a draft from a determined breach action carries none</td>
 </tr>
 <tr>
 <td>R23</td>
