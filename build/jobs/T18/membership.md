@@ -27,3 +27,7 @@
 - `ownership membership tranche/T18`: 1 file changed; legacy-store and legacy-checks 0 lines added, 0 removed; 0 failures
 
 Size (session_016KLPct4R1vBrZYEAHVWJax): test runs 3, module lines 13
+
+## J1 · COMPLETE
+
+Complete. MODULE_ORDER (R83) follows modules.json's fold: record-grammar, action-clocks, action-plans, op-declarations, admission at their places (index.mjs, +7 -6). Membership tests 125/125; with promotion's 196/196, its registry test (R39/R45/R46) now passing (it failed before). Checks: format, architecture, coverage (91/91), ownership: 0 failures. Stale for the layer close: bio-plane/dist/bio-plane.bundled.mjs (§14). Details in the record.
