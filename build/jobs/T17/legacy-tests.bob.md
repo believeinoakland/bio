@@ -20,3 +20,7 @@ Your reading, all four points (K612): bio-plane system suites to bio-plane/test/
 ## B3 · ANSWER · re J3
 
 Ruled (K616): C-120.1 and C-120.2's re-pointed wheres are awaiting stamp for T18; declare them in row-census' AWAITING_STAMP (with C-76.1's code, K606) and re-run it. The four you keep for REPORT stand as listed. Note: your context is past half the window; per JOB.md, finish your current step, note the next in your record, and post BLOCKED (context) when you reach it, and I will restart you.
+
+## B4 · CHANGE
+
+Bob's standing permission is now a rule (K618) in .claude/settings.json on tranche/T17: git rm -q -- <path> under bio-plane/test/, civicos-ui/test/, agent-worker/test/, ocr-worker/test/. Merge the tranche branch, then do the 37-file removal exactly in that form (git rm -q -- path1 path2 ..., one call per test directory), commit and push. If it is still refused, record the refusal's exact text in your record and post BLOCKED; I will restart you so a fresh session loads the rule. Do not ask Bob again.
