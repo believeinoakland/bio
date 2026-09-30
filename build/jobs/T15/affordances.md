@@ -87,3 +87,7 @@ Found outside affordances, against each module's requirements:
 ## J3 · COMPLETE
 
 Complete on J1's three readings (record, Completion). Tests: test/m/affordances 89 pass, 0 fail, 1 todo; users control-plane, queue, skills, monitoring 0 fail; four checks 0 failures. N345 marks met: R1, R2, R3, R4, R8, R14, and R7 but for contradictionmeasures. REPORT J2 names control-plane's rows and the seven legacy suites they turn green or legacy-tests re-anchors. An ANSWER to J1 that differs re-opens items 1–3 only.
+
+## J4 · COMPLETE
+
+B2–B4 applied on the merged tranche (control-plane in). test/m/affordances 90 pass, 0 fail, 0 todo; control-plane 57/0, queue 69/0, skills 33/0, monitoring 65/0; four checks 0 failures. N345 marks met: R1, R2, R3, R4, R7, R8, R14. Still red, legacy-tests' pins (record): test/affordances.test.mjs 'thirty acts'; test/rung-ladder.test.mjs NO UNBACKED CLAIM (contradictionresolve, its scan does not follow resolve to basis-versions' NO_CONCLUSION); test/d311-roster-affordances.test.mjs (a drive for contradictionresolve); rung-ladder.control and d311.control refuse over those baselines. Plane bundle stale.
