@@ -1,6 +1,6 @@
 # jurisdictions (T18)
 
-**Status** · session_01BzHjKddHo9h3xqxppmp72U · depth 2 · WORKING · handled B1
+**Status** · session_01BzHjKddHo9h3xqxppmp72U · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## Progress
 
