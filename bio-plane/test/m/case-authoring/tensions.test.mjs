@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, sha } from "./fixture.mjs";
+import { CASE_DOCUMENT_FORMAT, caseTensionsOf } from "../../../src/publication/index.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE,
          CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED } from "../../../src/case-authoring/index.mjs";
 
@@ -319,4 +320,34 @@ test("R31: tensionsDisclosed absent or null is none; a candidate listed twice is
   assert.equal(n.publish(n.project("Team", "alice", [F]), "alice", [F], { tensionsDisclosed: null }).ok, true);
 });
 
-test.todo("R14: the document's format is bio-case-document/5, read back through publication's caseTensionsOf — publication's CASE_DOCUMENT_FORMAT and its reader land at PUBLICATION #5's merge (K498)");
+test("R14: the document's format is bio-case-document/5, and its tension section reads back through publication's caseTensionsOf (K498) — both sides of a seen one, the seen side only of a highlighted one, each member's sentences, the unread legs", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/5");
+  const { w, P, id } = seen();
+  const r = w.publish(P, "alice", [F], { tensionsDisclosed: disclose(id, "we read the later page") });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const text = docOf(w, r).text;
+  assert.equal(w.fm(text).format, "bio-case-document/5");
+  const back = caseTensionsOf(text);
+  assert.equal(back.detail, null);
+  assert.deepEqual([back.highlighted, back.depth, back.tensions.length], [0, TENSIONS_DEPTH_STATED, 1]);
+  const t = back.tensions[0];
+  assert.deepEqual([t.candidate, t.finding, t.unseen_other_side, t.owner_words.text, t.acknowledged_by, t.acknowledged_at],
+    [id, F, false, "we read the later page", "alice", w.clock.now]);
+  assert.deepEqual([t.sides.a.text, t.sides.a.source, t.sides.b.text, t.sides.b.source],
+    [`the page of ${DOC}`, DOC, `the page of ${DOC2}`, DOC2]);
+  assert.deepEqual(back.members[F].map((m) => [m.candidate, m.template, m.highlighted]), [[id, "in_tension", false]]);
+  assert.equal(back.members[F][0].sentence, w.fm(text).case_tension_sentences[0].sentence);
+  assert.deepEqual(back.unread, []);
+  /* highlighted: the seen side and the fixed sentence, read the same way on both sides of the interface */
+  const h = hidden();
+  const hr = h.w.publish(h.P, "alice", [F], { tensionsDisclosed: disclose(h.id) });
+  const hb = caseTensionsOf(docOf(h.w, hr).text);
+  assert.deepEqual([hb.highlighted, hb.tensions[0].unseen_other_side, hb.tensions[0].sentence, hb.tensions[0].side.source],
+    [1, true, HIGHLIGHT_SENTENCE, DOC]);
+  assert.equal("sides" in hb.tensions[0], false);
+  assert.deepEqual(hb.members[F].map((m) => [m.template, m.highlighted]), [["unseen", true]]);
+  /* no tension: the section is present and empty */
+  const n = world(); n.member("alice"); n.doc(DOC); n.finding(F, [{ target: DOC }]);
+  const nr = n.publish(n.project("Team", "alice", [F]), "alice", [F]);
+  assert.deepEqual(caseTensionsOf(docOf(n, nr).text).tensions, []);
+});

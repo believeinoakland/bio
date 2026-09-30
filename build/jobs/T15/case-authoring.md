@@ -23,7 +23,7 @@
 
 **Please strike** (my work meets these marks): R14 `*(not yet met: N345)*`, R29 `*(not yet met: N345)*`, R32 `*(not yet met: N345)*`, R33 `*(not yet met: N345)*`, R31's highlight `*(not yet met: N345)*`, and the Status line's N345 fold as met. R14's `/5` holds once publication's `CASE_DOCUMENT_FORMAT` moves (see Deferred).
 
-**Deferred.** R14's `bio-case-document/5`, read back through publication's `caseTensionsOf`, is a `test.todo` (K498). Both are publication's and land at PUBLICATION #5's merge. A `CHANGE` after that merge turns the todo into the test. The document already writes `format: ${CASE_DOCUMENT_FORMAT}`, so no code of mine changes.
+**Deferred.** None. B4 (CHANGE): `tranche/T15` merged after PUBLICATION #5; R14's todo is now a test. It checks `format: bio-case-document/5`, and reads the tension section back through publication's `caseTensionsOf` (K498): a seen conflict with both sides, a highlighted one with its seen side only, each member's sentences, the unread legs, and an empty section.
 
 **Found in other modules** (also posted as REPORT):
 - **review** (its R13, the review copy's dry run of `op=publish`). Its draft params carry no `tensionsDisclosed`. A dry run over a case with an unresolved duty on it will now answer C-120.1, so its missing-list shows that refusal instead of the case. Review's fixture stubs `publishCase`, so its 30 tests still pass. What its drafts should carry is N345's DEC-80 part.
@@ -31,11 +31,11 @@
 - **Generated artifacts:** none made stale (no bundle takes case-authoring's files).
 
 **Tests and checks** (from `bio-plane/`, `node --test`):
-- `test/m/case-authoring/`: tests 53, pass 52, fail 0, todo 1. The new `tensions.test.mjs` runs over the real contradiction module (candidates laid through `pairs`, `propose`, `clarify`, `takeUp` and `optIn`), with stand-ins only for a failed, truncated, leg-unread or irreconcilable read.
-- `test/m/review/`: tests 30, pass 30, fail 0. `test/m/control-plane/`: tests 52, pass 52, fail 0 (the modules using mine).
-- `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures. `architecture.mjs … case-authoring`: 13 product files, 62 relative imports; 0 failures. `coverage.mjs … case-authoring`: 33 of 33 live requirement ids named by a test; 0 failures. `ownership.mjs … case-authoring tranche/T15`: 8 files; legacy-store and legacy-checks 0 added, 0 removed; 0 failures.
+- `test/m/case-authoring/`: tests 53, pass 53, fail 0, todo 0 (after B4). The new `tensions.test.mjs` runs over the real contradiction module (candidates laid through `pairs`, `propose`, `clarify`, `takeUp` and `optIn`), with stand-ins only for a failed, truncated, leg-unread or irreconcilable read.
+- `test/m/review/`: tests 30, pass 30, fail 0. `test/m/control-plane/`: tests 52, pass 52, fail 0 (the modules using mine). After B4: `test/m/ratification/`: tests 74, pass 73, fail 1, the accepted `checks.test.mjs`:133 (K500), not mine. `test/m/publication/`: pass 100, fail 0. `test/m/review/`: pass 30, fail 0.
+- `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures. `architecture.mjs … case-authoring`: 13 product files, 62 relative imports (63 after B4); 0 failures. `coverage.mjs … case-authoring`: 33 of 33 live requirement ids named by a test; 0 failures. `ownership.mjs … case-authoring tranche/T15`: 8 files; legacy-store and legacy-checks 0 added, 0 removed; 0 failures.
 
-Size (session_017F7CenwNVr8EttZdzGn7Pc): test runs 16, module lines 2610
+Size (session_017F7CenwNVr8EttZdzGn7Pc): test runs 21, module lines 2610
 
 ## J1 · QUESTION
 
