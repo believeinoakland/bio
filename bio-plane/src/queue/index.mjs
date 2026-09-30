@@ -477,6 +477,8 @@ export class Queue {
    *  kinds change every wave and this pair has not changed since REC-7. */
   static QUEUE_DISPOSITION_KEY = ["progression_key", "stage_key"];
   /** R12: the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a task (taskresolve). */
+  /** R8: the task statuses an OBLIGATION is live in (N373). */
+  static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
   static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset" });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
@@ -757,8 +759,10 @@ export class Queue {
        who by construction can see it. Withheld silently and with no count, for
        the reason `mute` states its own suppressions and this cannot: a count
        here would say a project exists. */
-    /* tasks R6: the visible tasks of any status, newest first, each as `taskList` gives it (N363). */
-    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2 })) {
+    /* tasks R6: the visible OPEN or FORWARDED tasks, newest first, each as `taskList` gives it (N363). N373 (K566): the
+       read asks for the live statuses itself, so however many tasks were resolved lately none of them takes a place an
+       open one needs (it used to read every status and drop the resolved ones after the cap). */
+    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: Queue.TASK_LIVE_STATUSES })) {
       if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
       const subject = row.refers_to;
       /* The homes are derived FIRST and the event's state is asked ONCE, for
@@ -1451,7 +1455,9 @@ export class Queue {
       /* R26: an OBLIGATION published under its own class segment (`OBLIGATION::bias-debt::<run>`, R8) is named
          OBLIGATION too, so it is refused as one rather than as unknown. */
       if (cls === null && /^OBLIGATION::\S/.test(itemId)) cls = "OBLIGATION";
-      if (cls === null && this.#tasks.taskExists(itemId)) cls = "OBLIGATION";      // tasks R6
+      /* tasks R6, gated by the viewer (N374, K565): a task this viewer may not see answers as no task, so its id is
+         UNKNOWN_KIND exactly as an absent one's and the refusal reveals nothing (R33). */
+      if (cls === null && this.#tasks.taskExists({ id: itemId, viewer })) cls = "OBLIGATION";
       subjects.push({ item: itemId, cls });
     } else {
       c = this.#queueCaseFor(caseId, viewer);
@@ -1746,7 +1752,8 @@ export class Queue {
       return { ok: false, reason: "CLASS_NOT_DISPOSED", code: "CLASS_NOT_DISPOSED",
                check: row.check, translation: row.translation,
                class: keyClass, kind: keyKind,
-               instead: keyClass === "CONDITION" ? "queuemute" : "taskresolve",
+               /* R28 (K607): the same per-kind door R12 publishes on the item. */
+               instead: keyClass === "CONDITION" ? "queuemute" : (Queue.OBLIGATION_DOORS[keyKind] || "taskresolve"),
                detail: `this names ${keyClass === "CONDITION" ? "a CONDITION" : "an OBLIGATION"} and `
                      + `${keyClass === "CONDITION" ? "a" : "an"} ${keyClass} is not DISPOSED: a disposition is `
                      + "an authored record act on a FINDING, and op=queue publishes the act that does "

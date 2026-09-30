@@ -47,6 +47,19 @@ test("R19: then per kind or item: a comma BAD_KIND; unclassifiable UNKNOWN_KIND 
   assert.equal(w.all(`SELECT count(*) c FROM queue_state`)[0].c + w.all(`SELECT count(*) c FROM queue_item_mutes`)[0].c, 0, "nothing written");
 });
 
+test("R19, R33: an item id of a task the viewer may not see is UNKNOWN_KIND, alike to an absent one (N374)", () => {
+  const w = setup();
+  w.task("TASK-2026-0002-hid", "PRJ-H");
+  const hidden = mute(w, { item: "TASK-2026-0002-hid" });
+  const absent = mute(w, { item: "TASK-2026-9999-none" });
+  assert.equal(hidden.reason, "UNKNOWN_KIND");
+  assert.deepEqual({ ...hidden, item: null }, { ...absent, item: null }, "the refusal says nothing a hidden task could leak");
+  // bob sees PRJ-H: for him the same id is his obligation, refused as one
+  const bob = w.q.queueMute({ member: "bob", viewer: "member:bob", item: "TASK-2026-0002-hid" });
+  assert.deepEqual([bob.reason, bob.kind_class], ["KIND_NOT_PERSONAL", "OBLIGATION"]);
+  assert.equal(w.all(`SELECT count(*) c FROM queue_item_mutes`)[0].c, 0);
+});
+
 test("R26: an OBLIGATION muted by its published id OBLIGATION::bias-debt::<run> is KIND_NOT_PERSONAL, not UNKNOWN_KIND", () => {
   const w = setup();
   const r = mute(w, { item: "OBLIGATION::bias-debt::run-1" });

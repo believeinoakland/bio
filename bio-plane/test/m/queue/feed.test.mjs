@@ -93,6 +93,24 @@ test("R8: obligations are the open or forwarded tasks for the member or unassign
   assert.equal(d.kind, "bias-debt"); assert.deepEqual(d.recipients, []); assert.ok(d.recipients_stated);
 });
 
+test("R8: many recently resolved tasks never hide an open one: the read asks for open and forwarded tasks only (N373)", () => {
+  const w = world();
+  w.member("alice");
+  // the live tasks are the OLDEST, and more tasks were resolved since than the feed's cap twice over
+  w.bundle("INF-OPEN"); w.bundle("INF-FWD");
+  w.task("TASK-2026-0000-open", "INF-OPEN", { created: iso(NOW - 10 * 86400000) });
+  w.task("TASK-2026-0000-fwd", "INF-FWD", { assignee: "alice", role: "member", status: "forwarded", created: iso(NOW - 9 * 86400000) });
+  for (let i = 1; i <= 12; i++) {
+    w.bundle(`INF-${i}`);
+    w.task(`TASK-2026-${String(i).padStart(4, "0")}-done`, `INF-${i}`, { status: "resolved", created: iso(NOW - i * 1000), resolvedAt: iso(NOW) });
+  }
+  for (const [member, viewer] of [["alice", "member:alice"], [null, "class:admin"]]) {
+    const f = w.q.queueFeed({ member, viewer, limit: 2 });
+    assert.deepEqual(f.items.map((i) => i.id), ["TASK-2026-0000-fwd", "TASK-2026-0000-open"], String(member));
+    assert.equal(f.truncated, false);
+  }
+});
+
 test("R11: the mint refuses the whole feed for an uncatalogued or misclassed kind, with the check and translation, before any mute", () => {
   const w = world();
   w.member("alice"); w.bundle("INQ-1", "inquiry");
