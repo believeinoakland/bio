@@ -44,8 +44,8 @@ const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const ONLY = process.argv[2] || null;
 
 const F = {
-  deriv:   ROOT + "test/derivation-bounds.test.mjs",
-  bounds:  ROOT + "test/bounds.test.mjs",
+  deriv:   ROOT + "test/system/derivation-bounds.test.mjs",   /* K612 */
+  bounds:  ROOT + "test/system/bounds.test.mjs",
   caseprod: ROOT + "test/caseproduction.test.mjs",
   control: ROOT + "test/caseproduction.control.mjs",
 };
@@ -81,7 +81,7 @@ function run(cmd, args, cwd) {
   catch (e) { return { out: String(e.stdout || "") + String(e.stderr || ""), code: e.status ?? -1 }; }
 }
 const suite = (name) => {
-  const r = run(process.execPath, [ROOT + "test/" + name], ROOT);
+  const r = run(process.execPath, [ROOT + "test/" + (/bounds\.test/.test(name) ? "system/" : "") + name], ROOT);   /* K612 */
   const m = /(\d+) pass, (\d+) fail/.exec(r.out);
   const named = [...r.out.matchAll(/^ {2}FAIL {2}(.+)$/gm)].map((x) => x[1].slice(0, 160));
   /* `-1`, NEVER `0`: a suite that threw and a suite with no failures are

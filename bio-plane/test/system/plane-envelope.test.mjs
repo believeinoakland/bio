@@ -1,0 +1,1207 @@
+/* NEGATIVE CONTROL: (run 2026-09-21, D-254 worker, D-254) the D-240 arm (a) is an IMPORT PIN now — the DEC-49 guard imports REC-76's reader from `test/verdict-reader.mjs` — and `test/verdict-excluder.control.mjs` runs THIRTEEN arms, **13 of 13 AS DECLARED, harness exit 0**, restores verified by sha256 AND content (`meaning-bounds.test.mjs`'s head states them in full). THIS file's share: (3) a SECOND `verdictKind` re-grown in the guard, one character drifted -> **59/1**, D-240 (a) naming it NOT SINGLE-HOMED; (3m) all eight re-grown beside the import -> **59/1** on (a), and the guard fails to load; (3b) a comment outside the shared functions -> **60/0**; (3c) D-240's own arm-(3) edit applied to the ONE home -> **58/2**: (a) `MISREAD: verdictKind` AND (d), this file's `{ ok: Boolean(r.result), n }` fixture — the one behavioural arm in the three instruments that exercises the edited branch. D-240 recorded 58/2 for its arm (3) here and named only (a); (3c) names the second. (3d) the guard's import re-spelled -> **60/0**. */
+/* NEGATIVE CONTROL: (run 2026-08-08, d240-agent, D-240) TEN arms in `test/verdict-excluder.control.mjs`, shared with `meaning-bounds.test.mjs` — that file's header states all ten in full and the harness prints its own register. Baseline for THIS file **60/0**, restored exactly after every arm. **10 of 10 behaved AS DECLARED.** This file's share: (2) restore the one-literal GATE (`canReportSuccess` -> `SUCCESS_ENVELOPE_OLD.test(arg)`) -> **57/3**, D-240 (b), (c) and (d) failing while **DETECTOR A ITSELF STAYS GREEN AT 0 VIOLATIONS** — the gate decides what the detector may see, which is the whole defect and the reason a green detector proved nothing here. (3) drift ONE CHARACTER inside `verdictKind` in `test/verdict-reader.mjs` -> **58/2**, D-240 (a) naming `verdictKind`; (3b) the over-strictness half, a COMMENT edited outside the six shared functions -> **60/0**. (4) remove the REAL `promoted.answered` guard from `src/index.mjs` -> **58/2**, DETECTOR A firing and NAMING `promoted`, with the unconverted-set arm going with it. (4b) THE RECEIPT, and it is the pair that matters: **the SAME removed guard read by the OLD one-literal gate reports ZERO violations.** A real defect at a real site, invisible to the classifier this item replaced and caught by the one that replaced it. */
+/* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) ONE arm, this file's share of REC-67's six, armed ALONE and restored from a PRISTINE copy verified by sha256 AND by `cmp`. Baseline 54/0. RESTORE THE SPELLING-ONLY ANCHOR — `jsonCalls`' `const re = /(?<![.\w$])json\(/g` back to `/\bjson\(/g` -> **53/1**, and the ONE failure is the REC-67 CORPUS GUARD, with the corpus line printing `144 json() call sites` where the structural anchor reads 117. NOTHING ELSE FAILS, and that is the measurement rather than a claim: it is what shows the 27 `.json()` METHOD calls this anchor was admitting were INERT — detectors A and B both require argument text a zero-argument method call cannot have, so nothing was invented and nothing was hidden. The defect was a corpus 19% larger than the walk's real one. To re-run: swap that one regex, run this suite, restore. */
+/* NEGATIVE CONTROL: RUN 2026-08-05 (rec52-agent), NINE ARMS, each broken ALONE against the FINAL files and every file restored BYTE-IDENTICALLY — sha256 index.mjs 469c2af3b2e1af0a…, plane-envelope.test.mjs 719222e59aead07e…, do-fail-worker.mjs 77be03389e432c26… before and after ALL of them. Whole = 46/46. (a) THE ITEM'S SITE (a) — section 7a's `const out = await r.json(); return json({ok:true, ...out.result}, 200)` restored -> 43 pass, 3 FAIL: the SOURCE sweep names the site ("1628:out"), the unconverted-set arm goes with it, and the DRIVEN arm reports the lie in the words of the defect ("got 200 true"). (b) THE ITEM'S SITE (b) — `(c || { reason: "NOT_PUBLISHED" })` restored -> 43 pass, 3 FAIL: detector B names line 1786, its own REACH DELTA fails because only 2 of the 3 fallbacks are now plantable, and the drive reports `got "NOT_PUBLISHED"` for a store that never answered. (c) op=publishedmanifest's `result: (await r.json()).result` restored -> 45/1, the published INDEX indistinguishable from an empty record. (d) op=publishedbytes' `if (!v || !v.published)` restored as ONE test -> 44/2, and DETECTOR C fires too because `verify` rejoins the unconverted path set — two independent instruments on one edit. (e) the session lookup's silence restored -> 45/1. (f) THE OTHER DIRECTION, and it is the arm that keeps this from collapsing the wrong way: `answered` made to require a NON-EMPTY result -> 44/2, the chokepoint's own arm plus "a bundle that genuinely is not there still answers ABSENT" — a real absence read as a silence, which UI-37 measured is one character away. (g) THE SWEEP'S OWN, AND IT HAD TO BE CORRECTED MID-RUN, REPORTED RATHER THAN SMOOTHED: the first version neutered `handlerRegion` to return the whole file and the suite stayed 46/46 GREEN, so it measured NOTHING — with every guard removed by the reach delta there is no `.answered` anywhere and a whole-file region gives the same answer as a scoped one. The property the bound actually protects is that a guard in ONE handler must not vouch for a spread in ANOTHER, and `out` is the identifier in BOTH op=verify and op=bootstrap. Corrected to two paired arms: (g1) op=verify's guard removed ALONE with the sweep intact -> 43 pass, 3 FAIL, detector A naming "1627:out"; (g2) THE SAME single guard removed AND `handlerRegion` neutered -> 45 pass, 1 FAIL — the source sweep goes BLIND and only the live drive still bites, because op=bootstrap's own `out.answered` vouches for op=verify's missing one. The delta between (g1) and (g2) is the whole value of the handler bound. (h) THE INSTRUMENT'S OWN — `fixtures/do-fail-worker.mjs`'s injection disarmed (`if (false && …)`) so the store is asked to fail and does not -> 29 pass, 17 FAIL, every driven arm in the file naming its own site, which is what proves the drives are answering an actual Durable Object failure and not a belief about one. To re-run: node the arms in the order above, one file mutated at a time, restoring from a pristine copy and comparing sha256 after each. */
+/* NEGATIVE CONTROL: RUN 2026-08-05 (rec53-agent), REC-53's ELEVEN ARMS over this file and `ratify-envelope.test.mjs`, each broken ALONE against the FINAL files and every file restored BYTE-IDENTICALLY with sha256 compared before and after — index.mjs 8b8515b42b882f9f…, plane-envelope.test.mjs 163292ca7cdbe63e…, ratify-envelope.test.mjs 7d9180199be94898…, do-fail-worker.mjs 77be03389e432c26…. (index.mjs and do-fail-worker.mjs are the SHIPPED shas; the two test files' are their shas AS RUN, before their own NEGATIVE CONTROL headers were appended — a file cannot state its own sha, and REC-52's line above has the same property. The shipped test files are plane-envelope 18190d7f… and ratify-envelope fa2d83e8….) **THE WHOLE FOR THIS FILE IS NOW 53/53, CORRECTED FROM REC-52's 46/46 ABOVE** — +5 for REC-53's corrected pins and detector D, +2 for detector D2, and the line above is left as REC-52 measured it rather than rewritten. The arms are stated in full in `ratify-envelope.test.mjs`'s own NEGATIVE CONTROL line, because seven of them are edits to `src/index.mjs`'s publish/ratify block that BOTH files see; what they do to THIS file: (a) `do/list` restored -> 47/6 (CLOSED (i) and its other-direction arm, detector C, detector D naming "4027:list", and both D reach arms); (b) `do/reusedparts` restored -> 48/5 (CLOSED (ii) plus the same four); (c) `do/image` -> 50/3; (d) `do/gatefacts` -> 50/3; (e) `do/publish`'s guard removed -> 51/2, **and this arm is why detector D2 exists: run before D2 it left this file 51/51 FULLY GREEN while the live drive reported `PUBLISH_FAILED`, because D proves an envelope is OPENED through the chokepoint and says nothing about the handler ACTING on the answer, and A is correctly silent since `pub` is spread into a REFUSAL rather than a success envelope**; (f) `capturelimit`'s `ceilingRead` forced true -> 52/1, D2 naming "limOut"; (g) `recordreuseverdicts` back to fire-and-forget -> 50/3; (h) `recordcasemanifest`'s branches swapped -> **53/53 SILENT here**, the one arm this file cannot see — D2 passes because the binding IS read with `.answered`, only in the wrong order — and it is `ratify-envelope.test.mjs`'s ordering pin that bites; (i) the other direction, a genuinely empty reused-part set treated as a silence -> 52/1; (j) the injector disarmed -> **36/17, REC-52's own seventeen reproduced exactly**; (k) detector D's region bound neutered to the whole file -> 50/3, D reporting 23 violations ALL OUTSIDE the block, so an unbounded detector stops being a claim about the BLOCK. */
+/* REC-52 — THE PLANE MUST NOT CONVERT ITS OWN FAILURE INTO A CLAIM ABOUT THE RECORD.
+ *
+ * D-197 one layer down. UI-37 fixed three public surfaces that rendered a plane
+ * refusal as a substantive negative, and while doing it measured WHY it could
+ * not fix its own defect the obvious way: `index.mjs` section 7a answered
+ * `json({ ok: true, ...out.result }, 200)` WITHOUT LOOKING AT `out.ok`, so a
+ * Durable Object failure left the plane as an HTTP 200 SUCCESS carrying
+ * nothing — and there was no `ok:false` for any transport seam to throw on.
+ * The motivating case sailed straight past. A second site, `op=publishedcase`,
+ * SYNTHESISED `reason:"NOT_PUBLISHED"` when the store returned no result: the
+ * plane manufacturing a claim about the record out of a failure to answer.
+ *
+ * That is the defect this project ranks worst, at the layer where NO SURFACE
+ * CAN CORRECT IT — a surface that faithfully renders what it received will
+ * faithfully render a lie.
+ *
+ * =====================================================================
+ * WHAT THE SWEEP FOUND, because the item named two sites and asked for the
+ * CLASS. Eleven caller-facing conversions, of which nine were not in scope:
+ *
+ *   1  op=verify                  {ok:true} at 200 carrying nothing   [named]
+ *   2  op=publishedcase           reason:"NOT_PUBLISHED" invented     [named]
+ *   3  op=publishedmanifest       {ok:true, result:undefined} -> JSON.stringify
+ *                                 DROPS an undefined value, so `{ok:true}` at
+ *                                 200 again by a DIFFERENT route from 7a's
+ *                                 spread. This is the op that fills the
+ *                                 published INDEX, so the rendered consequence
+ *                                 is the WHOLE record rather than one hash —
+ *                                 the shape UI-37 measured as the worst of its
+ *                                 three ("This group has not published any case
+ *                                 files yet").
+ *   4  op=publishedbytes          `if (!v || !v.published) return notFound()`
+ *                                 was ONE test, so a silence answered "no
+ *                                 published part answers to that hash. A hash
+ *                                 that was never ratified and a hash that never
+ *                                 existed are the same answer here,
+ *                                 deliberately." — D-197's own sentence,
+ *                                 minted here rather than at the surface.
+ *   5  publishedcase/publishedtargets  `registry = (rt && rt.registry) || {}`
+ *                                 made every basis leg of every finding read
+ *                                 "this leg is NAMED and not served: what it
+ *                                 rests on is not in the published record".
+ *                                 THE ARGUMENT FOR SWEEPING, in one line: it is
+ *                                 site 2's defect written with a `||` on a
+ *                                 different line, and it renders on the page a
+ *                                 stranger arrives at.
+ *   6  op=bootstrap               the 7a spread again; newgroup reads this op
+ *   7  op=affordances             reason:"NO_FACTS" invented — a claim that
+ *                                 there are no facts about an object, which
+ *                                 decides what acts a member is offered
+ *   8  op=queue                   reason:"NO_QUEUE" invented
+ *   9  op=knock                   a bare {ok:false} at HTTP 429 — TOO MANY
+ *                                 REQUESTS is itself a claim, and nobody counted
+ *  10  op=monitor                 reason:"ABSENT" invented — the plane saying a
+ *                                 bundle does not exist when it failed to look,
+ *                                 and ABSENT is deliberately also the
+ *                                 fail-closed answer for a bundle the viewer
+ *                                 may not SEE, which made it convincing
+ *  11  the SESSION lookup         a silence swallowed into `undefined`, after
+ *                                 which the caller is refused BY NAME — a store
+ *                                 that could not be reached reported to a
+ *                                 signed-in member as a fact about their
+ *                                 credential
+ *
+ * Plus five WRITES and MEASUREMENTS that reported success over nothing:
+ * op=linkproject, op=governorconfig, op=governorstate, op=links (both arms),
+ * op=runtime (a measurement op answering ok:true with no measurement — this
+ * class at its most literal), op=selftest (a health check that read only a
+ * THROWN fetch, so an `ok:false` store left `out.ok` true), and two that
+ * CRASHED rather than lied (op=registeraudit, op=cpuprobe) and were converted
+ * anyway because what they answer is a soundness verdict and a ceiling.
+ *
+ * =====================================================================
+ * THE FIX IS A CHOKEPOINT. `doAnswer` in index.mjs is the ONLY place that opens
+ * a Durable Object envelope; `storeSilent` is the only thing a handler may say
+ * when it did not get one. Twenty-four remembered checks would have been
+ * twenty-four chances to forget the twenty-fifth, which is how eleven of these
+ * got here. Part 1 below asserts that STRUCTURALLY over the source. Part 2
+ * drives it: the store is made to FAIL FOR REAL at each site (see
+ * `fixtures/do-fail-worker.mjs` — a subclass of the shipped `Store` that
+ * answers the store's own catch-block envelope; nothing on disk is mutated),
+ * and every arm is paired with the SAME op against the SAME store with the
+ * injection off, because these must not collapse the other way either: a
+ * GENUINE not-published answer must still read as not-published, and UI-37
+ * measured that the opposite collapse is one character away.
+ */
+import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import "../sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
+import { Miniflare } from "miniflare";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+/* D-240: REC-76's verdict reader, SHARED rather than re-derived. See the block
+   above DETECTOR A, and `verdict-reader.mjs`'s own header. */
+import { verdictOf, readerDrift } from "./verdict-reader.mjs";
+/* D-561: C-69.2 and C-98, read from the rows, never a hand copy. */
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #2 J4 R32): C-69 moved whole to control-plane's own table. */
+import { DISPATCH_CHECKS } from "../../src/control-plane/checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): C-98's rows moved with the published reads into
+   publication's own family. */
+import { PUBLISHED_READ_CHECKS } from "../../src/publication/checks.mjs";
+/* T4 (legacy-tests): held-open (iii) moved with the governor's Worker side into host-governor (R17). */
+import { governedFetch, governorOverStub } from "../../src/host-governor/index.mjs";
+const LEGACY_DIR = new URL("../", import.meta.url);   /* moved to test/system/ (K612): its relative reads resolve from bio-plane/test/ */
+
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6, PUBLICATION #1 J4.6): THE WORKER SIDE IS THREE FILES.
+   T8 layer 8 moved op=ratify and op=caseratify out of index.mjs into `src/ratification/ops.mjs` (`ratifyOp`,
+   `caseRatifyOp`, handed `json`, `doAnswer` and `storeSilent` by the control plane), and the published reads
+   (op=verify's bytes, op=publishedbytes, op=publishedcase) and the case container's assembly into
+   `src/publication/worker.mjs` (`publishedRoutes`, `assembleCaseContainer`, reaching the plane's helpers through the
+   bound `P`/`plane()`). Every detector below asks of that code exactly what it asked of index.mjs, so PART 1 reads
+   the three as ONE corpus, index.mjs first so its line numbers stay true: `WORKER_FILES` joined in order, each file
+   opened by a handler-region mark (`handlerRegion`) so no guard in one file can vouch for a spread in another.
+   Two more Worker halves left index.mjs in T6–T8 and are read for the same reason: op=knock's (`capture/doorbell.mjs`,
+   `knockOp`) and op=monitor's (`monitoring/index.mjs`, `monitorOp`, MONITORING #1 J3.1). */
+/* WIDENED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #1 step 1): the doors left index.mjs for
+   `src/control-plane/index.mjs` — `doAnswer`, `storeSilent`, `makeFetch` with the forward, the review door, admission,
+   `whoami`, the session gate and the claim — while legacy-index keeps the arms of modules not yet extracted
+   (`publicOp`, `gatedOp`). So the control plane's file is read second, and every detector asks of it what it asked
+   of index.mjs. */
+const WORKER_FILES = ["index.mjs", "control-plane/index.mjs", "ratification/ops.mjs", "publication/worker.mjs",
+                      "capture/doorbell.mjs", "monitoring/index.mjs"];
+const SRC_PATH = fileURLToPath(new URL("../../src/index.mjs", import.meta.url));
+const FILE_MARK = (f) => `\nif (op === "__file ${f}") {}\n`;
+const RAW = WORKER_FILES.map((f, i) => (i ? FILE_MARK(f) : "")
+  + readFileSync(fileURLToPath(new URL(`../src/${f}`, LEGACY_DIR)), "utf8")).join("");
+
+let pass = 0, fail = 0;
+const ok = (label, cond) => {
+  console.log(`  ${cond ? "PASS" : "FAIL"}  ${label}`);
+  cond ? pass++ : fail++;
+};
+const t = (label, got, want) => {
+  const good = JSON.stringify(got) === JSON.stringify(want);
+  console.log(`  ${good ? "PASS" : "FAIL"}  ${label}`
+    + (good ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`));
+  good ? pass++ : fail++;
+};
+
+/* =====================================================================
+   PART 1 — THE SOURCE-LEVEL SWEEP
+   =====================================================================
+   Comments are stripped BLANKED rather than removed, so every line number this
+   suite reports is the line number in the real file. The line-comment strip is
+   anchored to the start of a line (REC-48's lesson: an unanchored `//` strip
+   eats everything after `https:` inside a string literal, and a sweep that
+   silently reaches LESS than it claims is worse than no sweep). */
+const blank = (s) => s
+  .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+  .replace(/^([ \t]*)\/\/.*$/gm, (m) => " ".repeat(m.length));
+
+/* Every `json(...)` call in the file, as its balanced argument text with the
+   line it starts on. Bracket-matched rather than regexed, because these
+   arguments run to twenty lines and contain nested objects and template
+   literals. */
+/* CORRECTED 2026-08-08 (REC-67), not exempted. This anchor was `/\bjson\(/g`,
+   and `\b` matches between a DOT and a letter — so every `await r.json()` and
+   `await req.json()` in the control plane was collected as a call to the
+   module's own `json()` helper. MEASURED over `src/index.mjs` on 2026-08-08:
+   144 matches, of which **27 were `.json()` METHOD calls on a Response or a
+   Request**, so nearly a fifth of this walk's corpus was a phantom.
+   IT WAS INERT, AND IT IS STILL WORTH FIXING. A `.json()` call takes no
+   argument, so detector A (which requires an argument opening `{ ok: true`) and
+   detector B (which scans the argument for a `|| { reason:` fallback) could
+   never have produced a finding from one — nothing was invented and nothing was
+   hidden. But a walk whose reported corpus is 19% larger than its real one is
+   an instrument nobody can hold to a number, and this is REC-67's class exactly:
+   an anchor that admits a METHOD NAME because it matched the callee's spelling
+   rather than its structure. The negated class is what makes it structural — a
+   receiver is what turns `json(` into somebody else's method. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): publication's worker half calls the control plane's own `json` through
+   its bound helpers — `P.json(` and `plane().json(` — which is the helper this walk means, spelled through a binding,
+   and NOT a `.json()` METHOD on a Response or a Request. So those two receivers, and only those, are admitted; the
+   REC-67 pair below still refuses every other `.json(`. */
+function jsonCalls(src) {
+  const out = [];
+  const re = /(?<![.\w$])(?:P\.|plane\(\)\.)?json\(/g;
+  let m;
+  while ((m = re.exec(src))) {
+    let i = m.index + m[0].length, depth = 1;
+    while (i < src.length && depth > 0) {
+      const ch = src[i];
+      if (ch === "(") depth++;
+      else if (ch === ")") depth--;
+      i++;
+    }
+    out.push({ start: m.index, line: src.slice(0, m.index).split("\n").length,
+               arg: src.slice(m.index + m[0].length, i - 1) });
+  }
+  return out;
+}
+
+/* The handler a site sits in, for the guard search. Bounded by the nearest
+   preceding `if (op === "..."` / `if (op ===` / arrow-function head, which is
+   how this file is actually organised. The bound MATTERS: identifiers here are
+   one or two letters and are reused in every handler, so an unscoped search for
+   `r.answered` would let a guard in one handler vouch for a spread in another.
+   The reach delta below is what proves this bound reaches every site. */
+function handlerRegion(src, at) {
+  const before = src.slice(0, at);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): + an exported async function's head, which is how the handlers that
+     left index.mjs are organised (`ratifyOp`, `caseRatifyOp`, `publishedRoutes`, `assembleCaseContainer`). */
+  const marks = [...before.matchAll(/\n\s*(?:if \(op ===|const renderFinding =|if \(req\.method ===|export async function )/g)];
+  const from = marks.length ? marks[marks.length - 1].index : 0;
+  return src.slice(from, at);
+}
+
+/* ---- DETECTOR A: THE SUCCESS ENVELOPE ------------------------------------
+   No handler may spread a Durable Object result into an answer that can report
+   a SUCCESS without having checked that the store answered. `.answered` is the
+   ONLY way `ok` is ever checked, because `doAnswer` is the only thing that reads
+   it — which is what makes a textual search for it a real check and not a guess.
+
+   CORRECTED 2026-08-08 (D-240), NOT EXEMPTED, and it is D-236's defect arriving
+   in a second instrument exactly as REC-76's class sweep predicted. THE GATE
+   READ `if (!/^\s*\{\s*ok:\s*true\b/.test(c.arg)) continue;` — ONE LITERAL
+   deciding which of this file's answers can report a success, in a detector
+   whose entire subject is a handler telling a caller something the store never
+   said.
+
+   MEASURED over `src/index.mjs` on this tree, rather than argued: **117 `json()`
+   call sites, 23 graded by the literal and 94 skipped** — and of the skipped,
+   **three spread a Durable Object `.result`**. Two are declared refusals
+   (`{ ok: false, ...rec.result }`, `{ ok: false, ...(minted.result || {}) }`)
+   and are outside this detector's subject; they are NAMED below rather than
+   left implicit. **The third is `json({ ok: !!promoted.result?.ok, …,
+   ...promoted.result… })` — a COMPUTED verdict spreading a store result, which
+   is D-236's own shape, and the old gate could not see it at all.**
+
+   THE FIX IS REC-76's VERDICT READING, IMPORTED AND NOT RE-DERIVED
+   (`verdict-reader.mjs`): the verdict is the FIRST BOOLEAN-SHAPED top-level
+   property of the answer object.
+
+     A LITERAL `true` IS GRADED — it declares a success.
+     A COMPUTED VERDICT IS GRADED TOO — `!!promoted.result?.ok` EVALUATES TRUE
+       whenever the store answered ok, so the answer can report a success, and
+       that is the only question this detector asks.
+     A LITERAL `false` IS SKIPPED — a declared refusal is not this subject.
+     ANYTHING ELSE IS UNCLASSIFIED, and is NAMED and CEILINGED below rather
+       than silently skipped.
+
+   **THIS IS THE OPPOSITE POLICY TO `meaning-bounds.test.mjs`'s OVER THE SAME
+   READER, AND THAT IS DELIBERATE.** REC-76's guard and that walk both ask
+   whether something is a REFUSAL, where a computed verdict is safely read as
+   one. This detector asks whether an answer can report a SUCCESS, where the safe
+   reading is the opposite. One reader, two stated polarities, each with the
+   reason at its own site — what is refused is a second READER.
+
+   WHAT THE WIDENING BOUGHT, MEASURED: graded sites 23 -> 25, violations on a
+   clean tree 0 -> 0, **and the reach delta goes from 9 to 15** — because
+   removing the answered-guards makes the `promoted` site fire SIX times where
+   the old detector saw nothing. So `index.mjs:4608` was correctly guarded all
+   along and NOTHING WAS CHECKING THAT IT STAYED SO: a mechanism believed on the
+   strength of its existence rather than its behaviour, which is the defect this
+   project meets most. It is now driven. */
+const declaresRefusalEnvelope = (arg) => {
+  const i = arg.indexOf("{");
+  if (i < 0 || !/^\s*\{/.test(arg)) return null;      /* not an object literal at all */
+  return verdictOf(arg.slice(i));
+};
+/* GRADED: an answer whose verdict is a literal `true` or is COMPUTED. */
+const canReportSuccess = (arg) => { const v = declaresRefusalEnvelope(arg); return !!v && (v.kind === "true" || v.kind === "expr"); };
+/* KEPT AS THE DELTA, NOT AS THE GATE — so "the widening loses nothing" is a
+   comparison this suite runs on every tree rather than a claim from a report. */
+const SUCCESS_ENVELOPE_OLD = /^\s*\{\s*ok:\s*true\b/;
+function detectA(src) {
+  const bad = [];
+  for (const c of jsonCalls(src)) {
+    if (!canReportSuccess(c.arg)) continue;
+    const region = handlerRegion(src, c.start);
+    for (const r of c.arg.matchAll(/(?:\.\.\.)?\b([A-Za-z_$][\w$]*)\s*(?:\?)?\.result\b/g)) {
+      const id = r[1];
+      if (!new RegExp(`\\b${id}\\.answered\\b`).test(region))
+        bad.push({ line: c.line, id, why: `json({ok:true, …${id}.result…}) with no ${id}.answered check` });
+    }
+  }
+  return bad;
+}
+
+/* ---- DETECTOR B: THE INVENTED REASON -------------------------------------
+   No answer may take its `reason` or `error` from a fallback over a Durable
+   Object value. This is the exact shape of all four found instances —
+   `(c || { reason: "NOT_PUBLISHED" })`, `(r || { reason: "NO_QUEUE" })`,
+   `(facts || { reason: "NO_FACTS" })`, `(rt && rt.registry) || {}` in the
+   `json()` it feeds — and it is deliberately NOT "index.mjs may never mint a
+   reason code the store also mints". THAT RULE WAS TRIED AND IS WRONG:
+   measured, seven codes are minted in both files (NOT_FOUND, TOO_LARGE, EMPTY,
+   NO_BODY, BAD_SHA, ABSENT, MALFORMED), and the control plane's copies are
+   about the REQUEST — a body too large, a malformed sha — which is its own
+   business to refuse. Forbidding them would push a true refusal into a
+   euphemism, which is the same defect wearing modesty. */
+function detectB(src) {
+  const bad = [];
+  for (const c of jsonCalls(src)) {
+    for (const m of c.arg.matchAll(/(?:\|\||\?\?)\s*\{\s*(reason|error)\s*:/g))
+      bad.push({ line: c.line + c.arg.slice(0, m.index).split("\n").length - 1,
+                 why: `a ${m[1]} supplied by a fallback rather than by the store` });
+  }
+  return bad;
+}
+
+/* ---- DETECTOR C: THE UNOPENED ENVELOPE -----------------------------------
+   Every Durable Object fetch whose BODY is consumed must be consumed through
+   `doAnswer`. This is the assertion that makes A and B hold in the future
+   rather than today: a new handler cannot read `.result` off a raw envelope at
+   all without appearing here.
+
+   ITS LIMIT IS STATED RATHER THAN EXEMPTED. The remaining sites are NOT
+   converted, and the list is EXACT — a site that leaves it or joins it fails
+   this suite. One region and one deliberate design choice:
+     - `op=acquire`'s capture path (CAPTURE's ground, not this item's), where a
+       silence yields a `subs.*` diagnostic field that is undefined or a
+       TypeError that throws — a crash, not a claim;
+     - `governoradmit`, which fails OPEN by an explicit documented decision
+       ("ungoverned is better than unfetched"). That is a ruling already made
+       and not an oversight, so it is named here and left alone.
+
+   CORRECTED 2026-08-05 (REC-53): SIX PATHS LEFT THIS LIST — `gatefacts`,
+   `image`, `list`, `publish`, `recordcasemanifest` and `reusedparts`. REC-52
+   named them here because the publish/ratify block was REC-47's ground and held
+   concurrently; REC-47 has landed and REC-53 converted the block, so they now
+   go through `doAnswer` and appear in `converted` instead. `capturelimit` STAYS
+   on the list and the reason matters: REC-53 converted op=ratify's read of it,
+   but `op=acquire` reads the same path in CAPTURE's ground and this set is keyed
+   by PATH, so one site leaving does not take the path with it. Removing it here
+   would have been the easy wrong edit and detector C's own delta arm is what
+   would have caught it.
+   The classification is a RELATION assertion: this suite asserts the SET, and
+   asserts that none of them sits inside a `json({ ok: true` — it rules on
+   nothing else about them.
+
+   RE-ANCHORED 2026-09-27 (T4, legacy-tests): THE LIST IS NOW EMPTY, and every path left index.mjs with the code
+   that read it, none by conversion. `governoradmit` and `governorstate` went with host-governor (T4-1, N25): the
+   Worker reaches the governor through `governorOverStub`, and its fail-open is host-governor's R17, asked at that
+   module's interface in HELD OPEN (iii) below. The other eight (`sourcereach`, `loadcapturesession`,
+   `capturelimit`, `siteassets`, `recordcapturelimit`, `savecapturesession`, `recordruntime`, `recordsiteassets`)
+   went with capture (T4-4): the acquisition is a service inside the Durable Object (K72 (11)), so it calls the store
+   in process and opens no envelope. The detector still asserts the set EXACTLY, so a raw read that joins index.mjs
+   fails it (REACH (C) below). */
+const UNCONVERTED = [];
+/* Bracket-match the argument list of every call to `name(`, and return the
+   spans. Used for both `doAnswer(` and `.fetch(`. */
+function callSpans(src, pattern) {
+  const out = [];
+  const re = new RegExp(pattern, "g");
+  let m;
+  while ((m = re.exec(src))) {
+    let i = m.index + m[0].length, depth = 1;
+    while (i < src.length && depth > 0) {
+      const ch = src[i];
+      if (ch === "(") depth++;
+      else if (ch === ")") depth--;
+      i++;
+    }
+    out.push({ start: m.index, argStart: m.index + m[0].length, end: i, args: src.slice(m.index + m[0].length, i - 1) });
+  }
+  return out;
+}
+
+function doFetchSites(src) {
+  /* A LINE WINDOW WAS TRIED FIRST AND WAS WRONG IN BOTH DIRECTIONS, which is
+     why this is bracket-matched: op=publish's fetch argument runs past any
+     window and read as fire-and-forget, while `dropcapturesession` — which
+     genuinely IS fire-and-forget — swallowed a LATER statement's `.json()` and
+     read as consumed. A sweep that miscounts its own subject in both
+     directions is not a sweep, and neither error would have shown up as a
+     failure: both make the sweep quietly reach something other than what it
+     says it reaches. */
+  const wrappers = callSpans(src, "\\bdoAnswer\\(");
+  const out = [];
+  for (const f of callSpans(src, "\\.fetch\\(")) {
+    const url = /http:\/\/(?:do|x)\/([a-z]+)/.exec(f.args);
+    if (!url) continue;
+    /* What is done with the RESPONSE, read from the characters that FOLLOW the
+       call rather than guessed: `).json()` consumes the envelope, anything
+       else leaves it unread and there is nothing to lie with. */
+    const viaDoAnswer = wrappers.some((w) => w.argStart <= f.start && f.end <= w.end);
+    const rawConsumed = /^\)?\s*\.json\(\)/.test(src.slice(f.end, f.end + 24));
+    /* A converted site has NO `.json()` at the site at all — that is the whole
+       point of the chokepoint, and it is why "consumed" means either. */
+    if (!viaDoAnswer && !rawConsumed) continue;
+    out.push({ line: src.slice(0, f.start).split("\n").length, path: url[1], viaDoAnswer });
+  }
+  return out;
+}
+
+const SRC = blank(RAW);
+
+console.log(`\n--- PART 1: the source-level sweep over the Worker side (src/${WORKER_FILES.join(", src/")}) ---`);
+/* REC-67 · THE CORPUS THIS WALK ACTUALLY READS, PRINTED AND GUARDED IN BOTH
+   DIRECTIONS. Narrowing an anchor must not narrow its reach to nothing, so the
+   site count is printed every run and the reader is driven over a synthetic
+   pair: a bare `json(` is FOUND and a `.json()` method call is REFUSED. Without
+   the second half the correction is unprovable; without the first it could have
+   been made by matching nothing at all. */
+console.log(`  CORPUS: ${WORKER_FILES.length} files, ${SRC.split("\n").length} lines · `
+          + `${jsonCalls(SRC).length} json() call sites (the anchor excludes \`.json()\` method calls; `
+          + `${[...SRC.matchAll(/\bjson\(/g)].length} match a spelling-only anchor)`);
+t("REC-67 CORPUS GUARD: the walk reads a real corpus of json() sites, and the anchor refuses a "
++ "`.json()` METHOD call — measured in BOTH directions over a synthetic pair, because an anchor "
++ "made precise by matching nothing is the failure this correction could otherwise introduce",
+  [jsonCalls(SRC).length > 80,
+   jsonCalls(`return json({ ok: true, x }, 200);`).length,
+   jsonCalls(`const out = await r.json();`).length,
+   jsonCalls(`const body = await req.json().catch(() => null);`).length],
+  [true, 1, 0, 0]);
+
+const aBad = detectA(SRC);
+t(`DETECTOR A — no handler spreads a Durable Object result into an answer that can report a success `
+  + `without checking that the store answered (violations: ${JSON.stringify(aBad.map((x) => x.line + ":" + x.id))})`,
+  aBad.length, 0);
+
+/* ==========================================================================
+ * D-240 · DETECTOR A's GATE, DRIVEN. The gate decides what the detector is
+ * ALLOWED TO SEE, so a detector reporting zero says nothing until the gate has
+ * been measured — which is how a computed verdict spreading a store result sat
+ * in this file's corpus, unseen, while the suite read 54/0.
+ * ========================================================================== */
+console.log("\n--- D-240: detector A's gate, measured rather than trusted ---");
+/* THE CENSUS ASKS `canReportSuccess` AND NEVER RE-IMPLEMENTS IT — a correction
+   this file's own control forced. Its first draft read `verdictOf` directly, so
+   restoring the one-literal gate left the printed `graded` figure unchanged and
+   arm (b) stayed green over a gate that had been reverted. A census derived from
+   a COPY of its subject is a census of nothing. */
+const A_CENSUS = (() => {
+  const c = { total: 0, graded: 0, success: 0, computed: 0, refusal: 0, unclassified: [], oldGraded: 0,
+              refusalSpreadingResult: [], unclassifiedSpreadingResult: [] };
+  for (const site of jsonCalls(SRC)) {
+    c.total++;
+    if (SUCCESS_ENVELOPE_OLD.test(site.arg)) c.oldGraded++;
+    if (canReportSuccess(site.arg)) c.graded++;         /* THE DETECTOR'S OWN DECISION */
+    const v = declaresRefusalEnvelope(site.arg);
+    const ids = [...new Set([...site.arg.matchAll(/(?:\.\.\.)?\b([A-Za-z_$][\w$]*)\s*(?:\?)?\.result\b/g)].map((m) => m[1]))];
+    if (!v) { c.unclassified.push(`${site.line}${/^\s*\{/.test(site.arg) ? "(no verdict)" : "(not a literal)"}`);
+              if (ids.length) c.unclassifiedSpreadingResult.push(`${site.line}:${ids.join("+")}`); continue; }
+    if (v.kind === "true") c.success++;
+    else if (v.kind === "expr") c.computed++;
+    else { c.refusal++; if (ids.length) c.refusalSpreadingResult.push(`${site.line}:${ids.join("+")}`); }
+  }
+  return c;
+})();
+console.log(`  GATE: ${A_CENSUS.total} json() sites · ${A_CENSUS.graded} GRADED by the detector · `
+          + `${A_CENSUS.success} declare a success · `
+          + `${A_CENSUS.computed} carry a COMPUTED verdict · ${A_CENSUS.refusal} declare a refusal · `
+          + `${A_CENSUS.unclassified.length} UNCLASSIFIED`);
+console.log(`    the OLD one-literal gate graded ${A_CENSUS.oldGraded}; this gate grades ${A_CENSUS.graded}`);
+console.log(`    UNCLASSIFIED, NAMED rather than scored zero: ${A_CENSUS.unclassified.join(", ")}`);
+console.log(`    DECLARED REFUSALS spreading a store .result (outside this detector's subject, named): `
+          + `${A_CENSUS.refusalSpreadingResult.join(", ") || "none"}`);
+/* (a) ONE MECHANISM, NOT TWO — the same pin `meaning-bounds.test.mjs` carries,
+   asserted here too rather than inherited: each suite must be falsifiable
+   standing alone, and a shared reader nobody in THIS file checks is a shared
+   reader this file cannot rely on.
+   CORRECTED 2026-09-21 by D-254, never exempted: it compared this reader with a
+   byte-identical COPY in the guard. The guard now IMPORTS this reader instead,
+   so that comparison would set the file beside itself and agree for free; the
+   arm asserts ONE HOME (the guard binds every shared function from here and
+   declares none) and ONE BEHAVIOUR (every reading holds) instead. */
+{
+  const drift = readerDrift(readFileSync(new URL("../../../civicos-ui/check-refusal-codes.mjs", import.meta.url), "utf8"),
+                            readFileSync(new URL("./verdict-reader.mjs", import.meta.url), "utf8"));
+  console.log(`  READER: ${drift.read} of ${drift.expected} shared functions in the ONE home, ${drift.chars} chars `
+            + `(floor ${drift.minChars}) · the DEC-49 guard imports ${drift.imported} of ${drift.expected} in `
+            + `${drift.statements} statement(s) and declares ${drift.localCopies.length} itself · `
+            + `${drift.held} of ${drift.readings} readings hold (floor ${drift.minReadings}) · `
+            + `NOT SINGLE-HOMED: ${drift.differing.length ? drift.differing.join(", ") : "none"} · `
+            + `MISREAD: ${drift.misread.length ? drift.misread.join(", ") : "none"}`);
+  t("D-240 (a) ONE MECHANISM, ONE HOME (D-254): this gate and the DEC-49 guard read the verdict through "
+  + "ONE module — the guard imports every function of it and declares none itself — and every READING of "
+  + "that module still holds, so the guard and this detector cannot drift into disagreeing about what a "
+  + "verdict is, and the one reader cannot change what it answers unnamed. Counted and floored, because "
+  + "an empty reader, an empty import and an empty readings table would each agree for free",
+    [drift.differing, drift.misread, drift.unread, drift.read, drift.imported,
+     drift.chars > drift.minChars, drift.readings >= drift.minReadings, drift.held],
+    [[], [], [], drift.expected, drift.expected, true, true, drift.readings]);
+}
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; N247, MONITORING #1 J3.1): THE COMPUTED-VERDICT SITE LEFT THE WORKER. (b)
+   and (c) were witnessed on the tree by ONE site, op=monitor's `json({ ok: !!promoted.result?.ok, … })` behind
+   `if (!promoted.answered) return storeSilent("monitor/promote")`; T8's monitoring extraction (5501b53e10) moved the
+   promotion and its verdict into the Durable Object's `monitor` service, so the Worker corpus now holds NO computed
+   verdict (the GATE line above prints `0 carry a COMPUTED verdict`, and the real tree's census still drives (e) and
+   (f)). What (b) and (c) assert is a property of the GATE — that it sees the computed shape the literal cannot, and
+   that the answered-guard at such a site is load-bearing — and the tree no longer carries a specimen of it. So the
+   specimen is PLANTED, as REACH (D)'s bound is (T4): the removed site's own lines, verbatim in every part the gate and
+   the guard strip read (the guard, the computed `ok`, the `promoted.result` spreads, the computed status), as its own
+   handler region appended to a copy of the corpus. Nothing on disk is changed, and the one-literal gate (the
+   verdict-excluder control's arm 2) still fails both arms over it. What monitoring's Worker half answers now —
+   `monitorOp`'s unclassified spread and its raw envelope — is (e)'s and DETECTOR C's, N247's monitoring share. */
+const PLANT_COMPUTED = `
+if (op === "__plant monitor, the computed-verdict site as it stood before 5501b53e10") {
+      const promoted = await doAnswer(stub.fetch(new Request("http://do/promote", { method: "POST", body })));
+      if (!promoted.answered) return storeSilent("monitor/promote");
+
+      return json({
+        ok: !!promoted.result?.ok,
+        checked, status, note, baseline, seen,
+        reeval_raised: flags,
+        ...(promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail }),
+        store: storeName, tokenClass: cls,
+      }, promoted.result?.ok ? 200 : 409);
+}
+`;
+const SRC_PLANTED = SRC + PLANT_COMPUTED;
+/* (b) THE WIDENING, AS A DELTA IN BOTH DIRECTIONS. It must grade MORE than the
+   literal, and it must grade EVERYTHING the literal graded — a gate that traded
+   one blind spot for another would pass a count and fail the file's purpose. */
+{
+  const lost = jsonCalls(SRC_PLANTED).filter((c) => SUCCESS_ENVELOPE_OLD.test(c.arg) && !canReportSuccess(c.arg))
+    .map((c) => c.line);
+  const pGraded = jsonCalls(SRC_PLANTED).filter((c) => canReportSuccess(c.arg)).length;
+  const pOld = jsonCalls(SRC_PLANTED).filter((c) => SUCCESS_ENVELOPE_OLD.test(c.arg)).length;
+  const pComputed = jsonCalls(SRC_PLANTED).filter((c) => (declaresRefusalEnvelope(c.arg) || {}).kind === "expr").length;
+  console.log(`  PLANTED (b): over the corpus and the planted site, the OLD gate grades ${pOld}, this gate ${pGraded}, `
+            + `${pComputed} of them COMPUTED`);
+  t("D-240 (b) THE GATE SEES MORE AND LOSES NOTHING — it grades strictly more json() sites than "
+  + "`/^\\s*\\{\\s*ok:\\s*true\\b/`, and NOT ONE site the literal graded is now skipped. The gain is "
+  + "the COMPUTED verdicts, which is D-236's shape arriving in this instrument",
+    [pGraded > pOld, pComputed > 0, lost],
+    [true, true, []]);
+}
+/* (c) REACH, AS A DELTA ON THE GATE ITSELF — and this is the arm that shows the
+   widening bought something REAL rather than a larger number. With every
+   answered-guard mechanically removed, the OLD gate finds the sites it always
+   could; the NEW gate finds those AND the computed-verdict site. The difference
+   between the two planted counts IS the blind spot D-240 named. */
+{
+  const GUARD_A = /^[ \t]*if \(![A-Za-z_$][\w$]*(?:Out)?\.answered.*$\n/gm;
+  /* T9 (legacy-tests): over the corpus and the planted computed-verdict site, (b)'s re-anchor above. */
+  const stripped = SRC_PLANTED.replace(GUARD_A, "");
+  const withOld = [];
+  for (const c of jsonCalls(stripped)) {
+    if (!SUCCESS_ENVELOPE_OLD.test(c.arg)) continue;
+    const region = handlerRegion(stripped, c.start);
+    for (const r of c.arg.matchAll(/(?:\.\.\.)?\b([A-Za-z_$][\w$]*)\s*(?:\?)?\.result\b/g))
+      if (!new RegExp(`\\b${r[1]}\\.answered\\b`).test(region)) withOld.push(`${c.line}:${r[1]}`);
+  }
+  const withNew = detectA(stripped).map((x) => `${x.line}:${x.id}`);
+  const onlyNew = [...new Set(withNew.filter((x) => !withOld.includes(x)))];
+  console.log(`  GATE REACH: with every answered-guard removed the OLD gate finds ${withOld.length} `
+            + `spreads and this gate finds ${withNew.length}; ONLY the new gate sees ${onlyNew.join(", ")}`);
+  t("D-240 (c) THE WIDENING IS LOAD-BEARING, NOT COSMETIC — un-guarding the source makes this gate "
+  + "report a spread the old gate CANNOT SEE AT ALL, and it is the computed-verdict site. So that "
+  + "site was correctly guarded all along and NOTHING WAS CHECKING THAT IT STAYED SO: a mechanism "
+  + "believed on the strength of its existence rather than its behaviour",
+    [withNew.length > withOld.length, onlyNew.length > 0,
+     onlyNew.every((x) => x.endsWith(":promoted"))], [true, true, true]);
+}
+/* (d) OVER-STRICTNESS, over synthetic answers rather than the tree, because the
+   tree cannot show what the gate would do to a shape nobody has written yet.
+   A declared refusal must stay OUT of the subject — grading those would flood
+   the detector with the ~78 refusal envelopes this file legitimately writes. */
+t("D-240 (d) OVER-STRICTNESS: the gate admits a declared success and a COMPUTED verdict, and still "
++ "refuses a declared refusal and a non-literal argument. A gate that started grading refusals would "
++ "turn this detector's whole subject inside out",
+  [canReportSuccess("{ ok: true, ...out.result }"),
+   canReportSuccess("{ ok: !!promoted.result?.ok, checked }"),
+   canReportSuccess("{ ok: Boolean(r.result), n }"),
+   canReportSuccess("{ started: true, run, ...r.result }"),
+   canReportSuccess("{ ok: false, ...rec.result }"),
+   canReportSuccess("{ ...arm.refusal, op }"),
+   canReportSuccess("out, out.ok ? 200 : 500")],
+  [true, true, true, true, false, false, false]);
+/* (e) WHAT THE GATE CANNOT CLASSIFY, NAMED AND CEILINGED — REC-76's rule, and
+   M0-14's and CPDF-9's before it: a thing the matcher does not understand must
+   be NAMED, never silently scored zero. Eleven of these hand `json()` a VARIABLE
+   rather than a literal (`json(out, …)`, `json(sel.payload, sel.status)`), which
+   is the same blind spot REC-76 recorded for arm C — an outcome built into a
+   variable and returned later. Three are object literals carrying no
+   boolean-shaped property at all. The CROSS-CHECK is what makes the ceiling
+   honest rather than a shrug: none of them spreads a store `.result`, gated at
+   zero, so today the residual cannot be hiding this detector's own subject. */
+t("D-240 (e) THE UNCLASSIFIED RESIDUAL IS NAMED AND CEILINGED, and CROSS-CHECKED: not one "
++ "unclassified json() site spreads a Durable Object `.result`, so the ceiling is a statement about "
++ "reach and not a place for this detector's subject to hide",
+  /* 14 -> 17, RAISED 2026-09-24 by D-513, and a ceiling that RISES owes its reason at the site
+     exactly as a floor that falls does. The three arrivals are `index.mjs` 6047, 6061 and 6068 —
+     `op=knock`'s three pre-store refusals, each now handed to `json()` by a governed DEC-49 helper
+     (`knockEnvelopeTooLarge`, `knockEmpty`, `knockPayloadTooLarge`) rather than written as an object
+     literal at the call site. They join the residual for the reason the block above names: the
+     argument is NOT A LITERAL, which is this gate's known and stated blind spot, not a new one.
+     **THE CROSS-CHECK IS WHAT KEEPS THIS HONEST AND IT IS UNMOVED AND GATED AT ZERO:** none of the
+     three spreads a Durable Object `.result` — none of them reads the store at all, they are
+     composed in the control plane before `Store.knock` is called — so the residual still cannot be
+     hiding this detector's own subject. Verified by the printed site list, which names all 17
+     individually; a raise that could not name its arrivals would be this ceiling becoming a place
+     to hide, which is precisely what it exists to prevent. */
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): 17 -> 23, RAISED, each arrival named with the change that made it; no
+     departure. Measured by name against T15's close (f5554232cb), the census re-run over both trees:
+       - RATIFICATION (b89c9dbab9, R18's pre-flight shares op=caseratify's refusals through `./refusals.mjs`):
+         `ratification/ops.mjs` `json(machineCaseRefusal(cls), 403)`, `json(operatorCaseRefusal(cls), 403)` and
+         `json({ ...refusal, store, tokenClass }, 409)` — the first two were the literal refusals
+         MACHINE_CANNOT_RATIFY_CASE and OPERATOR_TOKEN_CANNOT_RATIFY_CASE, the third replaces three literal ones
+         (TESTIMONY_CASE_UNPUBLISHABLE, ATTRIBUTION_UNCHOSEN, ATTRIBUTION_STATEMENT_STALE), now built by a helper;
+       - CAPTURE (2ff4800ac2, R66): `capture/doorbell.mjs` `json(knockerSecretWeak(), 400)`, a pre-store refusal
+         composed by a governed helper, exactly as D-513's three above;
+       - CONTROL-PLANE (8a55152ade, N364, R36): `control-plane/index.mjs` op=inboxpull's hinted relay
+         `json({ ...body, store, tokenClass }, hinted)` (the relay's two siblings were already here), and
+         op=knockerconsent's `json({ ...rec, ok: true }, 200)`.
+     All six are the gate's stated blind spot (not a literal, or a leading spread). THE CROSS-CHECK IS UNMOVED AND
+     GATED AT ZERO. One limit stated rather than absorbed: op=knockerconsent's `rec` IS the store's result, bound to a
+     local (`const rec = out.result …`) before the spread, so this `.result`-spelled cross-check cannot see it; the
+     site sits behind `if (!out.answered) return storeSilent("knockerconsent", …)`, so it is guarded, and no product
+     change is owed. The declared refusals fell 77 -> 74 (the five ratification literals above left; op=knockerconsent's
+     `{ ok: false, ...rec }` and its `knockerconsent is a POST` arrived). */
+  [A_CENSUS.unclassified.length <= 23, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
+/* (f) AND THE DECLARED REFUSALS THAT DO SPREAD ONE — outside this detector's
+   subject by construction, so they are pinned BY SITE rather than left as a
+   sentence. `{ ok: false, ...rec.result }` cannot report a success, but it is
+   the same class one field over and D-197's ground; if one of them ever becomes
+   a success envelope, this arm fails before detector A gets the chance. */
+t("D-240 (f) THE DECLARED REFUSALS THAT SPREAD A STORE RESULT ARE PINNED BY SITE — they are outside "
++ "this detector's subject because they cannot report a success, and saying so with the sites is what "
++ "keeps that a measurement rather than an assumption",
+  /* MOVED 2 -> 3 on 2026-09-18 by REC-126: `op=reviewgrant`'s refusal branch
+     (`issued`) is `op=aicredentialmint`'s (`minted`) shape exactly — the read
+     secret is generated at the edge and the store's refusal is spread under a
+     LITERAL `ok: false`, so it cannot report a success. Named here, not absorbed. */
+  A_CENSUS.refusalSpreadingResult.length <= 3, true);
+
+const bBad = detectB(SRC);
+t(`DETECTOR B — no answer takes its reason or error from a fallback over a Durable Object value `
+  + `(violations: ${JSON.stringify(bBad.map((x) => x.line))})`,
+  bBad.length, 0);
+
+const sites = doFetchSites(SRC);
+const converted = sites.filter((s) => s.viaDoAnswer);
+const unconverted = sites.filter((s) => !s.viaDoAnswer);
+ok(`the sweep found Durable Object reads at all — ${sites.length} sites whose body is consumed, `
+   + `${converted.length} through doAnswer and ${unconverted.length} named as unconverted`,
+   sites.length >= 30 && converted.length >= 15);
+t("DETECTOR C — the unconverted set is EXACTLY the list this item states, so a site cannot "
+  + "join or leave it silently",
+  [...new Set(unconverted.map((s) => s.path))].sort(), [...new Set(UNCONVERTED)].sort());
+
+/* Every unconverted site is a read whose failure crashes or is swallowed
+   internally — none of them reaches a caller through a success envelope. That
+   is what A already proves, and it is asserted HERE against the unconverted
+   list specifically so the stated limit is a measured claim rather than a
+   promise. */
+ok("and NONE of the unconverted sites spreads into a success envelope — which is what makes "
+   + "leaving them a limit rather than a hole",
+   detectA(SRC).length === 0);
+
+/* ---- THE SWEEP'S OWN REACH, AS A DELTA -----------------------------------
+   A walk that covers nothing passes everything. This has eight sightings in
+   this project, including a reach assertion that compared a PLANTED COUNT TO 1
+   and so read as deaf on a file that already had hits (REC-48, corrected). So
+   reach is asserted as a DELTA and never against an absolute.
+
+   AND THE PLANT IS THE REAL DEFECT, NOT A SYNTHETIC ONE: the guard lines are
+   mechanically REMOVED from a copy of the shipped source, which restores every
+   converted site to exactly the shape it had before this item. So the delta
+   measures the detector against the actual defect at every actual site, and it
+   proves each guard is load-bearing rather than decorative. */
+const GUARD = /^[ \t]*if \(![A-Za-z_$][\w$]*(?:Out)?\.answered.*$\n/gm;
+const guardsRemoved = (SRC.match(GUARD) || []).length;
+const noGuards = SRC.replace(GUARD, "");
+const aPlanted = detectA(noGuards);
+ok(`REACH (A), AS A DELTA — removing all ${guardsRemoved} answered-guards from a copy of the source `
+   + `takes detector A from ${aBad.length} to ${aPlanted.length} violations, so every guarded spread `
+   + `is one this detector can see and every guard is load-bearing`,
+   guardsRemoved >= 15 && aPlanted.length - aBad.length >= 7);
+ok(`REACH (A) names the sites rather than counting them — ${JSON.stringify(aPlanted.map((x) => x.line + ":" + x.id))}`,
+   aPlanted.length > 0 && aPlanted.every((x) => Number.isFinite(x.line)));
+
+/* Detector B's reach, planted with the four fallbacks this item removed,
+   written back at their own sites rather than appended to the end of the file —
+   a plant at the end proves only that the regex fires somewhere. */
+const B_PLANTS = [
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): op=publishedcase's site is publication's worker half now, through `P`. */
+  ['if (!c.ok) return P.json({ ok: false, ...c }, 404);',
+   'if (!c.ok) return P.json({ ok: false, ...(c || { reason: "NOT_PUBLISHED" }) }, 404);'],
+  ['return json({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);',
+   'return json({ ok: false, ...(r || { reason: "NO_QUEUE" }), store: storeName, tokenClass: cls }, 400);'],
+  ['return json({ ok: false, ...facts, store: storeName, tokenClass: cls },',
+   'return json({ ok: false, ...(facts || { reason: "NO_FACTS" }), store: storeName, tokenClass: cls },'],
+];
+let bSrc = SRC, bPlantedCount = 0;
+for (const [from, to] of B_PLANTS) {
+  if (bSrc.includes(from)) { bSrc = bSrc.replace(from, to); bPlantedCount++; }
+}
+const bPlanted = detectB(bSrc);
+t(`REACH (B), AS A DELTA — writing the ${bPlantedCount} removed fallbacks back at their own sites `
+  + `takes detector B from ${bBad.length} to ${bPlanted.length}`,
+  [bPlantedCount, bPlanted.length - bBad.length], [3, 3]);
+
+/* Detector C's reach: a new unconverted DO read must fail the set assertion in
+   BOTH directions — one that appears, and one that disappears. */
+const cPlantAdd = SRC + `\n      const q9 = (await (await st.fetch("http://x/newthing")).json()).result;\n`;
+const addedPaths = [...new Set(doFetchSites(cPlantAdd).filter((s) => !s.viaDoAnswer).map((s) => s.path))].sort();
+ok(`REACH (C), AS A DELTA — a NEW unconverted Durable Object read appears in the set `
+   + `(${unconverted.length} sites -> ${doFetchSites(cPlantAdd).filter((s) => !s.viaDoAnswer).length}, `
+   + `and "newthing" joins the paths)`,
+   addedPaths.includes("newthing")
+   && addedPaths.length === [...new Set(unconverted.map((s) => s.path))].length + 1);
+
+/* ---- WAS HELD OPEN; (i) AND (ii) ARE NOW CLOSED --------------------------
+   Three of REC-52's sixteen unconverted sites turned out to be a DIFFERENT
+   question rather than the same one, and the honest thing was to pin the
+   RELATION rather than collapse them into that item. A relation assertion states
+   no value and so is not a ruling; what it buys is that the site cannot change
+   shape without somebody being told.
+
+   CORRECTED 2026-08-05 (REC-53), AND THE POLARITY IS THE WHOLE POINT. Pins (i)
+   and (ii) were written by REC-52 to hold a DEFECT open, so as written they
+   REQUIRED THE DEFECT TO BE PRESENT: `listSite` matched `.result || []` on the
+   raw envelope, and `reusedSite` matched the raw `do/reusedparts` read. Left
+   alone they would have gone RED FOR THIS FIX AND GREEN FOR THE BUG — which is
+   the trap UI-36 wrote into a pin whole, that REC-52 then found UI-37 had
+   repeated, and that is twice in three items. They are INVERTED here with the
+   date and the reason, never deleted, and they now assert the FIX: each site
+   reads through `doAnswer` and refuses through `storeSilent`, so restoring
+   either defect turns the pin red. Verified by running exactly that (arms (a)
+   and (b) of this file's negative control).
+
+   What each one was:
+     (i)  `do/list`'s `.result || []` gave `runGate` an EMPTY known-id set, so
+          a store silence made every reference in the bundle read as
+          unresolved and the ratification was refused for a reason about the
+          RECORD ("does not resolve in the store") rather than about the
+          exchange. The worst reachable form of this class.
+     (ii) `do/reusedparts`' silence read as "no parts were reused", which is a
+          statement about what the group did.
+
+   (iii) `governoradmit` fails OPEN — `(a && a.result) || null` and a `catch`
+   whose comment says "ungoverned is better than unfetched". That is a DECISION
+   already taken and written down, not an oversight, and it is not this class:
+   nothing is told to a caller. It STAYS held open, unchanged. */
+{
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "CLOSED (i) — op=ratify derives its known-id set from an
+     `.answered`-guarded `do/list` read and REFUSES on a silence". The relay is ratification's (`src/ratification/ops.mjs`)
+     and its refusal on a silence is ratification's R17, tested at its interface in
+     `test/m/ratification/relays.test.mjs` ("R17 (N349): a reply that is no answer is 502 STORE_DID_NOT_ANSWER naming
+     the relay", over each of the seven relays, `ratify/list` among them, driven rather than read). */
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; RATIFICATION #6, N349): the guard now hands the store's
+     correlation, `storeSilent("ratify/list", listOut.correlation)`. KEPT under K457: ratification's R17 tests drive a
+     silence and a refusal, not a genuinely EMPTY list read as an answer, which is what this arm holds.
+     AND THE OTHER DIRECTION AT THE SAME SITE, because a guard that also threw
+     away a real empty list would be REC-52's arm (f) collapse reversed: a viewer
+     who can genuinely see no bundles is a real answer, and `|| []` must survive
+     BEHIND the guard rather than in front of it. */
+  ok("CLOSED (i), THE OTHER DIRECTION — the `|| []` survives BEHIND the answered-guard, so a "
+     + "genuinely empty list is still a real answer and is not itself treated as a silence",
+     /if \(!listOut\.answered\) return storeSilent\("ratify\/list", listOut\.correlation\);\s*\n\s*const known = new Set\(\(listOut\.result \|\| \[\]\)/.test(SRC));
+  const reusedSite = /const reusedOut = await doAnswer\(stub\.fetch\(`http:\/\/do\/reusedparts/.test(SRC)
+    && /if \(!reusedOut\.answered\) \{/.test(SRC)
+    && /op: "ratify\/reusedparts"/.test(SRC);
+  ok("CLOSED (ii) — op=ratify's reuse report STATES an unread reuse set instead of omitting the key, "
+     + "so a silence no longer reads as \"nothing was reused\". Post-commit, so it states the "
+     + "undetermined rather than refusing: the ratification genuinely landed. POLARITY INVERTED "
+     + "2026-08-05 (REC-53) for the same reason as (i)",
+     reusedSite);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor T4-1, N25): the admission check and its written decision
+     left index.mjs for `src/host-governor/index.mjs` (`governedFetch`, `governorOverStub`), where the decision is
+     R17. Asked there, of the behaviour rather than the sentence: a governor whose stub throws, and one whose store
+     answers no envelope, each leave the fetch made, ungoverned. */
+  const fetched = [];
+  const fakeFetch = async (u) => { fetched.push(u); return { status: 200, headers: { get: () => null } }; };
+  const throwing = governorOverStub({ fetch: async () => { throw new Error("the store is down"); } });
+  const silent = governorOverStub({ fetch: async () => ({ json: async () => ({ ok: false, error: "stack" }) }) });
+  const viaThrowing = await governedFetch("https://example.org/a", { fetch: fakeFetch, governor: throwing, sleep: async () => {} });
+  const viaSilent = await governedFetch("https://example.org/b", { fetch: fakeFetch, governor: silent, sleep: async () => {} });
+  ok("HELD OPEN (iii), UNCHANGED: the governor's admission check fails OPEN by an explicit written "
+     + "decision (\"ungoverned is better than unfetched\", host-governor R17), which is a ruling already made "
+     + "and not this class",
+     !!viaThrowing.res && !!viaSilent.res && !viaThrowing.refusedByGovernor && !viaSilent.refusedByGovernor
+     && JSON.stringify(fetched) === JSON.stringify(["https://example.org/a", "https://example.org/b"]));
+}
+
+/* ---- DETECTOR D: THE PUBLISH/RATIFY BLOCK, WHOLE (REC-53) ----------------
+   Detectors A, B and C are file-wide and each has a blind spot this block
+   walked straight into, measured rather than supposed:
+     - A looks for a `.result` spread inside `json({ ok: true`, and
+       `recordcasemanifest`'s invented `MANIFEST_NOT_RECORDED` reached the caller
+       in a LOCAL VARIABLE (`container`) spread twelve lines later;
+     - B looks for a `||`/`??` fallback, and `do/publish`'s invented
+       `PUBLISH_FAILED` was a TERNARY;
+     - C only sees a body that is CONSUMED, and `recordreuseverdicts` was
+       FIRE-AND-FORGET, so a write that never landed was invisible to it while
+       the answer told the caller its outcomes.
+   So the block gets ONE property covering all three blind spots at once: inside
+   `if (op === "ratify")` there is no raw Durable Object read AT ALL — every
+   `.fetch(` in the region sits inside a `doAnswer(`. That is checkable without
+   knowing what any site does with its answer, which is exactly why it survives
+   a shape the three detectors above have not met yet. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6): the handler is `ratifyOp` in
+   `src/ratification/ops.mjs` now, the body `if (op === "ratify") {` held in index.mjs, moved whole. */
+function ratifyRegion(src) {
+  const from = src.indexOf("export async function ratifyOp(req, stub, ctx) {");
+  if (from < 0) return null;
+  let i = src.indexOf("{", from), depth = 0;
+  for (; i < src.length; i++) {
+    if (src[i] === "{") depth++;
+    else if (src[i] === "}" && --depth === 0) return { from, to: i + 1, text: src.slice(from, i + 1) };
+  }
+  return null;
+}
+function rawInRatify(src) {
+  const region = ratifyRegion(src);
+  if (!region) return null;
+  const wrappers = callSpans(src, "\\bdoAnswer\\(");
+  const out = [];
+  for (const f of callSpans(src, "\\.fetch\\(")) {
+    if (f.start < region.from || f.end > region.to) continue;
+    if (!/http:\/\/(?:do|x)\//.test(f.args)) continue;
+    if (wrappers.some((w) => w.argStart <= f.start && f.end <= w.end)) continue;
+    out.push({ line: src.slice(0, f.start).split("\n").length,
+               path: (/http:\/\/(?:do|x)\/([a-z]+)/.exec(f.args) || [])[1] || "?" });
+  }
+  return out;
+}
+{
+  const region = ratifyRegion(SRC);
+  const raw = rawInRatify(SRC);
+  const inBlock = callSpans(SRC, "\\.fetch\\(").filter((f) => f.start >= region.from && f.end <= region.to);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: 8 -> 7 IN THE REGION,
+     and the eighth is FOLLOWED, not dropped. The container assembly — and its `recordcasemanifest` fetch —
+     moved VERBATIM out of the ratify handler into the module function `assembleCaseContainer`, because under
+     rule 12 op=caseratify can complete a case too and must assemble it by the same code. So the region carries
+     seven, and the moved fetch is held to detector D's rule at its new home, in the arm right after this one. */
+  /* CORRECTED 2026-09-24 (D-530), never exempted: 7 -> 8 IN THE REGION. The ratify gate's `hasCapture` now asks
+     the store's `registerholds` on a whole-hash miss, so that it can name a capture held in parts rather than call
+     its bytes absent. That is a real eighth Durable Object read in this handler, and it goes through the
+     chokepoint: detectors D and D2 below read all eight and pass. The old pin counted a handler that no longer exists. */
+  ok(`the ratify region is found and is the whole handler — ${region.text.split("\n").length} lines `
+     + `carrying ${inBlock.length} Durable Object fetches`,
+     region && inBlock.length === 8);
+  {
+    const from = SRC.indexOf("async function assembleCaseContainer(");
+    let i = SRC.indexOf("{", SRC.indexOf(")", from)), depth = 0, to = -1;
+    for (; from >= 0 && i < SRC.length; i++) {
+      if (SRC[i] === "{") depth++;
+      else if (SRC[i] === "}" && --depth === 0) { to = i + 1; break; }
+    }
+    const wrappers = callSpans(SRC, "\\bdoAnswer\\(");
+    const fetches = callSpans(SRC, "\\.fetch\\(").filter((f) => f.start >= from && f.end <= to
+      && /http:\/\/(?:do|x)\//.test(f.args));
+    const rawHere = fetches.filter((f) => !wrappers.some((w) => w.argStart <= f.start && f.end <= w.end));
+    t("D-442: the container assembly's ONE Durable Object fetch, moved out of the ratify handler, still goes "
+    + "through the chokepoint at its new home",
+      [from >= 0 && to > from, fetches.length, rawHere.length], [true, 1, 0]);
+  }
+  t(`DETECTOR D — NO raw Durable Object read anywhere in the publish/ratify block; all eight go `
+    + `through the chokepoint (violations: ${JSON.stringify((raw || []).map((x) => x.line + ":" + x.path))})`,
+    (raw || []).length, 0);
+
+  /* REACH (D), AS A DELTA, and by REC-52's method: the REAL guards are removed
+     from a copy of the REAL source, so what the detector is measured against is
+     the actual defect at every actual site rather than a planted specimen. Here
+     the plant must ALSO restore the raw envelope reads, because detector D's
+     subject is the `doAnswer` wrapper itself and not the guard line. */
+  const dPlant = SRC
+    .replace("const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${ratViewer}`));",
+             "const listOut = { result: (await (await stub.fetch(`http://do/list?viewer=${ratViewer}`)).json()).result };")
+    .replace("const reusedOut = await doAnswer(stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`));",
+             "const reusedOut = { result: (await (await stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`)).json()).result };")
+    /* CORRECTED 2026-09-28 (T8, legacy-tests), never exempted: this plant opened `{ answered: true, result: …` and never
+       closed it. Inside index.mjs's `fetch` the stray brace was balanced by an OUTER closer, so the region merely ran
+       long; `ratifyOp` is a top-level function, so the region never closed and detector D read nothing. The plant is
+       the same fire-and-forget write, brace-balanced. */
+    .replace("const vOut = await doAnswer(stub.fetch(new Request(\"http://do/recordreuseverdicts\", {",
+             "const vOut = { answered: true }; await stub.fetch(new Request(\"http://do/recordreuseverdicts\", {");
+  const dPlanted = rawInRatify(dPlant);
+  ok(`REACH (D), AS A DELTA — un-converting the two sites this item was NAMED for plus the `
+     + `fire-and-forget write takes detector D from ${(raw || []).length} to ${dPlanted.length} `
+     + `violations, and it names them: ${JSON.stringify(dPlanted.map((x) => x.path))}`,
+     dPlanted.length - (raw || []).length === 3
+     && ["list", "recordreuseverdicts", "reusedparts"].every((p) => dPlanted.some((x) => x.path === p)));
+  /* And the bound is load-bearing in the other direction: a raw read OUTSIDE the
+     block must NOT make detector D fire, or "the block is clean" would be a
+     claim about the file. `op=acquire`'s raw reads are the standing proof. */
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): the ten raw reads outside the block that were the standing proof
+     left index.mjs with host-governor and capture (DETECTOR C's note), so the proof is PLANTED: detector C's own
+     planted raw read, outside the ratify region, is seen by C and does not make D fire. */
+  ok("REACH (D), THE BOUND — a raw read OUTSIDE this block does not make detector D "
+     + "fire, so a clean block is a claim about the BLOCK and not about the file",
+     doFetchSites(cPlantAdd).some((x) => !x.viaDoAnswer && x.path === "newthing")
+     && (rawInRatify(cPlantAdd) || []).length === 0 && (raw || []).length === 0);
+
+  /* ---- DETECTOR D2: OPENED IS NOT THE SAME AS CHECKED ------------------
+     ADDED 2026-08-05 (REC-53) BECAUSE ITS OWN NEGATIVE CONTROL EXPOSED THE
+     GAP, and it is reported rather than smoothed. Arm (e) deletes `do/publish`'s
+     `if (!pubOut.answered) return storeSilent(…)` line and NOTHING in this file
+     moved — 51/51 green — while the live drive reported `PUBLISH_FAILED` for a
+     store that never answered. Detector D proves the envelope is OPENED through
+     the chokepoint; it says nothing about the handler ACTING on the answer. And
+     detector A cannot cover it either, by design: `pub` is spread into a
+     REFUSAL (`json({ ok: false, … })`), not into a success envelope, so A is
+     correctly silent.
+     So: every identifier bound from a `doAnswer(` inside this block must be
+     read with `.answered` somewhere in the block. That is the property arm (e)
+     showed was missing, and it is deliberately scoped to this region for the
+     same reason `handlerRegion` is — REC-52's arm (g) measured that an unscoped
+     search lets one handler's guard vouch for another's. */
+  const bound = [...region.text.matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*await doAnswer\(/g)]
+    .map((m) => m[1]);
+  const unchecked = bound.filter((id) => !new RegExp(`\\b${id}\\.answered\\b`).test(region.text));
+  t(`DETECTOR D2 — every opened envelope in the block is also CHECKED: all ${bound.length} `
+    + `doAnswer bindings are read with .answered (unchecked: ${JSON.stringify(unchecked)})`,
+    unchecked, []);
+  /* Reach, as a delta and against the real defect: drop the real guard line at
+     the site arm (e) drops it at, and D2 must name that binding. */
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the moved handler is indented one level less. */
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; RATIFICATION #6, N349): the commit site's guard now hands the
+     store's correlation. KEPT under K457: this is detector D2's own reach, which no module test guards. */
+  const d2Plant = SRC.replace('if (!pubOut.answered) return storeSilent("ratify/publish", pubOut.correlation);\n    ', "");
+  const d2Region = ratifyRegion(d2Plant);
+  const d2Unchecked = [...d2Region.text.matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*await doAnswer\(/g)]
+    .map((m) => m[1])
+    .filter((id) => !new RegExp(`\\b${id}\\.answered\\b`).test(d2Region.text));
+  ok(`REACH (D2), AS A DELTA — removing the REAL guard at the commit site takes D2 from `
+     + `${unchecked.length} to ${d2Unchecked.length} and names it: ${JSON.stringify(d2Unchecked)}`,
+     d2Unchecked.length - unchecked.length === 1 && d2Unchecked.includes("pubOut"));
+}
+
+/* ---- THE CHOKEPOINT IS ONE PLACE, AND SAYS THE RIGHT THING --------------- */
+ok("`doAnswer` is the only thing in index.mjs that reads `ok` off a Durable Object envelope",
+   (SRC.match(/out\.ok === true/g) || []).length === 1
+   && /async function doAnswer\(res\)/.test(SRC));
+ok("`answered` is `ok === true` AND NOTHING ELSE — it does not require a non-empty result, "
+   + "because a store may legitimately answer null, [] or {} and treating a real empty answer as a "
+   + "non-answer is this same collapse running the other way",
+   /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K421/K422, CONTROL-PLANE #3, control-plane R23): `doAnswer` now
+      also carries `reply` and grades a below-500 `ok: false` as the store's own REFUSAL (`answered: false, refused:
+      true`), so the one-expression ternary became three returns. The rule is unchanged and read as such: the one
+      `answered: true` in the function is guarded by `out.ok === true` alone, with no test of the result. */
+   (() => {
+     const fn = SRC.slice(SRC.indexOf("async function doAnswer(res)"));
+     const body = fn.slice(0, fn.indexOf("\n}\n") + 2);
+     return (body.match(/answered: true/g) || []).length === 1
+       && /\n\s*if \(out\.ok === true\) return \{ answered: true, result: out\.result, reply \};/.test(body);
+   })());
+ok("the refusal states the state of the EXCHANGE and makes no claim about the record",
+   /It is NOT a claim that what you asked for is absent, unpublished, unknown or refused/.test(SRC));
+ok("and it does not echo the Durable Object's `error`, which is a raw stack trace on ops "
+   + "reachable with no credential at all",
+   !/error: out\.error/.test(SRC) && !/store_error/.test(SRC));
+
+/* =====================================================================
+   PART 2 — DRIVEN: THE STORE IS MADE TO FAIL, FOR REAL
+   ===================================================================== */
+const WORKER = fileURLToPath(new URL("../fixtures/do-fail-worker.mjs", import.meta.url));
+const mf = new Miniflare({
+  modules: true, modulesRoot: "/", scriptPath: WORKER, script: readFileSync(WORKER, "utf8"),
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+  durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],
+  bindings: { ADMIN_TOKEN: "adm-rec52", MEMBER_TOKEN: "mem-rec52", PROBE_TOKEN: "prb-rec52", VERSION: "test" },
+});
+
+const GET = async (q) => {
+  const r = await mf.dispatchFetch(`http://x/api/?${q}`);
+  return { status: r.status, body: await r.json() };
+};
+const POST = async (q, body) => {
+  const r = await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body ?? {}) });
+  return { status: r.status, body: await r.json() };
+};
+const poison = async (...paths) => {
+  const r = await mf.dispatchFetch(`http://x/__failpaths?paths=${encodeURIComponent(paths.join(","))}`);
+  return (await r.json()).result.failing;
+};
+
+const HEX = "a".repeat(64);
+const SILENT = "STORE_DID_NOT_ANSWER";
+
+/* The two properties every arm asserts, named once so each arm reads as what it
+   is rather than as three lines of shape-checking:
+   - a silence is NEVER a success, and
+   - a silence NEVER carries a substantive word the store did not say. */
+const isSilence = (r) => r.body && r.body.ok === false && r.body.reason === SILENT && r.status === 502;
+
+console.log("\n--- PART 2: the injection control ---");
+t("the injector arms and disarms, and reports what it is holding",
+  [await poison("verify", "publishedcase"), await poison()],
+  [["verify", "publishedcase"], []]);
+
+console.log("\n--- site 1: op=verify (section 7a — the item's site (a)) ---");
+{
+  await poison();
+  const good = await GET(`op=verify&sha256=${HEX}`);
+  t("THE TRUE NEGATIVE FIRST: an unpublished hash answers `published:false` at 200, which is a real "
+    + "answer and must keep reading as one",
+    [good.status, good.body.ok, good.body.published, good.body.sha256], [200, true, false, HEX]);
+
+  await poison("verify");
+  const bad = await GET(`op=verify&sha256=${HEX}`);
+  ok("a Durable Object failure reaches the caller AS A FAILURE — not `{ok:true}` at HTTP 200 with "
+     + `nothing in it (got ${bad.status} ${JSON.stringify(bad.body.reason || bad.body.ok)})`,
+     isSilence(bad));
+  ok("and the refusal carries NO `published` field, so no surface can read an absence out of it — "
+     + "which is the exact route D-197 took",
+     !("published" in bad.body) && !("matches" in bad.body));
+  await poison();
+}
+
+console.log("\n--- site 2: op=publishedcase (the item's site (b)) ---");
+{
+  await poison();
+  const good = await GET("op=publishedcase&id=CASE-2026-nothing");
+  t("THE GENUINE NOT-PUBLISHED ANSWER, PRESERVED: the store's own NOT_PUBLISHED reaches the caller "
+    + "at 404 with the store's own sentence",
+    [good.status, good.body.ok, good.body.reason, /published projection/.test(good.body.detail || "")],
+    [404, false, "NOT_PUBLISHED", true]);
+
+  await poison("publishedcase");
+  const bad = await GET("op=publishedcase&id=CASE-2026-nothing");
+  ok("a Durable Object failure is NOT reported as NOT_PUBLISHED — the plane no longer manufactures "
+     + `a claim about the record out of a failure to answer (got ${JSON.stringify(bad.body.reason)})`,
+     bad.body.reason !== "NOT_PUBLISHED" && isSilence(bad));
+  ok("and it carries none of the store's not-published sentence",
+     !/published projection/.test(JSON.stringify(bad.body)));
+  /* D-561 (C-69.2): the silence a STRANGER meets at the public door carries its code, check and canned translation. */
+  const sd = DISPATCH_CHECKS.STORE_DID_NOT_ANSWER;
+  t("D-561 STORE_DID_NOT_ANSWER at publishedcase, as a caller holding nothing: C-69.2's check and canned translation",
+    [bad.status, bad.body.code, bad.body.check, bad.body.translation], [502, SILENT, sd.check, sd.translation]);
+  await poison();
+  /* D-561 (C-98.8): the genuine negative carries ITS translation too, and the two stay apart. */
+  const np = PUBLISHED_READ_CHECKS.NOT_PUBLISHED;
+  t("D-561 NOT_PUBLISHED at publishedcase: C-98.8's check and canned translation, never the silence's",
+    [good.body.code, good.body.check, good.body.translation], ["NOT_PUBLISHED", np.check, np.translation]);
+}
+
+console.log("\n--- site 3: op=publishedmanifest (the published INDEX — not in scope, found by the sweep) ---");
+{
+  await poison();
+  const good = await GET("op=publishedmanifest");
+  t("an empty published record answers ok:true with an EMPTY LIST — a real answer about a group "
+    + "that has published nothing",
+    [good.status, good.body.ok, Array.isArray(good.body.result.published), good.body.result.published.length],
+    [200, true, true, 0]);
+
+  await poison("publishedmanifest");
+  const bad = await GET("op=publishedmanifest");
+  ok("a Durable Object failure is not an empty index — the two were indistinguishable and the "
+     + "surface rendered the second as \"this group has not published any case files yet\"",
+     isSilence(bad) && !("result" in bad.body));
+  await poison();
+}
+
+console.log("\n--- site 4: op=publishedbytes (D-197's own sentence, minted in the plane) ---");
+{
+  await poison();
+  const good = await GET(`op=publishedbytes&sha256=${HEX}`);
+  /* CORRECTED by D-561, not exempted: the true negative's CODE was `NOT_FOUND`, which the plane also mints for three
+     other conditions, so it could carry no canned translation; it is now NO_PUBLISHED_PART (C-98.1) with the SAME
+     sentence. What this site asserts — the true negative keeps its indistinguishability clause — is unchanged. */
+  t("THE TRUE NEGATIVE: a hash the published projection does not hold answers NO_PUBLISHED_PART with the "
+    + "deliberate-indistinguishability clause, which is TRUE of a real absence",
+    [good.status, good.body.reason, /deliberately/.test(good.body.detail || "")],
+    [404, "NO_PUBLISHED_PART", true]);
+
+  await poison("verify");
+  const bad = await GET(`op=publishedbytes&sha256=${HEX}`);
+  /* CORRECTED by D-561: the true negative's code is NO_PUBLISHED_PART now (was NOT_FOUND); the arm asks the same thing. */
+  ok("a Durable Object failure does NOT answer NO_PUBLISHED_PART, and does not carry the sentence whose "
+     + "second clause is exactly what made D-197 convincing",
+     bad.body.reason !== "NO_PUBLISHED_PART" && bad.body.reason !== "NOT_FOUND" && !/deliberately/.test(JSON.stringify(bad.body)) && isSilence(bad));
+  /* D-561 (C-69.2): and at publishedbytes, the same row — one condition, one sentence. */
+  const sd = DISPATCH_CHECKS.STORE_DID_NOT_ANSWER;
+  t("D-561 STORE_DID_NOT_ANSWER at publishedbytes, as a caller holding nothing: C-69.2's check and canned translation",
+    [bad.status, bad.body.code, bad.body.check, bad.body.translation], [502, SILENT, sd.check, sd.translation]);
+  await poison();
+}
+
+console.log("\n--- site 5: op=bootstrap ---");
+{
+  await poison();
+  const good = await GET("op=bootstrap");
+  t("an instance answers what it is", [good.status, good.body.ok, good.body.service], [200, true, "bio-plane"]);
+
+  await poison("bootstrap");
+  const bad = await GET("op=bootstrap");
+  ok("an instance that cannot consult its own store does not answer `{ok:true}` with a service "
+     + "name and nothing else — newgroup reads this op to decide whether an instance is ready",
+     isSilence(bad));
+  await poison();
+}
+
+console.log("\n--- site 6: op=affordances (reason:\"NO_FACTS\" invented) ---");
+{
+  await poison();
+  const good = await GET("op=affordances&target=INQ-nope&token=adm-rec52");
+  t("THE GENUINE ANSWER: an object the store does not hold answers the store's own NO_SUCH_BUNDLE",
+    [good.status, good.body.reason], [404, "NO_SUCH_BUNDLE"]);
+
+  await poison("affordancefacts");
+  const bad = await GET("op=affordances&target=INQ-nope&token=adm-rec52");
+  ok("a Durable Object failure is neither NO_FACTS nor NO_SUCH_BUNDLE — a member is not told an "
+     + "object does not exist, nor offered a set of acts derived from facts nobody read",
+     bad.body.reason !== "NO_FACTS" && bad.body.reason !== "NO_SUCH_BUNDLE" && isSilence(bad));
+  await poison();
+}
+
+console.log("\n--- site 7: op=queue (reason:\"NO_QUEUE\" invented) ---");
+{
+  await poison("queue");
+  const bad = await GET("op=queue&token=adm-rec52");
+  ok("a Durable Object failure is not reported as there being no queue",
+     bad.body.reason !== "NO_QUEUE" && isSilence(bad));
+  await poison();
+  const good = await GET("op=queue&token=adm-rec52");
+  t("and the real queue still answers", [good.status, good.body.ok], [200, true]);
+}
+
+console.log("\n--- site 8: op=monitor (reason:\"ABSENT\" invented) ---");
+{
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; MONITORING #1 J3.1): the monitor's look runs in the Durable Object's
+     `monitor` service now, so the Worker opens ONE envelope, `do/monitor`, and the image is read in process. The
+     store is made to fail THERE, the one read the op makes; the claim is unchanged. */
+  await poison("monitor");
+  const bad = await POST("op=monitor&token=adm-rec52", { bundleId: "INQ-nope" });
+  ok("a Durable Object failure is NOT reported as the bundle being absent — ABSENT is also the "
+     + "fail-closed answer for a bundle the viewer may not see, which is what made it convincing",
+     bad.body.reason !== "ABSENT" && isSilence(bad));
+  await poison();
+  const good = await POST("op=monitor&token=adm-rec52", { bundleId: "INQ-nope" });
+  t("and a bundle that genuinely is not there still answers ABSENT",
+    [good.status, good.body.reason], [404, "ABSENT"]);
+}
+
+console.log("\n--- site 9: op=knock (a bare ok:false at HTTP 429) ---");
+{
+  await poison();
+  const good = await POST("op=knock", { contentText: "a document a stranger wants the group to see" });
+  t("A GENUINE KNOCK still lands", [good.status, good.body.ok], [200, true]);
+
+  await poison("knock");
+  const bad = await POST("op=knock", { contentText: "a document a stranger wants the group to see" });
+  ok("a Durable Object failure is not reported to an anonymous member of the public as their "
+     + `having knocked too often (status ${bad.status}, was 429)`,
+     bad.status !== 429 && isSilence(bad));
+  await poison();
+}
+
+console.log("\n--- site 10: the SESSION lookup (a store silence read as a verdict on a credential) ---");
+{
+  await poison("session");
+  const bad = await GET(`op=whoami&token=${"b".repeat(64)}`);
+  ok("a store that could not be reached is not reported to a signed-in member as a fact about "
+     + "their credential",
+     isSilence(bad));
+  await poison();
+  const good = await GET(`op=whoami&token=${"b".repeat(64)}`);
+  ok("and a token that genuinely names no session is still refused as one",
+     good.body.ok === false && good.body.reason !== SILENT);
+}
+
+console.log("\n--- sites 11-15: the writes and the measurements ---");
+{
+  await poison("linksto");
+  const l = await GET("op=links&address=https://example.gov/a&token=adm-rec52");
+  ok("op=links: a silence is not \"nothing points at that address\"", isSilence(l));
+
+  await poison("governorconfig");
+  const g = await GET("op=governorconfig&host=example.gov&appetite_per_min=12&token=adm-rec52");
+  ok("op=governorconfig: a WRITE that never landed is not reported as done — an operator would "
+     + "otherwise believe a courtesy limit is in force on somebody else's server", isSilence(g));
+
+  await poison("projectlinks");
+  const p = await GET(`op=linkproject&capture=${HEX}&token=adm-rec52`);
+  ok("op=linkproject: a projection that never ran is not reported as a successful projection",
+     isSilence(p));
+
+  await poison("runtimeobservations");
+  const r = await GET("op=runtime&token=adm-rec52");
+  ok("op=runtime: a MEASUREMENT op does not answer ok:true carrying no measurement", isSilence(r));
+
+  await poison("stats");
+  const s = await GET("op=selftest&token=adm-rec52");
+  ok("op=selftest: a health check reports UNHEALTHY when the store answers ok:false, not only when "
+     + `the fetch throws (ok=${s.body.ok}, store=${JSON.stringify(s.body.store)})`,
+     s.body.ok === false && /did not answer/.test(String(s.body.store)));
+
+  await poison();
+  const ok2 = await GET("op=selftest&token=adm-rec52");
+  ok("and a healthy instance still reports healthy", ok2.body.ok === true);
+}
+
+console.log("\n--- the collapse must not run the other way ---");
+{
+  await poison();
+  const v = await GET(`op=verify&sha256=${HEX}`);
+  const c = await GET("op=publishedcase&id=CASE-2026-nothing");
+  const b = await GET(`op=publishedbytes&sha256=${HEX}`);
+  const m = await GET("op=publishedmanifest");
+  ok("with NOTHING poisoned, every genuine negative on the public read path still reads as the "
+     + "negative it is, and NONE of them reads as a silence — UI-37 measured that this collapse is "
+     + "one character away in the other direction",
+     v.body.published === false && v.body.ok === true
+     /* CORRECTED by D-561: publishedbytes' true negative is NO_PUBLISHED_PART (C-98.1), was NOT_FOUND. */
+     && c.body.reason === "NOT_PUBLISHED" && b.body.reason === "NO_PUBLISHED_PART"
+     && m.body.ok === true && m.body.result.published.length === 0
+     && ![v, c, b, m].some((x) => x.body.reason === SILENT));
+}
+
+await mf.dispose();
+console.log(`\nplane-envelope: ${pass} pass, ${fail} fail`);
+console.log(`REC-52: eleven caller-facing conversions found where the item named two; the sweep's reach `
+  + `asserted as a delta by removing every answered-guard from a copy of the source and re-running `
+  + `the detector; the unconverted set pinned EXACTLY at ${UNCONVERTED.length} paths with its limit `
+  + `stated rather than exempted.`);
+process.exit(fail ? 1 : 0);

@@ -368,7 +368,7 @@ const child = (mode, extra = {}) => {
 /* The suites driven THROUGH the probe, alongside the synthetic corpus. These are
    the node-side consumers of `compile()`; every other consumer is in workerd and
    the tripwire arm is what reaches it. */
-const NODE_SUITES = ["query.test.mjs", "meaningquery.test.mjs", "bounds.test.mjs"];
+const NODE_SUITES = ["query.test.mjs", "meaningquery.test.mjs", "system/bounds.test.mjs"];   /* K612: bounds moved to test/system/ */
 
 function sweep() {
   console.log("\n================ SWEEP: which fields does anything READ? ================");
