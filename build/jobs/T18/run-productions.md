@@ -44,3 +44,20 @@ Best reading, now applied: `SUGGEST_LEVELS` and C-104 `EXTRACT_PROPOSE_CHECKS` a
 - `format`: 82 modules, 77 requirements files; 0 failures. `architecture run-productions`: 7 product files, 38 relative imports; 0 failures. `coverage run-productions`: 19 of 19 live requirement ids named by a test; 0 failures. `ownership run-productions tranche/T18`: legacy-store 0 added, 0 removed; legacy-checks 0 added, 102 removed; 0 failures.
 
 Size (session_01VFBFEMEmv24uKBA3Qo3CH8): test runs 11, module lines 1146
+
+## J4 · COMPLETE
+
+**Every entry applied; ready to merge** (B3, B4; J3 stands for everything else).
+
+- **B3 (K649 adds):** merged `origin/tranche/T18` (@ 8f8b083325, run-rules merged); `index.mjs` now imports `runPrincipalGate` from `../run-rules/index.mjs` (its R5); it was this module's only `airun.mjs` import, so the module no longer imports `airun.mjs`. Comments re-pointed.
+- **B4:** J2's reading stands as applied in J3: C-104 and `SUGGEST_LEVELS` defined in `run-productions/checks.mjs`, C-104 deleted from the catalogue, `SUGGEST_LEVELS`' catalogue line held as a copy (for the catalogue's next job, once agent-worker re-points). C-104.1–C-104.12 **awaiting stamp**. B2 read, not applied (it answered J1, which J2 replaced).
+- **Deferred:** none.
+
+**Found, added to J3:** on a clean `origin/tranche/T18` worktree, `agent-worker/test/requirements.test.mjs` now throws at load ("op=affordances published no fences", the pack render), the same on my branch; not mine (it follows skills' merge; agent-worker's R48/N157 work in its own job). `wire-vocabulary.test.mjs` 83 passed, 0 failed.
+
+**Tests and checks** (after the merge, on `job/T18/run-productions` @ its pushed head):
+- `node --test bio-plane/test/m/run-productions/`: tests 36, pass 36, fail 0.
+- `node --test bio-plane/test/m/`: tests 3678, pass 3655, fail 1 (control-plane doorbell R36, pre-existing, N419), todo 22.
+- `format`: 82 modules, 77 requirements files; 0 failures. `architecture run-productions`: 7 product files, 38 relative imports; 0 failures. `coverage run-productions`: 19 of 19; 0 failures. `ownership run-productions tranche/T18`: legacy-store 0 added, 0 removed; legacy-checks 0 added, 102 removed; 0 failures.
+
+Size (session_01VFBFEMEmv24uKBA3Qo3CH8): test runs 16, module lines 1147
