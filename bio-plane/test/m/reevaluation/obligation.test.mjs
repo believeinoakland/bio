@@ -291,3 +291,39 @@ test("R21: silence is earned: no published registry means no edition was read, a
   assert.deepEqual([r2.ok, r2.editions_read], [true, false]);
   assert.match(r2.editions_why, /not the same as none/);
 });
+
+/* Converted from the old `reevaluation` suite (T18; its source-reading arms, blocks 7–9, restated at the interface). */
+test("R3 (converts reevaluation block 9): only a positively recorded `severed` narrows a leg; the severed leg's edition facts equal a confirmed leg's; the confirmed wording is byte-for-byte", () => {
+  const w = world();
+  const ODD = "INQ-2026-0007-odd";
+  w.inquiry(T, {});
+  w.inquiry(DEP, { legs: [{ target: T, target_edition: 1 }] });
+  w.inquiry(DEP2, { legs: [{ target: T, target_edition: 1 }], refs: [{ target: T, rel: "cites", status: "severed" }] });
+  w.inquiry(ODD, { legs: [{ target: T, target_edition: 1 }], refs: [{ target: T, rel: "cites", status: "Severed" }] });
+  w.publish(T, 1); w.publish(T, 2);
+  const r = w.r.reevaluations({ target: T, viewer: ADMIN });
+  const of = (id) => r.obligations.find((o) => o.bundle_id === id);
+  const facts = (o) => ["cited_edition", "latest_edition", "latest_ratified_edition"].map((k) => o.causes[0][k]);
+  assert.deepEqual(r.obligations.map((o) => [o.bundle_id, o.legs.map((l) => l.status)]),
+    [[DEP, ["confirmed"]], [DEP2, ["severed"]], [ODD, ["confirmed"]]], "the severed dependent still receives the obligation");
+  assert.deepEqual([facts(of(DEP2)), facts(of(ODD))], [facts(of(DEP)), facts(of(DEP))]);
+  const confirmed = `this leg rests on edition 1 of ${T}, which now stands at edition 2. Edition 1 keeps answering `
+    + "with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).";
+  assert.equal(of(DEP).causes[0].detail, confirmed);
+  assert.equal(of(ODD).causes[0].detail, confirmed, "an unrecognised spelling is not a withdrawal");
+  assert.match(of(DEP2).causes[0].detail, /^this leg was WITHDRAWN \(severed\) and named edition 1 of /);
+  assert.doesNotMatch(of(DEP2).causes[0].detail, /\brest(s|ing)? on\b/i, "a withdrawn leg is never said to rest on its target");
+});
+
+test("R4 R18 R19 (converts reevaluation blocks 2, 5, 8): the strength is two or more axis objects and no composed scalar; no read or raise writes a row", () => {
+  const w = base();
+  move(w, T, { state: "deferred", disposition: '"set down"' });
+  const snap = w.snapshot();
+  const [o] = w.r.reevaluations({ viewer: ADMIN }).obligations;
+  w.r.raise({ target: T, source: "deferred", since: "s", viewer: ADMIN });
+  w.r.changesOf({ findings: [T, DEP], viewer: ADMIN });
+  assert.equal("grade" in o.strength, false, "no scalar");
+  assert.ok(["capture", "connection", "testimony"].every((a) => o.strength[a] && typeof o.strength[a] === "object"));
+  assert.deepEqual(w.snapshot(), snap, "the obligation, the raise and the recovery read write nothing, in any table");
+  assert.deepEqual(o.stored, { flag: null, since: null, source: null }, "the stored triple is the document's own, unmerged");
+});
