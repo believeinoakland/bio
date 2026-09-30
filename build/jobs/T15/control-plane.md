@@ -1,3 +1,13 @@
 # control-plane (T15)
 
 **Status** · session_01HUfzsqiRFUiyAQ3trjLmav · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Readings I am building N345's routes on. I carry on with each unless you answer otherwise.
+
+1. **Classes and reach.** All fifteen ops take `["admin", "member", "probe"]`, no `machineClasses`, so an `ai` credential reaches each as a member does (a write only when declared). Mutating: the six contradiction acts, `contradictionrecommend`, `resolutiondefect`. Reads (mutating false): the five contradiction reads, `publishtensions`, `comparisonfacts`.
+2. **Session sets and capability.** The six contradiction acts (a new `CONTRADICTION_ACTIONS`) and `resolutiondefect` (joining `REGISTRY_ACTIONS`) go in both session sets; `contradictionrecommend` joins `AI_RUN_ACTIONS` (both sets) and `RUN_PRODUCTION_ACTIONS`, as `contradictionpropose` does. `NEEDS`: `contribute` for those eight (each writes a row in a name). The seven reads get no `NEEDS` row (the `reevaluations` precedent), so affordances need not name them.
+3. **Stamps, each in the form the module compares.** Contradiction acts: `viewer`, and `author` as the positional identity (`member:<id>`, the founder's `member:admin`; `class:<cls>`; `class:ai/<tokenId>`), the action layer's `QUERY_AUTHOR_ACTIONS` expression, because contradiction passes it to promotion as `actorIdentity` and asks `memberFacts` of it. `contradictionrecommend`: `viewer`, `proposedBy` and `principal`, `contradictionpropose`'s. `resolutiondefect`: body `by`, the registry writes' expression (the member id or `class:<cls>`; DEC-52, a machine may report and is named). `entity`, `entitybyalias`: `viewer`. `publishtensions`: `viewer` and `author` by `publish`'s expression (the member id or `token:<cls>`), since case-authoring asks `isProjectOwner` of it as for `publish`. `comparisonfacts`: `viewer` (joins `CONFORMANCE_READS`).
+4. **R27's tables.** Naming a project: `contradictionnotices` and `contradictionresponses` (`project`: contradiction's own first refusal is the same `existenceAct`, so door and route agree), `contradictioncandidates` (`project`, `bundle`), `publishtensions` (`project`: case-authoring's R2 answers the same existence first). Naming none, with reasons: `contradictionfacts` and `comparisonfacts` (a candidate id), `contradictiontensions` (referents in the body, never a project's own id). The body form `on: {project}` of `contradictioncandidates` is not read by the door (it reads top-level fields only); I note it rather than widen `existenceRead`.
+5. **Count.** Twelve contradiction ops, not thirteen (K490), plus `resolutiondefect`, `publishtensions`, `comparisonfacts`: fifteen routes, and `viewer` added to `entity` and `entitybyalias`.
