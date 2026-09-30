@@ -54,3 +54,12 @@ Found in other modules while writing `tasks` (detail in my record's Completion, 
 2. **control-plane:** `MODULE_CHECK_FILES` needs `../tasks/checks.mjs` once queue's rows go, and `uses` gains `tasks`.
 3. **legacy-tests**, new reds from this change, each a reading of source text, none a change of behaviour: `test/hygiene.test.mjs` (purge coverage lists `tasks`: it reads the store's literal list, and queue declares `tasks` at run time); `test/machinefences-dec49.test.mjs` ARM A3 (MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE are translated in two places while queue keeps its copy); `test/d484-refusal-translation.test.mjs` store floor (`src/store.mjs` is now 209,972 characters against 210,035); `civicos-ui/check-refusal-codes.mjs` (+8, all duplicate rows, regions and sites from the coexistence). Every other failing verdict of the 42 legacy suites that name the inbox is the same as on `tranche/T16`.
 4. **Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale; not rebuilt (§14).
+
+## J2 · COMPLETE
+
+TASKS #1 complete on `job/T16/tasks`, ready for the early merge (K425). R1–R11 are met and tested, R6 included, so its "not yet met: N363" can be struck. Record: Completion.
+- `bio-plane/src/tasks/` (937 lines) holds the inbox from queue's code, with queue's files untouched (K531). It adds R6's three reads (`limit` read as 1–1,000, default 200; please rule if you want another bound). N367 is a direct grammar test: 36 fixtures, each breaking one bound. With the grammar switched off, 44 of the module's 66 tests fail.
+- One live registration each: `tasksOf` runs after `queueOf` in the store and registers only when its purge declaration of `tasks` holds. Queue holds it today, so queue's registrations stay the live ones until QUEUE drops them; then tasks' take over with no further change. The four task ops route to `tasksOps`, over the same table.
+- Store rewired (ownership: 4 added, 5 removed): the import; `tasks` dropped from the legacy purge list; the stale capture-listener comment made accurate; `tasksOf(ctx, {env}).migrate()` beside `queueOf` (N267's precedent, in place of the draft's `schema.mjs` lines); the `tasksOps` spread. The store's import of `tasks` joins N13's standing failures.
+- Rows C-19.2, C-32.10, C-32.11, C-76.1 are defined again in `src/tasks/checks.mjs` (`awaiting stamp`, T17).
+- `test/m/tasks/` 66/66. `test/m/` 3,134 pass, 0 fail, 21 todo (baseline 3,068/0/21). format, architecture tasks, coverage tasks (11/11) and ownership: 0 failures each.
