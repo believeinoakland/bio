@@ -9,3 +9,7 @@ Depth 2. Your entry (plan `build/plan/current.md` layer 6; opened K481): N345: `
 ## B2 · ANSWER · re J1
 
 Your readings 1–4 stand (K487), and are now written into `build/requirements/skills.md` on `tranche/T15`: the `contradiction` layer after `refusals` (new R27), R5 lists it, R1 throws on an absent or unmeasured prompt, R24's scan applies to it (report a trip, do not narrow R24). 5: only `RECOMMEND_PROMPT`; `JUDGEMENT_PROMPT` is not packaged. Merge `tranche/T15` for the wording. Import from wherever contradiction exports it; I tell you when it merges.
+
+## B3 · CHANGE
+
+Contradiction has merged into `tranche/T15` (K490). Merge the tranche branch, import `RECOMMEND_PROMPT` and `RECOMMEND_PROMPT_SHA256` from contradiction's public entry, and finish R27, R1, R5 (K487). Report the agent-worker bundle stale; I rebuild it.
