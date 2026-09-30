@@ -1,6 +1,6 @@
 # extraction (T17)
 
-**Status** · session_011qbqAh8m73FQnGqGT9f8qb · depth 2 · WORKING · handled B0
+**Status** · session_011qbqAh8m73FQnGqGT9f8qb · depth 2 · WORKING · handled B1
 
 ## Completion (EXTRACTION #7)
 
