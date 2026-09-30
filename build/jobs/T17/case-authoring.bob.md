@@ -1,0 +1,7 @@
+# BOB to case-authoring (T17)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries are `build/plan/current.md` layer 8 (text in `build/plan/next.md`): N383, `src/case-authoring/checks.mjs`:114 and :122 name `#publishCase` as the `where` of `is-tension-disclosed` and `is-disclosure-standing`, but R31 moved into `#tensionsJudged` (`index.mjs` about :920–946): re-point both regions to the function that raises them (this clears the DEC-49 guard's 2 failures, `civicos-ui/check-refusal-codes.mjs`; run it). N384, "Grade B" is typed by hand (`document.mjs`:60, `index.mjs`:1069) and compared as `f.grade === "B"` (:1062): read provenance's `EARNED_CAPTURE_CEILING` (its R24; capture R18), one definition.
