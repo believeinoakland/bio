@@ -123,11 +123,15 @@ test("R6 earned arms: testimony only where the registry holds an authored observ
 });
 
 test("R7 an inherited leg rests on a published case at an edition the registry holds, no stronger than its frozen strength", () => {
-  const pub = { [INQ]: { editions: { 1: { strength: { capture: "C", connection: "C" } } } } };
+  /* the published registry as the check reads it: each edition's axes, each {state, grade} */
+  const pub = { [INQ]: { object_type: "inquiry", editions: { 1: { capture: { state: "graded", grade: "C" },
+                                                                 connection: { state: "graded", grade: "C" } } } } };
   const fm = (extra) => fmWith([{ target: INQ, role: "supports", grade_source: "inherited", target_edition: 1, ...extra }]);
-  const plain = basisErrs(fm({}), pub);
+  assert.deepEqual(basisErrs(fm({ grade: "C", grade_axis: "connection" }), pub), [], "the frozen grade itself is inherited");
+  assert.deepEqual(basisErrs(fm({ grade: "D", grade_axis: "capture" }), pub), [], "a weaker one too");
   const over = basisErrs(fm({ grade: "A", grade_axis: "connection" }), pub);
-  assert.ok(over.length > plain.length || over.some((x) => /stronger|inherit|frozen/i.test(x.message)), JSON.stringify(over.map((x) => x.message)));
+  assert.deepEqual(over.map((x) => x.check), ["C-21.2"]);
+  assert.match(over[0].message, /whose frozen connection strength is C/);
   assert.ok(basisErrs(fm({ target_edition: 9 }), pub).length, "an edition the registry does not hold");
   assert.ok(basisErrs(fmWith([{ target: INFO, role: "supports", grade_source: "inherited" }]), pub).length, "inherited rests on a published case");
 });

@@ -25,15 +25,19 @@ export const INQUIRY_ROWS = Object.freeze({
 
 /** R2, R3 (C-2.8, C-6.1): an inquiry document's entry requirements, judged by the catalogue's own inquiry extension
  *  over the document as `checkBundle` reads it. `bundleMd` is the document's text; `opts` are `checkBundle`'s facts
- *  (`publishedRegistry`, `earnedRegistry`), null blinding the arms that need them. Answers the error findings, each
- *  `{check, severity, message, repairs?}`. Never throws. */
+ *  (`publishedRegistry`, `earnedRegistry`), null blinding the arms that need them, and `grammars`, the type grammars
+ *  registered with record-core (`checkBundle`'s own option, §1b), which the instance's `checkEntry` passes from the
+ *  record as promotion's gate does. Answers the error findings, each `{check, severity, message, repairs?}`. Never
+ *  throws: a document it cannot judge (a malformed grammar list among them) is one C-2.8 error saying so. */
 export async function checkInquiryEntry(bundleMd, opts = {}) {
   try {
+    const o = opts && typeof opts === "object" ? opts : {};
     const text = String(bundleMd ?? "");
     const id = (/^id:\s*(\S+)/m.exec(text) || [])[1] || "";
     const r = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
-                                  publishedRegistry: opts.publishedRegistry ?? null,
-                                  earnedRegistry: opts.earnedRegistry ?? null });
+                                  publishedRegistry: o.publishedRegistry ?? null,
+                                  earnedRegistry: o.earnedRegistry ?? null },
+                                o.grammars === undefined ? {} : { grammars: o.grammars });
     const all = r && Array.isArray(r.findings) ? r.findings : [];
     return all.filter((x) => x && x.severity === "error");
   } catch (e) {

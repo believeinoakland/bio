@@ -525,11 +525,6 @@ export class Store extends DurableObject {
       const cap = this.earnedBasisRegistry(null, [...new Set(legs.map((l) => l.target_id))])?.earned?.capture || {};
       return legs.map((l) => Store.#capturedAt(l.grade, cap[l.target_id], l.target_id));
     });
-    retrieval.registerProjectionDecoration("legacy-store", (row, { viewer, nowMs }) => {
-      const type = normalizeType(row.object_type);
-      const migrated = type === "inquiry" ? this.#surfacedIn(row.bundle_id) : null;
-      return migrated ? { surfaced_in: migrated } : {};
-    });
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     /* inquiry (K31, K61): its check and projection join promotion before legacy-store's step; strength R28 here. */
     ratificationOf(ctx);   /* ratification (K61): its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
@@ -648,7 +643,6 @@ export class Store extends DurableObject {
       ["bundles", "inquiry_capture_state", "TEXT"],
       ["bundles", "inquiry_connection_strength", "TEXT"],
       ["bundles", "inquiry_connection_state", "TEXT"],
-      ["bundles", "inquiry_basis_count", "INTEGER"],
       /* REC-18 / DATA-MODEL D1(b): the registry ENTITY this question is about,
          and it is the whole of the subject-entity linkage — one nullable
          projection column, no new table, no join row, no ordinal.
@@ -669,21 +663,6 @@ export class Store extends DurableObject {
          (the primary key) while building a write's earned registry, and no
          seek anybody makes is on its value. */
       ["bundles", "inquiry_subject_entity", "TEXT"],
-      /* REC-17 / P-64: the REVERSE of a `supersedes` edge, so R7's obligation
-         is a LOOKUP and not a graph walk. `refs` answers "what does this
-         document supersede" because the edge lives on the SUPERSEDING
-         document; the question the obligation asks is the other one — "has
-         anything superseded THIS?" — and asking it of `refs` means scanning
-         for a target rather than reading a row. The column holds the
-         superseding ids, comma-joined and sorted, NULL when nothing supersedes
-         this bundle. Additive and nullable like every column above: a bundle
-         promoted before this existed has none until the boot pass below or its
-         next promotion fills it.
-         DELIBERATELY NOT INDEXED, and that is not an oversight: this column is
-         read BY bundle_id, which is the primary key, so an index on its value
-         would serve no seek anybody makes. REC-12's state columns are
-         unindexed for the same reason and its comment says so. */
-      ["bundles", "inquiry_superseded_by", "TEXT"],
       /* REC-42: `inquiry_basis.ground` is inquiry's migration now (its R36). */
       /* REC-82: `inquiry_basis.content_id` is inquiry's migration now (its R36). */
     ];
@@ -782,15 +761,6 @@ export class Store extends DurableObject {
   contentAxis(a) { return retrievalOf(this.ctx).contentAxis(a); }
   frontier(a) { return retrievalOf(this.ctx).frontier(a); }
 
-  /** REC-173 (§11 item 5, BOB #30, clause (c)): the `surfaced_in` of a question whose creation was a server-verified
-   *  MIGRATION REPLAY — surfaced in the Drive era, not inside a run on this plane — or null. The rest of `surfaced_in`
-   *  is ai-runs' decoration (its R27); this arm is inquiry's (map §5.8) and answers here until inquiry is extracted. */
-  #surfacedIn(bundleId) {
-    const mig = this.#one(
-      `SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`, bundleId);
-    return mig ? { recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null,
-                   migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at } } : null;
-  }
 
 
   /* The producer-side arm for the connection-derive consumer: a resolve that
