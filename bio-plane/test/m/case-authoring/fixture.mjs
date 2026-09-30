@@ -1,7 +1,8 @@
 /* case-authoring over the modules it uses, each the real one (record-core, membership, promotion, provenance,
    extraction's tables, content, entities, connections, inquiry, basis-versions, strength, bias, observation-log,
-   reevaluation, publication, ratification), on a real SQLite database (node:sqlite) standing in for a Durable Object's
-   storage. What a later module fills is a stand-in the test controls: the review provider (publication R23, which
+   reevaluation, publication, ratification, contradiction), on a real SQLite database (node:sqlite) standing in for a Durable Object's
+   storage. What a later module fills is a stand-in the test controls: the run gate `ai-runs` registers with
+   contradiction (its R13; `runs` below), the review provider (publication R23, which
    `review` registers once extracted) and its `case_drafts` table (review R26's read contract). Every test drives
    `case-authoring` at its interface: `publishCase`, `acknowledgeStatement`, `statementAcknowledgements`, its ops, its
    exports. */
@@ -20,6 +21,7 @@ import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { ratificationOf, completenessFields } from "../../../src/ratification/index.mjs";
+import { contradictionOf } from "../../../src/contradiction/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
@@ -164,10 +166,21 @@ export function world({ group = "test-group", provider = true, now = null, recor
                                             now: () => clock.now });
   const ratification = ratificationOf(host, { record, membership, promotion, provenance: prov, inquiry, basisVersions,
                                               publication });
+  /* contradiction (layer 6), on this host; the runs its gate answers for are the test's: {status, principal}. */
+  const contradiction = contradictionOf(host, { record, extraction: ex, membership, promotion, entities, basisVersions,
+                                                now: () => clock.now });
+  contradiction.migrate();
+  const runs = new Map();
+  contradiction.registerRunGate("test", (id, viewer, caller) => {
+    const r = runs.get(id);
+    if (!r) return { found: false, running: false, refusal: null };
+    return { found: true, running: r.status === "running",
+             refusal: caller === r.principal ? null : { ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code: "AI_RUN_NOT_PRINCIPAL" } };
+  });
   st.db.exec(CASE_DRAFTS);
   const w = {
     st, host, record, membership, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
-    bias, observations, reevaluation, publication, ratification, clock, readings, grants: new Map(),
+    bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -180,7 +193,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   };
   if (provider) publication.registerReviewProvider("review", reviewProvider(w));
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
-    strength, bias, observations, reevaluation, publication, ratification,
+    strength, bias, observations, reevaluation, publication, ratification, contradiction,
     now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {

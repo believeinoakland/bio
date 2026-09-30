@@ -24,7 +24,7 @@ function setup(opts) {
 const docOf = (w, r) => w.row(`SELECT * FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition);
 const bodyOf = (text) => text.slice(text.indexOf("\n---\n", 4) + 5);
 
-test("R14: the document, bio-case-document/4, is stored unsigned through publication and states the case, edition and project, the scope, the roster with roles and pins, each member's own edition, frozen pair (capture and connection always, testimony when not unrated) with grounds and conclusion, the completeness block, the bias acknowledgement and manifest, the bar, the attributions, the citations, the searched section, the draft link and a receipt; its body prints every authored sentence", () => {
+test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, is stored unsigned through publication and states the case, edition and project, the scope, the roster with roles and pins, each member's own edition, frozen pair (capture and connection always, testimony when not unrated) with grounds and conclusion, the completeness block, the bias acknowledgement and manifest, the bar, the attributions, the citations, the searched section, the draft link and a receipt; its body prints every authored sentence", () => {
   const w = setup();
   /* a member's firsthand observation, reached through Q2's testimony leg */
   const obs = w.prov.testify({ words: "I was at the meeting.", observedAt: "2026-09-20", title: "At the meeting",
@@ -43,7 +43,9 @@ test("R14: the document, bio-case-document/4, is stored unsigned through publica
   const fm = w.fm(row.text);
   assert.deepEqual([fm.format, fm.case_id, fm.case_edition, fm.case_project, fm.case_scope],
     [CASE_DOCUMENT_FORMAT, r.caseId, 1, P, AUTHORED.scope]);
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/4");
+  /* its tension section, present with nothing to disclose (R31; `/5` and publication's reader: tensions.test.mjs) */
+  assert.deepEqual([fm.tensions_disclosed, fm.tensions_highlighted, fm.case_tensions, fm.case_tension_sentences],
+    [0, 0, [], []]);
   assert.deepEqual(fm.case_findings, [Q, Q2]);
   assert.deepEqual(fm.case_roles.map((m) => [m.target, m.role, m.version_sha, m.edition]),
     [[Q, "load_bearing", w.head(Q), 1], [Q2, "supporting", w.head(Q2), 1]]);
@@ -128,14 +130,16 @@ test("R14: the bias manifest is frozen from bias.biasManifest at the project's s
   assert.ok(bodyOf(docOf(w, und).text).includes("THE MANIFEST IS UNDETERMINED"));
 });
 
-test("R15: the answer carries the case, whether it was minted, its edition, the document to review (its sha and length), the findings with their pins, pairs, roles and bar, the scope, project, bar, roles, bias acknowledgement and manifest, citations, completeness, author, instant, weight and next; target, bundleSha and state at the top only for one member", () => {
+test("R15: the answer carries the case, whether it was minted, its edition, the document to review (its sha and length), the findings with their pins, pairs, roles and bar, the scope, project, bar, roles, bias acknowledgement and manifest, citations, completeness, the tensions disclosed (R31), author, instant, weight and next; target, bundleSha and state at the top only for one member", () => {
   const w = setup();
   w.finding(Q, [{ target: DOC }]); w.finding(Q2, [{ target: DOC2 }]);
   const P = w.project("Team", "alice", [Q, Q2]);
   const one = w.publish(P, "alice", [Q]);
   assert.deepEqual(Object.keys(one).sort(), ["author", "at", "bias_acknowledgement", "bias_manifest", "bundleSha",
     "caseDocument", "caseId", "case_citations", "completeness", "edition", "findings", "minted", "next", "ok", "project",
-    "required", "roles", "scope", "state", "target", "weight"].sort());
+    "required", "roles", "scope", "state", "target", "tensions", "tensions_highlighted", "tensions_legs_unread",
+    "weight"].sort());
+  assert.deepEqual([one.tensions, one.tensions_highlighted], [[], 0], "nothing to disclose: stated, zero included");
   const row = docOf(w, one);
   assert.deepEqual(one.caseDocument, { case_id: one.caseId, edition: 1, doc_sha: row.doc_sha,
     bytes: Buffer.byteLength(row.text, "utf8"), read: `op=casedocument&case=${one.caseId}&edition=1` });
