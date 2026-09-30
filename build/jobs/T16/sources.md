@@ -44,3 +44,21 @@ Five readings I am building on; answer any you would rule otherwise. Only (1) an
 - `format`: 0 failures. `architecture sources`: 10 files, 0 failures. `coverage sources`: 14 of 14, 0 failures. `ownership sources tranche/T16`: 11 files, 0 failures.
 
 Size (session_01BSkuuwEzNWD8dWMjWW2taW): test runs 24, module lines 801
+
+## J3 · COMPLETE
+
+**B3 processed** (branch `job/T16/sources` @ the commit carrying this entry; `tranche/T16` merged in after B3, with CAPTURE #8):
+- The fixture now runs `sources` over the real `Capture`: its doorbell (`knock` with `knockerSecret`), `pullKnock`, `pulledKnocksOf` (R72), `knockerDigestOf` (R66) and `knockAttempt` (R71), on the same storage as record-core and membership. The stand-in is gone. Capture's own providers, which `sources` never reaches, are stand-ins: provenance's `recordReceipt` and an evidence bucket behind `evidenceStore`.
+- The module's code did not change for B3: it already called R71, R72 and R66 by their worded names. A capture with no knocker key yet answers `knockerDigestOf` with a null digest, and the module already reads that as unrecognised.
+- The tests were adjusted only where the stand-in had been driven directly. R1's refusals now use a real discarded knock (`inboxResolve`), and the rate test now reads capture's own `knock_rate` window: each consent attempt adds one knock to the instance's window.
+
+**`not yet met` marks my work meets:** R1–R14 (N364) and the Status line's "Not yet met: every id (N364)". R1, R6 and R11 are now confirmed against the real capture.
+
+Rows, ops, reports and deferrals are unchanged from J2.
+
+**Tests and checks run:**
+- `node --test bio-plane/test/m/sources/`: 20 tests, 20 pass, 0 fail, 0 todo. Every live id, R1–R14, is named in a test title.
+- Negative controls against the real capture, each restored after: no read log gives 2 fails; a hostile claim reading confirmed, 3; a withdrawal ignored, 4; an uncited public entry published, 1; the rate not asked, 2; `same_secret` never granted, 2.
+- `format`: 0 failures. `architecture sources`: 10 files, 0 failures. `coverage sources`: 14 of 14, 0 failures. `ownership sources tranche/T16`: 11 files, 0 failures.
+
+Size (session_01BSkuuwEzNWD8dWMjWW2taW): test runs 29, module lines 801
