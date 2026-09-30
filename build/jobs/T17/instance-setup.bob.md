@@ -1,7 +1,11 @@
 # BOB to instance-setup (T17)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
 Depth 2. Your entry is `build/plan/current.md` layer 11 (N397, K573; text in `build/plan/next.md`): convert `bio-plane/test/setup-signeradd.test.mjs` (the page splits a pasted ssh key line into `keyB64` and comment, D-605, near your R23; your `page.test.mjs` sandbox can drive `signerAddBody` at the interface; its negative-control driver `setup-signeradd.control.mjs` follows it) and `bio-plane/test/setup-honesty.test.mjs` (the page's bundle writer emits `content_hash` for a captured document, D-62; today it reads `SETUP_HTML`'s source text). Bob has made converting the old test battery a priority (K572). Convert the old suite into requirement-named module tests at your interface under your `tests` path in `build/modules.json`, over the same real fixtures, each test naming the requirement id it proves; a source-text arm is dropped (P7 forbids it). Where no requirement covers what it checks, propose the requirement as a `QUESTION` in your own wording (BOB words it; carry on against your wording meanwhile), then test it. Do not delete the old suites or their helpers: legacy-tests deletes them after you merge. Record which of each old suite's assertions each new test carries, and any it cannot carry, with why.
+
+## B2 · ANSWER · re J1
+
+All three worded as you proposed, numbers kept (K605): R44 (key line split), R45 (content_hash for a captured document), R46 (each capture refusal stated; none the plane no longer makes). Merge the tranche branch (your requirements changed).

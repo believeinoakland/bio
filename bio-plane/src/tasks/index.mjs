@@ -52,6 +52,8 @@ const clampLimit = (limit, dflt, max) => {
   const n = limit === null || limit === undefined || limit === "" ? NaN : Math.floor(Number(limit));
   return Number.isFinite(n) ? Math.max(1, Math.min(max, n)) : dflt;
 };
+/* R6: a read's argument as an object; anything else (null, a bare id) is an empty query, which the gate denies. */
+const asQuery = (q) => (q && typeof q === "object" && !Array.isArray(q) ? q : {});
 
 export class Tasks {
   #host; #deps; #env; #clock;
@@ -429,22 +431,29 @@ export class Tasks {
      Each is the statement queue's feed ran over this table before the split, so the feed does not change. Each never
      throws: a store without the table answers empty, or false. */
 
-  /** R6: the tasks on subjects the viewer may see, of any status, newest first (`created` descending, then `id`), at
-   *  most `limit` (1–1,000, default 200), each as `taskList` gives a task. */
-  recentTasks({ viewer = null, limit = 200 } = {}) {
-    const cap = clampLimit(limit, 200, 1000);
+  /** R6: the tasks on subjects the viewer may see, of any status or, when `statuses` is given (an array), only of those
+   *  (N373, K566), newest first (`created` descending, then `id`), at most `limit` (1–1,000, default 200), each as
+   *  `taskList` gives a task. Given `statuses`, the cap is taken over the tasks of those statuses, so tasks of the others
+   *  never crowd them out; an empty `statuses` answers none. */
+  recentTasks(q = {}) {
+    const { viewer = null, limit = 200, statuses = null } = asQuery(q);
     try {
+      const cap = clampLimit(limit, 200, 1000);
+      const only = Array.isArray(statuses) ? statuses.filter((x) => typeof x === "string") : null;
+      if (only && !only.length) return [];
       const seen = this.#bundleGate("tk.refers_to", viewer);
-      return this.#rows(`SELECT tk.* FROM tasks tk WHERE (${seen.sql}) ORDER BY tk.created DESC, tk.id LIMIT ?`,
-        ...seen.args, cap).map((r) => this.#taskOf(r));
+      const which = only ? ` AND tk.status IN (${only.map(() => "?").join(",")})` : "";
+      return this.#rows(`SELECT tk.* FROM tasks tk WHERE (${seen.sql})${which} ORDER BY tk.created DESC, tk.id LIMIT ?`,
+        ...seen.args, ...(only || []), cap).map((r) => this.#taskOf(r));
     } catch { return []; }
   }
 
   /** R6: the resolved tasks with `resolved_at` at or after `since` on subjects the viewer may see, `resolved_at`
    *  descending, then `id`, at most `limit` (1–1,000, default 200), each as `taskList` gives a task. */
-  resolvedTasks({ viewer = null, since = null, limit = 200 } = {}) {
-    const cap = clampLimit(limit, 200, 1000);
+  resolvedTasks(q = {}) {
+    const { viewer = null, since = null, limit = 200 } = asQuery(q);
     try {
+      const cap = clampLimit(limit, 200, 1000);
       const seen = this.#bundleGate("tk.refers_to", viewer);
       return this.#rows(
         `SELECT tk.* FROM tasks tk WHERE tk.status='resolved' AND tk.resolved_at >= ? AND (${seen.sql})
@@ -452,10 +461,15 @@ export class Tasks {
     } catch { return []; }
   }
 
-  /** R6: whether a task has that id, ungated. */
-  taskExists(id) {
+  /** R6 (N374, K565): whether a task has that id on a subject the viewer may see, behind `taskList`'s gate (R2, R9), so
+   *  a task the viewer may not see answers as no task. An absent or unrecognised viewer is denied, so it answers false. */
+  taskExists(q = {}) {
+    const { id = null, viewer = null } = asQuery(q);
     if (typeof id !== "string" || !id) return false;
-    try { return !!this.#one(`SELECT 1 AS x FROM tasks WHERE id=?`, id); } catch { return false; }
+    try {
+      const seen = this.#bundleGate("tk.refers_to", viewer);
+      return !!this.#one(`SELECT 1 AS x FROM tasks tk WHERE tk.id=? AND (${seen.sql})`, id, ...seen.args);
+    } catch { return false; }
   }
 
   /** REC-4: the TASK-ACTOR FENCE, shared by taskForward and taskResolve (R3, C-76.1).
@@ -490,7 +504,7 @@ export class Tasks {
    *  THIS one answers *is this THIS member's task*, and the act refusal answers
    *  *is this a person at all*.
    *
-   *  Returns a NOT_YOURS refusal NAMING who it is with, or null to proceed. */
+   *  Returns a TASK_NOT_YOURS refusal (N382: its own code, apart from intent's NOT_YOURS) NAMING who it is with, or null to proceed. */
   #refuseNotYours(row, actor, verb) {
     if (row.assignee === "unassigned") return null;
     if (actor === row.assignee) return null;
@@ -499,10 +513,10 @@ export class Tasks {
        its code, check and translation; `reason`, `detail` and the assignee name who holds the task. */
     return {
       ok: false,
-      reason: "NOT_YOURS",
-      code: "NOT_YOURS",
-      check: TASK_ACTOR_CHECKS.NOT_YOURS.check,
-      translation: TASK_ACTOR_CHECKS.NOT_YOURS.translation,
+      reason: "TASK_NOT_YOURS",
+      code: "TASK_NOT_YOURS",
+      check: TASK_ACTOR_CHECKS.TASK_NOT_YOURS.check,
+      translation: TASK_ACTOR_CHECKS.TASK_NOT_YOURS.translation,
       detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
       assignee: row.assignee,
       assignee_role: row.assignee_role,
