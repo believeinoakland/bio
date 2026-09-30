@@ -23,3 +23,7 @@ Size (session_01YBB3FhBVLLqxoQXxXj1PVQ): test runs 8, module lines 3269
 ## J1 · REPORT
 
 control-plane: test/m/control-plane/doorbell.test.mjs:365-371 asserts the refusal N381 removes (PROVENANCE_REGISTER_REFUSED from the pull's dry run), so it now fails: the one failure in test/m/ (3193 tests, 3169 pass, 1 fail, 23 todo). Measured with a scratch copy (not committed): through the record store's door with the real capture, promotion and provenance, inboxpullfile now pulls and files the knock (bundle INFO-2026-0001-doorbell-knock, register row homed there, receipt written). Control-plane's layer-11 entry (N381's share: R36's end-to-end test.todo runs, its mark goes) replaces the stale assertion.
+
+## J2 · COMPLETE
+
+N381 applied: C-18.1 admits capture R65's pulled-knock document (no letter, grade_basis CAPTURE_RECEIVED_NOT_FETCHED; doorbell among the origin kinds), one spelling of the basis shared with captureGrade. Tested at the arms and at the write with capture's document as the pull writes it; end to end the real door now files the pull (measured, scratch). No catalogue row changed, nothing awaiting stamp. Two requirement changes proposed for you (record, Deferred): R42's text to name the doorbell arm; R19 so a doorbell document with no chain is not reconstructed as a fetched hop. Checks: format, architecture, coverage (51/51), ownership all 0 failures; test/m/ 1 fail, control-plane's stale assertion (REPORT J1). Record: build/jobs/T17/provenance.md.
