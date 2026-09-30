@@ -28,3 +28,7 @@ Bob's standing permission is now a rule (K618) in .claude/settings.json on tranc
 ## B5 · CHANGE
 
 Bob, 2026-09-30: do NOT rerun work already done. The verifications (all 124 covered? suites, 23 dead? confirmed), row-census 8/0, d470 14/0, gate-reads 188/0 and d311 22/0 have passed and are recorded; a restarted session reads its record and continues only from 'Still to do': the 37-file removal (K618's git rm form), the K612 moves (each moved suite run once from its new place), the scoped run of suites reading files T17 changed that no earlier session ran (K570), the DEC-49 guard once at the end, then completion.
+
+## B6 · CHANGE
+
+Bob, K619: this is the last legacy-tests stage, and it is cut short now. Finish only: (1) the 37-file removal (K618's git rm form); (2) the K612 moves already under way: for the 14 failing moved suites, fix only a broken relative import the move caused; any other failure, note it in your record and move on (no diagnosis, no reruns); (3) the DEC-49 guard once; (4) completion. Drop the scoped K570 run. Do not rerun anything that already passed.
