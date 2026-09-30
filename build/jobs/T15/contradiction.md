@@ -2,10 +2,31 @@
 
 **Status** · session_0171p4zErPrN1VgxXfWEhXn7 · depth 2 · WORKING · handled B3
 
-## Progress
+## Completion (CONTRADICTION #2)
 
-- Steps 1–3 done: started, read whole (requirements, uses' public parts, layer 6's contract, module code and tests, plan entry, B1–B3); J1 answered by B2 (K488); inquiry merged (B3, K489), tranche merged into this branch.
-- Step 4 in progress: the N345 services are written (`src/contradiction/index.mjs`, `derive.mjs`, `text.mjs`, `checks.mjs`, `schema.mjs`, `../contradiction.mjs`); the fixture now drives the real record-core, membership, promotion, content, extraction, entities, connections and inquiry. Next: tests for R5–R55 at the interface (step 5), then the checks.
+**Entries applied** (plan layer 6, N345 with DEC-85; K455, K456, K459, K481, K488, K489). Built at the module's interface: R24–R55 (weights, `candidatesFor`, states, `tensionsOn`, `contextFacts`, `unresolvedRecordOn`, the member's acts `dismiss`/`clarify`/`takeUp`/`resolve`, `recommend`, the promotion check R38, the measures, and DEC-85's parties, notices, opt-in, reveal, responses and relay); K5 in the pairing (R5, R7, R8, R10, R11, R14); R12's `HELD_APART` judgement; R19, R20, R42, R47 amended; the tables `contradiction_acts`, `contradiction_recommendations`, `contradiction_optins`, `contradiction_responses`, and `a_side`/`b_side`/`seq` on `contradiction_candidates` (K488 3); `uses` promotion (already in `modules.json`). Inquiry's R46–R48 are read from its merged exports (B3). Files: `src/contradiction/index.mjs`, `derive.mjs` (new), `text.mjs` (new), `checks.mjs`, `schema.mjs`, `src/contradiction.mjs` (R3's stance rendering, `RECOMMEND_PROMPT`); tests `test/m/contradiction/` (fixture over the real record-core, membership, promotion, content, extraction, entities and inquiry; basis-versions' reads and its no-project `conclude` a stand-in from its stated interface, its version tables its own migrate).
+
+**`not yet met` marks my work meets** (for BOB to strike, K460): R5, R8, R10, R11, R12, R14, R19, R20, R25, R26, R28, R29, R30, R31, R35, R36, R37, R38, R39, R40, R42, R43, R44, R45, R46, R47, R48, R49, R50, R51, R52, R53, R54, R55; and R24, R27, R32, R33 but for their K5 arms (below). Still not met: R41, R34, and the K5 arms of R24, R27, R32, R33 (K488: no model access; each a `test.todo` naming the cause). The Status line's older "Not yet met: R21": ai-runs registers the gate today (`src/ai-runs/index.mjs` 110–113) and R21 is tested; BOB's to strike if he agrees.
+
+**Deferred, and why.** R41 and the K5 gate arm need a measured run and no model is reachable from this job: `RECOMMEND_PROMPT_SHA256` is `null` (the prompt claims no measurement; skills' R1 throws on it, K487), and `K5_GATE_MEASURED` is false, so every K5 candidate reads `not_shown` with `unshown_why: k5_gate_unmeasured` (R25 counts them `unmeasured`). The gate harness and corpus (Suggestion) stay in `bio-plane/test/`, legacy-tests' path.
+
+**Readings taken (BOB's to confirm).** (1) R25's empty answer when shown candidates exist but the filters or the cursor exclude them all names a third level, `none_matching` (the requirement names two, for the unfiltered case). (2) R29's half-seen entry keeps the candidate's id (as R50's notice does) and nothing of the other side. (3) A take-up's inquiry id is `INQ-<year>-NNNN-contradiction` (record-core `allocId`). (4) R32's K5 "recorded on both projects' stances" is read as derived from the act (R42: nothing copied), unreachable while K5 is unshown.
+
+**Ops for control-plane (layer 11) and their stamps.** `contradictioncandidates`, `contradictiontensions`, `contradictionfacts`, `contradictionnotices`, `contradictionresponses`: `viewer`. `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionresolve`, `contradictionoptin`, `contradictionrespond`: `viewer`, `author`. `contradictionrecommend`: `viewer`, `proposedBy`, `principal` (as `contradictionpropose`). That is twelve; the Suggestion says thirteen ("the nine, and R50, R51, R53 and R54's four"): the ninth is not named anywhere I can find (R29 is in-process; R39 and R40 name no op). REPORT J3 asks.
+
+**Rows `awaiting stamp` for T16** (promotion stamps only layers 1–2): added C-60.2, C-60.3, C-93.8–C-93.39 (34 rows); changed C-93.1, C-93.2, C-93.3 (`where` moved from `propose` to `#runRefusals`, the one site `propose` and `recommend` share). Every row's `where` names the method its DEC-49 region sits in, one mint site per code.
+
+**Generated artifacts made stale** (reported, not rebuilt, §14): `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs` (`test/fleetbundles.test.mjs`: their fresh-build arms fail on this branch, pass on the tranche).
+
+**Found in other modules** (REPORT J3): affordances `src/affordances.mjs`:1983 describes `contradictionpairs` "by the four named keys" (now five). legacy-tests: `test/contradictionpairs.test.mjs` (six arms pin four keys and `NOT_REACHED`, amended by R5, R12), `test/contradiction-overstrict.test.mjs` (its EMPTY RECORD arm reads four keys), `test/derivation-bounds.test.mjs` (its rosters now name `contradiction/index:candidatesFor:items`, cut-graded and compliant, and `unresolvedRecordOn`), `civicos-ui/check-refusal-codes.mjs` floors (rows, regions, governedSites, census, reach, codesChecked, refusalsJudged, regionLines, outcomeReturns rise with these rows; no new failure of its own arms from this module), and the R50 census's `awaiting stamp` list. inquiry (on the tranche, not mine): that guard's arm C finds no refusal inside `src/inquiry/contradiction.mjs`'s six `contradictionFindings` regions, and arm G counts two literal sites for `CONTRADICTION_LINK_MALFORMED` and `RESOLUTION_INCOMPLETE`. `civicos-ui/` names none of the new ops.
+
+**Tests and checks run.**
+- `node --test test/m/contradiction/`: tests 91, pass 84, fail 0, todo 7.
+- Uses' tests (modules that use contradiction, and inquiry, entities): ai-runs 49/0, skills 31/0, reevaluation 49/0, publication 91/0, case-authoring 39/0, conformance 36/0, affordances 76/0, queue 69/0, control-plane 52/0, inquiry 74/0, entities 49/0 (pass/fail).
+- Legacy suites naming contradiction (42 files): the seven red here are `bounds`, `d470-catalog-census`, `derivation-bounds`, `fleetbundles`, `meaning-bounds` (all red on the tranche too; derivation-bounds and fleetbundles gain the lines above) and `contradictionpairs`, `contradiction-overstrict` (red from R5/R12's amendment); legacy-tests' to re-anchor.
+- `node checks/format.mjs`: 0 failures. `architecture.mjs contradiction`: 17 product files, 0 failures. `coverage.mjs contradiction`: 55 of 55 live ids, 0 failures. `ownership.mjs contradiction tranche/T15`: 16 files, 0 failures.
+
+Size (session_0171p4zErPrN1VgxXfWEhXn7): test runs 36, module lines 3182
 
 ## J1 · QUESTION
 
