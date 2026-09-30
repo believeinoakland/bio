@@ -13,3 +13,7 @@ Leave the answer's shape (K534). R29 defines `runCaseGate`'s answer as a verdict
 ## B3 · CHANGE
 
 Membership gains a second row for your stamp: C-96.16 `SIGNER_KEY_REVOKED` (membership R89, K535), beside C-96.15. Both land when MEMBERSHIP #9 merges early; merge the tranche then and stamp both. No requirement of yours changed.
+
+## B4 · CHANGE
+
+MEMBERSHIP #9 has merged into tranche/T16 (C-96.15, C-96.16 in MEMBERSHIP_CHECKS; R83's MODULE_ORDER now holds sources, tasks, queue-producers, so your R39 order test should go green). Merge the tranche into your branch and stamp (entry 3).
