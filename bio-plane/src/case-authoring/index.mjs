@@ -65,15 +65,15 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, createSha256, OBJECT_TYPES, BASIS_GRADES,
-         EARNED_CAPTURE_CEILING, MACHINE_FENCE_CHECKS } from "../../checks/bio-checks.mjs";
-import { CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
+         EARNED_CAPTURE_CEILING } from "../../checks/bio-checks.mjs";
+import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
 import { fmSafe, statementSha, caseDocumentText, ackFrontmatterLines, ackBodyLines, withheldWriterStated,
          ACK_PROSE_HEAD, tensionSentence, HIGHLIGHT_SENTENCE, CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS,
          TENSIONS_DEPTH_STATED, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
 
-export { CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
+export { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 export { CASE_AUTHORING_SCHEMA, CASE_AUTHORING_TABLES } from "./schema.mjs";
 export { searchedSection, SEARCHED_LEVEL_OUTCOMES } from "./searched.mjs";
 export { caseDocumentText, statementSha, withheldWriterStated, fmSafe, ackFrontmatterLines, ackBodyLines,
@@ -113,7 +113,7 @@ function refusal(family, key, extra = {}) {
 /* Each family's own helper, the code its literal first argument, so the DEC-49 guard judges the code at each site
    against the rows that govern it (N259, N275). */
 const derivationRefusal = (key, extra) => refusal(CASE_DERIVATION_CHECKS, key, extra);
-const fenceRefusal = (key, extra) => refusal(MACHINE_FENCE_CHECKS, key, extra);
+const actRefusal = (key, extra) => refusal(PUBLISH_ACT_CHECKS, key, extra);
 const disclosureRefusal = (key, extra) => refusal(CASE_DISCLOSURE_CHECKS, key, extra);
 
 export class CaseAuthoring {
@@ -187,7 +187,7 @@ export class CaseAuthoring {
     const who = str(author);
     /* DEC-49 REGION is-machine-publish — R1 / C-32.6. The fence alone, before anything else is read. */
     if (!who || isMachineIdentity(who))
-      return fenceRefusal("MACHINE_CANNOT_PUBLISH", {
+      return actRefusal("MACHINE_CANNOT_PUBLISH", {
         detail: "publishing puts the group's name on a case. A machine credential may prepare one and "
               + "may never author the completeness assertion or the position on putting it to its "
               + "subject, both of which are declared bias. Sign in as a member." });
@@ -229,11 +229,11 @@ export class CaseAuthoring {
     const scp = str(scope);
     /* REC-47 / DEC-46 (a): the bias acknowledgement is authored and disclosed, never a bar (DEC-20). */
     const back = str(biasAcknowledgement);
-    /* DEC-49 REGION is-publish-statement — REC-64/C-33.14. */
+    /* DEC-49 REGION is-publish-statement — R3 / REC-64 / C-33.14. */
     if (!stmt)
-      return { ok: false, reason: "NO_STATEMENT",
-               detail: "a published case states what it does NOT cover. A case silent about its own limits is "
-                     + "claiming to cover everything, which is the overclaim this record exists to refuse." };
+      return actRefusal("NO_STATEMENT", {
+        detail: "a published case states what it does NOT cover. A case silent about its own limits is "
+              + "claiming to cover everything, which is the overclaim this record exists to refuse." });
     /* END DEC-49 REGION is-publish-statement */
     if (!SUBJECT_POSITIONS.includes(pos))
       return { ok: false, reason: "NO_SUBJECT_POSITION", allowed: SUBJECT_POSITIONS,
@@ -483,7 +483,8 @@ export class CaseAuthoring {
 
     /* R10 — C-21.1 AT CASE ALTITUDE, before anything moves: against the previous RATIFIED edition of THIS case, compared
        through ratification's one shape (`completenessFields`). The scope is not compared. Two refusal names, because a
-       reprinted statement and a reprinted acknowledgement of bias are two different mistakes; the check is C-21.1. */
+       reprinted statement and a reprinted acknowledgement of bias are two different mistakes; the check is C-21.1.
+       Each code is the literal at its own return (N242), never looked up. */
     const priorCase = this.#one(
       `SELECT edition, completeness, bias_acknowledgement FROM published_cases
        WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
@@ -495,22 +496,25 @@ export class CaseAuthoring {
                     bias_acknowledgement: back };
       const was = { ...priorCompleteness, bias_acknowledgement: priorCase.bias_acknowledgement ?? null };
       const LABEL = { statement: "statement", subject_justification: "the subject-position justification",
-                      excluded: "the exclusion list", bias_acknowledgement: "the bias acknowledgement" };
-      const REASON = { bias_acknowledgement: "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD" };
-      const WHY = { bias_acknowledgement:
-        `An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and `
-        + `never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. `
-        + `The lens itself may well be unchanged — what must be fresh is what it means for THIS edition's `
-        + `findings. Say that, as of this edition. Declaring a bias never blocks publication (DEC-20).` };
+                      excluded: "the exclusion list" };
+      const carried = (k) => now[k] != null && was[k] != null && now[k] === was[k];
       for (const k of Object.keys(LABEL))
-        if (now[k] != null && was[k] != null && now[k] === was[k])
-          return { ok: false, reason: REASON[k] || "COMPLETENESS_CARRIED_FORWARD", field: k, edition,
+        if (carried(k))
+          return { ok: false, reason: "COMPLETENESS_CARRIED_FORWARD", field: k, edition,
                    check: "C-21.1", caseId: theCase, prior: priorCase.edition,
-                   detail: `${LABEL[k]} is byte-identical to edition ${priorCase.edition}'s. ${WHY[k]
-                         || `A completeness claim carried forward unchanged is a checkbox, and C-21.1 exists to `
-                          + `refuse it: every edition is a separate document and states its own limits in its `
-                          + `own words, as of its own date. If nothing about the limits changed, say THAT, as `
-                          + `of this edition.`}` };
+                   detail: `${LABEL[k]} is byte-identical to edition ${priorCase.edition}'s. A completeness claim `
+                         + `carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every edition is `
+                         + `a separate document and states its own limits in its own words, as of its own date. If `
+                         + `nothing about the limits changed, say THAT, as of this edition.` };
+      if (carried("bias_acknowledgement"))
+        return { ok: false, reason: "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD", field: "bias_acknowledgement", edition,
+                 check: "C-21.1", caseId: theCase, prior: priorCase.edition,
+                 detail: `the bias acknowledgement is byte-identical to edition ${priorCase.edition}'s. An `
+                       + `acknowledgement of the bias a case was produced under is AUTHORED at the moment of export `
+                       + `and never carried forward (DEC-46): reprinting the last edition's sentence is evidence `
+                       + `nobody looked. The lens itself may well be unchanged — what must be fresh is what it means `
+                       + `for THIS edition's findings. Say that, as of this edition. Declaring a bias never blocks `
+                       + `publication (DEC-20).` };
     }
 
     const when = this.#when("second");

@@ -1,14 +1,38 @@
-/* case-authoring's invariants and refusal rows (requirements: `build/requirements/case-authoring.md`, R7, R9, R19, R29).
+/* case-authoring's invariants and refusal rows (requirements: `build/requirements/case-authoring.md`, R1, R3, R7, R9, R19, R29).
  * DEC-49: every refusal this module answers from a row carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue with their ids, codes and translations unchanged (K6, R29): C-44.1 and C-44.3–C-44.5
  * (the case-identity family, `CASE_DERIVATION_CHECKS`; C-44.2 is `publication`'s and stays in the catalogue's family of
  * that name until publication takes it, so the family is one across the two, as `BIAS_CHECKS` is) and C-82.2–C-82.7
  * (`STATEMENT_ACK_CHECKS`, whole; C-82.1 is retired, D-521, and its number is not reused). Each `where` names the
- * region of this module that enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) stays a row of the catalogue's
- * `MACHINE_FENCE_CHECKS`, which `skills` (an earlier module) reads by key; this module reads it from there (R1). */
+ * region of this module that enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) are copied
+ * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29), ids, codes, `where`s and translations unchanged: the catalogue keeps
+ * its copies in `MACHINE_FENCE_CHECKS` (read by key by `skills`, an earlier module) and `ACT_SHAPE_CHECKS` for one
+ * tranche, and the catalogue's next job deletes them (K529). */
 
 const at = (fn, region) => `src/case-authoring/index.mjs ${fn} > ${region}`;
+
+/* C-32.6, C-33.14 — op=publish's own two rows from the catalogue's machine-fence and act-shape families (R1, R3; K6,
+   K529), copied with their ids, codes, `where`s and translations unchanged. Awaiting promotion's stamp (T19). */
+export const PUBLISH_ACT_CHECKS = Object.freeze({
+  /* R1: the fence alone, before anything else is read. */
+  MACHINE_CANNOT_PUBLISH: {
+    check: 'C-32.6',
+    where: at('#publishCase', 'is-machine-publish'),
+    translation: 'Publishing puts the group\'s name on a case, together with an assertion that it '
+      + 'is complete and a stated position on putting it to the people it concerns. Both of those '
+      + 'are declared judgements, and the credential that asked here is an automated one. It can '
+      + 'assemble the case; sign in to publish it.',
+  },
+  /* R3: a case silent about what it leaves out (REC-64). */
+  NO_STATEMENT: {
+    check: 'C-33.14',
+    where: at('#publishCase', 'is-publish-statement'),
+    translation: 'A published case has to say what it does NOT cover. A case that is silent about '
+      + 'its own limits is claiming to cover everything, and that is the overclaim this record '
+      + 'exists to refuse.',
+  },
+});
 
 /* C-44 — THE CASE IDENTITY op=publish AUTHORS (D-309, DEC-72 clause 6; REC-217, BIO_Publication_v0_1.md §3 rule 13).
    An allocation carrying its enforcement site: `checkBundle` does not call these, because each condition is about an
