@@ -87,7 +87,7 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 **The grammar's arm** (C-2.11–C-2.16; judged by R11 as C-2.8's entry requirements are)
 - **R47**
   - **The link.** A **contradiction inquiry** is one whose document carries `contradiction: {candidate}`, where `candidate` is 64 lowercase hex (`contradiction` R15's id). Anything else is `CONTRADICTION_LINK_MALFORMED` (C-2.11).
-  - **An arm that cannot judge.** A document the arm cannot judge (its check stops with an error) is `CONTRADICTION_ARM_FAILED` (C-2.18), inside `BASIS_REFUSED` with the rest (R11); it never passes (K543). *(not yet met: N369)*
+  - **An arm that cannot judge.** A document the arm cannot judge (its check stops with an error) is `CONTRADICTION_ARM_FAILED` (C-2.18), inside `BASIS_REFUSED` with the rest (R11); it never passes (K543).
   - **Where a resolution may appear.** A document that is not a contradiction inquiry and carries `resolution` is `RESOLUTION_WITHOUT_CONTRADICTION` (C-2.12).
   - **Concluding.** A contradiction inquiry at `concluded` carries `resolution: {kind, coordinates?, qualifiers?, wrong_side?, reason?, canon?}`. With none, it is `RESOLUTION_MISSING` (C-2.13), so no door concludes one without its kind. A kind outside R46 is `RESOLUTION_KIND_UNKNOWN` (C-2.14).
   - **What each kind requires.** Each missing or ill-formed field is `RESOLUTION_INCOMPLETE` (C-2.15), naming the field:
