@@ -6,7 +6,10 @@
    The module holds no database: every test compiles a plan at the interface and runs what it returns.
    `world({projection: {table, key}})` holds the projection in a relation of its own (R25, N106): retrieval R2's
    columns, `fm_json` and `fts_id` there, keyed by bundle, and none of them on `bundles`, so a statement that reads
-   one off `bundles` fails; every compile of that world is given the relation. */
+   one off `bundles` fails; every compile of that world is given the relation. `world({fields: {<field>: {table,
+   key, col}}})` likewise holds each named field's column in its own table (R26), under the name `col`, and nowhere
+   else. Every database refuses a compound SELECT of more than five terms, the ceiling workerd imposes (measured,
+   2026-07-25), so a statement that would fail on the plane fails here. */
 import { DatabaseSync } from "node:sqlite";
 import { compile, FIELDS, PROVENANCE_COLS, FTS_COLUMNS } from "../../../src/query.mjs";
 
@@ -18,17 +21,26 @@ export const PROJECTION_COLS = ["schema_id", "produced_mode", "capability_tier",
   "annotations_open", "reeval_flag", "reeval_since", "reeval_source", "fm_json", "action_kind", "action_risk_tier",
   "action_counterparty_state", "action_resolution", "action_clock_next", "action_clock_overdue"];
 
-export function world({ projection = null } = {}) {
-  const db = new DatabaseSync(":memory:");
+/* workerd's measured ceiling on the terms of one compound SELECT. */
+export const WORKERD_COMPOUND_SELECT = 5;
+
+export function world({ projection = null, fields = null } = {}) {
+  const db = new DatabaseSync(":memory:", { limits: { compoundSelect: WORKERD_COMPOUND_SELECT } });
   const P = projection;
+  /* R26: each named field's registry column, held in its own table and on neither `bundles` nor the projection. */
+  const F = new Map(Object.entries(fields || {}).map(([name, r]) => [FIELDS[name].col, r]));
   const cols = [...new Set([...PROVENANCE_COLS, ...Object.values(FIELDS).map((f) => f.col)])]
     .filter((c) => c !== "bundle_id");
   const decl = (c) => `${c} ${["annotations_open", "reeval_flag", "monitor_enabled", "inquiry_basis_count",
     "action_risk_tier", "action_clock_overdue", "fts_id"].includes(c) ? "INTEGER" : "TEXT"}`;
-  const onProj = (c) => !!P && (c === "fts_id" || PROJECTION_COLS.includes(c));
+  const onProj = (c) => !!P && !F.has(c) && (c === "fts_id" || PROJECTION_COLS.includes(c));
   const all = ["fts_id", "fm_json", ...cols];
-  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, ${all.filter((c) => !onProj(c)).map(decl).join(", ")})`);
+  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, ${all.filter((c) => !onProj(c) && !F.has(c)).map(decl).join(", ")})`);
   if (P) db.exec(`CREATE TABLE ${P.table} (${P.key} TEXT PRIMARY KEY, ${all.filter(onProj).map(decl).join(", ")})`);
+  const tables = new Map();
+  for (const [c, r] of F) tables.set(r.table, { key: r.key, cols: [...(tables.get(r.table)?.cols || []), [c, r.col]] });
+  for (const [t, { key, cols: tc }] of tables)
+    db.exec(`CREATE TABLE ${t} (${key} TEXT PRIMARY KEY, ${tc.map(([c, col]) => decl(c).replace(c, col)).join(", ")})`);
   db.exec(`CREATE VIRTUAL TABLE bundles_fts USING fts5(${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`);
   db.exec(`CREATE TABLE members (member_id TEXT PRIMARY KEY, role TEXT, status TEXT);
     CREATE TABLE project_participants (project_id TEXT, member_id TEXT, state TEXT);
@@ -63,8 +75,14 @@ export function world({ projection = null } = {}) {
                     source_locator: locator, source_authority: authority, ...rest };
       const put = (table, keys) => db.prepare(`INSERT INTO ${table} (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")})`)
         .run(...keys.map((k) => bind(row[k])));
-      put("bundles", Object.keys(row).filter((k) => !onProj(k)));
+      put("bundles", Object.keys(row).filter((k) => !onProj(k) && !F.has(k)));
       if (P) { row[P.key] = id; put(P.table, [P.key, ...Object.keys(row).filter(onProj)]); }
+      for (const [t, { key, cols: tc }] of tables) {
+        const held = tc.filter(([c]) => c in row);
+        if (!held.length) continue;
+        db.prepare(`INSERT INTO ${t} (${[key, ...held.map(([, col]) => col)].join(",")}) VALUES (${[id, ...held].map(() => "?").join(",")})`)
+          .run(id, ...held.map(([c]) => bind(row[c])));
+      }
       db.prepare(`INSERT INTO bundles_fts (rowid, title, body, meta, locator, authority) VALUES (?,?,?,?,?,?)`)
         .run(fid, title, body, `${id} ${meta}`, locator, authority);
       return id;
@@ -91,7 +109,8 @@ export function world({ projection = null } = {}) {
     all(stmt) { return db.prepare(stmt.sql).all(...stmt.args.map(bind)).map((r) => ({ ...r })); },
     /* Compile and run one shape. */
     run(opts, shape = "page", arg) {
-      const plan = P ? compile(opts, { projection: P }) : compile(opts);
+      const plan = P || fields ? compile(opts, { ...(P ? { projection: P } : {}), ...(fields ? { fields } : {}) })
+                               : compile(opts);
       const s = plan.statements[shape](arg);
       if (s === null) return { plan, rows: null };
       const rows = Array.isArray(s) ? s.flatMap((x) => w.all(x)) : w.all(s);
