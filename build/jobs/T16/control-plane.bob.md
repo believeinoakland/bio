@@ -20,3 +20,7 @@ Ruled (K559). Merge `tranche/T16`: R36's wording changed.
 1. Accepted as you built it. The promotion runs first as a dry run, then `pullKnock`, then the real promotion. A pull whose promotion fails after the pull says so in its answer, and a repeated pull promotes it. R36 now words this. Strict one-act atomicity needs the `within` seam in capture (a closed layer), so it is N380 for T17, and R36 carries its mark. Test the residue path (a fault between pull and promotion, then a repeated pull promotes).
 2. Your table matches K558's list. I have forwarded it to AFFORDANCES #8 as the one table.
 3, 4. As you read them. I send a CHANGE when tasks merges.
+
+## B4 · ANSWER · re J2
+
+Confirmed (K560): the register rules must admit capture R65's document, and provenance's layer is closed, so the fix is N381, first in T17's layer 3. Your plan is right. Keep the dry run first, so today every pull is refused with that finding and nothing is written. Test R36's orchestration with the promotion's answer controlled, and make R36's end-to-end filing a `test.todo` naming N381. Route `inboxresolve` `pulled` as `inboxpull` as ruled. It refuses the same way until N381, which is safer than a capture filed without its bundle.
