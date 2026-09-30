@@ -2165,10 +2165,10 @@ function checkInquiryExtension(ctx, findings) {
       /* REC-56 / D-203's SWEEP, and this one is the HARDER half of the class:
          `concluded -> open` IS a legal edge (REC-13 added it — a conclusion is
          revisable), so the state machine does not refuse this advice. THE OP
-         SURFACE DOES. `REOPENABLE_FROM` is `[...DISPOSITIONS, "published"]` and
-         excludes `concluded` DELIBERATELY and BY NAME: `deriveActs` does not
-         publish `reopen` on a concluded inquiry, and `store.reopen()` answers
-         NOT_SET_DOWN with the reason — a conclusion quietly reverting to open
+         SURFACE DOES. `REOPENABLE_FROM` is promotion R51's frozen `["deferred",
+         "dismissed"]` and excludes `concluded` DELIBERATELY and BY NAME:
+         `deriveActs` does not publish `reopen` on a concluded inquiry in no case,
+         and promotion's `#reopen` answers NOT_SET_DOWN with the reason — a conclusion quietly reverting to open
          still wearing its conclusion records nothing, and the edition machinery
          is where that move belongs. So the old repair told an operator to do
          exactly what the plane refuses, on an edge that looks legal, which is
@@ -4421,132 +4421,9 @@ async function checkInfo2Contract(ctx, findings) {
   }
 }
 
-const TASK_ID_RE = /^TASK-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-const TASK_KIND_ENUM = ['authority-undetermined'];
-const TASK_ROLE_ENUM = ['project-manager', 'group-admin', 'member'];
-const TASK_STATUS_ENUM = ['open', 'resolved', 'forwarded'];
-const TASK_EVENT_ENUM = ['created', 'forwarded', 'resolved', 'folded'];
-const MEMBER_ID_RE = /^[a-z0-9][a-z0-9-]{1,40}$/;
-
-/** C-19.1 (error): data/inbox.json task grammar (D-98, INBOX-GRAMMAR.md).
- *
- *  A SIBLING of C-18.5, not a new kind of thing. Bob's ruling puts an
- *  undetermined-authority capture in front of a member, and says the transport
- *  MIGHT ONE DAY BE EMAIL. That clause is the whole reason this is a grammar
- *  and not a table: an email renders in a client we do not control, where a
- *  plausible-looking instruction is exactly what phishing is. So the F5 split
- *  that governs the gathering queue governs this file unchanged: fields a
- *  member READS are length-bounded and newline-free so the exporter renders
- *  them as inert quoted data, and fields a MACHINE acts on are enum- or
- *  pattern-bounded so a malformed value is refused rather than obeyed.
- *
- *  Every bound below copies the C-18.5 pattern for the same kind of field
- *  rather than a similar one, and `refers_to` reuses BUNDLE_ID_RE, the C-1.2
- *  validator, rather than restating the canonical ID grammar. A second grammar
- *  pretending to be the same one is the mistake checkGatheringGrammar's own
- *  comment warns against.
- *
- *  Scoped by declared contract: enforced only where the file is present.
- *  N325 (T14): `checkBundle` no longer calls it. C-19.1 is queue's, a promotion
- *  check and an audit check queue registers; this export stays one tranche,
- *  until queue holds its copy (T15), and then goes. */
-export function checkInboxGrammar(ctx, findings) {
-  const raw = ctx.files.get('data/inbox.json');
-  if (!raw) return;
-  let g;
-  try { g = JSON.parse(asText(raw)); } catch { return; } // C-14.3 reports
-  if (typeof g !== 'object' || g === null || Array.isArray(g)) {
-    findings.push(f('C-19.1', 'error', 'data/inbox.json must be a JSON object'));
-    return;
-  }
-  const tasks = Array.isArray(g.tasks) ? g.tasks : null;
-  if (g.tasks !== undefined && !tasks) {
-    findings.push(f('C-19.1', 'error', 'inbox.json tasks must be an array'));
-    return;
-  }
-  const seen = new Set();
-  for (let i = 0; i < (tasks || []).length; i++) {
-    const tk = tasks[i];
-    if (typeof tk !== 'object' || tk === null) { findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}] is not an object`)); continue; }
-
-    if (!TASK_ID_RE.test(tk.id || '')) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].id '${tk.id}' does not match the TASK grammar`));
-    else if (seen.has(tk.id)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}] repeats id '${tk.id}'`));
-    else seen.add(tk.id);
-
-    if (!TASK_KIND_ENUM.includes(tk.kind)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].kind '${tk.kind}' must be one of: ${TASK_KIND_ENUM.join(', ')}`));
-
-    /* The two fields a member actually reads. Bounded exactly as C-18.5 bounds
-       target.text and target.description, character for character. */
-    const sub = tk.subject;
-    if (!sub || typeof sub !== 'object') findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}] missing subject block`));
-    else {
-      if (typeof sub.text !== 'string' || sub.text.length === 0 || sub.text.length > 200 || /[\r\n]/.test(sub.text)) {
-        findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].subject.text must be a nonempty single-line string under 200 chars`));
-      }
-      if (sub.description !== undefined && (typeof sub.description !== 'string' || sub.description.length > 2000)) {
-        findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].subject.description must be a string under 2000 chars`));
-      }
-    }
-
-    /* The task points AT a bundle, so this is the canonical ID grammar and not
-       a locator. A substrate path here would be the C-6.1 mistake. */
-    if (!BUNDLE_ID_RE.test(tk.refers_to || '')) {
-      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].refers_to '${String(tk.refers_to).slice(0, 40)}' is not a canonical bundle ID`));
-    } else if (ctx.resolveTarget && !ctx.resolveTarget(tk.refers_to)) {
-      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].refers_to '${tk.refers_to}' does not resolve in the store`,
-        ['re-point the task at the successor bundle', 'resolve the task with a reason if its subject is gone']));
-    }
-
-    if (tk.locators !== undefined) {
-      if (!Array.isArray(tk.locators)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].locators must be an array`));
-      else for (let L = 0; L < tk.locators.length; L++) {
-        if (!isPublicHttpsLocator(tk.locators[L])) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].locators[${L}] '${String(tk.locators[L]).slice(0, 40)}' is not an https public-host locator`));
-      }
-    }
-
-    if (tk.assignee !== 'unassigned' && !MEMBER_ID_RE.test(tk.assignee || '')) {
-      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].assignee '${tk.assignee}' must be a member_id or the literal 'unassigned'`));
-    }
-    if (!TASK_ROLE_ENUM.includes(tk.assignee_role)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].assignee_role '${tk.assignee_role}' must be one of: ${TASK_ROLE_ENUM.join(', ')}`));
-    if (!TASK_STATUS_ENUM.includes(tk.status)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].status '${tk.status}' must be one of: ${TASK_STATUS_ENUM.join(', ')}`));
-
-    if (!ISO_TS_RE.test(tk.created || '')) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].created must be an ISO 8601 UTC instant`));
-    if (tk.resolved_at !== undefined && tk.resolved_at !== null && !ISO_TS_RE.test(tk.resolved_at)) {
-      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].resolved_at must be an ISO 8601 UTC instant`));
-    }
-    /* A resolved task without the instant it resolved at is a status nobody can
-       audit, which is the same class of defect as a clock entry silently past
-       due (C-11.1). */
-    if (tk.status === 'resolved' && !ISO_TS_RE.test(tk.resolved_at || '')) {
-      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}] is resolved but carries no resolved_at instant`));
-    }
-
-    /* Append-only, and shaped exactly like a member_expertise row: what
-       happened, who did it, when. Who a task was taken FROM is as much a fact
-       as who holds it now, so a forward ADDS here and never rewrites. */
-    const hist = tk.history;
-    if (!Array.isArray(hist) || hist.length === 0) {
-      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history must be a nonempty append-only array`));
-    } else {
-      let prev = '';
-      for (let h = 0; h < hist.length; h++) {
-        const e = hist[h];
-        if (typeof e !== 'object' || e === null) { findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}] is not an object`)); continue; }
-        if (!ISO_TS_RE.test(e.at || '')) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}].at must be an ISO 8601 UTC instant`));
-        else { if (prev && e.at < prev) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}] is out of chronological order`)); prev = e.at; }
-        if (!TASK_EVENT_ENUM.includes(e.event)) findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}].event '${e.event}' must be one of: ${TASK_EVENT_ENUM.join(', ')}`));
-        /* The actor is a name a member reads beside an event, so it is bounded
-           like one rather than left free. */
-        if (typeof e.actor !== 'string' || e.actor.length === 0 || e.actor.length > 64 || /[\r\n]/.test(e.actor)) {
-          findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history[${h}].actor must be a nonempty single-line string under 64 chars`));
-        }
-      }
-      if (hist[0] && hist[0].event !== 'created') {
-        findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].history does not begin with its creation`));
-      }
-    }
-  }
-}
+/* `checkInboxGrammar`, the inbox task grammar (D-98, INBOX-GRAMMAR.md), and the task vocabularies only it read
+   stood here until T15 (legacy-checks, N325). The grammar is queue's, a promotion check and an audit check queue
+   registers, held whole in `src/queue/checks.mjs` since T14; this copy ran in no gate after T14. */
 
 // ---------------------------------------------------------------------------
 // C-20.1: the mechanical-writer diff-conformance auditor (I-20, State Rules
@@ -4767,8 +4644,8 @@ export async function checkBundle(input, opts = {}) {
     checkWriteCompleteness(ctx, findings);
     await checkInformationExtension(ctx, findings);
     await checkInfo2Contract(ctx, findings);
-    /* N325 (T14): `checkInboxGrammar(ctx, findings)` stood here. C-19.1 is queue's, a promotion check and an audit
-       check it registers, so the bundle check no longer runs it; the export stays one tranche for queue to copy. */
+    /* N325 (T14): `checkInboxGrammar(ctx, findings)` stood here. The inbox task grammar is queue's, a promotion check
+       and an audit check it registers, so the bundle check does not run it; the export went in T15. */
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
     checkInquiryExtension(ctx, findings);
@@ -6858,12 +6735,15 @@ export const CAPTURE_REQUEST_CHECKS = {
  * D-199's five determinations). NINE C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE,
  * and every one of them is DRIVEN in test/aicredential.test.mjs — PL-4's rule,
  * paid at allocation rather than discovered later: an undrivable code is a
- * refusal nobody can prove fires. TWELVE since 2026-09-27: C-29.10 (D-463, the
- * confinement) and C-29.11–C-29.12 (T4, N44: membership R29 and R62, driven by
- * membership's own tests, `test/m/membership/`).
+ * refusal nobody can prove fires. TWELVE by 2026-09-27: C-29.10 (D-463, the
+ * confinement) and C-29.11 and a twelfth (T4, N44: membership R29 and R62,
+ * driven by membership's own tests, `test/m/membership/`). The twelfth,
+ * `AI_CREDENTIAL_ORG_NOT_ADMIN`, went in T15 (legacy-checks, N327): R62's
+ * refusal is the one condition membership's NOT_AN_ADMIN names (K275, K408),
+ * and nothing has minted the old code since MEMBERSHIP #7.
  *
- * WHAT THE FAMILY HOLDS NOW (T14, legacy-checks, N334). The mint's and the
- * revocation's rows, C-29.1–.5 and C-29.11–.12, all minted in
+ * WHAT THE FAMILY HOLDS NOW (T14, legacy-checks, N334; T15, N327). The mint's
+ * and the revocation's rows, C-29.1–.5 and C-29.11, all minted in
  * `src/membership/index.mjs` (moved with membership's extraction, T3-2). The
  * reach question, what a declared scope admits, is the control plane's, because
  * the OPS table is the only thing that knows what an op is and which classes may
@@ -6964,16 +6844,6 @@ export const AI_CREDENTIAL_CHECKS = {
       + 'You named another member, and nobody can authorise an agent in someone else\'s name: it would see '
       + 'what they see and its work would be recorded as theirs. Nothing was created. The member it should '
       + 'act for can create it themselves.',
-  },
-  /* Membership R62 (Bob, 2026-09-26): an organisation-scoped credential acts for the whole group, with nobody
-     individual behind it, so only an active administrator (the founder included) mints one. Until this row the
-     refusal carried `check: 'membership.R62'` and its own sentence. */
-  AI_CREDENTIAL_ORG_NOT_ADMIN: {
-    check: 'C-29.12',
-    where: 'src/membership/index.mjs aiCredentialMint > is-ai-credential-mint',
-    translation: 'A credential that acts for the whole group is created by one of its administrators, and '
-      + 'the account asking is not an active administrator here. Nothing was created. You can create a '
-      + 'credential that acts for you alone, or ask an administrator to create this one.',
   },
 };
 
@@ -11199,10 +11069,10 @@ export const PER_ITEM_CHECKS = {
  *
  * T8 (N128, PROMOTION #5's REPORT) adds promotion's own malformed registrations, C-102.6 and C-102.7. Each
  * `where` names a REGION promotion marks, not the whole function, because `registerFact` and `registerStep` also
- * refuse STEP_DECLARED. Not here, on the REC-64 rule (ACT_SHAPE_CHECKS' header: a row cannot claim one of many
- * sites): LISTENER_DECLARED and LISTENER_MALFORMED, each minted for one condition by about a dozen modules'
- * listener registrations. Under K231's rule, one code one site, their rows follow once those registrations call
- * the one helper that mints each (N202).
+ * refuse STEP_DECLARED. Not here: LISTENER_MALFORMED and LISTENER_DECLARED, the family's C-102.11 and C-102.12.
+ * Under K231's rule, one code one site, every listener registration now refuses through membership's one helper,
+ * `listenerRefusal` (N202), so membership holds their rows (`src/membership/checks.mjs` MEMBERSHIP_CHECKS, region
+ * `is-listener-registration`; N128).
  *
  * T9 (N206, N214) adds three rows, each at one site:
  *   C-102.8  STEP_DECLARED, now minted only by promotion's helper `stepDeclared`, which `registerStep`,
