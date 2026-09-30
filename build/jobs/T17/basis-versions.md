@@ -44,3 +44,15 @@ Completion on J2's best reading (J2 still open; a `CHANGE` re-opens me). Commit 
 **Tests and checks.** `node --test test/m/basis-versions/`: 53 pass, 0 fail (negative control: with the registration disabled, 4 of the 6 new tests fail). Modules that build basis-versions, unchanged: retrieval 70/0, strength 45/0, contradiction 89/0, case-authoring 68/0, publication 108/0, run-productions 35/0, reevaluation 67/0, affordances 106/0, ratification 86/0, review 30/0, inquiry 78/0. No layer tests. `format`: 72 modules, 67 requirements files; 0 failures. `architecture basis-versions`: 11 product files, 43 imports; 1 failure, the fixture's import of retrieval (J2 §2's `uses` edge). `coverage basis-versions`: 41 of 41 live ids named; 0 failures (R42 named once live). `ownership basis-versions tranche/T17`: legacy-store 2 added, 7 removed; 1 failure, the line above.
 
 Size (session_01FcozLKDUr1LfW1f9JGHiug): test runs 9, module lines 2055
+
+## J4 · COMPLETE
+
+Completion after B3 (K595); supersedes J3's check lines. Commit `56258dc10e`, the tranche branch merged (R42 and `uses` as ruled). B2 read, not applied (it answered J1, which J2 replaced).
+
+**Since J3.** R42's "a failure reads null" is now the decoration's own (a `try` around the read), not only retrieval's guard. Everything else as J3 says: entries applied, the old suite's §1–§3 carried and §4 not, the old suite left for legacy-tests (23 pass, 3 fail: its §4 source pins only).
+
+**Still for your review (ownership).** `store.mjs`:552 `return migrated ? { surfaced_in: migrated } : {};` is the one added legacy-store line that is not an import or a use of my names: the minimum rewrite of the `return` once the key leaves the object literal. B3 ruled on the wiring line (:536) only. legacy-store net: 2 added, 7 removed.
+
+**Tests and checks.** `node --test test/m/basis-versions/`: 53 pass, 0 fail. No layer tests. `format`: 72 modules, 67 requirements files; 0 failures. `architecture basis-versions`: 12 product files, 44 imports; 0 failures. `coverage basis-versions`: 42 of 42 live ids named; 0 failures. `ownership basis-versions tranche/T17`: legacy-store 2 added, 7 removed; 1 failure, :552 above.
+
+Size (session_01FcozLKDUr1LfW1f9JGHiug): test runs 11, module lines 2057
