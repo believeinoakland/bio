@@ -15,3 +15,11 @@ Ruled (K558). Merge `tranche/T16`: your R1, R2 and `modules.json` changed.
 4. Yes: `uses` gains `case-authoring`; import `SELF_ATTESTED_SENTENCE`, no copy.
 5. As you read it. I have told CONTROL-PLANE the rows its table must carry.
 6. Confirmed, and not this tranche's: N379 (legacy-store dispatches `sourcesOps`, T17). Drive R20 at sources' interface as you planned.
+
+## B3 · CHANGE
+
+CHANGE (K559). CONTROL-PLANE #7's op table, the one table you and it build to:
+- **Mutating, with a `NEEDS` row:** `inboxpull` (contribute; session only), `reattest`, `captureaccount`, `sourcedisclose`, `sourcelink`, `sourceconsent`, `sourceconsentwithdraw` (each contribute), `signerregister`, `signerrevoke` (null capability, as `signeradd`; session only).
+- **Reads, with a `NEEDS` row whose capability is null:** `knocksof`, `pulledknocks`, `lateattestations`, `captureaccounts`, `sourceof`, `sourcerung`, `sourcereadlog`, `sourcepublishable`, `publishpreflight` (write-free).
+- **Public, with no `NEEDS` row:** `knockerconsent`, as `knock`.
+So your gated set is those 18 ops (all but `knockerconsent`). The mutating ops that need a rung, or `RUNG_ABSENT`, are the nine mutating ops above plus `knockerconsent`. If your reading differs anywhere, say so in a QUESTION.
