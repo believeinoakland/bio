@@ -10,9 +10,9 @@ export const CONTRADICTION_SCHEMA = `
 -- changed side is a new row and the old one stays with its versions. A claim side is the inquiry and the reading
 -- it is held on, versioned by the sha256 of the claim text as compared. An extent side is its content row (or the
 -- capture where none is named), versioned by the capture, whose bytes never change.
--- state is only 'proposed' until PRESENT and RESOLVE are designed (section 9 item 4). origin is always 'machine'
--- (DEC-24: a proposal, labelled). a_bundle_id and b_bundle_id are the bundles each side lives in, so a purge of
--- either end takes the row (D-113), as connections do. Nothing reads this table to a member yet.
+-- state is always 'proposed': what a candidate is now is derived at the read from its acts (R26, R42), never
+-- written here. origin is always 'machine' (DEC-24: a proposal, labelled). a_bundle_id and b_bundle_id are the
+-- bundles each side lives in, so a purge of either end takes the row (D-113), as connections do.
 CREATE TABLE IF NOT EXISTS contradiction_candidates (
   candidate    TEXT PRIMARY KEY,
   key          TEXT NOT NULL,

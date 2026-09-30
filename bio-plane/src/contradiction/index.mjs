@@ -10,7 +10,7 @@
    audit story: PAIRING — which two assertions are worth comparing — is deterministic, in the plane, and auditable;
    JUDGEMENT — whether a pair conflicts, and how — is the machine's, inside a run, labelled machine work. This module
    pairs, and holds what a run PROPOSED about a formed pair. It judges nothing, grades nothing, edits or closes no
-   side, and no read here shows a candidate to a member (R19: PRESENT and RESOLVE are not designed).
+   side, and a candidate is shown to a member only by PRESENT's reads (R25–R29), at the weight R24 gives it (R19).
 
    THE ONE THING THIS SURFACE CAN GET WRONG THAT NOTHING ELSE CAN. `CLAUDE.md`: *sparse is normal at every level, and
    absence at one level is not evidence of absence at the next. Saying WHICH is true is a first-class obligation.* An
@@ -765,7 +765,7 @@ export class Contradiction {
   }
 
   /** op=contradictionpairs — THE PAIRING READ (R5–R12). A READ: it judges nothing and writes nothing, and both are
-   *  said in the answer: `judgement.state` is `NOT_REACHED` and `wrote` is false.
+   *  said in the answer: `judgement.state` is `HELD_APART` and `wrote` is false.
    *
    *  WHY `judgement` IS PUBLISHED AS A FIELD AT ALL: a list of pairs with no verdict beside it reads as a list of
    *  CONTRADICTIONS. NO LABEL VOCABULARY IS PUBLISHED HERE (R12): the five labels are the JUDGEMENT's output, and
@@ -909,7 +909,7 @@ export class Contradiction {
    *
    *  THE LABEL IS A PROPOSAL (DEC-24): every row is `origin = 'machine'`, `state = 'proposed'`, and nothing here
    *  grades, edits or closes either side (R19). §7's over-strictness gate is a property of the JUDGEMENT (M-162
-   *  measured the prompt `../contradiction.mjs` pins, R2). */
+   *  measured the prompt `../contradiction.mjs` pins, R2, R57). */
   propose({ run, proposals, proposedBy, viewer = null, caller = null, at = null } = {}) {
     const refusal = (code, detail, extra) => {
       const row = CONTRADICTION_CANDIDATE_CHECKS[code];
