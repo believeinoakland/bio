@@ -63,7 +63,7 @@ CREATE TABLE case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, te
 `;
 
 /** One world: the store, the controlled providers, and helpers that write what they read. */
-export function world({ now = NOW } = {}) {
+export function world({ now = NOW, injectClock = true } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of statements(RECORD_SCHEMA)) st.db.exec(t);
@@ -118,8 +118,9 @@ export function world({ now = NOW } = {}) {
       return { self, via };
     },
   };
+  /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
   const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseAuthoring,
-                             now: () => clock.now });
+                             ...(injectClock ? { now: () => clock.now } : {}) });
   let bundles = 0;
   const w = {
     st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, providers,
