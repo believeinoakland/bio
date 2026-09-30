@@ -1,11 +1,10 @@
 /* The tasks module's test world: record-core and membership real, over node:sqlite behind a `sql` that answers as
    workerd's does (a CURSOR, iterable once, with `toArray()` and `one()`, never an array; K316); every other provider a
    fake in the shape its requirements publish, which a test fills. The tables other modules own and this module reads
-   by their read contracts (record-core R37, connections R58) are the real schema's where `schema.mjs` holds them, else
-   created here with exactly the contracted columns. */
+   by their read contracts (record-core R37, connections R58) are their owners' schemas where an owner publishes one
+   (record-core's, membership's), else created here with exactly the contracted columns. */
 import { DatabaseSync } from "node:sqlite";
-import { SCHEMA } from "../../../src/schema.mjs";
-import { recordOf } from "../../../src/record-core/index.mjs";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
 
@@ -42,7 +41,7 @@ export function host({ bare = false } = {}) {
   const record = recordOf(h, { evidence: null, evidencePrefix: "bio/captures/" });
   const membership = membershipOf(h, { record });
   const boot = () => {
-    for (const t of SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
+    for (const t of RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
     db.exec(`CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
     record.migrate();
     membership.migrate();
