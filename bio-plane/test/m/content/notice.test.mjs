@@ -2,9 +2,8 @@
    only: every table is byte-identical across each notice. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { VERSION_NOTICE_CHECKS } from "../../../checks/bio-checks.mjs";
 import { world, V, LAYER } from "./fixture.mjs";
-import { canonicalExtent, VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_GRADES } from "../../../src/content/index.mjs";
+import { canonicalExtent, VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_GRADES, VERSION_NOTICE_CHECKS } from "../../../src/content/index.mjs";
 
 const DOC = "INFO-2026-0001-a", NEW = "INFO-2026-0002-b";
 const U = (page, text, truncated = false) => ({ extent: canonicalExtent({ kind: "pdf-page", page }), ref: `page ${page + 1}`, text, truncated });
