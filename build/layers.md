@@ -14,7 +14,7 @@
 | 8 | Publication | 13 | What the group stands behind leaves one way. | publication, ratification, case-authoring, review |
 | 9 | Action | Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on a published finding and a standard held in the record; the group decides every act, the AI prepares and never files; compliance is recorded as carefully as noncompliance; every deadline names its basis. | standards, conformance, consequences, actions, filings, escalation |
 | 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, scheduler, legacy-store |
-| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, queue, instance-setup, control-plane, legacy-index, legacy-ui, installer, legacy-tests |
+| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, tasks, queue-producers, queue, instance-setup, control-plane, legacy-index, legacy-ui, installer, legacy-tests |
 
 ## No jurisdiction in the product (Bob's concern, 2026-09-25; ruled by BOB #37)
 
