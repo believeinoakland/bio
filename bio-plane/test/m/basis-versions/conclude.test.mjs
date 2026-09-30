@@ -216,3 +216,22 @@ test("R32: a project's conclusion record is append-only; the latest row is its s
   assert.deepEqual(rec.history.map((h) => [h.act, h.falsifier ?? h.reason]), [["concluded", "one"], ["withdrawn", "second thoughts"], ["concluded", "two"]]);
   assert.equal(rec.stance.falsifier, "two");
 });
+
+test("R20, R11, R18: a withdrawal moves nothing on the question and says so; without a project it points at op=reopen; op=basisversions then reads the stance withdrawn; a conclusion after it names the withdrawal as its prior and the history grows to three", () => {
+  const w = setup();
+  const p = standing(w);
+  conclude(w, { project: p, falsifier: "the minutes" });
+  const qSha = w.sha(Q);
+  const r = conclude(w, { withdraw: true, project: p, reason: "we got it wrong" });
+  assert.deepEqual([r.ok, r.relationship, r.to, r.inquiry_moved], [true, "project", "withdrawn", false]);
+  assert.equal(w.sha(Q), qSha, "the question's bytes do not move");
+  const none = conclude(w, { withdraw: true, project: "", reason: "r" });
+  assert.equal(none.reason, "NOT_A_PROJECT");
+  assert.match(none.detail, /op=reopen/, "the no-project relationship is withdrawn by reopening");
+  const read = w.bv.basisVersions({ id: Q, viewer: V("alice"), project: p });
+  assert.deepEqual([read.conclusion, read.conclusion_stance, read.conclusion_history.map((h) => h.act)],
+    [null, "withdrawn", ["concluded", "withdrawn"]]);
+  const again = conclude(w, { project: p, falsifier: "a later record" });
+  assert.deepEqual([again.ok, again.prior.act, again.prior.version, again.history_length], [true, "withdrawn", "first", 3]);
+  assert.equal(w.bv.basisVersions({ id: Q, viewer: V("alice"), project: p }).conclusion_stance, "concluded");
+});
