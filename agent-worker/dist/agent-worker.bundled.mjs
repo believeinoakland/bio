@@ -551,7 +551,6 @@ __export(bio_checks_exports, {
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   THEME_CHECKS: () => THEME_CHECKS,
   THEME_ID_RE: () => THEME_ID_RE,
-  TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   UNREACHABLE_CAPTURE_GRADE: () => UNREACHABLE_CAPTURE_GRADE,
   VERSION_ACT_CHECKS: () => VERSION_ACT_CHECKS,
   VERSION_MACHINE: () => VERSION_MACHINE,
@@ -5693,53 +5692,6 @@ var NARROW_CHECKS = {
     check: "C-50.11",
     where: "src/basis-versions/index.mjs narrow > is-narrow-claim",
     translation: "The new reading needs a short account of what changed and why \u2014 which citation now points at less of its document, and what makes that part the one that matters. That account is what a later reader has to go on."
-  }
-};
-var TRANSCRIBE_CHECKS = {
-  TRANSCRIBE_NOT_A_MEMBER: {
-    check: "C-52.1",
-    where: "src/content/index.mjs transcribe > is-transcribe-act",
-    translation: "Transcribing is a person reading the page and typing what it says, in their own name. The credential that asked is an automated one: a machine reading of a page is OCR, which the record already carries and labels as such. Sign in and type it yourself."
-  },
-  TRANSCRIBE_NO_DOCUMENT: {
-    check: "C-52.2",
-    where: "src/content/index.mjs transcribe > is-transcribe-act",
-    translation: "That request does not name a document this record holds and you can read. A transcription is of a part of a document, so it needs the document first."
-  },
-  TRANSCRIBE_NO_BYTES: {
-    check: "C-52.3",
-    where: "src/content/index.mjs transcribe > is-transcribe-act",
-    translation: "This record holds no copy of that document, so there is no page to transcribe. A transcription is tied to the exact copy it was typed from, so the copy has to be captured first."
-  },
-  TRANSCRIBE_NO_PORTION: {
-    check: "C-52.4",
-    where: "src/content/index.mjs transcribe > is-transcribe-act",
-    translation: "That request does not say which part of the document you transcribed. Select the page or the region you read \u2014 a transcription with no stated part would be read as covering the whole document, which is a claim you did not make."
-  },
-  TRANSCRIBE_PORTION_UNREADABLE: {
-    check: "C-52.5",
-    where: "src/content/index.mjs transcribe > is-transcribe-portion",
-    translation: "The part you selected is one this record cannot yet check a transcription against \u2014 a spreadsheet cell, a paragraph or a slide shape, or an image cited as itself rather than as text. A second member could not attest a transcription of it, so it is refused rather than left unable ever to be checked. Select a page or a region of a page."
-  },
-  TRANSCRIBE_NO_TEXT: {
-    check: "C-52.6",
-    where: "src/content/index.mjs transcribe > is-transcribe-portion",
-    translation: "The transcription is empty. Type what the selected part of the page says; nothing is filled in for you."
-  },
-  TRANSCRIBE_TEXT_TOO_LONG: {
-    check: "C-52.7",
-    where: "src/content/index.mjs transcribe > is-transcribe-portion",
-    translation: "The transcription is longer than one passage this record stores. Select a smaller part of the page and transcribe it on its own; the parts can each be checked and cited."
-  },
-  TRANSCRIPTION_NOT_FOUND: {
-    check: "C-52.8",
-    where: "src/content/index.mjs #transcriptionOf > is-transcription-source",
-    translation: "That request does not name a transcription this record holds and you can read. A transcription is named by the content id its own transcribe act returned."
-  },
-  TRANSCRIPTION_SELF_ATTEST: {
-    check: "C-52.9",
-    where: "src/content/index.mjs transcriptionAttest > is-transcription-attest",
-    translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
 var LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;

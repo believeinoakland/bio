@@ -340,7 +340,6 @@ __export(bio_checks_exports, {
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   THEME_CHECKS: () => THEME_CHECKS,
   THEME_ID_RE: () => THEME_ID_RE,
-  TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   UNREACHABLE_CAPTURE_GRADE: () => UNREACHABLE_CAPTURE_GRADE,
   VERSION_ACT_CHECKS: () => VERSION_ACT_CHECKS,
   VERSION_MACHINE: () => VERSION_MACHINE,
@@ -5482,53 +5481,6 @@ var NARROW_CHECKS = {
     check: "C-50.11",
     where: "src/basis-versions/index.mjs narrow > is-narrow-claim",
     translation: "The new reading needs a short account of what changed and why \u2014 which citation now points at less of its document, and what makes that part the one that matters. That account is what a later reader has to go on."
-  }
-};
-var TRANSCRIBE_CHECKS = {
-  TRANSCRIBE_NOT_A_MEMBER: {
-    check: "C-52.1",
-    where: "src/content/index.mjs transcribe > is-transcribe-act",
-    translation: "Transcribing is a person reading the page and typing what it says, in their own name. The credential that asked is an automated one: a machine reading of a page is OCR, which the record already carries and labels as such. Sign in and type it yourself."
-  },
-  TRANSCRIBE_NO_DOCUMENT: {
-    check: "C-52.2",
-    where: "src/content/index.mjs transcribe > is-transcribe-act",
-    translation: "That request does not name a document this record holds and you can read. A transcription is of a part of a document, so it needs the document first."
-  },
-  TRANSCRIBE_NO_BYTES: {
-    check: "C-52.3",
-    where: "src/content/index.mjs transcribe > is-transcribe-act",
-    translation: "This record holds no copy of that document, so there is no page to transcribe. A transcription is tied to the exact copy it was typed from, so the copy has to be captured first."
-  },
-  TRANSCRIBE_NO_PORTION: {
-    check: "C-52.4",
-    where: "src/content/index.mjs transcribe > is-transcribe-act",
-    translation: "That request does not say which part of the document you transcribed. Select the page or the region you read \u2014 a transcription with no stated part would be read as covering the whole document, which is a claim you did not make."
-  },
-  TRANSCRIBE_PORTION_UNREADABLE: {
-    check: "C-52.5",
-    where: "src/content/index.mjs transcribe > is-transcribe-portion",
-    translation: "The part you selected is one this record cannot yet check a transcription against \u2014 a spreadsheet cell, a paragraph or a slide shape, or an image cited as itself rather than as text. A second member could not attest a transcription of it, so it is refused rather than left unable ever to be checked. Select a page or a region of a page."
-  },
-  TRANSCRIBE_NO_TEXT: {
-    check: "C-52.6",
-    where: "src/content/index.mjs transcribe > is-transcribe-portion",
-    translation: "The transcription is empty. Type what the selected part of the page says; nothing is filled in for you."
-  },
-  TRANSCRIBE_TEXT_TOO_LONG: {
-    check: "C-52.7",
-    where: "src/content/index.mjs transcribe > is-transcribe-portion",
-    translation: "The transcription is longer than one passage this record stores. Select a smaller part of the page and transcribe it on its own; the parts can each be checked and cited."
-  },
-  TRANSCRIPTION_NOT_FOUND: {
-    check: "C-52.8",
-    where: "src/content/index.mjs #transcriptionOf > is-transcription-source",
-    translation: "That request does not name a transcription this record holds and you can read. A transcription is named by the content id its own transcribe act returned."
-  },
-  TRANSCRIPTION_SELF_ATTEST: {
-    check: "C-52.9",
-    where: "src/content/index.mjs transcriptionAttest > is-transcription-attest",
-    translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
 var LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
@@ -37031,12 +36983,13 @@ var Extraction = class {
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     return out;
   }
-  /** R18: `jurisdictions.combine` of record-core's `jurisdiction_profiles`; undefined when the instance holds none. */
+  /** R18: `jurisdictions.combine` of record-core's `jurisdiction_profiles`, never a default. An instance that names
+   *  no profile, or profiles that do not combine, reads under the empty view (`combine([])`), which is a view: handed
+   *  none, docprofile's readers would fall back to every held profile (K39), a default R18 forbids. */
   view() {
     const ids = this.core && typeof this.core.getSetting === "function" ? this.core.getSetting("jurisdiction_profiles") : null;
-    if (!Array.isArray(ids)) return void 0;
-    const c = combine(ids);
-    return c && c.ok ? c.view : void 0;
+    const c = Array.isArray(ids) ? combine(ids) : null;
+    return c && c.ok ? c.view : combine([]).view;
   }
   async #liveCalibration(q6) {
     const c = this.calibration;
@@ -40016,6 +39969,66 @@ function observationLogOps(o, url, body) {
     leadlist: () => o.leadList({ limit: q6("limit"), viewer: q6("viewer"), identity: q6("identity") })
   };
 }
+
+// src/content/checks.mjs
+var TRANSCRIBE_CHECKS = {
+  TRANSCRIBE_NOT_A_MEMBER: {
+    check: "C-52.1",
+    where: "src/content/index.mjs transcribe > is-transcribe-act",
+    translation: "Transcribing is a person reading the page and typing what it says, in their own name. The credential that asked is an automated one: a machine reading of a page is OCR, which the record already carries and labels as such. Sign in and type it yourself."
+  },
+  TRANSCRIBE_NO_DOCUMENT: {
+    check: "C-52.2",
+    where: "src/content/index.mjs transcribe > is-transcribe-act",
+    translation: "That request does not name a document this record holds and you can read. A transcription is of a part of a document, so it needs the document first."
+  },
+  TRANSCRIBE_NO_BYTES: {
+    check: "C-52.3",
+    where: "src/content/index.mjs transcribe > is-transcribe-act",
+    translation: "This record holds no copy of that document, so there is no page to transcribe. A transcription is tied to the exact copy it was typed from, so the copy has to be captured first."
+  },
+  TRANSCRIBE_NO_PORTION: {
+    check: "C-52.4",
+    where: "src/content/index.mjs transcribe > is-transcribe-act",
+    translation: "That request does not say which part of the document you transcribed. Select the page or the region you read \u2014 a transcription with no stated part would be read as covering the whole document, which is a claim you did not make."
+  },
+  TRANSCRIBE_PORTION_UNREADABLE: {
+    check: "C-52.5",
+    where: "src/content/index.mjs transcribe > is-transcribe-portion",
+    translation: "The part you selected is one this record cannot yet check a transcription against \u2014 a spreadsheet cell, a paragraph or a slide shape, or an image cited as itself rather than as text. A second member could not attest a transcription of it, so it is refused rather than left unable ever to be checked. Select a page or a region of a page."
+  },
+  TRANSCRIBE_NO_TEXT: {
+    check: "C-52.6",
+    where: "src/content/index.mjs transcribe > is-transcribe-portion",
+    translation: "The transcription is empty. Type what the selected part of the page says; nothing is filled in for you."
+  },
+  TRANSCRIBE_TEXT_TOO_LONG: {
+    check: "C-52.7",
+    where: "src/content/index.mjs transcribe > is-transcribe-portion",
+    translation: "The transcription is longer than one passage this record stores. Select a smaller part of the page and transcribe it on its own; the parts can each be checked and cited."
+  },
+  TRANSCRIPTION_NOT_FOUND: {
+    check: "C-52.8",
+    where: "src/content/index.mjs #transcriptionOf > is-transcription-source",
+    translation: "That request does not name a transcription this record holds and you can read. A transcription is named by the content id its own transcribe act returned."
+  },
+  TRANSCRIPTION_SELF_ATTEST: {
+    check: "C-52.9",
+    where: "src/content/index.mjs transcriptionAttest > is-transcription-attest",
+    translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
+  }
+};
+var VERSION_NOTICE_CHECKS2 = {
+  /* The passage named is not a content row this caller may read. Its `where` names content's `passageNotice`
+     (content R29–R31, T5; N97, T6): the passage arm is content's. The store's `versionNotice` still answers the
+     same condition inside `is-version-notice-subject`, one sentence true at both, until legacy-store's passage arm
+     delegates to content (reported by T6's legacy-checks job). */
+  VERSION_NOTICE_NO_CONTENT: {
+    check: "C-80.3",
+    where: "src/content/index.mjs passageNotice > is-passage-notice",
+    translation: "There is no cited passage by that id that you can read here. A passage id exists once somebody has cited that part of a document; one in a project you were not invited to answers exactly as one that does not exist."
+  }
+};
 
 // ../pdf-worker/src/dctdecode.mjs
 var DctRefusal = class extends Error {
@@ -44204,6 +44217,7 @@ __export(extent_exports, {
   citationContentId: () => citationContentId,
   citationExtent: () => citationExtent,
   citationHasAuthoredExtent: () => citationHasAuthoredExtent,
+  containerBoundUndetermined: () => containerBoundUndetermined,
   contentCitedAs: () => contentCitedAs2,
   contentIdFor: () => contentIdFor2,
   describeExtent: () => describeExtent2,
@@ -44379,7 +44393,56 @@ function pdfPageBoxUndetermined(extent, ctx = {}) {
   return null;
 }
 function mintUndetermined(extent, ctx = {}) {
-  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx) || pdfPageBoxUndetermined(extent, ctx);
+  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx) || containerBoundUndetermined(extent, ctx) || pdfPageBoxUndetermined(extent, ctx);
+}
+function containerBoundUndetermined(extent, ctx = {}) {
+  const e = isObj5(extent) ? extent : null;
+  if (!e || !ctx || ctx.known === false) return null;
+  const c = isObj5(ctx.container) ? ctx.container : {};
+  const u = (level, why) => ({ level, why: `${why}, so whether ${describeExtent2({ ...e, ref: void 0 })} lies inside the document is UNDETERMINED, admitted and stated rather than guessed` });
+  const pages = Number.isInteger(ctx.pageCount) && ctx.pageCount > 0;
+  switch (e.kind) {
+    case "pdf-page":
+      return pages ? null : u("page_set", "this record holds no page set for this capture");
+    case "image":
+      return Number.isInteger(e.page) && !pages ? u("page_set", "this record holds no page set for this capture") : null;
+    case "sheet-cell":
+    case "sheet-range": {
+      const sheets = Array.isArray(c.sheets) && c.sheets.length ? c.sheets : null;
+      if (!sheets) return u("sheet_list", "this record holds no sheet list for this capture's workbook");
+      const want = typeof e.sheet === "string" ? e.sheet.trim() : "";
+      const sheet = sheets.find((x) => x && x.name === want);
+      if (sheet && !(Number.isInteger(sheet.rows) && Number.isInteger(sheet.cols)))
+        return u("sheet_grid", `this record holds no row and column grid for sheet '${want.slice(0, 40)}' (a format that fixes no maximum table size states none)`);
+      return null;
+    }
+    case "doc-para":
+      return Number.isInteger(c.paragraphs) && c.paragraphs > 0 ? null : u("paragraph_count", "this record holds no paragraph count for this capture");
+    case "slide-shape": {
+      const slides = Array.isArray(c.slides) && c.slides.length ? c.slides : null;
+      if (!slides) return u("slide_list", "this record holds no slide list for this capture's deck");
+      const slide = Number.isInteger(e.slide) ? slides[e.slide - 1] : null;
+      if (Number.isInteger(e.shape) && !(slide && Number.isInteger(slide.shapes)))
+        return u("shape_count", `this record holds no shape count for slide ${e.slide}`);
+      return null;
+    }
+    case "doc-table": {
+      if (!Array.isArray(c.tables)) return u("table_list", "this record holds no table list for this capture");
+      const t = c.tables[e.table];
+      if (typeof e.cell === "string" && e.cell.trim() && !(t && Number.isInteger(t.rows) && Number.isInteger(t.cols)))
+        return u("table_grid", `this record holds no row and column grid for table ${e.table}`);
+      return null;
+    }
+    case "envelope": {
+      const at20 = isObj5(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? containerBoundUndetermined(e.at, ctx) : null;
+      return at20 || {
+        level: "envelope_items",
+        why: "this record persists no list of a capture's envelope items to bound one against (they arrive as text units), so whether this item exists rests on the index that found it: UNDETERMINED, admitted and stated"
+      };
+    }
+    default:
+      return null;
+  }
 }
 function imagePageUndetermined(extent, ctx = {}) {
   const e = isObj5(extent) ? extent : null;
@@ -46135,7 +46198,7 @@ var Content = class {
     const r = cid ? this.#one(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as
                                  FROM content WHERE content_id=?`, cid) : null;
     if (!r || !this.sees(r.bundle_id, viewer)) {
-      const row2 = VERSION_NOTICE_CHECKS.VERSION_NOTICE_NO_CONTENT;
+      const row2 = VERSION_NOTICE_CHECKS2.VERSION_NOTICE_NO_CONTENT;
       return {
         ok: false,
         reason: "VERSION_NOTICE_NO_CONTENT",
@@ -115438,6 +115501,11 @@ async function pdfStructureOp(url, env, store, {
   const r = await ask(store, `http://x/pdfstructure?${q6}`, void 0, doAnswer2);
   return unanswered2(r, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json5(r.result.body, r.result.status);
 }
+var EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
+async function extractionOp(op, url, env, getStore, stamps) {
+  if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
+  return null;
+}
 async function acquireReadingOp(answer, store, { json: json5 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
   const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
     method: "POST",
@@ -125700,10 +125768,11 @@ async function gatedOp({
     });
     if (c) return c;
   }
-  if (op === "pdfstructure") return pdfStructureOp(
+  if (EXTRACTION_OPS.includes(op)) return extractionOp(
+    op,
     url,
     env,
-    env.STORE.get(env.STORE.idFromName(storeName)),
+    () => env.STORE.get(env.STORE.idFromName(storeName)),
     {
       json: json4,
       storeSilent,
