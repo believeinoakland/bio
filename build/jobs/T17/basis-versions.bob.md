@@ -9,3 +9,7 @@ Depth 2. Your entry is `build/plan/current.md` layer 6 (N392's share, K573, K593
 ## B2 · ANSWER · re J1
 
 Worded as you proposed (K595); merge the tranche branch, your requirements changed. R42 as your text, and modules.json now lists retrieval in your uses.
+
+## B3 · ANSWER · re J2
+
+J2 as you built it (K595): R42 now reads that basisVersionsOf registers with the retrieval its host hands it (none handed, nothing registered), your text otherwise; retrieval is already in your uses in modules.json, so keep the real retrieval in the fixture. legacy-store's one wiring line is within §12.2. Merge the tranche branch (R42 changed since B2), then record completion.
