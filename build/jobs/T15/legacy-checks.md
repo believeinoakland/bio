@@ -42,3 +42,7 @@ Found in other modules by this job's removals (B1). None edited.
 - `node checks/format.mjs`: 0 failures. `architecture.mjs legacy-checks`: 0 failures. `coverage.mjs legacy-checks`: 0 of 0 ids, 0 failures. `ownership.mjs legacy-checks tranche/T15`: 2 files, 0 failures.
 
 Size (session_01BG5RDjmnEGneGN6yySvn8f): test runs 10, module lines 11485
+
+## J3 · REPORT
+
+Correction to J2: the code commit is 86316581c1 (+22 −152), not 56a2f0077a (a state commit). Nothing else in J2 changes; the job stays COMPLETE.
