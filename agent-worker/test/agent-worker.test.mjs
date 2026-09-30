@@ -92,10 +92,14 @@ const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WRANGLER = fileURLToPath(new URL("../wrangler.jsonc", import.meta.url));
 const MANIFEST = fileURLToPath(new URL("../fleet-member.json", import.meta.url));
 const SRC = readFileSync(WORKER_SRC, "utf8");
-/* FL-3: read so `AI_RUN_ACTIONS` — the record's OWN declaration of what an
-   agent's task scope may write — is the authority for what this member may
-   name, rather than a list kept here. */
-const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
+/* N402 (K575, K668): this suite no longer parses the plane's source for `AI_RUN_ACTIONS`, its OPS table or its
+   namespace set (they moved, and a parse of moved text is an empty corpus that passes everything). It tests the
+   member at its interface: the op declaration it exports (`PLANE_OPS`, R37) and its namespaces (`NAMESPACES`, R4),
+   each pinned exactly here. control-plane pins both against its own op table, `AI_RUN_ACTIONS` and namespace gate
+   (layer 11), which a layer-6 suite may not import. */
+import { NAMESPACES } from "../src/harness.mjs";
+/* The writes this member declares: exactly the mutating members of `PLANE_OPS`, pinned floor and ceiling (R37). */
+const DECLARED_WRITES = ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"];
 /* Comments carry this project's reasoning and are long; a scan that reads them
    would match its own explanation of what must not appear.
  *
@@ -285,8 +289,8 @@ console.log("\n--- 1 · the round trip: the member asks the plane and reports wh
   const wrote = [...new Set(after.record.rows.map((r) => r.op))].sort();
   t("the record moved only through ops in the pinned set",
     wrote.filter((op) => !PLANE_OPS[op]), []);
-  t("and every op that moved it is one PL-11's credential scope can declare",
-    wrote.filter((op) => !new RegExp(`const AI_RUN_ACTIONS = \\[[^\\]]*"${op}"`).test(PLANE_INDEX)), []);
+  t("R37: and every op that moved it is one this member declares a WRITE (control-plane pins those to AI_RUN_ACTIONS)",
+    wrote.filter((op) => !(PLANE_OPS[op] && PLANE_OPS[op].mutating === true)), []);
   /* NULL-TOLERANT, AND THE CLASS WAS SWEPT ACROSS BOTH SUITES RATHER THAN THE
      SITE THAT BIT. Measured: with control arm A3 armed (the binding replaced by
      a bare global fetch) NO request reaches the mock, so `after.log` is EMPTY
@@ -392,16 +396,11 @@ console.log("\n--- 3 · every refusable condition is STATED, with a code, and ne
     const out = await res.json();
     t("store=biosmoke -> 400 NAMESPACE_UNKNOWN, naming what was asked and what exists",
       [res.status, out.reason, out.asked, out.namespaces], [400, "NAMESPACE_UNKNOWN", "biosmoke", ["bio", "scratch"]]);
-    /* The copy in this member is pinned to the plane's declaration, read from the plane's source rather than
-       retyped here: a suite asserting about its own copy of the value is the failure this file's A2 note is about. */
-    const scratchName = (PLANE_INDEX.match(/^const SCRATCH = "([^"]+)";$/m) || [])[1];
-    const planeSet = ((PLANE_INDEX.match(/^const NAMESPACES = Object\.freeze\(\[([^\]]*)\]\);$/m) || [])[1] || "")
-      .split(",").map((x) => x.trim()).filter(Boolean)
-      .map((x) => (x === "SCRATCH" ? scratchName : JSON.parse(x)));
-    const memberSet = JSON.parse(((CODE.match(/const NAMESPACES = Object\.freeze\((\[[^\]]*\])\);/) || [])[1]) || "null");
-    t("the plane's namespace set was READ from its source (not an empty corpus)", planeSet.length >= 2, true);
-    t("this member's namespace set EQUALS the plane's `namespaceGate` set", memberSet, planeSet);
-    t("and the refusal lists exactly that set", out.namespaces, planeSet);
+    /* R4, N402: the member's set is the one it EXPORTS, pinned exactly here; control-plane pins that export to its
+       namespace gate (layer 11). The refusal is held to the export, not to a literal kept beside it. */
+    t("R4: the exported namespace set is exactly bio, scratch, frozen",
+      [[...NAMESPACES], Object.isFrozen(NAMESPACES)], [["bio", "scratch"], true]);
+    t("R4: and the refusal lists exactly the exported set", out.namespaces, [...NAMESPACES]);
   }
   const bad = await mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: "{{{" });
   t("an unreadable body -> 400 BAD_BODY", (await bad.json()).reason, "BAD_BODY");
@@ -496,12 +495,20 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
   const OP_ALIAS = Object.fromEntries(
     [...CODE.matchAll(/const\s+([A-Z][A-Z0-9_]*)\s*=\s*"([a-z]+)"\s*;/g)].map((m) => [m[1], m[2]]));
   const viaAlias = [...CODE.matchAll(/call\(\s*([A-Za-z_$][\w$]*)\s*,/g)].map((m) => m[1]);
+  /* R51 (K660): mode `plan`'s reads are named in ONE table, `harness.mjs`' `PLAN_READS` (`{ op: "<name>", … }`), and
+     the driver calls them as `call(op, …)` off that table; the scan reads the table and resolves `op` through it. */
+  const HARNESS_CODE = readFileSync(fileURLToPath(new URL("../src/harness.mjs", import.meta.url)), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+  const planReadsBlock = (HARNESS_CODE.match(/export const PLAN_READS = \{([\s\S]*?)\n\};/) || [])[1] || "";
+  const PLAN_READ_OPS = [...planReadsBlock.matchAll(/op:\s*"([a-z]+)"/g)].map((m) => m[1]);
+  t("R51: the plan-mode reads table was read (guard: an empty parse would pass everything)", PLAN_READ_OPS.length >= 7, true);
   t("every op named through a CONSTANT resolves to a literal — none is invisible to this scan",
-    viaAlias.filter((id) => !(id in OP_ALIAS)), []);
+    viaAlias.filter((id) => !(id in OP_ALIAS) && !(id === "op" && PLAN_READ_OPS.length)), []);
   const named = [...new Set([
     ...[...CODE.matchAll(/askPlane\(\s*env\s*,\s*"([a-z]+)"/g)].map((m) => m[1]),
     ...[...CODE.matchAll(/call\(\s*"([a-z]+)"/g)].map((m) => m[1]),
     ...viaAlias.map((id) => OP_ALIAS[id]).filter(Boolean),
+    ...PLAN_READ_OPS,
   ])].sort();
   /* FLOOR AND CEILING BOTH, by exact equality. A call this member gains is a call
      somebody decided to give it, and a call it loses is visible too. D-199 (2):
@@ -519,15 +526,14 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
      MEMBER THAT MADE ONE READ. "No mutating op name appears in the source AT
      ALL" cannot survive an endpoint that must write a version and spend a
      budget, and FL-3's acceptance is unreachable without both. What replaces it
-     is not weaker: every mutating op this member names must be one PL-11's
-     `AI_RUN_ACTIONS` declares, READ FROM THE PLANE'S OWN SOURCE rather than from
-     a list here — so a mutating op that is not in the record's own declaration
-     of what an agent's task scope may cover fails this arm, and the plane's list
-     shrinking fails it too. */
+     is not weaker: the writes this member declares are pinned exactly, floor and
+     ceiling, and control-plane pins that declaration to PL-11's `AI_RUN_ACTIONS`
+     (N402, layer 11) — so a write gained here fails this arm, and a write the
+     plane's list does not hold fails that pin. */
   const mutatingNamed = named.filter((op) => PLANE_OPS[op] && PLANE_OPS[op].mutating);
   t("the member does name mutating ops now, so this arm has a subject", mutatingNamed.length > 0, true);
-  t("and every one of them is declared by PL-11's AI_RUN_ACTIONS in the plane's own source",
-    mutatingNamed.filter((op) => !new RegExp(`const AI_RUN_ACTIONS = \\[[^\\]]*"${op}"`).test(PLANE_INDEX)), []);
+  t("R37: and the writes it declares are exactly airuntick, suggest, capturerequest, airunclose, optionpropose",
+    Object.keys(PLANE_OPS).filter((op) => PLANE_OPS[op].mutating === true).sort(), DECLARED_WRITES);
   t("no op outside the record's own agent-write declaration is named",
     named.filter((op) => !PLANE_OPS[op]), []);
   /* THE FIRST SPELLING OF THIS ARM WAS `/aik-[0-9a-f]/` AND CONTROL ARM A2

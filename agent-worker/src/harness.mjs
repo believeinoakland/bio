@@ -147,6 +147,13 @@
  * example. */
 export const LEVELS = ["meaning", "content", "document", "internet"];
 
+/* D-462, R4 — THE NAMESPACES THIS MEMBER NAMES TO THE PLANE: EXACTLY `bio` OR `scratch`, case-sensitive (a Durable
+ * Object name is an exact string). The plane's set is not per instance (`namespaceGate` holds it in code), so "no such
+ * namespace exists" is the same fact on every instance this member can be bound to. It is a COPY, because a fleet
+ * member cannot import the plane, and it is EXPORTED with `PLANE_OPS` (R37) so control-plane pins both against its own
+ * namespace gate and op table (N402): the day the plane gains a namespace, that pin goes red. */
+export const NAMESPACES = Object.freeze(["bio", "scratch"]);
+
 /* THE SAME FOUR LEVELS IN THE SPELLING A `level-empty` SUGGESTION IS WRITTEN
  * IN — and the two vocabularies DISAGREE ON ONE MEMBER, which is D-323's
  * headline one field over.
@@ -204,6 +211,14 @@ export const MODES = {
                  does: "propose citable passages and readings over a SUBJECT a member named, under the run's "
                      + "`mints` bound, never attesting — §7.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; "
                      + "not yet deployed, and a standing EXTRACT run is provisionally NO (§7.3 point 7)" },
+  /* R53 (K660): THE PLANNING SKILL, NOT DEPLOYED. It walks its own table (`PLAN_FLOW`, R50) and proposes options to one
+     action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is deployed as soon as
+     this member runs model turns (R40, R48) by the reviewed edit that also sets `run-rules`' `DEPLOYED_MODES` (its R14);
+     until then a plan-mode run closes `mode-not-deployed` at the gate, like every mode this table holds and has not
+     deployed. */
+  plan:        { deployed: false,
+                 does: "propose options to one action plan, strongest first, through op=optionpropose; it decides, "
+                     + "starts, prepares and sends nothing (BIO_Action_v0_1.md §4); not yet deployed" },
 };
 
 /* §14b.6's budget, in the plane's OWN bound names (`bio-plane/src/airun.mjs`
@@ -276,10 +291,21 @@ export const PLANE_OPS = {
   search:         { mutating: false, why: "D-220 — which held bundle a citation names, and the source address its bytes name" },
   versionchain:   { mutating: false, why: "D-220 / PL-10 — every version at that address, so a document is counted ONCE" },
   affordances:    { mutating: false, why: "R48 — what the plane publishes, which the skill pack is rendered from before any model turn" },
+  /* R51, R53 (K660) — MODE `plan`'s reads, under the run's credential and nothing else. Their op names are held in
+     `PLAN_READS` below, beside the rows that call them. */
+  plan:              { mutating: false, why: "R51 — the run's action plan: its subjects, options and proposals (action-plans R6)" },
+  plans:             { mutating: false, why: "R51 — the earlier plans of the SAME project, as the plane answers them (action-plans R7)" },
+  determination:     { mutating: false, why: "R51 — a determined subject's determination (conformance.determinationRead)" },
+  standard:          { mutating: false, why: "R51 — a subject's standard and its text (standards.standardRead)" },
+  consequencesof:    { mutating: false, why: "R51 — the consequences recorded for a determined outcome (consequences)" },
+  availableactions:  { mutating: false, why: "R51 — the actions a determination makes available (filings.availableActions)" },
+  publishededitions: { mutating: false, why: "R51 — a suspected subject's inquiry, as its findings stand published" },
+  profiles:          { mutating: false, why: "R51 — the active jurisdiction profiles (jurisdictions.combine), read once" },
   airuntick:      { mutating: true,  why: "log-always and budget spend, through the plane's own producer" },
   suggest:        { mutating: true,  why: "PL-3 — ONE version, as formed. The only write that reaches the record" },
   capturerequest: { mutating: true,  why: "PL-4 — the internet level REQUESTS acquisition; it does not perform it" },
   airunclose:     { mutating: true,  why: "the ordinary exit, naming the bound (C-22.5)" },
+  optionpropose:  { mutating: true,  why: "R52 — mode `plan`'s one write: ONE proposal to the run's plan, as formed (action-plans R11, R31)" },
 };
 
 /** THE MEANING ARM THIS MEMBER READS AT — D-276, AND IT IS A DECLARATION RATHER
@@ -603,6 +629,47 @@ export function stopBecause(state) {
   return null;
 }
 
+/** THE GATE, the first row of either table (R14): a mode that is not deployed closes `mode-not-deployed` before any
+ *  bound is consulted; a deployed one goes on to `resume`. Pure. */
+export function gateStep(state) {
+  const s = state || {};
+  /* A mode that is not deployed must not even be able to report that it ran out of budget. */
+  const key = String(s.mode || "");
+  const mode = MODES[key];
+  if (!mode || !mode.deployed) {
+    /* `mode-not-deployed`, NOT `cancelled`, AND THE CHANGE IS FL-7 (2026-08-10,
+       IC-62) CORRECTING A MISATTRIBUTION THIS LINE USED TO MAKE. This branch
+       closed on `cancelled` from FL-3 until FL-7 — and the plane defines
+       `cancelled` as "a member stopped it", which is FALSE of every run that
+       reaches this line: the gate refused a launch, nobody asked, and nothing
+       had been spent. The ending now names the machine that actually acted.
+       The word is the plane's (`bio-plane/src/airun.mjs` RUN_ENDINGS) and is
+       NOT minted here — a fleet member inventing an ending would be the
+       drift class DEC-8 closed.
+
+       THE SENTENCE IS DERIVED FROM THE TABLE SINCE 2026-09-14 (SK-8's
+       delegation), because the hand-written two-mode story it replaced would
+       have gone stale on the third row and every row after. Two absences are
+       two facts and both are stated: a mode this table KNOWS and has not
+       deployed says "not deployed yet" and names what it does; a word this
+       table does not hold says so. The bound is the same for both — no run
+       was started either way — and only the reason differs. */
+    const deployed = Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k);
+    const waiting = Object.entries(MODES).filter(([, m]) => !m.deployed).map(([k]) => k);
+    const which = !mode
+      ? `mode '${key || "(none)"}' is not deployed — it is no mode this table knows at all `
+        + `(the table holds: ${Object.keys(MODES).join(", ")})`
+      : `mode '${key}' is not deployed yet — it is a row in this table (${mode.does}), and enabling it `
+        + "is an EDIT to this file under review, never a request parameter";
+    return { step: "close", bound: "mode-not-deployed",
+             why: `${which}. CHECK is the first deployed mode (§2); deployed now: ${deployed.join(", ")}; `
+                + `not yet: ${waiting.join(", ")}. investigate-fresh enables only after CHECK's first live run `
+                + `is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence `
+                + "in the skill." };
+  }
+  return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
+}
+
 /** THE TABLE, AS A FUNCTION. Pure: same state in, same step out, every time.
  *
  *  Returns `{ step, why }`. `why` is a sentence for the observation log, so the
@@ -614,44 +681,8 @@ export function nextStep(state) {
   const row = CONTROL_FLOW[at];
   if (!row) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
 
-  /* THE GATE FIRST, and before any bound is consulted: a mode that is not
-     deployed must not even be able to report that it ran out of budget. */
-  if (at === "gate-mode") {
-    const key = String(s.mode || "");
-    const mode = MODES[key];
-    if (!mode || !mode.deployed) {
-      /* `mode-not-deployed`, NOT `cancelled`, AND THE CHANGE IS FL-7 (2026-08-10,
-         IC-62) CORRECTING A MISATTRIBUTION THIS LINE USED TO MAKE. This branch
-         closed on `cancelled` from FL-3 until FL-7 — and the plane defines
-         `cancelled` as "a member stopped it", which is FALSE of every run that
-         reaches this line: the gate refused a launch, nobody asked, and nothing
-         had been spent. The ending now names the machine that actually acted.
-         The word is the plane's (`bio-plane/src/airun.mjs` RUN_ENDINGS) and is
-         NOT minted here — a fleet member inventing an ending would be the
-         drift class DEC-8 closed.
-
-         THE SENTENCE IS DERIVED FROM THE TABLE SINCE 2026-09-14 (SK-8's
-         delegation), because the hand-written two-mode story it replaced would
-         have gone stale on the third row and every row after. Two absences are
-         two facts and both are stated: a mode this table KNOWS and has not
-         deployed says "not deployed yet" and names what it does; a word this
-         table does not hold says so. The bound is the same for both — no run
-         was started either way — and only the reason differs. */
-      const deployed = Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k);
-      const waiting = Object.entries(MODES).filter(([, m]) => !m.deployed).map(([k]) => k);
-      const which = !mode
-        ? `mode '${key || "(none)"}' is not deployed — it is no mode this table knows at all `
-          + `(the table holds: ${Object.keys(MODES).join(", ")})`
-        : `mode '${key}' is not deployed yet — it is a row in this table (${mode.does}), and enabling it `
-          + "is an EDIT to this file under review, never a request parameter";
-      return { step: "close", bound: "mode-not-deployed",
-               why: `${which}. CHECK is the first deployed mode (§2); deployed now: ${deployed.join(", ")}; `
-                  + `not yet: ${waiting.join(", ")}. investigate-fresh enables only after CHECK's first live run `
-                  + `is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence `
-                  + "in the skill." };
-    }
-    return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
-  }
+  /* THE GATE FIRST, and before any bound is consulted (`gateStep`). */
+  if (at === "gate-mode") return gateStep(s);
 
   /* AND THE BOUNDS ABOVE EVERY OTHER ROW. */
   const stopped = stopBecause(s);
@@ -813,12 +844,14 @@ export function stateBytes(state) {
 /** `{ state, bytes, restarted }`: the state a tick may publish under `limit`. With no positive limit (the plane
  *  publishes none), the state as it is. `restarted` is null when it fits, else `{ bytes, limit, at }`: the measured
  *  size of the state that did not fit and the step the published one restarts at. */
-export function publishableState(state, limit) {
+export function publishableState(state, limit, flow = CONTROL_FLOW) {
   const full = resumableState(state);
   const bytes = stateBytes(full);
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
-  const at = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
+  /* `PLAN_FLOW`'s pass restarts at `read` (R50), `CONTROL_FLOW`'s at `plan`. */
+  const at = flow === PLAN_FLOW ? (full.step === "close" ? "close" : "read")
+    : (STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan");
   const restart = resumableState({ step: at, pass: full.pass, adjusted: false });
   return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at } };
 }
@@ -826,11 +859,16 @@ export function publishableState(state, limit) {
 const list = (v) => (Array.isArray(v) ? v : []);
 const record = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
 
+/** The steps a published state may name for a table to continue from: `resume`'s edges, and for `PLAN_FLOW` also
+ *  `compose`, whose reads a state does not carry, so it continues by reading again (R50). */
+export const resumeTargets = (flow = CONTROL_FLOW) =>
+  (flow === PLAN_FLOW ? [...PLAN_FLOW.resume.to, "compose"] : CONTROL_FLOW.resume.to);
+
 /** What a segment continues from: `{ at, state, basis }`. `at` is the step the published state names, when it is a
  *  row `resume` may move to, with the state's table fields; otherwise `at` is null and `basis` says why the run
  *  starts its pass at `plan`: no state published (null, or the empty scratch a run opens with), or one naming no
  *  step this table continues at. */
-export function resumeFrom(published) {
+export function resumeFrom(published, flow = CONTROL_FLOW) {
   const p = record(published);
   if (!p || !Object.prototype.hasOwnProperty.call(p, "step") || p.step == null)
     return { at: null, state: null,
@@ -839,7 +877,7 @@ export function resumeFrom(published) {
                : "The run's published state names no step yet, so this segment starts from the resume row" };
   const at = String(p.step);
   const pass = Number(p.pass);
-  if (!CONTROL_FLOW.resume.to.includes(at) || !Number.isInteger(pass) || pass < 0)
+  if (!resumeTargets(flow).includes(at) || !Number.isInteger(pass) || pass < 0)
     return { at: null, state: null,
              basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at).slice(0, 60)} at pass `
                   + `${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so `
@@ -950,4 +988,266 @@ export function applyJudgement(state, judgement) {
   const next = { ...state };
   for (const k of JUDGEABLE) if (Object.prototype.hasOwnProperty.call(j, k)) next[k] = j[k];
   return { ok: true, state: next };
+}
+
+/* ================================================================ MODE `plan` (R50–R53; K660)
+ *
+ * THE PLANNING SKILL WALKS ITS OWN TABLE, held beside `CONTROL_FLOW` and pure like it (`BIO_Action_v0_1.md` §4 rules
+ * 1, 3, 8). One pass over one action plan: read what the record holds about the plan's matters, compose proposals
+ * strongest first, drop those the plan already holds, and submit them one at a time through `op=optionpropose`. There
+ * is no `fanout`: a plan-mode run spawns no sub-session, requests no capture, writes no version and fetches nothing;
+ * its only writes are `optionpropose`, `airuntick` and `airunclose` (R53). It decides nothing: a proposal becomes an
+ * option only when a member adopts it (`action-plans` R11, R33).
+ *
+ * THE ORDER IS THE ONLY SIGN OF STRENGTH (R52). The model answers its candidates strongest first; the table keeps that
+ * order to the plane (one submission at a time, a resent candidate keeping its place), so the order the plane stores
+ * the run's proposals in is the assistant's order of strength. No candidate carries a score, a rank figure or a
+ * strength: `OPTION_KEYS` is an exact key set and a candidate carrying any other key is refused by name. */
+export const PLAN_FLOW = {
+  "gate-mode": {
+    does:   "the same gate: refuse a mode that is not deployed, before anything is spent",
+    judged: null,
+    logs:   true,
+    to:     ["resume", "close"],
+  },
+  resume: {
+    does:   "§14b.7 — continue where the last segment's published state stopped; the reads are made again",
+    judged: null,
+    logs:   true,
+    to:     ["read", "dedup", "submit", "adjust", "close"],
+  },
+  read: {
+    does:   "read, under the run's credential only, the plan, the project's earlier plans and each subject's record (R51)",
+    judged: null,
+    logs:   true,
+    to:     ["compose", "close"],
+  },
+  compose: {
+    does:   "form candidate proposals from what was read, strongest first, each with only optionPropose's fields (R52)",
+    judged: "which options to propose, in order of strength, and why",
+    logs:   true,
+    /* NO EDGE TO `submit`, for `CONTROL_FLOW`'s reason: dedup is the table's shape. */
+    to:     ["dedup", "close"],
+  },
+  dedup: {
+    does:   "drop a candidate the plan already holds as an option or a proposal, BEFORE any write (R52)",
+    judged: null,
+    logs:   true,
+    to:     ["submit", "close"],
+  },
+  submit: {
+    does:   "propose ONE candidate through op=optionpropose, in the order composed — never a batch",
+    judged: null,
+    logs:   true,
+    to:     ["submit", "adjust", "close"],
+  },
+  adjust: {
+    does:   "F10, unchanged (R25): change the refused proposal or drop it; a resent one keeps its place",
+    judged: "how to answer the refusal",
+    logs:   true,
+    to:     ["submit", "close"],
+  },
+  close: {
+    does:   "the one exit, naming the bound (C-22.5). Terminal",
+    judged: null,
+    logs:   true,
+    to:     [],
+  },
+};
+
+/** Which table a run walks: `PLAN_FLOW` for mode `plan`, `CONTROL_FLOW` for every other word (R50). */
+export const flowFor = (mode) => (mode === "plan" ? PLAN_FLOW : CONTROL_FLOW);
+
+/* R50: `stopBecause` asks `proposals` then `wallclock` for this table; `fetches` and `subsessions` are 0 on a plan-mode
+   run (ai-runs R46) and never asked. R15's pass limit is 1: the one pass is done when its queue is. */
+export const PLAN_BUDGET_BOUNDS = ["proposals", "wallclock"];
+export const PLAN_MAX_PASSES = 1;
+
+export function planStopBecause(state) {
+  const s = state || {};
+  for (const bound of PLAN_BUDGET_BOUNDS) {
+    const row = allowance(s.budget, bound);
+    if (row && row.consumed >= row.allowed) return bound;
+  }
+  if (Number(s.pass) >= PLAN_MAX_PASSES) return "completed";
+  return null;
+}
+
+/** `PLAN_FLOW` as a function, `nextStep`'s twin. Pure. */
+export function nextPlanStep(state) {
+  const s = state || {};
+  const at = String(s.step || FIRST_STEP);
+  if (!PLAN_FLOW[at]) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
+  if (at === "gate-mode") return gateStep(s);
+  const stopped = planStopBecause(s);
+  if (stopped && at !== "close")
+    return { step: "close", bound: stopped,
+             why: stopped === "completed"
+               ? "the plan's one pass is done; the loop's termination is the table's and not the model's"
+               : `the '${stopped}' budget is spent. §14b.6: when a bound stops a run, the log says WHICH bound and where` };
+  const done = (why) => ({ step: "close", bound: "completed", why, pass_done: true });
+  const queue = s.queue || [];
+  switch (at) {
+    case "resume":
+      if (typeof s.resumeAt === "string" && ["dedup", "submit", "adjust"].includes(s.resumeAt))
+        return { step: s.resumeAt,
+                 why: `this run's last tick published its state at '${s.resumeAt}'; continuing rather than restarting (§14b.7)` };
+      return { step: "read",
+               why: (s.resumeAt ? `this run's last tick published its state at '${s.resumeAt}', which works from reads a `
+                                  + "state does not carry, so the reads are made again"
+                                : "starting the plan's one pass: read what the record holds")
+                  + (s.resumeBasis ? `. ${s.resumeBasis}` : "") };
+    case "read":
+      return { step: "compose", why: `${(s.reads || []).length} read(s) made, ${(s.undetermined || []).length} UNDETERMINED` };
+    case "compose":
+      return { step: "dedup", why: `${(s.candidates || []).length} candidate(s) composed, strongest first; nothing may be proposed before dedup` };
+    case "dedup":
+      if (!queue.length) return done("no candidate differs from what the plan already holds");
+      return { step: "submit", why: `${queue.length} candidate(s) survived dedup; they are proposed ONE AT A TIME, in order` };
+    case "submit":
+      if (s.refusal) return { step: "adjust", why: `the plane refused '${String(s.refusal.code || s.refusal.reason || "?")}'; `
+                                                   + "F10 routes a refusal to an ADJUST step, never to a verbatim retry" };
+      if (queue.length) return { step: "submit", why: `${queue.length} candidate(s) still to propose, one at a time, in order` };
+      return done("every candidate this pass composed has been proposed or dropped");
+    case "adjust":
+      if (s.adjusted) return { step: "submit", why: "the proposal was ADJUSTED, differs from the refused one and keeps its place" };
+      if (queue.length)
+        return { step: "submit", why: "the refusal could not be answered by changing the proposal, so it is DROPPED and never "
+                                    + `resent; ${queue.length} candidate(s) behind it are still proposed, in order` };
+      return done("the refusal could not be answered by changing the proposal, so it is DROPPED; none remain");
+    case "close":
+      return { step: "close", why: "terminal", bound: s.bound || "completed" };
+  }
+  return { step: "close", why: `'${at}' has no transition`, bound: "completed" };
+}
+
+/** The move, `advance`'s twin for `PLAN_FLOW`: the pass counts when it is done (a `completed` close from a work row). */
+export function planAdvance(state, decision) {
+  const next = advance(state, decision);
+  return decision && decision.pass_done ? { ...next, pass: (Number(next.pass) || 0) + 1 } : next;
+}
+
+/* R52 — WHAT A PLAN-MODE JUDGEMENT MAY CARRY. The top-level keys per judged row, and the exact key set of one
+   candidate: `optionPropose`'s fields (`action-plans` R9's option fields, `why`, `sources`) and nothing else. */
+export const OPTION_KEYS = ["summary", "detail", "category", "subjects", "addressee", "dates", "tier", "enforces",
+                            "lobbying", "why", "sources"];
+export const PLAN_JUDGEABLE = { compose: ["candidates"], adjust: ["submission"] };
+
+/** The one door a plan-mode judgement comes through (R16, R52). `{ok, state}` or `{ok: false, overreach, detail}`,
+ *  naming every key it may not carry: a top-level key the row does not judge, and each candidate key outside
+ *  `OPTION_KEYS` as `candidates[i].<key>` (a score, a rank or a strength among them). */
+export function applyPlanJudgement(state, judgement) {
+  const j = judgement && typeof judgement === "object" && !Array.isArray(judgement) ? judgement : {};
+  const step = String((state || {}).step || "");
+  const allowed = PLAN_JUDGEABLE[step] || [];
+  const overreach = Object.keys(j).filter((k) => !allowed.includes(k));
+  const shapes = [];
+  if ("candidates" in j) {
+    if (!Array.isArray(j.candidates)) shapes.push("candidates");
+    else j.candidates.forEach((c, i) => {
+      if (!c || typeof c !== "object" || Array.isArray(c)) { shapes.push(`candidates[${i}]`); return; }
+      for (const k of Object.keys(c)) if (!OPTION_KEYS.includes(k)) overreach.push(`candidates[${i}].${k}`);
+    });
+  }
+  if ("submission" in j && j.submission != null) {
+    if (typeof j.submission !== "object" || Array.isArray(j.submission)) shapes.push("submission");
+    else for (const k of Object.keys(j.submission)) if (!OPTION_KEYS.includes(k)) overreach.push(`submission.${k}`);
+  }
+  if (overreach.length || shapes.length)
+    return { ok: false, overreach: [...overreach, ...shapes],
+             detail: `a plan-mode judgement at '${step}' may carry only ${allowed.join(", ") || "nothing"}, and a proposal only `
+                   + `${OPTION_KEYS.join(", ")} (optionPropose's fields). ${[...overreach, ...shapes].join(", ")} `
+                   + "may not be set: the order of the candidates is the only sign of their strength, so no candidate "
+                   + "carries a score, a rank or a strength, and the step, the pass, the budget and the plan are the table's." };
+  const next = { ...state };
+  for (const k of allowed) if (Object.prototype.hasOwnProperty.call(j, k)) next[k] = j[k];
+  if ("candidates" in j) next.candidates = j.candidates.map((c) => ({ ...c }));
+  return { ok: true, state: next };
+}
+
+/** R52's duplicate: the canonical `{summary, category, subjects}`. */
+export const proposalKey = (o) => canonical({ summary: o?.summary ?? null, category: o?.category ?? null,
+                                               subjects: o?.subjects ?? null });
+
+/** R52 — dedup, before any write: the candidates whose canonical `{summary, category, subjects}` equals no option or
+ *  proposal on the plan, nor an earlier candidate, in their order. `plan` is `op=plan`'s answer (action-plans R6). */
+export function planDedup(candidates, plan) {
+  const p = plan && typeof plan === "object" ? plan : {};
+  const pages = Array.isArray(p.planning_runs) ? p.planning_runs.flatMap((r) => list(r?.proposals)) : [];
+  const held = new Set([...list(p.options), ...list(p.proposals), ...pages].filter((o) => o && typeof o === "object")
+    .map(proposalKey));
+  const queue = [], dropped = [];
+  for (const c of list(candidates)) {
+    const key = proposalKey(c);
+    if (held.has(key)) { dropped.push(c); continue; }
+    held.add(key);
+    queue.push(c);
+  }
+  return { queue, dropped };
+}
+
+/* R51 — THE READS, AS DATA. What `read` asks the plane for: the run's plan, the earlier plans of its project, and per
+   subject its record, each through the op the plane declares for it; once per run, the jurisdiction profiles. The op
+   names are here and nowhere else, so a change the plane's declarations make is one line. */
+export const PLAN_READS = {
+  plan:    (planId) => ({ op: "plan", query: { id: planId } }),
+  plans:   (project) => ({ op: "plans", query: { project } }),
+  profile: () => ({ op: "profiles", query: {} }),
+  subject: (subject) => {
+    const s = subject && typeof subject === "object" ? subject : {};
+    if (s.kind === "outcome")
+      return [
+        { op: "determination", query: { id: s.determination } },
+        { op: "standard", query: { id: s.standard } },
+        { op: "consequencesof", query: { determination: s.determination, standard: s.standard } },
+        { op: "availableactions", query: { determination: s.determination } },
+      ];
+    if (s.kind === "inquiry")
+      return [{ op: "publishededitions", query: { id: s.inquiry } },
+              ...list(s.standards).map((id) => ({ op: "standard", query: { id } }))];
+    return [];
+  },
+};
+
+/** The profile view's three facts R51 names; an answer that does not carry one leaves it UNDETERMINED. */
+export const PROFILE_FACTS = ["deadlines", "venues", "legal_organisations"];
+
+/** R51 — the reads to make for a plan, in order, each once: the subjects' reads, then the profiles. */
+export function planSubjectReads(plan) {
+  const seen = new Set(), out = [];
+  for (const subject of list(plan?.subjects)) {
+    const inner = subject && typeof subject === "object" && subject.subject && typeof subject.subject === "object"
+      ? subject.subject : subject;
+    for (const r of PLAN_READS.subject(inner)) {
+      const key = canonical(r);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(r);
+    }
+  }
+  out.push(PLAN_READS.profile());
+  return out;
+}
+
+/** R51 — the plans `op=plans` answered, kept to the SAME project and never the run's own plan. */
+export function earlierPlans(answer, project, planId) {
+  const items = list(answer?.plans ?? answer?.items);
+  return items.filter((p) => p && typeof p === "object" && (p.project ?? project) === project
+                             && String(p.id ?? p.plan ?? "") !== String(planId ?? ""));
+}
+
+export const WHY_MAX = 500;
+
+/** R51 — a proposal's `why` carries every read that was refused or silent as UNDETERMINED, never as an absence: the
+ *  table appends the sentence, and the model's own words are cut to fit the 500 characters `optionPropose` holds. */
+export function whyWithUndetermined(why, undetermined) {
+  const own = typeof why === "string" ? why.trim() : "";
+  const u = list(undetermined);
+  if (!u.length) return own.slice(0, WHY_MAX);
+  const note = " UNDETERMINED, not absent: " + u.map((x) => `${x.op}${x.id ? ` ${x.id}` : ""} (${x.code ?? "no answer"})`)
+    .join("; ") + ".";
+  const tail = note.length > WHY_MAX ? note.slice(0, WHY_MAX) : note;
+  const room = WHY_MAX - tail.length;
+  const head = own.length > room ? `${own.slice(0, Math.max(0, room - 1))}…` : own;
+  return `${head}${tail}`.trim().slice(0, WHY_MAX);
 }
