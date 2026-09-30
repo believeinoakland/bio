@@ -1,6 +1,6 @@
 # membership (T17)
 
-**Status** · session_01FgiHtCg8KEHDB2sC7rKq9y · depth 2 · WORKING · handled B0
+**Status** · session_01FgiHtCg8KEHDB2sC7rKq9y · depth 2 · COMPLETE · handled B0
 
 ## J1 · COMPLETE
 
