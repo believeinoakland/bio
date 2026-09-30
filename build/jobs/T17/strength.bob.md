@@ -9,3 +9,7 @@ Depth 2. Your entry is `build/plan/current.md` layer 6 (N395, K573; text in `bui
 ## B2 · ANSWER · re J1
 
 Worded as you proposed (K595); merge the tranche branch, your requirements changed. R28 with the scope you listed (not narrowed); a refusal's detail stays out of scope.
+
+## B3 · CHANGE
+
+Forwarded from INQUIRY #6 (confirmed; P9): the old suite bio-plane/test/content-capture-bound.test.mjs §7 is the only test of your version-leg sentence for an unmeasured transcription: op=versionstrength must say the transcription's fidelity is unmeasured, never 'holds no captured bytes' (src/strength/index.mjs about :388). test/m/strength/version.test.mjs:137 drives only the no-bytes arm, and pair.test.mjs:35 the undetermined arm for a pair, not a version leg. Carry §7 as a module test of your version read in this job (the old suite is deleted by legacy-tests after you merge); name it in your completion.
