@@ -76,7 +76,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 - `content`: `passageNotice` (R9–R11, R14).
 - `connections`: `edgeSevered` (R3).
 - `inquiry`: `restsOnLive`, `supersededBy`, `legCapped`, `earned`, the `inquiry_basis` read contract, the `onRaised` registration (R2–R7).
-- `basis-versions`: the new version R15 writes.
+- `basis-versions`: the new version R15 writes; the `inquiry_basis_versions` read contract (its R38) for R27's claim referents (K493).
 - `strength`: `strengthOf` (R4, R17).
 - `contradiction` (N345): `tensionsOn` (its R27), for R27.
 
