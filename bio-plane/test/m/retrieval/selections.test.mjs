@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { world, V, infoMd } from "./fixture.mjs";
 import { SELECTION_CHECKS, SELECTION_TTL_MS, SELECTION_MAX_ITEMS, SELECTION_MAX_PER_OWNER, SELECTION_ID_CHUNK, answerChanged }
   from "../../../src/retrieval/index.mjs";
-import { listenerRefusal, MODULE_ORDER, viewerPredicate } from "../../../src/membership/index.mjs";
+import { listenerRefusal, MODULE_ORDER, hiddenBundles } from "../../../src/membership/index.mjs";
 
 function many(n, w = world()) {
   for (let i = 1; i <= n; i++) w.doc(`INFO-${String(i).padStart(3, "0")}`, { source_status: i % 2 ? "live" : "gone" });
@@ -264,11 +264,8 @@ test("R59: answerChanged(drift, moved) is true exactly when moved is true or dri
   assert.deepEqual([answerChanged(c.drift, c.moved), c.ok], [false, true]);
 });
 
-/* The hidden set as a caller (legacy-store's #counts, queue) composes it: the bundles the viewer's gate does not admit. */
-const hidFor = (viewer) => {
-  const g = viewerPredicate(viewer);
-  return { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${g.sql}))`, args: g.args };
-};
+/* The hidden set as every caller (legacy-store's #counts, queue) takes it: membership's `hiddenBundles` (its R88). */
+const hidFor = (viewer) => hiddenBundles(viewer);
 
 test("R60: counts(hid) answers {indexed, selections, selectionItems}; hid leaves out the index rows a hidden bundle claims (an orphan stays), the items naming a hidden bundle and a selection holding one; synchronous, writes nothing, never throws", async () => {
   const w = many(3);
@@ -299,4 +296,38 @@ test("R60: counts(hid) answers {indexed, selections, selectionItems}; hid leaves
   assert.deepEqual(broken, { indexed: null, selections: null, selectionItems: null });
   w.st.db.exec(`ALTER TABLE selections RENAME TO selections_gone`);
   assert.deepEqual(w.retrieval.counts(), { indexed: 5, selections: null, selectionItems: 4 });
+});
+
+test("R17, R21, R29, R60 (N352): each subtraction of what a viewer may not see is membership's hiddenBundles set — the index check's indexed figure and the selection bytes equal the figures taken through it, for every kind of viewer", async () => {
+  const w = many(3, world({ members: ["ann", "vera"], admins: ["adele"] }));
+  const proj = w.project("Hidden", "ann");
+  await w.retrieval.selectionCreate({ owner: "o", viewer: V("ann"), ids: ["INFO-001", proj] });
+  await w.retrieval.selectionCreate({ owner: "o", viewer: V("ann"), ids: ["INFO-002", "INFO-003"] });
+  w.st.sql.exec(`INSERT INTO bundles_fts (rowid, title, body, meta, locator, authority) VALUES (999, 't', 'b', 'm', 'l', 'a')`);
+  const bytesThrough = (hid) => w.row(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`
+    + (hid ? ` WHERE bundle_id NOT IN ${hid.sql}` : ""), ...(hid ? hid.args : [])).b;
+  const whole = w.retrieval.counts();
+  const seen = {};
+  /* A participant, a member outside the project, an administrator, the founder, a machine credential, and the
+     viewers the gate refuses (absent, empty, unrecognised). */
+  for (const viewer of [V("ann"), V("vera"), V("adele"), "admin", "class:member", null, "", "somebody"]) {
+    const hid = hiddenBundles(viewer);
+    const check = w.retrieval.searchIndexCheck({ viewer });
+    assert.equal(check.counts.indexed, w.retrieval.counts(hid).indexed, `indexed ${viewer}`);
+    const list = w.retrieval.selectionList({ owner: "o", viewer });
+    assert.equal(list.bytes, bytesThrough(hid), `bytes ${viewer}`);
+    seen[String(viewer)] = [check.counts.indexed, list.bytes];
+  }
+  /* The set moves the figures as R43 says: the project's rows leave only for vera; a refused viewer loses every
+     claimed row and keeps the orphan; the see-all viewers read whole. */
+  const all = bytesThrough(null);
+  assert.deepEqual(seen[V("ann")], [whole.indexed, all]);
+  assert.deepEqual(seen[V("adele")], [whole.indexed, all]);
+  assert.deepEqual(seen.admin, [whole.indexed, all]);
+  assert.deepEqual(seen["class:member"], [whole.indexed, all]);
+  assert.deepEqual(seen[V("vera")], [whole.indexed - 1, bytesThrough(hiddenBundles(V("vera")))]);
+  assert.ok(seen[V("vera")][1] < all);
+  for (const v of ["null", "", "somebody"]) assert.deepEqual(seen[v], [1, 0], `refused viewer ${v}: only the orphan`);
+  /* An internal call (no viewer passed) stays whole. */
+  assert.equal(w.retrieval.selectionList({ owner: "o" }).bytes, all);
 });
