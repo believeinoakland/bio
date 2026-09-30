@@ -16,10 +16,14 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 
 ## Layer 2
 
+- **membership** · N387 (K571): `MACHINE_CANNOT_REGISTER_KEY` gets its catalogue row, translation and region; merged before promotion's stamp.
+
 - **record-core** · N376 (K540; SOURCES #1 J2 (3)): `MINTED_OBJECT` gains `SRC`, so `mintExhausted` for sources names a source.
 - **promotion** · The stamp, last (K425): `CATALOG_VERSION` from 1.46.0 (K536) over every row change since. T16's layers 3+, named `awaiting stamp` in their records: capture C-118.3–C-118.6 added (`jobs/T16/capture.md` J3); sources C-121.1–C-121.6 added (`sources.md` J2); inquiry C-2.18 `CONTRADICTION_ARM_FAILED` added and C-2.15's translation changed (`inquiry.md`; K543). The gate's composition: registrations renamed to `tasks` (K531). T16's layer 8 (K557): publication C-122.1 `SOURCE_CONSENT_WITHDRAWN` added, in a new family `CASE_SOURCES_CHECKS` (`jobs/T16/publication.md`:33; K554); case-authoring C-120.4–C-120.7 added in `CASE_DISCLOSURE_CHECKS`, whose words become "a case's disclosures and its pre-flight"; C-120.7 gives `UNCLEARED_HUNCH` its first row (`case-authoring.md`:30, :41); ratification's six `where`s moved to `src/ratification/refusals.mjs`: C-32.13, C-32.15, C-53.12, C-65.1, and C-92.10 and C-92.11 with their region split and renamed `is-attribution-unchosen` and `is-attribution-stale` (`ratification.md`:39–47; K555). `NO_ATTESTING_KEY` and `PREFLIGHT_UNDETERMINED` have no rows (K552). T16's layer 11 (K563): C-19.1 (`checkInboxGrammar`), C-19.2, C-32.10, C-32.11 and C-76.1 moved from `queue/checks.mjs` to `src/tasks/checks.mjs` with a new `where`, and queue's copies retired (`tasks.md`:26, `queue.md`:21; K562). The gate's composition: queue's `registerStep("queue")` retired and tasks' `registerStep("tasks")` is the live step; record-core's audit likewise changes from queue's registration to `registerAuditCheck("tasks")` (K531, `queue.md`:21). Queue-producers, affordances and control-plane change no row. Any row or composition change T16's legacy-tests names. T17's layer 1: N372's census change, C-41.1–C-41.15's catalogue copies departing and the catalogue's case-document arms of C-2.8, C-3.1, C-21.1 (`legacy-checks.md` J3). `ROW_CENSUS` (R50) re-pinned.
 
 ## Layer 3
+
+- **capture** · N388: `captureaccounts` and `lateattestations` gated by sight; `op=reattest`'s machine fence confirmed or added.
 
 - **provenance** · N381 first (K560): the register rules admit capture R65's pulled-knock document (a null grade on R51's doorbell basis; `doorbell` among the origin kinds). Until it lands, every `op=inboxpull` is refused with nothing written.
 
@@ -30,6 +34,11 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 ## Layer 7
 
 - **reevaluation** · N378 (K556; CASE-AUTHORING #5 J2 (4)): R8's listeners are called after the act commits, never inside a caller that rolls back.
+
+## Layer 8
+
+- **case-authoring** · N383: the two regions' `where` re-pointed to `#tensionsJudged` (clears the guard's 2). N384: grade B read from provenance's `EARNED_CAPTURE_CEILING`.
+- **ratification** · N385: `MACHINE_CANNOT_RATIFY_CASE` chosen by the predicate, not the word "ai".
 
 ## Layer 9
 
@@ -42,7 +51,7 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 
 - **queue** · N373 (K531): the feed reads tasks capped at `cap×2` before dropping resolved ones (`queue/index.mjs`:2455 before the split), so many recently resolved tasks can hide open ones, short of R8.
 - **queue** · N373 (K531): the feed reads tasks through `tasks.recentTasks({viewer, limit: cap * 2})` of any status before dropping the resolved ones (`queue/index.mjs`:754), so many recently resolved tasks can hide open ones, short of R8: read `recentTasks({viewer, limit, statuses: ["open", "forwarded"]})` (K566). N374's share (K565): R19 asks `taskExists({id, viewer})` (`queue/index.mjs`:1447) and classes a hidden task's id alike to an absent one (`UNKNOWN_KIND`), after tasks merges early. N375's share: R1 catalogues `signer-self-registered` (OBLIGATION, with its sentence) in `queuestate.mjs`, landed before queue-producers' R14. Also the stale "LIVE: queue/proposals.mjs" in `queuestate.mjs`:102 and :105, which is now `queue-producers/proposals.mjs` (QUEUE-PRODUCERS #1 J1 (4)).
-- **control-plane** · N380's share (K559): R36's route calls capture's `pullKnock({…, within})`, so the pull and the promotion are one act; R36's N380 mark goes. N381's share (K560): R36's end-to-end filing, a `test.todo` naming N381 in `test/m/control-plane/doorbell.test.mjs`, runs against the real provenance and capture; its mark goes. N379 (K566, replacing K558's owner): control-plane's `controlPlaneRoutes` (`dispatch.mjs`) dispatches `sourcesOps`, beside its own-key and `inboxpullfile` routes. Both follow layer 3's capture and provenance entries.
+- **control-plane** · N386: `pull.mjs`:26's stamp through `record-core.stampInstant`. N380's share (K559): R36's route calls capture's `pullKnock({…, within})`, so the pull and the promotion are one act; R36's N380 mark goes. N381's share (K560): R36's end-to-end filing, a `test.todo` naming N381 in `test/m/control-plane/doorbell.test.mjs`, runs against the real provenance and capture; its mark goes. N379 (K566, replacing K558's owner): control-plane's `controlPlaneRoutes` (`dispatch.mjs`) dispatches `sourcesOps`, beside its own-key and `inboxpullfile` routes. Both follow layer 3's capture and provenance entries.
 
 ## Last: legacy-tests (K420, K427, K457)
 
@@ -50,7 +59,7 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 
 ## Not in T17
 
-**Bob's first:** N317, N303's remainder, N320; N61 (a meaning change: `records_laws` levels); N71 (the word "bundle"); N144, N232, N241, N371 (UX: surfaces, recipes, legacy-ui's types and writes).
+**Bob's first:** N317, N303's remainder, N320; N61 (a meaning change: `records_laws` levels); N71 (the word "bundle"); N144, N232, N241, N371, N389 (UX: surfaces, recipes, legacy-ui's types and writes).
 
 **Needs a deployment or measurement no job can make:** contradiction R41, the K5 gate arm and R24/R27/R32/R33's K5 arms and R34 (a measured recommender run; `test.todo`, K488, K490); DIST-14, N75 (a deployed plane); N34 (a measured JPX bound, and BOB reviews pdf-worker's split first); N22 (a non-root container).
 
