@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MACHINE, sha } from "./fixture.mjs";
-import { seeded, cand, recommend, refusedWith, IQ, INFO, CID, M1, OUT } from "./seed.mjs";
+import { seeded, cand, recommend, refusedWith, IQ, INFO, CID, M1, M2, OUT } from "./seed.mjs";
 import { CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS, PAGE_MAX, TENSIONS_REFERENTS_MAX,
          REACH_PROJECTS_MAX, REACH_INQUIRIES_MAX, UNRESOLVED_MAX } from "../../../src/contradiction/index.mjs";
 
@@ -56,6 +56,55 @@ test("R24: a duty is held for the joined participants of every project drawing o
   const rows = seeded();
   for (let i = 0; i < 33; i++) { const q = `INQ-2026-${String(100 + i).padStart(4, "0")}-q`; rows.inquiry(q); rows.leg(q, 0, "supports", { content: CID.a, target: INFO.a }); }
   assert.equal(one(rows, cand(rows, "K4", "record")).reach.truncated, true);
+});
+
+test("R24, R25, R19 (N366): a duty's reach names only the projects the viewer may see, and neither counts nor bounds on the rest; {project} for a project the viewer may not see answers as an absent one", () => {
+  const PV = "PROJ-2026-0001-seen", PH1 = "PROJ-2026-0002-hid", PH2 = "PROJ-2026-0003-hid", PX = "PROJ-2026-0404-none";
+  const HQ = "PROJ-2026-0004-hq";                   /* a hidden project-typed bundle whose leg cites passage a */
+  /* m1 sees PV only; m2 takes part in the two hidden projects; each hidden project draws on a seen side */
+  const build = (hidden) => {
+    const w = seeded();
+    w.project(PV, ["m1"]);
+    w.draws(IQ.a, PV); w.draws(IQ.c, PV);
+    if (hidden) {
+      w.project(PH1, ["m2"]); w.project(PH2, ["m2"]);
+      w.draws(IQ.a, PH1); w.draws(IQ.b, PH2); w.draws(IQ.c, PH2);
+      w.project(HQ, ["m2"]); w.leg(HQ, 0, "supports", { content: CID.a, target: INFO.a }); w.draws(HQ, PH1);
+      /* enough hidden projects and hidden citing questions to fill every bound, were they counted */
+      for (let i = 0; i < 33; i++) {
+        const p = `PROJ-2026-${String(100 + i).padStart(4, "0")}-h`; w.project(p, ["m2"]); w.draws(IQ.a, p);
+        const q = `PROJ-2026-${String(200 + i).padStart(4, "0")}-q`; w.project(q, ["m2"]); w.leg(q, 0, "supports", { content: CID.a, target: INFO.a });
+      }
+    }
+    return { w, k2: cand(w, "K2", "record"), k4: cand(w, "K4", "record"), k1: cand(w, "K1", "record") };
+  };
+  const bare = build(false), two = build(true);
+  const ask = (x, on, viewer = M1) => x.w.c.candidatesFor({ on, viewer });
+  /* the viewer outside both hidden projects is shown only the project they see, never truncated by the hidden ones */
+  for (const id of ["k2", "k4", "k1"]) {
+    const c = ask(two, { candidate: two[id] }).candidates[0];
+    assert.deepEqual(c.reach, { projects: [PV], truncated: false }, id);
+    const bytes = JSON.stringify(ask(two, { candidate: two[id] }));
+    for (const leak of [PH1, PH2, HQ, "-h\"", "-q\""]) assert.ok(!bytes.includes(leak), `${id} ${leak}`);
+    /* R55's parity: the answer is the same bytes with the hidden projects and without them */
+    assert.equal(bytes, JSON.stringify(ask(bare, { candidate: bare[id] })), id);
+  }
+  /* a participant of the hidden projects is shown the ones they see (and the reach is cut where they see 33) */
+  const seen2 = ask(two, { candidate: two.k2 }, M2).candidates[0].reach;
+  assert.ok(seen2.projects.includes(PH1) && seen2.projects.includes(PH2) && !seen2.projects.includes(PV));
+  /* {project}: hidden, or seen at existence only, answers exactly as an id that names nothing */
+  const norm = (r, id) => JSON.stringify(r).replaceAll(id, "ID");
+  const absent = norm(ask(two, { project: PX }), PX);
+  assert.equal(JSON.parse(absent).empty.level, "none_judged");
+  assert.equal(norm(ask(two, { project: PH1 }), PH1), absent);
+  assert.equal(norm(ask(two, { project: PH2 }), PH2), absent);
+  two.w.st.sql.exec(`INSERT INTO project_visibility (project_id, setting, reason, set_by, at) VALUES (?, 'discoverable', 'r', 'm2', '2026-01-01')`, PH1);
+  two.w.st.sql.exec(`INSERT OR REPLACE INTO project_sight (project_id, setting) VALUES (?, 'discoverable')`, PH1);
+  assert.equal(two.w.membership.sight(PH1, M1), "existence");
+  assert.equal(norm(ask(two, { project: PH1 }), PH1), absent);
+  /* the project's own participant is answered its candidates; the seen project answers the viewer */
+  assert.deepEqual(ask(two, { project: PH1 }, M2).candidates.map((c) => c.candidate).sort(), [two.k2, two.k4].sort());
+  assert.deepEqual(ask(two, { project: PV }).candidates.map((c) => c.candidate).sort(), [two.k1, two.k2, two.k4].sort());
 });
 
 test("R24 (K5): any shown label on K5 is plurality until no_difference, then duty", { todo: "K5 is unshown until its gate arm is measured, and no model is reachable here to measure it (K488; draft-T15 point 5)" }, () => {});

@@ -1078,23 +1078,31 @@ export class Contradiction {
   /** R24, R49: the projects reached through one side, and whether the list was cut. A claim, leg or stance side reaches
    *  the projects drawing on its inquiry (`basis-versions` R37); an extent side, those drawing on each inquiry with a leg
    *  on its content row (`inquiry` R40), at most `REACH_INQUIRIES_MAX` inquiries; a stance side of K5, its own project.
-   *  At most `REACH_PROJECTS_MAX` projects per inquiry. Read as the record holds it, whoever asks. */
-  #reachOf(side) {
+   *  At most `REACH_PROJECTS_MAX` projects per inquiry.
+   *
+   *  `viewer` is whose sight the list is read under (N366). R49's parties are about the record, never about who asks,
+   *  so the notice, the opt-in, the reveal and the marks read it as `INTERNAL`, the default. What a viewer is SHOWN as a
+   *  duty's reach is read under that viewer: only projects they see (membership R43, R80), through only the inquiries
+   *  they see, so neither a hidden project's id nor a bound it fills reaches them (R19, R55). */
+  #reachOf(side, viewer = INTERNAL) {
     const out = { projects: [], truncated: false };
     const add = (id) => { if (id && !out.projects.includes(id)) out.projects.push(id); };
     if (!side) return out;
-    if (side.kind === "stance") { add(side.project); return out; }
+    if (side.kind === "stance") { if (side.project && this.#sees(side.project, viewer)) add(side.project); return out; }
     let inquiries = [];
-    if (side.kind === "claim" || side.kind === "leg") inquiries = side.inquiry ? [side.inquiry] : [];
+    if (side.kind === "claim" || side.kind === "leg")
+      inquiries = side.inquiry && this.#sees(side.inquiry, viewer) ? [side.inquiry] : [];
     else if (side.content_id) {
-      const rows = this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis WHERE content_id=? ORDER BY bundle_id LIMIT ?`,
-                              String(side.content_id), REACH_INQUIRIES_MAX + 1);
+      const g = this.#gate("ib.bundle_id", viewer);
+      const rows = this.#rows(`SELECT DISTINCT ib.bundle_id AS bundle_id FROM inquiry_basis ib
+                                WHERE ib.content_id=? AND (${g.sql}) ORDER BY ib.bundle_id LIMIT ?`,
+                              String(side.content_id), ...g.args, REACH_INQUIRIES_MAX + 1);
       if (rows.length > REACH_INQUIRIES_MAX) out.truncated = true;
       inquiries = rows.slice(0, REACH_INQUIRIES_MAX).map((r) => r.bundle_id);
     }
     const bv = this.#b();
     for (const inq of inquiries) {
-      const list = bv && typeof bv.projectsDrawingOn === "function" ? bv.projectsDrawingOn(inq, INTERNAL) || [] : [];
+      const list = bv && typeof bv.projectsDrawingOn === "function" ? bv.projectsDrawingOn(inq, viewer) || [] : [];
       if (list.truncated) out.truncated = true;
       for (const p of list.slice(0, REACH_PROJECTS_MAX)) add(p.id);
     }
@@ -1103,9 +1111,9 @@ export class Contradiction {
   }
 
   /** R24: the reach of a candidate (the projects its duty is held for), and R49's parties, which are the same set read
-   *  side by side. */
-  #parties(row) {
-    const a = this.#reachOf(row.a), b = this.#reachOf(row.b);
+   *  side by side; under `viewer`'s sight when one is given (N366), else as the record holds it. */
+  #parties(row, viewer = INTERNAL) {
+    const a = this.#reachOf(row.a, viewer), b = this.#reachOf(row.b, viewer);
     const all = [...new Set([...a.projects, ...b.projects])].sort();
     return { a, b, all, truncated: a.truncated || b.truncated };
   }
@@ -1227,7 +1235,11 @@ export class Contradiction {
 
   /** A candidate as R25 answers it to a viewer who sees it whole. */
   #present(row, view, viewer) {
-    const parties = (view.weight === "duty" || view.weight === "plurality" || view.weight === "lead") ? this.#parties(row) : null;
+    const reaches = view.weight === "duty" || view.weight === "plurality" || view.weight === "lead";
+    /* R49's parties are read whole (a joined participant of any of them is answered its party's view), and the reach is
+       read under the viewer's own sight: a project hidden from them is neither named nor counted (N366; R19, R55). */
+    const parties = reaches ? this.#parties(row) : null;
+    const shownReach = reaches ? this.#parties(row, viewer) : null;
     const member = viewerPredicate(viewer).member;
     const m = this.#m();
     const between = parties && isProjectConflict(view.weight, view.state) && member
@@ -1240,7 +1252,7 @@ export class Contradiction {
       machine: this.#machine(row), weight: view.weight, state: view.state,
       resolution: this.#resolutionOf(view), inquiry: view.inquiry,
       recommendations: this.#standing(row, view),
-      reach: parties && view.weight !== "not_shown" ? { projects: parties.all, truncated: parties.truncated } : null,
+      reach: shownReach ? { projects: shownReach.all, truncated: shownReach.truncated } : null,
       default_question: this.#defaultQuestion(row),
       ...(between.length ? { between_projects: between } : {}),
     };
@@ -1318,7 +1330,10 @@ export class Contradiction {
       const n = Number(limit);
       const cap = limit === null || limit === undefined || limit === "" || !Number.isFinite(n) || n < 1
         ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
-      const ids = this.#candidatesNaming(subject);
+      /* N366 (R19; C-93.9's rule): `{project}` for a project the viewer may not see, at existence only or not at all
+         (membership R43, R44), answers exactly as an id that names nothing: its candidates are never matched. */
+      const fenced = subject.kind === "project" && !this.#sees(subject.id, viewer);
+      const ids = fenced ? [] : this.#candidatesNaming(subject);
       const scanCut = ids.length > CANDIDATES_SCAN_MAX;
       const notShown = { precision: 0, unrelated: 0 };
       let unmeasured = 0, visible = 0, shown = 0;
