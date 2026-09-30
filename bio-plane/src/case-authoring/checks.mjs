@@ -106,12 +106,12 @@ export const STATEMENT_ACK_CHECKS = Object.freeze({
    exists; it discloses each document's grade and co-attestation, and is never refused because a document is not
    co-attested. What refuses is an undisclosed conflict, a disclosure of something that is not one, a read that could not
    be made whole, a load-bearing Grade B document published as self-attested without its owner saying so and why, an
-   acknowledgement that stands on nothing, and an uncleared hunch. Promotion stamps these rows (N318); C-120.4–C-120.7 are
-   `awaiting stamp` (T17). */
+   acknowledgement that stands on nothing, and an uncleared hunch. Promotion stamps these rows (N318); C-120.4–C-120.7
+   were stamped in `CATALOG_VERSION` 1.47.0 (T17). */
 export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   TENSION_NOT_DISCLOSED: {
     check: 'C-120.1',
-    where: at('#publishCase', 'is-tension-disclosed'),
+    where: at('#tensionsJudged', 'is-tension-disclosed'),
     translation: 'A finding in this case rests on something the record holds in unresolved conflict, and a case may '
       + 'be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you '
       + 'cannot see is named by its finding, and the published case will highlight it without naming that record. '
@@ -119,7 +119,7 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   },
   DISCLOSURE_NOT_STANDING: {
     check: 'C-120.2',
-    where: at('#publishCase', 'is-disclosure-standing'),
+    where: at('#tensionsJudged', 'is-disclosure-standing'),
     translation: 'One of the conflicts disclosed is not an unresolved conflict on this case\'s findings: it may have '
       + 'been resolved since. Read the list again. Nothing was published.',
   },

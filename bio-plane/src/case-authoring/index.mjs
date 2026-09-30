@@ -65,7 +65,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, createSha256, OBJECT_TYPES, BASIS_GRADES,
-         MACHINE_FENCE_CHECKS } from "../../checks/bio-checks.mjs";
+         EARNED_CAPTURE_CEILING, MACHINE_FENCE_CHECKS } from "../../checks/bio-checks.mjs";
 import { CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
@@ -326,8 +326,9 @@ export class CaseAuthoring {
     const listed = { byCandidate: tensionsJ.byCandidate };
 
     /* R35 — N364 (DEC-81 items 1 and 3): EACH DOCUMENT'S GRADE AND CO-ATTESTATION, and the owner's acknowledgement of
-       a load-bearing Grade B document that is not co-attested. Read and judged before the case identity is derived, so a
-       refusal draws no id and writes nothing. The case is never refused because a document is not co-attested. */
+       a load-bearing document at `EARNED_CAPTURE_CEILING` (Grade B) that is not co-attested. Read and judged before the
+       case identity is derived, so a refusal draws no id and writes nothing. The case is never refused because a document
+       is not co-attested. */
     const resting = this.#restingCaptures(prepared);
     const facts = new Map([...new Set(resting.map((r) => r.capture))].map((sha) => [sha, this.#captureFacts(sha)]));
     const selfJ = this.#selfAttestedJudged(resting, facts, memberRoles, selfAttested);
@@ -1027,10 +1028,10 @@ export class CaseAuthoring {
   /** R35 (DEC-81 item 3 (b), (d)): `selfAttested: [{capture, reason}]`, the owner's attributed acknowledgement of a
    *  document published as self-attested only. Any malformed shape is R3's `BAD_COMPLETENESS` naming the field (the
    *  pattern of `tensionsDisclosed`, K498); a capture listed twice is acknowledged once, its first reason kept. Then, in
-   *  R35's order: a load-bearing Grade B capture not co-attested and not listed is C-120.4, naming each; a listed one with
-   *  an empty reason C-120.5; a listed one that is co-attested, or not in the case, C-120.6. Answers `{refusals,
-   *  byCapture}`; `op=publish` answers the first, R34's pre-flight lists them all. Nothing here refuses a case because a
-   *  document is not co-attested. */
+   *  R35's order: a load-bearing capture at `EARNED_CAPTURE_CEILING` (Grade B, provenance R24's one definition) not
+   *  co-attested and not listed is C-120.4, naming each; a listed one with an empty reason C-120.5; a listed one that
+   *  is co-attested, or not in the case, C-120.6. Answers `{refusals, byCapture}`; `op=publish` answers the first, R34's
+   *  pre-flight lists them all. Nothing here refuses a case because a document is not co-attested. */
   #selfAttestedJudged(resting, facts, memberRoles, list) {
     const byCapture = new Map();
     const bad = (field, detail) => ({ refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field, detail }], byCapture });
@@ -1059,14 +1060,15 @@ export class CaseAuthoring {
       membersOf.get(r.capture).push(r.member);
     }
     const refusals = [];
-    const unacknowledged = [...facts.values()].filter((f) => f.grade === "B" && !f.co_attested
+    const unacknowledged = [...facts.values()].filter((f) => f.grade === EARNED_CAPTURE_CEILING && !f.co_attested
       && membersOf.get(f.capture).some((m) => roleOf.get(m) === "load_bearing") && !byCapture.has(f.capture));
     /* DEC-49 REGION is-co-attestation-acknowledged */
     if (unacknowledged.length)
       refusals.push(disclosureRefusal("CO_ATTESTATION_UNACKNOWLEDGED", {
         unacknowledged: unacknowledged.map((f) => ({ capture: f.capture, members: membersOf.get(f.capture), grade: f.grade,
                                                      timestamp_at: f.timestamp_at, co_archive: f.co_archive })),
-        detail: `${unacknowledged.length} load-bearing Grade B document(s) hold no trusted timestamp and co-archive (`
+        detail: `${unacknowledged.length} load-bearing Grade ${EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp `
+              + `and co-archive (`
               + unacknowledged.map((f) => `${f.capture} under ${membersOf.get(f.capture).join(", ")}`).join("; ")
               + `). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as `
               + `self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. `
