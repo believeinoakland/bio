@@ -33,7 +33,7 @@ Terms are `publication`'s. A **ceremony** is `op=caseratify` (the case document)
 
 #### The case ceremony's pre-flight (N364; DEC-80 item 3)
 
-- **R18** **caseRatifyPreflight({text, signer, viewer})** answers, over an unsigned document's bytes, every refusal of R2 and R3 that holds before a signature exists, in their order: C-32.13, C-32.15, C-53.12, C-92.10, C-92.11; `NO_ATTESTING_KEY` when `signer` holds no key `membership.attestingKeys` answers (its remedy names `membership` R89, registering one's own key); `CASE_SIGNER_NOT_AN_OWNER`; C-65.1; and `promotion.runCaseGate`'s findings. Each is byte-identical to the act's own refusal. It writes nothing and never throws.
+- **R18** **caseRatifyPreflight({text, signer, viewer})** answers, over an unsigned document's bytes, every refusal of R2 and R3 that holds before a signature exists, in their order: C-32.13, C-32.15, C-53.12, C-92.10, C-92.11; `NO_ATTESTING_KEY` when `signer` holds no key `membership.attestingKeys` answers (its remedy names `membership` R89, registering one's own key); `CASE_SIGNER_NOT_AN_OWNER`; C-65.1; and `promotion.runCaseGate`'s findings. C-32.13 and C-32.15 hold for a viewer carrying a minted agent credential (`{stamp, aiCred}`, admission's stamp) whatever its stamp (N407). Each is byte-identical to the act's own refusal. It writes nothing and never throws.
 
 #### The case-document catalogue
 
@@ -66,6 +66,7 @@ The collected-to-verified transition of many Information documents at once, over
 - `capture`: `reusedParts`, `recordReuseVerdicts`, `captureLimit` (R6).
 - `inquiry`: `earned` and the subject entity (R7), the basis read.
 - `basis-versions`: `conclusionOf`, `conclusionRecordOf`, `noProjectConclusionOf`, `projectsDrawingOn` (R1), `testimonyReach` (R7).
+- `strength`: `STRENGTH_STATES` (R9, C-2.8's frozen-axis states).
 - `publication`: `caseDocumentFacts`, `caseRelation`, the registries and pinning reads, `attributionFacts`, `attributionStatedFor`, `observationsNamingAuthor`, `commitEdition`, `commitCaseEdition`, `dischargeCaseFlags`, `delivererOf`, `deliveringPrincipal`; and, through its re-export, `case-grammar`'s format grammar and `publishedGraphEdges` (`case-grammar` R1, R5; K651).
 - `public-read` (K651): `assembleCaseContainer` (its R6), and the public reads R6's tests read (`publishedManifest`, `publishedList`, `publishedEditions`: its R4, R2).
 
@@ -78,7 +79,7 @@ The collected-to-verified transition of many Information documents at once, over
 - **R14** Each check moves here as an invariant with its test (K6): C-41.1–C-41.15 with the case arms of C-2.8, C-3.1 and C-21.1; C-58.1–C-58.3; C-65.1; C-53.10–C-53.12; C-32.12–C-32.15; C-92.10–C-92.12. A change to any moves `CATALOG_VERSION` (rule 17).
 - **R15** No place is named in this module's behaviour or outward text.
 - **R19** (N364) A signature verifies against a key by `membership` R27's predicate alone, whatever the key's `origin` (`membership` R91).
-- **R17** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349). This holds for a store read made inside a longer act (K444): the ratify gate's `registerholds` probe answers the store's silence as `STORE_DID_NOT_ANSWER` with the correlation id, and its refusal as the store's own, never as a finding about the record (`PLANE_MISSING_BYTES`) (N354, K477).
+- **R17** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349). This holds for a store read made inside a longer act (K444): the ratify gate's store-half relay (`ratifygate`, which runs `promotion.runGate` on the store's host so registered grammars reach it, N417) answers the store's silence as `STORE_DID_NOT_ANSWER` with the correlation id, and its refusal as the store's own, never as a finding about the record (`PLANE_MISSING_BYTES`) (N354, K477).
 - **R27** (K636) No document moves before every member of the selection has passed R22, and a batch never carries a member that is crucial or not `collected` Information: the bulk transition is a named member's decision, recorded in each document's own record with the acknowledgment and mitigation (Intake Doctrine §4).
 
 ### Satisfies
