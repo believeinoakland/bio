@@ -43,3 +43,16 @@ Two readings I have built on (J1 still open, separate).
 - `ownership content tranche/T18`: 13 files changed; legacy-store 0 added, 4 removed; legacy-checks 0 added, 83 removed; 0 failures.
 
 Size (session_01YSoHhK3iM2dE9hknYcY6ai): test runs 10, module lines 2423
+
+## J4 · COMPLETE
+
+B3 (K665) applied: tranche merged (R7's C-45.2 clause); one requirement-named test at the interface, `grammar.test.mjs` "R7 (K665)": `{kind: "image", part, cited_as: "text"}` over a capture WITH a chain is C-45.2 (check, translation, detail), the same part as bytes (stated or by default, R4) admitted. R8's widening kept. Everything else as J3.
+
+**Tests and checks (rerun):**
+- `node --test test/m/content/`: tests 104, pass 104, fail 0.
+- `format`: 82 modules, 77 requirements files; 0 failures.
+- `architecture content`: 19 product files, 56 relative imports; 0 failures.
+- `coverage content`: 47 of 47 live requirement ids named by a test; 0 failures.
+- `ownership content tranche/T18`: 13 files changed; legacy-store 0 added, 4 removed; legacy-checks 0 added, 83 removed; 0 failures.
+
+Size (session_01YSoHhK3iM2dE9hknYcY6ai): test runs 11, module lines 2423
