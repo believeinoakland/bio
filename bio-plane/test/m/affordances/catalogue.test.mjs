@@ -32,7 +32,7 @@ test("R1: ACTS holds exactly the object-directed acts, each at its weight", () =
       "actionlaws", "actionrisktier", "versionaccept", "versionreject", "versionconsider", "versionrevert",
       "versioncurrent", "withdrawconclusion", "versionhide", "projectinvite", "projectjoin", "projectleave",
       "projectremove", "projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibilityset",
-      "contradictionresolve" /* N345 */],
+      "contradictionresolve" /* N345 */, "sourceconsent" /* N364 (K530): its prompt rides it, R5 */],
   };
   const want = Object.entries(W).flatMap(([w, xs]) => xs.map((id) => [id, w])).sort();
   assert.deepEqual(ACTS.map((a) => [a.id, a.weight]).sort(), want);
@@ -64,7 +64,7 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   const want = {
     irreversible: ["publish"],
-    attested: ["attest", "caseratify", "ratify"],
+    attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */],
     terminal: ["retire"],
     reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
       "versionhide", "versionrevert"],
@@ -75,7 +75,9 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
       "reevaluationrecord", "reinstate", "relationdeclare", "relationwithdraw", "release", "reopen", "sever",
       "themewithdraw", "triage", "versionconsider", "versionreject", "withdrawconclusion",
       /* N345 (K447): contradiction's four member acts that ask an account, and entities' defect report */
-      "contradictionclarify", "contradictiondismiss", "contradictionresolve", "contradictiontakeup", "resolutiondefect"],
+      "contradictionclarify", "contradictiondismiss", "contradictionresolve", "contradictiontakeup", "resolutiondefect",
+      /* N364: the member's acts on a source's history */
+      "sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"],
   };
   for (const k of Object.keys(want)) want[k].sort();
   const got = {};
@@ -187,15 +189,48 @@ test("R26: no action kind is held in this module — none of legacy-checks' loca
   assert.deepEqual(kinds.filter((k) => text.includes(k)), []);
 });
 
-test("R5: inquirydivide carries DIVIDE_PROMPT, inquiryground GROUND_PROMPT, attest ATTEST_FENCE, and every other act's prompt is null", () => {
+test("R5: inquirydivide carries DIVIDE_PROMPT, inquiryground GROUND_PROMPT, attest ATTEST_FENCE, publish "
+   + "SELF_ATTESTED_PROMPT and sourceconsent CONSENT_PROMPT, and every other act's prompt is null", () => {
   const prompts = Object.fromEntries([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS]
     .map((a) => [a.id, A.decorate(a, null).prompt]));
-  assert.equal(prompts.inquirydivide, A.DIVIDE_PROMPT);
-  assert.equal(prompts.inquiryground, A.GROUND_PROMPT);
-  assert.equal(prompts.attest, A.ATTEST_FENCE);
-  assert.deepEqual(Object.entries(prompts).filter(([id, p]) => !["inquirydivide", "inquiryground", "attest"].includes(id)
-    && p !== null).map(([id]) => id), []);
-  for (const p of [A.DIVIDE_PROMPT, A.GROUND_PROMPT, A.ATTEST_FENCE]) assert.ok(typeof p === "string" && p.length > 100);
+  const WANT = { inquirydivide: A.DIVIDE_PROMPT, inquiryground: A.GROUND_PROMPT, attest: A.ATTEST_FENCE,
+                 publish: A.SELF_ATTESTED_PROMPT, sourceconsent: A.CONSENT_PROMPT };
+  for (const [id, p] of Object.entries(WANT)) assert.equal(prompts[id], p, id);
+  assert.deepEqual(Object.entries(prompts).filter(([id, p]) => !(id in WANT) && p !== null).map(([id]) => id), []);
+  for (const p of Object.values(WANT)) assert.ok(typeof p === "string" && p.length > 100);
+});
+
+/* R28 (N364): DEC-81 item 3's sentence "stated for readers", read out of DECISIONS.md, and the very string
+   case-authoring's case document prints beside a self-attested capture (its R36). */
+import * as caseAuthoring from "../../../src/case-authoring/index.mjs";
+import * as sources from "../../../src/sources/index.mjs";
+const DECISIONS = () => readFileSync(fileURLToPath(new URL("../../../../docs/development/DECISIONS.md", import.meta.url)), "utf8");
+test("R28: SELF_ATTESTED_PROMPT is DEC-81 item 3's reader sentence, verbatim, and case-authoring's own string (R36)", () => {
+  const dec = DECISIONS();
+  const at = dec.indexOf("### DEC-81");
+  assert.ok(at > 0, "DEC-81 is in DECISIONS.md");
+  const lead = "Why it matters, stated for readers: ";
+  const from = dec.indexOf(lead, at);
+  assert.ok(from > at && from < dec.indexOf("### DEC-82"), "item 3's reader sentence is in DEC-81");
+  const rest = dec.slice(from + lead.length);
+  const sentence = rest.slice(0, rest.indexOf("\n")).trim();
+  assert.equal(A.SELF_ATTESTED_PROMPT, sentence[0].toUpperCase() + sentence.slice(1));
+  assert.equal(A.SELF_ATTESTED_PROMPT, caseAuthoring.SELF_ATTESTED_SENTENCE, "the same string, not a copy that agrees");
+  assert.equal(ACTS.find((a) => a.id === "publish").prompt, A.SELF_ATTESTED_PROMPT);
+});
+
+/* R29 (N364): DEC-78 item 5(d), stated in the two sentences sources' consent acts answer with (its R7). */
+test("R29: CONSENT_PROMPT states that consent to publish is permanent for what is published, and that a withdrawal "
+   + "binds only later publications — sources' own two statements", () => {
+  const p = A.CONSENT_PROMPT;
+  assert.match(p, /consent is permanent for anything published under it/);
+  assert.match(p, /stays published, even if the consent is later withdrawn/);
+  assert.match(p, /withdrawal binds only later publications/);
+  assert.equal(p, `${sources.CONSENT_STATEMENT} ${sources.WITHDRAWAL_STATEMENT}`);
+  assert.equal(ACTS.find((a) => a.id === "sourceconsent").prompt, p);
+  const dec = DECISIONS();
+  assert.match(dec.slice(dec.indexOf("### DEC-78"), dec.indexOf("### DEC-79")),
+    /\(d\) Consent to go public is asked at the moment of publishing, stated as permanent; a source may withdraw consent for future publications, and what is published stays published\./);
 });
 
 test("R5: ATTEST_FENCE is DEC-39's wording verbatim, its two letters composed from the capture ceiling and the grade above it", () => {
@@ -267,6 +302,7 @@ test("R19: `terminal` is given only while STATES.information.edges.retired is em
 test("R19: the justification family names only codes that ask the member for an account, and holds the "
    + "codes the reasoned ops refuse with", () => {
   for (const c of JUSTIFICATION_REFUSALS) assert.match(c, /^[A-Z_]+$/);
+  assert.ok(JUSTIFICATION_REFUSALS.includes("NO_EVIDENCE"), "N364 (R2): a source act's account is its evidence");
   for (const c of ["NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION",
     "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
     "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED",
@@ -346,7 +382,10 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     "filingprepare", "filingapprove", "filingsent", "counselpacket", "theorypropose", "escalationopen",
     "escalationattach", "escalationend",
     /* N345 (K481): the recommendation, the opt-in and the response */
-    "contradictionrecommend", "contradictionoptin", "contradictionrespond"].sort());
+    "contradictionrecommend", "contradictionoptin", "contradictionrespond",
+    /* N364: the pull */
+    "inboxpull"].sort());
+  assert.equal(undetermined.length, 61, "R27's count: N364's inboxpull added to the 60 held before it");
 });
 
 test("R27: no new rung is added — the ladder keeps its five", () => {
@@ -502,4 +541,68 @@ test("R19: the justification family holds the codes N345's reasoned acts refuse 
     "NO_CONCLUSION", "NO_REASON"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
   for (const c of ["NO_CANDIDATE", "NO_SUCH_CANDIDATE", "MACHINE_CANNOT_ACT_ON_CANDIDATE", "NOT_A_CONTRADICTION_INQUIRY",
     "CLARIFY_CHOICE_UNKNOWN", "TAKE_UP_NO_FRAME"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+});
+
+/* N364 (K530): the ops sources, capture, membership and case-authoring add, keyed to their op maps where they have one
+   (membership's signer pair is routed by the control plane alone). Each op that writes carries its rung or stated
+   absence (R2, R3); each carries a `NON_ACTS` reason (R7, R12) except `sourceconsent`, an act, and `knockerconsent`,
+   which holds no account and so has no `NEEDS` row, as `knock` has none. */
+import { sourcesOps } from "../../../src/sources/index.mjs";
+import { captureOps } from "../../../src/capture/index.mjs";
+import { caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
+const N364_RUNGS = { sourcedisclose: "reasoned", sourcelink: "reasoned", sourceconsent: "reasoned",
+  sourceconsentwithdraw: "reasoned", reattest: "attested", captureaccount: "attested" };
+const N364_ABSENT = { signerregister: "credential", signerrevoke: "credential", knockerconsent: "credential",
+  inboxpull: "undetermined" };
+const N364_READS = ["sourceof", "sourcerung", "sourcereadlog", "sourcepublishable", "knocksof", "pulledknocks",
+  "lateattestations", "captureaccounts", "publishpreflight"];
+test("R2 R3 R7 R12: N364's ops each carry their rung or stated absence and their registry, and with the control "
+   + "plane's rows for them nothing is unaccounted", () => {
+  const url = new URL("http://x/");
+  const writes = [...Object.keys(N364_RUNGS), ...Object.keys(N364_ABSENT)];
+  /* the op maps hold them: every source op, capture's seven new ones, case-authoring's pre-flight */
+  assert.deepEqual(Object.keys(sourcesOps({}, url, {})).sort(), ["knockerconsent", "sourceconsent", "sourceconsentwithdraw",
+    "sourcedisclose", "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+  const cap = Object.keys(captureOps({}, url, {}, {}));
+  for (const op of ["inboxpull", "knocksof", "pulledknocks", "reattest", "lateattestations", "captureaccount", "captureaccounts"])
+    assert.ok(cap.includes(op), op);
+  assert.ok(Object.keys(caseAuthoringOps({}, url, {})).includes("publishpreflight"));
+  for (const [op, r] of Object.entries(N364_RUNGS)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
+  for (const [op, g] of Object.entries(N364_ABSENT)) {
+    assert.equal(RUNG_ABSENT[op]?.ground, g, op); assert.ok(!Object.hasOwn(RUNGS, op), op);
+    assert.ok(RUNG_ABSENT[op].is.length > 40, op);
+  }
+  for (const op of N364_READS) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  const named = [...writes, ...N364_READS].filter((op) => op !== "sourceconsent" && op !== "knockerconsent");
+  for (const op of named)
+    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 40 && !NON_ACTS[op].startsWith("capture-directed:"), op);
+  assert.ok(ACTS.some((a) => a.id === "sourceconsent") && !Object.hasOwn(NON_ACTS, "sourceconsent"));
+  assert.ok(!Object.hasOwn(NON_ACTS, "knockerconsent") && !Object.hasOwn(NON_ACTS, "knock"));
+  for (const op of N364_READS) assert.ok(NON_ACTS[op].startsWith("read: "), op);
+  /* the control plane's rows (J1 (5)): the ten writes mutating, every op but knockerconsent gated */
+  const table = [...writes.map((op) => ({ op, mutating: true, gated: op !== "knockerconsent" })),
+    ...N364_READS.map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => writes.includes(op) || N364_READS.includes(op)), []);
+  /* carried ungated, a read named here would read stale; carried gated, knockerconsent would read unpublished */
+  assert.ok(A.unaccounted([{ op: "knocksof", mutating: false, gated: false }]).stale.includes("knocksof"));
+  assert.deepEqual(A.unaccounted([{ op: "knockerconsent", mutating: true, gated: true }]).unpublished, ["knockerconsent"]);
+});
+
+test("R7: NON_ACTS.ratify says its pre-flight is op=publishpreflight (case-authoring R34), no longer deferred; "
+   + "inboxresolve's names its pulled arm as the pull", () => {
+  assert.match(NON_ACTS.ratify, /op=publishpreflight \(case-authoring R34\)/);
+  assert.doesNotMatch(NON_ACTS.ratify, /deferred/i);
+  assert.match(NON_ACTS.inboxresolve, /`pulled` arm is the pull/);
+  assert.match(NON_ACTS.inboxresolve, /op=inboxpull/);
+  assert.match(RUNG_ABSENT.inboxresolve.is, /inboxpull/);
+});
+
+test("R3: the signer pair and knockerconsent are graded `credential`, as signeradd and knock; inboxpull `undetermined` "
+   + "on R27's rule; none is in both RUNGS and RUNG_ABSENT", () => {
+  for (const op of ["signerregister", "signerrevoke"]) assert.equal(RUNG_ABSENT[op].ground, RUNG_ABSENT.signeradd.ground, op);
+  assert.equal(RUNG_ABSENT.knockerconsent.ground, RUNG_ABSENT.knock.ground);
+  assert.equal(RUNG_ABSENT.inboxpull.ground, "undetermined");
+  for (const op of ["signerregister", "signerrevoke", "knockerconsent", "inboxpull"]) assert.ok(!Object.hasOwn(RUNGS, op), op);
 });

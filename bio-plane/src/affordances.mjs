@@ -4,8 +4,9 @@
  * DEC-8, restated because every act surface builds on this file: the act
  * pre-flight is PLANE-SOURCED always. A surface may render a refusal it
  * received and may never compute one. Publication (op=affordances) is the
- * default; a dry-run op (op=publishpreflight) is DEFERRED with REC-15 for the
- * one act — publication — whose refusal turns on state a surface cannot see.
+ * default; the dry run for the one act whose refusal turns on state a surface
+ * cannot see — publication — is `case-authoring`'s op=publishpreflight (its R34,
+ * N364), a read and never an act here (NON_ACTS.publishpreflight).
  * No act surface exists before this op, so what this file publishes is the
  * whole of what a surface may know about "what can I do here".
  *
@@ -96,6 +97,12 @@ import { BASIS_ROLES } from "./inquiry/index.mjs";
    `contradiction'`s (its R31, DISMISSAL_REASON_UNKNOWN). */
 import { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, RESOLUTION_KINDS, NORM_CANONS } from "./inquiry/index.mjs";
 import { DISMISSAL_REASONS } from "./contradiction/index.mjs";
+/* N364 (R28, R29): the two prompts whose words are other modules' — DEC-81 item 3's reader sentence is
+   `case-authoring`'s (its R36, the words its case document prints beside a self-attested capture), and what a consent
+   binds and what a withdrawal binds are `sources'` (its R7, the statements its consent acts answer with). Imported so a
+   surface reads the very sentence the act and the document state, never a copy. */
+import { SELF_ATTESTED_SENTENCE } from "./case-authoring/index.mjs";
+import { CONSENT_STATEMENT, WITHDRAWAL_STATEMENT } from "./sources/index.mjs";
 /* PL-2 / IS-2. THE SIXTH STATE MACHINE, imported from where it is defined and
    enforced — `basis-versions` — the `op=dispose` hazard, not repeated. §6 rule 4
    requires it: *"the machine publishes the new machine through op=affordances,
@@ -365,6 +372,20 @@ export const attestFence = (ceiling, unreachable) => {
 
 export const ATTEST_FENCE = attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 
+/* R28 (N364; DEC-81 item 3): THE SELF-ATTESTED PROMPT, ON `publish`. A load-bearing Grade B whose co-attestation failed
+ * may be published, deliberately and visibly, by the owner's attributed acknowledgement; the case then marks that
+ * document "self-attested only". The sentence a member reads before choosing that is DEC-81 item 3's "stated for
+ * readers", verbatim, and it is `case-authoring`'s very string (its R36), the one the case document prints beside the
+ * mark — so the words offered before the act and the words published by it cannot drift. Not composed here, not
+ * copied here. */
+export const SELF_ATTESTED_PROMPT = SELF_ATTESTED_SENTENCE;
+
+/* R29 (N364; DEC-78 item 5(d)): THE CONSENT PROMPT, ON `sourceconsent`. Consent to go public is asked at the moment of
+ * publishing and stated as permanent: what is published under it stays published, and a withdrawal binds only later
+ * publications. The two sentences are `sources'` (its R7), the statements its consent and withdrawal acts answer with,
+ * joined, so the prompt says exactly what the act will record and nothing the act does not keep. */
+export const CONSENT_PROMPT = `${CONSENT_STATEMENT} ${WITHDRAWAL_STATEMENT}`;
+
 /* N80 (T8): op=acquire's `note` (`acquireGradeNote`, `ACQUIRE_GRADE_NOTE`) is `capture`'s, which composes its own
  * answer from the same two letters and refuses to compose it without both (`capture/acquire.mjs`; K225 (4)).
  * The copy that stood here, REC-48's third statement of the doctrine, left with it: the note is a receipt of the act
@@ -455,7 +476,12 @@ export const IRREVERSIBLE_CORRECTION_PATH =
  * `NO_SIBLING_DISCLOSURE`. Those demand an OBJECT, an IDENTIFIER, EVIDENCE or a
  * well-formed document — none of them is the member saying why. A family that
  * swept them in would have graded nearly every op `reasoned` and the rung would
- * have meant nothing. */
+ * have meant nothing.
+ * N364 (R2) MAKES ONE EXCEPTION, BY NAME, AND IT IS THE REQUIREMENT'S RATHER THAN A WIDENING HERE: a source's
+ * disclosure, a claim that two sources are one person and a member's record of a source's consent are each an account
+ * of what the member knows about a PERSON, and their account IS their evidence (sources R2, R6, R7: "evidence is
+ * required"). R2 grades them `reasoned` on "a reason, or a question or conclusion, or evidence", so `sources'`
+ * `NO_EVIDENCE` (C-121.3) joins the family. `NO_CITATION` and the rest above stay out. */
 export const JUSTIFICATION_REFUSALS = [
   "NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION",
   "NO_CONCLUSION", "NO_FALSIFIER", "NO_JUSTIFICATION",
@@ -479,6 +505,8 @@ export const JUSTIFICATION_REFUSALS = [
      a lead's reason for being set aside (one of three, never blank), an explanation of how the sides differ, the
      reason a side is wrong, and the question a taken-up conflict asks. */
   "DISMISSAL_REASON_UNKNOWN", "CLARIFY_NO_EXPLANATION", "WRONG_SIDE_NO_REASON", "TAKE_UP_NO_QUESTION",
+  /* N364 (R2): the source acts' account is their evidence (sources R2, R6, R7), refused absent as C-121.3. */
+  "NO_EVIDENCE",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -706,12 +734,19 @@ export const RUNGS = {
      authority's token — which is what `attested` means and what makes these two
      unlike everything below. */
   attest:             "attested",   // Constructs:275 (a CAPTURE act — CAPTURE_ACTS below)
-  ratify:             "attested",   // Constructs:275 (publication pre-flight is REC-15's)
+  ratify:             "attested",   // Constructs:275 (its pre-flight is case-authoring's op=publishpreflight, R34)
   /* CASE-5b / DEC-72: signing the CASE DOCUMENT is `attested` for `ratify`'s own
      reason and not a new one — its authority is a registered signer's key over
      the document's hash, which is a thing the group does not hold by having
      decided something. Same rung, same ladder, a different subject. */
   caseratify:         "attested",
+  /* N364 (DEC-81 item 3): the two late acts on a capture whose co-attestation failed, each `attested` for `attest`'s own
+     reason — an authority the group does not hold alone. `reattest` asks a timestamp authority for a fresh token over
+     the digest (capture R68, through provenance's `attest`; it proves the bytes existed by now, not at capture), and
+     `captureaccount` is refused unless a registered signer's key of the capturing member verifies the account
+     (capture R69: `SIG_<reason>` otherwise). Neither is undone: each appends. */
+  reattest:           "attested",   // capture R68 · a timestamp authority's token (provenance.attest)
+  captureaccount:     "attested",   // capture R69 · SIG_* unless the capturing member's attesting key verifies it
 
   /* ---- terminal: the target state has no outgoing edge. See the ladder note.
      `op=retire` ALSO raises NO_REASON, so it is `reasoned` at minimum; it is
@@ -775,6 +810,13 @@ export const RUNGS = {
   contradictiontakeup:  "reasoned", // TAKE_UP_NO_QUESTION (contradiction R35: the member's own question)
   contradictionresolve: "reasoned", // NO_CONCLUSION (contradiction R36, through basis-versions' conclude)
   resolutiondefect:     "reasoned", // NO_REASON (entities R38: a defect is reported with why)
+  /* N364 (R2), on R27's rule: a member's act on a source's history, each asking its evidence (R2's "or evidence",
+     JUSTIFICATION_REFUSALS above) and corrected forward — a later disclosure supersedes on read, a consent is
+     withdrawn by a further act, and nothing is erased (sources R2, R6, R7). */
+  sourcedisclose:        "reasoned", // NO_EVIDENCE (sources R2: a disclosure names its evidence)
+  sourcelink:            "reasoned", // NO_EVIDENCE (sources R6: a claim that two sources are one person, with evidence)
+  sourceconsent:         "reasoned", // NO_EVIDENCE (sources R7: a member's evidenced record of the source's consent)
+  sourceconsentwithdraw: "reasoned", // R2's grade; sources R7's withdrawal asks no account yet (R19's todo, J1 (2))
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -884,6 +926,10 @@ export const RUNG_ABSENT = {
   adminendorse:         { ground: "credential", is: "administrator endorsement of a member" },
   signeradd:            { ground: "credential", is: "signer governance — the KEY, not what is signed with it" },
   signerset:            { ground: "credential", is: "signer governance" },
+  /* N364 (membership R89, R90; DEC-80): a member registers or revokes their OWN signing key, `signeradd`'s ground — the
+     key, never what is signed with it. */
+  signerregister:       { ground: "credential", is: "a member registers their own signing key, every administrator told (membership R89); the key, not what is signed with it" },
+  signerrevoke:         { ground: "credential", is: "a member revokes their own signing key (membership R90); the key, not what is signed with it" },
   governorconfig:       { ground: "credential", is: "operator tuning of the per-host governor" },
   /* K377 (monitoring R30): the administrator's pause of the monitoring daemon, on `governorconfig`'s ground beside it. */
   monitorpause:         { ground: "credential", is: "an administrator's setting over the instance's own fetching: pauses or resumes the monitoring daemon" },
@@ -891,6 +937,10 @@ export const RUNG_ABSENT = {
   expertiseconfirm:     { ground: "credential", is: "administrator act on a declaration" },
   enroll:               { ground: "credential", is: "an invitee becoming a member" },
   knock:                { ground: "credential", is: "an unauthenticated request to be let in" },
+  /* N364 (sources R11): `knock`'s ground — the source proves who they are by the knocker secret, with no account, and
+     what the act moves is whether a source's own consent stands, which `sourceconsent` (a member's evidenced record of
+     it) grades on the ladder. */
+  knockerconsent:       { ground: "credential", is: "a source, proving who they are by their knocker secret and holding no account, consents to or withdraws from one disclosure for one audience (sources R11)" },
   claim:                { ground: "credential", is: "claims an instance at bootstrap" },
   aicredentialmint:     { ground: "credential", is: "mints a machine credential" },
   aicredentialrevoke:   { ground: "credential", is: "revokes a machine credential" },
@@ -932,7 +982,10 @@ export const RUNG_ABSENT = {
      assigning them `reversible` would promise a way back that does not exist;
      so they are stated undetermined and the ladder's gap is named rather than
      papered over. Raised as a provisional at the close of this item. */
-  inboxresolve:         { ground: "undetermined", is: "a disposition of a knock, keyed by knock id" },
+  inboxresolve:         { ground: "undetermined", is: "a disposition of a knock, keyed by knock id; its `pulled` arm is the pull (inboxpull), which files the knock as a capture (capture R32, R65)" },
+  /* N364 (capture R65), on R27's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
+     name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
+  inboxpull:            { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
   taskforward:          { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
   taskresolve:          { ground: "undetermined", is: "records how a task ended" },
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
@@ -1258,7 +1311,8 @@ const anyVersionEdgeTo = (f, to) =>
  * whether the dependent can still withdraw one — COUNTS and never ids, because
  * this answer is about the target and naming its dependents would be §7.9's
  * reverse walk by a new door), and (N345) contradiction_inquiry (whether an
- * inquiry's document carries `contradiction`: `conclude` or `contradictionresolve`). */
+ * inquiry's document carries `contradiction`: `conclude` or `contradictionresolve`), and (N365)
+ * contradiction_sides_seen (whether the viewer sees both sides of the candidate it names: `contradictionresolve`). */
 export const ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
@@ -1356,9 +1410,14 @@ export const ACTS = [
      the edge to `concluded` and has no project arm (a question already concluded is ILLEGAL_TRANSITION there). Only on
      a STATED `true`: a null never widens. Which kind, the conclusion and the reading are the act's parameters, refused
      by name — the release precedent. Weight `single`: one question is resolved at a time. RUNG `reasoned`. */
+  /* N365 (R8): AND NOT WHERE THE VIEWER CANNOT SEE BOTH SIDES. `resolve` refuses NOT_A_CONTRADICTION_INQUIRY to a
+     viewer who cannot see every bundle each side of the linked candidate lives in (contradiction R36, C-93.27), and
+     `contradiction_sides_seen` is that very check (its R56). `!== false`: a null (a hand-built facts object) narrows
+     nothing (R10). */
   { id: "contradictionresolve", label: "Resolve this contradiction (conclude with what it turned out to be)",
     weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && f.contradiction_inquiry === true && edgesFrom(f).includes("concluded") },
+    applies: (f, ty) => ty === "inquiry" && f.contradiction_inquiry === true && edgesFrom(f).includes("concluded")
+                     && f.contradiction_sides_seen !== false },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
      back to `open`. TWO conditions and no third: the FROM state is in the
      published DISPOSITIONS array — the one array that says what "set down"
@@ -1513,7 +1572,11 @@ export const ACTS = [
      so is every other act derived from it — reopen, dispose, inquiryground and
      inquirydivide ask whether these BYTES are frozen in a case, which a moved
      conclusion does not change. */
+  /* R5, R28 (N364; DEC-81 item 3): THE SELF-ATTESTED PROMPT RIDES THE ACT, DIVIDE_PROMPT's mechanism. A case may rest on
+     a load-bearing capture whose co-attestation failed, published by the owner's acknowledgement and marked
+     "self-attested only"; every surface that offers publication receives the reader sentence that mark carries. */
   { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
+    prompt: SELF_ATTESTED_PROMPT,
     applies: (f, ty) => ty === "inquiry"
                      && (f.current_state === "concluded" || f.concluded_for_project === true)
                      && (!f.case_member || f.edition_warranted_for_project === true)
@@ -1928,6 +1991,19 @@ export const ACTS = [
   { id: "projectvisibilityset", label: "Choose whether this project can be found", weight: "single",
     types: ["project"],
     applies: (f, ty) => ty === "project" && f.project_target_owner === true },
+  /* N364 (R5, R29; K530): A MEMBER RECORDS A SOURCE'S CONSENT, with its evidence, for one disclosure and one audience
+     (sources R7). AN ACTS ROW, NOT A NON-ACT, because the prompt must ride the act (DEC-78 item 5(d): consent to go public
+     is asked at the moment of publishing, stated as permanent), and a prompt rides an act this file publishes.
+     ITS SUBJECT IS A SOURCE'S ENTRY, WHICH NO BUNDLE'S FACTS DESCRIBE, so `applies` is false on every bundle: offering
+     it beside an information bundle or a case would be the pre-flight offering an act about a person on an object that
+     is not that person — `attest`'s argument (2) above, one noun over. It reaches a surface through the catalogue
+     (op=affordances with no target, R17), decorated with its rung and prompt, for the view that shows a source's
+     history. Weight `single`: one entry, one audience, one act. NOT in MACHINE_REFUSALS: `recordConsent` answers a
+     machine NO_SUCH_SOURCE (a machine names no member who may read a source), never a MACHINE_* code (R20). RUNG
+     `reasoned` (R2). */
+  { id: "sourceconsent", label: "Record a source's consent to publish (with its evidence)", weight: "single",
+    types: ["source"], prompt: CONSENT_PROMPT,
+    applies: () => false },
 ];
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -2139,8 +2215,34 @@ export const NON_ACTS = {
   discharge: "exception document, keyed by (progression, entity, stage)",
   proposedispose: "ages a DERIVED proposal, keyed by (progression, stage) — not a bundle",
   /* Inbox and publication. */
-  inboxresolve: "inbox disposition, keyed by knock id",
-  ratify: "publication: its pre-flight is the deferred op=publishpreflight (REC-15), because the refusal turns on gate state a surface cannot see",
+  inboxresolve: "inbox disposition, keyed by knock id: sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (capture R32, R65)",
+  /* N364 (capture R65–R69, R72; DEC-78, DEC-81 item 3). A knock is not a bundle (capture R32) and a capture is keyed by
+     its sha, so none of these has an object in a state beside which to offer it. `inboxpull` is `inboxresolve`'s
+     subject, filed; the late co-attestation and the capturing member's account are capture-directed in subject but
+     are NOT `capture-directed:` rows, because that prefix enrols an op in CAPTURE_ACTS, which offers an act for any
+     capture, and these two are reached only where a case's pre-flight names a self-attested capture (case-authoring
+     R34–R36). */
+  inboxpull: "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle",
+  knocksof: "read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing",
+  pulledknocks: "read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing",
+  reattest: "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight",
+  lateattestations: "read: one capture's late attestations in order, keyed by capture sha; writes nothing",
+  captureaccount: "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested",
+  captureaccounts: "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing",
+  /* N364 (sources R1–R9; DEC-78 item 5). A SOURCE is a person behind a knock, keyed by its own id, never a bundle, so no
+     object's facts could say when to offer these. The one source act a member is prompted at, the consent, is an ACTS
+     row (`sourceconsent`) so its prompt rides it; the rest are named here. `knockerconsent`, the source's own consent by
+     secret, holds no account and has no `NEEDS` row, so it is not named here (R12), as `knock` is not. */
+  sourcedisclose: "source-directed: a member appends one disclosure to a source's history — what was revealed, how, to whom it is known, with its evidence — keyed by source id; never edited, a later entry superseding it on read",
+  sourcelink: "source-directed: a member claims that two sources are one person, with evidence, keyed by the source pair; recorded as a disclosure and merging nothing",
+  sourceconsentwithdraw: "source-directed: a member records the withdrawal of a source's consent for one disclosure and one audience, keyed by (source, entry); binds only later publications, and what is published stays published",
+  sourceof: "read: the source of one capture as it stood when received, beside the source's current history as this viewer may read it, keyed by capture sha; writes nothing",
+  sourcerung: "read: where a source stands on the ladder from unknown to publicly known, with who knows and how, keyed by source id; a withheld value stays withheld",
+  sourcereadlog: "read: who read a source's stored values under sight, and when, keyed by source id; answered to the listed members and to administrators",
+  sourcepublishable: "read: which of a source's disclosures may be shown to one audience at one instant, each with its basis (consent, or public elsewhere, cited), keyed by source id; says nothing of the rest and writes nothing",
+  ratify: "publication: its pre-flight is op=publishpreflight (case-authoring R34), which runs the publication and the ratification's checks over the text and writes nothing, because the refusal turns on gate state a surface cannot see",
+  /* N364 (case-authoring R34; K530): the ceremony's dry run, a READ for `publishtensions`' reason below. */
+  publishpreflight: "read: the publication ceremony's dry run — op=publish's first refusal, every other refusal reachable, and whether the case is ready, over the same arguments, rolled back; writes nothing",
   /* CASE-5b / DEC-72. A NON_ACT for `ratify`'s reason and ALSO for a reason of
      its own, which is why it gets its own sentence rather than riding the row
      above. Its subject is a CASE EDITION, keyed (case_id, edition) — not a
@@ -2287,6 +2389,9 @@ export const NON_ACTS = {
   profilesset: "the instance's active jurisdiction profiles — the subject is the instance's configuration, not a bundle; refused PROFILES_NOT_ADMIN to a caller who is not an administrator",
   signeradd: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   signerset: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
+  /* N364 (membership R89, R90; DEC-80): the member's own key, `signeradd`'s subject — a key, not a bundle. */
+  signerregister: "signer governance: a member registers their own signing key, stamped `by` from their session, and every administrator is told; the subject is a key, not a bundle",
+  signerrevoke: "signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle",
   governorconfig: "operator tuning of the per-host governor",
   /* K377, K404 (monitoring R30, N314): open to member sessions, and refused NOT_AN_ADMIN to a caller who is neither an
      administrator nor the root of trust. */

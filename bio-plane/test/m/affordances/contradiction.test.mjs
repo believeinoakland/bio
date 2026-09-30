@@ -3,18 +3,20 @@
    doors (the pairing forms them, a run proposes them, a member takes one up). `affordanceFacts` (R14) is asked
    in-process through `affordancesOf(host, deps)` over that record; the providers it reads that the fixture does not
    build (connections, citation, publication, ratification) are stand-ins answering that nothing cites, rests on or
-   publishes these documents. Measured here: the `contradiction_inquiry` fact read from the front matter (R14), the
+   publishes these documents; `contradiction` is the fixture's own. Measured here: the `contradiction_inquiry` and (N365)
+   `contradiction_sides_seen` facts (R14), the
    offer agreeing with the act on such an inquiry (R8, R18), the backing of the five N345 acts graded `reasoned` (R19),
    and the machine map's `contradictionresolve` entry against the answer its method gives (R20). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, cand, IQ, INFO, M1 } from "../contradiction/seed.mjs";
+import { seeded, cand, IQ, INFO, M1, M2, OUT, RUN, PRINCIPAL } from "../contradiction/seed.mjs";
+import { MACHINE, sha } from "../contradiction/fixture.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { affordancesOf, deriveActs, JUSTIFICATION_REFUSALS, MACHINE_REFUSALS, RUNGS } from "../../../src/affordances.mjs";
 
 const NONE = { confirmed: [], severed: [] };
 const factsOf = (w) => affordancesOf(w.host, {
-  record: w.record, membership: w.membership, sql: w.st.sql, inquiry: w.k, basisVersions: w.bv,
+  record: w.record, membership: w.membership, sql: w.st.sql, inquiry: w.k, basisVersions: w.bv, contradiction: w.c,
   connections: { citesInto: () => NONE },
   citation: { retiredNotCitable: () => false },
   publication: { caseRelation: () => ({ member: false }) },
@@ -157,4 +159,63 @@ test("R19: resolutiondefect, graded `reasoned`, is refused without its reason wi
   }
   const ok = w.entities.reportResolutionDefect({ ...args, reason: "the reference names a different body" });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+});
+
+/* N365 (R14, R8, R18): a contradiction inquiry one member may see, whose linked candidate has one side in a project that
+   member takes no part in (contradiction R56's own scene: the inquiry linked by its document, since a leg cannot rest on
+   the project the hidden side is filed in). */
+const halfHidden = () => {
+  const w = seeded();
+  const hb = "PROJ-2026-0009-h"; w.project(hb, ["m2"]);
+  const hid = sha("hidden"); w.content(hid, "capH", hb);
+  w.leg(IQ.c, 2, "cuts_against", { content: hid, target: INFO.b });
+  const pair = w.c.pairs({ key: "K1", viewer: MACHINE }).pairs.find((p) => p.b.content_id === hid);
+  const half = w.c.propose({ run: RUN, proposedBy: "class:ai/t", viewer: MACHINE, caller: PRINCIPAL,
+                             proposals: [{ key: "K1", a: pair.a, b: pair.b, label: "record", reason: "r" }] }).candidates[0].candidate;
+  const id = "INQ-2026-0600-half";
+  const md = ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Q"`, "current_state: open",
+    "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`, "surfaced_by: human",
+    "contradiction:", `  candidate: "${half}"`, "references: []", "state_history: []", "---", "", "## Question", "", "Q?", ""].join("\n");
+  const pr = w.promotion.promote({ bundleId: id, base: null, snapKey: "half", author: M2, actorViewer: M2,
+                                   files: [{ path: "bundle.md", text: md }], meta: { object_type: "inquiry" } });
+  assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 400));
+  return { w, inquiry: id };
+};
+
+test("R14: contradiction_sides_seen is whether the viewer sees both sides of the linked candidate — contradiction's "
+   + "candidateSidesSeen, asked of `viewer` — and null wherever contradiction_inquiry is not true", () => {
+  const { w, inquiry } = halfHidden();
+  const a = factsOf(w);
+  const as = (viewer) => a.affordanceFacts({ target: inquiry, viewer, identity: viewer, author: viewer });
+  const m1 = as(M1), m2 = as(M2);
+  assert.deepEqual([m1.ok, m1.contradiction_inquiry, m1.contradiction_sides_seen], [true, true, false], "m1 sees the question, not both sides");
+  assert.deepEqual([m2.ok, m2.contradiction_inquiry, m2.contradiction_sides_seen], [true, true, true]);
+  for (const v of [M1, M2]) assert.equal(as(v).contradiction_sides_seen, w.c.candidateSidesSeen({ inquiry, viewer: v }), v);
+  /* asked of the viewer, never of the identity: m1's sight with m2's identity is m1's answer */
+  assert.equal(a.affordanceFacts({ target: inquiry, viewer: M1, identity: M2, author: M2 }).contradiction_sides_seen, false);
+  /* a whole candidate taken up: every member who sees the question sees both sides */
+  const { w: w2, inquiry: whole } = takenUp();
+  for (const v of [M1, M2, OUT]) {
+    const f = factsOf(w2).affordanceFacts({ target: whole, viewer: v, identity: v, author: v });
+    if (f.ok) assert.equal(f.contradiction_sides_seen, true, v);
+  }
+  /* null wherever contradiction_inquiry is not true: a plain inquiry (false) and an information bundle (null) */
+  assert.deepEqual([a.affordanceFacts({ target: IQ.a, viewer: M1 }).contradiction_inquiry,
+                    a.affordanceFacts({ target: IQ.a, viewer: M1 }).contradiction_sides_seen], [false, null]);
+  assert.deepEqual([a.affordanceFacts({ target: INFO.a, viewer: M1 }).contradiction_inquiry,
+                    a.affordanceFacts({ target: INFO.a, viewer: M1 }).contradiction_sides_seen], [null, null]);
+});
+
+test("R8 R18: contradictionresolve is withheld from a viewer who cannot see both sides, whom resolve refuses "
+   + "NOT_A_CONTRADICTION_INQUIRY, and offered to one who can, whose well-formed resolve is accepted", () => {
+  const { w, inquiry } = halfHidden();
+  const offered = (v) => deriveActs(factsOf(w).affordanceFacts({ target: inquiry, viewer: v, identity: v, author: v }))
+    .map((x) => x.id);
+  assert.ok(!offered(M1).includes("contradictionresolve"), offered(M1).join(","));
+  assert.ok(!offered(M1).includes("conclude"), "nor conclude, which inquiry R47 refuses on it");
+  const refused = w.c.resolve({ inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both stand", viewer: M1, author: M1 });
+  assert.equal(refused.code, "NOT_A_CONTRADICTION_INQUIRY", JSON.stringify(refused).slice(0, 300));
+  assert.ok(offered(M2).includes("contradictionresolve"), offered(M2).join(","));
+  const ok = w.c.resolve({ inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both stand", viewer: M2, author: M2 });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 400));
 });
