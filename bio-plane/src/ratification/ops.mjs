@@ -9,14 +9,18 @@
  * the caller class (`cls`), the minted agent credential (`aiCred`), whether the caller arrived through a member's own
  * session (`viaSession`) with its viewer and session row (`sessViewer`, `sessRights`), the store's name and bindings,
  * and its helpers — `json`, `doAnswer`, `storeSilent`, `storeRefusal` (when the caller hands it), `STORE_SILENT_REASON`/
- * `_DETAIL`, `captureKey`, and two services of modules this one does not use directly: publication's container assembly
- * (`assembleCaseContainer`) and bias's gate arm (`withBiasChecks`). `stub` is the Durable Object stub the op is scoped
- * to. The legacy code's comments moved with it. */
+ * `_DETAIL`, `captureKey`, and a service of a module this one does not use directly: bias's gate arm (`withBiasChecks`).
+ * The case container's assembly is public-read's (R6), imported; a caller may hand its own as `assembleCaseContainer`
+ * (the module's tests do). `stub` is the Durable Object stub the op is scoped to. The legacy code's comments moved with
+ * it. */
 
 import { runGate } from "../gate.mjs";
 import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../sshsig.mjs";
 import { deliveringPrincipal, delivererOf } from "../deliverer.mjs";
 import { publishedGraphEdges } from "../publication/index.mjs";
+/* K651, K691: the case container's one assembly (public-read R6), read here rather than handed in by the door. Its file
+   joins public-read's paths when publication's job merges (plan T18 rule (10)). */
+import { assembleCaseContainer as assembleContainer } from "../publication/worker.mjs";
 import { partsHeld, withRegisterChecks } from "../provenance/index.mjs";
 import { userAgent } from "../acquisition/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, isPublicHttpsLocator,
@@ -50,8 +54,9 @@ export function ratificationOp(op, req, stub, ctx) {
      of the case document, which is the signature those facts had nowhere to
      move to before this item. */
 export async function caseRatifyOp(req, stub, ctx) {
-  const { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession,
+  const { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession,
           sessViewer, sessRights } = ctx;
+  const assembleCaseContainer = ctx.assembleCaseContainer || assembleContainer;
   const relay = { json, storeRefusal };
     /* REC-123 / C-32.13: the machine fence alone, FIRST and before the payload is read (`./refusals.mjs` holds the
        refusal and its region; R18's pre-flight answers the same one). THE GUARD'S SHAPE IS REC-46's AND NOT STYLE:
@@ -214,8 +219,9 @@ export async function caseRatifyOp(req, stub, ctx) {
      commit the published rows, then copy bytes to the published bucket.
      A failure mid-copy leaves rows that a re-ratification converges. */
 export async function ratifyOp(req, stub, ctx) {
-  const { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession,
+  const { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession,
           sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL } = ctx;
+  const assembleCaseContainer = ctx.assembleCaseContainer || assembleContainer;
   const relay = { json, storeRefusal };
   const op = "ratify";
     /* DEC-49 REGION is-machine-ratify-bundle — REC-123 / C-32.12. The fence alone, first,
