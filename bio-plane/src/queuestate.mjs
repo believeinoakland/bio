@@ -89,6 +89,11 @@ export const QUEUE_OBLIGATION_KINDS = {
   "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
   "membership-request":          "a membership request is at the doorbell",
   "project-owners-inactive":     "every owner of a project is inactive; rescue is available (D-47)",
+  /* N345 (R1; DEC-84 item 2, DEC-85): a duty is never muted, dismissed or set aside, and it leaves only by resolution
+     (contradiction R24), so both are OBLIGATIONs. Their producers are `queue-producers`' (its R4, R7). */
+  "contradiction-duty":          "a conflict the record holds that a member of this project must resolve (N345)",
+  "contradiction-duty-unseen":   "something this project rests on is in conflict with a record you cannot see; "
+                              + "your project can ask to resolve it (DEC-85)",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -183,6 +188,15 @@ export const QUEUE_FINDING_KINDS = {
                               + "the claim of the reading it stands on; nothing this project stands on "
                               + "or concluded has moved (§7.1 — a conclusion is per-project) "
                               + "— LIVE: queue #findingsConcludedElsewhere",
+  /* N345 (R1; DEC-76 item 3, DEC-84 items 1, 3, 7, 13; DEC-85): what the record noticed about conflicts, each leaving a
+     list by an attributed act (R46), never by one member's preference alone. Their producers are `queue-producers`'
+     (its R4–R7). */
+  "contradiction-lead":         "a lead the record noticed: two things it holds may be in conflict (N345)",
+  "contradiction-plurality":    "two projects' conclusions that may not both hold (N345)",
+  "contradiction-plurality-unseen":
+                                "this project's conclusion may not hold together with a conclusion you cannot see (DEC-85)",
+  "side-corrected":             "something a finding rests on was marked wrong (N345)",
+  "tension-after-publication":  "a published case's finding rests on a conflict found since it was published (N345)",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before
