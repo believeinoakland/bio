@@ -8,7 +8,7 @@ Cut from T14's "Not in T14" (`current.md`, with K464's reading), `next.md`'s ope
 
 ## Layer 1
 
-- **legacy-checks** · N325's remainder: the `checkInboxGrammar` export goes (`bio-checks.mjs`:4453; queue holds its own since T14's layer 11); the old battery's `test/inbox.test.mjs`:27 import is red from this merge until legacy-tests retires it, accepted by name at the layer's close; if queue's T14 record says it holds C-19.1's row, the catalogue's copy goes too. N327's remainder: C-29.12 `AI_CREDENTIAL_ORG_NOT_ADMIN` retires (nothing mints it since MEMBERSHIP #7), with its family header (:6860–6867). PROMOTION #15's report: the stale comment at `bio-checks.mjs`:2168 (`REOPENABLE_FROM` is promotion R51's frozen `["deferred", "dismissed"]`). Optional, N128's header share: `REGISTRATION_CHECKS`' header (:11200–11205) names membership's C-102.11 and C-102.12.
+- **legacy-checks** · N325's remainder: the `checkInboxGrammar` export goes (`bio-checks.mjs`:4453; queue holds its own since T14's layer 11); the old battery's `test/inbox.test.mjs`:27 import is red from this merge until legacy-tests retires it, accepted by name at the layer's close; C-19.1's catalogue copy goes too: QUEUE #4 holds `checkInboxGrammar` whole in `src/queue/checks.mjs`, registered with promotion (its record; K476). N327's remainder: C-29.12 `AI_CREDENTIAL_ORG_NOT_ADMIN` retires (nothing mints it since MEMBERSHIP #7), with its family header (:6860–6867). PROMOTION #15's report: the stale comment at `bio-checks.mjs`:2168 (`REOPENABLE_FROM` is promotion R51's frozen `["deferred", "dismissed"]`). Optional, N128's header share: `REGISTRATION_CHECKS`' header (:11200–11205) names membership's C-102.11 and C-102.12.
 
 ## Layer 2
 
@@ -39,6 +39,10 @@ Cut from T14's "Not in T14" (`current.md`, with K464's reading), `next.md`'s ope
 
 - **conformance** · N345: R1, R9, R12 amended; R21, R22 (a comparison started from a contradiction; a cause only when evidenced; no recommendation in a determination); rows C-113.24–C-113.27. `uses` gains contradiction.
 
+## Layer 9 (T14's reports)
+
+- **filings** · N355: the no-promotion fallback (`src/filings/index.mjs`:138) carries no code for its internal `FACT_UNAVAILABLE`.
+
 ## Layer 10
 
 - **legacy-store** · N342's drop (K445): its four reads of queue's tables go (now through record-core R63's spread), and `#MINT_LEDGER_LIVE`'s `TASK` row with its seed. N352's share: `#hiddenBundles` (`store.mjs`:2052) reads membership's helper, if provided.
@@ -48,7 +52,7 @@ Cut from T14's "Not in T14" (`current.md`, with K464's reading), `next.md`'s ope
 - **affordances** · N345's rungs (wording, K447): R1–R4, R7, R8, R14 (the opt-in; the response graded `RUNG_ABSENT`; "resolve" for "conclude" on a contradiction inquiry). MEMBERSHIP #7's report: `affordances.mjs`:1834 names `ADMIN_ONLY`, now `NOT_AN_ADMIN`. Any code T14's layers 3+ retire or rename that their records find in affordances' lists.
 - **queue** · N345: R1 amended; R43–R47 (the conflict duty, not mutable; leads; two-project marks; "something you rest on was corrected"; "a conflict found since publishing"; "in conflict with a record you cannot see"; the opt-in and relayed responses). `uses` gains contradiction. N352's share: `#hiddenBundles` (`queue/index.mjs`:167) reads membership's helper, if provided.
 - **instance-setup** · N348's remainder (K445): `instanceSetupStore` and `instanceSetupRoute` (`setup.mjs`:2439, :2420) go, with the fixture's frame (`test/m/instance-setup/fixture.mjs`:9, :137).
-- **control-plane** · N345: routes, `NEEDS` rows and stamps (`author`, `viewer`, `proposedBy`, `caller`) for the fifteen new ops (contradiction's thirteen, entities' `resolutiondefect`, case-authoring's `publishtensions`). Optional: comments still naming `ADMIN_ONLY` (`ops.mjs`:824; `index.mjs`:3054, :3066).
+- **control-plane** · N345: routes, `NEEDS` rows and stamps (`author`, `viewer`, `proposedBy`, `caller`) for the fifteen new ops (contradiction's thirteen, entities' `resolutiondefect`, case-authoring's `publishtensions`). N356: comments still naming `ADMIN_ONLY` (`ops.mjs`:824; `index.mjs`:3057, :3069).
 
 ## Last: legacy-tests (K420, K427, K457)
 
@@ -65,14 +69,14 @@ Cut from T14's "Not in T14" (`current.md`, with K464's reading), `next.md`'s ope
 ## BOB's points before opening
 
 1. N345's rows are stamped in T16, not at T15's layer 2 (the rule, N318/K425); the N345 draft's "promotion stamps at layer 2" is read so.
-2. C-19.1's catalogue row: decided from QUEUE's T14 record.
+2. DONE: C-19.1's catalogue copy goes at layer 1 (QUEUE #4's record).
 3. DONE (K477). N352: BOB words membership's provider (R88) before opening, else N352 drops from every layer.
 4. DONE (K477). N351: BOB words the bound (entities R39) before opening.
 5. Contradiction R41 and the K5 arm need a measured recommender run; if the job lacks model access they are `test.todo` and K5 candidates stay unshown.
 6. Measured by BOB #68's worker: queue's code is 5,145 lines (about 6,870 with tests and requirements; queue.md's Size line is stale); the named inbox split (~750 lines of code) is concrete in its functions, not its seams (module name, queue's read of tasks, who registers `task-drain` and C-19.1, which ids move), and leaves queue ~4,400, so the feed producers (~1,500) are a second cut. A new product module is Bob's (P17): brought to him with the recommendation to cut both. Was: queue is 4,162 lines and N345 adds R43–R47; review queue.md's named split of the obligation inbox before its job (P6). Publication (3,613) and inquiry (2,680) also grow.
 7. DONE (K478): the marks struck; basis-versions R41 (N300) looks met too, checked at the re-read.
-8. `next.md` housekeeping: entries carried in full (N10, N93, N112, N129, N130, N150, N154, N167, N170, N171, N192, N323; N202, N128, N344 met) move to `archive/next-applied.md`.
-9. Everything T14's layers 3–11 record (rows, reports, deferrals) is folded at the re-read.
+8. DONE (BOB #68, 16 entries moved). `next.md` housekeeping: entries carried in full (N10, N93, N112, N129, N130, N150, N154, N167, N170, N171, N192, N323; N202, N128, N344 met) move to `archive/next-applied.md`.
+9. DONE by BOB #68 at T14's close: N355, N356 placed; capture R32 (K383) and basis-versions R41 marks are checked by their next jobs. Was: everything T14's layers 3–11 record (rows, reports, deferrals) is folded at the re-read.
 
 ## Wordings to fold into the requirements when T15 opens (K477)
 
