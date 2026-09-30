@@ -47,6 +47,9 @@ import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attribut
 
 export * from "./checks.mjs";
 
+/* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
+const AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
+
 /* Frontmatter-safe (legacy-store's `#fmSafe`, the rule `caseConclusionRowLines` writes under): the restricted grammar
    has no escapes, and these strings are DERIVED rather than authored, so they are sanitised rather than refused. */
 export function fmSafe(s) {
@@ -458,10 +461,10 @@ export class Ratification {
      What `op=caseratify` (R2) and its commit (R3) would refuse, asked over an unsigned case document's bytes before
      anybody signs, so the ceremony can say so before its first screen (case-authoring R34). Every refusal that holds
      is listed, each asked on its own and never stopping at the first, in R18's order:
-       C-32.13 and C-32.15, the credential fences, read from the control plane's `viewer` stamp: an agent
-         credential's `class:ai…` holds both (the act answers the first; lifted, the second would answer), another
-         `class:<cls>` bearer C-32.15, a member's or the founder's session neither; an absent viewer, an internal
-         caller, is not asked;
+       C-32.13 and C-32.15, the credential fences, read from the control plane's `viewer` stamp: every machine
+         identity (REC-46's predicate) holds both (the act answers the first; lifted, the second would answer) but an
+         operator's bearer stamp `class:<cls>`, which holds C-32.15 alone; a member's or the founder's session holds
+         neither; an absent viewer, an internal caller, is not asked;
        C-53.12, C-92.10, C-92.11 over publication's attribution facts for these bytes;
        NO_ATTESTING_KEY, the pre-flight's own: `signer` (a member id, or `member:<id>`) holds no key
          `membership.attestingKeys` answers (R19: whatever the key's origin);
@@ -486,11 +489,18 @@ export class Ratification {
         .map((x) => String(x ?? "").trim()).filter(Boolean);
       const refusals = [];
 
+      /* N385 (K601): the predicate decides C-32.13, never a word in the name. Every identity `isMachineIdentity`
+         answers is refused C-32.13 but one: an operator's bearer, whose stamp is `class:<cls>` alone, which the act
+         answers C-32.15 only (it has no agent credential). A `class:` stamp is an agent credential's only in the
+         shapes the plane mints for one: the act's `class:<cls>/<tokenId>`, and membership's organisation principal
+         `class:ai` (`aiCredentialMint`), matched as the whole stamp. */
       const v = viewer === null || viewer === undefined ? "" : String(viewer).trim();
       if (v && isMachineIdentity(v)) {
-        const cls = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX)
-          ? v.slice(MACHINE_CLASS_PREFIX.length).split("/")[0] : v;
-        if (cls.toLowerCase() === "ai") refusals.push(machineCaseRefusal(cls));
+        const stamped = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX);
+        const rest = stamped ? v.slice(MACHINE_CLASS_PREFIX.length) : v;
+        const cls = stamped ? rest.split("/")[0] : v;
+        const bearer = stamped && !rest.includes("/") && v.toLowerCase() !== AGENT_ORGANISATION_STAMP;
+        if (!bearer) refusals.push(machineCaseRefusal(cls));
         refusals.push(operatorCaseRefusal(cls));
       }
 
