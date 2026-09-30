@@ -53,3 +53,7 @@ Wording this needs (yours): R1's digest clause gains "when `RECOMMEND_PROMPT_SHA
 ## J3 · REPORT
 
 agent-worker's bundle is stale: skills' `bio-plane/src/skillpack.mjs` changed (N345), and `agent-worker/test/requirements.test.mjs` R45's two bundle arms go red on it (static check and byte identity). Yours to rebuild at the close (mechanics §14); I rebuilt nothing.
+
+## J4 · COMPLETE
+
+N345 applied (K487, B3), on J2's reading while it stands: the `contradiction` layer after `refusals`, a stated absence while contradiction's `RECOMMEND_PROMPT_SHA256` is null, the prompt and digest carried `imported` once it is set; R1 throws on an absent or blank prompt, or one its non-null digest does not measure. test/m/skills 33/0; legacy skillpack.test 1/0; agent-worker unchanged but R45's stale-bundle arms (J3); format, architecture, coverage (27/27), ownership: 0 failures. Marks: R5's layer met; R27 met in both forms at the interface, its imported form live only once contradiction's R41 is measured. Record: completion section. If J2 is answered otherwise, a CHANGE reopens me (a two-line revert).
