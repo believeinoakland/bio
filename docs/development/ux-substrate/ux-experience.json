@@ -83,7 +83,11 @@
   "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65 · updated 2026-09-29 for DEC-86–DEC-90 and the action-plan rulings, by BOB #67 · 2026-09-29, rebuilt on claude/gallant-brown-zg0wc1 @ af8c42f022 for DEC-76-DEC-93, K356-K452 and the requirement changes since tranche/T10 @ 6faa808405; reconciled with BOB #67's page (tranche/T14 @ ba1980dc38) and renumbered per K473",
   "commit": "c9a245767f",
   "snapshotDate": "2026-09-29",
-  "asOf": "claude/gallant-brown-zg0wc1 @ c9a245767f (this rebuild, rulings renumbered per K473) and tranche/T14 @ ba1980dc38 (BOB #67's page: DEC-86-DEC-90 and the action-plan rulings)"
+  "asOf": "claude/gallant-brown-zg0wc1 @ c9a245767f (this rebuild, rulings renumbered per K473) and tranche/T14 @ ba1980dc38 (BOB #67's page: DEC-86-DEC-90 and the action-plan rulings)",
+  "neededIntro": [
+   "These are the decisions about what members see and do that only you can make. Each one opens to the decision in a sentence, why it is yours, the background with an example, what is already fixed, the choices with what each gains and costs, a recommendation, and a few ways you might answer. Take them in any order; the table shows which are quick.",
+   "To answer, reply with the number and your ruling, for example “15: as recommended” or “19: option B, but pseudonymous work shows the same strength”. A question is welcome instead of a ruling. Each ruling is recorded, folded into the design documents, and this page is updated in the same change."
+  ]
  },
  "audiences": [
   {

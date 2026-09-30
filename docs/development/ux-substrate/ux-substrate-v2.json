@@ -15,7 +15,12 @@
   "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65 · updated 2026-09-29 for DEC-86–DEC-90 and the action-plan rulings, by BOB #67 · 2026-09-29, rebuilt on claude/gallant-brown-zg0wc1 @ af8c42f022 for DEC-76-DEC-93, K356-K452 and the requirement changes since 6faa808405 (T11-T13 built, T14 specified); reconciled with BOB #67's page (tranche/T14 @ ba1980dc38) and renumbered per K473",
   "snapshotDate": "2026-09-29",
   "firstWrittenAt": "tranche/T10 @ 6faa808405 (2026-09-28)",
-  "asOf": "claude/gallant-brown-zg0wc1 @ c9a245767f (this rebuild, rulings renumbered per K473) and tranche/T14 @ ba1980dc38 (BOB #67's page: DEC-86-DEC-90 and the action-plan rulings)"
+  "asOf": "claude/gallant-brown-zg0wc1 @ c9a245767f (this rebuild, rulings renumbered per K473) and tranche/T14 @ ba1980dc38 (BOB #67's page: DEC-86-DEC-90 and the action-plan rulings)",
+  "overview": [
+   "A group runs its own copy of CivicOS to investigate how a government is meeting its obligations. Members bring documents in with a record of where each came from. They ask questions and support each answer with passages from those documents. A project concludes a question on the support it accepts, and the concluded question becomes a finding. The group publishes its findings as a case, in editions.",
+   "Then the group decides what to do. From the first suspicion, a project can open an <b>action plan</b>: the matters it is about and how well each is shown, the options open to it (a records request, a complaint, a story, testimony, a filing through counsel, and so on), which it chooses and which it declines with a reason, and up to three scenarios with checkpoints the group judges. Choosing an option starts an <b>action</b>, addressed to an office, an outlet or an organisation, never a private person. The assistant may draft what is sent; a member approves it and sends it by their own hand. The group then tracks replies and deadlines and, for a breach, the seven-stage escalation until compliance is restored.",
+   "Three things run through all of it. The record always says what is not known and why. It keeps track of who looked where and what they found. And the assistant finds, proposes and drafts, but a person makes every judgement and takes every act that commits the group."
+  ]
  },
  "constructs": [
   {
