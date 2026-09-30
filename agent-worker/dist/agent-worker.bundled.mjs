@@ -248,10 +248,10 @@ function stopBecause(state) {
 }
 function nextStep(state) {
   const s = state || {};
-  const at6 = String(s.step || FIRST_STEP);
-  const row = CONTROL_FLOW[at6];
-  if (!row) return { step: "close", why: `'${at6}' is not a row in this table`, bound: "completed" };
-  if (at6 === "gate-mode") {
+  const at7 = String(s.step || FIRST_STEP);
+  const row = CONTROL_FLOW[at7];
+  if (!row) return { step: "close", why: `'${at7}' is not a row in this table`, bound: "completed" };
+  if (at7 === "gate-mode") {
     const key = String(s.mode || "");
     const mode = MODES[key];
     if (!mode || !mode.deployed) {
@@ -267,13 +267,13 @@ function nextStep(state) {
     return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
   }
   const stopped = stopBecause(s);
-  if (stopped && at6 !== "close")
+  if (stopped && at7 !== "close")
     return {
       step: "close",
       bound: stopped,
       why: stopped === "completed" ? `${s.pass} of ${s.maxPasses} passes are done; the loop's termination is the table's and not the model's` : `the '${stopped}' budget is spent. \xA714b.6: when a bound stops a run, the log says WHICH bound and where`
     };
-  switch (at6) {
+  switch (at7) {
     case "resume":
       if (typeof s.resumeAt === "string" && CONTROL_FLOW.resume.to.includes(s.resumeAt))
         return {
@@ -328,7 +328,7 @@ function nextStep(state) {
     case "close":
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
   }
-  return { step: "close", why: `'${at6}' has no transition`, bound: "completed" };
+  return { step: "close", why: `'${at7}' has no transition`, bound: "completed" };
 }
 function advance(state, decision) {
   const s = state || {};
@@ -371,9 +371,9 @@ function publishableState(state, limit) {
   const bytes = stateBytes(full);
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
-  const at6 = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
-  const restart = resumableState({ step: at6, pass: full.pass, adjusted: false });
-  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at6 } };
+  const at7 = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
+  const restart = resumableState({ step: at7, pass: full.pass, adjusted: false });
+  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at7 } };
 }
 var list = (v) => Array.isArray(v) ? v : [];
 var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : null;
@@ -385,15 +385,15 @@ function resumeFrom(published) {
       state: null,
       basis: published == null ? "The run publishes no state it can be read back from, so this segment starts from the resume row" : "The run's published state names no step yet, so this segment starts from the resume row"
     };
-  const at6 = String(p.step);
+  const at7 = String(p.step);
   const pass = Number(p.pass);
-  if (!CONTROL_FLOW.resume.to.includes(at6) || !Number.isInteger(pass) || pass < 0)
+  if (!CONTROL_FLOW.resume.to.includes(at7) || !Number.isInteger(pass) || pass < 0)
     return {
       at: null,
       state: null,
-      basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at6).slice(0, 60)} at pass ${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped`
+      basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at7).slice(0, 60)} at pass ${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped`
     };
-  return { at: at6, basis: null, state: {
+  return { at: at7, basis: null, state: {
     pass,
     targets: list(p.targets),
     reports: list(p.reports),
@@ -465,7 +465,6 @@ __export(bio_checks_exports, {
   AI_CREDENTIAL_CHECKS: () => AI_CREDENTIAL_CHECKS,
   AI_RUN_CHECKS: () => AI_RUN_CHECKS,
   ANN_ID_RE: () => ANN_ID_RE,
-  ATTEST_CHECKS: () => ATTEST_CHECKS,
   BASIS_GRADES: () => BASIS_GRADES,
   BASIS_ROLES: () => BASIS_ROLES,
   BASIS_VERSION_CHECKS: () => BASIS_VERSION_CHECKS,
@@ -512,7 +511,6 @@ __export(bio_checks_exports, {
   INSTALLATION_CHECKS: () => INSTALLATION_CHECKS,
   INSTANCE_GROUP_CHECKS: () => INSTANCE_GROUP_CHECKS,
   ISO_TS_RE: () => ISO_TS_RE,
-  KNOCK_CHECKS: () => KNOCK_CHECKS,
   LAW_PROPOSAL_STATES: () => LAW_PROPOSAL_STATES,
   LEAD_CHECKS: () => LEAD_CHECKS,
   LEAD_ID_RE: () => LEAD_ID_RE,
@@ -533,7 +531,6 @@ __export(bio_checks_exports, {
   PROJECT_JOIN_REQUEST_CHECKS: () => PROJECT_JOIN_REQUEST_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
   PROPOSAL_STATES: () => PROPOSAL_STATES,
-  PROVENANCE_ACT_CHECKS: () => PROVENANCE_ACT_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
   REGISTRATION_CHECKS: () => REGISTRATION_CHECKS,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
@@ -541,7 +538,6 @@ __export(bio_checks_exports, {
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   RISK_TIERS: () => RISK_TIERS,
-  ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
   SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
   STATES: () => STATES,
   STRENGTH_STATES: () => STRENGTH_STATES,
@@ -552,14 +548,12 @@ __export(bio_checks_exports, {
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
   SURFACE_CHECKS: () => SURFACE_CHECKS,
-  TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   THEME_CHECKS: () => THEME_CHECKS,
   THEME_ID_RE: () => THEME_ID_RE,
   TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   UNREACHABLE_CAPTURE_GRADE: () => UNREACHABLE_CAPTURE_GRADE,
   VERSION_ACT_CHECKS: () => VERSION_ACT_CHECKS,
-  VERSION_CHAIN_CHECKS: () => VERSION_CHAIN_CHECKS,
   VERSION_MACHINE: () => VERSION_MACHINE,
   VERSION_NAME_RE: () => VERSION_NAME_RE,
   VERSION_NOTICE_CHECKS: () => VERSION_NOTICE_CHECKS,
@@ -1094,8 +1088,8 @@ var deriveInquiryTitle = (question) => {
   if (flat === "") return null;
   if (flat.length <= 120) return flat;
   const cut = flat.slice(0, 120);
-  const at6 = cut.lastIndexOf(" ");
-  return (at6 > 0 ? cut.slice(0, at6) : cut) + "\u2026";
+  const at7 = cut.lastIndexOf(" ");
+  return (at7 > 0 ? cut.slice(0, at7) : cut) + "\u2026";
 };
 var inquiryQuestionOf = (markdown) => {
   const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
@@ -3388,22 +3382,22 @@ function grammarsOf(list3) {
   if (!Array.isArray(list3)) throw new TypeError("checkBundle: opts.grammars is a list of {module, ids, arm}");
   const byArm = /* @__PURE__ */ new Map(), rest = [], claimed = /* @__PURE__ */ new Map();
   list3.forEach((g, i) => {
-    const at6 = `checkBundle: opts.grammars[${i}]`;
-    if (!g || typeof g !== "object") throw new TypeError(`${at6} is not a {module, ids, arm} entry`);
-    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at6} names no module`);
+    const at7 = `checkBundle: opts.grammars[${i}]`;
+    if (!g || typeof g !== "object") throw new TypeError(`${at7} is not a {module, ids, arm} entry`);
+    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at7} names no module`);
     if (!Array.isArray(g.ids) || g.ids.length === 0 || !g.ids.every((id) => typeof id === "string" && GRAMMAR_ID_RE.test(id)))
-      throw new TypeError(`${at6} (${g.module}): ids is a non-empty list of C-ids`);
-    if (typeof g.arm !== "function") throw new TypeError(`${at6} (${g.module}): arm is not a function`);
+      throw new TypeError(`${at7} (${g.module}): ids is a non-empty list of C-ids`);
+    if (typeof g.arm !== "function") throw new TypeError(`${at7} (${g.module}): arm is not a function`);
     for (const id of g.ids) {
-      if (claimed.has(id)) throw new RangeError(`${at6} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
+      if (claimed.has(id)) throw new RangeError(`${at7} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
       claimed.set(id, g.module);
     }
     const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => g.ids.includes(id)));
     if (touched.length > 1)
-      throw new RangeError(`${at6} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
+      throw new RangeError(`${at7} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
     const [arm] = touched;
     if (arm && !arm.ids.every((id) => g.ids.includes(id)))
-      throw new RangeError(`${at6} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
+      throw new RangeError(`${at7} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
     if (arm) byArm.set(arm.name, g);
     else rest.push(g);
   });
@@ -3683,37 +3677,6 @@ var AI_RUN_CHECKS = {
     check: "C-22.17",
     where: "src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored",
     translation: "That observation says nobody looked, and an observation is the record of a look. Never having looked is what the record says of a subject with no observation at all, so it is not written as one. A look that happened records what it found: nothing, something, part of it, or that it could not tell."
-  }
-};
-var VERSION_CHAIN_CHECKS = {
-  /* No address at all. There is no default document and there must not be one:
-     the chain's entire subject is "at THIS address", and a chain answered for
-     an unnamed address is a list of unrelated bundles wearing the word
-     "versions". */
-  VERSION_CHAIN_NO_ADDRESS: {
-    check: "C-24.1",
-    where: "src/provenance/index.mjs versionChain, reached from op=versionchain",
-    translation: "That request did not say which document address to read the versions of. Versions are versions OF something, so it asks rather than answering for a document you did not name."
-  },
-  /* An anchor was given and it is not a version at this address. Refused rather
-     than matched approximately — that approximation IS D-221 — and refused
-     IDENTICALLY whether the capture is absent, filed at a different address, or
-     in a project this viewer was never invited to. Hidden and absent are one
-     answer here, as they are on every gated read in this plane. */
-  VERSION_CHAIN_NO_SUCH_VERSION: {
-    check: "C-24.2",
-    where: "src/provenance/index.mjs versionChain, reached from op=versionchain with at=<capture sha>",
-    translation: "The record holds no version of that document with those bytes. Rather than pick the closest-looking one and call it the version before this, it says so \u2014 naming the wrong predecessor is the defect this read was built to end."
-  },
-  /* The anchor is not the shape a capture identity has. A separate refusal from
-     the one above because it is a different fact about the world: "you typed
-     something that is not a capture" is the caller's, and "no such version" is
-     the record's. Collapsing them would make a typo indistinguishable from an
-     absence, which is the distinction CLAUDE.md requires be stated. */
-  VERSION_CHAIN_BAD_ANCHOR: {
-    check: "C-24.3",
-    where: "src/provenance/index.mjs versionChain, reached from op=versionchain with at=<capture sha>",
-    translation: "That is not the shape a capture identity has, so nothing was looked up. A capture is named by the sha256 of its bytes; this says the request was malformed rather than letting it read as a document the record does not hold."
   }
 };
 var BASIS_VERSION_CHECKS = {
@@ -5144,42 +5107,6 @@ var ACT_SHAPE_CHECKS = {
     translation: "A project always keeps at least one owner who is committed to it, and this would leave it with none: every other owner has asked to leave, or there is no other owner. Add another owner first \u2014 or stand the project down. Nothing was recorded."
   }
 };
-var ROUTE_MARK_CHECKS = {
-  /* Marking is a NAMED ACT: a standing statement in the record with nobody's
-     name on it is not a statement. WHAT THIS DOES *NOT* DO, stated so the next
-     reader does not read a fence that is not here — it does not refuse a MACHINE
-     principal. It refuses an act with NO principal at all. `op=provenancechain`
-     draws exactly this line and no other, and inventing a stricter one here
-     would be this item ruling on DEC-52's ground (REC-65) as a side effect. */
-  ROUTE_MARK_NO_AUTHOR: {
-    check: "C-34.1",
-    where: "src/provenance/index.mjs provenanceRouteAssess > is-route-mark",
-    translation: "Recording that a document's route cannot be shown is an act the record has to be able to attribute, and nothing here said who is making it. Sign in and try again."
-  },
-  ROUTE_MARK_NO_BUNDLE: {
-    check: "C-34.2",
-    where: "src/provenance/index.mjs provenanceRouteAssess > is-route-mark",
-    translation: "This did not say which document to look at, so nothing was assessed."
-  },
-  /* Absent and invisible answer IDENTICALLY, which is REC-25's posture rather
-     than this item's invention: a document the caller may not see must refuse
-     exactly as one that does not exist, or the refusal becomes a read. */
-  ROUTE_MARK_NO_SUCH_BUNDLE: {
-    check: "C-34.3",
-    where: "src/provenance/index.mjs provenanceRouteAssess > is-route-mark",
-    translation: "The record holds no document by that name, so there was nothing to assess."
-  },
-  /* A ROUTE IS A FACT ABOUT A CAPTURED DOCUMENT. A question, a project or an
-     action was never fetched from anywhere, so asking whether its route can be
-     shown is a category error rather than a doubt — and answering it as
-     undetermined would put a marker on every inquiry in the store, which is the
-     over-strictness failure this item's third control arm exists to catch. */
-  ROUTE_MARK_NOT_A_DOCUMENT: {
-    check: "C-34.4",
-    where: "src/provenance/index.mjs provenanceRouteAssess > is-route-mark",
-    translation: "Only a captured document travelled a route to get here, and this is not one. Questions, projects and actions were written in the record rather than fetched from anywhere, so there is no route to show or to doubt."
-  }
-};
 var REQUIRED_ARGUMENT_CHECKS = {
   /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
      tell a refused request from a half-applied one has to go and look, and this
@@ -5273,83 +5200,6 @@ var RENDER_CAPTURE_CHECKS = {
     check: "C-83.8",
     where: "src/capture/acquire.mjs acquire > is-render-admit",
     translation: "This instance is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
-  }
-};
-var KNOCK_CHECKS = {
-  RATE_IP: {
-    check: "C-85.1",
-    where: "src/capture/index.mjs #knockRateRefusal > is-knock-rate",
-    translation: "This group's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive."
-  },
-  RATE_GLOBAL: {
-    check: "C-85.2",
-    where: "src/capture/index.mjs #knockRateRefusal > is-knock-rate",
-    translation: "This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you \u2014 the cap exists so that no one sender can fill the inbox \u2014 and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. If it keeps happening, the group's members can be told the doorbell is saturated."
-  },
-  /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
-     `where` names a module-scope helper (capture's `doorbell.mjs` since T4) and
-     the region inside it, because that is where each refusal is enforced; the two oversize
-     rows are two conditions and deliberately not one row with a widened
-     sentence. */
-  KNOCK_ENVELOPE_TOO_LARGE: {
-    check: "C-85.3",
-    where: "src/capture/doorbell.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large",
-    translation: "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged \u2014 its size was read off the request and it stopped there. The size this instance will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read."
-  },
-  KNOCK_PAYLOAD_TOO_LARGE: {
-    check: "C-85.4",
-    where: "src/capture/doorbell.mjs knockPayloadTooLarge > is-knock-payload-too-large",
-    translation: "This group's inbox read your material and cannot keep it, because it is larger than this instance stores. That is a fact about how this group has set its instance up rather than a judgement about what you sent \u2014 a group that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them."
-  },
-  KNOCK_EMPTY: {
-    check: "C-85.5",
-    where: "src/capture/doorbell.mjs knockEmpty > is-knock-empty",
-    translation: "This group's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again."
-  }
-};
-var ATTEST_CHECKS = {
-  CAPTURE_HELD_IN_PARTS: {
-    check: "C-89.1",
-    where: "src/provenance/index.mjs attest > is-attest-parts",
-    translation: "The record lists this document, but keeps it in parts rather than as one file, and this instance has no record of fetching it itself. A timestamp is only requested for bytes this instance can vouch for, so none was requested. Nothing is missing: do not capture the document again. If the instance fetches it from its address, it can then be co-attested."
-  }
-};
-var PROVENANCE_ACT_CHECKS = {
-  /* R1: the C-18 register rules at the write. The findings carry each rule's own C-18 id; this row is the act's. */
-  PROVENANCE_REGISTER_REFUSED: {
-    check: "C-103.1",
-    where: "src/provenance/index.mjs #registerArms",
-    translation: "This document's account of where it came from breaks rules that the version it revises did not break, so nothing was written. Each broken rule is listed beside this message. Correct the account and save the document again."
-  },
-  ORIGIN_NOT_A_MEMBER: {
-    check: "C-103.2",
-    where: "src/provenance/index.mjs declareOrigin > is-origin-act",
-    translation: "Saying which system a document came from is a statement a named member makes and is named beside, and this came from an automated credential or from nobody. Sign in and make it yourself. Nothing was recorded."
-  },
-  NO_BUNDLE: {
-    check: "C-103.3",
-    where: "src/provenance/index.mjs declareOrigin > is-origin-act",
-    translation: "This did not say which document it is about, so nothing was done."
-  },
-  ORIGIN_NOT_A_DOCUMENT: {
-    check: "C-103.4",
-    where: "src/provenance/index.mjs declareOrigin > is-origin-statement",
-    translation: "Only a captured document came from a system, and this is not one: a question, a project or an action was written in the record. Nothing was recorded."
-  },
-  ORIGIN_NO_SYSTEM: {
-    check: "C-103.5",
-    where: "src/provenance/index.mjs declareOrigin > is-origin-statement",
-    translation: "This did not name the system the document came from, or named it at more than 200 characters. Name it briefly and try again. Nothing was recorded."
-  },
-  RECEIPT_MALFORMED: {
-    check: "C-103.6",
-    where: "src/provenance/index.mjs signReceipt",
-    translation: "A receipt names the captured document's fingerprint, the address it was fetched from and when, and one of those was missing or not in its form, so no receipt was signed."
-  },
-  RECEIPT_NO_KEY: {
-    check: "C-103.7",
-    where: "src/provenance/index.mjs signReceipt",
-    translation: "This instance holds no key to sign its receipts with, so this receipt was not signed, and nothing claims that it was. Whoever runs the instance can add one."
   }
 };
 var DRIVE_CAPTURE_CHECKS = {
@@ -5890,74 +5740,6 @@ var TRANSCRIBE_CHECKS = {
     check: "C-52.9",
     where: "src/content/index.mjs transcriptionAttest > is-transcription-attest",
     translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
-  }
-};
-var TESTIMONY_CHECKS = {
-  TESTIMONY_NOT_A_MEMBER: {
-    check: "C-53.1",
-    where: "src/provenance/index.mjs testify > is-testify-act",
-    translation: "A firsthand observation is a person saying what they saw, in their own name, and it stands on that person's trust. The credential that asked is an automated one, and it has no eyes to have seen anything with. Sign in and record it yourself."
-  },
-  TESTIMONY_AUTHOR_SUPPLIED: {
-    check: "C-53.2",
-    where: "src/provenance/index.mjs testify > is-testify-act",
-    translation: "That request names who the author is. The record takes the author of an observation from the account that is signed in, never from the request \u2014 a request that names its own author could sign as somebody else. Send the observation without an author and it is recorded as yours."
-  },
-  TESTIMONY_NO_WORDS: {
-    check: "C-53.3",
-    where: "src/provenance/index.mjs testify > is-testify-words",
-    translation: "The observation is empty. Write what you saw, in your own words; nothing is filled in for you."
-  },
-  TESTIMONY_WORDS_TOO_LONG: {
-    check: "C-53.4",
-    where: "src/provenance/index.mjs testify > is-testify-words",
-    translation: "The observation is longer than one passage this record stores. Record it as more than one observation; each is kept exactly as written and each can be cited."
-  },
-  TESTIMONY_OBSERVED_AT_INVALID: {
-    check: "C-53.5",
-    where: "src/provenance/index.mjs testify > is-testify-words",
-    translation: "An observation needs the date you saw it, as a calendar date (for example 2026-09-10) or a date and time, and not a date later than now. The record keeps that date apart from the moment you wrote it down, because they are two different facts."
-  },
-  /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
-     second member's IDENTICAL words, because the register is keyed by bytes.
-     The ruling: two identical observations are two testimonies, and the bytes
-     carry a canonical header holding the testimony's own id — so identical
-     words never collide. What is left is the case only an adversary produces:
-     somebody registering, ahead of time, the exact bytes the NEXT testimony
-     will have (the id is sequential, so it can be predicted). Recording over
-     them would re-file their register row under the observation. */
-  TESTIMONY_WORDS_REGISTERED: {
-    check: "C-53.6",
-    where: "src/provenance/index.mjs testify > is-testify-bytes",
-    translation: "The record already holds, under another document, the exact bytes this observation would be stored as \u2014 which can only happen if somebody registered them in advance. Nothing was recorded. Try again: the next attempt is stored under a new identifier and new bytes."
-  },
-  TESTIMONY_ORIGIN_NOT_MEMBER: {
-    check: "C-53.7",
-    where: "src/provenance/index.mjs #testimonyFence > is-testimony-fence",
-    translation: "This document is a member's own observation, and this revision of its record claims it came from somewhere else \u2014 a fetch, a sweep, or a machine. That would let a member's word pass for a captured publication. An observation's origin is the member who made it, and that cannot be revised."
-  },
-  TESTIMONY_AUTHORED_UNEARNED: {
-    check: "C-53.8",
-    where: "src/provenance/index.mjs #testimonyFence > is-testimony-fence",
-    translation: "This document claims to be a member's own firsthand observation, but it did not come through the act that records one. Only that act can mark a document as an observation, because only that act takes the author from the signed-in account. Record the observation through it, or remove the claim."
-  },
-  TESTIMONY_AUTHORED_DROPPED: {
-    check: "C-53.9",
-    where: "src/provenance/index.mjs #testimonyFence > is-testimony-fence",
-    translation: "This document is a member's own observation, and this revision no longer says so. Removing that would let a member's word read as a captured document. What the document is cannot be revised; to withdraw an observation, record a new one."
-  },
-  /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
-     `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
-     observation to EVERY capture: `register` is keyed by `capture_sha`, so a
-     promote registering bytes another bundle already holds would MOVE that
-     bundle's row to the newcomer, silently. Kept in this family because it is
-     the same fence at the same line, asked of every row rather than the authored
-     one; C-53.8 still answers first for an authored capture, in its own words.
-     The holding bundle is named only to a caller who may see it (D-15). */
-  CAPTURE_HELD_BY_ANOTHER_BUNDLE: {
-    check: "C-53.13",
-    where: "src/provenance/index.mjs #testimonyFence > is-register-home",
-    translation: "The record already holds this document, under another bundle. A document has one home in the record \u2014 the first bundle that registered it \u2014 and registering it again here would move it away from there. Nothing was written. Cite the bundle that holds it, or, if you found it at a new address, that sighting is already recorded as a corroboration of the one it holds."
   }
 };
 var LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
@@ -6522,12 +6304,12 @@ function coversSheetCell(e, container) {
   const sheet = sheets.find((x) => x && typeof x.name === "string" && x.name === want);
   if (!sheet)
     return `this capture's workbook holds ${sheets.length} sheet(s) (${sheets.map((x) => x && typeof x.name === "string" ? x.name : "?").slice(0, 12).join(", ")}${sheets.length > 12 ? ", \u2026" : ""}) and the extent names a sheet called '${want.slice(0, 40)}'`;
-  const at6 = a1ToRowCol(e.cell);
-  if (!at6) return null;
-  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at6.row > sheet.rows)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the extent names row ${at6.row}`;
-  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at6.col > sheet.cols)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent names column ${at6.col}`;
+  const at7 = a1ToRowCol(e.cell);
+  if (!at7) return null;
+  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at7.row > sheet.rows)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the extent names row ${at7.row}`;
+  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at7.col > sheet.cols)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent names column ${at7.col}`;
   return null;
 }
 function coversDocPara(e, container) {
@@ -6571,12 +6353,12 @@ function coversDocTable(e, container) {
     return `this capture's document holds ${tables.length} table(s)${tables.length ? ` (0-${tables.length - 1})` : ""} and the extent names table ${e.table}`;
   if (typeof e.cell !== "string" || !e.cell.trim()) return null;
   const t = tables[e.table] || {};
-  const at6 = a1ToRowCol(e.cell);
-  if (!at6) return null;
-  if (Number.isInteger(t.rows) && t.rows > 0 && at6.row > t.rows)
-    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at6.row}`;
-  if (Number.isInteger(t.cols) && t.cols > 0 && at6.col > t.cols)
-    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at6.col}`;
+  const at7 = a1ToRowCol(e.cell);
+  if (!at7) return null;
+  if (Number.isInteger(t.rows) && t.rows > 0 && at7.row > t.rows)
+    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at7.row}`;
+  if (Number.isInteger(t.cols) && t.cols > 0 && at7.col > t.cols)
+    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at7.col}`;
   return null;
 }
 function coversImage(e, container) {
@@ -7985,13 +7767,13 @@ var REFUSED = Symbol("record-core-refusal");
 var hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
 var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-function fileDigestOf(f3) {
-  if (f3 && typeof f3.text === "string") return createSha256().update(te.encode(f3.text)).hex();
-  if (f3 && typeof f3.blobSha === "string" && f3.blobSha) return f3.blobSha.toLowerCase();
+function fileDigestOf(f4) {
+  if (f4 && typeof f4.text === "string") return createSha256().update(te.encode(f4.text)).hex();
+  if (f4 && typeof f4.blobSha === "string" && f4.blobSha) return f4.blobSha.toLowerCase();
   return null;
 }
-function inlineBytesOf(f3) {
-  return f3 && typeof f3.text === "string" ? te.encode(f3.text).length : null;
+function inlineBytesOf(f4) {
+  return f4 && typeof f4.text === "string" ? te.encode(f4.text).length : null;
 }
 function censusCap(limit) {
   const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
@@ -8004,7 +7786,7 @@ function manifestFiles(filesJson) {
   } catch {
     arr = null;
   }
-  return Array.isArray(arr) ? arr.filter((f3) => f3 && typeof f3 === "object") : [];
+  return Array.isArray(arr) ? arr.filter((f4) => f4 && typeof f4 === "object") : [];
 }
 var MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source" });
 var RecordCore = class _RecordCore {
@@ -8183,13 +7965,13 @@ var RecordCore = class _RecordCore {
    *  head, never a GLOB built from the prefix: workerd refuses a pattern over 50 bytes (K313), and a
    *  prefix is the caller's, of any length and any characters. */
   seedMintLedger(sources = []) {
-    const at6 = (/* @__PURE__ */ new Date()).toISOString();
+    const at7 = (/* @__PURE__ */ new Date()).toISOString();
     for (const [prefix, table, column] of sources) {
       if (!IDENT.test(String(table)) || !IDENT.test(String(column))) continue;
       const head = `${prefix}-`;
       this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
                       SELECT DISTINCT ${column}, ?, 'live' FROM ${table}
-                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at6, head, head);
+                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at7, head, head);
     }
     const scopes = _RecordCore.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
     const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
@@ -8200,7 +7982,7 @@ var RecordCore = class _RecordCore {
                     SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
                       FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
       ...scopes,
-      at6,
+      at7,
       ...scopes
     );
   }
@@ -8324,9 +8106,9 @@ var RecordCore = class _RecordCore {
         written = [];
       }
       if (!Array.isArray(written)) written = [];
-      const writtenPairs = written.map((f3) => typeof f3 === "string" ? { name: f3, sha256: null } : f3);
-      const files = writtenPairs.map((f3) => f3.name);
-      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f3) => f3.name);
+      const writtenPairs = written.map((f4) => typeof f4 === "string" ? { name: f4, sha256: null } : f4);
+      const files = writtenPairs.map((f4) => f4.name);
+      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f4) => f4.name);
       entries.push({
         key: r.snap_key,
         seq: ++seq,
@@ -8554,7 +8336,7 @@ var RecordCore = class _RecordCore {
         if (deficit < 0) out.excess += -deficit;
         const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA);
         const outputs = new Set(rows.map((r) => {
-          const md = manifestFiles(r.files_json).find((f3) => f3.name === "bundle.md");
+          const md = manifestFiles(r.files_json).find((f4) => f4.name === "bundle.md");
           return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
         }).filter(Boolean));
         const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
@@ -8613,10 +8395,10 @@ var RecordCore = class _RecordCore {
     created,
     lastUpdated,
     criticality,
-    at: at6
+    at: at7
   }) {
     return this.transact(() => {
-      const now = at6 ?? (/* @__PURE__ */ new Date()).toISOString();
+      const now = at7 ?? (/* @__PURE__ */ new Date()).toISOString();
       const cur = this.#one(`SELECT row_version FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur)
         for (const r of this.#rows(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
@@ -8638,22 +8420,22 @@ var RecordCore = class _RecordCore {
         base,
         author,
         now,
-        JSON.stringify(files.map((f3) => ({ name: f3.path, sha256: f3.sha256 }))),
+        JSON.stringify(files.map((f4) => ({ name: f4.path, sha256: f4.sha256 }))),
         writer,
         operation
       );
       this.#sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
-      for (const f3 of files)
+      for (const f4 of files)
         this.#sql.exec(
           `INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`,
           bundleId,
-          f3.path,
-          f3.text ?? null,
-          f3.blobSha ?? null,
-          f3.bytes ?? (typeof f3.text === "string" ? te.encode(f3.text).length : 0),
-          f3.sha256
+          f4.path,
+          f4.text ?? null,
+          f4.blobSha ?? null,
+          f4.bytes ?? (typeof f4.text === "string" ? te.encode(f4.text).length : 0),
+          f4.sha256
         );
-      const bundleSha = (files.find((f3) => f3.path === "bundle.md") || files[0] || {}).sha256 ?? "";
+      const bundleSha = (files.find((f4) => f4.path === "bundle.md") || files[0] || {}).sha256 ?? "";
       const given = [
         ["current_state", state],
         ["prior_state", priorState],
@@ -8824,20 +8606,20 @@ var RecordCore = class _RecordCore {
    *  admin class still receives a figure that moves on every write, so an operator can tell that something large was
    *  written, never that it was a lead, and no lead is readable to it. Writes nothing; never throws. */
   stats({ capacity = false, viewer } = {}) {
-    const f3 = this.#figures(viewer, false);
-    for (const k of [..._RecordCore.#PROOF_ONLY, "dbBytes"]) delete f3[k];
-    if (capacity === true) f3.dbBytes = this.#dbBytes();
-    return f3;
+    const f4 = this.#figures(viewer, false);
+    for (const k of [..._RecordCore.#PROOF_ONLY, "dbBytes"]) delete f4[k];
+    if (capacity === true) f4.dbBytes = this.#dbBytes();
+    return f4;
   }
   /** R64: purge's proof of what it removed, the private form of the same figures, WHOLE (§5: *the purge proof's own
    *  count stays whole*): the whole log as `observations`, with `leads`, the themes and `dbBytes`, and no
    *  `observationsNonLead`. No route answers it: purge reads it before and after it clears. Writes nothing; never
    *  throws. */
   proofCounts() {
-    const f3 = this.#figures(void 0, true);
-    for (const k of [..._RecordCore.#WIRE_ONLY, "dbBytes"]) delete f3[k];
-    f3.dbBytes = this.#dbBytes();
-    return f3;
+    const f4 = this.#figures(void 0, true);
+    for (const k of [..._RecordCore.#WIRE_ONLY, "dbBytes"]) delete f4[k];
+    f4.dbBytes = this.#dbBytes();
+    return f4;
   }
   /* ---- the audit sweep (R18–R20, R45, R59, R67) ---- */
   /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
@@ -8961,9 +8743,9 @@ var RecordCore = class _RecordCore {
         } catch (e) {
           more = [_RecordCore.#checkFailed(module, id, e)];
         }
-        if (Array.isArray(more)) findings.push(...more.filter((f3) => f3 && typeof f3 === "object"));
+        if (Array.isArray(more)) findings.push(...more.filter((f4) => f4 && typeof f4 === "object"));
       }
-      const errs = findings.filter((f3) => f3.severity === "error");
+      const errs = findings.filter((f4) => f4.severity === "error");
       if (!errs.length) {
         clean++;
         continue;
@@ -9672,6 +9454,7 @@ var MODULE_ORDER = Object.freeze([
   "host-governor",
   "provenance",
   "capture-sources",
+  "acquisition",
   "capture",
   "sources",
   /* 4 */
@@ -9692,6 +9475,7 @@ var MODULE_ORDER = Object.freeze([
   "basis-versions",
   "strength",
   "contradiction",
+  "run-rules",
   "ai-runs",
   "run-productions",
   "capture-requests",
@@ -9701,7 +9485,10 @@ var MODULE_ORDER = Object.freeze([
   "intent",
   "reevaluation",
   /* 8 */
+  "case-grammar",
   "publication",
+  "public-read",
+  "project-stage",
   "ratification",
   "case-authoring",
   "review",
@@ -9843,10 +9630,10 @@ var Membership = class _Membership {
     this.#revokedListeners.sort((a, b) => rank(a.module) - rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
   }
-  #announceRevoked(memberId, by, at6) {
+  #announceRevoked(memberId, by, at7) {
     for (const l of this.#revokedListeners) {
       try {
-        const r = l.fn({ memberId, by: by ?? null, at: at6 });
+        const r = l.fn({ memberId, by: by ?? null, at: at7 });
         if (r && typeof r.then === "function") r.then(null, () => {
         });
       } catch {
@@ -9893,7 +9680,7 @@ var Membership = class _Membership {
       const bad = this.visibilitySettingRefusal(visibility, projectId);
       if (bad) return bad;
     }
-    const at6 = (/* @__PURE__ */ new Date()).toISOString();
+    const at7 = (/* @__PURE__ */ new Date()).toISOString();
     let owner = null;
     if (ownerId) {
       const claimed = this.projectClaimOwner({ projectId, memberId: ownerId });
@@ -9907,7 +9694,7 @@ var Membership = class _Membership {
         String(visibility),
         by ?? ownerId ?? "not recorded",
         "chosen at creation",
-        at6
+        at7
       );
     this.reindexProjectSight(projectId);
     return { ok: true, projectId, owner, setting: this.visibilityOf(projectId) };
@@ -9960,10 +9747,10 @@ var Membership = class _Membership {
         "NO_HOLDERS",
         "name who holds hosting access: the record keeps the group's answer as it was given, and an empty answer records nobody. Nothing was written."
       );
-    const at6 = (/* @__PURE__ */ new Date()).toISOString();
+    const at7 = (/* @__PURE__ */ new Date()).toISOString();
     const n = note === null || note === void 0 || String(note).trim() === "" ? null : String(note).slice(0, 280);
-    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at6);
-    return { ok: true, holders: h, note: n, recorded_by: by, at: at6 };
+    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at7);
+    return { ok: true, holders: h, note: n, recorded_by: by, at: at7 };
   }
   /* N70: BOUNDED, AND THE BOUND IS PUBLISHED (R48's shape): the history grows with every answer the group records, so
      `limit` is the cap applied (the caller may lower it, never raise it), `truncated` is measured by reading one row
@@ -10757,24 +10544,24 @@ var Membership = class _Membership {
       if (unknown) return unknown;
     }
     const why = reason === null || reason === void 0 || String(reason).trim() === "" ? null : String(reason).slice(0, 280);
-    const at6 = (/* @__PURE__ */ new Date()).toISOString();
+    const at7 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
       projectId,
       want,
       by,
       why,
-      at6
+      at7
     );
     this.reindexProjectSight(projectId);
-    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at6) : 0;
+    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at7) : 0;
     return {
       ok: true,
       projectId,
       setting: want,
       set_by: by,
       reason: why,
-      at: at6,
+      at: at7,
       ...want === "hidden" ? { requests_lapsed: lapsed } : {}
     };
   }
@@ -10962,7 +10749,7 @@ var Membership = class _Membership {
   /* THE ONE STATEMENT THAT CLOSES A REQUEST. Every terminal state is written here, and only an OPEN row moves:
      the `WHERE state='open'` is what makes the closing fields write-once, so an answered request cannot be
      answered twice and a withdrawn one cannot then be granted. Returns the number of rows closed. */
-  #closeJoinRequests(projectId, memberId, state, by, comment, at6) {
+  #closeJoinRequests(projectId, memberId, state, by, comment, at7) {
     const before = this.#one(
       `SELECT COUNT(*) AS n FROM project_join_requests
                                WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
@@ -10976,15 +10763,15 @@ var Membership = class _Membership {
       state,
       by,
       comment,
-      at6,
+      at7,
       projectId,
       memberId,
       memberId
     );
     return before;
   }
-  #lapseJoinRequests(projectId, by, at6) {
-    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at6);
+  #lapseJoinRequests(projectId, by, at7) {
+    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at7);
   }
   static #requestComment(comment) {
     return comment === null || comment === void 0 || String(comment).trim() === "" ? null : String(comment).slice(0, 280);
@@ -11030,7 +10817,7 @@ var Membership = class _Membership {
         { asked: open.asked_at }
       );
     const c = _Membership.#requestComment(comment);
-    const at6 = (/* @__PURE__ */ new Date()).toISOString();
+    const at7 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
        VALUES (?,?,?,?,?,'open')`,
@@ -11038,7 +10825,7 @@ var Membership = class _Membership {
       me.member_id,
       shown,
       c,
-      at6
+      at7
     );
     return {
       ok: true,
@@ -11046,7 +10833,7 @@ var Membership = class _Membership {
       name: shown,
       state: "open",
       comment: c,
-      asked: at6,
+      asked: at7,
       detail: "your request is open. The project's owners answer it; until they do it stays open."
     };
   }
@@ -11065,9 +10852,9 @@ var Membership = class _Membership {
         projectId,
         "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written."
       );
-    const at6 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at6);
-    return { ok: true, projectId, state: "withdrawn", closed: at6 };
+    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at7);
+    return { ok: true, projectId, state: "withdrawn", closed: at7 };
   }
   /** REC-150 — AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act: a member at
    *  EXISTENCE gets C-70.1, a caller who cannot see the project the absent answer, and only then is ownership
@@ -11127,7 +10914,7 @@ var Membership = class _Membership {
         { handle: target.handle }
       );
     const c = _Membership.#requestComment(comment);
-    const at6 = (/* @__PURE__ */ new Date()).toISOString();
+    const at7 = (/* @__PURE__ */ new Date()).toISOString();
     if (want === "grant") {
       this.sql.exec(
         `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
@@ -11135,18 +10922,18 @@ var Membership = class _Membership {
         projectId,
         target.member_id,
         by,
-        at6,
-        at6
+        at7,
+        at7
       );
     }
-    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at6);
+    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at7);
     return {
       ok: true,
       projectId,
       handle: target.handle,
       state: want === "grant" ? "granted" : "declined",
       comment: c,
-      closed: at6,
+      closed: at7,
       ...want === "grant" ? {
         participation: "invited",
         detail: "granted as an invitation: the member is INVITED, and joins by the checkbox (\xA77.4)."
@@ -11443,7 +11230,7 @@ var Membership = class _Membership {
       detail: "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner."
     };
     const why = comment === null || comment === void 0 ? null : String(comment).slice(0, 280);
-    const at6 = (/* @__PURE__ */ new Date()).toISOString();
+    const at7 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     this.sql.exec(
       `INSERT INTO project_removals (project_id, member_id, removed_by, comment, at) VALUES (?,?,?,?,?)`,
@@ -11451,9 +11238,9 @@ var Membership = class _Membership {
       target.member_id,
       by,
       why,
-      at6
+      at7
     );
-    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at6 };
+    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at7 };
   }
   /** 7.10 addition. The sole owner may add a second unilaterally; every addition
    *  past that needs the consensus of ALL existing owners.
@@ -12012,9 +11799,9 @@ var Membership = class _Membership {
     );
   }
   /* R42: a carried ownership decision, kept with its deciders and reasons. */
-  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at6) {
+  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at7) {
     this.sql.exec(`INSERT INTO project_owner_decisions (project_id, kind, target, deciders, reasons, at)
-                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at6);
+                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at7);
   }
   /** The table, computed rather than transcribed, so the code and the document
    *  cannot drift. Exposed as an op because a UI must be able to tell a group
@@ -12769,7 +12556,7 @@ var Membership = class _Membership {
     writes = [],
     note = null,
     confinedTo = null,
-    at: at6 = null
+    at: at7 = null
   } = {}) {
     const refusal5 = (code, detail, extra) => {
       const row = AI_CREDENTIAL_CHECKS[code];
@@ -12783,7 +12570,7 @@ var Membership = class _Membership {
         ...extra || {}
       };
     };
-    const now = at6 || stampSecond();
+    const now = at7 || stampSecond();
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who || isMachineIdentity(who))
@@ -12841,7 +12628,7 @@ var Membership = class _Membership {
   }
   /** op=aicredentialrevoke. Also a member act, and the reason is `revoked_by`
    *  rather than the risk — see C-29.4's note in the catalog. */
-  aiCredentialRevoke({ who = null, tokenId = null, at: at6 = null } = {}) {
+  aiCredentialRevoke({ who = null, tokenId = null, at: at7 = null } = {}) {
     const refusal5 = (code, detail, extra) => {
       const row2 = AI_CREDENTIAL_CHECKS[code];
       return {
@@ -12854,7 +12641,7 @@ var Membership = class _Membership {
         ...extra || {}
       };
     };
-    const now = at6 || stampSecond();
+    const now = at7 || stampSecond();
     const id = String(tokenId ?? "").trim();
     if (!who || isMachineIdentity(who))
       return refusal5(
@@ -13019,6 +12806,46 @@ var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
 
 // ../bio-plane/src/provenance/register-checks.mjs
 var CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
+
+// ../bio-plane/src/provenance/checks.mjs
+var PROVENANCE_ACT_CHECKS = {
+  /* R1: the C-18 register rules at the write. The findings carry each rule's own C-18 id; this row is the act's. */
+  PROVENANCE_REGISTER_REFUSED: {
+    check: "C-103.1",
+    where: "src/provenance/index.mjs #registerArms",
+    translation: "This document's account of where it came from breaks rules that the version it revises did not break, so nothing was written. Each broken rule is listed beside this message. Correct the account and save the document again."
+  },
+  ORIGIN_NOT_A_MEMBER: {
+    check: "C-103.2",
+    where: "src/provenance/index.mjs declareOrigin > is-origin-act",
+    translation: "Saying which system a document came from is a statement a named member makes and is named beside, and this came from an automated credential or from nobody. Sign in and make it yourself. Nothing was recorded."
+  },
+  NO_BUNDLE: {
+    check: "C-103.3",
+    where: "src/provenance/index.mjs declareOrigin > is-origin-act",
+    translation: "This did not say which document it is about, so nothing was done."
+  },
+  ORIGIN_NOT_A_DOCUMENT: {
+    check: "C-103.4",
+    where: "src/provenance/index.mjs declareOrigin > is-origin-statement",
+    translation: "Only a captured document came from a system, and this is not one: a question, a project or an action was written in the record. Nothing was recorded."
+  },
+  ORIGIN_NO_SYSTEM: {
+    check: "C-103.5",
+    where: "src/provenance/index.mjs declareOrigin > is-origin-statement",
+    translation: "This did not name the system the document came from, or named it at more than 200 characters. Name it briefly and try again. Nothing was recorded."
+  },
+  RECEIPT_MALFORMED: {
+    check: "C-103.6",
+    where: "src/provenance/index.mjs signReceipt",
+    translation: "A receipt names the captured document's fingerprint, the address it was fetched from and when, and one of those was missing or not in its form, so no receipt was signed."
+  },
+  RECEIPT_NO_KEY: {
+    check: "C-103.7",
+    where: "src/provenance/index.mjs signReceipt",
+    translation: "This instance holds no key to sign its receipts with, so this receipt was not signed, and nothing claims that it was. Whoever runs the instance can add one."
+  }
+};
 
 // ../bio-plane/src/provenance/index.mjs
 var te4 = new TextEncoder();
@@ -13848,70 +13675,70 @@ function validateInto(p, errors) {
   const origins = /* @__PURE__ */ new Set();
   const noPathHosts = /* @__PURE__ */ new Map();
   if (own2(p, "systems")) list3("systems", p.systems).forEach((s, i) => {
-    const at6 = `systems[${i}]`;
-    if (!entry(at6, s)) return;
-    fields(at6, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
-    str(`${at6}.origin`, s.origin, "origin");
+    const at7 = `systems[${i}]`;
+    if (!entry(at7, s)) return;
+    fields(at7, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
+    str(`${at7}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
-    str(`${at6}.name`, s.name, "name");
+    str(`${at7}.name`, s.name, "name");
     if (!Array.isArray(s.hosts) || !s.hosts.length || !s.hosts.every((h) => isStr(h) && h === h.toLowerCase()))
-      err(`${at6}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
-    if (own2(s, "path")) pattern(`${at6}.path`, s.path);
+      err(`${at7}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
+    if (own2(s, "path")) pattern(`${at7}.path`, s.path);
     else if (Array.isArray(s.hosts)) {
-      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at6);
+      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at7);
     }
     if (own2(s, "links")) {
       if (!isObj2(s.links) || !own2(s.links, "item") || !own2(s.links, "file"))
-        err(`${at6}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
+        err(`${at7}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
       else {
-        fields(`${at6}.links`, s.links, ["item", "file"]);
-        pattern(`${at6}.links.item`, s.links.item);
-        pattern(`${at6}.links.file`, s.links.file);
+        fields(`${at7}.links`, s.links, ["item", "file"]);
+        pattern(`${at7}.links.item`, s.links.item);
+        pattern(`${at7}.links.file`, s.links.file);
       }
     }
-    if (own2(s, "republishes") && typeof s.republishes !== "boolean") err(`${at6}.republishes`, "VALUE_INVALID", "true or false");
-    if (own2(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at6}.provenance_stated`, "VALUE_INVALID", "true or false");
-    basis(at6, s);
+    if (own2(s, "republishes") && typeof s.republishes !== "boolean") err(`${at7}.republishes`, "VALUE_INVALID", "true or false");
+    if (own2(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at7}.provenance_stated`, "VALUE_INVALID", "true or false");
+    basis(at7, s);
   });
   if (own2(p, "mixed_hosts")) list3("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
-    const at6 = `mixed_hosts[${i}]`;
-    if (!entry(at6, m)) return;
-    fields(at6, m, ["host", "why", "basis"]);
-    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at6}.host`, "VALUE_INVALID", "a lower-case host name");
-    str(`${at6}.why`, m.why, "why");
+    const at7 = `mixed_hosts[${i}]`;
+    if (!entry(at7, m)) return;
+    fields(at7, m, ["host", "why", "basis"]);
+    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at7}.host`, "VALUE_INVALID", "a lower-case host name");
+    str(`${at7}.why`, m.why, "why");
     if (typeof m.host === "string" && noPathHosts.has(m.host))
-      err(`${at6}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
-    basis(at6, m);
+      err(`${at7}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
+    basis(at7, m);
   });
   const spaceForms = {};
   if (own2(p, "spaces")) {
     if (!isObj2(p.spaces)) err("spaces", "VALUE_INVALID", "spaces is an object keyed by space");
     else for (const [name, s] of Object.entries(p.spaces)) {
-      const at6 = `spaces.${name}`;
+      const at7 = `spaces.${name}`;
       if (!SPACES.includes(name)) {
-        err(at6, "UNKNOWN_SPACE", `'${name}' is not one of ${SPACES.join(", ")}`);
+        err(at7, "UNKNOWN_SPACE", `'${name}' is not one of ${SPACES.join(", ")}`);
         continue;
       }
-      if (!entry(at6, s)) continue;
-      fields(at6, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
-      str(`${at6}.label`, s.label, "label");
+      if (!entry(at7, s)) continue;
+      fields(at7, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
+      str(`${at7}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list3(`${at6}.forms`, s.forms).forEach((f3, i) => {
-        const fa = `${at6}.forms[${i}]`;
-        if (!entry(fa, f3)) return;
-        fields(fa, f3, ["form", "pattern", "normal", "clean", "basis"]);
-        str(`${fa}.form`, f3.form, "form");
-        if (isStr(f3.form)) {
-          if (names.has(f3.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f3.form}' is named twice in ${name}`);
-          names.add(f3.form);
+      list3(`${at7}.forms`, s.forms).forEach((f4, i) => {
+        const fa = `${at7}.forms[${i}]`;
+        if (!entry(fa, f4)) return;
+        fields(fa, f4, ["form", "pattern", "normal", "clean", "basis"]);
+        str(`${fa}.form`, f4.form, "form");
+        if (isStr(f4.form)) {
+          if (names.has(f4.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f4.form}' is named twice in ${name}`);
+          names.add(f4.form);
         }
-        const re = compile(f3.pattern);
-        if (!re) pattern(`${fa}.pattern`, f3.pattern);
+        const re = compile(f4.pattern);
+        if (!re) pattern(`${fa}.pattern`, f4.pattern);
         const groups = re ? groupCount(re) : Infinity;
-        let normalOk = Array.isArray(f3.normal) && f3.normal.length > 0;
+        let normalOk = Array.isArray(f4.normal) && f4.normal.length > 0;
         if (!normalOk) err(`${fa}.normal`, "NORMAL_INVALID", "normal is a non-empty list of parts");
-        else f3.normal.forEach((part, j) => {
+        else f4.normal.forEach((part, j) => {
           if (typeof part === "string") return;
           const pa = `${fa}.normal[${j}]`;
           if (!isObj2(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k)) || own2(part, "unpad") && typeof part.unpad !== "boolean" || own2(part, "upper") && typeof part.upper !== "boolean" || own2(part, "default") && typeof part.default !== "string") {
@@ -13919,19 +13746,19 @@ function validateInto(p, errors) {
             err(pa, "NORMAL_INVALID", "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has");
           }
         });
-        if (own2(f3, "clean")) {
-          const c = f3.clean;
+        if (own2(f4, "clean")) {
+          const c = f4.clean;
           const bad = !isObj2(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k)) || own2(c, "strip") && (!Array.isArray(c.strip) || !c.strip.every((x) => compile(x))) || own2(c, "spaces") && !["remove", "collapse"].includes(c.spaces) || own2(c, "upper") && c.upper !== true;
           if (bad) {
             normalOk = false;
             err(`${fa}.clean`, "NORMAL_INVALID", "clean is {strip?: [pattern], spaces?: remove|collapse, upper?: true}");
           }
         }
-        basis(fa, f3);
-        if (isStr(f3.form) && re && normalOk) spaceForms[name].set(f3.form, f3);
+        basis(fa, f4);
+        if (isStr(f4.form) && re && normalOk) spaceForms[name].set(f4.form, f4);
       });
-      if (name === "enactment" && own2(s, "kinds")) list3(`${at6}.kinds`, s.kinds).forEach((k, i) => {
-        const ka = `${at6}.kinds[${i}]`;
+      if (name === "enactment" && own2(s, "kinds")) list3(`${at7}.kinds`, s.kinds).forEach((k, i) => {
+        const ka = `${at7}.kinds[${i}]`;
         if (!entry(ka, k)) return;
         fields(ka, k, ["kind", "prefix", "floor", "basis"]);
         str(`${ka}.kind`, k.kind, "kind");
@@ -13951,41 +13778,41 @@ function validateInto(p, errors) {
     }
   }
   if (own2(p, "crosswalks")) list3("crosswalks", p.crosswalks).forEach((x, i) => {
-    const at6 = `crosswalks[${i}]`;
-    if (!entry(at6, x)) return;
-    fields(at6, x, ["space", "forms", "pairs", "source", "basis"]);
-    if (!SPACES.includes(x.space)) err(`${at6}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
-    if (!own2(x, "source") || x.source === "" || x.source == null) err(`${at6}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
-    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at6}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
+    const at7 = `crosswalks[${i}]`;
+    if (!entry(at7, x)) return;
+    fields(at7, x, ["space", "forms", "pairs", "source", "basis"]);
+    if (!SPACES.includes(x.space)) err(`${at7}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
+    if (!own2(x, "source") || x.source === "" || x.source == null) err(`${at7}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
+    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at7}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
-    if (!forms) err(`${at6}.forms`, "VALUE_INVALID", "forms is [a, b]");
-    else forms.forEach((f3, j) => {
-      if (!known.has(f3)) err(`${at6}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f3)}'`);
+    if (!forms) err(`${at7}.forms`, "VALUE_INVALID", "forms is [a, b]");
+    else forms.forEach((f4, j) => {
+      if (!known.has(f4)) err(`${at7}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f4)}'`);
     });
-    list3(`${at6}.pairs`, x.pairs).forEach((pair, j) => {
+    list3(`${at7}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
-        err(`${at6}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
+        err(`${at7}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
         return;
       }
       if (!forms) return;
       pair.forEach((v, n) => {
-        const f3 = known.get(forms[n]);
-        if (f3 && applyForm(f3, v) == null) err(`${at6}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        const f4 = known.get(forms[n]);
+        if (f4 && applyForm(f4, v) == null) err(`${at7}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
       });
     });
-    basis(at6, x);
+    basis(at7, x);
   });
   if (own2(p, "vocabulary")) {
     if (!isObj2(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
-      const at6 = `vocabulary.${key}`;
+      const at7 = `vocabulary.${key}`;
       if (!VOCABULARY.includes(key)) {
-        err(at6, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
+        err(at7, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
         continue;
       }
-      list3(at6, entries).forEach((e, i) => {
-        const ea = `${at6}[${i}]`;
+      list3(at7, entries).forEach((e, i) => {
+        const ea = `${at7}[${i}]`;
         if (!entry(ea, e)) return;
         if (key === "codes") {
           fields(ea, e, ["key", "label", "pattern", "basis"]);
@@ -14016,22 +13843,22 @@ function validateInto(p, errors) {
     }
   }
   if (own2(p, "search_terms")) list3("search_terms", p.search_terms).forEach((t, i) => {
-    const at6 = `search_terms[${i}]`;
-    if (!entry(at6, t)) return;
-    fields(at6, t, ["term", "basis"]);
-    str(`${at6}.term`, t.term, "term");
-    basis(at6, t);
+    const at7 = `search_terms[${i}]`;
+    if (!entry(at7, t)) return;
+    fields(at7, t, ["term", "basis"]);
+    str(`${at7}.term`, t.term, "term");
+    basis(at7, t);
   });
   const lawNames = /* @__PURE__ */ new Set();
   if (own2(p, "records_laws")) list3("records_laws", p.records_laws).forEach((l, i) => {
-    const at6 = `records_laws[${i}]`;
-    if (!entry(at6, l)) return;
-    fields(at6, l, ["level", "name", "citation", "basis"]);
-    if (!LAW_LEVELS.includes(l.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS.join(", ")}`);
-    str(`${at6}.name`, l.name, "name");
-    str(`${at6}.citation`, l.citation, "citation");
+    const at7 = `records_laws[${i}]`;
+    if (!entry(at7, l)) return;
+    fields(at7, l, ["level", "name", "citation", "basis"]);
+    if (!LAW_LEVELS.includes(l.level)) err(`${at7}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS.join(", ")}`);
+    str(`${at7}.name`, l.name, "name");
+    str(`${at7}.citation`, l.citation, "citation");
     if (isStr(l.name)) lawNames.add(l.name);
-    basis(at6, l);
+    basis(at7, l);
   });
   if (own2(p, "locale")) {
     const l = p.locale;
@@ -14044,67 +13871,67 @@ function validateInto(p, errors) {
   }
   const codeKeys = new Set(own2(p, "vocabulary") && isObj2(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj2).map((c) => c.key) : []);
   if (own2(p, "standard_sources")) list3("standard_sources", p.standard_sources).forEach((s, i) => {
-    const at6 = `standard_sources[${i}]`;
-    if (!entry(at6, s)) return;
-    fields(at6, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
-    str(`${at6}.source`, s.source, "source");
-    str(`${at6}.issuer`, s.issuer, "issuer");
+    const at7 = `standard_sources[${i}]`;
+    if (!entry(at7, s)) return;
+    fields(at7, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
+    str(`${at7}.source`, s.source, "source");
+    str(`${at7}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
-    if (!SOURCE_KINDS.includes(s.kind)) err(`${at6}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
-    if (!LAW_LEVELS.includes(s.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS.join(", ")}`);
-    pattern(`${at6}.cite`, s.cite);
-    if (own2(s, "code") && !codeKeys.has(s.code)) err(`${at6}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
-    basis(at6, s);
+    if (!SOURCE_KINDS.includes(s.kind)) err(`${at7}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
+    if (!LAW_LEVELS.includes(s.level)) err(`${at7}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS.join(", ")}`);
+    pattern(`${at7}.cite`, s.cite);
+    if (own2(s, "code") && !codeKeys.has(s.code)) err(`${at7}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
+    basis(at7, s);
   });
   if (own2(p, "counterparties")) list3("counterparties", p.counterparties).forEach((c, i) => {
-    const at6 = `counterparties[${i}]`;
-    if (!entry(at6, c)) return;
-    fields(at6, c, ["role", "body", "level", "elected", "oversight", "basis"]);
-    str(`${at6}.role`, c.role, "role");
-    str(`${at6}.body`, c.body, "body");
-    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
-    if (typeof c.elected !== "boolean") err(`${at6}.elected`, "VALUE_INVALID", "elected is true or false");
-    if (own2(c, "oversight") && typeof c.oversight !== "boolean") err(`${at6}.oversight`, "VALUE_INVALID", "oversight is true or false");
-    basis(at6, c);
+    const at7 = `counterparties[${i}]`;
+    if (!entry(at7, c)) return;
+    fields(at7, c, ["role", "body", "level", "elected", "oversight", "basis"]);
+    str(`${at7}.role`, c.role, "role");
+    str(`${at7}.body`, c.body, "body");
+    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at7}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
+    if (typeof c.elected !== "boolean") err(`${at7}.elected`, "VALUE_INVALID", "elected is true or false");
+    if (own2(c, "oversight") && typeof c.oversight !== "boolean") err(`${at7}.oversight`, "VALUE_INVALID", "oversight is true or false");
+    basis(at7, c);
   });
   const kinds = /* @__PURE__ */ new Set();
   const tier3 = /* @__PURE__ */ new Set();
   if (own2(p, "action_kinds")) list3("action_kinds", p.action_kinds).forEach((k, i) => {
-    const at6 = `action_kinds[${i}]`;
-    if (!entry(at6, k)) return;
-    fields(at6, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "evidence", "basis"]);
-    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at6}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (kinds.has(k.kind)) err(`${at6}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
+    const at7 = `action_kinds[${i}]`;
+    if (!entry(at7, k)) return;
+    fields(at7, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "evidence", "basis"]);
+    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at7}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+    else if (kinds.has(k.kind)) err(`${at7}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
     else {
       kinds.add(k.kind);
       if (k.tier === 3) tier3.add(k.kind);
     }
-    str(`${at6}.label`, k.label, "label");
-    if (own2(k, "tier") && !TIERS.includes(k.tier)) err(`${at6}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
-    if (own2(k, "laws")) list3(`${at6}.laws`, k.laws).forEach((l, j) => {
-      if (!lawNames.has(l)) err(`${at6}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
+    str(`${at7}.label`, k.label, "label");
+    if (own2(k, "tier") && !TIERS.includes(k.tier)) err(`${at7}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
+    if (own2(k, "laws")) list3(`${at7}.laws`, k.laws).forEach((l, j) => {
+      if (!lawNames.has(l)) err(`${at7}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
     });
     if (own2(k, "venue")) {
       const v = k.venue;
-      if (!isObj2(v)) err(`${at6}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
+      if (!isObj2(v)) err(`${at7}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at6}.venue`, v, ["name", "how", "basis"]);
-        str(`${at6}.venue.name`, v.name, "name");
-        if (!VENUE_HOW.includes(v.how)) err(`${at6}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
-        basis(`${at6}.venue`, v);
+        fields(`${at7}.venue`, v, ["name", "how", "basis"]);
+        str(`${at7}.venue.name`, v.name, "name");
+        if (!VENUE_HOW.includes(v.how)) err(`${at7}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
+        basis(`${at7}.venue`, v);
       }
     }
     if (own2(k, "template")) {
-      if (!isStr(k.template)) err(`${at6}.template`, "VALUE_INVALID", "a template is text");
-      if (k.tier === 3) err(`${at6}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
+      if (!isStr(k.template)) err(`${at7}.template`, "VALUE_INVALID", "a template is text");
+      if (k.tier === 3) err(`${at7}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
     }
     if (own2(k, "advisory")) {
-      if (!isStr(k.advisory)) err(`${at6}.advisory`, "VALUE_INVALID", "an advisory note is text");
-      if (k.tier !== 2) err(`${at6}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
+      if (!isStr(k.advisory)) err(`${at7}.advisory`, "VALUE_INVALID", "an advisory note is text");
+      if (k.tier !== 2) err(`${at7}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
     }
     if (own2(k, "evidence")) {
       const ev = k.evidence;
-      const ea = `${at6}.evidence`;
+      const ea = `${at7}.evidence`;
       if (!isObj2(ev)) err(ea, "VALUE_INVALID", "evidence is {standard, accepts, contestable?, basis}");
       else {
         fields(ea, ev, ["standard", "accepts", "contestable", "basis"]);
@@ -14130,43 +13957,43 @@ function validateInto(p, errors) {
         basis(ea, ev);
       }
     }
-    basis(at6, k);
+    basis(at7, k);
   });
   if (own2(p, "deadlines")) list3("deadlines", p.deadlines).forEach((d, i) => {
-    const at6 = `deadlines[${i}]`;
-    if (!entry(at6, d)) return;
-    fields(at6, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
-    str(`${at6}.rule`, d.rule, "rule");
+    const at7 = `deadlines[${i}]`;
+    if (!entry(at7, d)) return;
+    fields(at7, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
+    str(`${at7}.rule`, d.rule, "rule");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
-      err(`${at6}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
-    if (!isPosInt(d.days)) err(`${at6}.days`, "VALUE_INVALID", "days is a positive integer");
-    if (!COUNTS.includes(d.count)) err(`${at6}.count`, "COUNT_UNKNOWN", "count is calendar or business");
-    if (!STARTS.includes(d.starts)) err(`${at6}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
+      err(`${at7}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
+    if (!isPosInt(d.days)) err(`${at7}.days`, "VALUE_INVALID", "days is a positive integer");
+    if (!COUNTS.includes(d.count)) err(`${at7}.count`, "COUNT_UNKNOWN", "count is calendar or business");
+    if (!STARTS.includes(d.starts)) err(`${at7}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
     if (own2(d, "extension")) {
       const x = d.extension;
-      if (!isObj2(x)) err(`${at6}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
+      if (!isObj2(x)) err(`${at7}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
       else {
-        fields(`${at6}.extension`, x, ["days", "count", "when"]);
-        if (!isPosInt(x.days)) err(`${at6}.extension.days`, "VALUE_INVALID", "days is a positive integer");
-        if (!COUNTS.includes(x.count)) err(`${at6}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
-        str(`${at6}.extension.when`, x.when, "when");
+        fields(`${at7}.extension`, x, ["days", "count", "when"]);
+        if (!isPosInt(x.days)) err(`${at7}.extension.days`, "VALUE_INVALID", "days is a positive integer");
+        if (!COUNTS.includes(x.count)) err(`${at7}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
+        str(`${at7}.extension.when`, x.when, "when");
       }
     }
-    str(`${at6}.citation`, d.citation, "citation");
-    basis(at6, d);
+    str(`${at7}.citation`, d.citation, "citation");
+    basis(at7, d);
   });
   if (own2(p, "legal_organisations")) list3("legal_organisations", p.legal_organisations).forEach((o, i) => {
-    const at6 = `legal_organisations[${i}]`;
-    if (!entry(at6, o)) return;
-    fields(at6, o, ["name", "evaluates", "contacts", "basis"]);
-    str(`${at6}.name`, o.name, "name");
-    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at6}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
+    const at7 = `legal_organisations[${i}]`;
+    if (!entry(at7, o)) return;
+    fields(at7, o, ["name", "evaluates", "contacts", "basis"]);
+    str(`${at7}.name`, o.name, "name");
+    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at7}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
     else o.evaluates.forEach((k, j) => {
-      if (!tier3.has(k)) err(`${at6}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
+      if (!tier3.has(k)) err(`${at7}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
     });
-    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at6}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at7}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
     else o.contacts.forEach((c, j) => {
-      const ca = `${at6}.contacts[${j}]`;
+      const ca = `${at7}.contacts[${j}]`;
       if (!isObj2(c)) {
         err(ca, "CONTACT_INVALID", "a contact is {how, value}");
         return;
@@ -14175,20 +14002,20 @@ function validateInto(p, errors) {
       if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${CONTACT_HOW.join(", ")}`);
       if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
     });
-    basis(at6, o);
+    basis(at7, o);
   });
   if (own2(p, "holidays")) {
     const years = /* @__PURE__ */ new Set();
     list3("holidays", p.holidays).forEach((h, i) => {
-      const at6 = `holidays[${i}]`;
-      if (!entry(at6, h)) return;
-      fields(at6, h, ["year", "days", "basis"]);
-      if (!isYear(h.year)) err(`${at6}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
-      else if (years.has(h.year)) err(`${at6}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
+      const at7 = `holidays[${i}]`;
+      if (!entry(at7, h)) return;
+      fields(at7, h, ["year", "days", "basis"]);
+      if (!isYear(h.year)) err(`${at7}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
+      else if (years.has(h.year)) err(`${at7}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
       else years.add(h.year);
       const dates = /* @__PURE__ */ new Set();
-      list3(`${at6}.days`, h.days).forEach((d, j) => {
-        const da = `${at6}.days[${j}]`;
+      list3(`${at7}.days`, h.days).forEach((d, j) => {
+        const da = `${at7}.days[${j}]`;
         if (!entry(da, d)) return;
         fields(da, d, ["date", "name"]);
         if (!isDate(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", "a date is a real YYYY-MM-DD");
@@ -14197,7 +14024,7 @@ function validateInto(p, errors) {
         else dates.add(d.date);
         str(`${da}.name`, d.name, "name");
       });
-      basis(at6, h);
+      basis(at7, h);
     });
   }
 }
@@ -14231,9 +14058,9 @@ var tag = (e, profile) => ({ ...clone(e), profile, bases: [{ profile, basis: e.b
 function union(into, entries, profile) {
   for (const e of entries || []) {
     const k = canon(e);
-    const at6 = into.find((x) => x.__k === k);
-    if (at6) {
-      if (!at6.bases.some((b) => b.profile === profile && b.basis === e.basis)) at6.bases.push({ profile, basis: e.basis });
+    const at7 = into.find((x) => x.__k === k);
+    if (at7) {
+      if (!at7.bases.some((b) => b.profile === profile && b.basis === e.basis)) at7.bases.push({ profile, basis: e.basis });
     } else into.push(Object.assign(tag(e, profile), { __k: k }));
   }
 }
@@ -14286,7 +14113,7 @@ function combineInner(listIn) {
 }
 function merge(profiles) {
   const conflicts = [];
-  const conflict = (at6, values, says) => conflicts.push({ at: at6, values, says });
+  const conflict = (at7, values, says) => conflicts.push({ at: at7, values, says });
   const view = {
     id: profiles.map((p) => p.id).join("+"),
     name: profiles.map((p) => p.name).join("; "),
@@ -14302,9 +14129,9 @@ function merge(profiles) {
       if (!givers.length) continue;
       const s = { label: [...new Set(givers.map((p) => p.spaces[space].label))].join("; "), forms: [] };
       const byForm = /* @__PURE__ */ new Map();
-      for (const p of givers) for (const f3 of p.spaces[space].forms || []) {
-        if (!byForm.has(f3.form)) byForm.set(f3.form, []);
-        byForm.get(f3.form).push({ profile: p.id, value: f3 });
+      for (const p of givers) for (const f4 of p.spaces[space].forms || []) {
+        if (!byForm.has(f4.form)) byForm.set(f4.form, []);
+        byForm.get(f4.form).push({ profile: p.id, value: f4 });
       }
       for (const [form, given] of byForm) {
         const vals = given.map((g) => ({ profile: g.profile, value: (({ basis, ...rest }) => rest)(g.value), basis: g.value.basis }));
@@ -14473,12 +14300,12 @@ function merge(profiles) {
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
       if (given.some((g) => own2(g.k, "laws"))) e.laws = laws;
       const WHAT = { tier: "risk tiers", venue: "venues", template: "templates", advisory: "advisory notes", evidence: "evidence standards" };
-      for (const f3 of ["tier", "venue", "template", "advisory", "evidence"]) {
-        const carriesBasis = f3 === "venue" || f3 === "evidence";
-        const vals = given.filter((g) => own2(g.k, f3)).map((g) => ({ profile: g.profile, value: clone(g.k[f3]), basis: carriesBasis ? g.k[f3].basis : g.k.basis }));
+      for (const f4 of ["tier", "venue", "template", "advisory", "evidence"]) {
+        const carriesBasis = f4 === "venue" || f4 === "evidence";
+        const vals = given.filter((g) => own2(g.k, f4)).map((g) => ({ profile: g.profile, value: clone(g.k[f4]), basis: carriesBasis ? g.k[f4].basis : g.k.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f3] = !carriesBasis ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.basis })) };
-        else conflict(`action_kinds[${kind}].${f3}`, vals, `the active profiles give different ${WHAT[f3]} for ${kind}, so none is given` + (f3 === "evidence" ? ": the venue's standard is undetermined" : ""));
+        if (agree(vals)) e[f4] = !carriesBasis ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.basis })) };
+        else conflict(`action_kinds[${kind}].${f4}`, vals, `the active profiles give different ${WHAT[f4]} for ${kind}, so none is given` + (f4 === "evidence" ? ": the venue's standard is undetermined" : ""));
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -14497,11 +14324,11 @@ function merge(profiles) {
     for (const given of byRule.values()) {
       const { rule, applies_to } = given[0].d;
       const e = { rule, applies_to };
-      for (const f3 of ["days", "count", "starts", "extension"]) {
-        const vals = given.filter((g) => own2(g.d, f3)).map((g) => ({ profile: g.profile, value: clone(g.d[f3]), basis: g.d.basis }));
+      for (const f4 of ["days", "count", "starts", "extension"]) {
+        const vals = given.filter((g) => own2(g.d, f4)).map((g) => ({ profile: g.profile, value: clone(g.d[f4]), basis: g.d.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f3] = vals[0].value;
-        else conflict(`deadlines[${rule}/${applies_to}].${f3}`, vals, `the active profiles disagree on the ${f3} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
+        if (agree(vals)) e[f4] = vals[0].value;
+        else conflict(`deadlines[${rule}/${applies_to}].${f4}`, vals, `the active profiles disagree on the ${f4} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
       }
       e.citation = [...new Set(given.map((g) => g.d.citation))].join("; ");
       e.basis = given[0].d.basis;
@@ -14930,7 +14757,7 @@ var PdfDoc = class {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f3) => f3 && f3.t === "name" ? f3.v : null) : [];
+    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f4) => f4 && f4.t === "name" ? f4.v : null) : [];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
     const inflated = await inflate(raw);
@@ -15765,9 +15592,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const ref = curFontDict[name];
     const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + scopeTag + name;
     if (fontCache.has(key)) return fontCache.get(key);
-    const f3 = await loadFont(doc, ref);
-    fontCache.set(key, f3);
-    return f3;
+    const f4 = await loadFont(doc, ref);
+    fontCache.set(key, f4);
+    return f4;
   };
   const show = (bytes) => {
     if (!bytes || bytes.length === 0) return;
@@ -16318,10 +16145,10 @@ function matrixOf(doc, v) {
   return n.every((x) => typeof x === "number" && Number.isFinite(x)) ? n : null;
 }
 function imageFilters(doc, dict) {
-  const f3 = doc.resolve(dict.Filter);
-  if (!f3) return [];
-  if (f3.t === "name") return [f3.v];
-  if (f3.t === "arr") return f3.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  const f4 = doc.resolve(dict.Filter);
+  if (!f4) return [];
+  if (f4.t === "name") return [f4.v];
+  if (f4.t === "arr") return f4.items.map((x) => nameOf(doc, x)).filter(Boolean);
   return [];
 }
 async function decodeContentStreams(doc, contents) {
@@ -16851,10 +16678,10 @@ async function inflateRaw(u8, limit) {
       chunks.push(value);
     }
     const bytes = new Uint8Array(total);
-    let at6 = 0;
+    let at7 = 0;
     for (const c of chunks) {
-      bytes.set(c, at6);
-      at6 += c.length;
+      bytes.set(c, at7);
+      at7 += c.length;
     }
     return { bytes };
   } catch {
@@ -17019,8 +16846,8 @@ async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAV
   signals.push(`container:zip entries=${container.count}`);
   const opcRows = [];
   const odfRows = [];
-  for (const f3 of Array.isArray(flavours) ? flavours : []) {
-    if (f3 && typeof f3 === "object") ((f3.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f3);
+  for (const f4 of Array.isArray(flavours) ? flavours : []) {
+    if (f4 && typeof f4 === "object") ((f4.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f4);
   }
   const ctEntry = container.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
@@ -17040,26 +16867,26 @@ async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAV
     return { ok: true, format: "undetermined", why: "content_types_unparseable", signals };
   }
   signals.push(`part:${CONTENT_TYPES_PART} parsed (${types2.defaults.size} defaults, ${types2.overrides.size} overrides)`);
-  for (const f3 of opcRows) {
+  for (const f4 of opcRows) {
     let declared = null;
     for (const [part, ct] of types2.overrides) {
-      if (ct === f3.mainContentType) {
+      if (ct === f4.mainContentType) {
         declared = part;
         break;
       }
     }
     if (!declared) {
-      const conv = normalizePartName(f3.conventionalMainPart);
-      if (partContentType(conv, types2) === f3.mainContentType) declared = conv;
+      const conv = normalizePartName(f4.conventionalMainPart);
+      if (partContentType(conv, types2) === f4.mainContentType) declared = conv;
     }
     if (!declared) continue;
     const present = container.byName.has(declared) || container.entries.some((e) => normalizePartName(e.name) === declared);
     if (!present) {
-      signals.push(`ct:${f3.mainContentType} declared for ${declared}, but the part is ABSENT`);
-      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f3.flavour, signals };
+      signals.push(`ct:${f4.mainContentType} declared for ${declared}, but the part is ABSENT`);
+      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f4.flavour, signals };
     }
-    signals.push(`ct:${f3.mainContentType}`, `part:${declared} present`);
-    return { ok: true, format: f3.flavour, mainPart: declared, confidence: "high", signals };
+    signals.push(`ct:${f4.mainContentType}`, `part:${declared} present`);
+    return { ok: true, format: f4.flavour, mainPart: declared, confidence: "high", signals };
   }
   signals.push("opc:no known main content type");
   return { ok: true, format: "undetermined", why: "opc_main_part_unrecognized", signals };
@@ -17087,7 +16914,7 @@ async function discriminateOdf(bytes, container, rows, signals) {
     return { ok: true, format: "undetermined", why: `odf_mimetype_unreadable:${read2.why}`, signals };
   }
   const declared = UTF8.decode(read2.bytes);
-  const row = rows.find((f3) => f3.mimetype === declared);
+  const row = rows.find((f4) => f4.mimetype === declared);
   if (!row) {
     signals.push(`odf:${ODF_MIMETYPE_PART}=${JSON.stringify(declared)} is no known OpenDocument media type`);
     return { ok: true, format: "undetermined", why: "odf_mimetype_unrecognized", signals };
@@ -17614,8 +17441,8 @@ async function docxStructure(parts) {
     const name = normalizePartName(entry.name);
     if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
     const rid = embeddingRids.get(name) ?? null;
-    const at6 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
-    const source = at6 ? docParaRef(at6.para, at6.run) : null;
+    const at7 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
+    const source = at7 ? docParaRef(at7.para, at7.run) : null;
     const read2 = await readPart(parts.bytes, parts.container, name);
     if (!read2.ok) {
       links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name, detail: read2.why }));
@@ -17653,7 +17480,7 @@ async function docxStructure(parts) {
     if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
     else {
       for (const c of parsed.comments) {
-        const at6 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
+        const at7 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
         items.push({
           kind: "comment",
           id: c.id,
@@ -17661,7 +17488,7 @@ async function docxStructure(parts) {
           date: c.date,
           initials: c.initials,
           text: c.text,
-          source: at6 ? docParaRef(at6.para, at6.run) : null
+          source: at7 ? docParaRef(at7.para, at7.run) : null
         });
       }
     }
@@ -17905,11 +17732,11 @@ function splitTopLevel(s, sep) {
   return out;
 }
 function definedNameUnit(formula, sheets) {
-  const f3 = String(formula ?? "").trim();
-  if (!f3) return { why: "empty_reference" };
-  if (/#REF!/i.test(f3)) return { why: "broken_reference" };
-  if (splitTopLevel(f3, ",").length > 1 || /^\(.*\)$/.test(f3)) return { why: "multi_area" };
-  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f3);
+  const f4 = String(formula ?? "").trim();
+  if (!f4) return { why: "empty_reference" };
+  if (/#REF!/i.test(f4)) return { why: "broken_reference" };
+  if (splitTopLevel(f4, ",").length > 1 || /^\(.*\)$/.test(f4)) return { why: "multi_area" };
+  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f4);
   if (!m) return { why: "not_a_range_reference" };
   const sheetName = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
   if (/\[[^\]]*\]/.test(sheetName)) return { why: "external_workbook" };
@@ -18087,13 +17914,13 @@ function walkSheetXml(xml) {
     r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
     hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
     cells: elements(row.inner, "c").map((c) => {
-      const f3 = elements(c.inner, "f");
+      const f4 = elements(c.inner, "f");
       const v = elements(c.inner, "v");
       const is = elements(c.inner, "is");
       return {
         cell: c.attrs.r ?? null,
         t: c.attrs.t ?? null,
-        f: f3.length ? decodeXmlEntities2(f3[0].inner) : null,
+        f: f4.length ? decodeXmlEntities2(f4[0].inner) : null,
         v: v.length ? decodeXmlEntities2(v[0].inner) : null,
         is: is.length ? textRuns(is[0].inner) : null
       };
@@ -19105,9 +18932,9 @@ function spendChars(n) {
   }
   meter.chars += n;
 }
-var ODF_ROWS = CONTAINER_FLAVOURS.filter((f3) => f3.partMap === "odf");
+var ODF_ROWS = CONTAINER_FLAVOURS.filter((f4) => f4.partMap === "odf");
 function odfRow(flavour) {
-  const row = ODF_ROWS.find((f3) => f3.flavour === flavour);
+  const row = ODF_ROWS.find((f4) => f4.flavour === flavour);
   if (!row) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
   return row;
 }
@@ -19474,8 +19301,8 @@ async function manifestIntraLinks(bytes, container, contentXml, undetermined) {
   }
   const fonts = /* @__PURE__ */ new Set();
   if (contentXml != null) {
-    for (const f3 of elementsNested(contentXml, "font-face-uri")) {
-      const href = f3.attrs.href;
+    for (const f4 of elementsNested(contentXml, "font-face-uri")) {
+      const href = f4.attrs.href;
       if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
     }
   }
@@ -19724,17 +19551,17 @@ function odtStructure(parts) {
     const markFor = /* @__PURE__ */ new Map();
     for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
     for (const c of parseTrackedChanges(parts.contentXml)) {
-      const at6 = c.id != null ? markFor.get(c.id) : void 0;
+      const at7 = c.id != null ? markFor.get(c.id) : void 0;
       const item = {
         kind: "tracked-change",
         change: c.change,
         author: c.author,
         date: c.date,
-        source: at6 == null ? null : docParaRef(at6)
+        source: at7 == null ? null : docParaRef(at7)
       };
       if (c.change === "deletion") item.superseded = c.superseded;
       else item.text = c.id != null && inserted.has(c.id) ? inserted.get(c.id) : null;
-      if (at6 === void 0) item.why = "change_region_unmarked_in_body";
+      if (at7 === void 0) item.why = "change_region_unmarked_in_body";
       items.push(item);
     }
     for (const a of walk.annotations) {
@@ -21558,10 +21385,10 @@ function selfNaming(text, re) {
 }
 var FURNITURE_RECURS = 3;
 function alsoSatisfies(ctx, selfKey) {
-  const f3 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
-  if (!f3) return [];
+  const f4 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
+  if (!f4) return [];
   try {
-    return f3(selfKey) || [];
+    return f4(selfKey) || [];
   } catch {
     return [];
   }
@@ -21646,8 +21473,8 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
   const v = readerView(ctx);
   const sp = v.spaces && v.spaces.enactment;
   if (!sp || typeof sp !== "object") return [];
-  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f3) => f3 && f3.pattern && typeof f3.pattern.re === "string" && vocabRegex(f3.pattern));
-  const forms = formList.map((f3) => vocabPiece(f3.pattern.re));
+  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f4) => f4 && f4.pattern && typeof f4.pattern.re === "string" && vocabRegex(f4.pattern));
+  const forms = formList.map((f4) => vocabPiece(f4.pattern.re));
   const markers = vocabulary(ctx, "enactment_markers").map((e) => e.pattern && typeof e.pattern.re === "string" ? e.pattern.re : null).filter((s) => s && vocabRegex({ re: s }));
   if (!forms.length && !blankNumber) return [];
   const num = forms.length ? `(?<num>${forms.map((s) => `(?:${s})`).join("|")})` : "(?<num>(?!))";
@@ -21663,9 +21490,9 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
 }
 function enactmentNumber(forms, text) {
   if (typeof text !== "string" || !text.trim()) return null;
-  for (const f3 of forms || []) {
+  for (const f4 of forms || []) {
     let t = text.trim();
-    const c = f3.clean || {};
+    const c = f4.clean || {};
     for (const s of Array.isArray(c.strip) ? c.strip : []) {
       const re2 = vocabRegex(s, (x) => `^(?:${x})`);
       if (re2) t = t.replace(re2, "");
@@ -21673,11 +21500,11 @@ function enactmentNumber(forms, text) {
     if (c.spaces === "remove") t = t.replace(/\s+/g, "");
     else if (c.spaces === "collapse") t = t.replace(/\s+/g, " ");
     if (c.upper === true) t = t.toUpperCase();
-    const re = vocabRegex(f3.pattern);
+    const re = vocabRegex(f4.pattern);
     const m = re && re.exec(t);
     if (!m) continue;
     let out = "";
-    for (const part of Array.isArray(f3.normal) ? f3.normal : []) {
+    for (const part of Array.isArray(f4.normal) ? f4.normal : []) {
       if (typeof part === "string") {
         out += part;
         continue;
@@ -21726,13 +21553,13 @@ var CONNECTION = { REFERENTIAL: "referential", TEMPORAL: "temporal" };
 function referential(from, to, relation, why) {
   return { connection: CONNECTION.REFERENTIAL, from, to, relation, why };
 }
-function temporal(from, to, relation, { at: at6, expected_by, why } = {}) {
+function temporal(from, to, relation, { at: at7, expected_by, why } = {}) {
   return {
     connection: CONNECTION.TEMPORAL,
     from,
     to,
     relation,
-    at: at6 || null,
+    at: at7 || null,
     expected_by: expected_by || null,
     why
   };
@@ -21748,9 +21575,9 @@ function diffEntities(before, after) {
       continue;
     }
     const moved = [];
-    for (const f3 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
-      if (String(was.facts[f3]) !== String(now.facts[f3]))
-        moved.push({ fact: f3, was: was.facts[f3], now: now.facts[f3] });
+    for (const f4 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
+      if (String(was.facts[f4]) !== String(now.facts[f4]))
+        moved.push({ fact: f4, was: was.facts[f4], now: now.facts[f4] });
     if (moved.length) altered.push({ entity: now, was, moved });
   }
   for (const [k, now] of a) if (!b.has(k)) appeared.push(now);
@@ -21890,38 +21717,38 @@ var meeting_calendar_default = {
       ));
     }
     for (const alt of d.altered) {
-      const f3 = new Map(alt.moved.map((m) => [m.fact, m]));
-      if (f3.has("status")) {
-        const now = f3.get("status").now;
+      const f4 = new Map(alt.moved.map((m) => [m.fact, m]));
+      if (f4.has("status")) {
+        const now = f4.get("status").now;
         events.push(event(
           now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
           {
             key: alt.entity.key,
             label: alt.entity.label,
-            was: f3.get("status").was,
+            was: f4.get("status").was,
             now,
-            why: `a meeting's status changed from ${f3.get("status").was} to ${now}`
+            why: `a meeting's status changed from ${f4.get("status").was} to ${now}`
           }
         ));
       }
-      if (f3.has("date"))
+      if (f4.has("date"))
         events.push(event("moved", {
           key: alt.entity.key,
           label: alt.entity.label,
-          was: f3.get("date").was,
-          now: f3.get("date").now,
+          was: f4.get("date").was,
+          now: f4.get("date").now,
           why: "a meeting's date changed"
         }));
-      if (f3.has("body"))
+      if (f4.has("body"))
         events.push(event("renamed", {
           key: alt.entity.key,
-          was: f3.get("body").was,
-          now: f3.get("body").now,
+          was: f4.get("body").was,
+          now: f4.get("body").now,
           why: "the body holding a meeting is named differently"
         }));
       for (const kind of ["agenda", "minutes"]) {
-        if (!f3.has(kind)) continue;
-        const { was, now } = f3.get(kind);
+        if (!f4.has(kind)) continue;
+        const { was, now } = f4.get(kind);
         if (!was && now)
           events.push(event(`${kind}_published`, {
             key: alt.entity.key,
@@ -22661,13 +22488,13 @@ function memoHeader(flat) {
       for (let c = b + 1; c < hits.length && hits[c].i - hits[a].i <= 250; c++)
         if (!seen.has(hits[c].k)) seen.set(hits[c].k, hits[c].i);
       const all = hits.map((h) => h.i);
-      const at6 = {};
+      const at7 = {};
       for (const [k, i] of seen) {
         const next = all.find((x) => x > i);
         const rest = flat.slice(i, next != null ? Math.min(next, i + 200) : i + 160).replace(/^\s*\w+\s*:\s*/, "");
-        at6[k.toLowerCase()] = rest.trim() || null;
+        at7[k.toLowerCase()] = rest.trim() || null;
       }
-      return { fields: at6, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
+      return { fields: at7, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
     }
   }
   return null;
@@ -22746,7 +22573,7 @@ var staff_report_default = {
     const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
     const memo = memoHeader(flat);
-    const f3 = memo && memo.fields || {};
+    const f4 = memo && memo.fields || {};
     const sections = reportSectionPatterns(ctx);
     const secs = reportSections(raw, sections);
     let recommendation = null;
@@ -22809,10 +22636,10 @@ var staff_report_default = {
       );
     return {
       entities,
-      to: f3.to || null,
-      from: f3.from || null,
-      subject: f3.subject || null,
-      date: f3.date || null,
+      to: f4.to || null,
+      from: f4.from || null,
+      subject: f4.subject || null,
+      date: f4.date || null,
       recommendation,
       sections: secs.length,
       signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
@@ -23423,6 +23250,190 @@ var CAPTURE_CHECKS = Object.freeze({
     translation: "An account of how you captured a document says what happened in your own words, and this one is empty. Write it. Nothing was written."
   })
 });
+
+// ../bio-plane/src/acquisition/checks.mjs
+var at4 = (region) => `src/acquisition/index.mjs acquire > ${region}`;
+var CAPTURE_REQUEST_ARM_CHECKS = Object.freeze({
+  CAPTURE_NOT_DRAINING: Object.freeze({
+    check: "C-28.13",
+    where: at4("is-capture-request-arm"),
+    translation: "Only this instance's own background worker fetches documents, and it does so from its own queue. Nothing else can ask it to fetch something right now \u2014 including the assistant that asked for the document in the first place."
+  })
+});
+var RENDER_CAPTURE_CHECKS2 = Object.freeze({
+  /* `render` present and not `true`. Refused rather than read as absent: a `render: "yes"` answered with the plain
+     capture would file the shell as the content, which is the outcome this family exists to prevent. */
+  RENDER_FLAG_MALFORMED: Object.freeze({
+    check: "C-83.1",
+    where: at4("is-render-admit"),
+    translation: "This request asked for a rendered capture in a form this instance does not recognise. It answers render: true or nothing, so a request for the page as a visitor saw it is never quietly answered with the page's empty frame. Nothing was fetched."
+  }),
+  /* A render combined with an arm whose bytes are not a live page: an archive replay, a Drive export, or the
+     continuation of a capture already filed. */
+  RENDER_ARM_CONFLICT: Object.freeze({
+    check: "C-83.2",
+    where: at4("is-render-admit"),
+    translation: "A rendered capture runs the live page in a browser, and this request combined that with a way of capturing that does not load a live page (an archived copy, a Drive export, or the continuation of an earlier capture). Ask for one or the other. Nothing was fetched."
+  }),
+  /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a BROWSER bound to something that is
+     not a Fetcher, so there is no endpoint to open a devtools session on. Named rather than falling back. */
+  RENDER_NO_RENDERER: Object.freeze({
+    check: "C-83.3",
+    where: at4("is-render-admit"),
+    translation: "This instance has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
+  }),
+  /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by renders in flight (D-492). The
+     render is DEFERRED and the deferral is recorded; the shell is never the content. The sentence says which, without
+     naming a mechanism: a member told "used" would go away for the day when the answer may be a minute off. */
+  RENDER_DEFERRED: Object.freeze({
+    check: "C-83.4",
+    where: at4("is-render-admit"),
+    translation: "Today's allowance for rendering pages is fully committed \u2014 either already used, or held by renders this instance is running right now \u2014 so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in flight have finished, or after midnight UTC."
+  }),
+  /* The render loads the page again, which is a second document load to the host, so it asks the per-host governor
+     like any other (BOB #32 item 3: "through the host governor"). Refused by name when the host is cooling off. */
+  RENDER_HOST_COOLING_OFF: Object.freeze({
+    check: "C-83.5",
+    where: at4("is-render-admit"),
+    translation: "This instance is giving that website a rest after it asked us to slow down, and a rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again after the wait shown beside this message."
+  }),
+  /* The shell is not an HTML page small enough to render (a PDF, an office file, a multipart giant). A document that
+     is not a page has nothing a browser adds; capture it without `render`. */
+  RENDER_NOT_A_PAGE: Object.freeze({
+    check: "C-83.6",
+    where: at4("is-render-result"),
+    translation: "The address served something that is not a web page a browser can render, such as a PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. Capture it the ordinary way."
+  }),
+  /* The renderer did not produce a rendered document. The shell's bytes are held content-addressed and unregistered,
+     exactly as TOO_LARGE's parts are; no document names them. */
+  RENDER_FAILED: Object.freeze({
+    check: "C-83.7",
+    where: at4("is-render-result"),
+    translation: "The page was fetched but the renderer did not produce the page as a visitor would see it, so nothing was filed: the page's empty frame is never filed as its content. The reason the renderer gave is beside this message."
+  }),
+  /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a render over it WAITS, never dropped).
+     Decided in the admission span, before the shell is fetched, and distinct from C-83.4 on purpose: the day's
+     allowance is untouched and may have room, so the sentence must not say it is used. */
+  RENDER_AT_CAPACITY: Object.freeze({
+    check: "C-83.8",
+    where: at4("is-render-admit"),
+    translation: "This instance is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
+  })
+});
+var DRIVE_CAPTURE_CHECKS2 = Object.freeze({
+  /* D-112, AND IT IS THE SPINE OF THE ITEM. The three facts this capture's hop carries — the export address, the
+     export format, the producer — are derived by the plane from the file id and the kind in the address. A body
+     carrying one is a caller trying to author the record's own provenance, and it is refused BY NAME rather than
+     having the field quietly dropped: a hop a caller can hand us is one a caller can invent. */
+  DRIVE_HOP_FACT_SUPPLIED: Object.freeze({
+    check: "C-48.1",
+    where: at4("is-drive-capture"),
+    translation: "This request tried to tell the record where a document was exported from, in what format, or by whom. Those are facts this instance establishes by doing the fetch itself, never facts it accepts from whoever asked. Send the Drive link and nothing else."
+  }),
+  /* A FOLDER. There is nothing to export and no single set of bytes a capture could honestly hold. */
+  DRIVE_FOLDER_NOT_A_DOCUMENT: Object.freeze({
+    check: "C-48.2",
+    where: `${at4("is-drive-capture")}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both`,
+    translation: "That address is a Drive FOLDER \u2014 a listing of files rather than a document. There is nothing to export and no single set of bytes a capture of it would hold. Name the document you want; harvesting everything a folder lists is a different act."
+  }),
+  /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an export address here would mean
+     guessing which conversion to ask for, and filing bytes whose format the record had invented. */
+  DRIVE_KIND_UNDETERMINED: Object.freeze({
+    check: "C-48.3",
+    where: `${at4("is-drive-capture")}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)`,
+    translation: "That Drive address names a file but not what KIND of file it is, and the kind is what decides which export to ask for. Guessing would file bytes in a format nobody established. Use the address that opens the document itself, which carries the kind."
+  }),
+  /* A DRIVE HOST WITH AN UNREAD PATH: not a document this instance can promise to have captured. */
+  DRIVE_SHAPE_UNRECOGNISED: Object.freeze({
+    check: "C-48.4",
+    where: `${at4("is-drive-capture")}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)`,
+    translation: "That is a Google Drive address in a form this instance does not recognise. Rather than capture whatever bytes the address happens to serve and call it the document, it says so. If this shape should be harvestable, that is a change worth making deliberately."
+  }),
+  /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the export address with `text/html` when
+     the file is not shared with anyone who has the link. It is never the document. */
+  DRIVE_EXPORT_IS_THE_SHELL: Object.freeze({
+    check: "C-48.5",
+    where: at4("is-drive-export"),
+    translation: "Google answered the export address with a web page rather than a document \u2014 which is what it does when a file is not shared with anyone who has the link. That page is the application, not the document, and it is not filed as one. Check that the file is shared."
+  }),
+  /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT* HAPPEN: there is no fallback to the shell.
+     A 403 or a 404 at the export address ends the capture with the failure named. */
+  DRIVE_EXPORT_UNREACHABLE: Object.freeze({
+    check: "C-48.6",
+    where: at4("is-drive-export"),
+    translation: "The OpenDocument export of that Drive document could not be fetched, so nothing was captured. The application page at the same address is NOT captured instead: a record holding the app in place of the document would look like evidence and be none."
+  }),
+  /* THE SAME SHELL, CAUGHT ON THE BYTES, AND A SECOND CODE RATHER THAN C-48.5 FIRING TWICE (PL-4: one predicate at two
+     points leaves one undrivable). C-48.5 is "Google told us it was a web page"; this is "Google told us it was a
+     document and it was a web page", the more serious fact, which is why detection here is bytes-first (COFF-1). */
+  DRIVE_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
+    check: "C-48.7",
+    where: at4("is-drive-bytes"),
+    translation: "The export address said it was sending a document and sent a web page instead. This instance checks the bytes rather than taking the label, so the application page was recognised and refused. Nothing was filed under that document address."
+  })
+});
+var ACQUISITION_CHECKS = Object.freeze({ ...CAPTURE_REQUEST_ARM_CHECKS, ...RENDER_CAPTURE_CHECKS2, ...DRIVE_CAPTURE_CHECKS2 });
+
+// ../bio-plane/src/render.mjs
+var RENDER_NAVIGATION_TIMEOUT_MS = 1e4;
+var RENDER_DEFAULTS = Object.freeze({
+  /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
+     ALLOWANCE. A render's maximum browser cost is the time it may spend getting to
+     the page plus the time the wait condition may burn once there, so the two
+     together are what `renderReserveMs` reserves at admission.
+     D-520: SET FROM A MEASUREMENT, `docs/development/measurements/M-151.md`. It was
+     30,000 ms and CHOSEN; M-151 timed Page.navigate to commit over the client-rendered
+     sources the corpus names (local headless Chromium, 2026-09-25): the slowest of 24
+     navigations committed in 1,300 ms. Its rule, applied to that printed tail: twice the
+     tail, plus 5,000 ms held for the session acquisition nobody has measured, rounded UP
+     to the next whole 5,000 ms — 2 x 1,300 + 5,000 = 7,600, so 10,000. The doubling is
+     the stated allowance for the instrument not being Cloudflare's browser or network;
+     the 5,000 ms is CHOSEN, NOT MEASURED (no instance holds the binding), and is the
+     term the first live render's figure replaces. AND IT IS NOW HONOURED: until D-520 the in-plane driver never
+     read this field (`browserrender.mjs` bounded Page.navigate by the WAIT timeout and
+     every setup command by a 30,000 ms default), so the reservation was a bound the
+     renderer was asked for and did not hold. */
+  navigation_timeout_ms: RENDER_NAVIGATION_TIMEOUT_MS,
+  viewport: Object.freeze({ width: 1280, height: 800 }),
+  dpr: 1,
+  /* R54: the FALLBACK only. The locale a render asks for is the one the instance's
+     jurisdiction profiles name (`renderLocaleFor`); this is used when they name none. */
+  locale: "en-US",
+  timezone: "UTC",
+  wait: Object.freeze({ until: "networkidle", timeout_ms: 15e3 })
+});
+var RENDER_DAILY_ALLOWANCE_MS_DEFAULT = 20 * 60 * 1e3;
+var NON_DATA_TYPES = Object.freeze({
+  script: "code",
+  stylesheet: "layout",
+  font: "layout"
+});
+
+// ../bio-plane/src/host-governor/index.mjs
+var GOVERNOR = Object.freeze({
+  defaultAppetitePerMin: 12,
+  /* chosen: one document fetch every ~5s on average */
+  jitterLow: 0.6,
+  jitterHigh: 1.5,
+  burstTokens: 3,
+  /* a person opens a few tabs; a loop opens forty */
+  cooloff429BaseMs: 6e4,
+  cooloff429CapMs: 36e5,
+  cooloffRefusedBaseMs: 3e4,
+  cooloffRefusedCapMs: 18e5
+});
+var GOVERNOR_OPS = Object.freeze(["governorstate", "governorconfig"]);
+
+// ../bio-plane/src/acquisition/index.mjs
+var acquireGradeNote = (ceiling, unreachable) => {
+  if (!ceiling || !unreachable)
+    throw new Error("op=acquire's note states what this surface earns AND the grade above it; with no grade above the ceiling the sentence cannot be composed truthfully");
+  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${ceiling} toward evidentiary weight.`;
+};
+var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
+var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+var ODF_DIGEST_MAX = 8 * 1024 * 1024;
+var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 
 // ../bio-plane/src/extraction/filemembership.mjs
 var MEMBERSHIP_LABEL = Object.freeze({
@@ -24049,9 +24060,9 @@ var NW = 16;
 var NE = 32;
 var SW = 64;
 var SE = 128;
-var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f3) => {
-  let h = ((f3 & W) !== 0) + ((f3 & E) !== 0), v = ((f3 & N) !== 0) + ((f3 & S) !== 0);
-  const d = ((f3 & NW) !== 0) + ((f3 & NE) !== 0) + ((f3 & SW) !== 0) + ((f3 & SE) !== 0);
+var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f4) => {
+  let h = ((f4 & W) !== 0) + ((f4 & E) !== 0), v = ((f4 & N) !== 0) + ((f4 & S) !== 0);
+  const d = ((f4 & NW) !== 0) + ((f4 & NE) !== 0) + ((f4 & SW) !== 0) + ((f4 & SE) !== 0);
   if (orient === 1) [h, v] = [v, h];
   if (orient === 3) {
     const hv = h + v;
@@ -24388,65 +24399,85 @@ var KNOCK = {
 KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 
-// ../bio-plane/src/render.mjs
-var RENDER_NAVIGATION_TIMEOUT_MS = 1e4;
-var RENDER_DEFAULTS = Object.freeze({
-  /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
-     ALLOWANCE. A render's maximum browser cost is the time it may spend getting to
-     the page plus the time the wait condition may burn once there, so the two
-     together are what `renderReserveMs` reserves at admission.
-     D-520: SET FROM A MEASUREMENT, `docs/development/measurements/M-151.md`. It was
-     30,000 ms and CHOSEN; M-151 timed Page.navigate to commit over the client-rendered
-     sources the corpus names (local headless Chromium, 2026-09-25): the slowest of 24
-     navigations committed in 1,300 ms. Its rule, applied to that printed tail: twice the
-     tail, plus 5,000 ms held for the session acquisition nobody has measured, rounded UP
-     to the next whole 5,000 ms — 2 x 1,300 + 5,000 = 7,600, so 10,000. The doubling is
-     the stated allowance for the instrument not being Cloudflare's browser or network;
-     the 5,000 ms is CHOSEN, NOT MEASURED (no instance holds the binding), and is the
-     term the first live render's figure replaces. AND IT IS NOW HONOURED: until D-520 the in-plane driver never
-     read this field (`browserrender.mjs` bounded Page.navigate by the WAIT timeout and
-     every setup command by a 30,000 ms default), so the reservation was a bound the
-     renderer was asked for and did not hold. */
-  navigation_timeout_ms: RENDER_NAVIGATION_TIMEOUT_MS,
-  viewport: Object.freeze({ width: 1280, height: 800 }),
-  dpr: 1,
-  /* R54: the FALLBACK only. The locale a render asks for is the one the instance's
-     jurisdiction profiles name (`renderLocaleFor`); this is used when they name none. */
-  locale: "en-US",
-  timezone: "UTC",
-  wait: Object.freeze({ until: "networkidle", timeout_ms: 15e3 })
-});
-var RENDER_DAILY_ALLOWANCE_MS_DEFAULT = 20 * 60 * 1e3;
-var NON_DATA_TYPES = Object.freeze({
-  script: "code",
-  stylesheet: "layout",
-  font: "layout"
-});
-
-// ../bio-plane/src/host-governor/index.mjs
-var GOVERNOR = Object.freeze({
-  defaultAppetitePerMin: 12,
-  /* chosen: one document fetch every ~5s on average */
-  jitterLow: 0.6,
-  jitterHigh: 1.5,
-  burstTokens: 3,
-  /* a person opens a few tabs; a loop opens forty */
-  cooloff429BaseMs: 6e4,
-  cooloff429CapMs: 36e5,
-  cooloffRefusedBaseMs: 3e4,
-  cooloffRefusedCapMs: 18e5
-});
-
-// ../bio-plane/src/capture/acquire.mjs
-var acquireGradeNote = (ceiling, unreachable) => {
-  if (!ceiling || !unreachable)
-    throw new Error("op=acquire's note states what this surface earns AND the grade above it; with no grade above the ceiling the sentence cannot be composed truthfully");
-  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${ceiling} toward evidentiary weight.`;
+// ../bio-plane/src/capture/grammar.mjs
+var f3 = (check, severity, message, repairs) => {
+  const out = { check, severity, message };
+  if (repairs) {
+    out.repairable = true;
+    out.repairs = repairs;
+  }
+  return out;
 };
-var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
-var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
-var ODF_DIGEST_MAX = 8 * 1024 * 1024;
-var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
+var asText2 = (v) => typeof v === "string" ? v : new TextDecoder().decode(v);
+var INFO_ENUMS2 = {
+  criticality: ["crucial", "supporting"],
+  source_status: ["unchanged", "modified", "removed"]
+};
+var MONITOR_FREQ2 = Object.freeze(["hourly", "daily", "weekly", "monthly", "per_meeting", "none"]);
+var CONTENT_HASH_RE2 = /^sha256:[0-9a-f]{64}$/;
+async function checkInformationExtension2(ctx, findings) {
+  if (ctx.fm?.object_type !== "information") return;
+  const fm = ctx.fm;
+  for (const [field, legal] of Object.entries(INFO_ENUMS2)) {
+    if (!legal.includes(fm[field])) {
+      findings.push(f3("C-2.7", "error", `${field} '${fm[field]}' is not one of: ${legal.join(", ")}`));
+    }
+  }
+  const src = fm.source;
+  if (!src || typeof src !== "object") findings.push(f3("C-2.7", "error", "source block is missing"));
+  else for (const k of ["locator", "authority", "retrieved"]) {
+    if (!src[k]) findings.push(f3("C-2.7", "error", `source.${k} is missing`));
+  }
+  const mon = fm.monitoring;
+  if (!mon || typeof mon !== "object") findings.push(f3("C-2.7", "error", "monitoring block is missing"));
+  else {
+    if (typeof mon.enabled !== "boolean") findings.push(f3("C-2.7", "error", `monitoring.enabled '${mon.enabled}' is not boolean`));
+    if (!MONITOR_FREQ2.includes(mon.frequency)) findings.push(f3("C-2.7", "error", `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ2.join(", ")}`));
+  }
+  const ch = fm.content_hash;
+  const chOk = typeof ch === "string" && CONTENT_HASH_RE2.test(ch);
+  if (ch !== void 0 && ch !== null && ch !== "" && !chOk) {
+    findings.push(f3("C-2.7", "error", `content_hash '${String(ch).slice(0, 24)}\u2026' is not sha256:<64 hex>`));
+  }
+  const dsRaw = ctx.files.get("data/dataset.json");
+  if (dsRaw && chOk) {
+    try {
+      const canon2 = canonicalJson(JSON.parse(asText2(dsRaw)));
+      const actual = "sha256:" + await ctx.sha256(canon2);
+      if (actual !== ch) {
+        findings.push(f3(
+          "C-2.7",
+          "error",
+          `content_hash does not match the canonicalized data/dataset.json (declared ${ch.slice(7, 19)}\u2026, actual ${actual.slice(7, 19)}\u2026)`,
+          ["refresh content_hash and append a change record", "restore data/dataset.json from history"]
+        ));
+      }
+    } catch {
+    }
+  }
+  if (fm.current_state === "verified") {
+    if (!chOk) findings.push(f3("C-2.7", "error", "verified state requires a well-formed content_hash"));
+    if (!dsRaw) findings.push(f3("C-2.7", "error", "verified state requires data/dataset.json"));
+    const hasSnap = [...ctx.files.keys()].some((p) => p.startsWith("snapshots/")) || ctx.elided && [...ctx.elided].some((p) => p.startsWith("snapshots/"));
+    if (!hasSnap) findings.push(f3("C-2.7", "error", "verified state requires at least one file in snapshots/"));
+  }
+  const chRaw = ctx.files.get("data/changes.json");
+  if (chRaw) {
+    try {
+      const recs = JSON.parse(asText2(chRaw));
+      const arr = recs && Array.isArray(recs.records) ? recs.records : null;
+      if (!arr) findings.push(f3("C-2.7", "error", 'data/changes.json must be {"records": [...]}'));
+      else for (let i = 0; i < arr.length; i++) {
+        const r = arr[i];
+        if (!r || !ISO_TS_RE.test(r.detected || "") || !["modified", "removed", "corrected"].includes(r.kind) || !r.summary) {
+          findings.push(f3("C-2.7", "error", `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
+        }
+      }
+    } catch {
+    }
+  }
+}
+var INFORMATION_GRAMMAR = Object.freeze({ ids: Object.freeze(["C-2.7"]), arm: checkInformationExtension2 });
 
 // ../bio-plane/src/capture/index.mjs
 var te5 = new TextEncoder();
@@ -24657,7 +24688,7 @@ var FIELDS = {
   overdue: { col: "action_clock_overdue", type: "bool", proj: true }
 };
 var CACHED_FIELDS = Object.fromEntries(
-  Object.entries(FIELDS).filter(([, f3]) => f3.asOf).map(([name, f3]) => [f3.col, { field: name, asOf: f3.asOf, authority: f3.authority, why: f3.why }])
+  Object.entries(FIELDS).filter(([, f4]) => f4.asOf).map(([name, f4]) => [f4.col, { field: name, asOf: f4.asOf, authority: f4.authority, why: f4.why }])
 );
 var RESOLUTION_SUB = {
   grade: { col: "grade", case: "upper", vocab: [] },
@@ -25192,10 +25223,10 @@ var MEANING = {
 };
 var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 var SORTABLE = { relevance: null, ...Object.fromEntries(
-  Object.entries(FIELDS).map(([k, f3]) => [k, f3.col])
+  Object.entries(FIELDS).map(([k, f4]) => [k, f4.col])
 ) };
 var TEXT_CAP = 128 * 1024;
-var PROJ_COLS = new Set(Object.values(FIELDS).filter((f3) => f3.proj).map((f3) => f3.col));
+var PROJ_COLS = new Set(Object.values(FIELDS).filter((f4) => f4.proj).map((f4) => f4.col));
 
 // ../bio-plane/src/retrieval/projection.mjs
 var PROJECTION_COLS = Object.freeze([
@@ -25298,86 +25329,86 @@ var CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.
 var VIA = Object.freeze({ projection: PROJECTION_RELATION });
 
 // ../bio-plane/src/progressions/checks.mjs
-var at4 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
+var at5 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
 var PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {
     check: "C-100.2",
-    where: at4("defineProgression", "is-progression-labelled"),
+    where: at5("defineProgression", "is-progression-labelled"),
     translation: "A declared flow carries a name a person can read, and this one has none. Give it a name. Nothing was written."
   },
   NO_STAGES: {
     check: "C-100.3",
-    where: at4("defineProgression", "is-progression-staged"),
+    where: at5("defineProgression", "is-progression-staged"),
     translation: "A declared flow is its steps in order, and this one names no step. Name at least one step. Nothing was written."
   },
   NO_STAGE_KEY: {
     check: "C-100.4",
-    where: at4("defineProgression", "is-stage-keyed"),
+    where: at5("defineProgression", "is-stage-keyed"),
     translation: "One step of this flow has no key, so nothing could later be placed at it or found missing from it. Give every step a key. Nothing was written."
   },
   DUPLICATE_STAGE: {
     check: "C-100.5",
-    where: at4("defineProgression", "is-stage-unique"),
+    where: at5("defineProgression", "is-stage-unique"),
     translation: "Two steps of this flow share one key, so a document placed at that key could belong to either. Give each step its own key. Nothing was written."
   },
   NO_CARDINALITY: {
     check: "C-100.6",
-    where: at4("defineProgression", "is-stage-counted"),
+    where: at5("defineProgression", "is-stage-counted"),
     translation: "One step does not say how many documents it may hold (exactly one, at most one, or any number), so the record could not tell a step holding too many from one holding the usual set. Say how many. Nothing was written."
   },
   BAD_REQUIRED: {
     check: "C-100.7",
-    where: at4("defineProgression", "is-stage-required"),
+    where: at5("defineProgression", "is-stage-required"),
     translation: "One step does not say how firmly it is expected, in one of the five words the record understands (always, usually, sometimes, never, unless an exception is recorded). Use one of them. Nothing was written."
   },
   UNKNOWN_AFTER: {
     check: "C-33.26",
-    where: at4("defineProgression", "is-progression-order"),
+    where: at5("defineProgression", "is-progression-order"),
     translation: "One step here says it comes after a step this sequence does not contain, so the order cannot be worked out. Name a step that exists, or leave the ordering off and let it stand on its own."
   },
   PROGRESSION_VERSION_NOT_HELD: {
     check: "C-100.8",
-    where: at4("readProgression", "is-version-held"),
+    where: at5("readProgression", "is-version-held"),
     translation: "The record holds no such version of this flow. The versions it does hold are named beside this message, and each reads back in full."
   },
   NO_PLACEMENTS: {
     check: "C-100.10",
-    where: at4("threadInstance", "is-thread-placed"),
+    where: at5("threadInstance", "is-thread-placed"),
     translation: "Threading places documents at the steps of a flow, and this request places none. Name at least one step and the document that fills it. Nothing was written."
   },
   NO_SUCH_PROGRESSION: {
     check: "C-100.11",
-    where: at4("#declared", "is-progression-declared"),
+    where: at5("#declared", "is-progression-declared"),
     translation: "No flow of that key has been declared, so there is nothing to place documents in or to decide about. Declare the flow first. Nothing was written."
   },
   NO_STAGE: {
     check: "C-100.13",
-    where: at4("#stageNamed", "is-stage-named"),
+    where: at5("#stageNamed", "is-stage-named"),
     translation: "This request does not say which step of the flow it is about. Name the step. Nothing was written."
   },
   BAD_STAGE: {
     check: "C-100.14",
-    where: at4("#stageOf", "is-stage-of-progression"),
+    where: at5("#stageOf", "is-stage-of-progression"),
     translation: "The step named here is not a step of this flow as it is declared now. Name one of its steps. Nothing was written."
   },
   NO_CAPTURE: {
     check: "C-100.15",
-    where: at4("#documentNamed", "is-document-named"),
+    where: at5("#documentNamed", "is-document-named"),
     translation: "A step is filled by a captured document, named by its fingerprint, and this request names none. Name the document. Nothing was written."
   },
   DUPLICATE_PLACEMENT: {
     check: "C-100.16",
-    where: at4("threadInstance", "is-placement-unique"),
+    where: at5("threadInstance", "is-placement-unique"),
     translation: "The same document is placed at the same step twice in this request. Place it once. Nothing was written."
   },
   NOT_CONCERNED: {
     check: "C-100.17",
-    where: at4("#concerned", "is-document-concerned"),
+    where: at5("#concerned", "is-document-concerned"),
     translation: "The record does not show this document concerning the subject this instance follows, so it cannot be placed in it or excuse one of its steps. Resolve the document to the subject first, or use it in the instance of the subject it does concern. Nothing was written."
   },
   NO_REASON: {
     check: "C-100.18",
-    where: at4("#reasonStated", "is-reason-stated"),
+    where: at5("#reasonStated", "is-reason-stated"),
     translation: "This act is recorded with a reason, in your own words, and none was given. A decision or an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was written."
   },
   NOT_A_DISPOSITION: {
@@ -25387,22 +25418,22 @@ var PROGRESSION_CHECKS = Object.freeze({
   },
   BAD_REASON: {
     check: "C-100.21",
-    where: at4("disposeProposal", "is-reason-bounded"),
+    where: at5("disposeProposal", "is-reason-bounded"),
     translation: "The reason is too long or contains a quotation mark, a backslash or a line break, which the record cannot keep as written. Shorten it to one plain line. Nothing was written."
   },
   NO_DECIDER: {
     check: "C-100.22",
-    where: at4("disposeProposal", "is-decider-stamped"),
+    where: at5("disposeProposal", "is-decider-stamped"),
     translation: "A decision is recorded under the member who took it, and this request reached the record without one. Sign in and decide again. Nothing was written."
   },
   NO_DEFINITION_VERSION: {
     check: "C-33.42",
-    where: at4("disposeProposal", "is-dispose-version-named"),
+    where: at5("disposeProposal", "is-dispose-version-named"),
     translation: "Setting aside one of the record's own questions is a decision about the way a body is said to work \u2014 and that description is written down, dated, and rewritten when the group learns better. This request does not say which of those versions you were reading when you decided, so the record cannot say what you actually judged. Open the question again and send the version shown beside it. Nothing was recorded."
   },
   DEFINITION_MOVED: {
     check: "C-33.43",
-    where: at4("disposeProposal", "is-dispose-version-current"),
+    where: at5("disposeProposal", "is-dispose-version-current"),
     translation: "The version of the declared flow this decision names is not the one standing now. Rather than file your decision against a description you did not read, the record keeps it out and asks you to look again: read the question against the version in force and decide again. The answer may well be the same one, and it will then be yours. Both versions are named beside this message, the earlier one still reads back in full, and nothing was recorded."
   }
 });
@@ -25470,16 +25501,16 @@ var DOCUMENT_AXES = Object.freeze(["capture", "testimony"]);
 var GRADE_RANK = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
 
 // ../bio-plane/src/strength/checks.mjs
-var at5 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
+var at6 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
 var VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_NO_INQUIRY: {
     check: "C-30.1",
-    where: at5("versionStrength", "is-version-strength"),
+    where: at6("versionStrength", "is-version-strength"),
     translation: "This asks how strongly one question is answered, and no question was named. There is no default question here and there must not be one."
   },
   VERSION_STRENGTH_NOT_AN_INQUIRY: {
     check: "C-30.2",
-    where: at5("versionStrength", "is-version-strength"),
+    where: at6("versionStrength", "is-version-strength"),
     translation: "That is not a question, so there is nothing here to say how strongly it is answered. Only a question carries readings of the evidence, and only a reading has a strength."
   },
   /* THE FOUR BEATS' FIRST BEAT, one altitude down from PL-2's acts and for the
@@ -25488,17 +25519,17 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      thing, which is worse than being asked which was meant. */
   VERSION_STRENGTH_NO_VERSION: {
     check: "C-30.3",
-    where: at5("versionStrength", "is-version-strength"),
+    where: at6("versionStrength", "is-version-strength"),
     translation: "Say which reading of the evidence to measure, or say which project is asking so that the reading it stands on can be used. There is no default reading, because a strength reported for a reading nobody meant is a number about something else."
   },
   VERSION_STRENGTH_NO_SUCH_VERSION: {
     check: "C-30.4",
-    where: at5("versionStrength", "is-version-strength"),
+    where: at6("versionStrength", "is-version-strength"),
     translation: "No reading by that name belongs to this question, or this project has not said which reading it stands on. An empty answer here would say the question rests on nothing when the truth is that nobody has pointed at anything yet."
   },
   VERSION_STRENGTH_UNKNOWN_STATE: {
     check: "C-30.5",
-    where: at5("versionStrength", "is-version-strength"),
+    where: at6("versionStrength", "is-version-strength"),
     translation: "One of the words used to say which readings to count is not one this record knows. The set is closed on purpose: a strength that quietly counted readings nobody recognises would be a number no reader could check."
   },
   /* §6 rule 6, and it is the mechanism rather than a nicety: *"Exploring an
@@ -25508,7 +25539,7 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      state-set line (DEC-40) wherever it renders. */
   VERSION_STRENGTH_STATE_EXCLUDED: {
     check: "C-30.6",
-    where: at5("versionStrength", "is-version-strength"),
+    where: at6("versionStrength", "is-version-strength"),
     translation: "Nobody has adopted that reading, so it is not what this record answers with. You can still see what it would come to \u2014 ask for it as a what-if by saying which kinds of reading to count \u2014 and the answer will say on its face that that is what it is."
   },
   /* DEC-44 determination 1, at the version altitude: *"A case does NOT compose a
@@ -25520,7 +25551,7 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      number is the record claiming something neither population supports. */
   VERSION_STRENGTH_COMPOSED: {
     check: "C-30.7",
-    where: at5("refusePairComposed", "is-pair-composed"),
+    where: at6("refusePairComposed", "is-pair-composed"),
     translation: "This answer tried to report one overall figure for a question, and there is no such figure. How well the documents were captured and how firmly they connect to the subject are two separate measurements over two separate things, and averaging them or picking one would state something neither of them says."
   },
   /* DEC-40 determination 2, and its own negative control: *"a filtered
@@ -25532,12 +25563,12 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      the record's own. */
   VERSION_STRENGTH_UNFILTERED: {
     check: "C-30.8",
-    where: at5("refusePairComposed", "is-pair-composed"),
+    where: at6("refusePairComposed", "is-pair-composed"),
     translation: "This answer did not say which readings it counted, and a strength separated from that is a misreading waiting to happen. Every answer here says on its face whether it is the record's own or a view somebody constructed."
   },
   VERSION_STRENGTH_TOO_MANY_STATES: {
     check: "C-30.9",
-    where: at5("versionStrength", "is-version-strength"),
+    where: at6("versionStrength", "is-version-strength"),
     translation: "More kinds of reading were named than this record has. The bound is said here rather than applied quietly, so nothing is dropped without you being told."
   }
 });
@@ -25546,37 +25577,37 @@ var VERSION_STRENGTH_INERT_SOURCES = ["hunch"];
 var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
   PARTITION_INDEPENDENCE_NO_INQUIRY: {
     check: "C-71.1",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "This asks whether the groups of reasons behind one question share a source, and no question was named. There is no default question here and there must not be one."
   },
   PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
     check: "C-71.2",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "That is not a question you can read here, so it has no reasons to group. Only a question rests on reasons, and a question you may not see answers exactly as one that does not exist."
   },
   PARTITION_INDEPENDENCE_UNREADABLE: {
     check: "C-71.3",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "The grouping of reasons could not be read. Send it as a list of groups, each group a list of the positions of the reasons in it, or as groups each carrying a name and its positions. Every group needs at least one reason and a name no other group has."
   },
   PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
     check: "C-71.4",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "The grouping names a reason this question does not have. It was not dropped quietly, because an answer about groups the question does not hold would be an answer about something else."
   },
   PARTITION_INDEPENDENCE_LEG_TWICE: {
     check: "C-71.5",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "One reason was put in two groups. Each reason belongs to exactly one group, because a reason shared by two groups would make them share a source by construction."
   },
   PARTITION_INDEPENDENCE_NOT_TOTAL: {
     check: "C-71.6",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "Some of this question's reasons are in no group. A grouping covers every reason, as a written reading does, so that what is checked here is what would be written."
   },
   PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
     check: "C-71.7",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "This question rests on more reasons than a written reading may hold, so a grouping of all of them could not be written and is not checked. The bound is said here rather than applied quietly."
   },
   /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
@@ -25585,31 +25616,31 @@ var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
      strength. */
   PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
     check: "C-71.8",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "Both a written reading and a proposed grouping were named. This answers for one of them at a time, and which one was meant is not something to guess, so name only the one you want."
   },
   PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
     check: "C-71.9",
-    where: at5("partitionIndependence", "is-partition-independence"),
+    where: at6("partitionIndependence", "is-partition-independence"),
     translation: "No reading by that name belongs to this question, so there are no written groups of it to check. Nothing was substituted for it."
   }
 });
 var STRENGTH_BAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE: {
     check: "C-32.9",
-    where: at5("strengthBarSet", "is-machine-strength-bar"),
+    where: at6("strengthBarSet", "is-machine-strength-bar"),
     translation: "How much evidence this group requires of itself is the group's own declaration about the standard it works to, and everything filed afterwards is measured against it. An automated credential cannot set that bar for the people it works for. Sign in to change it."
   },
   STRENGTH_BAR_NOT_ADMIN: {
     check: "C-107.1",
-    where: at5("strengthBarSet", "is-admin-strength-bar"),
+    where: at6("strengthBarSet", "is-admin-strength-bar"),
     translation: "The standard of evidence a new project starts from is set for the whole group, so only an administrator can change it. A project can still declare its own standard in its own document. Nothing was changed."
   },
   /* N208 (K275): this module's own condition, a bar letter outside the grades, with its own row; intent's grade
      refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
   BAD_GRADE: {
     check: "C-107.2",
-    where: at5("strengthBarSet", "is-strength-bar-grade"),
+    where: at6("strengthBarSet", "is-strength-bar-grade"),
     translation: "A standard of evidence is stated in the grades the record uses, A to D, one for how the documents were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed."
   }
 });
@@ -27069,19 +27100,19 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     segmentStopped
   };
 }
-function planeAnswer(asked, at6) {
-  if (!asked.reached) return { at: at6, silent: asked };
+function planeAnswer(asked, at7) {
+  if (!asked.reached) return { at: at7, silent: asked };
   const envelope = asked.body && typeof asked.body === "object" ? asked.body : {};
   const inner = envelope.result && typeof envelope.result === "object" && !Array.isArray(envelope.result) ? envelope.result : null;
   const said = inner && "ok" in inner ? inner : envelope;
   if (asked.status !== 200 || envelope.ok !== true || said.ok === false)
-    return { at: at6, refused: {
-      at: at6,
+    return { at: at7, refused: {
+      at: at7,
       code: said.reason ?? said.code ?? envelope.reason ?? envelope.code ?? null,
       check: said.check ?? envelope.check ?? null,
       plane: asked.body ?? null
     } };
-  return { at: at6, result: inner ?? envelope };
+  return { at: at7, result: inner ?? envelope };
 }
 var MEANING_OP = "meaningrows";
 var meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) => planeAnswer(await call(MEANING_OP, { q, rows, limit }, ids ? { ids } : null), MEANING_OP);
