@@ -34,3 +34,7 @@
 - `node checks/ownership.mjs … extraction tranche/T18`: legacy-index 2 line(s) added, 3 removed (listed above); 0 failures.
 
 Size (session_01Y891RVtgQpU2ma9akMbBvy): test runs 30, module lines 3548
+
+## J1 · COMPLETE
+
+All entries applied (record: Completion). pdfstructure dispatch moved (EXTRACTION_OPS/extractionOp; index.mjs +2 -3); DRIVE_CAPTURE_CHECKS: no import existed, the precedent comment re-pointed; all 16 converts in six new test files (145/145). A flaw fixed in my module: R18 view() fell back to every profile when none was named; now the empty view. REPORTs: plane bundle stale (§14); control-plane doorbell R36 red on tranche/T18 without me; extraction could re-point sha256HexSync/BASIS_GRADES to record-grammar given a uses edge. No row moved or changed. Checks: format, architecture, coverage, ownership 0 failures.
