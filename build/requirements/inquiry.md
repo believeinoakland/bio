@@ -87,6 +87,7 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 **The grammar's arm** (C-2.11–C-2.16; judged by R11 as C-2.8's entry requirements are)
 - **R47**
   - **The link.** A **contradiction inquiry** is one whose document carries `contradiction: {candidate}`, where `candidate` is 64 lowercase hex (`contradiction` R15's id). Anything else is `CONTRADICTION_LINK_MALFORMED` (C-2.11).
+  - **An arm that cannot judge.** A document the arm cannot judge (its check stops with an error) is `CONTRADICTION_ARM_FAILED` (C-2.18), inside `BASIS_REFUSED` with the rest (R11); it never passes (K543). *(not yet met: N369)*
   - **Where a resolution may appear.** A document that is not a contradiction inquiry and carries `resolution` is `RESOLUTION_WITHOUT_CONTRADICTION` (C-2.12).
   - **Concluding.** A contradiction inquiry at `concluded` carries `resolution: {kind, coordinates?, qualifiers?, wrong_side?, reason?, canon?}`. With none, it is `RESOLUTION_MISSING` (C-2.13), so no door concludes one without its kind. A kind outside R46 is `RESOLUTION_KIND_UNKNOWN` (C-2.14).
   - **What each kind requires.** Each missing or ill-formed field is `RESOLUTION_INCOMPLETE` (C-2.15), naming the field:
@@ -133,7 +134,7 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - **R35** A published case member cannot be divided, re-grouped or set down; the route is reopen (DEC-12, DEC-72).
 - **R36** `inquiry_basis`, `inquiry_exclusions`, `inquiry_migration_replays` and `inquiry_member_agents` carry `bundle_id` and are declared to record-core's purge (K23); the table that holds R48's projection is keyed by `bundle_id` and declared to purge.
 - **R37** No place is named in this module's behaviour or outward text.
-- **R38** Each check moves here as an invariant with its test (K6): C-2.8 and C-21.2 as the grammar uses them, C-6.1's supersession and division arms, C-6.3, C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8 (cite's rows are `citation`'s, its R11). C-2.11–C-2.17 are held in this module's own table (DEC-49; K343's pattern in the C-2 family), this module's first `checks.mjs`; C-2.1–C-2.10 stay the catalogue's. Promotion stamps them.
+- **R38** Each check moves here as an invariant with its test (K6): C-2.8 and C-21.2 as the grammar uses them, C-6.1's supersession and division arms, C-6.3, C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8 (cite's rows are `citation`'s, its R11). C-2.11–C-2.18 are held in this module's own table (DEC-49; K343's pattern in the C-2 family), this module's first `checks.mjs`; C-2.1–C-2.10 stay the catalogue's. Promotion stamps them.
 
 Rows C-2.11–C-2.17 (R38; N345), with their translations:
 
@@ -146,6 +147,7 @@ Rows C-2.11–C-2.17 (R38; N345), with their translations:
 | C-2.15 | `RESOLUTION_INCOMPLETE` | "This resolution is not complete. A resolution gives its kind together with what that kind needs: the respect in which the sides differ, which side is wrong and why, or the rule that reconciles them. The part that is missing or not in that form is named. Nothing was written." |
 | C-2.16 | `EXPLORES_MALFORMED` | "A question that explores a contradiction names one thing it explores: one respect in which the sides may differ, one rule that may reconcile them, or one hypothesis. This one names none, several, or one the record does not know. Nothing was written." |
 | C-2.17 | `CANDIDATE_ALREADY_TAKEN_UP` | "That contradiction has already been taken up as another question, which is named. Work on it there, so that one conflict has one place where it is resolved. Nothing was written." |
+| C-2.18 | `CONTRADICTION_ARM_FAILED` | "The check of this question's contradiction fields (its link, its resolution, what it explores) stopped with an error instead of answering, so the question is refused rather than let through. The error is in the check and says nothing yet about the document. Nothing was written." |
 
 ### Satisfies
 
