@@ -1,11 +1,12 @@
 /* capture — the doorbell (Intake Doctrine §2a): anyone may hand the group material, with no account. The op's
  * handler (moved from `legacy-index` in T4, K98) refuses what it will not read before the store is called
- * (R49–R51, in R53's order) and hands the rest to the store side (`Capture#knock`, R31, R32, R54). A knock is not a
+ * (R49–R51 and R66's weak secret, in R53's order) and hands the rest to the store side (`Capture#knock`, R31, R32, R54). A knock is not a
  * capture and not a bundle: it lands in the inbox, which only a signed-in member reads. The response envelope,
  * `requiredArgument`, the store-silence refusal and the Durable Object envelope's reader (`doAnswer`, N247) are the
  * control plane's, passed in by the caller. */
 import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
 import { relayUnanswered } from "./ops.mjs";
+import { CAPTURE_CHECKS } from "./checks.mjs";
 
 /* R31, R49, R50. The limits the instance runs, and D-496's published sentences BUILT FROM THEM, so the words and
    the numbers cannot drift apart (BOB #32: a published limit is a BOUND). "Estimated by a sliding window" because
@@ -61,7 +62,28 @@ export function knockEmpty() {
   /* END DEC-49 REGION is-knock-empty */
 }
 
-/** op=knock (R30–R32, R47–R54, R64). `store` is the Durable Object stub; `json`, `requiredArgument`, `storeSilent`,
+/* R66 (N364): the shortest knocker secret the doorbell accepts, in characters (K497: at least 20). A shorter one could
+   be guessed, and whoever guessed it would continue the knocker's pseudonym. */
+export const KNOCKER_SECRET_MIN = 20;
+
+/** R66: whether a supplied `knockerSecret` is refused. Absent (undefined or null) is no secret, never weak; anything
+ *  else that is not a string of at least `KNOCKER_SECRET_MIN` characters is weak. */
+export function isWeakKnockerSecret(secret) {
+  if (secret === undefined || secret === null) return false;
+  return typeof secret !== "string" || [...secret].length < KNOCKER_SECRET_MIN;
+}
+
+/** R66, C-118.3: the one site `KNOCKER_SECRET_WEAK` is minted; the handler and the store side both answer through it.
+ *  Nothing is received, stored or counted. */
+export function knockerSecretWeak() {
+  /* DEC-49 REGION is-knocker-secret-strong — N364 / C-118.3. */
+  const row = CAPTURE_CHECKS.KNOCKER_SECRET_WEAK;
+  return { ok: false, reason: "KNOCKER_SECRET_WEAK", code: "KNOCKER_SECRET_WEAK", check: row.check,
+           translation: row.translation, minChars: KNOCKER_SECRET_MIN };
+  /* END DEC-49 REGION is-knocker-secret-strong */
+}
+
+/** op=knock (R30–R32, R47–R54, R64, R66). `store` is the Durable Object stub; `json`, `requiredArgument`, `storeSilent`,
  *  `storeRefusal` and `doAnswer` (the one reader of a Durable Object's envelope, N247) are the control plane's. The
  *  refusals are tried in R53's order and the first that applies answers. */
 export async function knockOp(req, env, store, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }) {
@@ -83,12 +105,16 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
   const evidence = typeof env.CAPTURES?.put === "function";
   const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
   if (bytes.length > cap) return json(knockPayloadTooLarge(cap, evidence), 413);
+  /* R53, R66: a weak knocker secret after oversize content and before the rate: nothing is received or counted. */
+  if (isWeakKnockerSecret(body.knockerSecret)) return json(knockerSecretWeak(), 400);
   const source = req.headers.get("cf-connecting-ip") || "unknown";
   const out = await doAnswer(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source)}`, {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ contentB64: typeof body.contentB64 === "string" ? body.contentB64 : null,
                            content: typeof body.contentB64 === "string" ? null : body.contentText,
                            note: body.note, contact: body.contact, windowMs: KNOCK.windowMs,
+                           ...(typeof body.knockerSecret === "string" ? { knockerSecret: body.knockerSecret } : {}),
+                           ...(body.generateSecret === true ? { generateSecret: true } : {}),
                            perIpLimit: KNOCK.perIp, globalLimit: KNOCK.global,
                            /* D-487: the window's instant is the control plane's, read once, as it always was. */
                            now: Date.now() }) })));
@@ -102,6 +128,9 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
       return json({ ok: false, ...rec, stated: rec.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal }, 429);
     return json({ ok: false, ...rec }, rec.status || 502);
   }
+  /* R54, R66: the pseudonym (null without a secret), and a secret the doorbell made shown in this answer only. */
   return json({ ok: true, knockId: rec.knockId, sha256: rec.sha256, bytes: rec.bytes,
-                received: "Your material is in the group's inbox awaiting member review." }, 200);
+                received: "Your material is in the group's inbox awaiting member review.",
+                pseudonym: typeof rec.pseudonym === "string" ? rec.pseudonym : null,
+                ...(typeof rec.secret === "string" ? { secret: rec.secret } : {}) }, 200);
 }
