@@ -1792,3 +1792,11 @@ A replayed creation (historical replay is not authorship) carries the past's byt
 producer can become (it cannot be rewritten; a correcting act is undesigned as of 2026-09-21); what `group` means for a document that
 genuinely came from another group (no import path exists — replay is the only one, and it keeps the past's bytes); and
 whether the setup page and the member UI should learn the value at all, since the plane now stamps every creation.
+
+## Amendment: the Action layer (2026-09-30, `BIO_Action_v0_1.md` §6; K608)
+
+**§1.2 and §4 gain the action-plan type.** `PLN-` (type `action_plan`) is a record object like the layer-9 types `STD-`, `CONF-`, `CONS-` and `ESC-` (K171): states `open` and `closed`, one edge `open → closed`, taken only by a member's act with a reason; a plan never closes itself (`action-plans` R20).
+
+**§4.4 Action, as the layer holds it now.** The `counterparty` field is the action's **addressee**: an office by role and body; a reporter or outlet, an organisation or another civic group by role and organisation; or a described audience; never a private individual, and an action asserting a breach is addressed to an office (`BIO_Action_v0_1.md` §4 rule 6; `actions` R9). The free-text example `counterparty: "Oakland Finance Department, Controller's Bureau"` is history. The kinds are the product's own (`records_request`, `request_for_comment`, `other`) and the active jurisdiction profile's; the seven state-specific kinds listed above read as written on records that carry them (`actions` R4, R10). Resolutions are `complied`, `denied`, `escalated`, `withdrawn` and `completed` (the action was carried out and no counterparty's answer decides it). An action may state `contact` (a member id, the group's contact for it), and `plan` and `option` (the action plan and option it was started from, set at creation, never changed).
+
+**§5.1's closed vocabulary gains three relationships**, already built and approved: `action_basis` (an action → the inquiry, determination or information it rests on or advances), `responds_to` (a reply → the action it answers) and `references` (a finding of non-response → the action).

@@ -3,7 +3,7 @@
   "not_product": ["docs/", "requirements/", "build/", "tools/", "release/", ".claude/", ".github/", "README.md", "CLAUDE.md", ".gitignore", ".env.example", ".worktreeinclude", "bio-plane/dist/", "bio-plane/DEPLOY-DASHBOARD.md", "bio-plane/DEPLOY.md", "bio-plane/DRY-RUN.md", "bio-plane/INSTALLER.md", "bio-plane/KICKOFF.md", "bio-plane/SESSION-HANDOFF.md", "bio-plane/SETUP.md", "bio-plane/checks/README.md", "bio-plane/migrate/README.md"],
   "modules": [
     {"id": "record-grammar", "layer": 1, "from": ["legacy-checks"], "paths": ["bio-plane/src/record-grammar/"], "tests": ["bio-plane/test/m/record-grammar/"], "uses": []},
-    {"id": "legacy-checks", "layer": 1, "legacy": true, "paths": ["bio-plane/checks/bio-checks.mjs"], "tests": [], "uses": ["record-grammar"]},
+    {"id": "legacy-checks", "layer": 1, "legacy": true, "paths": ["bio-plane/checks/bio-checks.mjs"], "tests": ["bio-plane/test/m/legacy-checks/"], "uses": ["record-grammar"]},
     {"id": "jurisdictions", "layer": 1, "paths": ["jurisdictions/"], "tests": ["jurisdictions/test/"], "uses": ["record-grammar"]},
     {"id": "test-support", "layer": 1, "paths": ["bio-plane/test/sandbox.mjs", "bio-plane/test/stdio.mjs", "pdf-worker/test/make-pdf.mjs"], "tests": ["bio-plane/test/m/test-support/"], "uses": []},
     {"id": "bundler", "layer": 1, "paths": ["bio-plane/scripts/fleet-bundle.mjs", "bio-plane/scripts/provenance.mjs"], "tests": ["bio-plane/test/m/bundler/"], "uses": []},

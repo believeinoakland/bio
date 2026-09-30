@@ -398,7 +398,7 @@ BIO_Technical_Architecture_Decisions Section 5.
 
 ## Function 3: Escalate
 
-When findings reveal noncompliance, the six-stage escalation protocol
+When findings reveal noncompliance, the seven-stage escalation protocol
 activates. The Escalation Skill identifies the current stage, available
 actions by risk tier, and upcoming deadlines. For Tier 1 and 2 actions,
 the skill produces filing templates pre-populated with case-specific
@@ -432,7 +432,7 @@ BIO_State_Rules_Consistency Section 4.4.
 **Compliance Skill:** evaluates work products against BIO publishing
 standards before publication.
 
-**Escalation Skill:** guides groups through the six-stage protocol with
+**Escalation Skill:** guides groups through the seven-stage protocol with
 tier-appropriate actions.
 
 **Monitoring Skill:** tracks deadlines, city responses, and compliance
@@ -575,7 +575,7 @@ for human evaluation.
 products against publishing standards.
 
 **8. Escalation Protocol Skill** --- Layer 3. Guides groups through
-six-stage protocol with tiered actions.
+seven-stage protocol with tiered actions.
 
 Note: Five skills operate in Layer 1 (information), reflecting the
 reality that information management is the largest part of a group's

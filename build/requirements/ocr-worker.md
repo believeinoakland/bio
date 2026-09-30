@@ -156,6 +156,7 @@ engine_loaded, engine_unavailable?}`.
   requested, and the two instance settings (`OCR_CONFIDENCE_FLOOR`, `OCR_PSM`); this module holds no
   state between calls, reads the record only through `CAPTURES.get`, and makes no other network or
   storage call.
+- **R22** The module exports, from its engine-free contract, `PLANE_OPS` (`{op: {mutating, why}}`, the plane ops it calls: empty, since it calls none) and `NAMESPACES` (R16's set), both frozen; control-plane pins them against its op table and its namespace gate, which is how a record namespace set moved without this module's (R16) is caught. (N402, K631)
 
 ### Satisfies
 
