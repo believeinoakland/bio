@@ -25,7 +25,7 @@ FRICTION = {"irreversible": "Only through the publication ceremony (DEC-80).",
 
 SUPP = [
  ("document","reading","is read into","extraction Purpose"),
- ("knock","document","is admitted as a capture when pulled (decided, not built)","capture R30-R32; DEC-78; Intake Doctrine §2a"),
+ ("knock","document","is filed as a capture when pulled","capture R30-R32; DEC-78; Intake Doctrine §2a"),
  ("lead","inquiry","points where a question could look","observation-log R14-R21; queue R18"),
  ("contradiction","passage","flags two that may conflict","contradiction Purpose, R1-R16"),
  ("bias-set","bias-debt","leaves, when its lens changes","bias R33-R43"),
@@ -91,8 +91,10 @@ GROUPS = [
   ["document", "knock", "source", "firsthand-observation", "capture-request", "reading", "passage", "entity", "connection", "progression", "observation", "lead", "leg", "inquiry"]),
  ("From a question to a published case", "A question rests on supports. A project accepts one account of that support and concludes the question; the concluded question is a finding. Strength and declared bias weigh it. Findings are published as a case, in editions.",
   ["inquiry", "leg", "basis-version", "strength", "bias-set", "bias-debt", "contradiction", "project", "case", "review-copy", "reevaluation"]),
- ("Acting on what was found, and watching", "Once published, a finding can be held against a standard. A determination can lead to an action or a filing with its deadline. Escalation and monitoring follow the government's response. The group's aspirations and objectives set direction.",
-  ["case", "standard", "determination", "consequence", "action", "filing", "escalation", "monitoring", "aspiration-goal", "objective"]),
+ ("Deciding what to do", "A project can open an action plan as soon as a question begins. The plan names the matters it is about, each suspected or determined; it holds options, suggested by the assistant or added by a member, each chosen or declined with a reason; and up to three scenarios lay the chosen options out in phases with checkpoints a member judges.",
+  ["inquiry", "determination", "action-plan", "plan-subject", "plan-option", "option-proposal", "scenario", "checkpoint", "action"]),
+ ("Acting, and watching the response", "A published finding can be held against a standard. A chosen option starts an action addressed to an office, an outlet or an organisation; what is sent is prepared as a filing or a communication draft, approved by a member and sent by their own hand. Deadlines, replies, pressure against the group and a breach's escalation are tracked; the group's aspirations and objectives set direction.",
+  ["case", "standard", "determination", "consequence", "action", "filing", "communication-draft", "pressure-entry", "deadline-reminder", "escalation", "monitoring", "aspiration-goal", "objective"]),
  ("People, permissions and the group's copy", "Each group runs its own copy. A founder claims it, administrators invite members, capabilities say what each may do, and projects decide who sees what.",
   ["group-instance", "member", "administrator", "invitation", "capability", "project", "credentials"]),
  ("What waits on a member, and the assistant", "The queue gathers everything waiting on someone. The assistant works inside a run with limits: it finds, pursues and checks, and never concludes.",
@@ -110,10 +112,11 @@ spine = """flowchart TB
   end
   subgraph P["3 · Publication and action"]
     direction LR
-    cs["Case, published"] --> det["Determination against a standard"] --> act["Action or filing"] --> mon["Watching the response"]
+    cs["Case, published"] --> det["Determination against a standard"] --> plan["Action plan: options and scenarios"] --> act["Action, sent by a member"] --> mon["Tracking replies, deadlines, escalation"]
   end
   leg --> q
   fnd --> cs
+  q -.->|a plan may open early| plan
   str["Strength and declared bias"] -.->|weigh| q
   ai["Assistant"] -.->|finds and checks; never concludes| leg
   qu["Queue"] -.->|what waits on each member| prj
@@ -129,7 +132,9 @@ def statechips(states):
     return '<ol class="states">' + "".join(out) + "</ol>"
 
 def actnotes(a):
-    return "".join("<div class=note>" + e(a[k]) + "</div>" for k in ("friction", "ruling") if a.get(k))
+    out = "".join("<div class=note>" + e(a[k]) + "</div>" for k in ("friction", "ruling") if a.get(k))
+    if a.get("rungRuled") is False: out += "<div class=note>Weight proposed, not yet ruled.</div>"
+    return out
 
 def rungpill(r):
     k = r or "undetermined"
@@ -422,7 +427,7 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <h2 id="weights">How heavy each act is</h2>
 <p>Every act carries a weight, its rung, and the rung decides how much friction the act gets (Bob, 2026-09-29, DEC-87). Friction is kept as low as possible so the tool fades and the work stays in focus, yet a heavier act slows the member down, even for a moment, before it is taken.</p>
 <ul class="bl"><li>{rungpill("reversible")} happens inline.</li><li>{rungpill("reasoned")} opens a reason field in place.</li><li>{rungpill("terminal")} and {rungpill("attested")} open a full dialog stating what ends or cannot be silently undone, and who signs.</li><li>{rungpill("irreversible")} only through the publication ceremony (DEC-80).</li></ul>
-<p>Every act's button shows its rung's name and weight mark (DEC-82). Weights come from the affordances module. Bob gave the 57 acts that had none their rungs on 2026-09-29 (DEC-88: 26 reversible, 29 reasoned, 2 terminal), and they are shown here at those rungs; the module takes them up when BOB moves them, and each says so. <b>{n_undet}</b> acts here still show {rungpill("undetermined")}: some because no operation of their own has been located, others because they are decided but not yet built and their rung is not yet assigned; each is treated as needing a stated reason until BOB assigns it.</p>
+<p>Every act's button shows its rung's name and weight mark (DEC-82). Weights come from the affordances module and, for the 57 acts that had none, from Bob's grades (DEC-88: 26 reversible, 29 reasoned, 2 terminal), shown here at those rungs; the module takes them up when BOB moves them. New acts of the Action layer carry a proposed weight, marked as not yet ruled. <b>{n_undet}</b> acts here show {rungpill("undetermined")}: no operation of their own has been located, or they are decided but not yet built and not yet weighed; each is treated as needing a stated reason until BOB assigns it.</p>
 <p>Six acts are judgement calls that carry high friction whatever their rung, because friction follows the consequence in the world, and a heavy consequence is not a new rung (DEC-88):</p>
 <ul class="bl">{six}</ul>
 <p>An act that is decided but not yet built, such as “Decline to escalate” (DEC-89), is listed at its rung and marked as not yet built.</p>
@@ -451,6 +456,11 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 (function(){{ var t=document.getElementById("srcToggle"); function set(v){{ document.body.classList.toggle("show-src", v); t.checked=v; }}
 try {{ set(localStorage.getItem("ux-src")==="1"); }} catch(_ ) {{ set(false); }}
 t.addEventListener("change", function(){{ set(t.checked); try {{ localStorage.setItem("ux-src", t.checked?"1":"0"); }} catch(_ ) {{}} }}); }})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.0/mermaid.min.js"></script>
+<script>
+try {{ var dk = document.documentElement.dataset.theme === "dark" || (document.documentElement.dataset.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+mermaid.initialize({{ startOnLoad: true, theme: dk ? "dark" : "neutral", securityLevel: "strict", flowchart: {{ useMaxWidth: true }} }}); }} catch (_) {{}}
 </script>'''
 open(S + "ux-substrate.html", "w").write(page)
 print(len(page), "exp" if x else "no-exp")
