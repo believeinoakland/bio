@@ -15,21 +15,29 @@
  *               membership's `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
  */
 
-import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SETS,
-         deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity, projectNameKey, withProducingGroup,
-         ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
+import { parseFrontmatter, normalizeType, vocabFor, STATES,
+         deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity,
+         ACT_SHAPE_CHECKS, PROJECT_ID_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
          CUSTODIAL_CHECKS, REGISTRATION_CHECKS } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
-import { PROMOTION_CHECKS } from "./checks.mjs";
+import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
-import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
-import { runCaseGate as runCaseCatalogue } from "../gate.mjs";
+import { MECHANICAL_FIELD_SETS } from "./history.mjs";
+import { projectNameKey } from "./names.mjs";
+import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences,
+         withProducingGroup } from "./text.mjs";
+import { runCaseGate as runCaseCatalogue, runGate as runBundleGate } from "../gate.mjs";
 
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../gate.mjs";
-export { PROMOTION_CHECKS } from "./checks.mjs";
+export { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
+/* Moved here from the catalogue in T18 (K636): the name key and C-77 (R19, R38), the producing group's one writing
+   (R13), and the mechanical field sets R8 and C-20.1 read (a copy until T19 deletes the catalogue's). */
+export { projectNameKey, checkProjectNameUniqueness } from "./names.mjs";
+export { withProducingGroup } from "./text.mjs";
+export { MECHANICAL_FIELD_SETS } from "./history.mjs";
 /* R49 (K285): the one site of LISTENER_MALFORMED and LISTENER_DECLARED is membership's (its R81), re-exported for later
    modules, which call either spelling of the one function. */
 export { listenerRefusal } from "../membership/index.mjs";
@@ -286,6 +294,26 @@ class Promotion {
   /* R33: the case gate over the registered catalogue; with none registered, C-102.9 (K529). Same GATE_VERSION (R34). */
   runCaseGate(args = {}) {
     return runCaseCatalogue(args || {}, this.#caseCatalogue ? this.#caseCatalogue.fn : null);
+  }
+
+  /* ---------------------------------------------------------------- R27: the gate, with the registered grammars */
+
+  /* R27 (§1b): the bundle gate with the type grammars later modules registered with record-core (its `grammars()`), so
+     a grammar that left the catalogue judges a bundle here as it does at the audit. `args` are `runGate`'s own; a
+     caller's `grammars` is never taken, since the record's registrations are the one list. A record that cannot answer
+     its registrations rejects the gate: an unread list is never read as empty (R37). A grammar whose arm throws is one
+     error of its own on the bundle, naming its module, as record-core's audit counts it (its R67, R59): the gate fails
+     closed with a verdict, never passes and never throws out. */
+  async runGate(args = {}) {
+    const grammars = this.#record.grammars().map((g) => ({ module: g.module, ids: g.ids, arm: async (ctx, found) => {
+      try { await g.arm(ctx, found); }
+      catch (e) {
+        found.push({ check: g.module, severity: "error",
+                     message: `${g.module}'s grammar threw on ${ctx && ctx.folderName}, so it judged nothing and the bundle is `
+                            + `not passed: ${cut(e && e.message ? e.message : e, 200)}` });
+      }
+    } }));
+    return runBundleGate({ ...(args || {}), grammars });
   }
 
   /* ---------------------------------------------------------------- promote */

@@ -3736,104 +3736,6 @@ export const MECHANICAL_FIELD_SETS = {
   'deadline-recheck': ['clock[].status', 'last_updated'],
   'member-attest': ['last_updated']
 };
-// ---------------------------------------------------------------------------
-// C-77 — project name uniqueness over a HANDED CORPUS (D-50)
-// ---------------------------------------------------------------------------
-
-/**
- * THE comparison key for project name uniqueness (Membership v2 §7.1): the
- * `title`, trimmed, lower-cased, runs of whitespace collapsed to one space.
- *
- * ONE FUNCTION, AND THE STORE HOLDS THIS SAME OBJECT. `Store.projectNameKey`
- * is assigned from this export (`static projectNameKey = projectNameKey`), so
- * the write path's NAME_TAKEN refusal and `checkProjectNameUniqueness` below
- * cannot disagree about what a collision is. It lived as a private static on
- * `Store` until D-50 and moved HERE, not beside it, because the store imports
- * the catalog and the catalog cannot import the store (`cloudflare:workers`).
- * A second normaliser that agrees on a fixture is the way this rule is broken
- * without any suite noticing; `test/d50-project-names.test.mjs` asserts the
- * two are the SAME function object, not that they give equal output.
- *
- * @param {unknown} title
- * @returns {string}
- */
-export function projectNameKey(title) {
-  return String(title ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-/**
- * Membership v2 §11 item 8: project name uniqueness enforced IN THE CHECK
- * CATALOG as well as at the write path. The write path refuses a colliding
- * write (`Store#promote` and `Store#projectFork`, NAME_TAKEN); nothing could
- * judge a corpus handed in from elsewhere — an export, a migration, another
- * group's instance, §11 item 9's pre-enforcement recheck — until this.
- *
- * A CORPUS-level check, deliberately outside `checkBundle`: uniqueness is a
- * fact about a SET of bundles and no single bundle can carry it.
- *
- * The rule is §7.1's three consequences, in full:
- *   - compared by `projectNameKey` (case-insensitive, whitespace collapsed);
- *   - across EVERY lifecycle state: a deactivated (`closed`) project is still
- *     cited and its name must still resolve to what was cited, so there is NO
- *     state filter here and there must never be one;
- *   - about the project OBJECT: only bundles whose `object_type` is `project`.
- *
- * C-77.1 (error) names EVERY colliding PAIR, by bundle id and title — three
- * projects on one key are three pairs, because each pair is a separate thing
- * somebody has to resolve.
- *
- * C-77.2 (warning) names every bundle this check could NOT judge, which is
- * first-class rather than silence: a bundle with no readable `bundle.md` (it
- * may or may not be a project) and a project with no title (its key is empty,
- * so it can collide with nothing; the write path refuses it NO_TITLE). A clean
- * result over a corpus with C-77.2 findings is a clean result over the part
- * that could be read, and the finding says which part could not.
- *
- * @param {Iterable<{folderName?: string, files: Map<string, string|Uint8Array>}>} corpus
- *   the catalog's own BundleInput shape, one per bundle
- * @returns {{pass: boolean, findings: Finding[], projects: number, judged: number}}
- */
-export function checkProjectNameUniqueness(corpus) {
-  /** @type {Finding[]} */
-  const findings = [];
-  const keyed = [];
-  let projects = 0;
-  for (const input of corpus || []) {
-    const raw = input && input.files && input.files.get ? input.files.get('bundle.md') : undefined;
-    const fm = raw == null ? null : parseFrontmatter(asText(raw)).data;
-    const label = (fm && typeof fm.id === 'string' && fm.id) || (input && input.folderName) || '(unnamed bundle)';
-    if (!fm) {
-      findings.push(f('C-77.2', 'warning',
-        `${label}: bundle.md is ${raw == null ? 'absent' : 'unreadable'}, so whether it is a project, and whether its name collides, is UNDETERMINED`,
-        ['hand the corpus with this bundle\'s bundle.md readable and run the check again']));
-      continue;
-    }
-    if (normalizeType(fm.object_type) !== 'project') continue;
-    projects++;
-    const key = projectNameKey(fm.title);
-    if (!key) {
-      findings.push(f('C-77.2', 'warning',
-        `${label}: a project with no title cannot be compared for name uniqueness (the write path refuses it NO_TITLE)`,
-        ['give the project a title unique across the instance']));
-      continue;
-    }
-    keyed.push({ id: label, title: String(fm.title), state: fm.current_state, key });
-  }
-  for (let i = 0; i < keyed.length; i++) {
-    for (let j = i + 1; j < keyed.length; j++) {
-      const a = keyed[i], b = keyed[j];
-      if (a.key !== b.key) continue;
-      const st = (p) => (p.state === undefined ? '' : ` [${p.state}]`);
-      findings.push(f('C-77.1', 'error',
-        `project names collide: ${a.id} "${a.title}"${st(a)} and ${b.id} "${b.title}"${st(b)} are the same name `
-          + 'compared case-insensitively with whitespace collapsed (Membership v2 §7.1), which holds across '
-          + 'deactivated projects too',
-        ['rename one of the two projects so each name identifies one project',
-         'if one is deactivated, rename the live one: the deactivated project is still cited by its name']));
-    }
-  }
-  return { pass: !findings.some((x) => x.severity === 'error'), findings, projects, judged: keyed.length };
-}
 
 // ---------------------------------------------------------------------------
 // Runner
@@ -8638,30 +8540,6 @@ export const PROJECT_JOIN_REQUEST_CHECKS = {
   },
 };
 
-/* REC-197 / C-97 — A CREATION CARRIES ITS SETTING, AND AN OWNERLESS CREATION CANNOT CHOOSE ONE (Membership
- * Architecture v2 §7.14, RULED by BOB #32 (b), 2026-09-23: *"create and fork take one optional field,
- * `visibility` (`discoverable` or `hidden`), and an absent one is HIDDEN. A MACHINE credential never sets it:
- * the setting is an owner's act, and an ownerless project has no owner to choose. Its creation is therefore
- * HIDDEN, and a `visibility=discoverable` it sends is refused by name."*). Its own family, minted, rather than
- * C-70.5 and on, because REC-150 (the request to join) is extending C-70 in parallel. An unknown value on a
- * creation answers C-70.3, the same row the owner's act answers, through one helper. Both codes are minted in
- * `Store#promote`, before anything is written; a fork reaches them through `promote`. */
-export const PROJECT_CREATION_VISIBILITY_CHECKS = {
-  PROJECT_VISIBILITY_NO_OWNER: {
-    check: 'C-97.1',
-    where: 'src/promotion/index.mjs #promote > is-project-creation-ownerless',
-    translation: 'Whether a project can be found is chosen by its owners, and a project created by a machine '
-      + 'credential has no owner, so it is created hidden and cannot be made discoverable here. Nothing was '
-      + 'created. Create it without the setting; an owner who joins it later can make it discoverable.',
-  },
-  PROJECT_VISIBILITY_NOT_A_CREATION: {
-    check: 'C-97.2',
-    where: 'src/promotion/index.mjs #promote > is-project-creation-visibility',
-    translation: 'Whether a project can be found is chosen when it is created or forked, and this was not a '
-      + 'project being created. Nothing was changed. An owner changes an existing project\'s setting in its '
-      + 'settings.',
-  },
-};
 
 /* REC-137 / C-57 — A CASE RATIFICATION'S AUTHORITY IS ITS SIGNATURES, AND THEY MUST INCLUDE AN
  * OWNER OF THE PUBLISHING PROJECT (Membership Architecture v2 §7, the bullet *"A CASE
@@ -8816,24 +8694,6 @@ export const INSTANCE_GROUP_CHECKS = {
   },
 };
 
-/** D-436 — THE ONE DEFINITION of how a producing group is written into a document's bytes. `Store#stampGroup` calls it
- *  for every creation at the one write path, and a suite that judges a composer's bytes AS THE PLANE WILL HOLD THEM calls
- *  the same function — so neither is a copy of the other, and a change to how the group is written moves both.
- *  Replaces the top-level `group:` line (column 0, inside the front matter), or opens one immediately before the closing
- *  fence, the convention every key the plane adds follows. Returns the text UNCHANGED when there is no front matter block
- *  to write into, and when the document already names `slug` in any spelling this catalogue's parser reads as it — so a
- *  correct document is never rewritten. */
-export function withProducingGroup(text, slug) {
-  if (typeof text !== 'string' || typeof slug !== 'string' || !slug) return text;
-  if (parseFrontmatter(text).data?.group === slug) return text;
-  const lines = text.split('\n');
-  if (lines[0] !== '---') return text;
-  const end = lines.indexOf('---', 1);
-  if (end === -1) return text;
-  for (let i = 1; i < end; i++)
-    if (lines[i].startsWith('group:')) { lines[i] = `group: ${slug}`; return lines.join('\n'); }
-  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join('\n');
-}
 
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
  *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
@@ -9842,68 +9702,6 @@ export const CONNECTION_CHOICE_CHECKS = {
   },
 };
 
-/* D-510 / C-86 — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE (`BIO_Case_Making_v0_1.md` §2; C-2.5 already
- * pins a document's type to its id prefix). ONE refusal, and the family is one row rather than padded out,
- * because there is exactly one way for the two statements to be wrong about each other.
- * D-547 adds C-86.2 below: not a third statement, but the request against the RECORD's head.
- *
- * WHY IT IS A REFUSAL AND NOT A SILENT NORMALISATION, which was the alternative the row licensed: the
- * request carries TWO statements of what is being promoted — the document's own `object_type`, which every
- * column of the projection is already read from, and the envelope's `meta.object_type`, which `promote`
- * wrote into `bundles.object_type` and gated the action, bias and inquiry projections on. Obeying the
- * envelope filed an ACTION as information with its risk tier in the bytes and its basis and correspondence
- * never projected: a record holding an action it does not index as one. Obeying the document SILENTLY would
- * be the other half of the same defect — the caller asked for one thing and got another, and nothing said
- * so. So the record takes the DOCUMENT's word (the bytes are what it holds) and REFUSES the request that
- * contradicts it, naming both answers, before anything is written.
- *
- * THE COMPARISON GOES THROUGH `normalizeType` ON BOTH SIDES, so `focus` and `problem` — legal legacy
- * spellings of `inquiry` (REC-10) — are not disagreements. A fence tighter than its rule is not a safer
- * fence. A document that states NO type is not a disagreement either: the envelope is then all there is. */
-export const PROMOTED_TYPE_CHECKS = {
-  ENVELOPE_TYPE_DISAGREES: {
-    check: 'C-86.1',
-    where: 'src/promotion/index.mjs #promote > is-promoted-type-disagrees',
-    translation: 'The document being filed says what kind of thing it is, and the request that carried it '
-      + 'says something different. The record goes by the document, so rather than file an action as '
-      + 'information — or the reverse — and index it as neither, it stops and tells you both answers. '
-      + 'Nothing was written. Send it again with the request naming the type the document names, or change '
-      + 'the document first.',
-  },
-  /* D-547 (2026-09-25) — the SECOND way a promotion's type can be wrong, and it is not the first one twice: C-86.1
-   * compares the two statements in ONE request; this compares the request with the RECORD. A revision whose document
-   * names a different type than the bundle already holds would rewrite `bundles.object_type` in place, and every
-   * type-scoped fence would then ask the wrong machine. Replay is exempt, as for C-86.1. */
-  REVISION_RETYPES_BUNDLE: {
-    check: 'C-86.2',
-    where: 'src/promotion/index.mjs #promote > is-promote-retypes-bundle',
-    translation: 'This change would turn something the record already holds into a different kind of thing, '
-      + 'an item of information into an action, say. A change can alter what a document says, but not what it '
-      + 'is, because what it is decides which rules protect it. Nothing was written. To record it as the other '
-      + 'kind, create a new one of that kind and link the two.',
-  },
-  /* D-563 (2026-09-25) — C-86.1's rule one field over, twice: the document states what it is CALLED and where it STANDS,
-   * and a request whose label contradicts either is refused rather than obeyed. The name is what 7.1 holds unique and
-   * the state decides who may move the item (7.11) and what may cite it (REC-181), so a label a caller can steer was
-   * an authority over both. Only a contradiction between two statements: a label stating nothing takes the document's
-   * word. Replay is exempt, as for C-86.1. */
-  ENVELOPE_TITLE_DISAGREES: {
-    check: 'C-86.3',
-    where: 'src/promotion/index.mjs #promote > is-promoted-title-disagrees',
-    translation: 'The document being filed gives itself one name, and the request that carried it gives another. '
-      + 'The record goes by the document, and names are held unique across the instance, so rather than file it under '
-      + 'a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request '
-      + 'naming the document\'s title, or naming none, or change the document first.',
-  },
-  ENVELOPE_STATE_DISAGREES: {
-    check: 'C-86.4',
-    where: 'src/promotion/index.mjs #promote > is-promoted-state-disagrees',
-    translation: 'The document being filed says where it stands, and the request that carried it says something '
-      + 'different. Where a thing stands decides who may move it and what may cite it, and the record goes by the '
-      + 'document, so it stops and tells you both. Nothing was written. Send it again with the request saying what '
-      + 'the document says, or saying nothing about it, or change the document first.',
-  },
-};
 
 
 

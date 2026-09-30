@@ -76,6 +76,10 @@ export function makeRecord() {
       }
       return null;
     },
+    /** record-core's grammar seam (§1b): the grammars later modules registered, in module order, as `grammars()`
+     *  answers them. A test sets `grammarList`. */
+    grammarList: [],
+    grammars() { return record.grammarList; },
     /** record-core R59: the audit checks a module registers, kept for a test to run. */
     auditChecks: [],
     registerAuditCheck(module, check) { record.auditChecks.push({ module, check }); return { ok: true, module }; },

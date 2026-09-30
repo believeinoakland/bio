@@ -9,6 +9,7 @@ import { Miniflare } from "miniflare";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import * as C from "../../../checks/bio-checks.mjs";
+import * as P from "../../../src/promotion/index.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../../../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -132,8 +133,11 @@ const RELAYED = [
 ];
 
 test("R18: every refusal the catalogue sites at the promote write is enforced there — each row is met by name", async () => {
+  /* The catalogue's tables, and the two families that moved from it to promotion whole in T18 (C-86, C-97): still
+     the catalogue's rows sited at this write, wherever the table lives. */
+  const moved = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS };
   const rows = [];
-  for (const [family, table] of Object.entries(C)) {
+  for (const [family, table] of [...Object.entries(C), ...Object.entries(moved)]) {
     if (!table || typeof table !== "object" || Array.isArray(table)) continue;
     for (const [code, row] of Object.entries(table))
       if (row && typeof row === "object" && typeof row.where === "string" && /promote\b/.test(row.where)
@@ -182,4 +186,21 @@ test("R17: through the whole write path, an unreadable revision gets the readabi
   assert.deepEqual([blob.reason, blob.why], ["BUNDLE_MD_UNREADABLE", "blob"]);
   const nofm = await rev([{ path: "bundle.md", text: "no front matter here" }]);
   assert.deepEqual([nofm.reason, nofm.why], ["BUNDLE_MD_UNREADABLE", "front_matter"]);
+});
+
+test("R16 (rec-181): through the whole write path, an item a live edge cites is refused its retirement CITED, naming the citer and `to: retired`; with no edge it retires", async () => {
+  const verified = (id) => info(id).replace("current_state: collected", "current_state: verified");
+  const retired = (id) => info(id).replace("current_state: collected", "current_state: retired")
+    .replace("prior_state: null", "prior_state: verified");
+  const cited = "INFO-2026-0150-z", free = "INFO-2026-0151-z", citer = "INQ-2026-0152-z";
+  const c = await promote(cited, verified(cited), { replay: true });
+  const f = await promote(free, verified(free), { replay: true });
+  assert.deepEqual([c.ok, f.ok], [true, true], JSON.stringify([c, f]));
+  const q = await promote(citer, inquiry(citer, refs([cited])));
+  assert.equal(q.ok, true, JSON.stringify(q));
+  const r = await promote(cited, retired(cited), { base: c.bundleSha });
+  assert.deepEqual([r.ok, r.reason, r.to], [false, "CITED", "retired"], JSON.stringify(r));
+  assert.deepEqual(r.offenders, [{ id: cited, citedBy: [citer] }]);
+  const g = await promote(free, retired(free), { base: f.bundleSha });
+  assert.equal(g.ok, true, JSON.stringify(g));
 });

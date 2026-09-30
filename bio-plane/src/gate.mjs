@@ -398,7 +398,36 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    a changed composition. ROW_CENSUS (R50) is re-pinned to this tree: 879 rows. Rows T17's layers 3+ change are T18's
    stamp (`awaiting stamp`). The d470 census, of the catalogue file only, moved with N372 (356 -> 340, sha256
    c56ccc26…, behaviour source 15465533…, its own print on this tree); its 1.47.0 row is legacy-tests' re-pin. */
-export const CATALOG_VERSION = "1.47.0";
+/* 1.48.0 (PROMOTION #19, T18 layer 2, 2026-09-30; N318, K425, K636, K644, K650): EVERY ROW CHANGE SINCE 1.47.0, counted
+   wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T18` after record-core and membership
+   merged against 1.47.0's own (`test/fixtures/row-census-1.47.0.jsonl`): eight arrivals, one row now held twice, three
+   changed. Each is one a job record names (T17's layers 3+ `awaiting stamp`; T18's layers 1 and 2).
+   ARRIVED: C-102.15 GRAMMAR_DECLARED, C-102.16 GRAMMAR_MALFORMED (record-core R67, the grammar seam), C-102.17
+   STATS_SOURCE_DECLARED, C-102.18 STATS_SOURCE_MALFORMED (record-core R65); C-102.1 AUDIT_CHECK_DECLARED, C-102.2
+   AUDIT_CHECK_MALFORMED and C-102.3 AUDIT_CHECK_FAILED copied into record-core's `RECORD_CORE_CHECKS` with `where`s
+   naming their DEC-49 regions (the catalogue's `REGISTRATION_CHECKS` copies, their lines unmoved, stay for T19, so each
+   is counted twice, as two row objects are).
+   HELD TWICE, line unchanged: C-59.5 ALLOCID_PREFIX_GATED, copied into `RECORD_CORE_CHECKS` beside the catalogue's
+   `PROJECT_ID_CHECKS` row (T19 deletes the catalogue's).
+   CHANGED: C-76.1's key, `NOT_YOURS` departed and `TASK_NOT_YOURS` arrived, its line otherwise unchanged (tasks, N382,
+   K606); the `where`s of C-120.1 and C-120.2, now `#tensionsJudged` (case-authoring, K616). Code and condition unmoved.
+   MOVED, NOT CHANGED, each line byte-identical where it now lives: C-35.1–C-35.14 `TEXT_CHAIN_CHECKS` into
+   `src/textchain.mjs` (text-chain); C-75.1–C-75.5 `PER_ITEM_CHECKS` into `src/record-core/checks.mjs` (record-core);
+   C-86.1–C-86.4 `PROMOTED_TYPE_CHECKS` and C-97.1–C-97.2 `PROJECT_CREATION_VISIBILITY_CHECKS` into
+   `src/promotion/checks.mjs` (this job), each catalogue copy deleted; C-77's corpus check with `projectNameKey`,
+   `withProducingGroup` and a copy of `MECHANICAL_FIELD_SETS` into promotion, none a row.
+   CHANGED IN WHAT THE GATES RUN, no row moving: `checkBundle` runs the type grammars later modules register with
+   record-core in their arms' places (legacy-checks' §1b seam), and the promote gate and the audit pass the one list
+   (`record.grammars()`), a throwing grammar one error on the bundle at both; none is registered at this stamp, so no
+   bundle's findings move. C-2.5 admits a schema stamp whose type holds `_` (`^[a-z][a-z_]*@\d+$`, for `action_plan@1`),
+   and N-A1 added `PLN`/`action_plan` to the id and type vocabularies (legacy-checks, record-grammar); record-grammar's
+   moved grammar answers some malformed inputs differently (its record: a lone quote, a `__proto__` key and an indented
+   inherited name read as C-2.1; inherited names in `normalizeType`). Removed exports with no row: `LAW_LEVELS`,
+   `CASE_MEMBER_ROLES`.
+   MINOR, rule 17 moving the stamp for arrivals, changed checks and a changed composition. ROW_CENSUS (R50) is re-pinned
+   to this tree: 887 rows. Rows T18's layers 3+ change are T19's stamp (`awaiting stamp`). The d470 census, of the
+   catalogue file only, moved with the removals (text-chain's, record-core's, this job's) and is legacy-tests' re-pin. */
+export const CATALOG_VERSION = "1.48.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -489,8 +518,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 /* R50 (N319, K431): the census of every refusal row as this stamp read it, pinned here and held against the tree by
    legacy-tests' census suite (this module cannot read a later module's table, P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 879,
-  digest: "b8bbd059390f894eb419d10b40c4683bc0d5a85f022c3a354e9c67925cde3f11" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 887,
+  digest: "bfda481e4d45df7944bd4a6584614c8d397fd55f5028c61c3cf4a8efd04f2532" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -555,8 +584,13 @@ export function runCaseGate({ caseId, edition, fm, priorCase, body = null, membe
   };
 }
 
+/* R27 (§1b, K585 (2)): `grammars` are the type grammars later modules registered with record-core
+   (`record.grammars()`, `[{module, ids, arm}]` in module order), passed to `checkBundle` as its `opts.grammars`: a
+   grammar claiming a built-in arm's ids runs in that arm's place, so a grammar that left the catalogue judges the
+   bundle at the gate exactly as at the audit. Promotion's instance passes its record's (`Promotion#runGate`); a caller
+   of this function with none passes none, and the catalogue's built-in arms run. */
 export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry,
-                                publishedRegistry, publishedCaseRegistry, earnedRegistry }) {
+                                publishedRegistry, publishedCaseRegistry, earnedRegistry, grammars = null }) {
   const files = new Map(), elided = new Set();
   for (const [path, v] of Object.entries(image || {})) {
     if (typeof v === "string") files.set(path, v);
@@ -594,7 +628,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        refuses the leg outright rather than waving it through, which is why the
        blinding is loud instead of silent. */
     earnedRegistry: earnedRegistry || null,
-  });
+  }, { grammars });
   /* R30–R32 (K64): the checks that read a bundle's record of promotions and its release signatures (C-4.2, C-17.2,
      C-18.8, C-20.1) left the catalogue for this module, and run here, after it, over the same image. */
   const findings = [...catalogue, ...await recordChecks({ folderName: bundleId, files,
