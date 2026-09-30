@@ -352,7 +352,7 @@ test("R69 R37 (C-118.5, C-118.6): only a capture's actor appends a signed accoun
   s.sql.exec(`UPDATE members SET status = 'active' WHERE member_id = 'm1'`);
   const via = await captureOps(c, new URL("http://x/captureaccount?by=m2"), { captureSha: d, text, signature: good, by: "m1" }, c.env).captureaccount();
   assert.equal(via.reason, "NOT_THE_CAPTURING_ACTOR", "the query's stamp, not the body's claim");
-  assert.equal(captureOps(c, new URL(`http://x/captureaccounts?capture=${d}`), null, c.env).captureaccounts().accounts.length, 2);
+  assert.equal(captureOps(c, new URL(`http://x/captureaccounts?capture=${d}&viewer=admin`), null, c.env).captureaccounts().accounts.length, 2);
 });
 
 test("R69: the puller of a knock is its capture's actor and may give a signed account of receiving it", async () => {
@@ -502,4 +502,128 @@ test("R72 R70: pulledKnocksOf answers every knock pulled into a capture, oldest 
   const k4 = await c.knock({ content: "not pulled", sourceAddress: "4" });
   assert.deepEqual(c.pulledKnocksOf(k4.sha256), [], "a knock not pulled is in no capture");
   assert.equal(captureOps(c, new URL(`http://x/pulledknocks?capture=${sha("same memo")}`), null, c.env).pulledknocks().length, 2);
+});
+
+/* N380 (K559): `within`, the seam that makes the pull and control-plane R36's promotion one act. A table of the test's
+   own stands for what the caller writes: it lands or rolls back with the pull. */
+test("R65 (N380): within is called with the pulled document inside the pull's own transaction; its answer rides beside the pull's, and what it writes lands with the pull", async () => {
+  const { c, rows, s } = setup();
+  s.db.exec(`CREATE TABLE promoted (knock TEXT, sha TEXT)`);
+  const k = await c.knock({ content: "one act", note: "n", contact: "who@example.org", sourceAddress: "9.1.1.1" });
+  const seen = [];
+  const r = await c.pullKnock({ knockId: k.knockId, by: "m1", at: "2026-09-30T12:00:00Z", within: (doc) => {
+    /* inside the transaction: the pull's own writes are already visible to the caller's act */
+    seen.push({ doc, status: rows(`SELECT status FROM inbox WHERE knock_id = ?`, k.knockId)[0].status,
+                receipts: rows(`SELECT count(*) n FROM captured_locators`)[0].n, actors: rows(`SELECT count(*) n FROM capture_actors`)[0].n });
+    s.sql.exec(`INSERT INTO promoted VALUES (?, ?)`, k.knockId, doc.capture.sha256);
+    return { ok: true, bundleId: "INFO-2026-0001-doorbell-knock" };
+  } });
+  assert.deepEqual([r.ok, r.existed, r.within], [true, false, { ok: true, bundleId: "INFO-2026-0001-doorbell-knock" }]);
+  assert.equal(seen.length, 1, "called once");
+  assert.deepEqual([seen[0].status, seen[0].receipts, seen[0].actors], ["pulled", 1, 1], "after the receipt, the knock's update and the actor");
+  assert.deepEqual(seen[0].doc, r.document, "the pulled document, as the answer carries it");
+  assert.ok(!JSON.stringify(seen[0].doc).includes("who@example.org"), "never the contact (R70)");
+  assert.deepEqual(rows(`SELECT * FROM promoted`).map((x) => ({ ...x })), [{ knock: k.knockId, sha: sha("one act") }]);
+  /* the caller's copy is its own: changing it changes neither the answer nor the stored document */
+  const k2 = await c.knock({ content: "second", sourceAddress: "9.1.1.2" });
+  const r2 = await c.pullKnock({ knockId: k2.knockId, by: "m1", within: (doc) => { doc.capture.actor = "someone else"; return { ok: true }; } });
+  assert.equal(r2.document.capture.actor, "m1");
+  assert.equal((await c.pullKnock({ knockId: k2.knockId, by: "m1" })).document.capture.actor, "m1");
+  /* without within, the answer is as it was: no `within` key */
+  const k3 = await c.knock({ content: "third", sourceAddress: "9.1.1.3" });
+  assert.equal("within" in (await c.pullKnock({ knockId: k3.knockId, by: "m1" })), false);
+  /* a knock already pulled does not call it: its pull is not being made */
+  let called = 0;
+  const again = await c.pullKnock({ knockId: k.knockId, by: "m1", within: () => { called++; return { ok: true }; } });
+  assert.deepEqual([again.ok, again.existed, called, "within" in again], [true, true, 0, false]);
+});
+
+test("R65 (N380): within's refusal, its throw, or an answer that is not synchronous rolls the whole pull back: no receipt, the knock unchanged, no actor, nothing of the caller's; the knock is then pulled as ever", async () => {
+  const { c, rows, s } = setup();
+  s.db.exec(`CREATE TABLE promoted (knock TEXT)`);
+  const k = await c.knock({ content: "rolled back", sourceAddress: "9.2.2.2" });
+  const state = () => everything(rows);
+  const before = state();
+  const write = () => s.sql.exec(`INSERT INTO promoted VALUES (?)`, k.knockId);
+  /* a refusal: the caller's own answer, with the knock named */
+  const refused = await c.pullKnock({ knockId: k.knockId, by: "m1", within: () => { write(); return { ok: false, reason: "NO_GROUP_RECORDED", check: "C-64.1", status: 409 }; } });
+  assert.deepEqual([refused.ok, refused.reason, refused.check, refused.status, refused.knockId], [false, "NO_GROUP_RECORDED", "C-64.1", 409, k.knockId]);
+  assert.deepEqual(state(), before, "nothing written");
+  /* a throw, and a promise: PULL_WITHIN_FAILED, 500, nothing written */
+  for (const within of [() => { write(); throw new Error("promotion store fault"); }, async () => { write(); return { ok: true }; }]) {
+    const r = await c.pullKnock({ knockId: k.knockId, by: "m1", within });
+    assert.deepEqual([r.ok, r.reason, r.status, r.knockId], [false, "PULL_WITHIN_FAILED", 500, k.knockId]);
+    assert.match(r.detail, /rolled back and nothing was written/);
+    assert.deepEqual(state(), before, "nothing written");
+  }
+  assert.match((await c.pullKnock({ knockId: k.knockId, by: "m1", within: () => { throw new Error("promotion store fault"); } })).detail, /promotion store fault/);
+  assert.equal(c.inboxGet(k.knockId).item.status, "new");
+  /* a fault of the pull's own is not the caller's: it still throws, and nothing lands */
+  const broken = setup();
+  const kb = await broken.c.knock({ content: "own fault", sourceAddress: "9.2.2.3" });
+  broken.s.db.exec(`CREATE TRIGGER no_actor BEFORE INSERT ON capture_actors BEGIN SELECT RAISE(ABORT, 'actor table down'); END`);
+  await assert.rejects(broken.c.pullKnock({ knockId: kb.knockId, by: "m1", within: () => ({ ok: true }) }), /actor table down/);
+  assert.equal(broken.c.inboxGet(kb.knockId).item.status, "new");
+  /* and the knock, never pulled, is pulled now */
+  const ok = await c.pullKnock({ knockId: k.knockId, by: "m1", within: () => { write(); return { ok: true }; } });
+  assert.deepEqual([ok.ok, ok.existed, rows(`SELECT count(*) n FROM promoted`)[0].n], [true, false, 1]);
+});
+
+/* N388 (REC-30): the two capture reads that took no viewer. A project bundle hides its captures from a member who does
+   not participate (membership R43, D-701's gate); an information bundle hides nothing from a member. */
+function sightWorld() {
+  const w = setup();
+  const d = H("5a"), open = H("5b"), loose = H("5c");
+  register(w.s, d, "PROJ-2026-0001", { type: "project" });
+  register(w.s, open, "INFO-2026-0001");
+  w.s.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES ('PROJ-2026-0001', 'm1', 'active', '2026-01-01', '2026-01-01')`);
+  for (const m of ["m1", "m2"]) w.s.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', 'member', 'active', '2026-01-01', '2026-01-01')`, m);
+  for (const x of [d, open, loose]) {
+    w.c.recordCaptureActor({ captureSha: x, actor: "m1", at: "2026-09-01T00:00:00Z" });
+    w.s.sql.exec(`INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, 1, 'm1', 'captured for the budget project', 'sig', 'key', '2026-09-02T00:00:00Z')`, x);
+    w.s.sql.exec(`INSERT INTO late_attestations (capture_sha, seq, kind, service, ok, at, by, outcome) VALUES (?, 1, 'timestamp', 'tsa', 1, '2026-09-03T00:00:00Z', 'm1', ?)`,
+                 x, JSON.stringify({ kind: "timestamp", service: "tsa", ok: true, at: "2026-09-03T00:00:00Z", late: true }));
+  }
+  return { ...w, d, open, loose };
+}
+
+test("R69 (N388, REC-30): captureAccountsOf answers by the caller's viewer through the capture's bundle: an unseen capture reads as an unknown one, a capture in no bundle is seen, an absent viewer sees nothing, and an in-process caller with no viewer reads whole", () => {
+  const { c, d, open, loose } = sightWorld();
+  const nothing = (x) => ({ captureSha: x, actors: [], accounts: [] });
+  const sees = (x, viewer) => c.captureAccountsOf(x, { viewer }).accounts.length === 1;
+  /* the participant, the founder, an administrator's machine credential: the project's capture is seen */
+  for (const v of ["member:m1", "admin", "class:admin", "class:ai"]) assert.equal(sees(d, v), true, v);
+  /* a member not in the project, and a viewer the gate does not recognise: nothing, exactly as for a capture never recorded */
+  for (const v of ["member:m2", "", "junk", null]) {
+    assert.deepEqual(c.captureAccountsOf(d, { viewer: v }), nothing(d), String(v));
+    assert.deepEqual(c.captureAccountsOf(d, { viewer: v }), { ...c.captureAccountsOf(H("99"), { viewer: v }), captureSha: d }, "unseen reads as unknown");
+  }
+  /* an information bundle and a capture filed in no bundle: seen by every member */
+  for (const x of [open, loose]) assert.equal(sees(x, "member:m2"), true, x);
+  assert.deepEqual(c.captureAccountsOf(loose, { viewer: "junk" }), nothing(loose), "an unrecognised viewer sees nothing at all");
+  /* in process, no viewer: whole (case-authoring R36's pre-flight) */
+  assert.equal(c.captureAccountsOf(d).accounts[0].text, "captured for the budget project");
+  /* the route: the stamp decides, and an unstamped call sees nothing */
+  const route = (q) => captureOps(c, new URL(`http://x/captureaccounts?capture=${d}${q}`), null, c.env).captureaccounts();
+  assert.deepEqual([route("&viewer=member:m1").accounts.length, route("&viewer=member:m2").accounts.length, route("").accounts.length], [1, 0, 0]);
+  assert.deepEqual(captureOps(c, new URL(`http://x/captureaccounts?viewer=member:m1`), { captureSha: d }, c.env).captureaccounts().actors.map((a) => a.actor), ["m1"]);
+});
+
+test("R68 (N388, REC-30): lateAttestationsOf takes no viewer: it names no bundle, so its rows about a capture stand for every reader, through the route whatever the stamp", () => {
+  const { c, d } = sightWorld();
+  const all = c.lateAttestationsOf(d).late_attestations;
+  assert.deepEqual(all.map((o) => [o.seq, o.by, o.kind, o.late]), [[1, "m1", "timestamp", true]]);
+  assert.ok(!JSON.stringify(all).includes("PROJ-"), "no bundle named");
+  for (const q of ["", "&viewer=member:m2", "&viewer=junk"])
+    assert.deepEqual(captureOps(c, new URL(`http://x/lateattestations?capture=${d}${q}`), null, c.env).lateattestations().late_attestations, all, q);
+});
+
+test("R68 (N388): a machine may reattest, as it may attest: the authority vouches, not the caller; the attempt is appended late with the machine's stamp as who asked, and no refusal names a fence", async () => {
+  const w = reWorld({ attestAnswer: { ok: true, attempts: [ts(true)] } });
+  for (const by of ["class:ai", "class:probe", "class:admin"]) {
+    const r = await captureOps(w.c, new URL(`http://x/reattest?by=${encodeURIComponent(by)}`), { captureSha: w.d }, w.c.env).reattest();
+    assert.deepEqual([r.ok, r.late_attestations.every((o) => o.late === true)], [true, true], by);
+  }
+  assert.deepEqual(w.c.lateAttestationsOf(w.d).late_attestations.map((o) => o.by), ["class:ai", "class:probe", "class:admin"]);
+  assert.equal(w.c.provenance.attests.length, 3, "each asked of provenance.attest");
 });

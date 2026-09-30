@@ -67,6 +67,9 @@ const rawReplayOf = (archived) => {
 };
 const REPLAY_MAX = 256 * 1024 * 1024;
 
+/* N380: the tag a throw of `pullKnock`'s `within` is carried out of the transaction under. */
+const WITHIN_FAULT = Symbol("pullKnock: within's fault");
+
 /* ---- D-98 event queue: module scope because they are pure ----
    The F5 bound lives HERE, at the producer boundary, so a subject is inert before it is stored rather than after
    it is read. Single line, length-capped, control characters stripped: newlines go first because a multi-line
@@ -277,6 +280,13 @@ export class Capture {
     if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
     return { sql: `${GATE_MARK} NOT EXISTS (SELECT 1 FROM register reg JOIN bundles b ON b.bundle_id = reg.bundle_id
                      WHERE reg.capture_sha = ${col} AND NOT (${gate.sql}))`, args: gate.args };
+  }
+
+  /* N388: whether a viewer may see one capture, by `#captureGate` over the capture's own digest. */
+  #captureSeen(sha, viewer) {
+    if (viewer === undefined) return true;
+    const gate = this.#captureGate("c.capture_sha", viewer);
+    return !!this.#one(`SELECT 1 AS x FROM (SELECT ? AS capture_sha) c WHERE (${gate.sql})`, sha, ...gate.args);
   }
 
   /* ==================================================================== *
@@ -521,8 +531,16 @@ export class Capture {
    *  act: the bytes are held under their own digest in the evidence store, one acquisition receipt is written
    *  (`via: "doorbell"`, address `knock:<knockId>`), the knock becomes `pulled` naming the capture, `by` and the
    *  instant, and `by` is recorded as the capture's actor. The answer carries the provenance document (R16) the
-   *  control plane promotes at `collected`; it never carries `contact` (R70), and nothing here writes a bundle (R33). */
-  async pullKnock({ knockId, by, at = null } = {}) {
+   *  control plane promotes at `collected`; it never carries `contact` (R70), and nothing here writes a bundle (R33).
+   *
+   *  N380 (K559): `within`, the seam that makes the pull and the control plane's promotion one act (control-plane R36).
+   *  `pullKnock` is async and the record's transaction is synchronous, so no caller can wrap both; `within(document)` is
+   *  called INSIDE the pull's own transaction, after the receipt, the knock's `pulled` update and the actor, and what it
+   *  writes lands or rolls back with them. Its `{ok: false, …}` rolls the whole pull back and is the answer; a throw, or
+   *  an answer that is not synchronous (a promise would outlive the transaction), rolls it back as `PULL_WITHIN_FAILED`.
+   *  Any other answer is carried as `within`. A knock already pulled does not call it: its pull is not being made. The
+   *  bytes put under their own digest before the transaction stay, content-addressed and already held as the knock's. */
+  async pullKnock({ knockId, by, at = null, within = null } = {}) {
     if (typeof by !== "string" || !by.trim())
       return { ok: false, reason: "NO_PULLER", status: 400,
                detail: "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written" };
@@ -574,20 +592,38 @@ export class Capture {
                                       view: profileView(this.core), retrieved: when });
     const document = this.#pulledDocument(row, { by, at: when, profile });
     const receiptOf = (fn) => { try { return fn(); } catch (e) { return { recorded: false, error: String(e && e.message || e).slice(0, 200) }; } };
-    const done = this.core.transact(() => {
-      const receipt = receiptOf(() => this.provenance?.recordReceipt?.({ address, addressNorm: address, captureSha: sha, retrieved: when,
-                                                                          via: DOORBELL_VIA, retrievalLocator: null }));
-      if (!receipt || receipt.recorded !== true)
-        return { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502, knockId,
-                 detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed" };
-      this.#sql.exec(`UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?, pulled_at = ?,
-                        pulled_document = ? WHERE knock_id = ?`, when, by, sha, by, when, JSON.stringify(document), knockId);
-      this.recordCaptureActor({ captureSha: sha, actor: by, at: when });
-      return { ok: true, receipt };
-    });
+    const withinFailed = (why) => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId,
+      detail: `the act run with the pull did not complete (${String(why).slice(0, 200)}), so the pull was rolled back and nothing was written` });
+    let done;
+    try {
+      done = this.core.transact(() => {
+        const receipt = receiptOf(() => this.provenance?.recordReceipt?.({ address, addressNorm: address, captureSha: sha, retrieved: when,
+                                                                            via: DOORBELL_VIA, retrievalLocator: null }));
+        if (!receipt || receipt.recorded !== true)
+          return { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502, knockId,
+                   detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed" };
+        this.#sql.exec(`UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?, pulled_at = ?,
+                          pulled_document = ? WHERE knock_id = ?`, when, by, sha, by, when, JSON.stringify(document), knockId);
+        this.recordCaptureActor({ captureSha: sha, actor: by, at: when });
+        if (typeof within !== "function") return { ok: true, receipt };
+        /* N380: the caller's act, in this transaction. Its throw is tagged so a fault of the pull's own still throws. */
+        let w;
+        try { w = within(structuredClone(document)); } catch (e) { throw { [WITHIN_FAULT]: e && e.message || e }; }
+        if (w && typeof w.then === "function") {
+          Promise.resolve(w).catch(() => {});
+          throw { [WITHIN_FAULT]: "its answer was a promise, which would outlive the transaction" };
+        }
+        if (w && typeof w === "object" && w.ok === false) return { ...w, knockId: w.knockId ?? knockId };
+        return { ok: true, receipt, within: w ?? null };
+      });
+    } catch (e) {
+      if (e && typeof e === "object" && WITHIN_FAULT in e) return withinFailed(e[WITHIN_FAULT]);
+      throw e;
+    }
     if (!done.ok) return done;
     return { ok: true, existed: false, knockId, capture: { sha256: sha, bytes: bytes.length }, pulled_by: by, pulled_at: when,
-             receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null }, document };
+             receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null }, document,
+             ...(typeof within === "function" ? { within: done.within } : {}) };
   }
 
   /* R65, R16: the provenance document of a pulled knock. Received, not fetched (provenance R51): no fetched letter, no
@@ -701,18 +737,25 @@ export class Capture {
     return { ok: true, captureSha: sha, seq, by, at: when, key_b64: v.keyB64 };
   }
 
-  /** R69: every account appended for a capture, in order, with the members recorded as capturing it. Never throws. */
-  captureAccountsOf(captureSha) {
+  /** R69: every account appended for a capture, in order, with the members recorded as capturing it. Never throws.
+   *  N388 (REC-30): an account is its member's own words, which can name a project, so through the op it answers by
+   *  the caller's `viewer` (membership R43, through the register's bundle, D-701's gate): a capture filed in a bundle
+   *  the viewer may not see answers as one with nothing recorded, so an unseen capture and an unknown one read alike.
+   *  No viewer (an in-process caller: case-authoring's pre-flight) reads whole; the route never passes none. */
+  captureAccountsOf(captureSha, { viewer = undefined } = {}) {
     try {
       const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
       if (!HEX64.test(sha)) return { captureSha: sha || null, actors: [], accounts: [] };
+      if (!this.#captureSeen(sha, viewer)) return { captureSha: sha, actors: [], accounts: [] };
       return { captureSha: sha,
                actors: this.#rows(`SELECT actor, at FROM capture_actors WHERE capture_sha = ? ORDER BY at, actor`, sha),
                accounts: this.#rows(`SELECT seq, by, text, signature, key_b64, at FROM capture_accounts WHERE capture_sha = ? ORDER BY seq`, sha) };
     } catch { return { captureSha: null, actors: [], accounts: [] }; }
   }
 
-  /** R68 (DEC-81 item 3(a)): a late co-attestation. It asks `provenance.attest` for a fresh timestamp over the digest
+  /** R68 (DEC-81 item 3(a)): a late co-attestation. N388: any caller the control plane admits may ask, a machine
+   *  included, as for `attest`: the timestamp authority and the archive vouch, never the caller (Intake Doctrine §3),
+   *  a late attestation proves existence only by its own instant, and `by` records who asked. It asks `provenance.attest` for a fresh timestamp over the digest
    *  and, with a public `locator`, a fresh co-archive, then fetches the co-archive's raw replay through the host
    *  governor and compares its digest (`matches` true, false or undetermined). Each attempt's outcome is appended,
    *  dated, `late: true`, with the sentence "proves the bytes existed by <at>, not at capture". Refused `BAD_SHA`, and
@@ -792,7 +835,9 @@ export class Capture {
     }
   }
 
-  /** R68: the late attestations recorded for a capture, in the order appended. Never throws. */
+  /** R68: the late attestations recorded for a capture, in the order appended. Never throws. N388: it takes no viewer:
+   *  every field is the attempt's own (service, instant, token digest, archived locator, replay match) and who asked,
+   *  and it names no bundle, so REC-30's rule leaves a row about a capture standing for every reader. */
   lateAttestationsOf(captureSha) {
     try {
       const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
@@ -1781,7 +1826,8 @@ export function captureOps(c, url, body, env) {
     reattest: () => c.reattest({ ...(body || {}), by: q("by") ?? (body && body.by) ?? null }),
     lateattestations: () => c.lateAttestationsOf(q("capture") ?? (body && body.captureSha)),
     captureaccount: () => c.recordCaptureAccount({ ...(body || {}), by: q("by") ?? (body && body.by) }),
-    captureaccounts: () => c.captureAccountsOf(q("capture") ?? (body && body.captureSha)),
+    /* N388: the accounts answer by the caller's sight; an unstamped call sees nothing (REC-30's fail-closed posture). */
+    captureaccounts: () => c.captureAccountsOf(q("capture") ?? (body && body.captureSha), { viewer: q("viewer") ?? "" }),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
     acquire: () => c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
                                           storeName: q("store") || "bio" }),
