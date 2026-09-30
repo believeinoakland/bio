@@ -260,9 +260,7 @@ __export(bio_checks_exports, {
   BIAS_CHECKS: () => BIAS_CHECKS,
   BOILERPLATE_FORMS: () => BOILERPLATE_FORMS,
   BUNDLE_ID_RE: () => BUNDLE_ID_RE,
-  CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
-  CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
@@ -287,7 +285,6 @@ __export(bio_checks_exports, {
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
   EARNED_SOURCE_AXIS: () => EARNED_SOURCE_AXIS,
   EXTENSION_ARMS: () => EXTENSION_ARMS,
-  EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   FILENAME_RE: () => FILENAME_RE,
   FORBIDDEN_ALIASES: () => FORBIDDEN_ALIASES,
   GRADE_AXES: () => GRADE_AXES,
@@ -397,7 +394,6 @@ __export(bio_checks_exports, {
   sufficiencyClaimState: () => sufficiencyClaimState,
   supersedesEdgeFindings: () => supersedesEdgeFindings,
   themeLegFindings: () => themeLegFindings,
-  userAgentIsLegible: () => userAgentIsLegible,
   versionNeedsReason: () => versionNeedsReason,
   vocabFor: () => vocabFor
 });
@@ -4293,71 +4289,6 @@ var SUGGEST_CHECKS = {
     translation: "This reading says it is a kind of suggestion nobody recognises. The kinds are a closed set because what a suggestion CLAIMS to be decides how it is read, and a kind outside the set is a claim with nothing behind it."
   }
 };
-var EXTRACT_PROPOSE_CHECKS = {
-  NO_PROPOSER: {
-    check: "C-104.1",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
-    translation: "This proposed reading arrived without saying who proposed it, and the record keeps nothing it cannot attribute. Nothing was proposed and no passage was marked citable."
-  },
-  NO_RUN: {
-    check: "C-104.2",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
-    translation: "A machine proposes readings only as part of an investigation a member opened, and this named none. Nothing was proposed."
-  },
-  NO_SUCH_RUN: {
-    check: "C-104.3",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
-    translation: "No investigation you can see is open under that name, so nothing was proposed. A member opens an investigation; the assistant may suggest one, and may not start it."
-  },
-  RUN_NOT_RUNNING: {
-    check: "C-104.4",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
-    translation: "The investigation this names has ended, and an ended investigation takes no new proposals: its work is read against the conditions it ran under, and those stopped when it stopped. Nothing was proposed."
-  },
-  NOT_AN_EXTRACT_RUN: {
-    check: "C-104.5",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
-    translation: "This investigation was not opened to read documents for what they name, so it cannot propose readings. What an investigation may do is set when it is opened and never widened by its work. Nothing was proposed."
-  },
-  NO_MINTS_BOUND: {
-    check: "C-104.6",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
-    translation: "This investigation was opened with no limit on how many passages it may mark citable, and without a limit it may mark none. The member who opens an investigation sets that limit. Nothing was proposed."
-  },
-  MINTS_BOUND_REACHED: {
-    check: "C-104.7",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
-    translation: "This investigation has already marked as many passages citable as it was allowed to, so it proposes nothing more and ends. Nothing was proposed."
-  },
-  NO_PROPOSALS: {
-    check: "C-104.8",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
-    translation: "This named no readings to propose. A look that found nothing is recorded in the investigation's log of what was looked at, where it says which kind of absence it was, and not here. Nothing was proposed."
-  },
-  NOT_A_DOCUMENT: {
-    check: "C-104.9",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-document",
-    translation: "That is not a captured document. A question, a project or an action has no pages or text of its own, so there is nothing in it to read or to point into. Nothing was changed."
-  },
-  NO_BYTES_HELD: {
-    check: "C-104.10",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-document",
-    translation: "The record holds no captured copy of that document, so there is no text in it to read or to point into. That is a fact about what has been captured, never about what the document says. Nothing was changed."
-  },
-  MINTS_BOUND_WOULD_EXCEED: {
-    check: "C-104.11",
-    where: "src/run-productions/index.mjs extractPropose > is-extract-whole-batch",
-    translation: "This batch would mark more passages citable than the investigation has left of its limit, so the whole batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation."
-  },
-  /* K163 (T6): op=extractproposals' unscoped read. run-productions mints this code of its own in place of the
-     store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted
-     nowhere yet: run-productions writes it when it moves `extractProposals` (T6-7) and marks the region. */
-  EXTRACT_NO_SCOPE: {
-    check: "C-104.12",
-    where: "src/run-productions/index.mjs extractProposals > is-extract-scope",
-    translation: "This list of proposed readings names neither an investigation nor a document, so nothing was listed. A list of every proposal in the record would be a scan nobody can act on; name the one you mean."
-  }
-};
 var BIAS_CHECKS = {
   /* D-468 — THE MACHINE IS ENFORCED AT THE WRITE PATH, AND IT WAS NOT.
      `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" gives bias sets
@@ -4394,12 +4325,6 @@ var BIAS_CHECKS = {
     translation: "That is not a move this bias set can make from where it stands. A set is written, then offered, then adopted \u2014 and once it is adopted the only move left is to retire it, because a case published under it names the revision it was held to and a set that could slide backwards would make that unresolvable after the fact. To change an adopted set, write the amendment AS the adopted set \u2014 a new revision re-pins the lens \u2014 or retire it and adopt a successor. Nothing was written."
   }
 };
-var CAPTURE_PURPOSES = ["investigate", "acquire"];
-var CAPTURE_UA_MODES = ["civicos", "member-browser"];
-function userAgentIsLegible(ua) {
-  if (typeof ua !== "string" || ua.trim() === "") return false;
-  return /\(\+https?:\/\/[^\s)]+/.test(ua);
-}
 var CIVICOS_CONTACT_URL = "https://github.com/believeinoakland/bio";
 function civicosUserAgent(version, instance, purpose) {
   return `CivicOS/${version || "0.0.0"} (+${CIVICOS_CONTACT_URL}; instance ${instance || "unnamed"}; ${purpose})`;
@@ -33282,7 +33207,7 @@ sha256: ${captureSha}
     ));
     const from = Math.max(0, Math.floor(Number(offset) || 0));
     const seen = bundleGate("r.bundle_id", viewer);
-    const CHAIN = `WITH chain AS (
+    const CHAIN2 = `WITH chain AS (
         SELECT cl.capture_sha                   AS capture_sha,
                MIN(cl.first_retrieved)          AS first_retrieved,
                MAX(cl.last_retrieved)           AS last_retrieved,
@@ -33301,7 +33226,7 @@ sha256: ${captureSha}
            AND (${seen.sql})
          GROUP BY cl.capture_sha)`;
     const args = [addr, ...seen.args];
-    const total = this.#one(`${CHAIN} SELECT COUNT(*) AS n FROM chain`, ...args)?.n ?? 0;
+    const total = this.#one(`${CHAIN2} SELECT COUNT(*) AS n FROM chain`, ...args)?.n ?? 0;
     const shape = (r) => r && {
       capture_sha: r.capture_sha,
       bundle_id: r.bundle_id,
@@ -33317,14 +33242,14 @@ sha256: ${captureSha}
       registered: r.registered
     };
     const versions = this.#rows(
-      `${CHAIN} SELECT * FROM chain ORDER BY first_retrieved, capture_sha LIMIT ? OFFSET ?`,
+      `${CHAIN2} SELECT * FROM chain ORDER BY first_retrieved, capture_sha LIMIT ? OFFSET ?`,
       ...args,
       cap,
       from
     ).map(shape);
     let anchorRow = null, predecessor = null, atIndex = null;
     if (anchor) {
-      anchorRow = shape(this.#one(`${CHAIN} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
+      anchorRow = shape(this.#one(`${CHAIN2} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
       if (!anchorRow)
         return refuse5(
           "VERSION_CHAIN_NO_SUCH_VERSION",
@@ -33333,12 +33258,12 @@ sha256: ${captureSha}
       const before = `first_retrieved < ? OR (first_retrieved = ? AND capture_sha < ?)`;
       const beforeArgs = [anchorRow.first_retrieved, anchorRow.first_retrieved, anchorRow.capture_sha];
       atIndex = this.#one(
-        `${CHAIN} SELECT COUNT(*) AS n FROM chain WHERE ${before}`,
+        `${CHAIN2} SELECT COUNT(*) AS n FROM chain WHERE ${before}`,
         ...args,
         ...beforeArgs
       )?.n ?? 0;
       predecessor = shape(this.#one(
-        `${CHAIN} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, capture_sha DESC LIMIT 1`,
+        `${CHAIN2} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, capture_sha DESC LIMIT 1`,
         ...args,
         ...beforeArgs
       )) || null;
@@ -61622,6 +61547,7 @@ var inquiry_exports = {};
 __export(inquiry_exports, {
   AUTHORED_ROUTE_BASES: () => AUTHORED_ROUTE_BASES,
   BASIS_ROLES: () => BASIS_ROLES,
+  BUNDLE_FACTS: () => BUNDLE_FACTS,
   CANDIDATE_RE: () => CANDIDATE_RE,
   CONTRADICTION_COORDINATES: () => CONTRADICTION_COORDINATES,
   DISPOSITIONS: () => DISPOSITIONS,
@@ -61638,6 +61564,7 @@ __export(inquiry_exports, {
   INQUIRY_TABLES: () => INQUIRY_TABLES,
   INQUIRY_TITLE_MAX: () => INQUIRY_TITLE_MAX,
   Inquiry: () => Inquiry,
+  LEGS_RELATION: () => LEGS_RELATION,
   LEG_BACKFILL_MAX: () => LEG_BACKFILL_MAX,
   MEMBER_AGENT_MAX: () => MEMBER_AGENT_MAX,
   NORM_CANONS: () => NORM_CANONS,
@@ -61659,6 +61586,7 @@ __export(inquiry_exports, {
   inquiryQuestionOf: () => inquiryQuestionOf,
   leadLegFindings: () => leadLegFindings,
   legCapped: () => legCapped,
+  moveBundleFacts: () => moveBundleFacts,
   resolutionFamily: () => resolutionFamily,
   resolutionLines: () => resolutionLines,
   supersededByOf: () => supersededByOf,
@@ -61879,14 +61807,32 @@ CREATE TABLE IF NOT EXISTS inquiry_contradiction_links (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS inquiry_contradiction_links_candidate ON inquiry_contradiction_links(candidate);
+
+-- R36 (N136, K649 (6)): the two per-bundle facts this module alone writes, moved off record-core's bundles (T18).
+-- inquiry_basis_count is the leg count R12 records from inquiry_basis in the same promotion (query-language's legs:
+-- field reads it through retrieval's registration, its R62). inquiry_superseded_by is REC-17's reverse of a supersedes
+-- edge, so R7's obligation is a lookup and not a graph walk: the superseding ids, comma-joined and sorted, NULL when
+-- nothing supersedes the bundle (supersededByOf is its one parser). The column names are the ones they had on bundles,
+-- so every reader reads the same name. One row per bundle (retrieval R62: its registered table holds at most one row per
+-- key); a bundle with no row reads as NULL for both, as a column never written did. Unindexed beyond the key: both are
+-- read by bundle_id. The subject entity stays on bundles (R40).
+CREATE TABLE IF NOT EXISTS inquiry_bundle_facts (
+  bundle_id              TEXT PRIMARY KEY,
+  inquiry_basis_count    INTEGER,
+  inquiry_superseded_by  TEXT
+);
 `;
 var INQUIRY_TABLES = [
   "inquiry_basis",
   "inquiry_exclusions",
   "inquiry_migration_replays",
   "inquiry_member_agents",
-  "inquiry_contradiction_links"
+  "inquiry_contradiction_links",
+  "inquiry_bundle_facts"
 ];
+var BUNDLE_FACTS = "inquiry_bundle_facts";
+var LEGS_RELATION = Object.freeze({ table: BUNDLE_FACTS, key: "bundle_id", col: "inquiry_basis_count" });
+var MOVED = ["inquiry_basis_count", "inquiry_superseded_by"];
 var ADDITIVE = [["inquiry_basis", "ground", "TEXT"], ["inquiry_basis", "content_id", "TEXT"]];
 function migrateInquiry(sql) {
   const bare2 = INQUIRY_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -61898,6 +61844,19 @@ function migrateInquiry(sql) {
     const t = s.trim();
     if (t) sql.exec(t);
   }
+  moveBundleFacts(sql);
+}
+function moveBundleFacts(sql) {
+  const have = new Set([...sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name));
+  const cols = MOVED.filter((c) => have.has(c));
+  if (!cols.length) return 0;
+  const [{ n }] = [...sql.exec(`SELECT COUNT(*) AS n FROM ${BUNDLE_FACTS}`)];
+  if (n) return 0;
+  sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, ${cols.join(", ")})
+            SELECT bundle_id, ${cols.join(", ")} FROM bundles WHERE ${cols.map((c) => `${c} IS NOT NULL`).join(" OR ")}
+            ON CONFLICT(bundle_id) DO NOTHING`);
+  const [{ m }] = [...sql.exec(`SELECT COUNT(*) AS m FROM ${BUNDLE_FACTS}`)];
+  return m;
 }
 
 // src/inquiry/checks.mjs
@@ -61944,6 +61903,43 @@ var INQUIRY_CONTRADICTION_CHECKS = {
     translation: "The check of this question's contradiction fields (its link, its resolution, what it explores) stopped with an error instead of answering, so the question is refused rather than let through. The error is in the check and says nothing yet about the document. Nothing was written."
   }
 };
+
+// src/inquiry/grammar.mjs
+var INQUIRY_MACHINE = STATES.inquiry;
+var INQUIRY_ROWS = Object.freeze({
+  LEAD_NOT_EVIDENCE: LEAD_CHECKS.LEAD_NOT_EVIDENCE,
+  // C-54.1
+  NOT_INQUIRIES: ACT_SHAPE_CHECKS.NOT_INQUIRIES,
+  // C-33.13
+  SELF_BASIS: ACT_SHAPE_CHECKS.SELF_BASIS,
+  // C-33.22
+  BASIS_CYCLE: ACT_SHAPE_CHECKS.BASIS_CYCLE,
+  // C-33.23
+  MACHINE_CANNOT_DIVIDE: MACHINE_FENCE_CHECKS.MACHINE_CANNOT_DIVIDE,
+  // C-32.7
+  MACHINE_CANNOT_GROUND: MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND
+  // C-32.8
+});
+async function checkInquiryEntry(bundleMd, opts = {}) {
+  try {
+    const o = opts && typeof opts === "object" ? opts : {};
+    const text4 = String(bundleMd ?? "");
+    const id = (/^id:\s*(\S+)/m.exec(text4) || [])[1] || "";
+    const r = await checkBundle(
+      {
+        folderName: id,
+        files: /* @__PURE__ */ new Map([["bundle.md", text4]]),
+        publishedRegistry: o.publishedRegistry ?? null,
+        earnedRegistry: o.earnedRegistry ?? null
+      },
+      o.grammars === void 0 ? {} : { grammars: o.grammars }
+    );
+    const all = r && Array.isArray(r.findings) ? r.findings : [];
+    return all.filter((x) => x && x.severity === "error");
+  } catch (e) {
+    return [{ check: "C-2.8", severity: "error", message: `the entry requirements could not be judged: ${e && e.message}` }];
+  }
+}
 
 // src/inquiry/text.mjs
 function setScalar3(text4, key, value) {
@@ -62279,39 +62275,6 @@ function contradictionFindings(fm) {
   return out;
 }
 
-// src/inquiry/grammar.mjs
-var INQUIRY_MACHINE = STATES.inquiry;
-var INQUIRY_ROWS = Object.freeze({
-  LEAD_NOT_EVIDENCE: LEAD_CHECKS.LEAD_NOT_EVIDENCE,
-  // C-54.1
-  NOT_INQUIRIES: ACT_SHAPE_CHECKS.NOT_INQUIRIES,
-  // C-33.13
-  SELF_BASIS: ACT_SHAPE_CHECKS.SELF_BASIS,
-  // C-33.22
-  BASIS_CYCLE: ACT_SHAPE_CHECKS.BASIS_CYCLE,
-  // C-33.23
-  MACHINE_CANNOT_DIVIDE: MACHINE_FENCE_CHECKS.MACHINE_CANNOT_DIVIDE,
-  // C-32.7
-  MACHINE_CANNOT_GROUND: MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND
-  // C-32.8
-});
-async function checkInquiryEntry(bundleMd, opts = {}) {
-  try {
-    const text4 = String(bundleMd ?? "");
-    const id = (/^id:\s*(\S+)/m.exec(text4) || [])[1] || "";
-    const r = await checkBundle({
-      folderName: id,
-      files: /* @__PURE__ */ new Map([["bundle.md", text4]]),
-      publishedRegistry: opts.publishedRegistry ?? null,
-      earnedRegistry: opts.earnedRegistry ?? null
-    });
-    const all = r && Array.isArray(r.findings) ? r.findings : [];
-    return all.filter((x) => x && x.severity === "error");
-  } catch (e) {
-    return [{ check: "C-2.8", severity: "error", message: `the entry requirements could not be judged: ${e && e.message}` }];
-  }
-}
-
 // src/inquiry/index.mjs
 var EDGE_REASON_MAX2 = 160;
 var RELEASE_ACK_MAX = 500;
@@ -62464,13 +62427,12 @@ var Inquiry = class _Inquiry {
     const w = this.now();
     return typeof w === "string" && w ? w : stampInstant("second");
   }
-  /** The tables, their migrations and the superseded-by backfill (R36; REC-17's boot pass, bounded by the number of
-   *  `supersedes` edges, which is the number of divisions anybody has performed). Idempotent: every boot. */
+  /** The tables, their migrations (with N136's move of the leg count and the superseded-by index off `bundles`, R36)
+   *  and the superseded-by backfill (REC-17's boot pass, bounded by the number of `supersedes` edges, which is the
+   *  number of divisions anybody has performed). Idempotent: every boot. */
   migrate() {
     migrateInquiry(this.sql);
-    const hasColumn = this.#rows(`PRAGMA table_info(bundles)`).some((r) => r.name === "inquiry_superseded_by");
-    const hasRefs = this.#rows(`PRAGMA table_info(refs)`).length > 0;
-    if (hasColumn && hasRefs)
+    if (this.#rows(`PRAGMA table_info(refs)`).length > 0)
       for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE kind='supersedes'`))
         this.writeSupersededBy(r.target_id);
   }
@@ -62591,7 +62553,10 @@ var Inquiry = class _Inquiry {
           findings: errs.map((x) => ({
             check: x.check,
             detail: x.message,
-            ...x.code ? { code: x.code, translation: CONTENT_EXTENT_CHECKS[x.code]?.translation } : {},
+            /* a code with a catalogue row carries its translation (Terms); a sub-code of C-2.8 with none
+               (the testimony arms) carries its code alone, never an empty key */
+            ...x.code ? { code: x.code } : {},
+            ...x.code && CONTENT_EXTENT_CHECKS[x.code]?.translation ? { translation: CONTENT_EXTENT_CHECKS[x.code].translation } : {},
             ...x.repairs ? { repairs: x.repairs } : {}
           }))
         };
@@ -62820,7 +62785,9 @@ var Inquiry = class _Inquiry {
     if (isInquiry) {
       const n = this.#one(`SELECT count(*) AS c FROM inquiry_basis WHERE bundle_id=?`, bundleId).c;
       const subject = basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim() ? basisFm.subject_entity.trim() : null;
-      this.sql.exec(`UPDATE bundles SET inquiry_basis_count=?, inquiry_subject_entity=? WHERE bundle_id=?`, n, subject, bundleId);
+      this.sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, inquiry_basis_count) VALUES (?,?)
+                     ON CONFLICT(bundle_id) DO UPDATE SET inquiry_basis_count=excluded.inquiry_basis_count`, bundleId, n);
+      this.sql.exec(`UPDATE bundles SET inquiry_subject_entity=? WHERE bundle_id=?`, subject, bundleId);
     }
     this.sql.exec(`DELETE FROM inquiry_contradiction_links WHERE bundle_id=?`, bundleId);
     if (isInquiry && docFm) {
@@ -62865,16 +62832,21 @@ var Inquiry = class _Inquiry {
     };
   }
   /** R12, R16: ONE bundle's superseded-by index from the `supersedes` edges pointing at it (connections' `refs`), the
-   *  ids comma-joined and sorted, NULL when nothing supersedes it. An id with no row is a no-op. */
+   *  ids comma-joined and sorted, NULL when nothing supersedes it, held in this module's table (R36). An id with no
+   *  bundle is a no-op. */
   writeSupersededBy(targetId) {
     if (!targetId) return null;
     const ids = this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='supersedes' ORDER BY bundle_id`, targetId).map((r) => r.bundle_id);
-    this.sql.exec(`UPDATE bundles SET inquiry_superseded_by=? WHERE bundle_id=?`, ids.length ? ids.join(",") : null, targetId);
+    const v = ids.length ? ids.join(",") : null;
+    if (v === null) this.sql.exec(`UPDATE ${BUNDLE_FACTS} SET inquiry_superseded_by=NULL WHERE bundle_id=?`, targetId);
+    else this.sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, inquiry_superseded_by)
+                        SELECT bundle_id, ? FROM bundles WHERE bundle_id=?
+                        ON CONFLICT(bundle_id) DO UPDATE SET inquiry_superseded_by=excluded.inquiry_superseded_by`, v, targetId);
     return ids;
   }
   /** R16: the ids that supersede `id`, from the index. */
   supersededBy(id) {
-    return supersededByOf(this.#one(`SELECT inquiry_superseded_by FROM bundles WHERE bundle_id=?`, id));
+    return supersededByOf(this.#one(`SELECT inquiry_superseded_by FROM ${BUNDLE_FACTS} WHERE bundle_id=?`, id));
   }
   /** R18 (publication R12 reads it): the exclusions naming `targetId` the viewer may see, each with its inquiry, edition,
    *  description, reason, author and date, in (inquiry, ord) order. Every one is answered; they are read a page at a
@@ -62961,6 +62933,54 @@ var Inquiry = class _Inquiry {
     } catch {
       return null;
     }
+  }
+  /** N405 (REC-173, INVESTIGATIVE-SESSION.md §11 item 5): the `surfaced_in` of a question whose creation was a
+   *  server-verified MIGRATION REPLAY (R12's row), surfaced in the Drive era and not inside a run on this plane: said in
+   *  words, with the capture and promotion the replay named. Null for any other bundle; the rest of `surfaced_in` is
+   *  ai-runs' (its R27). Registered as this module's decoration of retrieval's single-bundle answer (its R56). Not gated
+   *  (the answer it decorates is); never throws. */
+  migratedSurfacing(id) {
+    try {
+      if (!id || typeof id !== "string") return null;
+      const mig = this.#one(`SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`, id);
+      return mig ? {
+        recorded: false,
+        stated: "not recorded (migrated from the Drive era)",
+        run: null,
+        lens: null,
+        migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at }
+      } : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R2, R3, R17 (T18): the entry requirements over one document, judged by the catalogue's `checkBundle` with the type
+   *  grammars later modules registered with record-core (its `grammars()`), as promotion's gate judges a bundle (its
+   *  R27), so a grammar that left the catalogue judges an inquiry here as it does there. A grammar whose arm throws is one
+   *  error of its own, naming its module; a record that cannot answer its registrations is an error, never read as none.
+   *  Never throws. */
+  async checkEntry(bundleMd, opts = {}) {
+    let grammars;
+    try {
+      grammars = this.record.grammars().map((g) => ({ module: g.module, ids: g.ids, arm: async (ctx, found) => {
+        try {
+          await g.arm(ctx, found);
+        } catch (e) {
+          found.push({
+            check: g.module,
+            severity: "error",
+            message: `${g.module}'s grammar threw, so it judged nothing and the document is not passed: ${fmSafe(e && e.message ? e.message : e).slice(0, 200)}`
+          });
+        }
+      } }));
+    } catch (e) {
+      return [{
+        check: "C-2.8",
+        severity: "error",
+        message: `the registered grammars could not be read, so the entry requirements were not judged: ${fmSafe(e && e.message ? e.message : e).slice(0, 200)}`
+      }];
+    }
+    return checkInquiryEntry(bundleMd, { ...opts && typeof opts === "object" ? opts : {}, grammars });
   }
   /* ---------------------------------------------------------------- content R41: a re-read that staled rows */
   /** Registered on content's `onStale`: the legs resting on each affected or undetermined row (and, past the notice's
@@ -64807,6 +64827,14 @@ function inquiryOf(host, deps) {
     record.declarePurge("inquiry", INQUIRY_TABLES);
     promotion.registerStep("inquiry", { check: (c) => k.check(c), project: (c) => k.project(c) });
     if (typeof content.onStale === "function") content.onStale("inquiry", (notice) => k.staled(notice));
+    const retrieval = k.retrieval;
+    if (retrieval && typeof retrieval.registerField === "function")
+      retrieval.registerField("inquiry", "legs", LEGS_RELATION);
+    if (retrieval && typeof retrieval.registerProjectionDecoration === "function")
+      retrieval.registerProjectionDecoration("inquiry", (row2) => {
+        const m = row2 && normalizeType(row2.object_type) === "inquiry" ? k.migratedSurfacing(row2.bundle_id) : null;
+        return m ? { surfaced_in: m } : {};
+      });
   }
   return k;
 }
@@ -65219,6 +65247,7 @@ var PROJECT_QUESTIONS_MAX = 500;
 var TESTIMONY_REACH_MAX = 200;
 var TESTIMONY_REACH_DEPTH = 64;
 var VERSION_REASON_MAX = 500;
+var VERSION_REASON_MIN = 8;
 var VERSION_ACT_TO = Object.freeze({
   accept: "accepted",
   reject: "rejected",
@@ -65962,9 +65991,16 @@ var BasisVersions = class _BasisVersions {
       );
     const row2 = rows[idx];
     const from = typeof row2.state === "string" ? row2.state.trim() : "";
+    if (act !== "current" && setVersionField(text4, vname, "hidden", row2.hidden === true) === null)
+      return refuse5(
+        "VERSION_ACT_UNWRITABLE",
+        "this question's version block could not be rewritten in place, so nothing was changed.",
+        { target, version: vname }
+      );
     if (to !== null) {
       const member = this.promotion.fact("caseMember", target);
-      if (!member.ok) return { ...member, act, target, version: vname };
+      if (!member.ok)
+        return { ...member, ok: false, reason: member.reason, code: member.code, act, target, version: vname };
       if (member.value)
         return refuse5(
           "PUBLISHED_CANNOT_MOVE_VERSION",
@@ -65979,10 +66015,10 @@ var BasisVersions = class _BasisVersions {
         `op=version${act} records WHY. ${to === "rejected" ? "The record of what was turned down is the anti-omission instrument (\xA76 rule 4) and it is worthless without the reason" : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement from an oversight"}.`,
         { target, version: vname, from, to }
       );
-    if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why))
+    if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why) || versionNeedsReason(to) && why.length < VERSION_REASON_MIN)
       return refuse5(
         "VERSION_REASON_MALFORMED",
-        `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes.`,
+        `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a reading aside or turning it down is at least ${VERSION_REASON_MIN} characters, the shortest the record keeps.`,
         { target, version: vname, reason_length: why.length }
       );
     if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
@@ -66057,6 +66093,12 @@ var BasisVersions = class _BasisVersions {
           `${projectId} does not draw on ${target}, so it has no stance on this question to move. Cite the question into the project first.`,
           { target, version: vname, project: projectId }
         );
+      if (setCurrentVersionRow(ptext, target, vname, who2, "") === null)
+        return refuse5(
+          "VERSION_ACT_UNWRITABLE",
+          `${projectId}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.`,
+          { target, version: vname, project: projectId }
+        );
     }
     const when = this.now();
     const hidden = act === "hide" ? !(a.hidden === false || a.hidden === "false" || a.hidden === "0") : row2.hidden === true;
@@ -66079,7 +66121,7 @@ var BasisVersions = class _BasisVersions {
     if (preview) return { ...receipt, preview: true, would: act, wrote: false };
     if (act === "current") {
       const p = this.#setProjectCurrentVersion(projectRow, target, vname, who2, when, why);
-      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
+      if (!p.ok) return { ...p, ok: false, reason: p.reason, act, target, version: vname, project: projectId };
       return receipt;
     }
     text4 = setVersionField(text4, vname, "state", to === null ? from : to);
@@ -66121,7 +66163,7 @@ Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returne
         criticality: fm.criticality ?? null
       }
     });
-    if (!promoted.ok) return { ...promoted, act, target, version: vname };
+    if (!promoted.ok) return { ...promoted, ok: false, reason: promoted.reason, act, target, version: vname };
     return receipt;
   }
   /* The make-current pointer's ONE writer (R15): the pointer, `last_updated` and a Session Log entry with the reason,
@@ -66550,6 +66592,10 @@ Claim: ${f11.claim}
         detail: "a conclusion answers a question, and only an inquiry carries one."
       };
     const projRow = pid ? this.#visible(pid, viewer) : null;
+    if (pid && !projRow) {
+      const existence = this.membership.existenceAct(pid, viewer);
+      if (existence) return existence;
+    }
     if (!projRow || normalizeType(projRow.object_type) !== "project")
       return {
         ok: false,
@@ -70788,16 +70834,7 @@ function contradictionOps(c, url, body) {
   };
 }
 
-// src/ai-runs/checks.mjs
-var checks_exports15 = {};
-__export(checks_exports15, {
-  AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
-  AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
-  AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
-  AI_RUN_OPEN_CHECKS: () => AI_RUN_OPEN_CHECKS,
-  AI_RUN_OWN_CHECKS: () => AI_RUN_OWN_CHECKS,
-  SURFACE_RUN_CHECKS: () => SURFACE_RUN_CHECKS
-});
+// src/run-rules/checks.mjs
 var AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
      which bound and where it stopped". A close with no bound named is the
@@ -70807,7 +70844,7 @@ var AI_RUN_OWN_CHECKS = {
      rather than an intention. */
   AI_RUN_BOUND_UNNAMED: {
     check: "C-22.5",
-    where: "src/airun.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
+    where: "src/run-rules/rules.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
     translation: "The run stopped without saying what stopped it. Not finding something and not finishing the search are different facts, and only one of them licenses a conclusion."
   },
   /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
@@ -70832,7 +70869,7 @@ var AI_RUN_OWN_CHECKS = {
        this module holds (`skillpack.mjs`'s copy was deleted by N156). */
   AI_RUN_SKILL_VERSION_UNNAMED: {
     check: "C-22.7",
-    where: "src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open",
+    where: "src/run-rules/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open",
     translation: "This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards."
   },
   /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
@@ -70865,7 +70902,7 @@ var AI_RUN_OWN_CHECKS = {
        question belongs to"*) stated the ruling Bob reversed — *a project does not own a line of inquiry*. */
   AI_RUN_NOT_PROJECT_MEMBER: {
     check: "C-22.8",
-    where: "src/airun.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close",
+    where: "src/run-rules/rules.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close",
     translation: "Asking the system to look into a project is work inside that project, and this account is not one of that project's participants. This is not about what the account is allowed to do in general \u2014 it is about which piece of work it is part of. Someone who owns that project can invite you to it."
   },
   /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
@@ -70893,7 +70930,7 @@ var AI_RUN_OWN_CHECKS = {
        code carrying any bit. */
   AI_RUN_NO_SUCH_CONTEXT: {
     check: "C-22.11",
-    where: "src/airun.mjs checkRunContextKind, called from src/ai-runs/index.mjs open",
+    where: "src/run-rules/rules.mjs checkRunContextKind, called from src/ai-runs/index.mjs open",
     translation: "Nothing of the kind this run names answers to that id here. A run is over a question or a project, nothing else; a run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
   },
   /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
@@ -70912,7 +70949,7 @@ var AI_RUN_OWN_CHECKS = {
   AI_RUN_NOT_PRINCIPAL: {
     check: "C-22.12",
     /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
-    where: "src/airun.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions",
+    where: "src/run-rules/rules.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions",
     translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
   },
   /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
@@ -70925,7 +70962,7 @@ var AI_RUN_OWN_CHECKS = {
      number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
   AI_RUN_CONSUME_INVALID: {
     check: "C-22.13",
-    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
+    where: "src/run-rules/rules.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
     translation: "The investigation gave an amount for its budget that is not a whole number of zero or more. A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step."
   },
   /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
@@ -70937,7 +70974,7 @@ var AI_RUN_OWN_CHECKS = {
      translation now names the lease beside the counts. */
   AI_RUN_BOUND_PLANE_COUNTED: {
     check: "C-22.14",
-    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
+    where: "src/run-rules/rules.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
     translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
   },
   /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
@@ -70948,7 +70985,7 @@ var AI_RUN_OWN_CHECKS = {
      names nothing the run has, and the remedy (spell the bound, send a map) differs. */
   AI_RUN_BOUND_UNKNOWN: {
     check: "C-22.15",
-    where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from src/ai-runs/index.mjs tick and open",
+    where: "src/run-rules/rules.mjs checkConsume (the tick's map, the open's list, and every key in either), called from src/ai-runs/index.mjs tick and open",
     translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
   },
   /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
@@ -70958,7 +70995,7 @@ var AI_RUN_OWN_CHECKS = {
      the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
   AI_RUN_BOUND_NO_ALLOWANCE: {
     check: "C-22.16",
-    where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
+    where: "src/run-rules/rules.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
     translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
   },
   /* N293 (AGENT-WORKER #2 J1; REC-169's rule, one figure over), R45 — THE RUN'S SCRATCH IS BOUNDED. `state` is the
@@ -70970,7 +71007,7 @@ var AI_RUN_OWN_CHECKS = {
      C-22.7's: `checkRunState` makes this one refusal and no other; the open and the tick relay it. */
   AI_RUN_STATE_TOO_LARGE: {
     check: "C-22.18",
-    where: "src/airun.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
+    where: "src/run-rules/rules.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
     translation: "The investigation tried to keep more working notes than one investigation may hold, so nothing it sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it has left to do, not everything it has read."
   }
 };
@@ -71160,15 +71197,54 @@ var AI_RUN_OPEN_CHECKS = {
     translation: "Nothing was run, because the kind of work this run asked for is not switched on for this instance yet. Kinds of work are switched on one at a time, each only after the one before it has been checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is."
   }
 };
+var AI_RUN_PLAN_CHECKS = {
+  /* R46: a run in mode `plan` names the plan it works on; it is stored on the run verbatim. */
+  AI_RUN_PLAN_REQUIRED: {
+    check: "C-109.2",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because a planning run was asked for without saying which plan it is for. A planning run works on one plan at a time, so it names that plan before it starts."
+  },
+  /* R46: only a planning run carries a plan, so no other run's record suggests it worked on one. */
+  AI_RUN_PLAN_UNEXPECTED: {
+    check: "C-109.3",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because this run named a plan but is not a planning run. Only a planning run works on a plan, so any other run is started without one and its record does not suggest otherwise."
+  },
+  /* R46: a plan belongs to the project that will act on it. */
+  AI_RUN_PLAN_NEEDS_PROJECT: {
+    check: "C-109.4",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because a planning run was asked for outside a project. A plan belongs to the project whose members will decide what to do, so a planning run is started from inside that project."
+  },
+  /* R46: only a member starts a planning run, for one plan at a time; nothing schedules, wakes or starts one. */
+  AI_RUN_PLAN_NEEDS_MEMBER: {
+    check: "C-109.5",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because a planning run is started only by a member of the group, for one plan at a time. Nothing starts one by itself, so a request that has no member behind it cannot start one."
+  },
+  /* R46: a planning run declares `fetches` 0 and `subsessions` 0; it works from the record and does not search. */
+  AI_RUN_PLAN_NO_SEARCH: {
+    check: "C-109.6",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because this planning run was allowed to fetch new material or to start further searches. A planning run proposes options from what the record already holds and does not go looking, so those parts of its budget are left out."
+  },
+  /* R47: fail closed. The check a later module registers for the mode is what judges the plan; with none, no run. */
+  AI_RUN_MODE_UNCHECKED: {
+    check: "C-109.7",
+    where: "src/ai-runs/index.mjs open > is-airun-open-check, reached from op=airunopen",
+    translation: "Nothing was run, because this kind of work has nothing in place yet to check what it is asked to work on. Rather than start without that check, the run is refused until the part that provides it is running."
+  }
+};
 var AI_RUNS_CHECKS = Object.freeze({
   ...AI_RUN_OWN_CHECKS,
   ...AI_RUN_ACT_SHAPE_CHECKS,
   ...AI_RUNS_CONTEXT_CHECKS,
   ...SURFACE_RUN_CHECKS,
-  ...AI_RUN_OPEN_CHECKS
+  ...AI_RUN_OPEN_CHECKS,
+  ...AI_RUN_PLAN_CHECKS
 });
 
-// src/ai-runs/skill-version.mjs
+// src/run-rules/skill-version.mjs
 function refusal9(key, detail) {
   const row2 = AI_RUN_OWN_CHECKS[key];
   return { ok: false, code: key, check: row2.check, translation: row2.translation, detail };
@@ -71179,8 +71255,8 @@ function checkSkillVersion(version) {
   return refusal9("AI_RUN_SKILL_VERSION_UNNAMED", !v ? "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them" : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`);
 }
 
-// src/airun.mjs
-var AI_RUN_CHECKS3 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
+// src/run-rules/rules.mjs
+var AI_RUN_CHECKS3 = Object.freeze({ ...AI_RUN_CHECKS2, ...AI_RUNS_CHECKS });
 var RUN_BOUNDS = {
   fetches: "fetches requested of the capture path",
   subsessions: "evidence sub-sessions spawned",
@@ -71215,6 +71291,12 @@ var RUN_BOUNDS = {
      allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
      in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
   surfaces: "questions an assistant opened inside this run (\xA711 item 5, rule 2) \u2014 the run's bound on what it may surface",
+  /* R13 (K660 (2); BIO_Action_v0_1.md §4 rule 1): THE PLANNING RUN'S BOUND, on `mints`' and `surfaces`' rule. The number
+     of proposals a planning run may make, consumed by `action-plans` (its R31) through `ai-runs.consumeBound` as each
+     proposal lands, so it is COUNTED BY THE PLANE (PLANE_COUNTED_BOUNDS below). Its allowance is the one the member
+     declares at the open, and nothing here caps it: five is the size of a page of the member's tray (`action-plans`
+     R34), not a bound. AFTER `surfaces` for `mints`' tie-break reason: appending it renames no existing ending. */
+  proposals: "options a planning run proposed for an action plan \u2014 the planning run's bound on what it may propose",
   lease: "the run stopped heartbeating and its lease lapsed: it died rather than finished"
 };
 var RUN_ENDINGS = {
@@ -71260,7 +71342,7 @@ function checkBound(bound) {
     `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; endings: ${Object.keys(RUN_ENDINGS).join(", ")} (\xA714b.6)`
   );
 }
-var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
+var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposals"]);
 var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
 function checkConsume(entries, { seed = false, allowance = false, map = false, list: list2 = false } = {}) {
   if (list2) {
@@ -71455,6 +71537,91 @@ function finishedBound(bounds, { expired = false, offered = null } = {}) {
   return "completed";
 }
 
+// src/run-rules/deployment.mjs
+var GATE_ADDRESS = {
+  file: "agent-worker/src/harness.mjs",
+  owned_by: "FL-3 (IS-9, the run harness) \u2014 landed, and outside this area's paths",
+  modes_export: "MODES",
+  table_export: "CONTROL_FLOW",
+  row: "gate-mode",
+  first_step_export: "FIRST_STEP",
+  decision_function: "nextStep",
+  why_it_is_first: "a run in a mode that is not deployed terminates before it has spent anything, so the gate cannot be reached around by exhausting something else first"
+};
+var SEQUENCING_SOURCE = "docs/development/INVESTIGATIVE-SESSION.md";
+var SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
+var DEPLOYMENT_SEQUENCE = {
+  id: "check-deploys-first",
+  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
+     mode that deploys first, and every later index is a mode that enables only
+     after the one before it has been verified live. */
+  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
+     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
+     is ARM B3's whole demand (the two rosters are ONE set, held in both
+     directions) and ARM B4's (index 0 stays the only deployed mode; every later
+     index, `extract` included, is not). The pack's digest moves with this line
+     by construction and nothing needs bumping by hand. */
+  /* `plan` APPENDED (K660 (5), BIO_Action_v0_1.md §4 rule 1): the planning run, which proposes options for an
+     action plan from what the record already holds. It is last in the order and it does NOT wait on the chain above
+     it: it deploys as soon as `agent-worker` runs model turns (its R40 and R48 met), whether or not `investigate` or
+     `extract` is deployed, by the reviewed change that meets those Rs setting `deploys_apart.plan.deployed` here and
+     `agent-worker`'s `MODES.plan` together (its R42, R53). No separate act. */
+  order: ["check", "investigate", "extract", "plan"],
+  first_deployed_mode: "check",
+  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
+     because a session cannot verify its own copying by re-reading it. */
+  text: "CHECK IS THE FIRST DEPLOYED MODE",
+  role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
+  because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
+  satisfies: "Deploying that mode first satisfies the enacted instruction without a second architecture",
+  source: SEQUENCING_SOURCE,
+  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
+     standard: one pin proves the sentence was copied; two prove the RULING is
+     the one both surfaces carry, so a sequencing quietly reversed on either
+     fails here rather than in a review nobody re-runs. */
+  also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
+  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
+  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
+     half is this area's, and saying so is the point rather than a disclaimer. */
+  enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
+  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
+  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
+     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
+     cannot leave it stale by editing prose around it. `null` is not "unknown":
+     it is "no live run has been verified", and the suite holds it against the
+     landed flag, which is still `false`. */
+  verification_recorded: null,
+  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
+  enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
+  gate: GATE_ADDRESS,
+  /* R14: THE MODES THAT DEPLOY APART FROM THE CHAIN, each with its own flag and the condition that sets it. A mode here
+     takes no part in the chain's verification: `DEPLOYED_MODES` below reads the chain from `order` without it, and
+     adds it only when its flag is true. `false` until the change that meets its condition flips it under review. */
+  deploys_apart: {
+    plan: {
+      deployed: false,
+      when: "as soon as agent-worker runs model turns (its R40 and R48), whether or not investigate or extract is deployed; the reviewed change that meets those sets this flag and agent-worker's MODES.plan together"
+    }
+  },
+  /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
+     refused a mode, and this said so; `op=airunopen` now refuses a mode not in `DEPLOYED_MODES` below with C-109.1, so
+     no run, and no production under a run, exists in a mode not deployed. `enforced_by_row` stays: the fleet member's
+     first row still refuses first inside the harness (agent-worker R14), and the two are tallied apart. */
+  enforced_by: ["C-109.1"],
+  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
+  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
+     landed sources rather than believed. */
+  does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
+  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
+  holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
+};
+var CHAIN = DEPLOYMENT_SEQUENCE.order.filter((m) => !Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m));
+var DEPLOYED_MODES = Object.freeze([
+  ...CHAIN.slice(0, DEPLOYMENT_SEQUENCE.verification_recorded == null ? 1 : 2),
+  ...DEPLOYMENT_SEQUENCE.order.filter((m) => DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed === true)
+]);
+var DEFAULT_MODE = DEPLOYED_MODES[0];
+
 // src/ai-runs/schema.mjs
 var AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"]);
 var AI_RUNS_SCHEMA = `
@@ -71507,7 +71674,9 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   stopped_condition     TEXT,
   stopped_at            TEXT,
   lens_at_open          TEXT,
-  rerun_of              TEXT
+  rerun_of              TEXT,
+  -- R46 (K660): the plan a run in mode 'plan' works on, stored verbatim; NULL for every other run.
+  plan                  TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
@@ -71547,77 +71716,8 @@ CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
 );
 `;
 
-// src/ai-runs/deployment.mjs
-var GATE_ADDRESS = {
-  file: "agent-worker/src/harness.mjs",
-  owned_by: "FL-3 (IS-9, the run harness) \u2014 landed, and outside this area's paths",
-  modes_export: "MODES",
-  table_export: "CONTROL_FLOW",
-  row: "gate-mode",
-  first_step_export: "FIRST_STEP",
-  decision_function: "nextStep",
-  why_it_is_first: "a run in a mode that is not deployed terminates before it has spent anything, so the gate cannot be reached around by exhausting something else first"
-};
-var SEQUENCING_SOURCE = "docs/development/INVESTIGATIVE-SESSION.md";
-var SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
-var DEPLOYMENT_SEQUENCE = {
-  id: "check-deploys-first",
-  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
-     mode that deploys first, and every later index is a mode that enables only
-     after the one before it has been verified live. */
-  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
-     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
-     is ARM B3's whole demand (the two rosters are ONE set, held in both
-     directions) and ARM B4's (index 0 stays the only deployed mode; every later
-     index, `extract` included, is not). The pack's digest moves with this line
-     by construction and nothing needs bumping by hand. */
-  order: ["check", "investigate", "extract"],
-  first_deployed_mode: "check",
-  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
-     because a session cannot verify its own copying by re-reading it. */
-  text: "CHECK IS THE FIRST DEPLOYED MODE",
-  role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
-  because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
-  satisfies: "Deploying that mode first satisfies the enacted instruction without a second architecture",
-  source: SEQUENCING_SOURCE,
-  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
-     standard: one pin proves the sentence was copied; two prove the RULING is
-     the one both surfaces carry, so a sequencing quietly reversed on either
-     fails here rather than in a review nobody re-runs. */
-  also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
-  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
-  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
-     half is this area's, and saying so is the point rather than a disclaimer. */
-  enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
-  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
-  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
-     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
-     cannot leave it stale by editing prose around it. `null` is not "unknown":
-     it is "no live run has been verified", and the suite holds it against the
-     landed flag, which is still `false`. */
-  verification_recorded: null,
-  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
-  enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
-  gate: GATE_ADDRESS,
-  /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
-     refused a mode, and this said so; `op=airunopen` now refuses a mode not in `DEPLOYED_MODES` below with C-109.1, so
-     no run, and no production under a run, exists in a mode not deployed. `enforced_by_row` stays: the fleet member's
-     first row still refuses first inside the harness (agent-worker R14), and the two are tallied apart. */
-  enforced_by: ["C-109.1"],
-  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
-  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
-     landed sources rather than believed. */
-  does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
-  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
-  holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
-};
-var DEPLOYED_MODES = Object.freeze(DEPLOYMENT_SEQUENCE.order.slice(
-  0,
-  DEPLOYMENT_SEQUENCE.verification_recorded == null ? 1 : 2
-));
-var DEFAULT_MODE = DEPLOYED_MODES[0];
-
 // src/ai-runs/index.mjs
+var ROW = (code) => AI_RUNS_CHECKS[code];
 var safeJson11 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
@@ -71655,9 +71755,15 @@ var AiRuns = class _AiRuns {
   #waitSource = null;
   #runListeners = [];
   // R43: {module, fn, seq}, in the modules' total order
-  constructor(ctx, env = {}) {
+  #openChecks = [];
+  // R47: {module, mode, fn}, one per mode and one per module
+  #deps;
+  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`) and, for a
+   *  module test alone, `deployedModes` in place of `run-rules`' `DEPLOYED_MODES`. */
+  constructor(ctx, env = {}, deps = {}) {
     this.ctx = ctx;
     this.env = env || {};
+    this.#deps = deps || {};
     this.sql = ctx.storage.sql;
     recordOf(ctx).declarePurge("ai-runs", [
       "inquiry_run_surfacings",
@@ -71722,6 +71828,11 @@ var AiRuns = class _AiRuns {
   #membership() {
     return membershipOf(this.ctx);
   }
+  /** N418 (K650): every write this module makes goes through record-core's `transact` (its R32), so the store's one
+   *  transaction, its savepoints and its `afterCommit` (R66) hold over them; never `transactionSync` directly. */
+  #transact(fn) {
+    return recordOf(this.ctx).transact(fn);
+  }
   #connections() {
     return connectionsOf(this.ctx);
   }
@@ -71766,6 +71877,20 @@ var AiRuns = class _AiRuns {
     this.#runListeners.push({ module, fn, seq: this.#runListeners.length });
     this.#runListeners.sort((a, b) => rank6(a.module) - rank6(b.module) || a.seq - b.seq);
     return { ok: true, module };
+  }
+  /** R47 (K660): a later module's check for one mode (`action-plans` for `plan`, its R30), registered once at start: a
+   *  synchronous `fn({contextType, contextId, plan, actor, viewer}) → null | refusal` that `open` applies last and passes
+   *  on unchanged. A malformed registration, or a second (by the same module, or for a mode already held), is refused by
+   *  membership's `listenerRefusal` (LISTENER_MALFORMED, LISTENER_DECLARED). */
+  registerOpenCheck(module, mode, fn) {
+    const m = typeof mode === "string" ? mode.trim() : "";
+    const refused = listenerRefusal(this.#openChecks, module, m ? fn : null) || listenerRefusal(this.#openChecks.find((c) => c.mode === m) || null, module, fn);
+    if (refused) return refused;
+    this.#openChecks.push({ module, mode: m, fn });
+    return { ok: true, module, mode: m };
+  }
+  #deployedModes() {
+    return Array.isArray(this.#deps.deployedModes) ? this.#deps.deployedModes : DEPLOYED_MODES;
   }
   #captureRequestConfigured() {
     const w = this.#wait();
@@ -71869,7 +71994,7 @@ var AiRuns = class _AiRuns {
       /* `unstated`, and it is the honest word rather than a derived one.
          `ai_run_log` never recorded what KIND of subject a row was about, so
          deriving one from the level would be the record claiming more than it
-         can support — see `OBSERVATION_SUBJECT_KINDS` in airun.mjs. */
+         can support — see `OBSERVATION_SUBJECT_KINDS` in run-rules. */
       subjectKind: "unstated",
       subject: entry ? entry.subject : null,
       state: entry ? entry.state : void 0,
@@ -71986,7 +72111,7 @@ var AiRuns = class _AiRuns {
         ORDER BY seq DESC LIMIT 1`,
       run
     );
-    return this.ctx.storage.transactionSync(() => {
+    return this.#transact(() => {
       const bad = this.#aiRunAppend(run, {
         level: last ? last.level : "document",
         subject: row2.context_id,
@@ -72030,7 +72155,7 @@ var AiRuns = class _AiRuns {
    * stays, as the FLOOR beneath this — it is still checked, in `index.mjs`'s
    * `NEEDS`, and it still refuses in its own words.
    *
-   * THE DECISION IS NOT HERE. It is in `airun.mjs projectGate`, pure and shared
+   * THE DECISION IS NOT HERE. It is in `run-rules projectGate`, pure and shared
    * by all three verbs. What lives here is the two DATABASE questions the pure
    * function cannot ask: which projects hold this context, and which of those
    * the account has joined.
@@ -72179,7 +72304,7 @@ var AiRuns = class _AiRuns {
    *  merely stored, because "every run records the skill version it ran under"
    *  is a requirement and a condition that may be omitted is not recorded. It
    *  is still never derived: the plane refuses, it does not fill in. The
-   *  refusal is C-22.7, built in `./skill-version.mjs checkSkillVersion`. */
+   *  refusal is C-22.7, built in `run-rules checkSkillVersion`. */
   async open({
     run,
     contextType,
@@ -72202,6 +72327,8 @@ var AiRuns = class _AiRuns {
        one from a context and a clock would be guessing at a judgement. Optional and additive: a
        run that names none is exactly the run this op opened before. */
     rerunOf = null,
+    /* R46 (K660): the plan a run in mode `plan` works on, stored verbatim; refused in any other mode. */
+    plan = null,
     /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
        `index.mjs` and empty for a machine credential. Never a
        caller's word — a principal a caller can name is not one, which
@@ -72218,8 +72345,8 @@ var AiRuns = class _AiRuns {
         run: run || null,
         started: false,
         code: "AI_RUN_NO_CONTEXT",
-        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.check,
-        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
+        check: ROW("AI_RUN_NO_CONTEXT").check,
+        translation: ROW("AI_RUN_NO_CONTEXT").translation,
         note: "a run needs an id and the context it runs in (an inquiry or a project): a run nothing is in the context of has nowhere to be visible"
       };
     if (Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, String(contextType ?? ""))) {
@@ -72263,8 +72390,8 @@ var AiRuns = class _AiRuns {
         run,
         started: false,
         code: "AI_RUN_CAPABILITY_UNAVAILABLE",
-        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.check,
-        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.translation,
+        check: ROW("AI_RUN_CAPABILITY_UNAVAILABLE").check,
+        translation: ROW("AI_RUN_CAPABILITY_UNAVAILABLE").translation,
         note: "a run names TWO principals \u2014 the plane credential acting and WHICH LEVEL of the Claude-account cascade pays (member, then project, then instance). They are different principals and an act must say both (DEC-27(b), DEC-55.4)"
       };
     const badSkill = checkSkillVersion(skillVersion);
@@ -72278,17 +72405,41 @@ var AiRuns = class _AiRuns {
         note: badSkill.detail
       };
     const runMode = mode === void 0 || mode === null ? DEFAULT_MODE : String(mode).trim();
-    if (!DEPLOYED_MODES.includes(runMode))
+    const deployed = this.#deployedModes();
+    if (!deployed.includes(runMode))
       return {
         run,
         started: false,
         code: "AI_RUN_MODE_NOT_DEPLOYED",
-        check: AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check,
-        translation: AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.translation,
+        check: ROW("AI_RUN_MODE_NOT_DEPLOYED").check,
+        translation: ROW("AI_RUN_MODE_NOT_DEPLOYED").translation,
         mode: String(mode).slice(0, 60),
-        deployed: [...DEPLOYED_MODES],
-        note: `the mode '${String(mode).slice(0, 60)}' is not deployed on this instance: the modes deploy in one order, each only after the one before it is verified live, and today ${DEPLOYED_MODES.join(", ")} ${DEPLOYED_MODES.length === 1 ? "is" : "are"} deployed. Nothing was written`
+        deployed: [...deployed],
+        note: `the mode '${String(mode).slice(0, 60)}' is not deployed on this instance: the modes deploy in one order, each only after the one before it is verified live, and today ${deployed.join(", ")} ${deployed.length === 1 ? "is" : "are"} deployed. Nothing was written`
       };
+    const planNo = (code, detail, extra = {}) => ({
+      run,
+      started: false,
+      code,
+      check: ROW(code).check,
+      translation: ROW(code).translation,
+      detail,
+      ...extra,
+      note: "Nothing was written"
+    });
+    const planNamed = typeof plan === "string" && plan.trim() !== "";
+    const who2 = actor == null ? "" : String(actor).trim();
+    const search = (Array.isArray(bounds) ? bounds : []).find((b) => b && typeof b === "object" && (b.bound === "fetches" || b.bound === "subsessions") && typeof b.allowed === "number" && b.allowed > 0);
+    if (runMode === "plan" && !planNamed)
+      return planNo("AI_RUN_PLAN_REQUIRED", "a planning run names the plan it works on: pass plan=<the plan's id>");
+    if (runMode !== "plan" && plan != null)
+      return planNo("AI_RUN_PLAN_UNEXPECTED", `a run in mode '${runMode.slice(0, 60)}' names no plan; only a run in mode 'plan' works on one`);
+    if (runMode === "plan" && String(contextType) !== "project")
+      return planNo("AI_RUN_PLAN_NEEDS_PROJECT", "a planning run is over the project the plan belongs to: contextType=project");
+    if (runMode === "plan" && (!who2 || isMachineIdentity(who2)))
+      return planNo("AI_RUN_PLAN_NEEDS_MEMBER", "only a member starts a planning run, for one plan at a time; nothing starts one by itself");
+    if (runMode === "plan" && search)
+      return planNo("AI_RUN_PLAN_NO_SEARCH", `a planning run works from what the record already holds, so it declares no '${search.bound}' allowance (it was given ${search.allowed})`, { bound: search.bound });
     const badSeed = checkConsume(bounds, { list: true });
     if (badSeed)
       return {
@@ -72330,8 +72481,8 @@ var AiRuns = class _AiRuns {
         run,
         started: false,
         code: "AI_RUN_ALREADY_OPEN",
-        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.check,
-        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
+        check: ROW("AI_RUN_ALREADY_OPEN").check,
+        translation: ROW("AI_RUN_ALREADY_OPEN").translation,
         note: "a run with this id already exists"
       };
     const reRuns = String(rerunOf ?? "").trim();
@@ -72341,8 +72492,8 @@ var AiRuns = class _AiRuns {
           run,
           started: false,
           code: "AI_RUN_RERUN_SELF",
-          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.check,
-          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.translation,
+          check: ROW("AI_RUN_RERUN_SELF").check,
+          translation: ROW("AI_RUN_RERUN_SELF").translation,
           note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's work this one repeats, and a self-reference would let one run discharge its own bias debt"
         };
       const target = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, reRuns);
@@ -72351,8 +72502,8 @@ var AiRuns = class _AiRuns {
           run,
           started: false,
           code: "AI_RUN_RERUN_UNKNOWN",
-          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.check,
-          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.translation,
+          check: ROW("AI_RUN_RERUN_UNKNOWN").check,
+          translation: ROW("AI_RUN_RERUN_UNKNOWN").translation,
           note: "no such run: it either never existed, was purged, or is not one this caller can open"
         };
       if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
@@ -72360,19 +72511,38 @@ var AiRuns = class _AiRuns {
           run,
           started: false,
           code: "AI_RUN_RERUN_OTHER_CONTEXT",
-          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.check,
-          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.translation,
+          check: ROW("AI_RUN_RERUN_OTHER_CONTEXT").check,
+          translation: ROW("AI_RUN_RERUN_OTHER_CONTEXT").translation,
           note: "a re-run runs the same question or project again. The lens a bias debt is owed against is the one in force for the INDEBTED run's context, so a re-run somewhere else would be measured against a different lens entirely"
         };
     }
+    const held = this.#openChecks.find((c) => c.mode === runMode);
+    if (held || runMode === "plan") {
+      let said2;
+      try {
+        said2 = held ? held.fn({ contextType: String(contextType), contextId: String(contextId), plan, actor, viewer }) : void 0;
+      } catch {
+        said2 = void 0;
+      }
+      if (said2 !== null)
+        return said2 && typeof said2 === "object" && typeof said2.code === "string" ? { run, started: false, ...said2 } : {
+          run,
+          started: false,
+          code: "AI_RUN_MODE_UNCHECKED",
+          check: ROW("AI_RUN_MODE_UNCHECKED").check,
+          translation: ROW("AI_RUN_MODE_UNCHECKED").translation,
+          detail: held ? `the check ${held.module} registered for mode '${runMode}' gave no answer` : `nothing is registered to check a run in mode '${runMode}'`,
+          note: "Nothing was written"
+        };
+    }
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
-    this.ctx.storage.transactionSync(() => {
+    this.#transact(() => {
       this.sql.exec(
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
            bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
-           rerun_of)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
+           rerun_of, plan)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
         run,
         label,
         runMode,
@@ -72395,7 +72565,9 @@ var AiRuns = class _AiRuns {
         lensAtOpen,
         /* REC-207: judged above, and stored as every empty case on this open is stored — absent rather
            than defaulted. A run that names no re-run reads `rerun_of` NULL, which is what it is. */
-        reRuns || null
+        reRuns || null,
+        /* R46: verbatim, and only a planning run carries one (any other mode naming a plan was refused above). */
+        runMode === "plan" ? plan : null
       );
       for (const b of Array.isArray(bounds) ? bounds : []) {
         if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
@@ -72547,7 +72719,7 @@ var AiRuns = class _AiRuns {
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
     const refused = [];
     let appended = 0;
-    this.ctx.storage.transactionSync(() => {
+    this.#transact(() => {
       for (const e of Array.isArray(log) ? log : []) {
         const bad = this.#aiRunAppend(run, e, now, 0, row2.principal_claude || null);
         if (bad) refused.push(bad);
@@ -72808,7 +72980,9 @@ var AiRuns = class _AiRuns {
     const holds = [], wakes = [], dispatches = [];
     const resumer = this.#aiRunWakeRuns().length ? await this.#aiRunResumer() : null;
     for (const r of this.#aiRunWakeHolds(iso3)) {
-      this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
+      this.#transact(() => {
+        this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
+      });
       holds.push({ run: r.run, outstanding: r.outstanding, expires: until });
     }
     for (const r of this.#aiRunWakeRuns()) {
@@ -72818,7 +72992,7 @@ var AiRuns = class _AiRuns {
       const expired = done.filter((q6) => q6.state === "expired").length;
       const refused = done.length - captured - expired;
       const decision = this.#aiRunResumeDecision(r, resumer);
-      const bad = this.ctx.storage.transactionSync(() => {
+      const bad = this.#transact(() => {
         const refusal19 = this.#aiRunAppend(r.run, {
           level: "internet",
           subject: r.context_id,
@@ -72985,13 +73159,13 @@ var AiRuns = class _AiRuns {
       clearTimeout(timer);
     }
     if (outcome.state !== "DISPATCHED" && outcome.state !== "RUNNING") {
-      const refusal19 = this.#aiRunAppend(d.run, {
+      const refusal19 = this.#transact(() => this.#aiRunAppend(d.run, {
         level: "internet",
         subject: d.context_id,
         ...this.#aiRunRestatedState(d.run),
         governed: false,
         detail: `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). The run was woken and is still resumable by its own principal; nothing it established is lost`
-      }, iso3, 0);
+      }, iso3, 0));
       if (refusal19) outcome.unwritable = refusal19;
     }
     return outcome;
@@ -73134,7 +73308,9 @@ var AiRuns = class _AiRuns {
       /* R19 (N190): the run this run re-runs (REC-207's `rerun_of`, judged at the open), published only when this
          viewer can see that run too, through the same sight; else null — a run that re-runs nothing and one whose
          earlier run is out of view answer alike, so the field never says a hidden run exists. */
-      rerun_of: row2.rerun_of != null && String(row2.rerun_of).trim() !== "" && this.#aiRunInSight(String(row2.rerun_of), viewer) ? String(row2.rerun_of) : null
+      rerun_of: row2.rerun_of != null && String(row2.rerun_of).trim() !== "" && this.#aiRunInSight(String(row2.rerun_of), viewer) ? String(row2.rerun_of) : null,
+      /* R46: the plan a planning run works on; the key exists only on a run in mode `plan`. */
+      ...row2.mode === "plan" ? { plan: row2.plan ?? null } : {}
     } };
   }
   /** REC-74: the run's BAR, computed ONCE, for the same reason `#biasForRun`
@@ -73267,7 +73443,7 @@ var AiRuns = class _AiRuns {
     limit = null
   } = {}) {
     const refusal19 = (code, detail) => {
-      const row2 = AI_RUNS_CONTEXT_CHECKS[code];
+      const row2 = ROW(code);
       return {
         ok: false,
         reason: code,
@@ -73640,8 +73816,8 @@ var AiRuns = class _AiRuns {
       const id = run == null ? "" : String(run).trim();
       if (!id) return null;
       const seen = this.#bundleGate("r.context_id", viewer);
-      const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude
-                             FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
+      const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude,
+                                  r.plan FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
       return r ? {
         run: r.run,
         status: r.status,
@@ -73649,7 +73825,8 @@ var AiRuns = class _AiRuns {
         context_type: r.context_type,
         context_id: r.context_id,
         principal_plane: r.principal_plane,
-        principal_claude: r.principal_claude
+        principal_claude: r.principal_claude,
+        ...r.mode === "plan" ? { plan: r.plan ?? null } : {}
       } : null;
     } catch {
       return null;
@@ -73673,14 +73850,16 @@ var AiRuns = class _AiRuns {
     const bad = checkConsume([[b, figure2 ? 0 : n]], { seed: false });
     if (bad) return bad;
     if (n === 0) return null;
-    this.sql.exec(
-      `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
-       ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
-      String(run),
-      String(bound),
-      n,
-      n
-    );
+    this.#transact(() => {
+      this.sql.exec(
+        `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
+         ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
+        String(run),
+        String(bound),
+        n,
+        n
+      );
+    });
     return null;
   }
   /** R37: the run gate `contradiction` offers (its R21), from R28 and R5: `found` false for blank, absent and
@@ -73719,7 +73898,7 @@ var AiRuns = class _AiRuns {
     const caller = String(pkg.assistantPrincipal ?? "").trim();
     const run = String(pkg.run ?? "").trim();
     const refusal19 = (code, detail, extra) => {
-      const row2 = SURFACE_RUN_CHECKS[code];
+      const row2 = ROW(code);
       return {
         ok: false,
         reason: code,
@@ -73786,25 +73965,38 @@ var AiRuns = class _AiRuns {
     if (!_AiRuns.#surfacing(c)) return null;
     const run = String(c.pkg.run).trim(), principal = c.pkg.assistantPrincipal.trim();
     const at20 = (/* @__PURE__ */ new Date()).toISOString();
-    this.sql.exec(
-      `INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
-      c.bundleId,
-      run,
-      principal,
-      at20
-    );
-    this.consumeBound(run, "surfaces", 1);
+    this.#transact(() => {
+      this.sql.exec(
+        `INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
+        c.bundleId,
+        run,
+        principal,
+        at20
+      );
+      this.consumeBound(run, "surfaces", 1);
+    });
     const left2 = this.boundOf(run, "surfaces");
     return { surfaced_in: { run, at: at20, bound: { bound: "surfaces", allowed: left2.allowed, consumed: left2.consumed } } };
   }
   /* ---- R36: HIDDEN RUNS — `hiddenRuns` (R42, module level) is what retrieval holds; observation-log's resolver is
      `runFor` (R28), the same sight. ------------------------------------------------------------------------------ */
+  /** R27 (K674): inquiry's `migratedSurfacing` (its R49) for a question with no surfacing row here: the migration
+   *  replay's record of it, or null. Reached lazily through inquiry's factory; null when it answers nothing. */
+  #migratedSurfacing(bundleId) {
+    try {
+      const k = this.#deps.inquiry || inquiryOf(this.ctx);
+      const m = k && typeof k.migratedSurfacing === "function" ? k.migratedSurfacing(bundleId) : null;
+      return m && typeof m === "object" ? m : null;
+    } catch {
+      return null;
+    }
+  }
   /** R27: which run a question was opened inside, and under what lens. The run's facts are `read`'s answer, taken
    *  whole under the same viewer. The migration-replay arm is inquiry's (map §5.8): a question with no surfacing
    *  row answers `not recorded` here. */
   async surfacedIn(bundleId, viewer) {
     const link = this.#one(`SELECT run, principal, at FROM inquiry_run_surfacings WHERE bundle_id=?`, bundleId);
-    if (!link) return { recorded: false, stated: "not recorded", run: null, lens: null };
+    if (!link) return this.#migratedSurfacing(bundleId) ?? { recorded: false, stated: "not recorded", run: null, lens: null };
     const read2 = await this.read({ run: link.run, viewer });
     if (!read2 || read2.found !== true || !read2.session)
       return {
@@ -73832,7 +74024,7 @@ var AiRuns = class _AiRuns {
     const bare2 = AI_RUNS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const st of bare2.split(";")) if (st.trim()) this.sql.exec(st);
     const cols = new Set(this.#rows(`PRAGMA table_info(ai_runs)`).map((c) => c.name));
-    for (const col of ["lens_at_open", "rerun_of"])
+    for (const col of ["lens_at_open", "rerun_of", "plan"])
       if (!cols.has(col)) this.sql.exec(`ALTER TABLE ai_runs ADD COLUMN ${col} TEXT`);
     if (this.#rows(`PRAGMA table_info(ai_run_log)`).length) {
       this.sql.exec(
@@ -73849,11 +74041,11 @@ var AiRuns = class _AiRuns {
   }
 };
 var INSTANCES = /* @__PURE__ */ new WeakMap();
-function aiRunsOf(ctx, env = null) {
+function aiRunsOf(ctx, env = null, deps = null) {
   const key = ctx.storage;
   let m = INSTANCES.get(key);
   if (!m) {
-    m = new AiRuns(ctx, env || {});
+    m = new AiRuns(ctx, env || {}, deps || {});
     INSTANCES.set(key, m);
   } else if (env && (!m.env || !Object.keys(m.env).length)) m.env = env;
   return m;
@@ -74471,10 +74663,190 @@ function migrateCaptureRequests(sql) {
 }
 
 // src/capture-requests/checks.mjs
-var checks_exports16 = {};
-__export(checks_exports16, {
-  CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS
+var checks_exports15 = {};
+__export(checks_exports15, {
+  CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
+  CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS2,
+  CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS,
+  CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
+  userAgentIsLegible: () => userAgentIsLegible
 });
+var CAPTURE_PURPOSES = Object.freeze(["investigate", "acquire"]);
+var CAPTURE_UA_MODES = Object.freeze(["civicos", "member-browser"]);
+function userAgentIsLegible(ua) {
+  if (typeof ua !== "string" || ua.trim() === "") return false;
+  return /\(\+https?:\/\/[^\s)]+/.test(ua);
+}
+var CAPTURE_REQUEST_CHECKS2 = Object.freeze({
+  /* ---- THE DOOR. Refused at the request, before any row exists. These are
+     SHAPE rules and NOT conduct: conduct is enforced once, at the drain. ---- */
+  CAPTURE_REQUEST_NO_RUN: {
+    check: "C-28.1",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
+    translation: "This request did not name the piece of work asking for it, or named one that is not running here. Every fetch this instance makes on its own is traceable to a session somebody opened, because that opening is what authorises it."
+  },
+  CAPTURE_REQUEST_NOT_PUBLIC: {
+    check: "C-28.2",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
+    translation: "What was asked for is not a public web address. What an investigation session may reach is what anybody could reach by typing it into a browser, so an address that is not public on its face is not asked for at all."
+  },
+  CAPTURE_REQUEST_NOT_AN_INQUIRY: {
+    check: "C-28.3",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
+    translation: "A capture is requested under a question, and the thing named here is not one. The question is what the request is accountable to, and a fetch belonging to nothing is a fetch nobody can later account for."
+  },
+  /* THE SPINE, AT THE DOOR. Section 4: *"capturing a document (with provenance
+     preserved) is something the daemon does (sometimes at the suggestion of an
+     AI)"* — so the requester holds no capture write at all and never touches the
+     provenance chain, which is the foundation the trust model rests on. A
+     request arriving WITH bytes, a sha or a provenance hop is a caller trying to
+     be the fetcher, and it is refused by name rather than having its fields
+     quietly dropped: a caller told nothing learns nothing. */
+  CAPTURE_REQUEST_CARRIES_A_CAPTURE: {
+    check: "C-28.4",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
+    translation: "A request asks for a document; it never brings one. The fetch is performed by this instance itself so that where the bytes came from is something the record established rather than something it was told, and a provenance chain anybody could hand us is one anybody could invent."
+  },
+  /* WHAT IS NOT HERE, AND WHY IT WAS REMOVED RATHER THAN KEPT FOR SYMMETRY.
+     The door also refused an incomplete attribution at one point in this item's
+     construction (C-28.5). DRIVING THE FAMILY EXPOSED IT AS A DEFECT: with the
+     same predicate at the door and at the drain, the door's refusal makes the
+     DRAIN'S unreachable, so one of the two codes could never be driven — and a
+     refusal nobody can drive is a refusal nobody can prove fires, which is
+     DEC-49's floor failing in the same way a control that asserts nothing does.
+     Attribution is judged ONCE, at the drain, for the same reason conduct is:
+     the drain is the last point before anything leaves, and a row can outlive
+     the rules the door applied to it. C-28.5 is therefore UNALLOCATED. */
+  /* ---- DEC-47's CONDUCT. ALL OF IT FIRES AT THE DRAIN AND NOWHERE ELSE. ---- */
+  /* CONDUCT 1: legibility. */
+  CAPTURE_CONDUCT_UA_ILLEGIBLE: {
+    check: "C-28.6",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
+    translation: "This instance will not fetch without saying who is asking and how to reach whoever is running it. Being refused honestly is a fact that can be recorded; being admitted by disguise is a claim that could not be defended later."
+  },
+  /* CONDUCT 1b: the member-browser form, which is DELEGATION and not disguise —
+     but only if the member's own agent was actually RECORDED. Inventing one
+     would be the fabricated-Mozilla case wearing BOB-3's clothes, so an
+     unrecorded member agent is refused rather than substituted. */
+  CAPTURE_CONDUCT_UA_UNRECORDED: {
+    check: "C-28.7",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
+    translation: "This request asked to fetch as the member's own browser, and the record does not hold what that browser is. Presenting an agent nobody actually used would be inventing a client rather than speaking as one, so it asks rather than guessing."
+  },
+  /* CONDUCT 2: the purpose token. */
+  CAPTURE_CONDUCT_NO_PURPOSE: {
+    check: "C-28.8",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
+    translation: "Every request this instance makes says what it is for, so a source can tell a first capture from a routine re-check and throttle one without blocking the other. This one names a purpose that is not one of the things it could truthfully be doing."
+  },
+  /* CONDUCT 3: rate. */
+  CAPTURE_CONDUCT_HOST_HELD: {
+    check: "C-28.9",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
+    translation: "The site this would fetch from has asked us to slow down, or has refused us recently, and we are waiting the interval it named. The request is still queued and will be made when the wait is over \u2014 nothing has been lost and nothing needs re-asking."
+  },
+  CAPTURE_CONDUCT_TICK_SPENT: {
+    check: "C-28.10",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
+    translation: "This round of fetching has already been to that site once. Requests are spread out rather than sent in a burst, so this one waits for the next round. It is still queued."
+  },
+  /* ---- THE ATTRIBUTION, composed at the drain, and its own two refusals. ---- */
+  /* DEC-27(b) IS EXPLICIT THAT THE RECORD STATES BOTH — *"the assistant captured
+     this, at Anna's request"* — and this design adds one distinction: the
+     Claude-account principal (WHICH LEVEL of the cascade paid for the reasoning)
+     and the plane-credential principal (whose scope the writes ran under) are
+     DIFFERENT principals. A record naming only one of them is the defect, so the
+     composer REFUSES rather than composing half an attribution, and no capture
+     is performed on a request it cannot account for. */
+  CAPTURE_ATTRIBUTION_ONE_PRINCIPAL: {
+    check: "C-28.11",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
+    translation: "This capture could not be recorded as belonging to anybody in particular, so it was not made. An act that names one party where two acted reads as though a person did something a machine did, or the other way round, and that is worse than a missing document."
+  },
+  /* THE ACT IS VISIBLY THE MACHINE'S BY CONSTRUCTION AND HAS NO CODE, which is
+     the second thing driving this family corrected. REC-2's `token:<class>`
+     stamp is the record's only durable trace of an unattended write, and a
+     capture attributed to a person's name would be this record claiming a member
+     fetched something they never touched. But the composer builds the actor from
+     `MACHINE_AUTHOR_PREFIX` and a literal, so it CANNOT be a person's name: a
+     refusal for that condition would be a gate for something the code cannot
+     produce — the empty gate this project refuses everywhere else — and it would
+     mint a code nobody could ever drive. The property is ASSERTED over the
+     composer's output instead. C-28.12 is therefore UNALLOCATED. */
+  /* PL-15 / D-213 — THE LEAD'S TWO DOOR REFUSALS, ADDED TO THIS FAMILY RATHER
+       THAN TO A NEW ONE. They are enforced inside `is-capture-request`, which is
+       THIS family's governed span, so a row anywhere else would leave two codes
+       in a region whose rows do not name them and arm C would report a site it
+       could not judge. SK-1's rule applies with it: a family is a FLOOR, and
+       minting one for two rows on somebody else's door buys slack for everybody
+       else's walk. C-28.14 and C-28.15 — C-28.12 stays UNALLOCATED (see above),
+       because reusing a number this file records as deleted would make its own
+       history unreadable.
+  
+       WHY THE DOOR AND NOT THE DRAIN. PL-4 moved attribution to the drain because
+       identical predicates at both points made one of two codes undrivable. That
+       reasoning does not reach these: the lead is a claim about the RECORD's own
+       shape, checkable the instant it arrives and never again — the drain has no
+       second opinion about whether a bundle is a question — so checking it at the
+       door refuses the row before it is stored rather than after it was fetched
+       for. Nothing downstream re-checks it, so neither code is shadowed. */
+  CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY: {
+    check: "C-28.14",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
+    translation: "This says the document bears on another question, but what it names is not a question. The whole point of noting a lead is that somebody working that question will be told about it, and there is nobody to tell if it does not name one."
+  },
+  CAPTURE_REQUEST_LEAD_IS_THE_TARGET: {
+    check: "C-28.15",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
+    translation: "This names the same question twice \u2014 the one being worked, and the one the document supposedly bears on. Evidence for the question you are already working is just evidence for it, and flagging it as belonging somewhere else would put a note in front of you saying a document you just asked for is about something other than what you asked."
+  },
+  /* D-491 / IC-276 — THE RENDER FLAG AT THE DOOR, AND IT IS C-83.1's ARGUMENT
+       ONE LAYER UP. op=acquire refuses a `render` that is present and not `true`
+       rather than reading it as absent, because a `render: "yes"` answered with the
+       plain capture files the served shell as the content — the one outcome the
+       whole C-83 family exists to prevent. The same value arriving at THIS door is
+       the same defect with a delay on it, and worse in one respect: the row
+       outlives the call, so the drain fetches under a flag nobody can see was
+       dropped and the request reads afterwards as one that never asked.
+  
+       IN THIS FAMILY AND NOT IN C-83, on PL-15's precedent (its two lead rows) and
+       for PL-15's reason: it is enforced inside `is-capture-request`, which is THIS
+       family's governed span, so a row filed under C-83 would leave a code in a
+       region whose rows do not name it and arm C would report a site it could not
+       judge. C-28.16 — C-28.5 and C-28.12 stay UNALLOCATED, because reusing a
+       number this file records as deleted would make its own history unreadable. */
+  CAPTURE_REQUEST_RENDER_MALFORMED: {
+    check: "C-28.16",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
+    translation: "This asked for the page as a visitor would see it in a form this instance does not recognise. It reads render: true, or nothing at all for the document as the site serves it, so a request for the rendered page is never quietly turned into a request for the page's empty frame. Nothing was queued."
+  },
+  /* D-584 (capture-requests R19; T6, legacy-checks) — THE DRAIN'S OWN HOLD WHEN A FETCH DOES NOT LAND.
+     Every other failure of a fire (not captured, not refused by the source, not a render op=acquire could
+     not do) holds the row `requested` under this code, appends a LOOKED_INDETERMINATE look that is NOT
+     governed, and answers the row in `held`. The code was written to the row and catalogued nowhere, so
+     `#renderHoldReason` answered it with no check and no sentence (it reads this family, so the row reaches the held row at once). It is the drain's condition, so it is
+     this family's (R19: every code the module writes to a row is in C-28 or C-83). The `where` names a
+     region, not the drain whole: the drain's other outcomes are other families' codes read from rows, and a
+     whole-function `where` would conscript them. capture-requests marks it in its `drain` (T6; re-pointed T8,
+     N154). */
+  CAPTURE_FETCH_FAILED: {
+    check: "C-28.17",
+    where: "src/capture-requests/index.mjs drain > is-capture-fetch-failed",
+    translation: "This instance tried to fetch the document and the fetch did not land, so nothing was captured. That says nothing about the document or the site beyond this one attempt, and it is recorded as a look that could not tell. The request is still queued and is tried again on a later round, until it expires."
+  },
+  /* K109 (3), capture-requests R42 (T6, legacy-checks) — THE RETRY'S ONE REFUSAL. `captureRequestRetry`
+     (op=capturerequestretry) returns a request to the queue only when it was refused for the SOURCE's reason
+     (R40) and its target is one the caller can see; every other request is refused by this code and nothing
+     is written. The code is minted nowhere yet: capture-requests builds R42 in T6 (T6-8), in its own module,
+     and the `where` names that site, as a region on this family's REC-71 rule (a region its job marks). The sentence claims
+     nothing about which state the request is in, because an invisible target answers alike. */
+  CAPTURE_REQUEST_NOT_RETRYABLE: {
+    check: "C-28.18",
+    where: "src/capture-requests/index.mjs captureRequestRetry > is-capture-request-retry",
+    translation: "This request cannot be asked again. Only a request the source itself turned away, under a question you can see, goes back into the queue; a request that is still waiting, was captured, has expired, or was refused for any other reason does not. Nothing was changed."
+  }
+});
+for (const row2 of Object.values(CAPTURE_REQUEST_CHECKS2)) Object.freeze(row2);
 var CAPTURE_SOURCE_CHECKS = Object.freeze({
   /* R40, R42: THE SOURCE TURNED THE REQUEST AWAY and said why (401/407 a login, 402 a payment, 403/406 an agent it will
      not admit, 451 another reason). Terminal, and the one refusal a member can answer: supply what the source asked
@@ -74513,8 +74885,8 @@ function sourceReasonOf(status) {
 }
 function renderHoldReason(code) {
   const own3 = (fam) => code && Object.prototype.hasOwnProperty.call(fam, code) ? fam[code] : null;
-  const family = own3(RENDER_CAPTURE_CHECKS) ? "C-83" : own3(CAPTURE_REQUEST_CHECKS) ? "C-28" : own3(CAPTURE_SOURCE_CHECKS) ? "C-108" : null;
-  const row2 = own3(RENDER_CAPTURE_CHECKS) || own3(CAPTURE_REQUEST_CHECKS) || own3(CAPTURE_SOURCE_CHECKS);
+  const family = own3(RENDER_CAPTURE_CHECKS2) ? "C-83" : own3(CAPTURE_REQUEST_CHECKS2) ? "C-28" : own3(CAPTURE_SOURCE_CHECKS) ? "C-108" : null;
+  const row2 = own3(RENDER_CAPTURE_CHECKS2) || own3(CAPTURE_REQUEST_CHECKS2) || own3(CAPTURE_SOURCE_CHECKS);
   return { code: code ?? null, family, check: row2 ? row2.check : null, translation: row2 ? row2.translation : null };
 }
 function captureRequestAttribution(row2) {
@@ -74611,7 +74983,7 @@ var CaptureRequests = class _CaptureRequests {
   captureRequest(a = {}, { viewer = null, caller = null, at: at20 = null } = {}) {
     const args = a && typeof a === "object" ? a : {};
     const refusal19 = (code, detail, extra) => {
-      const row2 = CAPTURE_REQUEST_CHECKS[code];
+      const row2 = CAPTURE_REQUEST_CHECKS2[code];
       return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
     };
     const run = text2(args.run).trim();
@@ -74985,7 +75357,7 @@ var CaptureRequests = class _CaptureRequests {
         };
       };
       const fetchFailed = (q6, r) => {
-        const row2 = CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED;
+        const row2 = CAPTURE_REQUEST_CHECKS2.CAPTURE_FETCH_FAILED;
         const fromSource = r.reason === "SOURCE_REFUSED";
         return {
           ok: false,
@@ -75000,7 +75372,7 @@ var CaptureRequests = class _CaptureRequests {
       for (const q6 of queued) {
         const verdict = this.#conduct(q6, nowMs, hostsThisTick);
         if (!verdict.ok) {
-          const row2 = CAPTURE_REQUEST_CHECKS[verdict.code];
+          const row2 = CAPTURE_REQUEST_CHECKS2[verdict.code];
           settle(q6, {
             terminal: verdict.terminal,
             code: verdict.code,
@@ -75050,7 +75422,7 @@ var CaptureRequests = class _CaptureRequests {
             ...promoted ? { promoted } : {}
           });
         } else if (r.renderCode) {
-          const renderRow2 = RENDER_CAPTURE_CHECKS[r.renderCode];
+          const renderRow2 = RENDER_CAPTURE_CHECKS2[r.renderCode];
           const why = String(r.detail || r.reason || "").slice(0, 400);
           if (renderRow2.check === RENDER_NOT_A_PAGE_CHECK) {
             settle(q6, {
@@ -75185,7 +75557,7 @@ var CaptureRequests = class _CaptureRequests {
         };
     } else {
       const env = this.#env();
-      ua = civicosUserAgent(env.VERSION, env.INSTANCE_NAME, q6.purpose);
+      ua = civicosUserAgent2(env.VERSION, env.INSTANCE_NAME, q6.purpose);
       if (!userAgentIsLegible(ua))
         return {
           ok: false,
@@ -75239,7 +75611,7 @@ var CaptureRequests = class _CaptureRequests {
    *  plane principal, target and host); none is admitted, the fetch goes without, and the source's refusal stands.
    *
    *  WHAT COMES BACK OUT: a filed capture's digest, grade and whether the bytes were already held (R39); a render
-   *  `capture` refused, named by its C-83 code (read off the catalogue, never a spelling invented here) and its own
+   *  `capture` refused, named by its C-83 code (read off `acquisition`'s rows, never a spelling invented here) and its own
    *  word for the hold (D-520); otherwise the reason and, for a source's answer, its status. D-205: a thrown error's
    *  message is never carried, because it can carry a query string and a query string can carry a credential. */
   async #fire(q6, verdict) {
@@ -75286,7 +75658,7 @@ var CaptureRequests = class _CaptureRequests {
       if (out && out.ok && out.unchanged === true && out.capture && out.capture.sha256)
         return { ok: true, sha: out.capture.sha256, grade: null, existed: true, document: null };
       const reason = out && (out.reason || out.error) || `http ${res && res.status}`;
-      const renderCode = q6.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
+      const renderCode = q6.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS2, reason) ? reason : null;
       return {
         ok: false,
         reason,
@@ -75663,7 +76035,7 @@ var CaptureRequests = class _CaptureRequests {
     const request = text2(args.request).trim();
     const row2 = request ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request) : null;
     if (!row2 || row2.state !== "refused" || !SOURCE_REASONS.includes(row2.source_reason) || !this.#inquiryInSight(row2.target, viewer)) {
-      const c = CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_RETRYABLE;
+      const c = CAPTURE_REQUEST_CHECKS2.CAPTURE_REQUEST_NOT_RETRYABLE;
       return {
         ok: false,
         reason: "CAPTURE_REQUEST_NOT_RETRYABLE",
@@ -75762,8 +76134,8 @@ function captureRequestsOps(c, url, body) {
 }
 
 // src/intent/checks.mjs
-var checks_exports17 = {};
-__export(checks_exports17, {
+var checks_exports16 = {};
+__export(checks_exports16, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal12
 });
@@ -77889,6 +78261,7 @@ function intentOf(host, deps) {
 // src/strength/arithmetic.mjs
 var STRENGTH_AXES = Object.freeze(["capture", "connection", "testimony"]);
 var DOCUMENT_AXES = Object.freeze(["capture", "testimony"]);
+var STRENGTH_STATES2 = Object.freeze(["graded", "unrated", "undetermined"]);
 var DEPTH_BOUND = 6;
 var GRADE_RANK2 = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
 function weakestOf(members) {
@@ -78027,8 +78400,8 @@ function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
 }
 
 // src/strength/checks.mjs
-var checks_exports18 = {};
-__export(checks_exports18, {
+var checks_exports17 = {};
+__export(checks_exports17, {
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
   STRENGTH_BAR_CHECKS: () => STRENGTH_BAR_CHECKS,
   VERSION_STRENGTH_CHECKS: () => VERSION_STRENGTH_CHECKS,
@@ -78200,11 +78573,49 @@ CREATE TABLE IF NOT EXISTS group_strength_bar (
   author     TEXT NOT NULL,
   at         TEXT NOT NULL
 );
+
+-- REC-12, R13: the derived pair CACHED per axis for search, one row per
+-- inquiry, written in the promotion that writes its legs. TWO grade columns
+-- and never one, because a single cached letter is exactly the composed scalar
+-- DEC-21 forbids. The STATE beside each grade tells unrated (nothing on the
+-- axis is graded) from undetermined (the walk hit its depth bound) from "never
+-- projected" (no row), which one nullable grade column cannot do. A CACHE:
+-- a leg raised beneath the inquiry does not re-promote it, so a row can be
+-- stale, and strengthOf() is the authority. The grade columns are indexed
+-- because "every inquiry at B or better on capture" must be a seek; the
+-- states are read with a row, never filtered across the corpus.
+CREATE TABLE IF NOT EXISTS strength_cache (
+  bundle_id        TEXT PRIMARY KEY,
+  capture_grade    TEXT,
+  capture_state    TEXT,
+  connection_grade TEXT,
+  connection_state TEXT
+);
+CREATE INDEX IF NOT EXISTS strength_cache_capture ON strength_cache(capture_grade);
+CREATE INDEX IF NOT EXISTS strength_cache_connection ON strength_cache(connection_grade);
 `;
+var STRENGTH_CACHE_TABLE = "strength_cache";
+var STRENGTH_CACHE_FIELDS = Object.freeze({
+  capture: Object.freeze({ table: STRENGTH_CACHE_TABLE, key: "bundle_id", col: "capture_grade" }),
+  connection: Object.freeze({ table: STRENGTH_CACHE_TABLE, key: "bundle_id", col: "connection_grade" })
+});
+var STRENGTH_PURGED_TABLES = Object.freeze([STRENGTH_CACHE_TABLE]);
 var STRENGTH_EXEMPT_TABLES = Object.freeze(["group_strength_bar"]);
+var LEGACY_CACHE_COLS = [
+  "inquiry_capture_strength",
+  "inquiry_capture_state",
+  "inquiry_connection_strength",
+  "inquiry_connection_state"
+];
 function migrateStrength(sql) {
   const bare2 = STRENGTH_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const cols = new Set([...sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name));
+  if (!LEGACY_CACHE_COLS.every((c) => cols.has(c))) return;
+  if ([...sql.exec(`SELECT 1 AS x FROM strength_cache LIMIT 1`)].length) return;
+  sql.exec(`INSERT OR IGNORE INTO strength_cache (bundle_id, capture_grade, capture_state, connection_grade, connection_state)
+            SELECT bundle_id, ${LEGACY_CACHE_COLS.join(", ")} FROM bundles
+             WHERE ${LEGACY_CACHE_COLS.map((c) => `${c} IS NOT NULL`).join(" OR ")}`);
 }
 
 // src/strength/index.mjs
@@ -78234,6 +78645,7 @@ function inquiryReader(k) {
 }
 var Strength = class _Strength {
   #deps;
+  #joined = false;
   constructor({
     storage,
     record,
@@ -78276,6 +78688,13 @@ var Strength = class _Strength {
   }
   migrate() {
     migrateStrength(this.sql);
+  }
+  /** R23 (N137): registers the cache's two grade columns with retrieval as the `capture` and `connection` fields (its
+   *  R62), once per instance; answers retrieval's answers, or null when this instance has registered already. */
+  joinRetrieval(retrieval) {
+    if (this.#joined || !retrieval || typeof retrieval.registerField !== "function") return null;
+    this.#joined = true;
+    return Object.entries(STRENGTH_CACHE_FIELDS).map(([field, relation]) => retrieval.registerField("strength", field, relation));
   }
   #rows(q6, ...a) {
     return [...this.sql.exec(q6, ...a)];
@@ -78469,6 +78888,44 @@ var Strength = class _Strength {
       connection: { grade: s.connection.grade, state: s.connection.state },
       pair: s
     };
+  }
+  /** R13: writes the cache for one bundle, `strength_cache`'s row, from R1–R5 over the legs as they now stand, and
+   *  answers what it wrote (null for a bundle that is not an inquiry, whose row, if a former revision left one, goes:
+   *  only an inquiry has a pair). Called inside the promotion that writes the legs, so the row is never a revision
+   *  behind them. It is still a cache: a leg raised beneath this inquiry does not re-promote it, and a document re-read
+   *  moves the capture ceiling without re-promoting anything (REC-105), so the row can go stale, never weaker than the
+   *  record earns; REC-108 / D-379 ruled to keep it so and mark the fields cached (`query-language`'s `asOf`) rather than
+   *  re-walk every dependent inside a promotion. `strengthOf` is what anything needing the truth calls. */
+  writeProjection(bundleId, isInquiry) {
+    const c = this.cacheOf(bundleId, isInquiry);
+    if (!c) {
+      this.sql.exec(`DELETE FROM ${STRENGTH_CACHE_TABLE} WHERE bundle_id=?`, bundleId);
+      return null;
+    }
+    this.sql.exec(
+      `INSERT INTO ${STRENGTH_CACHE_TABLE} (bundle_id, capture_grade, capture_state, connection_grade, connection_state)
+       VALUES (?,?,?,?,?)
+       ON CONFLICT(bundle_id) DO UPDATE SET capture_grade=excluded.capture_grade, capture_state=excluded.capture_state,
+         connection_grade=excluded.connection_grade, connection_state=excluded.connection_state`,
+      bundleId,
+      c.capture.grade,
+      c.capture.state,
+      c.connection.grade,
+      c.connection.state
+    );
+    return { capture: c.capture, connection: c.connection };
+  }
+  /** R13 (promotion R39): this module's projection in every promotion, run after inquiry's (which writes the legs) in
+   *  the modules' order, inside the one transaction. It adds nothing to the promotion's answer. */
+  project(c) {
+    if (!c || !c.bundleId) return null;
+    this.writeProjection(c.bundleId, c.promotedType === "inquiry");
+    return null;
+  }
+  /** R13, R23 (N137): the row the cache holds for one bundle, as search reads it, or null when it holds none. */
+  cachedOf(bundleId) {
+    return this.#one(`SELECT capture_grade, capture_state, connection_grade, connection_state FROM ${STRENGTH_CACHE_TABLE}
+                       WHERE bundle_id=?`, bundleId);
   }
   /* ============================================================ the pair over a version (R7–R10; PL-14, §12) */
   /* R9: the version's legs as the walk's members, each grade resolved from what the record earns rather than read off
@@ -78934,9 +79391,9 @@ var Strength = class _Strength {
    *  re-collapse the two axes in the one field a reader is most likely to quote. */
   strengthBarSet({ group = null, capture = null, connection = null, author = null } = {}) {
     const who2 = String(author ?? "").trim();
-    const refusal19 = (code, detail) => {
+    const refusal19 = (code, detail, extra) => {
       const row2 = STRENGTH_BAR_CHECKS[code];
-      return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail };
+      return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
     };
     if (!who2 || isMachineIdentity(who2))
       return refusal19(
@@ -78963,7 +79420,7 @@ var Strength = class _Strength {
     }
     for (const [axis, v] of [["capture", capture], ["connection", connection]])
       if (v != null && !BASIS_GRADES.includes(v))
-        return { ...refusal19("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`), axis };
+        return refusal19("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`, { axis });
     if (capture == null && connection == null)
       return {
         ok: false,
@@ -79183,22 +79640,25 @@ function strengthOf(host, deps) {
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host, { record, membership });
     const producingGroup = d.producingGroup || (() => {
-      const f11 = promotionOf(host).fact("producingGroup");
+      const f11 = promotion.fact("producingGroup");
       return f11 && f11.ok ? f11.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, producingGroup });
     instances17.set(host, s);
     s.migrate();
-    record.declarePurge("strength", [], { exempt: STRENGTH_EXEMPT_TABLES });
+    record.declarePurge("strength", [...STRENGTH_PURGED_TABLES], { exempt: STRENGTH_EXEMPT_TABLES });
+    promotion.registerStep("strength", { project: (c) => s.project(c) });
     s.registerGrounded();
   }
+  if (deps && deps.retrieval) s.joinRetrieval(deps.retrieval);
   return s;
 }
 
 // src/sources/checks.mjs
-var checks_exports19 = {};
-__export(checks_exports19, {
+var checks_exports18 = {};
+__export(checks_exports18, {
   SECRET_NOT_RECOGNISED_ANSWER: () => SECRET_NOT_RECOGNISED_ANSWER,
   SOURCES_CHECKS: () => SOURCES_CHECKS,
   badDisclosure: () => badDisclosure,
@@ -79241,15 +79701,15 @@ var SOURCES_CHECKS = Object.freeze({
     translation: "That secret was not recognised, so nothing was recorded. Check it and try again."
   })
 });
-var ROW = SOURCES_CHECKS;
+var ROW2 = SOURCES_CHECKS;
 function noSuchSource(source, extra) {
   return {
     ...extra || {},
     ok: false,
     reason: "NO_SUCH_SOURCE",
     code: "NO_SUCH_SOURCE",
-    check: ROW.NO_SUCH_SOURCE.check,
-    translation: ROW.NO_SUCH_SOURCE.translation,
+    check: ROW2.NO_SUCH_SOURCE.check,
+    translation: ROW2.NO_SUCH_SOURCE.translation,
     detail: "no source this caller may see answers to that id, so nothing was written",
     source: typeof source === "string" ? source.slice(0, 64) : null
   };
@@ -79260,8 +79720,8 @@ function badDisclosure(field, detail, extra) {
     ok: false,
     reason: "BAD_DISCLOSURE",
     code: "BAD_DISCLOSURE",
-    check: ROW.BAD_DISCLOSURE.check,
-    translation: ROW.BAD_DISCLOSURE.translation,
+    check: ROW2.BAD_DISCLOSURE.check,
+    translation: ROW2.BAD_DISCLOSURE.translation,
     detail,
     field
   };
@@ -79272,8 +79732,8 @@ function noEvidence(extra) {
     ok: false,
     reason: "NO_EVIDENCE",
     code: "NO_EVIDENCE",
-    check: ROW.NO_EVIDENCE.check,
-    translation: ROW.NO_EVIDENCE.translation,
+    check: ROW2.NO_EVIDENCE.check,
+    translation: ROW2.NO_EVIDENCE.translation,
     detail: "evidence is a non-empty statement, or a citation {cite}, and none was named, so nothing was written"
   };
 }
@@ -79283,8 +79743,8 @@ function noSightList(detail, extra) {
     ok: false,
     reason: "NO_SIGHT_LIST",
     code: "NO_SIGHT_LIST",
-    check: ROW.NO_SIGHT_LIST.check,
-    translation: ROW.NO_SIGHT_LIST.translation,
+    check: ROW2.NO_SIGHT_LIST.check,
+    translation: ROW2.NO_SIGHT_LIST.translation,
     detail
   };
 }
@@ -79294,8 +79754,8 @@ function consentNotStanding(detail, extra) {
     ok: false,
     reason: "CONSENT_NOT_STANDING",
     code: "CONSENT_NOT_STANDING",
-    check: ROW.CONSENT_NOT_STANDING.check,
-    translation: ROW.CONSENT_NOT_STANDING.translation,
+    check: ROW2.CONSENT_NOT_STANDING.check,
+    translation: ROW2.CONSENT_NOT_STANDING.translation,
     detail
   };
 }
@@ -79304,8 +79764,8 @@ function secretNotRecognised() {
     ok: false,
     reason: "SECRET_NOT_RECOGNISED",
     code: "SECRET_NOT_RECOGNISED",
-    check: ROW.SECRET_NOT_RECOGNISED.check,
-    translation: ROW.SECRET_NOT_RECOGNISED.translation,
+    check: ROW2.SECRET_NOT_RECOGNISED.check,
+    translation: ROW2.SECRET_NOT_RECOGNISED.translation,
     detail: "the secret was not recognised, so nothing was recorded"
   });
 }
@@ -80149,8 +80609,8 @@ function sourcesOps(s, url, body) {
 }
 
 // src/reevaluation/checks.mjs
-var checks_exports20 = {};
-__export(checks_exports20, {
+var checks_exports19 = {};
+__export(checks_exports19, {
   REEVALUATION_ACT_CHECKS: () => REEVALUATION_ACT_CHECKS,
   REEVAL_POLICY_AGE_DAYS: () => REEVAL_POLICY_AGE_DAYS,
   REEVAL_SOURCES: () => REEVAL_SOURCES,
@@ -82384,8 +82844,8 @@ function delivererOf(stored) {
 }
 
 // src/publication/checks.mjs
-var checks_exports21 = {};
-__export(checks_exports21, {
+var checks_exports20 = {};
+__export(checks_exports20, {
   ATTRIBUTION_ACT_CHECKS: () => ATTRIBUTION_ACT_CHECKS,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
@@ -87154,8 +87614,8 @@ function publicationOps(p, url, body) {
 }
 
 // src/standards/checks.mjs
-var checks_exports22 = {};
-__export(checks_exports22, {
+var checks_exports21 = {};
+__export(checks_exports21, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal13
 });
@@ -88002,8 +88462,8 @@ function standardsOf(host, deps) {
 }
 
 // src/conformance/checks.mjs
-var checks_exports23 = {};
-__export(checks_exports23, {
+var checks_exports22 = {};
+__export(checks_exports22, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal14
 });
@@ -92656,8 +93116,8 @@ function migrateConsequences(sql) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports24 = {};
-__export(checks_exports24, {
+var checks_exports23 = {};
+__export(checks_exports23, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at13 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -93710,8 +94170,8 @@ function migrateFilings(sql) {
 }
 
 // src/filings/checks.mjs
-var checks_exports25 = {};
-__export(checks_exports25, {
+var checks_exports24 = {};
+__export(checks_exports24, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf4
 });
@@ -95499,8 +95959,8 @@ function migrateEscalation(sql) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports26 = {};
-__export(checks_exports26, {
+var checks_exports25 = {};
+__export(checks_exports25, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal15
 });
@@ -102858,8 +103318,8 @@ async function publishedRoutes({ op, url, env, stub }) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports27 = {};
-__export(checks_exports27, {
+var checks_exports26 = {};
+__export(checks_exports26, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
@@ -104700,8 +105160,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports28 = {};
-__export(checks_exports28, {
+var checks_exports27 = {};
+__export(checks_exports27, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DISCLOSURE_CHECKS: () => CASE_DISCLOSURE_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
@@ -107548,8 +108008,8 @@ function caseAuthoringOps(c, url, body) {
 }
 
 // src/citation/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports28 = {};
+__export(checks_exports28, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -110375,8 +110835,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique ON tasks(refers_to, kind) WH
 `;
 
 // src/tasks/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
+var checks_exports29 = {};
+__export(checks_exports29, {
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
@@ -113872,8 +114332,8 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 `;
 
 // src/queue/checks.mjs
-var checks_exports31 = {};
-__export(checks_exports31, {
+var checks_exports30 = {};
+__export(checks_exports30, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
@@ -116678,22 +117138,88 @@ function mintRatio({ minted = 0, cited = 0 } = {}) {
 }
 
 // src/run-productions/checks.mjs
-var checks_exports32 = {};
-__export(checks_exports32, {
-  EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS2,
+var checks_exports31 = {};
+__export(checks_exports31, {
+  EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
   SUGGEST_CHECKS: () => SUGGEST_CHECKS2,
   SUGGEST_CHECK_KEYS: () => SUGGEST_CHECK_KEYS,
   SUGGEST_KINDS: () => SUGGEST_KINDS,
-  SUGGEST_LEVELS: () => SUGGEST_LEVELS
+  SUGGEST_LEVELS: () => SUGGEST_LEVELS2
 });
+var SUGGEST_LEVELS2 = Object.freeze(["meaning", "content", "documents", "internet"]);
+var EXTRACT_PROPOSE_ROWS = {
+  NO_PROPOSER: {
+    check: "C-104.1",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
+    translation: "This proposed reading arrived without saying who proposed it, and the record keeps nothing it cannot attribute. Nothing was proposed and no passage was marked citable."
+  },
+  NO_RUN: {
+    check: "C-104.2",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
+    translation: "A machine proposes readings only as part of an investigation a member opened, and this named none. Nothing was proposed."
+  },
+  NO_SUCH_RUN: {
+    check: "C-104.3",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
+    translation: "No investigation you can see is open under that name, so nothing was proposed. A member opens an investigation; the assistant may suggest one, and may not start it."
+  },
+  RUN_NOT_RUNNING: {
+    check: "C-104.4",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
+    translation: "The investigation this names has ended, and an ended investigation takes no new proposals: its work is read against the conditions it ran under, and those stopped when it stopped. Nothing was proposed."
+  },
+  NOT_AN_EXTRACT_RUN: {
+    check: "C-104.5",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
+    translation: "This investigation was not opened to read documents for what they name, so it cannot propose readings. What an investigation may do is set when it is opened and never widened by its work. Nothing was proposed."
+  },
+  NO_MINTS_BOUND: {
+    check: "C-104.6",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
+    translation: "This investigation was opened with no limit on how many passages it may mark citable, and without a limit it may mark none. The member who opens an investigation sets that limit. Nothing was proposed."
+  },
+  MINTS_BOUND_REACHED: {
+    check: "C-104.7",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
+    translation: "This investigation has already marked as many passages citable as it was allowed to, so it proposes nothing more and ends. Nothing was proposed."
+  },
+  NO_PROPOSALS: {
+    check: "C-104.8",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
+    translation: "This named no readings to propose. A look that found nothing is recorded in the investigation's log of what was looked at, where it says which kind of absence it was, and not here. Nothing was proposed."
+  },
+  NOT_A_DOCUMENT: {
+    check: "C-104.9",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-document",
+    translation: "That is not a captured document. A question, a project or an action has no pages or text of its own, so there is nothing in it to read or to point into. Nothing was changed."
+  },
+  NO_BYTES_HELD: {
+    check: "C-104.10",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-document",
+    translation: "The record holds no captured copy of that document, so there is no text in it to read or to point into. That is a fact about what has been captured, never about what the document says. Nothing was changed."
+  },
+  MINTS_BOUND_WOULD_EXCEED: {
+    check: "C-104.11",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-whole-batch",
+    translation: "This batch would mark more passages citable than the investigation has left of its limit, so the whole batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation."
+  },
+  /* K163 (T6): op=extractproposals' unscoped read. run-productions mints this code of its own in place of the
+     store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted
+     nowhere yet: run-productions writes it when it moves `extractProposals` (T6-7) and marks the region. */
+  EXTRACT_NO_SCOPE: {
+    check: "C-104.12",
+    where: "src/run-productions/index.mjs extractProposals > is-extract-scope",
+    translation: "This list of proposed readings names neither an investigation nor a document, so nothing was listed. A list of every proposal in the record would be a scan nobody can act on; name the one you mean."
+  }
+};
 var SUGGEST_CHECK_KEYS = Object.freeze(Object.keys(SUGGEST_CHECKS).filter((k) => SUGGEST_CHECKS[k].check !== "C-27.15"));
-var EXTRACT_PROPOSE_CHECK_KEYS = Object.freeze(Object.keys(EXTRACT_PROPOSE_CHECKS));
+var EXTRACT_PROPOSE_CHECK_KEYS = Object.freeze(Object.keys(EXTRACT_PROPOSE_ROWS));
 var ROWLESS_CODES = Object.freeze(["NO_TARGET", "NO_SUCH_BUNDLE"]);
 var pick = (family, keys) => Object.freeze(Object.fromEntries(keys.map((k) => [k, family[k]])));
 var SUGGEST_CHECKS2 = pick(SUGGEST_CHECKS, SUGGEST_CHECK_KEYS);
-var EXTRACT_PROPOSE_CHECKS2 = pick(EXTRACT_PROPOSE_CHECKS, EXTRACT_PROPOSE_CHECK_KEYS);
+var EXTRACT_PROPOSE_CHECKS = pick(EXTRACT_PROPOSE_ROWS, EXTRACT_PROPOSE_CHECK_KEYS);
 
 // src/run-productions/schema.mjs
 var RUN_PRODUCTIONS_SCHEMA = `
@@ -117047,11 +117573,11 @@ var RunProductions = class {
       );
     const level = str15(args.level);
     const observedAt = str15(args.observed_at);
-    if (kind === "level-empty" && (!level || !SUGGEST_LEVELS.includes(level) || !observedAt))
+    if (kind === "level-empty" && (!level || !SUGGEST_LEVELS2.includes(level) || !observedAt))
       return refusal19(
         "SUGGEST_EMPTY_LEVEL_UNSTATED",
-        `kind=level-empty carries level=<${SUGGEST_LEVELS.join("|")}> and observed_at=<the observation-log address of the search that establishes it>. Absence at one level is not evidence of absence at the next, and an unattributed empty answer is the one shape a later reader cannot check.`,
-        { target, level, observed_at: observedAt, levels: SUGGEST_LEVELS }
+        `kind=level-empty carries level=<${SUGGEST_LEVELS2.join("|")}> and observed_at=<the observation-log address of the search that establishes it>. Absence at one level is not evidence of absence at the next, and an unattributed empty answer is the one shape a later reader cannot check.`,
+        { target, level, observed_at: observedAt, levels: SUGGEST_LEVELS2 }
       );
     const submission = canonicalJson({
       kind,
@@ -117308,7 +117834,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         "this question's version block is in a shape the restricted frontmatter grammar cannot be extended in place, so nothing was written. The grammar has no escapes and a guess would corrupt the document silently.",
         { target, name }
       ));
-    if (!promoted || !promoted.ok) return remember({ ...promoted, code: promoted?.code ?? promoted?.reason, target, name });
+    if (!promoted || !promoted.ok)
+      return remember({
+        ...promoted,
+        ok: false,
+        reason: promoted?.reason ?? promoted?.code,
+        code: promoted?.code ?? promoted?.reason,
+        target,
+        name
+      });
     const readBack = this.basisVersions.basisVersions({ id: target, limit: SUGGEST_VERSIONS_MAX, viewer });
     const recorded = (readBack && Array.isArray(readBack.versions) ? readBack.versions.find((v) => v && v.name === persisted.version.name) : null) || null;
     const fromRecord = {
@@ -117368,7 +117902,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  so a member's later citation of the same passage finds this row); one with no position mints nothing. */
   extractPropose({ run, bundleId, fn, version, cap = null, refs, proposedBy, viewer = null, at: at20 = null, caller = null }) {
     const refuse5 = (code, detail, extra) => {
-      const row2 = EXTRACT_PROPOSE_CHECKS2[code];
+      const row2 = EXTRACT_PROPOSE_CHECKS[code];
       return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
     };
     if (typeof proposedBy !== "string" || !proposedBy.trim())
@@ -117579,7 +118113,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       args.push(bundleArm);
     }
     if (where.length === 0) {
-      const row2 = EXTRACT_PROPOSE_CHECKS2.EXTRACT_NO_SCOPE;
+      const row2 = EXTRACT_PROPOSE_CHECKS.EXTRACT_NO_SCOPE;
       return {
         ok: false,
         reason: "EXTRACT_NO_SCOPE",
@@ -117751,8 +118285,8 @@ function runProductionsOps(p, url, body) {
 }
 
 // src/review/checks.mjs
-var checks_exports33 = {};
-__export(checks_exports33, {
+var checks_exports32 = {};
+__export(checks_exports32, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at19 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -118650,6 +119184,9 @@ function reviewOps(r, url, body) {
 // src/skilldoctrine.mjs
 var skilldoctrine_exports = {};
 __export(skilldoctrine_exports, {
+  ACTION_RULES: () => ACTION_RULES,
+  ACTION_SECTION: () => ACTION_SECTION,
+  ACTION_SOURCE: () => ACTION_SOURCE,
   CLAUSES: () => CLAUSES,
   COMPOSITION: () => COMPOSITION,
   CONTROL_FLOW_AUTHORITY: () => CONTROL_FLOW_AUTHORITY,
@@ -118667,6 +119204,8 @@ __export(skilldoctrine_exports, {
   LICENSES_NOTHING: () => LICENSES_NOTHING,
   LOOP_TERMINATION_EVIDENCE: () => LOOP_TERMINATION_EVIDENCE,
   PERMITTED_AUTO_COMPOSITION: () => PERMITTED_AUTO_COMPOSITION,
+  PLANNING_ACT: () => PLANNING_ACT,
+  PLANNING_ACTS: () => PLANNING_ACTS,
   PROHIBITIONS: () => PROHIBITIONS,
   PROHIBITION_SET_IS_STANDING: () => PROHIBITION_SET_IS_STANDING,
   SEQUENCING_ALSO_NAMED_IN: () => SEQUENCING_ALSO_NAMED_IN,
@@ -118676,6 +119215,7 @@ __export(skilldoctrine_exports, {
   SURVEY_SOURCE: () => SURVEY_SOURCE,
   TABLE_SOURCE: () => TABLE_SOURCE,
   absenceByLevel: () => absenceByLevel,
+  actionPlanningLayer: () => actionPlanningLayer,
   controlFlowAuthority: () => controlFlowAuthority,
   judgementLayers: () => judgementLayers,
   reportsAs: () => reportsAs
@@ -118971,6 +119511,130 @@ var PERMITTED_AUTO_COMPOSITION = {
      rather than left to be inferred from the prohibition it sits under. */
   stops_at: "the first new word. A connective sentence written to make the excerpts read well is generated wording, and it is the first prohibition's subject however small it is."
 };
+var ACTION_SOURCE = "docs/architecture/BIO_Action_v0_1.md";
+var ACTION_SECTION = "\xA74";
+var ACTION_RULES = [
+  {
+    rule: 1,
+    heading: "Humans decide.",
+    sentences: [
+      "A member takes every act that commits the group: declaring a standard, determining, assessing a consequence, choosing an option, approving, sending, advancing a stage, resolving, closing.",
+      "The machine may find, compare, compute, propose and draft, always labelled as machine work, and never does any of these acts (DEC-24, DEC-27; Roadmap \xA710)."
+    ]
+  },
+  {
+    rule: 2,
+    heading: "The gate is at the outward act, not the reasoning (DEC-26), and a member may pass it openly (Bob, 2026-09-30).",
+    sentences: [
+      "A plan may rest on premises not yet established, shown as hunch debt.",
+      "An action that asserts a breach is refused by default unless it rests on a live noncompliant determination; a member may proceed anyway only by an attributed act with a stated reason, and the action and everything prepared from it carry that disclosure.",
+      "An action that seeks evidence (a records request, a request for comment) is never gated."
+    ]
+  },
+  {
+    rule: 3,
+    heading: "No significance, no score.",
+    sentences: [
+      "Whether a matter warrants action, and how urgently, is a member's judgment, recorded only in acts and their reasons: a declined option's reason, an escalation stage declined with a reason.",
+      "No field holds significance, severity, priority or a score."
+    ]
+  },
+  {
+    rule: 6,
+    heading: "Addressees are roles, not people.",
+    sentences: [
+      "An action is addressed to a government office by role and body, a reporter or outlet, an organisation or another civic group by role and organisation, or a described audience; never a private individual (Requirement 6).",
+      "An action asserting a breach is addressed to an office."
+    ]
+  },
+  {
+    rule: 8,
+    heading: "No catalogue, no budgets.",
+    sentences: [
+      "Suggested options come from reasoning over the matter and from the group's own earlier plans, never from a fixed list; the plan holds no costs, assignees or hours (Bob, 2026-09-29)."
+    ]
+  },
+  {
+    rule: 9,
+    heading: "The doctrine's limits.",
+    sentences: [
+      "CivicOS takes no position on what policy should be (Operational Principle 1).",
+      "Political accountability asks officials to act on a breach, requests oversight and audits, testifies, and supports legislation that restores or enforces an existing requirement; lobbying is an option only for that.",
+      "Policy advocacy and candidate support are not actions."
+    ]
+  },
+  {
+    rule: 10,
+    heading: "The work varies, not the person.",
+    sentences: [
+      "A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which shapes what the assistant suggests and nothing else.",
+      "No attribute of a person gates, filters or orders anything (DEC-17, DEC-54)."
+    ]
+  },
+  /* R29 (K660): the planning skill's own addition, the hostile-response branch. */
+  {
+    rule: 12,
+    heading: "Hope for good faith; prepare for opposition",
+    sentences: [
+      "People are presumed to want better outcomes, and a bad actor is identified by evidence, never by role.",
+      "every plan is checked for a branch that answers a hostile response"
+    ]
+  },
+  {
+    rule: 13,
+    heading: "The venue sets the standard of evidence",
+    sentences: [
+      "No action is refused for its evidence grade.",
+      "Where a filing rests on a grade the opposition could contest, it says so, so counsel and members can prepare (rule 12)."
+    ]
+  }
+];
+var PLANNING_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "optionpropose", defined_by: "action-plans R11" }),
+    Object.freeze({ id: "standardpropose", defined_by: "standards R9" }),
+    Object.freeze({ id: "comparisonpropose", defined_by: "conformance R12" }),
+    Object.freeze({ id: "theorypropose", defined_by: "filings R14" }),
+    Object.freeze({ id: "communicationprepare", defined_by: "filings R23" })
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "optionadopt", defined_by: "action-plans R11" }),
+    Object.freeze({ id: "standardadopt", defined_by: "standards R9" }),
+    Object.freeze({ id: "determine", defined_by: "conformance R12" }),
+    Object.freeze({ id: "filingapprove", defined_by: "filings R6" }),
+    Object.freeze({ id: "filingsent", defined_by: "filings R7" })
+  ])
+});
+var PLANNING_ACT = PLANNING_ACTS.proposes[0].id;
+function actionPlanningLayer(catalog) {
+  const byId = new Map((Array.isArray(catalog) ? catalog : []).filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  if (!byId.has(PLANNING_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${PLANNING_ACT} act, the one act a run in the plan mode proposes plan options through, so this layer carries no doctrine for work no run can do; a plan-mode run is refused before any turn.`
+  };
+  const read2 = (a) => {
+    if (!byId.has(a.id))
+      throw new Error(`the action planning layer names the act ${a.id} (${a.defined_by}) as the plane publishes it and invents none: op=affordances publishes the planning act but not this one`);
+    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
+  };
+  return {
+    load_when: "the run proposes plan options, standards, comparisons, candidate theories or communication drafts for an action or a plan, in the plan mode",
+    sourcing: "authored",
+    body: {
+      rules: ACTION_RULES,
+      source: ACTION_SOURCE,
+      section: ACTION_SECTION,
+      acts: {
+        proposes: PLANNING_ACTS.proposes.map(read2),
+        leaves_to_a_member: PLANNING_ACTS.leaves_to_a_member.map(read2)
+      },
+      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a proposal is stored apart and labelled as machine work, and the act a member takes on it refuses a machine. A run ignoring every word here gets past nothing."
+    }
+  };
+}
 var ABSENCE_FACTS = {
   meaning: {
     fact: "nothing derived",
@@ -118991,7 +119655,7 @@ var ABSENCE_FACTS = {
 };
 var FACTS_SOURCE = "docs/architecture/BIO_Content_Framework_v0_10.md";
 function reportsAs(level) {
-  return SUGGEST_LEVELS.find((s) => s === level || s === level + "s") ?? null;
+  return SUGGEST_LEVELS2.find((s) => s === level || s === level + "s") ?? null;
 }
 var LICENSES_A_CONCLUSION = Object.keys(OBSERVATION_STATES).filter((s) => DEFINITIVE_STATES.has(s));
 var LICENSES_NOTHING = Object.keys(OBSERVATION_STATES).filter((s) => !DEFINITIVE_STATES.has(s));
@@ -119104,7 +119768,7 @@ function judgementLayers() {
         gate: GATE_ADDRESS,
         ruled_in: SEQUENCING_SOURCE,
         restated_in: SEQUENCING_ALSO_NAMED_IN,
-        note: "this layer is INSTRUCTION and it holds no flag. The mode that is deployed is read from FL-3's landed table at the address above, which is CODE and is the first row every run takes; this text neither restates that flag nor could change it. What it adds is the REASON for the order and the enabling condition for the second mode, both of which are facts a run should be able to state and neither of which any code can be asked to hold."
+        note: "this layer is INSTRUCTION and it holds no flag of its own. The mode that is deployed is read from FL-3's landed table at the address above, which is CODE and is the first row every run takes, and by the plane's open from the run's rules, whose record this layer carries unchanged; this text neither restates those flags nor could change them. What it adds is the REASON for the order and the enabling condition for the second mode, both of which are facts a run should be able to state and neither of which any code can be asked to hold."
       }
     },
     judgement_boundary: {
@@ -119220,14 +119884,9 @@ var Store = class _Store extends DurableObject {
       const cap = this.earnedBasisRegistry(null, [...new Set(legs.map((l) => l.target_id))])?.earned?.capture || {};
       return legs.map((l) => _Store.#capturedAt(l.grade, cap[l.target_id], l.target_id));
     });
-    retrieval.registerProjectionDecoration("legacy-store", (row2, { viewer, nowMs }) => {
-      const type = normalizeType(row2.object_type);
-      const migrated = type === "inquiry" ? this.#surfacedIn(row2.bundle_id) : null;
-      return migrated ? { surfaced_in: migrated } : {};
-    });
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     ratificationOf(ctx);
-    strengthOf(ctx);
+    strengthOf(ctx, { retrieval });
     biasOf(ctx, { env });
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
     reviewOf(ctx);
@@ -119267,22 +119926,6 @@ var Store = class _Store extends DurableObject {
     const ADDITIVE_COLUMNS3 = [
       ["manifest", "writer", "TEXT"],
       ["manifest", "operation", "TEXT"],
-      /* REC-12: the derived strength PAIR, cached per axis. TWO grade columns
-         and never one, because a single cached letter is exactly the composed
-         scalar DEC-21 forbids and a column is where one would grow. The STATE
-         column beside each grade is what tells `unrated` (DEC-18's boundary
-         case — nothing on this axis is graded) from `undetermined` (R3 — the
-         walk hit its depth bound) from "never projected", which one nullable
-         grade column cannot do. Additive and nullable: a bundle that is not an
-         inquiry simply has none, and an inquiry promoted before these existed
-         has none until its next promotion re-derives them. THE COLUMN IS A
-         CACHE AND strengthOf() IS THE AUTHORITY — a stored strength goes stale
-         the moment a leg beneath it is raised. */
-      ["bundles", "inquiry_capture_strength", "TEXT"],
-      ["bundles", "inquiry_capture_state", "TEXT"],
-      ["bundles", "inquiry_connection_strength", "TEXT"],
-      ["bundles", "inquiry_connection_state", "TEXT"],
-      ["bundles", "inquiry_basis_count", "INTEGER"],
       /* REC-18 / DATA-MODEL D1(b): the registry ENTITY this question is about,
          and it is the whole of the subject-entity linkage — one nullable
          projection column, no new table, no join row, no ordinal.
@@ -119302,22 +119945,7 @@ var Store = class _Store extends DurableObject {
          NOT INDEXED, on REC-17's stated reasoning: it is read BY bundle_id
          (the primary key) while building a write's earned registry, and no
          seek anybody makes is on its value. */
-      ["bundles", "inquiry_subject_entity", "TEXT"],
-      /* REC-17 / P-64: the REVERSE of a `supersedes` edge, so R7's obligation
-         is a LOOKUP and not a graph walk. `refs` answers "what does this
-         document supersede" because the edge lives on the SUPERSEDING
-         document; the question the obligation asks is the other one — "has
-         anything superseded THIS?" — and asking it of `refs` means scanning
-         for a target rather than reading a row. The column holds the
-         superseding ids, comma-joined and sorted, NULL when nothing supersedes
-         this bundle. Additive and nullable like every column above: a bundle
-         promoted before this existed has none until the boot pass below or its
-         next promotion fills it.
-         DELIBERATELY NOT INDEXED, and that is not an oversight: this column is
-         read BY bundle_id, which is the primary key, so an index on its value
-         would serve no seek anybody makes. REC-12's state columns are
-         unindexed for the same reason and its comment says so. */
-      ["bundles", "inquiry_superseded_by", "TEXT"]
+      ["bundles", "inquiry_subject_entity", "TEXT"]
       /* REC-42: `inquiry_basis.ground` is inquiry's migration now (its R36). */
       /* REC-82: `inquiry_basis.content_id` is inquiry's migration now (its R36). */
     ];
@@ -119357,8 +119985,6 @@ var Store = class _Store extends DurableObject {
     for (const [legacy, canonical] of Object.entries(LEGACY_TYPE_ALIASES))
       this.sql.exec(`UPDATE bundles SET object_type=? WHERE object_type=?`, canonical, legacy);
     retrievalOf(this.ctx).migrate();
-    for (const c of ["inquiry_capture_strength", "inquiry_connection_strength"])
-      this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
     recordOf(this.ctx).migrate();
     recordOf(this.ctx).seedMintLedger(_Store.#MINT_LEDGER_LIVE);
     this.#reindexProjectSight();
@@ -119409,22 +120035,6 @@ var Store = class _Store extends DurableObject {
   }
   frontier(a) {
     return retrievalOf(this.ctx).frontier(a);
-  }
-  /** REC-173 (§11 item 5, BOB #30, clause (c)): the `surfaced_in` of a question whose creation was a server-verified
-   *  MIGRATION REPLAY — surfaced in the Drive era, not inside a run on this plane — or null. The rest of `surfaced_in`
-   *  is ai-runs' decoration (its R27); this arm is inquiry's (map §5.8) and answers here until inquiry is extracted. */
-  #surfacedIn(bundleId) {
-    const mig = this.#one(
-      `SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`,
-      bundleId
-    );
-    return mig ? {
-      recorded: false,
-      stated: "not recorded (migrated from the Drive era)",
-      run: null,
-      lens: null,
-      migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at }
-    } : null;
   }
   /* The producer-side arm for the connection-derive consumer: a resolve that
      dirtied an entity reconciles the alarm to include the sweep's wake. Mirrors
@@ -120344,7 +120954,6 @@ Mitigation: ${mit}
     const testimony = pkg[TESTIMONY_PATH] || null;
     const surfacing = !cur && promotedType === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim() ? { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() } : null;
     this.#reindexProjectSight(bundleId);
-    this.#writeStrengthProjection(bundleId, isInquiry);
     const testimonyWrote = pkg[TESTIMONY_PATH] ? this.#testimonyWithin(bundleId, pkg) : null;
     const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
     return {
@@ -120917,64 +121526,6 @@ Mitigation: ${mit}
   /* R14: one leg's capture letter against what its target earns: inquiry's `legCapped`. */
   static #capturedAt(...a) {
     return legCapped(...a);
-  }
-  /* REC-12: the projection CACHE, per axis, written inside promote's
-       transaction right after the inquiry_basis projection it derives from.
-  
-       A CACHE AND NEVER THE AUTHORITY, and the distinction is not decoration: a
-       stored strength goes stale the moment a leg anywhere beneath it is raised
-       (`resolutions` grades are explicitly IMPROVABLE, and an inquiry this one
-       rests on can be re-promoted without touching this row). It exists so that
-       "every inquiry at B or better on an axis" is an indexed query rather than
-       a scan of every basis in the store; anything that must be RIGHT calls
-       strengthOf().
-  
-       REC-108 / D-379 RULED ON THIS COLUMN AND LEFT IT EXACTLY AS IT IS, which is
-       worth stating HERE because this is where the next reader will come looking.
-       REC-105 opened a SECOND path to staleness — a DOCUMENT being re-read moves
-       the registry ceiling `strengthOf()` now caps by, so this row can hold a
-       letter STRONGER than the record earns, without any member acting on the
-       question. D-379 rowed two answers: re-walk the dependents at the re-read, or
-       make every route into this column STATE what it is a value of. The second
-       was taken. The first would have made this column fresh along the NEW path
-       and left it stale along REC-12's ORIGINAL one (a leg raised beneath this
-       inquiry still does not re-promote it, and nothing re-projects an ancestor) —
-       a cache fresh one way and stale another, about which the one honest sentence
-       below can no longer be said — and it would have put an unbounded fan-out
-       (every `inquiry_basis.target_id` dependent, each needing a full walk) inside
-       op=promote's transaction. `query.mjs`'s `CACHED_FIELDS` carries the ruling
-       and the evidence; the answer a member reads now names this column, names
-       `op=inquirystrength` as the authority, and says which of the three routes it
-       was reached by. NOTHING HERE MOVED, and that is the disposition, not an
-       omission.
-  
-       PER AXIS, in two columns and never one: a single cached letter is exactly
-       the composed scalar DEC-21 forbids, and a column is where one would grow.
-       The STATE column beside each grade is what keeps `unrated` distinguishable
-       from `undetermined` and both distinguishable from "never projected", which
-       one nullable grade column cannot do.
-  
-       REC-18 adds `inquiry_subject_entity` to this write, and it is NOT a cache in
-       the same sense as the four columns above: it is a straight projection of one
-       authored scalar, like every S-10 column, and it goes stale only when the
-       document changes — which re-promotes and re-writes it. It is written HERE
-       rather than in #writeProjection because it is inquiry-only and this is the
-       inquiry projection writer; #writeProjection runs for every object type and
-       would have to learn a type test to hold it. */
-  #writeStrengthProjection(bundleId, isInquiry) {
-    if (!isInquiry) return null;
-    const s = this.strengthOf(bundleId);
-    this.sql.exec(
-      `UPDATE bundles SET inquiry_capture_strength=?, inquiry_capture_state=?,
-              inquiry_connection_strength=?, inquiry_connection_state=?
-         WHERE bundle_id=?`,
-      s.capture.grade,
-      s.capture.state,
-      s.connection.grade,
-      s.connection.state,
-      bundleId
-    );
-    return s;
   }
   /* Eviction. The store is append-only by doctrine, so removal is deliberate,
        never implicit, and admin-only at the control plane. Two modes: one bundle
@@ -121917,8 +122468,8 @@ Mitigation: ${mit}
 };
 
 // src/control-plane/checks.mjs
-var checks_exports34 = {};
-__export(checks_exports34, {
+var checks_exports33 = {};
+__export(checks_exports33, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   BOOTSTRAP_CHECKS: () => BOOTSTRAP_CHECKS,
@@ -122578,6 +123129,18 @@ function controlPlaneRoutes(ctx, url, body) {
     )
   };
 }
+
+// src/ai-runs/checks.mjs
+var checks_exports34 = {};
+__export(checks_exports34, {
+  AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
+  AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
+  AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
+  AI_RUN_OPEN_CHECKS: () => AI_RUN_OPEN_CHECKS,
+  AI_RUN_OWN_CHECKS: () => AI_RUN_OWN_CHECKS,
+  AI_RUN_PLAN_CHECKS: () => AI_RUN_PLAN_CHECKS,
+  SURFACE_RUN_CHECKS: () => SURFACE_RUN_CHECKS
+});
 
 // src/signpage.mjs
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>CivicOS signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no CivicOS code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>CivicOS signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a CivicOS private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When CivicOS goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
@@ -124621,44 +125184,44 @@ var json4 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), nul
 });
 var MODULE_CHECK_FILES = [
   checks_exports,
-  checks_exports15,
+  checks_exports34,
   checks_exports13,
   checks_exports5,
-  checks_exports16,
+  checks_exports15,
   credentials_exports,
   checks_exports7,
+  checks_exports27,
   checks_exports28,
-  checks_exports29,
-  checks_exports23,
+  checks_exports22,
   themes_exports,
-  checks_exports24,
+  checks_exports23,
   extent_exports,
   checks_exports14,
-  checks_exports34,
+  checks_exports33,
   checks_exports11,
-  checks_exports26,
-  checks_exports6,
   checks_exports25,
+  checks_exports6,
+  checks_exports24,
   inquiry_exports,
-  checks_exports17,
+  checks_exports16,
   checks_exports3,
   checks_exports9,
   checks_exports12,
   checks_exports4,
   checks_exports8,
-  checks_exports21,
-  checks_exports31,
-  checks_exports27,
-  checks_exports2,
   checks_exports20,
-  checks_exports10,
-  checks_exports33,
-  checks_exports32,
-  skilldoctrine_exports,
+  checks_exports30,
+  checks_exports26,
+  checks_exports2,
   checks_exports19,
-  checks_exports22,
+  checks_exports10,
+  checks_exports32,
+  checks_exports31,
+  skilldoctrine_exports,
   checks_exports18,
-  checks_exports30
+  checks_exports21,
+  checks_exports17,
+  checks_exports29
 ];
 var DEC49_ROWS = null;
 function dec49Row(code) {
