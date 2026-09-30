@@ -1,6 +1,6 @@
 # capture (T18)
 
-**Status** · session_01F2hRC49z1gH7T1KRC7gwwg · depth 2 · WORKING · handled B4
+**Status** · session_01F2hRC49z1gH7T1KRC7gwwg · depth 2 · RUNNING until 2026-09-30T21:19:31Z (node --test test/m/**/*.test.mjs (whole, after the split's deletion)) · handled B4
 
 ## J1 · QUESTION
 
