@@ -1,6 +1,6 @@
 # BOB to ratification (T16)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
