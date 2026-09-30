@@ -39,7 +39,7 @@ test("R31: every op spec is well-formed {classes, machineClasses?, mutating}: cl
   const log = [];
   const hooks = defaultHooks(log);
   const callers = [[env.ADMIN_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }], [env.DAEMON_TOKEN, {}], [S.founder, {}], [S.ann, {}], [undefined, {}]];
-  const RENAMED = { inbox: "inboxlist", publish: "publishcase" };
+  const RENAMED = { inbox: "inboxlist", publish: "publishcase", inboxpull: "inboxpullfile" };
   for (const op of keys) {
     let reached = false;
     for (const [token, params] of callers) {

@@ -57,6 +57,8 @@ import * as M_RETRIEVAL from "../retrieval/checks.mjs";
 import * as M_REVIEW from "../review/checks.mjs";
 import * as M_RUN_PRODUCTIONS from "../run-productions/checks.mjs";
 import * as M_SKILLDOCTRINE from "../skilldoctrine.mjs";
+/* N364: sources' rows (C-121), so `op=knockerconsent`'s refusals and a forwarded one carry theirs. */
+import * as M_SOURCES from "../sources/checks.mjs";
 import * as M_STANDARDS from "../standards/checks.mjs";
 import * as M_STRENGTH from "../strength/checks.mjs";
 import { liveToken } from "../tokens.mjs";
@@ -65,7 +67,7 @@ import { setupPage } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 import { normalizeAddress } from "../subresources.mjs";
 import { Store } from "../store.mjs";
-import { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION } from "./ops.mjs";
+import { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION } from "./ops.mjs";
 
 const SCRATCH = "scratch";
 /* REC-22: the ONE namespace the public read path answers from. An instance has
@@ -604,15 +606,21 @@ function aiTaskScope(cred, op, spec) {
  *
  * WHY THE BARE `admin` VIEWER AND NOT `member:admin` OR `class:admin`.
  * `viewerPredicate` compiles bare `admin` UNFILTERED — its root-administrator
- * spelling — which is the founder's standing exactly. `member:admin` cannot
- * carry it: the predicate's administrator arm reads a `members` row the founder
- * never has, and in `store=scratch` (where acts are addressed while sessions
- * live in `bio`) nothing was ever claimed either, so no store-side check could
- * find the founder. `class:admin` would stamp a MACHINE class on a human's
- * session — the inner URL lying about who is asking, which REC-29 closed. And
- * the founder is told apart by the session ROLE, never by the folded name: a
- * member ENROLLED with the id `admin` has role `member:admin` and stays an
- * ordinary member here.
+ * spelling — which is the founder's standing exactly. CORRECTED 2026-09-30 (T16,
+ * N357; membership R43, MEMBERSHIP #9 J2 (2)): this read "`member:admin` cannot
+ * carry it", because the predicate's administrator arm read a `members` row the
+ * founder never has. Since N357 the predicate treats `member:admin` as the
+ * founder's viewer too, seeing every bundle as bare `admin` does, so both
+ * spellings now carry the founder's sight and the choice between them no longer
+ * changes what the founder sees. The viewer stays bare `admin`: it is the
+ * root-administrator spelling the predicate has always compiled unfiltered, and
+ * `identity` beside it carries `member:admin` for the positional questions.
+ * `class:admin` would stamp a MACHINE class on a human's session — the inner URL
+ * lying about who is asking, which REC-29 closed. And the founder is told apart
+ * by the session ROLE, never by the folded name: a member ENROLLED with the id
+ * `admin` has role `member:admin`, which since N357 reads with the founder's
+ * sight; `memberAdd` refuses that id (C-55.1), so only a store holding such a
+ * member from before REC-132 reserved it is affected, and op=audit reports one.
  *
  * SCOPE, AS IT WAS (IC-147) AND AS IT IS (IC-149). IC-147 made this the viewer
  * for the two case-document reads only, and said why the rest waited: several
@@ -781,7 +789,7 @@ const MODULE_CHECK_FILES = [
   M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_CONTROL_PLANE, M_ENTITIES,
   M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
   M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_QUEUE, M_RATIFICATION, M_RECORD_CORE, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
-  M_SKILLDOCTRINE, M_STANDARDS, M_STRENGTH];
+  M_SKILLDOCTRINE, M_SOURCES, M_STANDARDS, M_STRENGTH];
 let DEC49_ROWS = null;
 function dec49Row(code) {
   if (DEC49_ROWS === null) {
@@ -1306,6 +1314,30 @@ async function replayVerdict(env, storeName, text, viaSession, cls) {
            provenanceCapture: typeof b.provenanceCapture === "string" ? b.provenanceCapture.slice(0, 64) : null };
 }
 
+/* N364 (sources R11): `op=knockerconsent`, a knocker's consent (or its withdrawal) by their knocker secret, with no
+   account. Pinned to `bio` (R5), as the knock is. The stamps are the knock's: the connecting address as `source` and the
+   instant as `now`, set here and read by `sources` after the body, so a caller's own copies never reach it; only the
+   four fields the act takes are passed on. A rate refusal answers as the knock's does (429, with its sentence); every
+   other failure is the module's one `SECRET_NOT_RECOGNISED`, relayed whole at one status. */
+async function knockerConsent(req, store) {
+  if (req.method !== "POST") return json({ ok: false, error: "knockerconsent is a POST" }, 405);
+  let b = null;
+  try { b = JSON.parse((await req.text()) || "{}"); } catch { b = null; }
+  if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
+  const source = req.headers.get("cf-connecting-ip") || "unknown";
+  const out = await doAnswer(store.fetch(new Request(
+    `http://do/knockerconsent?source=${encodeURIComponent(source)}&now=${Date.now()}`,
+    { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ knockerSecret: b.knockerSecret, entry: b.entry, audience: b.audience,
+                             ...(b.withdraw !== undefined ? { withdraw: b.withdraw } : {}) }) })));
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent("knockerconsent", out.correlation);
+  const rec = out.result && typeof out.result === "object" ? out.result : {};
+  if (rec.ok !== true)
+    return json({ ok: false, ...rec }, rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL" ? 429 : 403);
+  return json({ ...rec, ok: true }, 200);
+}
+
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
@@ -1376,8 +1408,16 @@ export function makeFetch(hooks = {}) {
     }
 
     const path = url.pathname.replace(/^\/api\/?/, "/");
-    const op = url.searchParams.get("op") || path.slice(1) || "selftest";
-    const spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
+    let op = url.searchParams.get("op") || path.slice(1) || "selftest";
+    let spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
+    /* R36 (N364; capture R32, R65): a knock resolved to `pulled` is R65's pull, so it is routed as `op=inboxpull` before
+       any gate: every gate, stamp and answer it meets is the pull's, the promotion included, and no pull files a capture
+       without its bundle. The body is read from a copy; the other statuses stay `inboxresolve`'s. */
+    if (op === "inboxresolve" && req.method === "POST") {
+      let b = null;
+      try { b = JSON.parse(await req.clone().text()); } catch { b = null; }
+      if (b && typeof b === "object" && !Array.isArray(b) && b.status === "pulled") { op = "inboxpull"; spec = OPS.inboxpull; }
+    }
     /* DEC-49 REGION is-unknown-op
        D-278 (C-69.1). `error` stays "unknown op" BYTE-IDENTICAL and stays the
        FIRST key after `ok`: civicos-ui's `queueAbsent` reads the sentence to tell
@@ -1484,6 +1524,7 @@ export function makeFetch(hooks = {}) {
           commentBody === null ? undefined : { method: "POST", body: commentBody }));
         return reviewAnswer(out, op);
       }
+      if (op === "knockerconsent") return knockerConsent(req, stub);
       /* The public ops whose handlers are their modules' (membership, publication, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
     }
@@ -1738,8 +1779,10 @@ export function makeFetch(hooks = {}) {
        ratify committer that writes the published_bundles row. Two different
        things with one obvious name, so the public name and the internal name
        differ here exactly as they do for op=inbox. */
+    /* R36 (N364): `op=inboxpull` is the pull with its promotion, the store door's own route (`dispatch.mjs`), beside
+       capture's `inboxpull`, which files the capture alone. */
     const DO_PATH = { inbox: "inboxlist", memberlist: "memberlist", signerlist: "signerlist",
-                      publish: "publishcase" };
+                      publish: "publishcase", inboxpull: "inboxpullfile" };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
     /* REC-132 / D-422: `identity` — WHO is asking, beside `viewer`'s what they may see —
@@ -2133,6 +2176,10 @@ export function makeFetch(hooks = {}) {
         /* N345 (case-authoring R32): the ceremony's read names a project and its members, read exactly as op=publish
            reads them, so it takes publish's stamp. */
         || op === "publishtensions"
+        /* N364 (case-authoring R34): the ceremony's pre-flight is op=publish run and rolled back, so it takes publish's
+           stamp; (sources R1, R5, R9) a source's reads answer by the caller's sight, and a machine credential reads
+           nothing there; (R36) the pull's promotion is asked of the puller's sight, op=promote's `actorViewer`. */
+        || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -2568,7 +2615,9 @@ export function makeFetch(hooks = {}) {
     /* N345 (case-authoring R32): the ceremony's read asks the owner test op=publish asks, of the same `author`, so it
        takes publish's stamp by publish's expression (`STATE_ACTIONS`' author above), in a statement of its own so the
        span pinned above is not lengthened; a caller's `author` is overwritten. */
-    if (op === "publishtensions")
+    /* N364 (case-authoring R34): the pre-flight asks what op=publish asks, of the same `author`, so it takes publish's
+       stamp by publish's expression, in the same statement of its own. */
+    if (op === "publishtensions" || op === "publishpreflight")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* T6-13 (reevaluation R15, R16): the member who adopts a newer version, keeps the earlier one, or records a
        re-evaluation, stamped by the version acts' expression (`VERSION_ACTIONS`' author above), which reevaluation reads
@@ -2740,6 +2789,16 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (ROSTER_SELF_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* N364: a member's own key (membership R89, R90), capture's member acts (R65, R68, R69) and sources' acts (R2, R6,
+       R7) each take the server's `by` by the roster acts' expression, in a statement of their own for the reason just
+       given; each module reads it from the query after the body, so a caller's `by` names nobody. A bearer, where an
+       op admits one, stamps `class:<cls>`, which names no member. */
+    if (OWN_KEY_ACTIONS.includes(op) || CAPTURE_MEMBER_ACTIONS.includes(op) || SOURCE_ACTIONS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* R36: the pull's promotion carries the session's POSITIONAL identity as op=promote's `actorIdentity` (POSITIONAL_ACTS'
+       expression); only a session reaches the op (its row's `machineClasses: []`). */
+    if (op === "inboxpull")
+      inner.searchParams.set("identity", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's
        parameters were copied, so a caller's `by` is overwritten rather than honoured, and the store asks the roster
        for an active administrator (C-64.5). `origin` is stamped the same way: the address the administrator's
@@ -3551,6 +3610,10 @@ export function makeFetch(hooks = {}) {
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);
+    /* R36 (capture R65): the pull's refusals carry their status (400, 403, 404, 409, 502, 503), which its answer takes. */
+    const hinted = body.result?.status;
+    if (op === "inboxpull" && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
+      return json({ ...body, store: storeName, tokenClass: cls }, hinted);
     return json({ ...body, store: storeName, tokenClass: cls }, status);
   }
 }
