@@ -193,7 +193,7 @@ Cause: needs Bob. NEEDS BOB: commit and push the removal of 37 old test files on
 
 **Checks.** format: 72 modules, 67 requirements files; 0 failures. architecture: 532 product files, 1449 relative imports; 0 failures. coverage: 0 modules, 0 of 0; 0 failures. ownership (tranche/T17): 471 files; 0 failures.
 
-**Still to do.** Once Bob approves: the ten re-pins, the guard re-run (expect the three REPORT failures only), then COMPLETE.
+**Completion (B7, K622).** The DEC-49 guard ran once on the merged tree: 13 failures. Ten are floors below its print, not re-pinned by K622 (dropped, not Bob's; re-pinned or the guard retired at the release pass that deletes the battery), so the NEEDS BOB above is withdrawn. Three are routed by BOB: inheritedVerdicts (6/4) to control-plane, strength, run-productions, basis-versions (N411); TASK_NOT_YOURS's two sites to tasks (N412). Not done, per B6: the civicos-ui/test/release moves, the K570 scoped run, aicredential's NEVER_THE_STORES exemption. Entries applied this stage: B4 (the 37-file removal), B6 (1), (2) (one move-caused import fixed), (3) (the guard once), (4). Tests run: verdict-excluder.control once (2 of 11 arms as declared), the guard once (13 failures). Checks: format, architecture, coverage, ownership, 0 failures each.
 
 Size (session_01G96r3KaiubF4taKLzus78v): test runs 2, module lines 4
 
