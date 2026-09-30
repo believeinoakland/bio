@@ -43,3 +43,19 @@ Found in other modules while applying R39 (commit 326b976ab4):
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture entities`: 0 failures. `coverage entities`: 39 of 39 live ids named; 0 failures. `ownership entities tranche/T15`: 7 files; legacy-store 0 added, 0 removed; legacy-checks 0 added, 0 removed; 0 failures.
 
 Size (session_01KSDYyzB5ig2GsNMmtWdu8B): test runs 22, module lines 1247
+
+## J4 · COMPLETE
+
+**B3 applied** (K485): merged `tranche/T15` (the R39 wording) at 4bacc8048d. Commit a0f0cf57b1.
+- **R39:** an entity's relations are now bounded at 1,000 (`ENTITY_RELATIONS_LIMIT`), still read one past into `relations_truncated`. `readEntity` publishes the bound as `relations_limit: 1000`. Aliases, defects and `resolutions_resting` stay at 500 (`limit`). The R39 test covers 501 and 1,000 relations (not truncated) and 1,001 (cut to the first 1,000, oldest first).
+- **B2:** noted; nothing to change.
+- **`not yet met` to strike:** unchanged from J3 (R14, R15, R29, R30, R38, R39). Row C-91.7 is still `awaiting stamp` for T16.
+- **Found elsewhere:** J2 still holds, except item 1. The two bundles are stale, as before.
+
+**Tests and checks:**
+- `test/m/entities/`: 49 pass, 0 fail.
+- **intent: 51 pass, 0 fail.** `bounds.test.mjs`:77 is green again.
+- The other users, all 0 fail: connections 66, progressions 42 (1 todo), bias 53 (1 todo), observation-log 45, retrieval 65, inquiry 60 (1 todo), basis-versions 47, contradiction 28, scheduler 46 (2 todo), affordances 76, control-plane 52.
+- `format`: 0 failures. `architecture entities`: 0 failures. `coverage entities`: 39 of 39; 0 failures. `ownership entities tranche/T15`: 7 files; legacy-store and legacy-checks 0 added, 0 removed; 0 failures.
+
+Size (session_01KSDYyzB5ig2GsNMmtWdu8B): test runs 36, module lines 1249
