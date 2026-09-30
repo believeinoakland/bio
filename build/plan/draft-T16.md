@@ -16,6 +16,8 @@ Cut from T15's "Not in T15" (`current.md`), `next.md`'s open entries, rulings K4
 - **contradiction** · N359: R27's `stale` mark from a contradiction inquiry's CORRECTED conclusion answers `member: null, at: null` (`contradiction/index.mjs`:1430–1432, in `#marksOn`, not `#marksOf` as N359 says), though R36's resolve act already records `author` and the instant (`#appendAct`, :2038). Read them from that act. No row changes.
 - **inquiry** · N358, only if BOB chooses to move the columns (open point 1; not recommended): R36's older clause, `inquiry_basis_count`, `inquiry_subject_entity`, `inquiry_superseded_by` to a table of its own (written at `inquiry/index.mjs`:503; read :2040, :2578), with a read service `contradiction` K2 joins instead (`contradiction/index.mjs`:428–438). On the recommended ruling no job: R36's clause goes by wording and its mark is struck.
 
+- **inquiry** · N360 (K495): `divide` carries each apportioned leg's `content_id` to the child (R24's "verbatim"); a test that a child's leg names the parent leg's passage.
+
 ## Layer 7
 
 - **reevaluation** · N359's share, after contradiction merges: R27's `corrected` cause reads the mark's instant as `since` (K493 (4) set it null with a stated sentence); the null-`since` test re-anchors, and whether R16's null-matching close still has a case is the job's report. Optional, N242's share: the DEC-49 guard's four unclassified outcomes (LEGACY-TESTS #12 (4)), if REEVALUATION #5 leaves them.
