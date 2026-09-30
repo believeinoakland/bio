@@ -24,10 +24,22 @@ test("R8: a bias set moves only along the bias machine; any other move is BIAS_I
     assert.deepEqual([r.from, r.to, r.legal_from], [from, to, legal[from]]);
     assert.equal(w.dump(), before, "refused before any write");
   }
-  /* a revision that keeps the state is not a move, whatever the state */
-  const w = world();
-  w.set(A, [S("s1")], "adopted");
-  assert.equal(w.promote(A, FM(A, { current_state: "adopted", prior_state: "proposed", title: "Retitled" })).ok, true);
+});
+
+test("R8: a revision that keeps the state is not a move — it lands in every state of the bias machine, retired included, and the head moves to it", () => {
+  const path = { draft: ["draft"], proposed: ["draft", "proposed"], adopted: ["draft", "proposed", "adopted"],
+                 retired: ["draft", "retired"] };
+  for (const st of ["draft", "proposed", "adopted", "retired"]) {
+    const w = world();
+    let prior = null;
+    for (const s of path[st]) { assert.equal(w.promote(A, FM(A, { current_state: s, prior_state: prior })).ok, true, `${st}: walk to ${s}`); prior = s; }
+    const before = w.record.head(A).bundleSha;
+    const r = w.promote(A, FM(A, { current_state: st, prior_state: prior, title: `Retitled at ${st}`,
+                                   statements: [S("s1", { text: `Statement s1, amended while the set stands at ${st}.` })] }));
+    assert.equal(r.ok, true, `${st} -> ${st}: ${JSON.stringify(r)}`);
+    assert.notEqual(r.bundleSha, before, `${st}: a new revision was minted`);
+    assert.deepEqual([w.record.head(A).bundleSha, w.record.head(A).currentState], [r.bundleSha, st], `${st}: the head moved and kept its state`);
+  }
 });
 
 test("R9: a bias set with any R2–R7 finding is BIAS_REFUSED (C-26.11), each finding named by its code, before any write; a replay is not judged", () => {
