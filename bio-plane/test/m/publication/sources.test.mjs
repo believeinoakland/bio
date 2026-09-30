@@ -1,14 +1,13 @@
-/* publication — a `/5` document's `captures:` and `sources:` blocks (R20), answered by the facts read (R2) and the public
-   read (R10), and what a case may state of a source: re-read at the commit (R51), never more than `publishableAt`
-   answered then (R52). N364: DEC-81 items 1 and 3, DEC-78 item 5. `sources` is the real module; the knocks it mints its
+/* publication — a `/5` document's `captures:` and `sources:` blocks, answered by the facts read (R2), and what a case
+   may state of a source: re-read at the commit (R51), never more than `publishableAt` answered then (R52). N364: DEC-81
+   items 1 and 3, DEC-78 item 5. The blocks' grammar is `case-grammar`'s (its R1) and their public read `public-read`'s
+   (its R3) since K651, each tested there. `sources` is the real module; the knocks it mints its
    sources from are pulled through the fixture's stand-in for capture. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
-import { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
-         CAPTURE_FIELDS, SOURCE_FIELDS, SOURCE_BASES, BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE,
-         NOT_RECORDED_STATED, CASE_SOURCES_CHECKS } from "../../../src/publication/index.mjs";
-import { claimSentence } from "../../../src/sources/index.mjs";
+import { caseDocumentBlocks, sourceStatement, unnamedSourceStatement, BLOCKS_PREDATE_SENTENCE,
+         CASE_SOURCES_CHECKS } from "../../../src/publication/index.mjs";
 
 const F = "INQ-2026-0001";
 const CAP = sha("the knocked bytes");
@@ -57,54 +56,6 @@ const captureRow = (over = {}) => ({ capture: CAP, member: F, grade: "B", grade_
   ...over });
 const tick = (w, iso) => { w.clock.now = iso; };
 
-test("R20 the /5 blocks' grammar: written by the line builders, read back exactly by caseDocumentBlocks, the accounts byte for byte", () => {
-  assert.deepEqual([...CAPTURE_FIELDS], ["capture", "member", "grade", "grade_basis", "co_attested", "timestamp_at",
-                                         "co_archive", "late", "self_attested_only"]);
-  assert.deepEqual([...SOURCE_FIELDS], ["capture", "stated", "basis"]);
-  assert.deepEqual([...SOURCE_BASES], ["consent", "public_elsewhere"]);
-  const plain = { capture: CAP2, member: F, grade: "A", grade_basis: 'fetched, "quoted"\nbasis', co_attested: true,
-                  timestamp_at: NOW, co_archive: "https://archive.example/x", late: true, self_attested_only: false };
-  const sources = [{ capture: CAP, stated: "attribute employer: the water board", basis: "consent" },
-                   { capture: CAP2, stated: unnamedSourceStatement({ capture: CAP2, received: NOW }), basis: null }];
-  const text = caseDoc("CASE-2026-0001", 1, { roles: [{ target: F, version_sha: "a".repeat(64) }],
-                                              blocks: { captures: [captureRow(), plain], sources } });
-  const b = caseDocumentBlocks(text);
-  assert.equal(b.detail, null);
-  const { acknowledgement, accounts, ...first } = b.captures[0];
-  const { acknowledgement: ack0, accounts: acc0, ...want } = captureRow();
-  assert.deepEqual(first, want);
-  assert.deepEqual(acknowledgement, ack0);
-  assert.deepEqual(accounts, acc0, "an account's text and signature are the exact bytes, so the signature still verifies");
-  assert.deepEqual(b.captures[1], { ...plain, grade_basis: "fetched, 'quoted' basis", accounts: [] },
-                   "a value is written on one line, quotes made apostrophes; an unacknowledged capture has no acknowledgement");
-  assert.deepEqual(b.sources, sources);
-  /* the builders write every field of a row, and empty blocks as empty lists */
-  assert.deepEqual(captureBlockLines([]), ["captures: []", "capture_accounts: []"]);
-  assert.deepEqual(sourceBlockLines([]), ["sources: []"]);
-  const empty = caseDocumentBlocks(caseDoc("C", 1, { blocks: { captures: [], sources: [] } }));
-  assert.deepEqual(empty, { captures: [], sources: [], detail: null });
-  /* before /5: both null, said; a /5 without a block: that block null, said; never throws */
-  assert.deepEqual(caseDocumentBlocks(caseDoc("C", 1, { blocks: null })),
-                   { captures: null, sources: null, detail: BLOCKS_PREDATE_SENTENCE });
-  const noSources = caseDocumentBlocks(caseDoc("C", 1, { blocks: { captures: [] } }));
-  assert.deepEqual([noSources.captures, noSources.sources, noSources.detail], [[], null, BLOCK_UNREADABLE_SENTENCE]);
-  for (const odd of [null, undefined, 7, "", "---\n", "not front matter", {}, "---\nformat: bio-case-document/5\n---\n"])
-    assert.doesNotThrow(() => caseDocumentBlocks(odd));
-});
-
-test("R20 sourceStatement is the one spelling of an entry publishableAt answers, and unnamedSourceStatement the one for none", () => {
-  assert.equal(sourceStatement({ kind: "attribute", attribute: "employer", value: "the water board", how: "self" }),
-               "attribute employer: the water board");
-  assert.equal(sourceStatement({ kind: "name", recorded: false, how: "self" }), `name: ${NOT_RECORDED_STATED}`);
-  assert.equal(sourceStatement({ kind: "pseudonym_link", to: "SRC-2026-0002", how: "self" }),
-               "pseudonym_link: the same person as SRC-2026-0002");
-  const claim = claimSentence("a blog", "2026-09-01");
-  assert.equal(sourceStatement({ kind: "name", value: "Pat", how: "hostile", claim }), `name: Pat (${claim})`);
-  assert.equal(sourceStatement({ kind: "name", value: 'A "B"\nC' }), "name: A 'B' C");
-  for (const odd of [null, undefined, {}, { kind: "" }, "name"]) assert.equal(sourceStatement(odd), null);
-  assert.equal(unnamedSourceStatement({ capture: CAP, received: NOW }), `an unnamed source; received as ${CAP} at ${NOW}`);
-});
-
 test("R2 caseDocumentFacts answers a /5 document's captures and sources blocks, fenced as R1; an older one states them null", () => {
   const { w, proj, roles, source } = base();
   disclose(w, source);
@@ -122,37 +73,6 @@ test("R2 caseDocumentFacts answers a /5 document's captures and sources blocks, 
   w.prepare("CASE-2026-0002", 1, { project: proj, roles });
   const old = w.p.caseDocumentFacts("CASE-2026-0002", 1, V("olive"));
   assert.deepEqual([old.captures, old.sources, old.blocks_detail], [null, null, BLOCKS_PREDATE_SENTENCE]);
-});
-
-test("R10 publishedCase carries a /5 document's captures and sources blocks as signed; an older document and a loose bundle answer null with a sentence", () => {
-  const { w, proj, roles, source } = base();
-  disclose(w, source);
-  const rows = statedRows(w, CAP, source);
-  w.prepare("CASE-2026-0001", 1, { project: proj, roles, blocks: { captures: [captureRow()], sources: rows } });
-  assert.equal(w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles) }).ok, true);
-  assert.equal(w.signFinding(F).ok, true);
-  const c = w.p.publishedCase({ id: "CASE-2026-0001" });
-  assert.equal(c.ok, true);
-  assert.deepEqual(c.sources, rows);
-  assert.deepEqual(c.captures, caseDocumentBlocks(c.document.text).captures);
-  assert.equal(c.captures[0].acknowledgement.reason, "the knocker's bytes, no public copy");
-  assert.match(c.blocks_detail, /as it could be published when the case was signed/);
-  assert.deepEqual(w.op("publishedcase", { id: "CASE-2026-0001" }).sources, rows, "op=publishedcase is the same read");
-  /* a /4 case */
-  w.inquiry("INQ-2026-0002");
-  const pin2 = w.head("INQ-2026-0002");
-  const roles2 = [{ target: "INQ-2026-0002", version_sha: pin2 }];
-  w.prepare("CASE-2026-0002", 1, { project: proj, roles: roles2 });
-  w.signCase("CASE-2026-0002", 1, { project: proj, roster: roster(roles2) });
-  w.signFinding("INQ-2026-0002");
-  const old = w.p.publishedCase({ id: "CASE-2026-0002" });
-  assert.deepEqual([old.captures, old.sources, old.blocks_detail], [null, null, BLOCKS_PREDATE_SENTENCE]);
-  /* a ratified bundle in no case */
-  w.inquiry("INQ-2026-0003");
-  w.signFinding("INQ-2026-0003");
-  const loose = w.p.publishedCase({ id: "INQ-2026-0003" });
-  assert.deepEqual([loose.captures, loose.sources], [null, null]);
-  assert.match(loose.blocks_detail, /not a case/);
 });
 
 test("R51 commitCaseEdition re-reads publishableAt for every stated entry: a consent withdrawn since authoring is SOURCE_CONSENT_WITHDRAWN (C-122.1), nothing committed; a new preparation signs", () => {
@@ -237,7 +157,7 @@ test("R52 no published answer states a source detail except what publishableAt a
   const secretRow = { capture: CAP, stated: "name: Pat Doe", basis: "consent" };
   w.prepare("CASE-2026-0001", 1, { project: proj, roles, blocks: { captures: [], sources: [secretRow] } });
   assert.equal(w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles) }).reason, "SOURCE_CONSENT_WITHDRAWN");
-  assert.equal(w.p.publishedCase({ id: "CASE-2026-0001" }).reason, "NOT_PUBLISHED");
+  assert.equal(w.p.caseEditionState("CASE-2026-0001", 1), null, "no published case edition");
   /* what was publishable at the commit is published, and stays exactly that */
   const employer = disclose(w, source);
   const rows = statedRows(w, CAP, source);
@@ -245,8 +165,9 @@ test("R52 no published answer states a source detail except what publishableAt a
   w.prepare("CASE-2026-0001", 1, { project: proj, roles, blocks: { captures: [], sources: rows } });
   assert.equal(w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles) }).ok, true);
   assert.equal(w.signFinding(F).ok, true);
-  const published = () => JSON.stringify([w.p.publishedCase({ id: "CASE-2026-0001" }), w.op("publishedmanifest"),
-    w.op("publishedlist"), w.p.caseDocument("CASE-2026-0001", 1, null), w.op("verify", { sha256: sha("x") })]);
+  const published = () => JSON.stringify([w.p.caseEditionState("CASE-2026-0001", 1), w.p.caseDocument("CASE-2026-0001", 1, null),
+    w.p.caseDocumentFacts("CASE-2026-0001", 1, null).sources, w.p.publishedEditionsOf({ finding: F }),
+    w.rows(`SELECT * FROM published_cases`), w.rows(`SELECT * FROM published_shas`)]);
   const at = published();
   /* afterwards: the consent withdrawn (what is published stays published), the name consented: no answer moves */
   tick(w, "2026-09-28T02:00:00Z");

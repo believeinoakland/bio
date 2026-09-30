@@ -58,14 +58,19 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
 });
 
-test("R33 each check moved here with its id, code and translation, is held nowhere else, and names this module's site; R51's new row C-122.1 with them", () => {
+test("R33 each check moved here with its id, code and translation, is held nowhere else, and names its raiser's site (C-44.2 and C-98.8 public-read's since K651); R51's new row C-122.1 with them", () => {
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
   assert.deepEqual(ids, ["C-44.2", "C-68.5", "C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8",
                          "C-92.9", "C-98.1", "C-98.2", "C-98.3", "C-98.4", "C-98.5", "C-98.6", "C-98.7", "C-98.8", "C-98.9",
                          "C-122.1"]);
+  /* K651: the two rows public-read's copied reads raise point at it (awaiting stamp for T19's promotion job) */
+  assert.deepEqual([CASE_RESOLUTION_CHECKS.FINDING_IN_SEVERAL_CASES.where, PUBLISHED_READ_CHECKS.NOT_PUBLISHED.where],
+                   ["src/public-read/index.mjs #resolveOneCase > is-finding-in-several-cases",
+                    "src/public-read/index.mjs publishedCase > is-not-published"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
-    assert.match(row.where, /^src\/(publication\/(index|worker)\.mjs|container\.mjs) /, `${code}'s site is this module's`);
+    assert.match(row.where, /^src\/(publication\/(index|worker)\.mjs|container\.mjs|public-read\/index\.mjs) /,
+                 `${code}'s site is this module's, or public-read's that raises it`);
     assert.deepEqual(rowOf(code), { code, check: row.check, translation: row.translation });
     for (const [family, rows] of Object.entries(CATALOGUE))
       if (/_CHECKS$/.test(family) && rows && typeof rows === "object") {
@@ -88,10 +93,11 @@ test("R34 no place is named in this module's behaviour or outward text", () => {
   w.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: F, version_sha: pin }] });
   w.signCase("CASE-2026-0001", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] });
   w.signFinding(F);
-  const outward = JSON.stringify([MINE, w.op("publishedcase", { id: "CASE-2026-0001" }), w.op("publishedmanifest"),
-    w.op("publishedlist"), w.op("caseflags", {}), w.op("export", {}), w.op("exportlog", {}), w.op("publishedcase", { id: "X" }),
-    w.op("casedocument", { case: "CASE-2026-0002", edition: 1 }), w.p.reviewProvider().deadAnswer(),
-    w.p.publishedCase({ id: "CASE-2026-0001" }).evidence_package]);
+  const outward = JSON.stringify([MINE, w.p.caseEditionState("CASE-2026-0001", 1), w.op("publishedtargets", { ids: F }),
+    w.op("caseflags", {}), w.op("export", {}), w.op("exportlog", {}), w.op("excludedby", { id: F, viewer: V("olive") }),
+    w.op("casedocument", { case: "CASE-2026-0001", edition: 1 }), w.op("casedocument", { case: "CASE-2026-0002", edition: 1 }),
+    w.p.reviewProvider().deadAnswer(), w.p.publishedEditionsOf({ finding: F }), w.p.caseTensions({}),
+    w.p.caseFlags({}).doctrine, w.op("attribute", {}, {})]);
   for (const place of ["Oakland", "California", "Alameda", "Berkeley", "San Francisco", "Sacramento", "Brown Act", "CPRA",
                        "United States", "County", "City of"])
     assert.equal(outward.includes(place), false, `names ${place}`);
