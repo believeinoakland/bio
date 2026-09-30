@@ -202,7 +202,9 @@ for (const f of suites) {
  * then, from the printed figure, and say why here. */
 console.log("\n--- a finally that exits follows a catch that counts the failure ---");
 {
-  const FINALLY_EXIT_FLOOR = 6;
+  /* RE-PINNED 2026-09-30 (LEGACY-TESTS #16, T17; K572): 6 -> 3, the printed census. `capture-text-index`,
+     `rec119-version-legs-earned` and `strengthpair` left with the covered suites (ec24b52b65); no arrival. */
+  const FINALLY_EXIT_FLOOR = 3;
   const census = [], refused = [];
   for (const f of suites) {
     for (const r of scanFinallyExits(readFileSync(join(DIR, f), "utf8"))) {
@@ -2032,8 +2034,11 @@ console.log("\n--- the negative-control register's own detector (M0-9) ---");
   /* THE DELTA ON REAL DATA: hide the marker in one real suite's source and that
      suite alone leaves the register. An absolute count would be satisfied by a
      detector that had stopped reading. */
-  const victimSrc = readFileSync(join(DIR, "capture.test.mjs"), "utf8");
-  t("the register reads capture.test.mjs's declaration out of its real source",
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #16, T17; K572): the victim was `capture.test.mjs`, removed with the covered
+     suites; it is now the first suite the register reads, so the arm names no file a conversion can remove. */
+  const victim = read[0].f;
+  const victimSrc = readFileSync(join(DIR, victim), "utf8");
+  t(`the register reads ${victim}'s declaration out of its real source`,
     readControl(victimSrc) != null, true);
   t("...and reads none once its marker is hidden, so the read above is a measurement",
     readControl(victimSrc.replaceAll(CONTROL_MARKER, "NEGATIVE CONTROL(hidden):")), null);
@@ -2462,7 +2467,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      string literals and a template's text chunks, and KEEPS the code inside
      `${…}`. It is imported, never restated. */
   const DISCOVERY = /\b(?:readdirSync|readdir|opendirSync|opendir|globSync)\s*\(/g;
-  const CENSUS_ROOTS = [["bio-plane", ["scripts", "test", "src", "checks", "migrate"]],
+  const CENSUS_ROOTS = [["bio-plane", ["scripts", "test", "test/system", "src", "checks", "migrate"]],   /* K612: test/system/ */
                         ["civicos-ui", [".", "test"]]];
   const census = [];
   for (const [top, subs] of CENSUS_ROOTS) {
@@ -2530,7 +2535,6 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        reports no repository census. Nothing it prints is a figure a session quotes, so a
        phantom deposited beside it cannot inflate a baseline — which is the exposure the
        guarded walks carry and this one does not. */
-    "bio-plane/test/ref-variance-probe.mjs",      // bio-plane/test/fixtures/, one named PDF, no census
     /* MEASURED BY D-257'S SWEEP AND KEPT, WHICH IS A DIFFERENT CLAIM FROM THE ONE THAT WAS
        HERE. This suite's walk feeds an assertion that the fixture directory holds NO residue
        — a CEILING AT ZERO — so an untracked file deposited beside it makes this suite go RED
@@ -2604,7 +2608,6 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        `test/m025-arm-anchor-witness.test.mjs`, the battery-side half — asks
        provenance and appears in the GUARDED list above, which is the line that
        makes this naming a category judgement rather than a convenience. */
-    "bio-plane/test/m025-arm-census.mjs",         // runs the control drivers; reports a census, floors on nothing
     /* ADDED 2026-09-21 by D-432's item, AND THE RATCHET CAUGHT IT ON THE FIRST RUN — before anyone read the diff.
        WHY IT IS NAMED AND NOT GUARDED, and it is `refusal-codes.test.mjs`'s reason: its walk of `src/` (or of the
        armed copy a control points it at) feeds ONE assertion, that NO module but `store.mjs` and `schema.mjs` names
@@ -2617,12 +2620,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        that the literal producing-group slug occurs in NO module — a CEILING AT ZERO — and S0 asks for five modules BY
        NAME rather than flooring on a count. A phantom module deposited there can only turn S1 red, never quietly green,
        and nothing it prints is a figure anybody floors on. */
-    "bio-plane/test/instance-group.test.mjs",     // src/, asserts NO module names the literal group (a ceiling at zero)
     /* ADDED 2026-09-23 by REC-176's item; the ratchet caught it on the item's first battery. NAMED AND NOT GUARDED: its
        one walk is of ITS OWN `mkdtemp` persist root (`rec176-persist-*`, inside the sandbox `sandbox.mjs` owns), after
        `mf.dispose()`, to find the Durable Object's SQLite file and PLANT the lost manifest rows the census must count.
        The count it plants is asserted EXACTLY (`2`), so a phantom file can only turn that arm RED, never quietly green. */
-    "bio-plane/test/rec176-snapkey.test.mjs",     // its own mkdtemp persist root, to plant the census fixture; asserted exact
     /* ADDED 2026-09-23 by D-394; the ratchet caught it on the item's first battery. NAMED AND NOT GUARDED: its one
        walk is of ITS OWN `mkdtemp` persist root (`d394-persist-*`, inside the sandbox `sandbox.mjs` owns), after
        `mf.dispose()`, to hash every table of the Durable Object's SQLite — the WITNESS that the notice read wrote
@@ -2634,7 +2635,6 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        GUARDED: its one walk is of ITS OWN `mkdtemp` persist root (`n290-*`, inside the sandbox `sandbox.mjs` owns), after
        `mf.dispose()`, to find the Durable Object's SQLite and read `inquiry_member_agents`. It asserts EXACTLY one store
        file holds that table, so a phantom file can only turn it red, never quietly green. */
-    "bio-plane/test/n290-member-agent.test.mjs",  // its own mkdtemp persist root, one store file asserted exactly
     /* ADDED 2026-09-22 by CONDUCT #12 at M0-81's integration, AND THE RATCHET CAUGHT IT ON THE FIRST BATTERY THE ITEM
        MET: the integration gate of batch 2 (tree cd85c88a, commit b2797101), because M0-81 was folded into the batch with
        its own FULL gate unrun. NAMED AND NOT GUARDED: the driver's one discovery primitive in code is
@@ -2667,10 +2667,8 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        `group-identity.test.mjs` walks every `src/<module>/` for readers of `group_identity_history` outside the
        REC-164 block, asserted EMPTY (a ceiling at zero, `mint-ledger.test.mjs`'s reasoning). */
     "bio-plane/test/t5-extracted.mjs",            // src/<module>/ of T5's nine modules, re-inlined; floors on nothing
-    "bio-plane/test/bias.test.mjs",               // src/bias/, the corpus of its source arms; presence pins, no floor
     "bio-plane/test/d280-strengthbar.test.mjs",   // src/connections/, the severance rule's census; asserted exact
     "bio-plane/test/severedhomes.test.mjs",       // src/connections/, the severance rule's census; asserted exact
-    "bio-plane/test/group-identity.test.mjs",     // every src/<module>/, readers outside the block; a ceiling at zero
     /* ADDED 2026-09-27 (T5-12, legacy-tests): the ratchet caught it after the DEC-49 guard's family widened
        `check-semantics.mjs`'s store harvest to every `src/<module>/` (T5's bias move had dropped its reach 13 -> 9).
        NAMED, and GATED at the walk itself: it reads only files in the commit at HEAD (`git ls-files`), so the one floor
@@ -2700,21 +2698,17 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        `sandbox.mjs` owns), after `mf.dispose()`, to find the Durable Object's SQLite file and PLANT the row the old
        unchecked `op=promote` could have written — the census fixture. The count it plants is asserted EXACTLY (`2`), so a
        phantom file can only turn that arm RED, never quietly green, and nothing it walks is a figure anybody floors on. */
-    "bio-plane/test/rec175-digest.test.mjs",      // its own mkdtemp persist root, to plant the census fixture; asserted exact
     /* NAMED 2026-09-23 by CONDUCT #16 at REC-178's integration: REC-178's worker gated only its own suites (one FULL gate per train,
        BOB #30/#31), so this walker first met hygiene on the union — the train's gate doing its job. Same shape as rec175-digest: it walks
        its OWN mkdtemp persist root (rec178-persist-*) to find the sqlite file its census fixture plants, and the census it reads is
        asserted exactly; nothing it walks is a figure anybody floors on. */
-    "bio-plane/test/rec178-bytes.test.mjs",       // its own mkdtemp persist root, to plant the census fixture; asserted exact
     /* D-179 (2026-09-23): walks its OWN mkdtemp persist root (d179-persist-*) to find the one sqlite file holding `register`,
        with the instance down, to read the first bundle's register row back byte for byte; it throws unless exactly ONE store
        holds a register, and nothing it walks is a figure anybody floors on. */
-    "bio-plane/test/d179onehome.test.mjs",        // its own mkdtemp persist root, to read the register row; asserted exactly one store
     /* REC-190 (2026-09-24): D-179's shape exactly — walks its OWN mkdtemp persist root (rec190-persist-*), with the instance down,
        to find the one sqlite file holding `register`: to SEED the pre-fence move and an orphan row, and to read the register back
        as a witness. It throws unless exactly ONE store holds a register, each seed's change count is asserted exactly (`1`), and
        nothing it walks is a figure anybody floors on. Its control driver copies trees and walks none. */
-    "bio-plane/test/homecensus.test.mjs",         // its own mkdtemp persist root, to seed the moved row; asserted exactly one store
     /* D-454 (2026-09-25): D-179's shape exactly — walks its OWN mkdtemp persist root (d454-persist-*), with the instance down,
        to find the one sqlite file holding `reading_refs` rows: to REWRITE the table into its pre-D-454 (and pre-FW-17) shape and
        read it back after the boot's migration. It throws unless exactly ONE store holds rows, the row counts are asserted equal
@@ -2742,12 +2736,8 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        product's own build would do too. */
     "bio-plane/test/current.test.mjs",            // src/ module schemas, one writer and one column asserted exact
     "bio-plane/test/d334-monitor-credential.test.mjs", // src/, selecting and arming sites asserted exact (0 and 1)
-    "bio-plane/test/dec65-single-part.test.mjs",  // src/, the one stamp site asserted exact
-    "bio-plane/test/rec169-consume.test.mjs",     // src/, each bound's consume site asserted present
     "bio-plane/test/system/refusal-wire.test.mjs",       // src/ module directories, the static walk over moved acts
     "bio-plane/test/run-conditions.test.mjs",     // src/, W6's "no other file reads ai_runs" (a ceiling at zero)
-    "bio-plane/test/scheduler.test.mjs",          // src/, setAlarm/deleteAlarm sites asserted by name
-    "bio-plane/test/suggest.test.mjs",            // src/, ONE version write site asserted exact
     "bio-plane/test/versions.test.mjs",           // src/ and module schemas, one write site and no second table
     /* ADDED 2026-09-28 (T8, legacy-tests), FOUR AT ONCE, T7's reason: T8's extractions moved code these suites read into
        `src/<module>/`, so each now walks `src/` to find it where it lives (each re-anchor is its own family's in this job).
@@ -2758,14 +2748,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        six files the old hand list named by NAME; its one count, `> 50` files, is a reach guard fixed well below the
        tree and never moved to a print, so an arrival cannot raise what it is compared against. */
     "bio-plane/test/airun.test.mjs",              // src/ and module files, every arming site placed inside the one reconcile
-    "bio-plane/test/caselifecycle.test.mjs",      // src/, "nothing deletes a flag" (a ceiling at zero)
-    "bio-plane/test/casepin.test.mjs",            // src/, "no second version table" (a ceiling at zero)
-    "bio-plane/test/multicase.test.mjs",          // src/, no other builder of its query class (a ceiling at zero)
     /* ADDED 2026-09-29 (T12, legacy-tests), T7's reason: control-plane's extraction (K413) moved the doors that read
        `store=` out of `src/index.mjs` into `src/control-plane/index.mjs`, so D-456's §4 sweep now walks `src/` to find
        every reader where it lives. It asserts every reader is NAMED (a ceiling at zero unnamed); its one count,
        `>= 4` readers, is a reach guard fixed well below the tree's 12 and never moved to a print. */
-    "bio-plane/test/d456-namespace-scope.test.mjs", // src/, every reader of `store=` named (a ceiling at zero)
   ];
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));
@@ -2835,7 +2821,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
      (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
      bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 69)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 49)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2878,7 +2864,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     /* MOVED 68 -> 69 on 2026-09-28 (legacy-tests T10), from the figure this suite PRINTED (`69 walking file(s)`) against
        this job's baseline print of 68 (5e8d1fd055), diffed by name: one arrival, `n290-member-agent.test.mjs` (named
        above), no departure. */
-    census.length >= 69, true);
+    /* RE-PINNED 2026-09-30 (LEGACY-TESTS #16, T17; K572): 69 -> 49, the figure this suite PRINTED with test/system/ in
+       its roots. Twenty walking files left with the conversion's deletions (ec24b52b65); the nineteen of them this
+       suite named are retired from its named list below. */
+    census.length >= 49, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
@@ -2907,7 +2896,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
    * A CHECK THAT CRIES WOLF GETS SWITCHED OFF. That is `VERIFICATION.md`'s own
    * stated reason for not making `--strict` the gate yet, so the arms below assert
    * the FALSE-POSITIVE direction as hard as the true-positive one. */
-  const wf = sweepWalkFloors({ repo: REPO });
+  const wf = sweepWalkFloors({ repo: REPO, roots: [["bio-plane", ["scripts", "test", "test/system", "src", "checks", "migrate"]], ["civicos-ui", [".", "test"]]] });   /* K612: walkfloor's CENSUS_ROOTS predate test/system/ */
   const wfUnguarded = wf.sites.filter((s) => !s.guarded);
 
   /* NAMED, exactly as above: a cross-file floor that somebody has read and decided

@@ -341,7 +341,7 @@ t("UNCLASSIFIED — a comparison it cannot grade is NAMED, never silently scored
    So the estate is driven, its corpus PRINTED, and the floors taken over the
    TRACKED figure so a phantom in an uncommitted file cannot move them (D-238). */
 console.log("\n--- 4. the real estate, and the floors are over the TRACKED figure ---");
-const est = sweepWalkFloors({ repo: REPO });
+const est = sweepWalkFloors({ repo: REPO, roots: [["bio-plane", ["scripts", "test", "test/system", "src", "checks", "migrate"]], ["civicos-ui", [".", "test"]]] });   /* K612: walkfloor's CENSUS_ROOTS predate test/system/ */
 const prov = readGitProvenance(REPO);
 const trackedSites = prov.inHead === null
   ? est.sites

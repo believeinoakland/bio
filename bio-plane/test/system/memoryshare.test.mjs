@@ -121,8 +121,10 @@ console.log("--- 1 · no live site reads memory as a share of 128 MB ---");
   t("the dated records are NOT inside the walk (header)",
     ls.filter((p) => /^docs\/development\/(?:MEASUREMENTS\.md$|measurements\/)/.test(p)), []);
   t("...while the live contract is", ls.includes("docs/development/INTERFACES.md"), true);
-  t("the row's four named sites are inside the walk",
-    ["agent-worker/src/index.mjs", "bio-plane/test/fl1-cpu-probe.mjs", "docs/development/INTERFACES.md",
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #16, T17; K572): `bio-plane/test/fl1-cpu-probe.mjs`, the fourth named site,
+     left with the dead suites (ec24b52b65); the three that stand are asserted. */
+  t("the row's named sites are inside the walk",
+    ["agent-worker/src/index.mjs", "docs/development/INTERFACES.md",
      "pdf-worker/src/pagepixels.mjs"].every((p) => ls.includes(p)), true);
   for (const s of code) console.log(`    CODE     ${s.file}:${s.line} [${s.id}] ${s.text}`);
   for (const s of all.filter((a) => !code.some((c) => c.file === a.file && c.line === a.line)))
