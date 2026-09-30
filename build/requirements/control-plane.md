@@ -84,7 +84,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - `membership`: `claim` (R15), `existenceAct` (R27), `isAdministrator`.
 - `runtime-limits`: `liveToken` (R15).
 - `signatures`: the signing page (R1).
-- `publication`: `inbandQuartet`, for the review copy's answer (R20).
+- `public-read`: `inbandQuartet` (its R7, was `publication` R16; K651), for the review copy's answer (R20).
 - `instance-setup`: `setupPage`, its public group read (R1), the reports' handlers; `instanceSetupOf` and its `start`, `instanceSetupOps` (R35; N348).
 - `affordances`: `ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`, `VOCABULARIES` for `op=affordances`' answer while its arm is here.
 - `legacy-checks`: the rows of R32 until they move, and C-61.1 (R39) until it moves here; `CHECK_CATALOGUE` (R22); `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
