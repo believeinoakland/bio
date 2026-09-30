@@ -2253,13 +2253,21 @@ export class Publication {
      published_shas row is what makes it answerable by its own hash and what
      op=publishedbytes checks before serving anything. */
   recordCaseManifest({ caseId, edition, manifest, manifestSha, bytes = null } = {}) {
-    if (!caseId || !Number.isInteger(Number(edition)) || !manifest || !manifestSha)
-      return { ok: false, reason: "MALFORMED" };
+    /* R15: a case id, a whole edition, a manifest object, its SHA-256 as 64 lowercase hex, and a byte count that is a
+       whole number or absent; anything else is MALFORMED and nothing is written (never a throw). */
+    if (typeof caseId !== "string" || !caseId.trim() || !Number.isInteger(Number(edition)) || Number(edition) < 1
+        || !manifest || typeof manifest !== "object" || typeof manifestSha !== "string" || !/^[0-9a-f]{64}$/.test(manifestSha)
+        || !(bytes == null || (Number.isInteger(bytes) && bytes >= 0)))
+      return { ok: false, reason: "MALFORMED",
+               detail: "a case manifest names its case, its edition, the manifest and its SHA-256 (64 lowercase hex)" };
     const ed = Number(edition);
     return this.record.transact(() => {
       const c = this.#one(`SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
       if (!c) return { ok: false, reason: "NO_SUCH_CASE_EDITION", caseId, edition: ed };
-      if (c.manifest_sha && c.manifest_sha !== manifestSha)
+      /* R15, R24: recorded once. The same hash again is a retry and writes nothing (the manifest held is the one that
+         hash was recorded for, whatever this call carries); another hash is refused. */
+      if (c.manifest_sha === manifestSha) return { ok: true, caseId, edition: ed, manifest_sha: manifestSha, existed: true };
+      if (c.manifest_sha)
         return { ok: false, reason: "MANIFEST_EXISTS", caseId, edition: ed, manifest_sha: c.manifest_sha,
                  detail: `case ${caseId} edition ${ed} already has a manifest at a different hash. An edition is `
                        + `a SEPARATE DOCUMENT and its container answers forever; a second manifest under the `
