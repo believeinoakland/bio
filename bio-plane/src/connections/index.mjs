@@ -12,8 +12,8 @@
  * REC-120's unchosen mention, REC-122's choice with D-454's occurrences, REC-5's dirty set, REC-19's live-cites
  * predicate, D-267's severance, REC-25's backlinks, C-6.2's dangling read, REC-52's link projection, D-162's themes),
  * `schema.mjs` (the tables, now `./schema.mjs`) and `bio-checks.mjs` (the two pair predicates, now `./pair.mjs`; the
- * C-49, C-74 and C-81 rows and `themeLegFindings` stay in the catalogue, whose own grammars call them, and are
- * re-exported here as their one public face). The built work on `land/worker/D-575`, `D-625`, `D-706` and `D-722`
+ * C-74 rows, now `./checks.mjs` (T18); the C-49 and C-81 rows and `themeLegFindings` stay in the catalogue, whose own
+ * grammars call them, and are re-exported here as their one public face). The built work on `land/worker/D-575`, `D-625`, `D-706` and `D-722`
  * is taken in (R6, R15, R26, R27). The legacy code's comments moved with it, shortened where they only restated it.
  *
  * REACHED as `connectionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
@@ -31,8 +31,9 @@
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
 import { isMachineIdentity, BUNDLE_ID_RE, MACHINE_CLASS_PREFIX, parseFrontmatter, sha256HexSync,
-         CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, themeLegFindings }
+         CONNECTION_PAIR_CHECKS, THEME_CHECKS, THEME_ID_RE, themeLegFindings }
   from "../../checks/bio-checks.mjs";
+import { CONNECTION_CHOICE_CHECKS } from "./checks.mjs";
 import { readingSourceFromColumns, readingSourceJson, readingOccurrenceKey, readingPositionInExtent }
   from "../textchain.mjs";
 import { normalizeAddress } from "../subresources.mjs";
@@ -51,8 +52,8 @@ import { Themes } from "./themes.mjs";
 export { CONNECTIONS_SCHEMA, CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES } from "./schema.mjs";
 export { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
 export { THEME_READ_LIMIT_DEFAULT, THEME_READ_LIMIT_MAX, THEME_WITHDRAW_CHECKS } from "./themes.mjs";
-/* R35, R46 (K138 Q7's pattern): the rows and the leg check stay in the catalogue, whose own leg grammars call
-   `themeLegFindings`; this module is their one public face. */
+/* R35, R46 (K138 Q7's pattern): C-49, C-81 and the leg check stay in the catalogue, whose own leg grammars call
+   `themeLegFindings`; this module is their one public face. C-74 is this module's own (`./checks.mjs`, T18). */
 export { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, themeLegFindings };
 
 /** R2, R4: the meaning layer's bound (REC-60 / D-225): the default and the ceiling of every connection read. */

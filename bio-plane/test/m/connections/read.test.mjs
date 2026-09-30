@@ -250,6 +250,30 @@ test("R14, R35: refusals in order — C-74.1 not a member, C-74.2 no connection 
   assert.equal(w.count("connection_pair_choices"), 0);
 });
 
+test("R35 (T18, K585 (3)): C-74 is this module's own table — C-74.1–.4 in order, each refusal carries its row's check and translation, and the catalogue carries the family no longer", async () => {
+  const catalogue = await import("../../../checks/bio-checks.mjs");
+  assert.equal(catalogue.CONNECTION_CHOICE_CHECKS, undefined, "the catalogue's copy is deleted (✱)");
+  assert.deepEqual(Object.entries(CONNECTION_CHOICE_CHECKS).map(([code, r]) => [code, r.check]), [
+    ["CONNECTION_CHOICE_NOT_A_MEMBER", "C-74.1"], ["CONNECTION_CHOICE_NO_CONNECTION", "C-74.2"],
+    ["CONNECTION_CHOICE_NOT_A_MENTION", "C-74.3"], ["CONNECTION_CHOICE_OCCURRENCE_UNNAMED", "C-74.4"]]);
+  for (const r of Object.values(CONNECTION_CHOICE_CHECKS)) {
+    assert.equal(r.where, "src/connections/index.mjs choose > is-connection-choice");
+    assert.ok(typeof r.translation === "string" && r.translation.length > 40);
+  }
+  const w = world();
+  const { a, b } = pair(w, { pagesA: [2, 5] });
+  const base = { capture: a, other: b, entity: E, ref: "Ord. 1", viewer: V("alice") };
+  const answers = [w.k.choose({ ...base, author: MACHINE }), w.k.choose({ ...base, entity: "ENT-2026-0404", author: "alice" }),
+                   w.k.choose({ ...base, ref: "nope", author: "alice" }), w.k.choose({ ...base, author: "alice" })];
+  for (const r of answers) {
+    const row = CONNECTION_CHOICE_CHECKS[r.code];
+    assert.equal(r.ok, false); assert.equal(r.reason, r.code);
+    assert.equal(r.check, row.check); assert.equal(r.translation, row.translation);
+    assert.ok(r.detail);
+  }
+  assert.deepEqual(answers.map((r) => r.check), ["C-74.1", "C-74.2", "C-74.3", "C-74.4"]);
+});
+
 test("R14: listed occurrences are at most 256, with truncated", () => {
   const w = world();
   const { a, b } = pair(w, { pagesA: Array.from({ length: 300 }, (_, i) => i) });

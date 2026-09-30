@@ -40,6 +40,7 @@ import { capturePublicOp } from "./capture/doorbell.mjs";
 import { captureOp } from "./capture/ops.mjs";
 import { monitorOp } from "./monitoring/index.mjs";
 import { EXTRACTION_OPS, extractionOp, acquireReadingOp } from "./extraction/ops.mjs";
+import { CONNECTIONS_OPS, connectionsOp } from "./connections/ops.mjs";
 import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
 /* N348 (control-plane R35): the Durable Object class is control-plane's, which starts instance-setup and routes its ops
    inside the store's one frame. */
@@ -566,34 +567,9 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
     if (op === "cpuprobe") return cpuProbeOp(env.STORE.get(env.STORE.idFromName(storeName)),
       { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") }, { json, storeSilent, storeRefusal, doAnswer });
 
-    /* Project a capture's resolved links into edges. Separate from op=links
-       because it writes, and the capability gate has to see that. */
-    if (op === "linkproject") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const capture = url.searchParams.get("capture");
-      if (!/^[0-9a-f]{64}$/.test(capture || ""))
-        return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
-      const bundle = url.searchParams.get("bundle");
-      /* REC-52: op=linkproject WRITES — it projects a capture's links into
-         edges — and `json({ ok: true, ...p.result })` reported a store silence
-         as a successful projection carrying no counts. A write reported as
-         done when nothing was written is the worst member of this class after
-         the public reads, because the caller stops asking. */
-      /* D-706 (T5-11, connections R26): the answer names capture shas and the target's bundle, so the store reads
-         the source and every target through the D-15 viewer, decided here by the SERVER exactly as the stamp block
-         below decides it (a member-scoped agent key stamps its principal), and fails CLOSED on an absent one.
-         D-722 (connections R27): where the source bundle is a PROJECT the store asks REC-134's JOINED test, as `cite`
-         does, of the POSITIONAL identity. This handler builds its own store request and returns above that block,
-         so it stamps both here, by the same expressions. */
-      const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
-      const linkIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
-      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}`
-        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`
-        + `&identity=${encodeURIComponent(linkIdentity)}`));
-      if (p.refused) return storeRefusal(p);
-      if (!p.answered) return storeSilent("linkproject", p.correlation);
-      return json({ ok: true, ...p.result });
-    }
+    if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { json, doAnswer, storeRefusal, storeSilent,
+      viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
+      identity: viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}` });
 
     if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { json, doAnswer, storeRefusal, storeSilent });
 
