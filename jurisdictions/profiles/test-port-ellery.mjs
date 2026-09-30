@@ -1,8 +1,9 @@
 /* The test profile (R22): the City of Port Ellery and Marlow County, a jurisdiction made up for tests.
  * Every basis is `TEST`. It supplies every section and vocabulary key the first profile supplies, with
  * different values in each, shares no host with it (all hosts are under the reserved `.example`
- * domain), and adds a captured crosswalk and a holiday calendar, which the first profile has none of. Modules that take local
- * facts are tested against it (`build/layers.md`, "No jurisdiction in the product", rule 3). */
+ * domain), and adds a captured crosswalk, a holiday calendar and a venue's evidence standard (R39), which
+ * the first profile has none of. Modules that take local facts are tested against it (`build/layers.md`,
+ * "No jurisdiction in the product", rule 3). */
 const R = String.raw;
 
 export default {
@@ -142,7 +143,10 @@ export default {
       venue: { name: "the Selectboard", how: "in_person", basis: "TEST" },
       template: "To the Selectboard: {{act}} does not conform to {{bylaw}}.", basis: "TEST" },
     { kind: "commitment_claim", label: "claim on a budget commitment", tier: 3,
-      venue: { name: "Marlow County Court", how: "court", basis: "TEST" }, basis: "TEST" },
+      venue: { name: "Marlow County Court", how: "court", basis: "TEST" },
+      evidence: { standard: "Marlow County Court Rule 9.02 (test): a record authenticated by its custodian",
+        accepts: [{ grade: "A", coattested: true }, { grade: "B" }], contestable: [{ grade: "C" }], basis: "TEST" },
+      basis: "TEST" },
   ],
   deadlines: [
     { rule: "records_answer", applies_to: "records_request", days: 5, count: "business", starts: "received",
