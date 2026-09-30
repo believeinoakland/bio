@@ -353,10 +353,21 @@ const ebP = await get("earnedbasis", `id=INQ-2026-8800-claims-c&targets=${DOCS.P
 const capP = ebP.earned.capture[DOCS.PLAIN.id];
 t("a captured, READ, publisher-typed document still earns the ceiling",
   [capP.mode, capP.grade, capP.captures], ["ceiling", "B", 1]);
-t("and its entry is BYTE-IDENTICAL to what the PRISTINE pre-item tree printed — key order included",
-  sha(JSON.stringify(capP)), PRISTINE_PLAIN_CAPTURE_DIGEST);
-t("STRUCTURAL: it gained not one key — no code, no empty level, nothing",
-  Object.keys(capP), ["mode", "grade", "captures", "why", "ceiling"]);
+/* LEGACY-TESTS #14 (T16, 2026-09-30). RETIRED (K457): "and its entry is BYTE-IDENTICAL to what the PRISTINE pre-item
+   tree printed". PLAIN's capture is registered by promote with no acquisition receipt, so it has NO RECORDED ROUTE,
+   and provenance R26 (met in T16 through inquiry's reading, INQUIRY #5, K538/K545) requires such a capture's grade be
+   "the member's authored letter under the ceiling, stated as authored, never as measured": the entry now carries
+   `stated_as`, `route_basis` and R26's own `why`, so no digest measured before R26 can hold. What the pin guarded is
+   covered by inquiry's own tests, `test/m/inquiry/earned.test.mjs` "R13 capture: …" (an untranscribed capture, and
+   one with no route recorded, earns the ceiling, mode `ceiling`, with why and ceiling) and "R13 R14 capture: … stated
+   as authored (provenance R51, K538)" (the route-unrecorded entry's `stated_as`, `route_basis` and why; a measured
+   capture carries neither). `PRISTINE_PLAIN_CAPTURE_DIGEST` stays above as the record of the REC-88 measurement.
+   RE-ANCHORED, and kept because it is this suite's end-to-end reading through op=earnedbasis that the TEXT-CHAIN BOUND
+   adds nothing to an untranscribed document: the key set is the pre-item five plus R26's two, and nothing else. */
+t("STRUCTURAL: it gained not one key from the bound — no code, no empty level; only provenance R26's authored statement",
+  Object.keys(capP), ["mode", "grade", "captures", "why", "ceiling", "stated_as", "route_basis"]);
+t("and R26's statement is the route-unrecorded one, never a measured route",
+  [capP.stated_as, capP.route_basis], ["authored", ["CAPTURE_ROUTE_UNRECORDED"]]);
 const rP2 = await promote("INQ-2026-8800-plain-b",
   inquiryMd("INQ-2026-8800-plain-b", { subject: ORD, refs: [DOCS.PLAIN.id],
     legs: [legOn(DOCS.PLAIN, "B")] }), "inquiry");

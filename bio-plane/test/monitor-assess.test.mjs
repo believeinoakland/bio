@@ -688,8 +688,14 @@ console.log("\n--- D-472 OVER-STRICTNESS: a PUBLISH-TO-WEB address is left alone
   const pr = await P("monitor", { bundleId: B.id });
   t("the tick RUNS — no refusal, no export address, the ordinary path",
     [pr.ok, pr.reason ?? null, pr.drive ?? null, pr.fetched_address ?? null], [true, null, null, null]);
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): read as the SET of addresses fetched, not their count. The bundle is
+     monitored weekly and never checked, so it is DUE, and the scheduler's `monitor-cadence` consumer (monitoring R19,
+     its wake at now + 1 s) ticks it in the background: measured, a second GET of this same address ~0.3 s after the
+     promotion, before or during this tick depending on load (the T16 baseline caught it inside the window, four
+     suites at a time; alone it lands before `asked`). Either fetch is the ordinary path on the published address; the
+     arm's claim, that nothing was diverted to an export or any other address, is unchanged. */
   t("…and it fetched the published address itself",
-    driveAsked.slice(asked), ["/spreadsheets/d/e/2PACX-1vD472Published/pubhtml"]);
+    [...new Set(driveAsked.slice(asked))], ["/spreadsheets/d/e/2PACX-1vD472Published/pubhtml"]);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

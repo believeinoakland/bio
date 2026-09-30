@@ -511,14 +511,15 @@ t("bytes over the R2 line are not inlined", got.item.in_r2, 1);
 const noKnock = (await A.GET("op=inboxget&token=mem-door&id=KNOCK-nope")).result;
 t("unknown knock id says so", [noKnock.reason, noKnock.check], ["NO_SUCH_KNOCK", "C-118.2"]);
 
-const res = await A.POST("op=inboxresolve&token=mem-door", { knockId: k1.knockId, status: "pulled" });
-t("a member can disposition it", res.result.status, "pulled");
-t("who dispositioned it is recorded",
-  (await A.GET("op=inbox&token=mem-door")).result.inbox.find((r) => r.knock_id === k1.knockId).resolved_by, "token:member");
-t("filtering by status works", (await A.GET("op=inbox&token=mem-door&status=pulled")).result.inbox.length, 1);
-t("invented statuses refused", (await A.POST("op=inboxresolve&token=mem-door", { knockId: k1.knockId, status: "ratified" })).result.reason, "BAD_STATUS");
-t("discarding is a disposition, not a delete",
-  (await A.POST("op=inboxresolve&token=mem-door", { knockId: k1.knockId, status: "discarded" })).result.status, "discarded");
+/* RETIRED 2026-09-30 (LEGACY-TESTS #14, T16; K457): the five disposition arms that stood here ("a member can
+   disposition it" as `pulled` with the member BEARER, "who dispositioned it is recorded", "filtering by status
+   works", "invented statuses refused", "discarding is a disposition, not a delete"). N364 made `pulled` capture
+   R65's act (a member SESSION's pull, which files a capture and promotes it), so a bearer's `pulled` is now
+   CLASS_FORBIDDEN. Every one is covered by the modules' own tests: capture R32 (`test/m/capture/doorbell.test.mjs`
+   "R32: … members resolve with who and when; BAD_STATUS": BAD_STATUS, discarded then new, resolved_by, `pulled`
+   answering as R65), capture R32/N90 (`test/m/capture/reads.test.mjs` "inboxList … by status too"), capture R65
+   (`test/m/capture/knocker.test.mjs`), and control-plane R36 (`test/m/control-plane/doorbell.test.mjs`: `pulled`
+   routed as op=inboxpull, a bearer refused CLASS_FORBIDDEN, other statuses stay inboxresolve's with the `by` stamp). */
 
 console.log("\n--- the fence holds around the doorbell ---");
 t("knocked material is not published", (await A.GET(`op=verify&sha256=${k1.sha256}`)).published, false);

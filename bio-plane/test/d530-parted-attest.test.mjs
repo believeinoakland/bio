@@ -184,7 +184,15 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
     const ns = await mf.getDurableObjectNamespace("STORE");
     return (await (await ns.get(ns.idFromName("bio")).fetch(`http://x/${path}`, { method: "POST", body: JSON.stringify(body) })).json());
   };
-  await restOnARatifiedCase({ post: POST, get: GET, doPost: storeDO, sha, promoteToken: "mem-530",
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): case-authoring R35 (N364, DEC-81 item 3; C-120.4) now refuses a case whose
+     load-bearing Grade B capture holds no trusted timestamp AND co-archive unless the owner acknowledges it as
+     self-attested only. The lead cites WHOLE, whose capture is PARTED_SHA: attested above, never co-archived (this
+     suite's stand-in serves no archive). The fixture's op=publish now carries that acknowledgement, exactly as R35
+     says; what the suite asserts about its own subject (attest, the gate on a parted capture) is unchanged. */
+  const ackPost = (q, body) => POST(q, /^op=publish&/.test(q)
+    ? { ...body, selfAttested: [{ capture: PARTED_SHA, reason: "The source serves no co-archive to this suite's stand-in." }] }
+    : body);
+  await restOnARatifiedCase({ post: ackPost, get: GET, doPost: storeDO, sha, promoteToken: "mem-530",
     owner: "sparky", ownerToken: SESS, signText, targets: [WHOLE, BYPART], n: "5303", at: NOW });
 
   const ratify = (id, live) => POST(`op=ratify&token=${SESS}`,

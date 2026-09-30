@@ -7,7 +7,7 @@
  * d533partsaudit.control.mjs's method exactly: each arm copies `src/`, `checks/` and `docprofile/` into a
  * uniquely-named temporary tree, patches the COPY (each anchor must occur EXACTLY ONCE — an arm that did not arm is a
  * finding), and runs the suite with D556_SRC pointed at it. The real `src/index.mjs`, `src/store.mjs` and
- * `src/gate.mjs` are hashed before the first arm and after the last; the run fails loudly if any moved.
+ * `src/gate.mjs` (since T16: `src/ratification/ops.mjs`, `src/provenance/index.mjs`, `src/gate.mjs`) are hashed before the first arm and after the last; the run fails loudly if any moved.
  *
  * WHAT EACH ARM MUST FAIL (by label fragment) IS DECLARED BEFORE ARMING; every other assertion MUST stay green.
  * RESULTS: the suite's `NEGATIVE CONTROL:` line.
@@ -23,7 +23,10 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "d556partedpublish.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs", "src/gate.mjs"].map((f) => join(PLANE, f));
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the anchors left index.mjs and store.mjs with the extractions (ratify's gate
+   relay and publication copy to `ratification/ops.mjs`, RATIFICATION T8; the register document's digest read to
+   `provenance/index.mjs`, PROVENANCE T4); each arm now patches, and the run hashes, the file the code lives in. */
+const REAL = ["src/ratification/ops.mjs", "src/provenance/index.mjs", "src/gate.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 const PUBLISHED_WHOLE = ["and publication reports its copy whole", "and publishes whole",
@@ -37,7 +40,7 @@ const ARMS = {
      the store still commits them; the parts never reach the published bucket, and the re-verification must NAME
      them — the publish arm fails, never an ok copy. */
   nopartcopy: {
-    patches: [["index.mjs", "else try { await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 }); } catch { continue; }",
+    patches: [["ratification/ops.mjs", "else try { await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 }); } catch { continue; }",
                "else continue;"]],
     mustFail: PUBLISHED_WHOLE,
   },
@@ -45,7 +48,7 @@ const ARMS = {
   /* THE GATE AS D-530 LEFT IT: the parts the record names are never asked, so every whole-hash row held in parts is
      refused whatever the record says — PLANE_HELD_IN_PARTS on acquired bytes, PLANE_MISSING_BYTES on a caller's. */
   wholegate: {
-    patches: [["index.mjs", `if (named?.state === "named") {`, `if (false) {`]],
+    patches: [["ratification/ops.mjs", `if (named?.state === "named") {`, `if (false) {`]],
     mustFail: ["the gate raises no plane finding", "THE ROW: the parted capture RATIFIES", ...PUBLISHED_WHOLE,
                "no plane finding, the digests' spelling", "the parted capture RATIFIES",
                "PLANE_PART_MISSING, and never PLANE_HELD_IN_PARTS", "naming the missing part", "and the sentence names it too",
@@ -56,7 +59,7 @@ const ARMS = {
   /* NO RE-VERIFICATION AT THE DESTINATION: the copy is reported on its own word. Only the verified-count pins fail;
      the bytes are there, which is exactly why a copy that is never re-read cannot be told from one that is. */
   nodestverify: {
-    patches: [["index.mjs", `if (partShas.length && r2state !== "not configured") {`, `if (false) {`]],
+    patches: [["ratification/ops.mjs", `if (partShas.length && r2state !== "not configured") {`, `if (false) {`]],
     mustFail: ["every part re-verified at the destination"],
   },
 
@@ -71,7 +74,7 @@ const ARMS = {
   /* OVER-STRICTNESS: the digest the record names read only in the one spelling acquire writes. §2's `sha256:`-prefixed,
      upper-case spelling of the same digests then reads as no digest, and a row that earns ratification is refused. */
   strictspelling: {
-    patches: [["store.mjs", `const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;\n    const doc =`,
+    patches: [["provenance/index.mjs", `const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;\n    const doc =`,
                `const bare = (v) => typeof v === "string" ? v : null;\n    const doc =`]],
     mustFail: ["no plane finding, the digests' spelling", "the parted capture RATIFIES", "and publishes whole",
                "every part re-verified at the destination", "each part is served from the published store",
