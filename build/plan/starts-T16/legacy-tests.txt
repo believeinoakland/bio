@@ -2,3 +2,4 @@ Depth 2. You run alone, after every other job of T16 has merged (K420, K427). Yo
 
 Handovers, added at each layer close:
 - Layer 8 (K554, PUBLICATION #6 J3): the DEC-49 guard's floors move by publication's one family `CASE_SOURCES_CHECKS`, one row, one governed site and region, one refusal outcome; `row-census`' `AWAITING_STAMP` gains C-122.1.
+- Layer 8 (CASE-AUTHORING #5 J2 (1)): `derivation-bounds`' census gains case-authoring's `#restingCaptures` (unbounded basis and register reads, as `#searchedForCase`); `check-refusal-codes`' untranslated may fall by one (`UNCLEARED_HUNCH` now C-120.7); the DEC-49 guard's floors grow by four rows, sites and regions; `row-census`' `AWAITING_STAMP` gains C-120.4–C-120.7.

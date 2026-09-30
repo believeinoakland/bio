@@ -21,6 +21,10 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 
 - **sources** · N377 (K547; REEVALUATION #6 J2): a test at the module pinning R15's `source_knocks` read contract (its columns, one row per pulled knock a minted source stands behind, no value or contact), as inquiry R40's is pinned; R15's mark goes with it.
 
+## Layer 7
+
+- **reevaluation** · N378 (K556; CASE-AUTHORING #5 J2 (4)): R8's listeners are called after the act commits, never inside a caller that rolls back.
+
 ## Layer 11
 
 On the modules T16's layer 11 writes (N363's split); re-read at its close.
