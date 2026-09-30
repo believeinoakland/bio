@@ -147,6 +147,14 @@ Each: what it is, and how the plan handles it.
 - **C14 · The mechanics are not functionally complete (found running T1, 2026-09-26).** *Resolved 2026-09-26: revised, proven by the dry runs D1–D3, certified (K26).* (a) **No channel between BOB and a job, either way.** A job cannot message BOB, and BOB's session has no tool that reaches a cloud job session, so a job that asks a question or finishes waits, unseen, until BOB polls; `pdf-reader` waited on its proposed services and `subresources` on its completion. (b) **Metrics and ownership conflict:** a job's metrics row goes to `build/metrics/T<n>.csv`, which the ownership check refuses, and concurrent jobs appending one file would conflict at merge. (c) **Generated artifacts cross modules:** `ocr-worker`'s committed bundle inlines `pdf-worker`'s source, so a `pdf-worker` job stales an artifact no job may regenerate. (d) **A changed service within a layer** cannot reach its user before the layer closes; BOB patched this mid-tranche, uncertified. (e) **A job blocks on a wording question** it could have carried on through. Fix: mechanics revised and certified on a dry run (P3) before T1 resumes.
 - **C15 · The ownership check's net-removal rule assumes an extraction moves more than it wires (found in T7, K204).** A target module that is new in all but a few lines (intent: three lines out of legacy-checks) needs more wiring lines in legacy-store than it removes, so the check fails although every added line is the import-and-use §12.2 permits. *Handled:* BOB accepts such a job at the layer close from its read of the ADDED list, by ruling. *Fix:* the mechanics' next revision (P3) states the rule as "every added line is an import from the target's paths or a use of one", and drops net removal where the target's `from` includes a legacy module it only wires into; certified by a dry run before use.
 
+## 6. Handoff (BOB #75, in progress, 2026-09-30 ~19:10 UTC)
+
+Replaced at each handoff; the progress log (§4) is the history.
+
+**NEEDS BOB: merge PR #4's branch `claude/gallant-brown-zg0wc1` (DEC-86–DEC-95, the UX substrate, three canon edits) into `main`,** refused to BOB #75 by the permission check ("Merge Without Review"). Bob approves it in BOB #75's session (https://claude.ai/code/session_01SFKdEDXNPD63U2kdeajEsE), or merges PR #4 on GitHub himself; either must happen before T18 opens, or it waits for T18's close (`main` does not change while a tranche runs).
+
+**Where things stand.** T17 closed (K623; `main` @ 5272d2848e). T18 prepared on `tranche/T18` (not yet opened: no `current.md`): the Action fold and `draft-T18-recut.md` (K624); a worker finishes record-grammar, the control-plane split's requirements, K621's Rs, K624's reminders and the canon placement.
+
 ## 6. Handoff (BOB #74 to BOB #75, 2026-09-30 ~18:35 UTC)
 
 Replaced at each handoff; the progress log (§4) is the history.
