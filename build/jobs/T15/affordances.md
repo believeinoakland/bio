@@ -77,3 +77,7 @@ Found outside affordances, against each module's requirements:
    - A fix needs a fact R14 does not carry (for example, whether the viewer sees both sides of the linked candidate). That is BOB's to word if wanted. I have not added it.
 
 5. **Generated artifact stale** (§14): `bio-plane/dist/bio-plane.bundled.mjs` (it bundles `src/affordances.mjs`). Not rebuilt.
+
+## J3 · COMPLETE
+
+Complete on J1's three readings (record, Completion). Tests: test/m/affordances 89 pass, 0 fail, 1 todo; users control-plane, queue, skills, monitoring 0 fail; four checks 0 failures. N345 marks met: R1, R2, R3, R4, R8, R14, and R7 but for contradictionmeasures. REPORT J2 names control-plane's rows and the seven legacy suites they turn green or legacy-tests re-anchors. An ANSWER to J1 that differs re-opens items 1–3 only.
