@@ -24,7 +24,11 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { checkInboxGrammar } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; N325, QUEUE #4): C-19.1 is queue's, `checkInboxGrammar` copied whole
+   into `src/queue/checks.mjs` (registered at the promote gate and the audit, and run by the drain); the catalogue's
+   export goes in T15. KEPT under K457: queue's R41 tests drive the grammar through its three callers, not every
+   per-bound violation this suite fixtures, which is the suite's control (31 arms). */
+import { checkInboxGrammar } from "../src/queue/checks.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
