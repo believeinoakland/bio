@@ -16,6 +16,7 @@ import * as basisVersions from "../../../src/basis-versions/index.mjs";
 import * as content from "../../../src/content/index.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import * as ratification from "../../../src/ratification/index.mjs";
+import * as contradiction from "../../../src/contradiction/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
@@ -30,7 +31,8 @@ test("R1: ACTS holds exactly the object-directed acts, each at its weight", () =
     single: ["conclude", "reopen", "publish", "inquirydivide", "inquiryground", "actionmove", "actioncorrespond",
       "actionlaws", "actionrisktier", "versionaccept", "versionreject", "versionconsider", "versionrevert",
       "versioncurrent", "withdrawconclusion", "versionhide", "projectinvite", "projectjoin", "projectleave",
-      "projectremove", "projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibilityset"],
+      "projectremove", "projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibilityset",
+      "contradictionresolve" /* N345 */],
   };
   const want = Object.entries(W).flatMap(([w, xs]) => xs.map((id) => [id, w])).sort();
   assert.deepEqual(ACTS.map((a) => [a.id, a.weight]).sort(), want);
@@ -71,8 +73,11 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
       "escalationadvance", "escalationdecline", "escalationevaluate", "escalationsuspend", "filemembershipjudge", "goalclose",
       "inquirydivide", "inquiryground", "narrow", "projectownerremove", "projectownerrescue", "proposedispose",
       "reevaluationrecord", "reinstate", "relationdeclare", "relationwithdraw", "release", "reopen", "sever",
-      "themewithdraw", "triage", "versionconsider", "versionreject", "withdrawconclusion"],
+      "themewithdraw", "triage", "versionconsider", "versionreject", "withdrawconclusion",
+      /* N345 (K447): contradiction's four member acts that ask an account, and entities' defect report */
+      "contradictionclarify", "contradictiondismiss", "contradictionresolve", "contradictiontakeup", "resolutiondefect"],
   };
+  for (const k of Object.keys(want)) want[k].sort();
   const got = {};
   for (const [op, r] of Object.entries(RUNGS)) (got[r] ??= []).push(op);
   for (const k of Object.keys(got)) got[k].sort();
@@ -112,7 +117,9 @@ test("R4: VOCABULARIES carries exactly the named vocabularies", () => {
     "basis_roles", "entity_kinds", "relation_kinds", "stage_requiredness", "action_basis_kinds",
     "correspondence_directions", "correspondence_stages", "correspondence_outcomes", "resolutions", "risk_tiers",
     "version_states", "version_edges", "version_reason_required", "rung_ladder", "rung_correction_path",
-    "rung_absence_grounds", "sufficiency_claim_states", "content_mint_states"].sort());
+    "rung_absence_grounds", "sufficiency_claim_states", "content_mint_states",
+    /* N345 */ "contradiction_coordinates", "plurality_differences", "resolution_kinds", "norm_canons",
+    "dismissal_reasons"].sort());
 });
 
 test("R4: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
@@ -128,6 +135,10 @@ test("R4: each fixed value is the very object its enforcing module refuses again
     ["version_reason_required", basisVersions.VERSION_REASON_REQUIRED], ["rung_ladder", RUNG_LADDER],
     ["rung_correction_path", IRREVERSIBLE_CORRECTION_PATH], ["rung_absence_grounds", RUNG_ABSENCE_GROUNDS],
     ["sufficiency_claim_states", C.SUFFICIENCY_CLAIM_STATES], ["content_mint_states", content.CONTENT_MINT_STATES],
+    /* N345: inquiry R46's frozen vocabularies and contradiction R31's dismissal reasons */
+    ["contradiction_coordinates", inquiry.CONTRADICTION_COORDINATES], ["plurality_differences", inquiry.PLURALITY_DIFFERENCES],
+    ["resolution_kinds", inquiry.RESOLUTION_KINDS], ["norm_canons", inquiry.NORM_CANONS],
+    ["dismissal_reasons", contradiction.DISMISSAL_REASONS],
   ];
   assert.deepEqual(same.filter(([k, v]) => VOCABULARIES[k] !== v).map(([k]) => k), []);
   assert.equal(same.length + 1, Object.keys(VOCABULARIES).length, "every key but action_kind is a fixed value checked here");
@@ -229,7 +240,9 @@ test("R7: MACHINE_REFUSALS maps exactly the acts R7 names, withdrawconclusion to
    + "version acts to MACHINE_CANNOT_MOVE_VERSION", () => {
   const VERSION = ["versionaccept", "versionreject", "versionconsider", "versionrevert", "versioncurrent", "versionhide"];
   assert.deepEqual(Object.keys(MACHINE_REFUSALS).sort(), ["release", "conclude", "withdrawconclusion", "reopen", "publish",
-    "inquirydivide", "inquiryground", "actionmove", "actioncorrespond", "actionlaws", "actionrisktier", ...VERSION].sort());
+    "inquirydivide", "inquiryground", "actionmove", "actioncorrespond", "actionlaws", "actionrisktier", ...VERSION,
+    "contradictionresolve"].sort());
+  assert.equal(MACHINE_REFUSALS.contradictionresolve, "MACHINE_CANNOT_ACT_ON_CANDIDATE");
   assert.equal(MACHINE_REFUSALS.withdrawconclusion, "MACHINE_CANNOT_CONCLUDE");
   assert.equal(MACHINE_REFUSALS.conclude, "MACHINE_CANNOT_CONCLUDE");
   for (const v of VERSION) assert.equal(MACHINE_REFUSALS[v], "MACHINE_CANNOT_MOVE_VERSION");
@@ -331,7 +344,9 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     /* K264: layer 9's fifteen, restored in T9 with N216; `determine` left for `reasoned` (N310) */
     "standarddeclare", "standardpropose", "standardadopt", "comparisonpropose", "consequencerecord",
     "filingprepare", "filingapprove", "filingsent", "counselpacket", "theorypropose", "escalationopen",
-    "escalationattach", "escalationend"].sort());
+    "escalationattach", "escalationend",
+    /* N345 (K481): the recommendation, the opt-in and the response */
+    "contradictionrecommend", "contradictionoptin", "contradictionrespond"].sort());
 });
 
 test("R27: no new rung is added — the ladder keeps its five", () => {
@@ -363,10 +378,11 @@ const LAYER9_ABSENT = {
   escalationattach: "undetermined", escalationend: "undetermined",
 };
 const LAYER9_READS = ["standard", "standards", "standardinforce", "determination", "determinations", "comparison",
+  "comparisonfacts" /* conformance R21 (N345), an ungated read like `comparison` */,
   "consequence", "consequencesof", "addressed", "counselpacketread", "filingsfor", "availableactions", "escalation",
   "escalationsdue"];
 test("R3 R7 R12: layer 9's 22 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
-   + "14 reads none, and the op maps hold exactly those 36 ops (K264)", () => {
+   + "15 reads none, and the op maps hold exactly those 37 ops (K264; conformance's comparisonfacts, N345)", () => {
   const url = new URL("http://x/");
   const keys = (f) => Object.keys(f({}, url, {}));
   const ESCALATION = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance", "escalationdecline",
@@ -415,4 +431,73 @@ test("R3 R7 R12: op=projectstage, an ungated read, is named in no registry, and 
   assert.deepEqual(r.unpublished, ["projectstage"]);
   assert.deepEqual(A.unaccounted([{ ...row, mutating: true }]).unranked, ["projectstage"]);
   assert.deepEqual(r.stale, base.stale);
+});
+
+/* N345 (K481, K490): contradiction's twelve new ops (its op map, beside `contradictionpropose` and `contradictionpairs`),
+   entities' `resolutiondefect` (K485) and case-authoring's `publishtensions` (K498). The seven that write each carry a
+   rung or a stated absence (R2, R3) and a `NON_ACTS` reason unless an act (R7); the reads R7 names carry a `NON_ACTS`
+   reason, so the control plane gates each with a `NEEDS` row, as it gates `contradictionpairs` (R12). */
+import { contradictionOps } from "../../../src/contradiction/index.mjs";
+const N345_WRITES = { contradictiondismiss: "reasoned", contradictionclarify: "reasoned", contradictiontakeup: "reasoned",
+  contradictionresolve: "reasoned", resolutiondefect: "reasoned",
+  contradictionrecommend: "undetermined", contradictionoptin: "undetermined", contradictionrespond: "undetermined" };
+const N345_READS = ["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
+  "contradictionresponses", "publishtensions"];
+test("R2 R3 R7 R12: N345's ops — contradiction's twelve, resolutiondefect and publishtensions — each carries its rung or "
+   + "stated absence and its registry, and with the control plane's rows for them nothing is unaccounted", () => {
+  const url = new URL("http://x/");
+  const twelve = Object.keys(contradictionOps({}, url, {})).filter((op) => !["contradictionpropose", "contradictionpairs"].includes(op));
+  assert.deepEqual(twelve.sort(), [...Object.keys(N345_WRITES), ...N345_READS]
+    .filter((op) => op.startsWith("contradiction")).sort());
+  for (const [op, r] of Object.entries(N345_WRITES)) {
+    if (r === "undetermined") { assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op); assert.ok(!Object.hasOwn(RUNGS, op), op); }
+    else { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
+  }
+  assert.ok(ACTS.some((a) => a.id === "contradictionresolve"));
+  for (const op of [...Object.keys(N345_WRITES), ...N345_READS].filter((op) => op !== "contradictionresolve"))
+    assert.ok(typeof NON_ACTS[op] === "string" && !NON_ACTS[op].startsWith("capture-directed:"), op);
+  for (const op of N345_READS) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  const table = [...Object.keys(N345_WRITES).map((op) => ({ op, mutating: true, gated: true })),
+    ...N345_READS.map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => Object.hasOwn(N345_WRITES, op) || N345_READS.includes(op)), []);
+  /* carried ungated, a read R7 names would read stale: the control plane gates each */
+  assert.ok(A.unaccounted(N345_READS.map((op) => ({ op, mutating: false, gated: false }))).stale.includes("publishtensions"));
+});
+
+test("R7: NON_ACTS gives N345's ops the reasons R7 states — candidate-directed, run-directed, a registry correction, "
+   + "conflict-directed (DEC-85), and read", () => {
+  for (const op of ["contradictiondismiss", "contradictionclarify", "contradictiontakeup"])
+    assert.ok(NON_ACTS[op].startsWith("candidate-directed: keyed by a candidate, reached where its sides are shown"), op);
+  assert.ok(NON_ACTS.contradictionrecommend.startsWith("run-directed:"));
+  assert.ok(NON_ACTS.resolutiondefect.startsWith("registry correction, keyed by a resolution"));
+  for (const op of ["contradictionoptin", "contradictionrespond"])
+    assert.ok(NON_ACTS[op].startsWith("conflict-directed: keyed by a candidate and the member's project, reached from the "
+      + "conflict's notice"), op);
+  for (const op of N345_READS) assert.ok(NON_ACTS[op].startsWith("read: "), op);
+  assert.match(NON_ACTS.contradictionpairs, /five named keys/);
+  assert.ok(!Object.hasOwn(NON_ACTS, "contradictionresolve"), "an ACTS row, never a non-act too");
+});
+
+/* R7 names a read `contradictionmeasures`, but no such op exists: contradiction's R39 and R40 are in-process
+   (`acceptanceRates`, `dismissalMeasure`), in no op map and routed by no control plane, so a `NON_ACTS` row for it would
+   read `stale` (R12). Asked of BOB (J1, item 1). */
+test.todo("R7: NON_ACTS names contradictionmeasures (\"read: …\") — no op of that name exists to gate (J1)");
+
+test("R3 R27: contradictionrecommend, contradictionoptin and contradictionrespond are graded `undetermined`, each "
+   + "with its sentence; no new rung is added for them", () => {
+  for (const op of ["contradictionrecommend", "contradictionoptin", "contradictionrespond"]) {
+    assert.equal(RUNG_ABSENT[op].ground, "undetermined", op);
+    assert.ok(RUNG_ABSENT[op].is.length > 40, op);
+  }
+  assert.equal(RUNG_LADDER.length, 5);
+});
+
+test("R19: the justification family holds the codes N345's reasoned acts refuse with when the member's account is "
+   + "absent", () => {
+  for (const c of ["DISMISSAL_REASON_UNKNOWN", "CLARIFY_NO_EXPLANATION", "WRONG_SIDE_NO_REASON", "TAKE_UP_NO_QUESTION",
+    "NO_CONCLUSION", "NO_REASON"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+  for (const c of ["NO_CANDIDATE", "NO_SUCH_CANDIDATE", "MACHINE_CANNOT_ACT_ON_CANDIDATE", "NOT_A_CONTRADICTION_INQUIRY",
+    "CLARIFY_CHOICE_UNKNOWN", "TAKE_UP_NO_FRAME"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
