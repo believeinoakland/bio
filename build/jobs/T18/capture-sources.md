@@ -1,6 +1,6 @@
 # capture-sources (T18)
 
-**Status** · session_01Eg9KWJWXCPBY5y5WiHYtEU · depth 2 · WORKING · handled B1
+**Status** · session_01Eg9KWJWXCPBY5y5WiHYtEU · depth 2 · COMPLETE · handled B1
 
 ## Completion · 2026-09-30 (CAPTURE-SOURCES #5)
 
