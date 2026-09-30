@@ -51,3 +51,7 @@ Replaces J1 (items 1–3 unchanged; item 4 revised, as built). The grammar is in
 - `format`: 72 modules, 0 failures. `architecture publication`: 22 files, 76 imports, 0 failures. `coverage publication`: 52 of 52 live ids, 0 failures. `ownership publication tranche/T16`: 7 files, legacy 0 added / 0 removed, 0 failures.
 
 Size (session_019hjZa97BwV8fCGD6XMVLQD): test runs 18, module lines 6185
+
+## J3 · REPORT
+
+Found in other modules (record, Completion): (1) case-authoring: write the /5 blocks with captureBlockLines / sourceBlockLines; each sources: row's stated must be sourceStatement(entry) of an entry publishableAt({audience: public}) answered, or unnamedSourceStatement({capture, received}) with received the capture's first pulled knock; any other spelling is refused at the commit (C-122.1). (2) legacy-tests: the DEC-49 guard's floors move by my one family (CASE_SOURCES_CHECKS), one row, one site/region, one refusal outcome; the guard is already red on the tranche (15 failures, others' growth). row-census AWAITING_STAMP gains C-122.1. (3) ratification checks.test.mjs:133 red with or without this change (K500). (4) bio-plane/dist/bio-plane.bundled.mjs stale, not rebuilt. (5) sources R15 (source_knocks read contract, pin test N377) is now relied on by publication.
