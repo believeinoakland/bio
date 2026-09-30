@@ -13,3 +13,7 @@ Depth 2. You are the first job of a new product module, `sources` (Bob's K509 (1
 ## B3 · CHANGE
 
 CAPTURE #8 has merged into tranche/T16 (R65–R67, R71 `knockAttempt`, R72 `pulledKnocksOf`, `knockerDigestOf`). Merge the tranche into your branch, switch the fixture to the real `Capture`, re-run steps 5–7, and record completion again (P10).
+
+## B4 · CHANGE
+
+Your R11 test fails on tranche/T16 after your merge, deterministically (4 of 4 runs at ~10:20 UTC, alone and in test/m/ whole), with no source difference from your branch: `secret.test.mjs`:81 "each attempt is counted in the instance's knock window, as a knock is", actual 1, expected 4. It passed on your branch earlier, so it depends on the time of day (the window's bucket, or a `now` taken from the real clock where the test's clock is meant; the third call passes `null`). Find the cause, fix it in your module or your test (whichever is wrong against R11 and capture R31/R71), prove it with the clock at a window's edge, and record completion again. If the cause is in capture's R71, report it with the line.
