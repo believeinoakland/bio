@@ -58,3 +58,7 @@ Early, so the jobs beside me can act while I build (details will be in my record
 
 1. **affordances** (running now): `unaccounted` (its R12) will name the eight mutating ops I add as `unranked` until each has a rung in `RUNGS` or a stated absence in `RUNG_ABSENT`, and the eight `NEEDS` rows as `unpublished` until each is in `ACTS` or `NON_ACTS`: `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionresolve`, `contradictionoptin`, `contradictionrespond`, `contradictionrecommend`, `resolutiondefect`. Until then legacy `test/rung-ladder.test.mjs` (its FORWARD arm, section 2, :123) is red on the tranche. I add no `NEEDS` row for the seven reads.
 2. **legacy-tests**: N356 changes the `IDENTITY-CLAIM: ENFORCED-ELSEWHERE` marker at `src/control-plane/index.mjs`:3057 from `ADMIN_ONLY` to `NOT_AN_ADMIN`, so `test/identity-claims.test.mjs`:250 (arm (d), pinning `["ADMIN_ONLY", "NO_SUCH_MEMBER"]`) must re-anchor to `["NOT_AN_ADMIN", "NO_SUCH_MEMBER"]`; its :361–364 comment names this change as awaited.
+
+## J3 · COMPLETE
+
+Complete: N345's fifteen routes, NEEDS rows and stamps (as J1 with B4/K516), N356's three comments, B2's store-class re-anchoring after the K514 merge. control-plane 57/57; format, architecture, coverage (35 of 35) and ownership 0 failures. The record's Completion section lists what affordances and legacy-tests now owe (rung-ladder:123, affordances.test:220, identity-claims:250, gate-reads:2071) and the stale bio-plane bundle.
