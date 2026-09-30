@@ -61,3 +61,13 @@ Size (session_01Lo4UbhM2msU4EuN9zSJ4eS): test runs 31, module lines 6601
 ## J3 · COMPLETE
 
 Job complete at job/T16/control-plane (record: Completion). Applied: R36's pull as K559 orders it (dry run, pullKnock, promotion; residue answered and refiled by a repeated pull), refused today by the dry run with nothing written (N381, K560; its filing a test.todo naming N381); inboxresolve 'pulled' routed as inboxpull; K558's table (routes, NEEDS rows, stamps) for capture's, sources', membership's own-key and case-authoring's new ops, knockerconsent public and pinned; the stale comment at index.mjs:605-615. Waiting: N363's M_TASKS on your CHANGE. Reports: legacy-tests machine-attest.test.mjs:187 (four new ops unaccounted); affordances.test.mjs:220 and rung-ladder.test.mjs:123/136/148 red until AFFORDANCES #8 merges; plane bundle stale. Module 68 pass 0 fail 1 todo; test/m 3079 pass 0 fail 22 todo; four checks 0 failures.
+
+## Completion after B5 (CHANGE, K562)
+
+`tranche/T16` merged (tasks early). `M_TASKS` (`../tasks/checks.mjs`) imported and listed in `MODULE_CHECK_FILES`, after the others; `M_QUEUE` kept. New test (`envelope.test.mjs`, R22, N363): tasks' rows are read, and INBOX_REFUSED (C-19.2), MACHINE_CANNOT_FORWARD (C-32.10) and MACHINE_CANNOT_RESOLVE (C-32.11) each decorate a forwarded refusal; negative control: without `M_TASKS` it fails. Queue's duplicate rows trouble no test of mine (they carry the same check ids).
+
+**Found (REPORT J4):** `NOT_YOURS` has two rows in different modules: intent's C-111.15 (`src/intent/checks.mjs`, "A member's own aspiration…") and tasks' C-76.1 (queue's copy too). The door takes the first it reads, intent's, so a task refusal that carries no row of its own would show intent's check and sentence. That was already so with queue's copy before this change. One code, two rows is the DEC-49 guard's arm A; renaming either code is its owner's (intent or tasks).
+
+**Tests and checks:** `test/m/control-plane/` 70 tests, 69 pass, 0 fail, 1 todo (R36's filing, N381). `test/m/` whole: 3196 tests, 3173 pass, 0 fail, 23 todo. format, architecture (15 files, 94 imports), coverage (36 of 36), ownership (7 files, legacy 0/0): 0 failures each.
+
+Size (session_01Lo4UbhM2msU4EuN9zSJ4eS): test runs 36, module lines 6604

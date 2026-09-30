@@ -61,6 +61,8 @@ import * as M_SKILLDOCTRINE from "../skilldoctrine.mjs";
 import * as M_SOURCES from "../sources/checks.mjs";
 import * as M_STANDARDS from "../standards/checks.mjs";
 import * as M_STRENGTH from "../strength/checks.mjs";
+/* N363 (K562): tasks' rows (C-19.2, C-32.10, C-32.11, C-76.1), moved from queue's, so their DEC-49 row reaches the wire. */
+import * as M_TASKS from "../tasks/checks.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage } from "../setup.mjs";
@@ -789,7 +791,7 @@ const MODULE_CHECK_FILES = [
   M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_CONTROL_PLANE, M_ENTITIES,
   M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
   M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_QUEUE, M_RATIFICATION, M_RECORD_CORE, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
-  M_SKILLDOCTRINE, M_SOURCES, M_STANDARDS, M_STRENGTH];
+  M_SKILLDOCTRINE, M_SOURCES, M_STANDARDS, M_STRENGTH, M_TASKS];
 let DEC49_ROWS = null;
 function dec49Row(code) {
   if (DEC49_ROWS === null) {
