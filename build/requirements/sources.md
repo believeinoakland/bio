@@ -37,7 +37,7 @@ Terms. A **source** is the person behind a capture that was given to the group r
 - **R10** Each registration goes through `membership.listenerRefusal`, and each listener is called after every R2, R6 or R7 commit with `{source, entry, rung_before, rung_after}`. A listener's failure never undoes the act.
 
 **consentBySecret({knockerSecret, entry, audience, withdraw?})** (`op=knockerconsent`, no account)
-- **R11** A source proves who they are by presenting their knocker secret (its digest and pseudonym as `capture.knockerDigestOf` answers them), and consents to, or withdraws from, one entry for one audience, as R7 records a consent. `SECRET_NOT_RECOGNISED` (C-121.6) is answered identically for every failure, and the act is rate-bound as a knock is, in the same windows as knocks (`capture` R31): a consent attempt counts as a knock from its source (K530). *(not yet met: its rate arm fails on the tranche, K541)*
+- **R11** A source proves who they are by presenting their knocker secret (its digest and pseudonym as `capture.knockerDigestOf` answers them), and consents to, or withdraws from, one entry for one audience, as R7 records a consent. `SECRET_NOT_RECOGNISED` (C-121.6) is answered identically for every failure, and the act is rate-bound as a knock is, in the same windows as knocks (`capture` R31): a consent attempt counts as a knock from its source (K530).
 
 ## Private
 

@@ -2,3 +2,6 @@ session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_l
 session_014rKpxqH7kUf2B2Gnkpa86U,job,legacy-checks,18262806,459349,6837,26673,,1,0
 session_01Nism1JK1EosdBHAiFXkWHn,job,membership,23658482,355597,170,61448,,15,3870
 session_01SV3MUwaJQVfxezqBTByPmU,job,promotion,17322052,269554,672,36986,,16,124
+session_01C2JRNr5dArDzZueoyT1MmF,job,capture,36715650,453590,208,97191,,17,3658
+session_01BSkuuwEzNWD8dWMjWW2taW,job,sources,25970743,323446,209,117913,,35,805
+session_01VKXANZkXWm7m6KERHYiYdY,job,provenance,5396305,156342,74,15286,,5,3257
