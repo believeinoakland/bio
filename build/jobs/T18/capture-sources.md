@@ -31,3 +31,7 @@ None new. The guard's 13 failures on this branch are other modules' and already 
 - The DEC-49 guard ran once, read only (13 failures, none this module's).
 
 Size (session_01Eg9KWJWXCPBY5y5WiHYtEU): test runs 5, module lines 2245
+
+## J1 · COMPLETE
+
+Done, pushed on job/T18/capture-sources. N242's share was already met: the DEC-49 guard prints no failing C-105 row today (CAPTURE-SOURCES #3 fixed T7's list), and the existing guard test proves it. drive-convert's share: a new test covers R43 for every kind and host spelling, tied to the hop's export_format (R42), with a negative control. No code changed; no catalogue row moved, so nothing awaiting stamp. Stale not-yet-met marks for you to strike: R3, R26's last sentence, R36, R54 (the function; the caller wiring is capture's), R55-R63. Tests 74 pass, 0 fail, 1 todo (R37); format, architecture, coverage and ownership all 0 failures. Details in my record.
