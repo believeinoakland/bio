@@ -25,7 +25,7 @@
 
 **Check rows** (promotion's to stamp, N318; `awaiting stamp` T17): C-19.2, C-32.10, C-32.11, C-76.1 are now defined again in `src/tasks/checks.mjs`, with the same ids and words and a new `where`. C-19.1 is the function `checkInboxGrammar`. Their copies in `src/queue/checks.mjs` retire when QUEUE removes them. No new row.
 
-**Found in other modules (REPORT J2):**
+**Found in other modules (REPORT J1):**
 1. **queue (QUEUE #5):** after this merges, remove the moved code and rewire to R6 (`recentTasks` at :2454, `resolvedTasks` in `#resolvedLately` at :3089, `taskExists` at :3213), and drop `tasks` from `declarePurge("queue", …)`, `COUNT_KEYS`/`counts`, `registerAuditCheck`, `registerStep`, the `task-drain` consumer and `capture.on("task")`. Tasks' registrations then take over by themselves. Also drop the four moved rows and `checkInboxGrammar` from queue's `checks.mjs`, the task ops from `queueOps`, and `tasks` from `QUEUE_TABLES` and `QUEUE_SCHEMA`. R6 answers tasks in `taskList`'s shape (`subject.text`, not `subject_text`).
 2. **control-plane:** `MODULE_CHECK_FILES` needs `../tasks/checks.mjs` once queue's copies go (draft §3.4), and `uses` gains `tasks`.
 3. **legacy-tests** (new reds from this change, each red on its own reading of source text, none a change of behaviour). Every other failing verdict of the 42 legacy suites that name the inbox is the same on `tranche/T16` without this change.
