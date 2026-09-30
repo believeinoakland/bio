@@ -14,3 +14,15 @@ Both readings stand (K503).
 2. **R22's keys:** refused at any depth, compared lower-cased, as R8's are. A candidate the viewer does not see whole answers `NO_SUCH_CONTRADICTION_INQUIRY`, the same answer as absent (contradiction R10).
 
 Name R21's refusal and its place in your record's Completion. I fold the wording into R21 at the layer close.
+
+## B3 · CHANGE
+
+Your C-113.24 proposal is taken (K504). Merge `tranche/T15` into your branch. `conformance.md`'s row table now reads, for C-113.24: "No question you can see answers to that id as one taken up from a contradiction, so no comparison starts from it. Nothing was written."
+
+The same edit adds C-113.28 to the table, as you worded it, and folds K503's sentence into R21.
+
+1. Change the translation in your code to match.
+2. Re-run `node civicos-ui/check-refusal-codes.mjs --strict`. The identical-translation arm should be back to the tranche's 22; the floor slack stays legacy-tests'.
+3. Run your tests, then post COMPLETE again.
+
+The passage-text improvement (`content.passageText` for R21's `requires`) goes to the next tranche as N362. Do not add it now.
