@@ -48,3 +48,7 @@ CASE-AUTHORING #8 redid CASE-AUTHORING #7's lost work (B2), in four pushed commi
 - ownership: 7 files changed; legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_01PqWQooG9fBVam8LWu6weou): test runs 9, module lines 363 (325 added, 38 removed)
+
+## J3 · COMPLETE · re B3
+
+B3 applied: tranche/T18 merged (R29 now lists C-33.14). Re-run: coverage 37 of 37 live requirement ids named by a test, 0 failures; format 0 failures; ownership 0 failures (legacy-store 0/0, legacy-checks 0/0); test/m/case-authoring 79 of 79 pass. No code change needed; J2's record stands.
