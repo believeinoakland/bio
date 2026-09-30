@@ -266,13 +266,16 @@ test("R2, R17 (N364; case-authoring R34, R35): op=publish's body carries `selfAt
   }
 });
 
-test("R27 (N364): the new reads that carry an id are classified — publishpreflight names the publishing project (the door answers existence first), the knock, capture and source reads name none, with the reason", async () => {
+test("R27 (N364): the new reads that carry an id and reach a store route are classified — publishpreflight names the publishing project (the door answers existence first), the knock and capture reads name none, with the reason", async () => {
   const { PROJECT_NAMING_READS: NAMES, PROJECT_NAMING_READS_NOT: NOT } = D;
   assert.deepEqual(NAMES.publishpreflight, ["project"]);
-  for (const op of ["knocksof", "pulledknocks", "lateattestations", "captureaccounts", "sourceof", "sourcerung", "sourcereadlog", "sourcepublishable"]) {
+  for (const op of ["knocksof", "pulledknocks", "lateattestations", "captureaccounts"]) {
     assert.equal(typeof NOT[op], "string", op);
     assert.equal(Object.hasOwn(NAMES, op), false, op);
   }
+  /* sources' reads are not store routes of this door yet (N379, K558), so neither table names them */
+  for (const op of ["sourceof", "sourcerung", "sourcereadlog", "sourcepublishable"])
+    assert.equal(Object.hasOwn(NOT, op) || Object.hasOwn(NAMES, op), false, op);
   const PR = "PROJ-seen";
   const ran = [];
   const store = { routes: () => ({ publishpreflight: () => { ran.push(1); return { answered: true }; } }),

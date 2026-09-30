@@ -96,12 +96,11 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   contradictionfacts: "`candidate` is a contradiction CANDIDATE id — a thing inside the record, never a bundle id",
   contradictiontensions: "`referents` (in the body) are a case's claims, legs and extents at their versions, never a project's own id",
   comparisonfacts: "`contradiction` is a contradiction CANDIDATE id and `standardSide` names its side, never a bundle id",
-  /* N364's reads: a knock's pseudonym, a capture's digest or a source's id, never a bundle id. */
+  /* N364's reads: a knock's pseudonym or a capture's digest, never a bundle id. Sources' reads are classified when this
+     door dispatches them (N379): a name here must be a store route. */
   knocksof: "`pseudonym` is a KNOCKER's pseudonym, never a bundle id",
   pulledknocks: "`capture` is a CAPTURE's digest", lateattestations: "`capture` is a CAPTURE's digest",
-  captureaccounts: "`capture` is a CAPTURE's digest", sourceof: "`capture` is a CAPTURE's digest",
-  sourcerung: "`source_id` is a SOURCE id, never a bundle id", sourcereadlog: "`source_id` is a SOURCE id, never a bundle id",
-  sourcepublishable: "`source_id` is a SOURCE id, never a bundle id",
+  captureaccounts: "`capture` is a CAPTURE's digest",
 });
 
 /* R27 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1

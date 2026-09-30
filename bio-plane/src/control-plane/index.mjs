@@ -2789,10 +2789,10 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (ROSTER_SELF_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    /* N364: a member's own key (membership R89, R90), capture's member acts (R65, R68, R69) and sources' acts (R2, R6,
-       R7) each take the server's `by` by the roster acts' expression, in a statement of their own for the reason just
-       given; each module reads it from the query after the body, so a caller's `by` names nobody. A bearer, where an
-       op admits one, stamps `class:<cls>`, which names no member. */
+    /* N364: the own-key acts (membership R89, R90), capture's pull, re-attestation and account (R65, R68, R69) and
+       sources' four acts (R2, R6, R7) each take the server's `by` by the roster acts' expression, in a statement of their
+       own for the reason just given; each module reads it from the query after the body, so a caller's `by` names
+       nobody. A bearer, where an op's row admits one, stamps `class:<cls>`, and what that name may do is the module's. */
     if (OWN_KEY_ACTIONS.includes(op) || CAPTURE_MEMBER_ACTIONS.includes(op) || SOURCE_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* R36: the pull's promotion carries the session's POSITIONAL identity as op=promote's `actorIdentity` (POSITIONAL_ACTS'
