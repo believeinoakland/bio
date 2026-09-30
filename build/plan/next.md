@@ -83,3 +83,5 @@
 - **N421** (K683; AGENT-WORKER #5) · agent-worker: convert the older suites' remaining source-text arms (the op-name scan, the no-binding and no-URL scans, harness's header prose) to interface arms, and `plane-suggest.mjs`' C-25.1 floor to read the owner's export rather than `bio-checks.mjs` text (P7).
 
 - **N422** (K685; REEVALUATION #8's REPORT) · inquiry R42: `#raise` carries reevaluation's `raise` answer object itself rather than copying `listeners_failed` when `raise` returns (N406 writes it only after the outermost commit), as promotion's reopen and case-authoring do, so a re-read's reply names a failed listener; the same for `dispose` and `divide` under a caller's transaction. Also record-core: `registerGrammar`'s answer (`src/record-core/index.mjs`:970) classified for the DEC-49 guard (N242's share).
+
+- **N423** (K688; REVIEW #5 J2) · review: `src/review/index.mjs` imports `isMachineIdentity` from the catalogue (a re-export since T18 layer 1); re-point it to `record-grammar`, `uses` gaining `record-grammar` (BOB's edge, written before the job) and the Uses section re-worded; the catalogue's re-export is then one importer fewer.
