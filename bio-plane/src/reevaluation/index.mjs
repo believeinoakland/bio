@@ -113,6 +113,12 @@ const asList = (v) => {
 };
 const clamp = (v, dflt, max) => Math.max(1, Math.min(max, Math.floor(Number(v) || dflt)));
 
+/* R15: one ground of an adopted version, as the live document authored it, else asserted by the adopting member now. */
+function groundRow(ground, authored, who, when) {
+  const d = authored || {};
+  return { ground, asserted_by: d.asserted_by ?? who, at: d.at ?? when, ...(d.statement ? { statement: d.statement } : {}) };
+}
+
 /* A cause's `since` against a recorded one: closed when the cause is not later (R16). Two nulls are the same instant;
    an unreadable pair is compared as text, never read as later. */
 function notLater(since, recorded) {
@@ -458,8 +464,10 @@ export class Reevaluation {
           source: "corrected", since: m.at ?? null, ord: l.ord, candidate: m.candidate, kind: m.kind ?? null,
           reason: m.reason ?? null, member: m.member ?? null,
           ...(m.inquiry ? { inquiry: m.inquiry } : {}), ...(m.act ? { act: m.act } : {}), side,
-          ...(m.at ? {} : { since_why: "the side was named wrong by a contradiction inquiry's conclusion, and the "
-                              + "tensions read states no instant for it; none is invented here" }),
+          /* N359: a mark carries its marking act's instant (a member's `one_wrong`, or R36's concluding act); only a
+             conclusion reached by basis-versions' own door has none, and the mark says why. */
+          ...(m.at ? {} : { since_why: `${typeof m.why === "string" && m.why ? `${m.why}; ` : ""}the tensions read states `
+                              + "no instant for this mark, and none is invented here" }),
           detail: `${what} was named wrong by a member's resolution of contradiction ${m.candidate}`
             + `${m.reason ? ` (${m.reason})` : ""}. It still resolves and says it was corrected; nothing resting on it `
             + `was moved, and whether this finding still stands is the members' to decide.`,
@@ -1228,26 +1236,27 @@ export class Reevaluation {
     return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
   }
 
-  /* R15: the notice an act names, seen through its holder; a machine is refused first. */
+  /* R15: the notice an act names, seen through its holder; a machine is refused first. Answers the refusal itself, or
+     `{ok: true, who, r}`, so every outcome carries its verdict (DEC-49; N242). */
   #choiceSubject(machineCode, notice, author, viewer) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-version-choice */
     if (!who || isMachineIdentity(who))
-      return { refusal: this.#refuse(machineCode,
-        who ? `'${who.slice(0, 60)}' is a machine identity.` : "no member is named as the one choosing.") };
+      return this.#refuse(machineCode,
+        who ? `'${who.slice(0, 60)}' is a machine identity.` : "no member is named as the one choosing.");
     const id = String(notice ?? "").trim();
     /* R26: a case notice answers only to the owners it told; any other viewer reads it as absent. */
     const r = !id ? null
       : this.#noticeRows(viewerPredicate(viewer), `notice_id = ?`, [id], `LIMIT 1`, [])[0] ?? null;
     if (!r)
-      return { refusal: this.#refuse("VERSION_NOTICE_NOT_FOUND",
-        `no notice by the id '${id.slice(0, 60)}' is readable here.`, { notice: id || null }) };
+      return this.#refuse("VERSION_NOTICE_NOT_FOUND",
+        `no notice by the id '${id.slice(0, 60)}' is readable here.`, { notice: id || null });
     if (r.state !== "open")
-      return { refusal: this.#refuse("VERSION_NOTICE_CLOSED",
+      return this.#refuse("VERSION_NOTICE_CLOSED",
         `${id} was answered ${r.state === "adopted" ? "by adopting the newer version" : "by keeping the earlier version"} `
-        + `by ${r.closed_by} at ${r.closed_at}.`, { notice: id, state: r.state }) };
+        + `by ${r.closed_by} at ${r.closed_at}.`, { notice: id, state: r.state });
     /* END DEC-49 REGION is-version-choice */
-    return { who, r };
+    return { ok: true, who, r };
   }
 
   /** R15: ADOPT writes a new version of the reference pinned to the newer capture, the old staying readable: for a
@@ -1256,7 +1265,7 @@ export class Reevaluation {
    *  The version and the notice's closing land together or neither does. */
   adoptVersion({ notice = null, author = null, viewer = null } = {}) {
     const s = this.#choiceSubject("MACHINE_CANNOT_ADOPT_VERSION", notice, author, viewer);
-    if (s.refusal) return s.refusal;
+    if (!s.ok) return s;
     const { who, r } = s;
     if (r.kind === "case")
       return this.#refuse("VERSION_ADOPT_UNWRITABLE",
@@ -1312,11 +1321,7 @@ export class Reevaluation {
     let grounds;
     if (labels.size && vlegs.every((l) => typeof l.ground === "string" && l.ground.trim())) {
       const rowsG = Array.isArray(fm.grounds) ? fm.grounds.filter((g) => g && typeof g === "object") : [];
-      grounds = [...labels].map((g) => {
-        const d = rowsG.find((x) => String(x.ground ?? "").trim() === g) || {};
-        return { ground: g, asserted_by: d.asserted_by ?? who, at: d.at ?? when,
-                 ...(d.statement ? { statement: d.statement } : {}) };
-      });
+      grounds = [...labels].map((g) => groundRow(g, rowsG.find((x) => String(x.ground ?? "").trim() === g), who, when));
     } else {
       for (const l of vlegs) l.ground = "all";
       labels.clear(); labels.add("all");
@@ -1367,7 +1372,7 @@ export class Reevaluation {
   /** R15: KEEP records "stays on the earlier version" with who, when, the optional why and both captures. */
   keepVersion({ notice = null, why = null, author = null, viewer = null } = {}) {
     const s = this.#choiceSubject("MACHINE_CANNOT_KEEP_VERSION", notice, author, viewer);
-    if (s.refusal) return s.refusal;
+    if (!s.ok) return s;
     const { who, r } = s;
     const text = why == null ? null : String(why).trim() || null;
     if (text !== null && (text.length > NOTE_MAX || UNSTORABLE.test(text)))

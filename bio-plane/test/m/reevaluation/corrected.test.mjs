@@ -75,7 +75,7 @@ test("R27: a leg naming an inquiry whose claim was named wrong carries `correcte
   assert.match(c.detail, new RegExp(`claim of ${I1} at version v1`));
 });
 
-test("R27: only a live leg rests on anything: a severed leg and a divided citer carry no corrected cause", () => {
+test("R27: only a live leg rests on anything: a severed leg and a divided citer carry no corrected cause; the child that took the passage leg does (N360)", () => {
   const { w, ca, cand } = k1();
   const SEV = "INQ-2026-0005-sev";
   w.inquiry(SEV, { legs: [{ target: RULE, content_id: ca }], refs: [{ target: RULE, rel: "cites", status: "severed" }] });
@@ -83,8 +83,9 @@ test("R27: only a live leg rests on anything: a severed leg and a divided citer 
   const r = w.r.reevaluations({ viewer: ADMIN });
   assert.ok(!r.obligations.some((o) => o.bundle_id === SEV), "a severed leg supports nothing and is not caused");
   assert.deepEqual(w.r.correctedDependents({ viewer: ADMIN }).entries.map((e) => e.dependent), [Q, D]);
-  /* a divided citer: its legs are frozen history (the child that took the leg holds it on the whole document, not on
-     the passage, so it is not caused either) */
+  /* a divided citer: its legs are frozen history. The child that took the passage leg holds it on the same passage
+     (inquiry R24, N360: divide carries each apportioned leg's passage), so R27's passage-level cause reaches it; the
+     child that took the whole-document leg on ACT is not caused. */
   const DIV = "INQ-2026-0006-div", C1 = "INQ-2026-0007-first", C2 = "INQ-2026-0008-second";
   w.inquiry(DIV, { legs: [{ target: RULE, content_id: ca }, { target: ACT }] });
   const d = w.k.divide({ target: DIV, reason: "two questions", viewer: "admin", author: V("alice"),
@@ -93,8 +94,12 @@ test("R27: only a live leg rests on anything: a severed leg and a divided citer 
   const after = w.r.correctedDependents({ viewer: ADMIN }).entries.map((e) => e.dependent);
   assert.deepEqual(w.rows(`SELECT content_id FROM inquiry_basis WHERE bundle_id=? AND ord=0`, DIV)[0].content_id, ca,
     "the divided citer's leg still names the passage");
-  assert.deepEqual(after, [Q, D], "a divided citer is not caused");
-  assert.ok(!after.includes(C1) && !after.includes(C2));
+  assert.deepEqual(w.rows(`SELECT content_id FROM inquiry_basis WHERE bundle_id=? AND ord=0`, C1)[0].content_id, ca,
+    "the child's leg names the parent leg's passage");
+  assert.deepEqual(after, [Q, D, C1], "the divided citer is not caused; its child resting on the passage is");
+  assert.ok(!after.includes(DIV) && !after.includes(C2));
+  const [c1] = w.r.reevaluations({ viewer: ADMIN }).obligations.filter((o) => o.bundle_id === C1);
+  assert.deepEqual([c1.target, corrected(c1).map((c) => [c.ord, c.candidate, c.side.content_id])], [RULE, [[0, cand, ca]]]);
 });
 
 test("R27 R20: a dependent the viewer may not see is withheld and not counted; a viewer who may not see the candidate's sides is told no cause", () => {
@@ -192,8 +197,8 @@ test("R27 R18 R19: the reads write nothing and nothing moves: no strength, leg o
   assert.equal(w.text(D), text);
 });
 
-test("R27 R21: a tensions read that cannot be made is said, never read as none; a mark set by a contradiction inquiry states no instant, and none is invented", () => {
-  const { w, ca } = k1();
+test("R27 R21: a tensions read that cannot be made is said, never read as none", () => {
+  const { w } = k1();
   const make = (contradiction) => new Reevaluation({ storage: w.st, record: w.record, membership: w.membership,
     promotion: w.promotion, inquiry: w.k, content: w.content, provenance: w.prov, strength: w.strength,
     basisVersions: w.basisVersions, contradiction });
@@ -205,19 +210,60 @@ test("R27 R21: a tensions read that cannot be made is said, never read as none; 
   }
   const undetermined = make({ tensionsOn: () => ({ ok: true, wrote: false, referents: [], undetermined: true }) });
   assert.equal(undetermined.reevaluations({ viewer: ADMIN }).corrections_read, false);
-  /* a stale mark from a contradiction inquiry's CORRECTED conclusion: member and instant null (contradiction R27) */
-  const byInquiry = make({ tensionsOn: ({ referents }) => ({ ok: true, wrote: false, referents: referents.map((ref) => ({
-    referent: ref, marks: ref.ref === ca ? [{ mark: "stale", candidate: "c".repeat(64), corrected: true, kind: "misreading",
-      reason: "the table was misread", member: null, at: null, inquiry: "INQ-2026-0009-contra" }] : [] })) }) });
-  const r = byInquiry.reevaluations({ viewer: ADMIN });
-  assert.deepEqual(r.obligations.map((o) => o.bundle_id), [Q, D]);
-  const [c] = corrected(r.obligations[0]);
-  assert.deepEqual([c.since, c.member, c.inquiry, c.kind, c.act], [null, null, "INQ-2026-0009-contra", "misreading", undefined]);
-  assert.match(c.since_why, /states no instant/);
-  /* R16 closes it as any cause */
-  assert.equal(byInquiry.recordReevaluation({ dependent: D, target: RULE, source: "corrected", note: "seen", author: "alice",
-                                              viewer: ADMIN }).ok, true);
-  assert.deepEqual(byInquiry.reevaluations({ viewer: ADMIN }).obligations.map((o) => o.bundle_id), [Q]);
+});
+
+test("R27 R16 (N359): a side named wrong by a contradiction inquiry's CORRECTED conclusion gives `corrected` with the concluding member and instant as `since`; one concluded by basis-versions' own door states none, says why, and closes as any cause", () => {
+  const { w, ca, cand } = k1();
+  const side = sideOn(w, cand, ca);
+  const up = w.c.takeUp({ candidate: cand, question: "Which reading is right?", frame: side === "a" ? "b" : "a",
+                          viewer: ADMIN, author: "member:alice" });
+  assert.equal(up.ok, true, JSON.stringify(up).slice(0, 400));
+  /* the question's own accepted reading, whose claim the conclusion adopts (basis-versions R16) */
+  const T0 = "2026-09-28T00:00:00Z";
+  const reading = ["basis_versions:", '  - name: "v1"', '    description: "the reading called v1"', '    relationship: "and"',
+    '    state: "accepted"', "    hidden: false", "    derived_from: null", '    author: "member:alice"', `    at: "${T0}"`,
+    '    claim: "the fee fell"', '    state_by: "member:alice"', `    state_at: "${T0}"`, '    state_reason: ""',
+    "basis_version_grounds:", '  - version: "v1"', '    ground: "main"', '    asserted_by: "member:alice"', `    at: "${T0}"`,
+    "basis_version_legs:", '  - version: "v1"', `    target: "${RULE}"`, '    role: "supports"', '    ground: "main"'].join("\n");
+  const withReading = w.promotion.promote({ bundleId: up.inquiry, base: w.record.head(up.inquiry).bundleSha, snapKey: "reading",
+    author: "member:alice", files: [{ path: "bundle.md", text: w.text(up.inquiry).replace(/\n---\n/, `\n${reading}\n---\n`) }],
+    meta: { object_type: "inquiry" } });
+  assert.equal(withReading.ok, true, JSON.stringify(withReading).slice(0, 600));
+  w.clock.now = "2026-09-29T12:00:00Z";
+  const r = w.c.resolve({ inquiry: up.inquiry, resolution: { kind: "misquote", wrong_side: side, reason: "the table was misread" },
+                          conclusion: "the fee fell", version: "v1", falsifier: "a clean copy of the table", viewer: ADMIN, author: "member:bea" });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+  const o = w.r.reevaluations({ viewer: ADMIN }).obligations;
+  assert.ok([Q, D].every((d) => o.some((x) => x.bundle_id === d && x.target === RULE)));
+  for (const x of o.filter((y) => y.target === RULE)) {
+    const [c] = corrected(x);
+    assert.deepEqual([c.since, c.member, c.inquiry, c.act, c.kind, c.reason, c.since_why],
+      [r.act.at, "member:bea", up.inquiry, r.act.act_id, "misquote", "the table was misread", undefined]);
+    assert.equal(r.act.at, "2026-09-29T12:00:00Z");
+    assert.deepEqual(x.reeval, { flag: true, since: r.act.at, source: "corrected" });
+  }
+  assert.equal(w.r.recordReevaluation({ dependent: D, target: RULE, source: "corrected", note: "seen", author: "alice",
+                                        viewer: ADMIN }).since, r.act.at);
+  assert.ok(!w.r.correctedDependents({ viewer: ADMIN }).entries.some((e) => e.dependent === D), "closed for D");
+  /* concluded by basis-versions' own door: contradiction's mark carries no instant and says why; none is invented */
+  const { w: o2, ca: ca2, cand: cand2 } = k1();
+  const side2 = sideOn(o2, cand2, ca2);
+  const up2 = o2.c.takeUp({ candidate: cand2, question: "Which reading is right?", frame: side2 === "a" ? "b" : "a",
+                            viewer: ADMIN, author: "member:alice" });
+  const text = o2.text(up2.inquiry).replace(/^current_state: .*$/m, "current_state: concluded")
+    .replace(/^prior_state: .*$/m, "prior_state: open")
+    .replace(/\n---\n/, `\nconclusion: "the fee fell"\nfalsifier: "none"\nresolution:\n  kind: "misquote"\n  wrong_side: "${side2}"\n  reason: "misread"\n---\n`);
+  const pr = o2.promotion.promote({ bundleId: up2.inquiry, base: o2.record.head(up2.inquiry).bundleSha, snapKey: "other-door",
+                                    author: "member:alice", files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" } });
+  assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 600));
+  const d2 = o2.r.reevaluations({ viewer: ADMIN }).obligations.find((x) => x.bundle_id === D);
+  const [c2] = corrected(d2);
+  assert.deepEqual([c2.since, c2.member, c2.inquiry, c2.act], [null, null, up2.inquiry, undefined]);
+  assert.match(c2.since_why, /basis-versions' own door.*none is invented/s);
+  /* R16's null-matching close: a null since is closed by a record of a null since, until an instant appears */
+  assert.equal(o2.r.recordReevaluation({ dependent: D, target: RULE, source: "corrected", note: "seen", author: "alice",
+                                         viewer: ADMIN }).since, null);
+  assert.ok(!o2.r.reevaluations({ viewer: ADMIN }).obligations.some((x) => x.bundle_id === D));
 });
 
 test("R27 (K493): a stance side is never marked stale, so a K5 candidate never yields a corrected cause", () => {
