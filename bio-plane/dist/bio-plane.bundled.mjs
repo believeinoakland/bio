@@ -914,12 +914,12 @@ function parseScalar(raw) {
   if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
   return v;
 }
-function parseFrontmatter(text3) {
+function parseFrontmatter(text4) {
   const findings = [];
-  const lines = text3.split(/\r?\n/);
+  const lines = text4.split(/\r?\n/);
   if (lines[0] !== "---") {
     findings.push(f("C-2.1", "error", "bundle.md does not begin with a --- frontmatter fence"));
-    return { data: null, findings, body: text3 };
+    return { data: null, findings, body: text4 };
   }
   let end2 = -1;
   for (let i = 1; i < lines.length; i++) if (lines[i] === "---") {
@@ -928,7 +928,7 @@ function parseFrontmatter(text3) {
   }
   if (end2 === -1) {
     findings.push(f("C-2.1", "error", "frontmatter fence is never closed"));
-    return { data: null, findings, body: text3 };
+    return { data: null, findings, body: text4 };
   }
   const data = {};
   let topKey = null;
@@ -1119,16 +1119,16 @@ function checkHeadings(ctx, findings) {
   if (!required) return;
   const conditional = vocabFor(HEADINGS_WHEN, ot) || [];
   const canonical = [...required, ...conditional.map((c) => c.heading)];
-  const present = (ctx.body.match(/^## .*$/gm) || []).map((h) => h.trimEnd());
+  const present2 = (ctx.body.match(/^## .*$/gm) || []).map((h) => h.trimEnd());
   for (const h of required) {
-    if (!present.includes(h)) findings.push(f("C-3.1", "error", `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
+    if (!present2.includes(h)) findings.push(f("C-3.1", "error", `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
   }
   for (const c of conditional) {
     const owed = c.whenCaseMember ? isCaseMemberBytes(ctx.fm) : (c.states || []).includes(ctx.fm?.current_state);
-    if (owed && !present.includes(c.heading))
+    if (owed && !present2.includes(c.heading))
       findings.push(f("C-3.1", "error", `required heading '${c.heading}' is missing: a member of a published case carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
   }
-  for (const h of present) {
+  for (const h of present2) {
     if (!canonical.includes(h)) findings.push(f("C-3.1", "error", `heading '${h}' is not in the canonical set for ${ot}`, ["rename to the canonical heading, preserving body"]));
   }
 }
@@ -1182,8 +1182,8 @@ function checkFormatHygiene(ctx, findings) {
       findings.push(f("C-14.2", "error", `filename '${path}' violates the naming rule`, ["rename file and update references"]));
     }
     if (name.endsWith(".md")) {
-      const text3 = asText(content);
-      const m = escapeRe.exec(text3);
+      const text4 = asText(content);
+      const m = escapeRe.exec(text4);
       if (m) findings.push(f("C-14.1", "error", `escaped markdown character '${m[0]}' in ${path}`, ["normalize to clean markdown"]));
     }
     if (name.endsWith(".json")) {
@@ -6636,13 +6636,13 @@ var INSTANCE_GROUP_CHECKS = {
     translation: "This copy has not recorded which group it belongs to, and nothing in this request says, so the record cannot write a document that must name the group that produced it. A copy records its group once: when it is first installed, or by one act of whoever holds its administrator token in the hosting account. Nothing was written."
   }
 };
-function withProducingGroup(text3, slug) {
-  if (typeof text3 !== "string" || typeof slug !== "string" || !slug) return text3;
-  if (parseFrontmatter(text3).data?.group === slug) return text3;
-  const lines = text3.split("\n");
-  if (lines[0] !== "---") return text3;
+function withProducingGroup(text4, slug) {
+  if (typeof text4 !== "string" || typeof slug !== "string" || !slug) return text4;
+  if (parseFrontmatter(text4).data?.group === slug) return text4;
+  const lines = text4.split("\n");
+  if (lines[0] !== "---") return text4;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text3;
+  if (end2 === -1) return text4;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith("group:")) {
       lines[i] = `group: ${slug}`;
@@ -15310,8 +15310,8 @@ function normalizeKey(entry) {
     return null;
   }
 }
-var dearmor = (text3) => {
-  const m = String(text3 || "").match(
+var dearmor = (text4) => {
+  const m = String(text4 || "").match(
     /-----BEGIN SSH SIGNATURE-----\s*([\s\S]*?)\s*-----END SSH SIGNATURE-----/
   );
   if (!m) throw new Error("sshsig: missing armor");
@@ -15428,9 +15428,9 @@ function signerTimestamp(v) {
   const m = SIGNER_TS_RE.exec(String(v || "").replace(/^"|"$/g, ""));
   return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4] || "00"}:${m[5] || "00"}:${m[6] || "00"}Z` : null;
 }
-function signerKeysAt(text3, principal, at17) {
+function signerKeysAt(text4, principal, at17) {
   const out = [];
-  for (const raw of String(text3 || "").split(/\r?\n/)) {
+  for (const raw of String(text4 || "").split(/\r?\n/)) {
     const line = raw.trim();
     if (line === "" || line.startsWith("#")) continue;
     const toks = line.split(/\s+/);
@@ -15621,8 +15621,8 @@ async function recordChecks({ folderName, files, releaseRegistry = null, sha256:
 }
 
 // src/promotion/text.mjs
-function appendStateHistory(text3, e) {
-  const lines = text3.split("\n");
+function appendStateHistory(text4, e) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -15649,8 +15649,8 @@ function appendStateHistory(text3, e) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function setScalar(text3, key, value) {
-  const lines = text3.split("\n");
+function setScalar(text4, key, value) {
+  const lines = text4.split("\n");
   const end2 = lines.indexOf("---", 1);
   for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
     if (lines[i].startsWith(key + ":")) {
@@ -15658,20 +15658,20 @@ function setScalar(text3, key, value) {
       return lines.join("\n");
     }
   }
-  return text3;
+  return text4;
 }
-function appendSessionLog(text3, entry) {
-  const at17 = text3.indexOf("## Session Log");
-  if (at17 < 0) return text3 + "\n## Session Log\n\n" + entry;
-  const nxt = text3.indexOf("\n## ", at17 + 1);
-  const cutAt = nxt === -1 ? text3.length : nxt + 1;
-  return text3.slice(0, cutAt) + entry + "\n" + text3.slice(cutAt);
+function appendSessionLog(text4, entry) {
+  const at17 = text4.indexOf("## Session Log");
+  if (at17 < 0) return text4 + "\n## Session Log\n\n" + entry;
+  const nxt = text4.indexOf("\n## ", at17 + 1);
+  const cutAt = nxt === -1 ? text4.length : nxt + 1;
+  return text4.slice(0, cutAt) + entry + "\n" + text4.slice(cutAt);
 }
-function setOrAddScalar(text3, key, value) {
-  const lines = text3.split("\n");
-  if (lines[0] !== "---") return text3;
+function setOrAddScalar(text4, key, value) {
+  const lines = text4.split("\n");
+  if (lines[0] !== "---") return text4;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text3;
+  if (end2 === -1) return text4;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith(key + ":")) {
       lines[i] = `${key}: ${value}`;
@@ -15679,8 +15679,8 @@ function setOrAddScalar(text3, key, value) {
     }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function spliceReferences(text3, additions) {
-  const lines = text3.split("\n");
+function spliceReferences(text4, additions) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -15936,9 +15936,9 @@ function samePromotion(entry, want) {
 function stampGroup(files, slug) {
   return files.map((f9) => {
     if (!f9 || f9.path !== "bundle.md" || typeof f9.text !== "string") return f9;
-    const text3 = withProducingGroup(f9.text, slug);
-    if (text3 === f9.text) return f9;
-    return { ...f9, text: text3, bytes: inlineBytesOf({ text: text3 }), sha256: fileDigestOf({ text: text3 }) };
+    const text4 = withProducingGroup(f9.text, slug);
+    if (text4 === f9.text) return f9;
+    return { ...f9, text: text4, bytes: inlineBytesOf({ text: text4 }), sha256: fileDigestOf({ text: text4 }) };
   });
 }
 var factUnavailable = (fact, detail) => ({
@@ -16323,8 +16323,8 @@ var Promotion = class {
         if (!bundleId) return mintExhausted("PROJ");
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
-        const text3 = lines.join("\n");
-        const written = { ...files.find((f9) => f9.path === "bundle.md"), text: text3, bytes: inlineBytesOf({ text: text3 }), sha256: fileDigestOf({ text: text3 }) };
+        const text4 = lines.join("\n");
+        const written = { ...files.find((f9) => f9.path === "bundle.md"), text: text4, bytes: inlineBytesOf({ text: text4 }), sha256: fileDigestOf({ text: text4 }) };
         files = files.map((f9) => f9.path === "bundle.md" ? written : f9);
       }
       if (groupStamp) files = stampGroup(files, groupStamp);
@@ -16714,12 +16714,12 @@ var Promotion = class {
         projectId,
         detail: "the origin's references block is not in a shape this grammar can extend in place, so the clone could not be given a recorded origin. A fork with no provenance is not written."
       };
-    let text3 = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
-    text3 = setScalar(text3, "title", JSON.stringify(title));
-    text3 = setScalar(text3, "current_state", "forming");
-    text3 = setOrAddScalar(text3, "created", `"${when}"`);
-    text3 = setScalar(text3, "last_updated", `"${when}"`);
-    text3 = appendSessionLog(text3, `### Session ${when} | forked from ${projectId} | ${by}
+    let text4 = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
+    text4 = setScalar(text4, "title", JSON.stringify(title));
+    text4 = setScalar(text4, "current_state", "forming");
+    text4 = setOrAddScalar(text4, "created", `"${when}"`);
+    text4 = setScalar(text4, "last_updated", `"${when}"`);
+    text4 = appendSessionLog(text4, `### Session ${when} | forked from ${projectId} | ${by}
 Trigger: fork
 Changes: created as a clone of ${projectId}, recorded as a derived_from reference. Participants were NOT copied.
 `);
@@ -16736,7 +16736,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       author: by,
       ownerMemberId: by,
       visibility,
-      files: [{ path: "bundle.md", text: text3 }, ...carried],
+      files: [{ path: "bundle.md", text: text4 }, ...carried],
       meta: { object_type: "project", title, current_state: "forming", created: when, last_updated: when }
     });
     if (!promoted.ok) return promoted;
@@ -16865,8 +16865,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         target,
         detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
       };
-    let text3 = live.text;
-    const fm = parseFrontmatter(text3).data || {};
+    let text4 = live.text;
+    const fm = parseFrontmatter(text4).data || {};
     if (!REOPENABLE_FROM.includes(head.currentState)) {
       const m = this.#fact("caseMember", target);
       if (!m.ok) return { ...m, target };
@@ -16894,7 +16894,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         detail: "this is not a legal move in the catalogue's state table for this document's own vocabulary."
       };
     const when = this.#now().replace(/\.\d+Z$/, "Z");
-    const withHistory = appendStateHistory(text3, {
+    const withHistory = appendStateHistory(text4, {
       timestamp: when,
       from_state: head.currentState,
       to_state: "open",
@@ -16908,12 +16908,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         target,
         detail: "this document's state_history block cannot be extended in place, and a reopening recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text3 = setScalar(withHistory, "prior_state", head.currentState);
-    text3 = setScalar(text3, "current_state", "open");
-    text3 = setScalar(text3, "disposition_reason", `""`);
-    text3 = setScalar(text3, "case_edition", "null");
-    text3 = setScalar(text3, "last_updated", `"${when}"`);
-    text3 = appendSessionLog(text3, `### Session ${when} | Reopened | ${who2}
+    text4 = setScalar(withHistory, "prior_state", head.currentState);
+    text4 = setScalar(text4, "current_state", "open");
+    text4 = setScalar(text4, "disposition_reason", `""`);
+    text4 = setScalar(text4, "case_edition", "null");
+    text4 = setScalar(text4, "last_updated", `"${when}"`);
+    text4 = appendSessionLog(text4, `### Session ${when} | Reopened | ${who2}
 Trigger: op=reopen on ${target}
 Changes: state ${head.currentState} to open. Reason: ${why}.
 `);
@@ -16929,7 +16929,7 @@ Changes: state ${head.currentState} to open. Reason: ${why}.
       base: head.bundleSha,
       snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`,
       author: who2,
-      files: [{ path: "bundle.md", text: text3 }, ...carried],
+      files: [{ path: "bundle.md", text: text4 }, ...carried],
       meta: {
         object_type: declared,
         title: fm.title,
@@ -17450,8 +17450,8 @@ function checkCalibration(cal) {
     );
   for (const field of PROBE_REQUIRED) {
     const v = c[field];
-    const present = typeof v === "string" ? v.trim().length > 0 : v != null && typeof v === "object" ? Object.keys(v).length > 0 : false;
-    if (!present)
+    const present2 = typeof v === "string" ? v.trim().length > 0 : v != null && typeof v === "object" ? Object.keys(v).length > 0 : false;
+    if (!present2)
       return refusal3(
         "CAL_NO_PROBE",
         `this calibration carries no ${field}, so no probe run stands behind it. A CALIBRATION IS A MEASUREMENT, NEVER A CLAIM: a changelog, a release note, a model card and a version bump all say an engine changed, and none of them says what it now scores. The record stores the probe, its inputs and its scores precisely so a later reader can disagree with the letter`
@@ -18326,14 +18326,14 @@ function srcsetCandidates(v) {
 var CSS_COMMENT_RE = /\/\*[\s\S]*?\*\//g;
 function cssRefList(css) {
   const out = [];
-  const text3 = String(css).replace(CSS_COMMENT_RE, "");
+  const text4 = String(css).replace(CSS_COMMENT_RE, "");
   let m;
   CSS_IMPORT_RE.lastIndex = 0;
-  while (m = CSS_IMPORT_RE.exec(text3)) {
+  while (m = CSS_IMPORT_RE.exec(text4)) {
     const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
     if (u.trim()) out.push({ url: u.trim(), kind: "stylesheet" });
   }
-  const rest = text3.replace(CSS_IMPORT_RE, "");
+  const rest = text4.replace(CSS_IMPORT_RE, "");
   CSS_URL_RE.lastIndex = 0;
   while (m = CSS_URL_RE.exec(rest)) {
     const u = m[1] ?? m[2] ?? m[3] ?? "";
@@ -18974,11 +18974,11 @@ async function captureSubresources({
           reused_from: known.last_fetched_by || null
         });
         if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
-          const text3 = await readBack(known.sha256);
-          if (text3 != null) {
+          const text4 = await readBack(known.sha256);
+          if (text4 != null) {
             rec2.css = true;
             rec2.rewrite = [];
-            for (const c of cssRefList(text3))
+            for (const c of cssRefList(text4))
               queue.push({
                 ref: c.url,
                 kind: c.kind,
@@ -19087,15 +19087,15 @@ async function captureSubresources({
     });
     const isCss = item.kind === "stylesheet" || ct === "text/css";
     if (isCss && item.depth < CSS_MAX_DEPTH) {
-      let text3 = "";
+      let text4 = "";
       try {
-        text3 = meter2.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes2), bytes2.length);
+        text4 = meter2.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes2), bytes2.length);
       } catch {
-        text3 = "";
+        text4 = "";
       }
       rec.css = true;
       rec.rewrite = [];
-      for (const c of meter2.sync("parse_css", () => cssRefList(text3)))
+      for (const c of meter2.sync("parse_css", () => cssRefList(text4)))
         queue.push({
           ref: c.url,
           kind: c.kind,
@@ -20302,15 +20302,15 @@ function unicodeIncr(hex5, off) {
   units[units.length - 1] = units[units.length - 1] + off & 65535;
   return units.map((u) => String.fromCharCode(u)).join("");
 }
-function parseToUnicodeCMap(text3) {
+function parseToUnicodeCMap(text4) {
   const map = /* @__PURE__ */ new Map();
   let width = null;
-  const csr = /begincodespacerange([\s\S]*?)endcodespacerange/.exec(text3);
+  const csr = /begincodespacerange([\s\S]*?)endcodespacerange/.exec(text4);
   if (csr) {
     const first = /<([0-9a-fA-F]+)>/.exec(csr[1]);
     if (first) width = Math.max(1, Math.round(first[1].length / 2));
   }
-  for (const m of text3.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
+  for (const m of text4.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
     const toks = m[1].match(/<([0-9a-fA-F]*)>/g) || [];
     for (let i = 0; i + 1 < toks.length; i += 2) {
       const src = toks[i].replace(/[<>]/g, "");
@@ -20320,7 +20320,7 @@ function parseToUnicodeCMap(text3) {
       if (width == null) width = Math.max(1, Math.round(src.length / 2));
     }
   }
-  for (const m of text3.matchAll(/beginbfrange([\s\S]*?)endbfrange/g)) {
+  for (const m of text4.matchAll(/beginbfrange([\s\S]*?)endbfrange/g)) {
     parseBfrange(m[1], map, (w) => {
       if (width == null) width = w;
     });
@@ -20926,8 +20926,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
   };
   await run(toks, 0, []);
-  let text3 = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
-  if (!text3.length && !undetermined.length && pageDrawsImage(doc, resources) && (!fontDict || await pageShowsText(doc, pageMap) === false)) {
+  let text4 = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
+  if (!text4.length && !undetermined.length && pageDrawsImage(doc, resources) && (!fontDict || await pageShowsText(doc, pageMap) === false)) {
     undetermined.push({
       page: pageIdx,
       reason: "no_text_layer",
@@ -20936,7 +20936,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       count: 0
     });
   }
-  return { text: text3, undetermined, placed: { pieces, boxes: boxes2, undecodedCenters, unpositioned } };
+  return { text: text4, undetermined, placed: { pieces, boxes: boxes2, undecodedCenters, unpositioned } };
 }
 var TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
 var TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
@@ -21277,10 +21277,10 @@ function unionArea(rects) {
   }
   return total;
 }
-function markImageContent(doc, text3, images) {
-  if (!text3 || !Array.isArray(text3.pages) || !Array.isArray(images)) return;
+function markImageContent(doc, text4, images) {
+  if (!text4 || !Array.isArray(text4.pages) || !Array.isArray(images)) return;
   let added = 0;
-  for (const pg of text3.pages) {
+  for (const pg of text4.pages) {
     const painted = images.filter((im) => im.page === pg.page);
     if (!painted.length) continue;
     const marks = pg.undetermined;
@@ -21305,20 +21305,20 @@ function markImageContent(doc, text3, images) {
     added++;
   }
   if (!added) return;
-  restateUndetermined(text3);
+  restateUndetermined(text4);
 }
-function restateUndetermined(text3) {
-  text3.undetermined = [
-    ...text3.pages.flatMap((p) => p.undetermined),
-    ...text3.undetermined.filter((m) => !Number.isInteger(m.page))
+function restateUndetermined(text4) {
+  text4.undetermined = [
+    ...text4.pages.flatMap((p) => p.undetermined),
+    ...text4.undetermined.filter((m) => !Number.isInteger(m.page))
   ];
-  text3.counts = { ...text3.counts, undetermined: text3.undetermined.length };
+  text4.counts = { ...text4.counts, undetermined: text4.undetermined.length };
 }
 var IMAGE_UNREAD_MIN_SHARE = 1e-3;
-function markImagesUnread(doc, text3, images) {
-  if (!text3 || !Array.isArray(text3.pages) || !Array.isArray(images)) return;
+function markImagesUnread(doc, text4, images) {
+  if (!text4 || !Array.isArray(text4.pages) || !Array.isArray(images)) return;
   let added = 0;
-  for (const pg of text3.pages) {
+  for (const pg of text4.pages) {
     const painted = images.filter((im) => im.page === pg.page);
     if (!painted.length) continue;
     const pageMap = doc.pageDict(pg.page);
@@ -21342,7 +21342,7 @@ function markImagesUnread(doc, text3, images) {
     pg.undetermined = [...pg.undetermined, ...marks];
     added += marks.length;
   }
-  if (added) restateUndetermined(text3);
+  if (added) restateUndetermined(text4);
 }
 function pdfPageBox(doc, pageMap) {
   if (!pageMap) return null;
@@ -21441,11 +21441,11 @@ async function extractPdfStructure(bytes2) {
   for (const l of links) counts[l.partition]++;
   const placedByPage = /* @__PURE__ */ new Map();
   const linkPages = new Set(links.map((l) => l.source && l.source.page));
-  const text3 = await extractText(doc, placedByPage, linkPages);
+  const text4 = await extractText(doc, placedByPage, linkPages);
   for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
   const imgs = await extractImages(doc);
-  if (imgs.images) markImageContent(doc, text3, imgs.images);
-  if (imgs.images) markImagesUnread(doc, text3, imgs.images);
+  if (imgs.images) markImageContent(doc, text4, imgs.images);
+  if (imgs.images) markImagesUnread(doc, text4, imgs.images);
   return {
     ok: true,
     container: "pdf",
@@ -21453,7 +21453,7 @@ async function extractPdfStructure(bytes2) {
     pages: doc.pageCount,
     links,
     counts,
-    text: text3,
+    text: text4,
     images: imgs.images,
     ...imgs.images ? {} : { imagesWhy: imgs.why },
     /* R33: each page's MediaBox, top-level for `images`' reason (tier 2
@@ -21845,8 +21845,8 @@ async function discriminate(bytes2, contentType = null, flavours = CONTAINER_FLA
       if (partContentType(conv, types2) === f9.mainContentType) declared = conv;
     }
     if (!declared) continue;
-    const present = container2.byName.has(declared) || container2.entries.some((e) => normalizePartName(e.name) === declared);
-    if (!present) {
+    const present2 = container2.byName.has(declared) || container2.entries.some((e) => normalizePartName(e.name) === declared);
+    if (!present2) {
       signals.push(`ct:${f9.mainContentType} declared for ${declared}, but the part is ABSENT`);
       return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f9.flavour, signals };
     }
@@ -22208,10 +22208,10 @@ function parseComments(xml) {
     const a = attrsOf2(m[1]);
     const paras = [];
     for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
-      let text3 = "";
+      let text4 = "";
       for (const t of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
-        text3 += decodeEntities(t[1]);
-      if (text3) paras.push(text3);
+        text4 += decodeEntities(t[1]);
+      if (text4) paras.push(text4);
     }
     comments.push({
       id: a.id ?? null,
@@ -23197,7 +23197,7 @@ function xlsxText(parts) {
       }
       if (vals.length) lines.push(vals.join("	"));
     }
-    const text3 = lines.join("\n");
+    const text4 = lines.join("\n");
     outSheets.push({
       sheet: sheet.index,
       name: sheet.name,
@@ -23208,7 +23208,7 @@ function xlsxText(parts) {
       usedCols: walked.usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text: text3,
+      text: text4,
       undetermined
     });
     for (const u of undetermined) allUndetermined.push(u);
@@ -23373,8 +23373,8 @@ function walkSlide(xml) {
         noteRid(attrs);
     }
   }
-  const text3 = paragraphs.filter((t) => t.length).join("\n");
-  return { paragraphs, text: text3, shapes: shape + 1, hlinks, ridUsage };
+  const text4 = paragraphs.filter((t) => t.length).join("\n");
+  return { paragraphs, text: text4, shapes: shape + 1, hlinks, ridUsage };
 }
 function classifyUri3(uri) {
   const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
@@ -24112,8 +24112,8 @@ function detectOdfUnguarded(row2, raw, contentType) {
     const declared = readStoredMemberSync(bytes2, container2, ODF_MIMETYPE_PART, ODF_MIMETYPE_MAX_BYTES);
     if (declared !== row2.mimetype) return null;
     const main = normalizePartName(row2.conventionalMainPart);
-    const present = container2.byName.has(main) || container2.entries.some((e) => normalizePartName(e.name) === main);
-    if (!present) return null;
+    const present2 = container2.byName.has(main) || container2.entries.some((e) => normalizePartName(e.name) === main);
+    if (!present2) return null;
     return {
       format: row2.flavour,
       confidence: "certain",
@@ -24950,7 +24950,7 @@ function odsText(parts) {
       }
       if (vals.length) lines.push(vals.join("	"));
     }
-    const text3 = lines.join("\n");
+    const text4 = lines.join("\n");
     let usedRows = 0, usedCols = 0;
     for (const row2 of walked.rows) {
       if (!row2.cells.length) continue;
@@ -24969,7 +24969,7 @@ function odsText(parts) {
       usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, usedRows, usedCols),
-      text: text3,
+      text: text4,
       undetermined: []
     });
   }
@@ -25229,14 +25229,14 @@ function odpText(parts) {
   const deck = deckOf2(body, styles);
   for (const page of deck) {
     const walked = walkPage(page.xml);
-    const text3 = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
+    const text4 = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
     slides.push({
       slide: page.slide,
       ref: `slide ${page.slide}`,
       part: CONTENT_PART,
       hidden: page.hidden,
       shapes: walked.count,
-      text: text3
+      text: text4
     });
     const nt = notesTextOf(page.xml);
     if (nt != null && nt.length) {
@@ -25522,8 +25522,8 @@ function countOutsideQuotes(line, ch) {
   }
   return n;
 }
-function delimiterSignature(text3) {
-  const raw = text3.split("\n");
+function delimiterSignature(text4) {
+  const raw = text4.split("\n");
   const complete = raw.slice(0, -1).map((l) => l.endsWith("\r") ? l.slice(0, -1) : l);
   const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
   if (lines.length < 2) {
@@ -25577,7 +25577,7 @@ function delimiterSignature(text3) {
     tied: []
   };
 }
-function walkRecords(text3, delimiter) {
+function walkRecords(text4, delimiter) {
   const records = [];
   let row2 = [], field = "", inQuotes = false, started = false;
   const endField = () => {
@@ -25590,12 +25590,12 @@ function walkRecords(text3, delimiter) {
     row2 = [];
     started = false;
   };
-  for (let i = 0; i < text3.length; i++) {
-    const c = text3[i];
+  for (let i = 0; i < text4.length; i++) {
+    const c = text4[i];
     started = true;
     if (inQuotes) {
       if (c === '"') {
-        if (text3[i + 1] === '"') {
+        if (text4[i + 1] === '"') {
           field += '"';
           i++;
         } else inQuotes = false;
@@ -25611,7 +25611,7 @@ function walkRecords(text3, delimiter) {
       continue;
     }
     if (c === "\r") {
-      if (text3[i + 1] === "\n") i++;
+      if (text4[i + 1] === "\n") i++;
       endRecord();
       continue;
     }
@@ -25656,19 +25656,19 @@ async function csvParts(bytes2) {
   } : null;
   let records = null, transport = false, invalidUtf16 = false;
   if (!guard) {
-    let text3;
+    let text4;
     if (enc3.encoding === "utf-16le" || enc3.encoding === "utf-16be") {
       try {
-        text3 = new TextDecoder(enc3.encoding, { fatal: true, ignoreBOM: true }).decode(body);
+        text4 = new TextDecoder(enc3.encoding, { fatal: true, ignoreBOM: true }).decode(body);
       } catch {
-        text3 = new TextDecoder(enc3.encoding, { fatal: false, ignoreBOM: true }).decode(body);
+        text4 = new TextDecoder(enc3.encoding, { fatal: false, ignoreBOM: true }).decode(body);
         invalidUtf16 = true;
       }
     } else {
-      text3 = BYTE_TRANSPORT.decode(body);
+      text4 = BYTE_TRANSPORT.decode(body);
       transport = true;
     }
-    records = walkRecords(text3, delim.delimiter);
+    records = walkRecords(text4, delim.delimiter);
   }
   return {
     ok: true,
@@ -25799,7 +25799,7 @@ function csvText(parts) {
     });
     if (vals.length) lines.push(vals.join("	"));
   });
-  const text3 = lines.join("\n");
+  const text4 = lines.join("\n");
   const sheet = {
     sheet: 0,
     name: CSV_SHEET_NAME,
@@ -25813,16 +25813,16 @@ function csvText(parts) {
     usedRows,
     usedCols,
     range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
-    text: text3,
+    text: text4,
     undetermined
   };
   return {
     ...base,
-    document: text3,
+    document: text4,
     sheets: [sheet],
     undetermined,
     counts: {
-      chars: text3.length,
+      chars: text4.length,
       cells: cellCount,
       formulas: 0,
       undetermined: undetermined.length
@@ -26065,8 +26065,8 @@ function unescapeHtml(s) {
 }
 var REGION = { EVIDENTIARY: "evidentiary", PRESENTATIONAL: "presentational", MECHANICAL: "mechanical" };
 var PLACEHOLDER = "\0BIO-NORMALISED\0";
-function applyRules(text3, rules) {
-  let out = String(text3);
+function applyRules(text4, rules) {
+  let out = String(text4);
   const found = [];
   for (const rule of rules || []) {
     let count = 0, bytes2 = 0;
@@ -26082,12 +26082,12 @@ function applyRules(text3, rules) {
   }
   return { text: out, found, bytes: found.reduce((n, f9) => n + f9.bytes, 0) };
 }
-function applyBoundary(text3, boundary) {
-  if (!boundary) return { text: text3, found: [], bytes: 0 };
-  const m = boundary.exec(String(text3));
-  if (!m || !m[1]) return { text: text3, found: [], bytes: 0, missed: true };
+function applyBoundary(text4, boundary) {
+  if (!boundary) return { text: text4, found: [], bytes: 0 };
+  const m = boundary.exec(String(text4));
+  if (!m || !m[1]) return { text: text4, found: [], bytes: 0, missed: true };
   const inner = m[1];
-  const outside = String(text3).length - inner.length;
+  const outside = String(text4).length - inner.length;
   return {
     text: PLACEHOLDER + inner + PLACEHOLDER,
     found: [{
@@ -26106,11 +26106,11 @@ async function digests(bytes2, handler, ctx) {
   const h = handler || {};
   const identity = await sha2562(bytes2);
   if (!h.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
-  let text3 = "";
+  let text4 = "";
   try {
-    text3 = new TextDecoder("utf-8", { fatal: false }).decode(bytes2);
+    text4 = new TextDecoder("utf-8", { fatal: false }).decode(bytes2);
   } catch {
-    text3 = "";
+    text4 = "";
   }
   let rules = [];
   try {
@@ -26120,7 +26120,7 @@ async function digests(bytes2, handler, ctx) {
   }
   const mech = rules.filter((r) => r.region === REGION.MECHANICAL);
   const pres = rules.filter((r) => r.region === REGION.PRESENTATIONAL);
-  const r1 = applyRules(text3, mech);
+  const r1 = applyRules(text4, mech);
   let boundary = null;
   try {
     boundary = typeof h.boundary === "function" ? h.boundary(ctx) : null;
@@ -26230,11 +26230,11 @@ var aspnet_webforms_default = {
   textual: true,
   detect(ctx) {
     const h = ctx.headers || {};
-    const text3 = ctx.text || "";
+    const text4 = ctx.text || "";
     const signals = [];
-    if (/<input[^>]*\bname="__VIEWSTATE"/i.test(text3)) signals.push("__VIEWSTATE field");
-    if (/<input[^>]*\bname="__EVENTVALIDATION"/i.test(text3)) signals.push("__EVENTVALIDATION field");
-    if (/\bid="aspnetForm"/i.test(text3)) signals.push("aspnetForm");
+    if (/<input[^>]*\bname="__VIEWSTATE"/i.test(text4)) signals.push("__VIEWSTATE field");
+    if (/<input[^>]*\bname="__EVENTVALIDATION"/i.test(text4)) signals.push("__EVENTVALIDATION field");
+    if (/\bid="aspnetForm"/i.test(text4)) signals.push("aspnetForm");
     const powered = String(h["x-powered-by"] || "");
     if (/asp\.net/i.test(powered)) signals.push("x-powered-by: " + powered);
     if (h["x-aspnet-version"]) signals.push("x-aspnet-version: " + h["x-aspnet-version"]);
@@ -26336,14 +26336,14 @@ var wordpress_default = {
   version: 1,
   textual: true,
   detect(ctx) {
-    const text3 = ctx.text || "";
+    const text4 = ctx.text || "";
     const signals = [];
-    if (/\/wp-content\//i.test(text3)) signals.push("wp-content asset paths");
-    if (/\/wp-includes\//i.test(text3)) signals.push("wp-includes asset paths");
-    if (/\/wp-json\//i.test(text3)) signals.push("wp-json API link");
-    const gen = /<meta[^>]+name="generator"[^>]+content="([^"]*WordPress[^"]*)"/i.exec(text3);
+    if (/\/wp-content\//i.test(text4)) signals.push("wp-content asset paths");
+    if (/\/wp-includes\//i.test(text4)) signals.push("wp-includes asset paths");
+    if (/\/wp-json\//i.test(text4)) signals.push("wp-json API link");
+    const gen = /<meta[^>]+name="generator"[^>]+content="([^"]*WordPress[^"]*)"/i.exec(text4);
     if (gen) signals.push("generator: " + gen[1]);
-    if (/\bid="wp-block-|\bclass="[^"]*wp-block-/i.test(text3)) signals.push("block editor markup");
+    if (/\bid="wp-block-|\bclass="[^"]*wp-block-/i.test(text4)) signals.push("block editor markup");
     if (gen || signals.length >= 2) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     if (signals.length) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
     return { match: false, confidence: CONFIDENCE.NONE };
@@ -26361,14 +26361,14 @@ var wordpress_default = {
      listing is recognisable from its address with no ambiguity, so the address is
      asked first and the markup only gets a say when the address is silent. */
   kind(ctx) {
-    const text3 = ctx.text || "";
+    const text4 = ctx.text || "";
     const p = String(ctx.locator || "");
     if (/^https?:\/\/[^/]+\/?(?:\?|#|$)/.test(p)) return "index";
     if (/\/(?:category|tag|author|page|section|topics?)\//i.test(p)) return "index";
     if (/\/(?:feed|search)\/?$/i.test(p) || /[?&]s=/.test(p)) return "index";
     if (/\/\d{4}\/\d{2}\//.test(p)) return "article";
-    if (/<meta[^>]+property="og:type"[^>]+content="article"/i.test(text3) && !/<meta[^>]+property="og:type"[^>]+content="website"/i.test(text3)) return "article";
-    if (/\bclass="[^"]*\bsingle(?:-post)?\b/i.test(text3)) return "article";
+    if (/<meta[^>]+property="og:type"[^>]+content="article"/i.test(text4) && !/<meta[^>]+property="og:type"[^>]+content="website"/i.test(text4)) return "article";
+    if (/\bclass="[^"]*\bsingle(?:-post)?\b/i.test(text4)) return "article";
     return "page";
   },
   rules(ctx) {
@@ -26462,19 +26462,19 @@ var client_rendered_default = {
      treating as the document at all. */
   shell: true,
   detect(ctx) {
-    const text3 = ctx.text || "";
+    const text4 = ctx.text || "";
     const signals = [];
-    if (/<div[^>]+\bid="(?:root|app|__next|ember-basic-dropdown-wormhole)"[^>]*>\s*<\/div>/i.test(text3))
+    if (/<div[^>]+\bid="(?:root|app|__next|ember-basic-dropdown-wormhole)"[^>]*>\s*<\/div>/i.test(text4))
       signals.push("an empty mount point");
-    if (/__NEXT_DATA__/.test(text3)) signals.push("Next.js data island");
-    if (/\bng-version=/.test(text3)) signals.push("Angular");
-    if (/\bdata-reactroot\b/.test(text3)) signals.push("React root");
-    if (/\/reporting-classic-app\//.test(text3)) signals.push("OpenGov reporting app");
-    if (/window\.__(?:NUXT|INITIAL_STATE|PRELOADED_STATE)__/.test(text3)) signals.push("a hydration payload");
-    const anchors = (text3.match(/<a\b[^>]*\bhref=/gi) || []).length;
-    const paras = (text3.match(/<p\b/gi) || []).length;
-    const body = /<body\b[\s\S]*<\/body>/i.exec(text3);
-    const bodyLen = body ? body[0].length : text3.length;
+    if (/__NEXT_DATA__/.test(text4)) signals.push("Next.js data island");
+    if (/\bng-version=/.test(text4)) signals.push("Angular");
+    if (/\bdata-reactroot\b/.test(text4)) signals.push("React root");
+    if (/\/reporting-classic-app\//.test(text4)) signals.push("OpenGov reporting app");
+    if (/window\.__(?:NUXT|INITIAL_STATE|PRELOADED_STATE)__/.test(text4)) signals.push("a hydration payload");
+    const anchors = (text4.match(/<a\b[^>]*\bhref=/gi) || []).length;
+    const paras = (text4.match(/<p\b/gi) || []).length;
+    const body = /<body\b[\s\S]*<\/body>/i.exec(text4);
+    const bodyLen = body ? body[0].length : text4.length;
     if (bodyLen > 2e3 && anchors === 0 && paras <= 1) signals.push("no links and no prose in the body");
     if (signals.includes("no links and no prose in the body") && signals.length >= 2)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
@@ -26626,12 +26626,12 @@ function bySeverity(events) {
 
 // ../docprofile/doctypes/index.mjs
 var CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" };
-function flatten(text3) {
-  return String(text3 || "").replace(/\s+/g, " ");
+function flatten(text4) {
+  return String(text4 || "").replace(/\s+/g, " ");
 }
-function selfNaming(text3, re) {
+function selfNaming(text4, re) {
   let n = 0;
-  for (const line of String(text3 || "").split(/\r?\n/)) if (re.test(line.trim())) n++;
+  for (const line of String(text4 || "").split(/\r?\n/)) if (re.test(line.trim())) n++;
   return n;
 }
 var FURNITURE_RECURS = 3;
@@ -26739,10 +26739,10 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
   }
   return out;
 }
-function enactmentNumber(forms, text3) {
-  if (typeof text3 !== "string" || !text3.trim()) return null;
+function enactmentNumber(forms, text4) {
+  if (typeof text4 !== "string" || !text4.trim()) return null;
   for (const f9 of forms || []) {
-    let t = text3.trim();
+    let t = text4.trim();
     const c = f9.clean || {};
     for (const s of Array.isArray(c.strip) ? c.strip : []) {
       const re2 = vocabRegex(s, (x) => `^(?:${x})`);
@@ -28371,8 +28371,8 @@ async function assess(before, after, ctx) {
   const note = (layer, said2, detail) => {
     trail.push({ layer, said: said2, ...detail || {} });
   };
-  const text3 = pipelineText(after);
-  const id = identify({ ...ctx, text: text3 });
+  const text4 = pipelineText(after);
+  const id = identify({ ...ctx, text: text4 });
   note(
     LAYER.STACK,
     `${id.handler.label} (${id.confidence})`,
@@ -28388,7 +28388,7 @@ async function assess(before, after, ctx) {
       connections: [],
       why: id.handler.warning
     });
-  const dctx = { ...ctx, text: text3, confidence: id.confidence };
+  const dctx = { ...ctx, text: text4, confidence: id.confidence };
   let cmp;
   try {
     cmp = await compare2(before, after, id.handler, dctx);
@@ -28473,7 +28473,7 @@ async function assess(before, after, ctx) {
   note(LAYER.NOTEWORTHY, "the substance differs");
   let dt;
   try {
-    dt = doctypeFor({ ...ctx, text: text3, handler: id.handler, kind: id.kind });
+    dt = doctypeFor({ ...ctx, text: text4, handler: id.handler, kind: id.kind });
   } catch (e) {
     note(LAYER.CONTENT_TYPE, "no content type could be decided");
     return out({
@@ -28506,7 +28506,7 @@ async function assess(before, after, ctx) {
   let a, b, m;
   try {
     a = read2(textBefore, ctx.before_at);
-    b = read2(text3, ctx.after_at);
+    b = read2(text4, ctx.after_at);
   } catch (e) {
     return unread(`its contents could not be read this time (${String(e && e.message || e)})`);
   }
@@ -28557,17 +28557,17 @@ function docParaSource(para, ref) {
 }
 function joinItemised(items, textOf2, sourceOf) {
   const segments = [];
-  let text3 = "";
+  let text4 = "";
   for (let i = 0; i < items.length; i++) {
     const t = textOf2(items[i]);
     if (!t || !t.length) continue;
-    if (text3.length) text3 += "\n";
-    const start = text3.length;
-    text3 += t;
+    if (text4.length) text4 += "\n";
+    const start = text4.length;
+    text4 += t;
     const source = sourceOf(items[i], i);
-    if (source) segments.push({ start, end: text3.length, source });
+    if (source) segments.push({ start, end: text4.length, source });
   }
-  return { text: text3, segments };
+  return { text: text4, segments };
 }
 function flattenText(supplied2) {
   if (typeof supplied2 === "string")
@@ -28590,9 +28590,9 @@ function flattenText(supplied2) {
       segments: [],
       position_why: "no text was supplied"
     };
-  let text3 = "", source = null, segments = [], position_why = null;
+  let text4 = "", source = null, segments = [], position_why = null;
   if (typeof supplied2.document === "string" && supplied2.document.length) {
-    text3 = supplied2.document;
+    text4 = supplied2.document;
     source = "document";
     const pages = Array.isArray(supplied2.pages) ? supplied2.pages : null;
     const paras = Array.isArray(supplied2.paragraphs) ? supplied2.paragraphs : null;
@@ -28602,7 +28602,7 @@ function flattenText(supplied2) {
         (p) => p && typeof p.text === "string" ? p.text : "",
         (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
       );
-      if (j.text === text3) segments = j.segments;
+      if (j.text === text4) segments = j.segments;
       else position_why = "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed";
     } else if (paras && paras.length) {
       const j = joinItemised(
@@ -28613,7 +28613,7 @@ function flattenText(supplied2) {
           p && p.ref
         )
       );
-      if (j.text === text3) segments = j.segments;
+      if (j.text === text4) segments = j.segments;
       else position_why = "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed";
     } else {
       position_why = "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said";
@@ -28624,7 +28624,7 @@ function flattenText(supplied2) {
       (p) => p && typeof p.text === "string" ? p.text : "",
       (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
     );
-    text3 = j.text;
+    text4 = j.text;
     segments = j.segments;
     source = "pages";
   } else if (Array.isArray(supplied2.paragraphs) && supplied2.paragraphs.length) {
@@ -28633,7 +28633,7 @@ function flattenText(supplied2) {
       (p) => p && typeof p.text === "string" ? p.text : "",
       (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i, p && p.ref)
     );
-    text3 = j.text;
+    text4 = j.text;
     segments = j.segments;
     source = "paragraphs";
   }
@@ -28644,9 +28644,9 @@ function flattenText(supplied2) {
   const undetermined = c && typeof c.undetermined === "number" ? c.undetermined : markers.reduce((n, m) => n + (m && typeof m.count === "number" ? m.count : 1), 0);
   const reasons = [...new Set(markers.map((m) => m && m.reason).filter(Boolean))];
   return {
-    text: text3,
+    text: text4,
     source,
-    chars: text3.trim().length,
+    chars: text4.trim().length,
     undetermined,
     reasons,
     segments,
@@ -29175,7 +29175,7 @@ function applyConfidenceFloor(regions, floor) {
   return { regions: out, floored, undetermined };
 }
 function undeterminedRegion(region, why) {
-  const { text: text3, confidence, ...rest } = region;
+  const { text: text4, confidence, ...rest } = region;
   return { ...rest, text: null, undetermined: true, why, confidence: "none" };
 }
 function checkAnchor(source) {
@@ -29465,7 +29465,7 @@ function mergeTier2Text(base, t2) {
     for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
   }
   const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
-  const text3 = {
+  const text4 = {
     ...base,
     document,
     pages,
@@ -29474,7 +29474,7 @@ function mergeTier2Text(base, t2) {
   };
   return {
     ok: true,
-    text: text3,
+    text: text4,
     wholesale: false,
     replaced,
     kept,
@@ -29535,7 +29535,7 @@ function chainTierOf(chain2, page) {
   return all.length ? all[all.length - 1] : null;
 }
 async function readingProvenance({
-  text: text3 = null,
+  text: text4 = null,
   chain: chain2 = null,
   tier = null,
   container: container2 = null,
@@ -29553,12 +29553,12 @@ async function readingProvenance({
     pages: null,
     pages_why: null
   };
-  if (text3 == null) {
+  if (text4 == null) {
     out.why = "no text surface answered for this document, so no text was classified and there is nothing to digest";
     out.pages_why = out.why;
     return out;
   }
-  const flat = flattenText(text3);
+  const flat = flattenText(text4);
   out.text_from = flat.source;
   out.text_chars = flat.text.length;
   out.text_sha256 = flat.text.length ? await sha256Hex6(flat.text) : null;
@@ -29576,7 +29576,7 @@ async function readingProvenance({
       });
     if (page != null) byKey.get(key).pages.push(page);
   };
-  const pages = text3 && typeof text3 === "object" && Array.isArray(text3.pages) ? text3.pages : null;
+  const pages = text4 && typeof text4 === "object" && Array.isArray(text4.pages) ? text4.pages : null;
   if (pages && pages.some((p) => p && Number.isInteger(p.page))) {
     out.pages = [];
     for (const p of pages) {
@@ -30731,32 +30731,32 @@ var ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
 var ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
 var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 var MULTIPART_READ_MAX = 20 * 1024 * 1024;
-function decodeView(text3) {
-  const marks = text3 && Array.isArray(text3.undetermined) ? text3.undetermined : null;
-  if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text3;
+function decodeView(text4) {
+  const marks = text4 && Array.isArray(text4.undetermined) ? text4.undetermined : null;
+  if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text4;
   const keep = (a) => Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a;
   const undetermined = keep(marks);
-  const c = text3.counts;
+  const c = text4.counts;
   return {
-    ...text3,
+    ...text4,
     undetermined,
-    ...Array.isArray(text3.pages) ? { pages: text3.pages.map((p) => p ? { ...p, undetermined: keep(p.undetermined) } : p) } : {},
+    ...Array.isArray(text4.pages) ? { pages: text4.pages.map((p) => p ? { ...p, undetermined: keep(p.undetermined) } : p) } : {},
     ...c && typeof c.undetermined === "number" ? { counts: { ...c, undetermined: c.undetermined - (marks.length - undetermined.length) } } : {}
   };
 }
 function needsTier2(text0) {
-  const text3 = decodeView(text0);
-  const c = text3 && text3.counts;
+  const text4 = decodeView(text0);
+  const c = text4 && text4.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  const glyphs = typeof text3.document === "string" ? glyphCount(text3.document) : c.chars;
+  const glyphs = typeof text4.document === "string" ? glyphCount(text4.document) : c.chars;
   if (!(c.undetermined > glyphs)) return false;
-  const marks = Array.isArray(text3.undetermined) ? text3.undetermined : [];
+  const marks = Array.isArray(text4.undetermined) ? text4.undetermined : [];
   if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer" || m.reason === "image_content_unread" || m.reason === "image_content_undetermined"))) return false;
   return true;
 }
-async function tier2Escalate(env, { sha, storeName, text: text3 }) {
-  const out = { outcome: "not_needed", text: text3, replaced: [], kept: [], perPage: null, note: null, memberNotes: [] };
-  if (!needsTier2(text3)) return out;
+async function tier2Escalate(env, { sha, storeName, text: text4 }) {
+  const out = { outcome: "not_needed", text: text4, replaced: [], kept: [], perPage: null, note: null, memberNotes: [] };
+  if (!needsTier2(text4)) return out;
   if (!(env && env.PDF_WORKER)) {
     out.outcome = "unbound";
     return out;
@@ -30773,10 +30773,10 @@ async function tier2Escalate(env, { sha, storeName, text: text3 }) {
       return out;
     }
     out.memberNotes = (Array.isArray(t2.notes) ? t2.notes : []).filter((n) => typeof n === "string");
-    const m = mergeTier2Text(text3, t2.text);
+    const m = mergeTier2Text(text4, t2.text);
     if (m.ok) {
       out.outcome = "merged";
-      out.text = text3 && text3.producer && !m.text.producer ? { ...m.text, producer: text3.producer } : m.text;
+      out.text = text4 && text4.producer && !m.text.producer ? { ...m.text, producer: text4.producer } : m.text;
       out.replaced = m.replaced;
       out.kept = m.kept || [];
       out.perPage = m.perPageTier || null;
@@ -30815,13 +30815,13 @@ function layerChainFor(i2text, { tier, container: container2 }) {
   return Array.isArray(ext) ? ext : base;
 }
 var TIER3_REASONS = Object.freeze(["no_text_layer", "image_content_unread"]);
-function needsTier3(text3) {
-  const marks = text3 && Array.isArray(text3.undetermined) ? text3.undetermined : [];
+function needsTier3(text4) {
+  const marks = text4 && Array.isArray(text4.undetermined) ? text4.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return false;
   return marks.some((m) => m && TIER3_REASONS.includes(m.reason));
 }
-function tier3Pages(text3) {
-  const marks = text3 && Array.isArray(text3.undetermined) ? text3.undetermined : [];
+function tier3Pages(text4) {
+  const marks = text4 && Array.isArray(text4.undetermined) ? text4.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return [];
   const pages = [];
   for (const m of marks) {
@@ -30914,17 +30914,17 @@ ${said2}` : b.text,
   const unanswered3 = eligible.filter((p) => !filled.includes(p));
   const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
   const regions = ocr && Array.isArray(ocr.regions) ? ocr.regions.filter((r) => r && r.source && filled.includes(r.source.page)) : [];
-  const text3 = {
+  const text4 = {
     ...base,
     document,
     pages,
     undetermined,
     counts: { chars: document.length, undetermined: undetermined.length }
   };
-  if (regions.length) text3.regions = regions;
+  if (regions.length) text4.regions = regions;
   return {
     ok: true,
-    text: text3,
+    text: text4,
     filled,
     appended,
     refused: refusedWhy.map((r) => r.page),
@@ -31046,29 +31046,29 @@ function tier3SeedFrom(reading, units) {
     if (g.extent == null && chain2.some((x) => x.step !== "pixels" && x.step !== "ocr")) continue;
     parts.push({ chain: g.chain, covers: (p) => stepCovers({ step: "ocr", extent: g.extent ?? void 0 }, p) });
   }
-  const text3 = /* @__PURE__ */ new Map(), pagesOf = parts.map(() => []);
+  const text4 = /* @__PURE__ */ new Map(), pagesOf = parts.map(() => []);
   for (const u of units) {
     if (!u || !Number.isInteger(u.page) || typeof u.text !== "string" || !(glyphCount(u.text) > 0)) continue;
     const owners = parts.map((pt, i) => pt.covers(u.page) ? i : -1).filter((i) => i >= 0);
     if (owners.length !== 1) continue;
-    text3.set(u.page, u.text);
+    text4.set(u.page, u.text);
     pagesOf[owners[0]].push(u.page);
   }
   const kept = parts.map((pt, i) => ({ chain: pt.chain, pages: pagesOf[i] })).filter((pt) => pt.pages.length);
-  return kept.length ? { parts: kept, text: text3 } : null;
+  return kept.length ? { parts: kept, text: text4 } : null;
 }
-function withKeptPages(text3, kept, seed) {
-  if (!kept.length) return text3;
+function withKeptPages(text4, kept, seed) {
+  if (!kept.length) return text4;
   const pages = [
-    ...Array.isArray(text3 && text3.pages) ? text3.pages : [],
+    ...Array.isArray(text4 && text4.pages) ? text4.pages : [],
     ...kept.map((p) => ({ page: p, text: seed.text.get(p), undetermined: [] }))
   ].sort((a, b) => a.page - b.page);
   const document = pages.map((p) => p.text).filter(Boolean).join("\n");
   return {
-    ...text3 || {},
+    ...text4 || {},
     document,
     pages,
-    counts: { ...text3 && text3.counts || {}, chars: pages.reduce((n, p) => n + (p.text || "").length, 0) }
+    counts: { ...text4 && text4.counts || {}, chars: pages.reduce((n, p) => n + (p.text || "").length, 0) }
   };
 }
 function ocrTextFromMember(res, { calibration = null } = {}) {
@@ -31127,7 +31127,7 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
   );
   if (!Array.isArray(chain2))
     return { ok: false, why: `the OCR member's own provenance was refused: ${chain2.detail}` };
-  const text3 = {
+  const text4 = {
     document: outPages.map((p) => p.text).filter(Boolean).join("\n"),
     pages: outPages.map((p) => ({ page: p.page, text: p.text, undetermined: p.undetermined })),
     undetermined: outPages.flatMap((p) => p.undetermined),
@@ -31135,7 +31135,7 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
     regions: outPages.flatMap((p) => p.regions)
   };
   const note = anchorless ? `${anchorless} region(s) the OCR member returned carried no checkable image region and were dropped rather than recorded` : null;
-  return { ok: true, text: text3, chain: chain2, kept, floored, note };
+  return { ok: true, text: text4, chain: chain2, kept, floored, note };
 }
 async function tier3Extend(env, {
   sha,
@@ -31273,15 +31273,15 @@ function textUnitsFor(i2text) {
     };
     for (const u of units || []) {
       const cut3 = u.text.length > CAPTURE_TEXT_UNIT_CAP;
-      const text3 = cut3 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
-      const size = new TextEncoder().encode(text3).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      const text4 = cut3 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
+      const size = new TextEncoder().encode(text4).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size > budget) {
         dropped++;
         skip(u);
         continue;
       }
       budget -= size;
-      kept.push(cut3 ? { ...u, text: text3, truncated: true } : u);
+      kept.push(cut3 ? { ...u, text: text4, truncated: true } : u);
       run = null;
     }
     textUnits = kept.length ? kept : null;
@@ -31299,16 +31299,16 @@ var readEntities = (list2) => (Array.isArray(list2) ? list2 : []).map((e) => ({
   source: readingSource(e && e.source),
   ...Array.isArray(e && e.occurrences) ? { occurrences: e.occurrences } : {}
 })).filter((e) => e.key != null || e.kind != null);
-function textCountsOf(text3) {
-  if (text3 == null) return null;
-  if (typeof text3 === "string")
-    return { text_chars: text3.length, text_glyphs: glyphCount(text3), text_undetermined: null };
-  if (typeof text3 !== "object") return null;
-  const c = decodeView(text3).counts;
+function textCountsOf(text4) {
+  if (text4 == null) return null;
+  if (typeof text4 === "string")
+    return { text_chars: text4.length, text_glyphs: glyphCount(text4), text_undetermined: null };
+  if (typeof text4 !== "object") return null;
+  const c = decodeView(text4).counts;
   const n = (v) => Number.isInteger(v) && v >= 0 ? v : null;
   return {
     text_chars: n(c && c.chars),
-    text_glyphs: typeof text3.document === "string" ? glyphCount(text3.document) : null,
+    text_glyphs: typeof text4.document === "string" ? glyphCount(text4.document) : null,
     text_undetermined: n(c && c.undetermined)
   };
 }
@@ -31516,8 +31516,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, why: "the evidence store could not be read" }));
   const bytes2 = got.bytes;
   const textRead = !multipart && profile.profiled_from_text === true && bytes2;
-  const text3 = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "";
-  const profCtx = { headers, locator, content_type: ct || null, text: text3 };
+  const text4 = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "";
+  const profCtx = { headers, locator, content_type: ct || null, text: text4 };
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
   if (!bytes2)
@@ -31527,7 +31527,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect;
   if (!wireable && textRead) {
-    classifiedText = text3;
+    classifiedText = text4;
     member = "plane";
     if (typeof docType.type.parse === "function") {
       try {
@@ -32101,12 +32101,12 @@ var Extraction = class {
           );
           wrote.add(occ);
         }
-        for (const [src, text3] of refTermSources({
+        for (const [src, text4] of refTermSources({
           ref,
           ref_key: e.key == null ? null : String(e.key),
           label: e.label == null ? null : String(e.label)
         }))
-          for (const term of labelTerms(text3))
+          for (const term of labelTerms(text4))
             this.#sql.exec(
               `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
               sha,
@@ -32648,8 +32648,8 @@ var Extraction = class {
     let n = 0;
     for (const r of stale) {
       let wrote = 0;
-      for (const [src, text3] of refTermSources(r))
-        for (const term of labelTerms(text3)) {
+      for (const [src, text4] of refTermSources(r))
+        for (const term of labelTerms(text4)) {
           this.#sql.exec(
             `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
             r.capture_sha,
@@ -33841,9 +33841,9 @@ var isObj4 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var secondOf = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
 var b64 = (bytes2) => btoa(String.fromCharCode(...new Uint8Array(bytes2)));
 var unb64 = (s) => Uint8Array.from(atob(String(s)), (c) => c.charCodeAt(0));
-function safeJson3(text3) {
+function safeJson3(text4) {
   try {
-    return JSON.parse(text3);
+    return JSON.parse(text4);
   } catch {
     return null;
   }
@@ -35292,8 +35292,8 @@ sha256: ${captureSha}
         route: routeFinding("information", this.#latestRouteMark(bundleId)),
         detail: changed ? "pass apply=1 to write these chains into the register" : "every document already records a chain"
       };
-    const text3 = JSON.stringify({ ...reg, documents: next }, null, 2);
-    const bytes2 = new TextEncoder().encode(text3);
+    const text4 = JSON.stringify({ ...reg, documents: next }, null, 2);
+    const bytes2 = new TextEncoder().encode(text4);
     const carried = [];
     for (const path of this.#record.livePaths(bundleId) || []) {
       if (path === "data/provenance.json") continue;
@@ -35308,7 +35308,7 @@ sha256: ${captureSha}
       author: who2,
       files: [{
         path: "data/provenance.json",
-        text: text3,
+        text: text4,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -35758,12 +35758,12 @@ sha256: ${captureSha}
         "TESTIMONY_AUTHOR_SUPPLIED",
         `the request names an author (${JSON.stringify(claimedAuthor).slice(0, 60)}). The author of an observation is the signed-in member, stamped by the plane, and is never taken from the request`
       );
-    const text3 = typeof words === "string" ? words : "";
-    const bytes2 = new TextEncoder().encode(text3);
+    const text4 = typeof words === "string" ? words : "";
+    const bytes2 = new TextEncoder().encode(text4);
     const recorded = secondOf(this.#now());
     const obs = typeof observedAt === "string" ? observedAt.trim() : "";
     const obsMs = observedMs(obs);
-    if (!text3.trim())
+    if (!text4.trim())
       return refusal19(
         "TESTIMONY_NO_WORDS",
         `the observation is empty. Nothing is prefilled: the words are what the member saw, in theirs`
@@ -35783,7 +35783,7 @@ sha256: ${captureSha}
     const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
     const out = this.#record.transact(() => {
       const id2 = `${this.#record.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
-      const fileText = testimonyBytes({ id: id2, observedAt: obs, words: text3 });
+      const fileText = testimonyBytes({ id: id2, observedAt: obs, words: text4 });
       const fileBytes2 = new TextEncoder().encode(fileText);
       const sha2 = createSha256().update(fileBytes2).hex();
       if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha2)) return { spent: { id: id2, sha: sha2 } };
@@ -35899,7 +35899,7 @@ sha256: ${captureSha}
           criticality: "supporting"
         },
         register: [{ sha256: sha2, path: file2, encoding: "utf8", bytes: fileBytes2.length }],
-        [TESTIMONY_PATH]: { captureSha: sha2, author: who2, observedAt: obs, recordedAt: recorded, words: text3 }
+        [TESTIMONY_PATH]: { captureSha: sha2, author: who2, observedAt: obs, recordedAt: recorded, words: text4 }
       });
       if (!promoted2.ok) return promoted2;
       return { ok: true, id: id2, sha: sha2, file: file2, fileBytes: fileBytes2, promoted: promoted2 };
@@ -37269,7 +37269,7 @@ var ObservationLog = class _ObservationLog {
   /** R10 — §5: `last_verified` is the latest `PRESENT` row's `at`; unreachable since is the earliest
    *  `LOOKED_INDETERMINATE` after it. DERIVED, rather than a column anybody could set. */
   verification(level, subjectKind, subject) {
-    const present = this.#one(
+    const present2 = this.#one(
       `SELECT at, seq FROM observation_log
         WHERE level = ? AND subject_kind = ? AND subject IS ? AND state = 'PRESENT'
         ORDER BY seq DESC LIMIT 1`,
@@ -37277,16 +37277,16 @@ var ObservationLog = class _ObservationLog {
       subjectKind,
       subject
     );
-    const since = present ? this.#one(
+    const since = present2 ? this.#one(
       `SELECT at FROM observation_log
         WHERE level = ? AND subject_kind = ? AND subject IS ? AND state = 'LOOKED_INDETERMINATE'
           AND seq > ? ORDER BY seq ASC LIMIT 1`,
       level,
       subjectKind,
       subject,
-      present.seq
+      present2.seq
     ) : null;
-    return { last_verified: present ? present.at : null, unreachable_since: since ? since.at : null };
+    return { last_verified: present2 ? present2.at : null, unreachable_since: since ? since.at : null };
   }
   /** R11 — the missing-row rule at one level, its watermark read here: `missingCause` with this log's first row. */
   missingCauseAt(level, { hasArtifact = false, registeredAt = null } = {}) {
@@ -42626,9 +42626,9 @@ function extentBoundUnheld(extent, ctx, pdfPageBoxUndetermined2) {
       return `this read cannot bound an extent of kind '${String(extent.kind).slice(0, 40)}'`;
   }
 }
-function bagOf(text3) {
+function bagOf(text4) {
   const bag = /* @__PURE__ */ new Map();
-  for (const w of String(text3).toLowerCase().match(/[\p{L}\p{N}]+/gu) || []) bag.set(w, (bag.get(w) || 0) + 1);
+  for (const w of String(text4).toLowerCase().match(/[\p{L}\p{N}]+/gu) || []) bag.set(w, (bag.get(w) || 0) + 1);
   let n = 0;
   for (const v of bag.values()) n += v;
   return { bag, n };
@@ -42683,9 +42683,9 @@ function gradeAcross(row2, extent, older, newer) {
       );
     const same = newer.units.length === older.units.length && newer.units.every((u, i) => u.extent === older.units[i].extent && u.text === older.units[i].text);
     if (same) return out("A", "identical_at_extent", "every unit of the newer version's text is byte-identical at the same position", { extent, ref: row2.ref });
-    const text3 = newer.units.map((u) => u.text).join("\n");
-    if (text3 === cited.text) return out("B", "identical_elsewhere", "the newer version's text is byte-identical, divided into different units", { extent, ref: row2.ref });
-    const sim = dice(bagOf(cited.text), bagOf(text3));
+    const text4 = newer.units.map((u) => u.text).join("\n");
+    if (text4 === cited.text) return out("B", "identical_elsewhere", "the newer version's text is byte-identical, divided into different units", { extent, ref: row2.ref });
+    const sim = dice(bagOf(cited.text), bagOf(text4));
     const r2 = Math.round(sim * 1e3) / 1e3;
     return sim >= VERSION_NOTICE_SIMILAR ? out("C", "similar_text", `the document's text changed; word similarity ${r2}`, { extent, ref: row2.ref }, r2) : out("NOT_FOUND", "text_not_found", `the document's text changed past the similarity floor (${VERSION_NOTICE_SIMILAR}); word similarity ${r2}`, null, r2);
   }
@@ -43603,7 +43603,7 @@ var Content = class {
     const row2 = TRANSCRIBE_CHECKS[code];
     return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
   }
-  transcribe({ bundleId = null, extent = null, text: text3 = null, transcriber = null, viewer = null, at: at17 = null } = {}) {
+  transcribe({ bundleId = null, extent = null, text: text4 = null, transcriber = null, viewer = null, at: at17 = null } = {}) {
     const refusal19 = (code, detail, extra) => this.#transcribeRefusal(code, detail, extra);
     const who2 = typeof transcriber === "string" ? transcriber.trim() : "";
     const target = typeof bundleId === "string" ? bundleId.trim() : "";
@@ -43634,7 +43634,7 @@ var Content = class {
         `no portion was selected. A transcription is of a PART the member read \u2014 a page or a region of one, or the whole document NAMED as such \u2014 and a typing with no stated part would be read as covering all of it`,
         { target }
       );
-    const typed = typeof text3 === "string" ? text3 : "";
+    const typed = typeof text4 === "string" ? text4 : "";
     const bytes2 = new TextEncoder().encode(typed).length;
     const digest = sha256HexSync(typed);
     const chain2 = [{ step: "typed", member: who2, text_sha256: digest }];
@@ -45761,12 +45761,12 @@ WHERE ${gate.sql}${refSql}${ftsWhere}`;
 SELECT count(*) AS n ${from}`,
       args: [...args, ...ftsArgs]
     };
-    const present = m.refs.map((col) => `, EXISTS (SELECT 1 FROM bundles tb WHERE tb.bundle_id = m.${col}) AS ${col}_present`).join("");
+    const present2 = m.refs.map((col) => `, EXISTS (SELECT 1 FROM bundles tb WHERE tb.bundle_id = m.${col}) AS ${col}_present`).join("");
     const computed = Object.entries(m.rowComputed || {}).map(([name, expr]) => `, (${expr}) AS ${name}`).join("");
     const reached = m.rowJoin ? m.rowJoin.cols.map((c2) => `, ${m.rowJoin.alias}.${c2} AS ${c2}`).join("") : "";
     const snipCol = m.ftsTable ? fts ? `, snippet(${fts.name}, ${fts.col}, '[', ']', '\u2026', ?) AS snippet` : `, NULL AS snippet` : "";
     const snipArgs = m.ftsTable && fts ? [snip] : [];
-    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => m.rowLabel?.[c2] ? `(${m.rowLabel[c2]}) AS ${c2}` : `m.${c2} AS ${c2}`).join(", ") + reached + present + computed + snipCol;
+    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => m.rowLabel?.[c2] ? `(${m.rowLabel[c2]}) AS ${c2}` : `m.${c2} AS ${c2}`).join(", ") + reached + present2 + computed + snipCol;
     const order2 = [
       "b.bundle_id ASC",
       ...m.identity.filter((c2) => c2 !== m.key).map((c2) => `m.${c2} ASC`)
@@ -47142,11 +47142,11 @@ var Retrieval = class {
   }
   /** R4: clear a projection (and by default its index row, since the two are one derived structure with one backfill)
    *  so the backfill path can be exercised against a row that looks like it predates the columns. A test seam. */
-  projectionClear({ bundleId = null, text: text3 = true } = {}) {
+  projectionClear({ bundleId = null, text: text4 = true } = {}) {
     const set = PROJECTION_COLS.map((c) => `${c}=NULL`).join(", ");
     if (bundleId) this.#sql.exec(`UPDATE ${PROJECTION_TABLE} SET ${set} WHERE bundle_id=?`, bundleId);
     else this.#sql.exec(`UPDATE ${PROJECTION_TABLE} SET ${set}`);
-    if (text3) {
+    if (text4) {
       if (bundleId) {
         const r = this.#one(`SELECT fts_id FROM ${PROJECTION_TABLE} WHERE bundle_id=?`, bundleId);
         if (r && r.fts_id != null) this.#sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
@@ -47156,7 +47156,7 @@ var Retrieval = class {
         this.#sql.exec(`UPDATE ${PROJECTION_TABLE} SET fts_id=NULL`);
       }
     }
-    return { ok: true, scope: bundleId || "ALL", text: text3 };
+    return { ok: true, scope: bundleId || "ALL", text: text4 };
   }
   /** R5: the projected metadata for one bundle, or a json_extract query over the per-schema tail.
    *
@@ -48188,10 +48188,10 @@ async function knockOp(req, env, store, { json: json5, requiredArgument: require
 
 // src/cdx.mjs
 var EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
-function parseCdx(text3) {
+function parseCdx(text4) {
   let raw;
   try {
-    raw = JSON.parse(text3);
+    raw = JSON.parse(text4);
   } catch (e) {
     return { ok: false, reason: "CDX_UNPARSEABLE", detail: String(e && e.message || e) };
   }
@@ -48322,8 +48322,8 @@ var BODY_CALL_MS = 5e3;
 async function openSession(binding) {
   const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
   if (acq.status !== 200) {
-    const text3 = await acq.text().catch(() => "");
-    throw new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text3.slice(0, 200)}`);
+    const text4 = await acq.text().catch(() => "");
+    throw new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text4.slice(0, 200)}`);
   }
   let sessionId = null;
   try {
@@ -49198,7 +49198,7 @@ async function governedFetch2(cap, target, purpose, delegated = null, { headers 
 }
 var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 var REDIRECT_MAX = 20;
-var base64Of2 = (text3) => btoa(String.fromCharCode(...new TextEncoder().encode(text3)));
+var base64Of2 = (text4) => btoa(String.fromCharCode(...new TextEncoder().encode(text4)));
 function withCredential(headers, credential, env, purpose) {
   if (credential.kind === "user-agent") return { ...headers, "user-agent": userAgent(env, purpose, credential.secret) };
   if (credential.kind === "login") return { ...headers, authorization: `Basic ${base64Of2(credential.secret)}` };
@@ -50827,8 +50827,8 @@ var Capture = class _Capture {
       const have = this.#cols(table2);
       if (have.length && !have.includes(column)) this.#sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
     }
-    for (const text3 of [CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA]) {
-      const bare2 = text3.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const text4 of [CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA]) {
+      const bare2 = text4.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
       for (const st of bare2.split(";")) {
         const t = st.trim();
         if (t) this.#sql.exec(t);
@@ -52144,7 +52144,7 @@ var Capture = class _Capture {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
     if (typeof captureSha !== "string" || !HEX643.test(captureSha))
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
-    const text3 = boundedSubject(subject) || "a capture whose authority could not be determined";
+    const text4 = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
     const now = at17 && ISO_INSTANT.test(at17) ? at17 : stampSecond3();
     const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
@@ -52153,11 +52153,11 @@ var Capture = class _Capture {
         `INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
         kind,
         captureSha,
-        text3,
+        text4,
         loc,
         now
       );
-    const heard = await this.#emit("task", { kind, captureSha, subject: text3, locator: loc, enqueued: now, deduped: !!existing });
+    const heard = await this.#emit("task", { kind, captureSha, subject: text4, locator: loc, enqueued: now, deduped: !!existing });
     const armedAt = heard.map((h) => h.ok && h.result && h.result.armedAt).find((x) => x != null) ?? null;
     return existing ? { ok: true, queued: false, deduped: true, kind, captureSha, armedAt } : { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
   }
@@ -56137,29 +56137,29 @@ var Connections = class _Connections {
     const add = edges.filter((e) => !held.has(e.to));
     if (!add.length) return { ok: true, promoted: false, added: 0 };
     const when = this.now();
-    let text3 = spliceReferences2(md.text, add.map((e) => ({
+    let text4 = spliceReferences2(md.text, add.map((e) => ({
       rel: "links_to",
       target: e.to,
       status: "confirmed",
       note: cut2(String(e.address || "").replace(/["\\\n\r]/g, ""), 400)
     })));
-    if (!text3) return {
+    if (!text4) return {
       ok: false,
       reason: "UNSPLICEABLE_REFERENCES",
       detail: "the source document's references block is not in a shape this act can extend in place"
     };
-    text3 = setScalar2(text3, "last_updated", `"${when}"`);
+    text4 = setScalar2(text4, "last_updated", `"${when}"`);
     const by = typeof identity === "string" && identity.trim() ? identity.trim() : "system";
     const entry = `### Session ${when} | Projected ${add.length} link${add.length === 1 ? "" : "s"} | ${by}
 Trigger: op=linkproject
 Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the source's own link, resolved to a held document; asserted by the source, never by the group.
 `;
-    const logAt = text3.indexOf("## Session Log");
-    if (logAt < 0) text3 += "\n## Session Log\n\n" + entry;
+    const logAt = text4.indexOf("## Session Log");
+    if (logAt < 0) text4 += "\n## Session Log\n\n" + entry;
     else {
-      const nxt = text3.indexOf("\n## ", logAt + 1);
-      const end2 = nxt === -1 ? text3.length : nxt + 1;
-      text3 = text3.slice(0, end2) + entry + "\n" + text3.slice(end2);
+      const nxt = text4.indexOf("\n## ", logAt + 1);
+      const end2 = nxt === -1 ? text4.length : nxt + 1;
+      text4 = text4.slice(0, end2) + entry + "\n" + text4.slice(end2);
     }
     const carried = [];
     for (const path of this.record.livePaths(bundle) || []) {
@@ -56168,14 +56168,14 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       if (!f9) continue;
       carried.push(typeof f9.text === "string" ? { path, text: f9.text, bytes: new TextEncoder().encode(f9.text).length, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
-    const bytes2 = new TextEncoder().encode(text3);
-    const fm = parseFrontmatter(text3).data || {};
+    const bytes2 = new TextEncoder().encode(text4);
+    const fm = parseFrontmatter(text4).data || {};
     const r = this.promotion.promote({
       bundleId: bundle,
       base: head.bundleSha,
       snapKey: `${when.replace(/[-:.]/g, "")}_links_${randHex2(4)}`,
       author: by,
-      files: [{ path: "bundle.md", text: text3, bytes: bytes2.length, sha256: sha256HexSync(text3) }, ...carried],
+      files: [{ path: "bundle.md", text: text4, bytes: bytes2.length, sha256: sha256HexSync(text4) }, ...carried],
       meta: {
         object_type: fm.object_type ?? head.type,
         title: fm.title ?? head.title,
@@ -56623,8 +56623,8 @@ function portionConnectionAxis(s) {
 function refsReplacedOf(c, kind) {
   return (c && Array.isArray(c.refsReplaced) ? c.refsReplaced : []).filter((r) => r.kind === kind).map((r) => r.target_id);
 }
-function spliceReferences2(text3, additions) {
-  const lines = text3.split("\n");
+function spliceReferences2(text4, additions) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -56652,10 +56652,10 @@ function spliceReferences2(text3, additions) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function setScalar2(text3, key, value) {
-  const lines = text3.split("\n");
+function setScalar2(text4, key, value) {
+  const lines = text4.split("\n");
   const end2 = lines.indexOf("---", 1);
-  if (lines[0] !== "---" || end2 === -1) return text3;
+  if (lines[0] !== "---" || end2 === -1) return text4;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith(`${key}:`)) {
       lines[i] = `${key}: ${value}`;
@@ -57835,24 +57835,24 @@ var Progressions = class {
     const stages = [], findings = [], discharges = [];
     for (const s of stageDefs) {
       const docs = docsByStage.get(s.stage_key) || [];
-      const present = docs.length > 0;
+      const present2 = docs.length > 0;
       const exceptions = excByStage.get(s.stage_key) || [];
-      const discharged = !present && exceptions.length > 0;
+      const discharged = !present2 && exceptions.length > 0;
       stages.push({
         stage_key: s.stage_key,
         label: s.label,
         after_stage: s.after_stage,
         cardinality: s.cardinality,
         required: s.required,
-        present,
+        present: present2,
         document_count: docs.length,
-        grade: present ? repGrade.get(s.stage_key) : null,
+        grade: present2 ? repGrade.get(s.stage_key) : null,
         discharged,
         exception_count: exceptions.length,
         exceptions,
         documents: docs
       });
-      if (!present && REQUIRED_FIRES.has(s.required)) {
+      if (!present2 && REQUIRED_FIRES.has(s.required)) {
         if (discharged)
           discharges.push({
             kind: "discharged_skip",
@@ -58691,7 +58691,7 @@ function checkBiasExtension(ctx, findings) {
       continue;
     }
     const id = typeof s.id === "string" ? s.id.trim() : "";
-    const text3 = typeof s.text === "string" ? s.text.trim() : "";
+    const text4 = typeof s.text === "string" ? s.text.trim() : "";
     const kind = typeof s.kind === "string" ? s.kind.trim() : "";
     if (!id) findings.push(f5("C-26.1", "error", `${at17} has no id, and an id is what an override names`));
     else if (seen.has(id)) findings.push(f5("C-26.1", "error", `${at17} repeats the statement id '${id}'; ids are stable and unique within a bundle`));
@@ -58714,7 +58714,7 @@ function checkBiasExtension(ctx, findings) {
       ));
     }
     const nullifies = typeof s.nullifies === "string" ? s.nullifies.trim() : "";
-    if (!text3 && !nullifies)
+    if (!text4 && !nullifies)
       findings.push(f5("C-26.1", "error", `${at17} has no declarative text and nullifies nothing, so it says nothing at all`));
     const justification = typeof s.justification === "string" ? s.justification.trim() : "";
     if (!justification) {
@@ -58748,7 +58748,7 @@ function checkBiasExtension(ctx, findings) {
         ]
       ));
     }
-    if (text3 && (BIAS_VERDICT_WHOLESALE.test(text3) || BIAS_VERDICT_SPEAKER.some((re) => re.test(text3)))) {
+    if (text4 && (BIAS_VERDICT_WHOLESALE.test(text4) || BIAS_VERDICT_SPEAKER.some((re) => re.test(text4)))) {
       findings.push(f5(
         "C-26.5",
         "error",
@@ -58759,7 +58759,7 @@ function checkBiasExtension(ctx, findings) {
         ]
       ));
     }
-    const carriesBar = s.required_strength !== void 0 || s.bar !== void 0 && s.bar !== null || text3 && BIAS_BAR_PHRASING.some((re) => re.test(text3));
+    const carriesBar = s.required_strength !== void 0 || s.bar !== void 0 && s.bar !== null || text4 && BIAS_BAR_PHRASING.some((re) => re.test(text4));
     if (carriesBar) {
       findings.push(f5(
         "C-26.6",
@@ -59139,7 +59139,7 @@ var safeJson8 = (s) => {
 };
 var isObj8 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var str3 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var sha256Hex10 = (text3) => createSha256().update(enc.encode(String(text3))).hex();
+var sha256Hex10 = (text4) => createSha256().update(enc.encode(String(text4))).hex();
 function statementRows(bundleId, fm) {
   const stmts = fm && Array.isArray(fm.statements) ? fm.statements : [];
   const out = [];
@@ -59250,9 +59250,9 @@ var Bias = class _Bias {
     if (!c || c.replay || c.pkg && c.pkg.replay) return null;
     const envelopeType = c.meta && typeof c.meta === "object" ? normalizeType(c.meta.object_type) : null;
     if (c.promotedType !== "bias" && envelopeType !== "bias") return null;
-    const text3 = bundleMdText(c.files) ?? "";
-    const fm = parseFrontmatter(text3).data;
-    const errs = checkBiasSet(fm, /* @__PURE__ */ new Map([["bundle.md", text3]])).filter((x) => x.severity === "error");
+    const text4 = bundleMdText(c.files) ?? "";
+    const fm = parseFrontmatter(text4).data;
+    const errs = checkBiasSet(fm, /* @__PURE__ */ new Map([["bundle.md", text4]])).filter((x) => x.severity === "error");
     if (!errs.length) return null;
     return this.#refuse(
       "BIAS_REFUSED",
@@ -59480,12 +59480,12 @@ var Bias = class _Bias {
         ...seen.args
       );
       for (const a of rows) {
-        const text3 = this.#record.textAtSha(a.bundle_id, a.bundle_sha);
-        if (text3 === null) {
+        const text4 = this.#record.textAtSha(a.bundle_id, a.bundle_sha);
+        if (text4 === null) {
           unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type });
           continue;
         }
-        const fm = parseFrontmatter(text3).data || {};
+        const fm = parseFrontmatter(text4).data || {};
         if (fm.current_state !== "adopted") {
           const pinnedState = fm.current_state;
           pinsProposed.push({
@@ -59499,7 +59499,7 @@ var Bias = class _Bias {
           continue;
         }
         pinned.set(a.bundle_id, fm);
-        pinnedText.set(a.bundle_id, text3);
+        pinnedText.set(a.bundle_id, text4);
         out.push(a);
       }
       return out;
@@ -59683,8 +59683,8 @@ var Bias = class _Bias {
         "BIAS_INHALE_CANNOT_ADOPT",
         "op=biasinhale reads a policy and returns a PROPOSAL. Adopting is op=biasadopt, signed by a member \u2014 and only after the proposed set has been written into a bias bundle and offered."
       );
-    const text3 = String(policy || "");
-    const allSentences = text3.split(/\n{2,}|(?<=[.;:])\s+/).map((s) => s.replace(/\s+/g, " ").trim()).filter((s) => s.length > 12);
+    const text4 = String(policy || "");
+    const allSentences = text4.split(/\n{2,}|(?<=[.;:])\s+/).map((s) => s.replace(/\s+/g, " ").trim()).filter((s) => s.length > 12);
     const readSentences = allSentences.slice(0, BIAS_INHALE_SENTENCES_MAX);
     const SCRUTINY = /\b(verify|verified|verification|corroborat\w+|cross-?check\w*|confirm\w*|reliab\w+|track record|motive|direct knowledge|first-?hand|vet\w*|scrutin\w+|authenticat\w+)\b/i;
     const INFERENCE = /\b(does not (mean|indicate|imply|constitute)|is not (evidence|an indication|proof|confirmation)|should not be (taken|read|treated|inferred)|do not (assume|infer)|cannot be inferred|must not be (taken|read) as)\b/i;
@@ -64832,10 +64832,15 @@ var CaptureCredentials = class _CaptureCredentials {
 var inquiry_exports = {};
 __export(inquiry_exports, {
   BASIS_ROLES: () => BASIS_ROLES,
+  CANDIDATE_RE: () => CANDIDATE_RE,
+  CONTRADICTION_COORDINATES: () => CONTRADICTION_COORDINATES,
   DISPOSITIONS: () => DISPOSITIONS,
+  DISSOLVED_BY: () => DISSOLVED_BY,
   EARNED_TARGETS_MAX: () => EARNED_TARGETS_MAX,
   EDGE_REASON_MAX: () => EDGE_REASON_MAX2,
   GROUND_LABEL_RE: () => GROUND_LABEL_RE,
+  HYPOTHESIS_MAX: () => HYPOTHESIS_MAX,
+  INQUIRY_CONTRADICTION_CHECKS: () => INQUIRY_CONTRADICTION_CHECKS,
   INQUIRY_DISPOSE_CHECKS: () => INQUIRY_DISPOSE_CHECKS,
   INQUIRY_MACHINE: () => INQUIRY_MACHINE,
   INQUIRY_ROWS: () => INQUIRY_ROWS,
@@ -64845,8 +64850,12 @@ __export(inquiry_exports, {
   Inquiry: () => Inquiry,
   LEG_BACKFILL_MAX: () => LEG_BACKFILL_MAX,
   MEMBER_AGENT_MAX: () => MEMBER_AGENT_MAX,
+  NORM_CANONS: () => NORM_CANONS,
+  PLURALITY_DIFFERENCES: () => PLURALITY_DIFFERENCES,
   PROJECTS_DRAWING_MAX: () => PROJECTS_DRAWING_MAX,
+  QUALIFIER_MAX: () => QUALIFIER_MAX,
   RELEASE_ACK_MAX: () => RELEASE_ACK_MAX,
+  RESOLUTION_KINDS: () => RESOLUTION_KINDS,
   STALE_PAGE: () => STALE_PAGE,
   actNoBasis: () => actNoBasis,
   checkInquiryBasis: () => checkInquiryBasis,
@@ -64860,6 +64869,8 @@ __export(inquiry_exports, {
   inquiryQuestionOf: () => inquiryQuestionOf,
   leadLegFindings: () => leadLegFindings,
   legCapped: () => legCapped,
+  resolutionFamily: () => resolutionFamily,
+  resolutionLines: () => resolutionLines,
   supersededByOf: () => supersededByOf,
   supersedesEdgeFindings: () => supersedesEdgeFindings
 });
@@ -65062,8 +65073,30 @@ CREATE TABLE IF NOT EXISTS inquiry_member_agents (
   user_agent  TEXT NOT NULL,
   at          TEXT NOT NULL
 );
+
+-- R48 (N345): the contradiction link R47's grammar judges, as the inquiry's latest promotion projected it. A projection
+-- of the document's own 'contradiction', 'resolution' and 'explores' blocks, re-derived whole at every promotion (D-21),
+-- one row per inquiry that carries a link or an 'explores' block and none for a plain inquiry. candidate is the
+-- contradiction candidate's id (contradiction R15), NULL for a sub-inquiry that only explores. resolution is the logical
+-- resolution as JSON, written only while the document is concluded (R47: kept, never read, at any other state), so a
+-- reopened inquiry answers NULL with no edit. explores is the logical block as JSON, or NULL. The candidate index is the
+-- one lookup R11's one-candidate rule (C-2.17) and inquiryOfCandidate ask. Keyed by bundle_id and declared to purge (R36).
+CREATE TABLE IF NOT EXISTS inquiry_contradiction_links (
+  bundle_id   TEXT PRIMARY KEY,
+  candidate   TEXT,
+  resolution  TEXT,
+  explores    TEXT,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS inquiry_contradiction_links_candidate ON inquiry_contradiction_links(candidate);
 `;
-var INQUIRY_TABLES = ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents"];
+var INQUIRY_TABLES = [
+  "inquiry_basis",
+  "inquiry_exclusions",
+  "inquiry_migration_replays",
+  "inquiry_member_agents",
+  "inquiry_contradiction_links"
+];
 var ADDITIVE = [["inquiry_basis", "ground", "TEXT"], ["inquiry_basis", "content_id", "TEXT"]];
 function migrateInquiry(sql) {
   const bare2 = INQUIRY_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -65077,9 +65110,48 @@ function migrateInquiry(sql) {
   }
 }
 
+// src/inquiry/checks.mjs
+var INQUIRY_CONTRADICTION_CHECKS = {
+  CONTRADICTION_LINK_MALFORMED: {
+    check: "C-2.11",
+    where: "src/inquiry/contradiction.mjs contradictionFindings > is-contradiction-link",
+    translation: "A contradiction inquiry names the candidate it was taken up from by that candidate's id, and this document's link is not one. Take the candidate up again from where it is shown. Nothing was written."
+  },
+  RESOLUTION_WITHOUT_CONTRADICTION: {
+    check: "C-2.12",
+    where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-placed",
+    translation: "Only an inquiry taken up from a contradiction records what kind of contradiction it turned out to be, and this one was not taken up from one. Remove the resolution, or take the contradiction up first. Nothing was written."
+  },
+  RESOLUTION_MISSING: {
+    check: "C-2.13",
+    where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-present",
+    translation: "A contradiction inquiry is concluded by saying what the conflict turned out to be: how the two sides differ, which one is wrong, or that the conflict is real. This conclusion does not say. Name its kind. Nothing was written."
+  },
+  RESOLUTION_KIND_UNKNOWN: {
+    check: "C-2.14",
+    where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-kind",
+    translation: "That is not one of the kinds a contradiction can be resolved as. The kinds are listed with the question. Nothing was written."
+  },
+  RESOLUTION_INCOMPLETE: {
+    check: "C-2.15",
+    where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-complete",
+    translation: "This kind of resolution needs one more thing to be complete: the respect in which the sides differ, which side is wrong and why, or the rule that reconciles them. The missing part is named. Nothing was written."
+  },
+  EXPLORES_MALFORMED: {
+    check: "C-2.16",
+    where: "src/inquiry/contradiction.mjs contradictionFindings > is-explores-shape",
+    translation: "A question that explores a contradiction names one thing it explores: one respect in which the sides may differ, one rule that may reconcile them, or one hypothesis. This one names none, several, or one the record does not know. Nothing was written."
+  },
+  CANDIDATE_ALREADY_TAKEN_UP: {
+    check: "C-2.17",
+    where: "src/inquiry/index.mjs check > is-candidate-taken-up",
+    translation: "That contradiction has already been taken up as another question, which is named. Work on it there, so that one conflict has one place where it is resolved. Nothing was written."
+  }
+};
+
 // src/inquiry/text.mjs
-function setScalar3(text3, key, value) {
-  const lines = text3.split("\n");
+function setScalar3(text4, key, value) {
+  const lines = text4.split("\n");
   const end2 = lines.indexOf("---", 1);
   for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
     if (lines[i].startsWith(key + ":")) {
@@ -65087,13 +65159,13 @@ function setScalar3(text3, key, value) {
       return lines.join("\n");
     }
   }
-  return text3;
+  return text4;
 }
-function setOrAddScalar2(text3, key, value) {
-  const lines = text3.split("\n");
-  if (lines[0] !== "---") return text3;
+function setOrAddScalar2(text4, key, value) {
+  const lines = text4.split("\n");
+  if (lines[0] !== "---") return text4;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text3;
+  if (end2 === -1) return text4;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith(key + ":")) {
       lines[i] = `${key}: ${value}`;
@@ -65101,8 +65173,8 @@ function setOrAddScalar2(text3, key, value) {
     }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function appendStateHistory2(text3, e) {
-  const lines = text3.split("\n");
+function appendStateHistory2(text4, e) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -65129,17 +65201,17 @@ function appendStateHistory2(text3, e) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function removeBlock(text3, key) {
-  const lines = text3.split("\n");
-  if (lines[0] !== "---") return text3;
+function removeBlock(text4, key) {
+  const lines = text4.split("\n");
+  if (lines[0] !== "---") return text4;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text3;
+  if (end2 === -1) return text4;
   let at17 = -1;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
     at17 = i;
     break;
   }
-  if (at17 === -1) return text3;
+  if (at17 === -1) return text4;
   let last = at17;
   for (let i = at17 + 1; i < end2; i++) {
     if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
@@ -65147,37 +65219,37 @@ function removeBlock(text3, key) {
   }
   return [...lines.slice(0, at17), ...lines.slice(last + 1)].join("\n");
 }
-function setOrAddBlock(text3, key, block) {
-  const t = removeBlock(text3, key);
+function setOrAddBlock(text4, key, block) {
+  const t = removeBlock(text4, key);
   const lines = t.split("\n");
   if (lines[0] !== "---") return t;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return t;
   return [...lines.slice(0, end2), `${key}:`, ...block, ...lines.slice(end2)].join("\n");
 }
-function setSection(text3, heading, lines) {
-  const at17 = text3.indexOf(`
+function setSection(text4, heading, lines) {
+  const at17 = text4.indexOf(`
 ${heading}
 `);
   const body = `${heading}
 
 ${lines.join("\n")}
 `;
-  if (at17 === -1) return text3.replace(/\s*$/, "\n") + "\n" + body;
+  if (at17 === -1) return text4.replace(/\s*$/, "\n") + "\n" + body;
   const start = at17 + 1;
-  const nxt = text3.indexOf("\n## ", start + 1);
-  const end2 = nxt === -1 ? text3.length : nxt + 1;
-  return text3.slice(0, start) + body + "\n" + text3.slice(end2);
+  const nxt = text4.indexOf("\n## ", start + 1);
+  const end2 = nxt === -1 ? text4.length : nxt + 1;
+  return text4.slice(0, start) + body + "\n" + text4.slice(end2);
 }
-function appendSessionLog2(text3, entry) {
-  const at17 = text3.indexOf("## Session Log");
-  if (at17 < 0) return text3 + "\n## Session Log\n\n" + entry;
-  const nxt = text3.indexOf("\n## ", at17 + 1);
-  const cut3 = nxt === -1 ? text3.length : nxt + 1;
-  return text3.slice(0, cut3) + entry + "\n" + text3.slice(cut3);
+function appendSessionLog2(text4, entry) {
+  const at17 = text4.indexOf("## Session Log");
+  if (at17 < 0) return text4 + "\n## Session Log\n\n" + entry;
+  const nxt = text4.indexOf("\n## ", at17 + 1);
+  const cut3 = nxt === -1 ? text4.length : nxt + 1;
+  return text4.slice(0, cut3) + entry + "\n" + text4.slice(cut3);
 }
-function spliceBasisGround(text3, byOrd) {
-  const lines = text3.split("\n");
+function spliceBasisGround(text4, byOrd) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -65220,6 +65292,169 @@ function rand4(n = 32) {
   return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+// src/inquiry/contradiction.mjs
+var freeze = (a) => Object.freeze([...a]);
+var CONTRADICTION_COORDINATES = freeze(["time_or_occasion", "scope", "meaning", "observer_or_method", "subject"]);
+var PLURALITY_DIFFERENCES = freeze(["scope", "time_or_occasion", "standard", "evidence_set", "weighing"]);
+var DISSOLVED_BY = freeze([.../* @__PURE__ */ new Set([...CONTRADICTION_COORDINATES, ...PLURALITY_DIFFERENCES, "precision", "opinion"])]);
+var NORM_CANONS = freeze(["higher_over_lower", "later_over_earlier", "specific_over_general", "harmonization", "unreconciled"]);
+var FAMILY = Object.freeze({
+  dissolved: "DISSOLVED",
+  misquote: "CORRECTED",
+  transcription_or_reading_error: "CORRECTED",
+  superseded_version: "CORRECTED",
+  corrected: "CORRECTED",
+  double_speak_or_reversal: "GENUINE",
+  obligation_against_act: "GENUINE",
+  conflict_of_norms: "GENUINE",
+  irreconcilable: "GENUINE"
+});
+var RESOLUTION_KINDS = freeze(Object.keys(FAMILY));
+function resolutionFamily(kind) {
+  return typeof kind === "string" && Object.prototype.hasOwnProperty.call(FAMILY, kind) ? FAMILY[kind] : null;
+}
+var CANDIDATE_RE = /^[0-9a-f]{64}$/;
+var QUALIFIER_MAX = 200;
+var HYPOTHESIS_MAX = 500;
+var RESOLUTION_FIELDS = ["kind", "coordinates", "qualifier_a", "qualifier_b", "wrong_side", "reason", "canon"];
+var EXPLORES_FIELDS = ["coordinate", "canon", "hypothesis"];
+var isMap = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var present = (v) => v !== void 0 && v !== null;
+var blank = (v) => !present(v) || typeof v === "string" && v.trim() === "";
+var text = (v) => typeof v === "string" ? v : typeof v === "number" ? String(v) : null;
+function resolutionLines(resolution) {
+  try {
+    if (!isMap(resolution)) return [];
+    const q6 = (v) => `"${fmSafe(v)}"`;
+    const out = ["resolution:"];
+    const scalar = (key, v) => {
+      const s = text(v);
+      if (s !== null && fmSafe(s) !== "") out.push(`  ${key}: ${q6(s)}`);
+    };
+    scalar("kind", resolution.kind);
+    if (Array.isArray(resolution.coordinates)) {
+      const items = resolution.coordinates.map((c) => fmSafe(String(text(c) ?? "").replace(/[,[\]]/g, " ")).replace(/\s+/g, " ")).filter((c) => c !== "");
+      if (items.length) out.push(`  coordinates: [${items.join(", ")}]`);
+    }
+    const qual = isMap(resolution.qualifiers) ? resolution.qualifiers : {};
+    scalar("qualifier_a", qual.a);
+    scalar("qualifier_b", qual.b);
+    scalar("wrong_side", resolution.wrong_side);
+    scalar("reason", resolution.reason);
+    scalar("canon", resolution.canon);
+    return out.length > 1 ? out : [];
+  } catch {
+    return [];
+  }
+}
+function readResolution(block) {
+  if (!isMap(block)) return null;
+  const out = {};
+  if (present(block.kind)) out.kind = block.kind;
+  if (present(block.coordinates)) out.coordinates = block.coordinates;
+  const a = block.qualifier_a, b = block.qualifier_b;
+  if (present(a) || present(b)) out.qualifiers = { ...present(a) ? { a } : {}, ...present(b) ? { b } : {} };
+  for (const k of ["wrong_side", "reason", "canon"]) if (present(block[k])) out[k] = block[k];
+  return out;
+}
+function candidateOf(fm) {
+  const c = fm && fm.contradiction;
+  if (!isMap(c) || Object.keys(c).some((k) => k !== "candidate")) return null;
+  return typeof c.candidate === "string" && CANDIDATE_RE.test(c.candidate) ? c.candidate : null;
+}
+function exploresOf(fm) {
+  const e = fm && fm.explores;
+  if (!isMap(e)) return null;
+  const keys = Object.keys(e);
+  if (keys.length !== 1 || !EXPLORES_FIELDS.includes(keys[0])) return null;
+  const [k] = keys, v = e[k];
+  if (k === "coordinate") return DISSOLVED_BY.includes(v) ? { coordinate: v } : null;
+  if (k === "canon") return NORM_CANONS.includes(v) ? { canon: v } : null;
+  const h = text(v);
+  return h !== null && h.trim() !== "" && h.length <= HYPOTHESIS_MAX ? { hypothesis: h } : null;
+}
+function contradictionFindings(fm) {
+  const out = [];
+  const find = (code, detail, field) => {
+    const row2 = INQUIRY_CONTRADICTION_CHECKS[code];
+    out.push({ check: row2.check, code, detail, translation: row2.translation, ...field ? { field } : {} });
+  };
+  try {
+    if (!isMap(fm)) return out;
+    const linked = present(fm.contradiction);
+    const candidate = candidateOf(fm);
+    if (linked && !candidate)
+      find(
+        "CONTRADICTION_LINK_MALFORMED",
+        "`contradiction` is `{candidate}` and nothing else, the candidate's id 64 lowercase hex characters; this link is not one, so this document is not a contradiction inquiry."
+      );
+    if (present(fm.resolution) && !candidate)
+      find(
+        "RESOLUTION_WITHOUT_CONTRADICTION",
+        "`resolution` is carried only by a contradiction inquiry (one whose `contradiction` names its candidate), and this document is not one."
+      );
+    if (candidate && fm.current_state === "concluded") {
+      const block = fm.resolution;
+      const kind = isMap(block) ? block.kind : void 0;
+      if (!present(block) || typeof block === "string" && block.trim() === "" || isMap(block) && blank(kind))
+        find(
+          "RESOLUTION_MISSING",
+          "this contradiction inquiry is concluded and its `resolution` names no kind: a contradiction is concluded by saying what the conflict turned out to be.",
+          "kind"
+        );
+      else if (!isMap(block))
+        find("RESOLUTION_INCOMPLETE", "`resolution` is a block of fields (`kind` and what that kind needs), not a single value.", "resolution");
+      else {
+        const family = resolutionFamily(kind);
+        if (!family)
+          find("RESOLUTION_KIND_UNKNOWN", `'${fmSafe(text(kind) ?? typeof kind)}' is not a resolution kind; the kinds are ${RESOLUTION_KINDS.join(", ")}.`, "kind");
+        const incomplete = (field, detail) => find("RESOLUTION_INCOMPLETE", detail, field);
+        for (const k of Object.keys(block))
+          if (!RESOLUTION_FIELDS.includes(k))
+            incomplete(k, k === "qualifiers" ? "`qualifiers` is written as `qualifier_a` and `qualifier_b` inside `resolution` (the frontmatter grammar holds no map inside a map); write it through the resolution's own lines." : `\`${k}\` is not a field of a resolution; its fields are ${RESOLUTION_FIELDS.join(", ")}.`);
+        const coords = block.coordinates;
+        const coordsOk = Array.isArray(coords) && coords.length > 0 && coords.every((c) => DISSOLVED_BY.includes(c)) && new Set(coords).size === coords.length;
+        if (kind === "dissolved" && !present(coords))
+          incomplete("coordinates", `a \`dissolved\` resolution names the respects in which the sides differ: one or more distinct \`coordinates\` from ${DISSOLVED_BY.join(", ")}.`);
+        else if (present(coords) && !coordsOk)
+          incomplete("coordinates", `\`coordinates\` is a list of one or more distinct respects from ${DISSOLVED_BY.join(", ")}.`);
+        const side = block.wrong_side;
+        if (family === "CORRECTED" && !present(side))
+          incomplete("wrong_side", "a corrected resolution names the side that is wrong: `wrong_side` is `a` or `b`.");
+        else if (present(side) && side !== "a" && side !== "b")
+          incomplete("wrong_side", "`wrong_side` is `a` or `b`.");
+        const reason = block.reason;
+        if (family === "CORRECTED" && blank(reason))
+          incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
+        else if (present(reason) && (text(reason) === null || text(reason).trim() === ""))
+          incomplete("reason", "`reason` is a non-empty statement.");
+        const canon3 = block.canon;
+        if (kind === "conflict_of_norms" && !present(canon3))
+          incomplete("canon", `a conflict of norms names the canon that reconciles them, or says none does: \`canon\` from ${NORM_CANONS.join(", ")}.`);
+        else if (present(canon3) && !NORM_CANONS.includes(canon3))
+          incomplete("canon", `\`canon\` is one of ${NORM_CANONS.join(", ")}.`);
+        for (const [key, name] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
+          const v = block[key];
+          if (!present(v)) continue;
+          const s = text(v);
+          if (s === null || s.length > QUALIFIER_MAX)
+            incomplete(`qualifiers.${name}`, `a qualifier on side ${name} is a statement of at most ${QUALIFIER_MAX} characters.`);
+        }
+      }
+    }
+    if (present(fm.explores) && !exploresOf(fm))
+      find("EXPLORES_MALFORMED", `\`explores\` names exactly one of \`coordinate\` (from ${DISSOLVED_BY.join(", ")}), \`canon\` (from ${NORM_CANONS.join(", ")}) or \`hypothesis\` (non-empty, at most ${HYPOTHESIS_MAX} characters), and nothing else.`);
+  } catch (e) {
+    out.push({
+      check: INQUIRY_CONTRADICTION_CHECKS.CONTRADICTION_LINK_MALFORMED.check,
+      code: "CONTRADICTION_LINK_MALFORMED",
+      detail: `the contradiction arm could not judge this document: ${e && e.message}`,
+      translation: INQUIRY_CONTRADICTION_CHECKS.CONTRADICTION_LINK_MALFORMED.translation
+    });
+  }
+  return out;
+}
+
 // src/inquiry/grammar.mjs
 var INQUIRY_MACHINE = STATES.inquiry;
 var INQUIRY_ROWS = Object.freeze({
@@ -65238,11 +65473,11 @@ var INQUIRY_ROWS = Object.freeze({
 });
 async function checkInquiryEntry(bundleMd, opts = {}) {
   try {
-    const text3 = String(bundleMd ?? "");
-    const id = (/^id:\s*(\S+)/m.exec(text3) || [])[1] || "";
+    const text4 = String(bundleMd ?? "");
+    const id = (/^id:\s*(\S+)/m.exec(text4) || [])[1] || "";
     const r = await checkBundle({
       folderName: id,
-      files: /* @__PURE__ */ new Map([["bundle.md", text3]]),
+      files: /* @__PURE__ */ new Map([["bundle.md", text4]]),
       publishedRegistry: opts.publishedRegistry ?? null,
       earnedRegistry: opts.earnedRegistry ?? null
     });
@@ -65281,7 +65516,13 @@ var safeJson10 = (s) => {
     return null;
   }
 };
-var ROW_FAMILIES2 = [ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS, INQUIRY_DISPOSE_CHECKS];
+var ROW_FAMILIES2 = [
+  ACT_SHAPE_CHECKS,
+  MACHINE_FENCE_CHECKS,
+  INSTANCE_GROUP_CHECKS,
+  INQUIRY_DISPOSE_CHECKS,
+  INQUIRY_CONTRADICTION_CHECKS
+];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
   const row2 = ROW_FAMILIES2.map((f9) => f9 && f9[answer.reason]).find((r) => r && r.check);
@@ -65325,9 +65566,9 @@ function carriedFiles(sql, bundleId) {
     carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
   return carried;
 }
-var mdFile = (text3) => {
-  const bytes2 = new TextEncoder().encode(text3);
-  return { path: "bundle.md", text: text3, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() };
+var mdFile = (text4) => {
+  const bytes2 = new TextEncoder().encode(text4);
+  return { path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() };
 };
 var Inquiry = class _Inquiry {
   #onRaised = null;
@@ -65607,6 +65848,21 @@ var Inquiry = class _Inquiry {
           detail: `this write would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.`
         });
     }
+    if (isInquiry && docFm && !replay) {
+      const cf = contradictionFindings(docFm);
+      if (cf.length) return { ok: false, reason: "BASIS_REFUSED", findings: cf };
+      const candidate = candidateOf(docFm);
+      const holder = candidate ? this.inquiryOfCandidate(candidate, bundleId) : null;
+      if (holder)
+        return withRow({
+          ok: false,
+          reason: "CANDIDATE_ALREADY_TAKEN_UP",
+          code: "CANDIDATE_ALREADY_TAKEN_UP",
+          candidate,
+          inquiry: holder,
+          detail: `the contradiction candidate ${candidate} is already taken up as ${holder}, and one conflict has one question where it is resolved. Work on it in ${holder}.`
+        });
+    }
     return null;
   }
   /* ---------------------------------------------------------------- R12: the projection (promotion R39) */
@@ -65727,6 +65983,21 @@ var Inquiry = class _Inquiry {
       const subject = basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim() ? basisFm.subject_entity.trim() : null;
       this.sql.exec(`UPDATE bundles SET inquiry_basis_count=?, inquiry_subject_entity=? WHERE bundle_id=?`, n, subject, bundleId);
     }
+    this.sql.exec(`DELETE FROM inquiry_contradiction_links WHERE bundle_id=?`, bundleId);
+    if (isInquiry && docFm) {
+      const candidate = candidateOf(docFm), explores = exploresOf(docFm);
+      if (candidate || explores) {
+        const resolution = candidate && docFm.current_state === "concluded" ? readResolution(docFm.resolution) : null;
+        this.sql.exec(
+          `INSERT INTO inquiry_contradiction_links (bundle_id, candidate, resolution, explores, at) VALUES (?,?,?,?,?)`,
+          bundleId,
+          candidate,
+          resolution ? JSON.stringify(resolution) : null,
+          explores ? JSON.stringify(explores) : null,
+          this.#when()
+        );
+      }
+    }
     let migrated = null;
     const surfacing = typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim();
     if (!cur && isInquiry && !surfacing && pkg.migrationReplay && typeof pkg.migrationReplay === "object" && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture) {
@@ -65810,6 +66081,31 @@ var Inquiry = class _Inquiry {
       by: r.author ?? null,
       reason: r.blurb ?? null
     })) };
+  }
+  /** R48 (N345): the inquiry's recorded `{candidate, resolution, explores}` as its latest promotion projected them, with
+   *  `resolution` null unless the document was concluded; null for a plain inquiry. Not gated; for in-process callers
+   *  (`contradiction`). Never throws. */
+  contradictionLink(id) {
+    try {
+      if (!id || typeof id !== "string") return null;
+      const r = this.#one(`SELECT candidate, resolution, explores FROM inquiry_contradiction_links WHERE bundle_id=?`, id);
+      if (!r) return null;
+      return { candidate: r.candidate ?? null, resolution: safeJson10(r.resolution), explores: safeJson10(r.explores) };
+    } catch {
+      return null;
+    }
+  }
+  /** R48 (N345): the one inquiry whose document names `candidate`, or null (`except` leaves one inquiry out: R11's
+   *  one-candidate rule asks it of every inquiry but the one being written). Not gated; never throws. */
+  inquiryOfCandidate(candidate, except = null) {
+    try {
+      if (typeof candidate !== "string" || !CANDIDATE_RE.test(candidate)) return null;
+      const r = this.#one(`SELECT bundle_id FROM inquiry_contradiction_links WHERE candidate=? AND bundle_id IS NOT ?
+                            ORDER BY bundle_id LIMIT 1`, candidate, except);
+      return r ? r.bundle_id : null;
+    } catch {
+      return null;
+    }
   }
   /** R44: the member-browser agent recorded when the inquiry was created (the control plane's stamp, N149; a division's
    *  children carry their parent's), else the one its own document records (`member_user_agent`, trimmed), or null:
@@ -66023,38 +66319,38 @@ var Inquiry = class _Inquiry {
             bundleId: id,
             detail: "this inquiry has no readable bundle.md, so its state cannot be moved; nothing was moved"
           };
-        let text3 = appendStateHistory2(liveMd.content, {
+        let text4 = appendStateHistory2(liveMd.content, {
           timestamp: when,
           from_state: cur.current_state,
           to_state: to,
           blurb: why,
           author: author || "member"
         });
-        if (!text3)
+        if (!text4)
           return {
             ok: false,
             reason: "UNSPLICEABLE_STATE_HISTORY",
             bundleId: id,
             detail: "this document's state_history block is not in a shape this grammar can extend in place, and a disposition that recorded no transition would leave prior_state pointing at a history the document does not carry (C-4.2); nothing was moved"
           };
-        text3 = setScalar3(text3, "prior_state", cur.current_state);
-        text3 = setScalar3(text3, "current_state", to);
-        text3 = setOrAddScalar2(text3, "disposition_reason", `"${why}"`);
-        text3 = setScalar3(text3, "last_updated", `"${when}"`);
-        text3 = appendSessionLog2(
-          text3,
+        text4 = setScalar3(text4, "prior_state", cur.current_state);
+        text4 = setScalar3(text4, "current_state", to);
+        text4 = setOrAddScalar2(text4, "disposition_reason", `"${why}"`);
+        text4 = setScalar3(text4, "last_updated", `"${when}"`);
+        text4 = appendSessionLog2(
+          text4,
           `### Session ${when} | ${to === "deferred" ? "Deferred" : "Dismissed"} | ${author || "member"}
 Trigger: selection ${handle}
 Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
 `
         );
-        const fm = parseFrontmatter(text3).data || {};
+        const fm = parseFrontmatter(text4).data || {};
         const promoted = this.#promote({
           bundleId: id,
           base: cur.bundle_sha,
           snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
           author: author || "member",
-          files: [mdFile(text3), ...carriedFiles(this.sql, id)],
+          files: [mdFile(text4), ...carriedFiles(this.sql, id)],
           meta: {
             object_type: "inquiry",
             title: fm.title,
@@ -66437,33 +66733,33 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
       const sibs = ids.filter((x) => x !== id);
       const mine = [...homes.entries()].filter(([, to]) => to.includes(id)).map(([ord]) => ord).sort((x, y) => x - y);
       const childLegs = mine.map((ord) => legs[ord]);
-      let text4 = parentText;
-      text4 = setScalar3(text4, "id", id);
-      text4 = setScalar3(text4, "title", `"${fmSafe(deriveInquiryTitle(q6) ?? q6)}"`);
-      text4 = setScalar3(text4, "current_state", "open");
-      text4 = setScalar3(text4, "prior_state", "null");
-      text4 = setOrAddScalar2(text4, "created", `"${when}"`);
-      text4 = setOrAddScalar2(text4, "last_updated", `"${when}"`);
-      text4 = removeBlock(text4, "state_history");
-      text4 = setOrAddScalar2(text4, "state_history", "[]");
-      text4 = setOrAddScalar2(text4, "conclusion", `""`);
-      text4 = setScalar3(text4, "conclusion_version", `""`);
-      text4 = setScalar3(text4, "conclusion_claim", `""`);
-      text4 = setOrAddScalar2(text4, "falsifier", `""`);
-      text4 = setOrAddScalar2(text4, "falsifier_override_by", `""`);
-      text4 = setOrAddScalar2(text4, "falsifier_override_at", `""`);
-      text4 = setOrAddScalar2(text4, "disposition_reason", `""`);
-      text4 = setOrAddScalar2(text4, "division_parent", target);
-      text4 = setOrAddScalar2(text4, "division_siblings", `[${sibs.join(", ")}]`);
+      let text5 = parentText;
+      text5 = setScalar3(text5, "id", id);
+      text5 = setScalar3(text5, "title", `"${fmSafe(deriveInquiryTitle(q6) ?? q6)}"`);
+      text5 = setScalar3(text5, "current_state", "open");
+      text5 = setScalar3(text5, "prior_state", "null");
+      text5 = setOrAddScalar2(text5, "created", `"${when}"`);
+      text5 = setOrAddScalar2(text5, "last_updated", `"${when}"`);
+      text5 = removeBlock(text5, "state_history");
+      text5 = setOrAddScalar2(text5, "state_history", "[]");
+      text5 = setOrAddScalar2(text5, "conclusion", `""`);
+      text5 = setScalar3(text5, "conclusion_version", `""`);
+      text5 = setScalar3(text5, "conclusion_claim", `""`);
+      text5 = setOrAddScalar2(text5, "falsifier", `""`);
+      text5 = setOrAddScalar2(text5, "falsifier_override_by", `""`);
+      text5 = setOrAddScalar2(text5, "falsifier_override_at", `""`);
+      text5 = setOrAddScalar2(text5, "disposition_reason", `""`);
+      text5 = setOrAddScalar2(text5, "division_parent", target);
+      text5 = setOrAddScalar2(text5, "division_siblings", `[${sibs.join(", ")}]`);
       const refTargets = [...new Set(childLegs.map((l) => l.target).filter((t) => typeof t === "string"))];
-      text4 = setOrAddBlock(text4, "references", [
+      text5 = setOrAddBlock(text5, "references", [
         ...refTargets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
         `  - target: ${target}`,
         "    rel: supersedes",
         "    status: confirmed",
         `    reason: "${fmSafe(why)}"`
       ]);
-      text4 = setOrAddBlock(text4, "basis", childLegs.flatMap((l) => [
+      text5 = setOrAddBlock(text5, "basis", childLegs.flatMap((l) => [
         `  - target: ${l.target}`,
         `    role: ${l.role ?? "supports"}`,
         ...l.grade !== void 0 && l.grade !== null ? [`    grade: ${l.grade}`] : [],
@@ -66474,19 +66770,21 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         ...l.date ? [`    date: ${l.date}`] : [],
         ...typeof l.note === "string" ? [`    note: "${fmSafe(l.note)}"`] : []
       ]));
-      text4 = removeBlock(text4, "division");
-      text4 = removeBlock(text4, "division_apportionment");
-      text4 = setSection(text4, "## Question", [q6]);
-      text4 = setSection(text4, "## What It Rests On", [
+      text5 = removeBlock(text5, "division");
+      text5 = removeBlock(text5, "division_apportionment");
+      text5 = removeBlock(text5, "contradiction");
+      text5 = removeBlock(text5, "resolution");
+      text5 = setSection(text5, "## Question", [q6]);
+      text5 = setSection(text5, "## What It Rests On", [
         `Divided out of ${target} on ${when} by ${who2}.`,
         "",
         why,
         "",
         `The other half of that question stays on the record: ${sibs.join(", ")}. ${target} is the divided parent and records where every leg went, including any leg that cuts against this question.`
       ]);
-      text4 = setSection(text4, "## Conclusion", []);
-      text4 = setSection(text4, "## What Would Falsify This", []);
-      text4 = setSection(text4, "## Session Log", [
+      text5 = setSection(text5, "## Conclusion", []);
+      text5 = setSection(text5, "## What Would Falsify This", []);
+      text5 = setSection(text5, "## Session Log", [
         `### Session ${when} | Divided out | ${who2}`,
         `Trigger: op=inquirydivide on ${target}`,
         `Changes: created from ${target}, ${childLegs.length} leg(s) apportioned here.`,
@@ -66494,7 +66792,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         `Siblings: ${sibs.join(", ")}`,
         `Reason: ${why}`
       ]);
-      plans.push({ id, q: q6, sibs, mine, legs: childLegs, text: text4 });
+      plans.push({ id, q: q6, sibs, mine, legs: childLegs, text: text5 });
     }
     for (const pl of plans) {
       const cf = parseFrontmatter(pl.text).data || {};
@@ -66515,6 +66813,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
            carried across on trust. */
         this.earnedForDoc(cf, pl.legs)
       );
+      for (const x of contradictionFindings(cf)) findings.push({ check: x.check, severity: "error", message: x.detail });
       const errs = findings.filter((x) => x.severity === "error");
       if (errs.length)
         return {
@@ -66526,8 +66825,8 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
           detail: `the document this division would create for ${pl.id} would not pass the catalog, so nothing was written: the parent is untouched and no child exists. A division that landed half-applied would leave a terminal parent naming a question nobody can open.`
         };
     }
-    let text3 = parentText;
-    const withHistory = appendStateHistory2(text3, {
+    let text4 = parentText;
+    const withHistory = appendStateHistory2(text4, {
       timestamp: when,
       from_state: b.current_state,
       to_state: "divided",
@@ -66541,10 +66840,10 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         target,
         detail: "this document's state_history block cannot be extended in place, and a division recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text3 = withHistory;
-    text3 = setScalar3(text3, "prior_state", b.current_state);
-    text3 = setScalar3(text3, "current_state", "divided");
-    text3 = setOrAddBlock(text3, "division", [
+    text4 = withHistory;
+    text4 = setScalar3(text4, "prior_state", b.current_state);
+    text4 = setScalar3(text4, "current_state", "divided");
+    text4 = setOrAddBlock(text4, "division", [
       `  reason: "${fmSafe(why)}"`,
       `  apportioned_by: ${who2}`,
       `  at: "${when}"`,
@@ -66559,9 +66858,9 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
           `    role: ${legs[i].role ?? "supports"}`,
           `    to: ${to}`
         ]);
-    text3 = setOrAddBlock(text3, "division_apportionment", rows.flat());
-    text3 = setScalar3(text3, "last_updated", `"${when}"`);
-    text3 = setSection(text3, "## Conclusion", [
+    text4 = setOrAddBlock(text4, "division_apportionment", rows.flat());
+    text4 = setScalar3(text4, "last_updated", `"${when}"`);
+    text4 = setSection(text4, "## Conclusion", [
       ...typeof fm.conclusion === "string" && fm.conclusion.trim() ? [fm.conclusion, ""] : [],
       `Divided on ${when} by ${who2} into ${ids.join(", ")}: ${why}`,
       "",
@@ -66576,12 +66875,12 @@ Into: ${ids.join(", ")}
 Reason: ${why}
 Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((l) => l.role === "cuts_against").length} cutting against.
 `;
-    const at17 = text3.indexOf("## Session Log");
-    if (at17 < 0) text3 += "\n## Session Log\n\n" + entry;
+    const at17 = text4.indexOf("## Session Log");
+    if (at17 < 0) text4 += "\n## Session Log\n\n" + entry;
     else {
-      const nxt = text3.indexOf("\n## ", at17 + 1);
-      const cutAt = nxt === -1 ? text3.length : nxt + 1;
-      text3 = text3.slice(0, cutAt) + entry + "\n" + text3.slice(cutAt);
+      const nxt = text4.indexOf("\n## ", at17 + 1);
+      const cutAt = nxt === -1 ? text4.length : nxt + 1;
+      text4 = text4.slice(0, cutAt) + entry + "\n" + text4.slice(cutAt);
     }
     let promoted = null;
     const created = [];
@@ -66591,7 +66890,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
         base: b.bundle_sha,
         snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
         author: who2,
-        files: [mdFile(text3), ...carriedFiles(this.sql, target)],
+        files: [mdFile(text4), ...carriedFiles(this.sql, target)],
         meta: {
           object_type: fm.object_type ?? b.object_type,
           title: fm.title,
@@ -66821,8 +67120,8 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
         target,
         detail: "this inquiry has no readable bundle.md, so its structure cannot be authored"
       };
-    let text3 = liveMd.content;
-    const fm = parseFrontmatter(text3).data || {};
+    let text4 = liveMd.content;
+    const fm = parseFrontmatter(text4).data || {};
     const all = Array.isArray(fm.basis) ? fm.basis : [];
     const legs = all.filter((l) => l && typeof l === "object");
     if (!legs.length)
@@ -66987,7 +67286,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
         detail: "the structure this would author is refused by the SAME catalog function op=promote runs at the write, so nothing was written. Every group is a claim that its legs are enough on their own, and that claim carries a name and a date."
       };
     const before = this.#strength(target);
-    const spliced = spliceBasisGround(text3, nextLabel);
+    const spliced = spliceBasisGround(text4, nextLabel);
     if (!spliced)
       return {
         ok: false,
@@ -66995,17 +67294,17 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
         target,
         detail: "this document's basis block is not in a shape this grammar can edit in place. Nothing was written \u2014 a partial edit of a basis is worse than none."
       };
-    text3 = spliced;
-    text3 = grounds.length ? setOrAddBlock(text3, "grounds", rowsOut.flatMap((r) => [
+    text4 = spliced;
+    text4 = grounds.length ? setOrAddBlock(text4, "grounds", rowsOut.flatMap((r) => [
       `  - ground: ${r.ground}`,
       `    asserted_by: ${r.asserted_by}`,
       `    at: "${r.at}"`,
       ...r.statement === null ? [] : [`    statement: "${r.statement}"`]
-    ])) : removeBlock(text3, "grounds");
-    text3 = setScalar3(text3, "last_updated", `"${when}"`);
+    ])) : removeBlock(text4, "grounds");
+    text4 = setScalar3(text4, "last_updated", `"${when}"`);
     const w = (p) => `capture ${p.capture.state === "graded" ? p.capture.grade : p.capture.state}, connection ${p.connection.state === "graded" ? p.connection.grade : p.connection.state}` + (p.testimony && p.testimony.state !== "unrated" ? `, testimony ${p.testimony.state === "graded" ? p.testimony.grade : p.testimony.state}` : "");
-    text3 = appendSessionLog2(
-      text3,
+    text4 = appendSessionLog2(
+      text4,
       `### Session ${when} | ${restructure ? "Restructured" : "Grouped"} | ${who2}
 Trigger: op=inquiryground on ${target}
 Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(s) \u2014 ` + rowsOut.map((r) => `${r.ground}: ${r.legs.join(", ")}`).join("; ") : `grouping removed; ${legs.length} leg(s) read as necessary again`}.
@@ -67018,7 +67317,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
       base: b.bundle_sha,
       snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
       author: who2,
-      files: [mdFile(text3), ...carriedFiles(this.sql, target)],
+      files: [mdFile(text4), ...carriedFiles(this.sql, target)],
       /* NO STATE MOVES. The meta carries the document's own state forward
          unchanged — this act authors what a question rests on, not where it
          stands — which is why it is not in index.mjs's STATE_ACTIONS. */
@@ -67885,7 +68184,7 @@ function captureRequestAttribution(row2) {
 function unattendedBound(env) {
   return !!(env && (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN !== "" || typeof env.ADMIN_TOKEN === "string" && env.ADMIN_TOKEN !== ""));
 }
-var text = (v) => typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : "";
+var text2 = (v) => typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : "";
 var shown = (v) => {
   try {
     return String(JSON.stringify(v) ?? typeof v).slice(0, 40);
@@ -67963,7 +68262,7 @@ var CaptureRequests = class _CaptureRequests {
       const row2 = CAPTURE_REQUEST_CHECKS[code];
       return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
     };
-    const run = text(args.run).trim();
+    const run = text2(args.run).trim();
     const runRow = run ? this.#deps.runs.runFor(run, viewer) : null;
     if (!runRow)
       return refusal19(
@@ -67993,7 +68292,7 @@ var CaptureRequests = class _CaptureRequests {
         `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
         { run }
       );
-    const address = text(args.address).trim();
+    const address = text2(args.address).trim();
     if (!isPublicHttpsLocator(address))
       return refusal19(
         "CAPTURE_REQUEST_NOT_PUBLIC",
@@ -68012,14 +68311,14 @@ var CaptureRequests = class _CaptureRequests {
         "this address has no host this plane can read, and the per-host pacing DEC-47 requires is computed from one.",
         { address }
       );
-    const target = text(args.target).trim();
+    const target = text2(args.target).trim();
     if (!this.#inquiryInSight(target, viewer))
       return refusal19(
         "CAPTURE_REQUEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is accountable to the question it was asked under, and a fetch belonging to nothing is a fetch nobody can account for afterwards.`,
         { target: target || null }
       );
-    const lead = text(args.lead_inquiry ?? args.lead).trim();
+    const lead = text2(args.lead_inquiry ?? args.lead).trim();
     if (lead) {
       if (!this.#inquiryInSight(lead, viewer))
         return refusal19(
@@ -68049,9 +68348,9 @@ var CaptureRequests = class _CaptureRequests {
         { render: null }
       );
     const render = renderRaw === true ? 1 : 0;
-    const purpose = text(args.purpose).trim();
-    const uaMode = text(args.ua_mode ?? args.uaMode ?? "civicos").trim();
-    const callerPlane = text(caller).trim();
+    const purpose = text2(args.purpose).trim();
+    const uaMode = text2(args.ua_mode ?? args.uaMode ?? "civicos").trim();
+    const callerPlane = text2(caller).trim();
     const standing = this.#one(
       `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
       run,
@@ -68867,7 +69166,7 @@ var CaptureRequests = class _CaptureRequests {
   requestById(a = {}) {
     try {
       const { request = null, viewer = null } = a && typeof a === "object" ? a : {};
-      const id = text(request).trim();
+      const id = text2(request).trim();
       if (!id) return null;
       const seen = _CaptureRequests.#gate("cr.target", viewer);
       const r = this.#one(
@@ -69009,7 +69308,7 @@ var CaptureRequests = class _CaptureRequests {
    *  C-28.18 and nothing is written. Never throws. */
   captureRequestRetry(a = {}, { viewer = null } = {}) {
     const args = a && typeof a === "object" ? a : {};
-    const request = text(args.request).trim();
+    const request = text2(args.request).trim();
     const row2 = request ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request) : null;
     if (!row2 || row2.state !== "refused" || !SOURCE_REASONS.includes(row2.source_reason) || !this.#inquiryInSight(row2.target, viewer)) {
       const c = CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_RETRYABLE;
@@ -69302,9 +69601,9 @@ var ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
 var GRADES = BASIS_GRADES;
 var TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
 var q = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
-var parseFm = (text3) => {
-  if (typeof text3 !== "string") return null;
-  const d = parseFrontmatter(text3).data;
+var parseFm = (text4) => {
+  if (typeof text4 !== "string") return null;
+  const d = parseFrontmatter(text4).data;
   return d && typeof d === "object" && !Array.isArray(d) ? d : null;
 };
 function fence(lines) {
@@ -69312,34 +69611,34 @@ function fence(lines) {
   const end2 = lines.indexOf("---", 1);
   return end2 === -1 ? null : end2;
 }
-function setField(text3, key, value) {
-  const lines = text3.split("\n");
+function setField(text4, key, value) {
+  const lines = text4.split("\n");
   const end2 = fence(lines);
-  if (end2 === null) return text3;
+  if (end2 === null) return text4;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
     lines[i] = `${key}: ${value}`;
     return lines.join("\n");
   }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function removeBlock2(text3, key) {
-  const lines = text3.split("\n");
+function removeBlock2(text4, key) {
+  const lines = text4.split("\n");
   const end2 = fence(lines);
-  if (end2 === null) return text3;
+  if (end2 === null) return text4;
   const at17 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
-  if (at17 === -1) return text3;
+  if (at17 === -1) return text4;
   let last = at17;
   for (let i = at17 + 1; i < end2 && (/^\s/.test(lines[i]) || lines[i].trim() === ""); i++) last = i;
   return [...lines.slice(0, at17), ...lines.slice(last + 1)].join("\n");
 }
-function setBlock(text3, key, childLines) {
-  const lines = removeBlock2(text3, key).split("\n");
+function setBlock(text4, key, childLines) {
+  const lines = removeBlock2(text4, key).split("\n");
   const end2 = fence(lines);
-  if (end2 === null) return text3;
+  if (end2 === null) return text4;
   return [...lines.slice(0, end2), `${key}:`, ...childLines, ...lines.slice(end2)].join("\n");
 }
-function appendItem(text3, key, fields) {
-  const lines = text3.split("\n");
+function appendItem(text4, key, fields) {
+  const lines = text4.split("\n");
   const end2 = fence(lines);
   if (end2 === null) return null;
   const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
@@ -69352,54 +69651,54 @@ function appendItem(text3, key, fields) {
   for (let i = at17 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
   return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
 }
-function appendHistory(text3, { at: at17, from, to, blurb, author }) {
+function appendHistory(text4, { at: at17, from, to, blurb, author }) {
   return appendItem(
-    text3,
+    text4,
     "state_history",
     { timestamp: q(at17), from_state: from, to_state: to, blurb: q(blurb), author: TOKEN.test(author) ? author : q(author) }
   );
 }
-function sectionSpan(text3, heading) {
+function sectionSpan(text4, heading) {
   const marker = `
 ## ${heading}
 `;
-  const at17 = text3.indexOf(marker);
+  const at17 = text4.indexOf(marker);
   if (at17 === -1) return null;
   const start = at17 + marker.length;
-  const nxt = text3.indexOf("\n## ", start - 1);
-  return { at: at17, start, end: nxt === -1 ? text3.length : nxt };
+  const nxt = text4.indexOf("\n## ", start - 1);
+  return { at: at17, start, end: nxt === -1 ? text4.length : nxt };
 }
-function readSection(text3, heading) {
-  if (typeof text3 !== "string") return null;
-  const s = sectionSpan(text3, heading);
-  return s ? text3.slice(s.start, s.end).trim() : null;
+function readSection(text4, heading) {
+  if (typeof text4 !== "string") return null;
+  const s = sectionSpan(text4, heading);
+  return s ? text4.slice(s.start, s.end).trim() : null;
 }
-function setSection2(text3, heading, body) {
-  const s = sectionSpan(text3, heading);
+function setSection2(text4, heading, body) {
+  const s = sectionSpan(text4, heading);
   const content = `
 ${String(body).trim()}
 `;
-  if (!s) return `${text3.replace(/\n*$/, "\n")}
+  if (!s) return `${text4.replace(/\n*$/, "\n")}
 ## ${heading}
 ${content}`;
-  return text3.slice(0, s.start) + content + text3.slice(s.end);
+  return text4.slice(0, s.start) + content + text4.slice(s.end);
 }
-function appendSection(text3, heading, entry) {
-  const s = sectionSpan(text3, heading);
-  if (!s) return `${text3.replace(/\n*$/, "\n")}
+function appendSection(text4, heading, entry) {
+  const s = sectionSpan(text4, heading);
+  if (!s) return `${text4.replace(/\n*$/, "\n")}
 ## ${heading}
 
 ${entry.trim()}
 `;
-  const head = text3.slice(0, s.end).replace(/\n*$/, "\n");
+  const head = text4.slice(0, s.end).replace(/\n*$/, "\n");
   return `${head}
 ${entry.trim()}
-${text3.slice(s.end)}`;
+${text4.slice(s.end)}`;
 }
-var logEntry = (text3, at17, what, author, changes) => appendSection(text3, "Session Log", `### Session ${at17} | ${what} | ${author}
+var logEntry = (text4, at17, what, author, changes) => appendSection(text4, "Session Log", `### Session ${at17} | ${what} | ${author}
 Changes: ${changes}`);
-function deadEndsOf(text3) {
-  const body = readSection(text3, "Dead Ends");
+function deadEndsOf(text4) {
+  const body = readSection(text4, "Dead Ends");
   if (!body) return [];
   const out = [];
   for (const part of body.split(/\n(?=### )/)) {
@@ -69610,8 +69909,8 @@ var Intent = class {
     const head = this.record.head(id);
     if (!head) return null;
     const f9 = this.record.readFile(id, "bundle.md");
-    const text3 = f9 && typeof f9.text === "string" ? f9.text : null;
-    return { id, head, text: text3, fm: parseFm(text3) || {}, type: normalizeType(head.type) };
+    const text4 = f9 && typeof f9.text === "string" ? f9.text : null;
+    return { id, head, text: text4, fm: parseFm(text4) || {}, type: normalizeType(head.type) };
   }
   /* R23: a project the viewer may see, or the one answer an absent project gets. A viewer who sees the project at
      existence only is told so (membership R77, C-70.1), before the absent answer. */
@@ -69646,14 +69945,14 @@ var Intent = class {
    * THE WRITE (R2, R8–R11, R16, R26): every document intent writes goes through `promotion`, whose check runs this
    * module's own (below), so an act and a raw promotion meet one rule.
    * ===================================================================== */
-  #create(id, type, text3, author, extra = {}) {
-    const fm = parseFm(text3) || {};
+  #create(id, type, text4, author, extra = {}) {
+    const fm = parseFm(text4) || {};
     return this.promotion.promote({
       bundleId: id,
       base: null,
       snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand5(4)}`,
       author,
-      files: [{ path: "bundle.md", text: text3 }],
+      files: [{ path: "bundle.md", text: text4 }],
       meta: {
         object_type: type,
         title: fm.title,
@@ -69664,8 +69963,8 @@ var Intent = class {
       ...extra
     });
   }
-  #revise(d, text3, author, viewer, extra = {}) {
-    const fm = parseFm(text3) || {};
+  #revise(d, text4, author, viewer, extra = {}) {
+    const fm = parseFm(text4) || {};
     const carried = this.record.livePaths(d.id).filter((p) => p !== "bundle.md").map((path) => {
       const f9 = this.record.readFile(d.id, path);
       return typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes };
@@ -69676,7 +69975,7 @@ var Intent = class {
       base: d.head.bundleSha,
       snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand5(4)}`,
       author,
-      files: [{ path: "bundle.md", text: text3 }, ...carried],
+      files: [{ path: "bundle.md", text: text4 }, ...carried],
       meta: {
         object_type: d.type,
         title: fm.title,
@@ -69725,15 +70024,15 @@ var Intent = class {
         `a ${type} ${c.head ? `at '${from}' moves only to '${last}', once` : `is created '${first}'`}, and this promotion names '${String(to).slice(0, 40)}'. Nothing was written.`,
         { object_type: type, from, to: to ?? null }
       );
-    const text3 = typeof c.bundleMd?.text === "string" ? c.bundleMd.text : "";
-    if (!readSection(text3, "Statement") || type === GOAL && !readSection(text3, "Bounds"))
+    const text4 = typeof c.bundleMd?.text === "string" ? c.bundleMd.text : "";
+    if (!readSection(text4, "Statement") || type === GOAL && !readSection(text4, "Bounds"))
       return refusePursuitUnstated(`a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, in its Statement section. Nothing was written.`);
     if (type === GOAL) {
-      if (to === "closed" && from !== "closed" && !readSection(text3, "Why It Closed"))
+      if (to === "closed" && from !== "closed" && !readSection(text4, "Why It Closed"))
         return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
       return null;
     }
-    if (to === "retired" && from !== "retired" && !readSection(text3, "Taught"))
+    if (to === "retired" && from !== "retired" && !readSection(text4, "Taught"))
       return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
     const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : fm;
     if (c.head && (fm.scope !== heldFm.scope || String(fm.owner ?? null) !== String(heldFm.owner ?? null)))
@@ -69825,17 +70124,17 @@ var Intent = class {
       if (bad) return bad;
     }
     const at17 = this.#when();
-    let text3 = removeBlock2(p.doc.text, CONDITION_KEY);
-    if (c) text3 = setBlock(text3, CONDITION_KEY, conditionLines(c, str4(author), at17));
-    text3 = setField(text3, "last_updated", q(at17));
-    text3 = logEntry(
-      text3,
+    let text4 = removeBlock2(p.doc.text, CONDITION_KEY);
+    if (c) text4 = setBlock(text4, CONDITION_KEY, conditionLines(c, str4(author), at17));
+    text4 = setField(text4, "last_updated", q(at17));
+    text4 = logEntry(
+      text4,
       at17,
       c ? "Objective condition set" : "Objective condition removed",
       str4(author),
       c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."
     );
-    const r = this.#revise(p.doc, text3, str4(author), viewer);
+    const r = this.#revise(p.doc, text4, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, project, condition: c, set_by: str4(author), at: at17, bundleSha: r.bundleSha };
   }
@@ -70219,10 +70518,10 @@ var Intent = class {
     if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj9(o) && o.project === project))
       return { ok: true, goal, project, already: true };
     const at17 = this.#when();
-    let text3 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str4(author)) ? str4(author) : q(author), at: q(at17) });
-    text3 = setField(text3, "last_updated", q(at17));
-    text3 = logEntry(text3, at17, "Objective linked", str4(author), `${project}'s objective serves this goal.`);
-    const r = this.#revise(g, text3, str4(author), viewer);
+    let text4 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str4(author)) ? str4(author) : q(author), at: q(at17) });
+    text4 = setField(text4, "last_updated", q(at17));
+    text4 = logEntry(text4, at17, "Objective linked", str4(author), `${project}'s objective serves this goal.`);
+    const r = this.#revise(g, text4, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, goal, project, by: str4(author), at: at17 };
   }
@@ -70236,17 +70535,17 @@ var Intent = class {
     if (g.head.currentState === "closed")
       return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
     const at17 = this.#when();
-    let text3 = appendHistory(g.text, {
+    let text4 = appendHistory(g.text, {
       at: at17,
       from: "open",
       to: "closed",
       blurb: "closed; the reason is in its document",
       author: str4(author)
     });
-    text3 = setField(setField(setField(text3, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at17));
-    text3 = setSection2(text3, "Why It Closed", bodyText(reason));
-    text3 = logEntry(text3, at17, "Closed", str4(author), "open to closed.");
-    const r = this.#revise(g, text3, str4(author), viewer);
+    text4 = setField(setField(setField(text4, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at17));
+    text4 = setSection2(text4, "Why It Closed", bodyText(reason));
+    text4 = logEntry(text4, at17, "Closed", str4(author), "open to closed.");
+    const r = this.#revise(g, text4, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, goal, state: "closed", reason: str4(reason), author: str4(author), at: at17 };
   }
@@ -70359,15 +70658,15 @@ var Intent = class {
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at17 = this.#when();
-    let text3 = appendSection(
+    let text4 = appendSection(
       a.text,
       "Dead Ends",
       `### ${at17} | ${str4(author)}
 ${bodyText(note)}`
     );
-    text3 = setField(text3, "last_updated", q(at17));
-    text3 = logEntry(text3, at17, "Dead end recorded", str4(author), "a dead end was appended to the pursuit record.");
-    const r = this.#revise(a, text3, str4(author), viewer);
+    text4 = setField(text4, "last_updated", q(at17));
+    text4 = logEntry(text4, at17, "Dead end recorded", str4(author), "a dead end was appended to the pursuit record.");
+    const r = this.#revise(a, text4, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, aspiration, note: str4(note), author: str4(author), at: at17 };
   }
@@ -70387,17 +70686,17 @@ ${bodyText(note)}`
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at17 = this.#when();
-    let text3 = appendHistory(a.text, {
+    let text4 = appendHistory(a.text, {
       at: at17,
       from: "held",
       to: "retired",
       blurb: "retired; what it taught is in its document",
       author: str4(author)
     });
-    text3 = setField(setField(setField(text3, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at17));
-    text3 = setSection2(text3, "Taught", bodyText(taught));
-    text3 = logEntry(text3, at17, "Retired", str4(author), "held to retired.");
-    const r = this.#revise(a, text3, str4(author), viewer);
+    text4 = setField(setField(setField(text4, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at17));
+    text4 = setSection2(text4, "Taught", bodyText(taught));
+    text4 = logEntry(text4, at17, "Retired", str4(author), "held to retired.");
+    const r = this.#revise(a, text4, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, aspiration, state: "retired", taught: str4(taught), author: str4(author), at: at17 };
   }
@@ -70787,7 +71086,7 @@ ${bodyText(note)}`
     const at17 = this.#when();
     let inquiry = null, extra = {};
     if (act === "adopt") {
-      let text3 = appendItem(
+      let text4 = appendItem(
         proj.text,
         "objective_adoptions",
         {
@@ -70797,10 +71096,10 @@ ${bodyText(note)}`
           at: q(at17)
         }
       );
-      if (text3 === null) return refusal12("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
-      text3 = setField(text3, "last_updated", q(at17));
-      text3 = logEntry(text3, at17, "Proposal adopted", str4(author), `the proposal ${found.key} is adopted into the objective.`);
-      const r = this.#revise(proj, text3, str4(author), viewer);
+      if (text4 === null) return refusal12("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
+      text4 = setField(text4, "last_updated", q(at17));
+      text4 = logEntry(text4, at17, "Proposal adopted", str4(author), `the proposal ${found.key} is adopted into the objective.`);
+      const r = this.#revise(proj, text4, str4(author), viewer);
       if (!r.ok) return r;
     } else if (act === "question") {
       const opened = this.#openQuestion(found, author, viewer, run, assistantPrincipal, at17);
@@ -70850,7 +71149,7 @@ ${bodyText(note)}`
     const id = `${this.record.allocId("INQ", at17.slice(0, 4)).id}-question`;
     const question = questionOf(found);
     const who2 = str4(author) || PLANE_ACTOR;
-    const text3 = [
+    const text4 = [
       "---",
       `id: ${id}`,
       "object_type: inquiry",
@@ -70901,7 +71200,7 @@ ${bodyText(note)}`
       base: null,
       snapKey: `${at17.replace(/[-:]/g, "")}_${rand5(4)}`,
       author: who2,
-      files: [{ path: "bundle.md", text: text3 }],
+      files: [{ path: "bundle.md", text: text4 }],
       meta: { object_type: "inquiry", current_state: "surfaced", created: at17, last_updated: at17 },
       ...run ? { run } : {},
       ...str4(assistantPrincipal) ? { assistantPrincipal: str4(assistantPrincipal) } : {},
@@ -71253,8 +71552,8 @@ function blockAt(lines, end2, key) {
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(`${key}:`)) return i;
   return -1;
 }
-function setVersionField(text3, rowName, key, value) {
-  const lines = text3.split("\n");
+function setVersionField(text4, rowName, key, value) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -71286,8 +71585,8 @@ function setVersionField(text3, rowName, key, value) {
   }
   return [...lines.slice(0, rowEnd), `    ${key}: ${lit}`, ...lines.slice(rowEnd)].join("\n");
 }
-function setCurrentVersionRow(text3, inquiryId, vname, who2, when) {
-  const lines = text3.split("\n");
+function setCurrentVersionRow(text4, inquiryId, vname, who2, when) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -71316,9 +71615,9 @@ function setCurrentVersionRow(text3, inquiryId, vname, who2, when) {
   if (rowEnd === -1) rowEnd = i;
   return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join("\n");
 }
-function appendFmRows(text3, key, rowLines) {
-  if (!rowLines.length) return text3;
-  const lines = text3.split("\n");
+function appendFmRows(text4, key, rowLines) {
+  if (!rowLines.length) return text4;
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -71331,8 +71630,8 @@ function appendFmRows(text3, key, rowLines) {
   while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) i++;
   return [...lines.slice(0, i), ...rowLines, ...lines.slice(i)].join("\n");
 }
-function appendConclusionEntry(text3, inquiryId, f9) {
-  const lines = text3.split("\n");
+function appendConclusionEntry(text4, inquiryId, f9) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -71484,8 +71783,8 @@ function versionAsWritten({
   legs
 } = {}) {
   const fs = (x) => fmSafe2(x);
-  const blank = (x) => !(typeof x === "string" && x.trim() !== "");
-  const opt = (x) => blank(x) ? null : fs(x);
+  const blank2 = (x) => !(typeof x === "string" && x.trim() !== "");
+  const opt = (x) => blank2(x) ? null : fs(x);
   return {
     version: {
       name: fs(name),
@@ -71495,12 +71794,12 @@ function versionAsWritten({
       relationship: fs(String(relationship ?? "and").trim().toLowerCase()),
       derived_from: opt(derived_from),
       run: fs(run),
-      author: blank(author) ? null : fs(author),
+      author: blank2(author) ? null : fs(author),
       at: fs(at17),
       level: opt(level),
       observed_at: opt(observed_at)
     },
-    grounds: (grounds || []).filter((g) => g && !blank(g.ground)).map((g) => ({
+    grounds: (grounds || []).filter((g) => g && !blank2(g.ground)).map((g) => ({
       ground: fs(g.ground),
       asserted_by: isMachineIdentity(author) ? SUFFICIENCY_UNCLAIMED : fs(author ?? ""),
       at: fs(at17),
@@ -71516,7 +71815,7 @@ function versionAsWritten({
       note: opt(l?.note),
       date: opt(l?.date),
       extent_kind: "document",
-      ...blank(l?.extent_capture) ? {} : { extent_capture: fs(l.extent_capture) }
+      ...blank2(l?.extent_capture) ? {} : { extent_capture: fs(l.extent_capture) }
     }))
   };
 }
@@ -71714,7 +72013,7 @@ var BasisVersions = class _BasisVersions {
     return f9 && typeof f9.text === "string" ? f9.text : null;
   }
   /* ---- the one write: a new revision of a document through promotion (R14, R15, R18, R19, R27, R28) ---- */
-  #repromote({ bundleId, base, text: text3, when, author, meta }) {
+  #repromote({ bundleId, base, text: text4, when, author, meta }) {
     const carried = [];
     for (const path of this.record.livePaths(bundleId) || []) {
       if (path === "bundle.md") continue;
@@ -71722,13 +72021,13 @@ var BasisVersions = class _BasisVersions {
       if (!f9) continue;
       carried.push(typeof f9.text === "string" ? { path, text: f9.text, bytes: new TextEncoder().encode(f9.text).length, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     return this.promotion.promote({
       bundleId,
       base,
       snapKey: `${when.replace(/[-:]/g, "")}_${randHex3(4)}`,
       author,
-      files: [{ path: "bundle.md", text: text3, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
+      files: [{ path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
       meta
     });
   }
@@ -71953,9 +72252,9 @@ var BasisVersions = class _BasisVersions {
       );
     const cap = Math.max(1, Math.min(BASIS_VERSIONS_LIMIT_MAX, Math.floor(Number(limit) || BASIS_VERSIONS_LIMIT_DEFAULT)));
     const from = Math.max(0, Math.floor(Number(offset) || 0));
-    const present = this.#seen(inq, viewer);
-    const total = present ? this.#one(`SELECT COUNT(*) AS n FROM inquiry_basis_versions WHERE bundle_id=?`, inq)?.n ?? 0 : 0;
-    const rows = present ? this.#rows(
+    const present2 = this.#seen(inq, viewer);
+    const total = present2 ? this.#one(`SELECT COUNT(*) AS n FROM inquiry_basis_versions WHERE bundle_id=?`, inq)?.n ?? 0 : 0;
+    const rows = present2 ? this.#rows(
       `SELECT * FROM inquiry_basis_versions WHERE bundle_id=? ORDER BY ord, name LIMIT ? OFFSET ?`,
       inq,
       cap,
@@ -71992,7 +72291,7 @@ var BasisVersions = class _BasisVersions {
     return {
       ok: true,
       inquiry: inq,
-      ...present ? { inquiry_present: true } : {},
+      ...present2 ? { inquiry_present: true } : {},
       versions,
       count: versions.length,
       total,
@@ -72007,7 +72306,7 @@ var BasisVersions = class _BasisVersions {
         conclusion_history: concRec.history
       } : {},
       /* §7.1 item 5: the inquiry's own conclusion, the no-project relationship's, whether or not a project is named */
-      no_project_conclusion: present ? this.noProjectConclusionOf(inq) : null
+      no_project_conclusion: present2 ? this.noProjectConclusionOf(inq) : null
     };
   }
   /** R11, R13 (PL-2): what a project stands on, read from the project's own `bundle.md`: `{project, version, at, by}`,
@@ -72016,9 +72315,9 @@ var BasisVersions = class _BasisVersions {
   currentOf(projectId, inquiryId, viewer) {
     const pid = String(projectId ?? "").trim();
     if (!pid || !this.#seen(pid, viewer)) return null;
-    const text3 = this.#doc(pid);
-    if (text3 === null) return null;
-    const fm = parseFrontmatter(text3).data || {};
+    const text4 = this.#doc(pid);
+    if (text4 === null) return null;
+    const fm = parseFrontmatter(text4).data || {};
     const rows = Array.isArray(fm.current_versions) ? fm.current_versions : [];
     for (const r of rows) {
       if (!r || typeof r !== "object") continue;
@@ -72042,9 +72341,9 @@ var BasisVersions = class _BasisVersions {
   conclusionRecordOf(projectId, inquiryId, viewer) {
     const pid = String(projectId ?? "").trim();
     if (!pid || !this.#seen(pid, viewer)) return { history: [], stance: null };
-    const text3 = this.#doc(pid);
-    if (text3 === null) return { history: [], stance: null };
-    return _BasisVersions.#recordIn(parseFrontmatter(text3).data || {}, pid, inquiryId);
+    const text4 = this.#doc(pid);
+    if (text4 === null) return { history: [], stance: null };
+    return _BasisVersions.#recordIn(parseFrontmatter(text4).data || {}, pid, inquiryId);
   }
   /* R22's one reading of a project's parsed document: its rows for one question, in order, and the stance. Shared by
      `conclusionRecordOf` (after its sight test) and R41 (viewer-free), so the two cannot read a row differently. */
@@ -72114,8 +72413,8 @@ var BasisVersions = class _BasisVersions {
   noProjectConclusionOf(inquiryId) {
     const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, inquiryId);
     if (!b || b.current_state !== "concluded") return null;
-    const text3 = this.#doc(inquiryId);
-    const fm = text3 !== null ? parseFrontmatter(text3).data || {} : {};
+    const text4 = this.#doc(inquiryId);
+    const fm = text4 !== null ? parseFrontmatter(text4).data || {} : {};
     const s = (v) => typeof v === "string" ? v : null;
     const nv = (s(fm.conclusion_version) ?? "").trim(), nc = (s(fm.conclusion_claim) ?? "").trim();
     let claim = _BasisVersions.undeterminedClaim();
@@ -72167,9 +72466,9 @@ var BasisVersions = class _BasisVersions {
             out.truncated = true;
             return out;
           }
-          const text3 = this.#doc(r.pid);
-          if (text3 === null) continue;
-          if (!drawsOn(parseFrontmatter(text3).data || {}, inq)) continue;
+          const text4 = this.#doc(r.pid);
+          if (text4 === null) continue;
+          if (!drawsOn(parseFrontmatter(text4).data || {}, inq)) continue;
           if (out.length === PROJECTS_DRAWING_MAX2) {
             out.truncated = true;
             return out;
@@ -72195,9 +72494,9 @@ var BasisVersions = class _BasisVersions {
       if (!pid) return out;
       const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
       if (!p || normalizeType(p.object_type) !== "project") return out;
-      const text3 = this.#doc(pid);
-      if (text3 === null) return out;
-      const fm = parseFrontmatter(text3).data || {};
+      const text4 = this.#doc(pid);
+      if (text4 === null) return out;
+      const fm = parseFrontmatter(text4).data || {};
       const live = [...new Set((Array.isArray(fm.references) ? fm.references : []).filter((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed").map((x) => String(x.target ?? "").trim()).filter(Boolean))];
       if (!live.length) return out;
       const n = Math.floor(Number(limit));
@@ -72333,14 +72632,14 @@ var BasisVersions = class _BasisVersions {
         "no question by that id is readable here, so it holds no reading by that name either.",
         { target, version: vname }
       );
-    let text3 = this.#doc(target);
-    if (text3 === null)
+    let text4 = this.#doc(target);
+    if (text4 === null)
       return refuse5(
         "VERSION_ACT_UNWRITABLE",
         "this question has no readable file, so nothing about its readings can be moved.",
         { target, version: vname }
       );
-    const fm = parseFrontmatter(text3).data || {};
+    const fm = parseFrontmatter(text4).data || {};
     const rows = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const idx = rows.findIndex((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname);
     if (idx < 0)
@@ -72471,23 +72770,23 @@ var BasisVersions = class _BasisVersions {
       if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
       return receipt;
     }
-    text3 = setVersionField(text3, vname, "state", to === null ? from : to);
-    if (to !== null && text3 !== null) {
-      text3 = setVersionField(text3, vname, "state_by", who2);
-      if (text3 !== null) text3 = setVersionField(text3, vname, "state_at", when);
-      if (text3 !== null) text3 = setVersionField(text3, vname, "state_reason", why);
-      if (text3 !== null) text3 = setVersionField(text3, vname, "affirmed_parts", affirmedParts ?? "");
+    text4 = setVersionField(text4, vname, "state", to === null ? from : to);
+    if (to !== null && text4 !== null) {
+      text4 = setVersionField(text4, vname, "state_by", who2);
+      if (text4 !== null) text4 = setVersionField(text4, vname, "state_at", when);
+      if (text4 !== null) text4 = setVersionField(text4, vname, "state_reason", why);
+      if (text4 !== null) text4 = setVersionField(text4, vname, "affirmed_parts", affirmedParts ?? "");
     }
-    if (act === "hide" && text3 !== null) text3 = setVersionField(text3, vname, "hidden", hidden);
-    if (text3 === null)
+    if (act === "hide" && text4 !== null) text4 = setVersionField(text4, vname, "hidden", hidden);
+    if (text4 === null)
       return refuse5(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
       );
-    text3 = setScalar(text3, "last_updated", `"${when}"`);
-    text3 = appendSessionLog(
-      text3,
+    text4 = setScalar(text4, "last_updated", `"${when}"`);
+    text4 = appendSessionLog(
+      text4,
       `### Session ${when} | Version ${act} | ${who2}
 Trigger: op=version${act} on ${target}
 Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returned to"} the display` : `${from} to ${to}`}.
@@ -72497,7 +72796,7 @@ Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returne
     const promoted = this.#repromote({
       bundleId: target,
       base: b.bundle_sha,
-      text: text3,
+      text: text4,
       when,
       author: who2,
       meta: {
@@ -72531,11 +72830,11 @@ Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returne
     const md = this.#doc(pid);
     if (md === null) return unwritable(`${pid} has no readable file, so its stance cannot be recorded`);
     const pfm = parseFrontmatter(md).data || {};
-    let text3 = setCurrentVersionRow(md, inquiryId, vname, who2, when);
-    if (text3 === null) return unwritable(`${pid}'s current_versions block could not be rewritten in place`);
-    text3 = setScalar(text3, "last_updated", `"${when}"`);
-    text3 = appendSessionLog(
-      text3,
+    let text4 = setCurrentVersionRow(md, inquiryId, vname, who2, when);
+    if (text4 === null) return unwritable(`${pid}'s current_versions block could not be rewritten in place`);
+    text4 = setScalar(text4, "last_updated", `"${when}"`);
+    text4 = appendSessionLog(
+      text4,
       `### Session ${when} | Stands on | ${who2}
 Trigger: op=versioncurrent on ${inquiryId}
 Changes: this project now stands on reading '${vname}' of ${inquiryId}.
@@ -72545,7 +72844,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     return this.#repromote({
       bundleId: pid,
       base: projectRow.bundle_sha,
-      text: text3,
+      text: text4,
       when,
       author: who2,
       meta: {
@@ -72635,15 +72934,15 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         object_type: b.object_type,
         detail: "concluding answers a question, and only an inquiry carries one."
       };
-    let text3 = this.#doc(target);
-    if (text3 === null)
+    let text4 = this.#doc(target);
+    if (text4 === null)
       return {
         ok: false,
         reason: "NO_DOCUMENT",
         target,
         detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
       };
-    const fm = parseFrontmatter(text3).data || {};
+    const fm = parseFrontmatter(text4).data || {};
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legalFrom = spec?.edges?.[b.current_state] || [];
     if (!legalFrom.includes("concluded") && !(pid && b.current_state === "concluded"))
@@ -72785,7 +73084,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       };
     }
     const when = this.now();
-    const withHistory = appendStateHistory(text3, {
+    const withHistory = appendStateHistory(text4, {
       timestamp: when,
       from_state: b.current_state,
       to_state: "concluded",
@@ -72799,23 +73098,23 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         target,
         detail: "this document's state_history block cannot be extended in place, and a conclusion recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text3 = withHistory;
-    text3 = setScalar(text3, "prior_state", b.current_state);
-    text3 = setScalar(text3, "current_state", "concluded");
-    text3 = setOrAddScalar(text3, "conclusion", `"${concl}"`);
-    text3 = setOrAddScalar(text3, "conclusion_version", quoted(adopted.version));
-    text3 = setOrAddScalar(text3, "conclusion_claim", quoted(adopted.claim));
-    text3 = setOrAddScalar(text3, "falsifier", `"${fals}"`);
+    text4 = withHistory;
+    text4 = setScalar(text4, "prior_state", b.current_state);
+    text4 = setScalar(text4, "current_state", "concluded");
+    text4 = setOrAddScalar(text4, "conclusion", `"${concl}"`);
+    text4 = setOrAddScalar(text4, "conclusion_version", quoted(adopted.version));
+    text4 = setOrAddScalar(text4, "conclusion_claim", quoted(adopted.claim));
+    text4 = setOrAddScalar(text4, "falsifier", `"${fals}"`);
     if (noFals) {
-      text3 = setOrAddScalar(text3, "falsifier_override_by", quoted(who2));
-      text3 = setOrAddScalar(text3, "falsifier_override_at", `"${when}"`);
+      text4 = setOrAddScalar(text4, "falsifier_override_by", quoted(who2));
+      text4 = setOrAddScalar(text4, "falsifier_override_at", `"${when}"`);
     } else {
-      text3 = setScalar(text3, "falsifier_override_by", `""`);
-      text3 = setScalar(text3, "falsifier_override_at", `""`);
+      text4 = setScalar(text4, "falsifier_override_by", `""`);
+      text4 = setScalar(text4, "falsifier_override_at", `""`);
     }
-    text3 = setScalar(text3, "last_updated", `"${when}"`);
-    text3 = appendSessionLog(
-      text3,
+    text4 = setScalar(text4, "last_updated", `"${when}"`);
+    text4 = appendSessionLog(
+      text4,
       `### Session ${when} | Concluded | ${who2}
 Trigger: op=conclude on ${target}
 Changes: state ${b.current_state} to concluded.
@@ -72828,7 +73127,7 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
     const promoted = this.#repromote({
       bundleId: target,
       base: b.bundle_sha,
-      text: text3,
+      text: text4,
       when,
       author: who2,
       meta: {
@@ -72868,15 +73167,15 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
     if (md === null)
       return { ok: false, reason: "NO_DOCUMENT", detail: `${pid} has no readable file, so its conclusion cannot be recorded` };
     const pfm = parseFrontmatter(md).data || {};
-    let text3 = appendConclusionEntry(md, inquiryId, f9);
-    if (text3 === null)
+    let text4 = appendConclusionEntry(md, inquiryId, f9);
+    if (text4 === null)
       return {
         ok: false,
         reason: "UNSPLICEABLE_CONCLUSIONS",
         detail: `${pid}'s conclusions block could not be extended in place`
       };
-    text3 = setScalar(text3, "last_updated", `"${f9.when}"`);
-    text3 = appendSessionLog(text3, f9.act === "withdrawn" ? `### Session ${f9.when} | Conclusion withdrawn | ${f9.who}
+    text4 = setScalar(text4, "last_updated", `"${f9.when}"`);
+    text4 = appendSessionLog(text4, f9.act === "withdrawn" ? `### Session ${f9.when} | Conclusion withdrawn | ${f9.who}
 Trigger: op=withdrawconclusion on ${inquiryId} for ${pid}
 Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f9.version}', concluded ${f9.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.
 Reason: ${f9.reason}
@@ -72891,7 +73190,7 @@ Claim: ${f9.claim}
     return this.#repromote({
       bundleId: pid,
       base: projectRow.bundle_sha,
-      text: text3,
+      text: text4,
       when: f9.when,
       author: f9.who,
       meta: {
@@ -73022,27 +73321,27 @@ Claim: ${f9.claim}
       }
       return lines.join("\n");
     };
-    let text3 = appendFmRows(src, "basis_versions", [vLines.join("\n")]);
+    let text4 = appendFmRows(src, "basis_versions", [vLines.join("\n")]);
     const gRows = (Array.isArray(grounds) ? grounds : []).map(rowOf7);
     const lRows = (Array.isArray(legs) ? legs : []).map(rowOf7);
-    if (text3 !== null && gRows.length) text3 = appendFmRows(text3, "basis_version_grounds", gRows);
-    if (text3 !== null && lRows.length) text3 = appendFmRows(text3, "basis_version_legs", lRows);
-    if (text3 === null)
+    if (text4 !== null && gRows.length) text4 = appendFmRows(text4, "basis_version_grounds", gRows);
+    if (text4 !== null && lRows.length) text4 = appendFmRows(text4, "basis_version_legs", lRows);
+    if (text4 === null)
       return {
         ok: false,
         reason: "UNSPLICEABLE_BASIS",
         target: tgt,
         detail: "this question's version block is in a shape the restricted frontmatter grammar cannot extend in place, so nothing was written."
       };
-    text3 = setScalar(text3, "last_updated", `"${when}"`);
-    text3 = appendSessionLog(text3, typeof log === "string" && log ? log : `### Session ${when} | Version appended | ${author}
+    text4 = setScalar(text4, "last_updated", `"${when}"`);
+    text4 = appendSessionLog(text4, typeof log === "string" && log ? log : `### Session ${when} | Version appended | ${author}
 Trigger: appendVersion on ${tgt}
 Changes: reading '${fmSafe2(name)}' added, in state suggested.
 `);
     return this.#repromote({
       bundleId: tgt,
       base: b.bundle_sha,
-      text: text3,
+      text: text4,
       when,
       author,
       meta: {
@@ -73081,8 +73380,8 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
         tgt ? `no question by the id '${tgt.slice(0, 60)}' is readable here. A question you may not see answers exactly as one that does not exist.` : `pass target=<INQ-\u2026>: the question whose reading holds the citation.`,
         { target: tgt || null }
       );
-    const text3 = this.#doc(b.bundle_id);
-    const fm = text3 !== null ? parseFrontmatter(text3).data || {} : {};
+    const text4 = this.#doc(b.bundle_id);
+    const fm = text4 !== null ? parseFrontmatter(text4).data || {} : {};
     const versions = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const vrow = vname ? versions.find((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname) : null;
     if (!vrow)
@@ -73118,7 +73417,7 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
         { target: b.bundle_id, version: vname, ord: k, leg_target: leg.target ?? null }
       );
     const extent = row2.extent && typeof row2.extent === "object" ? row2.extent : { kind: row2.extent_kind };
-    return { ok: true, b, fm, text: text3, vrow, vname, legRows, k, leg, row: row2, extent };
+    return { ok: true, b, fm, text: text4, vrow, vname, legRows, k, leg, row: row2, extent };
   }
   /* R25: the machine's proposals for one leg, strictly NARROWER than it and in the same capture, per source. */
   #narrowCandidateList(src) {
@@ -76532,11 +76831,11 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
     const s = this.#choiceSubject("MACHINE_CANNOT_KEEP_VERSION", notice, author, viewer);
     if (s.refusal) return s.refusal;
     const { who: who2, r } = s;
-    const text3 = why == null ? null : String(why).trim() || null;
-    if (text3 !== null && (text3.length > NOTE_MAX2 || UNSTORABLE.test(text3)))
+    const text4 = why == null ? null : String(why).trim() || null;
+    if (text4 !== null && (text4.length > NOTE_MAX2 || UNSTORABLE.test(text4)))
       return this.#refuse(
         "VERSION_CHOICE_WHY_MALFORMED",
-        `the reason is ${text3.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
+        `the reason is ${text4.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
         { notice: r.notice_id, limit: NOTE_MAX2 }
       );
     const when = this.#when();
@@ -76545,7 +76844,7 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
                       SET state='kept', closed_by=?, closed_at=?, why=? WHERE notice_id=? AND state='open'`,
       who2,
       when,
-      text3,
+      text4,
       r.notice_id
     );
     return {
@@ -76556,7 +76855,7 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
       act: "kept",
       author: who2,
       at: when,
-      why: text3,
+      why: text4,
       capture_sha: r.capture_sha,
       newer_capture: r.newer_capture,
       says: `${r.kind === "case" ? `case ${r.holder}'s cited part ${r.target_id}` : `${r.holder}'s leg ${r.ord}`} stays on the earlier version (${r.capture_sha.slice(0, 12)}); the newer capture (${r.newer_capture.slice(0, 12)}) will not raise this notice again`
@@ -76581,11 +76880,11 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
         "MACHINE_CANNOT_RECORD_REEVALUATION",
         who2 ? `'${who2.slice(0, 60)}' is a machine identity.` : "no member is named as the one who looked again."
       );
-    const text3 = String(note ?? "").trim();
-    if (!text3 || text3.length > NOTE_MAX2 || UNSTORABLE.test(text3))
+    const text4 = String(note ?? "").trim();
+    if (!text4 || text4.length > NOTE_MAX2 || UNSTORABLE.test(text4))
       return this.#refuse(
         "REEVALUATION_NOTE_MALFORMED",
-        !text3 ? "pass note=<what was looked at and what was decided>." : `the note is ${text3.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
+        !text4 ? "pass note=<what was looked at and what was decided>." : `the note is ${text4.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
         { limit: NOTE_MAX2 }
       );
     const dep = str6(dependent), tgt = str6(target), src = str6(source);
@@ -76604,14 +76903,14 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
       return noCause(`nothing owed on ${dep} for ${tgt} (${src}${since != null ? ` since ${since}` : ""}) is standing now.`);
     const when = this.#when();
     this.sql.exec(`INSERT INTO reevaluation_records (dependent, target, source, since, note, author, at)
-                   VALUES (?,?,?,?,?,?,?)`, dep, tgt, src, cause.since ?? null, text3, who2, when);
+                   VALUES (?,?,?,?,?,?,?)`, dep, tgt, src, cause.since ?? null, text4, who2, when);
     return {
       ok: true,
       dependent: dep,
       target: tgt,
       source: src,
       since: cause.since ?? null,
-      note: text3,
+      note: text4,
       author: who2,
       at: when,
       closed: true,
@@ -76645,11 +76944,11 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
   audit(image) {
     const files = image && image.files instanceof Map ? image.files : null;
     const md = files ? files.get("bundle.md") : null;
-    const text3 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
-    if (text3 === null) return [];
+    const text4 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
+    if (text4 === null) return [];
     let fm = null;
     try {
-      fm = parseFrontmatter(text3).data;
+      fm = parseFrontmatter(text4).data;
     } catch {
       fm = null;
     }
@@ -77529,7 +77828,7 @@ function migratePublication(sql) {
   ))
     registerCaseDocumentSha(sql, d.case_id, d.edition, d.doc_sha, d.text, d.ratified_at);
 }
-function registerCaseDocumentSha(sql, caseId, edition, docSha, text3, at17) {
+function registerCaseDocumentSha(sql, caseId, edition, docSha, text4, at17) {
   sql.exec(
     `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
      ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
@@ -77537,7 +77836,7 @@ function registerCaseDocumentSha(sql, caseId, edition, docSha, text3, at17) {
     caseId,
     caseDocumentPath(edition),
     "case_document",
-    new TextEncoder().encode(String(text3 ?? "")).length,
+    new TextEncoder().encode(String(text4 ?? "")).length,
     at17
   );
 }
@@ -77624,7 +77923,7 @@ var safeJson13 = (s) => {
 };
 var fmSafe3 = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 var str7 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
-var shaOf = (text3) => createSha256().update(new TextEncoder().encode(String(text3))).hex();
+var shaOf = (text4) => createSha256().update(new TextEncoder().encode(String(text4))).hex();
 var REVIEW_DOORS = Object.freeze([
   "draftForMember",
   "draftIdentity",
@@ -77677,8 +77976,8 @@ function noCaseDocument(id, ed) {
     detail: `no case document has been authored for ${id} edition ${ed}. A case document is written by op=publish, which is the act that authors the assertions it carries \u2014 this plane does not compose one.`
   };
 }
-function signedCitations(text3) {
-  const fm = parseFrontmatter(String(text3 || "")).data || {};
+function signedCitations(text4) {
+  const fm = parseFrontmatter(String(text4 || "")).data || {};
   if (caseDocumentRequiresV4Disclosures(fm) && Array.isArray(fm.case_citations))
     return { state: "signed", rows: fm.case_citations };
   return {
@@ -77891,15 +78190,15 @@ var Publication = class {
     case: caseArg = null,
     caseId = null,
     edition = null,
-    text: text3 = null,
+    text: text4 = null,
     author = null,
     at: at17 = null,
     draft = null
   } = {}) {
     const id = str7(caseArg ?? caseId), ed = Number(edition);
-    if (!id || !Number.isInteger(ed) || ed < 1 || typeof text3 !== "string" || !text3)
+    if (!id || !Number.isInteger(ed) || ed < 1 || typeof text4 !== "string" || !text4)
       return { ok: false, reason: "MALFORMED", detail: "a case document names its case, a positive edition and its text" };
-    const docSha = shaOf(text3);
+    const docSha = shaOf(text4);
     this.sql.exec(
       `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by,draft_id)
        VALUES (?,?,?,?,?,?,?)
@@ -77909,7 +78208,7 @@ var Publication = class {
       id,
       ed,
       docSha,
-      text3,
+      text4,
       str7(at17) || this.#when(),
       author ?? null,
       draft ?? null
@@ -77956,11 +78255,11 @@ var Publication = class {
     const all = doc.text.split("\n");
     const at17 = locate(all);
     if (!at17) return { ok: true, ...held, reauthored: false, why: `this case document carries no ${section} section to re-author` };
-    const text3 = [...all.slice(0, at17.f0), ...fmLines, ...all.slice(at17.f1, at17.b0), ...bodyLines, ...all.slice(at17.b1)].join("\n");
-    if (text3 === doc.text) return { ok: true, ...held, reauthored: false };
-    const newSha = shaOf(text3);
+    const text4 = [...all.slice(0, at17.f0), ...fmLines, ...all.slice(at17.f1, at17.b0), ...bodyLines, ...all.slice(at17.b1)].join("\n");
+    if (text4 === doc.text) return { ok: true, ...held, reauthored: false };
+    const newSha = shaOf(text4);
     this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
-                   AND sig_armored IS NULL`, newSha, text3, id, ed, doc.doc_sha);
+                   AND sig_armored IS NULL`, newSha, text4, id, ed, doc.doc_sha);
     this.projectCaseExclusions(id, ed);
     const now = this.#one(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
     return {
@@ -78562,12 +78861,12 @@ var Publication = class {
       readiness: work.readiness,
       basis: null
     };
-    const text3 = this.#fileText(pid, "bundle.md");
-    if (!text3) {
+    const text4 = this.#fileText(pid, "bundle.md");
+    if (!text4) {
       const detail = "the project's own document could not be read, so whether its owner closed it is undetermined";
       return { ...out, stage: "undetermined", detail, stages: this.#stages({ unread: detail }) };
     }
-    const fm = parseFrontmatter(text3.content).data || {};
+    const fm = parseFrontmatter(text4.content).data || {};
     const closeRecorded = fm.current_state === "closed";
     const closed = closeRecorded && CLOSED_REASONS.includes(fm.closed_reason);
     const read2 = this.#readHeld(pid, out.questions);
@@ -79204,9 +79503,9 @@ case_project: ${pid}
     const out = {};
     for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
       if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
-      const text3 = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
-      if (text3 === null) continue;
-      const mfm = parseFrontmatter(text3).data || {};
+      const text4 = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
+      if (text4 === null) continue;
+      const mfm = parseFrontmatter(text4).data || {};
       out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
     }
     return out;
@@ -80810,9 +81109,9 @@ case_project: ${pid}
     if (more) pins.length = cap;
     const findings = [];
     for (const p of pins) {
-      const text3 = this.record.textAtSha(p.bundle_id, p.version_sha);
-      if (typeof text3 !== "string") continue;
-      const fm = parseFrontmatter(text3).data || {};
+      const text4 = this.record.textAtSha(p.bundle_id, p.version_sha);
+      if (typeof text4 !== "string") continue;
+      const fm = parseFrontmatter(text4).data || {};
       if (publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === id))
         findings.push({ case_id: p.case_id, finding: p.bundle_id, project: p.project_id ?? null });
     }
@@ -81325,10 +81624,10 @@ var Standards = class {
     if (!view) return undetermined(why);
     const entries = Array.isArray(view.standard_sources) ? view.standard_sources : [];
     if (!entries.length) return undetermined("the active jurisdiction profiles list no source of standards");
-    const text3 = String(cite ?? "");
+    const text4 = String(cite ?? "");
     const matches = entries.filter((e) => {
       try {
-        return !!e.cite && new RegExp(e.cite.re, e.cite.flags || "").test(text3);
+        return !!e.cite && new RegExp(e.cite.re, e.cite.flags || "").test(text4);
       } catch {
         return false;
       }
@@ -81450,7 +81749,7 @@ var Standards = class {
       const at17 = this.#when();
       const id = `${this.record.allocId("STD", at17.slice(0, 4)).id}-${f9.kind}`;
       const source = this.sourceOf(f9.cite, f9);
-      const text3 = standardDoc({ id, ...f9, source, proposal: proposalId, author, at: at17 });
+      const text4 = standardDoc({ id, ...f9, source, proposal: proposalId, author, at: at17 });
       this.#writing = id;
       let r;
       try {
@@ -81459,7 +81758,7 @@ var Standards = class {
           base: null,
           snapKey: `${at17.replace(/[-:]/g, "")}_${rand6(4)}`,
           author,
-          files: [{ path: "bundle.md", text: text3 }],
+          files: [{ path: "bundle.md", text: text4 }],
           meta: { object_type: STANDARD, title: titleOf2(f9.cite), current_state: "recorded", created: at17, last_updated: at17 },
           actorIdentity: author,
           actorViewer: viewer ?? author
@@ -82178,7 +82477,7 @@ var UNSEEN = "an object you may not see";
 var DATE_RE4 = /^\d{4}-\d{2}-\d{2}$/;
 var str9 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj11 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-var text2 = (v) => typeof v === "string" && v.trim() && v.length <= TEXT_MAX ? v.trim() : null;
+var text3 = (v) => typeof v === "string" && v.trim() && v.length <= TEXT_MAX ? v.trim() : null;
 var isDate3 = (v) => typeof v === "string" && DATE_RE4.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
 var q3 = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'")}"`;
 var oneLine = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").trim();
@@ -82351,10 +82650,10 @@ var Conformance = class _Conformance {
       );
       return { ok: true, act: this.#actView(held), minted: false };
     }
-    const description = text2(a.description);
+    const description = text3(a.description);
     if (!description) return incomplete("description", "the act states no description of what the government did.");
     const actor = isObj11(a.actor) ? a.actor : {};
-    const role = text2(actor.role), body = text2(actor.body);
+    const role = text3(actor.role), body = text3(actor.body);
     if (!role || !body)
       return incomplete("actor", "the act names the office that did it by its official role and body, never by a person.");
     let at17 = null, from = null, to = null;
@@ -82508,7 +82807,7 @@ var Conformance = class _Conformance {
     };
     for (const [i, r] of list2.entries()) {
       const row2 = isObj11(r) ? r : {};
-      const standard = str9(row2.standard), requires = text2(row2.requires), did = text2(row2.did);
+      const standard = str9(row2.standard), requires = text3(row2.requires), did = text3(row2.did);
       const reading = READINGS.includes(row2.reading) ? row2.reading : null;
       if (!standard || !named.has(standard))
         return incomplete(`row ${i} names no standard this determination names.`, { row: i });
@@ -82535,7 +82834,7 @@ var Conformance = class _Conformance {
     };
     for (const [i, x] of list2.entries()) {
       const item = isObj11(x) ? x : { question: x };
-      const question = text2(item.question);
+      const question = text3(item.question);
       if (!question) return bad(`question ${i} states no question.`, { question: i });
       const inquiry = str9(item.inquiry);
       if (inquiry) {
@@ -83145,8 +83444,8 @@ var Conformance = class _Conformance {
     const a = isObj11(act) ? act : {};
     const theAct = {
       id: str9(a.id),
-      description: text2(a.description),
-      actor: isObj11(a.actor) ? { role: text2(a.actor.role), body: text2(a.actor.body) } : null,
+      description: text3(a.description),
+      actor: isObj11(a.actor) ? { role: text3(a.actor.role), body: text3(a.actor.body) } : null,
       at: isDate3(a.at) ? a.at : null,
       period: isObj11(a.period) ? {
         from: isDate3(a.period.from) ? a.period.from : null,
@@ -83157,12 +83456,12 @@ var Conformance = class _Conformance {
     const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj11(x) ? str9(x.standard ?? x.id) : str9(x)).filter(Boolean);
     const rs = (Array.isArray(rows) ? rows : []).filter(isObj11).map((x) => ({
       standard: str9(x.standard),
-      requires: text2(x.requires),
-      did: text2(x.did),
+      requires: text3(x.requires),
+      did: text3(x.did),
       reading: READINGS.includes(x.reading) ? x.reading : null,
       content: Array.isArray(x.content) ? x.content.map(str9).filter(Boolean).slice(0, LIMITS.evidence) : []
     }));
-    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj11(x) ? x : { question: x }).map((x) => ({ question: text2(x.question), inquiry: str9(x.inquiry) })).filter((x) => x.question);
+    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj11(x) ? x : { question: x }).map((x) => ({ question: text3(x.question), inquiry: str9(x.inquiry) })).filter((x) => x.question);
     const at17 = this.#when();
     const who2 = str9(proposer);
     let id = null;
@@ -83847,8 +84146,8 @@ var Actions = class _Actions {
     );
   }
   /* K57's small helpers, copied from the legacy store (which keeps its own for its other writers). */
-  static #appendStateHistory(text3, e) {
-    const lines = text3.split("\n");
+  static #appendStateHistory(text4, e) {
+    const lines = text4.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -83875,8 +84174,8 @@ var Actions = class _Actions {
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
-  static #setScalar(text3, key, value) {
-    const lines = text3.split("\n");
+  static #setScalar(text4, key, value) {
+    const lines = text4.split("\n");
     const end2 = lines.indexOf("---", 1);
     for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
       if (lines[i].startsWith(key + ":")) {
@@ -83884,13 +84183,13 @@ var Actions = class _Actions {
         return lines.join("\n");
       }
     }
-    return text3;
+    return text4;
   }
-  static #setOrAddScalar(text3, key, value) {
-    const lines = text3.split("\n");
-    if (lines[0] !== "---") return text3;
+  static #setOrAddScalar(text4, key, value) {
+    const lines = text4.split("\n");
+    if (lines[0] !== "---") return text4;
     const end2 = lines.indexOf("---", 1);
-    if (end2 === -1) return text3;
+    if (end2 === -1) return text4;
     for (let i = 1; i < end2; i++)
       if (lines[i].startsWith(key + ":")) {
         lines[i] = `${key}: ${value}`;
@@ -83898,8 +84197,8 @@ var Actions = class _Actions {
       }
     return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
   }
-  static #spliceReferences(text3, additions) {
-    const lines = text3.split("\n");
+  static #spliceReferences(text4, additions) {
+    const lines = text4.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -83934,16 +84233,16 @@ var Actions = class _Actions {
     return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
   }
   /* One Session Log appender for this module's writers. */
-  static #appendSessionLog(text3, entry) {
-    const at17 = text3.indexOf("## Session Log");
-    if (at17 < 0) return text3 + "\n## Session Log\n\n" + entry;
-    const nxt = text3.indexOf("\n## ", at17 + 1);
-    const cut3 = nxt === -1 ? text3.length : nxt + 1;
-    return text3.slice(0, cut3) + entry + "\n" + text3.slice(cut3);
+  static #appendSessionLog(text4, entry) {
+    const at17 = text4.indexOf("## Session Log");
+    if (at17 < 0) return text4 + "\n## Session Log\n\n" + entry;
+    const nxt = text4.indexOf("\n## ", at17 + 1);
+    const cut3 = nxt === -1 ? text4.length : nxt + 1;
+    return text4.slice(0, cut3) + entry + "\n" + text4.slice(cut3);
   }
   /* A revision of `id` through promotion, carrying every other live file (R14, R16, R18, R24). */
-  #revise(id, text3, fm, b, when, who2, marks = {}, state = null) {
-    const bytes2 = new TextEncoder().encode(text3);
+  #revise(id, text4, fm, b, when, who2, marks = {}, state = null) {
+    const bytes2 = new TextEncoder().encode(text4);
     return this.promotion.promote({
       bundleId: id,
       base: this.#baseOf(id),
@@ -83952,7 +84251,7 @@ var Actions = class _Actions {
       viewer: marks.viewer ?? who2,
       ...marks,
       files: [
-        { path: "bundle.md", text: text3, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() },
+        { path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() },
         ...this.#carried(id)
       ],
       meta: {
@@ -84286,11 +84585,11 @@ var Actions = class _Actions {
   audit(image) {
     const files = image && image.files instanceof Map ? image.files : null;
     const md = files ? files.get("bundle.md") : null;
-    const text3 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
-    if (text3 === null) return [];
+    const text4 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
+    if (text4 === null) return [];
     let fm = null;
     try {
-      fm = parseFrontmatter(text3).data;
+      fm = parseFrontmatter(text4).data;
     } catch {
       fm = null;
     }
@@ -84396,8 +84695,8 @@ var Actions = class _Actions {
         target,
         detail: "this action has no readable bundle.md, so its state cannot be moved"
       };
-    let text3 = liveMd.content;
-    const fm = parseFrontmatter(text3).data || {};
+    let text4 = liveMd.content;
+    const fm = parseFrontmatter(text4).data || {};
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legal = spec?.legal || [];
     if (!legal.includes(to))
@@ -84439,7 +84738,7 @@ var Actions = class _Actions {
         detail: `a resolution describes how an action ENDED; supplying one on a move to ${to} would record an outcome the action has not reached.`
       };
     const when = stampInstant("second", this.#nowMs(null));
-    const withHistory = _Actions.#appendStateHistory(text3, {
+    const withHistory = _Actions.#appendStateHistory(text4, {
       timestamp: when,
       from_state: b.current_state,
       to_state: to,
@@ -84453,19 +84752,19 @@ var Actions = class _Actions {
         target,
         detail: "this document's state_history block cannot be extended in place, and a move recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text3 = withHistory;
-    text3 = _Actions.#setOrAddScalar(text3, "prior_state", b.current_state);
-    text3 = _Actions.#setScalar(text3, "current_state", to);
-    if (to === "resolved") text3 = _Actions.#setOrAddScalar(text3, "resolution", res);
-    text3 = _Actions.#setScalar(text3, "last_updated", `"${when}"`);
+    text4 = withHistory;
+    text4 = _Actions.#setOrAddScalar(text4, "prior_state", b.current_state);
+    text4 = _Actions.#setScalar(text4, "current_state", to);
+    if (to === "resolved") text4 = _Actions.#setOrAddScalar(text4, "resolution", res);
+    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
     const entry = `### Session ${when} | Action ${b.current_state} to ${to} | ${who2}
 Trigger: op=actionmove on ${target}
 Changes: state ${b.current_state} to ${to}.${to === "resolved" ? ` Resolution: ${res}.` : ""}
 Reason: ${why}
 `;
-    text3 = _Actions.#appendSessionLog(text3, entry);
+    text4 = _Actions.#appendSessionLog(text4, entry);
     const carried = this.#carried(target);
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     const promoted = this.promotion.promote({
       bundleId: target,
       base: this.#baseOf(target),
@@ -84474,7 +84773,7 @@ Reason: ${why}
       viewer: viewer ?? who2,
       files: [{
         path: "bundle.md",
-        text: text3,
+        text: text4,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -84799,18 +85098,18 @@ Reason: ${why}
         { governing_laws: listed }
       );
     }
-    let text3 = _Actions.#spliceCorrespondence(liveMd.content, entryFm);
-    if (!text3) this.#releaseLease(target, who2);
-    if (!text3)
+    let text4 = _Actions.#spliceCorrespondence(liveMd.content, entryFm);
+    if (!text4) this.#releaseLease(target, who2);
+    if (!text4)
       return {
         ok: false,
         reason: "UNSPLICEABLE_CORRESPONDENCE",
         target,
         detail: "this action's correspondence block is not in a shape this grammar can extend in place. Appending never rewrites the rest of the document, so nothing was written."
       };
-    text3 = _Actions.#setScalar(text3, "last_updated", `"${when}"`);
-    text3 = _Actions.#appendSessionLog(
-      text3,
+    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
+    text4 = _Actions.#appendSessionLog(
+      text4,
       `### Session ${when} | Correspondence ${direction} | ${who2}
 Trigger: op=actioncorrespond on ${target}
 Changes: correspondence[${ord}] recorded, dated ${day}${String(party ?? "").trim() ? `, with ${String(party).trim()}` : ""}.
@@ -84819,7 +85118,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
 ` : ""}`
     );
     const carried = this.#carried(target);
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     const promoted = this.promotion.promote({
       bundleId: target,
       base: this.#baseOf(target),
@@ -84828,7 +85127,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       viewer: viewer ?? who2,
       files: [{
         path: "bundle.md",
-        text: text3,
+        text: text4,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -84921,19 +85220,19 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const fm = parseFrontmatter(liveMd.content).data || {};
     const before = governingLawsOf(fm);
     const when = stampInstant("second", this.#nowMs(null));
-    let text3 = _Actions.#replaceGoverningLaws(liveMd.content, entries);
-    if (!text3)
+    let text4 = _Actions.#replaceGoverningLaws(liveMd.content, entries);
+    if (!text4)
       return {
         ok: false,
         reason: "UNSPLICEABLE_GOVERNING_LAWS",
         target,
         detail: "this action's governing_laws block is not in a shape this grammar can replace in place, so nothing was written."
       };
-    text3 = _Actions.#setOrAddScalar(text3, "governing_laws_by", `"${_Actions.#fmSafe(who2)}"`);
-    text3 = _Actions.#setOrAddScalar(text3, "governing_laws_at", `"${when}"`);
-    text3 = _Actions.#setScalar(text3, "last_updated", `"${when}"`);
-    text3 = _Actions.#appendSessionLog(
-      text3,
+    text4 = _Actions.#setOrAddScalar(text4, "governing_laws_by", `"${_Actions.#fmSafe(who2)}"`);
+    text4 = _Actions.#setOrAddScalar(text4, "governing_laws_at", `"${when}"`);
+    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
+    text4 = _Actions.#appendSessionLog(
+      text4,
       `### Session ${when} | Governing laws stated | ${who2}
 Trigger: op=actionlaws on ${target}
 Changes: governing_laws set to ${entries.map((e) => `${e.level} ${e.citation}`).join("; ")}.
@@ -84941,7 +85240,7 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
 `
     );
     const carried = this.#carried(target);
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     const promoted = this.promotion.promote({
       bundleId: target,
       base: this.#baseOf(target),
@@ -84951,7 +85250,7 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
       [LAWS_ACT]: true,
       files: [{
         path: "bundle.md",
-        text: text3,
+        text: text4,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -85057,8 +85356,8 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
      or open it before the closing fence when absent — `#spliceCorrespondence`'s grammar, whole-block. Returns
      null for a block it cannot read as that shape (an inline value other than `[]`), refusing rather than
      guessing: the grammar has no escapes and a wrong guess corrupts the document silently. */
-  static #replaceGoverningLaws(text3, entries) {
-    const lines = text3.split("\n");
+  static #replaceGoverningLaws(text4, entries) {
+    const lines = text4.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -85172,11 +85471,11 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
       };
     const when = stampInstant("second", this.#nowMs(null));
     const entry = { tier: next, prior: held, by: _Actions.#fmSafe(who2), at: when, reason: why };
-    let text3 = _Actions.#appendRiskTierHistory(liveMd.content, entry);
-    text3 = _Actions.#setOrAddScalar(text3, "risk_tier", String(next));
-    text3 = _Actions.#setScalar(text3, "last_updated", `"${when}"`);
-    text3 = _Actions.#appendSessionLog(
-      text3,
+    let text4 = _Actions.#appendRiskTierHistory(liveMd.content, entry);
+    text4 = _Actions.#setOrAddScalar(text4, "risk_tier", String(next));
+    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
+    text4 = _Actions.#appendSessionLog(
+      text4,
       `### Session ${when} | Risk tier revised | ${who2}
 Trigger: op=actionrisktier on ${target}
 Changes: risk_tier ${held} (${RISK_TIERS[held]}) -> ${next} (${RISK_TIERS[next]}).
@@ -85184,7 +85483,7 @@ Reason: ${why}
 `
     );
     const carried = this.#carried(target);
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     const promoted = this.promotion.promote({
       bundleId: target,
       base: this.#baseOf(target),
@@ -85194,7 +85493,7 @@ Reason: ${why}
       [RISK_TIER_ACT]: true,
       files: [{
         path: "bundle.md",
-        text: text3,
+        text: text4,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -85209,7 +85508,7 @@ Reason: ${why}
       }
     });
     if (!promoted.ok) return { ...promoted, target };
-    const after = parseFrontmatter(text3).data || {};
+    const after = parseFrontmatter(text4).data || {};
     return {
       ok: true,
       target,
@@ -85238,8 +85537,8 @@ Reason: ${why}
      `entry` null it answers only whether the block can be appended to (the act asks before it refuses anything
      that would write). Returns null for a block it cannot read as that shape — an inline value other than `[]` —
      refusing rather than guessing: the grammar has no escapes, and a wrong guess rewrites history silently. */
-  static #appendRiskTierHistory(text3, entry) {
-    const lines = text3.split("\n");
+  static #appendRiskTierHistory(text4, entry) {
+    const lines = text4.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -85386,21 +85685,21 @@ Reason: ${why}
     if (refs.some((r) => r && typeof r === "object" && r.rel === "responds_to" && r.target === actionId))
       return { bundle_id: doc.bundle_id, already: true };
     const when = stampInstant("second", this.#nowMs(null));
-    let text3 = _Actions.#spliceReferences(
+    let text4 = _Actions.#spliceReferences(
       doc.content,
       [{ rel: "responds_to", target: actionId, status: "confirmed", note: "" }]
     );
-    if (!text3) return null;
-    text3 = _Actions.#setScalar(text3, "last_updated", `"${when}"`);
-    text3 = _Actions.#appendSessionLog(
-      text3,
+    if (!text4) return null;
+    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
+    text4 = _Actions.#appendSessionLog(
+      text4,
       `### Session ${when} | Recorded as a response | ${who2}
 Trigger: op=actioncorrespond on ${actionId}
 Changes: responds_to edge added to ${actionId}.
 `
     );
     const carried = this.#carried(doc.bundle_id);
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     const p = this.promotion.promote({
       bundleId: doc.bundle_id,
       base: this.#baseOf(doc.bundle_id),
@@ -85409,7 +85708,7 @@ Changes: responds_to edge added to ${actionId}.
       viewer: who2,
       files: [{
         path: "bundle.md",
-        text: text3,
+        text: text4,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -85577,8 +85876,8 @@ Changes: responds_to edge added to ${actionId}.
      Values are emitted quoted where they are prose (account, medium, party) and
      bare where they are tokens, matching what the restricted grammar's parser
      reads back. */
-  static #spliceCorrespondence(text3, e) {
-    const lines = text3.split("\n");
+  static #spliceCorrespondence(text4, e) {
+    const lines = text4.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -86170,10 +86469,10 @@ function parseFigure(figure2) {
   if (!Number.isFinite(number)) return { ok: false, why: "the figure is not a finite number" };
   return { ok: true, number: Object.is(number, -0) ? 0 : number, decimals };
 }
-function passageHolds(text3, figure2) {
-  if (typeof text3 !== "string" || typeof figure2 !== "string") return false;
+function passageHolds(text4, figure2) {
+  if (typeof text4 !== "string" || typeof figure2 !== "string") return false;
   const f9 = fold(figure2);
-  return f9 !== "" && fold(text3).includes(f9);
+  return f9 !== "" && fold(text4).includes(f9);
 }
 var toDecimals = (x, d) => Number(x.toFixed(Math.min(20, d)));
 var toPrecision = (x) => Number(x.toPrecision(15));
@@ -86866,10 +87165,10 @@ var Consequences = class {
         } else {
           const f9 = parseFigure(o.figure);
           if (!f9.ok) return basisUnreadable(`operand ${i}: ${f9.why}`, { operand: i });
-          const text3 = this.#passageText(o.content);
-          if (text3 === null)
+          const text4 = this.#passageText(o.content);
+          if (text4 === null)
             lacking ||= { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` };
-          else if (!passageHolds(text3, o.figure))
+          else if (!passageHolds(text4, o.figure))
             lacking ||= { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` };
           else Object.assign(o, { number: f9.number, decimals: f9.decimals });
         }
@@ -87951,17 +88250,17 @@ var Filings = class _Filings {
       else unfilled.push({ name: n, why: val.why });
     }
     const filled = new Map(blanks.map((b) => [b.name, b.value]));
-    let text3 = entry.template.replace(BLANK_RE, (_, n) => filled.has(n) ? filled.get(n) : unfilledMarker(n));
+    let text4 = entry.template.replace(BLANK_RE, (_, n) => filled.has(n) ? filled.get(n) : unfilledMarker(n));
     let advisory = null;
     if (gov.tier === 2) {
       advisory = str11(entry.advisory);
-      if (advisory) text3 = `${advisory}
+      if (advisory) text4 = `${advisory}
 
-${text3}`;
+${text4}`;
       else {
-        text3 = `${unfilledMarker("advisory")}
+        text4 = `${unfilledMarker("advisory")}
 
-${text3}`;
+${text4}`;
         unfilled.unshift({ name: "advisory", why: "the profile gives no advisory note for this kind (or its profiles disagree), so it is undetermined; a member writes one in before the draft can be approved" });
       }
     }
@@ -87982,7 +88281,7 @@ ${text3}`;
         a.kind,
         gov.tier,
         json2(gov),
-        text3,
+        text4,
         json2(blanks),
         json2(unfilled),
         advisory,
@@ -87997,7 +88296,7 @@ ${text3}`;
         action: a.id,
         tier: gov.tier,
         governing: gov,
-        text: text3,
+        text: text4,
         blanks,
         unfilled,
         ...gov.tier === 2 ? { advisory } : {},
@@ -88047,7 +88346,7 @@ ${text3}`;
   }
   /* ---------------------------------------------------------------- R6: filingApprove */
   /** R6: a member approves the draft's text or an edited text, at most once; the approved text is the member's. */
-  filingApprove({ filing = null, text: text3 = void 0, author = null, viewer = null } = {}) {
+  filingApprove({ filing = null, text: text4 = void 0, author = null, viewer = null } = {}) {
     const who2 = str11(author);
     if (!who2 || isMachineIdentity(who2))
       return {
@@ -88075,7 +88374,7 @@ ${text3}`;
         changed,
         detail: `since the draft was prepared: ${changed.join("; ")} changed. Prepare it again.`
       };
-    const body = text3 === void 0 || text3 === null ? d.text : text3;
+    const body = text4 === void 0 || text4 === null ? d.text : text4;
     if (typeof body === "string" && UNFILLED_RE.test(body))
       return {
         ok: false,
@@ -88220,17 +88519,17 @@ ${text3}`;
     if (!isObj13(f9) || !str11(f9.id))
       return { finding: null, withheld: "an object you may not see", source: det.id };
     const source = `${f9.id}@${f9.case ?? "?"}/${f9.edition ?? "?"}`;
-    const text3 = f9.version_sha ? this.#call(() => this.record.textAtSha(f9.id, f9.version_sha)) : null;
+    const text4 = f9.version_sha ? this.#call(() => this.record.textAtSha(f9.id, f9.version_sha)) : null;
     const base = { finding: f9.id, case: f9.case ?? null, edition: f9.edition ?? null, version_sha: f9.version_sha ?? null, source };
-    if (typeof text3 !== "string")
+    if (typeof text4 !== "string")
       return { ...base, claim: { state: "undetermined", why: "the finding's published bytes are not held here as text" }, citations: [] };
     let fm = null;
     try {
-      fm = parseFrontmatter(text3).data;
+      fm = parseFrontmatter(text4).data;
     } catch {
       fm = null;
     }
-    const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text3);
+    const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text4);
     const conclusion = m && m[1].trim() ? m[1].trim() : null;
     const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj13) : [];
     return {
@@ -88913,9 +89212,9 @@ var LOG = "Escalation Log";
 var TOKEN3 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
 var q5 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
 var tok = (s) => TOKEN3.test(String(s)) ? String(s) : q5(s);
-var parseFm2 = (text3) => {
-  if (typeof text3 !== "string") return null;
-  const d = parseFrontmatter(text3).data;
+var parseFm2 = (text4) => {
+  if (typeof text4 !== "string") return null;
+  const d = parseFrontmatter(text4).data;
   return d && typeof d === "object" && !Array.isArray(d) ? d : null;
 };
 var escalationId = (allocated) => `${allocated}-escalation`;
@@ -88965,16 +89264,16 @@ function escalationDoc({ id, project, determination, act, standards, author, at:
 }
 var logText = (seq, entry) => `### ${seq} | ${entry.kind} | ${entry.author} | ${entry.at}
 ${JSON.stringify(entry)}`;
-function logOf(text3) {
-  if (typeof text3 !== "string") return [];
+function logOf(text4) {
+  if (typeof text4 !== "string") return [];
   const marker = `
 ## ${LOG}
 `;
-  const at17 = text3.indexOf(marker);
+  const at17 = text4.indexOf(marker);
   if (at17 === -1) return [];
   const start = at17 + marker.length;
-  const nxt = text3.indexOf("\n## ", start - 1);
-  const body = text3.slice(start, nxt === -1 ? text3.length : nxt).trim();
+  const nxt = text4.indexOf("\n## ", start - 1);
+  const body = text4.slice(start, nxt === -1 ? text4.length : nxt).trim();
   if (!body) return [];
   return body.split(/\n(?=### )/).map((part) => {
     const m = /^### (\d+) \| [^\n]*\n([\s\S]*)$/.exec(part.trim());
@@ -88987,34 +89286,34 @@ function logOf(text3) {
     }
   });
 }
-function logSection(text3) {
-  if (typeof text3 !== "string") return null;
+function logSection(text4) {
+  if (typeof text4 !== "string") return null;
   const marker = `
 ## ${LOG}
 `;
-  const at17 = text3.indexOf(marker);
+  const at17 = text4.indexOf(marker);
   if (at17 === -1) return null;
   const start = at17 + marker.length;
-  const nxt = text3.indexOf("\n## ", start - 1);
-  return text3.slice(start, nxt === -1 ? text3.length : nxt).trim();
+  const nxt = text4.indexOf("\n## ", start - 1);
+  return text4.slice(start, nxt === -1 ? text4.length : nxt).trim();
 }
 function fence2(lines) {
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   return end2 === -1 ? null : end2;
 }
-function setField2(text3, key, value) {
-  const lines = text3.split("\n");
+function setField2(text4, key, value) {
+  const lines = text4.split("\n");
   const end2 = fence2(lines);
-  if (end2 === null) return text3;
+  if (end2 === null) return text4;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
     lines[i] = `${key}: ${value}`;
     return lines.join("\n");
   }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function appendItem2(text3, key, fields) {
-  const lines = text3.split("\n");
+function appendItem2(text4, key, fields) {
+  const lines = text4.split("\n");
   const end2 = fence2(lines);
   if (end2 === null) return null;
   const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
@@ -89027,26 +89326,26 @@ function appendItem2(text3, key, fields) {
   for (let i = at17 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
   return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
 }
-function appendToSection(text3, heading, entry) {
+function appendToSection(text4, heading, entry) {
   const marker = `
 ## ${heading}
 `;
-  const at17 = text3.indexOf(marker);
-  if (at17 === -1) return `${text3.replace(/\n*$/, "\n")}
+  const at17 = text4.indexOf(marker);
+  if (at17 === -1) return `${text4.replace(/\n*$/, "\n")}
 ## ${heading}
 
 ${entry.trim()}
 `;
   const start = at17 + marker.length;
-  const nxt = text3.indexOf("\n## ", start - 1);
-  const end2 = nxt === -1 ? text3.length : nxt;
-  const head = text3.slice(0, end2).replace(/\n*$/, "\n");
+  const nxt = text4.indexOf("\n## ", start - 1);
+  const end2 = nxt === -1 ? text4.length : nxt;
+  const head = text4.slice(0, end2).replace(/\n*$/, "\n");
   return `${head}
 ${entry.trim()}
-${text3.slice(end2)}`;
+${text4.slice(end2)}`;
 }
-function appendEntry(text3, { entry, seq, stage, state, fromState, blurb }) {
-  let t = appendToSection(text3, LOG, logText(seq, entry));
+function appendEntry(text4, { entry, seq, stage, state, fromState, blurb }) {
+  let t = appendToSection(text4, LOG, logText(seq, entry));
   t = setField2(t, "last_updated", q5(entry.at));
   if (stage !== void 0) t = setField2(t, "stage", String(stage));
   if (state !== void 0 && state !== fromState) {
@@ -89778,10 +90077,10 @@ var Escalation = class {
   }
   #append(e, entry, { stage, state, blurb }) {
     const head = this.record.head(e.id);
-    const text3 = this.#text(e.id);
-    if (!head || text3 === null) return refuseNoSuchEscalation();
-    const seq = logOf(text3).length + 1;
-    const next = appendEntry(text3, { entry, seq, stage, state, fromState: head.currentState, blurb });
+    const text4 = this.#text(e.id);
+    if (!head || text4 === null) return refuseNoSuchEscalation();
+    const seq = logOf(text4).length + 1;
+    const next = appendEntry(text4, { entry, seq, stage, state, fromState: head.currentState, blurb });
     if (next === null)
       return refusal15("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
     const carried = this.record.livePaths(e.id).filter((p) => p !== "bundle.md").map((path) => {
@@ -89830,9 +90129,9 @@ var Escalation = class {
   /** R21: the tables, projected from the promoted document in the promotion's transaction. */
   project(c) {
     if (c.promotedType !== ESCALATION || !c.bundleMd || typeof c.bundleMd.text !== "string") return null;
-    const id = c.bundleId, text3 = c.bundleMd.text;
-    const fm = parseFm2(text3) || {};
-    const log = logOf(text3).filter((x) => !x.unreadable);
+    const id = c.bundleId, text4 = c.bundleMd.text;
+    const fm = parseFm2(text4) || {};
+    const log = logOf(text4).filter((x) => !x.unreadable);
     const held = this.#one(`SELECT log_len FROM escalations WHERE escalation_id=?`, id);
     const from = held ? held.log_len : 0;
     const open = log.find((x) => x.kind === "open") || {};
@@ -89934,14 +90233,14 @@ var Escalation = class {
     const r = this.record.transact(() => {
       const id = escalationId(this.record.allocId("ESC", at17.slice(0, 4)).id);
       const entry = { kind: "open", to: 1, determination, project, standards: pursued, author, at: at17 };
-      const text3 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at17, entry });
-      const fm = parseFm2(text3) || {};
+      const text4 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at17, entry });
+      const fm = parseFm2(text4) || {};
       const p = this.promotion.promote({
         bundleId: id,
         base: null,
         snapKey: this.#snap(),
         author,
-        files: [{ path: "bundle.md", text: text3 }],
+        files: [{ path: "bundle.md", text: text4 }],
         meta: {
           object_type: ESCALATION,
           title: fm.title,
@@ -90665,9 +90964,9 @@ function monitorObservationFor({
       return null;
   }
 }
-function markOverdue(text3, ords) {
+function markOverdue(text4, ords) {
   const want = new Set(ords.map(Number));
-  const lines = String(text3).split("\n");
+  const lines = String(text4).split("\n");
   let fence3 = 0, inClock = false, ord = -1, entryIndent = null;
   const hit = /* @__PURE__ */ new Set();
   for (let i = 0; i < lines.length; i++) {
@@ -90699,13 +90998,13 @@ function markOverdue(text3, ords) {
   }
   return hit.size === want.size ? lines.join("\n") : null;
 }
-function withSessionEntry(text3, checked, line) {
+function withSessionEntry(text4, checked, line) {
   const entry = "### Session " + checked + "\n\n" + line + "\n";
-  const at17 = text3.indexOf("## Session Log");
-  if (at17 < 0) return text3 + "\n## Session Log\n\n" + entry;
-  const nxt = text3.indexOf("\n## ", at17 + 1);
-  const cut3 = nxt === -1 ? text3.length : nxt + 1;
-  return text3.slice(0, cut3) + entry + "\n" + text3.slice(cut3);
+  const at17 = text4.indexOf("## Session Log");
+  if (at17 < 0) return text4 + "\n## Session Log\n\n" + entry;
+  const nxt = text4.indexOf("\n## ", at17 + 1);
+  const cut3 = nxt === -1 ? text4.length : nxt + 1;
+  return text4.slice(0, cut3) + entry + "\n" + text4.slice(cut3);
 }
 var clampLimit2 = (v, dflt, max) => {
   const n = Math.floor(Number(v));
@@ -90830,10 +91129,10 @@ var Monitoring = class {
       content: null,
       basis: "the fetched document is not read as text, and assess reads text documents only"
     };
-    const text3 = new TextDecoder("utf-8", { fatal: false }).decode(bytes2);
+    const text4 = new TextDecoder("utf-8", { fatal: false }).decode(bytes2);
     const v = view ? { view } : {};
-    const id = identify({ ...ctx, text: text3, ...v });
-    const dt = doctypeFor({ ...ctx, text: text3, handler: id.handler, kind: id.kind, ...v });
+    const id = identify({ ...ctx, text: text4, ...v });
+    const dt = doctypeFor({ ...ctx, text: text4, handler: id.handler, kind: id.kind, ...v });
     const content = {
       type: id.handler.shell ? null : dt.type.key,
       confidence: dt.confidence,
@@ -91289,10 +91588,10 @@ var Monitoring = class {
       }
       out.push(line);
     }
-    let text3 = out.join("\n");
-    if (!/^\s+last_checked:/m.test(text3) && /^monitoring:/m.test(text3))
-      text3 = text3.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
-    const head = text3;
+    let text4 = out.join("\n");
+    if (!/^\s+last_checked:/m.test(text4) && /^monitoring:/m.test(text4))
+      text4 = text4.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
+    const head = text4;
     const withEntry = (capLine) => withSessionEntry(head, checked, "Monitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + (driveTick && driveTick.harvestable ? ` \u2014 fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed from the Drive ${driveTick.kind} in ${driveTick.address}` : "") + (capLine ? ` \u2014 ${capLine}` : ""));
     const carried = [];
     for (const [path, v] of Object.entries(img)) {
@@ -92657,11 +92956,11 @@ var Monitoring = class {
     const clock = fm && Array.isArray(fm.clock) ? fm.clock : [];
     const ords = entries.map((e) => Number(e.ord)).filter((o) => Number.isInteger(o) && o >= 0 && o < clock.length && clock[o] && clock[o].status === "pending" && entries.some((e) => Number(e.ord) === o && e.date === clock[o].date));
     if (!ords.length) return { ok: false, reason: "NOTHING_PENDING", detail: "no entry named is still pending in the document" };
-    let text3 = markOverdue(live, ords);
-    if (text3 === null) return { ok: false, reason: "UNSPLICEABLE_CLOCK", detail: "a pending entry's status line could not be found" };
-    text3 = text3.split("\n").map((l, i, a) => /^last_updated:/.test(l) && a.slice(0, i).filter((x) => x === "---").length === 1 ? "last_updated: " + at17 : l).join("\n");
+    let text4 = markOverdue(live, ords);
+    if (text4 === null) return { ok: false, reason: "UNSPLICEABLE_CLOCK", detail: "a pending entry's status line could not be found" };
+    text4 = text4.split("\n").map((l, i, a) => /^last_updated:/.test(l) && a.slice(0, i).filter((x) => x === "---").length === 1 ? "last_updated: " + at17 : l).join("\n");
     const dates = ords.map((o) => clock[o].date);
-    text3 = withSessionEntry(text3, at17, `Deadline recheck: ${ords.length === 1 ? "the clock entry" : "the clock entries"} dated ${dates.join(", ")} passed while pending and ${ords.length === 1 ? "is" : "are"} marked overdue (a mechanical mark; nothing else moved)`);
+    text4 = withSessionEntry(text4, at17, `Deadline recheck: ${ords.length === 1 ? "the clock entry" : "the clock entries"} dated ${dates.join(", ")} passed while pending and ${ords.length === 1 ? "is" : "are"} marked overdue (a mechanical mark; nothing else moved)`);
     const carried = [];
     for (const [path, v] of Object.entries(img)) {
       if (path === "bundle.md" || path.startsWith("_history/")) continue;
@@ -92687,7 +92986,7 @@ var Monitoring = class {
         last_updated: at17
       },
       files: [
-        { path: "bundle.md", text: text3, bytes: new TextEncoder().encode(text3).length, sha256: await sha256Hex11(text3) },
+        { path: "bundle.md", text: text4, bytes: new TextEncoder().encode(text4).length, sha256: await sha256Hex11(text4) },
         ...carried
       ]
     });
@@ -95269,10 +95568,10 @@ var InstanceSetup = class _InstanceSetup {
             verdict = "absent";
             detail = status < 400 ? `the domain redirected (HTTP ${status}); the file is read on the claimed domain itself` : `the domain serves no ${GROUP_WELL_KNOWN_PATH} (HTTP ${status})`;
           } else if (status >= 200 && status < 300) {
-            const text3 = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
+            const text4 = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
             let f9 = null;
             try {
-              f9 = JSON.parse(text3);
+              f9 = JSON.parse(text4);
             } catch {
               f9 = null;
             }
@@ -96388,21 +96687,21 @@ async function publishedRoutes({ op, url, env, stub }) {
   if (!c.ok) return P.json({ ok: false, ...c }, 404);
   const renderFinding = async (fnd) => {
     const md = await pubBytes(fnd.bundle_sha);
-    const text3 = md ? new TextDecoder().decode(md) : null;
-    const fm = text3 ? parseFrontmatter(text3).data || {} : null;
-    const { ok: _refused, ...whyUnavailable } = text3 ? {} : publishedStoreAbsent(env) ?? publishedObjectMissing();
-    const body = text3 ? {
+    const text4 = md ? new TextDecoder().decode(md) : null;
+    const fm = text4 ? parseFrontmatter(text4).data || {} : null;
+    const { ok: _refused, ...whyUnavailable } = text4 ? {} : publishedStoreAbsent(env) ?? publishedObjectMissing();
+    const body = text4 ? {
       state: "published",
       from_sha: fnd.bundle_sha,
-      question: sectionText(text3, "## Question"),
-      conclusion: sectionText(text3, "## Conclusion"),
-      falsifies: sectionText(text3, "## What Would Falsify This"),
+      question: sectionText(text4, "## Question"),
+      conclusion: sectionText(text4, "## Conclusion"),
+      falsifies: sectionText(text4, "## What Would Falsify This"),
       /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): a member published under rule 12
          carries no `## What This Excludes` in its own bytes — the case states it once, in
          its document — so the section is read from THAT signed document for such a member,
          and from the member's own bytes for a legacy one (rule 12 (e)). `excludes_from`
          says which, so a renderer never has to infer whose words it is printing. */
-      excludes: fnd.frozen_from === "case_document" ? typeof fnd.case_excludes === "string" ? fnd.case_excludes : null : sectionText(text3, "## What This Excludes"),
+      excludes: fnd.frozen_from === "case_document" ? typeof fnd.case_excludes === "string" ? fnd.case_excludes : null : sectionText(text4, "## What This Excludes"),
       excludes_from: fnd.frozen_from === "case_document" ? "case_document" : "member_bytes",
       /* BOTH, because the document says it in two places and they are not
          the same statement. The FRONTMATTER carries what op=conclude
@@ -97273,11 +97572,11 @@ function caseMemberFindings(fm) {
 }
 function caseMemberImageFindings(image, parse3) {
   const md = image && image.files instanceof Map ? image.files.get("bundle.md") : image ? image["bundle.md"] : null;
-  const text3 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
-  if (text3 === null) return [];
+  const text4 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
+  if (text4 === null) return [];
   let fm = null;
   try {
-    fm = parse3(text3).data;
+    fm = parse3(text4).data;
   } catch {
     fm = null;
   }
@@ -97585,8 +97884,8 @@ var Ratification = class _Ratification {
   /* What a NEW edition would record for this member, rendered by the one writer and
      read back by the one parser — the same path an edition's own row took. */
   static #conclusionRowParsed(bundleId, c) {
-    const text3 = ["---", "case_conclusions:", ...caseConclusionRowLines(bundleId, c), "---", ""].join("\n");
-    const rows = (parseFrontmatter(text3).data || {}).case_conclusions;
+    const text4 = ["---", "case_conclusions:", ...caseConclusionRowLines(bundleId, c), "---", ""].join("\n");
+    const rows = (parseFrontmatter(text4).data || {}).case_conclusions;
     return Array.isArray(rows) && rows[0] && typeof rows[0] === "object" ? rows[0] : null;
   }
   static #sameRecordedConclusion(had, want) {
@@ -98211,8 +98510,8 @@ var CITE_EXTENT_CHECKS = {
 };
 
 // src/citation/splice.mjs
-function spliceEdgeStatus(text3, changes) {
-  const lines = text3.split("\n");
+function spliceEdgeStatus(text4, changes) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -98272,8 +98571,8 @@ function spliceEdgeStatus(text3, changes) {
   }
   return applied === changes.size ? out.join("\n") : null;
 }
-function spliceReferences3(text3, additions) {
-  const lines = text3.split("\n");
+function spliceReferences3(text4, additions) {
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -98319,9 +98618,9 @@ function legExtentLines(l) {
   }
   return out;
 }
-function spliceBasis(text3, legs) {
-  if (!legs.length) return text3;
-  const lines = text3.split("\n");
+function spliceBasis(text4, legs) {
+  if (!legs.length) return text4;
+  const lines = text4.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -98356,8 +98655,8 @@ function spliceBasis(text3, legs) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function setScalar4(text3, key, value) {
-  const lines = text3.split("\n");
+function setScalar4(text4, key, value) {
+  const lines = text4.split("\n");
   const end2 = lines.indexOf("---", 1);
   for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
     if (lines[i].startsWith(key + ":")) {
@@ -98365,14 +98664,14 @@ function setScalar4(text3, key, value) {
       return lines.join("\n");
     }
   }
-  return text3;
+  return text4;
 }
-function appendSessionLog3(text3, entry) {
-  const at17 = text3.indexOf("## Session Log");
-  if (at17 < 0) return text3 + "\n## Session Log\n\n" + entry;
-  const nxt = text3.indexOf("\n## ", at17 + 1);
-  const cut3 = nxt === -1 ? text3.length : nxt + 1;
-  return text3.slice(0, cut3) + entry + "\n" + text3.slice(cut3);
+function appendSessionLog3(text4, entry) {
+  const at17 = text4.indexOf("## Session Log");
+  if (at17 < 0) return text4 + "\n## Session Log\n\n" + entry;
+  const nxt = text4.indexOf("\n## ", at17 + 1);
+  const cut3 = nxt === -1 ? text4.length : nxt + 1;
+  return text4.slice(0, cut3) + entry + "\n" + text4.slice(cut3);
 }
 
 // src/citation/index.mjs
@@ -98457,7 +98756,7 @@ var Citation = class {
      whole image, so a writer that mentions one file deletes the rest (the default that once destroyed a provenance
      register). Hand-authored, not mechanical: a member citing evidence is authorship, so no writer and no operation
      are claimed. */
-  #write(project, head, text3, when, author, fm, objectType) {
+  #write(project, head, text4, when, author, fm, objectType) {
     const carried = [];
     for (const path of this.record.livePaths(project) || []) {
       if (path === "bundle.md") continue;
@@ -98465,13 +98764,13 @@ var Citation = class {
       if (!f9) continue;
       carried.push(typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     return this.promotion.promote({
       bundleId: project,
       base: head.bundleSha,
       snapKey: `${when.replace(/[-:]/g, "")}_${rand9(4)}`,
       author: author || "member",
-      files: [{ path: "bundle.md", text: text3, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
+      files: [{ path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
       meta: {
         object_type: objectType,
         title: fm.title,
@@ -98594,18 +98893,18 @@ var Citation = class {
         project,
         detail: "the references block is not in a shape this grammar can edit in place"
       };
-    let text3 = setScalar4(spliced, "last_updated", `"${when}"`);
+    let text4 = setScalar4(spliced, "last_updated", `"${when}"`);
     const ids = [...sel.members].sort();
     const shown2 = ids.slice(0, CITE_LOG_SAMPLE);
     const listed = shown2.join(", ") + (ids.length > shown2.length ? `, and ${ids.length - shown2.length} more` : "");
-    text3 = appendSessionLog3(
-      text3,
+    text4 = appendSessionLog3(
+      text4,
       `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}
 Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
 `
     );
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     if (bytes2.length > INLINE_MAX)
       return {
         ok: false,
@@ -98615,7 +98914,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         limit: INLINE_MAX,
         detail: "the reasons appended to these edges would push bundle.md past the 1MB inline limit"
       };
-    const promoted = this.#write(project, p, text3, when, author, doc.data, "project");
+    const promoted = this.#write(project, p, text4, when, author, doc.data, "project");
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
     return {
       ok: true,
@@ -99002,20 +99301,20 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
           detail: "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document."
         };
     }
-    let text3 = setScalar4(spliced, "last_updated", `"${when}"`);
+    let text4 = setScalar4(spliced, "last_updated", `"${when}"`);
     const shown2 = add.slice(0, CITE_LOG_SAMPLE);
     const listed = shown2.join(", ") + (add.length > shown2.length ? `, and ${add.length - shown2.length} more` : "");
     const ungraded = filled.filter((l) => !l.grade).length;
     const graded = filled.length - ungraded;
     const setMovedNote = answerChanged(sel.drift, sel.moved) ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
-    text3 = appendSessionLog3(text3, ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
+    text4 = appendSessionLog3(text4, ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
 Trigger: selection ${handle}${setMovedNote}
 Changes: basis legs added for ${listed}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
 ` : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}${setMovedNote}
 Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
 `);
-    const bytes2 = new TextEncoder().encode(text3);
+    const bytes2 = new TextEncoder().encode(text4);
     if (bytes2.length > INLINE_MAX) {
       const perEdge = CITE_EDGE_BYTES + (edgePins.size ? CITE_PIN_BYTES : 0);
       const overhead = bytes2.length - add.length * perEdge;
@@ -99033,7 +99332,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       };
     }
     const fm = doc.data;
-    const promoted = this.#write(project, p, text3, when, author, fm, fm.object_type ?? p.type);
+    const promoted = this.#write(project, p, text4, when, author, fm, fm.object_type ?? p.type);
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
     return {
       ok: true,
@@ -100941,9 +101240,9 @@ function mutedAsItem(item, itemMutes) {
 function serializeMutedKinds(kinds) {
   return [...new Set((kinds || []).filter((k) => typeof k === "string" && k))].sort().join(",");
 }
-function parseMutedKinds(text3) {
-  if (typeof text3 !== "string" || !text3) return [];
-  return [...new Set(text3.split(",").map((k) => k.trim()).filter(Boolean))].sort();
+function parseMutedKinds(text4) {
+  if (typeof text4 !== "string" || !text4) return [];
+  return [...new Set(text4.split(",").map((k) => k.trim()).filter(Boolean))].sort();
 }
 function suppressedBy(item, mutes) {
   if (!item || !mutes || mutes.size === 0) return null;
@@ -104369,7 +104668,7 @@ var Queue = class _Queue {
     );
     const had = parseMutedKinds(row2 ? row2.muted_kinds : "");
     const next = unmute ? had.filter((k) => !named.includes(k)) : [.../* @__PURE__ */ new Set([...had, ...named])];
-    const text3 = serializeMutedKinds(next);
+    const text4 = serializeMutedKinds(next);
     this.sql.exec(
       `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen)
        VALUES (?, ?, ?, ?, ?)
@@ -104377,7 +104676,7 @@ var Queue = class _Queue {
                                                      last_seen=excluded.last_seen`,
       me,
       c.id,
-      text3,
+      text4,
       row2 ? row2.snoozed_until ?? null : null,
       stamp2
     );
@@ -104387,7 +104686,7 @@ var Queue = class _Queue {
       case: c.id,
       case_type: c.type,
       case_title: c.title,
-      muted_kinds: parseMutedKinds(text3),
+      muted_kinds: parseMutedKinds(text4),
       added: unmute ? [] : named.filter((k) => !had.includes(k)),
       removed: unmute ? named.filter((k) => had.includes(k)) : [],
       at: stamp2,
@@ -105920,7 +106219,7 @@ async function ratifyOp(req, stub, ctx) {
          signed — which is the same doctrine reading a different signature. */
       group: ratifiedFm.group ?? null,
       edges,
-      shas: shas.map(({ text: text3, ...s }) => s)
+      shas: shas.map(({ text: text4, ...s }) => s)
     })
   })));
   if (pubOut.refused) return storeRefused(pubOut, relay);
@@ -105936,13 +106235,13 @@ async function ratifyOp(req, stub, ctx) {
       },
       pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF" || pub.reason === "CASE_SIGNER_NOT_AN_OWNER" || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT" || pub.reason === "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE" || pub.reason === "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE") ? 409 : 500
     );
-  let copied = 0, present = 0, r2state = "not configured";
+  let copied = 0, present2 = 0, r2state = "not configured";
   if (typeof env.PUBLISHED?.put === "function" && r2) {
     r2state = "ok";
     for (const s of shas) {
       const key = `${storeName}/published/${s.sha256}`;
       if (await env.PUBLISHED.head(key)) {
-        present++;
+        present2++;
         continue;
       }
       if (s.kind === "capture" || s.kind === "capture_part") {
@@ -106161,7 +106460,7 @@ async function ratifyOp(req, stub, ctx) {
     published: {
       shas: shas.length,
       copied,
-      alreadyPresent: present,
+      alreadyPresent: present2,
       r2: r2state,
       ...partsPublished ? { parts: partsPublished } : {}
     },
@@ -108304,15 +108603,15 @@ var CaseAuthoring = class {
           object_type: b.object_type,
           detail: "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a member of a case."
         };
-      const text3 = this.#liveText(id);
-      if (text3 === null)
+      const text4 = this.#liveText(id);
+      if (text4 === null)
         return {
           ok: false,
           reason: "NO_DOCUMENT",
           target: id,
           detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
         };
-      const fm = parseFrontmatter(text3).data || {};
+      const fm = parseFrontmatter(text4).data || {};
       const head = this.record.head(id);
       const conc = this.ratification.caseConclusionFor(proj, id, viewer, b.current_state);
       if (conc.state !== "concluded")
@@ -108767,8 +109066,8 @@ var CaseAuthoring = class {
    *  none (`no_capture`). A question has no bytes (`no_bytes`). Set-based: one grouped count per chunk of targets
    *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge. */
   #caseCitations(project) {
-    const text3 = this.#liveText(project);
-    const refs = text3 !== null ? parseFrontmatter(text3).data?.references || [] : [];
+    const text4 = this.#liveText(project);
+    const refs = text4 !== null ? parseFrontmatter(text4).data?.references || [] : [];
     const edges = (Array.isArray(refs) ? refs : []).filter((r) => r && typeof r === "object" && r.rel === "cites" && r.status !== "severed" && typeof r.target === "string" && r.target.trim());
     const isDocument = (t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "information";
     const docs = [...new Set(edges.map((r) => r.target.trim()).filter(isDocument))];
@@ -109016,8 +109315,8 @@ var CaseAuthoring = class {
       kind = "participant";
       by = who2;
     }
-    const text3 = fmSafe5(statement);
-    if (!text3)
+    const text4 = fmSafe5(statement);
+    if (!text4)
       return ack(
         "STATEMENT_ACK_NO_STATEMENT",
         "this draft states nothing about what its case excludes, so there is no statement to acknowledge yet. The draft's editor authors it (statement=); acknowledge it then."
@@ -109034,7 +109333,7 @@ var CaseAuthoring = class {
         (statementAuthor && by === statementAuthor ? `you wrote this statement, and its acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). ` : `you prepared and published this case and authored its completeness block at that act, so you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). Who WROTE the statement is a separate fact, stated separately in these bytes (\xA73 rule 13). `) + `Ask a participant of this project, or hand the draft to a reader through a review grant. The case publishes without one and says so.`,
         { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor }
       );
-    const sha = statementSha(text3);
+    const sha = statementSha(text4);
     const needle = `
   statement_sha: ${sha}
 `;
@@ -110191,14 +110490,14 @@ var Review = class {
   }
   /** R18: a comment through R10's doors (`op=reviewcomment`). A recipient's is attributed to the grant, a member's to
    *  the member. */
-  comment({ draft = null, secretSha = null, viewer = null, bySecret = false, text: text3 = "" } = {}) {
+  comment({ draft = null, secretSha = null, viewer = null, bySecret = false, text: text4 = "" } = {}) {
     const v = String(viewer ?? "");
     const door = bySecret || v.startsWith("member:") ? this.#door({ draft, secretSha, viewer: v, bySecret }) : null;
     if (!door) return noReviewCopy();
     const { draft: d, grant } = door;
     const kind = grant ? "recipient" : "member";
     const author = grant ? grant.grant_id : v.slice("member:".length);
-    const body = String(text3 ?? "").trim();
+    const body = String(text4 ?? "").trim();
     if (!body || body.length > REVIEW_TEXT_MAX)
       return refusal18(
         "REVIEW_NO_COMMENT_TEXT",
@@ -110419,8 +110718,8 @@ var CONTROL_FLOW_AUTHORITY = [
     re: /\b(?:repeat|iterate|keep\s+(?:going|searching)|loop)\b(?:[^.]{0,40}?\b(?:until|while)\b)?/i
   }
 ];
-function controlFlowAuthority(text3) {
-  const s = typeof text3 === "string" ? text3 : "";
+function controlFlowAuthority(text4) {
+  const s = typeof text4 === "string" ? text4 : "";
   return CONTROL_FLOW_AUTHORITY.filter((p) => p.re.test(s)).map((p) => p.name);
 }
 var C = {
@@ -111266,8 +111565,8 @@ var Store = class _Store extends DurableObject {
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
         return { ok: false, reason: "NO_DOCUMENT", bundleId: id, retiredSoFar: retired };
-      let text3 = liveMd.content;
-      const withHistory = _Store.#appendStateHistory(text3, {
+      let text4 = liveMd.content;
+      const withHistory = _Store.#appendStateHistory(text4, {
         timestamp: when,
         from_state: cur.current_state,
         to_state: "retired",
@@ -111282,20 +111581,20 @@ var Store = class _Store extends DurableObject {
           retiredSoFar: retired,
           detail: "this document's state_history block cannot be extended in place, and a retirement recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
         };
-      text3 = withHistory;
-      text3 = _Store.#setScalar(text3, "prior_state", cur.current_state);
-      text3 = _Store.#setScalar(text3, "current_state", "retired");
-      text3 = _Store.#setScalar(text3, "last_updated", `"${when}"`);
+      text4 = withHistory;
+      text4 = _Store.#setScalar(text4, "prior_state", cur.current_state);
+      text4 = _Store.#setScalar(text4, "current_state", "retired");
+      text4 = _Store.#setScalar(text4, "last_updated", `"${when}"`);
       const entry = `### Session ${when} | Retired | ${author || "member"}
 Trigger: selection ${handle}
 Changes: state ${cur.current_state} to retired. Reason: ${why}.
 `;
-      const at17 = text3.indexOf("## Session Log");
-      if (at17 < 0) text3 += "\n## Session Log\n\n" + entry;
+      const at17 = text4.indexOf("## Session Log");
+      if (at17 < 0) text4 += "\n## Session Log\n\n" + entry;
       else {
-        const nxt = text3.indexOf("\n## ", at17 + 1);
-        const cutAt = nxt === -1 ? text3.length : nxt + 1;
-        text3 = text3.slice(0, cutAt) + entry + "\n" + text3.slice(cutAt);
+        const nxt = text4.indexOf("\n## ", at17 + 1);
+        const cutAt = nxt === -1 ? text4.length : nxt + 1;
+        text4 = text4.slice(0, cutAt) + entry + "\n" + text4.slice(cutAt);
       }
       const carried = [];
       for (const r of this.sql.exec(
@@ -111303,8 +111602,8 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
         id
       ))
         carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-      const bytes2 = new TextEncoder().encode(text3);
-      const fm = parseFrontmatter(text3).data || {};
+      const bytes2 = new TextEncoder().encode(text4);
+      const fm = parseFrontmatter(text4).data || {};
       const promoted = this.promote({
         bundleId: id,
         base: cur.bundle_sha,
@@ -111312,7 +111611,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
         author: author || "member",
         files: [{
           path: "bundle.md",
-          text: text3,
+          text: text4,
           bytes: bytes2.length,
           sha256: createSha256().update(bytes2).hex()
         }, ...carried],
@@ -111476,8 +111775,8 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
         return { ok: false, reason: "NO_DOCUMENT", bundleId: id, releasedSoFar: released };
-      let text3 = liveMd.content;
-      const withHistory = _Store.#appendStateHistory(text3, {
+      let text4 = liveMd.content;
+      const withHistory = _Store.#appendStateHistory(text4, {
         timestamp: when,
         from_state: cur.current_state,
         to_state: "verified",
@@ -111492,22 +111791,22 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
           releasedSoFar: released,
           detail: "this document's state_history block cannot be extended in place, and a release recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
         };
-      text3 = withHistory;
-      text3 = _Store.#setScalar(text3, "prior_state", cur.current_state);
-      text3 = _Store.#setScalar(text3, "current_state", "verified");
-      text3 = _Store.#setScalar(text3, "last_updated", `"${when}"`);
+      text4 = withHistory;
+      text4 = _Store.#setScalar(text4, "prior_state", cur.current_state);
+      text4 = _Store.#setScalar(text4, "current_state", "verified");
+      text4 = _Store.#setScalar(text4, "last_updated", `"${when}"`);
       const entryLog = `### Session ${when} | Released (batch) | ${who2}
 Trigger: selection ${handle}
 Changes: state ${cur.current_state} to verified.
 Acknowledgment: ${ack}
 Mitigation: ${mit}
 `;
-      const at17 = text3.indexOf("## Session Log");
-      if (at17 < 0) text3 += "\n## Session Log\n\n" + entryLog;
+      const at17 = text4.indexOf("## Session Log");
+      if (at17 < 0) text4 += "\n## Session Log\n\n" + entryLog;
       else {
-        const nxt = text3.indexOf("\n## ", at17 + 1);
-        const cutAt = nxt === -1 ? text3.length : nxt + 1;
-        text3 = text3.slice(0, cutAt) + entryLog + "\n" + text3.slice(cutAt);
+        const nxt = text4.indexOf("\n## ", at17 + 1);
+        const cutAt = nxt === -1 ? text4.length : nxt + 1;
+        text4 = text4.slice(0, cutAt) + entryLog + "\n" + text4.slice(cutAt);
       }
       const carried = [];
       for (const r of this.sql.exec(
@@ -111515,8 +111814,8 @@ Mitigation: ${mit}
         id
       ))
         carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-      const bytes2 = new TextEncoder().encode(text3);
-      const fm = parseFrontmatter(text3).data || {};
+      const bytes2 = new TextEncoder().encode(text4);
+      const fm = parseFrontmatter(text4).data || {};
       const promoted = this.promote({
         bundleId: id,
         base: cur.bundle_sha,
@@ -111524,7 +111823,7 @@ Mitigation: ${mit}
         author: who2,
         files: [{
           path: "bundle.md",
-          text: text3,
+          text: text4,
           bytes: bytes2.length,
           sha256: createSha256().update(bytes2).hex()
         }, ...carried],
@@ -111605,8 +111904,8 @@ Mitigation: ${mit}
      populated shapes the corpus actually contains, exactly as #spliceReferences
      does for references. Returns null if the block is in a shape this restricted
      grammar cannot extend, so the caller refuses rather than guesses. */
-  static #appendStateHistory(text3, e) {
-    const lines = text3.split("\n");
+  static #appendStateHistory(text4, e) {
+    const lines = text4.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -111633,8 +111932,8 @@ Mitigation: ${mit}
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
-  static #setScalar(text3, key, value) {
-    const lines = text3.split("\n");
+  static #setScalar(text4, key, value) {
+    const lines = text4.split("\n");
     const end2 = lines.indexOf("---", 1);
     for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
       if (lines[i].startsWith(key + ":")) {
@@ -111642,7 +111941,7 @@ Mitigation: ${mit}
         return lines.join("\n");
       }
     }
-    return text3;
+    return text4;
   }
   #rows(q6, ...a) {
     return [...this.sql.exec(q6, ...a)];
@@ -111986,9 +112285,9 @@ Mitigation: ${mit}
     const { pkg, bundleId, base, meta, author, register: register2, files, promotedType } = stepContext(c);
     const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
     if (cur && base !== null && normalizeType(cur.object_type) === "inquiry") {
-      const surfacedOf = (text3) => {
-        if (typeof text3 !== "string") return "unreadable";
-        const fm = parseFrontmatter(text3).data;
+      const surfacedOf = (text4) => {
+        if (typeof text4 !== "string") return "unreadable";
+        const fm = parseFrontmatter(text4).data;
         if (!fm || typeof fm !== "object") return "unreadable";
         return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
       };
@@ -116285,10 +116584,10 @@ function promotedTypeOf(b) {
   if (typeof said2 === "string" && said2.trim() !== "") return normalizeType(said2);
   return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : void 0;
 }
-async function replayVerdict(env, storeName, text3, viaSession, cls) {
+async function replayVerdict(env, storeName, text4, viaSession, cls) {
   let b;
   try {
-    b = JSON.parse(text3);
+    b = JSON.parse(text4);
   } catch {
     return null;
   }
