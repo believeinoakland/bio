@@ -68,5 +68,5 @@
 | change | test | negative control |
 | --- | --- | --- |
 | scheduler `deadline-recheck` | a pending clock entry past its date is marked overdue within one cadence, and escalation is asked | an entry dated today stays pending |
-| queue kinds | one item each for an overdue clock (CONDITION), a proposed stage (OBLIGATION), a due checkpoint (OBLIGATION); none repeats for the same occurrence | a checkpoint judged before its item is read removes the item |
+| queue kinds | one item each for an overdue clock (CONDITION), a proposed stage (OBLIGATION), a due checkpoint (OBLIGATION); each follows DEC-10, DEC-69 and DEC-70 (informs once, dispositionable, ages; an overdue clock re-notifies only at its stage's interval) | a checkpoint judged before its item is read removes the item |
 | litigation-hold reminder | a received entry marked `pressure` of kind `legal` yields one OBLIGATION for an administrator; the item changes nothing by itself | kind `retaliation` yields none |
