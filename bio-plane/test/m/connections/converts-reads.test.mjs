@@ -177,24 +177,26 @@ test("R22, R23 (converts d280-strengthbar): citesInto over real severed referenc
 test("R22, R23 (converts d280-strengthbar): a severance is a revision of the citing document — it moves the citer between the lists and back, the edge kept throughout", () => {
   const w = world();
   w.doc(A, ["the subject"]);
-  const [lo, hi] = [citer(w, "Router a"), citer(w, "Router b")].sort();
-  reviseProject(w, lo, "Router a", [{ target: A, status: "severed" }]);
-  reviseProject(w, hi, "Router b", [{ target: A, status: "confirmed" }]);
+  /* Each project keeps its own title (a revision under another project's name is NAME_TAKEN); lo and hi are by id. */
+  const titled = [[citer(w, "Router a"), "Router a"], [citer(w, "Router b"), "Router b"]].sort((x, y) => (x[0] < y[0] ? -1 : 1));
+  const [[lo, tLo], [hi, tHi]] = titled;
+  reviseProject(w, lo, tLo, [{ target: A, status: "severed" }]);
+  reviseProject(w, hi, tHi, [{ target: A, status: "confirmed" }]);
   assert.deepEqual(w.k.citesInto(A), { confirmed: [hi], severed: [lo] });
   assert.deepEqual(w.promotion.fact("citedBy", A).value, [hi]);
   /* The live citer withdraws too: nobody is confirmed, both edges stay. */
-  reviseProject(w, hi, "Router b", [{ target: A, status: "severed" }]);
+  reviseProject(w, hi, tHi, [{ target: A, status: "severed" }]);
   assert.deepEqual(w.k.citesInto(A), { confirmed: [], severed: [lo, hi] });
   assert.deepEqual(w.k.citedBy(A), []);
   assert.deepEqual(w.promotion.fact("citedBy", A), { ok: true, fact: "citedBy", value: [] });
   assert.deepEqual(w.rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites' ORDER BY bundle_id`, A).map((r) => r.bundle_id),
     [lo, hi]);
   /* The first withdrawer reinstates: it is confirmed again, first by id. */
-  reviseProject(w, lo, "Router a", [{ target: A, status: "confirmed" }]);
+  reviseProject(w, lo, tLo, [{ target: A, status: "confirmed" }]);
   assert.deepEqual(w.k.citesInto(A), { confirmed: [lo], severed: [hi] });
   assert.deepEqual(w.k.citedBy(A), [lo]);
   /* Dropping the reference drops the edge from both lists (R19 replaces the bundle's edges). */
-  reviseProject(w, hi, "Router b", []);
+  reviseProject(w, hi, tHi, []);
   assert.deepEqual(w.k.citesInto(A), { confirmed: [lo], severed: [] });
 });
 
