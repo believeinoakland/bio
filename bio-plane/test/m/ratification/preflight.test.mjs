@@ -79,6 +79,29 @@ test("R18: C-32.13 and C-32.15 are read from the viewer stamp, each the act's ow
   }
 });
 
+test("R18 (N385): C-32.13 is chosen by the machine-identity predicate, never by the word \"ai\" in a name", async () => {
+  const { preflight, act } = await setup();
+  const both = ["MACHINE_CANNOT_RATIFY_CASE", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"];
+  /* machine identities whose names hold no "ai": each is a machine by the predicate, so each holds both fences */
+  for (const viewer of ["claude", "agent", "daemon", "token:claude", "Token:Probe", "class:bot/t7", "class:admin/t2"]) {
+    const pf = preflight({ viewer });
+    assert.deepEqual(reasons(pf).slice(0, 2), both, viewer);
+    assert.deepEqual(reasons(pf).filter((x) => both.includes(x)), both, viewer);
+  }
+  /* the act's own refusal, for a minted agent credential of a class whose name holds no "ai" */
+  assert.deepEqual(preflight({ viewer: "class:bot/t7" }).refusals[0],
+                   (await act({ aiCred: { tokenId: "t7" }, cls: "bot" })).body);
+  /* members whose names hold "ai" are no machine: neither fence */
+  for (const viewer of [V("ai"), V("kai"), V("aisha"), "member:AI", V("admin")])
+    assert.deepEqual(reasons(preflight({ viewer })).filter((x) => both.includes(x)), [], viewer);
+  /* an operator's bearer stamp holds C-32.15 alone, whatever its class word, as the act answers it */
+  for (const cls of ["daemon", "wait", "main"]) {
+    const op = preflight({ viewer: `class:${cls}` });
+    assert.deepEqual(reasons(op), ["OPERATOR_TOKEN_CANNOT_RATIFY_CASE"], cls);
+    assert.deepEqual(op.refusals[0], (await act({ viaSession: false, cls })).body, cls);
+  }
+});
+
 test("R18: C-53.12, C-92.10 and C-92.11 over publication's attribution facts for these bytes, each the act's own", async () => {
   const s = await setup();
   let attr = { reached: [OBS], legacy: [OBS], stated: [], current: [{ observation: OBS, level: null, why: "no choice made" }] };
