@@ -59,3 +59,15 @@ test("R17 members=1: a member that does not answer within 4 seconds reads SILENT
   assert.match(out["agent-worker"].why, /within 4000 ms/);
   assert.ok(took >= 3900 && took < 6000, `took ${took} ms`);
 });
+
+test("N348 this module holds no Durable Object door or class of its own: its fourteen routes are the map control-plane joins to its frame (control-plane R35)", async () => {
+  const S = await import("../../../src/setup.mjs");
+  assert.equal("instanceSetupRoute" in S, false);
+  assert.equal("instanceSetupStore" in S, false);
+  assert.equal(typeof S.instanceSetupOps, "function");
+  const ops = S.instanceSetupOps(null, new URL("http://do/"), null);
+  assert.deepEqual(Object.keys(ops).sort(), ["cpuprobeend", "cpuprobestart", "cpuprobestate", "groupdomainset",
+    "groupidentity", "groupidentitypublic", "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed",
+    "profiles", "profilesset", "recordcpuprobestep", "runtimeobservations"]);
+  for (const f of Object.values(ops)) assert.equal(typeof f, "function");
+});
