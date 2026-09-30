@@ -12,7 +12,7 @@
 
 **Deferred.** None.
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1).**
 1. legacy-tests (`civicos-ui/check-refusal-codes.mjs`, K458): arm G's `MULTI_SITE_CLOSED` entry for `FACT_UNAVAILABLE` (:3830, "filings' second literal is its constructor's fallback…") is now stale: the guard prints `FAIL: arm G: FACT_UNAVAILABLE is declared in MULTI_SITE_CLOSED but is not multi-site on this tree`. This is the retirement N355 set up; the entry goes, and arm G's multi-site count falls by one (the ceiling 54 moves with it). Measured: the guard's failures on `tranche/T15` @ e44efa6b95 are 22; with this change 23, the one extra being this line. No other guard line moved.
 2. Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) inlines filings (its line ~90988 holds the removed fallback); BOB regenerates at the layer close. Not rebuilt.
 3. `civicos-ui/` and affordances' lists: no hit for anything this change adds or retires, other than (1). `civicos-ui/test/reopened-finding.test.mjs` and `declared-flow-surface.test.mjs` mention `producingGroup`/`FACT_UNAVAILABLE` of promotion and setup, not filings'.
