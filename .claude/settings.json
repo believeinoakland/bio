@@ -10,7 +10,11 @@
       "Bash(rm -f .git/hooks/*)",
       "Edit(//home/user/civicos-process/**)",
       "Write(//home/user/civicos-process/**)",
-      "mcp__Claude_Code_Remote__archive_session"
+      "mcp__Claude_Code_Remote__archive_session",
+      "Bash(git rm -q -- bio-plane/test/:*)",
+      "Bash(git rm -q -- civicos-ui/test/:*)",
+      "Bash(git rm -q -- agent-worker/test/:*)",
+      "Bash(git rm -q -- ocr-worker/test/:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
