@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../../../src/promotion/index.mjs";
-import { checkBundle, checkCaseDocument, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
 import { doc, T0, makePromotion } from "./fixtures.mjs";
 
 const ID = "INFO-2026-0001-report";
@@ -97,19 +97,42 @@ test("R29: ok is false exactly when an error finding exists; findings hold only 
   assert.equal(missing.ok, false);
 });
 
-test("R33: runCaseGate runs the case catalogue with the facts supplied, R29's shape, and never throws", () => {
-  const fms = [{}, { schema: "bio-case-document/4", case_id: "CASE-2026-0001" }, parseFrontmatter(md()).data];
+test("R33: runCaseGate runs the case catalogue it is given with the facts supplied, R29's shape, and never throws", () => {
+  const fms = [{}, { schema: "bio-case-document/5", case_id: "CASE-2026-0001" }, parseFrontmatter(md()).data];
+  /* A catalogue answering errors with and without repairs, and warnings; the gate reports only the errors. */
+  const catalogue = (fm, c) => [
+    ...(fm.case_id ? [] : [{ check: "C-41.1", severity: "error", message: "no case_id", repairs: ["state it"] }]),
+    ...(c.body === null ? [{ check: "C-3.1", severity: "error", message: "no body" }] : []),
+    ...(c.priorCase ? [{ check: "C-21.1", severity: "warn", message: "prior asserted" }] : []),
+    { check: "C-41.2", severity: "info", message: "read" }];
   for (const fm of fms) {
-    for (const facts of [{}, { priorCase: null, body: "x", memberBasis: null }, { priorCase: { assertions: [] } }]) {
+    for (const facts of [{}, { priorCase: null, body: "x", memberBasis: null }, { priorCase: { assertions: [] }, memberBasis: { A: [] } }]) {
       const ctx = { caseId: "CASE-2026-0001", edition: 1, fm, ...facts };
-      const all = checkCaseDocument(fm, { caseId: ctx.caseId, edition: ctx.edition, priorCase: ctx.priorCase || null,
-                                          body: ctx.body ?? null, memberBasis: ctx.memberBasis ?? null });
-      const r = runCaseGate(ctx);
+      const calls = [];
+      const r = runCaseGate(ctx, (f, c) => { calls.push([f, c]); return catalogue(f, c); });
+      /* Asked once, over the front matter, with the facts the document cannot carry about itself (null when absent). */
+      assert.deepEqual(calls, [[fm, { caseId: ctx.caseId, edition: ctx.edition, priorCase: ctx.priorCase || null,
+                                      body: ctx.body ?? null, memberBasis: ctx.memberBasis ?? null }]]);
+      const all = catalogue(fm, calls[0][1]);
       const errors = all.filter((f) => f.severity === "error");
-      assert.deepEqual(r.findings.map((f) => [f.check, f.detail]), errors.map((f) => [f.check, f.message]));
-      assert.equal(r.ok, errors.length === 0);
-      assert.equal(r.warnings, all.length - errors.length);
-      assert.equal(r.gateVersion, GATE_VERSION);
+      assert.deepEqual(r, { gateVersion: GATE_VERSION, ok: errors.length === 0,
+        findings: errors.map((f) => ({ check: f.check, detail: f.message, ...(f.repairs ? { repairs: f.repairs } : {}) })),
+        warnings: all.length - errors.length });
+    }
+  }
+});
+
+test("R33 (K529): with no catalogue registered, runCaseGate runs no fallback and answers C-102.9 CASE_CATALOGUE_FAILED as R29's verdict, fail closed", () => {
+  /* A document every catalogue would pass is not passed when nothing judges it. */
+  for (const args of [{ caseId: "CASE-2026-0001", edition: 1, fm: { schema: "bio-case-document/5", case_id: "CASE-2026-0001" },
+                        priorCase: null }, {}, undefined]) {
+    for (const none of [undefined, null, "checkCaseDocument", {}]) {
+      const r = runCaseGate(args, none);
+      /* R29's shape, whole (K534): a verdict, its one finding naming C-102.9's code; no warnings; the one GATE_VERSION. */
+      assert.deepEqual(Object.keys(r), ["gateVersion", "ok", "findings", "warnings"]);
+      assert.deepEqual([r.ok, r.gateVersion, r.warnings], [false, GATE_VERSION, 0]);
+      assert.deepEqual(r.findings.map((f) => [Object.keys(f), f.check]), [[["check", "detail"], "CASE_CATALOGUE_FAILED"]]);
+      assert.match(r.findings[0].detail, /no case-document catalogue is registered/);
     }
   }
 });

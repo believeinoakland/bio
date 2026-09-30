@@ -19,7 +19,7 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity, projectNameKey, withProducingGroup,
          ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
-         CUSTODIAL_CHECKS, REGISTRATION_CHECKS, checkCaseDocument } from "../../checks/bio-checks.mjs";
+         CUSTODIAL_CHECKS, REGISTRATION_CHECKS } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
@@ -271,7 +271,7 @@ class Promotion {
   /* ---------------------------------------------------------------- R47, R33: the case-document catalogue */
 
   /* R47: a later module (ratification) registers, once, the case-document catalogue `fn(fm, ctx) → findings` that R33
-     runs in place of the catalogue's `checkCaseDocument`. Any second registration is refused, whoever makes it. */
+     runs. Any second registration is refused, whoever makes it. */
   registerCaseCatalogue(module, fn) {
     /* R49: membership's listenerRefusal answers the malformed case; a second registration is R47's STEP_DECLARED. */
     const malformed = listenerRefusal(null, module, fn);
@@ -283,9 +283,9 @@ class Promotion {
     return { ok: true, module };
   }
 
-  /* R33: the case gate over the registered catalogue, else the catalogue's own. Same shape and GATE_VERSION (R34). */
+  /* R33: the case gate over the registered catalogue; with none registered, C-102.9 (K529). Same GATE_VERSION (R34). */
   runCaseGate(args = {}) {
-    return runCaseCatalogue(args || {}, this.#caseCatalogue ? this.#caseCatalogue.fn : checkCaseDocument);
+    return runCaseCatalogue(args || {}, this.#caseCatalogue ? this.#caseCatalogue.fn : null);
   }
 
   /* ---------------------------------------------------------------- promote */
