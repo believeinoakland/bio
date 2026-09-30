@@ -65,7 +65,7 @@ import { setupPage } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 import { normalizeAddress } from "../subresources.mjs";
 import { Store } from "../store.mjs";
-import { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION } from "./ops.mjs";
+import { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION } from "./ops.mjs";
 
 const SCRATCH = "scratch";
 /* REC-22: the ONE namespace the public read path answers from. An instance has
@@ -2123,6 +2123,16 @@ export function makeFetch(hooks = {}) {
         || op === "monitoring"
         /* K372 (monitoring R30): the due slate names bundles too, and answers only what the viewer may see. */
         || op === "monitorslate"
+        /* N345 (contradiction R10, R25–R55): every read and act names a candidate, an inquiry, a referent or a project
+           and answers only what the viewer may see of each side; the run's recommendation is re-formed as this viewer,
+           as its candidate write is. Fails closed on an absent stamp. */
+        || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend"
+        /* N345 (entities R38, R32): the two registry reads now answer each resolution's defect reports, whose `by` is
+           withheld from a viewer who may not see the document, so they take the stamp. */
+        || op === "entity" || op === "entitybyalias"
+        /* N345 (case-authoring R32): the ceremony's read names a project and its members, read exactly as op=publish
+           reads them, so it takes publish's stamp. */
+        || op === "publishtensions"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -2396,6 +2406,17 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessIdentity
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* N345 (contradiction R30–R36, R51, R53): WHO DISMISSED, CLARIFIED, TOOK UP, RESOLVED, OPTED IN OR RESPONDED —
+       contradiction reads `author` from the query after the body, so it is set here and a caller's is overwritten. The
+       action layer's expression one statement up, for its reason: contradiction hands the author to promotion as
+       `actorIdentity` on a take-up and asks membership's facts of it, so it is the POSITIONAL identity; a machine
+       credential stamps `class:<cls>` and an `ai` credential `class:ai/<tokenId>`, each a machine identity every act
+       refuses BY NAME (C-93.10) — never a key's principal, which would put an assistant's act under a person's name. */
+    if (CONTRADICTION_ACTIONS.includes(op))
+      inner.searchParams.set("author",
+        viaSession ? sessIdentity
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
        CITABLE, stamped by the server on the same rule as every authorship field
        in this block. The body's own `mintedBy` is not read at the store at all
@@ -2452,8 +2473,9 @@ export function makeFetch(hooks = {}) {
        writes: permission is granted against a NAMED actor, and a proposal whose
        proposer were anonymous would be one the record could say nothing about,
        which is exactly what `NO_PROPOSER` refuses at the store. */
-    /* REC-147: the contradiction candidate's proposer is the same server-side stamp, for the same reason. */
-    if (op === "extractpropose" || op === "contradictionpropose")
+    /* REC-147: the contradiction candidate's proposer is the same server-side stamp, for the same reason; N345's
+       recommendation (contradiction R37) is the run's other production and takes it too. */
+    if (op === "extractpropose" || op === "contradictionpropose" || op === "contradictionrecommend")
       inner.searchParams.set("proposedBy",
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
@@ -2542,6 +2564,11 @@ export function makeFetch(hooks = {}) {
        the span pinned above is not lengthened. A caller's `author` is overwritten; a machine arrives honestly named
        and the store refuses it BY SHAPE (CONNECTION_ASSERT_NOT_A_MEMBER, FILE_MEMBERSHIP_NOT_A_MEMBER). */
     if (op === "connectionassert" || op === "filemembershipjudge")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* N345 (case-authoring R32): the ceremony's read asks the owner test op=publish asks, of the same `author`, so it
+       takes publish's stamp by publish's expression (`STATE_ACTIONS`' author above), in a statement of its own so the
+       span pinned above is not lengthened; a caller's `author` is overwritten. */
+    if (op === "publishtensions")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* T6-13 (reevaluation R15, R16): the member who adopts a newer version, keeps the earlier one, or records a
        re-evaluation, stamped by the version acts' expression (`VERSION_ACTIONS`' author above), which reevaluation reads
@@ -3054,7 +3081,7 @@ export function makeFetch(hooks = {}) {
        someone else is not a declaration. Without a session there is no member to
        be, so the store refuses on the identity it is handed.
 
-       IDENTITY-CLAIM: ENFORCED-ELSEWHERE NO_SUCH_MEMBER ADMIN_ONLY — the machine is
+       IDENTITY-CLAIM: ENFORCED-ELSEWHERE NO_SUCH_MEMBER NOT_AN_ADMIN — the machine is
        refused here, but NOT as a machine, and the difference is the finding.
 
        CORRECTED BY DEC-52 (REC-65), AND THIS PAIR IS THE ONE WHERE THE RULING AND THE
@@ -3066,7 +3093,7 @@ export function makeFetch(hooks = {}) {
        payload a member then completes successfully with the same body):
          - op=expertisedeclare answers **NO_SUCH_MEMBER** — `class:member` is not a
            member id, so there is no row to hang a licence on;
-         - op=expertiseconfirm answers **ADMIN_ONLY** — `#isAdminMember("class:admin")`
+         - op=expertiseconfirm answers **NOT_AN_ADMIN** — `#isAdminMember("class:admin")`
            is false, so a machine ADMIN credential is not an administrator MEMBER.
        NEITHER IS A MACHINE REFUSAL, and saying so is the point: this is D-229's exact
        shape — a fence believed to be doing work that an ordinary identity guard is
@@ -3152,6 +3179,23 @@ export function makeFetch(hooks = {}) {
         const b = JSON.parse(passBody);
         b.withdrawnBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* N345 (entities R38): WHO REPORTED that a resolution matched the wrong subject, stamped on the FW-6 rule above into
+       the body `reportResolutionDefect` reads, overwriting any `by` the caller put there; a repeat is judged per reporter,
+       so a caller who could name one could report twice or as someone else. An empty POST body is stamped too, so the
+       report's refusal is the module's own and never an unattributed row.
+
+       IDENTITY-CLAIM: RULED DEC-52 — a machine credential may report a defect in the registry it may build, and the record names it (class:<cls>).
+
+       The FW-6 block above carries the ruling in full; nothing refuses a machine here BY DESIGN. */
+    if (op === "resolutiondefect" && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          b.by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+          passBody = JSON.stringify(b);
+        }
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
     /* FW-7: WHO resolved a reference or TESTIFIED a grade-D connection is part of the

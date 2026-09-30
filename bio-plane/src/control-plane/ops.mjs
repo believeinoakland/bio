@@ -229,6 +229,21 @@ const OPS = {
   /* REC-147: the judgement's write, extractpropose's cut; the store refuses a proposal with no run of the caller's in
      sight (C-93). */
   contradictionpropose: { classes: ["admin", "member", "probe"], mutating: true },
+  /* N345 (contradiction R25–R55, DEC-85; K490): the five reads, viewer-stamped; the six acts a member's, conclude's cut (the
+     store refuses a machine author by name, C-93.10), `author` and `viewer` stamped; `contradictionrecommend` the run's one
+     act, `contradictionpropose`'s cut and stamps. */
+  contradictioncandidates: { classes: ["admin", "member", "probe"], mutating: false },
+  contradictiontensions:   { classes: ["admin", "member", "probe"], mutating: false },
+  contradictionfacts:      { classes: ["admin", "member", "probe"], mutating: false },
+  contradictionnotices:    { classes: ["admin", "member", "probe"], mutating: false },
+  contradictionresponses:  { classes: ["admin", "member", "probe"], mutating: false },
+  contradictiondismiss:    { classes: ["admin", "member", "probe"], mutating: true  },
+  contradictionclarify:    { classes: ["admin", "member", "probe"], mutating: true  },
+  contradictiontakeup:     { classes: ["admin", "member", "probe"], mutating: true  },
+  contradictionresolve:    { classes: ["admin", "member", "probe"], mutating: true  },
+  contradictionoptin:      { classes: ["admin", "member", "probe"], mutating: true  },
+  contradictionrespond:    { classes: ["admin", "member", "probe"], mutating: true  },
+  contradictionrecommend:  { classes: ["admin", "member", "probe"], mutating: true  },
   /* D-148: a fee quote is evidence; a read across actions, viewer-stamped fail-closed. */
   actionquotes:     { classes: ["admin", "member", "probe"],     mutating: false },
   /* N231: the action kinds this instance accepts now; a read naming no bundle, so no viewer stamp and no NEEDS entry. */
@@ -307,6 +322,8 @@ const OPS = {
   /* REC-14: authoring a case writes what op=ratify then signs, so it is separate from ratify. The bar and editions
      beside it. */
   publish:      { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* N345 (case-authoring R32): the ceremony's read before op=publish; publish's classes and its two stamps. */
+  publishtensions: { classes: ["admin", "member", "probe"],        mutating: false },
   strengthbar:  { classes: ["admin", "member", "probe"],           mutating: true  },
   strengthbarof:{ classes: ["admin", "member", "probe"],           mutating: false },
   publishededitions: { classes: ["admin", "member", "probe"],      mutating: false },
@@ -419,6 +436,8 @@ const OPS = {
      beside them. */
   aliaswithdraw:  { classes: ["admin", "member", "probe"],         mutating: true  },
   relationwithdraw:{ classes: ["admin", "member", "probe"],        mutating: true  },
+  /* N345 (entities R38): a report that a resolution matched the wrong subject, stamped `by` as the registry writes are. */
+  resolutiondefect:{ classes: ["admin", "member", "probe"],        mutating: true  },
   entity:       { classes: ["admin", "member", "probe"],           mutating: false },
   entitybyalias:{ classes: ["admin", "member", "probe"],           mutating: false },
   relation:     { classes: ["admin", "member", "probe"],           mutating: false },
@@ -485,6 +504,8 @@ const OPS = {
   determination:       { classes: ["admin", "member", "probe"],      mutating: false },
   determinations:      { classes: ["admin", "member", "probe"],      mutating: false },
   comparison:          { classes: ["admin", "member", "probe"],      mutating: false },
+  /* N345 (conformance R21): the facts a comparison started from a contradiction reads; viewer-stamped. */
+  comparisonfacts:     { classes: ["admin", "member", "probe"],      mutating: false },
   consequencerecord:   { classes: ["admin", "member", "probe"],      mutating: true  },
   consequencerevise:   { classes: ["admin", "member", "probe"],      mutating: true  },
   addressedrecord:     { classes: ["admin", "member", "probe"],      mutating: true  },
@@ -821,7 +842,7 @@ const PROVENANCE_JUDGEMENT_ACTIONS = ["provenancechain", "provenanceroute"];
    bearer route stays — a scheduled re-probe is a machine act by construction. */
 const CALIBRATION_WRITE_ACTIONS = ["calibrate", "calibrationsubject", "calibrationsignal"];
 /* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
-   member reaching confirm is refused by the store with ADMIN_ONLY, which says
+   member reaching confirm is refused by the store with NOT_AN_ADMIN, which says
    what is wrong. Putting confirm in the admin set alone would answer "requires a
    machine credential", which is true of neither the caller nor the rule. */
 const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
@@ -840,8 +861,9 @@ const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
    The reasoning is at the FW-6 stamp site and deliberately not copied here. */
 /* T5-11 (entities R8): the two withdrawals join the set, stamped with the withdrawing member as the three writes are
    with the declaring one. */
+/* N345 (entities R38): the defect report joins the set, stamped with the reporting member as the writes are. */
 const REGISTRY_ACTIONS = ["entitycreate", "entityalias", "relationdeclare", "aliaswithdraw", "relationwithdraw",
-                          "entity", "entitybyalias", "relation"];
+                          "resolutiondefect", "entity", "entitybyalias", "relation"];
 /* D-98, the TASK construct's two member verbs. Forwarding and resolving a task
    are MEMBER actions performed by a PERSON through their session — the construct
    makes them a human judgement, and the record's whole point is that who
@@ -898,7 +920,9 @@ const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capt
                         "extractpropose",
                         /* REC-147: the judgement's candidates are an act OF A RUN, for extractpropose's reason; the
                            run is checked at the store (C-93.2, C-93.3), not here. */
-                        "contradictionpropose"];
+                        "contradictionpropose",
+                        /* N345 (contradiction R37): the run's recommendation, for `contradictionpropose`'s reason. */
+                        "contradictionrecommend"];
 /* PL-18 / DEC-63 — THE THREE RUN VERBS, AS THEIR OWN LIST, because Bob's
    ruling is about exactly these three and not about the array above them.
    `AI_RUN_ACTIONS` also carries `suggest` and `capturerequest`, which are acts
@@ -919,7 +943,8 @@ const RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
    `runPrincipalGate`, then status, and records the CALLER's principal on the row. It is the ONE list extended, not a
    second stamp condition beside it. Rule 1's TARGET does not reach it (a request names an address, not a question). */
 /* REC-147 JOINS: a candidate names a run, is read against it, and takes the same principal stamp. */
-const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest", "contradictionpropose"];
+/* N345 (contradiction R37) JOINS: a recommendation names a run and is compared with its principal, as a candidate is. */
+const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest", "contradictionpropose", "contradictionrecommend"];
 /* REC-134 / C-56: the acts that change a project and read the POSITIONAL `identity` stamp for
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
@@ -973,7 +998,7 @@ const REEVALUATION_ACTIONS = ["versionadopt", "versionkeep", "reevaluationrecord
 const STANDARDS_ACTIONS = ["standarddeclare", "standardpropose", "standardadopt"];
 const STANDARDS_READS = ["standard", "standards", "standardinforce"];
 const CONFORMANCE_ACTIONS = ["determine", "comparisonpropose"];
-const CONFORMANCE_READS = ["determination", "determinations", "comparison"];
+const CONFORMANCE_READS = ["determination", "determinations", "comparison", "comparisonfacts"];
 const CONSEQUENCES_ACTIONS = ["consequencerecord", "consequencerevise", "addressedrecord"];
 const CONSEQUENCES_READS = ["consequence", "consequencesof", "addressed"];
 const FILINGS_ACTIONS = ["filingprepare", "filingapprove", "filingsent", "counselpacket", "counselpacketexport",
@@ -982,6 +1007,14 @@ const FILINGS_READS = ["counselpacketread", "filingsfor", "availableactions"];
 const ESCALATION_ACTIONS = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance",
                             "escalationdecline", "escalationend", "escalationsuspend", "escalationresume"];
 const ESCALATION_READS = ["escalation", "escalationsdue"];
+/* N345 (contradiction R30–R36, R51, R53): the six member acts on a candidate, one array for the reason every array here is
+   one — they share a stamp (`author`, the POSITIONAL identity, read from the query after the body, the expression the
+   action layer's acts take below, because contradiction hands it to promotion as `actorIdentity` and asks membership of
+   it), a capability and both session sets. The five reads beside them are viewer-stamped. */
+const CONTRADICTION_ACTIONS = ["contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve",
+                               "contradictionoptin", "contradictionrespond"];
+const CONTRADICTION_READS = ["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
+                             "contradictionresponses"];
 /* The four whose modules read `author` from the query. */
 const QUERY_AUTHOR_ACTIONS = [...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS];
 const ACTION_LAYER_ACTIONS = [...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS];
@@ -1170,6 +1203,8 @@ const SESSION_OPS = {
                       own name (the proposal `actionlawspropose`'s route), in BOTH sets. */
                    ...STANDARDS_ACTIONS, ...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS,
                    ...ESCALATION_ACTIONS, "actionriskpropose",
+                   /* N345: contradiction's six acts on a candidate, a member's own acts in their own name, in BOTH sets. */
+                   ...CONTRADICTION_ACTIONS,
                    /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
                       non-administrator by name. */
                    "monitorpause",
@@ -1229,6 +1264,7 @@ const SESSION_OPS = {
                    ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
                    ...STANDARDS_ACTIONS, ...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS,
                    ...ESCALATION_ACTIONS, "actionriskpropose",
+                   ...CONTRADICTION_ACTIONS,
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -1323,6 +1359,25 @@ const NEEDS = {
   /* REC-147: `extractpropose`'s capability and for its reason — a proposal is CONTRIBUTING, never publishing, and
      nothing it writes puts the group's name on anything: a candidate is labelled machine work, state proposed. */
   contradictionpropose: "contribute",
+  /* N345: each of contradiction's six acts appends a row in a member's name to the working record (and a take-up promotes
+     an inquiry), and the run's recommendation is `contradictionpropose`'s kind of production — `contribute`, and NO fifth
+     capability token (CAPABILITIES.md §4). Who may act on a candidate is the module's, asked of the stamped author. */
+  contradictiondismiss:   "contribute",
+  contradictionclarify:   "contribute",
+  contradictiontakeup:    "contribute",
+  contradictionresolve:   "contribute",
+  contradictionoptin:     "contribute",
+  contradictionrespond:   "contribute",
+  contradictionrecommend: "contribute",
+  /* N345 (K516): NO CAPABILITY for the five reads, on `contradictionpairs`' reasoning above: asking what the record's
+     candidates, marks, facts, notices and responses say is READING the record, and it writes nothing. PRESENT, null,
+     because affordances names each in NON_ACTS (its R7) and its totality guard reads a NON_ACTS key this table does not
+     carry as stale (its R12). */
+  contradictioncandidates: null,
+  contradictiontensions:   null,
+  contradictionfacts:      null,
+  contradictionnotices:    null,
+  contradictionresponses:  null,
   /* D-148: NO CAPABILITY, on `contradictionpairs`' reasoning: reading what a body
      quoted is READING the record, and it writes nothing. */
   actionquotes: null,
@@ -1525,6 +1580,8 @@ const NEEDS = {
   /* T5-11 (entities R8): correcting the registry is the same corpus-shaping surface as building it. */
   aliaswithdraw:    "contribute",
   relationwithdraw: "contribute",
+  /* N345 (entities R38): reporting a wrong subject match writes a row in the reporter's name, the registry's surface. */
+  resolutiondefect: "contribute",
   /* FW-7: RESOLVING a reference to an entity, and TESTIFYING a grade-D connection,
      both write into the record what documents concern which subjects — a corpus-shaping
      act on the same surface as building the registry, so `contribute`: a view-only
@@ -1599,6 +1656,10 @@ const NEEDS = {
   /* REC-198: NO CAPABILITY, on `reviewcopy`'s terms — the single read takes none, and the list is fenced exactly
      like it (BOB #32). Listing which drafts one's own project holds is reading; it writes nothing. */
   casedrafts:       null,
+  /* N345 (case-authoring R32; K516): NO CAPABILITY, on `contradictionpairs`' reasoning — the ceremony's read tells a
+     publisher what publishing will disclose and writes nothing; `publish` gates the act itself. Present, null, for the
+     reason the contradiction reads are (affordances R7, R12). */
+  publishtensions:  null,
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it
      rides the publication surface too. Lowering your own bar is legitimate and
      is an authored, dated, on-the-record act; what it may not be is quiet. */
@@ -1970,4 +2031,4 @@ const UNATTENDED_BY_DECISION = {
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 };
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
