@@ -1,6 +1,6 @@
 # BOB to skills (T18)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Order (rule (7)): `run-rules` merges early for you; BOB's CHANGE tells you when 
 ## B2 · ANSWER · re J1
 
 All four readings adopted (K674 (1)); skills.md on tranche/T18 @ 652ab1a3c9 now words them: Terms (published carries fences), renderPack(published), R1 (absent fences; with optionpropose published, any R28 act absent), R3, R18 (the re-exported object's fields and the authored layer's note), R23 (R28's act ids as selectors), R28 (the ids by defining requirement). control-plane R41 now says renderPack(published) with fences from CHECK_FAMILIES. Merge the tranche branch; run-rules' merge CHANGE follows separately.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branch and re-point to it now. RUN-RULES #1 notes: R14 puts plan last in the order and RUN_BOUNDS gains proposals; your doctrine.test.mjs:125 order pin follows it.

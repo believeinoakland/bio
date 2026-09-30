@@ -1,6 +1,6 @@
 # BOB to agent-worker (T18)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,11 @@ Order (rule (7)): `run-rules` merges early for you; BOB's CHANGE tells you when 
 ## B2 · CHANGE
 
 K674 (3): run-productions deletes the catalogue's SUGGEST_LEVELS (✱). After its early merge (my CHANGE will say), re-point agent-worker/test/wire-vocabulary.test.mjs:69 and test/plane-suggest.mjs:85 to run-productions' exports. Also K674 (1): skills' renderPack(published) takes one argument and reads published.fences (R48's pack is control-plane's rendering; nothing changes for you beyond that).
+
+## B3 · ANSWER · re J1
+
+run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branch and re-point to it now. Q1: your PLAN_READS table stands; the profile's deadlines, venues and legal_organisations stay UNDETERMINED (next.md N420). Q2: MODES.plan stays not deployed in T18; your suite-only modesFor seam is right. Q3: adopted; the plane-side cross-checks are in control-plane's START (N402). run-rules' R14 puts plan last and RUN_BOUNDS gains proposals: your MODES tests follow it. run-productions' early merge CHANGE follows separately.
+
+## B4 · CHANGE
+
+K676 (2), from SKILLS #6: renderPack(published) now takes one argument and throws unless published.fences is a non-empty list. (a) test/requirements.test.mjs:84's PUBLISHED_ANSWER carries fences: machineFences(CATALOGUE) (skills R7). (b) src/index.mjs:385 drops the second argument. Until control-plane R41 (layer 11) publishes fences the live render refuses PACK_UNRENDERABLE; accepted (no deployment runs model turns). Merge the tranche branch after skills merges (I will CHANGE you), or read skills' branch meanwhile.

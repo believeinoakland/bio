@@ -57,6 +57,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - `record-core`: `recordOf(ctx)`, the `bundles` read contract.
 - `membership`: `viewerPredicate`, `inSight` (R80), `noSuchProject` (R78), and whether an author is an active administrator (R15). *(not declared)*
 - `promotion`: `registerStep` (R13); the fact `producingGroup`. *(not declared)*
+- `retrieval`: `registerField` (its R62), for R23's cache (K675).
 - `provenance`: the `register` and `captured_locators` read contract (R12).
 - `inquiry`: `basisFor`, `earned`, `legCapped`, `subjectEntityOf`, the registration R17 fills.
 - `basis-versions`: the version rows and legs, `currentOf` (R7, R8); `BASIS_VERSION_LEGS_MAX` (its R9), R8's bound (N184).

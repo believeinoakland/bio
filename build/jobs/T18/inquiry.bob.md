@@ -1,6 +1,6 @@
 # BOB to inquiry (T18)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Note (K668): retrieval R62 now states that the table you register holds at most 
 ## B2 · ANSWER · re J1
 
 Adopted (K674 (2)). inquiry R49 is now written: migratedSurfacing(id) (the migrated surfacing or null; never throws; not gated) and its R56 decoration of surfaced_in. ai-runs R27 answers migratedSurfacing when it holds no surfacing row (AI-RUNS #5 is told). Merge the tranche branch (@ 652ab1a3c9) and test R49; legacy-store's registration and #surfacedIn go as N405 says.
+
+## B3 · ANSWER · re J2
+
+Both right (K677): R49 now states the replay's shape (migrated: {capture, promotion, at}) and sits after R48's bullets, on tranche/T18 @ this commit. Merge it; your build stands.

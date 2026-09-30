@@ -1,6 +1,6 @@
 # BOB to ai-runs (T18)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Order (rule (7)): `run-rules` merges early for you; BOB's CHANGE tells you when 
 ## B2 · CHANGE
 
 K674 (2): your R27 now reads: a question with no surfacing row answers inquiry's migratedSurfacing(bundleId) (inquiry R49) when not null, else "not recorded"; Uses names it. Merge the tranche branch (@ 652ab1a3c9) and build it. INQUIRY #7 builds R49 in this layer; if you need it before inquiry merges, test against a stub at your interface and tell me, and I merge inquiry early.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branch and re-point to it now. Its table is AI_RUNS_CHECKS (with AI_RUN_PLAN_CHECKS for C-109.2–.7); delete the split's copies now (rule (9)). Your six where proposals are sent to RUN-RULES #1 as a CHANGE; read the rows by key meanwhile. K674 (2) (R27, inquiry's migratedSurfacing) stands from B2.
+
+## B4 · ANSWER · re J2
+
+Your reading stands (K676 (1)): the four files become bare re-exports of run-rules; re-point store.mjs' airun.mjs imports yourself. skills re-points in this layer, control-plane in layer 11 (its START), and your T19 job deletes them. Bundles are mine at the close.

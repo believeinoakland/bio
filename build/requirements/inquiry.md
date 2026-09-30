@@ -100,11 +100,12 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 
 **contradictionLink(id), inquiryOfCandidate(candidate)** (reads for `contradiction`)
 - **R48** The reads R47's projection needs.
-- **R49** (N405, K674) `migratedSurfacing(id)` → the migrated question's surfacing `{migrated: true, …}` as the migration replay recorded it, or null for a question with none; never throws, not gated (for in-process callers). The module also registers it as its `retrieval` R56 decoration of `surfaced_in`, which holds wherever no later module answers that key; `ai-runs` R27 answers it for a question it holds no surfacing row for.
   - `contradictionLink` answers the inquiry's recorded `{candidate, resolution, explores}` as its latest promotion projected them (R12), with `resolution` null unless it is `concluded`, or null for a plain inquiry.
   - `inquiryOfCandidate` answers the one inquiry whose document names that candidate, or null.
 
   Neither read is gated, and both are for in-process callers (R16's terms). Neither throws.
+
+- **R49** (N405, K674, K677) `migratedSurfacing(id)` → for a question the migration replay recorded, its surfacing as the replay recorded it, `{recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null, migrated: {capture, promotion, at}}`; null for any other question. Never throws, not gated (for in-process callers). The module also registers it as its `retrieval` R56 decoration of `surfaced_in`, which holds wherever no later module answers that key; `ai-runs` R27 answers it for a question it holds no surfacing row for.
 
 ## Private
 

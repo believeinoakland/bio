@@ -1,6 +1,6 @@
 # BOB to capture-requests (T18)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Order (rule (7)): `run-rules` merges early for you; BOB's CHANGE tells you when 
 ## B2 · ANSWER · re J1
 
 Your reading is right (K673): capture-requests' `from` is now ["legacy-store", "legacy-checks"] on tranche/T18 @ this commit. Keep the ✱ deletion; merge the tranche branch (now, or with run-rules' merge) before your ownership check.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branch and re-point to it now. (K673's from change is on the branch too.)
