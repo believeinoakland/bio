@@ -131,7 +131,7 @@ None: answered by Bob 2026-09-26 (K102).
 
 ## Decided by BOB (for the rulings)
 
-- `from`: `legacy-store`, `legacy-index` (`op=monitor` and its helpers), `legacy-checks` (C-18.5), as K72 (1) did for layer 3; the C-48.8 and C-48.9 rows stay in `legacy-checks`, read as capture's are.
+- `from`: `legacy-store`, `legacy-index` (`op=monitor` and its helpers), `legacy-checks` (C-18.5), as K72 (1) did for layer 3; the C-48.8 and C-48.9 rows move here (R42).
 - The idempotence key (`monitor_fired`, `monitor_tick_epoch`, `#openTickEpoch`, `#claimFire`) is this module's: its only users are its two ticks.
 - `recordSourceOutcome`, `sourceReachability` and the thresholds stay `capture`'s (its R8, R43); this module reads them.
 - The credential choice (`#monitorTokenBound`, `#monitorToken`, `MONITOR_NO_LIVE_CREDENTIAL`) is shared with `capture-requests` today (store.mjs 40137, 40829), an earlier module; it goes to `runtime-limits` beside `liveToken` (`tokens.mjs`) as one `unattendedCredential(env)`, which both read until their in-process paths retire it. `#tickRunning` is per module: each keeps its own.

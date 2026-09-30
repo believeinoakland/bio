@@ -88,7 +88,7 @@ Terms. A **statement** is `{id, kind, subject, text, justification, citations?, 
 
 - **R27** Nothing puts a lens in force but a member's authored adoption whose pinned revision stands at `adopted`; no machine credential adopts (C-26.9), and reading a policy never installs one (R19).
 - **R28** Bias is disclosed and never blocks: nothing here refuses publication, ratification or a run because a lens exists or has changed (DEC-20). Only a set's own structure is refused (R2–R9).
-- **R29** Each check moves here as an invariant with its test (K6): C-26.1–C-26.19.
+- **R29** Each check moves here as an invariant with its test (K6): C-26.1–C-26.11 and C-26.13–C-26.19 (C-26.12 is promotion's, raised only at its write, its R15; K586).
 - **R30** `bias_statements` carries `bundle_id`, and `bias_adoptions` both `bundle_id` and the project id; both are declared to record-core's purge (K23). `bias_debts` and `bias_debt_settlements` are keyed by work product and purged with it (whole-store today); `bias_debt_sweeps` is an instance setting.
 - **R31** One predicate, one place: the verdict and bar predicates R5 and R6 use for a member's statement are the ones R20 uses for the machine's proposal.
 - **R32** No place is named in this module's behaviour or outward text.

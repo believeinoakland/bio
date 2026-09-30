@@ -70,7 +70,7 @@ Terms. An **entry** is `{actor_class, actor, authority_kind, authority, level, s
 - **R23** Nothing in the log is ever written into a bundle (C-22.6), and a per-bundle purge leaves the log as it is (§7); `observation_log` and `leads` carry no `bundle_id` and clear only with the whole store; `lead_shares` carries `bundle_id` and is declared to record-core's purge (K23).
 - **R24** A look is recorded only under an authority the record can name; a member's own searching, viewing or reading writes nothing (§4.6).
 - **R25** A lead is never evidence: nothing here mints a bundle or a content row, its id has no bundle shape, and the leg grammars refuse it (C-54.1, which stays with them).
-- **R26** Each check moves here as an invariant with its test (K6): C-22.1, C-22.2, C-22.3, C-22.4, C-22.6, C-22.9, C-22.10, C-22.17 (split from `AI_RUN_CHECKS` by the first job to move, numbers unchanged) and C-54.2–C-54.10.
+- **R26** Each check moves here as an invariant with its test (K6): every C-22 row (`AI_RUN_CHECKS`, which moves here whole, numbers unchanged; K586) and C-54.2–C-54.10.
 - **R27** One judgement, one place: every writer's outcome rule, the content-axis rule and the missing-row rule are the pure functions this module exports, and no caller restates one.
 - **R28** No place is named in this module's behaviour or outward text.
 
