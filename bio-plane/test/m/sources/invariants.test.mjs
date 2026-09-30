@@ -5,17 +5,19 @@ import assert from "node:assert/strict";
 import { seeded, V, SECRET } from "./fixture.mjs";
 import { SOURCES_CHECKS, SOURCES_TABLES, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT, NOT_RECORDED, claimSentence,
          sourcesOps } from "../../../src/sources/index.mjs";
+import { captureOwns } from "../../../src/capture/index.mjs";
 
 const VALUE = "Unmistakable Value 7731";
 
-test("R13 every table here is exempt from purge: a whole-store and a one-bundle purge leave every row, and no other module may declare one", () => {
+test("R13 every table here is exempt from purge: a whole-store and a one-bundle purge leave every row, and no other module may declare one", async () => {
   const w = seeded();
-  const { sourceId } = w.pulled({ secret: SECRET });
+  const { sourceId } = await w.pulled({ secret: SECRET });
   const e = w.disclose(sourceId);
   w.s.rungOf({ source: sourceId, viewer: V("bob") });
   w.tick();
   w.s.recordConsent({ source: sourceId, entry: e.entry, audience: "group", evidence: "e", by: "bob" });
-  assert.deepEqual([...SOURCES_TABLES].sort(), w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'source%'`).map((r) => r.name).sort(),
+  assert.deepEqual([...SOURCES_TABLES].sort(), w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'source%'`)
+                     .map((r) => r.name).filter((t) => !captureOwns(t)).sort(),
                    "the declared list is every table this module holds");
   for (const t of SOURCES_TABLES) assert.ok(w.count(t) > 0, `${t} holds a row`);
   const before = w.snapshot();
@@ -33,7 +35,7 @@ test("R13 every table here is exempt from purge: a whole-store and a one-bundle 
 
 test("R13 a value is never written to a log, an error or a listener payload", async () => {
   const w = seeded();
-  const { sourceId, row } = w.pulled({ secret: SECRET });
+  const { sourceId, row } = await w.pulled({ secret: SECRET });
   const logged = [];
   const orig = {};
   for (const k of ["log", "info", "warn", "error", "debug"]) { orig[k] = console[k]; console[k] = (...a) => logged.push(a); }
@@ -63,7 +65,7 @@ test("R13 a value is never written to a log, an error or a listener payload", as
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM source_reads WHERE reader LIKE '%Value%' OR entry_id LIKE '%Value%'`)[0].n, 0);
 });
 
-test("R14 C-121.1–C-121.6 are held in this module's own table with their requirement's codes and translations, and no place is named in its behaviour or outward text", () => {
+test("R14 C-121.1–C-121.6 are held in this module's own table with their requirement's codes and translations, and no place is named in its behaviour or outward text", async () => {
   const rows = {
     NO_SUCH_SOURCE: ["C-121.1", "No source you can see answers to that id. Nothing was written."],
     BAD_DISCLOSURE: ["C-121.2", "A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing was written."],
@@ -88,7 +90,7 @@ test("R14 C-121.1–C-121.6 are held in this module's own table with their requi
 
 test("R14 the ops: sourcedisclose, sourcelink, sourceconsent, sourceconsentwithdraw and knockerconsent reach their services with the control plane's stamps, never a body's", async () => {
   const w = seeded();
-  const { sourceId, row } = w.pulled({ secret: SECRET });
+  const { sourceId, row } = await w.pulled({ secret: SECRET });
   const url = (q) => new URL(`http://do/x?${new URLSearchParams(q)}`);
   const ops = (q, body) => sourcesOps(w.s, url(q), body);
   assert.deepEqual(Object.keys(ops({}, {})).sort(), ["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose",
@@ -106,11 +108,11 @@ test("R14 the ops: sourcedisclose, sourcelink, sourceconsent, sourceconsentwithd
   assert.equal(ops({ source_id: sourceId, audience: "group" }, null).sourcepublishable().entries.length, 1);
   w.tick();
   assert.equal(ops({ by: "bob" }, { source: sourceId, entry: d.entry, audience: "group" }).sourceconsentwithdraw().act, "withdraw");
-  const other = w.pulled().sourceId;
+  const other = (await w.pulled()).sourceId;
   assert.equal((await ops({ by: "bob" }, { source: sourceId, to: other, evidence: "e" }).sourcelink()).ok, true);
   w.tick();
-  const n = w.cap.attempts.length;
+  const n = w.spy.attempts.length;
   assert.equal((await ops({ source: "192.0.2.44", now: String(w.clock.now) }, { knockerSecret: SECRET, entry: d.entry, audience: "group",
                                                                               sourceAddress: "forged" }).knockerconsent()).ok, true);
-  assert.equal(w.cap.attempts[n].sourceAddress, "192.0.2.44", "the connecting address is the control plane's, never the body's");
+  assert.equal(w.spy.attempts[n].sourceAddress, "192.0.2.44", "the connecting address is the control plane's, never the body's");
 });

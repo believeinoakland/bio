@@ -6,7 +6,7 @@ import { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER, CONSENT_STATEMENT, WITHDR
 
 test("R11 a source proves who they are by presenting their knocker secret and consents to, or withdraws from, one entry for one audience, as R7 records a consent", async () => {
   const w = seeded();
-  const { sourceId } = w.pulled({ secret: SECRET });
+  const { sourceId } = await w.pulled({ secret: SECRET });
   const e = w.disclose(sourceId);
   w.tick();
   const c = await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "public", sourceAddress: "198.51.100.7" });
@@ -34,7 +34,7 @@ test("R11 a source proves who they are by presenting their knocker secret and co
 
 test("R11 SECRET_NOT_RECOGNISED is answered identically for every failure: a wrong secret, a short one, none, another source's entry, an unknown entry, a bad audience, a lower audience than stands, a malformed call", async () => {
   const w = seeded();
-  const a = w.pulled({ secret: SECRET }), b = w.pulled({ secret: OTHER_SECRET }), bare = w.pulled();
+  const a = await w.pulled({ secret: SECRET }), b = await w.pulled({ secret: OTHER_SECRET }), bare = await w.pulled();
   const e = w.disclose(a.sourceId), eb = w.disclose(b.sourceId), ebare = w.disclose(bare.sourceId);
   w.tick();
   await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "public", sourceAddress: "s0" });
@@ -69,15 +69,17 @@ test("R11 SECRET_NOT_RECOGNISED is answered identically for every failure: a wro
 
 test("R11 the act is rate-bound as a knock is, in the same windows as knocks: a consent attempt counts as a knock from its source (capture R31, K530)", async () => {
   const w = seeded();
-  const { sourceId } = w.pulled({ secret: SECRET });
+  const { sourceId } = await w.pulled({ secret: SECRET });
   const e = w.disclose(sourceId);
   /* every attempt, whatever its outcome, is counted in the knock windows with its source */
-  const n0 = w.cap.attempts.length;
+  const n0 = w.spy.attempts.length, counted = () => w.rows(`SELECT coalesce(sum(count), 0) AS n FROM knock_rate WHERE bucket LIKE 'all:%'`)[0].n;
+  const c0 = counted();
   await w.s.consentBySecret({ knockerSecret: "wrong, but long enough to count", entry: e.entry, audience: "group", sourceAddress: "203.0.113.9", now: w.clock.now });
   await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "group", sourceAddress: "203.0.113.9", now: w.clock.now });
   await w.s.consentBySecret(null);
-  assert.equal(w.cap.attempts.length, n0 + 3);
-  assert.deepEqual(w.cap.attempts.slice(n0, n0 + 2).map((x) => x.sourceAddress), ["203.0.113.9", "203.0.113.9"]);
+  assert.equal(w.spy.attempts.length, n0 + 3);
+  assert.equal(counted(), c0 + 3, "each attempt is counted in the instance's knock window, as a knock is");
+  assert.deepEqual(w.spy.attempts.slice(n0, n0 + 2).map((x) => x.sourceAddress), ["203.0.113.9", "203.0.113.9"]);
   /* past the per-source bound the window refuses, answered as the knock's rate refusal, and nothing is recorded */
   for (let i = 0; i < 12; i++)
     await w.s.consentBySecret({ knockerSecret: "a guess of sufficient length " + i, entry: e.entry, audience: "public", sourceAddress: "192.0.2.1" });
@@ -89,9 +91,9 @@ test("R11 the act is rate-bound as a knock is, in the same windows as knocks: a 
   assert.equal((await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "public", sourceAddress: "192.0.2.2" })).ok, true);
   /* a capture that cannot count answers the one refusal, never an uncounted consent */
   const w2 = seeded();
-  const s2 = w2.pulled({ secret: SECRET });
+  const s2 = await w2.pulled({ secret: SECRET });
   const e2 = w2.disclose(s2.sourceId);
-  w2.cap.knockAttempt = () => { throw new Error("store silent"); };
+  w2.cap.knockAttempt = async () => { throw new Error("store silent"); };
   assert.equal((await w2.s.consentBySecret({ knockerSecret: SECRET, entry: e2.entry, audience: "group", sourceAddress: "z" })).reason,
                "SECRET_NOT_RECOGNISED");
   assert.equal(w2.count("source_consents"), 0);

@@ -10,7 +10,7 @@ const rowOf = (r, code) => { assert.equal(r.check, SOURCES_CHECKS[code].check); 
 
 test("R6 linkClaim records a pseudonym_link disclosure with its evidence and merges nothing; a presented knocker secret of either source makes its basis same_secret; NO_SUCH_SOURCE for either side", async () => {
   const w = seeded();
-  const a = w.pulled({ secret: SECRET }), b = w.pulled();
+  const a = await w.pulled({ secret: SECRET }), b = await w.pulled();
   const hb = w.disclose(b.sourceId);
   const before = w.snapshot();
   for (const bad of [{ source: "SRC-2026-0000" }, { to: "SRC-2026-0000" }, { by: MACHINE }, { by: undefined }, { to: undefined }]) {
@@ -57,9 +57,9 @@ test("R6 linkClaim records a pseudonym_link disclosure with its evidence and mer
   assert.equal(l4.basis, "evidence");
 });
 
-test("R7 a consent covers one entry for one audience, stated as permanent; a withdrawal binds only later publications; CONSENT_NOT_STANDING for an entry not in the history or an audience lower than what already stands", () => {
+test("R7 a consent covers one entry for one audience, stated as permanent; a withdrawal binds only later publications; CONSENT_NOT_STANDING for an entry not in the history or an audience lower than what already stands", async () => {
   const w = seeded();
-  const a = w.pulled(), b = w.pulled();
+  const a = await w.pulled(), b = await w.pulled();
   const e = w.disclose(a.sourceId), f = w.disclose(a.sourceId, { revealed: { kind: "attribute", attribute: "role", value: "clerk" } });
   const eb = w.disclose(b.sourceId);
   const c = (fields) => w.s.recordConsent({ source: a.sourceId, entry: e.entry, audience: "group", evidence: "a signed note", by: "bob", ...fields });
@@ -123,9 +123,9 @@ test("R7 a consent covers one entry for one audience, stated as permanent; a wit
   for (const audience of AUDIENCES) { w.tick(); assert.equal(w.s.recordConsent({ source: b.sourceId, entry: x.entry, audience, evidence: "e", by: "carol" }).standing, audience); }
 });
 
-test("R8 publishableAt answers each entry that may be shown to the audience, with its value and its basis (consent not withdrawn at `at`, or public_elsewhere: knownTo public with a citation, never a hostile one alone); every other entry is left out; it writes nothing and never throws", () => {
+test("R8 publishableAt answers each entry that may be shown to the audience, with its value and its basis (consent not withdrawn at `at`, or public_elsewhere: knownTo public with a citation, never a hostile one alone); every other entry is left out; it writes nothing and never throws", async () => {
   const w = seeded();
-  const { sourceId } = w.pulled();
+  const { sourceId } = await w.pulled();
   const cited = w.disclose(sourceId, { knownTo: "public", evidence: { cite: "Court filing 24-1, p. 2" } });
   const told = w.disclose(sourceId, { revealed: { kind: "attribute", attribute: "employer", value: "Acme" }, knownTo: "public",
                                       evidence: "a member heard it" });

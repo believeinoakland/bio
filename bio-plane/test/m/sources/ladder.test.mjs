@@ -9,14 +9,14 @@ const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 test("R9 rungOf answers the ladder: unknown; same_knocker (proved by the secret); partly_known; known_to_group; publicly_known; each with who knows and how, a withheld value staying withheld", async () => {
   const w = seeded();
   assert.deepEqual(RUNGS, ["unknown", "same_knocker", "partly_known", "known_to_group", "publicly_known"]);
-  const bare = w.pulled();
+  const bare = await w.pulled();
   const r0 = w.s.rungOf({ source: bare.sourceId, viewer: V("carol") });
   assert.equal(r0.ok, true);
   assert.equal(r0.rung, "unknown", "a knock without a secret, nothing disclosed");
   assert.deepEqual(r0.ladder, RUNGS);
   assert.deepEqual(r0.basis, []);
   /* same_knocker: proved by the secret (a pseudonym), or a same_secret link */
-  const k = w.pulled({ secret: SECRET });
+  const k = await w.pulled({ secret: SECRET });
   const r1 = w.s.rungOf({ source: k.sourceId, viewer: V("carol") });
   assert.equal(r1.rung, "same_knocker");
   assert.deepEqual(r1.knocker, { pseudonym: k.row.pseudonym, how: "the same knocker secret was presented" });
@@ -26,7 +26,7 @@ test("R9 rungOf answers the ladder: unknown; same_knocker (proved by the secret)
   assert.deepEqual(r1b.basis.map((b) => b.entry), [l.entry]);
   assert.equal(r1b.basis[0].basis, "same_secret");
   /* an evidence link alone does not */
-  const c = w.pulled(), d = w.pulled();
+  const c = await w.pulled(), d = await w.pulled();
   await w.s.linkClaim({ source: c.sourceId, to: d.sourceId, evidence: "similar style", by: "bob" });
   assert.equal(w.s.rungOf({ source: d.sourceId, viewer: V("carol") }).rung, "unknown");
   /* partly_known: an attribute */
@@ -64,8 +64,8 @@ test("R9 rungOf answers the ladder: unknown; same_knocker (proved by the secret)
 
 test("R10 each registration goes through membership.listenerRefusal; each listener is called after every R2, R6, R7 (and R11) commit with {source, entry, rung_before, rung_after}; a listener's failure never undoes the act", async () => {
   const w = seeded();
-  const { sourceId } = w.pulled({ secret: SECRET });
-  const other = w.pulled().sourceId;
+  const { sourceId } = await w.pulled({ secret: SECRET });
+  const other = (await w.pulled()).sourceId;
   /* registration: malformed and second registrations refused by listenerRefusal's rows (C-102.11, C-102.12) */
   const m = w.s.onDisclosure("reevaluation", 7);
   assert.equal(m.reason, "LISTENER_MALFORMED"); assert.equal(m.check, "C-102.11");

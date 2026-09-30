@@ -8,10 +8,10 @@ import { SOURCES_CHECKS, KINDS, HOWS, AUDIENCES, ATTRIBUTES, NOT_RECORDED, claim
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 const rowOf = (r, code) => { assert.equal(r.check, SOURCES_CHECKS[code].check); assert.equal(r.translation, SOURCES_CHECKS[code].translation); };
 
-test("R2 a disclosure is appended with its stamped by and instant, never edited; every kind, how and knownTo is admitted and a later entry supersedes an earlier one on read", () => {
+test("R2 a disclosure is appended with its stamped by and instant, never edited; every kind, how and knownTo is admitted and a later entry supersedes an earlier one on read", async () => {
   const w = seeded();
-  const { sourceId } = w.pulled({ secret: SECRET });
-  const other = w.pulled().sourceId;
+  const { sourceId } = await w.pulled({ secret: SECRET });
+  const other = (await w.pulled()).sourceId;
   for (const kind of KINDS) for (const how of HOWS) for (const knownTo of AUDIENCES) {
     const revealed = kind === "attribute" ? { kind, attribute: "role", value: "clerk" }
       : kind === "pseudonym_link" ? { kind, to: other } : { kind, value: "Pat" };
@@ -29,7 +29,7 @@ test("R2 a disclosure is appended with its stamped by and instant, never edited;
   assert.equal(w.disclose(sourceId, { by: "admin", sight: ["admin"] }).by, "admin");
   /* never edited: every entry stays, in order; a later one of the same kind and attribute supersedes the earlier */
   const w2 = seeded();
-  const s2 = w2.pulled().sourceId;
+  const s2 = (await w2.pulled()).sourceId;
   const e1 = w2.disclose(s2, { revealed: { kind: "name", value: "First" } });
   const snap = w2.rows(`SELECT * FROM source_entries WHERE entry_id = ?`, e1.entry);
   const a1 = w2.disclose(s2, { revealed: { kind: "attribute", attribute: "employer", value: "Acme" } });
@@ -38,7 +38,7 @@ test("R2 a disclosure is appended with its stamped by and instant, never edited;
   assert.deepEqual(w2.rows(`SELECT * FROM source_entries WHERE entry_id = ?`, e1.entry), snap, "the earlier row is unchanged");
   const h = w2.s.rungOf({ source: s2, viewer: V("bob") });
   assert.equal(h.ok, true);
-  const hist = new Map(w2.s.sourceOf({ captureSha: w2.cap.inbox[0].sha256, viewer: V("bob") }).history.map((e) => [e.entry, e]));
+  const hist = new Map(w2.s.sourceOf({ captureSha: w2.rows(`SELECT sha256 FROM inbox ORDER BY received LIMIT 1`)[0].sha256, viewer: V("bob") }).history.map((e) => [e.entry, e]));
   assert.equal(hist.size, 4, "every entry stays in the history");
   assert.equal(hist.get(e1.entry).superseded_by, e2.entry, "a later name supersedes the earlier on read");
   assert.equal(hist.get(e2.entry).superseded_by, null);
@@ -47,9 +47,9 @@ test("R2 a disclosure is appended with its stamped by and instant, never edited;
   assert.equal(hist.get(e1.entry).value, "First", "the superseded entry keeps its value");
 });
 
-test("R2 refusals in order, each with its row and a negative control: NO_SUCH_SOURCE, BAD_DISCLOSURE naming the field, NO_EVIDENCE; nothing is written", () => {
+test("R2 refusals in order, each with its row and a negative control: NO_SUCH_SOURCE, BAD_DISCLOSURE naming the field, NO_EVIDENCE; nothing is written", async () => {
   const w = seeded();
-  const { sourceId } = w.pulled();
+  const { sourceId } = await w.pulled();
   const good = { source: sourceId, revealed: { kind: "name", value: "Pat" }, how: "self", knownTo: "group",
                  evidence: "a statement", sight: ["bob"], by: "bob" };
   const before = w.snapshot();
@@ -103,9 +103,9 @@ test("R2 refusals in order, each with its row and a negative control: NO_SUCH_SO
                "a confirmation is not itself hostile");
 });
 
-test("R3 a hostile disclosure is stored as the exposer's claim and read as \"named by <claimed_by> on <date>; not confirmed by the group\", confirmed false always; a confirmation is its own entry, publishable only by the source's consent", () => {
+test("R3 a hostile disclosure is stored as the exposer's claim and read as \"named by <claimed_by> on <date>; not confirmed by the group\", confirmed false always; a confirmation is its own entry, publishable only by the source's consent", async () => {
   const w = seeded();
-  const { sourceId, row } = w.pulled();
+  const { sourceId, row } = await w.pulled();
   const h = w.disclose(sourceId, { how: "hostile", claimedBy: "an anonymous account", claimedAt: "2026-09-12", knownTo: "public",
                                    evidence: { cite: "https://example.org/post/1" } });
   assert.equal(h.confirmed, false);
@@ -138,9 +138,9 @@ test("R3 a hostile disclosure is stored as the exposer's claim and read as \"nam
   assert.equal(after.entries.find((e) => e.entry === conf.entry).basis, "consent", "with the source's consent it may be published");
 });
 
-test("R4 recorded: false records a detail known to the group without its value: the entry holds none and no read answers one", () => {
+test("R4 recorded: false records a detail known to the group without its value: the entry holds none and no read answers one", async () => {
   const w = seeded();
-  const { sourceId, row } = w.pulled();
+  const { sourceId, row } = await w.pulled();
   const r = w.disclose(sourceId, { recorded: false, revealed: { kind: "name" }, sight: undefined });
   assert.equal(r.ok, true);
   assert.equal(r.recorded, false);
@@ -165,9 +165,9 @@ test("R4 recorded: false records a detail known to the group without its value: 
   assert.equal(w.disclose(sourceId, { recorded: false, revealed: { kind: "attribute", attribute: "occupation" }, sight: undefined }).ok, true);
 });
 
-test("R5 a stored value needs a non-empty sight list (NO_SIGHT_LIST); only listed members read it, every other viewer reads it withheld; each read answering a value is logged, and the log is answered to listed members and administrators", () => {
+test("R5 a stored value needs a non-empty sight list (NO_SIGHT_LIST); only listed members read it, every other viewer reads it withheld; each read answering a value is logged, and the log is answered to listed members and administrators", async () => {
   const w = seeded();
-  const { sourceId, row } = w.pulled();
+  const { sourceId, row } = await w.pulled();
   const before = w.snapshot();
   for (const sight of [undefined, null, [], "bob", ["nobody"], ["bob", "dave"], [MACHINE], [""]]) {
     const r = w.s.recordDisclosure({ source: sourceId, revealed: { kind: "name", value: "Pat" }, how: "self", knownTo: "group",
