@@ -28,3 +28,7 @@
 - `node checks/format.mjs` → `82 modules, 77 requirements files; 0 failures`; `architecture.mjs … query-language` → `8 product files, 28 relative imports …; 0 failures`; `coverage.mjs … query-language` → `26 of 26 live requirement ids named by a test; 0 failures`; `ownership.mjs … query-language tranche/T18` → `5 files changed …; 0 failures`.
 
 Size (session_011qbp7AFm5Cs13omsiZBw2X): test runs 12, module lines 2730
+
+## J1 · REPORT
+
+Two findings outside query-language (record, Completion). (1) agent-worker: agent-worker/test/agent-worker.test.mjs fails 5 of 139 with and without this job's change: its pins of the mutating ops against PL-11's AI_RUN_ACTIONS (airunclose, airuntick, capturerequest, suggest) and of the plane's namespace set read from source. (2) retrieval R62 and its registrants (inquiry legs; strength R23 capture/connection): R26 reads a registered relation as one row per bundle key (a filter by any row, a facet or sort by one scalar row); each registrant's table should hold its key unique, which R62 could state.
