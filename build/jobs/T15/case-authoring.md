@@ -65,3 +65,7 @@ Two modules' behaviour meets C-120.1 once this merges (details in my record's Co
 - **review** (R13, the review copy's dry run of `op=publish`): drafts carry no `tensionsDisclosed`, so a dry run over a case with a standing duty answers C-120.1 in the missing-list. Its fixture stubs `publishCase`; its 30 tests pass.
 - **civicos-ui** `app.html`'s publish ceremony sends no `tensionsDisclosed` and never asks `op=publishtensions`: a publish over a case with a standing duty is refused C-120.1 until N345's DEC-80 step is built.
 No hit for the new codes, op or rows in `civicos-ui/` or `affordances.mjs`. No generated artifact made stale.
+
+## J4 · COMPLETE
+
+Complete: N345 R14 (section; /5 a todo on PUBLICATION #5's merge, K498), R31, R32, R33, R15's fields, C-120.1–C-120.3 (awaiting stamp, T16). Checks 0 failures; case-authoring 52 pass 0 fail 1 todo; review, control-plane green. Record's Completion has the marks to strike, the stamps for control-plane and the reports.
