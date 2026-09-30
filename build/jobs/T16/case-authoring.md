@@ -65,3 +65,11 @@ Found in other modules (record, Completion): (1) legacy-tests: derivation-bounds
 ## J3 · COMPLETE
 
 R12, R14, R29 (C-120.4–C-120.7), R32, R34, R35, R36, R37 and N370 applied; 67/67 module tests, review 30/30, four checks pass; record Completion. The branch imports publication's block helpers (sourceStatement, unnamedSourceStatement, captureBlockLines, sourceBlockLines), so it loads only once publication merges early; tested with them overlaid. Please merge publication and send a CHANGE: I merge the tranche and re-run. Ratification R18 is read at its ruled shape; with it absent the pre-flight states it not reached.
+
+## Completion after B3, B4
+
+B3 (publication merged early, K553) and B4 (ratification merged early, K555) applied: `tranche/T16` merged. The blocks were already written through publication's exports in K553's spelling, so no code changed; the dependency on publication's early merge noted above is gone, and the branch loads and runs on the tranche's own modules. R34 is now also tested against the real `ratification.caseRatifyPreflight` (its refusals read over the text op=publish would store, the author as signer, folded into `blockers` as ratification answers them; nothing written).
+
+**Tests and checks:** `test/m/case-authoring/` 68/68; case-authoring, review, ratification and publication together 291 pass, 0 fail, 2 todo (publication's R30, R32); `test/m/` whole 3,068 pass, 0 fail, 21 todo. `format` 0 failures; `architecture case-authoring` 14 files, 0 failures; `coverage case-authoring` 37 of 37; `ownership case-authoring tranche/T16` 9 files, legacy 0/0, 0 failures.
+
+Size (session_01Q1akymVhSfhfv5f25VnNRw): test runs 25, module lines 3112
