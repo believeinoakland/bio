@@ -77,11 +77,20 @@ export const signBundle = (key, id, bundleSha) => sign(key, ratifyStatement(id, 
 
 /* ---------------------------------------------------------------- the world */
 
+/** An in-memory R2 bucket over a Map of key to bytes. */
+export const bucketOver = (m) => ({
+  head: async (k) => (m.has(k) ? { size: m.get(k).length } : null),
+  get: async (k) => (m.has(k) ? { body: m.get(k), arrayBuffer: async () => m.get(k) } : null),
+  put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
+});
+
 export function world() {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
-  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  /* record-core R38's evidence store, over an in-memory bucket (keys `bio/captures/<digest>`); R4's gate probes it */
+  const evidence = new Map();
+  const record = recordOf(host, { evidence: bucketOver(evidence), evidencePrefix: "bio/captures/" });
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
@@ -104,7 +113,12 @@ export function world() {
   };
   /* provenance's register rows and inquiry's earned registry, for R7 */
   const registers = new Map();
-  const provenance = { registeredFor: (id) => registers.get(id) ?? [] };
+  /* provenance R5's `registerHolds`, as the test sets it by hash: what the register's receipts and the bundle's record
+     name for a whole hash the evidence store does not hold (nothing, by default) */
+  const holds = new Map();
+  const provenance = { registeredFor: (id) => registers.get(id) ?? [],
+                       registerHolds: ({ sha }) => holds.get(sha) ?? { ok: true, sha, asked: true, parts: null,
+                                                                       registered: false, acquired: false } };
   const inquiry = { subjectEntityOf: (id) => `ENT-of-${id}`,
                     earned: (subject, targets) => ({ subject, earned: { capture: Object.fromEntries(targets.map((t) => [t, null])) } }) };
 
@@ -153,7 +167,7 @@ export function world() {
                                    publication });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, r, bv, key, registers, pub, publication, calls,
+    st, host, record, membership, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -319,17 +333,12 @@ export function plane(w, { session = { role: "member:alice" }, viaSession = true
       if (op === "reusedparts") return { parts: [] };
       if (op === "capturelimit") return { observed: null };
       if (op === "recordreuseverdicts") return { ok: true };
-      if (op === "registerholds") return { parts: null, acquired: false };
       const mine = ratificationOps(w.r, url, body)[op];
       if (mine) return mine();
       throw new Error(`no op ${op}`);
     },
   };
-  const bucket = (m) => ({
-    head: async (k) => (m.has(k) ? { size: m.get(k).length } : null),
-    get: async (k) => (m.has(k) ? { body: m.get(k) } : null),
-    put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
-  });
+  const bucket = bucketOver;
   const json = (body, status = 200) => ({ status, body });
   const ctx = {
     env: { CAPTURES: bucket(captures), PUBLISHED: bucket(published) }, json, storeName: "s",

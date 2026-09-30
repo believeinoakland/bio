@@ -18,10 +18,10 @@
  * first call. At creation it registers the case-document catalogue with `promotion` (its R47; R8 here), and the
  * case-member arm of C-2.8 as a promotion check and a record-core audit check (R9).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
- *   record, membership, promotion   layer 2: `head`, `transact`, `registerAuditCheck`; `caseAuthority`,
- *                                   `inSight`, `existenceAct`, `attestingKeys`; `runCaseGate`, `registerCaseCatalogue`,
- *                                   `registerStep`.
- *   provenance     `registeredFor` (the gate's register rows).
+ *   record, membership, promotion   layer 2: `head`, `transact`, `registerAuditCheck`, `evidenceStore`; `caseAuthority`,
+ *                                   `inSight`, `existenceAct`, `attestingKeys`; `runGate`, `runCaseGate`,
+ *                                   `registerCaseCatalogue`, `registerStep`.
+ *   provenance     `registeredFor` (the gate's register rows), `registerHolds` (R4's gate probe).
  *   inquiry        `earned`, `subjectEntityOf` (R7's earned registry).
  *   basisVersions  `conclusionOf`, `conclusionRecordOf`, `noProjectConclusionOf`, `projectsDrawingOn` (R1),
  *                  `testimonyReach` (R7).
@@ -37,7 +37,7 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { provenanceOf } from "../provenance/index.mjs";
+import { provenanceOf, partsHeld } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
@@ -426,6 +426,45 @@ export class Ratification {
          the write. The subject comes from the PROJECTION here (the document is already promoted). */
       earnedRegistry: this.inquiry.earned(this.inquiry.subjectEntityOf(bundleId), targets),
     };
+  }
+
+  /* ---- R4: `op=ratify`'s gate, on the promotion instance (N417, K691) ----
+
+     `op=ratify`'s gate runs here, in the Durable Object, for `caseGate`'s reason (K233): `promotion.runGate` runs the
+     type grammars later modules registered with record-core (C-2.7 among them), and those registrations live on this
+     host; the Worker has none. The Worker hands what it already read under the ratifier's sight (the image, the known
+     ids, the gate facts' registries and register rows); the register rows' bytes are probed here, in-process: the
+     evidence store (record-core R38), then provenance's `registerHolds` (R5) and, for parts the bundle's record names,
+     `partsHeld` (D-533, D-556). No evidence store bound is every row absent, as the Worker's unbound bucket was. The
+     answer is the gate's verdict and `parted`, the whole-hash rows the gate admitted as held in parts with the parts
+     the record names, which the Worker publishes part by part. */
+  async ratifyGate({ bundleId, image, knownIds, registers, publishedRegistry, publishedCaseRegistry,
+                     earnedRegistry } = {}) {
+    const evidence = this.record.evidenceStore();
+    const parted = [];
+    const gate = await this.promotion.runGate({
+      bundleId, image: image || {}, knownIds: new Set(Array.isArray(knownIds) ? knownIds : []),
+      registers: Array.isArray(registers) ? registers : [],
+      publishedRegistry: publishedRegistry ?? null, publishedCaseRegistry: publishedCaseRegistry ?? null,
+      earnedRegistry: earnedRegistry ?? null,
+      hasCapture: async (sha) => {
+        if (!evidence) return { present: false, bytes: 0 };
+        const h = await evidence.head(sha);
+        if (h) return { present: true, bytes: h.size };
+        /* D-530: a miss on the whole-hash key is not absence; D-556: the parts this bundle's record names are each
+           headed and their digests verified, and the gate admits the row only when all are present and verify. */
+        const held = this.provenance.registerHolds({ sha, bundle: bundleId });
+        const named = held ? held.parts : null;
+        if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
+        if (named?.state === "named") {
+          const v = await partsHeld(evidence, (s) => s, named.parts);
+          if (!v.missing.length && !v.disagree.length && !v.unverified.length) parted.push([sha, named.parts]);
+          return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
+        }
+        return { present: false, bytes: 0, ...(held && held.acquired === true ? { heldInParts: true } : {}) };
+      },
+    });
+    return { ...gate, parted };
   }
 
   /* ---- R2: the case document's catalogue, on the promotion instance (K233) ----
@@ -1017,14 +1056,15 @@ export function ratificationOf(host, deps) {
   return r;
 }
 
-/** The module's store-half ops (K3), as entries of the legacy store's op map: `gatefacts` (R7), `casegate` (R2's
- *  gate), `caseratify` (R3) and `publish` (R5), the internal hops of the two ceremonies, and `release` (R20–R27).
+/** The module's store-half ops (K3), as entries of the legacy store's op map: `gatefacts` (R7), `ratifygate` (R4's
+ *  gate, N417), `casegate` (R2's gate), `caseratify` (R3) and `publish` (R5), the internal hops of the two ceremonies, and `release` (R20–R27).
  *  `viewer`, and release's `owner` and `author`, are the control plane's stamps, read from the query. */
 export function ratificationOps(r, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
     gatefacts: () => r.gateFacts(q("id"), q("viewer") ?? null),
+    ratifygate: () => r.ratifyGate(b),
     casegate: () => r.caseGate({ caseId: b.caseId ?? q("case"), edition: Number(b.edition ?? q("edition")),
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
                                  secretSha: q("secretSha") ?? null }),

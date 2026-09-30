@@ -4,7 +4,7 @@
    target is published (publication R35), and a reference held privately for a published finding does (R5; N256). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, plane, newKey, signBundle, cleanInfoMd, V, SILENT } from "./fixture.mjs";
+import { world, plane, newKey, signBundle, cleanInfoMd, sha, V, SILENT } from "./fixture.mjs";
 import { ratifyOp } from "../../../src/ratification/ops.mjs";
 import { publishedGraphEdges } from "../../../src/publication/index.mjs";
 import { RATIFY_MACHINE_FENCE_CHECKS as FENCE, RATIFY_TESTIMONY_CHECKS as TESTIMONY,
@@ -98,6 +98,48 @@ test("R4, R9: the gate joins C-2.8's case-member arm over the same image", async
   const r = await run();
   assert.equal(r.body.reason, "GATE_REFUSED");
   assert.ok(r.body.findings.some((x) => x.check === "C-2.8" && /integer edition/.test(x.detail)), JSON.stringify(r.body.findings).slice(0, 500));
+});
+
+test("R4, R17 (N417): the gate is promotion.runGate on the store's host, so a grammar registered with its record reaches it, and a bundle it refuses is GATE_REFUSED with its finding; without it the same bundle crosses", async () => {
+  const clean = await setup();
+  assert.equal((await clean.run()).status, 200, "the negative control: no grammar registered, the bundle crosses");
+  const { w, run } = await setup();
+  const asked = [];
+  assert.equal(w.record.registerGrammar("test-grammar", { ids: ["C-990.1"], arm: async (ctx, found) => {
+    asked.push(ctx.folderName);
+    found.push({ check: "C-990.1", severity: "error", message: "the registered grammar refuses this bundle" });
+  } }).ok, true);
+  const r = await run();
+  assert.deepEqual([r.status, r.body.reason], [409, "GATE_REFUSED"]);
+  assert.ok(r.body.findings.some((f) => f.check === "C-990.1"), JSON.stringify(r.body.findings).slice(0, 400));
+  assert.deepEqual(asked, [DOC], "the grammar judged the bundle being ratified");
+  assert.ok(r.p.fetched.includes("ratifygate"), "through the store half's gate");
+  assert.equal(w.count("published_bundles"), 0, "nothing crossed");
+});
+
+test("R4, R6 (N417, D-556): a whole-hash row the evidence store holds only as the parts the bundle's record names passes the gate when every part is held and verifies, and crosses as its parts; a missing part is PLANE_PART_MISSING", async () => {
+  const enc = (s) => new TextEncoder().encode(s);
+  const parts = ["part one", "part two"].map((t, i) => ({ file: `snapshots/a.pdf.part${i + 1}`, sha256: sha(t), bytes: t.length, t }));
+  const whole = "d".repeat(64);
+  for (const held of [true, false]) {
+    const { w } = await setup();
+    w.registers.set(DOC, [{ capture_sha: whole, path: "snapshots/a.pdf", bytes: 16, authored: 0 }]);
+    w.holds.set(whole, { ok: true, sha: whole, asked: true, registered: true, acquired: true,
+                         parts: { state: "named", parts: parts.map(({ t, ...p }) => p) } });
+    for (const p of held ? parts : parts.slice(0, 1)) w.evidence.set(`bio/captures/${p.sha256}`, enc(p.t));
+    const p0 = plane(w);
+    for (const p of parts) p0.captures.set(`s/captures/${p.sha256}`, enc(p.t));
+    const res = await ratifyOp(p0.request({ bundleId: DOC, expectedSha: w.sha(DOC), sig: SIGNED.get(w) }), p0.stub, p0.ctx);
+    if (held) {
+      assert.equal(res.status, 200, JSON.stringify(res.body).slice(0, 400));
+      assert.deepEqual(res.body.published.parts, { parts: 2, verified: 2 });
+      for (const p of parts) assert.ok(p0.published.has(`s/published/${p.sha256}`), `part ${p.file} crossed`);
+      assert.ok(!p0.published.has(`s/published/${whole}`), "nothing under the whole's hash");
+    } else {
+      assert.deepEqual([res.status, res.body.reason], [409, "GATE_REFUSED"]);
+      assert.deepEqual(res.body.findings.filter((f) => f.check.startsWith("PLANE_")).map((f) => f.check), ["PLANE_PART_MISSING"]);
+    }
+  }
 });
 
 test("R5 through R4: the store half's scope refusals are relayed at 409; a store that does not answer before the commit refuses the act", async () => {
