@@ -4,9 +4,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   checkConfidence, applyConfidenceFloor, checkAnchor, checkAttestation, extentCovers, gradeCeiling,
-  captureBound, derivationCap, describeChain,
+  captureBound, derivationCap, describeChain, convertedChain, layerChain, TEXT_CHAIN_CHECKS,
 } from "../../../src/textchain.mjs";
-import { TEXT_CHAIN_CHECKS, BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
+import { BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
 
 const isRefusal = (r, code) => {
   assert.equal(r && r.ok, false, `expected ${code}, got ${JSON.stringify(r)}`);
@@ -187,6 +187,31 @@ test("R58: a chain that is not a transcription returns byteGrade unchanged", () 
 test("R59: a transcription with no measured cap returns null", () => {
   for (const g of BASIS_GRADES) assert.equal(captureBound([{ step: "layer" }], g), null);
   assert.equal(captureBound([{ step: "layer" }]), null);
+});
+
+test("R59: a host's conversion ahead of a text layer (convert then layer) bounds the capture axis to undetermined, whatever the layer measures", () => {
+  /* The shape a Drive export's reading carries (drive-convert's share, K619): the conversion unmeasured at the head. */
+  const convert = { step: "convert", engine: "google-export", format: "odt", cap: null, calibration: null,
+    measured_by: "unmeasured: a calibration row raises it" };
+  const layer = { step: "layer", tier: 1, container: "odt" };
+  for (const layerCap of [null, ...BASIS_GRADES]) {
+    const measuredLayer = layerChain({ ...layer, cap: layerCap, calibration: layerCap ? "CAL-9001" : null });
+    const chain = convertedChain(convert, measuredLayer);
+    assert.deepEqual(chain.map((s) => s.step), ["convert", "layer"]);
+    /* R29: the unmeasured head makes the cap undetermined; R59: so the capture axis is bounded to null, for every byte grade. */
+    assert.equal(derivationCap(chain), null);
+    for (const g of [...BASIS_GRADES, EARNED_CAPTURE_CEILING]) assert.equal(captureBound(chain, g), null, `${layerCap} ${g}`);
+    assert.equal(captureBound(chain), null);
+    /* The control: the layer alone reads its own letter (R26), and bounds by it (R60). */
+    assert.equal(derivationCap(measuredLayer), layerCap);
+    if (layerCap) assert.equal(captureBound(measuredLayer, "B"), BASIS_GRADES[Math.max(BASIS_GRADES.indexOf("B"), BASIS_GRADES.indexOf(layerCap))]);
+  }
+  /* R39: the sentence states both steps in the order they happened. */
+  assert.equal(describeChain(convertedChain(convert, layerChain(layer))),
+    "the document as converted by the host that served it (google-export to odt) -> the document's own text layer");
+  /* A calibrated conversion takes part like any step (R29's measured case). */
+  const calibrated = convertedChain({ ...convert, cap: "C", calibration: "CAL-7" }, layerChain({ cap: "D" }));
+  assert.equal(captureBound(calibrated, "B"), "D");
 });
 
 test("R60: a measured transcription returns the weaker of byteGrade and its cap, never stronger than either", () => {
