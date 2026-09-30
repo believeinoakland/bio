@@ -13,6 +13,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
+import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -42,15 +43,25 @@ export const V = (id) => `member:${id}`;
 export const MACHINE = "class:daemon";
 export const NOW = "2026-09-28T01:00:00Z";
 
-/* The columns this module writes on record-core's `bundles` (R40), which the store's additive list creates today. */
-const BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"];
+/* The column this module writes on record-core's `bundles` (R40), which the store's additive list creates today. A
+   store written before T18 also held the leg count and the superseded-by index there (`legacyColumns`, R36's move). */
+const BUNDLE_COLUMNS = ["inquiry_subject_entity TEXT"];
+export const LEGACY_BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_superseded_by TEXT"];
+/* The strength columns legacy-store adds to `bundles` (strength's), which the real retrieval's search reads. */
+const STRENGTH_COLUMNS = ["inquiry_capture_strength TEXT", "inquiry_capture_state TEXT", "inquiry_connection_strength TEXT",
+                          "inquiry_connection_state TEXT"];
 
-export function world({ caseMembers = new Set(), published = null, group = "test-group" } = {}) {
+/** `realRetrieval`: the real retrieval module over the same storage (its selections, its projection's decorations,
+ *  its search), instead of the stand-in whose selections the test controls. `legacyColumns`: `bundles` as a store
+ *  written before T18 holds it (R36's move). */
+export function world({ caseMembers = new Set(), published = null, group = "test-group", realRetrieval = false,
+                        legacyColumns = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  for (const c of BUNDLE_COLUMNS) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
+  for (const c of [...BUNDLE_COLUMNS, ...(legacyColumns ? LEGACY_BUNDLE_COLUMNS : []), ...(realRetrieval ? STRENGTH_COLUMNS : [])])
+    st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   const clock = { now: NOW };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
   record.migrate();
@@ -74,7 +85,9 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   const connections = connectionsOf(host, { record, membership, promotion, content, extraction, capture, entities });
   connections.migrate();
   const selections = new Map();
-  const retrieval = {
+  const retrieval = realRetrieval
+    ? retrievalOf(host, { record, membership, promotion, extraction, observation: null, now: () => Date.parse(clock.now) })
+    : {
     selectionResolve: ({ handle, weight }) => {
       const s = selections.get(handle);
       if (!s) return { ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" };
@@ -82,13 +95,14 @@ export function world({ caseMembers = new Set(), published = null, group = "test
       return { ok: true, members: s.members, drift: s.drift || null };
     },
   };
+  if (realRetrieval) retrieval.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, retrieval, provenance: prov,
                               now: () => clock.now });
   k.migrate();
   const raisedCalls = [];
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, extraction, content, entities, connections, k, clock, selections, raisedCalls,
+    st, host, record, membership, promotion, prov, extraction, content, entities, connections, retrieval, k, clock, selections, raisedCalls,
     caseMembers, groupRef,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),

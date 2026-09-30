@@ -82,8 +82,10 @@ test("R12 projection: inquiry_basis re-derived whole from basis[]; each leg's co
   const x = w.rows(`SELECT ord, target_id, description, reason, author FROM inquiry_exclusions WHERE bundle_id=? ORDER BY ord`, "INQ-2026-0001-q");
   assert.deepEqual(x.map((r) => [r.target_id, r.description, r.reason, r.author]),
     [[B, "the other memo", "out of scope", "member:alice"], [null, "a records request", "outstanding", "member:alice"]]);
-  const b = w.row(`SELECT inquiry_basis_count, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, "INQ-2026-0001-q");
-  assert.deepEqual([b.inquiry_basis_count, b.inquiry_subject_entity], [2, "ENT-2026-0001"]);
+  const b = w.row(`SELECT f.inquiry_basis_count, b.inquiry_subject_entity FROM bundles b
+                     JOIN inquiry_bundle_facts f ON f.bundle_id = b.bundle_id WHERE b.bundle_id=?`, "INQ-2026-0001-q");
+  assert.deepEqual([b.inquiry_basis_count, b.inquiry_subject_entity], [2, "ENT-2026-0001"],
+    "the count in this module's table (R36), the subject on bundles (R40)");
   /* a re-promotion that REORDERS the legs keeps each leg's content row (carried, keyed by target and extent, not ord) */
   const again = w.promote("INQ-2026-0001-q", inquiryMd("INQ-2026-0001-q", { subject: "ENT-2026-0001",
     legs: [{ target: B, role: "cuts_against" }, { target: A }] }));
@@ -119,7 +121,7 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   assert.equal(w.promote("INQ-2026-0001-q", w.text("INQ-2026-0001-q").replace("---\n\n## Question",
     `contradiction:\n  candidate: ${"c".repeat(64)}\n---\n\n## Question`)).ok, true);
   assert.deepEqual(INQUIRY_TABLES, ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
-                                    "inquiry_contradiction_links"]);
+                                    "inquiry_contradiction_links", "inquiry_bundle_facts"]);
   for (const t of INQUIRY_TABLES) {
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "bundle_id"), t);
     assert.ok(inquiryOwns(t) && inquiryOwns({ name: t }));
@@ -128,6 +130,7 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   assert.equal(w.count("inquiry_basis"), 0);
   assert.equal(w.count("inquiry_member_agents"), 0);
   assert.equal(w.count("inquiry_contradiction_links"), 0, "R48's projection is purged with its inquiry");
+  assert.equal(w.count("inquiry_bundle_facts"), 0, "the leg count and superseded-by index are purged with it (N136)");
   assert.ok(JSON.stringify(r).includes("inquiry_basis"), JSON.stringify(r).slice(0, 300));
 });
 

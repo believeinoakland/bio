@@ -15,7 +15,8 @@
  *
  * REACHED as `inquiryOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first call
  * with `deps`, returned to every later caller. At creation it declares its tables to purge (R36), joins every promotion
- * (R11's check, R12's projection) and every re-read that stales content (content R41's `onStale`).
+ * (R11's check, R12's projection) and every re-read that stales content (content R41's `onStale`), and registers with
+ * retrieval the `legs` field's relation (R36, its R62) and the migrated arm of `surfaced_in` (N405, its R56).
  * `deps`:
  *   record, membership, promotion, content, connections, entities, retrieval, provenance   the modules it uses,
  *                through their factories on the same host unless a test passes its own (connections, entities,
@@ -37,13 +38,14 @@ import { entitiesOf, gradeRank } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
-import { INQUIRY_TABLES, migrateInquiry } from "./schema.mjs";
+import { INQUIRY_TABLES, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
+import { checkInquiryEntry } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
 
-export { INQUIRY_SCHEMA, INQUIRY_TABLES } from "./schema.mjs";
+export { INQUIRY_SCHEMA, INQUIRY_TABLES, BUNDLE_FACTS, LEGS_RELATION, moveBundleFacts } from "./schema.mjs";
 export * from "./grammar.mjs";
 export { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
 export { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
@@ -197,13 +199,12 @@ export class Inquiry {
   #promote(pkg) { return this.promotion.promote(pkg); }
   #when() { const w = this.now(); return typeof w === "string" && w ? w : stampInstant("second"); }
 
-  /** The tables, their migrations and the superseded-by backfill (R36; REC-17's boot pass, bounded by the number of
-   *  `supersedes` edges, which is the number of divisions anybody has performed). Idempotent: every boot. */
+  /** The tables, their migrations (with N136's move of the leg count and the superseded-by index off `bundles`, R36)
+   *  and the superseded-by backfill (REC-17's boot pass, bounded by the number of `supersedes` edges, which is the
+   *  number of divisions anybody has performed). Idempotent: every boot. */
   migrate() {
     migrateInquiry(this.sql);
-    const hasColumn = this.#rows(`PRAGMA table_info(bundles)`).some((r) => r.name === "inquiry_superseded_by");
-    const hasRefs = this.#rows(`PRAGMA table_info(refs)`).length > 0;
-    if (hasColumn && hasRefs)
+    if (this.#rows(`PRAGMA table_info(refs)`).length > 0)
       for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE kind='supersedes'`))
         this.writeSupersededBy(r.target_id);
   }
@@ -519,7 +520,10 @@ export class Inquiry {
       const n = this.#one(`SELECT count(*) AS c FROM inquiry_basis WHERE bundle_id=?`, bundleId).c;
       const subject = basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim()
         ? basisFm.subject_entity.trim() : null;
-      this.sql.exec(`UPDATE bundles SET inquiry_basis_count=?, inquiry_subject_entity=? WHERE bundle_id=?`, n, subject, bundleId);
+      /* R36 (N136): the count in this module's own table; the subject on `bundles`, R40's read contract. */
+      this.sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, inquiry_basis_count) VALUES (?,?)
+                     ON CONFLICT(bundle_id) DO UPDATE SET inquiry_basis_count=excluded.inquiry_basis_count`, bundleId, n);
+      this.sql.exec(`UPDATE bundles SET inquiry_subject_entity=? WHERE bundle_id=?`, subject, bundleId);
     }
     /* R48 (N345): the contradiction link, its resolution while the document is concluded, and `explores`, re-derived
        whole from the document; no row for a plain inquiry. */
@@ -554,18 +558,23 @@ export class Inquiry {
   }
 
   /** R12, R16: ONE bundle's superseded-by index from the `supersedes` edges pointing at it (connections' `refs`), the
-   *  ids comma-joined and sorted, NULL when nothing supersedes it. An id with no row is a no-op. */
+   *  ids comma-joined and sorted, NULL when nothing supersedes it, held in this module's table (R36). An id with no
+   *  bundle is a no-op. */
   writeSupersededBy(targetId) {
     if (!targetId) return null;
     const ids = this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='supersedes' ORDER BY bundle_id`, targetId)
       .map((r) => r.bundle_id);
-    this.sql.exec(`UPDATE bundles SET inquiry_superseded_by=? WHERE bundle_id=?`, ids.length ? ids.join(",") : null, targetId);
+    const v = ids.length ? ids.join(",") : null;
+    if (v === null) this.sql.exec(`UPDATE ${BUNDLE_FACTS} SET inquiry_superseded_by=NULL WHERE bundle_id=?`, targetId);
+    else this.sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, inquiry_superseded_by)
+                        SELECT bundle_id, ? FROM bundles WHERE bundle_id=?
+                        ON CONFLICT(bundle_id) DO UPDATE SET inquiry_superseded_by=excluded.inquiry_superseded_by`, v, targetId);
     return ids;
   }
 
   /** R16: the ids that supersede `id`, from the index. */
   supersededBy(id) {
-    return supersededByOf(this.#one(`SELECT inquiry_superseded_by FROM bundles WHERE bundle_id=?`, id));
+    return supersededByOf(this.#one(`SELECT inquiry_superseded_by FROM ${BUNDLE_FACTS} WHERE bundle_id=?`, id));
   }
 
   /** R18 (publication R12 reads it): the exclusions naming `targetId` the viewer may see, each with its inquiry, edition,
@@ -640,6 +649,44 @@ export class Inquiry {
       const ua = fm && typeof fm === "object" ? fm.member_user_agent : null;
       return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
     } catch { return null; }
+  }
+
+  /** N405 (REC-173, INVESTIGATIVE-SESSION.md §11 item 5): the `surfaced_in` of a question whose creation was a
+   *  server-verified MIGRATION REPLAY (R12's row), surfaced in the Drive era and not inside a run on this plane: said in
+   *  words, with the capture and promotion the replay named. Null for any other bundle; the rest of `surfaced_in` is
+   *  ai-runs' (its R27). Registered as this module's decoration of retrieval's single-bundle answer (its R56). Not gated
+   *  (the answer it decorates is); never throws. */
+  migratedSurfacing(id) {
+    try {
+      if (!id || typeof id !== "string") return null;
+      const mig = this.#one(`SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`, id);
+      return mig ? { recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null,
+                     migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at } } : null;
+    } catch { return null; }
+  }
+
+  /** R2, R3, R17 (T18): the entry requirements over one document, judged by the catalogue's `checkBundle` with the type
+   *  grammars later modules registered with record-core (its `grammars()`), as promotion's gate judges a bundle (its
+   *  R27), so a grammar that left the catalogue judges an inquiry here as it does there. A grammar whose arm throws is one
+   *  error of its own, naming its module; a record that cannot answer its registrations is an error, never read as none.
+   *  Never throws. */
+  async checkEntry(bundleMd, opts = {}) {
+    let grammars;
+    try {
+      grammars = this.record.grammars().map((g) => ({ module: g.module, ids: g.ids, arm: async (ctx, found) => {
+        try { await g.arm(ctx, found); }
+        catch (e) {
+          found.push({ check: g.module, severity: "error",
+                       message: `${g.module}'s grammar threw, so it judged nothing and the document is not passed: `
+                              + `${fmSafe(e && e.message ? e.message : e).slice(0, 200)}` });
+        }
+      } }));
+    } catch (e) {
+      return [{ check: "C-2.8", severity: "error",
+                message: `the registered grammars could not be read, so the entry requirements were not judged: `
+                       + `${fmSafe(e && e.message ? e.message : e).slice(0, 200)}` }];
+    }
+    return checkInquiryEntry(bundleMd, { ...(opts && typeof opts === "object" ? opts : {}), grammars });
   }
 
   /* ---------------------------------------------------------------- content R41: a re-read that staled rows */
@@ -2779,6 +2826,17 @@ export function inquiryOf(host, deps) {
     record.declarePurge("inquiry", INQUIRY_TABLES);
     promotion.registerStep("inquiry", { check: (c) => k.check(c), project: (c) => k.project(c) });
     if (typeof content.onStale === "function") content.onStale("inquiry", (notice) => k.staled(notice));
+    /* R36 (N136): the `legs` field read from this module's table (retrieval R62); N405: the migrated arm of
+       `surfaced_in` on retrieval's single-bundle answer (its R56). Retrieval is created at start before any module
+       reaches this one; a stand-in that offers neither registration is left alone. */
+    const retrieval = k.retrieval;
+    if (retrieval && typeof retrieval.registerField === "function")
+      retrieval.registerField("inquiry", "legs", LEGS_RELATION);
+    if (retrieval && typeof retrieval.registerProjectionDecoration === "function")
+      retrieval.registerProjectionDecoration("inquiry", (row) => {
+        const m = row && normalizeType(row.object_type) === "inquiry" ? k.migratedSurfacing(row.bundle_id) : null;
+        return m ? { surfaced_in: m } : {};
+      });
   }
   return k;
 }
