@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #73 · session_01SgBCnPS48MxiscmhoWHwzR · depth 1
 
-**Jobs** · legacy-checks: LEGACY-CHECKS #11 session_01TaobwHYryXf8vfbvWkYqUz; docprofile: DOCPROFILE #2 session_01PzNztiLm9r2dBH43cVX69y; membership: MEMBERSHIP #10 session_01FgiHtCg8KEHDB2sC7rKq9y
+**Jobs** · legacy-checks: LEGACY-CHECKS #11 session_01TaobwHYryXf8vfbvWkYqUz; docprofile: DOCPROFILE #2 session_01PzNztiLm9r2dBH43cVX69y; membership: MEMBERSHIP #10 session_01FgiHtCg8KEHDB2sC7rKq9y; record-core: RECORD-CORE #9 session_015Z2ibFGipKFWMV5BopFcPH
 
 Opened by BOB #73, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ caf5106554, T16 closed (K571). Cut from `draft-T17.md`, re-read against T16's close (K564–K573): T16's layers 8, 11 and legacy-tests folded (K566, K571), N362, N374, N375 worded (K565, K569), and Bob's priority on converting the old tests (K572) carried by the inventory's entries (K573). An `N` entry's text is in `build/plan/next.md`; the old battery's classes in `build/plan/legacy-inventory.tsv`. Bob's weekly meter at the opening: 48% (K568).
 
