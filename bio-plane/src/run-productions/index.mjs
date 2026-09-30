@@ -487,7 +487,9 @@ export class RunProductions {
      * document and promotes it (its R28), so the document stays the authority (D-21) and the promotion judges it. The
      * Session Log entry names the run. A document the grammar cannot extend in place (its `UNSPLICEABLE_BASIS`) is
      * C-27.14; any other refusal of the write, basis-versions' or the promotion's, is returned unchanged, and stored
-     * under the same key (R2). */
+     * under the same key (R2). THE VERDICT IS THIS SITE'S OWN (N411): the relay states `ok: false` and names the code
+     * and reason it carries, so the refusal is never read as a verdict inherited from the spread; every other field is
+     * the provider's, unchanged (R3). */
     const pv = persisted.version;
     const promoted = this.basisVersions.appendVersion({
       target,
@@ -510,7 +512,9 @@ export class RunProductions {
         "this question's version block is in a shape the restricted frontmatter grammar cannot be "
         + "extended in place, so nothing was written. The grammar has no escapes and a guess would "
         + "corrupt the document silently.", { target, name }));
-    if (!promoted || !promoted.ok) return remember({ ...promoted, code: promoted?.code ?? promoted?.reason, target, name });
+    if (!promoted || !promoted.ok)
+      return remember({ ...promoted, ok: false, reason: promoted?.reason ?? promoted?.code,
+                        code: promoted?.code ?? promoted?.reason, target, name });
     /* END DEC-49 REGION is-suggest-write */
 
     /* R5 — THE ANSWER IS ASSEMBLED OUT OF THREE NAMED GROUPS AND LABELS ITSELF (D-235). `record`: read back out of
