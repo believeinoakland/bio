@@ -72,6 +72,7 @@ Each move: the owner adds the family to its own table (the file control-plane al
 
 ### Layer 2
 
+- **record-core** · N406 (K598): `afterCommit(fn)`, a new R beside R32 (run now outside a transaction; just after the outermost commit inside one; dropped on rollback, the savepoint's included). Merge early for reevaluation's share (layer 7).
 - **record-core** · (1) §1b's seam: `registerGrammar`/`grammars()`, `auditPass` passing them (a new R beside R59; R18 amended). Merge early for promotion. (2) ✱ C-75 `PER_ITEM_CHECKS` (10176–10223) into `record-core/checks.mjs`: R55 met; importers: record-core alone. (3) C-59.5 (`PROJECT_ID_CHECKS` row, 9310–9354) and C-102.1–.3 (`REGISTRATION_CHECKS` rows, 10225–10330) copied into its table (R27; the note at `record-core.md`:252 re-worded); the split tables leave when promotion and ratification hold theirs (T19).
 - **membership** · Its eight families (≈480 lines: `AI_CREDENTIAL_CHECKS` 6511–6626, `MEMBER_ID_CHECKS` 8932–8953, `SIGNER_ENROLMENT_CHECKS` 8955–8991, `CUSTODIAL_CHECKS` 8993–9098, `PROJECT_AUTHORITY_CHECKS` 9100–9125, `PROJECT_VISIBILITY_CHECKS` 9127–9163, `PROJECT_JOIN_REQUEST_CHECKS` 9165–9228, `CASE_AUTHORITY_CHECKS` 9255–9278) and C-33.28/.48 into `membership/checks.mjs`, family names kept (the guard's and `dec49Row`'s suffix harvest); Uses (`membership.md`:149) re-worded; `legacy-store`'s imports (`store.mjs`:375–381) rewired. Merge early for promotion. Importers re-pointing: promotion (L2), case-authoring and review tests (L8).
 - **promotion** · (1) §1b: the gate passes `record.grammars()` (R27). (2) ✱ The tables it alone imports: `PROMOTED_TYPE_CHECKS` C-86 (10483–10544), `PROJECT_CREATION_VISIBILITY_CHECKS` C-97 (9230–9253), `MECHANICAL_FIELD_SETS` (4202–4225), `withProducingGroup` (9408–9425), `projectNameKey` with `checkProjectNameUniqueness` C-77 (4226–4323; no product caller: moved as carried, K6, BOB-4); Uses (`promotion.md`:119) re-worded. (3) Re-point `CUSTODIAL_CHECKS` and `PROJECT_VISIBILITY_CHECKS` to membership. (4) **The stamp, last (K425):** every row change since 1.47.0: T17's layers 3+ `awaiting stamp` (N382's new tasks code for `NOT_YOURS`; N383's two case-authoring `where`s; whatever N396–N399 add; capture none, K580); T17's legacy-tests; T18's layers 1–2 (C-35 in text-chain; C-75, C-59.5, C-102.1–.3 in record-core; membership's families and C-33.28/.48; promotion's own; each a second home until T19 unless BOB-1). `ROW_CENSUS` re-pinned. Rows moved at T18's layers 3+ are T19's stamp. Split-table rows (C-26.12, C-64.1, C-59.1–.4, C-102.4–.9, C-33.21/.24/.38/.49, C-67.1, C-32.5), C-18.6/.7 and `CHECK_RETIREMENTS` wait for T19 (sizing).
@@ -98,6 +99,7 @@ Each move: the owner adds the family to its own table (the file control-plane al
 
 ### Layer 7
 
+- **reevaluation** · N406 (K598; replaces N378): `raise` hands R8's listener calls to record-core's `afterCommit`, writing `listeners_failed` onto its answer; tested with a rolled-back caller and a nested savepoint rolled back under a committing outer.
 - **reevaluation** · Re-point its test's `VERSION_NOTICE_CHECKS` to content.
 
 ### Layer 8
