@@ -30,3 +30,7 @@ Size (session_011qbqAh8m73FQnGqGT9f8qb): test runs 3, module lines 0
 ## J1 · REPORT
 
 docprofile: `docprofile/doctypes/staff-directory.mjs`:177 emits each entity with kind "contact" and key "contact:<address>", so the reference extraction records (R19, R46: raw kind:key) is "contact:contact:<address>" in reading_refs.ref and the name terms; every other type emits a bare key (meeting:2101). docprofile's key should be the bare address; any reader of contact: refs checked with it. My N391 test asserts the key ends with the address, so it holds either way.
+
+## J2 · COMPLETE
+
+N391 applied: staff-directory-e2e converted to `bio-plane/test/m/extraction/staffdirectory.test.mjs` (3 tests, R4 R11 R12 R17, real fixtures copied to the tests path, real pdf-worker member bound by its fetch, not the bundle). Old suite untouched; the assertion map and what is not carried are in the record. test/m/extraction 94/94; format, architecture, coverage (59/59), ownership 0 failures. No module code changed. REPORT J2: docprofile's doubled contact: key.
