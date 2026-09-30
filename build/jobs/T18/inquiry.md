@@ -1,3 +1,11 @@
 # inquiry (T18)
 
 **Status** · session_016DJXNscE3zEJMBXUbRNAPx · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+N405, the migrated surfaced_in arm: as registered it cannot reach the answer. retrieval R56 applies decorations in the modules' total order and merges them later-over-earlier (`{...acc, ...v}`, retrieval/index.mjs:449). ai-runs (after inquiry in MODULE_ORDER) answers `surfaced_in` for EVERY inquiry: `{recorded:false, stated:"not recorded", ...}` when it holds no surfacing row (its R27). legacy-store's arm worked only because legacy-store is last. So an inquiry registration's `surfaced_in: {migrated...}` is always overwritten, and the migrated question would read "not recorded" (the rec173-migration-replay convert's arm fails).
+
+ai-runs' own requirements already name the seam the other way: its Uses (ai-runs.md:98) "inquiry: the migration-replay arm of surfaced_in (R27; map §5.8)", and R27's code comment says the arm is inquiry's.
+
+My best reading, which I am building: inquiry offers the arm as a read, `migratedSurfacing(id)` (the object legacy-store's #surfacedIn answers, or null; never throws; not gated, for in-process callers), AND registers its R56 decoration as N405 says (so it holds when nothing later answers the key); legacy-store's registration and #surfacedIn go (§12.2). For the answer to be right end to end, ai-runs' `surfacedIn` answers inquiry's `migratedSurfacing(id)` when it holds no surfacing row, else "not recorded" (its R27, ai-runs' job this layer: a CHANGE to AI-RUNS #5). Alternative: retrieval's merge keeps an earlier module's key (retrieval is closed). Also: inquiry.md has no R for the arm; I propose a new R49 (the read and the decoration), BOB's wording. Say if you want it otherwise.
