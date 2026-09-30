@@ -6,7 +6,7 @@
 
 - **Project home** gains a **Plans** list beside cases and actions: each plan's title, its subjects with their support (established, short, hypothetical), how many options are chosen, and the next checkpoint.
 - **The plan page** (the substrate's S11) is one page per plan with four parts, top to bottom: **Subjects**, **Options**, **Scenarios**, **Started**. A strip under the title shows the checks (R19) in words; each check links to what it is about.
-- **The queue** carries three new items: a checkpoint due (an obligation of the group's own), a proposed escalation stage (an obligation), an action's deadline passed (a condition). They reach members as Bob's notification rulings provide (DEC-10, DEC-69, DEC-70 and DEC-94): once at the occurrence, dispositionable, ageing; an overdue deadline notifies again only at its stage's own interval.
+- **The queue** carries three new items: a checkpoint due (an obligation of the group's own), a proposed escalation stage (an obligation), an action's deadline passed (a condition). They reach members as Bob's notification rulings provide (DEC-10, DEC-69, DEC-70 and DEC-94): the deadline reminders the member asked for when choosing the option, fired as asked, each offering another or none; an overdue deadline notifies once; a nearing deadline changes only how the item looks; nothing repeats unless the member asks.
 
 ## 2. The path, step by step
 
