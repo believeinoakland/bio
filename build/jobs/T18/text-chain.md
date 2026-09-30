@@ -1,6 +1,6 @@
 # text-chain (T18)
 
-**Status** · session_01N7QX5khED3EnvE1RYee7kL · depth 2 · WAITING ON BOB (J1: the CHANGE that record-grammar merged) · handled B2
+**Status** · session_01N7QX5khED3EnvE1RYee7kL · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
