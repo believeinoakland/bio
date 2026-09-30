@@ -1,0 +1,59 @@
+# queue (T16)
+
+**Status** · session_01PmQhGaaXRwTDaJ2GCHRzx1 · depth 2 · COMPLETE · handled B4
+
+## Completion (QUEUE #5)
+
+**Entries applied** (N363 queue's share, K531, K533; N345's share; B1–B4).
+- **R1 amended** (N345): `queuestate.mjs` catalogues `contradiction-duty` and `contradiction-duty-unseen` (OBLIGATION) and `contradiction-lead`, `contradiction-plurality`, `contradiction-plurality-unseen`, `side-corrected`, `tension-after-publication` (FINDING), each with its sentence. In before the switch to `feedItems` (89e91bd74c).
+- **R46**: `#contradictionDisposition` at the mint, reading the subject shapes K558 ruled (`queue-producers` R8): the duty (`instead` clarify/take up, or `contradictionresolve` with its `inquiry` once taken up), the lead (`scope: candidate`, `key`/`keyed_on`/`requires` on the candidate, dismiss/take up), the plurality (no set-aside; clarify/take up), the two unseen kinds (opt in until one of the member's party projects has, respond once one has), between projects (the relay acts added), side-corrected (R12's project-scoped disposition with `acts: [reevaluationrecord]`), tension-after-publication (`instead: publish`).
+- **The switch to `queue-producers`** (B3, K561): the producer code (`#conditionHomes` … `#conditionsRecheckDue`, `#queueConditions`, `#conditionsRenderDeferred`, `#obligationsBiasDebt`, `#hiddenBundles`, `#bundleRedactor`, the basis-versions and admin aliases, their statics) and `proposals.mjs` removed; every non-task item comes from `queueProducersOf(ctx, deps).feedItems({member, viewer, now, identity, homesOf, optionsOf})`, `homesOf` R7's walk and `optionsOf` R12's options, handed whichever of its providers queue was given (`Queue.PRODUCER_DEPS`). R6 publishes its `facts`: `objective_gap_projects_bound`/`_truncated`, the new `contradiction_projects_bound`/`_truncated`, `unattributed_readings`; R15 reads its `dispositions`. The mint stamps `catalogue_id` (R2) after `kind`. The lead's set-aside stays at the mint (R18).
+- **The switch to `tasks`** (B4, K562): the inbox removed from queue's files (the drain, list, forward, resolve, routing, grammar, actor fence, `inboxCheck`, `audit`, `seedLedger`, the `task-drain` consumer, `armDrain`; the TASK_DRAIN statics and helpers; `tasks` from `QUEUE_TABLES`/`QUEUE_SCHEMA`; `QUEUE_MACHINE_CHECKS`, `TASK_ACTOR_CHECKS`, `QUEUE_INBOX_CHECKS` and `checkInboxGrammar` from `queue/checks.mjs`; `queueOps`' four task ops). R8 reads `tasks.recentTasks({viewer, limit: cap × 2})` with queue's own member/unassigned filter and DEC-16's single event-state test kept; R39 `tasks.resolvedTasks({viewer, since, limit: 65})`; R19 `tasks.taskExists`. **Registrations as draft §3.3**: `queueOf` declares `queue_state`, `queue_item_mutes`, `finding_dispositions` to purge, registers R42's three figures and `queue-renotify`; nothing else (so tasks' own registrations are the live ones).
+- **R42**: `counts(hid)` answers `findingDispositions`, `queueState`, `queueItemMutes`; `COUNT_KEYS` three.
+- **R11**: unchanged; the new kinds pass it, a producer kind the catalogue lacks refuses the whole feed (tested over the stubbed producer).
+- **Every item and answer byte-equal**: over a world with every producer firing, the serialised feed (admin credential and an administrator member) equals the pre-switch commit's but for B3's announced changes (export-performed `bounds.limit` 200, concluded-elsewhere's `basis.detail`) and R6's new contradiction fields; across the tasks switch, byte-identical (`cmp`).
+- **Tests re-mapped (draft §3.5)**: `producers.test.mjs`, `proposals.test.mjs`, `inbox.test.mjs` removed (their ids are queue-producers' and tasks'); `invariants.test.mjs` holds queue's share of R35, R36, R37; `ledger.test.mjs` R42's three figures (the tasks figure asserted absent here and present through record-core, tasks'); `contradictions.test.mjs` R1, R2, R6, R11, R19, R31, R32, R46 over a stubbed `feedItems`; the test world builds a real `tasks` beside queue and the N345 providers' empty fakes.
+
+**`uses` edges no longer imported** (for BOB to drop from `modules.json`): `promotion`, `host-governor`, `provenance`, `capture`, `capture-requests`, `basis-versions`, `ai-runs`, `publication`, `reevaluation`, `intent`, `monitoring`, and `contradiction` (never imported). Queue imports `legacy-checks`, `record-core`, `membership`, `connections`, `progressions`, `bias`, `observation-log` (through `queuestate.mjs`), `scheduler`, `affordances`, `tasks`, `queue-producers`; `inquiry`, `actions`, `legacy-store` stay declared as K531 keeps them.
+
+**`not yet met` marks my work meets**, for BOB to strike: R1 *(N345)*, R6 *(N345)*, R46 *(N345)*. R18 (REC-202) stays, as B1 says.
+
+**Rows awaiting stamp** (promotion's, N318, for T17): C-19.1, C-19.2, C-32.10, C-32.11, C-76.1 leave `queue/checks.mjs` (their only copy now `tasks/checks.mjs`, `where` there); the promote gate's composition loses queue's step (`registerStep("queue", …)`), tasks' step now the live one; record-core's audit loses queue's registration likewise.
+
+**Found elsewhere (REPORT).**
+- `civicos-ui/` and affordances: no hit for the new kinds, the R46 act names, `contradiction_projects_*` or the retired check families. Hits for retired code: `civicos-ui/test/notifications.test.mjs`:205 and :650 read `Queue.LEAD_TAKE_UP` (now queue-producers'), red at :650; `civicos-ui/test/queue-unmute.test.mjs`:83 and `queue-peritem.test.mjs`:108 pass `TASK_DRAIN_DELAY_MS`, which is tasks' binding now (harmless).
+- Old-battery reds this job makes, for legacy-tests (41 suites naming queue, each run on this branch and on `tranche/T16`; 12 turn red, each a reading of source text, a path or a retired static, none a change of behaviour): `test/airuns.test.mjs` (SWEEP floor: the index-reader's list shrank with the producers' reads), `test/current.control.mjs`, `test/d125-findingmute.test.mjs`:50 (reads `src/queue/proposals.mjs`), `test/d280-strengthbar.test.mjs` (the D-280 sites `#routeTask` and `#leadBasisAbsence` read in queue's source), `test/identity-claims.test.mjs` (f) (taskforward/taskresolve/taskdrain read in queue's ops), `test/mint-ledger.test.mjs` S6 (the TASK mint site read in queue), `test/project-sight.test.mjs` 11g000/11g++ (queue's route map no longer carries `tasks`), `test/queue-conditions.test.mjs`:417 (a producer read in queue's source), `test/severedhomes.test.mjs` STRUCTURAL (`#routeTask` among the severance rule's callers), `civicos-ui/test/bound-sweep.test.mjs` (3 of 202: capped-op roster), `civicos-ui/test/member-respect.test.mjs` ARM 4d (`taskResolve`/`taskForward`'s set branch read in queue), `civicos-ui/test/notifications.test.mjs`:650. The other 29 have the same verdict as on `tranche/T16`.
+- DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`): 27 failures on `tranche/T16`, 20 on this branch. Gone: the four "defined TWICE", the four unclaimed regions, three arm G double sites (the coexistence TASKS #1 J1 (3) reported). New: only `vocabularyTerms` 115 → 122 (R1's seven terms; already legacy-tests', B2). Arm G stands at 55 against its ceiling 54 (58 on the tranche).
+- `control-plane`: `control-plane/index.mjs`:52 imports `../queue/checks.mjs` as `M_QUEUE`; the rows that left it are tasks' (`MODULE_CHECK_FILES` needs `../tasks/checks.mjs`, TASKS #1 J1 (2)).
+- Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs`; not rebuilt.
+- queue's requirements: its Uses lines for the moved services can now go as its "When this module's N363 job lands" bullet says; R8's text still says "each open or forwarded task", which the feed reads through `recentTasks` over `cap × 2` rows of any status (draft O1, unchanged, and O2's ungated `taskExists` likewise).
+
+**Deferred.** Nothing.
+
+**Tests and checks.**
+- `node --test test/m/queue/`: tests 45, pass 45, fail 0, todo 0. Negative control: with R46's dispatch disabled, 2 of `contradictions.test.mjs`' 5 fail.
+- `node --test test/m/` (the whole module battery, B4's condition): tests 3159, pass 3137, fail 0, todo 22.
+- Layer tests: none named in `build/manifest.md`.
+- `format`: 72 modules, 67 requirements files; 0 failures. `architecture queue`: 12 product files, 41 relative imports; 0 failures. `coverage queue`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership queue tranche/T16`: 16 files changed; legacy-store, legacy-checks, legacy-index 0 lines; 0 failures.
+
+Size (session_01PmQhGaaXRwTDaJ2GCHRzx1): test runs 19, module lines 2467
+
+## J1 · REPORT
+
+R1 is in, alone, on `job/T16/queue` @ 89e91bd74c (`queuestate.mjs` and its R1 test only): N345's seven kinds with their sentences (OBLIGATION contradiction-duty, contradiction-duty-unseen; FINDING contradiction-lead, contradiction-plurality, contradiction-plurality-unseen, side-corrected, tension-after-publication). Queue's tests 69 pass, 0 fail. It can merge to the tranche now, ahead of QUEUE-PRODUCERS' N345 arms (draft §6).
+
+Found, not mine: `civicos-ui/check-refusal-codes.mjs` (legacy-ui) arm E now measures `vocabularyTerms` 122 against its floor 115 (FLOOR SLACK). The +7 are these seven terms. It had 19 other failures on this tranche before my change, and 20 after; this one is the only new one.
+
+## J2 · QUESTION
+
+R46 (dispositions at the mint) needs facts only the producer carries. This is the seam with QUEUE-PRODUCERS. My best reading, which I am building to now (queue's #dispositionOf reads the item's `subject`):
+- a contradiction-duty, -lead or -plurality item: `subject: {kind: "contradiction_candidate", id: <candidate>, state (contradiction R26), inquiry (its contradiction inquiry, when taken_up), between_projects: true|false, parties: [{project, opted_in: true|false}] (only the member's party projects, as contradiction R25's "Between projects" gives them)}`;
+- a contradiction-duty-unseen or -plurality-unseen item: `subject: {kind: "contradiction_notice", id: <candidate>, parties: [{project, opted_in}]}` (the member's projects that hold R50's notice);
+- side-corrected and tension-after-publication need nothing more than what R12 already reads.
+Where the member has several party projects, `contradictionoptin` is offered while any has not opted in and `contradictionrespond` once any has (both when both are true); with one project that is R46's "until … then".
+A contradiction-lead's disposition carries `key: <candidate>`, `keyed_on: ["candidate"]`, `requires: ["candidate"]` beside R46's fields (as the notice's disposition does).
+Please confirm or correct, and pass the subject shape to QUEUE-PRODUCERS (its R4, R7 items). Until then I build and test R46 against this shape through a stubbed `feedItems`.
+
+## J3 · COMPLETE
+
+Complete: every entry met and test/m/ whole-green on job/T16/queue (3159 tests, 3137 pass, 22 todo, 0 fail). R1 amended (N345's seven kinds) and R46 at the mint on K558's subject shapes; rewired to queue-producers' feedItems (facts published, R6's contradiction bound new, catalogue_id stamped at the mint) and to tasks R6's three reads; producer code, proposals.mjs and the whole inbox removed; queueOf declares three tables, registers three figures (R42) and queue-renotify only. Feed byte-equal across both switches but for B3's announced changes. Queue 45/45; format, architecture, coverage (37/37), ownership: 0 failures. Please strike R1, R6, R46's not-yet-met marks and drop uses edges promotion, host-governor, provenance, capture, capture-requests, basis-versions, ai-runs, publication, reevaluation, intent, monitoring, contradiction. Awaiting stamp (T17): C-19.1/.2, C-32.10/.11, C-76.1 leave queue/checks.mjs; the promote gate loses queue's step. REPORT in the record: 12 old-battery suites turn red for legacy-tests (source reads of moved code, by file and line); DEC-49 guard 27 -> 20 failures, only vocabularyTerms new; control-plane's M_TASKS; dist/bio-plane.bundled.mjs stale. Record: build/jobs/T16/queue.md.

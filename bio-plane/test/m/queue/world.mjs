@@ -8,6 +8,7 @@ import { SCHEMA } from "../../../src/schema.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { queueOf } from "../../../src/queue/index.mjs";
+import { tasksOf } from "../../../src/tasks/index.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -54,9 +55,12 @@ export function world(fakes = {}, { bare = false } = {}) {
   if (!bare) boot();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
-  const q = queueOf(host, { record, membership, start: false, now: () => w.now, ...F });
+  /* `tasks` real (its R6 is what the feed reads), over the capture and provenance fakes; its table made at boot. */
+  const tasks = tasksOf(host, { record, membership, start: false, now: () => w.now, capture: F.capture, provenance: F.provenance });
+  if (!bare) tasks.migrate();
+  const q = queueOf(host, { record, membership, start: false, now: () => w.now, tasks, ...F });
   const w = {
-    db, sql, host, record, membership, q, fakes: F, statements, now: NOW, boot,
+    db, sql, host, record, membership, q, tasks, fakes: F, statements, now: NOW, boot: () => { boot(); tasks.migrate(); },
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     all: (s, ...a) => db.prepare(s).all(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {
@@ -89,7 +93,9 @@ export function world(fakes = {}, { bare = false } = {}) {
   return w;
 }
 
-/** Every provider the feed and the acts reach, answering nothing until a test says otherwise. */
+/** Every provider the feed and the acts reach, answering nothing until a test says otherwise. queue hands the
+ *  producers' own (governor … contradiction) to `queue-producers`, whose real `feedItems` then reads them, unless a
+ *  test gives `producers` itself. */
 export function defaultFakes() {
   return {
     governor: { governorHolding: () => [] },
@@ -105,12 +111,16 @@ export function defaultFakes() {
     aiRuns: { runFor: () => null },
     bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }),
             settled: ({ limit }) => ({ debts: [], limit, truncated: false }) },
-    publication: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }) },
-    reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }) },
+    publication: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }),
+                   caseTensions: () => ({ ok: true, cases: [], limit: 200, cursor: null }) },
+    reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }),
+                    correctedDependents: () => ({ ok: true, entries: [], limit: 200, truncated: false, cursor: null }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
     monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
                   archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
+    contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
+                     conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
     affordances: { affordanceFacts: () => ({ ok: false }) },
     scheduler: { arm: async () => null, register: () => ({ ok: true }) },
   };

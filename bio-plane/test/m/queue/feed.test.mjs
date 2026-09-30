@@ -259,7 +259,7 @@ test("R32, R33: one state, N homes; a hidden bundle is named nowhere and counted
   assert.equal(f.items.filter((i) => i.id === "TASK-2026-0001-a").length, 1, "one item, however many homes");
   assert.deepEqual(byId(f)["TASK-2026-0001-a"].case.ancestors.map((a) => a.id), ["INQ-1", "INQ-2"]);
   assert.ok(!JSON.stringify(f).includes("PRJ-H"));
-  assert.equal(w.q.taskResolve({ id: "TASK-2026-0001-a", actor: "alice" }).ok, true);
+  assert.equal(w.tasks.taskResolve({ id: "TASK-2026-0001-a", actor: "alice" }).ok, true);
   f = w.feed("alice");
   assert.equal(byId(f)["TASK-2026-0001-a"], undefined, "resolved once, it leaves every home");
 });
