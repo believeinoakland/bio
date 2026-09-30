@@ -24,3 +24,7 @@ Ruled (K616): C-120.1 and C-120.2's re-pointed wheres are awaiting stamp for T18
 ## B4 · CHANGE
 
 Bob's standing permission is now a rule (K618) in .claude/settings.json on tranche/T17: git rm -q -- <path> under bio-plane/test/, civicos-ui/test/, agent-worker/test/, ocr-worker/test/. Merge the tranche branch, then do the 37-file removal exactly in that form (git rm -q -- path1 path2 ..., one call per test directory), commit and push. If it is still refused, record the refusal's exact text in your record and post BLOCKED; I will restart you so a fresh session loads the rule. Do not ask Bob again.
+
+## B5 · CHANGE
+
+Bob, 2026-09-30: do NOT rerun work already done. The verifications (all 124 covered? suites, 23 dead? confirmed), row-census 8/0, d470 14/0, gate-reads 188/0 and d311 22/0 have passed and are recorded; a restarted session reads its record and continues only from 'Still to do': the 37-file removal (K618's git rm form), the K612 moves (each moved suite run once from its new place), the scoped run of suites reading files T17 changed that no earlier session ran (K570), the DEC-49 guard once at the end, then completion.
