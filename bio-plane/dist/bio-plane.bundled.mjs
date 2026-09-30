@@ -6831,6 +6831,7 @@ __export(checks_exports, {
   RECORDS_LAW_FENCE_CHECKS: () => RECORDS_LAW_FENCE_CHECKS,
   RECORDS_LAW_MAX: () => RECORDS_LAW_MAX,
   RESOLUTIONS: () => RESOLUTIONS,
+  RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   RISK_TIERS: () => RISK_TIERS,
   RISK_TIER_HISTORY_MAX: () => RISK_TIER_HISTORY_MAX,
   RISK_TIER_REASON_MAX: () => RISK_TIER_REASON_MAX,
@@ -88597,7 +88598,8 @@ var Conformance = class _Conformance {
   }
   /** R21 (N345; DEC-76 item 3, DEC-84 item 10): the rows a comparison may start from, as facts: `requires` from the
    *  side of the contradiction inquiry's candidate named `standardSide` (`a` or `b`, the member's, never defaulted) and
-   *  `did` from the other, each with its source, content id and date, labelled the record's and never an outcome; and
+   *  `did` from the other, each with its source, content id, date and `text` (the passage's words, `#sideText`; N362),
+   *  labelled the record's and never an outcome; and
    *  the question's resolution when it is concluded. R12's refusal applies. It writes nothing.
    *    {ok, wrote: false, contradiction, candidate, standard_side, rows: [{requires, did, origin: "record",
    *     machine_work: false}], resolution: null | {kind, …}, concluded, says} */
@@ -88617,7 +88619,7 @@ var Conformance = class _Conformance {
     if (!cand || !isObj12(cand.a) || !isObj12(cand.b)) return this.#contradictionInquiry(null, viewer);
     const fact = (x) => ({
       kind: x.kind ?? null,
-      text: x.text ?? null,
+      text: this.#sideText(x),
       note: x.note ?? null,
       source: x.source ?? null,
       content_id: x.content_id ?? null,
@@ -88639,6 +88641,20 @@ var Conformance = class _Conformance {
       concluded: !!from.resolution,
       says: FACTS_SAY
     };
+  }
+  /* R21 (N362, K569): a side's `text`. A side naming a content id (a leg or an extent) carries the passage's words as
+     `content.passageText` answers them (its R46), `null` where it answers `null` (a stale row, text not held whole);
+     a claim or stance side names no passage and keeps its claim's words as contradiction shows them. Asked only of a
+     side this viewer already sees (the caller's R12 gate); a read that throws is `null`, never guessed. */
+  #sideText(x) {
+    const cid = str10(x.content_id);
+    if (!cid) return typeof x.text === "string" ? x.text : null;
+    try {
+      const t = this.content.passageText(cid);
+      return typeof t === "string" ? t : null;
+    } catch {
+      return null;
+    }
   }
   /* ===================================================================== *
    * R10: the notice reevaluation gives (its R8); R13, R17: the step promotion runs
