@@ -132,10 +132,10 @@ export class Filings {
     this.record = record;
     this.#deps = { host, membership, publication, provenance, content, actions, conformance, standards, consequences, promotion };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
-       function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer. */
-    this.producingGroup = typeof producingGroup === "function" ? producingGroup
-      : () => (this.promotion && typeof this.promotion.fact === "function" ? this.promotion.fact("producingGroup")
-        : { ok: false, reason: "FACT_UNAVAILABLE", fact: "producingGroup", detail: "no promotion module is reachable here" });
+       function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer.
+       Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
+       of promotion's is spelled here). */
+    this.producingGroup = typeof producingGroup === "function" ? producingGroup : null;
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     for (const m of SERVICES) { const fn = this[m].bind(this); this[m] = (...a) => withRow(fn(...a)); }
@@ -363,13 +363,16 @@ export class Filings {
     return out;
   }
 
-  /* R3's `group` (N331): promotion's fact `producingGroup` (its R40). While no provider answers (FACT_UNAVAILABLE or
-     FACT_FAILED, or a reader that throws) the group is undetermined, never unrecorded; a provider answering no value
-     says none is recorded. */
+  /* R3's `group` (N331): promotion's fact `producingGroup` (its R40). While no provider answers (promotion's refusal,
+     no promotion module reachable, or a reader that throws) the group is undetermined, never unrecorded; a provider
+     answering no value says none is recorded. */
   #group() {
     const SOURCE = "fact:producingGroup";
+    const read = this.producingGroup
+      || (this.promotion && typeof this.promotion.fact === "function" ? () => this.promotion.fact("producingGroup") : null);
+    if (!read) return { why: "no promotion module is reachable here to answer the fact producingGroup, so the producing group is undetermined" };
     let g;
-    try { g = this.producingGroup(); }
+    try { g = read(); }
     catch { return { why: "the producing group could not be read (its reader failed), so it is undetermined" }; }
     if (isObj(g) && "ok" in g) {
       if (g.ok !== true)

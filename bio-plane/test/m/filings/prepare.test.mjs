@@ -188,6 +188,20 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   assert.match(ug.unfilled.why, /no provider/);
   assert.doesNotMatch(ug.unfilled.why, /is recorded/);
   assert.ok(un.text.includes(unfilledMarker("group")));
+  /* no promotion module reachable (no host, none given; N355): undetermined, said so, with no refusal code of
+     promotion's spelled by filings */
+  const f3 = new Filings({ storage: x.st, record: x.record, actions: x.actions, publication: x.p, provenance: x.prov,
+                           content: x.content, profiles: () => [other], now: () => x.clock.now });
+  assert.equal(f3.promotion, null, "no promotion module is reachable");
+  const np = f3.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
+  const npg = group(np);
+  assert.equal(np.ok, true);
+  assert.equal(npg.blank, null);
+  assert.match(npg.unfilled.why, /no promotion module is reachable/);
+  assert.match(npg.unfilled.why, /undetermined/);
+  assert.doesNotMatch(npg.unfilled.why, /is recorded|FACT_/);
+  assert.doesNotMatch(JSON.stringify(np), /FACT_UNAVAILABLE/);
+  assert.ok(np.text.includes(unfilledMarker("group")));
   /* a reader handed in (legacy-store's, until layer 10) still works: a value, or the fact's own answer */
   const handed = (fn) => group(new Filings({ storage: x.st, record: x.record, host: x.host, producingGroup: fn,
     publication: x.p, provenance: x.prov, content: x.content, profiles: () => [other], now: () => x.clock.now })
