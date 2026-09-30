@@ -30,7 +30,7 @@ import { createHash } from "node:crypto";
 import { deflateSync } from "node:zlib";
 import { ocrWorkerDef, WASM, MODEL } from "./memberworker.mjs";
 import { makeMember, NAMESPACES } from "../src/member.mjs";
-import { MEASURED_BY, MAX_FRAME_BYTES, REFUSALS } from "../src/contract.mjs";
+import { MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES as CONTRACT_NAMESPACES, PLANE_OPS, REFUSALS } from "../src/contract.mjs";
 import { renderPageToPixels } from "../../pdf-worker/src/pagepixels.mjs";
 import { checkAnchor, checkConfidence } from "../../bio-plane/src/textchain.mjs";
 import { BASIS_GRADES } from "../../bio-plane/checks/bio-checks.mjs";
@@ -64,6 +64,8 @@ const WIRE = [];
 const SCAN = F("../../pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf");
 const SCAN_SHA = hex(SCAN);
 const IND_UPRIGHT_SHA = "ac4eb57f0f966f5d5b07eca8c97b065ab56746f32cfe33f3ba8b31cd1579efbc";
+/* D-460's committed two-page fixture (a copy of the plane battery's `d460/agenda-p2.pdf`): two image-only pages. */
+const TWO_PAGE = F("./fixtures/agenda-two-scanned-pages.pdf");
 
 function pdf(objs) {
   const chunks = [Buffer.from("%PDF-1.7\n", "latin1")];
@@ -267,14 +269,12 @@ console.log("\n--- A2 · R2, R3, R16: the store is named, and it is exactly `bio
   t("R16 the member's set is exactly the two names, frozen", [[...NAMESPACES], Object.isFrozen(NAMESPACES)],
     [["bio", "scratch"], true]);
 
-  /* THE COPY AGES: the plane's own set, read from its source (the plane is a later module and cannot be imported),
-     must equal the set this member states on the wire. */
-  const PLANE = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
-  const scratchName = (PLANE.match(/^const SCRATCH = "([^"]+)";$/m) || [])[1];
-  const planeSet = ((PLANE.match(/^const NAMESPACES = Object\.freeze\(\[([^\]]*)\]\);$/m) || [])[1] || "")
-    .split(",").map((x) => x.trim()).filter(Boolean).map((x) => (x === "SCRATCH" ? scratchName : JSON.parse(x)));
-  t("R16 the plane's namespace set was read (not an empty corpus)", planeSet.length >= 2, true);
-  t("R16 the set this member refuses with EQUALS the plane's `namespaceGate` set", unknown.body.namespaces, planeSet);
+  /* THE COPY AGES, and the check that it has not is control-plane's (layer 11, N402): this layer-1 member cannot
+     import the plane, so it EXPORTS its set from the engine-free contract and the plane pins it against its own
+     namespace gate. Here: the set on the wire is the exported set, and the member's own module states the same. */
+  t("R16 R22 the set this member refuses with EQUALS the exported, frozen contract set",
+    [unknown.body.namespaces, [...CONTRACT_NAMESPACES], Object.isFrozen(CONTRACT_NAMESPACES), NAMESPACES === CONTRACT_NAMESPACES],
+    [["bio", "scratch"], ["bio", "scratch"], true, true]);
 }
 
 console.log("\n--- A3 · R4, R6: pages — a non-empty array; ONE page per call, the lowest; the rest deferred ---");
@@ -582,6 +582,10 @@ console.log("\n--- A9 · R15, R21: what the member touched — only CAPTURES.get
   t("R21 R15 the only thing touched on CAPTURES was `get`", [...new Set(w.bucket.log.filter(([k]) => k === "touch").map(([, p]) => p))], ["get"]);
   t("R21 no network call was made by the member in all of Part A", netCalls, []);
   t("R15 and the stand-in bucket's contents are unchanged", [...w.bucket.objects.keys()].length, 2);
+  /* The ops this member calls at the plane, declared for control-plane's pin (N402): none. It is called by the plane
+     and reads only CAPTURES.get, so its declared set is empty — and frozen, so no caller can add one to it. */
+  t("R22 R21 the member exports the plane ops it calls from its contract: none (PLANE_OPS is empty and frozen)",
+    [Object.keys(PLANE_OPS), Object.isFrozen(PLANE_OPS)], [[], true]);
   void b;
 }
 
@@ -604,7 +608,7 @@ const mf = new Miniflare({ workers: [
 ] });
 const bucket = await mf.getR2Bucket("CAPTURES");
 const STORE = "scratch";
-const puts = [["scan", SCAN], ["blank", BLANK], ["noise", NOISE], ["huge", HUGE], ["texty", TEXTY], ["notpdf", NOT_PDF]];
+const puts = [["scan", SCAN], ["twopage", TWO_PAGE], ["blank", BLANK], ["noise", NOISE], ["huge", HUGE], ["texty", TEXTY], ["notpdf", NOT_PDF]];
 const shaOf = new Map();
 for (const [name, bytes] of puts) { shaOf.set(name, hex(bytes)); await bucket.put(`${STORE}/captures/${hex(bytes)}`, bytes); }
 await bucket.put(`bio/captures/${SCAN_SHA}`, SCAN);
@@ -723,6 +727,24 @@ console.log("\n--- B3 · R6: ONE page per invocation, on the real member ---");
   t("R6 R7.2 the lowest is taken even when the document has no such page, and the rest stay deferred",
     [past.body.reason, past.body.page, past.body.deferred, past.body.refusal.render.reason],
     ["PAGE_NOT_RENDERABLE", 1, [3], "NO_SUCH_PAGE"]);
+
+  /* D-606, this member's share (converted from the plane's `d606-perpage-ocr` suite): a document of TWO scanned pages
+     (D-460's fixture, pixels only; page 1 is an agenda) is read past its first page by calling once per deferred page.
+     Each call is answered alone; the second is the same member answering the page the first deferred. */
+  const first = await ask("twopage", [1, 0]);
+  t("R6 a two-page scan asked for both: page 0 transcribed, page 1 deferred with the note",
+    [first.status, first.body.ok, first.body.pages.map((p) => p.page), first.body.deferred,
+     first.body.notes.some((n) => /ONE PAGE PER INVOCATION/.test(n))], [200, true, [0], [1], true]);
+  const second = await ask("twopage", first.body.deferred);
+  t("R6 R8 R9 the deferred page, asked alone, is transcribed: page 1, nothing deferred, anchored to p1",
+    [second.status, second.body.ok, second.body.pages.map((p) => p.page), second.body.deferred,
+     second.body.pages[0].regions.length > 0,
+     second.body.pages[0].regions.every((r) => r.source.ref === "p1" && r.source.page === 1 && checkAnchor(r.source) == null)],
+    [200, true, [1], [], true, true]);
+  t("R6 R21 the two calls answer different pages of the one capture: different frames",
+    first.body.image.pixels_sha256 !== second.body.image.pixels_sha256, true);
+  const again2 = await ask("twopage", [1]);
+  t("R21 the deferred page asked again answers the identical wire answer", JSON.stringify(again2.body), JSON.stringify(second.body));
 }
 
 console.log("\n--- B4 · R7: the real renderer's refusals pass through verbatim; the real bound; the real controls ---");
