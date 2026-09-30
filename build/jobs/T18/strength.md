@@ -1,3 +1,11 @@
 # strength (T18)
 
 **Status** · session_013c7GEWiwQ1d3AtiM5gG6dd · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Two points on N137 (R23's cache table), both with my best reading, which I am building now.
+
+(1) **`retrieval` is not in strength's `uses`** (`modules.json`, and the requirements' Uses list), but R23 has strength register its table with `retrieval` (R62, `registerField`). inquiry and basis-versions already declare `retrieval`. My reading: add `retrieval` (layer 5, earlier) to strength's `uses` in `modules.json` and to the Uses list ("`retrieval`: `registerField` (its R62), R23"). My factory imports `retrievalOf` for its default, so `architecture.mjs` fails until the line changes. Also in Uses, `promotion`'s `registerStep` now fills R13 (it is already listed).
+
+(2) **`store.mjs`**: plan rule (8) lists inquiry and ai-runs as the layer-6 editors of `store.mjs`, not strength. But moving the cache means legacy-store's copy stops being written or migrated. Under START's "a move out of the store deletes the legacy copy in this job where `from` allows (§12.2)", I am removing: the four `addColumns` rows for `bundles.inquiry_capture_strength` / `_state` / `inquiry_connection_strength` / `_state`, with their comment (~store.mjs 636–650); the index loop over those two columns (~745–750); the `#writeStrengthProjection` call in `#promoteProjections` and its comment (~1725–1732); and the method with its comment (~2250–2303). Strength registers its own projection step with promotion (R13, promotion R39) and writes `strength_cache` (bundle_id PK, per-axis grade and state), which is declared to purge and registered with retrieval for `capture` and `connection`. On a store written before this change, the migration copies the values from the `bundles` columns once where they exist, so no answer changes (retrieval R62). The addColumns block sits next to inquiry's `inquiry_basis_count` row (store.mjs 651), which inquiry's N136 also removes: adjacent hunks, so whichever of us merges second may conflict. Please serialise us, or tell me to leave `store.mjs` to inquiry or legacy-store and keep only my side (then legacy-store would keep writing the dead `bundles` columns until L10).
