@@ -43,3 +43,15 @@ N369, the catch in `contradictionFindings` (`src/inquiry/contradiction.mjs`:208�
 - `format`: 72 modules, 67 requirements files; 0 failures. `architecture`: 17 product files, 56 relative imports; 0 failures. `coverage`: 48 of 48 live requirement ids named by a test; 0 failures. `ownership` (tranche/T16): 8 files changed; legacy-store and legacy-checks 0 lines added; 0 failures.
 
 Size (session_01H5mTTXgEPXqH137mj1KHYa): test runs 35, module lines 3542
+
+## J2 · COMPLETE
+
+All four entries applied, tests green, checks clean; record `build/jobs/T16/inquiry.md` on `job/T16/inquiry` (merged with `tranche/T16` after B2).
+(1) N369: the catch is C-2.18 `CONTRADICTION_ARM_FAILED` (K543), inside `BASIS_REFUSED`, its own DEC-49 region; C-2.15 re-worded; the scalar-resolution case moved inside `is-resolution-complete`, so `RESOLUTION_INCOMPLETE` has one literal site. The table equals the requirement's word for word. Mark met: R47's "An arm that cannot judge" (N369).
+(2) N360: `divide` copies each apportioned leg's own lines from the parent (content_id, extents, extent_capture); the child's projected leg rests on the parent leg's passage.
+(3) W2: no test pinned R36's struck clause; nothing re-anchored.
+(4) K538: a doorbell capture reads as R26's unrecorded route does (author's letter under `ceiling`), and the entry says `stated_as: "authored"` whenever no measured route exists.
+Also fixed (mine): a grouped inquiry could not be divided at all (every child refused). A child now carries each group it holds whole, verbatim; one holding part of a group is ungrouped.
+Rows for T17's stamp: C-2.18 added, C-2.15's translation changed.
+Found elsewhere: reevaluation `corrected.test.mjs`:84–101 pins the old divide ("a divided citer's child is not caused"); with N360 the child C1 is now caused, as N360 intends. It is red (57/58) until reevaluation re-anchors it. legacy-tests: `civicos-ui/check-refusal-codes.mjs` `MULTI_SITE_CLOSED` declares `RESOLUTION_INCOMPLETE` as two literals, stale now (arm G). The two `CONTRADICTION_LINK_MALFORMED` failures are gone, and C-2.18 adds to the floors it re-pins. `bio-plane/dist/bio-plane.bundled.mjs` is stale (old C-2.15 text and catch). Ratification's `checks.test.mjs`:133 is red with or without me (legacy-checks' copy `/4` vs `/5`).
+inquiry 78 pass + 1 todo; users all green except reevaluation (above) and ratification (pre-existing); format, architecture, coverage 48/48, ownership: 0 failures.
