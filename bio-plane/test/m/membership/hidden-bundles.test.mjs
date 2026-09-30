@@ -42,9 +42,9 @@ const MACHINES = ["admin", "member", "probe", "daemon", "ai"].map((c) => `${MACH
 const REFUSED = [null, undefined, "", "anna", "junk", `${MACHINE_CLASS_PREFIX}robot`, "member:", "member:a b", "Admin",
                  " admin", 42, 0, true, {}, [], ["admin"]];
 
-test("R88 hiddenBundles is null exactly for R43's see-all arms: every machine credential and the founder's viewer", async () => {
+test("R88 hiddenBundles is null exactly for R43's see-all arms: every machine credential and the founder's viewer, in both spellings", async () => {
   const w = await hidWorld();
-  for (const v of [...MACHINES, "admin"]) {
+  for (const v of [...MACHINES, "admin", V("admin")]) {
     assert.equal(hiddenBundles(v), null, v);
     assert.deepEqual(seen(w, v), ALL(w), `${v}: R43 lets it see every bundle, so nothing is subtracted`);
   }
@@ -70,7 +70,6 @@ test("R88 for every other viewer it names exactly the bundles R43 does not pass:
   assert.deepEqual(check(V("cal"), "leaving"), ["PROJ-D", "PROJ-M"]);
   assert.deepEqual(check(V("dee"), "outside"), ["PROJ-D", "PROJ-H", "PROJ-M"], "a discoverable project too: EXISTENCE is not FULL");
   assert.deepEqual(check(V("second"), "an active administrator"), []);
-  check(V("admin"), "the founder's id as a member viewer");
   assert.deepEqual(check(V("nobody"), "an id no member holds"), ["PROJ-D", "PROJ-H", "PROJ-M"]);
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.deepEqual(check(V("dee"), "a revoked member"), ["PROJ-D", "PROJ-H", "PROJ-M"]);

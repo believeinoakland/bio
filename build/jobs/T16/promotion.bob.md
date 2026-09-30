@@ -1,6 +1,6 @@
 # BOB to promotion (T16)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,11 @@ Depth 2. Your entries (plan `build/plan/current.md` layer 2; opened K527): (1) N
 ## B2 · ANSWER · re J1
 
 Leave the answer's shape (K534). R29 defines `runCaseGate`'s answer as a verdict, `{gateVersion, ok, findings, warnings}`, each finding naming its `check`; C-102.9's answer is such a verdict, its one finding naming C-102.9, not a refusal. Adding `reason`/`code` would change a provided service's shape for every user (P5) to satisfy a test tool. The DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`) is legacy-tests' file: it learns to read a gate verdict by its findings' `check`, in T16's legacy-tests job. So your N242 share is: confirm the region answers C-102.9 through R29's verdict (with your no-fallback change, R33), name the guard's arm in your record for legacy-tests, and keep `registry.test.mjs`'s "R29's shape, whole (N275)" assertion as it is. Nothing to merge from the tranche for this answer.
+
+## B3 · CHANGE
+
+Membership gains a second row for your stamp: C-96.16 `SIGNER_KEY_REVOKED` (membership R89, K535), beside C-96.15. Both land when MEMBERSHIP #9 merges early; merge the tranche then and stamp both. No requirement of yours changed.
+
+## B4 · CHANGE
+
+MEMBERSHIP #9 has merged into tranche/T16 (C-96.15, C-96.16 in MEMBERSHIP_CHECKS; R83's MODULE_ORDER now holds sources, tasks, queue-producers, so your R39 order test should go green). Merge the tranche into your branch and stamp (entry 3).

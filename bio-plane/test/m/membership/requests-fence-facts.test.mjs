@@ -23,7 +23,12 @@ test("R49 projectRequest: a member asks first; NONE absent; FULL not outside; on
   assert.equal(ask(w, `${MACHINE_CLASS_PREFIX}member`, "PROJ-D", null, `${MACHINE_CLASS_PREFIX}member`).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.equal(ask(w, "dee").reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
-  assert.equal(ask(w, "admin", "NOPE", null, V("admin")).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER", "asked first, before sight");
+  assert.equal(ask(w, "admin", "NOPE", null, V("cal")).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER", "asked first, before sight");
+  /* N357: the founder's viewer in either spelling (R43) is the founder, at FULL sight of every project. */
+  for (const v of ["admin", V("admin")]) {
+    assert.equal(ask(w, "admin", "PROJ-H", null, v).reason, "PROJECT_REQUEST_NOT_OUTSIDE", v);
+    assert.equal(ask(w, "admin", "NOPE", null, v).reason, "NO_SUCH_PROJECT", v);
+  }
   assert.equal(ask(w, "cal", "PROJ-H").reason, "NO_SUCH_PROJECT");
   const absent = (p) => JSON.stringify(ask(w, "cal", p)).replaceAll(p, "<id>");
   assert.equal(absent("PROJ-H"), absent("PROJ-NEVER"), "a hidden project answers as an id that names nothing");
