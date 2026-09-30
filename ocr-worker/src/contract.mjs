@@ -60,6 +60,27 @@ export const MAX_FRAME_BYTES = 61_300_000;
  *  less (CPDF-15 measured that refusal). */
 export const frameBytesOf = (w, h) => w * h * 4;
 
+/* D-478 — THE NAMESPACES THIS MEMBER WILL READ FROM: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
+ *
+ * Before D-478 the store test read `/^[a-z0-9_-]+$/i`, so `biosmoke`, `Scratch` and any well-shaped name was spent
+ * as the R2 key prefix and came back 404 NOT_FOUND — the same answer as a capture genuinely absent from a real
+ * namespace. *Not found* is not *absent*, and this member's output is GRADED: a page reported unread because the
+ * capture "was not there" is a fact about the document, when the truth was a fact about the NAME.
+ *
+ * The set is the plane's (`namespaceGate` holds `Object.freeze(["bio", SCRATCH])` in code, the same on every
+ * instance), kept here as a COPY because a fleet member cannot import the plane (a later module). A copy ages, so it is
+ * EXPORTED, and control-plane (layer 11, which may import this module) pins it equal to its own namespace gate —
+ * the check that used to parse the plane's source from here, and went empty when that source moved (N402). Exact and case-sensitive: an R2
+ * key is an exact string. NOT NAMING ONE is a different condition, BAD_STORE (`store` absent or not a string); an
+ * empty `store: ""` is a NAMED value and meets NAMESPACE_UNKNOWN. */
+export const NAMESPACES = Object.freeze(["bio", "scratch"]);
+
+/* THE PLANE OPS THIS MEMBER CALLS: NONE. It is called BY the plane (extraction's `OCR_WORKER` binding) and reads
+ * only `CAPTURES.get` (R21); it holds no credential and names no op. Declared in the same shape as agent-worker's
+ * `PLANE_OPS` (`{op: {mutating, why}}`) so control-plane's pin reads both members the one way: every op a member
+ * exports is in the op table with the class and namespace gate the member assumes. An empty set is the claim. */
+export const PLANE_OPS = Object.freeze({});
+
 /* ===================================================================== *
  * Refusals. Every one is STATED, carries what it saw, and leaves the
  * document HONESTLY UNREAD rather than half-transcribed.
