@@ -195,6 +195,12 @@ test("R27 (§1b): the gate passes the registered grammars to the catalogue: a gr
   /* With none registered, the instance's gate is the built-in catalogue's. */
   record.grammarList = [];
   assert.deepEqual((await p.runGate(base(image))).findings.map((f) => [f.check, f.detail]), builtIn);
+  /* A grammar that throws judged nothing: one error naming its module, ok false, never a pass or a throw out (R37). */
+  record.grammarList = [{ module: "capture", ids: ["C-2.7"], arm: () => { throw new Error("arm broke"); } }];
+  const broke = await p.runGate(base(image));
+  assert.equal(broke.ok, false);
+  assert.deepEqual(broke.findings.filter((f) => f.check === "capture").map((f) => /capture's grammar threw on .*arm broke/.test(f.detail)), [true]);
+  assert.equal(broke.findings.some((f) => f.check === "C-2.7"), false, "the built-in arm does not run in its place");
   /* A record that cannot answer its registrations rejects the gate: an unread list is never read as empty (R37). */
   record.grammars = () => { throw new Error("registrations unreadable"); };
   await assert.rejects(p.runGate(base(image)), /registrations unreadable/);

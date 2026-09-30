@@ -301,9 +301,19 @@ class Promotion {
   /* R27 (§1b): the bundle gate with the type grammars later modules registered with record-core (its `grammars()`), so
      a grammar that left the catalogue judges a bundle here as it does at the audit. `args` are `runGate`'s own; a
      caller's `grammars` is never taken, since the record's registrations are the one list. A record that cannot answer
-     its registrations rejects the gate: an unread list is never read as empty (R37). */
+     its registrations rejects the gate: an unread list is never read as empty (R37). A grammar whose arm throws is one
+     error of its own on the bundle, naming its module, as record-core's audit counts it (its R67, R59): the gate fails
+     closed with a verdict, never passes and never throws out. */
   async runGate(args = {}) {
-    return runBundleGate({ ...(args || {}), grammars: this.#record.grammars() });
+    const grammars = this.#record.grammars().map((g) => ({ module: g.module, ids: g.ids, arm: async (ctx, found) => {
+      try { await g.arm(ctx, found); }
+      catch (e) {
+        found.push({ check: g.module, severity: "error",
+                     message: `${g.module}'s grammar threw on ${ctx && ctx.folderName}, so it judged nothing and the bundle is `
+                            + `not passed: ${cut(e && e.message ? e.message : e, 200)}` });
+      }
+    } }));
+    return runBundleGate({ ...(args || {}), grammars });
   }
 
   /* ---------------------------------------------------------------- promote */
