@@ -84,7 +84,7 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - **R27** The display name is presentation only: it enters no signed bytes. Signed bytes carry the slug (State Rules §3.1).
 - **R28** `instance_group`, `group_identity_history` and `group_domain_checks` are declared to record-core exempt from purge, in both forms (record-core R21, R23); the profiles setting is exempt as every setting is (record-core R25).
 - **R29** Nothing a caller sends names who set a value or where the instance is: `by`, `author` and `origin` are the control plane's stamps.
-- **R30** Each check moves here as an invariant with its test (K6): C-64.2, C-64.3, C-64.5, C-64.6, C-64.7. C-64.1 (`GROUP_UNDETERMINED`, raised at the write) is `promotion`'s; C-64.4 (a bearer on the two sets) is `control-plane`'s.
+- **R30** Each check moves here as an invariant with its test (K6): C-64.2, C-64.3, C-64.5, C-64.6, C-64.7. C-64.1 (`GROUP_UNDETERMINED`, raised at the write) is `promotion`'s; C-64.4 (a bearer on the two sets) is `admission`'s (its R12, R14; split from `control-plane`, K624).
 - **R31** No place is named in this module's behaviour or outward text; local facts come only through R12.
 - **R41** The runtime observations and the probe trail (R33–R40) are measurements of the runtime, not of the corpus: `purge` never clears them, in either form (declared to record-core exempt, record-core R21, R23).
 - **R42** At start this module registers with `capture` (its R55) a listener that records each walk's compute measurement through R33 (`metric` `capture_work_bytes`, the value as `ms` until R34's unit is recorded, the detail as given). *(met in substance: `legacy-store` registers this listener on capture's R55 today, and this module takes the registration at its extraction; the store route `recordruntime` is left with no product caller and goes with it)*
@@ -109,7 +109,7 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - **Tests.** R2 and R13 need a store booted twice (first and later boot); R8 needs a fake governor and fetch covering all four verdicts; R19 runs against a scratch store and a broken fixture per arm (its own negative controls). R38–R40 need a store whose checkpoint write can be made to fail and two probe runs in sequence; R37 and R38 each need a silent store (as `plane-envelope.test.mjs` poisons `runtimeobservations` today).
 - **The installer's part (K102).** The installer offers the profiles with nothing preselected (installer R21); this module records them at the first boot (R13), as it records the slug.
 - **The record browser (K102).** This module keeps claim, sign-in, enrolment, the healthy panel and the instance's settings (R20–R24). The page's record surfaces (browse, add, revise, inbox, members and keys) follow ruling 4: a UI placeholder, kept working, with no new work planned except the carried D-719 (R25).
-- **The limits (K98).** `op=runtime` and `op=cpuprobe` are the instance measuring itself, with this module's other report ops (K93 (2)); `runtime-limits` stays a pure library in layer 1, and `control-plane` keeps their `OPS` rows and routes.
+- **The limits (K98).** `op=runtime` and `op=cpuprobe` are the instance measuring itself, with this module's other report ops (K93 (2)); `runtime-limits` stays a pure library in layer 1, and `op-declarations` holds their `OPS` rows and `control-plane` their routes (K624).
 
 ## Open for Bob
 
@@ -117,8 +117,8 @@ None: answered by Bob 2026-09-26 (K102).
 
 ## Decided by BOB
 
-- C-64 splits: C-64.1 goes to `promotion`, C-64.4 goes to `control-plane`, and the rest come here. `withProducingGroup` and `stampGroup` are already `promotion`'s (K69's list named `#stampGroup`, which T3 moved).
+- C-64 splits: C-64.1 goes to `promotion`, C-64.4 goes to `control-plane` (since K624 `admission`), and the rest come here. `withProducingGroup` and `stampGroup` are already `promotion`'s (K69's list named `#stampGroup`, which T3 moved).
 - `from`: `legacy-store`, `legacy-checks` and `legacy-index`. Uses gain `record-core`, `membership`, `promotion`, `host-governor` and `scheduler`.
 - The instance's reports (`bootstrap`'s Worker arm, `selftest`, `livefire`) are this module's. The `/` route itself is `control-plane`'s, which calls R20.
-- `op=runtime` and `op=cpuprobe`, with the store's runtime observations and probe trail, are this module's (K98); their routes and classes stay `control-plane`'s.
+- `op=runtime` and `op=cpuprobe`, with the store's runtime observations and probe trail, are this module's (K98); their routes stay `control-plane`'s and their classes `op-declarations`' (K624).
 - The profiles reach the instance at install as a plain binding, `JURISDICTION_PROFILES`, recorded once at first boot (R13), the same channel as the slug.

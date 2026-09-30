@@ -1,10 +1,10 @@
 # The layers
 
-**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T4), as drafted by BOB #37 the same day with his rulings (below), including the Understanding layer. AMENDED by Bob 2026-09-26: the Action layer (layer 9, below), splitting the old layer 8 into Publication (8) and Operations (10); 11 layers, 58 modules. A view of it is `layers-view.html`, beside this file. The modules, in their total order, are in `modules.json`. Sources: the construct map (`BIO_System_Design.md` §3–§4) and the code as it stands (imports measured 2026-09-25). Each layer's modules may use modules earlier in the order only (P4). AMENDED at T17's close, 2026-09-30 (K608, K617): layer 9's contract and row, action-clocks (split from actions), action-plans.
+**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T4), as drafted by BOB #37 the same day with his rulings (below), including the Understanding layer. AMENDED by Bob 2026-09-26: the Action layer (layer 9, below), splitting the old layer 8 into Publication (8) and Operations (10); 11 layers, 58 modules. A view of it is `layers-view.html`, beside this file. The modules, in their total order, are in `modules.json`. Sources: the construct map (`BIO_System_Design.md` §3–§4) and the code as it stands (imports measured 2026-09-25). Each layer's modules may use modules earlier in the order only (P4). AMENDED at T17's close, 2026-09-30 (K608, K617): layer 9's contract and row, action-clocks (split from actions), action-plans. AMENDED at T18's opening, 2026-09-30, by a worker for BOB #75 (K585 (4), K589, K617, K624): `record-grammar` heads layer 1, before `legacy-checks` (Helper modules, below); `control-plane` split three ways for size, `op-declarations` and `admission` directly before it in layer 11 (below).
 
 | layer | name | constructs (System Design §3) | contract | modules |
 | --- | --- | --- | --- | --- |
-| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | legacy-checks, jurisdictions, test-support, bundler, runtime-limits, signatures, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, docprofile, image-codecs, pdf-pixels, pdf-worker, ocr-worker |
+| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | record-grammar, legacy-checks, jurisdictions, test-support, bundler, runtime-limits, signatures, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, docprofile, image-codecs, pdf-pixels, pdf-worker, ocr-worker |
 | 2 | Record and authority | 3, 1 | Owns storage, id allocation, leases, audit and purge; the member, the capability and the fence; the one write path that promotes and checks a bundle. | record-core, membership, promotion |
 | 3 | Intake and provenance | 2 | Material enters only with provenance; a hop attests bytes, URL and time, no more. | host-governor, provenance, capture-sources, capture, sources |
 | 4 | Content | 4, 5 | Readings are made from captured bytes; content is the reference to a part of a document, minted over them. | calibration, extraction, content |
@@ -14,7 +14,7 @@
 | 8 | Publication | 13 | What the group stands behind leaves one way. | publication, ratification, case-authoring, review |
 | 9 | Action | 16 (`BIO_Action_v0_1.md`); Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis. | standards, conformance, consequences, actions, action-clocks, filings, escalation, action-plans |
 | 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, scheduler, legacy-store |
-| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, tasks, queue-producers, queue, instance-setup, control-plane, legacy-index, legacy-ui, installer, legacy-tests |
+| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, tasks, queue-producers, queue, instance-setup, op-declarations, admission, control-plane, legacy-index, legacy-ui, installer, legacy-tests |
 
 ## No jurisdiction in the product (Bob's concern, 2026-09-25; ruled by BOB #37)
 
@@ -33,7 +33,7 @@ The work this makes is in `plan/next.md`. The UI is worked on elsewhere and carr
 
 | legacy module | file | lines | why it sits where it does |
 | --- | --- | --- | --- |
-| legacy-checks | `bio-plane/checks/bio-checks.mjs` | 16,591 | It is the whole check catalogue, one set per construct, and it imports nothing. It is first in the order because modules in every layer use it. Each extracted module takes its own checks, which are its invariants. |
+| legacy-checks | `bio-plane/checks/bio-checks.mjs` | 16,591 | It is the whole check catalogue, one set per construct, and it imports nothing. It was first in the order because modules in every layer use it; since T18 it is second, after `record-grammar`, the shared grammar it re-exports while importers re-point (K585 (4)). Each extracted module takes its own checks, which are its invariants. |
 | legacy-store | `store.mjs`, `schema.mjs` | 54,618 and 4,287 | It is last among the store-backed modules, so extraction runs bottom-up: an extracted module never calls back into it, and it calls the extracted modules. |
 | legacy-index | `index.mjs` | 13,438 | It is after legacy-store, because it imports it. |
 | legacy-ui | `civicos-ui/` | 26,489 in `app.html` | It talks to the plane over HTTP only. |
@@ -95,11 +95,24 @@ Uses, all earlier in the order: `standards` uses jurisdictions, record-core, con
 
 **The Action layer's fold (T17's close, 2026-09-30; K590, K597, K600, K608, K611, K613–K615, K617).** Bob approved the Action design (`BIO_Action_v0_1.md`) as canon and ruled the layer a priority (K608 (2)). The contract above was re-worded; `actions` was split for size into `actions` and `action-clocks` (K617), and `action-plans` joined the layer, last; `actions`, `filings`, `escalation`, `monitoring`, `scheduler`, `queue`, `queue-producers`, `skills` and `jurisdictions` gained requirements (`build/plan/action-fold/deltas/`, with the reminder rulings K613–K615).
 
+## Layer 11: the control-plane split (K617, K624 (1), (2); T18's opening)
+
+`control-plane` passed the 4,000-line mark (6,578 lines at T17's close), and a two-way split left ~4,470, so it is split three ways with no requirement changing meaning; each new module is a product module with no `from` (`from` names a legacy module only), built by copy in its own job and merged early, and `control-plane`'s job, after them, deletes its copy and re-points (K624 (1)).
+
+| module | what it does | source |
+| --- | --- | --- |
+| op-declarations | What each op is: its spec (the classes that reach it, whether it mutates), the act lists that drive the stamps and the fences, the two session sets, the capability each op needs, the recorded decisions that a verb is not a person's, and the act gate read from those tables. Pure data. | `control-plane/ops.mjs`; `control-plane` R31, R34 |
+| admission | Who may call an op: the namespace gates, the binding classes, the agent credential's resolution, confinement and task scope, the session gate, the class and capability gates and the bearer fences, with their refusal rows. | `control-plane/index.mjs` (`classify`, `scopeFor`, the gates, `sessionOpGate`, the admission region); `control-plane` R3–R14, R19 |
+| control-plane | The door: routing, the stamps, the answer's decoration and envelope, the store's dispatch, the pull. | what remains |
+
+Uses: `op-declarations` uses affordances (`decorate`, for the act gate); `admission` uses runtime-limits, membership and op-declarations; `control-plane` gains both.
+
 ## Helper modules (BOB #38, 2026-09-26, under P17)
 
 Found by the architecture check's first run: shared helpers that later modules used from the top of the order.
 - **test-support** (layer 1): the test sandbox and stdio guard (`bio-plane/test/sandbox.mjs`, `stdio.mjs`) that the workers' tests and the old battery share.
 - **bundler** (layer 1): `bio-plane/scripts/fleet-bundle.mjs` and its `provenance.mjs`, which build the plane and the three workers.
+- **record-grammar** (layer 1, first in the order; K578, K585 (4), K589, formed at T18's opening): the record's shared grammar below every module that reads or writes a document (the id and type vocabulary, the restricted front-matter parser, canonical JSON, actor identity, the grade vocabulary, the public-locator test and the one SHA-256), moved out of `legacy-checks` in stages, each part whole, the catalogue re-exporting it until its importers re-point (PROCESS-MECHANICS §12.2). It holds no store, no network and no clock.
 
 Declared uses the code already had were added (affordances, query-language and skills on legacy-checks; agent-worker on runtime-limits, legacy-checks, query-language, ai-runs and skills; ocr-worker on legacy-checks and text-chain), `skills` moved after `ai-runs`, and `ai-runs`'s stale use of `skills` was removed. `not_product` in `modules.json` lists the paths no module owns.
 
