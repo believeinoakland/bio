@@ -116274,8 +116274,7 @@ Mitigation: ${mit}
     ["CASE", "cases", "case_id"],
     ["CASE", "published_cases", "case_id"],
     ["CASE", "case_documents", "case_id"],
-    ["CASE", "published_case_members", "case_id"],
-    ["TASK", "tasks", "id"]
+    ["CASE", "published_case_members", "case_id"]
   ]);
   /** REC-131 / IC-148 — THE WIRE'S COUNTS. `op=stats`, `op=selftest` and `op=livefire` all read
    *  this. Every COUNT is the same for every class (BOB #15's corrected ruling,
@@ -116295,22 +116294,9 @@ Mitigation: ${mit}
   stats({ capacity = false, viewer } = {}) {
     return this.#counts({ proof: false, capacity: capacity === true, viewer });
   }
-  /** D-464 — THE BUNDLES THIS CALLER CANNOT SEE, as a set subtraction: every bundle the caller's own
-   *  `viewerPredicate` does not pass, the complement of the one compiled gate (a use, not a second rule). The
-   *  shared-inquiry candidates and `#counts` subtract it. `null` when there is nothing to subtract: a credential the
-   *  gate does not filter (scope `member`) and a viewer NEVER SENT (`undefined`: a direct internal call, which stays
-   *  WHOLE, purge's proof among them). A viewer sent but unrecognised is DENY, so every bundle is hidden: fails closed.
-   *
-   *  D-486's RUN subtraction (BOB #32: a hidden project's run is its thinking; the bytes stay shared, only the run's
-   *  attribution is withheld) is NOT spelled here any more. It is ai-runs' one predicate, `hiddenRuns` (its R42,
-   *  N191), which `#counts` asks through `#hiddenRunTail` below. */
-  #hiddenBundles(viewer) {
-    const gate = viewer === void 0 ? null : viewerPredicate(viewer);
-    return gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
-  }
   /** N191 (K333, K335): ai-runs' R42 tail for the caller's sight — over `observation_log` without `column`, over a
    *  column naming a run id with one. R42 fails CLOSED on an absent viewer, so it is not asked for a viewer never
-   *  sent: this store's own convention keeps a direct internal call WHOLE (the empty tail), as `#hiddenBundles` does. */
+   *  sent: this store's own convention keeps a direct internal call WHOLE (the empty tail), as `#counts`' bundle subtraction does. */
   #hiddenRunTail(viewer, column = void 0) {
     return viewer === void 0 ? { sql: "", args: [] } : hiddenRuns(viewer, column);
   }
@@ -116320,7 +116306,7 @@ Mitigation: ${mit}
    *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
    *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
   #counts({ proof, capacity = false, viewer }) {
-    const hid = this.#hiddenBundles(viewer);
+    const hid = viewer === void 0 ? null : hiddenBundles(viewer);
     const runTail = this.#hiddenRunTail(viewer), boundsTail = this.#hiddenRunTail(viewer, "run");
     const nx = (t, where, keys = []) => {
       const conds = where ? [where] : [], args = [];
@@ -116376,8 +116362,7 @@ Mitigation: ${mit}
       selections: ret.selections,
       selectionItems: ret.selectionItems,
       /* Reported so a purge can prove it took them, and so an operator can see
-         inbox and reachability depth without a second call. */
-      tasks: n("tasks", "refers_to"),
+         reachability depth without a second call. */
       taskQueue: n("task_queue"),
       sourceReachability: n("source_reachability"),
       /* REC-26: the monitoring consumers' idempotence state, reported so a purge
@@ -116423,25 +116408,12 @@ Mitigation: ${mit}
          PROVE it cleared the aged decisions (D-113) and an operator can see how many of the
          record's own questions a member has deferred or dismissed. */
       proposalDispositions: n("proposal_dispositions"),
-      /* D-266 / IC-60: the JUDGMENT-LAYER dispositions, counted APART from the instance-wide ones
-         above and never folded into them. One number for both would report a member's decisions as
-         a single quantity while the two govern different sets of feeds — and it is precisely the
-         distinction this item exists to draw, so the count that proves the purge took them must
-         not be the one place it is lost. */
-      findingDispositions: n("finding_dispositions", "project_id"),
       /* REC-27 / D-137: the participation graph and the pending owner-governance
          votes, reported so a purge can PROVE it took them (both are keyed on
          project_id, a bundle id, and were the silent-leftover the D-113 check
          could not see). */
       projectParticipants: n("project_participants", "project_id"),
       projectOwnerVotes: n("project_owner_votes", "project_id"),
-      /* REC-21: members' personal queue state, reported so a purge can PROVE it
-         cleared the mutes and snoozes it took (D-113). A COUNT OF ROWS AND
-         NOTHING ELSE — stats is an operator surface and whose attention is muted
-         on what is not an operator's business. */
-      queueState: n("queue_state", "case_id"),
-      /* D-125: the item mutes, a COUNT for queueState's reason. */
-      queueItemMutes: n("queue_item_mutes"),
       /* REC-82 / IC-83: the content rows — the parts of documents this record's
          edges point at — reported so a purge can PROVE it took them (D-113)
          rather than assert it, and so an operator can see the content axis's
@@ -116468,7 +116440,7 @@ Mitigation: ${mit}
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
          COUNT AND NOTHING ELSE — what a run is looking into is not an operator
-         surface, the same line queueState draws one row up. */
+         surface, the same line queueState draws. */
       aiRuns: n("ai_runs", "context_id"),
       aiRunBounds: this.#one(`SELECT count(*) c FROM ai_run_bounds WHERE 1=1${boundsTail.sql}`, ...boundsTail.args).c,
       /* D-85: the links from an assistant's questions to their runs, counted for IS-6's reason one line up — so a
@@ -116561,8 +116533,8 @@ Mitigation: ${mit}
          pages on every write, a large lead's included, so the operator can detect that SOMETHING
          large was written; it cannot tell a lead from any other write, and no lead is readable to it. */
       ...proof || capacity ? { dbBytes: this.ctx.storage.sql.databaseSize } : {},
-      /* N342 (K445): every module's registered figures (record-core R63), after the literal keys: a registered key of
-         a literal's name replaces it and keeps its place, so the keys, their order and their figures stay as they are. */
+      /* N342 (K445): every module's registered figures (record-core R63), after the literal keys: queue's `tasks`,
+         `findingDispositions`, `queueState` and `queueItemMutes` (its R42) among them. */
       ...recordOf(this.ctx).counts(hid)
     };
   }
