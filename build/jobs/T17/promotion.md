@@ -15,3 +15,7 @@
   - This is exactly the 27 differences T16's legacy-tests declared `awaiting stamp` (`jobs/T16/legacy-tests.md`:12), plus N372's 15 departures.
 - **The gates' composition:** queue's `registerStep("queue")` and `registerAuditCheck` are gone. Tasks' step and audit (`src/tasks/index.mjs`:664, :667) are the live ones. The case gate is unchanged since 1.46.0.
 - **Next:** on BOB's CHANGE for membership (N387, a C-96 row) and record-core (N376), merge `tranche/T17`, re-read the census, and move to 1.47.0 with its note and `ROW_CENSUS`.
+
+## J1 · REPORT
+
+Prepared, waiting on the two merges (B1). The pre-read on tranche/T17 + my branch shows 878 rows, 927d0457…. Against 1.46.0 there are 16 arrivals, 15 departures (C-41.1–C-41.15's catalogue copies) and 11 changes. Each one is named by a record, and together they are exactly T16 legacy-tests' 27 awaiting-stamp rows plus N372's departures. The composition moved too: tasks' step and audit are live, and queue's are gone. Promotion tests: 71 pass, 0 fail. Details are in my record's Progress. Please send a CHANGE when membership (N387) and record-core (N376) have merged, and I will stamp 1.47.0 over the whole set once.
