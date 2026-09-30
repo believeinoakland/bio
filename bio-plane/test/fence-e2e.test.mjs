@@ -90,8 +90,10 @@ import { ACTION_FENCE_CHECKS, RECORDS_LAW_FENCE_CHECKS } from "../src/actions/ch
 import { REVIEW_COPY_CHECKS } from "../src/review/checks.mjs";
 /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): C-32.10 MACHINE_CANNOT_FORWARD and C-32.11 MACHINE_CANNOT_RESOLVE left
    `MACHINE_FENCE_CHECKS` with the task acts for queue's own `QUEUE_MACHINE_CHECKS` (`src/queue/checks.mjs`), ids and
-   translations unchanged, so the registry this suite reads includes them. */
-import { QUEUE_MACHINE_CHECKS } from "../src/queue/checks.mjs";
+   translations unchanged, so the registry this suite reads includes them.
+   LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the family, its name kept, with the obligation
+   inbox to `src/tasks/checks.mjs` (tasks R7); ids and translations unchanged. */
+import { QUEUE_MACHINE_CHECKS } from "../src/tasks/checks.mjs";
 /* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the agent credential's gate and declaration rows C-29.6–.10
    (AI_BEYOND_TASK_SCOPE, AI_CREDENTIAL_REVOKED, AI_SCOPE_BEYOND_MEMBER_REACH among them) left `AI_CREDENTIAL_CHECKS`
    for control-plane's `AI_SCOPE_CHECKS`, ids and translations unchanged; the catalogue keeps the mint's rows. */
@@ -993,8 +995,10 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
      (`#publishCase`), MACHINE_CANNOT_REVIEW for review — each extracted from the store. */
   /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE left with `taskForward`
      and `taskResolve` for `src/queue/`, extracted from the store with the obligation inbox. */
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved `taskForward`/`taskResolve` and their two fences
+     on to `src/tasks/`; `src/queue/` mints none now, so the corpus reads `tasks` in its place. */
   const STORE_BARE = storeCorpus(["record-core", "membership", "promotion", "inquiry", "basis-versions", "strength",
-                                  "actions", "case-authoring", "review", "queue"])
+                                  "actions", "case-authoring", "review", "tasks"])
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
   const HARVEST = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
   t("the harvest found a REAL family and not an empty one — the guard is the evidence, never the "
@@ -1004,7 +1008,7 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
      plane can mint" also covers the five fences minted in `src/index.mjs`, which this suite does not
      drive. Those five are harvested and driven, each under a payload a human then succeeds with, by
      `machine-fences.test.mjs` block 3b (D-503), which holds the same equality over them. */
-  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3, `src/{inquiry,basis-versions,strength}/`, T7, and `src/{actions,case-authoring,review}/`, T8, and `src/queue/`, T12) mints, so a thirteenth cannot arrive "
+  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3, `src/{inquiry,basis-versions,strength}/`, T7, and `src/{actions,case-authoring,review}/`, T8, and `src/tasks/`, T16, `src/queue/`'s from T12) mints, so a thirteenth cannot arrive "
   + "unmeasured (the five `src/index.mjs` mints are machine-fences.test.mjs block 3b's, D-503)",
     [HARVEST.filter((c) => !(c in SHORT)), Object.keys(SHORT).filter((c) => !HARVEST.includes(c))],
     [[], []]);

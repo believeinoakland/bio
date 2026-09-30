@@ -167,9 +167,14 @@ const T8_EXTRACTED = ["actions", "case-authoring", "review", "publication", "rat
 /* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): NO_CASE left with `queueMute`'s case resolver (`#queueCaseFor`)
    for `src/queue/index.mjs`, so the walk found no site for it. The corpus widens to the queue in the same way, each
    file walked on its own. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the inbox to `src/tasks/` and the producers to
+   `src/queue-producers/`; the walk reads them as it reads the queue, so the queue is walked as it stood before the split.
+   None of the eight moved (NO_CASE's `#queueCaseFor` stays in queue). Measured: 596 -> 608 sites, 974 -> 1046 methods
+   (the files' own; the walk's figures are floors, not pins). */
 const WALKED_BARE = [STORE_BARE, ...[...moduleFiles("membership"), ...moduleFiles("promotion"),
                                     ...moduleFiles("provenance"), ...moduleFiles("capture"), ...moduleFiles("host-governor"),
-                                    ...T8_EXTRACTED.flatMap(moduleFiles), ...moduleFiles("queue")]
+                                    ...T8_EXTRACTED.flatMap(moduleFiles), ...moduleFiles("queue"),
+                                    ...moduleFiles("tasks"), ...moduleFiles("queue-producers")]
   .map((f) => decomment(readFileSync(SRC(f), "utf8")))];
 /* RE-ANCHORED 2026-09-29 (T12 B8/B9, K413; CONTROL-PLANE #2): the control plane's dispatch — the author stamp on
    `provenancechain` among it — left `src/index.mjs` for `src/control-plane/index.mjs`. The structural arm reads the

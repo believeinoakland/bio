@@ -335,8 +335,13 @@ t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning ca
    characters, the measured print (-2,538: N342's drop of queue's four reads and the TASK seed, N352's `#hiddenBundles`
    now reading membership R88, K500's unused CASE_DOCUMENT_FORMAT import). ops.mjs's floor is unmoved. Both still
    blindness floors at the measured figures, never below them. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): store.mjs 210,035 -> 209,972 characters, the measured print (-63, one change:
+   TASKS #1, 2f170f04a5, N363 — `tasks` left the store's purge list and the capture R44 half of the registration
+   comment went; `tasksOf`'s import, its `.migrate()` call and the `tasksOps` spread came in). The SEEK GUARD's code
+   line (`.declarePurge("legacy-store", [`) is still read here. ops.mjs's floor is unmoved (161,228 measured). Both
+   still blindness floors at the measured figures, never below them. */
 t("CORPUS PRINTED — the size of what every source arm below is read over",
-  [STORE_SRC.length >= 210_035, OPS_SRC.length >= 149_682], [true, true]);
+  [STORE_SRC.length >= 209_972, OPS_SRC.length >= 149_682], [true, true]);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
           + `index.mjs ${INDEX_SRC.length}, control-plane/ops.mjs ${OPS_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, `
           + `src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);

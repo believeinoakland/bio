@@ -260,6 +260,12 @@ const t = (label, got, want) => {
 /* RE-ANCHORED 2026-09-29 (legacy-tests T12, B5; K409, QUEUE #2): the queue left the store behind one spread of its routes
    (`...queueOps(queueOf(this.ctx), url, body),`), so a FOURTH pass of the same re-inliner re-inlines it
    (`{ modules: { queueOf: "queue" } }`), the re-inliner unchanged — `bounds.test.mjs`'s corpus, the same edit. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the obligation inbox left queue for `src/tasks/` (TASKS #1, 2f170f04a5, N363) and the
+   store spreads its routes on their own (`...tasksOps(tasksOf(this.ctx), url, body),`), so op=tasks left the BOUNDED
+   roster and op=taskforward/op=taskresolve the UNJUDGED one while unchanged; the FOURTH pass re-inlines tasks beside
+   queue (`tasksOf: "tasks"`) — `bounds.test.mjs`'s corpus, the same edit. Queue's producers moved to
+   `src/queue-producers/` (N363), which queue (not the store) calls, so they are outside this corpus as the store's other
+   callees' callees are; what that moves is named at D-240 (e) below. */
 /* WIDENED 2026-09-29 (LEGACY-TESTS #11, T13; N238, N277): every pass also follows a HELD SERVICE (`{ services: true }`,
    rule (6) of `t5-extracted.mjs`): a module method whose answer is taken from another module's service it holds
    (`const committed = this.publication.commitCaseEdition(…)`) reads that service method as a private delegate, and the
@@ -268,7 +274,7 @@ const SVC = { ops: true, privates: true, services: true };
 const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(
   reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, SVC).text,
   { ...SVC, modules: T7_MODULES }).text, { ...SVC, modules: T8_MODULES }).text,
-  { ...SVC, modules: { queueOf: "queue" } }).text;
+  { ...SVC, modules: { queueOf: "queue", tasksOf: "tasks" } }).text;
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
    REC-57's redraft: an anchor that matches PROSE measures the prose, and this file's own
@@ -1126,6 +1132,13 @@ t("D-240 (b) THE WIDENING SEES MORE, AND LOSES NOTHING — the declared-refusal 
      of `publish` into helpers that answer `{ refusal: { ok: false, … } }` — the verdict one level down, the shape citation's
      `#document` had until T10. None carries a collection, so no roster moves on them. Not re-pinned (the arm's property
      does not hold over them). Owners: extraction (the route envelope) and case-authoring (the nested refusal). */
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): STILL RED, ONE CAUSE LEFT. SEVEN DEPARTURES by a fix: CASE-AUTHORING #5's N370
+     (K546) made `#authority` and `#judgeMembers` answer their refusal flat (`ok: false` at the top level), so
+     `#authority$caseAuthoringOf[silent]` x3 and `#judgeMembers$caseAuthoringOf[silent]` x4 left the list — checked by name
+     in this run's print. What remains is extraction's `pdfStructure[silent]` x6, T14's cause unchanged (the refusals in
+     op=pdfstructure's route envelope `{ status, body: { ok: false, … } }`, the verdict one level down, extraction R31).
+     None carries a collection. Not re-pinned (the arm's property does not hold over those six); owner: extraction (the
+     envelope), with the D-240 reader, which this job does not change. */
   [EX.newlyDeclared > 0, EX.spellings.size > 1, EX.lostByWidening],
   [true, true, []]);
 /* (c) OVER-STRICTNESS — THE ARM THAT REFUSED THIS EDIT'S FIRST DRAFT, and it is
@@ -1196,7 +1209,14 @@ t("D-240 (e) THE MIS-READ IS NAMED, NOT ABSORBED — a return excluded while it 
      misread of the same kind — the queue's new `#resolvedLately` (R39: the obligations resolved lately), whose answer
      leads with the DATUM `personal: false` beside its `obligations` list. Reached by no dispatched op (e2 below). */
   ["#conditionHomes$queueOf[ungrouped:reasons]", "#resolvedLately$queueOf[personal:obligations]",
-   "#sessionRights[rootOfTrust:capabilities+member]", "open[started:deployed]"]);
+   "#sessionRights[rootOfTrust:capabilities+member]", "open[started:deployed]"]
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): RE-PINNED from this run's print, diffed by name against T15's close (f5554232cb):
+     ONE DEPARTURE, NOT A FIX: `#conditionHomes$queueOf[ungrouped:reasons]` moved with queue's producers to
+     `src/queue-producers/` (QUEUE-PRODUCERS #1 / QUEUE #3, N363), which queue calls and the store does not, so it is
+     outside this walk's corpus (the re-inliner reads the store's delegations and spreads). The return still leads with
+     the datum `ungrouped: false` there (`src/queue-producers/index.mjs`:263); it left the reader's sight, not the
+     plane. NO ARRIVAL. */
+  .filter((x) => x !== "#conditionHomes$queueOf[ungrouped:reasons]"));
 t("D-240 (e2) AND NEITHER OF THEM IS REACHED BY A DISPATCHED OP, so no ratchet in this file moves on "
 + "their account — asserted rather than assumed, because that is the only reason (e) is a named "
 + "residual instead of a defect this item owes a fix for",
@@ -1534,7 +1554,21 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
          coordinates whose `resolved_entities` come off `#entitiesOf`, an unbounded scan keyed on one capture). Both are
          keyed on one parent row, the class entities R39 bounded; the figure 38 the handover expected is 40 - 2 and is NOT
          what this walk printed. REPORTED to contradiction (src/contradiction/index.mjs:1446, :1527) rather than absorbed. */
-  BARE_OPS.length <= 40, true);
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): 40 -> 41, CEILING AND FLOOR IN ONE EDIT, and a ceiling that RISES owes its
+     reason at the site. The walk PRINTS 41 (with tasks re-inlined, the corpus note at the top), DIFFED BY NAME against
+     its own print on T15's close (f5554232cb, 40), never 40 + 1:
+       TWO DEPARTURES BY A FIX (CONTRADICTION #3, N368, K546): `contradictiontensions -> tensionsOn` is on the BOUNDED
+         roster (each referent's candidates read at most TENSIONS_CANDIDATES_MAX + 1, `limit` and `truncated` published);
+         `contradictionfacts -> contextFacts` bounds its resolved entities at FACTS_ENTITIES_MAX with `limit` and
+         `truncated`, and the reader now files it NO_COLLECTION rather than BOUNDED — its answer's `facts` is a local
+         assigned from the private `#facts(row)` and published by shorthand, a shape the RETURN-DELEGATE rule does not
+         follow (its stated limit); it is accounted for exactly once (the REACH arm below).
+       THREE ARRIVALS, NEW READS (CAPTURE #8, N364; capture R68, R69, R72): `captureaccounts -> captureAccountsOf`
+         (`actors`, `accounts`), `lateattestations -> lateAttestationsOf` (`late_attestations`) and
+         `pulledknocks -> pulledKnocksOf` (a BARE ARRAY), each a scan with no LIMIT keyed on ONE capture's digest —
+         bounded by one parent row, the judgement this walk states it cannot make, and capture R68/R69/R72 state no bound.
+         Counted honestly, not exempted; REPORTED to capture (src/capture/index.mjs:643, :705, :796). */
+  BARE_OPS.length <= 41, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -1581,7 +1615,8 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      caseratify seen again, and `aliaswithdraw` and `entity` credited by the widened reader. */
   /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15): NOT MOVED; the ceiling's T15 note names the swap (entities' two out
      by R39's fix, contradiction's two in by N345). */
-  BARE_OPS.length >= 40, true);
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): MOVED 40 -> 41 IN THE SAME EDIT AS ITS CEILING, whose note names the five. */
+  BARE_OPS.length >= 41, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
@@ -1667,7 +1702,12 @@ t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so 
    enjoyed quietly. */
 t("REACH: and the residual is NAMED, not merely counted — a bare count is satisfied by ANY eight "
 + "ops, so the identities are pinned and a swap fails here",
-  OPAQUE, [/* ADDED 2026-09-25 (D-454): the write path's bounded occurrence read; the ceiling above says why. */
+  OPAQUE, [
+           /* ADDED 2026-09-30 (LEGACY-TESTS #14, T16): AN ARRIVAL, NAMED, of this residual's own class: capture's new
+              `recordCaptureAccount` (CAPTURE #8, R69, N364), a WRITE path that scans `capture_actors` for its own logic
+              (is the signer a capturing actor) and answers a status. The arm stays red for record-core's pair alone. */
+           "captureaccount->recordCaptureAccount",
+           /* ADDED 2026-09-25 (D-454): the write path's bounded occurrence read; the ceiling above says why. */
            /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `chooseConnectionPair` is connections' `choose` (T5-5),
               the same act, reached through `connectionsOps`' entry. */
            "connectionchoose->choose",
@@ -1744,7 +1784,9 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
               printed on the T7 close (84d078c16a) and on this tree; still left red for its owners.
               legacy-tests T10, 2026-09-28: UNCHANGED BUT FOR `thread` (above): `audit->auditPass` still arrives and
               `projectfork->forkProject` still leaves, identically on the T9 close and on the merged T10 tree. Left red for
-              record-core (its REPORT R3; the audit pass and the fork read are record-core's services). */
+              record-core (its REPORT R3; the audit pass and the fork read are record-core's services).
+              LEGACY-TESTS #14 (T16, 2026-09-30): UNCHANGED, the same pair on T15's close and on this tree; left red for
+              record-core (T15 carried it). */
           ]);
 t("REACH IS A DELTA (dispatch denominator): breaking the dispatch arrow shape shrinks the "
 + "DENOMINATOR too — otherwise the reach fractions above are computed against a constant and "

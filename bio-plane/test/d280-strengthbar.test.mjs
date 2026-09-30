@@ -157,6 +157,13 @@ const STRENGTH_SRC = moduleSrc("strength");
    `#refEdgeSevered(...a)`, as the store did). The census, the surviving-site pin and SITE (e)'s pin read queue's
    files; the removed site's absence is asserted over the store AND the queue. */
 const QUEUE_SRC = moduleSrc("queue");
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved `#routeTask` to `src/tasks/` (tasks R1), where it
+   asks connections' predicate directly (`this.#connections.edgeSevered(pid, bundleId, …)`, no private delegate), and
+   `#leadBasisAbsence` to `src/queue-producers/` (queue-producers R2). The census counts tasks' call in that spelling
+   (over tasks' files alone, so queue's own one-line delegate `return this.#connections.edgeSevered(...a)` is not
+   counted as a caller, as it never was); SITE (e)'s pin reads the producers' file. */
+const TASKS_SRC = moduleSrc("tasks");
+const PRODUCERS_SRC = moduleSrc("queue-producers");
 const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC + "\n" + INQUIRY_SRC + "\n" + QUEUE_SRC;
 const INDEX_SRC = readFileSync(IDX, "utf8");
 
@@ -721,8 +728,9 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
      (or the store's old `#refEdgeSevered(citingId, targetId`); the callers are the store's `this.#refEdgeSevered(`
      and connections' `this.edgeSevered(` (citesInto, formerly the store's #citesInto). */
   const defs = (SEVERANCE_SRC.match(/(?:#refEdgeSevered|\bedgeSevered)\(citingId, targetId/g) || []).length;
-  const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connections\.edgeSevered)\(/g) || []).length;
-  console.log(`  severance predicate: ${defs} definition(s), ${calls} call site(s) over store, connections, inquiry and queue`);
+  const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connections\.edgeSevered)\(/g) || []).length
+              + (TASKS_SRC.match(/this\.#connections\.edgeSevered\(/g) || []).length;
+  console.log(`  severance predicate: ${defs} definition(s), ${calls} call site(s) over store, connections, inquiry, queue and tasks`);
   t("THE RULE HAS EXACTLY ONE IMPLEMENTATION, and D-280 added no second one — the shape that has "
   + "already absorbed a control in this estate",
     defs, 1);
@@ -767,8 +775,14 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   + "as through the op, because an op arm alone cannot tell a confirmation from a fixture that "
   + "happened to agree",
     /* RE-ANCHORED (T7; INQUIRY #1): `restingOn` is inquiry's, and it asks connections' predicate for each row. */
-    [/#routeTask[\s\S]{0,4000}?this\.#refEdgeSevered\(pid, bundleId/.test(QUEUE_SRC),
-     /\n  restingOn\(targetId\) \{[\s\S]{0,3000}?this\.connections\.edgeSevered\(/.test(INQUIRY_SRC)], [true, true]);
+    /* LEGACY-TESTS #14 (T16, 2026-09-30): `#routeTask`'s half RETIRED (K457). It moved to `src/tasks/` (N363), and
+       tasks R1 ("routed … to an active owner of the first project (by id) with a live `cites` edge") is held by
+       `test/m/tasks/inbox.test.mjs` "R1: drain takes queued events in order; … routed owner, citing owner, admin,
+       unassigned", which severs the only citing edge through connections' `edgeSevered` and asserts the owner behind
+       it is NOT tried — a behavioural proof that the predicate is consulted, stronger than this spelling. The census
+       above still counts its call, and §5 still drives the route through the plane (a real severed ref, kept: the
+       module test fakes connections, so only §5 holds the two modules together). */
+    [/\n  restingOn\(targetId\) \{[\s\S]{0,3000}?this\.connections\.edgeSevered\(/.test(INQUIRY_SRC)], [true]);
 
   /* ---- THE SITES LEFT UNCHANGED, PINNED SO THE JUDGEMENT IS ENFORCED --------
      A silent partial fix is the thing D-280's row exists to prevent, so each
@@ -784,8 +798,12 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   + "inference. The count is the honest instrument and the status is not its question",
     /* RE-ANCHORED 2026-09-29 (K409): the method is queue's now; read there, with its presence asserted beside the
        pin, since a pin over a file that no longer holds the method would pass over nothing. */
-    [QUEUE_SRC.includes("  #leadBasisAbsence(captureSha) {"),
-     /#leadBasisAbsence\([\s\S]{0,2400}?#refEdgeSevered/.test(QUEUE_SRC)], [true, false]);
+    /* LEGACY-TESTS #14 (T16, 2026-09-30): it is queue-producers' now (N363); read there, its presence asserted as
+       before. KEPT under K457: no module test holds the judgement (queue-producers' `producers.test.mjs` R2 asserts
+       `absent` for a document with no leg, never a severed-only leg), and the predicate is looked for in either
+       spelling, the delegate's or connections'. */
+    [PRODUCERS_SRC.includes("  #leadBasisAbsence(captureSha) {"),
+     /#leadBasisAbsence\([\s\S]{0,2400}?(?:#refEdgeSevered|edgeSevered)/.test(PRODUCERS_SRC)], [true, false]);
   t("SITES (f) `#writeSupersededBy` and `#actionDerived` ARE OUT OF THE CLASS AS MEASURED, and the "
   + "pin is what would notice if that stopped being true: no op in the plane writes a `supersedes` "
   + "or `responds_to` reference carrying a status at all, so the exposure is UNMEASURED rather than "

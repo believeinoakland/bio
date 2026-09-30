@@ -133,8 +133,13 @@ console.log(`\nCORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").
    212,573 -> 210,035 characters (-2,538: N342's drop of queue's four reads and the TASK seed, N352's `#hiddenBundles`
    now reading membership R88, K500's unused CASE_DOCUMENT_FORMAT import). Still a blindness floor at the measured
    figure, never below it. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): RE-PINNED from this suite's own CORPUS print: 210,035 -> 209,972 characters
+   (-63, one change: TASKS #1, 2f170f04a5, N363 — `tasks` left the store's purge list, the capture R44 half of the
+   registration comment went, and `tasksOf`'s import, its `.migrate()` call and the `tasksOps` spread came in). The
+   store arms below still read a real subject (`class Store`, `actNoCitation`). Still a blindness floor at the
+   measured figure, never below it. */
 t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
-  store.length >= 210_035 && /class Store\b/.test(store), true);
+  store.length >= 209_972 && /class Store\b/.test(store), true);
 
 const ROW_BASIS = ACT_SHAPE_CHECKS.NO_BASIS;
 const ROW_CITE = ACT_SHAPE_CHECKS.NO_CITATION;

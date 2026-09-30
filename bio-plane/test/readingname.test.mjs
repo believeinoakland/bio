@@ -900,9 +900,13 @@ console.log("\n=== REC-77 · THE SWEEP: orderings fixed in advance, over bio-pla
    queue ranked by `QUEUE_CLASSES.indexOf`) left store.mjs with the queue for `src/queue/index.mjs`, where it is
    `Queue.QUEUE_CLASSES`. The sweep reads that file too, and the detector admits the `Queue.` qualifier as it admits
    `Store.`, so the same ordering is found by its new name rather than lost from the walk. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the obligation inbox to `src/tasks/` and the feed's
+   producers to `src/queue-producers/`; the sweep reads their files too, so the queue is walked as it stood before the
+   split. Measured: neither holds a `CONSTANT.indexOf(` site, so the pinned three are unchanged. */
 const SWEEP_TEXT = STORE_TEXT + "\n"
-  + readFileSync(fileURLToPath(new URL("../src/case-authoring/index.mjs", import.meta.url)), "utf8") + "\n"
-  + readFileSync(fileURLToPath(new URL("../src/queue/index.mjs", import.meta.url)), "utf8");
+  + ["case-authoring/index.mjs", "queue/index.mjs", "tasks/index.mjs", "queue-producers/index.mjs",
+     "queue-producers/proposals.mjs"]
+      .map((f) => readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8")).join("\n");
 const RANKED = [...SWEEP_TEXT.matchAll(/(?:^|[^\w.])((?:Store\.|Queue\.)?#?[A-Z][A-Z_]{2,})\.indexOf\(/gm)]
   .map((m) => m[1]);
 const ORDER_BY = (STORE_TEXT.match(/ORDER BY/g) || []).length;

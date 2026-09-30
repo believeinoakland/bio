@@ -56,7 +56,10 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
    for src/queue/index.mjs; the shared predicate (arm C2) is connections' `edgeSevered` (CONNECTIONS #1 R22, T5) and
    `restingOn` (arm D) is inquiry's (INQUIRY #1, T7), so those two arms had matched nothing since. Each arm makes the
    same edit where the code now lives; needles counted (exactly one) first. */
-const F = { queue: ROOT + "src/queue/index.mjs", connections: ROOT + "src/connections/index.mjs",
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved `#routeTask` (arm B) on to src/tasks/index.mjs
+   (tasks R1), where it asks connections' predicate directly rather than through a private `#refEdgeSevered`; arm B
+   makes the same edit there, its needle re-spelled to that call and counted (exactly one) first. */
+const F = { tasks: ROOT + "src/tasks/index.mjs", connections: ROOT + "src/connections/index.mjs",
             inquiry: ROOT + "src/inquiry/index.mjs" };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -210,8 +213,8 @@ arm("B", "SITE (b) PUT BACK, ALONE. `#routeTask` takes the FIRST citing project 
   + "DECLARED: the routing arm and its basis arm MUST fail. The bar arms and the restson arms MUST "
   + "stay green — armed apart from (A) on purpose, because one confirmation covering for another is "
   + "exactly how a half-fix reads as a whole one.",
-  [["queue", `    const cite = [...citeEdges].find(([pid, kinds]) =>
-      !kinds.every((k) => this.#refEdgeSevered(pid, bundleId, k || null)));`,
+  [["tasks", `    const cite = [...citeEdges].find(([pid, kinds]) =>
+      !kinds.every((k) => this.#connections.edgeSevered(pid, bundleId, k || null)));`,
               `    const cite = [...citeEdges][0];   /* ARMED (D-280 control B) */`]],
   [{ name: OWN,
      mustFail: ["THE OBLIGATION GOES TO THE OWNER", "the routing BASIS names the project"],

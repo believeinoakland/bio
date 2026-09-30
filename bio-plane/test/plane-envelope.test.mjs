@@ -587,7 +587,25 @@ t("D-240 (e) THE UNCLASSIFIED RESIDUAL IS NAMED AND CEILINGED, and CROSS-CHECKED
      hiding this detector's own subject. Verified by the printed site list, which names all 17
      individually; a raise that could not name its arrivals would be this ceiling becoming a place
      to hide, which is precisely what it exists to prevent. */
-  [A_CENSUS.unclassified.length <= 17, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): 17 -> 23, RAISED, each arrival named with the change that made it; no
+     departure. Measured by name against T15's close (f5554232cb), the census re-run over both trees:
+       - RATIFICATION (b89c9dbab9, R18's pre-flight shares op=caseratify's refusals through `./refusals.mjs`):
+         `ratification/ops.mjs` `json(machineCaseRefusal(cls), 403)`, `json(operatorCaseRefusal(cls), 403)` and
+         `json({ ...refusal, store, tokenClass }, 409)` — the first two were the literal refusals
+         MACHINE_CANNOT_RATIFY_CASE and OPERATOR_TOKEN_CANNOT_RATIFY_CASE, the third replaces three literal ones
+         (TESTIMONY_CASE_UNPUBLISHABLE, ATTRIBUTION_UNCHOSEN, ATTRIBUTION_STATEMENT_STALE), now built by a helper;
+       - CAPTURE (2ff4800ac2, R66): `capture/doorbell.mjs` `json(knockerSecretWeak(), 400)`, a pre-store refusal
+         composed by a governed helper, exactly as D-513's three above;
+       - CONTROL-PLANE (8a55152ade, N364, R36): `control-plane/index.mjs` op=inboxpull's hinted relay
+         `json({ ...body, store, tokenClass }, hinted)` (the relay's two siblings were already here), and
+         op=knockerconsent's `json({ ...rec, ok: true }, 200)`.
+     All six are the gate's stated blind spot (not a literal, or a leading spread). THE CROSS-CHECK IS UNMOVED AND
+     GATED AT ZERO. One limit stated rather than absorbed: op=knockerconsent's `rec` IS the store's result, bound to a
+     local (`const rec = out.result …`) before the spread, so this `.result`-spelled cross-check cannot see it; the
+     site sits behind `if (!out.answered) return storeSilent("knockerconsent", …)`, so it is guarded, and no product
+     change is owed. The declared refusals fell 77 -> 74 (the five ratification literals above left; op=knockerconsent's
+     `{ ok: false, ...rec }` and its `knockerconsent is a POST` arrived). */
+  [A_CENSUS.unclassified.length <= 23, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
 /* (f) AND THE DECLARED REFUSALS THAT DO SPREAD ONE — outside this detector's
    subject by construction, so they are pinned BY SITE rather than left as a
    sentence. `{ ok: false, ...rec.result }` cannot report a success, but it is

@@ -184,6 +184,11 @@ const t = (label, got, want) => {
    CORRECTED 2026-09-30 (LEGACY-TESTS #13, T15; N348, INSTANCE-SETUP #4): `instanceSetupStore` and `instanceSetupRoute`
    are gone from `src/setup.mjs` (816faed8f4); what is read here, `InstanceSetup` and `instanceSetupOps`, is all it
    routes, and control-plane's `Store` spreads `instanceSetupOps` over legacy-store's map (so its entries win). */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the obligation inbox left queue for `src/tasks/` (TASKS #1, 2f170f04a5, N363),
+   and the store spreads its routes on their own (`...tasksOps(tasksOf(this.ctx), url, body),`), so op=tasks and
+   op=taskdrain left the roster while still capped and still driven (WALK and the second PIN arm named them, and the
+   WALK GUARD's `taskList` segment was gone). The FOURTH pass re-inlines tasks beside queue (`tasksOf: "tasks"`,
+   spelled as the store calls the factory); the re-inliner is not changed. */
 const SRC_SETUP = readFileSync(new URL("../src/setup.mjs", import.meta.url), "utf8");
 const setupAppendix = (() => {
   const L = SRC_SETUP.split("\n");
@@ -200,7 +205,7 @@ const setupAppendix = (() => {
 })();
 const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
   { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text,
-  { ops: true, privates: true, modules: { queueOf: "queue" } }).text + setupAppendix;
+  { ops: true, privates: true, modules: { queueOf: "queue", tasksOf: "tasks" } }).text + setupAppendix;
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures
@@ -367,6 +372,8 @@ t("WALK GUARD: the segmenter partitions the class into a plausible number of met
 /* RE-ANCHORED 2026-09-29 (T12 B5, K409): `taskList` is the queue's now (re-inlined above), and its clamp is the
    queue's `clampLimit(limit, 200, 1000)` where the store wrote `Math.max(1, Math.min(1000, …))`; the segment is read
    for its own line and still must not run into `taskDrain`. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): `taskList` is tasks' now (TASKS #1, N363, re-inlined beside queue above), the same
+   clamp line; this guard and the WALK arm below read it there, unchanged. */
 t("WALK GUARD: a segment is bounded by the NEXT method and does not run into it",
   [/const cap = clampLimit\(limit, 200, 1000\)/.test(segments(CODE).get("taskList")),
    /taskDrain\(\{/.test(segments(CODE).get("taskList"))], [true, false]);
@@ -837,7 +844,20 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      op=contradictionresponses (`conflictResponses`, R54). The other N345/N351 bounds the handover named
      (`resolutiondefect`, `entity`'s aliases and relations, `publishtensions`) put no op on this roster: the walk does
      not find a cap in their dispatched segments. */
-  OPS.size, 77);
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): 77 -> 79 from this suite's print (`102 carrying a cap, reaching 79 ops`), the
+     roster DIFFED BY NAME against T15's close (f5554232cb: `106 carrying a cap, reaching 77 ops`). NO DEPARTURE (op=tasks
+     and op=taskdrain are back under `taskList` and `taskDrain` once tasks is re-inlined, above). TWO ARRIVALS:
+     op=contradictiontensions (`tensionsOn`, CONTRADICTION #3, N368: each referent's marks read from at most
+     TENSIONS_CANDIDATES_MAX (200) candidates, `LIMIT ?` at cap + 1, `limit` and `truncated` per referent and overall)
+     and op=knocksof (`knocksOf`, CAPTURE #8, R67: `limitOf(limit)` beside `LIMIT ?` at cap + 1, `limit`, `truncated`,
+     `next`). The capped METHODS (106 -> 102, diffed by name) moved only in segments that are no op's: EIGHT of queue's
+     privates left the set — seven producers moved to queue-producers (QUEUE #3/QUEUE-PRODUCERS #1, N363:
+     `#conditionBundlesForAddress`, `#conditionBundlesForHost`, `#conditionsArchiveEligible`,
+     `#findingsConcludedElsewhere`, `#findingsStanceDiverged`, `#findingsVersionFromAnotherTeam`,
+     `#queueSharedInquiryCandidates`), and `#resolvedLately` now asks tasks' `resolvedTasks({limit: cap + 1})` (TASKS R6)
+     where it held a `LIMIT ?` — and FOUR came in: `knocksOf`, `tensionsOn`, and contradiction's `#entitiesOf` and
+     `#facts` (N368's FACTS_ENTITIES_MAX). */
+  OPS.size, 79);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1849,7 +1869,19 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      way, but its one module test (`projects.test.mjs` "R50, R55: a notice carries …") reads
                                      only `limit` 50 and `truncated` false over one notice; no suite drives the bite.
                                      REPORTED to contradiction. Its envelope is below. */
-                                  "aliaswithdraw", "contradictioncandidates", "contradictionresponses"]);
+                                  "aliaswithdraw", "contradictioncandidates", "contradictionresponses",
+                                  /* LEGACY-TESTS #14 (T16, 2026-09-30): T15's red op and T16's two arrivals, each bite now
+                                     driven at its module's interface in this loop's shape: op=contradictionnotices in
+                                     `test/m/contradiction/projects.test.mjs` "R50 (N368): the page is at most 50 …"
+                                     (51 notices cut at 50 with `truncated` true, the rest read whole with it false, a limit
+                                     of one cut and resumed; CONTRADICTION #3, K546); op=contradictiontensions in
+                                     `test/m/contradiction/present.test.mjs` "R27 (N368): … at most 200 candidates …" (201
+                                     cut at 200 with the referent's and the answer's `truncated` true, 200 read whole with
+                                     both false); op=knocksof in `test/m/capture/knocker.test.mjs` "R67 R70: knocksOf …
+                                     bounded and paged" (seven knocks paged 3, 3, 1 with `truncated` true until the last, an
+                                     over-ask answered at the ceiling, and the route cut at a limit of two). Their envelopes
+                                     are below. */
+                                  "contradictionnotices", "contradictiontensions", "knocksof"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -2561,6 +2593,13 @@ const answersByOp = new Map([
     return POST("op=aliaswithdraw&token=mem-r57", { entityId: id, alias: "bounds envelope withdrawn name",
                                                     reason: "bounds envelope: a name withdrawn to read the answer's shape" });
   })()],
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): T16's two arrivals' ENVELOPES, for CPDF-10's reason (the bites are where
+     DRIVEN_ELSEWHERE says). Both asked at the Durable Object, `projectstage`'s precedent: op=knocksof is a member
+     SESSION's read only (`machineClasses: []`) and this suite drives machine tokens, and op=contradictiontensions is
+     asked with the viewer stamped, over one referent no candidate touches (so it answers its marks empty and whole). */
+  ["knocksof", await DO("knocksof?pseudonym=knocker-0000-0000-0000-0000&limit=1")],
+  ["contradictiontensions", await DO("contradictiontensions?viewer=member:d479own",
+    { referents: [{ ref: "INQ-2026-0807-bounds-runs|v1", version: "0".repeat(64) }] })],
 ]);
 /* ADDED 2026-09-30 (LEGACY-TESTS #13, T15): the envelopes above are ANSWERS, not refusals standing in for them, where an
    answer is reachable here — each publishes the bound it applied (R25, R50: the asked limit of 1, under PAGE_MAX, with
@@ -2573,6 +2612,13 @@ t("op=contradictioncandidates, op=contradictionnotices and op=aliaswithdraw: eac
    answersByOp.get("aliaswithdraw")?.ok, answersByOp.get("aliaswithdraw")?.limit,
    answersByOp.get("aliaswithdraw")?.resolutions_resting_truncated],
   [true, 1, false, true, 1, false, true, 500, false]);
+/* LEGACY-TESTS #14 (T16, 2026-09-30): and the two T16 arrivals' envelopes are answers publishing their bounds (R67: the
+   asked limit of 1, `truncated` false over no knock; R27 (N368): TENSIONS_CANDIDATES_MAX, `truncated` false overall). */
+t("op=knocksof and op=contradictiontensions: each envelope is an answer publishing its bound",
+  [answersByOp.get("knocksof")?.ok, answersByOp.get("knocksof")?.limit, answersByOp.get("knocksof")?.truncated,
+   answersByOp.get("contradictiontensions")?.ok, answersByOp.get("contradictiontensions")?.limit,
+   answersByOp.get("contradictiontensions")?.truncated],
+  [true, 1, false, true, 200, false]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "
 + "through the op rather than asserted about it",

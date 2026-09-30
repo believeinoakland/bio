@@ -583,11 +583,18 @@ console.log("\n--- SWEEP: an ACCESS PATH the schema built for a question no op a
    (`… FROM source_reachability WHERE consecutive_failures >= ? …`) moved from queue's `#conditionsArchiveEligible`
    into monitoring's `archiveEligible` (its R47). Measured: 136 -> 138 indexes (monitoring's own two, each read), 13 ->
    12 unread, the one difference `source_reach_failing`, read again; no other name moved. */
+/* WIDENED 2026-09-30 (LEGACY-TESTS #14, T16; N363, the queue split): `tasks` (the `tasks` table, its schema and its
+   statements, from queue) and `queue-producers` (the feed's producers' SQL, from queue) join the corpus on BOTH sides.
+   Without them the sweep read 148 indexes and 11 unread: `tasks_assignee` (`tasks(assignee)`) had left the roster only
+   because `tasks/schema.mjs` was outside the corpus, i.e. the reader lost sight of it, the one direction the floor
+   exists to catch. Measured with them: the corpus of `5eae967ba5` (the tranche before queue's merge, 150 indexes, 12
+   unread) returns, the same twelve names; the figures below are unmoved. */
 const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture",
                    "calibration", "extraction", "content", "entities", "connections", "progressions", "bias",
                    "observation-log", "retrieval",
                    "ai-runs", "basis-versions", "capture-requests", "capture-sources", "citation", "contradiction",
-                   "inquiry", "intent", "queue", "reevaluation", "run-productions", "strength", "monitoring"];
+                   "inquiry", "intent", "queue", "reevaluation", "run-productions", "strength", "monitoring",
+                   "tasks", "queue-producers"];
 const EXTRACTED_SRC = moduleSources(EXTRACTED);
 const PURGE_COMPOSED = [...(SRC_STORE + "\n" + EXTRACTED_SRC).matchAll(/\{ name: "(\w+)", keys: \[([^\]]*)\]/g)]
   .map((m) => [m[1], [...m[2].matchAll(/"(\w+)"/g)].map((k) => k[1])]).filter(([, keys]) => keys.length)

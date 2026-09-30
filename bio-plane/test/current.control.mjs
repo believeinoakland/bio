@@ -39,8 +39,12 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): both slugs' producers, `#dispositionOf` and
    `#queueSharedInquiry`'s callers left src/store.mjs with the queue for src/queue/index.mjs; the arms that edited them
    in the store (2b, 3, 5, 6, 7, 8) edit them there. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved both slugs' producers and `#queueSharedInquiry`'s
+   callers on to src/queue-producers/index.mjs; the arms that edit them (2b, 3, 5, 6, 8) edit them there, with the same
+   needles (each counted exactly once there). `#dispositionOf` (arm 7) stays in src/queue/index.mjs. */
 const F = {
   queue: ROOT + "src/queue/index.mjs",
+  producers: ROOT + "src/queue-producers/index.mjs",
   queuestate: ROOT + "src/queuestate.mjs",
   /* ADDED 2026-09-28 (LEGACY-TESTS #4): `#setProjectCurrentVersion` and `#projectsDrawingOn` moved to basis-versions
      (BASIS-VERSIONS #1 J4.1), and QUEUE_CONDITION_KINDS is observation-log's `CONDITION_KINDS` (K78), re-exported by
@@ -222,7 +226,7 @@ arm("2b", "THE HALF ARM 2 CANNOT REACH, AND IT TAKES TWO EDITS TOGETHER ON PURPO
    ["vocabulary", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
                   `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
   "stance-changed-here-not-elsewhere": "MOVED BY THE CONTROL ARM — a divergence a member may silence",`],
-   ["queue", `          id: \`FINDING::stance-changed-here-not-elsewhere::\${inq}::\${p.id}\`,
+   ["producers", `          id: \`FINDING::stance-changed-here-not-elsewhere::\${inq}::\${p.id}\`,
           class: "FINDING",`,
              `          id: \`FINDING::stance-changed-here-not-elsewhere::\${inq}::\${p.id}\`,
           class: "CONDITION",`]],
@@ -237,7 +241,7 @@ arm("3", "THE SPINE OF SLUG ONE — DIVERGENCE IS A COMPARISON AND NOT A COUNT. 
   + "DECLARED: the CONVERGENCE arm MUST fail — two projects on ONE reading must produce silence. "
   + "The divergence arms MUST stay green, which is exactly what makes this defect invisible without "
   + "an arm pointed at AGREEMENT rather than at disagreement.",
-  [["queue", `                      && (!q.current || q.current.version !== p.current.version))`,
+  [["producers", `                      && (!q.current || q.current.version !== p.current.version))`,
              `                      && (true || q.current.version !== p.current.version))`]],
   ["when B moves ONTO A's reading the divergence is GONE"],
   ["now TWO items, one per dated act"]);
@@ -283,7 +287,7 @@ arm("5", "THE TEAM IS READ, NEVER INFERRED. `#findingsVersionFromAnotherTeam` st
      R8–R9 and the run through ai-runs R28 (`runFor`), so the arm is re-expressed at those two sites with its meaning
      unchanged: the run-less readings are no longer filtered out, and a reading whose run names no project falls back
      to the first project drawing on the question. Each needle counted (exactly one) before it was written. */
-  [["queue", `      const vrows = heldVersions.filter((v) => typeof v.run === "string" && v.run)`,
+  [["producers", `      const vrows = heldVersions.filter((v) => typeof v.run === "string" && v.run)`,
              `      const vrows = heldVersions.filter((v) => true)`],
    /* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING IS
       SHARPER THAN "THE LINE MOVED": **THIS ANCHOR NEVER EXISTED.** It quoted
@@ -303,7 +307,7 @@ arm("5", "THE TEAM IS READ, NEVER INFERRED. `#findingsVersionFromAnotherTeam` st
       first project drawing on the question" is: drop `context_type='project'`
       from the predicate and `|| drawing[0]` after it. Asserted to occur exactly
       once, and the patched source re-parsed, before this was written. */
-   ["queue", `        const from = run && run.context_type === "project"
+   ["producers", `        const from = run && run.context_type === "project"
           ? drawing.find((p) => p.id === run.context_id) : undefined;`,
              `        const from = (run && run.context_type === "project"
           ? drawing.find((p) => p.id === run.context_id) : undefined) || drawing[0];`]],
@@ -317,7 +321,7 @@ arm("6", "THE SOURCE IS NOT A HOME OF ITS OWN ITEM. The exclusion is removed, so
   + "DECLARED: the excluded-home arms MUST fail. The item still exists and still says everything "
   + "else it said, which is the defect's whole camouflage — nothing errors, nothing is missing, and "
   + "one sentence is simply false for one audience.",
-  [["queue", `        const kept = homes.ancestors.filter((a) => a.id !== src);`,
+  [["producers", `        const kept = homes.ancestors.filter((a) => a.id !== src);`,
              `        const kept = homes.ancestors;`]],
   ["A's reading is NOT filed under A"],
   ["the run-less version is absent for a REASON THE PRODUCER PUBLISHES"]);
@@ -365,7 +369,7 @@ arm("8", "THE QUESTION MUST STILL EXIST. `#queueSharedInquiry`'s guard is remove
   + "defect found by a control is the best evidence that the control is real.",
   /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): the six-line anchor occurs TWICE (the conclusion producer carries the
      same head), so the harness refused to arm; the stance producer's next line keeps it unique. */
-  [["queue", `      const q = this.#queueSharedInquiry(inq, viewer);
+  [["producers", `      const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
       const drawing = this.#projectsDrawingOn(inq, viewer);
       if (drawing.length < 2) continue;

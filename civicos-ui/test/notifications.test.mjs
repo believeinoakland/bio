@@ -128,7 +128,11 @@ import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS,
          classOfKind } from "../../bio-plane/src/queuestate.mjs";
 /* RE-ANCHORED 2026-09-29 (queue R18, REC-202; K409): the lead's take-up act is queue's own published option, read
    from the module rather than typed here, so the fixture carries the act the producer mints. */
-import { Queue } from "../../bio-plane/src/queue/index.mjs";
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the lead's producer and its take-up act on to
+   queue-producers (`QueueProducers.LEAD_TAKE_UP`, set by the producer, as queue-producers R9 names it), so the
+   fixture reads the act from there; the set-aside stays queue's mint. Import added: `queue-producers` (an earlier
+   module; legacy-tests' `uses` is `*earlier`). */
+import { QueueProducers } from "../../bio-plane/src/queue-producers/index.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -202,7 +206,7 @@ function LEAD(entryState){
        the inquiry it bears on), decorated with its rung as `op=queue` publishes it; the project-scoped set-aside
        (`LEAD_SET_ASIDE`) is added only where the item's disposition is available, which this fixture's is not. The
        old `options_grain: {offered: "document", missing: "inquiry"}` is RETIRED by R18 and is gone from the lead. */
-    options: [{ ...Queue.LEAD_TAKE_UP, rung:"reversible" }],
+    options: [{ ...QueueProducers.LEAD_TAKE_UP, rung:"reversible" }],
   };
 }
 
@@ -647,7 +651,7 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
 
   ok("§2 the lead's options[] are rendered — the acts the record DOES publish on it (queue R18: take it up "
      + "under the question it bears on)",
-     html.includes(Queue.LEAD_TAKE_UP.label));
+     html.includes(QueueProducers.LEAD_TAKE_UP.label));
   /* RE-ANCHORED 2026-09-29 (queue R18, REC-202; K409, QUEUE #2), never exempted. These arms read the LEAD's
      `options_grain` ({offered: document, missing: inquiry}) — the gap REC-202 closed: R18 offers the inquiry-grain
      acts on the lead itself and the lead declares no grain. What the arms protect is unchanged — a grain the record

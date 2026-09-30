@@ -102,7 +102,9 @@ arm("b", "ADMIT OBLIGATION AS PERSONALLY MUTABLE. DECLARED: both OBLIGATION refu
 /* (c) THE OBLIGATION FENCE, naming half: an opaque task id is not asked of `tasks`. */
 arm("c", "DO NOT ASK `tasks` TO NAME AN OPAQUE ID. DECLARED: the by-ITEM obligation arm MUST fail "
   + "(it is refused, but as UNKNOWN_KIND rather than by name). The by-KIND arm MUST NOT.",
-  [["queue", "if (cls === null && this.#one(`SELECT id FROM tasks WHERE id=?`, itemId)) cls = \"OBLIGATION\";",
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the `tasks` table to `src/tasks/`; queue now
+     asks it through tasks R6's `taskExists` (queue R19), so the needle is that call. */
+  [["queue", "if (cls === null && this.#tasks.taskExists(itemId)) cls = \"OBLIGATION\";",
              "if (cls === null && false) cls = \"OBLIGATION\";"]],
   ["by ITEM: the task's own id is refused"],
   ["by KIND: refused KIND_NOT_PERSONAL"]);

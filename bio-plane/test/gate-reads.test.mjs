@@ -1145,7 +1145,8 @@ console.log("\n--- T13's read (publication's projectstage), driven on the hidden
  *  classification below is written from what the plane ANSWERED. The candidate-addressed three (`contradictionfacts`,
  *  `contradictiontensions`, `contradictioncandidates`) need a run's proposed candidate this fixture does not hold;
  *  their sight is driven at contradiction's interface (test/m/contradiction/present.test.mjs R25/R27/R28,
- *  projects.test.mjs R49–R55), and `contradictioncandidates` is LEFT UNCLASSIFIED (see the classification's note).
+ *  projects.test.mjs R49–R55), and `contradictioncandidates` is LEFT UNCLASSIFIED (see the classification's note;
+ *  its `{project}` arm is driven in the T16 section below, since N366).
  * ------------------------------------------------------------------------- */
 console.log("\n--- T15's reads (contradiction, case-authoring, conformance), driven on the hidden project ---");
 {
@@ -1193,6 +1194,45 @@ console.log("\n--- T15's reads (contradiction, case-authoring, conformance), dri
   t("op=comparisonfacts: that answer is NO_SUCH_CONTRADICTION_INQUIRY, carrying no fact, side or resolution",
     [cH.body.result?.ok, cH.body.result?.reason, "rows" in (cH.body.result || {})],
     [false, "NO_SUCH_CONTRADICTION_INQUIRY", false]);
+}
+
+/* ------------------------------------------------------------------------- *
+ *  LEGACY-TESTS #14 (T16, 2026-09-30): T16's PROJECT-NAMING READS, DRIVEN ON THE HIDDEN PROJECT. Ten reads arrived
+ *  unclassified (T15's `contradictioncandidates`, now fenced by N366, and nine from N364: capture's `knocksof`,
+ *  `pulledknocks`, `lateattestations`, `captureaccounts`; sources' `sourceof`, `sourcerung`, `sourcereadlog`,
+ *  `sourcepublishable`; case-authoring's `publishpreflight`). The two that take a PROJECT are asked here by dave,
+ *  never invited to carol's project, and by carol, who owns it. The eight others name no project or bundle (a knocker's
+ *  pseudonym, a capture's digest, a source id), and their reasons are read off their code below.
+ * ------------------------------------------------------------------------- */
+console.log("\n--- T16's project-naming reads (contradiction's candidates, case-authoring's pre-flight), driven on the hidden project ---");
+{
+  const flatten = (r, ...ids) => JSON.parse(ids.reduce((s, id) => s.split(id).join("<ASKED>"), JSON.stringify(r)));
+  const ABSENT_PROJ = "PROJ-2026-9999-none";
+  const pair = async (q) => [await GET(q(PROJ)), await GET(q(ABSENT_PROJ))];
+
+  /* contradiction R25 (N366): `{project}` for a project the viewer may not see answers as an absent one. */
+  const cC = await GET(`op=contradictioncandidates&token=${carol}&project=${PROJ}`);
+  t("op=contradictioncandidates: the OWNER is answered on her project (the arm is live)",
+    [cC.body.result?.ok !== false, Array.isArray(cC.body.result?.candidates)], [true, true]);
+  const [ccH, ccA] = await pair((p) => `op=contradictioncandidates&token=${dave}&project=${p}`);
+  t("op=contradictioncandidates: the hidden project answers dave byte-identically to one that does not exist, the id aside (N366)",
+    flatten(ccH, PROJ), flatten(ccA, ABSENT_PROJ));
+
+  /* case-authoring R34: op=publish's own refusals, without writing. */
+  const pfC = await POST(`op=publishpreflight&token=${carol}&project=${PROJ}`, { target: INFO });
+  t("op=publishpreflight: the OWNER is answered the pre-flight for her project, and nothing is written (the arm is live)",
+    [pfC.result?.ok, pfC.result?.wrote], [true, false]);
+  const pf = async (p) => {
+    const r = await mf.dispatchFetch(`http://x/api/?op=publishpreflight&token=${dave}&project=${p}`,
+      { method: "POST", body: JSON.stringify({ target: INFO }) });
+    return { status: r.status, body: await r.json() };
+  };
+  const [pfH, pfA] = [await pf(PROJ), await pf(ABSENT_PROJ)];
+  t("op=publishpreflight: the hidden project answers dave byte-identically to one that does not exist, the id aside",
+    flatten(pfH, PROJ), flatten(pfA, ABSENT_PROJ));
+  t("op=publishpreflight: that answer's first refusal is NO_SUCH_PROJECT, with no blocker and nothing read past it",
+    [pfH.body.result?.wrote, pfH.body.result?.ready, pfH.body.result?.first?.reason, pfH.body.result?.blockers],
+    [false, false, "NO_SUCH_PROJECT", []]);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -1955,7 +1995,8 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
        reach includes (`#projectInquiries` reads basis-versions' viewer-free `projectQuestions`), where an absent project
        answers `none_judged`. Measured at the module's interface over contradiction's own fixture (a project m1 is not
        in, drawing on a K2 duty's inquiry): m1 is shown `reach: {projects: ["<hidden id>"]}`, and asked by the hidden id
-       is answered the candidate. Reported to contradiction; not classified away. */
+       is answered the candidate. Reported to contradiction; not classified away. (CLASSIFIED in T16, below the
+       T15 entries, once N366 closed both.) */
     contradictiontensions: "contradiction R27, R19, R55: each referent's marks from every candidate the viewer may see "
       + "on it. GATED per side: `#marksOn` answers nothing for a side the viewer may not see (`#sideSeen`, every bundle "
       + "the side lives in through viewerPredicate), and a candidate seen whole marks only by its derived state, naming "
@@ -1996,6 +2037,46 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "whose two sides the viewer may not both see answers that same refusal, so no fact of an unseen side is "
       + "answered (the fields it copies are the sides' own, never `reach`). DRIVEN in the T15 section above. Stamped "
       + "fail-closed with CONFORMANCE_READS. It writes nothing.",
+    /* LEGACY-TESTS #14 (T16, 2026-09-30): CLASSIFIED once N366 (CONTRADICTION #3, 0d3612eecc, K546) fenced it — the
+       read T15 left unclassified and red above. Its reason read off src/contradiction/index.mjs `candidatesFor`,
+       `#present` and `#reachOf` (reach read through basis-versions' `projectsDrawingOn(inq, viewer)`), DRIVEN in this
+       suite's T16 section on the hidden project, and at contradiction's interface in
+       test/m/contradiction/present.test.mjs "R24, R25, R19 (N366)" (byte parity with 0, 2 and 34 hidden projects). */
+    contradictioncandidates: "contradiction R24, R25, R19 (N366): the candidates on exactly one subject. GATED per "
+      + "candidate and per project: a candidate with a side the viewer may not see is not answered nor counted "
+      + "(`#sideSeen`); a shown candidate's `reach.projects` names only the projects the viewer sees at FULL "
+      + "(`projectsDrawingOn(inq, viewer)`, membership R80), the rest neither counted nor flagged, and `truncated` taken "
+      + "over the visible list; `{project}` for a project the viewer may not see (or sees at EXISTENCE only) answers "
+      + "exactly as an absent id (`none_judged`). DRIVEN in the T16 section above. Stamped fail-closed with "
+      + "CONTRADICTION_READS (an absent stamp sees no side). It writes nothing.",
+    /* LEGACY-TESTS #14 (T16, 2026-09-30): N364's reads (CAPTURE #8 R67–R69, R72; SOURCES #1 R1, R5, R9; CASE-AUTHORING
+       #5 R34), each reason read off its code whole (src/capture/index.mjs `knocksOf`, `pulledKnocksOf`,
+       `lateAttestationsOf`, `captureAccountsOf`; src/sources/index.mjs `sourceOf`, `#view`, `readLog`, `rungOf`,
+       `publishableAt`; src/case-authoring/index.mjs `publishPreflight`) and the control plane's door
+       (src/control-plane/dispatch.mjs PROJECT_NAMING_READS / _NOT, driven in test/m/control-plane/doorbell.test.mjs
+       "R27 (N364)"). The three sources reads gated by the entry's SIGHT LIST are GATED here, as op=leadread is, by a
+       predicate narrower than a bundle's. */
+    publishpreflight: "case-authoring R34 (N364): op=publish's refusals, without writing. GATED exactly as op=publish "
+      + "and op=publishtensions: the control plane's door answers a project named at EXISTENCE first "
+      + "(PROJECT_NAMING_READS), then `publishCase` runs in a rolled-back transaction behind `#authority` (the project "
+      + "through viewerPredicate, NO_SUCH_PROJECT for absent and invisible alike, then the OWNER test), and every "
+      + "independent blocker is read only when that authority holds; ratification R18's list is read only over the text "
+      + "the act would store. DRIVEN in the T16 section above: dave is answered the hidden project byte-identically to "
+      + "an absent one. Stamped with the viewer and publish's `author`. It writes nothing.",
+    sourceof: "sources R1, R5 (N364): a pulled capture's source as it stood (capture R65's `source`: a knocker's "
+      + "pseudonym and the knock's receipt, never a contact) and the source's history. GATED per ENTRY by the sight "
+      + "list: a stored value is answered only to a member on that entry's `source_sight` (`#view`), every other "
+      + "viewer reads it `withheld: true`, and each read answering a value is logged; a viewer naming no active member "
+      + "answers NO_SUCH_SOURCE, as a capture that is no pulled knock does. It names no bundle (REC-30's rule: a row "
+      + "about a capture stands, and there is no bundle reference to withhold). Tested at sources' interface "
+      + "(test/m/sources/source.test.mjs R1, disclose.test.mjs R5).",
+    sourcerung: "sources R9, R5 (N364): one source's ladder with who knows and how. GATED as op=sourceof, per entry by "
+      + "the sight list (`#view`: a withheld value stays withheld); a viewer naming no active member answers "
+      + "NO_SUCH_SOURCE. Names no bundle. Tested at sources' interface (test/m/sources/ladder.test.mjs R9).",
+    sourcereadlog: "sources R5 (N364): who read a source's stored values. GATED: answered whole only to an "
+      + "administrator, and to any other member only for the entries whose sight list names them (`readLog`); a viewer "
+      + "naming no active member answers NO_SUCH_SOURCE. Names no bundle. Tested at sources' interface "
+      + "(test/m/sources/disclose.test.mjs R5).",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
@@ -2177,6 +2258,33 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "name and coverage and the conflicts `combine` reports. It opens no bundle table and names no bundle, "
       + "so there is no working material for the D-15 predicate to filter; R15 shows the list to members by "
       + "name. Its write, op=profilesset, is admin-only and refused PROFILES_NOT_ADMIN otherwise (R14).",
+    /* LEGACY-TESTS #14 (T16, 2026-09-30): N364's doorbell and capture reads (CAPTURE #8, R67–R69, R72), each reason
+       read off src/capture/index.mjs whole; none takes a viewer, and the control plane's door classifies each as naming
+       no project (dispatch.mjs PROJECT_NAMING_READS_NOT, test/m/control-plane/doorbell.test.mjs "R27 (N364)"). */
+    knocksof: "THE DOORBELL INBOX, as op=inbox: capture R67, the knocks sharing one knocker's PSEUDONYM, oldest first, "
+      + "with the continuity sentence and never an identity or a contact (R70). A knock is filed against no bundle "
+      + "(R32), so there is nothing for the D-15 predicate to filter; it is fenced to a member SESSION "
+      + "(`machineClasses: []`), op=inbox's own reader. Bounded (N90). It writes nothing.",
+    pulledknocks: "THE DOORBELL INBOX, as op=inbox: capture R72, the knocks pulled into one capture, by its digest — "
+      + "each knock's id, digest, size, received instant, pseudonym and knocker digest, never a contact (R70). It names "
+      + "no bundle: the rows are the inbox's, which op=inbox already lists with their capture digest, and a row about a "
+      + "capture stands for every reader under REC-30's rule. Fenced to a member SESSION (`machineClasses: []`). It "
+      + "writes nothing.",
+    lateattestations: "NAMES NO BUNDLE: capture R68, the late co-attestations recorded for one capture, by its digest "
+      + "— each outcome's instant, the member who asked, and what the fresh timestamp and co-archive prove (`late: true`). "
+      + "A row about a CAPTURE, which REC-30's rule leaves standing for every reader (op=reading's row, op=pdfstructure's "
+      + "reason), and it carries no bundle reference to withhold. Capture R68 states no sight for it. It writes nothing.",
+    captureaccounts: "NAMES NO BUNDLE: capture R69, the members recorded as capturing one capture and their signed "
+      + "accounts of it, by its digest. A row about a CAPTURE, which REC-30's rule leaves standing (op=lateattestations' "
+      + "reason); it carries no bundle reference to withhold, and the accounts are what case-authoring R36 prints into "
+      + "a published case beside the capture. Capture R69 states no sight for it. It writes nothing.",
+    /* LEGACY-TESTS #14 (T16, 2026-09-30): SOURCES #1 R8, read off src/sources/index.mjs `publishableAt`. */
+    sourcepublishable: "OPENS ONLY WHAT IS ALREADY OPEN: sources R8, each entry of a source that may be shown to an "
+      + "AUDIENCE, with its basis — consent not withdrawn at `at`, or a `knownTo: public` entry whose evidence is a "
+      + "citation — every other entry left out and nothing said of it. It takes no viewer because what it answers is "
+      + "fixed by the consent and the public record, not by the reader (R8, K539: not a read under sight, so not "
+      + "logged), and it names no bundle. Tested at sources' interface (test/m/sources/consent.test.mjs R8). It writes "
+      + "nothing.",
   };
 
   const unclassified = reads.filter((op) => !(op in GATED) && !(op in UNGATED));
