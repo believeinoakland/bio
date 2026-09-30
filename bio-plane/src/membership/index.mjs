@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R1–R91; T16's N357 the founder's `member:admin` (R43) and N364 a
+ * Requirements: build/requirements/membership.md (R1–R91; T17's N387 R89's machine fence, its row C-96.17;
+ * T16's N357 the founder's `member:admin` (R43) and N364 a
  * member's own key (R27, R89–R91); T15's N352 `hiddenBundles` (R88); T14's N128 listener rows (R81), N327 `remedy` (R84), N329
  * `activeAdmins` ordered (R86) and N335 `notAParticipant` (R87); T13's N324 `notAnAdmin` (R84) and N332's `visibilityOf` (R85); T9's N123 revocation notice `onRevoked`, N142's `inSight` and
  * N70's bounds, as MEMBERSHIP #3 proposed them, J2). Extracted from the legacy store (T3-2); the legacy
@@ -2886,18 +2887,24 @@ export class Membership {
    * and any of them can revoke the key (R26).
    *
    * THE ORDER, and each step is the requirement's: who is asking (a machine credential, the operator's bearer or no
-   * stamp at all has no member to register for); the key's shape (R25's answer, RELAYED from R25's own region so
-   * C-96.8 keeps its one site); the member's standing (R25's bar, the gate's own question); and whether ANOTHER member
+   * stamp at all has no member to register for: C-96.17, N387); the key's shape (R25's answer, RELAYED from R25's
+   * own region so C-96.8 keeps its one site); the member's standing (R25's bar, the gate's own question); and whether ANOTHER member
    * holds the key. A held key is never rebound, and the refusal names no one: whose key it is, is not the caller's
    * to learn. A key `by` already holds and that is active answers `existed: true` and is not rewritten: its origin
    * and who registered it stay as first recorded. One `by` holds that was revoked is refused and stays revoked
    * (K535): only an administrator re-activates a key (R26), so an administrator's revocation sticks. */
   signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
-    if (by === null || by === undefined || by === "" || isMachineIdentity(by))
-      return { ok: false, reason: "MACHINE_CANNOT_REGISTER_KEY", by: by || null,
+    /* N387 (K571; DEC-49): the fence carries its row, C-96.17, minted here alone. */
+    /* DEC-49 REGION is-machine-register-key */
+    if (by === null || by === undefined || by === "" || isMachineIdentity(by)) {
+      const row = MEMBERSHIP_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
+      return { ok: false, reason: "MACHINE_CANNOT_REGISTER_KEY", code: "MACHINE_CANNOT_REGISTER_KEY", check: row.check,
+               translation: row.translation, by: by || null,
                detail: "a member registers their own signing key from their own signed-in session. A machine "
                      + "credential, the operator's bearer and an unstamped call have no member behind them to hold "
                      + "one; an administrator registers a key for a member with op=signeradd. Nothing was written." };
+    }
+    /* END DEC-49 REGION is-machine-register-key */
     if (!Membership.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });   /* R25's BAD_KEY, from its one site */
     const bar = this.#signerMemberBar(by);
     if (bar) return bar;

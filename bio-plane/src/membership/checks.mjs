@@ -31,7 +31,12 @@
  * N364 (DEC-80 item 4, K509 (2)): SIGNER_KEY_HELD_BY_ANOTHER is R89's, a member registering a key another member holds,
  * minted at its one site in `signerRegisterOwn`; its row is C-96.15, as the requirement names it, worded there.
  * SIGNER_KEY_REVOKED is R89's too (K535): a member registering again a key of theirs that was revoked, which only an
- * administrator re-activates (R26); its row is C-96.16, beside it. */
+ * administrator re-activates (R26); its row is C-96.16, beside it.
+ *
+ * N387 (K571; DEC-49): MACHINE_CANNOT_REGISTER_KEY is R89's first refusal, a machine credential, the operator's token
+ * or an unstamped call asking to register a member's own key, minted at its one site in `signerRegisterOwn`. T16 left
+ * it with no row; DEC-49 says every fence carries one, so it takes the next free number of C-96, this module's family
+ * for its acts on a member's own row and keys, beside C-96.15 and C-96.16. */
 
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
@@ -89,6 +94,13 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     check: 'C-96.16', where: at("signerRegisterOwn", "is-signer-key-revoked"),
     translation: 'This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an '
       + 'administrator. Nothing was changed.',
+  }),
+  MACHINE_CANNOT_REGISTER_KEY: Object.freeze({
+    check: 'C-96.17', where: at("signerRegisterOwn", "is-machine-register-key"),
+    translation: 'A member registers their own signing key, from their own signed-in session. The credential that '
+      + 'asked here has no member behind it: it is an automated one, the operator\'s token, or a call with nobody '
+      + 'signed in. Sign in as yourself to register your key, or ask an administrator to register one for you. '
+      + 'Nothing was changed.',
   }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: 'C-96.13', where: at("expertiseDeclare", "is-expertise-labelled"),
