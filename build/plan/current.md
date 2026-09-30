@@ -1,6 +1,6 @@
 # Plan: tranche T17
 
-**Status** · OPEN · BOB #73 · session_01SgBCnPS48MxiscmhoWHwzR · depth 1
+**Status** · OPEN · BOB #74 · session_01WBtQhddi9im4nvVrxcgoBM · depth 1
 
 **Jobs** · legacy-checks: LEGACY-CHECKS #11 session_01TaobwHYryXf8vfbvWkYqUz; docprofile: DOCPROFILE #2 session_01PzNztiLm9r2dBH43cVX69y; membership: MEMBERSHIP #10 session_01FgiHtCg8KEHDB2sC7rKq9y; record-core: RECORD-CORE #9 session_015Z2ibFGipKFWMV5BopFcPH; promotion: PROMOTION #18 session_011ju7BEaAQKe7REaDVMPKum; capture: CAPTURE #9 session_01CeSQD7cKcqii9K2VExg18L; provenance: PROVENANCE #7 session_01YBB3FhBVLLqxoQXxXj1PVQ; sources: SOURCES #2 session_01BuH77QM4Gg6KVGSfhNvcHf
 
