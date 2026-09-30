@@ -103,8 +103,8 @@ export function noEntity(detail = null) {
 /* The label as kept (R1): trimmed, whitespace collapsed, at most 200 characters. */
 const cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
 
-/* D-484: the governed site for an act that rests on nothing (C-33.40), names no source (C-33.41) or names no alias
-   (C-33.25): the catalogue's act-shape rows, never a second sentence. */
+/* D-484: the governed site for an act that rests on nothing (C-33.40) or names no source (C-33.41): the catalogue's
+   shared act-shape rows, never a second sentence. C-33.25 (no alias) is this module's own row (`ENTITY_CHECKS`). */
 function actShapeRefusal(code, detail, extra = {}) {
   const row = ACT_SHAPE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -301,10 +301,14 @@ export class Entities {
   addAlias({ entityId, alias, declaredBy = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an alias is attached to an entity by its id");
-    /* DEC-49 REGION is-alias-named — REC-64/C-33.25; N126: the whole refusal, the alias's fold with it. */
+    /* DEC-49 REGION is-alias-named — REC-64/C-33.25, this module's row; N126: the whole refusal. */
     const norm = normAlias(alias);
-    if (!norm) return actShapeRefusal("NO_ALIAS", "an alias needs a name: the one given folds to nothing (it is empty, or "
-                               + "only whitespace), so there is nothing a document could be matched by. Nothing was written.");
+    if (!norm) {
+      const row = ENTITY_CHECKS.NO_ALIAS;
+      return { ok: false, reason: "NO_ALIAS", code: "NO_ALIAS", check: row.check, translation: row.translation,
+               detail: "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so "
+                 + "there is nothing a document could be matched by. Nothing was written." };
+    }
     /* END DEC-49 REGION is-alias-named */
     if (!this.has(entityId)) return noSuchEntity(entityId);
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
