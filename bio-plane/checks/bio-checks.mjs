@@ -6,49 +6,17 @@
 // Runs identically at the bundle skill's pre-write gate (node) and in the client scan (browser import).
 // Filesystem access is injected so the browser call site can supply its own file map.
 
+import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, CORE_FIELDS, FORBIDDEN_ALIASES,
+  parseFrontmatter, canonicalJson, MACHINE_AUTHOR_PREFIX, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
+  TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES, b64ToBytes, createSha256, sha256HexSync } from '../src/record-grammar/index.mjs';
+export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, CORE_FIELDS,
+  FORBIDDEN_ALIASES, parseFrontmatter, canonicalJson, NON_MEMBER_AUTHORS, ACTOR_CLASSES, MACHINE_AUTHOR_PREFIX,
+  MACHINE_CLASS_PREFIX, MACHINE_STAMP_PREFIXES, isMachineStamp, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
+  TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
+  isPublicHttpsLocator, createSha256, sha256HexSync } from '../src/record-grammar/index.mjs';
 // ---------------------------------------------------------------------------
 // Constants (spec v1.1)
 // ---------------------------------------------------------------------------
-
-/* PL-12 / D-84 adds BIAS to both alternations. A bias SET is a bundle
-   (`BIO_Declared_Bias_v0_1.md`, "Bias bundles and adoption") precisely so it
-   inherits append-only history, member-authored transitions, convergent
-   promotion, conformance checks and the store — "nothing new is invented for
-   governance". A bundle is addressed by an id, so the id pattern is the first
-   thing that has to know the type exists; before this, a BIAS- id read as
-   malformed and C-2.5 refused the document before any bias rule could run,
-   which is the literal sense of D-84's "a bias bundle cannot be written at
-   all". Both regexes move together: an annotation on a bias bundle is an
-   annotation like any other. */
-/* K171 (1) (T8, N129) adds the Action layer's four record types the same way and for the same reason: STD- (a
-   standard), CONF- (a conformance determination), CONS- (a consequence part) and ESC- (an escalation) are each
-   a record object promoted through `promotion`, and an id the pattern does not know is refused before any rule
-   of the type can run. K198 (2) (T8, N159) adds intent's ASP- (an aspiration) and GOAL- (a goal), which intent's
-   own step governs from T7 and which `intent`, later in the order, cannot register here itself. */
-export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-export const ANN_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
-export const FILENAME_RE = /^[A-Za-z0-9._-]+$/;
-export const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-
-/* The construct formerly named Problem, then FOCUS, is the INQUIRY (REC-10;
-   RECONCILED.md is the design). History is append-only and is not rewritten,
-   so `problem` and `focus` and their literals remain LEGAL LEGACY ALIASES
-   wherever they already exist, and the catalog judges a document by its
-   NORMALIZED type. PROB-/FOCUS- ids may carry any spelling, because a
-   bundle's id is immutable while its frontmatter modernizes on promotion.
-   The alias map is FLATTENED, never chained: normalizeType is a single
-   lookup, so problem points straight at inquiry rather than at focus. */
-/* PL-12 / D-84: `bias` joins as a SIXTH prefix and a FIFTH canonical type. It
-   has no legacy spelling and never will — it is born under the collapse rather
-   than before it — so it appears exactly once here and needs no entry in
-   LEGACY_TYPE_ALIASES. */
-/* K171 (1) and K198 (2) (T8): six more canonical types, one prefix each and no legacy spelling, on `bias`'s terms.
-   The Action layer's four are its modules' record objects (standards R15, conformance R17, consequences R14,
-   escalation R21); `aspiration` and `goal` are intent's (its R26). */
-export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inquiry', INQ: 'inquiry', PROJ: 'project', ACTN: 'action', BIAS: 'bias',
-  STD: 'standard', CONF: 'determination', CONS: 'consequence', ESC: 'escalation', ASP: 'aspiration', GOAL: 'goal' };
-export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };
-export const normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
 
 /* C-16 (RECONCILED §2.2): an inquiry has ONE authored field, the question;
    a title is a RENDERING of it and is never separately authored. THE
@@ -79,19 +47,6 @@ export const deriveInquiryTitle = (question) => {
 export const inquiryQuestionOf = (markdown) => {
   const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec('\n' + String(markdown == null ? '' : markdown));
   return m ? m[1] : '';
-};
-
-/** Universal core fields (spec 3.1). */
-export const CORE_FIELDS = [
-  'id', 'object_type', 'schema', 'title', 'current_state', 'prior_state',
-  'created', 'last_updated', 'produced_by', 'group', 'references',
-  'state_history', 'annotations_open', 'reeval_pending', 'visuals'
-];
-
-/** Forbidden alias -> canonical (spec 3.3). */
-export const FORBIDDEN_ALIASES = {
-  status: 'current_state', state: 'current_state', pipeline_state: 'current_state',
-  verdict: 'current_state', type: 'object_type', updated: 'last_updated', modified: 'last_updated'
 };
 
 /** Literal heading constants per type (spec Section 4).
@@ -839,141 +794,6 @@ function f(check, severity, message, repairs, code) {
 }
 
 // ---------------------------------------------------------------------------
-// Restricted-grammar frontmatter parser (spec 2.2, 3.3)
-// Grammar: '---' fences; top-level keys at column 0; one-level maps at 2 spaces;
-// arrays of scalars or of objects ('- ' at 2 spaces, object props at 4 spaces);
-// inline [] arrays; optional '# ' comments after values; double or single quotes.
-// ---------------------------------------------------------------------------
-
-function stripComment(raw) {
-  let inS = false, inD = false;
-  for (let i = 0; i < raw.length; i++) {
-    const c = raw[i];
-    if (c === "'" && !inD) inS = !inS;
-    else if (c === '"' && !inS) inD = !inD;
-    else if (c === '#' && !inS && !inD && (i === 0 || raw[i - 1] === ' ')) return raw.slice(0, i);
-  }
-  return raw;
-}
-
-function parseScalar(raw) {
-  let v = stripComment(raw).trim();
-  if (v === '') return '';
-  if (v === 'null' || v === '~') return null;
-  if (v === 'true') return true;
-  if (v === 'false') return false;
-  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) return v.slice(1, -1);
-  if (v.startsWith('[') && v.endsWith(']')) {
-    const inner = v.slice(1, -1).trim();
-    if (inner === '') return [];
-    return inner.split(',').map(s => parseScalar(s));
-  }
-  if (/^-?\d+$/.test(v)) return parseInt(v, 10);
-  if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
-  return v;
-}
-
-/**
- * Parse bundle.md frontmatter under the restricted grammar.
- * @param {string} text full bundle.md content
- * @returns {{data: Record<string, any>|null, findings: Finding[], body: string}}
- */
-export function parseFrontmatter(text) {
-  /** @type {Finding[]} */
-  const findings = [];
-  const lines = text.split(/\r?\n/);
-  if (lines[0] !== '---') {
-    findings.push(f('C-2.1', 'error', 'bundle.md does not begin with a --- frontmatter fence'));
-    return { data: null, findings, body: text };
-  }
-  let end = -1;
-  for (let i = 1; i < lines.length; i++) if (lines[i] === '---') { end = i; break; }
-  if (end === -1) {
-    findings.push(f('C-2.1', 'error', 'frontmatter fence is never closed'));
-    return { data: null, findings, body: text };
-  }
-
-  /** @type {Record<string, any>} */
-  const data = {};
-  let topKey = null;          // current open block key ('key:' with no value)
-  let topMode = null;         // 'map' | 'array' | null (undecided)
-  let curElem = null;         // current array element object
-
-  const keyLine = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
-  const indKeyLine = /^( +)([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
-  const itemLine = /^( +)- (.*)$/;
-
-  for (let n = 1; n < end; n++) {
-    const line = lines[n];
-    const stripped = stripComment(line);
-    if (stripped.trim() === '') continue;
-
-    let m;
-    if ((m = keyLine.exec(line))) {                     // column-0 key
-      const key = m[1];
-      const rest = m[2];
-      topKey = null; topMode = null; curElem = null;
-      if (Object.prototype.hasOwnProperty.call(data, key)) {
-        findings.push(f('C-2.1', 'error', `duplicate top-level key '${key}' at line ${n + 1}`));
-      }
-      if (stripComment(rest).trim() === '') {           // block start
-        topKey = key; data[key] = undefined;            // decided by first child
-      } else {
-        data[key] = parseScalar(rest);
-      }
-    } else if ((m = itemLine.exec(line))) {             // '- ' array item
-      const indent = m[1].length;
-      const rest = m[2];
-      if (!topKey) {
-        findings.push(f('C-2.1', 'error', `array item outside any block at line ${n + 1}`));
-        continue;
-      }
-      if (indent !== 2) findings.push(f('C-2.1', 'error', `array item indented ${indent} (expected 2) at line ${n + 1}`));
-      if (topMode === null) { topMode = 'array'; data[topKey] = []; }
-      if (topMode !== 'array') { findings.push(f('C-2.1', 'error', `array item inside a map block '${topKey}' at line ${n + 1}`)); continue; }
-      const km = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/.exec(rest);
-      if (km && stripComment(km[2]).trim() !== '') {    // object element: '- key: value'
-        curElem = {}; curElem[km[1]] = parseScalar(km[2]);
-        data[topKey].push(curElem);
-      } else {                                          // scalar element
-        curElem = null;
-        data[topKey].push(parseScalar(rest));
-      }
-    } else if ((m = indKeyLine.exec(line))) {           // indented key
-      const indent = m[1].length;
-      const key = m[2];
-      const rest = m[3];
-      const isCore = CORE_FIELDS.includes(key) || key in FORBIDDEN_ALIASES;
-      if (topKey && topMode === null && indent === 2) { // first child decides: map
-        topMode = 'map'; data[topKey] = {};
-        data[topKey][key] = parseScalar(rest);
-      } else if (topKey && topMode === 'map' && indent === 2) {
-        data[topKey][key] = parseScalar(rest);
-      } else if (topKey && topMode === 'array' && curElem && indent === 4) {
-        curElem[key] = parseScalar(rest);
-      } else {
-        // A key indented where the grammar has no slot for it: the Alpha buried-key failure mode.
-        if (isCore) {
-          findings.push(f('C-2.4', 'error',
-            `top-level key '${key}' is buried by stray indentation at line ${n + 1} and will not register`,
-            [`re-indent '${key}' to column 0`]));
-          data[key] = parseScalar(rest);                // recover for downstream checks
-        } else {
-          findings.push(f('C-2.1', 'error', `key '${key}' indented ${indent} does not fit the restricted grammar at line ${n + 1}`));
-        }
-      }
-    } else {
-      findings.push(f('C-2.1', 'error', `line ${n + 1} does not fit the restricted grammar: ${line.slice(0, 60)}`));
-    }
-  }
-
-  // undecided empty blocks become empty arrays
-  for (const k of Object.keys(data)) if (data[k] === undefined) data[k] = [];
-
-  return { data, findings, body: lines.slice(end + 1).join('\n') };
-}
-
-// ---------------------------------------------------------------------------
 // Bundle context: injected file access so both call sites share one codebase.
 // files: Map<relativePath, Uint8Array|string>. sha256: async (bytes) => hex.
 // ---------------------------------------------------------------------------
@@ -1295,15 +1115,6 @@ async function checkQueueAndBase(ctx, findings) {
 // Per-type extension checks (I-2 family). information@1: C-2.7.
 // ---------------------------------------------------------------------------
 
-/** Canonicalize a parsed JSON value: recursively sorted keys, compact output. */
-export function canonicalJson(v) {
-  if (Array.isArray(v)) return '[' + v.map(canonicalJson).join(',') + ']';
-  if (v !== null && typeof v === 'object') {
-    return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canonicalJson(v[k])).join(',') + '}';
-  }
-  return JSON.stringify(v);
-}
-
 const INFO_ENUMS = {
   criticality: ['crucial', 'supporting'],
   source_status: ['unchanged', 'modified', 'removed']
@@ -1435,86 +1246,6 @@ export function sectionText(body, heading) {
 // (spec Section 8 check versioning); store-wide bindingness arrives with the
 // schema bump that makes the register mandatory.
 // ---------------------------------------------------------------------------
-
-/** Surface and AI identities, never release authors. Staged named-member-now:
- *  a member identity is any named identity outside this closed set, until the
- *  engagement layer adds per-member credentials (intake doctrine 4a). */
-export const NON_MEMBER_AUTHORS = ['claude', 'pwa-client', 'daemon', 'sweep', 'session', 'accelerator', 'apps-script', 'system', 'agent', 'ai'];
-/** The three actor classes a capture may DECLARE (C-18.1). Exported since
- *  REC-46 because a bare class word standing where a person's name belongs is
- *  one of the three ways this plane used to ask "is this a machine" — see
- *  `isMachineIdentity` below. The CHECK that reads it is still asking a
- *  different question (is this a legal value of a declared field), and that
- *  difference is stated at the site. */
-export const ACTOR_CLASSES = ['daemon', 'session', 'member'];
-
-/* ===================================================================== *
- * THE MACHINE-IDENTITY PREDICATE (REC-46, out of REC-45's measurement).
- *
- * THE DEFECT THIS CLOSES, measured through op=promote before it was written:
- * this plane had THREE unrelated ways of asking "is this a person" — the word
- * list above, the `token:` prefix `store.mjs` refused BY SHAPE, and
- * `ACTOR_CLASSES` — and NONE of them knew the whole answer. `checkGrounds`
- * asked only the word list, so `asserted_by: token:member` PASSED the
- * hand-written door while the identical claim was refused for saying `agent`.
- * A word list that a new class silently escapes is the shape to remove, not to
- * extend, so there is now ONE predicate and every asking site reads it.
- *
- * A SECOND MINTED SPELLING, found by sweeping for the class rather than
- * trusting the routed count of three: `index.mjs` stamps `token:<class>` on
- * AUTHORSHIP fields (author, actor, by) and `class:<class>` on OWNERSHIP and
- * viewer fields, at twenty sites between them. The word list knew neither.
- * Closing only the routed one would have left the same hole one spelling over.
- *
- * WHY THE MINT COMPOSES FROM HERE TOO. The prefixes are the CONTROL PLANE's
- * own vocabulary, and a refusal that reads one literal while the stamp writes
- * another is precisely the drift D-164 exists to stop. index.mjs, store.mjs and
- * query.mjs all already import this module, so the stamp and the refusal are
- * now the same two strings and cannot disagree at all.
- *
- * TWO PREDICATES, AT TWO STRENGTHS, AND THE NARROWER ONE IS NOT AN OVERSIGHT.
- * `isMachineStamp` answers "did the control plane mint this identity", by
- * SHAPE. `isMachineIdentity` answers the full question and is `isMachineStamp`
- * OR a bare class word OR a surface/AI identity. `taskForward`/`taskResolve`
- * (REC-28, D-151) deliberately take the NARROW one: on those two verbs the
- * bare string "admin" is a LEGITIMATE actor — it is ROOT_ADMIN's own session —
- * so the bare-class arm would refuse the root administrator's browser. That
- * difference is real, it is documented at those two sites, and it is not
- * collapsed. Both still derive from the ONE set of prefixes, so moving what
- * counts as a minted machine identity moves those two sites as well.
- *
- * ABSENT IS NOT MACHINE. An empty or missing identity answers FALSE here and
- * every caller keeps its own `!who` arm, because "nobody said" and "a machine
- * said" are different findings and undetermined is first-class (CLAUDE.md).
- * ===================================================================== */
-
-/** The prefix the control plane stamps on an AUTHORSHIP field (author, actor,
- *  `by`) for a machine credential — a NAMED machine identity rather than an
- *  anonymous one, which is what lets an unattended writer act at all (D-61). */
-export const MACHINE_AUTHOR_PREFIX = 'token:';
-/** The prefix it stamps on an OWNERSHIP or VIEWER field (viewer, owner, by,
- *  declaredBy, resolvedBy, threadedBy, memberId, decidedBy). */
-export const MACHINE_CLASS_PREFIX = 'class:';
-/** Every spelling this plane mints for a machine. A new one is added HERE and
- *  every refusal, every stamp and every sweep follows it. */
-export const MACHINE_STAMP_PREFIXES = [MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX];
-
-/** Did the CONTROL PLANE mint this identity? Case-folded deliberately: at the
- *  store the value is server-stamped and the fold changes nothing, while at the
- *  gate the value is hand-written by a caller and `Token:member` is the same
- *  claim as `token:member`. */
-export function isMachineStamp(who) {
-  const s = String(who ?? '').trim().toLowerCase();
-  return s !== '' && MACHINE_STAMP_PREFIXES.some((p) => s.startsWith(p));
-}
-
-/** Is this identity a machine rather than a named person? The whole question,
- *  in one place. Returns FALSE for an absent identity — see the block above. */
-export function isMachineIdentity(who) {
-  const s = String(who ?? '').trim().toLowerCase();
-  if (s === '') return false;
-  return isMachineStamp(s) || ACTOR_CLASSES.includes(s) || NON_MEMBER_AUTHORS.includes(s);
-}
 
 /* ===================================================================== *
  * THE THIRD `asserted_by` STATE (DEC-65, answered 2026-08-09; PL-17).
@@ -2486,102 +2217,6 @@ export const CASE_MEMBER_ROLES = ['load_bearing', 'supporting'];
    is now the only site that applies it. Three comments in this file point here by
    name; they now point at that arm. */
 
-/* REC-11: the basis leg vocabularies, exported so op=affordances can publish
-   them the way it publishes the disposition set, and so no surface keeps a
-   copy. GRADE_AXES is single-column by RECONCILED R2's own reasoning: a leg
-   asserts ONE grade for ONE reason, and two grade columns would create a place
-   to state two. GRADE_SOURCES carries 'hunch' per DEC-15: an authored
-   connection grade with an author and a date, the only authored grade
-   permitted above D, HUNCH DEBT until cleared (BIO_Declared_Bias_v0_1.md).
-   D-188 / DEC-46 (d): HUNCH debt, not "bias debt" — the hunch is the ONE kind
-   of declared bias that DISQUALIFIES publication (DEC-20); ordinary bias debt
-   is DISCLOSED and travels with every published case. */
-export const BASIS_ROLES = ['supports', 'cuts_against'];
-export const BASIS_GRADES = ['A', 'B', 'C', 'D'];
-/* MK-2 / D-184 / IC-142: A THIRD AXIS, `testimony` — MEMBER-KNOWLEDGE-DESIGN.md
-   §3, and the reason it is an axis rather than a label is DEC-21's amendment:
-   the capture axis measures THE ACT OF READING A DOCUMENT IN, and a member's
-   own authored words were not read in from anywhere. Grading an observation
-   "capture D" would make one axis mean two things — how faithfully we obtained
-   a source's bytes, and whose word the bytes are — which is the combining
-   DEC-21 exists to prevent. So a leg citing an authored bundle carries its
-   grade on THIS axis, and only at TESTIMONY_GRADE, and its capture axis is not
-   applicable and says so (checkTestimonyLeg below refuses the rest by name).
-   APPENDED, so `connection` keeps index 1 for every reader that addressed it
-   positionally (skilldoctrine.test.mjs does). */
-export const GRADE_AXES = ['capture', 'connection', 'testimony'];
-/* MK-2: THE ONE LETTER A TESTIMONY IS WORTH, declared once so the catalogue's
-   two arms and the store's registry compose it rather than type it (the store
-   holds no grade-letter literal — hygiene.test.mjs detector (C)). The ruling
-   is Bob's, 2026-09-14 (MEMBER-KNOWLEDGE-DESIGN.md §1: "graded as testimony
-   (D)") and DEC-15's ("a hunch is the only authored grade permitted above D");
-   it is a VALUE and not a rank derivation, because "the weakest letter" and
-   "what testimony is worth" are two facts that merely coincide today. */
-export const TESTIMONY_GRADE = 'D';
-/* 'inherited' joins with REC-14: a leg resting on a PUBLISHED case does not
-   earn its grade and does not author it — it takes the grade that case froze
-   when the group signed it, on the same axis, and says so.
-
-   'capture' joins with REC-18, and it is the CAPTURE-axis twin of 'resolution'.
-   Before it, the four sources above were all sources for a CONNECTION grade and
-   the capture axis had no honest name to give — so a capture-axis grade on an
-   INFO- leg was AUTHORED outright, with nothing between a member and typing A
-   for bytes that arrived like any other. R2-g is the landed doctrine it now
-   enforces: "Grade B is what a direct capture by this instance is worth; it is
-   not Grade A and this surface will not say it is". Both EARNED sources are
-   computed server-side and REFUSED when a caller's value differs from what the
-   record holds — an equality a caller can hand us is one a caller can invent
-   (CLAUDE.md). */
-export const GRADE_SOURCES = ['resolution', 'testimony', 'hunch', 'inherited', 'capture'];
-
-/* REC-18: the two EARNED sources, named once so no arm below spells them and
-   the store's registry builder and this grammar cannot drift about which is
-   which. A caller may WRITE either — what a caller may not do is write a VALUE
-   the record did not earn, which is what the arms in checkEarnedLeg enforce. */
-export const EARNED_GRADE_SOURCES = ['resolution', 'capture'];
-
-/* REC-43 / DEC-39: THE CAPTURE-AXIS CEILING, AND THE LETTER ABOVE IT.
- *
- * MOVED HERE from `Store.EARNED_CAPTURE_CEILING` (src/store.mjs), and the move
- * is the only interesting thing about this item, so it is stated rather than
- * left to be inferred. The DOCTRINE is unchanged and is R2-g's: "Grade B is
- * what a direct capture by this instance is worth; it is not Grade A and this
- * surface will not say it is" (SB-EVIDENCE 908-910). Grade A needs a
- * chain-of-custody web archive, which CAPTURE-FIDELITY.md states plainly is out
- * of a Worker's reach and is NOT CLAIMED. The day a group can produce a WACZ
- * this is one arm, not a redesign.
- *
- * WHY IT LIVES HERE NOW, and the direction is the whole of REC-43's design.
- * DEC-39 rules that the plane publishes the co-attestation honesty fence with
- * the act, and that fence's two grade letters ARE this rule — so the wording
- * must be composed from this value rather than typed beside it, or the sentence
- * a member reads and the rule the gate runs can drift apart silently. The
- * wording is published from `src/affordances.mjs` (DEC-8: a surface renders
- * what it received and never composes a prompt of its own), and that module
- * CANNOT import `store.mjs` — `store.mjs` already imports IT (DISPOSITIONS,
- * REOPENABLE_FROM, deriveActs), so the import would close a cycle and evaluate
- * a top-level object literal against bindings still in the temporal dead zone.
- * That is the same wall REC-35 hit and wrote up on VOCABULARIES.
- *
- * SO THE CONSTANT MOVES TO THE LOWEST LAYER BOTH SIDES ALREADY IMPORT, which is
- * this file — and this is not a demotion of the store's authority but a
- * promotion to where the REFUSAL is actually computed. `checkEarnedLeg` below
- * is the arm that refuses a leg claiming MORE than the ceiling, and
- * earnedbasis.test.mjs arm (c) measured that it is the ONLY thing in the battery
- * standing between the record and a capture grade the record cannot support.
- * `Store.earnedBasisRegistry` now IMPORTS this value to build the registry that
- * arm reads. One value, three readers (the registry, the refusal, the published
- * fence), no copy — the DISPOSITIONS/REC-11 arrangement exactly.
- *
- * AND THE LETTER ABOVE IT IS DERIVED, NOT TYPED. "It never reaches Grade A" is
- * true because A is one rank stronger than the ceiling in the SAME array
- * `checkEarnedLeg` compares against — so it is read out of that array rather
- * than written down a second time. If a future ceiling were the strongest grade
- * there would BE no unreachable letter, and this is null rather than a lie; the
- * fence composer refuses to compose a sentence it cannot make true. */
-export const EARNED_CAPTURE_CEILING = 'B';
-export const UNREACHABLE_CAPTURE_GRADE =
-  BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
 /* Which axis each earned source is a source FOR. A resolution is the framework's
    §8.1 CONNECTION grade and nothing else; a capture grade is a property of an
    INFORMATION object (DEC-21) and nothing else. Stated as data rather than as
@@ -3984,22 +3619,6 @@ export function lifecycleFindings(entries, i) {
 // C-18.5 is the F5 injection-posture gathering.json field grammar.
 // ---------------------------------------------------------------------------
 
-/** https-only, public hosts only (intake doctrine 0.7): forecloses lookalike
- *  origins and SSRF-shaped locators alike. The one canonical implementation;
- *  the accelerator's daemon delegates to this through the embedded gate. */
-export function isPublicHttpsLocator(url) {
-  if (typeof url !== 'string' || !/^https:\/\//.test(url)) return false;
-  const m = /^https:\/\/([^/?#]+)/.exec(url);
-  if (!m) return false;
-  const hostport = m[1];
-  if (hostport.indexOf('@') !== -1) return false;
-  const host = hostport.split(':')[0].toLowerCase();
-  if (host === 'localhost' || host.charAt(0) === '[') return false;
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
-  if (host.indexOf('.') === -1) return false;
-  return true;
-}
-
 // ---------------------------------------------------------------------------
 // information@2 (M3' member submissions): the register contract extended by
 // the schema bump taken once. C-18.1 gains the @2 shapes (mandatory register,
@@ -4014,119 +3633,6 @@ export function isPublicHttpsLocator(url) {
 
 const CAPTURE_ENCODINGS = ['utf8', 'base64', 'binary'];
 const RAW_SHA_RE = /^[0-9a-f]{64}$/;
-
-/** Portable base64 decode (no Buffer, no atob): verifies legacy .b64 files
- *  in Node, the browser, and the Apps Script embed alike. */
-export function b64ToBytes(s) {
-  const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  const clean = String(s).replace(/[\s=]+/g, '');
-  const out = new Uint8Array(Math.floor(clean.length * 3 / 4));
-  let o = 0, buf = 0, bits = 0;
-  for (let i = 0; i < clean.length; i++) {
-    const v = A.indexOf(clean[i]);
-    if (v === -1) throw new Error('invalid base64 at position ' + i);
-    buf = (buf << 6) | v; bits += 6;
-    if (bits >= 8) { bits -= 8; out[o++] = (buf >> bits) & 0xff; }
-  }
-  return out.subarray(0, o);
-}
-
-/** Incremental SHA-256 (FIPS 180-4), pure JS, Uint8Array-native, zero
- *  dependencies: one byte per element end to end, no platform digest, no
- *  signed-byte conversion. Exists so oversize multi-part captures stream
- *  through the hash one part at a time (KICKOFF-P2M6 4a: the whole-file
- *  reassembly plus Apps Script's number-array digest input materialized
- *  ~8 bytes per content byte and OOMed the promotion of the 39.6MB budget
- *  book). update() accepts Uint8Array or any byte array-like (values are
- *  coerced mod 256, so Apps Script signed bytes agree); hex() finalizes.
- *  Battery-cross-validated against WebCrypto on multiple sizes and chunk
- *  boundary offsets: a wrong hash here would silently corrupt every gate
- *  verdict, so the battery is load-bearing, not decorative. */
-export function createSha256() {
-  const K = [
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-  ];
-  let h0 = 0x6a09e667 | 0, h1 = 0xbb67ae85 | 0, h2 = 0x3c6ef372 | 0, h3 = 0xa54ff53a | 0;
-  let h4 = 0x510e527f | 0, h5 = 0x9b05688c | 0, h6 = 0x1f83d9ab | 0, h7 = 0x5be0cd19 | 0;
-  const buf = new Uint8Array(64);
-  const w = new Int32Array(64);
-  let bufLen = 0;
-  let total = 0;       // message length in bytes (< 2^53, ample for the store)
-  let finalized = false;
-
-  function compress(bytes, off) {
-    for (let i = 0; i < 16; i++) {
-      w[i] = (bytes[off] << 24) | (bytes[off + 1] << 16) | (bytes[off + 2] << 8) | bytes[off + 3];
-      off += 4;
-    }
-    for (let i = 16; i < 64; i++) {
-      const x = w[i - 15], y = w[i - 2];
-      const s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
-      const s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
-      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
-    }
-    let a = h0, b = h1, c = h2, d = h3, e = h4, f2 = h5, g = h6, h = h7;
-    for (let i = 0; i < 64; i++) {
-      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
-      const ch = (e & f2) ^ (~e & g);
-      const t1 = (h + S1 + ch + K[i] + w[i]) | 0;
-      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
-      const maj = (a & b) ^ (a & c) ^ (b & c);
-      const t2 = (S0 + maj) | 0;
-      h = g; g = f2; f2 = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
-    }
-    h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0;
-    h4 = (h4 + e) | 0; h5 = (h5 + f2) | 0; h6 = (h6 + g) | 0; h7 = (h7 + h) | 0;
-  }
-
-  return {
-    /** Feed a chunk of bytes. Chainable. */
-    update(chunk) {
-      if (finalized) throw new Error('sha256 stream already finalized');
-      let c = chunk;
-      if (!(c instanceof Uint8Array)) c = Uint8Array.from(c);   // signed bytes coerce mod 256
-      let i = 0;
-      const n = c.length;
-      total += n;
-      if (bufLen > 0) {                                          // top up a partial block
-        while (bufLen < 64 && i < n) buf[bufLen++] = c[i++];
-        if (bufLen === 64) { compress(buf, 0); bufLen = 0; }
-      }
-      while (n - i >= 64) { compress(c, i); i += 64; }           // full blocks, no copy
-      while (i < n) buf[bufLen++] = c[i++];                      // tail into the buffer
-      return this;
-    },
-    /** Finalize and return the lowercase hex digest. */
-    hex() {
-      if (finalized) throw new Error('sha256 stream already finalized');
-      finalized = true;
-      const bitHi = Math.floor(total / 0x20000000);              // total*8 >>> 32
-      const bitLo = (total % 0x20000000) * 8;                    // low 32 bits of total*8
-      buf[bufLen++] = 0x80;
-      if (bufLen > 56) { while (bufLen < 64) buf[bufLen++] = 0; compress(buf, 0); bufLen = 0; }
-      while (bufLen < 56) buf[bufLen++] = 0;
-      buf[56] = (bitHi >>> 24) & 0xff; buf[57] = (bitHi >>> 16) & 0xff;
-      buf[58] = (bitHi >>> 8) & 0xff; buf[59] = bitHi & 0xff;
-      buf[60] = (bitLo >>> 24) & 0xff; buf[61] = (bitLo >>> 16) & 0xff;
-      buf[62] = (bitLo >>> 8) & 0xff; buf[63] = bitLo & 0xff;
-      compress(buf, 0);
-      let out = '';
-      const H = [h0, h1, h2, h3, h4, h5, h6, h7];
-      for (let i = 0; i < 8; i++) {
-        const v = H[i] >>> 0;
-        out += ('00000000' + v.toString(16)).slice(-8);
-      }
-      return out;
-    }
-  };
-}
 
 /** Stored value to hashable input: base64 decodes to raw bytes; utf8 and
  *  binary hash as stored (ctx.sha256 accepts string or bytes, so the Apps
@@ -10544,94 +10050,6 @@ export const PROMOTED_TYPE_CHECKS = {
 };
 
 
-
-/* --------------------------------------------------------------------------
- * The content ADDRESS.
- * --------------------------------------------------------------------------
- *
- * `promote` is SYNCHRONOUS — the whole write happens inside
- * `ctx.storage.transactionSync` — and `crypto.subtle.digest` is not. So the
- * content address needs a SYNCHRONOUS SHA-256, and this is it.
- *
- * WHY NOT A CHEAP NON-CRYPTOGRAPHIC MIX. `content_id` is a PRIMARY KEY whose
- * whole purpose is that two citers of one passage collide and two citers of
- * different passages do not. A 32- or 64-bit mix would make the SECOND half of
- * that a probability rather than a property, and a collision there merges two
- * different passages into one row — an address silently pointing at the wrong
- * part of a document, which is this record's worst failure class.
- *
- * WHY NOT MAKE `promote` ASYNC. It is the plane's one write path and its
- * transaction is what makes a promotion atomic; turning it async to hash a
- * string would be a structural change to the store's core in service of a
- * digest. The suite DRIVES this implementation against `crypto.subtle` over the
- * real inputs rather than trusting it — an agreement that costs nothing to
- * produce is not evidence, and a hand-rolled digest is exactly the shape that
- * agrees with itself.
- */
-const SHA256_K = new Uint32Array([
-  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]);
-
-/** Synchronous SHA-256 over a UTF-8 string, lowercase hex. DRIVEN against
- *  `crypto.subtle.digest` in `test/content-extent.test.mjs` rather than trusted. */
-export function sha256HexSync(str) {
-  const bytes = new TextEncoder().encode(String(str));
-  const bitLen = bytes.length * 8;
-  /* ceil((len + 1 + 8) / 64) blocks. Written as a rounding-up divide and NOT as
-     `((len + 9) >> 6) + 1`, which is the spelling this function shipped with for
-     ten minutes: that form adds a SPURIOUS EMPTY BLOCK whenever len + 9 is an
-     exact multiple of 64 (len ≡ 55 mod 64), which is valid-looking padding that
-     is not SHA-256's, and it agreed with itself perfectly. It was caught in the
-     first run of the arm that drives this against `crypto.subtle` over a length
-     sweep — which is the whole argument for that arm existing, and the reason
-     the sweep pins 55/56/63/64/65 by name rather than hashing "abc". */
-  const withPad = new Uint8Array(((bytes.length + 9 + 63) >> 6) << 6);
-  withPad.set(bytes);
-  withPad[bytes.length] = 0x80;
-  const dv = new DataView(withPad.buffer);
-  /* The length is 64 bits big-endian. A JS number is exact to 2^53, so the high
-     word is written from a float divide rather than a shift — `<<` truncates to
-     32 bits and would silently mis-pad anything over 512 MB. Nothing here
-     hashes an input that large, and the arithmetic is written correctly anyway
-     because a digest that is right only for small inputs is a trap. */
-  dv.setUint32(withPad.length - 8, Math.floor(bitLen / 0x100000000));
-  dv.setUint32(withPad.length - 4, bitLen >>> 0);
-  const h = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-                             0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
-  const w = new Uint32Array(64);
-  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
-  for (let off = 0; off < withPad.length; off += 64) {
-    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4);
-    for (let i = 16; i < 64; i++) {
-      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
-      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
-      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
-    }
-    let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], ff = h[5], g = h[6], hh = h[7];
-    for (let i = 0; i < 64; i++) {
-      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
-      const ch = (e & ff) ^ (~e & g);
-      const t1 = (hh + S1 + ch + SHA256_K[i] + w[i]) >>> 0;
-      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
-      const maj = (a & b) ^ (a & c) ^ (b & c);
-      const t2 = (S0 + maj) >>> 0;
-      hh = g; g = ff; ff = e; e = (d + t1) >>> 0;
-      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
-    }
-    h[0] = (h[0] + a) >>> 0; h[1] = (h[1] + b) >>> 0; h[2] = (h[2] + c) >>> 0;
-    h[3] = (h[3] + d) >>> 0; h[4] = (h[4] + e) >>> 0; h[5] = (h[5] + ff) >>> 0;
-    h[6] = (h[6] + g) >>> 0; h[7] = (h[7] + hh) >>> 0;
-  }
-  let out = '';
-  for (const v of h) out += v.toString(16).padStart(8, '0');
-  return out;
-}
 
 /** THE CONTENT ADDRESS — `hash(capture_sha, canonical extent, chain)`, IC-83's
  *  own formula and the whole of the dedup-by-construction property.

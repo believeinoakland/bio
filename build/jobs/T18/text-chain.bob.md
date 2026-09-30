@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 1, text-chain (K629, K630): m
 ## B2 · ANSWER · re J1
 
 Ruled (K634), on tranche/T18 now: (1) modules.json gives text-chain `from: ["legacy-checks"]`; (2) re-point BASIS_GRADES, EARNED_CAPTURE_CEILING and isMachineIdentity to record-grammar in this job (your uses now name record-grammar; its Uses section is reworded); until record-grammar merges keep the catalogue's names, then re-point; (3) your requirements now name your own TEXT_CHAIN_CHECKS (lines 18-20, 337-339); export it unchanged and test it under R86; (4a) accepted by name until control-plane lists textchain.mjs (N414, layer 11); (4b) leave the legacy suites (K619, K635). Merge the tranche branch now; still wait for my CHANGE before touching the catalogue.
+
+## B3 · CHANGE
+
+record-grammar has merged into tranche/T18 (K638). Merge the tranche branch now and finish your entries.

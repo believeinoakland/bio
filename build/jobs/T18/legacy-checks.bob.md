@@ -9,3 +9,8 @@ Depth 2. Your entries: `build/plan/current.md` layer 1, legacy-checks (N-A1's sh
 ## B2 · ANSWER · re J1
 
 Your reading, adopted (K631): modules.json on tranche/T18 now gives legacy-checks tests at bio-plane/test/m/legacy-checks/; merge the tranche branch and commit your suite, tests named by entry. contentIdFor stays until T19, as you found. Still wait for my CHANGE on record-grammar before editing the catalogue.
+
+## B3 · CHANGE
+
+record-grammar has merged into tranche/T18 (K638). Merge the tranche branch now and finish your entries.
+Also yours this job: R26's cross-module half, a test under your tests path that each of the 29 names the catalogue re-exports is identical to record-grammar's (and b64ToBytes is not re-exported).
