@@ -24,6 +24,18 @@
 - **The requirement drafts** (`drafts/action-plans.md`, `drafts/deltas.md`) are "correct and complete enough" (Bob); staged under K591.
 - **UX:** the plan-page view (`views/plan-page.html`) is approved; `UX-ANSWERS.md` is approved: OQ-8, OQ-9, OQ-25 answered, and OQ-14 answered by the earlier rulings DEC-10, DEC-69 and DEC-70, which the drafts now cite instead of restating.
 
+## 2026-09-30 · Bob's words on reminders and nagging (recorded at K615's request)
+
+**What this session holds, verbatim.** Searched for "nag" and "remind": Bob's only words on the subject in ACTION_DESIGN #1 are these, answering the proposal that the queue carry one reminder per occurrence, never repeated:
+
+> *"We've addressed questions related to 'nagging' already. Refer to those answers rather than us risking conflicting responses."*
+
+Bob's other words in this session that bear on reminders: approving the plan page, and *"The action requirements drafts appear to be correct and complete enough"* (both 2026-09-30).
+
+**What this session does not hold.** The points Bob recalls (choosing an action includes setting its reminder schedule, with defaults; responding to a deadline notice offers another reminder or none; the litigation hold not repeated unless asked, cleared when responding, else open until cleared; the filing-template library, with the assistant drafting one where none fits and a derivative kept) were not stated in this session's messages. They reach this session through Bob's words in BOB #74's session (K613) and through DEC-94 (Bob, 2026-09-29; PR #4), and are recorded and cited from there, not quoted as this session's. Nothing here should be read as a second, possibly conflicting, statement of them.
+
+**Folded at `drafts/`** (commits `2b1fe7b967`, `682f0b96b1`): `action-plans` R29 (reminders set when a dated option is chosen, from defaults the member sees; fired as asked; another reminder or none on response; nearing is display only; overdue notifies once; no outside channel); `actions`' member-set reminders; the queue's kinds on DEC-94, the overdue clock a CONDITION (K611); the litigation-hold item not repeated unless asked and open until cleared, clearing being its disposing door (K613 (2)); `filings`' template library, assistant drafts a member adopts (K613 (3)). Cited: DEC-10 (at D-125), DEC-69, DEC-70 and DEC-94 (K615). Requirement numbers follow K611's fold.
+
 ## Found on the way (BOB's to plan)
 
 - Monitoring's `deadlineRecheck` has no caller outside tests, and the queue has no kind for an overdue clock or a due stage: `monitoring` R34–R35 never reach a member.

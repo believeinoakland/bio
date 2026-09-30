@@ -1,6 +1,6 @@
 # BOB to legacy-tests (T17)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -20,3 +20,15 @@ Your reading, all four points (K612): bio-plane system suites to bio-plane/test/
 ## B3 · ANSWER · re J3
 
 Ruled (K616): C-120.1 and C-120.2's re-pointed wheres are awaiting stamp for T18; declare them in row-census' AWAITING_STAMP (with C-76.1's code, K606) and re-run it. The four you keep for REPORT stand as listed. Note: your context is past half the window; per JOB.md, finish your current step, note the next in your record, and post BLOCKED (context) when you reach it, and I will restart you.
+
+## B4 · CHANGE
+
+Bob's standing permission is now a rule (K618) in .claude/settings.json on tranche/T17: git rm -q -- <path> under bio-plane/test/, civicos-ui/test/, agent-worker/test/, ocr-worker/test/. Merge the tranche branch, then do the 37-file removal exactly in that form (git rm -q -- path1 path2 ..., one call per test directory), commit and push. If it is still refused, record the refusal's exact text in your record and post BLOCKED; I will restart you so a fresh session loads the rule. Do not ask Bob again.
+
+## B5 · CHANGE
+
+Bob, 2026-09-30: do NOT rerun work already done. The verifications (all 124 covered? suites, 23 dead? confirmed), row-census 8/0, d470 14/0, gate-reads 188/0 and d311 22/0 have passed and are recorded; a restarted session reads its record and continues only from 'Still to do': the 37-file removal (K618's git rm form), the K612 moves (each moved suite run once from its new place), the scoped run of suites reading files T17 changed that no earlier session ran (K570), the DEC-49 guard once at the end, then completion.
+
+## B6 · CHANGE
+
+Bob, K619: this is the last legacy-tests stage, and it is cut short now. Finish only: (1) the 37-file removal (K618's git rm form); (2) the K612 moves already under way: for the 14 failing moved suites, fix only a broken relative import the move caused; any other failure, note it in your record and move on (no diagnosis, no reruns); (3) the DEC-49 guard once; (4) completion. Drop the scoped K570 run. Do not rerun anything that already passed.
