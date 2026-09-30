@@ -63,6 +63,14 @@ test("R4: calibrationRecord mints CAL-<n>, supersedes the live one with R2's ver
   assert.equal(other.calibration_id, "CAL-4");
 });
 
+test("R4 R1: a body carrying fields the construct does not know is recorded, not refused", () => {
+  const { c } = fresh();
+  const r = rec(c, { dpi: 300, operator_note: "ran twice", calibration_id: "CAL-77", replaced_by: "CAL-9" });
+  assert.equal(r.ok, true);
+  assert.equal(r.calibration_id, "CAL-1", "the id is minted, never the body's");
+  assert.equal(c.calibrations().calibrations[0].superseded_by, null, "nor is supersession the body's");
+});
+
 test("R4: the id is minted from the highest suffix ever used, never a count", () => {
   const { c, s } = fresh();
   s.db.prepare(`INSERT INTO calibrations (calibration_id,engine,version,at,at_ms,cap,probe_id,probe_inputs,scores,measured_by)
@@ -164,6 +172,43 @@ test("R6 R15: calibrations lists newest first with superseded_by and drift, boun
   const t = c.calibrations({ engine: "tesseract" });
   assert.equal(t.engine, "tesseract");
   assert.deepEqual(t.calibrations.map((x) => x.engine), ["tesseract"]);
+});
+
+test("R6: each calibration's probe inputs and scores are read back as recorded, JSON or text", () => {
+  const { c, clock } = fresh();
+  const inputs = { corpus: "synthetic", pages: 4, ground_truth_sha: "0".repeat(64) };
+  const scores = { char_error_rate: 0.02, minted_digits: 0, pages_scored: 4 };
+  rec(c, { probe_inputs: inputs, scores });
+  clock.t += DAY;
+  rec(c, { engine: "t", probe_inputs: "corpus c9", scores: "cer 0.31" });
+  const byEngine = Object.fromEntries(c.calibrations().calibrations.map((x) => [x.engine, x]));
+  assert.deepEqual(byEngine.pdfjs.probe_inputs, inputs);
+  assert.deepEqual(byEngine.pdfjs.scores, scores);
+  assert.equal(byEngine.pdfjs.probe_id, "P-1");
+  assert.equal(byEngine.t.probe_inputs, "corpus c9");
+  assert.equal(byEngine.t.scores, "cer 0.31");
+});
+
+test("R6 R9: an instance that registered nothing has no subject, no calibration and no alarm, and says so with the cadence", () => {
+  const { c } = fresh();
+  const r = c.calibrations();
+  assert.equal(r.ok, true);
+  assert.deepEqual([r.subjects.length, r.count, r.calibrations.length, r.truncated], [0, 0, 0, false]);
+  assert.equal(r.cadence_ms, CALIBRATION_CADENCE_MS);
+  assert.match(r.why, /holds no alarm at all/);
+  assert.equal(c.calibrationWake(T0, 250), null);
+});
+
+test("R6: op=calibrations reads the engine and the limit from the request", () => {
+  const { c, clock } = fresh();
+  for (const e of ["a", "b", "b", "b"]) { clock.t += DAY; rec(c, { engine: e, at: new Date(clock.t).toISOString() }); }
+  const op = (q) => calibrationOps(c, new URL(`http://x/calibrations${q}`), null).calibrations();
+  assert.equal(op("").count, 4);
+  const b = op("?engine=b&limit=2");
+  assert.equal(b.engine, "b");
+  assert.deepEqual(b.calibrations.map((x) => x.calibration_id), ["CAL-4", "CAL-3"]);
+  assert.equal(b.truncated, true); assert.equal(b.limit, 2);
+  assert.deepEqual(b.subjects.map((x) => x.engine), ["b"]);
 });
 
 test("R6 R15: the default limit is 200, cut by reading one more", () => {
