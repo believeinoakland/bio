@@ -161,7 +161,10 @@ export function world({ gate = true, now = null } = {}) {
     project(id, members = [], { visibility = null } = {}) {
       w.bundle(id, { type: "project" });
       for (const m of members) w.participant(id, typeof m === "string" ? m : m.id, typeof m === "string" ? {} : m);
-      if (visibility) st.sql.exec(`INSERT INTO project_visibility (project_id, setting, reason, by, at) VALUES (?, ?, 'r', 'member:m1', '2026-01-01')`, id, visibility);
+      if (visibility) {
+        st.sql.exec(`INSERT INTO project_visibility (project_id, setting, reason, set_by, at) VALUES (?, ?, 'r', 'm1', '2026-01-01')`, id, visibility);
+        st.sql.exec(`INSERT OR REPLACE INTO project_sight (project_id, setting) VALUES (?, ?)`, id, visibility);   /* membership's sight index */
+      }
       return id;
     },
     participant(projectId, memberId, { state = "joined", owner = 0 } = {}) {
