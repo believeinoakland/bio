@@ -94,3 +94,38 @@ test("R43 with nothing wrong behind them, the same relays answer as before: 200 
     assert.deepEqual([r.status, r.body.ok], [200, true], name);
   }
 });
+
+test("R43 N348 through the frame this module's routes pass: a route that throws is the frame's STORE_INTERNAL_ERROR, and the relay answers 502 carrying that very correlation id and no stack; a POST that is not JSON is the frame's BAD_JSON, relayed as the store's refusal, and nothing is written", async () => {
+  const w = await boot();
+  const seen = [];
+  const inner = stubOver(w.m);
+  const stub = { async fetch(input, init) {
+    const r = await inner.fetch(input, init);
+    seen.push(await r.clone().json());
+    return r;
+  } };
+  const env = envOver(stub);
+  /* the store's storage fails under the route: the frame catches it */
+  const failing = w.st.sql.exec;
+  w.st.sql.exec = (q, ...a) => { if (/instance_group/.test(q)) throw new Error("SQLITE_IOERR /srv/setup.mjs:1"); return failing(q, ...a); };
+  const r = await read(await instanceGroupOp(env, "bio", { viewer: "admin", cls: "member" }, io));
+  w.st.sql.exec = failing;
+  const thrown = seen.at(-1);
+  assert.deepEqual([thrown.ok, thrown.reason], [false, "STORE_INTERNAL_ERROR"]);
+  assert.match(thrown.correlation, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  assert.deepEqual([r.status, r.body.reason, r.body.correlation], [502, "STORE_DID_NOT_ANSWER", thrown.correlation]);
+  assert.equal(/SQLITE|setup\.mjs|srv/.test(JSON.stringify(r.body)), false, JSON.stringify(r.body));
+  /* negative control: with the storage answering, the same relay answers the row */
+  const ok = await read(await instanceGroupOp(env, "bio", { viewer: "admin", cls: "member" }, io));
+  assert.deepEqual([ok.status, ok.body.ok], [200, true]);
+  /* a body that is not JSON never reaches the route */
+  for (const bad of ["{", "not json"]) {
+    const res = await stub.fetch(new Request("http://do/instancegroupseed?author=token:admin", { method: "POST", body: bad }));
+    assert.equal(res.status, 400, bad);
+    assert.deepEqual([seen.at(-1).ok, seen.at(-1).reason], [false, "BAD_JSON"], bad);
+  }
+  assert.equal(w.m.instanceGroup().group, null, "nothing was seeded");
+  /* an empty body is null, and the route answers its own refusal inside the envelope */
+  const empty = await stub.fetch(new Request("http://do/instancegroupseed?author=token:admin", { method: "POST" }));
+  assert.deepEqual([empty.status, seen.at(-1).ok, seen.at(-1).result.reason], [200, true, "GROUP_SLUG_MALFORMED"]);
+});

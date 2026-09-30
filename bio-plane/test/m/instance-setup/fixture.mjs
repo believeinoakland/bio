@@ -6,7 +6,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { webcrypto } from "node:crypto";
 import { RECORD_SCHEMA, recordOf } from "../../../src/record-core/index.mjs";
-import { InstanceSetup, instanceSetupOps, instanceSetupRoute } from "../../../src/setup.mjs";
+import { InstanceSetup, instanceSetupOps } from "../../../src/setup.mjs";
 
 export const WORKERD_PATTERN_CAP = 50;
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -115,7 +115,7 @@ export async function boot({ st = null, env = {}, prov = null, now = null } = {}
   return { m, st: store, ctx, record, prov: p, started, env };
 }
 
-/* The Durable Object's door for this module, and a `doAnswer` as the control plane's reads it (control-plane R23, R25):
+/* A `doAnswer` as the control plane's reads it (control-plane R23, R25):
    `ok: true` is an answer; `ok: false` below 500 is the store's own refusal, `refused` with its `reply`; anything else
    is a silence, carrying the correlation id of the store's `STORE_INTERNAL_ERROR` when it gave a well-formed one. */
 const CORRELATION_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -142,14 +142,40 @@ export const io = {
 };
 export const ioLegacy = { json: io.json, storeSilent: io.storeSilent, doAnswer };
 
-/** A stub whose fetch reaches this module's routes, with `extra` answering any other path (`bootstrap`, `stats`, …). */
+/* The frame this module's routes pass on the instance (N348): `control-plane`'s door (its R25, R26, R35), which joins
+   `instanceSetupOps` to its one route map. `control-plane` comes after this module in the order, so its tests are the
+   ones that drive the real door; this is that door's behaviour as this module's routes meet it: an absent body is
+   null, a body that is not JSON is 400 `BAD_JSON` before the route runs, an answer is `{ok: true, result}`, and a route
+   that throws is 500 `STORE_INTERNAL_ERROR` with a correlation id and no stack, message or path. `null` for a route
+   that is not this module's, so the caller answers it. */
+export async function frame(m, req) {
+  const url = new URL(req.url);
+  const op = url.pathname.slice(1);
+  if (!Object.hasOwn(instanceSetupOps(m, url, null), op)) return null;
+  let body = null;
+  if (req.method === "POST") {
+    const raw = await req.text();
+    if (raw.trim() !== "") {
+      try { body = JSON.parse(raw); }
+      catch { return Response.json({ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, { status: 400 }); }
+    }
+  }
+  try { return Response.json({ ok: true, result: await instanceSetupOps(m, url, body)[op]() }); }
+  catch {
+    return Response.json({ ok: false, error: "internal error", reason: "STORE_INTERNAL_ERROR", code: "STORE_INTERNAL_ERROR",
+                           correlation: webcrypto.randomUUID() }, { status: 500 });
+  }
+}
+
+/** A stub whose fetch reaches this module's routes through `frame`, with `extra` answering any other path
+ *  (`bootstrap`, `stats`, …). */
 export function stubOver(m, extra = {}, { silent = [] } = {}) {
   return {
     async fetch(input, init) {
       const req = input instanceof Request ? input : new Request(input, init);
       const path = new URL(req.url).pathname.slice(1);
       if (silent.includes(path)) return new Response("boom", { status: 500 });
-      const mine = await instanceSetupRoute(m, req);
+      const mine = await frame(m, req);
       if (mine) return mine;
       if (extra[path]) return Response.json({ ok: true, result: await extra[path](req) });
       return Response.json({ ok: false, error: "unknown op: " + path }, { status: 400 });
