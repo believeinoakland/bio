@@ -102901,6 +102901,9 @@ var AffordanceFacts = class {
       edition_warranted_for_project: type !== "inquiry" || who2 === null ? null : this.#editionWarrantedForProject(id, viewer, who2, b.current_state),
       /* REC-16: how many legs this question rests on, read from the document (inquiry_basis projects it). */
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
+      /* N345 (R14): a contradiction inquiry is one whose document carries `contradiction` (inquiry R47), read from
+         the front matter; null on a type that is not an inquiry. */
+      contradiction_inquiry: type !== "inquiry" ? null : docFm.contradiction !== void 0 && docFm.contradiction !== null,
       rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length, severed: rested.severed.length },
       /* PL-2 / IS-2: which states this question's readings are in, from the document. */
       basis_version_states: versions.filter((v) => v && typeof v === "object" && typeof v.state === "string").map((v) => v.state.trim()),
@@ -103084,7 +103087,17 @@ var VOCABULARIES = {
      turns a stored value into one of these keys, and a surface that matches on
      the literal `minted_by` has rebuilt the predicate; every content-row
      projection already carries the plane's own answer in its `mint` block. */
-  content_mint_states: CONTENT_MINT_STATES
+  content_mint_states: CONTENT_MINT_STATES,
+  /* N345 (R4): what a member offers when a contradiction is clarified, resolved or dismissed — the respects in which
+     two sides may differ (K1–K4), the named differences between two projects' conclusions (K5), the kinds a
+     resolution records, the canons a conflict of norms is reconciled by, and the reasons a lead is set aside for. Each
+     is the array its enforcing module refuses against (CLARIFY_COORDINATE_UNKNOWN, RESOLUTION_KIND_UNKNOWN,
+     RESOLUTION_INCOMPLETE, DISMISSAL_REASON_UNKNOWN), so a surface offers a choice before a member is refused it. */
+  contradiction_coordinates: CONTRADICTION_COORDINATES,
+  plurality_differences: PLURALITY_DIFFERENCES,
+  resolution_kinds: RESOLUTION_KINDS,
+  norm_canons: NORM_CANONS,
+  dismissal_reasons: DISMISSAL_REASONS
 };
 function vocabulariesFor(kinds) {
   const ok = Array.isArray(kinds) && kinds.length > 0 && kinds.every((k) => typeof k === "string" && k.length > 0);
@@ -103200,6 +103213,18 @@ var RUNGS = {
      (conformance R7); a first determination replaces nothing and asks none, `inquiryground`'s shape (K212). */
   determine: "reasoned",
   // NO_REASON (conformance R7: a supersession says why)
+  /* N345 (K447), on R27's rule: each member act on a contradiction asks the member's account — a reason, an
+     explanation, a question or a conclusion — and is corrected forward by a further act, never by one moving back. */
+  contradictiondismiss: "reasoned",
+  // DISMISSAL_REASON_UNKNOWN (contradiction R31: a lead is set aside for a stated reason)
+  contradictionclarify: "reasoned",
+  // CLARIFY_NO_EXPLANATION, WRONG_SIDE_NO_REASON (contradiction R32, R33)
+  contradictiontakeup: "reasoned",
+  // TAKE_UP_NO_QUESTION (contradiction R35: the member's own question)
+  contradictionresolve: "reasoned",
+  // NO_CONCLUSION (contradiction R36, through basis-versions' conclude)
+  resolutiondefect: "reasoned",
+  // NO_REASON (entities R38: a defect is reported with why)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -103420,6 +103445,13 @@ var RUNG_ABSENT = {
      things, not what was observed, so not `observational`. The ladder's own gap, stated: an act on the record,
      corrected forward (a candidate is never updated), labelled machine work and never signed. */
   contradictionpropose: { ground: "undetermined", is: "a run PROPOSES how two referents the pairing formed relate \u2014 one of \xA75's five labels and its reason, labelled machine work, state proposed, and never a finding until a member judges it (CONTRADICTION-IDENTIFY-DESIGN.md \xA78)" },
+  /* N345 (K481), on R27's rule. `contradictionrecommend` is `contradictionpropose`'s ground for its reason: a run
+     proposes, and it is machine work. The opt-in and the response (DEC-85) ask no authored reason (their words are
+     optional, a response's text is what is relayed, not an account of a decision), and no published act takes either
+     back: an opt-in is never withdrawn, and a response is relayed as written. */
+  contradictionrecommend: { ground: "undetermined", is: "a run RECOMMENDS in which respects the sides of a shown contradiction may differ \u2014 never which side is wrong or a kind \u2014 labelled machine work and standing only while the candidate is open (contradiction R37)" },
+  contradictionoptin: { ground: "undetermined", is: "a project, through one of its joined participants, asks to resolve a conflict with a record its members cannot see; never withdrawn, and when every project holding a side has asked, the projects are named to each other (contradiction R51, R52)" },
+  contradictionrespond: { ground: "undetermined", is: "a member of an opted-in project responds to a conflict's notice, disclosing only what they choose; relayed as written to the other opted-in projects once they are named to each other (contradiction R53, R54)" },
   /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined`: none of its refusals (C-74) is in
      `JUSTIFICATION_REFUSALS`, and widening that class would be this item re-grading the ladder
      to suit itself. NOT `reversible`: nothing takes a choice back; a re-choice SUPERSEDES it and
@@ -103500,7 +103532,7 @@ var RUNG_ABSENT = {
   standarddeclare: { ground: "undetermined", is: "a member records a standard the record holds \u2014 citation, kind, issuer, its own words as captured and its period; never edited, corrected by a later standard that supersedes it (standards R1, R6)" },
   standardpropose: { ground: "undetermined", is: "a member or a machine PROPOSES a standard with its why, stored apart and labelled; never a standard until a member adopts it (standards R9)" },
   standardadopt: { ground: "undetermined", is: "a member adopts a proposal as a standard, the standard naming the proposal and the proposal its adoption, at most once (standards R10)" },
-  comparisonpropose: { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled; never a determination (conformance R12)" },
+  comparisonpropose: { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled, optionally started from a contradiction the proposer can see; never a determination (conformance R12, R21)" },
   consequencerecord: { ground: "undetermined", is: "a member records what a breach did and to whom \u2014 a part computed from the record's figures, assessed with a rationale, or undetermined with why; never edited, revised by a successor (consequences R1\u2013R6)" },
   filingprepare: { ground: "undetermined", is: "a machine or a member prepares a filing draft from the record, every filled blank naming its source and every unfilled one marked; never sent until a member approves it (filings R1\u2013R5)" },
   filingapprove: { ground: "undetermined", is: "a member approves a filing draft's text, or their edit of it, at most once; the approved text is theirs (filings R6)" },
@@ -103652,12 +103684,28 @@ var ACTS = [
      NO EDGE IS ADDED, AND THAT IS THE LIAR THIS REFUSES: a `concluded -> concluded` edge would
      publish the act to everybody and let the NO-PROJECT relationship conclude twice, re-opening a
      conclusion to itself. `conclude-project-arm.test.mjs` asserts both, through the op. */
+  /* N345 (R8): NOT ON A CONTRADICTION INQUIRY. Its conclusion must carry the kind the conflict turned out to be
+     (inquiry R47: RESOLUTION_MISSING at every door), which `conclude` does not ask, so it is withheld there and
+     `contradictionresolve` below is offered instead. `=== true`: a null (a hand-built facts object) narrows nothing. */
   {
     id: "conclude",
     label: "Conclude",
     weight: "single",
     types: ["inquiry"],
-    applies: (f9, ty) => ty === "inquiry" && (edgesFrom(f9).includes("concluded") || f9.current_state === "concluded" && f9.concludes_for_project === true)
+    applies: (f9, ty) => ty === "inquiry" && f9.contradiction_inquiry !== true && (edgesFrom(f9).includes("concluded") || f9.current_state === "concluded" && f9.concludes_for_project === true)
+  },
+  /* N345 (R8; contradiction R36): RESOLVE a contradiction inquiry — its conclusion with the kind of resolution the
+     conflict turned out to be. Offered where `conclude` would be on such an inquiry, by its state machine's arm: the
+     act concludes the question itself through basis-versions' `conclude` WITHOUT a project (its R16), so it takes
+     the edge to `concluded` and has no project arm (a question already concluded is ILLEGAL_TRANSITION there). Only on
+     a STATED `true`: a null never widens. Which kind, the conclusion and the reading are the act's parameters, refused
+     by name — the release precedent. Weight `single`: one question is resolved at a time. RUNG `reasoned`. */
+  {
+    id: "contradictionresolve",
+    label: "Resolve this contradiction (conclude with what it turned out to be)",
+    weight: "single",
+    types: ["inquiry"],
+    applies: (f9, ty) => ty === "inquiry" && f9.contradiction_inquiry === true && edgesFrom(f9).includes("concluded")
   },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
      back to `open`. TWO conditions and no third: the FROM state is in the
@@ -104247,7 +104295,7 @@ var ACTS = [
        projectownerremove NOT_THE_OWNER, LAST_OWNER, LAST_COMMITTED_OWNER (`projectOwnerRemove`) ->
                           owner, the one-owner floor clear and some owner committed (a one-owner
                           project, or one whose owners have all asked to leave, refuses EVERY parameter)
-       projectownerrescue ADMIN_ONLY, NO_OWNERS, OWNERS_ARE_ACTIVE (`#rescueRefusal`) -> open
+       projectownerrescue NOT_AN_ADMIN, NO_OWNERS, OWNERS_ARE_ACTIVE (membership `rescueRefusal`) -> open
      `projectremove` IS AN OWNER'S, NOT AN ADMINISTRATOR'S: Membership Architecture v2 §7.7
      REVERSED v1.4, and the store has refused a non-owner since. D-311's own row and D-310's
      argument both said "an ADMINISTRATOR's" — the v1.4 reading; each predicate here is derived
@@ -104358,7 +104406,9 @@ var MACHINE_REFUSALS = {
   versionconsider: "MACHINE_CANNOT_MOVE_VERSION",
   versionrevert: "MACHINE_CANNOT_MOVE_VERSION",
   versioncurrent: "MACHINE_CANNOT_MOVE_VERSION",
-  versionhide: "MACHINE_CANNOT_MOVE_VERSION"
+  versionhide: "MACHINE_CANNOT_MOVE_VERSION",
+  /* N345: contradiction's member acts refuse an empty or machine author first (its R30, C-93.10). */
+  contradictionresolve: "MACHINE_CANNOT_ACT_ON_CANDIDATE"
 };
 var PER_ITEM_ACTS = [
   /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
@@ -117917,7 +117967,16 @@ var PROJECT_NAMING_READS = Object.freeze({
   escalation: ["id"],
   /* N321 (publication R44): the stage read names the project by its own id; publication answers the same C-70.1 through
      the same `existenceAct`, so the door's answer and the route's agree. */
-  projectstage: ["project"]
+  projectstage: ["project"],
+  /* N345: contradiction's notices and responses name the project a member reads on its own side, and contradiction's first
+     refusal for it is the same `existenceAct` (its R50), so the door's answer and the route's agree; the candidates read
+     may name a project, or a bundle, as its subject (its R25) — the body's `on: {project}` form is not read here, only a
+     top-level field; case-authoring's ceremony read names the publishing project, whose R2 answers the same existence
+     first. */
+  contradictionnotices: ["project"],
+  contradictionresponses: ["project"],
+  contradictioncandidates: ["project", "bundle"],
+  publishtensions: ["project"]
 });
 var PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) \u2014 never a bundle id",
@@ -117956,7 +118015,11 @@ var PROJECT_NAMING_READS_NOT = Object.freeze({
   filemembership: "`sha256` is a CAPTURE's digest",
   /* N216's layer-9 reads whose id names a row inside a project, never a bundle. */
   comparison: "`id` is a comparison PROPOSAL id \u2014 a thing inside a project, whose existence is contents",
-  counselpacketread: "`id` is a COUNSEL PACKET id \u2014 a thing inside a project, whose existence is contents"
+  counselpacketread: "`id` is a COUNSEL PACKET id \u2014 a thing inside a project, whose existence is contents",
+  /* N345's reads whose parameters name a candidate or a referent, never a project's own id. */
+  contradictionfacts: "`candidate` is a contradiction CANDIDATE id \u2014 a thing inside the record, never a bundle id",
+  contradictiontensions: "`referents` (in the body) are a case's claims, legs and extents at their versions, never a project's own id",
+  comparisonfacts: "`contradiction` is a contradiction CANDIDATE id and `standardSide` names its side, never a bundle id"
 });
 function existenceRead(membershipOf2, op, url, body) {
   const params = Object.hasOwn(PROJECT_NAMING_READS, op) ? PROJECT_NAMING_READS[op] : null;
@@ -118231,6 +118294,21 @@ var OPS2 = {
   /* REC-147: the judgement's write, extractpropose's cut; the store refuses a proposal with no run of the caller's in
      sight (C-93). */
   contradictionpropose: { classes: ["admin", "member", "probe"], mutating: true },
+  /* N345 (contradiction R25–R55, DEC-85; K490): the five reads, viewer-stamped; the six acts a member's, conclude's cut (the
+     store refuses a machine author by name, C-93.10), `author` and `viewer` stamped; `contradictionrecommend` the run's one
+     act, `contradictionpropose`'s cut and stamps. */
+  contradictioncandidates: { classes: ["admin", "member", "probe"], mutating: false },
+  contradictiontensions: { classes: ["admin", "member", "probe"], mutating: false },
+  contradictionfacts: { classes: ["admin", "member", "probe"], mutating: false },
+  contradictionnotices: { classes: ["admin", "member", "probe"], mutating: false },
+  contradictionresponses: { classes: ["admin", "member", "probe"], mutating: false },
+  contradictiondismiss: { classes: ["admin", "member", "probe"], mutating: true },
+  contradictionclarify: { classes: ["admin", "member", "probe"], mutating: true },
+  contradictiontakeup: { classes: ["admin", "member", "probe"], mutating: true },
+  contradictionresolve: { classes: ["admin", "member", "probe"], mutating: true },
+  contradictionoptin: { classes: ["admin", "member", "probe"], mutating: true },
+  contradictionrespond: { classes: ["admin", "member", "probe"], mutating: true },
+  contradictionrecommend: { classes: ["admin", "member", "probe"], mutating: true },
   /* D-148: a fee quote is evidence; a read across actions, viewer-stamped fail-closed. */
   actionquotes: { classes: ["admin", "member", "probe"], mutating: false },
   /* N231: the action kinds this instance accepts now; a read naming no bundle, so no viewer stamp and no NEEDS entry. */
@@ -118308,6 +118386,8 @@ var OPS2 = {
   /* REC-14: authoring a case writes what op=ratify then signs, so it is separate from ratify. The bar and editions
      beside it. */
   publish: { classes: ["admin", "member", "probe"], mutating: true },
+  /* N345 (case-authoring R32): the ceremony's read before op=publish; publish's classes and its two stamps. */
+  publishtensions: { classes: ["admin", "member", "probe"], mutating: false },
   strengthbar: { classes: ["admin", "member", "probe"], mutating: true },
   strengthbarof: { classes: ["admin", "member", "probe"], mutating: false },
   publishededitions: { classes: ["admin", "member", "probe"], mutating: false },
@@ -118420,6 +118500,8 @@ var OPS2 = {
      beside them. */
   aliaswithdraw: { classes: ["admin", "member", "probe"], mutating: true },
   relationwithdraw: { classes: ["admin", "member", "probe"], mutating: true },
+  /* N345 (entities R38): a report that a resolution matched the wrong subject, stamped `by` as the registry writes are. */
+  resolutiondefect: { classes: ["admin", "member", "probe"], mutating: true },
   entity: { classes: ["admin", "member", "probe"], mutating: false },
   entitybyalias: { classes: ["admin", "member", "probe"], mutating: false },
   relation: { classes: ["admin", "member", "probe"], mutating: false },
@@ -118486,6 +118568,8 @@ var OPS2 = {
   determination: { classes: ["admin", "member", "probe"], mutating: false },
   determinations: { classes: ["admin", "member", "probe"], mutating: false },
   comparison: { classes: ["admin", "member", "probe"], mutating: false },
+  /* N345 (conformance R21): the facts a comparison started from a contradiction reads; viewer-stamped. */
+  comparisonfacts: { classes: ["admin", "member", "probe"], mutating: false },
   consequencerecord: { classes: ["admin", "member", "probe"], mutating: true },
   consequencerevise: { classes: ["admin", "member", "probe"], mutating: true },
   addressedrecord: { classes: ["admin", "member", "probe"], mutating: true },
@@ -118638,6 +118722,7 @@ var REGISTRY_ACTIONS = [
   "relationdeclare",
   "aliaswithdraw",
   "relationwithdraw",
+  "resolutiondefect",
   "entity",
   "entitybyalias",
   "relation"
@@ -118668,10 +118753,12 @@ var AI_RUN_ACTIONS = [
   "extractpropose",
   /* REC-147: the judgement's candidates are an act OF A RUN, for extractpropose's reason; the
      run is checked at the store (C-93.2, C-93.3), not here. */
-  "contradictionpropose"
+  "contradictionpropose",
+  /* N345 (contradiction R37): the run's recommendation, for `contradictionpropose`'s reason. */
+  "contradictionrecommend"
 ];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
-var RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest", "contradictionpropose"];
+var RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest", "contradictionpropose", "contradictionrecommend"];
 var POSITIONAL_ACTS = [
   "cite",
   "sever",
@@ -118710,7 +118797,7 @@ var REEVALUATION_ACTIONS = ["versionadopt", "versionkeep", "reevaluationrecord"]
 var STANDARDS_ACTIONS = ["standarddeclare", "standardpropose", "standardadopt"];
 var STANDARDS_READS = ["standard", "standards", "standardinforce"];
 var CONFORMANCE_ACTIONS = ["determine", "comparisonpropose"];
-var CONFORMANCE_READS = ["determination", "determinations", "comparison"];
+var CONFORMANCE_READS = ["determination", "determinations", "comparison", "comparisonfacts"];
 var CONSEQUENCES_ACTIONS = ["consequencerecord", "consequencerevise", "addressedrecord"];
 var CONSEQUENCES_READS = ["consequence", "consequencesof", "addressed"];
 var FILINGS_ACTIONS = [
@@ -118733,6 +118820,21 @@ var ESCALATION_ACTIONS = [
   "escalationresume"
 ];
 var ESCALATION_READS = ["escalation", "escalationsdue"];
+var CONTRADICTION_ACTIONS = [
+  "contradictiondismiss",
+  "contradictionclarify",
+  "contradictiontakeup",
+  "contradictionresolve",
+  "contradictionoptin",
+  "contradictionrespond"
+];
+var CONTRADICTION_READS = [
+  "contradictioncandidates",
+  "contradictiontensions",
+  "contradictionfacts",
+  "contradictionnotices",
+  "contradictionresponses"
+];
 var QUERY_AUTHOR_ACTIONS = [...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS];
 var ACTION_LAYER_ACTIONS = [...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS];
 var ACTION_LAYER_READS = [
@@ -118931,6 +119033,8 @@ var SESSION_OPS = {
     ...FILINGS_ACTIONS,
     ...ESCALATION_ACTIONS,
     "actionriskpropose",
+    /* N345: contradiction's six acts on a candidate, a member's own acts in their own name, in BOTH sets. */
+    ...CONTRADICTION_ACTIONS,
     /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
        non-administrator by name. */
     "monitorpause",
@@ -119033,6 +119137,7 @@ var SESSION_OPS = {
     ...FILINGS_ACTIONS,
     ...ESCALATION_ACTIONS,
     "actionriskpropose",
+    ...CONTRADICTION_ACTIONS,
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
     ...CUSTODIAL_ACTIONS,
@@ -119112,6 +119217,25 @@ var NEEDS = {
   /* REC-147: `extractpropose`'s capability and for its reason — a proposal is CONTRIBUTING, never publishing, and
      nothing it writes puts the group's name on anything: a candidate is labelled machine work, state proposed. */
   contradictionpropose: "contribute",
+  /* N345: each of contradiction's six acts appends a row in a member's name to the working record (and a take-up promotes
+     an inquiry), and the run's recommendation is `contradictionpropose`'s kind of production — `contribute`, and NO fifth
+     capability token (CAPABILITIES.md §4). Who may act on a candidate is the module's, asked of the stamped author. */
+  contradictiondismiss: "contribute",
+  contradictionclarify: "contribute",
+  contradictiontakeup: "contribute",
+  contradictionresolve: "contribute",
+  contradictionoptin: "contribute",
+  contradictionrespond: "contribute",
+  contradictionrecommend: "contribute",
+  /* N345 (K516): NO CAPABILITY for the five reads, on `contradictionpairs`' reasoning above: asking what the record's
+     candidates, marks, facts, notices and responses say is READING the record, and it writes nothing. PRESENT, null,
+     because affordances names each in NON_ACTS (its R7) and its totality guard reads a NON_ACTS key this table does not
+     carry as stale (its R12). */
+  contradictioncandidates: null,
+  contradictiontensions: null,
+  contradictionfacts: null,
+  contradictionnotices: null,
+  contradictionresponses: null,
   /* D-148: NO CAPABILITY, on `contradictionpairs`' reasoning: reading what a body
      quoted is READING the record, and it writes nothing. */
   actionquotes: null,
@@ -119314,6 +119438,8 @@ var NEEDS = {
   /* T5-11 (entities R8): correcting the registry is the same corpus-shaping surface as building it. */
   aliaswithdraw: "contribute",
   relationwithdraw: "contribute",
+  /* N345 (entities R38): reporting a wrong subject match writes a row in the reporter's name, the registry's surface. */
+  resolutiondefect: "contribute",
   /* FW-7: RESOLVING a reference to an entity, and TESTIFYING a grade-D connection,
      both write into the record what documents concern which subjects — a corpus-shaping
      act on the same surface as building the registry, so `contribute`: a view-only
@@ -119388,6 +119514,10 @@ var NEEDS = {
   /* REC-198: NO CAPABILITY, on `reviewcopy`'s terms — the single read takes none, and the list is fenced exactly
      like it (BOB #32). Listing which drafts one's own project holds is reading; it writes nothing. */
   casedrafts: null,
+  /* N345 (case-authoring R32; K516): NO CAPABILITY, on `contradictionpairs`' reasoning — the ceremony's read tells a
+     publisher what publishing will disclose and writes nothing; `publish` gates the act itself. Present, null, for the
+     reason the contradiction reads are (affordances R7, R12). */
+  publishtensions: null,
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it
      rides the publication surface too. Lowering your own bar is legitimate and
      is an authored, dated, on-the-record act; what it may not be is quiet. */
@@ -120509,7 +120639,7 @@ function makeFetch(hooks = {}) {
          takes the stamp and fails closed without it. */
       "projectstage"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend" || op === "entity" || op === "entitybyalias" || op === "publishtensions" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -120583,12 +120713,17 @@ function makeFetch(hooks = {}) {
         "author",
         viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
+    if (CONTRADICTION_ACTIONS.includes(op))
+      inner.searchParams.set(
+        "author",
+        viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
     if (op === "contentmint")
       inner.searchParams.set(
         "mintedBy",
         viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
-    if (op === "extractpropose" || op === "contradictionpropose")
+    if (op === "extractpropose" || op === "contradictionpropose" || op === "contradictionrecommend")
       inner.searchParams.set(
         "proposedBy",
         viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -120598,6 +120733,8 @@ function makeFetch(hooks = {}) {
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "connectionchoose" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (op === "connectionassert" || op === "filemembershipjudge")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "publishtensions")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (REEVALUATION_ACTIONS.includes(op))
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
@@ -120789,6 +120926,16 @@ function makeFetch(hooks = {}) {
         const b = JSON.parse(passBody);
         b.withdrawnBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "resolutiondefect" && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          b.by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+          passBody = JSON.stringify(b);
+        }
       } catch {
       }
     }
