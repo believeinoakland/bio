@@ -506,6 +506,12 @@ export const STATES = {
   goal: {
     legal: ['open', 'closed'],
     edges: { open: ['closed'], closed: [] }
+  },
+  /* N-A1 (T18, K608): `action-plans`' plan (its R2, `PLN-`, `action_plan` in record-grammar's `OBJECT_TYPES`). A plan
+     is `open` while the group works it and `closed` when a member closes it with a reason; nothing reopens it. */
+  action_plan: {
+    legal: ['open', 'closed'],
+    edges: { open: ['closed'], closed: [] }
   }
 };
 /* One machine, two spellings: the legacy alias points at the SAME object, so
@@ -554,18 +560,8 @@ export function riskTierState(v) {
 }
 
 
-/* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
- * THE THREE LEVELS a governing law is stated at. Exported for the reason ACTION_KINDS is: C-2.10 judges an
- * action's `governing_laws[]` against it, `op=actionlaws` refuses against it before anything is written, and
- * `op=affordances` publishes it — one array, three readers.
- *
- * THE LEVEL IS THE MEMBER'S STATEMENT AND NEVER A DERIVATION. The layers follow the AGENCY ASKED (federal FOIA
- * governs federal agencies only; a California state or local agency is governed by the CPRA; a city with a
- * sunshine ordinance adds its own), and which agency a request went to is a fact the member holds and the plane
- * does not. So nothing here maps a counterparty to a level, and nothing maps a level to a rule: the plane
- * encodes no law's fees, clocks or appeals (the design's own words), because a citation stays true when the law
- * changes and an encoded rule goes stale silently. */
-export const LAW_LEVELS = ['federal', 'state', 'local'];
+/* `LAW_LEVELS` (D-149) stood here until T18 (legacy-checks). The governing-law levels are `jurisdictions`' (its R31),
+   which actions re-exports and `op=affordances` publishes; this copy had no reader. */
 
 /* =====================================================================
  * REC-195 (D-149's remaining half; `BIO_Case_Making_v0_1.md` §2): A MACHINE'S
@@ -619,7 +615,8 @@ export function lawProposalState(proposedBy) {
 
 /* K171 (2) (T8, N129): THE SAME LABEL FOR EVERY PROPOSAL THE ACTION LAYER STORES APART. A standard proposed by
  * the Legal/Policy Lookup skill or a member (standards R9), a comparison against standards (conformance R12), a
- * filing's draft (filings R5) and a candidate theory and remedy (filings R14) are each machine work or a member's
+ * filing's draft (filings R5), a candidate theory and remedy (filings R14), an action plan's proposed option
+ * (action-plans R11) and a prepared communication (filings R23; both N-A1, T18) are each machine work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -659,6 +656,25 @@ export const PROPOSAL_STATES = Object.freeze({
     member_proposed: 'a member proposed this candidate theory and remedy. It is a candidate for members and counsel '
       + 'to weigh and not the group\'s position, and the record holds who proposed it',
     unstated: 'the record does not say who proposed this candidate theory and remedy',
+  }),
+  /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
+     adopts it, and a prepared communication (filings R23) is a draft nobody has approved or sent, worded as
+     `filing_draft`'s sentences are. */
+  plan_option: Object.freeze({
+    machine_proposed: 'a machine credential proposed this option. That is machine work, labelled as machine work: it '
+      + 'can set an option beside the plan for members to weigh and it can never choose one. It is not an option '
+      + 'until a member adopts it',
+    member_proposed: 'a member proposed this option. It is a proposal and not an option: it is not an option until '
+      + 'a member adopts it, and the record holds who proposed it',
+    unstated: 'the record does not say who proposed this option, and it is not an option until a member adopts it',
+  }),
+  communication: Object.freeze({
+    machine_proposed: 'a machine credential prepared this communication. That is machine work, labelled as machine '
+      + 'work: it can prepare the words of a message and it can never approve or send one. Nobody has approved or '
+      + 'sent it, and nothing is sent until members decide to send it themselves',
+    member_proposed: 'a member prepared this communication. It is a draft and not a message sent: nobody has '
+      + 'approved or sent it, and the record holds who prepared it',
+    unstated: 'the record does not say who prepared this communication, and nobody has approved or sent it',
   }),
 });
 
@@ -881,7 +897,8 @@ function checkFrontmatterContract(ctx, findings) {
     const wantType = OBJECT_TYPES[prefix];
     if (wantType && wantType !== normalizeType(ot)) findings.push(f('C-2.5', 'error', `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
     const schema = fm.schema;
-    const sm = typeof schema === 'string' && /^([a-z]+)@(\d+)$/.exec(schema);
+    /* N-A1 (T18): a type name may hold `_` (`action_plan`, the first that does), so the stamp's type part does too. */
+    const sm = typeof schema === 'string' && /^([a-z][a-z_]*)@(\d+)$/.exec(schema);
     if (!sm) findings.push(f('C-2.5', 'error', `schema stamp '${schema}' is not of the form <type>@<n>`));
     else {
       if (normalizeType(sm[1]) !== normalizeType(ot)) findings.push(f('C-2.5', 'error', `schema stamp '${schema}' does not match object_type '${ot}'`));
@@ -2143,18 +2160,8 @@ function checkDividedExtension(fm, findings) {
 export const SUBJECT_POSITIONS = ['sought_and_answered', 'sought_no_answer', 'not_sought'];
 export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
 
-/** CASE-2 / DEC-72 clause 4: the two designations a case member can carry.
- *  EXPORTED for SUBJECT_POSITIONS' own reason — op=affordances publishes the
- *  vocabulary and no surface keeps a copy, so CASE-6's ceremony renders the two
- *  terms the gate actually accepts rather than a third spelling of them.
- *
- *  THE SPELLING IS THE SCHEMA'S. CASE-1 fixed it on
- *  `published_case_members.role` and said in the column's own comment that it
- *  was fixed there "so CASE-2 and CASE-6 do not each invent a third". This is
- *  that spelling consumed; `store.mjs`'s `Store.MEMBER_ROLES` is the same list,
- *  and the suite asserts all three agree by PARSING the schema rather than by
- *  restating it, because a vocabulary written three times is one that drifts. */
-export const CASE_MEMBER_ROLES = ['load_bearing', 'supporting'];
+/* `CASE_MEMBER_ROLES` (CASE-2 / DEC-72 clause 4) stood here until T18 (legacy-checks). The two designations a case
+   member can carry are ratification's (`src/ratification/checks.mjs`, R9); this copy had no reader. */
 
 /* `checkPublishedExtension`, C-2.8's case-member arm, stood here until T17 (legacy-checks, N372, K529). It is
    ratification's (`src/ratification/checks.mjs`, R9), and this copy's only caller was the catalogue's own
@@ -3832,13 +3839,58 @@ export function checkProjectNameUniqueness(corpus) {
 // Runner
 // ---------------------------------------------------------------------------
 
+/* §1b (T18, K585 (2)): THE GRAMMARS SEAM. A type grammar leaves this catalogue by registering with record-core
+ * (`registerGrammar(module, {ids, arm})`), whose audit and promotion's gate pass the registrations here as
+ * `opts.grammars`, a list `[{module, ids, arm(ctx, findings)}]` in module order. Each built-in type arm below is
+ * claimed by its whole id list: a grammar whose `ids` hold all of one arm's ids runs IN THAT ARM'S PLACE, over the
+ * same `ctx`, and the arm is skipped, so a moved arm never runs twice and the findings keep their order. (An arm's
+ * ids are the grammar ids its own body raises; the helpers it calls go with it.) A grammar that claims no built-in
+ * arm runs after the type arms, in list order. A claim covering part of an arm, or two arms, or an id another
+ * grammar claims, is a caller's defect and throws before any arm runs, as a malformed entry does. */
+export const EXTENSION_ARMS = Object.freeze([
+  { name: 'checkInformationExtension', ids: ['C-2.7'] },
+  { name: 'checkInfo2Contract', ids: ['C-18.6', 'C-18.7'] },
+  { name: 'checkInquiryExtension', ids: ['C-2.8'] },
+  { name: 'checkProjectExtension', ids: ['C-2.9', 'C-9.1'] },
+].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
+const GRAMMAR_ID_RE = /^C-\d+(\.\d+)?$/;
+
+/* The registered grammars, judged whole before any arm runs: `byArm` maps a built-in arm's name to the grammar that
+   replaces it, `rest` holds the others in list order. */
+function grammarsOf(list) {
+  if (list === undefined || list === null) return { byArm: new Map(), rest: [] };
+  if (!Array.isArray(list)) throw new TypeError('checkBundle: opts.grammars is a list of {module, ids, arm}');
+  const byArm = new Map(), rest = [], claimed = new Map();
+  list.forEach((g, i) => {
+    const at = `checkBundle: opts.grammars[${i}]`;
+    if (!g || typeof g !== 'object') throw new TypeError(`${at} is not a {module, ids, arm} entry`);
+    if (typeof g.module !== 'string' || g.module.trim() === '') throw new TypeError(`${at} names no module`);
+    if (!Array.isArray(g.ids) || g.ids.length === 0 || !g.ids.every((id) => typeof id === 'string' && GRAMMAR_ID_RE.test(id)))
+      throw new TypeError(`${at} (${g.module}): ids is a non-empty list of C-ids`);
+    if (typeof g.arm !== 'function') throw new TypeError(`${at} (${g.module}): arm is not a function`);
+    for (const id of g.ids) {
+      if (claimed.has(id)) throw new RangeError(`${at} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
+      claimed.set(id, g.module);
+    }
+    const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => g.ids.includes(id)));
+    if (touched.length > 1)
+      throw new RangeError(`${at} (${g.module}): claims ids of ${touched.map((a) => a.name).join(' and ')}; one grammar replaces one arm`);
+    const [arm] = touched;
+    if (arm && !arm.ids.every((id) => g.ids.includes(id)))
+      throw new RangeError(`${at} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(', ')}; an arm is claimed whole`);
+    if (arm) byArm.set(arm.name, g); else rest.push(g);
+  });
+  return { byArm, rest };
+}
+
 /**
  * Run all applicable checks over one bundle.
  * @param {BundleInput} input
- * @param {{knownSchemas?: string[]}} [opts]
+ * @param {{knownSchemas?: string[], grammars?: {module: string, ids: string[], arm: Function}[]}} [opts]
  * @returns {Promise<{pass: boolean, findings: Finding[]}>}
  */
 export async function checkBundle(input, opts = {}) {
+  const grammars = grammarsOf(opts.grammars);
   /** @type {Finding[]} */
   const findings = [];
   const bundleRaw = input.files.get('bundle.md');
@@ -3865,9 +3917,10 @@ export async function checkBundle(input, opts = {}) {
     /* PL-12 / D-84: `bias@1`. A type whose schema stamp the catalog does not
        know is refused by C-2.5 before any type-specific check runs, so the
        stamp has to be admitted in the same turn as the type. */
-    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason. */
+    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason; N-A1 (T18)
+       `action_plan@1` likewise. */
     knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'inquiry@1', 'focus@1', 'problem@1', 'project@1', 'action@1', 'bias@1',
-      'standard@1', 'determination@1', 'consequence@1', 'escalation@1', 'aspiration@1', 'goal@1'],
+      'standard@1', 'determination@1', 'consequence@1', 'escalation@1', 'aspiration@1', 'goal@1', 'action_plan@1'],
     resolveTarget: input.resolveTarget,
     // D2.3: the key registry, injected exactly like resolveTarget. Absent
     // is legal and means pre-migration behavior; absent WITH a
@@ -3926,20 +3979,26 @@ export async function checkBundle(input, opts = {}) {
     checkHeadings(ctx, findings);
     checkStateLegality(ctx, findings);
     checkWriteCompleteness(ctx, findings);
-    await checkInformationExtension(ctx, findings);
-    await checkInfo2Contract(ctx, findings);
+    /* §1b: each type arm runs through `typeArm`, which runs the grammar that claims it in its place. */
+    const typeArm = async (name, builtIn) => {
+      const g = grammars.byArm.get(name);
+      await (g ? g.arm(ctx, findings) : builtIn(ctx, findings));
+    };
+    await typeArm('checkInformationExtension', checkInformationExtension);
+    await typeArm('checkInfo2Contract', checkInfo2Contract);
     /* N325 (T14): `checkInboxGrammar(ctx, findings)` stood here. The inbox task grammar is queue's, a promotion check
        and an audit check it registers, so the bundle check does not run it; the export went in T15. */
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
-    checkInquiryExtension(ctx, findings);
+    await typeArm('checkInquiryExtension', checkInquiryExtension);
     /* CASE-5b: `checkCompletenessFreshness(ctx, findings)` STOOD HERE and is
        removed — C-21.1 at case altitude now runs over the CASE DOCUMENT, in ratification's
        `checkCaseDocument`, which is the only place its four fields exist. The
        call is deleted rather than left returning early: a check that can never
        fire is a rule nobody is enforcing wearing the costume of one. The full
        reasoning is at the removal site above. */
-    checkProjectExtension(ctx, findings);
+    await typeArm('checkProjectExtension', checkProjectExtension);
+    for (const g of grammars.rest) await g.arm(ctx, findings);
     /* checkCitationRegister ran here until FW-13 retired it (2026-08-08), and
        checkDeletionRecords beside it until FW-15 retired that too the same day.
        See CHECK_RETIREMENTS above for what each gated and why keeping it was
