@@ -1,8 +1,8 @@
 /* contradiction's test fixture: a Durable Object storage stand-in over node:sqlite (`sql.exec`, `transactionSync`
    nesting as savepoints) with the real modules contradiction uses — record-core (`bundles`, purge, `transact`),
    membership (the sight rule, participation, facts), promotion (the one write path, with this module's check
-   registered), provenance, extraction (`readings` and `readingOf`), content (`content`), entities (`resolutions`,
-   `reportResolutionDefect`), connections and inquiry (its tables, its grammar and projection, `contradictionLink`,
+   registered), extraction (`readings` and `readingOf`), content (`content`), entities (`resolutions`,
+   `reportResolutionDefect`) and inquiry (its tables, its grammar and projection, `contradictionLink`,
    `inquiryOfCandidate`, R46–R48). `basis-versions`' reads (`projectsDrawingOn`, `conclusionOf`, `projectQuestions`) and
    its no-project `conclude` are a stand-in the test controls, built from its stated interface (its R16–R19, R22, R37,
    R41): a question concluded through it is promoted through the real promotion, so inquiry's grammar judges the
@@ -14,11 +14,9 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
-import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
-import { connectionsOf } from "../../../src/connections/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { migrateBasisVersions } from "../../../src/basis-versions/schema.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
@@ -70,16 +68,22 @@ export function world({ gate = true, now = null } = {}) {
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   promotion.registerFact("caseMember", "legacy-store", () => false);
   promotion.registerFact("publishedRegistry", "legacy-store", () => null);
-  const prov = provenanceOf(host, { record, membership, promotion, now: tick });
-  prov.migrate();
+  /* provenance and connections are not contradiction's uses: inquiry, content and entities receive stand-ins answering
+     that the record holds no capture history and no theme or severed edge, which none of these tests exercises. */
+  /* provenance's `register` and connections' `refs`, as inquiry reads them (empty: no capture registered, no edge) */
+  st.sql.exec(`CREATE TABLE IF NOT EXISTS register (bundle_id TEXT, capture_sha TEXT, authored INTEGER DEFAULT 0)`);
+  st.sql.exec(`CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
+               PRIMARY KEY (bundle_id, target_id, kind))`);
+  const prov = { capturesOf: () => [], originOf: () => null, versionChain: () => null, capturedLocators: () => [],
+                 captureGrade: () => ({ determined: false, basis: "CAPTURE_ROUTE_UNRECORDED" }),
+                 recordReceipt: () => ({ ok: true }) };
   const x = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
   x.migrate();
   const content = contentOf(host, { record, membership, provenance: prov, extraction: x, now: tick });
   content.migrate();
   const entities = entitiesOf(host, { record, membership, provenance: prov, now: tick });
   entities.migrate();
-  const connections = connectionsOf(host, { record, membership, promotion, content, extraction: x, capture: {}, entities });
-  connections.migrate();
+  const connections = { themeLegFindings: () => [], edgeSevered: () => false, portionGrades: () => ({}), portionAxes: () => ({}) };
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, provenance: prov,
                               retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) }, now: tick });
   k.migrate();

@@ -343,6 +343,12 @@ export class Contradiction {
    * THE PAIRING READ (REC-146 / IC-167; R5–R12). Section 9 item 1.
    * ===================================================================== */
 
+  /** R48 (DEC-77 item 1): aspirations are in contact, never in contradiction, so no key pairs a side that lives in
+   *  one. A condition on a qualified bundle column, as the gate is. */
+  static #notAspiration(col) {
+    return `NOT EXISTS (SELECT 1 FROM bundles asp WHERE asp.bundle_id = ${col} AND asp.object_type = 'aspiration')`;
+  }
+
   /** R9: the doctype and the document DATE for one capture, AS THE READER STATES THEM — never as this module infers
    *  them. BOTH ARE THREE-VALUED AND THE THIRD VALUE IS THE POINT (section 4): *a document date or a doctype that its
    *  reader does not state is UNDETERMINED, and a pair that needs one is not formed on a guess.* So `null` here is
@@ -391,6 +397,7 @@ export class Contradiction {
          JOIN inquiry_basis c ON c.bundle_id = s.bundle_id
         WHERE s.role = 'supports' AND c.role = 'cuts_against'
           AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
+          AND ${Contradiction.#notAspiration("s.bundle_id")}
           AND (${g.sql})
         ORDER BY s.bundle_id, s.ord, c.ord
         LIMIT ?`, ...g.args, cap + 1);
@@ -429,6 +436,7 @@ export class Contradiction {
           AND v1.claim IS NOT NULL AND v1.claim <> ''
           AND v2.claim IS NOT NULL AND v2.claim <> ''
           AND d1.inquiry_subject_entity IS NOT NULL AND d1.inquiry_subject_entity <> ''
+          AND d1.object_type <> 'aspiration' AND d2.object_type <> 'aspiration'
           AND (${ga.sql}) AND (${gb.sql})
         ORDER BY d1.inquiry_subject_entity, v1.bundle_id, v1.name, v2.bundle_id, v2.name
         LIMIT ?`, ...ga.args, ...gb.args, cap + 1);
@@ -457,6 +465,7 @@ export class Contradiction {
                                            AND l2.bundle_id > l1.bundle_id
          JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
         WHERE l1.content_id IS NOT NULL
+          AND ${Contradiction.#notAspiration("v1.bundle_id")} AND ${Contradiction.#notAspiration("v2.bundle_id")}
           AND v1.state = 'accepted' AND v2.state = 'accepted'
           AND v1.hidden = 0 AND v2.hidden = 0
           AND v1.claim IS NOT NULL AND v1.claim <> ''
@@ -488,6 +497,7 @@ export class Contradiction {
          JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
         WHERE l1.content_id IS NULL AND l1.target_type = 'information'
           AND l2.target_type = 'information'
+          AND ${Contradiction.#notAspiration("v1.bundle_id")} AND ${Contradiction.#notAspiration("v2.bundle_id")}
           AND v1.state = 'accepted' AND v2.state = 'accepted'
           AND v1.hidden = 0 AND v2.hidden = 0
           AND v1.claim IS NOT NULL AND v1.claim <> ''
@@ -562,6 +572,7 @@ export class Contradiction {
                             AND r2.capture_sha > r1.capture_sha
          JOIN content c2 ON c2.capture_sha = r2.capture_sha
         WHERE ${ca.sql} AND ${cb.sql}
+          AND ${Contradiction.#notAspiration("c1.bundle_id")} AND ${Contradiction.#notAspiration("c2.bundle_id")}
           AND (${ga.sql}) AND (${gb.sql})
         ORDER BY r1.entity_id, c1.content_id, c2.content_id
         LIMIT ?`, ...ca.args, ...cb.args, ...ga.args, ...gb.args, cap + 1);
