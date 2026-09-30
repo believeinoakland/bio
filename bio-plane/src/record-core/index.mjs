@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R63).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R64, and R65–R67 as proposed in T18, J1).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -9,13 +9,21 @@
    the tables other modules declared to it (R21), and `seedMintLedger` reads the live rows its
    caller names. Extracted from `legacy-store` (store.mjs, schema.mjs) in T3; the reasoning the
    legacy comments carried is kept beside the code it explains. */
-import { checkBundle, createSha256, PROJECT_ID_CHECKS, PER_ITEM_CHECKS } from "../../checks/bio-checks.mjs";
-import { RECORD_CORE_CHECKS } from "./checks.mjs";
+import { checkBundle, createSha256, EXTENSION_ARMS } from "../../checks/bio-checks.mjs";
+import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
 
 export { RECORD_SCHEMA } from "./schema.mjs";
-export { RECORD_CORE_CHECKS } from "./checks.mjs";
+export { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
 
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const C_ID = /^C-\d+(\.\d+)?$/;             /* a catalogue check id, as `checkBundle`'s grammars name them */
+
+/* A refusal under one of this module's own rows (DEC-49): its code, its row's check and translation, and the detail;
+   `more` adds the refusal's own fields and never replaces these. */
+function refusedAs(code, detail, more) {
+  const row = RECORD_CORE_CHECKS[code];
+  return { ...more, ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+}
 const REFUSED = Symbol("record-core-refusal");
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -252,9 +260,12 @@ export class RecordCore {
   static OWN_TABLES = Object.freeze(["files", "history", "manifest", "leases", "bundles"]);
   static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings"]);
 
-  #storage; #sql; #depth = 0; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
+  #storage; #sql; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
+  #held = [];             // R66: one list per open `transact`, outermost first, of what `afterCommit` held
   #auditChecks = [];      // R59: {module, check}, in registration order
+  #grammars = [];         // R67: {module, ids, arm}, in registration order
   #countsBy = [];         // R63: {module, keys, counts}, in registration order
+  #statsSource = null;    // R65: {module, figures}, the one source of the instance's figures
 
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
@@ -285,7 +296,7 @@ export class RecordCore {
     this.#sql.exec(`CREATE INDEX IF NOT EXISTS bundles_project ON bundles(project, bundle_id)`);
   }
 
-  /* ---- transactions (R32) ---- */
+  /* ---- transactions (R32, R66) ---- */
 
   /** Runs `fn` as one transaction over the whole store. A throw, or a returned refusal (`ok:false`),
    *  rolls back every row written inside it, in any module's tables; a refusal is then returned, a
@@ -293,20 +304,44 @@ export class RecordCore {
    *  `transactionSync` nests so, measured in Miniflare): a nested call that throws or refuses rolls back
    *  its own writes and ids and nothing else, and the outer call decides the rest (R32, K133). */
   transact(fn) {
-    let result;
-    this.#depth++;
+    let result, out, committed = false;
+    const held = [];                  /* R66: what `afterCommit` held inside this call */
+    this.#held.push(held);
     try {
-      return this.#storage.transactionSync(() => {
+      out = this.#storage.transactionSync(() => {
         result = fn();
         if (result && typeof result === "object" && result.ok === false) throw REFUSED;
         return result;
       });
+      committed = true;
     } catch (e) {
-      if (e === REFUSED) return result;
-      throw e;
+      if (e !== REFUSED) throw e;     /* a throw drops what this call held, with its rows */
+      out = result;                   /* so does a refusal */
     } finally {
-      this.#depth--;
+      this.#held.pop();
     }
+    /* R66: a savepoint that committed hands what it held to the transaction around it, which may still roll it
+       back; the outermost commit runs it, now, before this call returns. */
+    if (committed) {
+      if (this.#held.length) this.#held[this.#held.length - 1].push(...held);
+      else RecordCore.#runHeld(held);
+    }
+    return out;
+  }
+
+  /** R66 (N406, K598): `fn` runs after the record has committed what it was asked in: at once outside any `transact`;
+   *  inside one, synchronously just after the outermost `transact` commits and before that call returns, in the order
+   *  the calls were made; never when the transaction, or the savepoint holding it, rolls back (a throw or an `ok:false`
+   *  answer). A held `fn` that throws does not undo the commit, stop the others or change what `transact` answers: a
+   *  caller that must know (reevaluation's `listeners_failed`) catches its own. A non-function is a caller's defect. */
+  afterCommit(fn) {
+    if (typeof fn !== "function") throw new TypeError("afterCommit: fn is not a function");
+    if (this.#held.length) this.#held[this.#held.length - 1].push(fn);
+    else RecordCore.#runHeld([fn]);
+  }
+
+  static #runHeld(fns) {
+    for (const fn of fns) { try { fn(); } catch { /* R66: the commit stands, and so do the others */ } }
   }
 
   /* ---- ids (R1–R9) ---- */
@@ -334,7 +369,7 @@ export class RecordCore {
     const gated = RecordCore.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));
     /* DEC-49 REGION is-allocid-prefix-gated */
     if (gated) {
-      const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;
+      const row = RECORD_CORE_CHECKS.ALLOCID_PREFIX_GATED;
       return { ok: false, reason: "ALLOCID_PREFIX_GATED", code: "ALLOCID_PREFIX_GATED", check: row.check,
                translation: row.translation,
                detail: `${gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid `
@@ -814,7 +849,84 @@ export class RecordCore {
     return Object.fromEntries(out);
   }
 
-  /* ---- the audit sweep (R18–R20, R45, R59) ---- */
+  /* ---- the instance's figures and what each caller is told of them (R64, R65; K621) ---- */
+
+  /* REC-131 / IC-148 (BOB #15's corrected ruling, `MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A DISCLOSURE OF
+     EXISTENCE*): a count over rows a caller could not all read goes only to a caller who could read them all, and for
+     members' leads THAT CALLER DOES NOT EXIST, so `leads` is on the wire for no class. ONE KEY NEVER CARRIES TWO
+     MEANINGS: the wire's log count excludes lead looks and is published as `observationsNonLead`, a name that states
+     its predicate; purge's `observations` keeps the whole log, and the wire carries no `observations` key, so no reader
+     compares the two under one name. The themes and their placements (D-162) are purge's proof only: a count of
+     members' lenses is not an operator fact. */
+  static #PROOF_ONLY = Object.freeze(["leads", "observations", "themes", "themePlacements"]);
+  static #WIRE_ONLY = Object.freeze(["observationsNonLead"]);
+
+  /** R65 (K621): the one source of the instance's figures, registered once at start, `figures({viewer, proof})`
+   *  answering them through the caller's sight (`viewer` exactly as the caller sent it, `undefined` when never sent,
+   *  a direct internal call that counts whole). The sight and the counting are the source's, over the tables it
+   *  reads; which figures each caller is told is this module's (R64). A second source is `STATS_SOURCE_DECLARED`,
+   *  naming the holder; one without a module name or a function `STATS_SOURCE_MALFORMED`. */
+  registerStatsSource(module, figures) {
+    /* DEC-49 REGION is-stats-source-registration */
+    if (typeof module !== "string" || !module.trim() || typeof figures !== "function")
+      return refusedAs("STATS_SOURCE_MALFORMED", "a statistics source names its module and is a function; nothing was registered.",
+                       { module: typeof module === "string" ? module : null });
+    if (this.#statsSource)
+      return refusedAs("STATS_SOURCE_DECLARED", `the instance's figures are already supplied by ${this.#statsSource.module}; `
+        + "nothing was registered.", { module, heldBy: this.#statsSource.module });
+    /* END DEC-49 REGION is-stats-source-registration */
+    this.#statsSource = { module, figures };
+    return { ok: true, module };
+  }
+
+  /* The source's figures, as a plain object of its own enumerable fields; none (`{}`) when no source is registered or
+     it threw or answered no object. A field that cannot be read is left out. */
+  #figures(viewer, proof) {
+    const out = {};
+    if (!this.#statsSource) return out;
+    let got;
+    try { got = this.#statsSource.figures({ viewer, proof }); } catch { return out; }
+    if (!got || typeof got !== "object" || typeof got.then === "function") return out;
+    let keys = [];
+    try { keys = Object.keys(got); } catch { return out; }
+    for (const k of keys) { try { Object.defineProperty(out, k, { value: got[k], enumerable: true, writable: true, configurable: true }); } catch { /* unread */ } }
+    return out;
+  }
+
+  /* The database's size, a figure of this object's storage and no table's; null when the storage states none. */
+  #dbBytes() {
+    try { const n = this.#sql.databaseSize; return typeof n === "number" && Number.isFinite(n) ? n : null; } catch { return null; }
+  }
+
+  /** R64 (N408, K621): `op=stats`. The instance's figures through the caller's sight (R65's source), with the same
+   *  keys for every class of caller: never `leads` nor `observations` (nor the themes, purge's only), whatever the
+   *  source answers; the observation log as `observationsNonLead`. `capacity` IS THE ONE CLASS DISTINCTION, AND IT
+   *  GOVERNS `dbBytes` AND NOTHING ELSE (BOB #15, resuming REC-131): the database's size moves in whole pages on every
+   *  write, a lead's included, so a member diffing it across a colleague's authoring could detect a large lead;
+   *  capacity is an operator need. It is the control plane's word, set from the authenticated class after the
+   *  caller's parameters are copied, so only `true` itself grants it: an absent or any other value is false, and a
+   *  door that forgets to stamp loses `dbBytes` rather than leaking it. THE RESIDUE, STATED RATHER THAN HIDDEN: the
+   *  admin class still receives a figure that moves on every write, so an operator can tell that something large was
+   *  written, never that it was a lead, and no lead is readable to it. Writes nothing; never throws. */
+  stats({ capacity = false, viewer } = {}) {
+    const f = this.#figures(viewer, false);
+    for (const k of [...RecordCore.#PROOF_ONLY, "dbBytes"]) delete f[k];
+    if (capacity === true) f.dbBytes = this.#dbBytes();
+    return f;
+  }
+
+  /** R64: purge's proof of what it removed, the private form of the same figures, WHOLE (§5: *the purge proof's own
+   *  count stays whole*): the whole log as `observations`, with `leads`, the themes and `dbBytes`, and no
+   *  `observationsNonLead`. No route answers it: purge reads it before and after it clears. Writes nothing; never
+   *  throws. */
+  proofCounts() {
+    const f = this.#figures(undefined, true);
+    for (const k of [...RecordCore.#WIRE_ONLY, "dbBytes"]) delete f[k];
+    f.dbBytes = this.#dbBytes();
+    return f;
+  }
+
+  /* ---- the audit sweep (R18–R20, R45, R59, R67) ---- */
 
   /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
    *  runs over every bundle of a page beside the catalogue, called `check(image, context)`: `image` is what
@@ -822,13 +934,53 @@ export class RecordCore {
    *  and `raw`, the bundle's `readImage`; `context` is R45's for the bundle (`{}` when the caller gives none), so a check that left the catalogue for its module is not
    *  lost to the audit, and the bundle is judged once, whole. */
   registerAuditCheck(module, check) {
+    /* DEC-49 REGION is-audit-check-registration */
     if (typeof module !== "string" || !module || typeof check !== "function")
-      return { ok: false, reason: "AUDIT_CHECK_MALFORMED", detail: "an audit check names its module and is a function" };
+      return refusedAs("AUDIT_CHECK_MALFORMED", "an audit check names its module and is a function; nothing was registered.");
     if (this.#auditChecks.some((c) => c.module === module))
-      return { ok: false, reason: "AUDIT_CHECK_DECLARED", module, detail: `${module} has already registered its audit check` };
+      return refusedAs("AUDIT_CHECK_DECLARED", `${module} has already registered its audit check; the first still runs.`, { module });
+    /* END DEC-49 REGION is-audit-check-registration */
     this.#auditChecks.push({ module, check });
     return { ok: true, module };
   }
+
+  /** R67 (§1b, K585 (2)): a type grammar leaves the check catalogue by registering here, once, at its module's start:
+   *  `ids` are the catalogue check ids its `arm(ctx, findings)` raises, and a grammar that claims all the ids of one of
+   *  the catalogue's `EXTENSION_ARMS` runs in that arm's place (legacy-checks' `checkBundle`, `opts.grammars`). What
+   *  the catalogue would throw on is refused here, before anything is registered, so the audit and the gate never meet
+   *  a grammar list the catalogue rejects: a malformed entry, a claim of part of one arm or of two arms
+   *  (`GRAMMAR_MALFORMED`), a module's second registration or an id another registration holds (`GRAMMAR_DECLARED`,
+   *  naming the holder). */
+  registerGrammar(module, { ids, arm } = {}) {
+    const named = typeof module === "string" && module.trim() !== "";
+    /* DEC-49 REGION is-grammar-registration */
+    if (!named || !Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === "string" && C_ID.test(id))
+        || typeof arm !== "function")
+      return refusedAs("GRAMMAR_MALFORMED", "a grammar names its module, a non-empty list of the check ids it raises and "
+        + "a function to run; nothing was registered.", { module: named ? module : null });
+    const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => ids.includes(id)));
+    if (touched.length > 1 || (touched.length === 1 && !touched[0].ids.every((id) => ids.includes(id))))
+      return refusedAs("GRAMMAR_MALFORMED", touched.length > 1
+        ? `the grammar claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar takes the place of one of the catalogue's arms. Nothing was registered.`
+        : `the grammar claims part of ${touched[0].name}, whose ids are ${touched[0].ids.join(", ")}; an arm is claimed whole. Nothing was registered.`,
+        { module });
+    const twice = ids.find((id, i) => ids.indexOf(id) < i);
+    const clash = this.#grammars.some((g) => g.module === module) ? { heldBy: module }
+      : twice !== undefined ? { id: twice, heldBy: module }
+      : (() => { for (const id of ids) { const g = this.#grammars.find((x) => x.ids.includes(id)); if (g) return { id, heldBy: g.module }; } return null; })();
+    if (clash)
+      return refusedAs("GRAMMAR_DECLARED", clash.id === undefined
+        ? `${module} has already registered its grammar; the first still stands.`
+        : `the check ${clash.id} is already claimed by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+    /* END DEC-49 REGION is-grammar-registration */
+    this.#grammars.push(Object.freeze({ module, ids: Object.freeze([...ids]), arm }));
+    return { ok: true, module, ids: [...ids] };
+  }
+
+  /** R67: every registered grammar, `{module, ids, arm}`, in registration order: what the audit (R18) and promotion's
+   *  gate pass to `checkBundle` as `opts.grammars`, so a bundle is judged by one grammar list at both. A fresh list
+   *  each call; the entries are frozen. */
+  grammars() { return [...this.#grammars]; }
 
   /** R18–R20: the check catalogue over a bounded page of bundles in id order after `after`, run WHERE
    *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). What a reference
@@ -868,19 +1020,22 @@ export class RecordCore {
       }
       const extra = typeof context === "function" ? (context(id) || {}) : {};
       const resolveTarget = (t) => typeof t === "string" && !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=? LIMIT 1`, t);
+      /* R18, R67: the catalogue runs the registered grammars in their arms' places. A grammar whose arm throws is one
+         error of its own on this bundle, as a registered check's is (R59), never a clean bundle or a throw out of the
+         pass. */
+      const grammars = this.#grammars.map((g) => ({ module: g.module, ids: g.ids, arm: async (ctx, found) => {
+        try { await g.arm(ctx, found); } catch (e) { found.push(RecordCore.#checkFailed(g.module, id, e)); }
+      } }));
       const { findings } = await checkBundle({
         folderName: id, files, elidedPaths: elided, sha256, sha512, resolveTarget, ...extra,
-      });
+      }, { grammars });
       /* R59: every registered check over the same image, in registration order. A check that throws is an error
          finding of its own, never a clean bundle. */
       for (const { module, check } of this.#auditChecks) {
         let more;
         try { more = await check({ bundleId: id, folderName: id, raw: img, files, elidedPaths: elided, sha256, sha512,
                                    resolveTarget }, extra); }
-        catch (e) {
-          more = [{ check: module, code: "AUDIT_CHECK_FAILED", severity: "error",
-                    message: `${module}'s audit check threw on ${id}: ${String((e && e.message) || e).slice(0, 200)}` }];
-        }
+        catch (e) { more = [RecordCore.#checkFailed(module, id, e)]; }
         if (Array.isArray(more)) findings.push(...more.filter((f) => f && typeof f === "object"));
       }
       const errs = findings.filter((f) => f.severity === "error");
@@ -898,6 +1053,15 @@ export class RecordCore {
     return { ok: true, checked: page.length, clean, withErrors, tally,
              ...(Object.keys(tallyDetail).length ? { tallyDetail } : {}),
              offenders, limit: cap, cursor: page.length === cap ? last : null, page };
+  }
+
+  /** R59, R67: the one finding a registered check or grammar that threw on a bundle leaves, an error under its module's
+   *  name (C-102.3), so the bundle is counted as having an error and never as clean. */
+  static #checkFailed(module, id, e) {
+    /* DEC-49 REGION is-audit-check-failed */
+    return { check: module, code: "AUDIT_CHECK_FAILED", severity: "error",
+             message: `${module}'s audit check threw on ${id}: ${String((e && e.message) || e).slice(0, 200)}` };
+    /* END DEC-49 REGION is-audit-check-failed */
   }
 
   /* ---- purge (R21–R24) ---- */
