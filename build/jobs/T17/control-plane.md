@@ -40,3 +40,10 @@ Proposed **R39** (for whichever module holds the gate): `op=purge` is refused 40
 **Tests and checks** (after merging `tranche/T17` for B3). `test/m/control-plane/`: 79 tests, 79 pass, 0 fail, 0 todo. format (72 modules; 0 failures), architecture (19 files, 101 imports; 0 failures), coverage (39 of 39; 0 failures), ownership (9 files; legacy 0/0; 0 failures). Negative controls, each restored: `captureaccounts` out of the viewer reads, `sourcesOps` not dispatched, the fault not sanitised, `within` not passed: each turns a doorbell test red (1, 1, 1, 3 fails).
 
 **Pending:** B2 (TASK_NOT_YOURS decorated at the door), on BOB's CHANGE that tasks' second completion has merged.
+
+## J2 · REPORT
+
+B1 and B3 applied and pushed on job/T17/control-plane (record: 'Progress'); only B2 remains, waiting on your CHANGE that tasks' TASK_NOT_YOURS has merged. After merging tranche/T17: test/m/control-plane 79/79, 0 todo; format, architecture, coverage (39 of 39), ownership (legacy 0/0): 0 failures.
+Two things for you now:
+(1) R36's text still describes the dry run ("the promotion is tried first in a transaction rolled back, and a pull whose promotion then fails ... says so in its answer and is promoted by a repeated pull"). Since N380 the pull and its promotion are one act: a refusal or throw of either leaves neither written. What remains of the repeated pull is a knock already pulled whose capture no bundle holds (pulled through capture's own `inboxpull` route), which the door's next pull promotes. Both marks (N380, N381) are met.
+(2) capture R65 (not mine): `PULL_WITHIN_FAILED`'s `detail` carries a thrown `within`'s message, which can carry store text to a caller. My pull now rethrows a fault as a fixed sentence, so control-plane's path is clean; a fixed sentence in capture's `withinFailed` would close it for any caller.
