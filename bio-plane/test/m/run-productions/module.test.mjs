@@ -3,7 +3,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as RP from "../../../src/run-productions/index.mjs";
-import { SUGGEST_CHECKS as CATALOGUE_SUGGEST, EXTRACT_PROPOSE_CHECKS as CATALOGUE_EXTRACT } from "../../../checks/bio-checks.mjs";
+import * as CATALOGUE from "../../../checks/bio-checks.mjs";
+
+const CATALOGUE_SUGGEST = CATALOGUE.SUGGEST_CHECKS;
 import { world, Q, Q2, DOC, DOC2, RUN, ALICE, BOB, MACHINE } from "./fixture.mjs";
 
 const AK = "class:ai/k1";
@@ -47,11 +49,30 @@ test("R14: the source is registered with basis-versions' onCandidates (its R40) 
   assert.deepEqual(fn({ captureSha: "0".repeat(64), max: 3 }), { truncated: false, rows: [] });
 });
 
-test("R16: every C-27 row but C-27.15 and every C-104 row is this module's, read from the catalogue unchanged, and each is minted by this module with its row", () => {
+test("R16: every C-27 row but C-27.15 is this module's, read from the catalogue unchanged; C-104.1–C-104.12 and SUGGEST_LEVELS are defined here, and the catalogue holds no C-104 row; each row is minted by this module with its row", () => {
   assert.deepEqual([...RP.SUGGEST_CHECK_KEYS].sort(), Object.keys(CATALOGUE_SUGGEST).filter((k) => k !== "VERSION_KIND_UNKNOWN").sort());
-  assert.deepEqual([...RP.EXTRACT_PROPOSE_CHECK_KEYS].sort(), Object.keys(CATALOGUE_EXTRACT).sort());
   for (const k of RP.SUGGEST_CHECK_KEYS) assert.equal(RP.SUGGEST_CHECKS[k], CATALOGUE_SUGGEST[k]);
-  for (const k of RP.EXTRACT_PROPOSE_CHECK_KEYS) assert.equal(RP.EXTRACT_PROPOSE_CHECKS[k], CATALOGUE_EXTRACT[k]);
+  /* C-104 is this module's own family: exactly twelve rows, numbered C-104.1 to C-104.12, each with a translation and a
+     `where` naming the region of this module's op that mints it; the catalogue keeps no copy (N155). */
+  assert.deepEqual(Object.keys(RP.EXTRACT_PROPOSE_CHECKS).map((k) => RP.EXTRACT_PROPOSE_CHECKS[k].check),
+                   Array.from({ length: 12 }, (_, i) => `C-104.${i + 1}`));
+  assert.deepEqual([...RP.EXTRACT_PROPOSE_CHECK_KEYS], Object.keys(RP.EXTRACT_PROPOSE_CHECKS));
+  const REGIONS = { NO_PROPOSER: "is-extract-run", NO_RUN: "is-extract-run", NO_SUCH_RUN: "is-extract-run",
+    RUN_NOT_RUNNING: "is-extract-door", NOT_AN_EXTRACT_RUN: "is-extract-door", NO_MINTS_BOUND: "is-extract-door",
+    MINTS_BOUND_REACHED: "is-extract-door", NO_PROPOSALS: "is-extract-door", NOT_A_DOCUMENT: "is-extract-document",
+    NO_BYTES_HELD: "is-extract-document", MINTS_BOUND_WOULD_EXCEED: "is-extract-whole-batch",
+    EXTRACT_NO_SCOPE: "is-extract-scope" };
+  assert.deepEqual(Object.keys(RP.EXTRACT_PROPOSE_CHECKS).sort(), Object.keys(REGIONS).sort());
+  for (const [k, region] of Object.entries(REGIONS)) {
+    const r = RP.EXTRACT_PROPOSE_CHECKS[k];
+    const fn = k === "EXTRACT_NO_SCOPE" ? "extractProposals" : "extractPropose";
+    assert.equal(r.where, `src/run-productions/index.mjs ${fn} > ${region}`, k);
+    assert.ok(typeof r.translation === "string" && r.translation.length > 40, k);
+  }
+  assert.equal("EXTRACT_PROPOSE_CHECKS" in CATALOGUE, false, "the catalogue holds no C-104 copy");
+  assert.equal(Object.values(CATALOGUE).some((f) => f && typeof f === "object"
+    && Object.values(f).some((r) => r && typeof r === "object" && /^C-104\./.test(String(r.check)))), false, "nor any C-104 row");
+  assert.ok(Object.isFrozen(RP.SUGGEST_LEVELS));
   /* Drive every code once, and collect what the module minted. */
   const driven = new Map();
   const see = (r) => { if (r && r.ok === false && r.code) driven.set(r.code, r); return r; };

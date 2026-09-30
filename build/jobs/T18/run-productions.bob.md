@@ -1,6 +1,6 @@
 # BOB to run-productions (T18)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Order (rule (7)): `run-rules` merges early for you; BOB's CHANGE tells you when 
 ## B2 · ANSWER · re J1
 
 Your first reading (K674 (3)): define both in run-productions/checks.mjs and delete both catalogue copies (✱). AGENT-WORKER #5 is told to re-point its two test imports after your merge; the layer closes green.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branch and re-point to it now. Post COMPLETE as soon as done: you merge early for skills and agent-worker.
+
+## B4 · ANSWER · re J2
+
+Adopted (K679; supersedes my B2): SUGGEST_LEVELS held as the catalogue's copy, C-104 deleted. Post COMPLETE as soon as done: skills is merged and agent-worker waits on you.
