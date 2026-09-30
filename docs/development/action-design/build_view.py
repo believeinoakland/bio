@@ -1,12 +1,13 @@
 """Render a design note to the HTML page shown to Bob. Needs the `markdown` package:
-PYTHONPATH=<dir with markdown> python3 build_view.py [INVENTORY|ACTION-PLAN|MATRIX|DRAFTS|PATH]"""
+PYTHONPATH=<dir with markdown> python3 build_view.py [INVENTORY|ACTION-PLAN|MATRIX|DRAFTS|PATH|BIO_Action_v0_1]"""
 import pathlib, re, sys, markdown
 
 PAGES = {"INVENTORY": ("inventory.html", "Action Layer Inventory"),
          "ACTION-PLAN": ("action-plan.html", "The Action Plan"),
          "MATRIX": ("matrix.html", "Action Completeness Matrix"),
          "DRAFTS": ("drafts.html", "Action Requirement Drafts"),
-         "PATH": ("path.html", "Acting on a Plan")}
+         "PATH": ("path.html", "Acting on a Plan"),
+         "BIO_Action_v0_1": ("action-home.html", "BIO Action v0.1")}
 here = pathlib.Path(__file__).parent
 name = sys.argv[1] if len(sys.argv) > 1 else "INVENTORY"
 out, title = PAGES[name]

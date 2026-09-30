@@ -1,6 +1,6 @@
 # Action design (ACTION_DESIGN sessions, week of 2026-09-29)
 
-Design work on the Action layer (layer 9, `build/layers.md`): the inventory, then Bob's framing questions, a completeness matrix, requirement drafts for BOB to fold, and the design. Nothing here is build state or canon until BOB folds it or Bob rules it.
+Design work on the Action layer (layer 9, `build/layers.md`). **The role (Bob, 2026-09-30):** the ACTION_DESIGN session owns the Action layer's requirements, architecture, UX and every other action-related piece of work. All development is managed by BOB: what this session produces is integrated into `main` in coordination with BOB, and BOB manages the resulting work (plans, jobs, tranches). Nothing here is build state or canon until BOB folds it or Bob rules it.
 
 | file | what |
 | --- | --- |
@@ -12,3 +12,4 @@ Design work on the Action layer (layer 9, `build/layers.md`): the inventory, the
 | `drafts/tests.md` | the tests each drafted requirement needs, with negative controls; included in `drafts.html` |
 | `PATH.md` | step 5: the member's path through acting, from a young inquiry to a closed plan, on the substrate's surfaces. Rendered as `path.html` |
 | `HANDOFF.md` | the handoff to BOB: Bob's rulings to record, what to fold, what was found on the way |
+| `BIO_Action_v0_1.md` | the proposed level-1 home of the Action layer: purpose, contract, constructs, rules, the sixteen contradictions reconciled, the canon text to change, and six points still Bob's. Rendered as `action-home.html` |
