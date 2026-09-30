@@ -206,7 +206,8 @@ test("R28: a projected links_to edge becomes a references[] entry of the source 
   const r = w.k.projectLinks({ sourceCapture: s, viewer: MACHINE, identity: V("alice") });
   assert.equal(r.promoted, true); assert.equal(r.references_written, 1);
   const md = w.record.readFile(A, "bundle.md").text;
-  assert.match(md, /- rel: links_to\n    target: INFO-2026-0002-b\n    status: confirmed\n    note: "https:\/\/example.org\/b"/);
+  /* C-6.1's links_to arm: the entry is the source's on its face, with the address and a contemporaneity verdict. */
+  assert.match(md, /- rel: links_to\n    target: INFO-2026-0002-b\n    status: confirmed\n    asserted_by: source\n    address: "https:\/\/example.org\/b"\n    verdict: (contemporaneous|superseded|undetermined)\n    note: "https:\/\/example.org\/b"/);
   assert.match(md, /## Session Log[\s\S]*Projected 1 link \| member:alice/);
   assert.equal(w.record.readFile(A, "snapshots/c0.txt").text, "source", "every other file carried");
   /* The source is promoted again, carrying its document: the edge stays. */
