@@ -7,9 +7,10 @@ import {
 } from "../../../src/queuestate.mjs";
 import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 
-/* R1's eight, N345's two duties among them (DEC-85's unseen one included). */
+/* R1's nine, N345's two duties among them (DEC-85's unseen one included), and N375's self-registered key. */
 const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "expertise-confirmation-owed",
-  "membership-request", "project-owners-inactive", "contradiction-duty", "contradiction-duty-unseen"];
+  "membership-request", "project-owners-inactive", "contradiction-duty", "contradiction-duty-unseen",
+  "signer-self-registered"];
 /* R1's twenty-six, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172) and N345's five among
    them. */
 const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectation-due", "source-modified",
@@ -38,6 +39,8 @@ test("R1: every catalogued kind answers its class, anything else null, and every
     assert.equal(classOfKind(v), null, String(v));
   for (const vocab of [QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS])
     for (const [k, s] of Object.entries(vocab)) assert.ok(typeof s === "string" && s.trim().length > 0, k);
+  // N375: the self-registered key is an OBLIGATION whose sentence says what happened and what may be done
+  assert.match(QUEUE_OBLIGATION_KINDS["signer-self-registered"], /registered their own signing key; you may revoke it/);
   // the cardinality finding is worded as what it is: never "required and absent"
   assert.doesNotMatch(QUEUE_FINDING_KINDS.cardinality_exceeded, /absent/);
 });

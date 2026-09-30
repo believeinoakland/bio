@@ -476,6 +476,8 @@ export class Queue {
    *  publication below. A list of field names rather than a list of kinds: the
    *  kinds change every wave and this pair has not changed since REC-7. */
   static QUEUE_DISPOSITION_KEY = ["progression_key", "stage_key"];
+  /** R12: the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a task (taskresolve). */
+  static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset" });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -528,14 +530,15 @@ export class Queue {
     const contradiction = this.#contradictionDisposition(item);
     if (contradiction) return contradiction;
     if (item.class === "OBLIGATION")
-      /* REC-207: AND `instead` NAMES THE DOOR THIS ITEM ACTUALLY HAS. `op=taskresolve` addresses rows in
+      /* REC-207: AND `instead` NAMES THE DOOR THIS ITEM ACTUALLY HAS. N375 (R12; J1): a self-registered signing key is
+         keyed by the KEY, not a task, and leaves when an administrator revokes it (op=signerset, membership R26). `op=taskresolve` addresses rows in
          `tasks` by id; a bias-debt obligation is keyed by the RUN it is about and has no task row, so
          every bias-debt item published before this named a door it could not go through — the row's own
          headline. The kind decides, not a list of exceptions to keep in step: a producer whose items are
          resolved somewhere else will need its own answer here and will find this line when it does. */
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
-               instead: item.kind === "bias-debt" ? "biasdebtresolve" : "taskresolve",
+               instead: Queue.OBLIGATION_DOORS[item.kind] || "taskresolve",
                detail: "an OBLIGATION is something a named person must do for the record to proceed "
                      + "and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it "
                      + "is not a narrower version of that act, it is a different one."
@@ -544,6 +547,10 @@ export class Queue {
                         + "a task, so it is settled through op=biasdebtresolve with a stated reason — or "
                         + "by a re-run under the lens now in force, or by the lens moving back "
                         + "(BOB #32, 2026-09-23)."
+                        : item.kind === "signer-self-registered"
+                        ? " This one is a signing key a member registered for themselves, which is keyed by the "
+                        + "KEY rather than by a task, so it leaves when an administrator revokes the key "
+                        + "(op=signerset), or when it is otherwise no longer active."
                         : "") };
     if (item.class === "CONDITION")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
