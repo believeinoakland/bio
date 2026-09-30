@@ -57,3 +57,7 @@ B1 and B3 applied and pushed on job/T17/control-plane (record: 'Progress'); only
 Two things for you now:
 (1) R36's text still describes the dry run ("the promotion is tried first in a transaction rolled back, and a pull whose promotion then fails ... says so in its answer and is promoted by a repeated pull"). Since N380 the pull and its promotion are one act: a refusal or throw of either leaves neither written. What remains of the repeated pull is a knock already pulled whose capture no bundle holds (pulled through capture's own `inboxpull` route), which the door's next pull promotes. Both marks (N380, N381) are met.
 (2) capture R65 (not mine): `PULL_WITHIN_FAILED`'s `detail` carries a thrown `within`'s message, which can carry store text to a caller. My pull now rethrows a fault as a fixed sentence, so control-plane's path is clean; a fixed sentence in capture's `withinFailed` would close it for any caller.
+
+## J3 · COMPLETE
+
+B1–B4 applied, pushed on job/T17/control-plane (record: Progress, Completion). B4: merged tranche/T17; envelope.test R22 reads TASK_NOT_YOURS (C-76.1), and a new R22 door test proves a forwarded taskresolve/taskforward refusal carries tasks' row, not intent's C-111.15 (intent's NOT_YOURS still reads its own as the control). test/m/control-plane 80/80, 0 todo; format, architecture, coverage (39/39), ownership (legacy 0/0): 0 failures. Open for you from J2: R36's wording (dry run) and capture's PULL_WITHIN_FAILED detail carrying a thrown message.
