@@ -26,3 +26,7 @@
 - `node checks/ownership.mjs … observation-log tranche/T18`: 9 files changed; legacy-store 1 line added, 5 removed (the added line: `store.mjs`:533, `observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) })`); legacy-checks 0; 0 failures.
 
 Size (session_01PsaM5ugjCPER1vjNE5prhR): test runs 9, module lines 3052
+
+## J1 · COMPLETE
+
+Complete. C-22 (AI_RUN_CHECKS' eight rows) and LEAD_ID_RE copied into observation-log/checks.mjs (catalogue copies held for T19 layer 1; the eight rows awaiting stamp); the module registers onDerived and registerDerivationProvider with connections itself, store.mjs's two legacy-store lines gone (+1 call, -5). N242's share met. Converts carried (meaning.test.mjs, R26, R24, an end-to-end writer test). Module tests 51/51; format, architecture, coverage (29/29), ownership 0 failures. REPORT in my record: agent-worker's and the plane's bundles stale (my files); the DEC-49 guard (release-only) fails on the eight held-twice C-22 rows, the stale MULTI_SITE_CLOSED entry for AI_LOG_NEVER_LOOKED_STORED and its families floor 114->115, legacy-tests' at the release.
