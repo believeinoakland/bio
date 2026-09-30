@@ -14,3 +14,13 @@ Readings I am building on now. Only (1) needs a ruling that may reach another mo
 3. **`inboxresolve` with `status: "pulled"`** (instance-setup's "Mark as taken up") is routed as `op=inboxpull`: read from the POST body before admission, and then every gate, stamp and answer is `inboxpull`'s (so a bearer is refused `CLASS_FORBIDDEN`, as `inboxpull`). The other statuses are unchanged.
 
 4. **N363:** `src/tasks/checks.mjs` is not on the tranche, so importing it now fails the module's load; I add `M_TASKS` when your CHANGE says tasks merged.
+
+## J2 · REPORT
+
+**R36 cannot be met while provenance's register rules refuse capture R65's own document.** Measured over a real record store (node:sqlite, the tranche's modules): a knock pulled by capture's `pullKnock`, its document then promoted as an `information` bundle at `collected`, is refused `PROVENANCE_REGISTER_REFUSED` (C-103.1) with two C-18.1 findings from `src/provenance/register-checks.mjs`:
+- :206 `capture.grade 'null' is not one of: A, B, C` — R65's document carries `grade: null` with `grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED"` (provenance R51's doorbell route, K539);
+- :216 `origin.kind must be one of: named_request, sweep, member` (`ORIGIN_KINDS`, :36) — R65's document carries `origin: {kind: "doorbell", knock_id}` (K539).
+
+So no pulled knock can be filed as a bundle by any caller; capture R65 says the control plane promotes it. The register rules need the doorbell arm: a null grade with R51's `grade_basis` (as the authored arm, :195–205, already admits a null grade), and `doorbell` among the origin kinds. That is provenance's code (or, if you rule the document wrong, capture's). A CHANGE to either is yours to open.
+
+My side is built (J1's reading): my route runs the promotion as a dry run first, so today the pull is refused with that finding and nothing is written: no knock pulled, no receipt, no bundle. I test R36's orchestration with capture real and the promotion's answer controlled, and R36's end-to-end filing as a `test.todo` naming this cause, until the fix merges; then I run it against the real modules.
