@@ -2,14 +2,16 @@
  "meta": {
   "title": "CivicOS experience inputs for UX design",
   "written": "2026-09-28",
-  "branch": "tranche/T10",
+  "branch": "claude/gallant-brown-zg0wc1",
   "readThis": [
    "Every line carries basis. 'fixed' means the canon or the approved module requirements say it, and src names where. 'open' means the canon does not settle it; the text is the question the design must answer. Nothing marked open has an invented answer.",
    "Act references use the inventory's own names, written 'construct-id: Act name' (docs/development/ux-substrate/ux-substrate.json). Screen inventory, act weights and working names are another worker's job and are not repeated here.",
    "Two words mean two things. RUNG is how heavy an act is (reversible, reasoned, terminal, attested, irreversible). WEIGHT is how an act applied to a set behaves (refuse = all or nothing, report = proceed and say what moved, per-item = each applied or kept with its reason, single = one object). Source: affordances R1-R2; Interaction Constructs, naming collision corrected 2026-08-01.",
    "'Finding' is overloaded: in case-making it is a concluded question; in the queue it is a class of item the record noticed and nobody has judged (inventory contradictions). This file says 'concluded finding' or 'queue finding' where it matters.",
    "Coverage (useCases) says whether approved module requirements (build/requirements/*.md) hold the use case, not whether it is built.",
-   "Open questions 1-8 and 10 were ruled by Bob on 2026-09-29 (DEC-76 to DEC-82, DEC-86 to DEC-90); question 9 was ruled in part (Bob's action-plan rulings 1-10, docs/development/action-design/ACTION-PLAN.md) and stays open until the action-plans module is approved. Each keeps its original context and carries a 'ruled' entry naming its rulings, date and what was decided (and, for question 9, what is still open); the rulings win over that context wherever they differ."
+   "Bob ruled open questions 1-8 and 10 on 2026-09-29 (DEC-76 to DEC-82, DEC-86 to DEC-90); question 9 is ruled in part (BOB's action-plan rulings 1-10, docs/development/action-design/ACTION-PLAN.md) and is decided in the Actions session (DEC-93), staying open until the action-plans module is approved; question 12 is partly ruled (DEC-92, more to decide later) and question 11 deferred (DEC-91, with its trigger). Each keeps its original context and carries a 'ruled' entry naming its rulings, date, status and what was decided (and what is still open); the rulings win wherever they differ.",
+   "Questions 13-30 carry an 'update' entry where a ruling settles or changes part of them; nothing there is a ruling Bob did not make.",
+   "Where a line says 'decided' or 'decided, not built', Bob has ruled it but no approved requirement carries it yet; 'specified T14' means the requirement is written and T14 builds it."
   ],
   "sources": [
    "requirements/README.md (canon index)",
@@ -29,22 +31,30 @@
    "docs/development/DECISIONS.md",
    "build/requirements/*.md",
    "docs/development/ux-substrate/ux-substrate.json",
-   "docs/archive/research/AUDIENCES.md is cited ONLY as reference (not canon) where Publication section 6 points to it; lines resting on it alone are marked open"
+   "docs/archive/research/AUDIENCES.md is cited ONLY as reference (not canon) where Publication section 6 points to it; lines resting on it alone are marked open",
+   "docs/development/DECISIONS.md DEC-76 to DEC-92",
+   "build/rulings.md K356-K452",
+   "docs/development/CONTRADICTION-PRESENT-RESOLVE-DESIGN.md",
+   "docs/development/GRADE-A-CAPTURE.md",
+   "build/plan/archive/T11.md-T13.md; build/plan/draft-T14.md"
   ],
   "counts": {
    "audiences": 19,
-   "useCases": 148,
+   "useCases": 158,
    "useCaseCoverage": {
-    "yes": 106,
-    "partial": 28,
-    "no": 14
+    "yes": 113,
+    "partial": 23,
+    "no": 22
    },
    "journeys": 10,
-   "journeySteps": 66,
-   "surfaces": 17,
+   "journeySteps": 69,
+   "surfaces": 18,
    "openQuestions": 30,
    "openQuestionsRuled": 9,
-   "openQuestionsRuledInPart": 1
+   "openQuestionsDeferred": 1,
+   "openQuestionsStillOpen": 20,
+   "openQuestionsRuledInPart": 2,
+   "openQuestionsWithNoRuling": 18
   },
   "useCasesWithoutRequirementCoverage": [
    "UC-003 Assemble what is known about a focus area (Context skill)",
@@ -60,9 +70,20 @@
    "UC-125 Discuss across groups (forum, working-on signals)",
    "UC-126 Build an action plan: options, dependencies, deadlines, declined options",
    "UC-129 Document pressure against supporters as evidence",
-   "UC-148 Learn the principles and start from the starter kit"
+   "UC-148 Learn the principles and start from the starter kit",
+   "UC-149 Show that several knocks came from one person, without saying who",
+   "UC-150 Record how a source's identity became known, and publish it only with consent",
+   "UC-153 Publish a document whose co-attestation failed, by an acknowledgement",
+   "UC-154 Decline to escalate, saying why not now",
+   "UC-155 Resolve a conflict inline: say how two things differ, or which is wrong",
+   "UC-156 Accept the machine's recommendation in one attributed act",
+   "UC-157 Sign in the browser with a browser-held key",
+   "UC-158 Disclose an unresolved record contradiction when publishing"
   ],
-  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65 · updated 2026-09-29 for DEC-86–DEC-90 and the action-plan rulings, by BOB #67"
+  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65 · updated 2026-09-29 for DEC-86–DEC-90 and the action-plan rulings, by BOB #67 · 2026-09-29, rebuilt on claude/gallant-brown-zg0wc1 @ af8c42f022 for DEC-76-DEC-93, K356-K452 and the requirement changes since tranche/T10 @ 6faa808405; reconciled with BOB #67's page (tranche/T14 @ ba1980dc38) and renumbered per K473",
+  "commit": "c9a245767f",
+  "snapshotDate": "2026-09-29",
+  "asOf": "claude/gallant-brown-zg0wc1 @ c9a245767f (this rebuild, rulings renumbered per K473) and tranche/T14 @ ba1980dc38 (BOB #67's page: DEC-86-DEC-90 and the action-plan rulings)"
  },
  "audiences": [
   {
@@ -363,8 +384,14 @@
      "src": "UI-KICKOFF refinements (load-bearing complexity is per-level)"
     },
     {
-     "text": "What a newcomer is taught first, and where, is not settled (starter materials are 'not yet started').",
-     "basis": "open"
+     "text": "A newcomer meets two things first: strength against the project's bar, and 'Undetermined'; every other mark is taught where it is used, its explanation one hover away.",
+     "basis": "fixed",
+     "src": "DEC-82; Interaction Constructs §M"
+    },
+    {
+     "text": "The onboarding path and starter materials are deferred until the redesigned surfaces are built and stable.",
+     "basis": "fixed",
+     "src": "DEC-91"
     }
    ],
    "context": {
@@ -423,7 +450,7 @@
     {
      "text": "Never shown UNDETERMINED as an error.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U"
+     "src": "Interaction Constructs §U; DEC-86"
     }
    ],
    "src": "UI-KICKOFF; Design Requirements 2, 11; DEC-69",
@@ -605,8 +632,9 @@
    "context": {
     "device": [
      {
-      "text": "Not stated; signing needs a registered attesting key and the owner's own session.",
-      "basis": "open"
+      "text": "Signs in the browser with a browser-held key registered as their attesting key, confirmed by passphrase or device unlock (decided, not built).",
+      "basis": "fixed",
+      "src": "DEC-80 item 4"
      }
     ],
     "timePressure": [
@@ -635,6 +663,11 @@
      "text": "The ceremony must feel like signing, not form-filling; it states what becomes permanent and what it does not claim.",
      "basis": "fixed",
      "src": "Interaction Constructs revision 0.2 and section A"
+    },
+    {
+     "text": "A pre-flight says what would stop publication before the ceremony's first screen; the ceremony's step three asks them to disclose any unresolved record contradiction and the source's consent to any identity the case reveals.",
+     "basis": "fixed",
+     "src": "DEC-80 items 2-3; DEC-76 item 4; DEC-78 item 5"
     }
    ],
    "whatTheyMustNeverSee": [
@@ -873,6 +906,11 @@
      "text": "Hand over material safely and know it arrived.",
      "basis": "fixed",
      "src": "capture R54 (answers knockId, digest, bytes, received)"
+    },
+    {
+     "text": "Optionally, show that several knocks come from one person, with a secret they keep, without saying who they are; the doorbell can generate one and show it once on the receipt.",
+     "basis": "fixed",
+     "src": "DEC-78 item 3"
     }
    ],
    "whatTheyAlreadyKnow": [
@@ -913,7 +951,22 @@
    },
    "trustConcerns": [
     {
-     "text": "What the knocker is told about what happens next (who reads it, whether their contact is kept) is not designed.",
+     "text": "The record names them as an unnamed knocker identified by the knock's receipt, never as 'unknown'; the member who pulls the material is never recorded as its source.",
+     "basis": "fixed",
+     "src": "DEC-78 item 2; Intake Doctrine §2a"
+    },
+    {
+     "text": "Their note travels with the material as their own words, never as evidence of its truth; their contact stays in the doorbell inbox and never enters the record or any publication.",
+     "basis": "fixed",
+     "src": "DEC-78 item 4"
+    },
+    {
+     "text": "The group is never the first to make them more public: an identity detail is published only with their consent to that audience, or where it is already public, cited.",
+     "basis": "fixed",
+     "src": "DEC-78 item 5(a)"
+    },
+    {
+     "text": "What the knocker is told about what happens next, beyond the receipt and the optional secret, is not designed.",
      "basis": "open"
     },
     {
@@ -992,6 +1045,26 @@
      "text": "A display name is always shown with the slug, and a domain only while verified.",
      "basis": "fixed",
      "src": "Publication section 7; instance-setup R10"
+    },
+    {
+     "text": "Sees each document's capture grade and whether it is co-attested, or 'self-attested only' with the owner's acknowledgement.",
+     "basis": "fixed",
+     "src": "DEC-81 items 1, 3"
+    },
+    {
+     "text": "Sees any unresolved contradiction in the group's own record, disclosed and attributed, reaching one level and saying so.",
+     "basis": "fixed",
+     "src": "DEC-76 item 4; DEC-84 (12)-(13)"
+    },
+    {
+     "text": "For a finding against an office: Cause only when evidenced, otherwise 'cause not established'; a Recommendation is a proposed action, never a policy position.",
+     "basis": "fixed",
+     "src": "DEC-84 (10)"
+    },
+    {
+     "text": "Sees who made cited work: the origin mark (Ours, Another group's, Accepted by our group, Not yet evaluated, Flagged), never a trust score.",
+     "basis": "fixed",
+     "src": "DEC-92"
     }
    ],
    "whatTheyMustNeverSee": [
@@ -1134,6 +1207,15 @@
     {
      "text": "How strength composes across an instance boundary when one group cites another's published case is unanswered.",
      "basis": "open"
+    },
+    {
+     "text": "Its work, cited here, shows as 'Another group's' (signature verified), 'Accepted by our group' only by a reasoned act with a reason, and 'Flagged' only from a member's recorded evaluation naming specific issues, never a machine's.",
+     "basis": "fixed",
+     "src": "DEC-92"
+    },
+    {
+     "text": "What accepting commits the group to, whether it can be withdrawn, and how a flag is raised, answered and cleared are Bob's to decide later (DEC-92).",
+     "basis": "open"
     }
    ],
    "whatTheyMustNeverSee": [
@@ -1212,6 +1294,11 @@
      "text": "Their response returns as ordinary captured evidence (a received correspondence entry), not through a channel into the workspace.",
      "basis": "fixed",
      "src": "actions R15-R17; reference: AUDIENCES.md H7"
+    },
+    {
+     "text": "A published finding against it states Cause only when evidenced, otherwise 'cause not established'; a hypothesised cause never contributes to a determination; a Recommendation is a proposed action, never a policy position.",
+     "basis": "fixed",
+     "src": "DEC-84 (10)"
     }
    ],
    "whatTheyMustNeverSee": [
@@ -1427,6 +1514,16 @@
      "text": "Machine work is labelled everywhere; an agent-surfaced question carries a marker wherever listed.",
      "basis": "fixed",
      "src": "AI Roles section 3 rules 3, 8; ai-runs R27"
+    },
+    {
+     "text": "Appears as a panel docked beside the surface it serves; a wizard step highlights the real control and never fills or presses it.",
+     "basis": "fixed",
+     "src": "DEC-90"
+    },
+    {
+     "text": "May recommend which respects of a contradiction may differ, labelled machine work; never which side is wrong nor that a conflict is genuine.",
+     "basis": "fixed",
+     "src": "DEC-84 (5); DEC-77 item 3"
     }
    ],
    "whatTheyMustNeverSee": [
@@ -1802,12 +1899,12 @@
    "acts": [
     "knock: List / read / resolve inbox"
    ],
-   "outcome": "A knock marked pulled, discarded or new, with who and when.",
+   "outcome": "Pulled material admitted as a capture at 'collected' carrying the knock's receipt (decided); a discarded knock can be put back to new.",
    "coveredByRequirements": "partial",
-   "requirementIds": "capture Provides (inboxList, inboxGet, inboxResolve)",
+   "requirementIds": "capture R32 (NO_SUCH_KNOCK built T12, K383); Provides (inboxList, inboxGet, inboxResolve)",
    "src": "Intake Doctrine section 2a; DEC-78 (pulling admits the knock's material as a capture carrying its receipt; vouching stays with release)",
    "basis": "fixed",
-   "coverageNote": "What 'pulled' commits a member to, and whether the resulting capture names the doorbell as provenance, is undesigned."
+   "coverageNote": "Pulling is ruled (DEC-78): it admits the material as a capture and commits the member to nothing more; the source is the unnamed knocker, the member the capturing actor. Capture's requirements are owed (N345); today 'pulled' is a status only (capture R32)."
   },
   {
    "id": "UC-014",
@@ -2257,7 +2354,7 @@
    "acts": [],
    "outcome": "Queue findings source-modified / source-removed homed under what rests on the document.",
    "coveredByRequirements": "partial",
-   "requirementIds": "monitoring R31; queue R9 (not yet met: N229)",
+   "requirementIds": "monitoring R31 (not yet met); queue R9 through monitoring R48 (specified T14, N330)",
    "src": "Functional Architecture Function 4",
    "basis": "fixed"
   },
@@ -2300,7 +2397,7 @@
    "acts": [],
    "outcome": "Captures at collected with anomaly notes.",
    "coveredByRequirements": "partial",
-   "requirementIds": "monitoring R27-R29 (not yet met)",
+   "requirementIds": "monitoring R27 (met), R28-R29 (not yet met)",
    "src": "Intake Doctrine (standing intent)",
    "basis": "fixed"
   },
@@ -2321,8 +2418,8 @@
     "monitoring: Pause the daemon"
    ],
    "outcome": "A paused daemon that says so.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "monitoring R30 (not yet met)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "monitoring R30 (built T11-T13: the pause, N314 for every administrator, N324)",
    "src": "Functional Architecture annotation v3; Design Requirement 12 (optional)",
    "basis": "fixed"
   },
@@ -2367,8 +2464,8 @@
     "passage: Ask if a newer version holds it"
    ],
    "outcome": "A new version of the reference, or a recorded keep.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "reevaluation R14-R15; content R29-R31; queue R1, R9, R12 (not yet met: N172)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "reevaluation R14-R15; content R29-R31; queue R1, R9, R12 (built T12, N172)",
    "src": "Content Framework section 18.1",
    "basis": "fixed"
   },
@@ -2456,7 +2553,7 @@
    ],
    "outcome": "The finding leaves that project's list with the reason recorded; other projects unaffected.",
    "coveredByRequirements": "yes",
-   "requirementIds": "queue R13, R16, R27-R29 (R29 not yet met)",
+   "requirementIds": "queue R13, R16, R27-R29 (R29 built T12)",
    "src": "Interaction Constructs section P (PROPOSAL); D-79, D-82",
    "basis": "fixed"
   },
@@ -2478,8 +2575,8 @@
     "queue-item: Snooze a case"
    ],
    "outcome": "A personal suppression the feed states; a new kind on a muted case surfaces again.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "queue R4, R14, R19-R22 (R40 snoozed marker not yet met)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "queue R4, R14, R19-R22, R40 (R40 built T12)",
    "src": "DEC-10; NOTIFICATIONS.md (D-125, D-170)",
    "basis": "fixed"
   },
@@ -2499,7 +2596,7 @@
    "acts": [],
    "outcome": "'Resolved by X on this date'.",
    "coveredByRequirements": "partial",
-   "requirementIds": "queue R39 (not yet met)",
+   "requirementIds": "queue R39 (its bias half specified T14: bias R44, N326)",
    "src": "Interaction Constructs DEC-16",
    "basis": "fixed"
   },
@@ -2521,8 +2618,8 @@
     "lead: Take it up into a question / set it aside"
    ],
    "outcome": "Cited into the question or set aside with a reason.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "queue R18 (not yet met: REC-202)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "queue R18 (built T12, REC-202)",
    "src": "queue Purpose",
    "basis": "fixed"
   },
@@ -2890,7 +2987,8 @@
    "coveredByRequirements": "partial",
    "requirementIds": "strength R5 (not yet met); case-authoring R12 (not yet met)",
    "src": "DEC-15; DEC-20; Declared Bias 'HUNCH DEBT'",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "The uncleared-hunch refusal lands with the ceremony's pre-flight (DEC-80 item 3); case-authoring R12 and strength R5 not yet met."
   },
   {
    "id": "UC-062",
@@ -3023,14 +3121,15 @@
     "escalation"
    ],
    "acts": [
-    "escalation: Open from a live noncompliant determination"
+    "escalation: Open from a live noncompliant determination",
+    "escalation: Decline to escalate"
    ],
-   "outcome": "A member's act to open (or not open) an escalation; no significance field anywhere.",
+   "outcome": "A member opens an escalation with a written reason, or records in their own words why the group declines to (decided); no significance field anywhere.",
    "coveredByRequirements": "partial",
    "requirementIds": "conformance R8; consequences R11; escalation R1, R19",
    "src": "Functional Architecture Layer 2 Function 4; DEC-89 (a required reason to open an escalation; 'decline to escalate', not yet built)",
    "basis": "fixed",
-   "coverageNote": "Requirements forbid storing significance, severity or scores; the judgment is expressed only by acting. Where the member records why is open."
+   "coverageNote": "Decided (DEC-89): opening requires a written reason, and a reasoned 'decline to escalate' act records why not; both prose only. Requirements owed in escalation, conformance and affordances."
   },
   {
    "id": "UC-068",
@@ -3055,7 +3154,7 @@
    "requirementIds": "contradiction R1-R19",
    "src": "Case Making 'CONTRADICTION'; CONTRADICTION-IDENTIFY-DESIGN; DEC-76, DEC-77 (conditional contradiction; WORLD candidates reach members as leads)",
    "basis": "fixed",
-   "coverageNote": "IDENTIFY only; PRESENT and RESOLVE are undesigned (contradiction R19)."
+   "coverageNote": "An undetermined candidate is a lead, never a duty (DEC-84 (1)); a precision or unrelated label is never shown as a tension."
   },
   {
    "id": "UC-069",
@@ -3070,12 +3169,18 @@
    "constructs": [
     "contradiction"
    ],
-   "acts": [],
-   "outcome": "A member's attributed resolution; neither side deleted.",
+   "acts": [
+    "contradiction: Say how the two differ (the clarifier)",
+    "contradiction: Mark one side wrong",
+    "contradiction: Take it up as a contradiction inquiry",
+    "contradiction: Conclude the contradiction inquiry, recording its kind"
+   ],
+   "outcome": "Resolved with its kind: dissolved (both stay, each qualified), corrected (the wrong side stale with its reason, never deleted) or genuine (double-speak promoted to a finding, obligation against act routed to a determination, a conflict of norms, or held irreconcilable).",
    "coveredByRequirements": "no",
    "requirementIds": "none",
    "src": "Case Making 'CONTRADICTION' (PRESENT, RESOLVE); DEC-76, DEC-77 (resolution kinds; inline tension mark and clarifier, the contradiction inquiry as escalation)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Decided (DEC-76, DEC-77, DEC-84) and designed (CONTRADICTION-PRESENT-RESOLVE-DESIGN.md, reviewed K447); the requirement changes are owed (N345), not in T14."
   },
   {
    "id": "UC-070",
@@ -3096,7 +3201,8 @@
    "coveredByRequirements": "partial",
    "requirementIds": "inquiry R4-R8 (expressible as an ordinary question)",
    "src": "Case Making 'CONTRADICTION' (first case expressible today); DEC-76 (double-speak or reversal promotes into a finding; obligation against act routes into conformance)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "A world candidate is a lead, taken up or dismissed with one fixed reason; a double-speak or reversal promotes into a finding (DEC-76 item 3; DEC-84 (17))."
   },
   {
    "id": "UC-071",
@@ -3376,7 +3482,7 @@
    "requirementIds": "inquiry R7",
    "src": "Roadmap section 11 (five trust levels); Publication section 3 rule 5",
    "basis": "fixed",
-   "coverageNote": "Inherited legs are required; the five-level trust indicator and local acceptance are not."
+   "coverageNote": "Cited work from another group shows the origin mark 'Another group's' (signature verified); citing it inherits the fact of publication, never the credibility of its content (DEC-92; inquiry R7)."
   },
   {
    "id": "UC-083",
@@ -3390,14 +3496,18 @@
    "goal": "Keep the group's own accepted body of work with public, traceable acceptance.",
    "trigger": "Another group publishes relevant work.",
    "constructs": [
-    "case"
+    "case",
+    "inquiry"
    ],
-   "acts": [],
+   "acts": [
+    "inquiry: Accept another group's published work, with a reason"
+   ],
    "outcome": "Public acceptance with explicit dependencies.",
    "coveredByRequirements": "no",
    "requirementIds": "none",
    "src": "Design Requirement 5; Roadmap section 12 (Settings: accepted body of work)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Partly decided (DEC-92): accepting is a new reasoned act, attributed, with a reason, shown as the origin mark 'Accepted by our group'; requirements owed in inquiry, publication and affordances. What accepting commits the group to, and rejecting or withdrawing, are still Bob's."
   },
   {
    "id": "UC-084",
@@ -3602,7 +3712,8 @@
    "coveredByRequirements": "no",
    "requirementIds": "none",
    "src": "DEC-27; Interaction Constructs section P (THE ASSISTANT); ASSISTANT-PILOT; DEC-90 (the assistant panel docks beside the surface; a wizard step highlights, never fills)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Its panel is decided (DEC-90): docked beside the surface it serves, expandable, never floating; a wizard step highlights the real control and never fills it. No requirement yet."
   },
   {
    "id": "UC-093",
@@ -3737,7 +3848,8 @@
    "coveredByRequirements": "yes",
    "requirementIds": "publication R17, R39 (not yet met: K240); ratification R2",
    "src": "Publication section 3 rule 7; MEMBER-KNOWLEDGE-DESIGN section 4",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Choosing attribution carries high friction: a full dialog stating that the name becomes permanent at publication (DEC-88)."
   },
   {
    "id": "UC-099",
@@ -3781,7 +3893,7 @@
    "requirementIds": "none",
    "src": "Design Requirement 4; Functional Architecture Layer 3 Function 2; Roadmap section 9 skill 7; DEC-79 (work-product readiness: only earnable rungs shown, unearned ones stated)",
    "basis": "fixed",
-   "coverageNote": "The compliance skill and the work-product readiness ladder exist in canon only (inFlux)."
+   "coverageNote": "Until it exists, a case's 'Internally checked' and 'Externally compliant' rungs read 'not yet evaluated', never inferred from a signature (K364; publication R46)."
   },
   {
    "id": "UC-101",
@@ -3822,7 +3934,8 @@
    "coveredByRequirements": "partial",
    "requirementIds": "case-authoring R6, R12; ratification R2",
    "src": "DEC-80 (ceremony and pre-flight built in the redesign; DEC-33's placeholder retired); DEC-81 (pre-flight retries a failed co-attestation, else an attributed acknowledgement); Interaction Constructs RULED 2026-08-01",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Undeferred (DEC-80): five steps re-derived for DEC-72, a pre-flight running the real refusals before the first screen, no placeholder. Requirements owed (N345)."
   },
   {
    "id": "UC-103",
@@ -3845,7 +3958,8 @@
    "coveredByRequirements": "yes",
    "requirementIds": "ratification R2-R3, R10-R13; membership R56",
    "src": "Membership v2 section 7; AI Roles rule 4; DEC-80 (the owner signs in the browser with a registered browser-held key); DEC-87 (an irreversible act only through the ceremony)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Decided: signing in the browser with a browser-held key producing the same sshsig signature; founder delivery a fallback (DEC-80 item 4). Requirements owed (N345)."
   },
   {
    "id": "UC-104",
@@ -3936,7 +4050,8 @@
    "coveredByRequirements": "yes",
    "requirementIds": "publication R9-R12, R26-R29",
    "src": "Publication; UI-KICKOFF refinements (print)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Decided: the case also discloses each document's grade and co-attestation (DEC-81) and any unresolved record contradiction (DEC-76 item 4); requirements owed (N345)."
   },
   {
    "id": "UC-108",
@@ -4024,7 +4139,8 @@
    "coveredByRequirements": "yes",
    "requirementIds": "escalation R1, R4, R17-R21",
    "src": "Design Requirement 7; DEC-89 (opening requires a written reason)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Decided: opening requires a written reason, why this breach is worth pursuing (DEC-89); requirement owed."
   },
   {
    "id": "UC-112",
@@ -4160,8 +4276,8 @@
    ],
    "acts": [],
    "outcome": "Kinds and tiers from the profile, undetermined where the profile is silent.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "filings R15, R21; actions R40-R42; jurisdictions R25-R27",
+   "coveredByRequirements": "yes",
+   "requirementIds": "filings R15, R21; actions R40-R42 (R42 built T11, N231); jurisdictions R25-R27; affordances R26 (met T13)",
    "src": "Functional Architecture Function 3",
    "basis": "fixed",
    "coverageNote": "Profile action kinds are not yet live in the affordance vocabularies (affordances R26; inFlux)."
@@ -4381,7 +4497,7 @@
    "acts": [],
    "outcome": "Overdue marks; a proposed stage, never advanced.",
    "coveredByRequirements": "partial",
-   "requirementIds": "monitoring R34-R35, R44 (not yet met); escalation R2, R16",
+   "requirementIds": "monitoring R34-R35 (not yet met), R44; escalation R2, R16",
    "src": "Functional Architecture Function 5 resolution note",
    "basis": "fixed"
   },
@@ -4513,8 +4629,8 @@
     "group-instance: Choose jurisdiction profiles"
    ],
    "outcome": "Identity recorded with history; profiles chosen, none preselected.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "instance-setup R5-R16 (R13, R16 not yet met)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "instance-setup R5-R16 (profiles built T12, N10)",
    "src": "Publication section 7; build/layers.md 'No jurisdiction in the product'",
    "basis": "fixed"
   },
@@ -4867,6 +4983,246 @@
    "coveredByRequirements": "no",
    "requirementIds": "none",
    "src": "Design Requirement 11; Roadmap section 15 (not yet started)",
+   "basis": "fixed",
+   "coverageNote": "Deferred by Bob until the redesigned surfaces are built and stable (DEC-91)."
+  },
+  {
+   "id": "UC-149",
+   "name": "Show that several knocks came from one person, without saying who",
+   "layer": "1 Information",
+   "function": "Retrieve and extract",
+   "audience": [
+    "knocker"
+   ],
+   "goal": "Let the group link later material to earlier material from the same source, without revealing identity.",
+   "trigger": "A knocker returns with more.",
+   "constructs": [
+    "knock",
+    "source"
+   ],
+   "acts": [
+    "knock: Knock (hand over material)"
+   ],
+   "outcome": "The record shows a pseudonym and states that the same knocker secret was presented, never an identity.",
+   "coveredByRequirements": "no",
+   "requirementIds": "none (decided; requirements owed, N345)",
+   "src": "DEC-78 item 3; Intake Doctrine §2a",
+   "basis": "fixed"
+  },
+  {
+   "id": "UC-150",
+   "name": "Record how a source's identity became known, and publish it only with consent",
+   "layer": "1 Information",
+   "function": "Document",
+   "audience": [
+    "member",
+    "project owner"
+   ],
+   "goal": "Keep what is known of a source as it grows, without the group ever being first to expose them.",
+   "trigger": "Something about a source's identity becomes known.",
+   "constructs": [
+    "source",
+    "case"
+   ],
+   "acts": [
+    "source: Record a disclosure of the source's identity",
+    "source: Record a hostile exposure as the exposer's claim",
+    "source: Ask the source's consent to publish an identity detail"
+   ],
+   "outcome": "A dated, attributed history of disclosures; an identity detail published only with consent to that audience or where already public, cited; a firmer identity reaches resting findings as a notice.",
+   "coveredByRequirements": "no",
+   "requirementIds": "none (decided; a home for the disclosure history is BOB's to place, N345)",
+   "src": "DEC-78 item 5",
+   "basis": "fixed"
+  },
+  {
+   "id": "UC-151",
+   "name": "See where a project stands: its stage and its cases' readiness",
+   "layer": "Cross-cutting (membership, setup, assistant, attention)",
+   "function": "Track toward resolution",
+   "audience": [
+    "member",
+    "project owner"
+   ],
+   "goal": "Sense at a glance how far a project has come and what the next stage needs.",
+   "trigger": "A member opens a project.",
+   "constructs": [
+    "project",
+    "case"
+   ],
+   "acts": [
+    "project: Read the project's stage and readiness",
+    "project: Close the project, with its reason"
+   ],
+   "outcome": "Stage bars and readiness rungs computed from the record, each unreached step stating what it still needs; 'closed' with its reason.",
+   "coveredByRequirements": "yes",
+   "requirementIds": "publication R44-R47 (built T12; routed T13, N321), R49 (specified T14, N346); basis-versions R41",
+   "src": "State Rules §4.3; K362; K364; DEC-79",
+   "basis": "fixed",
+   "coverageNote": "The stacked bars are decided (DEC-79), not built in the interface."
+  },
+  {
+   "id": "UC-152",
+   "name": "Publish a case resting on co-attested Grade B copies, each disclosed",
+   "layer": "3 Action",
+   "function": "Evaluate and publish",
+   "audience": [
+    "project owner"
+   ],
+   "goal": "Publish without Grade A, stating how checkable each document is.",
+   "trigger": "A case is ready to publish.",
+   "constructs": [
+    "case",
+    "document"
+   ],
+   "acts": [
+    "case: Prepare a case"
+   ],
+   "outcome": "The case discloses each document's capture grade and whether it is co-attested.",
+   "coveredByRequirements": "partial",
+   "requirementIds": "capture R20; provenance R32-R33 (co-attestation built); the disclosure is owed (N345)",
+   "src": "DEC-81 item 1; Intake Doctrine §3",
+   "basis": "fixed"
+  },
+  {
+   "id": "UC-153",
+   "name": "Publish a document whose co-attestation failed, by an acknowledgement",
+   "layer": "3 Action",
+   "function": "Evaluate and publish",
+   "audience": [
+    "project owner"
+   ],
+   "goal": "Keep evidence that can never be co-archived, disclosing its limit rather than dropping it.",
+   "trigger": "The pre-flight finds a load-bearing Grade B without co-attestation.",
+   "constructs": [
+    "case",
+    "document"
+   ],
+   "acts": [
+    "case: Acknowledge a missing co-attestation, with a reason",
+    "case: Add a signed account of how a document was captured"
+   ],
+   "outcome": "The pre-flight retries first; if still missing, an attributed acknowledgement with a reason, and the document marked 'self-attested only'; never refused outright.",
+   "coveredByRequirements": "no",
+   "requirementIds": "none (decided; requirements owed, N345)",
+   "src": "DEC-81 item 3",
+   "basis": "fixed"
+  },
+  {
+   "id": "UC-154",
+   "name": "Decline to escalate, saying why not now",
+   "layer": "2 Analysis",
+   "function": "Evaluate significance (human judgment)",
+   "audience": [
+    "project participant"
+   ],
+   "goal": "Keep the group's judgement not to pursue a breach, without turning it into a score.",
+   "trigger": "A live noncompliant determination the group chooses not to pursue now.",
+   "constructs": [
+    "determination",
+    "escalation"
+   ],
+   "acts": [
+    "escalation: Decline to escalate"
+   ],
+   "outcome": "A reasoned, attributed, dated decline in the member's own words; a later escalation supersedes it and both stay readable.",
+   "coveredByRequirements": "no",
+   "requirementIds": "none (decided; escalation, conformance and affordances requirements owed)",
+   "src": "DEC-89",
+   "basis": "fixed"
+  },
+  {
+   "id": "UC-155",
+   "name": "Resolve a conflict inline: say how two things differ, or which is wrong",
+   "layer": "2 Analysis",
+   "function": "Cross-reference multiple sources",
+   "audience": [
+    "member"
+   ],
+   "goal": "Settle an apparent conflict where it is met, without leaving the work.",
+   "trigger": "A tension mark appears where two points sit together.",
+   "constructs": [
+    "contradiction"
+   ],
+   "acts": [
+    "contradiction: Say how the two differ (the clarifier)",
+    "contradiction: Mark one side wrong",
+    "contradiction: Dismiss a lead"
+   ],
+   "outcome": "A stated explanation (resolved when evidenced, otherwise softened), or one side stale with a written reason, or a lead dismissed with a fixed reason.",
+   "coveredByRequirements": "no",
+   "requirementIds": "none (decided; requirements owed, N345)",
+   "src": "DEC-77 item 1; DEC-84 (16)-(17)",
+   "basis": "fixed"
+  },
+  {
+   "id": "UC-156",
+   "name": "Accept the machine's recommendation in one attributed act",
+   "layer": "2 Analysis",
+   "function": "Assistant",
+   "audience": [
+    "member",
+    "AI run"
+   ],
+   "goal": "Use a labelled recommendation without it silently becoming the member's decision.",
+   "trigger": "A recommendation is shown first, with its reason.",
+   "constructs": [
+    "contradiction"
+   ],
+   "acts": [
+    "contradiction: Accept the machine's recommendation"
+   ],
+   "outcome": "The record keeps that the member accepted it, and which one; the machine's reason stays the machine's; the acceptance rate is measured.",
+   "coveredByRequirements": "no",
+   "requirementIds": "none (decided; requirements owed, N345)",
+   "src": "DEC-77 item 3(b); DEC-84 (14); K447 point 15",
+   "basis": "fixed"
+  },
+  {
+   "id": "UC-157",
+   "name": "Sign in the browser with a browser-held key",
+   "layer": "3 Action",
+   "function": "Evaluate and publish",
+   "audience": [
+    "project owner"
+   ],
+   "goal": "Sign a case without command-line tools, producing a signature strangers can verify.",
+   "trigger": "The ceremony reaches its last step.",
+   "constructs": [
+    "case",
+    "credentials"
+   ],
+   "acts": [
+    "credentials: Register a browser-held signing key",
+    "case: Sign the case"
+   ],
+   "outcome": "The same sshsig signature the plane verifies, confirmed by passphrase or device unlock; a lost key revoked and replaced.",
+   "coveredByRequirements": "no",
+   "requirementIds": "none (decided; requirements owed, N345)",
+   "src": "DEC-80 item 4",
+   "basis": "fixed"
+  },
+  {
+   "id": "UC-158",
+   "name": "Disclose an unresolved record contradiction when publishing",
+   "layer": "3 Action",
+   "function": "Evaluate and publish",
+   "audience": [
+    "project owner"
+   ],
+   "goal": "Publish a finding whose basis holds an unresolved conflict, saying so rather than hiding or blocking.",
+   "trigger": "The pre-flight finds an open record tension on the case's basis.",
+   "constructs": [
+    "case",
+    "contradiction"
+   ],
+   "acts": [
+    "case: Disclose an unresolved record contradiction"
+   ],
+   "outcome": "An attributed disclosure on the case, both sides with their sources; undisclosed, the case is refused; disclosed, it is not.",
+   "coveredByRequirements": "no",
+   "requirementIds": "none (decided; requirements owed, N345)",
+   "src": "DEC-76 item 4; DEC-84 (11)-(13)",
    "basis": "fixed"
   }
  ],
@@ -4925,7 +5281,7 @@
      "howLong": "Minutes; domain re-checked daily.",
      "handoffTo": "administrators",
      "feelingRisk": "Showing an unverified domain would claim an association the record cannot support.",
-     "src": "instance-setup R5-R16; Publication section 7",
+     "src": "instance-setup R5-R16; Publication section 7 (profiles built T12, N10)",
      "basis": "fixed"
     },
     {
@@ -4990,7 +5346,10 @@
      "handoffTo": "member (active)",
      "feelingRisk": "The handle is what the public sees; the member may not realise.",
      "src": "membership R15-R16; Membership v2 section 3",
-     "basis": "fixed"
+     "basis": "fixed, with open points listed",
+     "openInThisStep": [
+      "What a newcomer learns first is deferred until the redesign is built and stable (DEC-91); meanwhile strength against the bar and 'Undetermined' come first (DEC-82)."
+     ]
     },
     {
      "step": "Create a project with an objective",
@@ -5119,7 +5478,8 @@
      "whatCanGoWrong": [
       "RETIRED_NOT_CITABLE.",
       "A grouped question refuses a new leg until ungrouped (DEC-50).",
-      "A newer capture may exist: stale version notice."
+      "A newer capture may exist: stale version notice.",
+      "A supporting and a cutting-against leg that conflict carry a tension mark; the clarifier asks how they differ (decided: DEC-77)."
      ],
      "howLong": "Ongoing, days.",
      "handoffTo": "member",
@@ -5196,7 +5556,7 @@
      "decisionTheyMake": "Which findings are load-bearing; which hunches to clear.",
      "whatCanGoWrong": [
       "BELOW_PROJECT_STRENGTH naming member, axis, required and reached (case-authoring R6).",
-      "UNCLEARED_HUNCH (not yet enforced)."
+      "UNCLEARED_HUNCH (not yet enforced; lands with the ceremony's pre-flight, DEC-80 item 3)."
      ],
      "howLong": "Days if more evidence is needed.",
      "handoffTo": "owner",
@@ -5254,24 +5614,26 @@
      "basis": "fixed"
     },
     {
-     "step": "Sign the case (own session, attesting key)",
+     "step": "Go through the publication ceremony and sign in the browser",
      "whoIsActing": "owner",
-     "whatTheyKnow": "What becomes permanent and what it does and does not claim.",
-     "decisionTheyMake": "Sign now or not.",
+     "whatTheyKnow": "Before the first screen, what would stop publication (the pre-flight). Then: what becomes permanent; what it rests on; what it leaves out, including any unresolved record contradiction to disclose and consent for any source identity it would reveal; the edition it creates (DEC-80 item 2).",
+     "decisionTheyMake": "Disclose, acknowledge, and sign now or not.",
      "whatCanGoWrong": [
       "NO_SIGNERS.",
       "CASE_RATIFY_STALE (an acknowledgement or edit re-authored it).",
       "ATTRIBUTION_UNCHOSEN / ATTRIBUTION_STATEMENT_STALE.",
       "OPERATOR_TOKEN_CANNOT_RATIFY_CASE.",
-      "CASE_CONCLUSION_MOVED."
+      "CASE_CONCLUSION_MOVED.",
+      "An undisclosed open record tension refuses the case; a disclosed one does not (DEC-84 (13)).",
+      "A load-bearing document whose co-attestation failed: retried, then acknowledged with a reason and marked 'self-attested only' (DEC-81 item 3)."
      ],
-     "howLong": "Minutes; the ceremony itself is deferred (DEC-33).",
+     "howLong": "Minutes, once the pre-flight is clear.",
      "handoffTo": "signer with case authority",
      "feelingRisk": "A member who thinks they certify authenticity has been misled (Interaction Constructs section A).",
-     "src": "ratification R2-R3; DEC-33",
+     "src": "ratification R2-R3; DEC-80; DEC-81; DEC-76 item 4; DEC-78 item 5",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "The five-step ceremony and its pre-flight are deferred; only a placeholder surface is owed."
+      "Decided, not built: the ceremony's requirements are owed (N345); the words of each step are the redesign's."
      ]
     },
     {
@@ -5366,7 +5728,7 @@
      "step": "Open an escalation",
      "whoIsActing": "joined member",
      "whatTheyKnow": "The determination is live and noncompliant.",
-     "decisionTheyMake": "Whether to pursue (the group's choice).",
+     "decisionTheyMake": "Whether to pursue, and why, in their own words (decided: DEC-89).",
      "whatCanGoWrong": [
       "MACHINE_CANNOT_OPEN.",
       "DETERMINATION_SUPERSEDED."
@@ -5374,8 +5736,25 @@
      "howLong": "Minutes.",
      "handoffTo": "member",
      "feelingRisk": "None named.",
-     "src": "escalation R1",
+     "src": "escalation R1; DEC-89",
      "basis": "fixed"
+    },
+    {
+     "step": "Or decline to escalate, saying why not now",
+     "whoIsActing": "joined member",
+     "whatTheyKnow": "The determination is live and noncompliant.",
+     "decisionTheyMake": "Why the group is not pursuing it now, in their own words.",
+     "whatCanGoWrong": [
+      "Nothing may be recorded as significance, severity, priority, urgency or rank (conformance R8, escalation R19)."
+     ],
+     "howLong": "Minutes.",
+     "handoffTo": "the group; a later escalation, opened with its own reason, supersedes it and both stay readable",
+     "feelingRisk": "Until it is built, deciding not to escalate leaves no trace.",
+     "src": "DEC-89",
+     "basis": "fixed, with open points listed",
+     "openInThisStep": [
+      "Decided, not built: escalation, conformance and affordances requirements owed."
+     ]
     },
     {
      "step": "Create a breach action to the office; set the risk tier",
@@ -5550,7 +5929,7 @@
      ],
      "howLong": "Minutes.",
      "handoffTo": "forwardee",
-     "feelingRisk": "Silent disappearance for the member who did not resolve it (R39 not yet met).",
+     "feelingRisk": "Silent disappearance for the member who did not resolve it: 'resolved by X' is built (R39), except for bias debts (specified T14, N326).",
      "src": "queue R25; record-core R50-R52",
      "basis": "fixed"
     },
@@ -5595,8 +5974,26 @@
      "howLong": "Minutes.",
      "handoffTo": "member",
      "feelingRisk": "Silence must be earned: never 'unaffected' unless read.",
-     "src": "reevaluation R14-R15, R21",
+     "src": "reevaluation R14-R15, R21; queue R9, R12 (built T12, N172)",
      "basis": "fixed"
+    },
+    {
+     "step": "Resolve a tension in our own record, or dismiss a lead",
+     "whoIsActing": "joined member",
+     "whatTheyKnow": "Both sides in the record's own words, with source and date and why they were paired; facts the record holds filled in with their source; the machine's recommendation, labelled.",
+     "decisionTheyMake": "How the two differ, which one is wrong (with a reason), or take it up as a contradiction inquiry; for a lead, dismiss with one fixed reason.",
+     "whatCanGoWrong": [
+      "A record duty cannot be muted, dismissed or set aside (DEC-84 (2)).",
+      "Explained without evidence: the mark softens and does not clear (DEC-77 item 1)."
+     ],
+     "howLong": "Minutes; days if taken up.",
+     "handoffTo": "the contradiction inquiry, for 'they really conflict' or 'not sure'",
+     "feelingRisk": "Recommendations becoming decisions: the acceptance rate is measured and reviewed (DEC-77 item 3).",
+     "src": "DEC-76; DEC-77; DEC-84",
+     "basis": "fixed, with open points listed",
+     "openInThisStep": [
+      "Decided, not built: requirements owed (N345)."
+     ]
     },
     {
      "step": "Resolve a bias debt with a reason",
@@ -5653,7 +6050,7 @@
      "step": "Work the objective",
      "whoIsActing": "member",
      "whatTheyKnow": "The gaps.",
-     "decisionTheyMake": "Start a run.",
+     "decisionTheyMake": "Start a run. The reason opens in place with the run's budget and scope beside it (DEC-88 item 4).",
      "whatCanGoWrong": [
       "MACHINE_CANNOT_CHOOSE_THE_QUESTION if a machine tries.",
       "Mode not deployed."
@@ -5662,7 +6059,10 @@
      "handoffTo": "run",
      "feelingRisk": "The machine choosing the question.",
      "src": "intent R18; ai-runs R40",
-     "basis": "fixed"
+     "basis": "fixed, with open points listed",
+     "openInThisStep": [
+      "The assistant's docked, expandable panel is decided (DEC-90), not built."
+     ]
     },
     {
      "step": "Run requests captures",
@@ -5759,25 +6159,43 @@
      "src": "capture R30-R32, R47-R56; Intake Doctrine section 2a",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "What the knocker is told about what happens next."
+      "What the knocker is told about what happens next, beyond the receipt and the optional knocker secret (DEC-78 item 3)."
      ]
     },
     {
      "step": "A member reads the inbox and resolves the knock",
      "whoIsActing": "member",
-     "whatTheyKnow": "The material, its digest, note and contact.",
-     "decisionTheyMake": "Pull, discard, or leave new.",
+     "whatTheyKnow": "The material, its digest, the knocker's note (their own words, never evidence of truth) and contact (it stays in the inbox); a knocker pseudonym if the same secret was presented (DEC-78).",
+     "decisionTheyMake": "Pull (admits the material as a capture carrying the knock's receipt), discard, or leave new.",
      "whatCanGoWrong": [
-      "Each resolution is recorded with when and by whom; what happens when two members resolve one knock at once is not specified (Intake Doctrine section 2a)."
+      "Two members resolving one knock at once is not specified.",
+      "An unknown knock: NO_SUCH_KNOCK, nothing written (capture R32, built T12)."
      ],
      "howLong": "Days.",
      "handoffTo": "member",
-     "feelingRisk": "Unvetted material entering the record as if vouched.",
-     "src": "capture Provides (inboxResolve); Intake Doctrine section 2a",
-     "basis": "open",
+     "feelingRisk": "Unvetted material entering as if vouched: pulling commits the member to nothing more; vouching stays with release (DEC-78 item 1).",
+     "src": "capture R32; DEC-78 items 1-4; Intake Doctrine §2a",
+     "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "What 'pulled' commits the member to.",
-      "Whether the resulting capture names the doorbell as its provenance."
+      "Decided, not built: capture's requirements owed (N345)."
+     ]
+    },
+    {
+     "step": "What is known of the source grows",
+     "whoIsActing": "member",
+     "whatTheyKnow": "The source as it stood when the material was received, and each later disclosure, dated and attributed.",
+     "decisionTheyMake": "Record a disclosure; before publishing any identity detail, ask the source's consent.",
+     "whatCanGoWrong": [
+      "A hostile exposure is recorded as the exposer's claim, never confirmed by the group without the source's consent (DEC-78 item 5(b)).",
+      "A stored name can be breached or subpoenaed: 'known to the group, not recorded' is a first-class choice (DEC-78 item 5(c))."
+     ],
+     "howLong": "Months or years.",
+     "handoffTo": "project owner, at publishing (consent)",
+     "feelingRisk": "The group making a source more public than they chose (DEC-78 item 5(a)).",
+     "src": "DEC-78 item 5",
+     "basis": "fixed, with open points listed",
+     "openInThisStep": [
+      "Decided, not built: where the disclosure history lives is BOB's to place (N345)."
      ]
     }
    ],
@@ -5920,7 +6338,7 @@
      "howLong": "Days.",
      "handoffTo": "owner",
      "feelingRisk": "Silence claimed without reading ('unaffected').",
-     "src": "reevaluation R1-R21",
+     "src": "reevaluation R1-R21; queue R9, R12 (built T12, N172); DEC-78 item 5(e)",
      "basis": "fixed"
     },
     {
@@ -6026,6 +6444,21 @@
      "text": "An obligation's own resolving act, as the item publishes it.",
      "basis": "fixed",
      "src": "queue R12; NOTIFICATIONS.md (REC-207)"
+    },
+    {
+     "text": "The finding class labelled 'Noticed'.",
+     "basis": "fixed",
+     "src": "K356; queue R1 (built T12, N301)"
+    },
+    {
+     "text": "A record contradiction as a duty that cannot be muted or dismissed, leaving only by resolution; a world one as a lead dismissed in one act with a fixed reason.",
+     "basis": "fixed",
+     "src": "DEC-76 item 3; DEC-84 (1)-(2), (17)"
+    },
+    {
+     "text": "A newer capture that affects a member's reference, with adopt and keep.",
+     "basis": "fixed",
+     "src": "queue R9, R12 (built T12, N172)"
     }
    ],
    "mustNeverShowOrDo": [
@@ -6057,19 +6490,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -6103,13 +6536,13 @@
    "primaryActs": [
     {
      "act": "resolve an obligation (taskresolve)",
-     "rung": "not assigned (affordances R27: among the ops graded undetermined, to be reassigned)",
+     "rung": "reversible (DEC-88; the code still lists it as undetermined)",
      "weight": "per-item",
      "src": "affordances R1, R27"
     },
     {
      "act": "forward an obligation (taskforward)",
-     "rung": "not assigned (affordances R27: among the ops graded undetermined, to be reassigned)",
+     "rung": "reversible (DEC-88; the code still lists it as undetermined)",
      "weight": "per-item",
      "src": "affordances R1, R27"
     },
@@ -6159,9 +6592,9 @@
    ],
    "mustShow": [
     {
-     "text": "The rung, visible and escalating, learned once.",
+     "text": "Every act's button carries its rung's name and weight pips. Friction follows the rung: reversible inline; reasoned a reason field in place; terminal and attested a full dialog stating what ends or cannot be silently undone, and who signs; irreversible only through the ceremony.",
      "basis": "fixed",
-     "src": "affordances R2; Interaction Constructs rung ladder"
+     "src": "affordances R2; DEC-87; Interaction Constructs §F"
     },
     {
      "text": "For a set: whether the act is all-or-nothing, report-and-proceed, or per-item, before acting.",
@@ -6177,6 +6610,16 @@
      "text": "The receipt: what was written, by whom, when; a preview answers with nothing written.",
      "basis": "fixed",
      "src": "basis-versions R14"
+    },
+    {
+     "text": "An act whose effect cannot be taken back outside the record opens the full dialog stating that effect, whatever its rung: attributing a name, sharing a lead, naming a person in the registry, setting the group bar.",
+     "basis": "fixed",
+     "src": "DEC-88 item 4"
+    },
+    {
+     "text": "A recommendation, labelled machine work, is shown first with its reason and accepted in one attributed act; facts the record holds are filled in with their source.",
+     "basis": "fixed",
+     "src": "DEC-77 item 3"
     }
    ],
    "mustNeverShowOrDo": [
@@ -6199,23 +6642,33 @@
      "text": "Never offer an act the caller's capability lacks (absent, not greyed).",
      "basis": "fixed",
      "src": "Membership v2 section 5"
+    },
+    {
+     "text": "Never one dialog for every act with the rung merely highlighted.",
+     "basis": "fixed",
+     "src": "DEC-87; Interaction Constructs revision 0.2"
+    },
+    {
+     "text": "Never enter a value the member never saw under their name; nothing silently preselected.",
+     "basis": "fixed",
+     "src": "DEC-77 item 3(c)"
     }
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -6244,6 +6697,11 @@
      "text": "A selection handle unknown, released or expired: NO_SUCH_SELECTION, one answer.",
      "basis": "fixed",
      "src": "retrieval R19"
+    },
+    "no rung yet": {
+     "text": "An act whose rung is not yet ruled is treated as reasoned.",
+     "basis": "fixed",
+     "src": "DEC-87"
     }
    },
    "primaryActs": [
@@ -6325,6 +6783,16 @@
      "text": "Machine-suggested versions labelled as machine work, with the run that made them.",
      "basis": "fixed",
      "src": "AI Roles rule 3; run-productions R5"
+    },
+    {
+     "text": "Each leg's grade on the one A-D scale with its scale's icon; hover names the weakest document or link and how to raise it; a click highlights that leg.",
+     "basis": "fixed",
+     "src": "DEC-82; Interaction Constructs §M"
+    },
+    {
+     "text": "A tension mark wherever two conflicting points sit together (supporting and cutting-against legs, alternative versions, two projects' conclusions), opening the 'how do these differ?' clarifier.",
+     "basis": "fixed",
+     "src": "DEC-77 item 1; DEC-84 (3)"
     }
    ],
    "mustNeverShowOrDo": [
@@ -6344,25 +6812,26 @@
      "src": "basis-versions R31; inquiry R39"
     },
     {
-     "text": "The legacy workspace hides grades by design (UI-16 note in app.html, not canon). Canon says strength is shown rather than hidden (Case Making section 4a). Which governs the project-level view?",
-     "basis": "open"
+     "text": "Never hide grades: the old interface's grade-free workspace (UI-16) was an interface choice, superseded; never one combined badge.",
+     "basis": "fixed",
+     "src": "DEC-82; DEC-44"
     }
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -6383,13 +6852,14 @@
      "src": "content R22; reevaluation R14"
     },
     "conflict": {
-     "text": "Two projects concluded differently on one shared question: both stances stand, each project's own.",
+     "text": "Two projects concluded differently: both stand, each attributed; conclusions that cannot both hold in the same respect carry a tension mark, a named difference recorded on both clears it, and otherwise it is a duty on both projects, neither made to adopt the other's answer.",
      "basis": "fixed",
-     "src": "basis-versions R31"
+     "src": "basis-versions R31; DEC-84 (3)"
     },
     "contradiction": {
-     "text": "How a contradiction candidate is presented (both sides, in the record's words) is undesigned.",
-     "basis": "open"
+     "text": "A tension mark opens the clarifier: different time or occasion, part or scope, meaning, observer or method, not the same subject; one of them is wrong; they really conflict; not sure. Only the last two open the contradiction inquiry. Explained without evidence, the mark softens and does not clear.",
+     "basis": "fixed",
+     "src": "DEC-77 item 1; DEC-84 (16)"
     }
    },
    "primaryActs": [
@@ -6419,7 +6889,7 @@
     },
     {
      "act": "versionaccept",
-     "rung": "reversible (R2) but listed for reassignment (R27)",
+     "rung": "reversible (K211; affordances R2)",
      "weight": "single",
      "src": "affordances R2, R27"
     },
@@ -6489,6 +6959,140 @@
    "src": "inquiry; basis-versions; strength; citation"
   },
   {
+   "surface": "Tension mark, clarifier and contradiction inquiry",
+   "purpose": [
+    {
+     "text": "Meet a conflict where its two points already sit, settle it there in one act when possible, and escalate to the dedicated contradiction inquiry only when it will not dissolve.",
+     "basis": "fixed",
+     "src": "DEC-77 item 1; DEC-76 item 2"
+    }
+   ],
+   "mustShow": [
+    {
+     "text": "Both sides in the record's own words, each with source, date, document type and why the two were paired (the compare view).",
+     "basis": "fixed",
+     "src": "DEC-77 item 2"
+    },
+    {
+     "text": "The clarifier's choices: different time or occasion, part or scope, meaning, observer or method, not the same subject (multi-select); one of them is wrong; they really conflict; not sure.",
+     "basis": "fixed",
+     "src": "DEC-77 item 1"
+    },
+    {
+     "text": "Facts the record holds filled in with their source; a recommendation of which respects may differ, labelled machine work, shown first with its reason.",
+     "basis": "fixed",
+     "src": "DEC-77 item 3; DEC-84 (5)"
+    },
+    {
+     "text": "In the contradiction inquiry: the assumptions checklist as its working view, the timeline for a reversal, the competing-hypotheses matrix for a conflict that will not dissolve or a conflict of norms.",
+     "basis": "fixed",
+     "src": "DEC-77 item 2; K447 point 9"
+    },
+    {
+     "text": "The mark's state wherever a side appears: in tension, explained not yet shown (softened), stale with its reason, qualified.",
+     "basis": "fixed",
+     "src": "DEC-77 items 1-2; DEC-84 (7)"
+    }
+   ],
+   "mustNeverShowOrDo": [
+    {
+     "text": "Never say which side is wrong, or that a conflict is genuine, on the machine's word.",
+     "basis": "fixed",
+     "src": "DEC-84 (5); DEC-24"
+    },
+    {
+     "text": "Never preselect a choice; never fill the member's reason from the machine's.",
+     "basis": "fixed",
+     "src": "DEC-77 item 3(c); DEC-84 (14)"
+    },
+    {
+     "text": "Never let a record duty be muted, dismissed or set aside; never mark aspirations as in contradiction (they are in contact).",
+     "basis": "fixed",
+     "src": "DEC-84 (2); DEC-77 item 1"
+    },
+    {
+     "text": "Never show a precision or unrelated label as a tension, and never reveal a side the viewer may not see.",
+     "basis": "fixed",
+     "src": "CONTRADICTION-PRESENT-RESOLVE-DESIGN.md §4; contradiction R10"
+    }
+   ],
+   "statesToDesign": {
+    "undetermined": {
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
+     "basis": "fixed",
+     "src": "DEC-86; Interaction Constructs §U"
+    },
+    "withheld": {
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
+     "basis": "fixed",
+     "src": "DEC-86; DEC-36; queue R7"
+    },
+    "refused": {
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
+     "basis": "fixed",
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
+    },
+    "softened": {
+     "text": "Explained without evidence on the screen: the mark softens and does not clear; a record duty stays in the queue.",
+     "basis": "fixed",
+     "src": "DEC-77 item 1; DEC-76 item 1"
+    },
+    "stale": {
+     "text": "A side marked wrong: stale with its reason, never deleted; holders get a re-evaluation notice.",
+     "basis": "fixed",
+     "src": "DEC-84 (7), (16)"
+    },
+    "empty": {
+     "text": "Not specified.",
+     "basis": "open"
+    },
+    "loading": {
+     "text": "Not specified.",
+     "basis": "open"
+    }
+   },
+   "primaryActs": [
+    {
+     "act": "clarify (how the two differ)",
+     "rung": "not yet assigned (BOB's wording, K447); treated as reasoned (DEC-87)",
+     "weight": "single",
+     "src": "DEC-77 item 1"
+    },
+    {
+     "act": "one of them is wrong",
+     "rung": "reasoned (DEC-84 (16))",
+     "weight": "single",
+     "src": "DEC-84 (16)"
+    },
+    {
+     "act": "take up as a contradiction inquiry",
+     "rung": "not yet assigned; treated as reasoned (DEC-87)",
+     "weight": "single",
+     "src": "DEC-76 item 2"
+    },
+    {
+     "act": "accept a recommendation",
+     "rung": "not yet assigned; treated as reasoned (DEC-87)",
+     "weight": "single",
+     "src": "DEC-77 item 3(b)"
+    },
+    {
+     "act": "dismiss a lead (one fixed reason)",
+     "rung": "not yet assigned; one act (DEC-77 item 1)",
+     "weight": "single",
+     "src": "DEC-84 (17)"
+    }
+   ],
+   "accessibilityAndLanguage": [
+    {
+     "text": "Hover has a focus or tap equivalent; colour is never the only signal.",
+     "basis": "fixed",
+     "src": "DEC-79; DEC-82"
+    }
+   ],
+   "src": "DEC-76; DEC-77; DEC-84; K447; docs/development/CONTRADICTION-PRESENT-RESOLVE-DESIGN.md"
+  },
+  {
    "surface": "Document page (capture and release)",
    "purpose": [
     {
@@ -6527,6 +7131,21 @@
      "text": "That asking a public archive to fetch a URL publishes the group's interest, at the point of the act.",
      "basis": "fixed",
      "src": "UI-KICKOFF constraints (DR-13 tell discipline)"
+    },
+    {
+     "text": "Its source (who handed it over, or the unnamed knocker) apart from the member who captured it.",
+     "basis": "fixed",
+     "src": "DEC-78 item 2"
+    },
+    {
+     "text": "Its grade on the one A-D scale with the capture icon, never read as whether it is true; whether it is co-attested.",
+     "basis": "fixed",
+     "src": "DEC-82; DEC-81"
+    },
+    {
+     "text": "For work from another group, the origin mark; a hover shows who produced it, which edition, who accepted it and why.",
+     "basis": "fixed",
+     "src": "DEC-92"
     }
    ],
    "mustNeverShowOrDo": [
@@ -6543,19 +7162,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -6659,8 +7278,19 @@
      "src": "membership R37, R46"
     },
     {
-     "text": "The project lifecycle (forming, investigating, matured, closed) and work-product readiness ladder exist in canon only; should the home show a stage?",
-     "basis": "open"
+     "text": "The project's stage as coloured bars stacking one per stage reached, each named; hover, focus or tap discloses more; a click opens when each was reached, what earned it and what the next needs; 'closed' shows its reason and how far it had come, never a finished stack.",
+     "basis": "fixed",
+     "src": "DEC-79; State Rules §4.3; publication R44-R49"
+    },
+    {
+     "text": "Each case's readiness by its own evidence: Distributed, never Draft, once published; Internally checked and Externally compliant read 'not yet evaluated'.",
+     "basis": "fixed",
+     "src": "K364; publication R46"
+    },
+    {
+     "text": "Each question with its capture and connection badges (testimony beside), one phrase against the bar and 'Undetermined' with its reason; never one combined badge.",
+     "basis": "fixed",
+     "src": "DEC-82"
     }
    ],
    "mustNeverShowOrDo": [
@@ -6678,23 +7308,28 @@
      "text": "Aspirations never filter or reorder evidence.",
      "basis": "fixed",
      "src": "intent R21"
+    },
+    {
+     "text": "Never promise a stage the computation would not give: what the next stage needs is stated from the rule that computes it.",
+     "basis": "fixed",
+     "src": "DEC-79; K448"
     }
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -6723,7 +7358,7 @@
    "primaryActs": [
     {
      "act": "projectinvite / projectjoin / projectleave / projectremove",
-     "rung": "not assigned in R2",
+     "rung": "none: a credential act, not a record act (RUNG_ABSENT ground credential; affordances R2-R3)",
      "weight": "single",
      "src": "affordances R1"
     },
@@ -6796,6 +7431,11 @@
      "text": "Observations reached and whether each author chose an attribution level.",
      "basis": "fixed",
      "src": "review R16"
+    },
+    {
+     "text": "The disclosure of each unresolved record contradiction on the case's basis, authored and acknowledged here.",
+     "basis": "fixed",
+     "src": "DEC-76 item 4; K447 point 18"
     }
    ],
    "mustNeverShowOrDo": [
@@ -6817,19 +7457,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -6889,9 +7529,9 @@
    "surface": "Publication ceremony",
    "purpose": [
     {
-     "text": "The heaviest act: the owner signs, findings and evidence cross by their own signatures. Deferred; a placeholder surface ships and tells the member once what is not yet there.",
+     "text": "The heaviest act and the only way to it: five steps (what becomes permanent; what this rests on; what you are leaving out; the edition this creates; sign), after a pre-flight that runs the real refusals first. It replaces the placeholder.",
      "basis": "fixed",
-     "src": "DEC-33; Publication section 5"
+     "src": "DEC-80; Publication §5"
     }
    ],
    "mustShow": [
@@ -6909,6 +7549,26 @@
      "text": "Correction moves forward: a new edition, never erasure.",
      "basis": "fixed",
      "src": "affordances R2 (IRREVERSIBLE_CORRECTION_PATH); DEC-19"
+    },
+    {
+     "text": "Before the first screen, the pre-flight's real refusals, writing nothing: below the bar, an uncleared hunch, no signers.",
+     "basis": "fixed",
+     "src": "DEC-80 item 3"
+    },
+    {
+     "text": "Step three: exclusions and their acknowledgements, what was searched, the bias acknowledged, any unresolved record contradiction for the owner to disclose, and consent for any source identity the case would reveal.",
+     "basis": "fixed",
+     "src": "DEC-80 item 2; DEC-76 item 4; DEC-78 item 5"
+    },
+    {
+     "text": "Each document's capture grade and whether it is co-attested; a missing co-attestation retried first, then acknowledged with a reason and marked 'self-attested only'.",
+     "basis": "fixed",
+     "src": "DEC-81 items 1, 3"
+    },
+    {
+     "text": "Signing in the browser with the owner's registered browser-held key, confirmed by passphrase or device unlock.",
+     "basis": "fixed",
+     "src": "DEC-80 item 4"
     }
    ],
    "mustNeverShowOrDo": [
@@ -6926,23 +7586,33 @@
      "text": "Never discover NO_SIGNERS only after signing.",
      "basis": "fixed",
      "src": "Interaction Constructs RULED 2026-08-01"
+    },
+    {
+     "text": "Never refuse a case because a contradiction exists; refuse only one left undisclosed.",
+     "basis": "fixed",
+     "src": "DEC-76 item 4; DEC-84 (13)"
+    },
+    {
+     "text": "Never refuse outright a document that cannot be co-archived.",
+     "basis": "fixed",
+     "src": "DEC-81 item 3(d)"
     }
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -6950,8 +7620,9 @@
      "src": "inventory display primitive 'Truncated / bound'; queue R6; membership R48"
     },
     "empty": {
-     "text": "Placeholder content is owed; what it says beyond 'not yet there' is open.",
-     "basis": "open"
+     "text": "No placeholder: the ceremony replaces it.",
+     "basis": "fixed",
+     "src": "DEC-80 item 1"
     },
     "loading": {
      "text": "Not specified.",
@@ -7008,11 +7679,12 @@
      "basis": "open"
     },
     {
-     "text": "The five steps of the ceremony are named only in archived research; their order and words are open.",
-     "basis": "open"
+     "text": "The five steps are named and ordered; their exact words are the redesign's.",
+     "basis": "fixed",
+     "src": "Publication §5; DEC-80 item 2"
     }
    ],
-   "src": "Publication sections 1-5; ratification; DEC-33"
+   "src": "Publication sections 1-5; ratification; DEC-80; DEC-81"
   },
   {
    "surface": "Review copy",
@@ -7064,19 +7736,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -7104,25 +7776,25 @@
    "primaryActs": [
     {
      "act": "draft",
-     "rung": "not assigned in R2",
+     "rung": "reversible (DEC-88)",
      "weight": "single",
      "src": "review R1-R4"
     },
     {
      "act": "grant / revoke",
-     "rung": "not assigned in R2",
+     "rung": "none: a credential act, not a record act (RUNG_ABSENT ground credential; affordances R2-R3)",
      "weight": "single",
      "src": "review R6-R7"
     },
     {
      "act": "comment",
-     "rung": "not assigned in R2",
+     "rung": "reversible (DEC-88)",
      "weight": "single",
      "src": "review R18"
     },
     {
      "act": "statementack",
-     "rung": "not assigned in R2",
+     "rung": "reasoned (DEC-88)",
      "weight": "single",
      "src": "case-authoring R19-R21"
     }
@@ -7188,6 +7860,16 @@
      "text": "basis_changed flags naming causes.",
      "basis": "fixed",
      "src": "conformance R10; consequences R8; filings R12"
+    },
+    {
+     "text": "Why the group is pursuing a breach (the opening reason), or why it declined to (a reasoned 'decline to escalate'), in the member's own words; whether each determination was escalated, declined or neither.",
+     "basis": "fixed",
+     "src": "DEC-89"
+    },
+    {
+     "text": "For an obligation-against-act finding: Criteria, Condition, Cause (only when evidenced, else 'cause not established'), Effect, Recommendation (a proposed action).",
+     "basis": "fixed",
+     "src": "DEC-77 item 2; DEC-84 (10)"
     }
    ],
    "mustNeverShowOrDo": [
@@ -7214,19 +7896,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -7260,7 +7942,7 @@
    "primaryActs": [
     {
      "act": "determine",
-     "rung": "not assigned (affordances R27: among the ops graded undetermined, to be reassigned)",
+     "rung": "reasoned (K375: a supersession asks its reason)",
      "weight": "single",
      "src": "affordances R27 (layer-9 rungs K264, K309)"
     },
@@ -7278,7 +7960,7 @@
     },
     {
      "act": "actioncorrespond",
-     "rung": "not assigned (affordances R27: among the ops graded undetermined, to be reassigned)",
+     "rung": "reasoned (DEC-88; the code still lists it as undetermined)",
      "weight": "single",
      "src": "affordances R1, R27"
     },
@@ -7299,6 +7981,12 @@
      "rung": "reasoned",
      "weight": "single",
      "src": "affordances R1-R2"
+    },
+    {
+     "act": "escalationopen, with its reason / decline to escalate (decided)",
+     "rung": "reasoned (DEC-88, DEC-89)",
+     "weight": "single",
+     "src": "DEC-89"
     }
    ],
    "accessibilityAndLanguage": [
@@ -7378,19 +8066,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -7419,7 +8107,7 @@
    "primaryActs": [
     {
      "act": "approve / record sent / name counsel",
-     "rung": "not assigned in R2",
+     "rung": "approve: terminal; record sent and counsel packet: reasoned (DEC-88; the code still lists them as undetermined); approving carries the full dialog",
      "weight": "single",
      "src": "filings R6-R8"
     }
@@ -7474,7 +8162,7 @@
     {
      "text": "A paused daemon says so.",
      "basis": "fixed",
-     "src": "monitoring R30"
+     "src": "monitoring R30 (built T11-T13)"
     }
    ],
    "mustNeverShowOrDo": [
@@ -7491,19 +8179,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -7603,19 +8291,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -7644,13 +8332,13 @@
    "primaryActs": [
     {
      "act": "claim",
-     "rung": "not assigned in R2",
+     "rung": "none: a credential act, not a record act (RUNG_ABSENT ground credential; affordances R2-R3)",
      "weight": "single",
      "src": "membership R1"
     },
     {
      "act": "enroll",
-     "rung": "not assigned in R2",
+     "rung": "none: a credential act, not a record act (RUNG_ABSENT ground credential; affordances R2-R3)",
      "weight": "single",
      "src": "membership R16"
     }
@@ -7711,6 +8399,16 @@
      "text": "Projects each member participates in.",
      "basis": "fixed",
      "src": "membership R18"
+    },
+    {
+     "text": "A browser-held attesting key and its status beside the others (decided, not built).",
+     "basis": "fixed",
+     "src": "DEC-80 item 4"
+    },
+    {
+     "text": "An administrator-only act refused to others reads the standard sentence, then what to do next or instead.",
+     "basis": "fixed",
+     "src": "DEC-83; membership R84"
     }
    ],
    "mustNeverShowOrDo": [
@@ -7732,19 +8430,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -7778,7 +8476,7 @@
     },
     {
      "act": "adminendorse / membercaps / memberadd",
-     "rung": "not assigned in R2",
+     "rung": "none: a credential act, not a record act (RUNG_ABSENT ground credential; affordances R2-R3)",
      "weight": "single",
      "src": "membership R6-R12"
     }
@@ -7849,6 +8547,21 @@
      "text": "A voice transcription for correction before it becomes anything.",
      "basis": "fixed",
      "src": "Interaction Constructs section P (Voice)"
+    },
+    {
+     "text": "A panel docked beside the surface it serves: at the side on wide screens, at the bottom on narrow ones; the member may switch edges, and the choice is remembered.",
+     "basis": "fixed",
+     "src": "DEC-90"
+    },
+    {
+     "text": "Expandable by a draggable divider and an 'expand' control, always leaving some of the surface visible; it shrinks back by itself when a wizard step needs the member to act; one click restores the default.",
+     "basis": "fixed",
+     "src": "DEC-90"
+    },
+    {
+     "text": "A wizard step highlights the real control; the member performs every act on the real surface.",
+     "basis": "fixed",
+     "src": "DEC-90"
     }
    ],
    "mustNeverShowOrDo": [
@@ -7876,23 +8589,28 @@
      "text": "Never show a budget as a number the member must manage (budget recorded, never shown).",
      "basis": "fixed",
      "src": "AI Roles section 4 (F11)"
+    },
+    {
+     "text": "Never float over the work; never fill in or press a control for the member.",
+     "basis": "fixed",
+     "src": "DEC-90"
     }
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -7925,7 +8643,7 @@
    "primaryActs": [
     {
      "act": "open a run (airunopen)",
-     "rung": "not assigned in R2",
+     "rung": "reversible (DEC-88; the code still lists it as undetermined)",
      "weight": "single",
      "src": "ai-runs R9"
     }
@@ -8001,6 +8719,26 @@
      "text": "Interactive story visuals with progressive disclosure; a print version carrying the full narrative.",
      "basis": "fixed",
      "src": "UI-KICKOFF refinements"
+    },
+    {
+     "text": "Each document's capture grade and whether it is co-attested, or 'self-attested only'.",
+     "basis": "fixed",
+     "src": "DEC-81"
+    },
+    {
+     "text": "Each unresolved record contradiction, disclosed and attributed, reaching one level and saying so.",
+     "basis": "fixed",
+     "src": "DEC-76 item 4; DEC-84 (12)"
+    },
+    {
+     "text": "For a finding against an office: Criteria, Condition, Cause or 'cause not established', Effect, Recommendation.",
+     "basis": "fixed",
+     "src": "DEC-84 (10)"
+    },
+    {
+     "text": "The origin mark on work from other groups.",
+     "basis": "fixed",
+     "src": "DEC-92"
     }
    ],
    "mustNeverShowOrDo": [
@@ -8022,19 +8760,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -8120,6 +8858,21 @@
      "text": "Who resolved each knock and when.",
      "basis": "fixed",
      "src": "capture Provides (inboxResolve)"
+    },
+    {
+     "text": "The receipt may carry a knocker secret the doorbell generated, shown once.",
+     "basis": "fixed",
+     "src": "DEC-78 item 3"
+    },
+    {
+     "text": "The inbox shows members the contact; it never enters the record or a publication.",
+     "basis": "fixed",
+     "src": "DEC-78 item 4"
+    },
+    {
+     "text": "Pulling says what it does: admits the material as a capture naming the unnamed knocker as its source and the member as its capturing actor; vouching stays with release.",
+     "basis": "fixed",
+     "src": "DEC-78 items 1-2"
     }
    ],
    "mustNeverShowOrDo": [
@@ -8132,23 +8885,28 @@
      "text": "Never keep the knocker's address; only a keyed fingerprint.",
      "basis": "fixed",
      "src": "capture R56"
+    },
+    {
+     "text": "Never record the pulling member as the source, and never call the material unattributed or its source unknown.",
+     "basis": "fixed",
+     "src": "DEC-78 item 2"
     }
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -8174,12 +8932,17 @@
     "rate-limited": {
      "text": "RATE_IP / RATE_GLOBAL have no member-facing translation yet (D-508).",
      "basis": "open"
+    },
+    "no such knock": {
+     "text": "An unknown knock: NO_SUCH_KNOCK, nothing written.",
+     "basis": "fixed",
+     "src": "capture R32 (built T12, K383)"
     }
    },
    "primaryActs": [
     {
      "act": "inboxresolve (pulled / discarded / new)",
-     "rung": "not assigned in R2",
+     "rung": "reversible while it only sets a status; reasoned once pulling admits material (DEC-88)",
      "weight": "single",
      "src": "capture Provides"
     }
@@ -8227,9 +8990,9 @@
      "src": "retrieval R7, R9"
     },
     {
-     "text": "Look states in member-facing words: nobody looked, looked and absent, could not tell, partial, present.",
+     "text": "Look states in member-facing words, 'Nobody looked' written as a named term: nobody looked, looked and absent, could not tell, partial, present.",
      "basis": "fixed",
-     "src": "observation-log R21; retrieval R49"
+     "src": "observation-log R21; retrieval R49; DEC-82; DEC-86"
     },
     {
      "text": "Only the order of relevance, never a relevance score.",
@@ -8251,19 +9014,19 @@
    ],
    "statesToDesign": {
     "undetermined": {
-     "text": "One visual treatment and one voice everywhere: what we do not know, and why. Never an error, never a shrug.",
+     "text": "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero.",
      "basis": "fixed",
-     "src": "Interaction Constructs section U; System Design section 1"
+     "src": "DEC-86; Interaction Constructs §U"
     },
     "withheld": {
-     "text": "Something exists the viewer may not see: state the incompleteness, never its identity, title, state or count.",
+     "text": "Something exists the viewer may not see: its own treatment and one fixed sentence stating the incompleteness, never identity, title, state or count.",
      "basis": "fixed",
-     "src": "Interaction Constructs DEC-36; queue R7"
+     "src": "DEC-86; DEC-36; queue R7"
     },
     "refused": {
-     "text": "Render the plane's refusal in its own words with offenders named and its catalogue translation; never 'something went wrong'.",
+     "text": "The plane's refusal in its own words with offenders named: the shared sentence first, then the act's own next step or alternative; never 'something went wrong'.",
      "basis": "fixed",
-     "src": "UI-KICKOFF constraints ('Refusals teach'); DEC-49; AI Roles rule 10"
+     "src": "DEC-83; DEC-86; DEC-49; AI Roles rule 10"
     },
     "truncated": {
      "text": "Every list says when it was cut at a stated bound.",
@@ -8380,9 +9143,11 @@
     "by": "Bob",
     "rulings": [
      "DEC-76",
-     "DEC-77"
+     "DEC-77",
+     "DEC-84"
     ],
-    "decided": "A contradiction is conditional: two assertions that cannot both hold in the same respect, so resolving one means finding the respect in which they differ, finding the side that is wrong, or recording that the conflict is genuine; a candidate a member takes up becomes an inquiry, whose conclusion records its kind (dissolved, corrected, or genuine, with double-speak promoted to a finding and obligation against act routed into conformance). It is shown inline wherever the two points already sit, through a tension mark and a short 'how do these differ' clarifier, with the dedicated contradiction screen only as the escalation; context may fill in facts and recommend judgements, labelled, but never silently decides."
+    "decided": "A contradiction is conditional: two assertions that cannot both hold in the same respect, so resolving one means finding the respect in which they differ, finding the side that is wrong, or recording that the conflict is genuine; a candidate a member takes up becomes an inquiry, whose conclusion records its kind (dissolved, corrected, or genuine, with double-speak promoted to a finding and obligation against act routed into conformance). It is shown inline wherever the two points already sit, through a tension mark and a short 'how do these differ' clarifier, with the dedicated contradiction screen only as the escalation; context may fill in facts and recommend judgements, labelled, but never silently decides. Bob ruled the design's thirteen open points the same day (DEC-84), all as recommended and two revised: an undetermined candidate is a lead; a record duty binds the joined members of every project drawing on either side until it is resolved; two projects' different conclusions are plurality unless they cannot both hold in the same respect, when a tension mark asks how they differ; the question's own conclusion resolves it; the machine recommends only which respects may differ; a hypothesised cause is published as 'cause not established'; publication discloses, never blocks; 'one of them is wrong' needs a written reason; a dismissal gives one fixed reason. BOB ruled the design's other five points (K447).",
+    "status": "ruled"
    }
   },
   {
@@ -8443,9 +9208,11 @@
     "date": "2026-09-29",
     "by": "Bob",
     "rulings": [
-     "DEC-78"
+     "DEC-78",
+     "DEC-88"
     ],
-    "decided": "Pulling a knock admits its material as a capture at 'collected' carrying the knock's receipt, and commits the member to nothing more; vouching stays with release. The source is recorded as an unnamed knocker identified by the receipt (never 'unknown'), the pulling member is the capturing actor and never the source, a knocker may prove continuity with a secret they keep, and a source's identity is held as a dated history of disclosures, published only with consent."
+    "decided": "Pulling a knock admits its material as a capture at 'collected' carrying the knock's receipt, and commits the member to nothing more; vouching stays with release. The source is recorded as an unnamed knocker identified by the receipt (never 'unknown'), the pulling member is the capturing actor and never the source, a knocker may prove continuity with a secret they keep, and a source's identity is held as a dated history of disclosures, published only with consent. The note travels with the capture as the knocker's own words; the contact stays in the inbox. The inbox act is regraded reasoned once pulling admits material (DEC-88).",
+    "status": "ruled"
    }
   },
   {
@@ -8507,9 +9274,12 @@
     "date": "2026-09-29",
     "by": "Bob",
     "rulings": [
-     "DEC-79"
+     "DEC-79",
+     "K362",
+     "K364"
     ],
-    "decided": "As recommended: all four stages shown, 'forming', 'investigating' and 'matured' computed and 'closed' the owner's reasoned act, with only earnable readiness rungs shown and each unearned one stated. Bob set the display: coloured bars that build up one per stage reached, disclosing more on hover (with a focus or tap equivalent) and opening on click to what each stage needs next; each bar is named, and 'closed' shows its reason and never reads as a finished stack."
+    "decided": "As recommended: all four stages shown, 'forming', 'investigating' and 'matured' computed and 'closed' the owner's reasoned act, with only earnable readiness rungs shown and each unearned one stated. Bob set the display: coloured bars that build up one per stage reached, disclosing more on hover (with a focus or tap equivalent) and opening on click to what each stage needs next; each bar is named, and 'closed' shows its reason and never reads as a finished stack. Built at the plane (publication R44-R47, T12; routed T13); what each unreached stage needs, and when each was reached, are specified in T14 (publication R49, N346; BOB read DEC-79's display points from State Rules §4.3, K448).",
+    "status": "ruled"
    }
   },
   {
@@ -8575,7 +9345,8 @@
      "DEC-80",
      "DEC-81"
     ],
-    "decided": "The placeholder is retired: the ceremony and its pre-flight are designed and built in the redesign, its five steps re-derived for DEC-72 (step three discloses any unresolved record contradiction and asks consent for any source identity revealed), and an owner signs in the browser with a registered browser-held key producing the same sshsig signature. A published case may rest on a co-attested Grade B capture, each document's grade and co-attestation disclosed; one whose co-attestation failed may be published only by an attributed acknowledgement and is marked 'self-attested only' (DEC-81)."
+    "decided": "The placeholder is retired: the ceremony and its pre-flight are designed and built in the redesign, its five steps re-derived for DEC-72 (step three discloses any unresolved record contradiction and asks consent for any source identity revealed), and an owner signs in the browser with a registered browser-held key producing the same sshsig signature. A published case may rest on a co-attested Grade B capture, each document's grade and co-attestation disclosed; one whose co-attestation failed may be published only by an attributed acknowledgement and is marked 'self-attested only' (DEC-81). Grade A and further co-witnesses are deferred, their options documented in docs/development/GRADE-A-CAPTURE.md (DEC-81 item 4).",
+    "status": "ruled"
    }
   },
   {
@@ -8639,7 +9410,8 @@
     "rulings": [
      "DEC-82"
     ],
-    "decided": "The project workspace shows strength: each question shows its capture and connection badges (with testimony beside them when an account is part of the answer) and one plain phrase against the project's bar, such as 'Short on connection · bar B/B', 'Undetermined' named with its reason, never one combined score. Every scale follows the measures map Bob approved (letters grade evidence, bars show progress, weights mark acts), docs/development/ux-substrate/measures-map.html, rendered at https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni."
+    "decided": "The project workspace shows strength: each question shows its capture and connection badges (with testimony beside them when an account is part of the answer) and one plain phrase against the project's bar, such as 'Short on connection · bar B/B', 'Undetermined' named with its reason, never one combined score. Every scale follows the measures map Bob approved (letters grade evidence, bars show progress, weights mark acts), docs/development/ux-substrate/measures-map.html, rendered at https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni.",
+    "status": "ruled"
    }
   },
   {
@@ -8698,7 +9470,8 @@
     "rulings": [
      "DEC-86"
     ],
-    "decided": "As recommended: 'Undetermined' is one component with a fixed mark and a line that always says 'because…', the same everywhere. 'Withheld', 'Unrated', 'Nobody looked' and 'Refused' each have their own visibly different treatment and one fixed sentence pattern, never shared with each other or with Undetermined. None is dressed as an error, and all are written as named terms (DEC-82). The exact marks and wording are the redesign's, within this rule."
+    "decided": "As recommended: 'Undetermined' is one component with a fixed mark and a line that always says 'because…', the same everywhere. 'Withheld', 'Unrated', 'Nobody looked' and 'Refused' each have their own visibly different treatment and one fixed sentence pattern, never shared with each other or with Undetermined. None is dressed as an error, and all are written as named terms (DEC-82). The exact marks and wording are the redesign's, within this rule.",
+    "status": "ruled"
    }
   },
   {
@@ -8758,7 +9531,8 @@
      "DEC-87",
      "DEC-88"
     ],
-    "decided": "As recommended, with the principle in Bob's words: friction is kept as low as possible so the tool fades and the work stays in focus, while members still feel the weight of their work and the finality of some steps; cues rich in information show state, relationships, context, progression and the acts available; everything is self-evident to newcomers and intuitive to experienced members; and a heavier act slows the member down, even for a moment. Friction follows the rung: a reversible act happens inline; a reasoned act opens a reason field in place; a terminal or attested act opens a full dialog stating what ends or cannot be silently undone, and who signs; an irreversible act goes only through the ceremony (DEC-80). Every act's button shows its rung's name and weight mark, and an act whose rung is not yet set is treated as reasoned. Bob then gave the 57 acts that had no rung their rungs (26 reversible, 29 reasoned, 2 terminal, DEC-88) and named six judgement calls that carry high friction: choosing a person's attribution, sharing a lead, registering a subject and setting the group's strength bar open the full dialog stating their effect; approving a filing is terminal and has it already; having the assistant work an objective, the lightest of the six, opens its reason field in place with the run's budget and scope beside it. The rung names stay as they are: a heavy consequence is not a new rung."
+    "decided": "As recommended, with the principle in Bob's words: friction is kept as low as possible so the tool fades and the work stays in focus, while members still feel the weight of their work and the finality of some steps; cues rich in information show state, relationships, context, progression and the acts available; everything is self-evident to newcomers and intuitive to experienced members; and a heavier act slows the member down, even for a moment. Friction follows the rung: a reversible act happens inline; a reasoned act opens a reason field in place; a terminal or attested act opens a full dialog stating what ends or cannot be silently undone, and who signs; an irreversible act goes only through the ceremony (DEC-80). Every act's button shows its rung's name and weight mark, and an act whose rung is not yet set is treated as reasoned. Bob then gave the 57 acts that had no rung their rungs (26 reversible, 29 reasoned, 2 terminal, DEC-88) and named six judgement calls that carry high friction: choosing a person's attribution, sharing a lead, registering a subject and setting the group's strength bar open the full dialog stating their effect; approving a filing is terminal and has it already; having the assistant work an objective, the lightest of the six, opens its reason field in place with the run's budget and scope beside it. The rung names stay as they are: a heavy consequence is not a new rung.",
+    "status": "ruled"
    }
   },
   {
@@ -8817,7 +9591,8 @@
     "rulings": [
      "DEC-89"
     ],
-    "decided": "As recommended: opening an escalation requires a written reason, why this breach is worth pursuing; and a new act, 'decline to escalate', on a live noncompliant determination records in the member's own words why the group is not pursuing it now, reasoned, attributed and dated, and corrected only forward (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are prose only: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere, so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one. The changes to the escalation and conformance requirements are owed, for Bob's approval."
+    "decided": "As recommended: opening an escalation requires a written reason, why this breach is worth pursuing; and a new act, 'decline to escalate', on a live noncompliant determination records in the member's own words why the group is not pursuing it now, reasoned, attributed and dated, and corrected only forward (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are prose only: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere, so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one. The changes to the escalation and conformance requirements are owed, for Bob's approval.",
+    "status": "ruled"
    }
   },
   {
@@ -8874,6 +9649,11 @@
    ],
    "recommendation": "The second option first (an outline with support status on every line), with a graph view added later; a module requirement must be written before design goes deep.",
    "whoDecides": "Bob: a plan needs requirements and a module (scope and tranche are his); Design settles the layout once he does.",
+   "elsewhere": {
+    "date": "2026-09-29",
+    "note": "Bob moved this question to a separate session on Actions, which decides it (DEC-93); BOB's action-plan rulings 1-10 there rule it in part.",
+    "src": "DECISIONS.md DEC-93; docs/development/action-design/ACTION-PLAN.md (another session's branch, as BOB's page cites it)"
+   },
    "ruled": {
     "date": "2026-09-29",
     "by": "Bob",
@@ -8883,7 +9663,8 @@
      "docs/development/action-design/ACTION-PLAN.md"
     ],
     "decided": "A plan may open as soon as an inquiry begins, before anything is published or determined, and is not tied to a publication; one publication may give rise to several plans. A plan addresses one or more related matters, each either suspected (an open inquiry) or determined (a noncompliant, compliant or unclear determination), so it may start from a success story or a records campaign as well as a breach. Options are suggested by the assistant, labelled as the machine's, or added by a member, directly or through the assistant; each option is bound to the matters it serves and falls in one of six categories: mitigation, legal, awareness, journalistic, grassroots or other. Lobbying is an option only to enforce or restore an existing requirement. There is no catalogue of response options and no budgets: neither money nor licensed resources are costed, and a plan is not a project-management system. An option left unticked is undecided; declining is an explicit act that records a short reason, so the options not taken stay visible. A plan holds up to three scenarios, each laying the chosen options out over time in phases, with checkpoints and conditions that a member judges; the system reminds once at each checkpoint and never judges. Options show collapsed as their summary, expanding to their detail, and the list sorts by category, date, matter and disposition.",
-    "stillOpen": "The new 'action-plans' module that would hold all this awaits Bob's approval as architecture; the surface (S11) is designed once it is approved."
+    "stillOpen": "The new 'action-plans' module that would hold all this awaits Bob's approval as architecture; the surface (S11) is designed once it is approved.",
+    "status": "partly ruled"
    }
   },
   {
@@ -8943,7 +9724,8 @@
     "rulings": [
      "DEC-90"
     ],
-    "decided": "As recommended: the assistant is a panel docked beside the surface it serves, and it never floats. Its text carries the one 'machine work' treatment every machine output shares, with attribution ('the assistant did this, at <member>'s request'); a wizard step highlights the real control and never fills or presses it, and the member performs every act on the real surface. Two refinements: the panel expands (a draggable divider and an 'expand' control let it take most of the window while some of the member's surface stays visible; it shrinks back by itself when a wizard step needs the member to act; its size is remembered, and one click restores the default), and it docks by screen shape, at the side on wide screens and at the bottom on narrow ones, with the member free to switch edges and the choice remembered."
+    "decided": "As recommended: the assistant is a panel docked beside the surface it serves, and it never floats. Its text carries the one 'machine work' treatment every machine output shares, with attribution ('the assistant did this, at <member>'s request'); a wizard step highlights the real control and never fills or presses it, and the member performs every act on the real surface. Two refinements: the panel expands (a draggable divider and an 'expand' control let it take most of the window while some of the member's surface stays visible; it shrinks back by itself when a wizard step needs the member to act; its size is remembered, and one click restores the default), and it docks by screen shape, at the side on wide screens and at the bottom on narrow ones, with the member free to switch edges and the choice remembered.",
+    "status": "ruled"
    }
   },
   {
@@ -9002,7 +9784,17 @@
     }
    ],
    "recommendation": "Option 2, with option 1's teach-at-the-act rule everywhere else: it satisfies Requirement 11 in one session while keeping local guides in jurisdiction profiles, not in the product.",
-   "whoDecides": "Bob: what a newcomer must learn first, and whether the starter kit is part of the product or the group's website, is a requirement and UX principle; the layout of the path is Design's."
+   "whoDecides": "Bob: what a newcomer must learn first, and whether the starter kit is part of the product or the group's website, is a requirement and UX principle; the layout of the path is Design's.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-91"
+    ],
+    "status": "deferred",
+    "decided": "Deferred: 'this needs to be deferred until the new UX is in place and stabilized.' Onboarding is designed against the product members will actually use. Meanwhile the measures map already rules that a newcomer meets strength against the bar and 'Undetermined' first, everything else taught at the act (DEC-82).",
+    "trigger": "The redesigned member surfaces are built and have been stable in use (no major layout changes) for a period BOB judges sufficient; or Bob asks."
+   }
   },
   {
    "question": "How are the five trust levels (our work, independently verified, meets standards, not yet evaluated, flagged) shown on information from other groups?",
@@ -9061,10 +9853,25 @@
     }
    ],
    "recommendation": "Option 1: it keeps the ambient signal while grounding every level in a recorded fact, and leaves 'meets standards' for when an evaluator exists.",
-   "whoDecides": "Bob: the trust hierarchy is mission doctrine (Roadmap §11) and choosing to revise it, and adding an acceptance act, are requirements; the dot's look is Design's."
+   "whoDecides": "Bob: the trust hierarchy is mission doctrine (Roadmap §11) and choosing to revise it, and adding an acceptance act, are requirements; the dot's look is Design's.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-92"
+    ],
+    "status": "partly ruled",
+    "decided": "As recommended, 'but there's still more to decide later.' The five levels become an origin mark in the same family as 'Machine work', answering who made this: Ours; Another group's (a published edition, signature verified); Accepted by our group (a new reasoned act, attributed, with a reason); 'Not yet evaluated'; 'Flagged' only when a member's recorded evaluation names specific issues, never a machine's. 'Meets standards' is deferred until an evaluator of incoming work exists. The mark is ambient; a hover shows the fact behind it. It is never composed with grades or strength into one trust score.",
+    "stillOpen": [
+     "What accepting another group's work commits the group to, and whether it can be withdrawn",
+     "How a flag is raised, answered and cleared",
+     "Whether 'meets standards' returns, and what evaluates it",
+     "How the mark travels when a group republishes work it accepted"
+    ]
+   }
   },
   {
-   "question": "How is a member told a capture's grade at the moment of capture (DEC-51), and what co-attestation would be worth?",
+   "question": "How is a member told a capture's grade, and whether it is co-attested, at the moment of capture (DEC-51, DEC-81)? Presentation only.",
    "whyItMatters": "The belief about what a capture is worth forms at capture; the note is currently discarded before the member sees it.",
    "relatedUseCases": [
     "UC-009",
@@ -9072,7 +9879,7 @@
    ],
    "basis": "open",
    "whereTheCanonStops": "DEC-51; DEC-39",
-   "context": "When a member captures a document from a web address, the record fetches it, fingerprints the bytes and gives the capture a grade: how strong it is as evidence of what that address served and when (a direct fetch earns at most B; A needs a chain-of-custody archive). 'Co-attestation' is a separate act that asks an independent timestamp service to record when those bytes existed. The question is what the member is told about the grade at the moment they capture.",
+   "context": "When a member captures a document from a web address, the record fetches it, fingerprints the bytes and gives the capture a grade: how strong it is as evidence of what that address served and when (a direct fetch earns at most B; A needs a chain-of-custody archive). 'Co-attestation' is a separate act that asks an independent timestamp service to record when those bytes existed. The question is what the member is told about the grade at the moment they capture. Since DEC-81, co-attestation also decides what a published case says about the document: a co-attested Grade B can be published as it is, and one whose co-attestation failed only by the owner's acknowledgement, marked 'self-attested only'.",
    "canonSays": [
     {
      "source": "DEC-51 (decided 2026-08-10)",
@@ -9089,6 +9896,10 @@
     {
      "source": "UC-009, UC-023",
      "says": "A capture earns a grade (at most B for a direct fetch); an attestation is recorded and never reaches A."
+    },
+    {
+     "source": "DEC-81 (Bob, 2026-09-29); Intake Doctrine §3",
+     "says": "A co-attested Grade B (a trusted timestamp over the digest and a third-party co-archive of the locator) is sufficient to publish; the case discloses each document's grade and whether it is co-attested; a failed co-attestation is retried at the pre-flight, then acknowledged and marked 'self-attested only'; Grade A is the ceiling for adversarial or legal use and is deferred."
     }
    ],
    "whyOpen": "The substance is already settled: DEC-51 overturned the discard this question describes, and DEC-39 states what co-attestation is worth, so the question's premise is out of date. What remains open is presentation only: where and how long the note sits after capture, how a bulk or machine-requested capture (which completes later, unattended) carries it, and how the grade looks when the member returns to the document. One real tension: the pre-capture explanation deliberately predicts no grade (the capture does not exist yet), so the member sees nothing about strength until the capture lands.",
@@ -9112,10 +9923,32 @@
     {
      "option": "For captures that complete later (bulk or machine-requested), attach the note to the completed-capture status on the document and in the queue's condition item.",
      "tradeoffs": "Fills the unattended gap; adds nothing new to the record."
+    },
+    {
+     "option": "Show at capture whether co-attestation succeeded, since it now decides whether the document can be published without an acknowledgement (DEC-81).",
+     "tradeoffs": "Makes the consequence visible early; adds one more fact to a note DEC-51 requires to stay whole."
     }
    ],
    "recommendation": "Option 1 plus option 3 for unattended captures; ask Bob only if Design wants option 2's collapsed form.",
-   "whoDecides": "Design, within DEC-51 and DEC-39, which already settle the substance; Bob only if the note is to be shortened or collapsed."
+   "whoDecides": "Design: DEC-51, DEC-39 and DEC-81 settle the substance; only presentation remains. Bob only if the note is to be shortened or collapsed.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-51",
+     "DEC-39",
+     "DEC-81"
+    ],
+    "note": "The substance is settled: DEC-51 (the grade note shown whole at the moment of capture), DEC-39 (what co-attestation is worth) and DEC-81 (a co-attested Grade B is enough to publish, the case discloses each document's grade and whether it is co-attested, and Grade A is deferred). Only presentation remains, which is Design's."
+   },
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-95"
+    ],
+    "status": "ruled",
+    "decided": "The whole grade note is shown once when a capture completes; a capture that completes later and unattended carries the note on the completed capture and its queue item. Bob extended the question to what happens after capture: the system may suggest that a capture not yet released bears on a member's work under six guards (shown where the member works, never as a notification; labelled machine work with its reason; a dismissal remembered; never during a heavy act; switchable off per member; its acceptance rate measured). Still open: a held-captures list with bulk triage was proposed and not ruled."
+   }
   },
   {
    "question": "How does the queue avoid nagging (DEC-69) while making sure obligations with clocks are not missed?",
@@ -9147,6 +9980,10 @@
     {
      "source": "NOTIFICATIONS.md 'What this does not settle'",
      "says": "Transport (for example email) is undecided; the in-app queue is the only channel."
+    },
+    {
+     "source": "DEC-84 (1)-(2)",
+     "says": "An undetermined candidate is a lead, never a duty; a record duty is an unmutable obligation for the joined members of every project drawing on either side, leaving only by resolution."
     }
    ],
    "whyOpen": "The canon says obligations cannot be muted and overdue clocks are marked, but not how a clock's approach is shown: whether an item's position, colour or wording changes as a deadline nears, and whether anything reaches a member who has not opened the product. DEC-69 forbids repeated reminders, while Operational Principle 3 and monitoring R34 require members to be told; the only sanctioned re-notify triggers are 'snooze ended' and 'something new', and it is undecided whether 'a deadline is now N days away' counts as something new.",
@@ -9175,7 +10012,24 @@
     }
    ],
    "recommendation": "Option 1 inside the product, with option 3 left as a member's opt-in later: a threshold is a real change, so it is not nagging.",
-   "whoDecides": "Bob: where respect ends and a deadline duty begins is doctrine (DEC-69 is his); the threshold values and look are Design's."
+   "whoDecides": "Bob: where respect ends and a deadline duty begins is doctrine (DEC-69 is his); the threshold values and look are Design's.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-76",
+     "DEC-84"
+    ],
+    "note": "Not settled. One fixed point is added: a record contradiction is a duty that cannot be muted and leaves the queue only by resolution, while a world one is a lead (DEC-76 item 3; DEC-84 (1)-(2)). Where respect ends and a deadline duty begins remains Bob's."
+   },
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-94"
+    ],
+    "decided": "A deadline reminder is the member's own request, never the system's nagging: it is set up when the action is chosen in the action plan, perhaps by a default the member sees and can change at that moment, and any further reminder is one the member accepts, perhaps at the system's suggestion. As a deadline nears, the item's position, colour or wording may change, as appropriate; that is display, not a notification. There remains no way to reach a member who has not opened the product: no email, push or other outside channel. Overdue is new and re-notifies once; 'due within N days' is not new unless the member asked for that reminder. Threshold looks and wording are Design's.",
+    "status": "ruled"
+   }
   },
   {
    "question": "What are the empty and loading states across surfaces, especially long waits (renders deferred, capture requests hours away, statutory clocks of days)?",
@@ -9231,7 +10085,15 @@
     }
    ],
    "recommendation": "Option 1, adding option 3's next step only where the member has just created the empty thing.",
-   "whoDecides": "Design: the canon already sets the principle (state it, never dress it as an error); the vocabulary and treatments are detail within it."
+   "whoDecides": "Design: the canon already sets the principle (state it, never dress it as an error); the vocabulary and treatments are detail within it.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-86",
+     "DEC-82"
+    ],
+    "note": "Not settled. DEC-86 fixes how 'Undetermined' and its four neighbours look and read, and an empty or loading state must not be mistaken for any of them; DEC-82 writes 'Undetermined' and 'Nobody looked' as named terms. Empty and loading states remain Design's."
+   }
   },
   {
    "question": "What accessibility level and which languages must the member surfaces and published output meet?",
@@ -9288,7 +10150,16 @@
     }
    ],
    "recommendation": "Option 1 as a requirement now, with option 2's translated rendering taken up as a separate publication decision.",
-   "whoDecides": "Bob: a conformance level and supported languages are requirements, and a translated publication is doctrine; the implementation is Design's."
+   "whoDecides": "Bob: a conformance level and supported languages are requirements, and a translated publication is doctrine; the implementation is Design's.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-79",
+     "DEC-82",
+     "DEC-90"
+    ],
+    "note": "Not settled: the conformance level and the languages remain Bob's. Three rulings add points any level must honour: hover always has a focus or tap equivalent (DEC-79, DEC-82); colour is never the only signal, since each scale has its icon and each bar its name (DEC-79, DEC-82); the assistant panel must not trap or lose keyboard focus, one reason it does not float (DEC-90)."
+   }
   },
   {
    "question": "How does a subject named in a case (an office, or an official in role) see and respond, and how is the publisher's right-of-reply declaration shown?",
@@ -9343,7 +10214,15 @@
     }
    ],
    "recommendation": "Option 1: it makes the declaration legible without making it a gate; revisit option 2 when there is a directory.",
-   "whoDecides": "Bob for prominence and any subject-facing index (effects on people outside the project); Design for wording and layout."
+   "whoDecides": "Bob for prominence and any subject-facing index (effects on people outside the project); Design for wording and layout.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-84",
+     "DEC-77"
+    ],
+    "note": "Partly changed. For an obligation-against-act finding, what a named office reads is fixed: Criteria and Condition as facts from the two sides; Cause only when evidenced, otherwise published as 'cause not established'; Effect from consequences; Recommendation limited to a proposed action, never a policy position (DEC-77 item 2; DEC-84 (10)). How a subject sees and responds, and how the right-of-reply declaration is shown, remain open."
+   }
   },
   {
    "question": "How is a correction made visible to people who relied on an earlier edition (pull, never push)?",
@@ -9401,7 +10280,15 @@
     }
    ],
    "recommendation": "Option 1 with option 2 as supporting detail: corrections should explain themselves, and the pull model stays intact.",
-   "whoDecides": "Bob: a new required authored statement at publication is a requirement; banner design is Design's."
+   "whoDecides": "Bob: a new required authored statement at publication is a requirement; banner design is Design's.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-84",
+     "DEC-78"
+    ],
+    "note": "Partly changed. A tension found after publication leaves the signed edition as it is; the owning project gets a re-evaluation notice and a later edition discloses or resolves it (DEC-84 (13)). A source's firmer identity reaches the findings resting on it as a notice, never a silent regrade (DEC-78 item 5(e)). How readers of an earlier edition learn of a correction remains open."
+   }
   },
   {
    "question": "How is attribution chosen and shown (group, project, cover, name), including off-the-record sources, without making pseudonymous work look weaker?",
@@ -9454,7 +10341,15 @@
     }
    ],
    "recommendation": "Option 1 with option 2's recourse shown on the draft; confirm the two provisionals with Bob first.",
-   "whoDecides": "Bob for the two provisionals (blocking and handle-as-name, both doctrine about members' own words); Design for the choice screen and uniform public display."
+   "whoDecides": "Bob for the two provisionals (blocking and handle-as-name, both doctrine about members' own words); Design for the choice screen and uniform public display.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-78",
+     "DEC-88"
+    ],
+    "note": "Partly changed. A source's identity is a dated history of disclosures; the group is never first to make a source more public; consent is asked at publishing and stated as permanent; 'known to the group, not recorded' is a first-class state (DEC-78 item 5). Choosing attribution for a case edition carries high friction: its full dialog states that the name becomes permanent at publication (DEC-88). The two provisionals (blocking, and handle as name) remain Bob's."
+   }
   },
   {
    "question": "How are declared bias statements shown to readers so that a lens is weighable, not a weapon (the two-audience choice)?",
@@ -9559,7 +10454,14 @@
     }
    ],
    "recommendation": "Combine the first and third: show the hunch grade only on the leg, keep strength hunch-free with the count named, and list hunches as a to-do before publishing. Bob should confirm strength R5 overrides the 'composes normally' sentence.",
-   "whoDecides": "Bob for the one doctrinal point (whether a hunch counts in any strength figure while open, R5 versus the Declared Bias text); Design for the visual treatment and the clearing list."
+   "whoDecides": "Bob for the one doctrinal point (whether a hunch counts in any strength figure while open, R5 versus the Declared Bias text); Design for the visual treatment and the clearing list.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-80"
+    ],
+    "note": "Partly changed. The uncleared-hunch refusal lands with the ceremony's pre-flight, so an owner learns of an uncleared hunch before the first screen (DEC-80 item 3). Whether a hunch counts in strength during investigation remains Bob's."
+   }
   },
   {
    "question": "What does a group see when it names its cases for audiences with different standards of proof (journalist vs lawyer), given the catalogue of standards by audience is owed?",
@@ -9609,7 +10511,14 @@
     }
    ],
    "recommendation": "Build the first option now, since the bar already works, and put the catalogue on Bob's list as a research item with a named trigger; the chooser gains presets when it lands.",
-   "whoDecides": "Bob: the catalogue is a requirements and doctrine question (what standard each audience needs); Design settles the chooser's wording within it."
+   "whoDecides": "Bob: the catalogue is a requirements and doctrine question (what standard each audience needs); Design settles the chooser's wording within it.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-81"
+    ],
+    "note": "Partly changed. One standard is now fixed: a co-attested Grade B is enough to publish, while Grade A stays the ceiling for adversarial or legal use and is deferred (DEC-81). The catalogue of standards by audience is still owed."
+   }
   },
   {
    "question": "How is an out-of-view ancestor or withheld dependent phrased so it states incompleteness and nothing else?",
@@ -9664,7 +10573,15 @@
     }
    ],
    "recommendation": "Adopt the single sentence and marker, and have BOB record a ruling that re-evaluation, backlinks and strength R6 conform (state the incompleteness, no counts). Do not add the 'who to ask' hint.",
-   "whoDecides": "Bob, for the scope: whether DEC-36's rule (a missing item is stated as missing, never named or counted) also governs hidden dependents and backlinks, which today are withheld silently. Design then settles the one sentence and marker. Strength's count leak is already scheduled for correction in T12 (N303, BOB's)."
+   "whoDecides": "Bob, for the scope: whether DEC-36's rule (a missing item is stated as missing, never named or counted) also governs hidden dependents and backlinks, which today are withheld silently. Design then settles the one sentence and marker within DEC-86. Strength's count leak was corrected in T12 (N303, K360).",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-86",
+     "K360"
+    ],
+    "note": "Partly settled. 'Withheld' has its own visibly distinct treatment and one fixed sentence pattern (DEC-86); strength R6 now withholds a hidden member whole, stating only the incompleteness (built T12, K360), so the count leak this question names is closed. Whether DEC-36's rule also governs hidden dependents and backlinks remains Bob's."
+   }
   },
   {
    "question": "How does the product present the difference between the working side and the published side so a member always knows which side of the fence they are on?",
@@ -9719,7 +10636,17 @@
     }
    ],
    "recommendation": "Use two spaces with distinct frames plus a per-object path-to-publication marker, and treat the review copy as a working-side object with its own band; correct the semantics table's 'never served without a credential' wording.",
-   "whoDecides": "Design, within Bob's stated principle; Bob only if the designer proposes a third space, since that changes how members are taught the fence."
+   "whoDecides": "Design, within Bob's stated principle; Bob only if the designer proposes a third space, since that changes how members are taught the fence.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-80",
+     "DEC-81",
+     "DEC-76",
+     "DEC-92"
+    ],
+    "note": "Partly changed. The crossing is now a designed ceremony (DEC-80); what crosses discloses each document's grade (DEC-81) and any unresolved record contradiction (DEC-76 item 4); work from outside the group carries an origin mark (DEC-92). How a member always knows which side of the fence they are on remains Design's."
+   }
   },
   {
    "question": "How are declared flows (progressions) and their deltas drawn so the analytic product (declared vs observed flow) is visible, and our own missed deadlines are never shown as findings about the world?",
@@ -9814,7 +10741,14 @@
     }
    ],
    "recommendation": "Review and adopt the existing translations now, with the public page showing the bound, and ask Bob whether members should see a count-only saturation signal; until he rules, drop the 'members can be told' sentence.",
-   "whoDecides": "Design for the knocker's wording and page; Bob for whether refused knocks are recorded at all, which changes what the record holds."
+   "whoDecides": "Design for the knocker's wording and page; Bob for whether refused knocks are recorded at all, which changes what the record holds.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-78"
+    ],
+    "note": "Partly changed. The receipt may also show a knocker secret the doorbell generates, once; continuity is proved by possession of the secret, never identity (DEC-78 item 3). The rate-bound wording remains open."
+   }
   },
   {
    "question": "How is the founder / root-of-trust responsibility explained, given custody is unmodelled (DEC-2 deferred)?",
@@ -9864,7 +10798,14 @@
     }
    ],
    "recommendation": "Adopt the explainer at claim plus the standing custody card, and correct the claim page's one-sided reassurance; leave any acknowledgement act until DEC-2's trigger fires.",
-   "whoDecides": "Bob for what the group is told about a policy he deferred (a doctrine-adjacent disclosure); Design for placement and wording once he agrees."
+   "whoDecides": "Bob for what the group is told about a policy he deferred (a doctrine-adjacent disclosure); Design for placement and wording once he agrees.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-80"
+    ],
+    "note": "Slightly changed: once owners sign in the browser, the founder's delivery of signatures stays only as a fallback (DEC-80 item 4). Custody (DEC-2) stays deferred."
+   }
   },
   {
    "question": "How are the three queue classes presented differently while remaining one queue (findings compose into cases, obligations into a flow model, conditions into status on the thing)?",
@@ -9914,7 +10855,16 @@
     }
    ],
    "recommendation": "Use distinct labels, icons and act rows with a link to each class's home, and have BOB rename the condition disposition 'noticed' so K356's 'Noticed' is unambiguous.",
-   "whoDecides": "Design for the presentation; BOB for the vocabulary fix, recorded as a ruling; Bob only if the obligation class itself is to be renamed."
+   "whoDecides": "Design for the presentation; BOB for the vocabulary fix, recorded as a ruling; Bob only if the obligation class itself is to be renamed.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "K356",
+     "DEC-76",
+     "DEC-84"
+    ],
+    "note": "Partly changed. The finding class is shown as 'Noticed', built in T12 (N301). A record contradiction joins the queue as a duty that cannot be muted, a world one as a lead (DEC-76 item 3; DEC-84 (1)-(2)). No ruling yet renames the condition disposition 'noticed', so the word clash stands."
+   }
   },
   {
    "question": "How does the directory, cross-group discussion and 'working on' signalling appear, if at all, inside CivicOS?",
@@ -9974,7 +10924,14 @@
     }
    ],
    "recommendation": "Bob should first decide whether these are in CivicOS's scope at all; the smallest honest step is option one, with a tell warning on any link that submits.",
-   "whoDecides": "Bob: scope and requirements (whether CivicOS owns any of the network's shared functions) are his."
+   "whoDecides": "Bob: scope and requirements (whether CivicOS owns any of the network's shared functions) are his.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-92"
+    ],
+    "note": "Partly changed. How another group's work is marked is ruled (the origin mark, DEC-92), with more to decide later; the directory, cross-group discussion and 'working on' signals remain open."
+   }
   },
   {
    "question": "How are strength, grades and look states explained to the public reader at progressively deeper levels, and in print?",
@@ -10001,6 +10958,10 @@
     {
      "source": "OBSERVATION-LOG-DESIGN §1, §6; Publication §9",
      "says": "Absence has five states (NEVER_LOOKED, LOOKED_ABSENT, LOOKED_INDETERMINATE, PARTIAL, PRESENT); the completeness statement's search record is designed, not built."
+    },
+    {
+     "source": "DEC-82; Interaction Constructs §M",
+     "says": "Letters grade evidence, bars show progress, weights mark acts; every grade and bar step opens its meaning on hover, focus or tap; colour marks the scale, never the value."
     }
    ],
    "whyOpen": "The canon demands layered explanation and a full printed narrative but defines neither the layers nor the words. Readers expect one overall score, while DEC-44 forbids combining the two axes, so the explanation must teach why there is no single number. The look states cannot yet appear on a published case because the search record is not built, and Bob's principle that print must carry everything that on screen is hidden behind click-overs has no stated order or length limit.",
@@ -10024,7 +10985,17 @@
     }
    ],
    "recommendation": "Use the three layers with semantics-table click-overs, printing all layers plus a one-page glossary; the one-line verdict must state each axis and never a single score.",
-   "whoDecides": "Design, within Bob's stated principles and DEC-44; Bob only if a single summary line per finding is thought to risk composing the pair."
+   "whoDecides": "Design, within Bob's stated principles and DEC-44; Bob only if a single summary line per finding is thought to risk composing the pair.",
+   "update": {
+    "date": "2026-09-29",
+    "rulings": [
+     "DEC-82",
+     "DEC-81",
+     "DEC-76",
+     "DEC-84"
+    ],
+    "note": "Partly settled. The measures map gives the reader's layers their words: three sentences (an answer is only as strong as the weakest thing it depends on; a grade says how easily someone else could check it, never whether it is true; what we don't know is shown), one form per scale, every mark opening to its plain question (DEC-82). A published case also discloses each document's grade and co-attestation (DEC-81) and any unresolved record contradiction, one level deep and stated as such (DEC-76; DEC-84 (12)). Print order and length remain Design's."
+   }
   }
  ]
 }

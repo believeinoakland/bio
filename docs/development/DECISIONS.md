@@ -1387,3 +1387,156 @@ answer: (Bob, 2026-09-29, replacing BOB's recommendation.) The members of each c
 BOB's reading (P17, said to Bob): the notice names only the member's own side; the other project, its members and its side stay unseen until both projects opt in, and opting in reveals the two projects to each other's members only; the communication is as Bob clarified the same day: each project's members respond to the conflict notifications they receive, and parts of a response are included in the next notification the other project(s) receive; a response may include, at the responder's choice, their cover (Membership v2 §3) or even their email address; none of it is required, and nothing the responder did not choose is shared; there is no discussion thread and no general messaging; the publication's highlight states that the finding rests on a side in conflict with a record not shown, never naming the hidden project or its content.
 decided: 2026-09-29 · Bob
 owed: N345's draft amended (contradiction, queue, case-authoring, publication, affordances); the requirement files folded when a tranche carries N345.
+
+### DEC-86 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 6)
+for: bob
+question: What is the one visual treatment and voice of "Undetermined", and how does it differ from "Withheld", "Unrated", "Nobody looked" and "Refused"?
+why it is Bob's: UX (Interaction Constructs §U sets the principle; its treatment was open).
+provisional: the old interface used one tinted badge for both undetermined and no-grade-yet, so the two looked alike.
+alternative: one neutral "gap" family with a colour-free text label per kind (calmer, but the differences rest on reading and are easier to miss).
+recommendation: one Undetermined component that always carries its reason, and four visibly different neighbours with fixed wording.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29.** "Undetermined" is one component with a fixed mark and a mandatory "because…" line. "Withheld", "Unrated", "Nobody looked" and "Refused" each have their own visibly distinct treatment and one fixed sentence pattern, never shared. None is dressed as an error; all are written as named terms (DEC-82). The exact marks and wording are the redesign's, within this rule.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §U.
+owed: the five treatments and sentence patterns in the redesign; the UX page's open question 6 marked ruled.
+
+### DEC-87 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 7)
+for: bob
+question: How does the rung ladder look and feel, so a member senses an act's weight before acting, especially the attested and irreversible rungs?
+why it is Bob's: UX, within Interaction Constructs revision 0.2 and K356.
+provisional: the old interface showed one dialog with a five-rung ladder and the act's rung lit.
+alternative: the same dialog for every act, the rung highlighted (read, not felt: the flattening revision 0.2 warns against).
+recommendation: escalating friction by rung, the rung's name on the button, an undetermined rung treated as reasoned until assigned.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29, with the principle stated in his words.** Friction is kept as low as possible so the tool fades and the work stays in focus, while members still appreciate the weight of their work and the finality of some steps: information-rich cues convey state, relationships, context, progression and available actions; elements are self-evident to newcomers (quietly showing how to understand more) and intuitive to experienced members; and visual tools slow a member down, even for a moment, before a heavier act. The rule: reversible acts inline; reasoned acts a reason field in place; terminal and attested acts a full dialog stating what ends or cannot be silently undone, and who signs; irreversible acts only through the ceremony (DEC-80). Every act's button carries its rung's name and weight mark (DEC-82's pips). An act with an undetermined rung is treated as reasoned until BOB assigns it.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
+owed: the act surfaces in the redesign; BOB's assignment of the acts still graded undetermined (affordances R27); the UX page's open question 7 marked ruled.
+
+### DEC-88 · answered
+raised: 2026-09-29 · the same design session with Bob (following DEC-87: the acts whose rung is undetermined)
+for: bob
+question: Can the 57 acts graded `undetermined` in `affordances.RUNG_ABSENT` be given rungs from the principles already ruled (affordances R27; DEC-87)?
+why it is Bob's: the banding logic is UX and doctrine (how heavy an act feels); assigning each act is BOB's detail (P17), put to Bob here at his request.
+provisional: each is treated as reasoned (DEC-87).
+alternative: leave them to BOB one by one.
+recommendation: three bands, with six judgement calls named.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29, with his note on the six: "The 6 judgment calls are heavyweight, so the friction should be appropriately high. That said, workobjective is probably not the heaviest weight of the 6."**
+  1. REVERSIBLE (26), proposals that bind nothing and working moves nobody relies on yet: `suggest`, `extractpropose`, `contradictionpropose`, `themepropose`, `standardpropose`, `comparisonpropose`, `theorypropose`, `actionriskpropose`, `actionlawspropose`, `filingprepare`, `contentmint`, `casedraft`, `reviewcomment`, `inboxresolve` (while it only sets a status), `taskforward`, `taskresolve`, `thread`, `connectionchoose`, `themedeclare`, `themeplace`, `entityalias`, `goallink`, `versionkeep`, `airunopen`, `airunclose`, `projectfork`.
+  2. REASONED (29), a member's own claim others may rely on, corrected only forward: `testify`, `lead`, `leadlook`, `leadshare`, `transcribe`, `transcriptionattest`, `attesttext`, `resolve`, `resolvetestify`, `entitycreate`, `versionadopt`, `progressiondefine`, `goaldeclare`, `aspirationdeclare`, `aspirationdeadend`, `objectivecondition`, `biasadopt`, `strengthbar`, `standarddeclare`, `standardadopt`, `consequencerecord`, `actioncorrespond`, `filingsent`, `escalationopen`, `escalationattach`, `counselpacket`, `attribute`, `statementack`, `workobjective`.
+  3. TERMINAL (2), ending what cannot be reopened: `escalationend`, `filingapprove`.
+  4. THE SIX JUDGEMENT CALLS CARRY HIGH FRICTION. Their rung names stay honest (a heavy consequence is not a new rung, R27), and friction follows consequence in the world (Interaction Constructs §F): `attribute` (a name that becomes permanent at publication), `leadshare` (a disclosure that cannot be un-read), `entitycreate` (a person named in the registry) and `strengthbar` (a gate on the whole group) open the full dialog stating that effect; `filingapprove` is terminal and has it already. `workobjective` is the lightest of the six: its reason field opens in place with the run's budget and scope shown beside it, heavier than a plain reasoned act and lighter than the full dialog.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
+owed (BOB's): move the 57 from `RUNG_ABSENT` into `RUNGS` in `bio-plane/src/affordances.mjs` and update affordances R27's text (which says 56; the code holds 57); add a required reason to each reasoned act whose requirement does not yet require one (an act whose own authored words serve as its reason counts); publish the consequence statement for the six; regrade `inboxresolve` to reasoned when DEC-78's pull admits material.
+
+### DEC-89 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 8)
+for: bob
+question: Where does a member record why a noncompliant finding is, or is not, significant enough to escalate, given that no significance, severity, priority or score may be stored?
+why it is Bob's: it changes the escalation and conformance requirements and touches Operational Principle 1 (significance is the members' judgement, K12).
+provisional: reasons are recorded once an escalation exists; deciding NOT to escalate leaves no trace, and opening one records no why.
+alternative: record the reasoning in the unbuilt, never-published action plan (S11); or leave it to discussion outside the record.
+recommendation: a required reason when opening an escalation, and a reasoned "decline to escalate" act, both prose only.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29.** (1) Opening an escalation (`escalationopen`, reasoned in DEC-88) requires a written reason: why this breach is worth pursuing. (2) A new act, DECLINE TO ESCALATE, on a live noncompliant determination records, in the member's own words, why the group is not pursuing it now; reasoned, attributed and dated; corrected forward only (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are PROSE ONLY: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere (conformance R8, escalation R19), so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the requirement changes in `escalation` (the required opening reason; the decline act and its read) and `conformance` (a determination shows whether it was escalated, declined or neither), with the decline act's rung (reasoned) in `affordances`, for Bob's approval; the UX page's open question 8 marked ruled.
+
+### DEC-90 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 10)
+for: bob
+question: What does the assistant dialog look like on each surface, and how is "the machine did the looking, you do the concluding" made felt?
+why it is Bob's: UX, within DEC-24, DEC-27 and ASSISTANT-PILOT.
+provisional: the pilot flow and wizard are unbuilt; only CHECK runs are deployed.
+alternative: a modal dialog that navigates away and returns (simple on phones, but it hides the surface the member is meant to act on).
+recommendation: a side panel docked beside the owning surface, with one visible "machine work" treatment shared with every other machine output, and acts always performed on the real surface.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29.** The assistant is a panel docked beside the surface it serves. Its text carries the one "machine work" treatment every machine output shares, with attribution ("the assistant did this, at <member>'s request"). A wizard step highlights the real control and never fills it or presses it; every act is performed by the member on the real surface. Bob asked whether it may float; its downsides (it can cover the control a wizard step highlights, come loose from the surface it serves, crowd a phone, trap or lose keyboard focus, and get lost off-screen) led him instead to two refinements, as recommended the same day: (1) EXPANDABLE: a draggable divider and an "expand" control let the panel take most of the window for a long answer or a table of results; some of the member's surface always stays visible; when a wizard step needs the member to act, the panel shrinks back by itself so the highlighted control is in view; its size is remembered per member and one click restores the default. (2) DOCK EDGE BY SCREEN SHAPE: the side by default on wide screens (height is the scarcer space, the member's work scrolls vertically, and very wide lines read slowly) and the bottom on narrow ones (phones, tablets held upright); a member may switch edges and the choice is remembered. The panel does not float.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the assistant panel in the redesign; the UX page's open question 10 marked ruled.
+
+### DEC-91 · deferred
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 11)
+for: bob
+question: What does a newcomer learn first, and how do starter materials and onboarding fit a first session (Design Requirement 11: usable within one session)?
+why it is Bob's: what a newcomer must learn first, and whether the starter kit is part of the product or the group's website, is a requirement and a UX principle.
+provisional: no onboarding path or starter kit exists; the measures map (DEC-82) already rules that a newcomer meets strength against the bar and "Undetermined" first, everything else taught at the act.
+alternative: decide the onboarding path now, before the redesign exists.
+recommendation (not taken now): a short guided first-session path, with teaching at the act everywhere else, and local guides kept in jurisdiction profiles rather than in the product.
+reversal cost: none; nothing is built.
+response: **DEFERRED by Bob, 2026-09-29:** "this needs to be deferred until the new UX is in place and stabilized." Onboarding is designed against the product members will actually use, so it waits for the redesign.
+trigger: the redesigned member surfaces are built and have been stable in use (no major layout changes) for a period BOB judges sufficient; or Bob asks.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the UX page's open question 11 marked deferred, with this trigger.
+
+### DEC-92 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 12)
+for: bob
+question: How are the Roadmap's five trust levels (our work, independently verified, meets standards, not yet evaluated, flagged) shown on information from other groups?
+why it is Bob's: the trust hierarchy is mission doctrine (Roadmap §11); revising it and adding an acceptance act are requirements.
+provisional: no module produces the levels; nothing records that a group verified or accepted another group's work.
+alternative: build the five levels as written, with a compliance evaluator of incoming work; or drop the indicator and rely on grades and provenance.
+recommendation: derive the levels from recorded facts, shown as an origin mark rather than a trust ladder.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29, "but there's still more to decide later."** Earlier rulings already settle how checkable evidence is (DEC-82), what we don't know (DEC-86), who a source is (DEC-78 item 5), whether our copies are co-attested (DEC-81), and that citing another group's edition inherits the fact of publication, never the credibility of its content (AUTHORITY-AND-TRUST, 2026-07-30; inquiry R7). What this adds: the five levels become an ORIGIN MARK in the same family as the "Machine work" label, answering who made this: **Ours**; **Another group's** (a published edition, signature verified); **Accepted by our group** (a new reasoned act, attributed, with a reason); **"Not yet evaluated"**; **"Flagged"** only when a member's recorded evaluation names specific issues, never a machine's. "Meets standards" is deferred until an evaluator of incoming work exists. The mark is ambient; a hover shows the fact behind it (who produced it, which edition, who accepted it and why). It is never composed with grades or strength into one trust score.
+still open (Bob's, later): the rest of question 12, which Bob will take up later; known candidates: what accepting another group's work commits the group to and whether it can be withdrawn; how a flag is raised, answered and cleared; whether "meets standards" returns and what evaluates it; how the mark travels when a group republishes work it accepted.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Complete_Roadmap_v5.md` §11.
+owed: the acceptance act and the origin mark's requirements (inquiry, publication, affordances), for Bob's approval; the UX page's open question 12 marked partly ruled.
+
+### DEC-93 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 9)
+for: bob
+question: What does the action plan surface (S11) look like: options, dependencies, deadlines, resources, outcome branches, declined options, and support status on every element?
+why it is Bob's: a plan needs requirements and a module; scope and tranche are his.
+provisional: the plan surface is undesigned and unbuilt.
+alternative: decide it in this design session.
+recommendation: none taken here.
+reversal cost: none.
+response: **MOVED by Bob, 2026-09-29:** "I've started a separate session that will be used for work related to Actions." Question 9 stays open and is decided in that session, which was given the rulings that bear on Actions (DEC-81, DEC-87, DEC-88, DEC-89).
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: nothing here; the Actions session owns question 9.
+
+### DEC-94 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 14)
+for: bob
+question: How does the queue avoid nagging (DEC-69) while making sure obligations with clocks are not missed?
+why it is Bob's: where respect ends and a deadline duty begins is doctrine (DEC-69 is his).
+provisional: the queue keeps one standing entry per member and case, re-notifying only on a snooze increment or when something new lands (DEC-10); overdue is to be marked (monitoring R34).
+alternative: treat a clock crossing a threshold such as "due within 3 days" as new; or add an outside channel (email or push).
+recommendation: thresholds as new events in the product; an outside channel left for later.
+reversal cost: low; nothing is built.
+response: **Ruled by Bob, 2026-09-29, refining the recommendation.**
+  1. A DEADLINE REMINDER IS THE MEMBER'S OWN REQUEST, never the system's nagging. It is set up when the action is chosen in the action plan, perhaps by a default the member sees and can change at that moment (nothing preselected unseen, DEC-77); a further reminder is also one the member accepts, perhaps at the system's suggestion. A reminder the member asked for is informing at the act they set it at (DEC-69), and it fires as asked.
+  2. As a deadline nears, the item's POSITION, COLOUR or WORDING may change, as appropriate. That is display, not a notification.
+  3. There remains NO WAY to reach a member who has not opened the product: no email, push or other outside channel.
+  4. OVERDUE is new, and re-notifies once (DEC-10's "something new"). "Due within N days" is NOT new unless the member requested that reminder.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the reminder as a member-set part of choosing an action (actions or the action-plan module, with the Actions session), the queue's display change as a clock nears and the overdue re-notification (queue, monitoring R34), for Bob's approval; the UX page's open question 14 marked ruled.
+
+### DEC-95 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 13, which Bob extended to what happens to captures afterwards)
+for: bob
+question: How is a member told a capture's grade at the moment of capture, and, as Bob added, how are the many captures nobody has yet released or set aside handled, and may the system suggest that a held capture relates to a member's work?
+why it is Bob's: UX; the suggestion touches DEC-77's rule that context supports and never silently decides, and DEC-94's rule against nagging.
+provisional: DEC-51 and DEC-39 settle the substance (the whole grade note at completion; co-attestation answers "when did these bytes exist?").
+alternative: no backlog view and no suggestions; or suggestions pushed as notifications.
+recommendation: as below.
+reversal cost: low; nothing is built.
+response: **Bob, 2026-09-29: items 1 and 3 as recommended; item 2 not ruled.**
+  1. THE GRADE NOTE: shown whole, once, when a capture completes (DEC-51); for a capture that completes later and unattended (a bulk capture, or one the assistant requested), the note is attached to the completed capture and to its queue item.
+  2. NOT RULED (Bob, 2026-09-29, correcting this entry the same day): the held-captures list with bulk triage was proposed but not approved; it stays open (a list of captures still at "collected", per member and per project, sortable, age shown never notified, triaged several at a time).
+  3. SUGGESTING THAT A HELD CAPTURE RELATES TO A MEMBER'S WORK, under six guards: (a) it appears where the member already works, never as a notification (e.g. one quiet line on a question's page, "3 held captures may bear on this question", opened by a click); (b) it is labelled "Machine work" and states its reason (e.g. "names the same ordinance number"), and linking or releasing stays the member's act; (c) a dismissal is remembered, and the same capture is not suggested for the same question again unless something new connects them; (d) it never appears during a heavy act such as the ceremony or a signing dialog; (e) a member may turn it off for themselves; (f) its acceptance rate is measured (DEC-77).
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the relevance suggestion as labelled machine work with its dismissal memory and per-member switch (run-productions or retrieval, as BOB places it), and the unattended grade note (capture, queue), for Bob's approval; the UX page's open question 13 marked ruled.
