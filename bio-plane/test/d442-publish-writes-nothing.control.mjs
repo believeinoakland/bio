@@ -43,9 +43,15 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-d442");
-const STORE = join(ROOT, "src", "store.mjs");
-const INDEX = join(ROOT, "src", "index.mjs");
-const CHECKS = join(ROOT, "checks", "bio-checks.mjs");
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15): the subjects left `src/store.mjs`, `src/index.mjs` and the
+   catalogue with the extraction. Each arm now edits the module that holds its subject: publication's worker half
+   (op=publishedcase's exclusions), publication's store half (the ratify committer's frozen pair, op=excludedby),
+   case-authoring's document text (the receipt) and ratification's case-document catalogue, the LIVE gate
+   (ratification R8; the catalogue's `checks/bio-checks.mjs` copy is no longer what op=caseratify runs). */
+const PUB_WORKER = join(ROOT, "src", "publication", "worker.mjs");
+const PUB = join(ROOT, "src", "publication", "index.mjs");
+const CA_DOC = join(ROOT, "src", "case-authoring", "document.mjs");
+const RAT_CHECKS = join(ROOT, "src", "ratification", "checks.mjs");
 const SUITE = join(DIR, "d442-publish-writes-nothing.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -66,35 +72,18 @@ const edit = (file, needle, replacement) => {
                                      src.subarray(first + nb.length)]));
 };
 
-/* (a): the member promotion the rule removed, restored at the head of the member loop. It writes the
-   receipt and `last_updated` into the finding and promotes it, and the loop then pins the NEW sha —
-   the act rule 12 (a) forbids, and nothing else of the change moved. */
-const LOOP_HEAD = "      const { id: target, b, fm } = p;\n      /* R2/DEC-21: BOTH axis objects, derived and frozen — never two letters, and\n         never composed. REC-44: PER FINDING;";
-const PROMOTION = "      const { id: target, b, fm } = p;\n"
-  + "      { let text = Store.#setScalar(p.text, \"last_updated\", `\"${when}\"`);\n"
-  + "        const entry = `### Session ${when} | Published | ${who}\\nTrigger: op=publish on ${target}\\n`\n"
-  + "                    + `Changes: joined case ${theCase} at case edition ${edition} as a member.\\n`;\n"
-  + "        const at = text.indexOf(\"## Session Log\");\n"
-  + "        if (at < 0) text += \"\\n## Session Log\\n\\n\" + entry;\n"
-  + "        else { const nxt = text.indexOf(\"\\n## \", at + 1); const cutAt = nxt === -1 ? text.length : nxt + 1;\n"
-  + "               text = text.slice(0, cutAt) + entry + \"\\n\" + text.slice(cutAt); }\n"
-  + "        const carried = [];\n"
-  + "        for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))\n"
-  + "          carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }\n"
-  + "                                          : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });\n"
-  + "        const bytes = new TextEncoder().encode(text);\n"
-  + "        const pr = this.promote({ bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, \"\")}_${Store.#rand(4)}`,\n"
-  + "          author: who, files: [{ path: \"bundle.md\", text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() }, ...carried],\n"
-  + "          meta: { object_type: fm.object_type ?? b.object_type, title: fm.title, current_state: b.current_state,\n"
-  + "                  prior_state: fm.prior_state ?? null, created: fm.created, last_updated: when, criticality: fm.criticality ?? null } });\n"
-  + "        if (!pr.ok) return { ...pr, target, caseId: theCase };\n"
-  + "        b.bundle_sha = pr.bundleSha; }\n"
-  + "      /* R2/DEC-21: BOTH axis objects, derived and frozen — never two letters, and\n         never composed. REC-44: PER FINDING;";
+/* (a) RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K457): its anchor restored `publishCase()`'s member promotion inside
+   `src/store.mjs`'s member loop. publishCase is case-authoring's now (`src/case-authoring/index.mjs`), and that module
+   holds no promotion service at all (its uses, case-authoring's requirements, name none), so the promotion is not a
+   line that can be put back: arming it would mean wiring a dependency the module does not have, which measures the
+   wiring rather than rule 12. The property is covered by case-authoring R13 and R23,
+   `test/m/case-authoring/members.test.mjs` ("R13, R23: publishing writes nothing on any finding … project B's publish
+   leaves project A's pin and raises no flag"). */
 
-const EXCLUDES = "                excludes: fnd.frozen_from === \"case_document\"\n";
-const FROZEN = "      const frozenStrength = memberCarriesBlocks ? strength : docFrozen ? docFrozen.strength : strength;";
+const EXCLUDES = "          excludes: fnd.frozen_from === \"case_document\"\n";
+const FROZEN = "    const frozenStrength = memberCarriesBlocks ? strength : docFrozen ? docFrozen.strength : strength;";
 const CHECK = "      checkPublishedExtension(memberFm, own);";
-const RECEIPT = "      ...roster.map((m) => `Pinned: ${m} at ${pins.get(m) ?? \"(unpinned)\"}`";
+const RECEIPT = "    ...roster.map((m) => `Pinned: ${m} at ${pins.get(m) ?? \"(unpinned)\"}`";
 
 const S1_OWN = "A's OWN prepare leaves Q's bundle_sha and bytes unmoved";
 const S1_RAT = "(fixture) Q ratifies at X's pin";
@@ -137,53 +126,31 @@ const ALL = [S1_OWN, S1_RAT, S1_PIN, S1_FLAG, S2_NEW, S2_PIN, S2_BYTES, S2_FLAG,
              S4_BYTES, S4_PC, S4_EXCL, S4_CONT, S4_EX1, S4_EX2, S4_MAN, S5_GUARD, S5_PAIR, S5_ED, S5_SECT, S5_TEST, S5_LEG, S5_FMT];
 const except = (...xs) => ALL.filter((x) => !xs.includes(x));
 
-/* (a)'s declaration: the promotion moves Q at A's own prepare (S1_OWN), and again at B's and at A's second
-   (the pin, bytes and flag arms), so B's pin is not X's (S2_SAME, S2_BLOCKS — the row's version_sha — and
-   S2_PROSE's receipt line naming X's pin), B's ratification at X's pin is STALE (S2_RAT), Q ends away from
-   X's pin (S2_AFTER, S3_PIN), publishing into X again is no longer refused — Q's moved bytes are no edition
-   of X's (S3_AGAIN), A's second case ratifies at X's pin and is stale (S3_RAT), Q's own bytes carry the
-   promotion's receipt (S4_BYTES), and B's member is at a NEW edition 2 on every per-case read (S4_PC,
-   S4_CONT, S4_EX1). */
-/* DECLARATION CORRECTED AFTER THE FIRST RUN, AND THE ARM WAS RIGHT: every one of the sixteen above failed as
-   declared, and ONE more did — S4_EXCL. B's member is never ratified at its moved pin (S2_RAT is STALE), so
-   op=publishedcase for B's case holds NO member row at all, and the excludes arm has nothing to read: the
-   same moved pin, one reader further on. Added rather than smoothed; the re-run is recorded at the foot. */
-/* CORRECTED A SECOND TIME, after the plane's prepared-window rule was settled (an unsigned preparation still
-   refuses ALREADY_A_CASE_MEMBER, REC-157's arm, unchanged): with the promotion restored, the fixture's re-publish
-   into case X is no longer refused (S3_AGAIN) and so leaves an UNSIGNED preparation of X pinning Q's newly promoted
-   bytes and recording A's conclusion — and A's second case is then refused on that preparation (S3_NEW), so only
-   two cases exclude the memo (S4_EX2). The same moved pin, two readers further on; the arm was right both times. */
-const A_FAIL = [S1_OWN, S2_PIN, S2_BYTES, S2_FLAG, S2_SAME, S2_BLOCKS, S2_PROSE, S2_RAT, S2_AFTER, S3_AGAIN,
-                S3_NEW, S3_PIN, S3_RAT, S4_BYTES, S4_PC, S4_EXCL, S4_CONT, S4_EX1, S4_EX2];
 const EXCLUDEDBY = "    rows.push(...this.#rows(\n      `SELECT x.bundle_id, x.ord, x.member_edition AS edition,";
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes five-arms-working from five-arms-broken",
               apply: () => {}, mustFail: [], mustNotFail: ALL },
-  a: { files: [STORE],
-       label: "(A) RESTORE THE MEMBER PROMOTION — op=publish promotes each member again and pins the new sha",
-       apply: () => edit(STORE, LOOP_HEAD, PROMOTION),
-       mustFail: A_FAIL, mustNotFail: except(...A_FAIL) },
-  b: { files: [INDEX],
+  b: { files: [PUB_WORKER],
        label: "(B) THE LIAR, reader 1 — op=publishedcase's exclusions read off the finding's bytes again",
-       apply: () => edit(INDEX, EXCLUDES, "                excludes: false\n"),
+       apply: () => edit(PUB_WORKER, EXCLUDES, "          excludes: false\n"),
        mustFail: [S4_EXCL], mustNotFail: except(S4_EXCL) },
-  c: { files: [STORE],
+  c: { files: [PUB],
        label: "(C) THE LIAR, reader 2 — the ratify committer's pair from the finding's bytes only",
-       apply: () => edit(STORE, FROZEN, "      const frozenStrength = strength;"),
+       apply: () => edit(PUB, FROZEN, "    const frozenStrength = strength;"),
        mustFail: [S4_MAN], mustNotFail: except(S4_MAN) },
-  d: { files: [CHECKS],
+  d: { files: [RAT_CHECKS],
        label: "(D) THE CHECK LEFT BEHIND — checkPublishedExtension no longer run per member of a /2 document",
-       apply: () => edit(CHECKS, CHECK, "      void own;"),
+       apply: () => edit(RAT_CHECKS, CHECK, "      void own;"),
        mustFail: [S5_PAIR, S5_ED, S5_TEST], mustNotFail: except(S5_PAIR, S5_ED, S5_TEST) },
-  e: { files: [STORE],
+  e: { files: [CA_DOC],
        label: "(E) OVER-STRICTNESS — the case document's receipt line re-worded; the suite must stay GREEN",
-       apply: () => edit(STORE, RECEIPT,
-         "      ...roster.map((m) => `Taken for this case: ${m}, frozen at ${pins.get(m) ?? \"(unpinned)\"}`"),
+       apply: () => edit(CA_DOC, RECEIPT,
+         "    ...roster.map((m) => `Taken for this case: ${m}, frozen at ${pins.get(m) ?? \"(unpinned)\"}`"),
        mustFail: [], mustNotFail: ALL, expectGreen: true },
-  f: { files: [STORE],
+  f: { files: [PUB],
        label: "(F) THE LIAR, reader 3 — op=excludedby answers from the members' bytes alone",
-       apply: () => edit(STORE, EXCLUDEDBY, "    rows.push(...[] || this.#rows(\n      `SELECT x.bundle_id, x.ord, x.member_edition AS edition,"),
+       apply: () => edit(PUB, EXCLUDEDBY, "    rows.push(...[] || this.#rows(\n      `SELECT x.bundle_id, x.ord, x.member_edition AS edition,"),
        mustFail: [S4_EX1, S4_EX2], mustNotFail: except(S4_EX1, S4_EX2) },
 };
 
