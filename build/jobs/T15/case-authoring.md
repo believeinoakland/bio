@@ -16,3 +16,10 @@ Best readings, which I am building on now; the first one is shared with PUBLICAT
 4. **R31's place:** right after R12 and before R7's derivation (which draws an id), so C-120.1–C-120.3 draw no id.
 5. **R32 with no targets** answers an empty list rather than R3's `NO_TARGET` (R32 names only R2's and R4's refusals); duplicates are read once. R1's machine fence is not asked (R32 names only R2's), but R2's owner test needs the `author` stamp.
 6. **Op stamps for control-plane:** `op=publishtensions` takes `viewer` and `author` (as `op=publish`). `op=publish` gains `tensionsDisclosed` in the body only.
+
+## J2 · QUESTION
+
+Replaces J1 (items 1, 2, 4, 5, 6 unchanged; item 3 revised, item 7 added).
+
+3. **What counts as "a read that fails" (C-120.3):** `unresolvedRecordOn` answering `undetermined: true` or `truncated: true`, as R31 says, and nothing more. Its extra `undetermined_legs` (a document leg with no content row, so no passage-level referent to look for a conflict on) is NOT a refusal: treating it as one refused every case resting on a whole-document leg (my own R17 fixture). It is stated instead (R26): frontmatter `case_tensions_unread:` (`- target`, `legs`) and a body sentence per member, and the answers carry `tensions_legs_unread` / `legs_unread`.
+7. **Frontmatter additions for PUBLICATION #5** beyond J1 item 1: `case_tensions_unread:` as above, between `tensions_depth_stated` and `case_tensions`. The answer of `op=publish` gains `tensions`, `tensions_highlighted`, `tensions_legs_unread` (R15's list, a wording for BOB).
