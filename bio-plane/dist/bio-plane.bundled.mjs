@@ -79259,6 +79259,25 @@ function sourcesOf(ctx, deps = {}) {
   }
   return s;
 }
+function sourcesOps(s, url, body) {
+  const q6 = (k) => url.searchParams.get(k);
+  const b = isObj10(body) ? body : {};
+  return {
+    sourceof: () => s.sourceOf({ captureSha: q6("capture") ?? b.captureSha, viewer: q6("viewer") }),
+    sourcedisclose: () => s.recordDisclosure({ ...b, by: q6("by") }),
+    sourcelink: () => s.linkClaim({ ...b, by: q6("by") }),
+    sourceconsent: () => s.recordConsent({ ...b, by: q6("by") }),
+    sourceconsentwithdraw: () => s.withdrawConsent({ ...b, by: q6("by") }),
+    knockerconsent: () => s.consentBySecret({ ...b, sourceAddress: q6("source"), now: q6("now") }),
+    sourcerung: () => s.rungOf({ source: q6("source_id") ?? b.source, viewer: q6("viewer") }),
+    sourcereadlog: () => s.readLog({ source: q6("source_id") ?? b.source, viewer: q6("viewer") }),
+    sourcepublishable: () => s.publishableAt({
+      source: q6("source_id") ?? b.source,
+      audience: q6("audience") ?? b.audience,
+      at: q6("at") ?? b.at ?? null
+    })
+  };
+}
 
 // src/reevaluation/checks.mjs
 var checks_exports20 = {};
@@ -109508,7 +109527,7 @@ var QUEUE_MACHINE_CHECKS = Object.freeze({
   })
 });
 var TASK_ACTOR_CHECKS = Object.freeze({
-  NOT_YOURS: Object.freeze({
+  TASK_NOT_YOURS: Object.freeze({
     check: "C-76.1",
     where: at16("#refuseNotYours", "is-task-actor-fence"),
     translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
@@ -109644,6 +109663,7 @@ var clampLimit3 = (limit, dflt, max) => {
   const n = limit === null || limit === void 0 || limit === "" ? NaN : Math.floor(Number(limit));
   return Number.isFinite(n) ? Math.max(1, Math.min(max, n)) : dflt;
 };
+var asQuery = (q6) => q6 && typeof q6 === "object" && !Array.isArray(q6) ? q6 : {};
 var Tasks = class _Tasks {
   #host;
   #deps;
@@ -110048,15 +110068,22 @@ var Tasks = class _Tasks {
   /* ------------------------------------------------------------------ R6: queue's three reads (N363)
      Each is the statement queue's feed ran over this table before the split, so the feed does not change. Each never
      throws: a store without the table answers empty, or false. */
-  /** R6: the tasks on subjects the viewer may see, of any status, newest first (`created` descending, then `id`), at
-   *  most `limit` (1–1,000, default 200), each as `taskList` gives a task. */
-  recentTasks({ viewer = null, limit = 200 } = {}) {
-    const cap = clampLimit3(limit, 200, 1e3);
+  /** R6: the tasks on subjects the viewer may see, of any status or, when `statuses` is given (an array), only of those
+   *  (N373, K566), newest first (`created` descending, then `id`), at most `limit` (1–1,000, default 200), each as
+   *  `taskList` gives a task. Given `statuses`, the cap is taken over the tasks of those statuses, so tasks of the others
+   *  never crowd them out; an empty `statuses` answers none. */
+  recentTasks(q6 = {}) {
+    const { viewer = null, limit = 200, statuses = null } = asQuery(q6);
     try {
+      const cap = clampLimit3(limit, 200, 1e3);
+      const only = Array.isArray(statuses) ? statuses.filter((x) => typeof x === "string") : null;
+      if (only && !only.length) return [];
       const seen = this.#bundleGate("tk.refers_to", viewer);
+      const which = only ? ` AND tk.status IN (${only.map(() => "?").join(",")})` : "";
       return this.#rows(
-        `SELECT tk.* FROM tasks tk WHERE (${seen.sql}) ORDER BY tk.created DESC, tk.id LIMIT ?`,
+        `SELECT tk.* FROM tasks tk WHERE (${seen.sql})${which} ORDER BY tk.created DESC, tk.id LIMIT ?`,
         ...seen.args,
+        ...only || [],
         cap
       ).map((r) => this.#taskOf(r));
     } catch {
@@ -110065,9 +110092,10 @@ var Tasks = class _Tasks {
   }
   /** R6: the resolved tasks with `resolved_at` at or after `since` on subjects the viewer may see, `resolved_at`
    *  descending, then `id`, at most `limit` (1–1,000, default 200), each as `taskList` gives a task. */
-  resolvedTasks({ viewer = null, since = null, limit = 200 } = {}) {
-    const cap = clampLimit3(limit, 200, 1e3);
+  resolvedTasks(q6 = {}) {
+    const { viewer = null, since = null, limit = 200 } = asQuery(q6);
     try {
+      const cap = clampLimit3(limit, 200, 1e3);
       const seen = this.#bundleGate("tk.refers_to", viewer);
       return this.#rows(
         `SELECT tk.* FROM tasks tk WHERE tk.status='resolved' AND tk.resolved_at >= ? AND (${seen.sql})
@@ -110080,11 +110108,14 @@ var Tasks = class _Tasks {
       return [];
     }
   }
-  /** R6: whether a task has that id, ungated. */
-  taskExists(id) {
+  /** R6 (N374, K565): whether a task has that id on a subject the viewer may see, behind `taskList`'s gate (R2, R9), so
+   *  a task the viewer may not see answers as no task. An absent or unrecognised viewer is denied, so it answers false. */
+  taskExists(q6 = {}) {
+    const { id = null, viewer = null } = asQuery(q6);
     if (typeof id !== "string" || !id) return false;
     try {
-      return !!this.#one(`SELECT 1 AS x FROM tasks WHERE id=?`, id);
+      const seen = this.#bundleGate("tk.refers_to", viewer);
+      return !!this.#one(`SELECT 1 AS x FROM tasks tk WHERE tk.id=? AND (${seen.sql})`, id, ...seen.args);
     } catch {
       return false;
     }
@@ -110121,17 +110152,17 @@ var Tasks = class _Tasks {
    *  THIS one answers *is this THIS member's task*, and the act refusal answers
    *  *is this a person at all*.
    *
-   *  Returns a NOT_YOURS refusal NAMING who it is with, or null to proceed. */
+   *  Returns a TASK_NOT_YOURS refusal (N382: its own code, apart from intent's NOT_YOURS) NAMING who it is with, or null to proceed. */
   #refuseNotYours(row2, actor, verb) {
     if (row2.assignee === "unassigned") return null;
     if (actor === row2.assignee) return null;
     if (this.#membership.isAdministrator(actor)) return null;
     return {
       ok: false,
-      reason: "NOT_YOURS",
-      code: "NOT_YOURS",
-      check: TASK_ACTOR_CHECKS.NOT_YOURS.check,
-      translation: TASK_ACTOR_CHECKS.NOT_YOURS.translation,
+      reason: "TASK_NOT_YOURS",
+      code: "TASK_NOT_YOURS",
+      check: TASK_ACTOR_CHECKS.TASK_NOT_YOURS.check,
+      translation: TASK_ACTOR_CHECKS.TASK_NOT_YOURS.translation,
       detail: `this task is not yours to ${verb}; it is with ${row2.assignee}`,
       assignee: row2.assignee,
       assignee_role: row2.assignee_role
@@ -112706,7 +112737,7 @@ function queueProducersOf(ctx, deps = {}) {
 
 // src/queuestate.mjs
 var QUEUE_OBLIGATION_KINDS = {
-  "authority-undetermined": "authority undetermined at capture (D-98, RULED: created automatically) \u2014 LIVE: capture's task kinds, drained by queue",
+  "authority-undetermined": "authority undetermined at capture (D-98, RULED: created automatically) \u2014 LIVE: capture's task kinds, drained by tasks",
   /* CORRECTED 2026-08-05 (REC-47 / DEC-46 (d), D-188). This read "blocks a
      transition", which is the PRE-DEC-20 blanket rule and the opposite of the
      doctrine: ordinary bias debt is DISCLOSED and travels; only an uncleared
@@ -112716,8 +112747,8 @@ var QUEUE_OBLIGATION_KINDS = {
      exactly why it had to be, since the producer would have been built to the
      sentence. The identical wording in NOTIFICATIONS.md is corrected with it.
      LIVE from 2026-09-23 (D-86): the `bias-debt` consumer on the one alarm raises one item per run whose lens
-     `moved`, read from aiRunRead and never compared again; queue #obligationsBiasDebt serves it on op=queue. */
-  "bias-debt": "a re-run is owed after a lens change (D-86) \u2014 DISCLOSED, never blocking (DEC-20) \u2014 LIVE: bias's debt sweep, served by queue #obligationsBiasDebt",
+     `moved`, read from aiRunRead and never compared again; queue-producers #obligationsBiasDebt serves it on op=queue. */
+  "bias-debt": "a re-run is owed after a lens change (D-86) \u2014 DISCLOSED, never blocking (DEC-20) \u2014 LIVE: bias's debt sweep, served by queue-producers #obligationsBiasDebt",
   "endorsement-owed": "an endorsement is owed on a pending administrator or owner vote",
   "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
   "membership-request": "a membership request is at the doorbell",
@@ -112725,31 +112756,35 @@ var QUEUE_OBLIGATION_KINDS = {
   /* N345 (R1; DEC-84 item 2, DEC-85): a duty is never muted, dismissed or set aside, and it leaves only by resolution
      (contradiction R24), so both are OBLIGATIONs. Their producers are `queue-producers`' (its R4, R7). */
   "contradiction-duty": "a conflict the record holds that a member of this project must resolve (N345)",
-  "contradiction-duty-unseen": "something this project rests on is in conflict with a record you cannot see; your project can ask to resolve it (DEC-85)"
+  "contradiction-duty-unseen": "something this project rests on is in conflict with a record you cannot see; your project can ask to resolve it (DEC-85)",
+  /* N375 (R1; membership R89, K535, K566): a key a member registered for themselves is a signer of the group's bundles
+     until an administrator decides otherwise, so it is an OBLIGATION of the administrators, never muted. Its producer is
+     `queue-producers`' (its R14), which offers membership's revoke. */
+  "signer-self-registered": "a member registered their own signing key; you may revoke it (N375)"
 };
 var QUEUE_FINDING_KINDS = {
-  "missing_predecessor": "a required predecessor stage is absent (D-73) \u2014 LIVE: queueFeed's FINDING half",
-  "overdue_successor": "a required successor is past its declared deadline (DEC-10) \u2014 LIVE: queueFeed's FINDING half",
-  /* N107 (K147): progressions R31's finding, aggregated one per (progression, stage) by `queue/proposals.mjs` in its
+  "missing_predecessor": "a required predecessor stage is absent (D-73) \u2014 LIVE: queue-producers/proposals.mjs",
+  "overdue_successor": "a required successor is past its declared deadline (DEC-10) \u2014 LIVE: queue-producers/proposals.mjs",
+  /* N107 (K147): progressions R31's finding, aggregated one per (progression, stage) by `queue-producers/proposals.mjs` in its
      own words, because it is not "required and absent". It decides nothing about which document belongs. */
-  "cardinality_exceeded": "a stage declared to hold at most one document holds more; noticed, which decides nothing about which of them belongs (framework 8.2) \u2014 LIVE: queue/proposals.mjs",
+  "cardinality_exceeded": "a stage declared to hold at most one document holds more; noticed, which decides nothing about which of them belongs (framework 8.2) \u2014 LIVE: queue-producers/proposals.mjs",
   "temporal-expectation-due": "a temporal expectation is coming due (framework 8.2, D-73)",
-  "source-modified": "a monitor tick found the source modified \u2014 LIVE: queue #findingsSourceFlagged",
-  "source-removed": "a monitor tick found the source removed (404/410) \u2014 LIVE: queue #findingsSourceFlagged",
+  "source-modified": "a monitor tick found the source modified \u2014 LIVE: queue-producers #findingsSourceFlagged",
+  "source-removed": "a monitor tick found the source removed (404/410) \u2014 LIVE: queue-producers #findingsSourceFlagged",
   "duplicate-document": "a duplicate document was detected (D-60)",
   "link-verdict-changed": "a link verdict was established or changed when a target landed (LINK-FIDELITY 8)",
   "reused-asset-changed": "a reused asset was later found changed, post-hoc (CAP-4)",
   "assistant-surfaced-focus": "an assistant surfaced a question (D-78, D-82 \u2014 must LOOK derived)",
   "grade-improvable": "a connection's grade is improvable (D-72)",
-  "objective-gap": "a gap derived from an objective's satisfaction condition (D-76) \u2014 LIVE: queue #findingsObjectiveGap",
+  "objective-gap": "a gap derived from an objective's satisfaction condition (D-76) \u2014 LIVE: queue-producers #findingsObjectiveGap",
   "measure-decay": "a bias statement's measure has decayed (D-87, D-90 \u2014 reports, never blocks)",
-  /* D-52, LIVE 2026-09-23: queue #findingsExportPerformed, derived on read from `export_log`
+  /* D-52, LIVE 2026-09-23: queue-producers #findingsExportPerformed, derived on read from `export_log`
      and raised to every administrator and to nobody else (Membership v2 §8.1). */
-  "export-performed": "an export was performed; every administrator is notified (D-52 8.1) \u2014 LIVE: queue #findingsExportPerformed",
+  "export-performed": "an export was performed; every administrator is notified (D-52 8.1) \u2014 LIVE: queue-producers #findingsExportPerformed",
   "audit-finding": "op=audit found something about the record",
   "register-unbacked": "a register entry's bytes are unbacked (D-9, D-45)",
   /* PL-15 / D-213, ANSWERED 2026-08-06 by Bob and LIVE from this item:
-       queue #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
+       queue-producers #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
        while a run was working inquiry A, is CAPTURED — an entry to the store, and
        deliberately NOT an entry to any leg of any claim — and the OBSERVATION
        becomes this item.
@@ -112761,11 +112796,11 @@ var QUEUE_FINDING_KINDS = {
        for everybody with nothing recorded. It leaves the list the way every
        finding does — adopted, deferred or dismissed through op=proposedispose,
        an authored record act carrying its author and its reason. */
-  "out-of-inquiry-lead": "evidence for ANOTHER question was met while working this one: captured, and deliberately not made part of any claim (D-213, DEC-60) \u2014 LIVE: queue #findingsOutOfInquiryLead",
+  "out-of-inquiry-lead": "evidence for ANOTHER question was met while working this one: captured, and deliberately not made part of any claim (D-213, DEC-60) \u2014 LIVE: queue-producers #findingsOutOfInquiryLead",
   /* PL-13 / IS-3, MINTED 2026-08-09, and BOTH ARRIVE WITH A PRODUCER. The plan
        row named these two slugs; UI-45 asserted them ABSENT so the gap would have
        an alarm on it rather than be a comment, and this is the item that sets the
-       alarm off on purpose. Neither is a word without a generator: see queue's
+       alarm off on purpose. Neither is a word without a generator: see queue-producers'
        `#findingsStanceDiverged` and `#findingsVersionFromAnotherTeam`.
   
        THEY EXIST BECAUSE D-216's ANSWER IS **PER-PROJECT** (measured 2026-08-08,
@@ -112791,15 +112826,15 @@ var QUEUE_FINDING_KINDS = {
        other member's list; `test/current.test.mjs` drives exactly that — the mute
        accepted, personal, writing no disposition, the finding still on a second
        member's feed — where it used to drive a refusal. */
-  "stance-changed-here-not-elsewhere": "a project moved what it stands on for a SHARED question and the other projects drawing on it did not: one question, two live readings, refused by nothing (\xA77, D-216 \u2014 per-project stance) \u2014 LIVE: queue #findingsStanceDiverged",
-  "new-version-arrived-from-another-team": "a new reading of a question this project draws on was proposed under ANOTHER project's work, so it arrived without anybody here authoring it (\xA77, D-216 \u2014 one question beneath several projects) \u2014 LIVE: queue #findingsVersionFromAnotherTeam",
+  "stance-changed-here-not-elsewhere": "a project moved what it stands on for a SHARED question and the other projects drawing on it did not: one question, two live readings, refused by nothing (\xA77, D-216 \u2014 per-project stance) \u2014 LIVE: queue-producers #findingsStanceDiverged",
+  "new-version-arrived-from-another-team": "a new reading of a question this project draws on was proposed under ANOTHER project's work, so it arrived without anybody here authoring it (\xA77, D-216 \u2014 one question beneath several projects) \u2014 LIVE: queue-producers #findingsVersionFromAnotherTeam",
   /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
      another team concluding the question you share is a fact about the work,
      and no member may silence it for the team. */
   /* N172 (reevaluation R14): a newer capture of something a member's reference is pinned to was graded affected or
      undetermined; the member adopts the newer version or keeps the earlier one (reevaluation R15). */
-  "newer-capture-affects-reference": "a newer capture of something your reference is pinned to may change what it says; adopt the newer version or keep the earlier one (reevaluation R14, R15) \u2014 LIVE: queue #findingsNewerCapture",
-  "shared-inquiry-concluded-by-another-project": "another project drawing on a SHARED question concluded it, adopting the claim of the reading it stands on; nothing this project stands on or concluded has moved (\xA77.1 \u2014 a conclusion is per-project) \u2014 LIVE: queue #findingsConcludedElsewhere",
+  "newer-capture-affects-reference": "a newer capture of something your reference is pinned to may change what it says; adopt the newer version or keep the earlier one (reevaluation R14, R15) \u2014 LIVE: queue-producers #findingsNewerCapture",
+  "shared-inquiry-concluded-by-another-project": "another project drawing on a SHARED question concluded it, adopting the claim of the reading it stands on; nothing this project stands on or concluded has moved (\xA77.1 \u2014 a conclusion is per-project) \u2014 LIVE: queue-producers #findingsConcludedElsewhere",
   /* N345 (R1; DEC-76 item 3, DEC-84 items 1, 3, 7, 13; DEC-85): what the record noticed about conflicts, each leaving a
      list by an attributed act (R46), never by one member's preference alone. Their producers are `queue-producers`'
      (its R4–R7). */
@@ -112929,7 +112964,7 @@ CREATE TABLE IF NOT EXISTS queue_item_mutes (
 -- (section 7, D-216), a dismissal is a judgment-layer act, and R5 makes forks at
 -- the judgment layer legitimate. So one team's dismissal of a stance-scoped
 -- finding governs THAT TEAM'S feed and nothing else -- exactly the boundary
--- queue/index.mjs #findingsStanceDiverged already enforces by refusing to offer
+-- queue-producers/index.mjs #findingsStanceDiverged already enforces by refusing to offer
 -- op=versioncurrent across projects.
 --
 -- WIDENING proposal_dispositions' OWN KEY WOULD HAVE ERASED THAT DISTINCTION,
@@ -113460,6 +113495,10 @@ var Queue = class _Queue {
    *  publication below. A list of field names rather than a list of kinds: the
    *  kinds change every wave and this pair has not changed since REC-7. */
   static QUEUE_DISPOSITION_KEY = ["progression_key", "stage_key"];
+  /** R12: the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a task (taskresolve). */
+  /** R8: the task statuses an OBLIGATION is live in (N373). */
+  static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
+  static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset" });
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
    *  **A DISMISSAL IS SCOPED TO THE KEY'S OWN SUBJECT** (the ruling, 2026-08-10,
@@ -113510,8 +113549,8 @@ var Queue = class _Queue {
         keyed_on: KEYED_ON,
         key: null,
         reason: "an_obligation_is_resolved_not_disposed",
-        instead: item.kind === "bias-debt" ? "biasdebtresolve" : "taskresolve",
-        detail: "an OBLIGATION is something a named person must do for the record to proceed and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it is not a narrower version of that act, it is a different one." + (item.kind === "bias-debt" ? " This one is a bias debt, which is keyed by the RUN it is about rather than by a task, so it is settled through op=biasdebtresolve with a stated reason \u2014 or by a re-run under the lens now in force, or by the lens moving back (BOB #32, 2026-09-23)." : "")
+        instead: _Queue.OBLIGATION_DOORS[item.kind] || "taskresolve",
+        detail: "an OBLIGATION is something a named person must do for the record to proceed and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it is not a narrower version of that act, it is a different one." + (item.kind === "bias-debt" ? " This one is a bias debt, which is keyed by the RUN it is about rather than by a task, so it is settled through op=biasdebtresolve with a stated reason \u2014 or by a re-run under the lens now in force, or by the lens moving back (BOB #32, 2026-09-23)." : item.kind === "signer-self-registered" ? " This one is a signing key a member registered for themselves, which is keyed by the KEY rather than by a task, so it leaves when an administrator revokes the key (op=signerset), or when it is otherwise no longer active." : "")
       };
     if (item.class === "CONDITION")
       return {
@@ -113702,7 +113741,7 @@ var Queue = class _Queue {
     const me = typeof member === "string" && member.trim() ? member.trim() : null;
     const identity = me ? `member:${me}` : null;
     const items = [];
-    for (const row2 of this.#tasks.recentTasks({ viewer, limit: cap * 2 })) {
+    for (const row2 of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: _Queue.TASK_LIVE_STATUSES })) {
       if (me && row2.assignee !== me && row2.assignee !== "unassigned") continue;
       const subject = row2.refers_to;
       const homes = this.#queueAncestors([subject], viewer);
@@ -114227,7 +114266,7 @@ var Queue = class _Queue {
         };
       let cls = itemClassOf(itemId);
       if (cls === null && /^OBLIGATION::\S/.test(itemId)) cls = "OBLIGATION";
-      if (cls === null && this.#tasks.taskExists(itemId)) cls = "OBLIGATION";
+      if (cls === null && this.#tasks.taskExists({ id: itemId, viewer })) cls = "OBLIGATION";
       subjects.push({ item: itemId, cls });
     } else {
       c = this.#queueCaseFor(caseId, viewer);
@@ -114570,7 +114609,8 @@ var Queue = class _Queue {
         translation: row2.translation,
         class: keyClass,
         kind: keyKind,
-        instead: keyClass === "CONDITION" ? "queuemute" : "taskresolve",
+        /* R28 (K607): the same per-kind door R12 publishes on the item. */
+        instead: keyClass === "CONDITION" ? "queuemute" : _Queue.OBLIGATION_DOORS[keyKind] || "taskresolve",
         detail: `this names ${keyClass === "CONDITION" ? "a CONDITION" : "an OBLIGATION"} and ${keyClass === "CONDITION" ? "a" : "an"} ${keyClass} is not DISPOSED: a disposition is an authored record act on a FINDING, and op=queue publishes the act that does reach this item as its \`disposition.instead\`. Nothing was written. The rest of a selection is unaffected \u2014 under the per-item weight this item alone is kept, carrying this reason.`
       };
     }
@@ -121307,41 +121347,11 @@ var REPLAY_CHECKS = {
 
 // src/control-plane/pull.mjs
 var PULL_BUNDLE_SLUG = "doorbell-knock";
-var DRY = Symbol("pull: the promotion's dry run");
 var hexOf3 = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
 var enc3 = (text4) => {
   const b = new TextEncoder().encode(text4);
   return { text: text4, bytes: b.length, sha256: createSha256().update(b).hex() };
 };
-var instantOf = (d) => d.toISOString().replace(/\.\d+Z$/, "Z");
-var fileOf = (knockId) => `snapshots/${String(knockId).replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100)}`;
-function provisionalDocument(row2, { by, at: at19 }) {
-  return {
-    file: fileOf(row2.knock_id),
-    locator: `knock:${row2.knock_id}`,
-    retrieved: at19,
-    authority_state: "undetermined",
-    authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted`,
-    capture: {
-      method: "doorbell knock, received, hashed at receipt",
-      grade: null,
-      grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
-      actor_class: "member",
-      actor: by,
-      sha256: row2.sha256,
-      encoding: "binary",
-      bytes: row2.bytes
-    },
-    source: {
-      kind: "knocker",
-      named: false,
-      pseudonym: row2.pseudonym ?? null,
-      receipt: { knock_id: row2.knock_id, sha256: row2.sha256, bytes: row2.bytes, received: row2.received }
-    },
-    origin: { kind: "doorbell", knock_id: row2.knock_id },
-    attestation_attempts: []
-  };
-}
 function filing(record, doc, { knockId, by, identity, viewer, at: at19 }) {
   const cap = doc.capture || {};
   const id = `${record.allocId("INFO", at19.slice(0, 4)).id}-${PULL_BUNDLE_SLUG}`;
@@ -121429,52 +121439,37 @@ var promoteIn = ({ record, promotion }, doc, who2) => record.transact(() => {
   const p = promotion.promote(pkg);
   return p && p.ok === true ? { ...p, bundleId: p.bundleId ?? pkg.bundleId } : p || { ok: false, reason: "PROMOTE_FAILED" };
 });
-function dryRun(deps, doc, who2) {
+function promoteOrFault(deps, doc, who2) {
   try {
-    const r = deps.record.transact(() => {
-      const p = promoteIn(deps, doc, who2);
-      if (!p || p.ok !== true) return p || { ok: false, reason: "PROMOTE_FAILED" };
-      throw DRY;
-    });
-    return r && r.ok === false ? r : null;
-  } catch (e) {
-    if (e === DRY) return null;
-    throw e;
+    return promoteIn(deps, doc, who2);
+  } catch {
+    throw new Error("the promotion did not complete");
   }
 }
 var bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null });
-async function pullAndFile(deps, { knockId, by, identity, viewer, now = () => /* @__PURE__ */ new Date() } = {}) {
+async function pullAndFile(deps, { knockId, by, identity, viewer, now = Date.now } = {}) {
   const { capture, provenance } = deps;
-  const at19 = instantOf(now());
+  const at19 = stampInstant("second", +now());
   const who2 = { knockId, by, identity, viewer, at: at19 };
-  const got = typeof knockId === "string" && knockId && typeof by === "string" && by.trim() ? capture.inboxGet(knockId) : null;
-  const row2 = got && got.ok ? got.item : null;
-  if (!row2 || row2.status === "discarded") return capture.pullKnock({ knockId, by, at: at19 });
-  if (!row2.capture_sha) {
-    const refused = dryRun(deps, provisionalDocument(row2, { by, at: at19 }), who2);
-    if (refused) return { ...refused, knockId };
-  }
-  const pulled = await capture.pullKnock({ knockId, by, at: at19 });
+  const pulled = await capture.pullKnock({ knockId, by, at: at19, within: (doc) => promoteOrFault(deps, doc, who2) });
   if (!pulled || pulled.ok !== true) return pulled;
-  if (pulled.existed) {
-    const home = provenance.homeOf(pulled.capture && pulled.capture.sha256);
-    if (home) return { ...pulled, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
-    if (!pulled.document) return { ...pulled, bundle: null };
-  }
-  let filed;
+  const { within: filed, ...answer } = pulled;
+  if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
+  const home = provenance.homeOf(pulled.capture && pulled.capture.sha256);
+  if (home) return { ...answer, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
+  if (!pulled.document) return { ...answer, bundle: null };
+  let again;
   try {
-    filed = promoteIn(deps, pulled.document, { ...who2, at: pulled.pulled_at || at19 });
+    again = promoteIn(deps, pulled.document, { ...who2, at: pulled.pulled_at || at19 });
   } catch {
-    filed = { ok: false, reason: "PROMOTE_FAILED", detail: "the promotion did not complete." };
+    again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: "the promotion did not complete." };
   }
-  if (filed && filed.ok === true) return { ...pulled, bundle: bundleOf(filed) };
+  if (again && again.ok === true) return { ...answer, bundle: bundleOf(again) };
   return {
-    ...filed || { ok: false, reason: "PROMOTE_FAILED" },
+    ...again || { ok: false, reason: "PROMOTE_FAILED" },
     ok: false,
     knockId,
-    status: 502,
-    pulled: { capture: pulled.capture, pulled_by: pulled.pulled_by, pulled_at: pulled.pulled_at },
-    detail: "the knock was brought in and its bundle was not filed; pulling the knock again files it. " + String(filed && filed.detail || "").slice(0, 300)
+    detail: `the knock was already brought in, and its bundle was not filed; nothing was written. ` + String(again && again.detail || "").slice(0, 300)
   };
 }
 
@@ -121574,12 +121569,17 @@ var PROJECT_NAMING_READS_NOT = Object.freeze({
   contradictionfacts: "`candidate` is a contradiction CANDIDATE id \u2014 a thing inside the record, never a bundle id",
   contradictiontensions: "`referents` (in the body) are a case's claims, legs and extents at their versions, never a project's own id",
   comparisonfacts: "`contradiction` is a contradiction CANDIDATE id and `standardSide` names its side, never a bundle id",
-  /* N364's reads: a knock's pseudonym or a capture's digest, never a bundle id. Sources' reads are classified when this
-     door dispatches them (N379): a name here must be a store route. */
+  /* N364's reads: a knock's pseudonym or a capture's digest, never a bundle id. */
   knocksof: "`pseudonym` is a KNOCKER's pseudonym, never a bundle id",
   pulledknocks: "`capture` is a CAPTURE's digest",
   lateattestations: "`capture` is a CAPTURE's digest",
-  captureaccounts: "`capture` is a CAPTURE's digest"
+  captureaccounts: "`capture` is a CAPTURE's digest",
+  /* N379: sources' reads, store routes of this door since it dispatches `sourcesOps`: a capture's digest or a source's
+     own id, never a bundle id. */
+  sourceof: "`capture` is a CAPTURE's digest",
+  sourcerung: "`source_id` is a SOURCE id, never a bundle id",
+  sourcereadlog: "`source_id` is a SOURCE id, never a bundle id",
+  sourcepublishable: "`source_id` is a SOURCE id, never a bundle id"
 });
 function existenceRead(membershipOf2, op, url, body) {
   const params = Object.hasOwn(PROJECT_NAMING_READS, op) ? PROJECT_NAMING_READS[op] : null;
@@ -121668,7 +121668,9 @@ var Store2 = class extends Store {
 function controlPlaneRoutes(ctx, url, body) {
   const q6 = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+  const sourceRoutes = Object.fromEntries(Object.keys(sourcesOps(null, url, body)).map((op) => [op, () => sourcesOps(sourcesOf(ctx), url, body)[op]()]));
   return {
+    ...sourceRoutes,
     signerregister: () => membershipOf(ctx).signerRegisterOwn({ ...b, by: q6("by") }),
     signerrevoke: () => membershipOf(ctx).signerRevokeOwn({ ...b, by: q6("by") }),
     inboxpullfile: () => pullAndFile(
@@ -124339,7 +124341,11 @@ function makeFetch(hooks = {}) {
       /* N321 (publication R44): the stage read names a project by its own id and answers by
          the caller's SIGHT (the absent answer at NONE, the id and name at EXISTENCE), so it
          takes the stamp and fails closed without it. */
-      "projectstage"
+      "projectstage",
+      /* N388 (capture R69, K580): the accounts of a capture answer by the caller's SIGHT of
+         the bundle that files it, so an unseen capture reads as one with no account; capture
+         fails closed without the stamp. `lateattestations` names no bundle and takes none. */
+      "captureaccounts"
     ];
     if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend" || op === "entity" || op === "entitybyalias" || op === "publishtensions" || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
