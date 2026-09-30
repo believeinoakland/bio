@@ -114,7 +114,8 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   NO_SUCH_CONTRADICTION_INQUIRY: {
     check: 'C-113.24', where: at("#contradictionInquiry", "is-contradiction-inquiry-seen"),
-    translation: 'No question you can see answers to that id as one taken up from a contradiction. Nothing was written.',
+    translation: 'No question you can see answers to that id as one taken up from a contradiction, so no comparison '
+      + 'starts from it. Nothing was written.',
   },
   CAUSE_NOT_EVIDENCED: {
     check: 'C-113.25', where: at("#causeRefusal", "is-cause-evidenced"),
