@@ -19,6 +19,8 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 
 ## Layer 3
 
+- **provenance** · N381 first (K560): the register rules admit capture R65's pulled-knock document (a null grade on R51's doorbell basis; `doorbell` among the origin kinds). Until it lands, every `op=inboxpull` is refused with nothing written.
+
 - **sources** · N377 (K547; REEVALUATION #6 J2): a test at the module pinning R15's `source_knocks` read contract (its columns, one row per pulled knock a minted source stands behind, no value or contact), as inquiry R40's is pinned; R15's mark goes with it.
 
 - **capture** (layer 3) · N380 (K559): a `within` seam in `pullKnock`, so control-plane R36's pull and promotion are one act; control-plane takes it in layer 11.
