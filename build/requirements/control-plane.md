@@ -65,7 +65,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **R35** The Durable Object class the instance exports is this module's (`dispatch.mjs`'s `Store`). At construction it starts `instance-setup` once per object (`instanceSetupOf(ctx, env).start()`, the composition root's share), and `instance-setup`'s routes (`instanceSetupOps`) are part of R26's route map, beside `legacy-store`'s. So every store route passes the one frame: R26's body read and envelope, R27's existence read and R25's catch. No module answers a store route outside it.
 
 **The doorbell's pull** (N364; DEC-78 item 1)
-- **R36** `op=inboxpull` routes to capture's `pullKnock` (capture R65) stamping `by` from the session, and in the same act promotes the pulled document as a new information bundle at `collected`, the puller its author; a refusal of either leaves neither written. *(not yet met: N364)*
+- **R36** `op=inboxpull` routes to capture's `pullKnock` (capture R65) stamping `by` from the session, and in the same act promotes the pulled document as a new information bundle at `collected`, the puller its author; a refusal of either leaves neither written: the promotion is tried first in a transaction rolled back, and a pull whose promotion then fails (a store fault or a race) says so in its answer and is promoted by a repeated pull, which promotes whenever no bundle holds the capture (K559). *(not yet met: N364)* *(strictly one act: not yet met, N380)*
 
 **`dispatch(req)`, the record store's door**
 - **R26** An empty POST body is `null`, and a body that is not JSON is refused 400 `BAD_JSON`. A route no module serves is refused 400 `unknown op: <op>`. An answer is `{ok: true, result}`. The routes are the modules' own maps (the `membershipOps` pattern).
