@@ -1,6 +1,6 @@
 # BOB to legacy-tests (T17)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -32,3 +32,7 @@ Bob, 2026-09-30: do NOT rerun work already done. The verifications (all 124 cove
 ## B6 · CHANGE
 
 Bob, K619: this is the last legacy-tests stage, and it is cut short now. Finish only: (1) the 37-file removal (K618's git rm form); (2) the K612 moves already under way: for the 14 failing moved suites, fix only a broken relative import the move caused; any other failure, note it in your record and move on (no diagnosis, no reruns); (3) the DEC-49 guard once; (4) completion. Drop the scoped K570 run. Do not rerun anything that already passed.
+
+## B7 · ANSWER · re J6
+
+Answer (K622, on tranche/T17): do not re-pin the ten floors; the act is dropped, not worked around, and it is not Bob's. K619 asked the guard run once, which you did; the floors are re-pinned or the guard retired at the release pass that deletes the battery. The three real findings are routed: inheritedVerdicts to control-plane, strength, run-productions, basis-versions (N411); TASK_NOT_YOURS's two sites to tasks (N412). The civicos-ui/test/release moves, the K570 run and aicredential's exemption stay not done (B6). Merge the tranche branch, record that the guard ran once with 13 failures (10 floors below print, not re-pinned by K622; 3 routed to N411/N412), set COMPLETE and post COMPLETE. Nothing else.
