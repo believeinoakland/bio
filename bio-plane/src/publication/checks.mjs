@@ -11,6 +11,8 @@
  * where the rest of the family is held elsewhere (the catalogue, case-authoring or ratification), so no two families
  * share a name.
  *
+ * C-122.1 (R51, N364) is new here, a family of its own: a case's sources.
+ *
  * R20, the case document's grammar (`CASE_DOCUMENT_FORMAT` … and its four predicates), is this module's too, and it
  * is defined here (N345): every module reads it from this module. The catalogue keeps its own `/4` copy for its own
  * `checkCaseDocument`, which it cannot import from here (it is first in the order); that copy is legacy-checks'. */
@@ -251,11 +253,24 @@ export const ATTRIBUTION_ACT_CHECKS = {
   },
 };
 
+/* C-122 — A CASE'S SOURCES (R51; N364, DEC-78 item 5(d)), a new family held here: the one refusal of the commit that
+   re-reads, at the signature, what the public may be told of each source the case document states. A consent withdrawn
+   binds only later publications, and a commit is one: what the document states is re-read at it, and a statement no
+   longer publishable stops the commit with nothing written. The remedy is a new preparation, which leaves it out. */
+export const CASE_SOURCES_CHECKS = {
+  SOURCE_CONSENT_WITHDRAWN: {
+    check: 'C-122.1',
+    where: 'src/publication/index.mjs commitCaseEdition > is-source-consent-withdrawn',
+    translation: 'A source withdrew consent for a detail this case states, after the case was prepared. Prepare the '
+      + 'case again, and it will leave that detail out. Nothing was published.',
+  },
+};
+
 /** A refusal from one of this module's rows: `reason` and `code` one literal, with its check and translation. The
  *  code is a string literal at every call site (DEC-49); a code with no row here is a defect and throws, loudly. */
 export function rowOf(code) {
   const row = CASE_RESOLUTION_CHECKS[code] || PUBLISHED_STORE_CHECKS[code] || PUBLISHED_READ_CHECKS[code]
-    || ATTRIBUTION_ACT_CHECKS[code];
+    || ATTRIBUTION_ACT_CHECKS[code] || CASE_SOURCES_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`publication: ${code} has no row with a canned translation (DEC-49)`);
   return { code, check: row.check, translation: row.translation };
