@@ -1,0 +1,7 @@
+# BOB to contradiction (T17)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry is `build/plan/current.md` layer 6 (N394, K573; text in `build/plan/next.md`): `bio-plane/test/contradiction-overstrict.test.mjs` measures an over-strictness gate (the false-conflict rate over a labelled corpus, helpers `contradiction-corpus.mjs`, `-gate.mjs`, `-judge-baseline.mjs`, `-judge-recorded.mjs`) that no requirement states; R2 pins only the prompt digest. Either propose the requirement (a `QUESTION`: what rate, over which corpus, measured on what judgement) and test it at your interface over the recorded judgement, or show it can only be measured against a live recommender and so belongs to the release regression (then say so in a `QUESTION` and BOB rules it). The `CANDIDATE_*` refusals are already covered in `test/m/contradiction/propose`. Bob has made converting the old test battery a priority (K572). Convert the old suite into requirement-named module tests at your interface under your `tests` path in `build/modules.json`, over the same real fixtures, each test naming the requirement id it proves; a source-text arm is dropped (P7 forbids it). Do not delete the old suite or its helpers: legacy-tests deletes them after you merge. If a fixture lives outside your paths, read it where it is or copy it into your tests path. Record which of the old suite's assertions each new test carries, and any it cannot carry, with why.
