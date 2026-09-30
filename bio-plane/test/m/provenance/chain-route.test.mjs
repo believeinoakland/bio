@@ -213,3 +213,70 @@ test("R36: no hop is read from a request: every hop written is derived from fiel
   const rep = w2.prov.provenanceChainRebuild({ bundleId: "INFO-2026-0002-z", author: V("r"), viewer: V("r") });
   assert.equal(rep.documents[0].outcome, "already_recorded");
 });
+
+/* R19 (K581): a document received through the doorbell (capture R65's pull) with no chain, with and without the
+   knock's receipt it states. */
+const knockDoc = (id, { receipt = true, bytes = `handed in ${id}` } = {}) => ({
+  file: `snapshots/${id}`, locator: `knock:${id}`, retrieved: "2026-09-30T12:00:00Z",
+  authority_state: "undetermined", authority_basis: "handed in at the doorbell; no authority is asserted",
+  capture: { method: "doorbell knock, received, hashed at receipt", grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+             actor_class: "member", actor: "member:ruth", sha256: sha(bytes), encoding: "binary", bytes: Buffer.byteLength(bytes) },
+  source: { kind: "knocker", named: false, pseudonym: null,
+            ...(receipt ? { receipt: { knock_id: id, sha256: sha(bytes), bytes: Buffer.byteLength(bytes), received: "2026-09-30T11:00:00Z" } } : {}) },
+  origin: { kind: "doorbell", knock_id: id }, attestation_attempts: [],
+});
+
+test("R19 (K581): a doorbell document is never a fetched route: its one hop is read from the knock's receipt, else undetermined", () => {
+  const d = knockDoc("KNOCK-20260930-0a1b2c3d");
+  const r = chainFromEvidence(d, { instanceName: "civic", at: "2026-09-30T13:00:00Z" });
+  assert.equal(r.ok, true);
+  assert.equal(r.hops.length, 1);
+  const h = r.hops[0];
+  assert.equal(h.asserts, "these bytes were received for knock:KNOCK-20260930-0a1b2c3d at 2026-09-30T11:00:00Z");
+  assert.deepEqual([h.via, h.bound, h.who], ["doorbell", false, "instance civic (doorbell)"]);
+  assert.equal(/served for/.test(h.asserts), false, "never a fetched hop, though locator, retrieved and method are all present");
+  assert.deepEqual(h.reconstructed.from, ["origin.kind", "source.receipt.knock_id", "source.receipt.received", "source.receipt.sha256"]);
+  assert.equal(h.reconstructed.at, "2026-09-30T13:00:00Z");
+  assert.match(h.evidence, new RegExp(d.capture.sha256));
+  /* No receipt, or one without its knock or instant: undetermined, naming the receipt as missing. */
+  for (const bad of [knockDoc("K1", { receipt: false }), { ...d, source: { ...d.source, receipt: { knock_id: "K" } } },
+                     { ...d, source: null }]) {
+    const u = chainFromEvidence(bad);
+    assert.equal(u.ok, false);
+    assert.equal(u.missing.length, 1);
+    assert.match(u.missing[0], /source\.receipt/);
+  }
+  /* A timestamp is cited as evidence for the bytes and the instant, never binding the knock. */
+  assert.match(chainFromEvidence({ ...d, timestamp: { authority: "tsa.example", token_file: "snapshots/t.tsr" } }).hops[0].evidence,
+               /not to the address/);
+  /* The arm is the origin's alone: the same fields under a fetched origin are a fetched route, as before. */
+  assert.equal(chainFromEvidence({ ...d, origin: { kind: "named_request" } }).hops[0].via, "direct");
+});
+
+test("R19, R20, R22 (K581): the rebuild reconstructs a chainless doorbell document from its receipt, and the route mark reads it derivable; without the receipt both say undetermined", () => {
+  const w = world();
+  const file = (id, doc) => {
+    const bytes = `handed in ${doc.origin.knock_id}`;
+    const r = w.promotion.promote({ bundleId: id, base: null, snapKey: `s-${id}`, author: "member:ruth",
+      meta: { object_type: "information" },
+      files: [{ path: "bundle.md", text: infoMd(id) }, { path: "data/provenance.json", text: JSON.stringify({ documents: [doc] }) },
+              { path: doc.file, blobSha: sha(bytes), sha256: sha(bytes), bytes: Buffer.byteLength(bytes) }],
+      register: [{ sha256: sha(bytes), path: doc.file, encoding: "binary", bytes: Buffer.byteLength(bytes) }] });
+    assert.equal(r.ok, true, JSON.stringify(r));
+  };
+  file("INFO-2026-0001-knock", knockDoc("KNOCK-A"));
+  file("INFO-2026-0002-knock", knockDoc("KNOCK-B", { receipt: false }));
+  const ask = (id) => ({ rebuild: w.prov.provenanceChainRebuild({ bundleId: id, author: V("ruth"), viewer: V("ruth") }),
+                         mark: w.prov.provenanceRouteAssess({ bundleId: id, author: V("ruth"), viewer: V("ruth") }) });
+  const a = ask("INFO-2026-0001-knock");
+  assert.deepEqual([a.rebuild.ok, a.rebuild.changed, a.rebuild.documents[0].outcome], [true, 1, "reconstructed"]);
+  assert.deepEqual([a.mark.route.finding, a.mark.documents[0].outcome], ["PRESENT", "derivable"]);
+  const applied = w.prov.provenanceChainRebuild({ bundleId: "INFO-2026-0001-knock", apply: true, author: V("ruth"), viewer: V("ruth") });
+  assert.equal(applied.applied, true, JSON.stringify(applied));
+  const chain = JSON.parse(w.record.readFile("INFO-2026-0001-knock", "data/provenance.json").text).documents[0].provenance_chain;
+  assert.deepEqual(chain.map((h) => [h.via, h.asserts]), [["doorbell", "these bytes were received for knock:KNOCK-A at 2026-09-30T11:00:00Z"]]);
+  const b = ask("INFO-2026-0002-knock");
+  assert.deepEqual([b.rebuild.ok, b.rebuild.reason, b.rebuild.documents[0].outcome], [false, "EVIDENCE_INSUFFICIENT", "undetermined"]);
+  assert.match(b.rebuild.documents[0].missing[0], /source\.receipt/);
+  assert.deepEqual([b.mark.route.finding, b.mark.documents[0].outcome], ["LOOKED_INDETERMINATE", "undetermined"]);
+});

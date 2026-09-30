@@ -33,7 +33,7 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { migrateProvenance } from "./schema.mjs";
-import { registerChecks, RECEIVED_NOT_FETCHED } from "./register-checks.mjs";
+import { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
 import { REGISTER_ENTRY_CHECKS } from "./checks.mjs";
 
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
@@ -174,6 +174,29 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
     basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
     from,
   });
+
+  /* ARM D — RECEIVED THROUGH THE DOORBELL (R19, R51; K581). The bytes were handed in and never fetched, so the
+     document is never a fetched route, whatever its `locator` (`knock:<id>`) looks like: reading it as one would
+     state that this instance was served the bytes at an address, which is the fetch R51 says did not happen. Its one
+     hop is read from the knock's receipt the document states: the digest taken as the bytes arrived, and the instant.
+     With no receipt, the route is undetermined, and the answer says the receipt is what is missing. */
+  if (doc.origin && typeof doc.origin === "object" && doc.origin.kind === DOORBELL_ORIGIN) {
+    const receipt = doc.source && typeof doc.source === "object" && doc.source.receipt && typeof doc.source.receipt === "object"
+      ? doc.source.receipt : null;
+    const knockId = receipt ? str(receipt.knock_id) : null;
+    const received = receipt ? str(receipt.received) : null;
+    if (!knockId || !received)
+      return { ok: false, missing: ["the knock's receipt it was received under (`source.receipt`, with `knock_id` and `received`)"] };
+    const rsha = str(receipt.sha256) || sha;
+    return { ok: true, hops: [{
+      who: `instance ${instanceName} (doorbell)`,
+      asserts: `these bytes were received for knock:${knockId} at ${received}`,
+      evidence: `the knock's receipt, sha256 ${rsha || "not recorded"} taken as the bytes arrived${tsrNote}`,
+      bound: false,
+      via: DOORBELL_ORIGIN,
+      reconstructed: stamp(["origin.kind", "source.receipt.knock_id", "source.receipt.received", "source.receipt.sha256"]),
+    }] };
+  }
 
   /* ARM A — A ROUTE THAT WAS FETCHED. The register names an address, an
      instant and a method, so our own leg is reconstructible: we know what we
