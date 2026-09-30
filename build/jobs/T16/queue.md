@@ -2,6 +2,12 @@
 
 **Status** · session_01PmQhGaaXRwTDaJ2GCHRzx1 · depth 2 · WORKING · handled B1
 
+## Progress (QUEUE #5)
+
+- R1 amended (N345's seven kinds) committed alone at 89e91bd74c, reported J1 for an early merge.
+- R46 built in `#dispositionOf` (`#contradictionDisposition`, and side-corrected's act on R12's project-scoped disposition) on J2's reading of the subject shape; its test comes with the switch to `feedItems` (a stubbed producer), since until then no producer in queue mints these kinds.
+- **Next:** on BOB's ANSWER to J2, align R46. On each CHANGE (tasks merged; queue-producers merged): merge the tranche, remove the moved code, rewire (tasks R6's three reads; queue-producers R8's `feedItems` with `homesOf`/`optionsOf`, its `facts` published, `catalogue_id` stamped at the mint), R6's publication clause, R42's three figures, registrations as draft §3.3, tests re-mapped (§3.5), then steps 5–7.
+
 ## J1 · REPORT
 
 R1 is in, alone, on `job/T16/queue` @ 89e91bd74c (`queuestate.mjs` and its R1 test only): N345's seven kinds with their sentences (OBLIGATION contradiction-duty, contradiction-duty-unseen; FINDING contradiction-lead, contradiction-plurality, contradiction-plurality-unseen, side-corrected, tension-after-publication). Queue's tests 69 pass, 0 fail. It can merge to the tranche now, ahead of QUEUE-PRODUCERS' N345 arms (draft §6).

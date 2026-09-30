@@ -2202,6 +2202,8 @@ export class Queue {
     const dv = item.subject && typeof item.subject === "object"
                && Number.isInteger(item.subject.definition_version)
       ? item.subject.definition_version : null;
+    const contradiction = this.#contradictionDisposition(item);
+    if (contradiction) return contradiction;
     if (item.class === "OBLIGATION")
       /* REC-207: AND `instead` NAMES THE DOOR THIS ITEM ACTUALLY HAS. `op=taskresolve` addresses rows in
          `tasks` by id; a bias-debt obligation is keyed by the RUN it is about and has no task row, so
@@ -2292,9 +2294,11 @@ export class Queue {
       .map((a) => a.id.trim())
       .sort();
     const fid = typeof item.id === "string" && item.id.trim() ? item.id.trim() : null;
+    /* R46: a side-corrected finding keeps this disposition and names the act that answers it. */
+    const acts = item.kind === "side-corrected" ? { acts: ["reevaluationrecord"] } : {};
     if (homes.length === 0 || !fid)
       return { available: false, op: null, scope: "project", keyed_on: SCOPED_ON, key: null,
-               finding: fid, projects: [],
+               finding: fid, projects: [], ...acts,
                reason: "no_project_scope",
                instead: null,
                detail: "this finding carries no progression stage, so a disposition of it is a "
@@ -2308,7 +2312,7 @@ export class Queue {
                      + "is re-triaged whether or not the fact still fires, and it AGES the finding "
                      + "out of the open list instead of deleting it (D-79)." };
     return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON,
-             key: null, finding: fid, projects: homes, requires: ["project", "finding"],
+             key: null, finding: fid, projects: homes, requires: ["project", "finding"], ...acts,
              detail: "this finding carries no progression stage, and that is what makes its "
                    + "disposition a JUDGMENT-LAYER act rather than a fact about the shared record "
                    + "(D-266's scoping ruling, 2026-08-10: a dismissal is scoped to the key's own "
@@ -2323,6 +2327,59 @@ export class Queue {
                    + "disposition and reason. The decision AGES this finding out of your team's "
                    + "open list and stands until it is re-triaged (D-79) — it deletes nothing, and "
                    + "it moves no other team's feed by even one item." };
+  }
+
+  /** R46 (N345; DEC-76 item 3, DEC-84 items 2, 3, 7, 13; DEC-85): the doors of the contradiction kinds, or null for any
+   *  other kind. What decides them is on the item's `subject`, as the producer names it (`queue-producers` R4, R7): a
+   *  candidate's `state` and, once taken up, its `inquiry`; and `parties`, the member's party projects each with
+   *  `opted_in`. `contradictionoptin` is offered while one of those has not opted in, and `contradictionrespond` once
+   *  one has. A side-corrected item keeps R12's project-scoped disposition and names its act. */
+  #contradictionDisposition(item) {
+    const s = item.subject && typeof item.subject === "object" ? item.subject : {};
+    const parties = Array.isArray(s.parties) ? s.parties.filter((p) => p && typeof p.project === "string") : [];
+    const relay = [...(parties.some((p) => p.opted_in !== true) ? ["contradictionoptin"] : []),
+                   ...(parties.some((p) => p.opted_in === true) ? ["contradictionrespond"] : [])];
+    const candidate = typeof s.id === "string" && s.id.trim() ? s.id.trim() : null;
+    const closed = (reason, extra, detail) => ({ available: false, op: null, scope: null,
+      keyed_on: Queue.QUEUE_DISPOSITION_KEY, key: null, reason, candidate, ...extra, detail });
+    const notSetAside = (acts, detail) => ({ available: false, op: null, scope: "project",
+      keyed_on: Queue.QUEUE_DISPOSITION_KEY_SCOPED, key: null, finding: item.id ?? null, projects: [],
+      reason: "a_plurality_is_not_set_aside", instead: null, candidate, acts, detail });
+    switch (item.kind) {
+      case "contradiction-duty": {
+        const inquiry = s.state === "taken_up" && typeof s.inquiry === "string" && s.inquiry ? s.inquiry : null;
+        const own = inquiry ? "contradictionresolve" : ["contradictionclarify", "contradictiontakeup"];
+        return closed("an_obligation_is_resolved_not_disposed",
+          { instead: relay.length ? [...[own].flat(), ...relay] : own, ...(inquiry ? { inquiry } : {}) },
+          "a conflict the record holds is a duty: it is never muted, dismissed or set aside, and it leaves every "
+          + "list only when a member of a project it reaches resolves it, by saying what it turned out to be or by "
+          + "taking it up as a question and concluding it (DEC-84 item 2).");
+      }
+      case "contradiction-duty-unseen":
+        return closed("an_obligation_is_resolved_not_disposed", { instead: relay.length ? relay : ["contradictionoptin"] },
+          "something this project rests on is in conflict with a record you cannot see. It is never muted: your "
+          + "project can ask to resolve it, and once every project holding a side has asked, the projects are named to "
+          + "each other and you can respond (DEC-85).");
+      case "contradiction-lead":
+        return { available: true, op: null, scope: "candidate", keyed_on: ["candidate"], key: candidate, candidate,
+                 acts: ["contradictiondismiss", "contradictiontakeup"], requires: ["candidate"],
+                 detail: "a lead is the record's uncertainty, not an obligation: a member dismisses it with a reason or "
+                       + "takes it up as a question (DEC-84 item 1)." };
+      case "contradiction-plurality":
+        return notSetAside(["contradictionclarify", "contradictiontakeup", ...relay],
+          "two projects' conclusions may not both hold. Setting it aside would not clear it: naming the difference "
+          + "does, or taking it up as a question (DEC-84 item 3).");
+      case "contradiction-plurality-unseen":
+        return notSetAside(relay.length ? relay : ["contradictionoptin"],
+          "this project's conclusion may not hold together with a conclusion you cannot see. It is not set aside: "
+          + "your project can ask to resolve it (DEC-85).");
+      case "tension-after-publication":
+        return closed("a_published_tension_is_disclosed", { instead: "publish" },
+          "a finding this case published rests on a conflict found since. It leaves when a later edition discloses it "
+          + "or the conflict is resolved.");
+      default:
+        return null;
+    }
   }
 
   /** The four generators, in catalogue order, and the ONE place a CONDITION
