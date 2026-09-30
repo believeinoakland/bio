@@ -954,7 +954,7 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_RATIFY_CASE: {
     check: 'C-32.13',
-    where: 'src/ratification/ops.mjs caseRatifyOp > is-machine-ratify-case',
+    where: 'src/ratification/refusals.mjs machineCaseRefusal > is-machine-ratify-case',
     translation: 'Ratifying a case commits the group\'s own assertions about it — its scope, its '
       + 'completeness, its position on the people it concerns — under a member\'s signature. The '
       + 'credential that asked here is an assistant\'s: it can assemble the case document, and it '
@@ -981,7 +981,7 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
   },
   OPERATOR_TOKEN_CANNOT_RATIFY_CASE: {
     check: 'C-32.15',
-    where: 'src/ratification/ops.mjs caseRatifyOp > is-operator-ratify-case',
+    where: 'src/ratification/refusals.mjs operatorCaseRefusal > is-operator-ratify-case',
     translation: 'Ratifying a case commits the group\'s own assertions about it under a member\'s '
       + 'signature, and it is delivered by that member signed in as themselves. The credential that '
       + 'asked here is one of the operator\'s access tokens for this copy, not a person, and a valid '
@@ -1023,7 +1023,7 @@ export const RATIFY_TESTIMONY_CHECKS = {
   },
   TESTIMONY_CASE_UNPUBLISHABLE: {
     check: 'C-53.12',
-    where: 'src/ratification/ops.mjs caseRatifyOp > is-testimony-publish-case',
+    where: 'src/ratification/refusals.mjs testimonyCaseRefusal > is-testimony-publish-case',
     translation: 'A finding in this case rests, directly or through another finding, on a member\'s '
       + 'firsthand observation recorded before the record stopped writing its author\'s name into the '
       + 'observation\'s own files, so the case is not published: that name would be published whatever '
@@ -1039,14 +1039,14 @@ export const RATIFY_ATTRIBUTION_CHECKS = {
      recourse is an edition without the finding that rests on it. */
   ATTRIBUTION_UNCHOSEN: {
     check: 'C-92.10',
-    where: 'src/ratification/ops.mjs caseRatifyOp > is-attribution-gate',
+    where: 'src/ratification/refusals.mjs attributionUnchosenRefusal > is-attribution-gate',
     translation: 'This case edition uses a member\'s firsthand observation whose author has not yet chosen how '
       + 'it is attributed, so it cannot be signed. Publishing it at any level would be choosing for them. Ask '
       + 'the author to choose, or prepare the edition without the finding that rests on it.',
   },
   ATTRIBUTION_STATEMENT_STALE: {
     check: 'C-92.11',
-    where: 'src/ratification/ops.mjs caseRatifyOp > is-attribution-gate',
+    where: 'src/ratification/refusals.mjs attributionStaleRefusal > is-attribution-gate',
     translation: 'This case document states an attribution for an observation that its author\'s choices no '
       + 'longer give. Prepare the case document again so it states what the authors chose, then sign that.',
   },
@@ -1070,7 +1070,7 @@ export const RATIFY_ATTRIBUTION_CHECKS = {
 export const CASE_CONCLUSION_CHECKS = {
   CASE_CONCLUSION_MOVED: {
     check: 'C-65.1',
-    where: 'src/ratification/index.mjs ratifyCaseDocument > is-caseratify-conclusion-moved',
+    where: 'src/ratification/refusals.mjs conclusionMovedRefusal > is-caseratify-conclusion-moved',
     translation: 'This case document records a conclusion its project no longer stands on: since the '
       + 'document was prepared, the project withdrew that conclusion or concluded again differently. '
       + 'Signing it would publish a conclusion nobody holds. Nothing was committed. Publish the case '

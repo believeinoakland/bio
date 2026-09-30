@@ -2,7 +2,7 @@
    C-41 with the case arms of C-2.8, C-3.1 and C-21.1 (R8), C-2.8's case-member arm and the pure vocabulary around it
    (R9), and the rows that moved here with their ids (R14). Each check is driven with its negative control: a document
    that draws no finding, and the one mutation that makes each arm fire. The copies `legacy-checks` keeps while earlier
-   modules import them (N211, and `isCaseMemberBytes` for C-3.1, N69) are asserted to answer alike. */
+   modules import them (`SUBJECT_POSITIONS`, N361; `isCaseMemberBytes` for C-3.1, N69) are asserted to answer alike. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as R from "../../../src/ratification/checks.mjs";
@@ -130,16 +130,11 @@ test("R8: CASE_CITATION_VERSIONS and SEARCHED_SUBJECT_SOURCES are exported; C-41
   }
 });
 
-test("R8, N211: the copy legacy-checks keeps for promotion's fallback answers exactly as this catalogue, over the baseline and every mutation", () => {
-  const ctxs = [CTX, { ...CTX, body: "x" }, { ...CTX, priorCase: { edition: 1, statement: doc().completeness.statement } }];
-  for (const ctx of ctxs) {
-    assert.deepEqual(R.checkCaseDocument(doc(), ctx), CAT.checkCaseDocument(doc(), ctx));
-    for (const [, , mutate] of ARMS)
-      assert.deepEqual(R.checkCaseDocument(mutate(doc()), ctx), CAT.checkCaseDocument(mutate(doc()), ctx));
-  }
-  assert.deepEqual(R.SEARCHED_SUBJECT_SOURCES, CAT.SEARCHED_SUBJECT_SOURCES);
-  assert.deepEqual(R.SUBJECT_POSITIONS, CAT.SUBJECT_POSITIONS);
-  assert.deepEqual(R.CASE_DOCUMENT_FAMILY, CAT.CASE_DOCUMENT_FAMILY);
+/* N361 (K529): the parity arm over the catalogue's copy of `checkCaseDocument`, `SEARCHED_SUBJECT_SOURCES` and
+   `CASE_DOCUMENT_FAMILY` is retired: promotion no longer imports that copy, and it goes in T17 (N372). What stays in the
+   catalogue and must still agree with this module, its owner (Decided 4), is `SUBJECT_POSITIONS`. */
+test("R9, N361: the catalogue's copy of SUBJECT_POSITIONS, which stays, answers as this module's, its owner", () => {
+  assert.deepEqual(CAT.SUBJECT_POSITIONS, R.SUBJECT_POSITIONS);
 });
 
 /* A legacy (/1) case member's own bytes: the frozen blocks C-2.8's case-member arm requires. */
@@ -252,7 +247,7 @@ test("R14: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and C-9
   for (const [fam, rows] of Object.entries(want)) {
     assert.deepEqual(Object.fromEntries(Object.entries(R[fam]).map(([k, v]) => [k, v.check])), rows, fam);
     for (const [code, v] of Object.entries(R[fam])) {
-      assert.match(v.where, /^src\/ratification\/(ops|index)\.mjs \w+ > is-[a-z-]+$/, code);
+      assert.match(v.where, /^src\/ratification\/(ops|index|refusals)\.mjs \w+ > is-[a-z-]+$/, code);
       assert.ok(typeof v.translation === "string" && v.translation.length > 60, code);
       assert.deepEqual(R.rowOf(code), { code, check: v.check, translation: v.translation });
       assert.deepEqual(catalogueHolding(code, v.check), [], `${code} left the catalogue`);

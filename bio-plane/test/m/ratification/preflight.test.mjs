@@ -1,0 +1,236 @@
+/* ratification R18: the case ceremony's pre-flight (`caseRatifyPreflight`), driven beside the act it answers for. Each
+   refusal of R2 and R3 that holds before a signature exists is listed, in R18's order, and each is the act's own
+   refusal: the same object `op=caseratify` (the Worker half) or its commit (`ratifyCaseDocument`) answers, less only the
+   act's envelope (`store`, `tokenClass` after the payload's refusals). It writes nothing and never throws. R19: a key
+   verifies by membership R27's predicate alone, whatever its `origin` (membership R89, R91). */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { world, plane, newKey, signCase, signBundle, cleanCase, cleanInfoMd, fmText, CASE_BODY, V } from "./fixture.mjs";
+import { caseRatifyOp, ratifyOp } from "../../../src/ratification/ops.mjs";
+import { caseConclusionRowLines } from "../../../src/ratification/index.mjs";
+
+const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001", OBS = "INFO-2026-0009-observation";
+const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
+              by: "member:alice", at: "2026-09-27T10:00:00Z" };
+const ORDER = ["MACHINE_CANNOT_RATIFY_CASE", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", "TESTIMONY_CASE_UNPUBLISHABLE",
+               "ATTRIBUTION_UNCHOSEN", "ATTRIBUTION_STATEMENT_STALE", "NO_ATTESTING_KEY", "CASE_SIGNER_NOT_AN_OWNER",
+               "CASE_CONCLUSION_MOVED", "GATE_REFUSED"];
+const CLEAR = { reached: [], legacy: [], stated: [], current: [] };
+
+/* alice owns P and holds an administrator-registered key; bo joined P and holds none; eve is in no project. The case
+   document is stored unsigned, and the act's facts are publication's for it, the attribution facts being whatever
+   `publication.attributionFacts` answers (the same read the pre-flight makes). */
+async function setup({ mutate = (d) => d, edition = 1, conclusions = true } = {}) {
+  const w = world();
+  const key = await newKey();
+  w.member("alice", { signer: key }); w.member("bo"); w.member("eve");
+  const P = w.project("Team", "alice", { joined: ["bo"] });
+  w.inquiry(Q1);
+  w.bv.conc.set(w.key(P, Q1), OWN);
+  const conc = w.r.caseConclusionFor(P, Q1, V("alice"), "open");
+  const text = fmText(mutate(cleanCase({ caseId: CASE, edition, project: P, members: [{ id: Q1, pin: w.sha(Q1) }] })),
+                      { raw: conclusions ? ["case_conclusions:", ...caseConclusionRowLines(Q1, conc)] : [], body: CASE_BODY });
+  const docSha = w.caseDoc(CASE, edition, text);
+  const facts = () => ({ ok: true, doc: { case_id: CASE, edition, doc_sha: docSha, text },
+                         attribution: w.publication.attributionFacts({ text, case_id: CASE, edition }),
+                         signers: w.membership.attestingKeys(), memberBasis: {},
+                         priorCase: w.row(`SELECT edition, completeness, bias_acknowledgement FROM published_cases
+                                            WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
+                                            ORDER BY edition DESC LIMIT 1`, CASE, edition) });
+  const sig = await signCase(key, CASE, edition, docSha);
+  /* the act, through the Worker half, with the facts read as they stand at the call */
+  const act = async (o = {}, body = { caseId: CASE, edition, expectedSha: docSha, sig }) => {
+    w.pub.facts.set(`${CASE}#${edition}`, facts());
+    const p = plane(w, o);
+    return caseRatifyOp(p.request(body), p.stub, p.ctx);
+  };
+  /* the commit, the store half, signed by `signer` and delivered by `deliveredBy` */
+  const commit = (signer = "alice", deliveredBy = V(signer)) => w.r.ratifyCaseDocument({ caseId: CASE, edition, docSha,
+    sigArmored: sig, attestorKey: key.keyB64, attestorMember: signer, gateVersion: "g", deliveredBy });
+  const preflight = (o = {}) => w.r.caseRatifyPreflight({ text, signer: "alice", viewer: V("alice"), ...o });
+  return { w, P, key, text, docSha, sig, act, commit, preflight };
+}
+const envelopeless = ({ store, tokenClass, ...rest }) => rest;
+const entry = (pf, reason) => pf.refusals.find((r) => r.reason === reason);
+const reasons = (pf) => pf.refusals.map((r) => r.reason);
+
+test("R18: a document its project's owner, holding an attesting key, may sign is ready — no refusal — and the act commits it", async () => {
+  const { preflight, act } = await setup();
+  for (const signer of ["alice", V("alice")])
+    assert.deepEqual(preflight({ signer }), { ok: true, ready: true, refusals: [] }, signer);
+  for (const viewer of [V("alice"), V("bo"), "admin", V("admin"), null])
+    assert.deepEqual(preflight({ viewer }).refusals, [], String(viewer));
+  const r = await act();
+  assert.deepEqual([r.status, r.body.ok], [200, true], JSON.stringify(r.body).slice(0, 300));
+});
+
+test("R18: C-32.13 and C-32.15 are read from the viewer stamp, each the act's own refusal", async () => {
+  const { preflight, act } = await setup();
+  const ai = preflight({ viewer: "class:ai" });
+  assert.deepEqual(reasons(ai), ["MACHINE_CANNOT_RATIFY_CASE", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"],
+    "an agent credential did not arrive through a session either");
+  assert.deepEqual(ai.refusals[0], (await act({ aiCred: { tokenId: "t1" }, cls: "ai" })).body);
+  assert.deepEqual(ai.refusals[1], (await act({ viaSession: false, cls: "ai" })).body);
+  assert.deepEqual(reasons(preflight({ viewer: "class:ai/t1" })).slice(0, 2), reasons(ai));
+  for (const cls of ["admin", "member", "probe"]) {
+    const op = preflight({ viewer: `class:${cls}` });
+    assert.deepEqual(reasons(op), ["OPERATOR_TOKEN_CANNOT_RATIFY_CASE"], cls);
+    assert.deepEqual(op.refusals[0], (await act({ viaSession: false, cls })).body, cls);
+  }
+});
+
+test("R18: C-53.12, C-92.10 and C-92.11 over publication's attribution facts for these bytes, each the act's own", async () => {
+  const s = await setup();
+  let attr = { reached: [OBS], legacy: [OBS], stated: [], current: [{ observation: OBS, level: null, why: "no choice made" }] };
+  s.w.publication.attributionFacts = () => attr;
+  const all = s.preflight();
+  assert.deepEqual(reasons(all), ["TESTIMONY_CASE_UNPUBLISHABLE", "ATTRIBUTION_UNCHOSEN", "ATTRIBUTION_STATEMENT_STALE"]);
+  const steps = [
+    ["TESTIMONY_CASE_UNPUBLISHABLE", "C-53.12", () => { attr = { ...attr, legacy: [] }; }],
+    ["ATTRIBUTION_UNCHOSEN", "C-92.10", () => { attr = { ...attr, current: [{ observation: OBS, level: "group", shown: null, why: null }] }; }],
+    ["ATTRIBUTION_STATEMENT_STALE", "C-92.11", () => { attr = { ...attr, stated: [{ observation: OBS, level: "group", shown: null }] }; }],
+  ];
+  for (const [reason, check, relax] of steps) {
+    const got = entry(s.preflight(), reason);
+    const r = await s.act();
+    assert.deepEqual([r.status, r.body.reason, r.body.check], [409, reason, check], reason);
+    assert.deepEqual(got, envelopeless(r.body), `${reason}: the act's refusal, less its envelope`);
+    relax();
+  }
+  assert.deepEqual(s.preflight().refusals, [], "every author chose, and the document states it");
+  assert.equal((await s.act()).status, 200);
+});
+
+test("R18: the attribution facts are publication's real read over the bytes given (an observation reached by the roster)", async () => {
+  const { w, preflight } = await setup();
+  w.bv.reach = { self: [], via: [{ finding: Q1, observation: OBS }] };
+  assert.deepEqual(reasons(preflight()), ["TESTIMONY_CASE_UNPUBLISHABLE", "ATTRIBUTION_UNCHOSEN", "ATTRIBUTION_STATEMENT_STALE"]);
+  assert.deepEqual(entry(preflight(), "TESTIMONY_CASE_UNPUBLISHABLE").observations, [OBS]);
+});
+
+test("R18, R19: NO_ATTESTING_KEY when the signer holds no attesting key, its remedy naming membership R89; a self-registered key counts as an administrator's does, a revoked one does not", async () => {
+  const { w, preflight } = await setup();
+  const bo = await newKey();
+  const none = entry(preflight({ signer: "bo" }), "NO_ATTESTING_KEY");
+  assert.deepEqual([none.ok, none.code, none.signer], [false, "NO_ATTESTING_KEY", "bo"]);
+  assert.match(none.remedy, /op=signerregister/);
+  assert.match(none.remedy, /R89/);
+  assert.equal(w.membership.signerRegisterOwn({ keyB64: bo.keyB64, by: "bo" }).origin, "self");
+  assert.equal(entry(preflight({ signer: "bo" }), "NO_ATTESTING_KEY"), undefined, "a self-registered key attests");
+  assert.equal(w.membership.signerRevokeOwn({ keyB64: bo.keyB64, by: "bo" }).status, "revoked");
+  assert.ok(entry(preflight({ signer: V("bo") }), "NO_ATTESTING_KEY"), "a revoked key does not");
+  for (const signer of [null, "", "class:ai", "daemon"])
+    assert.deepEqual(entry(preflight({ signer }), "NO_ATTESTING_KEY").signer, null, String(signer));
+});
+
+test("R18: CASE_SIGNER_NOT_AN_OWNER is the commit's own, for a signer who is not the project's owner and for a document naming no project", async () => {
+  const s = await setup();
+  const got = entry(s.preflight({ signer: "bo" }), "CASE_SIGNER_NOT_AN_OWNER");
+  assert.deepEqual(got, s.commit("bo"));
+  assert.equal(entry(s.preflight({ signer: "bo", viewer: V("eve") }), "CASE_SIGNER_NOT_AN_OWNER").reason,
+    "CASE_SIGNER_NOT_AN_OWNER", "the deliverer is not asked: eve has no role and is not named");
+  assert.equal(reasons(s.preflight({ signer: "bo", viewer: V("eve") })).includes("PROJECT_ACT_NOT_A_PARTICIPANT"), false);
+  const loose = await setup({ mutate: (d) => ({ ...d, case_project: "null" }) });
+  assert.deepEqual(entry(loose.preflight(), "CASE_SIGNER_NOT_AN_OWNER"), loose.commit("alice"));
+});
+
+test("R18: C-65.1 is the commit's own, compared against the bytes given and read for the signer", async () => {
+  const s = await setup();
+  s.w.bv.conc.set(s.w.key(s.P, Q1), { ...OWN, version: "second", at: "2026-09-28T00:00:00Z" });
+  const got = entry(s.preflight(), "CASE_CONCLUSION_MOVED");
+  assert.equal(got.check, "C-65.1");
+  assert.deepEqual(got, s.commit());
+  const unrecorded = await setup({ conclusions: false });
+  assert.deepEqual(entry(unrecorded.preflight(), "CASE_CONCLUSION_MOVED"), unrecorded.commit(),
+    "a document recording no conclusion for a project that concluded");
+  const seen = [];
+  const conc = s.w.bv.conc;
+  s.w.r.basisVersions.conclusionOf = (p, q, viewer) => { seen.push(viewer); return conc.get(s.w.key(p, q)) ?? null; };
+  s.preflight({ signer: "alice", viewer: V("bo") });
+  assert.deepEqual([...new Set(seen)], [V("alice")], "the signer is the viewer the conclusion is read for");
+});
+
+test("R18: the case gate's findings, as the act's GATE_REFUSED, with the previous ratified edition and each member's basis at its pin", async () => {
+  const bad = await setup({ mutate: (d) => ({ ...d, case_scope: "" }) });
+  const got = entry(bad.preflight(), "GATE_REFUSED");
+  const r = await bad.act();
+  assert.deepEqual([r.status, r.body.reason], [409, "GATE_REFUSED"]);
+  assert.deepEqual(got, envelopeless(r.body));
+  assert.deepEqual(got.findings.map((f) => f.check), ["C-41.5"]);
+  /* edition 2, reprinting edition 1's statement and acknowledgement: C-21.1 twice, from `published_cases` */
+  const s = await setup();
+  assert.equal((await s.act()).status, 200);
+  const q = s.w.sha(Q1);
+  assert.equal(s.w.r.publish({ bundleId: Q1, bundleSha: q, attestorKey: s.key.keyB64, attestorMember: "alice",
+    gateVersion: "g", sigArmored: "s", shas: [{ sha256: q, path: "bundle.md", kind: "bundle", bytes: 1 }],
+    deliveredBy: V("alice") }).ok, true, "edition 1's last member lands, so it is the previous ratified edition");
+  const text2 = fmText(cleanCase({ caseId: CASE, edition: 2, project: s.P, members: [{ id: Q1, pin: q }] }),
+    { raw: ["case_conclusions:", ...caseConclusionRowLines(Q1, s.w.r.caseConclusionFor(s.P, Q1, V("alice"), "open"))],
+      body: CASE_BODY });
+  const second = s.w.r.caseRatifyPreflight({ text: text2, signer: "alice", viewer: V("alice") });
+  assert.deepEqual(entry(second, "GATE_REFUSED").findings.map((f) => f.check), ["C-21.1", "C-21.1"]);
+  /* a member whose pinned bytes carry a graded testimony leg: C-2.8's testimony row, read at the pin */
+  const leg = await setup({ mutate: (d) => ({ ...d, case_roles: d.case_roles.map((x) => ({ ...x, version_sha: "d".repeat(64) })) }) });
+  leg.w.record.textAtSha = (id, pin) => (id === Q1 && pin === "d".repeat(64)
+    ? "---\nid: x\nbasis:\n  - target: INFO-2026-0003-said\n    role: supports\n    grade: D\n    grade_axis: testimony\n    grade_source: testimony\n---\n"
+    : null);
+  const tf = entry(leg.preflight(), "GATE_REFUSED").findings;
+  assert.ok(tf.some((f) => f.check === "C-2.8" && /testimony axis/.test(f.detail)), JSON.stringify(tf).slice(0, 400));
+});
+
+test("R18: every refusal that holds is listed, each asked on its own, in R18's order", async () => {
+  const s = await setup({ mutate: (d) => ({ ...d, case_scope: "" }) });
+  s.w.publication.attributionFacts = () => ({ reached: [OBS], legacy: [OBS], stated: [],
+                                              current: [{ observation: OBS, level: null, why: "none" }] });
+  s.w.bv.conc.set(s.w.key(s.P, Q1), { ...OWN, version: "second" });
+  const pf = s.preflight({ signer: "eve", viewer: "class:ai" });
+  assert.deepEqual([pf.ok, pf.ready], [true, false]);
+  assert.deepEqual(reasons(pf), ORDER);
+  assert.ok(pf.refusals.every((x) => x.ok === false));
+});
+
+test("R18: it writes nothing and never throws", async () => {
+  const s = await setup();
+  const tables = s.w.st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((x) => x.name);
+  const snap = () => JSON.stringify(tables.map((t) => s.w.st.sql.exec(`SELECT * FROM "${t}"`)));
+  const before = snap();
+  s.preflight(); s.preflight({ signer: "eve", viewer: "class:ai" });
+  for (const text of [null, undefined, 3, "", "no front matter", "---\n---\n", "---\ncase_id: [\n---\n"])
+    for (const o of [{}, { signer: {} }, { viewer: 7 }, { signer: null, viewer: null }]) {
+      const pf = s.w.r.caseRatifyPreflight({ text, ...o });
+      assert.equal(pf.ok, true, JSON.stringify([text, o]));
+      assert.ok(reasons(pf).includes("GATE_REFUSED"), "unreadable bytes are the gate's to refuse");
+    }
+  assert.doesNotThrow(() => s.w.r.caseRatifyPreflight());
+  assert.equal(snap(), before, "nothing was written");
+  s.w.publication.attributionFacts = () => { throw new Error("disk"); };
+  const u = s.preflight();
+  assert.deepEqual([u.ok, u.reason, "refusals" in u], [false, "PREFLIGHT_UNDETERMINED", false]);
+  assert.doesNotMatch(u.detail, /disk/);
+  assert.equal(snap(), before);
+});
+
+test("R19: a signature by a member's self-registered key verifies exactly as an administrator-registered key's, in both ceremonies; revoked, it does not", async () => {
+  const s = await setup();
+  const own = await newKey();
+  assert.equal(s.w.membership.signerRegisterOwn({ keyB64: own.keyB64, by: "alice" }).origin, "self");
+  const sig = await signCase(own, CASE, 1, s.docSha);
+  const r = await s.act({}, { caseId: CASE, edition: 1, expectedSha: s.docSha, sig });
+  assert.deepEqual([r.status, r.body.attestor], [200, { member: "alice", key_b64: own.keyB64 }]);
+  /* op=ratify, over the evidence the case's finding rests on */
+  const DOC = "INFO-2026-0001-report";
+  s.w.promote(DOC, cleanInfoMd(DOC), "information");
+  s.w.pub.resting.set(DOC, [{ case_id: CASE, finding: Q1, project: s.P }]);
+  const run = async (key) => {
+    const p = plane(s.w);
+    return ratifyOp(p.request({ bundleId: DOC, expectedSha: s.w.sha(DOC), sig: await signBundle(key, DOC, s.w.sha(DOC)) }),
+                    p.stub, p.ctx);
+  };
+  s.w.membership.signerRevokeOwn({ keyB64: own.keyB64, by: "alice" });
+  const revoked = await run(own);
+  assert.deepEqual([revoked.status, revoked.body.reason], [403, "SIG_UNKNOWN_KEY"], "a revoked self key attests nothing");
+  const fresh = await newKey();
+  s.w.membership.signerRegisterOwn({ keyB64: fresh.keyB64, by: "alice" });
+  const ok = await run(fresh);
+  assert.deepEqual([ok.status, ok.body.attestor], [200, "alice"], JSON.stringify(ok.body).slice(0, 300));
+});

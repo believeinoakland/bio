@@ -1,5 +1,6 @@
-/* ratification R17 (N339, N349; control-plane R23, R25, R30; K421, K444): the seven relays of the two ceremonies —
-   `op=caseratify`'s facts, gate and commit, `op=ratify`'s gate facts, image, list and commit — answer the store's own
+/* ratification R17 (N339, N349, N354; control-plane R23, R25, R30; K421, K444, K477): the eight relays of the two
+   ceremonies — `op=caseratify`'s facts, gate and commit, `op=ratify`'s gate facts, image, list, register probe and
+   commit — answer the store's own
    refusal with its status, code and sentence, and only a reply that is no answer as the silence, carrying the store's
    correlation id when it gave one. The sub-reads inside the longer act relay a refusal by the same rule (K444). The
    control plane's helpers are stand-ins that behave as its R23, R25 and R30 state them (`doAnswer`, `storeSilent`,
@@ -64,7 +65,16 @@ async function ratifyWorld() {
   return { w, body: { bundleId: DOC, expectedSha: w.sha(DOC), sig: await signBundle(key, DOC, w.sha(DOC)) } };
 }
 
-/* The seven relays, each with the store op behind it and the op the silence names. */
+/* N354 (K477): the register probe inside `op=ratify`'s gate is a relay too. The bundle registers a capture the working
+   bucket does not hold whole, so the gate asks the store whether it is held in parts (`registerholds`). */
+const HELD = "c".repeat(64);
+async function probeWorld() {
+  const made = await ratifyWorld();
+  made.w.registers.set(made.body.bundleId, [{ capture_sha: HELD, path: "snapshots/a.pdf", bytes: 3, authored: 0 }]);
+  return made;
+}
+
+/* The eight relays, each with the store op behind it and the op the silence names. */
 const RELAYS = [
   { name: "caseratify/facts", op: "casedocfacts", make: caseWorld, run: caseRatifyOp },
   { name: "caseratify/gate", op: "casegate", make: caseWorld, run: caseRatifyOp },
@@ -73,6 +83,7 @@ const RELAYS = [
   { name: "ratify/image", op: "image", make: ratifyWorld, run: ratifyOp },
   { name: "ratify/list", op: "list", make: ratifyWorld, run: ratifyOp },
   { name: "ratify/publish", op: "publish", make: ratifyWorld, run: ratifyOp },
+  { name: "ratify/registerholds", op: "registerholds", make: probeWorld, run: ratifyOp },
 ];
 
 const silent = (op, correlation = undefined) =>
@@ -98,7 +109,7 @@ async function drive(relay, answer, handed) {
 const committed = (w) => w.pub.committed.length + w.count("published_bundles");
 const wire = (res) => JSON.stringify(res.body);
 
-test("R17 (N339): each of the seven relays answers the store's own refusal (ok false below 500) with the store's status, code and sentence, never STORE_DID_NOT_ANSWER, with or without storeRefusal handed; nothing is committed or copied", async () => {
+test("R17 (N339, N354): each of the eight relays answers the store's own refusal (ok false below 500) with the store's status, code and sentence, never STORE_DID_NOT_ANSWER, with or without storeRefusal handed; nothing is committed or copied", async () => {
   const refusals = [
     [{ ok: false, reason: "BAD_JSON", error: "the body is not JSON" }, 400],
     [{ ok: false, reason: "UNKNOWN_OP", code: "UNKNOWN_OP", error: "unknown op: x", translation: "t" }, 404],
@@ -159,5 +170,24 @@ test("R17: an answer is the handler's own to read — every relay answered, each
     const res = await (make === caseWorld ? caseRatifyOp : ratifyOp)(p.request(body), p.stub, p.ctx);
     assert.equal(res.status, 200, wire(res).slice(0, 400));
     assert.equal(res.body.ok, true);
+  }
+});
+
+test("R17 (N354): the register probe's silence or refusal is never a finding about the record; an answered probe that finds nothing held is the gate's PLANE_MISSING_BYTES", async () => {
+  for (const [label, handed] of Object.entries(HANDED)) {
+    const relay = RELAYS.find((r) => r.op === "registerholds");
+    for (const answer of [() => SILENT, () => reply({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: CORRELATION }, 500),
+                          () => reply({ ok: false, reason: "BAD_JSON", error: "the body is not JSON" }, 400)]) {
+      const { res } = await drive(relay, answer, handed);
+      assert.notEqual(res.body.reason, "GATE_REFUSED", label);
+      assert.doesNotMatch(wire(res), /PLANE_MISSING_BYTES|PLANE_HELD_IN_PARTS|PLANE_PART_/, label);
+    }
+    const answered = await drive(relay, () => ({ parts: null, acquired: false }), handed);
+    assert.deepEqual([answered.res.status, answered.res.body.reason], [409, "GATE_REFUSED"], label);
+    assert.deepEqual(answered.res.body.findings.filter((f) => f.check.startsWith("PLANE_")).map((f) => [f.check, f.where.sha256]),
+      [["PLANE_MISSING_BYTES", HELD]], `${label}: the negative control`);
+    const inParts = await drive(relay, () => ({ parts: null, acquired: true }), handed);
+    assert.deepEqual(inParts.res.body.findings.filter((f) => f.check.startsWith("PLANE_")).map((f) => f.check),
+      ["PLANE_HELD_IN_PARTS"], `${label}: an answered receipt still reads as held in parts`);
   }
 });
