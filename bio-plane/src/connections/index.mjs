@@ -535,8 +535,8 @@ export class Connections {
   }
 
   /** R13 composed for an internal caller with no viewer (the earned-basis registry: the write path, the gate), which
-   *  names no bundle id: each row's portion connection axis in the registry's shape, through one subject. A `document`
-   *  row is not answered here (it earns what its document earns, the caller's own entry). */
+   *  names no bundle id: each held row's portion connection axis in the registry's shape, through one subject (R52); a
+   *  `document` row is answered too, reached by every connection of its capture (R7, R10). */
   portionAxes(contentIds, { entityId = null } = {}) {
     const out = {};
     const g = this.portionGrades(contentIds, `${MACHINE_CLASS_PREFIX}daemon`, { entityId });
