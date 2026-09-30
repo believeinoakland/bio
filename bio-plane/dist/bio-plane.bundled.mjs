@@ -19616,10 +19616,10 @@ function parseDict(buf, s, pos) {
     }
     const key = parseName(s, pos);
     pos = key.pos;
-    const val = parseValue(buf, s, pos);
-    if (!val) break;
-    map[key.value.v] = val.value;
-    pos = val.pos;
+    const val2 = parseValue(buf, s, pos);
+    if (!val2) break;
+    map[key.value.v] = val2.value;
+    pos = val2.pos;
   }
   const after = skipWs(s, pos);
   if (s.startsWith("stream", after)) {
@@ -22674,19 +22674,19 @@ function rangeUnitFor(sheetName, a, b, sheets, grid = null) {
 }
 function splitTopLevel(s, sep) {
   const out = [];
-  let depth = 0, quoted2 = false, cur = "";
+  let depth = 0, quoted3 = false, cur = "";
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (ch === "'") {
-      if (quoted2 && s[i + 1] === "'") {
+      if (quoted3 && s[i + 1] === "'") {
         cur += "''";
         i++;
         continue;
       }
-      quoted2 = !quoted2;
-    } else if (!quoted2 && ch === "(") depth++;
-    else if (!quoted2 && ch === ")") depth--;
-    else if (!quoted2 && depth === 0 && ch === sep) {
+      quoted3 = !quoted3;
+    } else if (!quoted3 && ch === "(") depth++;
+    else if (!quoted3 && ch === ")") depth--;
+    else if (!quoted3 && depth === 0 && ch === sep) {
       out.push(cur);
       cur = "";
       continue;
@@ -24811,17 +24811,17 @@ function odsStructure(parts) {
 }
 function splitUnquoted(s, sepRe) {
   const out = [];
-  let quoted2 = false, cur = "";
+  let quoted3 = false, cur = "";
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (ch === "'") {
-      if (quoted2 && s[i + 1] === "'") {
+      if (quoted3 && s[i + 1] === "'") {
         cur += "''";
         i++;
         continue;
       }
-      quoted2 = !quoted2;
-    } else if (!quoted2 && sepRe.test(ch)) {
+      quoted3 = !quoted3;
+    } else if (!quoted3 && sepRe.test(ch)) {
       out.push(cur);
       cur = "";
       continue;
@@ -39541,9 +39541,9 @@ function readSymbolIdTable(bits, numSyms) {
     if (code === OOB || code > 34) throw corrupt("a symbol-id length code outside the run table");
     if (code < 32) lens.push(code);
     else {
-      const [rep, val] = code === 32 ? [3 + bits.read(2), lens.length ? lens[lens.length - 1] : -1] : code === 33 ? [3 + bits.read(3), 0] : [11 + bits.read(7), 0];
-      if (val < 0) throw corrupt("a repeated symbol-id length with nothing before it");
-      for (let i = 0; i < rep; i++) lens.push(val);
+      const [rep, val2] = code === 32 ? [3 + bits.read(2), lens.length ? lens[lens.length - 1] : -1] : code === 33 ? [3 + bits.read(3), 0] : [11 + bits.read(7), 0];
+      if (val2 < 0) throw corrupt("a repeated symbol-id length with nothing before it");
+      for (let i = 0; i < rep; i++) lens.push(val2);
     }
   }
   if (lens.length > numSyms) throw corrupt("more symbol-id lengths than symbols");
@@ -44931,9 +44931,9 @@ function textOf(bundleId, files) {
       return;
     }
     if (typeof v === "object") {
-      for (const [k, val] of Object.entries(v)) {
+      for (const [k, val2] of Object.entries(v)) {
         bits.push(k);
-        walk(val);
+        walk(val2);
       }
       return;
     }
@@ -45169,10 +45169,10 @@ function parseTokens(tokens2, implicitOp, ctx) {
   const ast = orExpr();
   return ast;
 }
-function textAtom(column, value, quoted2, ctx) {
+function textAtom(column, value, quoted3, ctx) {
   let v = value;
   let prefix = false;
-  if (!quoted2 && v.endsWith("*") && v.length > 1) {
+  if (!quoted3 && v.endsWith("*") && v.length > 1) {
     prefix = true;
     v = v.slice(0, -1);
   }
@@ -45222,12 +45222,12 @@ function selector(tok2, ctx) {
   if (name === "fm") {
     const at17 = tok2.value.indexOf("=");
     const path = at17 < 0 ? tok2.value : tok2.value.slice(0, at17);
-    const val = at17 < 0 ? null : tok2.value.slice(at17 + 1);
+    const val2 = at17 < 0 ? null : tok2.value.slice(at17 + 1);
     if (!/^[A-Za-z0-9_.[\]]{1,120}$/.test(path)) {
       ctx.warnings.push(`fm: path ${JSON.stringify(path)} is not a frontmatter path`);
       return null;
     }
-    return val === null ? { op: "meta", json: "$." + path, cmp: "present", value: null } : { op: "meta", json: "$." + path, cmp: "=", value: val };
+    return val2 === null ? { op: "meta", json: "$." + path, cmp: "present", value: null } : { op: "meta", json: "$." + path, cmp: "=", value: val2 };
   }
   if (name in MEANING) return meaningAtom(name, tok2, ctx);
   const f9 = FIELDS[name];
@@ -65290,17 +65290,17 @@ Claim: ${f9.claim}
     const when = at17 || this.now();
     const name = String(v.name ?? "");
     const vLines = [];
-    for (const [k, val] of Object.entries(v)) {
-      if (k === "state" || k === "hidden" || val === void 0) continue;
-      vLines.push(`${vLines.length ? "    " : "  - "}${k}: ${val === null ? "null" : typedValue(val)}`);
+    for (const [k, val2] of Object.entries(v)) {
+      if (k === "state" || k === "hidden" || val2 === void 0) continue;
+      vLines.push(`${vLines.length ? "    " : "  - "}${k}: ${val2 === null ? "null" : typedValue(val2)}`);
       if (k === "relationship") vLines.push(`    state: "suggested"`, `    hidden: false`);
     }
     if (!("relationship" in v)) vLines.push(`    state: "suggested"`, `    hidden: false`);
     const rowOf7 = (o) => {
       const lines = [`  - version: ${quoted(name)}`];
-      for (const [k, val] of Object.entries(o || {})) {
-        if (k === "version" || val === void 0 || val === null || val === "") continue;
-        lines.push(`    ${k}: ${typedValue(val)}`);
+      for (const [k, val2] of Object.entries(o || {})) {
+        if (k === "version" || val2 === void 0 || val2 === null || val2 === "") continue;
+        lines.push(`    ${k}: ${typedValue(val2)}`);
       }
       return lines.join("\n");
     };
@@ -79852,19 +79852,44 @@ function delivererOf(stored) {
 var checks_exports20 = {};
 __export(checks_exports20, {
   ATTRIBUTION_ACT_CHECKS: () => ATTRIBUTION_ACT_CHECKS,
-  CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
-  CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
-  CASE_DOCUMENT_FORMAT_LEGACY: () => CASE_DOCUMENT_FORMAT_LEGACY,
-  CASE_DOCUMENT_FORMAT_V2: () => CASE_DOCUMENT_FORMAT_V2,
-  CASE_DOCUMENT_FORMAT_V3: () => CASE_DOCUMENT_FORMAT_V3,
+  CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT2,
+  CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED2,
+  CASE_DOCUMENT_FORMAT_LEGACY: () => CASE_DOCUMENT_FORMAT_LEGACY2,
+  CASE_DOCUMENT_FORMAT_V2: () => CASE_DOCUMENT_FORMAT_V22,
+  CASE_DOCUMENT_FORMAT_V3: () => CASE_DOCUMENT_FORMAT_V32,
+  CASE_DOCUMENT_FORMAT_V4: () => CASE_DOCUMENT_FORMAT_V4,
   CASE_RESOLUTION_CHECKS: () => CASE_RESOLUTION_CHECKS,
   PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   PUBLISHED_STORE_CHECKS: () => PUBLISHED_STORE_CHECKS,
-  caseDocumentRequiresDisclosures: () => caseDocumentRequiresDisclosures,
-  caseDocumentRequiresV4Disclosures: () => caseDocumentRequiresV4Disclosures,
-  caseDocumentStatesMemberBlocks: () => caseDocumentStatesMemberBlocks,
+  caseDocumentRequiresDisclosures: () => caseDocumentRequiresDisclosures2,
+  caseDocumentRequiresTensionSection: () => caseDocumentRequiresTensionSection,
+  caseDocumentRequiresV4Disclosures: () => caseDocumentRequiresV4Disclosures2,
+  caseDocumentStatesMemberBlocks: () => caseDocumentStatesMemberBlocks2,
   rowOf: () => rowOf3
 });
+var CASE_DOCUMENT_FORMAT2 = "bio-case-document/5";
+var CASE_DOCUMENT_FORMAT_V4 = "bio-case-document/4";
+var CASE_DOCUMENT_FORMAT_V32 = "bio-case-document/3";
+var CASE_DOCUMENT_FORMAT_V22 = "bio-case-document/2";
+var CASE_DOCUMENT_FORMAT_LEGACY2 = "bio-case-document/1";
+var CASE_DOCUMENT_FORMATS_ACCEPTED2 = Object.freeze([
+  CASE_DOCUMENT_FORMAT2,
+  CASE_DOCUMENT_FORMAT_V4,
+  CASE_DOCUMENT_FORMAT_V32,
+  CASE_DOCUMENT_FORMAT_V22,
+  CASE_DOCUMENT_FORMAT_LEGACY2
+]);
+var formatOf = (fm) => {
+  try {
+    return fm && typeof fm === "object" ? fm.format : void 0;
+  } catch {
+    return void 0;
+  }
+};
+var caseDocumentStatesMemberBlocks2 = (fm) => [CASE_DOCUMENT_FORMAT2, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V32, CASE_DOCUMENT_FORMAT_V22].includes(formatOf(fm));
+var caseDocumentRequiresDisclosures2 = (fm) => [CASE_DOCUMENT_FORMAT2, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V32].includes(formatOf(fm));
+var caseDocumentRequiresV4Disclosures2 = (fm) => [CASE_DOCUMENT_FORMAT2, CASE_DOCUMENT_FORMAT_V4].includes(formatOf(fm));
+var caseDocumentRequiresTensionSection = (fm) => formatOf(fm) === CASE_DOCUMENT_FORMAT2;
 var CASE_RESOLUTION_CHECKS = {
   /* UI-81 (2026-09-23) — D-309's OTHER HALF, the READ, given its row. `op=publishedcase` handed a
      finding id that several cases pin refuses and names every case (IC-74), because each case is
@@ -80653,12 +80678,87 @@ function registerCaseDocumentSha(sql, caseId, edition, docSha, text4, at17) {
   );
 }
 
+// src/publication/tensions.mjs
+var TENSION_STATE_WORDS = Object.freeze({
+  open: "open",
+  explained_not_shown: "explained, not yet shown",
+  taken_up: "taken up as a question",
+  irreconcilable: "held irreconcilable, to be reopened by new evidence"
+});
+var TENSION_HIGHLIGHT_SENTENCE = "This finding rests on a side in conflict with a record not shown here. The record and who holds it are not named.";
+var TENSION_DEPTH_SENTENCE = "a disclosure reaches one level: the contradictions on what each finding rests on directly; deeper findings disclose their own when published";
+var TENSIONS_PREDATE_SENTENCE = "this case document's format predates the disclosure of contradictions, so it states none; that is not a statement that none existed";
+var TENSIONS_UNREADABLE_SENTENCE = "this case document declares a format that discloses contradictions, but carries no readable tension section, so what it disclosed is undetermined";
+var SIDE_FIELDS = ["kind", "text", "source", "date", "doctype", "capture"];
+var val = (v) => v === void 0 || v === null || v === "null" ? null : typeof v === "string" ? v : v;
+var sideOf = (row2, prefix) => Object.fromEntries(SIDE_FIELDS.map((f9) => [f9, val(row2[`${prefix}_${f9}`])]));
+var stateWords = (row2) => row2.state === "resolved" && row2.kind === "irreconcilable" ? TENSION_STATE_WORDS.irreconcilable : Object.prototype.hasOwnProperty.call(TENSION_STATE_WORDS, row2.state) ? TENSION_STATE_WORDS[row2.state] : row2.state == null ? null : String(row2.state);
+function caseTensionsOf(text4) {
+  try {
+    const fm = parseFrontmatter(String(text4 ?? "")).data || {};
+    if (!caseDocumentRequiresTensionSection(fm))
+      return { tensions: null, highlighted: null, depth: null, members: {}, unread: null, detail: TENSIONS_PREDATE_SENTENCE };
+    if (!Array.isArray(fm.case_tensions))
+      return { tensions: null, highlighted: null, depth: null, members: {}, unread: null, detail: TENSIONS_UNREADABLE_SENTENCE };
+    const depth = typeof fm.tensions_depth_stated === "string" && fm.tensions_depth_stated.trim() ? fm.tensions_depth_stated.trim() : TENSION_DEPTH_SENTENCE;
+    const tensions = fm.case_tensions.filter((r) => r && typeof r === "object").map((r) => {
+      const unseen = r.unseen_other_side === true || r.unseen_other_side === "true";
+      const common = {
+        candidate: val(r.candidate),
+        finding: val(r.finding),
+        state: stateWords(r),
+        depth: 1,
+        depth_stated: depth,
+        owner_words: val(r.words) === null ? null : { text: String(r.words), by: "the case's owner" },
+        acknowledged_by: val(r.acknowledged_by),
+        acknowledged_at: val(r.acknowledged_at)
+      };
+      if (unseen) return {
+        ...common,
+        unseen_other_side: true,
+        highlighted: true,
+        side: sideOf(r, "side"),
+        sentence: TENSION_HIGHLIGHT_SENTENCE
+      };
+      return {
+        ...common,
+        unseen_other_side: false,
+        highlighted: false,
+        kind: val(r.kind),
+        sides: { a: sideOf(r, "a"), b: sideOf(r, "b") },
+        explanation: val(r.explanation)
+      };
+    });
+    const unseenIds = new Set(tensions.filter((t) => t.unseen_other_side).map((t) => t.candidate));
+    const members = {};
+    for (const s of Array.isArray(fm.case_tension_sentences) ? fm.case_tension_sentences : []) {
+      if (!s || typeof s !== "object" || typeof s.target !== "string") continue;
+      const highlighted = s.template === "unseen" || unseenIds.has(val(s.candidate));
+      (members[s.target] ||= []).push({
+        candidate: val(s.candidate),
+        template: val(s.template),
+        sentence: val(s.sentence),
+        highlighted
+      });
+    }
+    const unread = Array.isArray(fm.case_tensions_unread) ? fm.case_tensions_unread.filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => ({ member: r.target, legs: val(r.legs) })) : null;
+    return { tensions, highlighted: tensions.filter((t) => t.highlighted).length, depth, members, unread, detail: null };
+  } catch {
+    return { tensions: null, highlighted: null, depth: null, members: {}, unread: null, detail: TENSIONS_UNREADABLE_SENTENCE };
+  }
+}
+function disclosedCandidates(text4) {
+  const t = caseTensionsOf(text4);
+  return new Set((t.tensions || []).map((x) => x.candidate).filter((c) => typeof c === "string" && c));
+}
+
 // src/publication/index.mjs
 var CASE_FLAGS_LIMIT = 500;
 var EXPORT_LOG_LIMIT_DEFAULT = 200;
 var EXPORT_LOG_LIMIT_MAX = 1e3;
 var EDITIONS_OF_MAX = 500;
 var CITED_PARTS_MAX = 1e3;
+var CASE_TENSIONS_MAX = 200;
 var RESTING_CAPTURES_MAX = 1e3;
 var RATIFIED_CASES_MAX = 1e3;
 var RESTING_FINDINGS_PER_CAPTURE = 200;
@@ -80790,7 +80890,7 @@ function noCaseDocument(id, ed) {
 }
 function signedCitations(text4) {
   const fm = parseFrontmatter(String(text4 || "")).data || {};
-  if (caseDocumentRequiresV4Disclosures(fm) && Array.isArray(fm.case_citations))
+  if (caseDocumentRequiresV4Disclosures2(fm) && Array.isArray(fm.case_citations))
     return { state: "signed", rows: fm.case_citations };
   return {
     state: "undetermined",
@@ -80854,13 +80954,14 @@ var Publication = class {
     host = null,
     inquiry = null,
     basisVersions = null,
+    contradiction = null,
     now = null
   } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, basisVersions };
+    this.#deps = { host, inquiry, basisVersions, contradiction };
     this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
   }
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -80869,6 +80970,9 @@ var Publication = class {
   }
   get basisVersions() {
     return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host);
+  }
+  get contradiction() {
+    return this.#deps.contradiction ||= contradictionOf(this.#deps.host);
   }
   migrate() {
     migratePublication(this.sql);
@@ -81543,6 +81647,136 @@ var Publication = class {
     const more = rows.length > cap;
     const cases = rows.slice(0, cap).map((r) => r.case_id);
     return { ok: true, cases, limit: cap, cursor: more ? cases[cases.length - 1] : null };
+  }
+  /* ---------------------------------------------------------------- R50: tensions after publication */
+  /** R50 (N345; DEC-84 item 13, DEC-85): for each case whose LATEST ratified edition `project` owns (every such case
+   *  when absent), in case id order after `after`, at most `limit` cases (1–CASE_TENSIONS_MAX, that by default), with
+   *  `cursor` the last case answered when more follow: the candidates `contradiction.unresolvedRecordOn` answers over
+   *  each member at its pinned sha that the edition did not disclose, each with its case, edition, member, candidate
+   *  and state; and each candidate the edition disclosed that the read no longer answers, `resolved_since: true`. Sight
+   *  is the owning project's owners': a candidate with a side any owner may not see is answered as the read answers it
+   *  for that owner, `unseen_other_side: true` with nothing of that side (DEC-85); a case whose project has no owner is
+   *  read by nobody, every side withheld. A member whose read fails or is cut is stated `undetermined` or `truncated`,
+   *  never dropped. Read as the plane, for `queue`: it writes nothing, never throws and composes no strength (R26);
+   *  the signed edition never changes (R24). */
+  caseTensions({ project = null, after = null, limit = null } = {}) {
+    try {
+      const cap = pageOf(limit, CASE_TENSIONS_MAX);
+      const pid = str7(project);
+      const latest = `SELECT c.case_id, MAX(c.edition) AS edition FROM published_cases c
+                       WHERE c.ratified_at IS NOT NULL GROUP BY c.case_id`;
+      const rows = this.#rows(
+        `SELECT l.case_id, l.edition, k.project_id FROM (${latest}) l LEFT JOIN cases k ON k.case_id=l.case_id
+          WHERE l.case_id > ? ${pid ? "AND k.project_id = ?" : ""} ORDER BY l.case_id LIMIT ?`,
+        typeof after === "string" ? after : "",
+        ...pid ? [pid] : [],
+        cap + 1
+      );
+      const more = rows.length > cap;
+      if (more) rows.length = cap;
+      const cases = rows.map((r) => this.#caseTensionsOne(r.case_id, Number(r.edition), r.project_id ?? null));
+      return {
+        ok: true,
+        wrote: false,
+        project: pid || null,
+        cases,
+        limit: cap,
+        cursor: more ? rows[rows.length - 1].case_id : null,
+        says: "each is a contradiction found on what a published case's findings rest on, one level deep, that its latest edition did not disclose, or one it disclosed that has since been resolved. The signed edition does not change; a later edition discloses or resolves it. No strength is composed."
+      };
+    } catch (e) {
+      return {
+        ok: true,
+        wrote: false,
+        project: str7(project) || null,
+        cases: [],
+        limit: pageOf(limit, CASE_TENSIONS_MAX),
+        cursor: null,
+        undetermined: true,
+        why: String(e && e.message || e).slice(0, 160)
+      };
+    }
+  }
+  /* R50: one case edition's tensions since publication, read under its owners' sight. */
+  #caseTensionsOne(caseId, edition, projectId) {
+    const doc = this.#one(
+      `SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NOT NULL`,
+      caseId,
+      edition
+    );
+    const disclosed = doc ? disclosedCandidates(doc.text) : /* @__PURE__ */ new Set();
+    let owners = [];
+    try {
+      owners = projectId ? this.membership.projectOwners(projectId) || [] : [];
+    } catch {
+      owners = [];
+    }
+    const viewers = owners.length ? owners.map((m) => `member:${m}`) : [""];
+    const members = this.#rows(`SELECT bundle_id, version_sha FROM published_case_members
+                                 WHERE case_id=? AND edition=? ORDER BY ord`, caseId, edition);
+    const tensions = [], resolvedSince = [], unread = [];
+    const answered = /* @__PURE__ */ new Set();
+    for (const m of members) {
+      if (!m.version_sha) {
+        unread.push({ member: m.bundle_id, undetermined: true, why: "no version was pinned" });
+        continue;
+      }
+      const byCandidate = /* @__PURE__ */ new Map();
+      let undetermined = false, truncated3 = false;
+      for (const viewer of viewers) {
+        let r = null;
+        try {
+          r = this.contradiction.unresolvedRecordOn({ finding: m.bundle_id, sha: m.version_sha, viewer });
+        } catch {
+          r = null;
+        }
+        if (!r || r.undetermined || !Array.isArray(r.candidates)) {
+          undetermined = true;
+          continue;
+        }
+        if (r.truncated) truncated3 = true;
+        if (r.undetermined_legs) undetermined = true;
+        for (const c of r.candidates) {
+          const had = byCandidate.get(c.candidate);
+          if (!had || c.unseen_other_side && !had.unseen_other_side) byCandidate.set(c.candidate, c);
+        }
+      }
+      if (undetermined || truncated3)
+        unread.push({
+          member: m.bundle_id,
+          ...undetermined ? { undetermined: true } : {},
+          ...truncated3 ? { truncated: true } : {}
+        });
+      for (const [id, c] of byCandidate) {
+        answered.add(id);
+        if (disclosed.has(id)) continue;
+        tensions.push({
+          case: caseId,
+          edition,
+          member: m.bundle_id,
+          candidate: id,
+          state: c.state ?? null,
+          ...c.unseen_other_side ? { unseen_other_side: true, ...c.side ? { side: c.side } : {} } : {
+            a: c.a ?? null,
+            b: c.b ?? null,
+            ...c.kind ? { kind: c.kind } : {},
+            explanation: c.explanation ?? null
+          },
+          depth: 1
+        });
+      }
+    }
+    if (!unread.length) {
+      for (const id of disclosed) if (!answered.has(id)) resolvedSince.push({ case: caseId, edition, candidate: id, resolved_since: true });
+    }
+    return {
+      case: caseId,
+      edition,
+      project: projectId,
+      tensions,
+      resolved_since: resolvedSince,
+      ...unread.length ? { unread } : {}
+    };
   }
   /* ---------------------------------------------------------------- R42: the captures published findings rest on */
   /** R42 (N230): in capture order after `after`, each capture a ratified finding's published basis rests on, with those
@@ -82366,7 +82600,7 @@ case_project: ${pid}
     const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
     if (!d || typeof d.text !== "string") return null;
     const dfm = parseFrontmatter(d.text).data || {};
-    if (!caseDocumentStatesMemberBlocks(dfm)) return null;
+    if (!caseDocumentStatesMemberBlocks2(dfm)) return null;
     const strip2 = ({ target, ...rest }) => rest;
     const rowsOf = (key, m) => (Array.isArray(dfm[key]) ? dfm[key] : []).filter((r) => r && typeof r === "object" && String(r.target ?? "") === m).map(strip2);
     const out = /* @__PURE__ */ new Map();
@@ -83497,6 +83731,14 @@ case_project: ${pid}
         }
       };
     });
+    const disclosed = state.document && typeof state.document.text === "string" ? caseTensionsOf(state.document.text) : {
+      tensions: null,
+      highlighted: null,
+      members: {},
+      unread: null,
+      detail: theCase ? "no signed case document is held for this edition, so it states no disclosure here" : "this is not a case, so it discloses no contradiction"
+    };
+    for (const f9 of findings) f9.tensions = disclosed.tensions === null ? null : disclosed.members[f9.bundle_id] || [];
     const cRow = theCase ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
     return {
@@ -83578,6 +83820,11 @@ case_project: ${pid}
       awaiting: state.awaiting,
       ...asked ? { asked } : {},
       findings,
+      tensions: disclosed.tensions,
+      highlighted: disclosed.highlighted,
+      /* K499: the member legs the conflict read could not examine, stated by the document; null where it states none. */
+      tensions_unread: disclosed.unread,
+      tensions_detail: disclosed.detail ?? "each contradiction this edition's owner disclosed, read from the signed document: both sides as the publisher saw them, its state and who acknowledged it. One marked highlighted rests on a side in conflict with a record the publisher could not see, which is not named. A disclosure reaches one level. It composes no strength.",
       /* R36: the evidence package's block, computed at this read by the module that provides it. */
       evidence_package: this.#evidencePackage(theCase, ed, findings),
       manifest_sha: state.manifest_sha,
@@ -91057,9 +91304,9 @@ var Filings = class _Filings {
     const names = [...new Set([...entry.template.matchAll(BLANK_RE)].map((m) => m[1]))];
     const blanks = [], unfilled = [];
     for (const n of names) {
-      const val = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n] : { why: "filings fills no blank by this name, so the record holds no value for it" };
-      if (val && "value" in val) blanks.push({ name: n, value: val.value, source: val.source });
-      else unfilled.push({ name: n, why: val.why });
+      const val2 = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n] : { why: "filings fills no blank by this name, so the record holds no value for it" };
+      if (val2 && "value" in val2) blanks.push({ name: n, value: val2.value, source: val2.source });
+      else unfilled.push({ name: n, why: val2.why });
     }
     const filled = new Map(blanks.map((b) => [b.name, b.value]));
     let text4 = entry.template.replace(BLANK_RE, (_, n) => filled.has(n) ? filled.get(n) : unfilledMarker(n));
@@ -99336,7 +99583,7 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
       manifest_at: "MANIFEST.json",
       note: "the zip carries every part at <case>/<finding>/<path> with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) join parts[] as kind: rendering."
     },
-    verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero \u2014 the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this instance \u2014 the authenticated session that performed the act, a member or the instance's founder \u2014 and it is this instance's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it." + (caseDocumentStatesMemberBlocks(parseFrontmatter(String(cs.document && cs.document.text || "")).data || {}) ? " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes." : "")
+    verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero \u2014 the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this instance \u2014 the authenticated session that performed the act, a member or the instance's founder \u2014 and it is this instance's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it." + (caseDocumentStatesMemberBlocks2(parseFrontmatter(String(cs.document && cs.document.text || "")).data || {}) ? " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes." : "")
   };
   const { bytes: mBytes, quartet: inband } = await inbandQuartet({
     subject: manifest,
@@ -99862,11 +100109,11 @@ var C412 = Object.fromEntries(
 function checkCaseDocument2(fm, ctx = {}) {
   const findings = [];
   const { caseId = null, edition = null, priorCase = null, body = null, memberBasis = null } = ctx;
-  if (!CASE_DOCUMENT_FORMATS_ACCEPTED.includes(fm?.format)) {
+  if (!CASE_DOCUMENT_FORMATS_ACCEPTED2.includes(fm?.format)) {
     findings.push(f7(
       C412.FORMAT,
       "error",
-      `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before REC-188, '${CASE_DOCUMENT_FORMAT_V2}'; or, authored before BIO_Publication_v0_1.md \xA73 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+      `a case document declares format '${CASE_DOCUMENT_FORMAT2}' (or, authored before REC-188, '${CASE_DOCUMENT_FORMAT_V22}'; or, authored before BIO_Publication_v0_1.md \xA73 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY2}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
       ["re-publish through op=publish, which authors the case document"]
     ));
   }
@@ -100000,27 +100247,27 @@ function checkCaseDocument2(fm, ctx = {}) {
         findings.push(f7(C412.COMPLETENESS, "error", `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
     }
   }
-  if (caseDocumentRequiresDisclosures(fm)) {
+  if (caseDocumentRequiresDisclosures2(fm)) {
     const bm = fm?.bias_manifest;
     if (!bm || typeof bm !== "object" || Array.isArray(bm) || typeof bm.in_force !== "boolean") {
       findings.push(f7(
         C412.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself \u2014 computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
+        `a ${CASE_DOCUMENT_FORMAT2} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself \u2014 computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
         ["re-publish through op=publish, which stamps the manifest in force for the case's project into the case document"]
       ));
     } else if (bm.in_force === true && !(typeof bm.statements_sha === "string" && /^[0-9a-f]{64}$/.test(bm.statements_sha))) {
       findings.push(f7(
         C412.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (bundle, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
+        `a ${CASE_DOCUMENT_FORMAT2} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (bundle, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
         ["re-publish through op=publish"]
       ));
     } else if (bm.in_force === false && !(typeof bm.stated === "string" && bm.stated.trim())) {
       findings.push(f7(
         C412.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
+        `a ${CASE_DOCUMENT_FORMAT2} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
         ["re-publish through op=publish"]
       ));
     }
@@ -100028,7 +100275,7 @@ function checkCaseDocument2(fm, ctx = {}) {
       findings.push(f7(
         C412.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias bundle was in force) and is legal \u2014 an ABSENT field is silence about which revisions the lens was`,
+        `a ${CASE_DOCUMENT_FORMAT2} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias bundle was in force) and is legal \u2014 an ABSENT field is silence about which revisions the lens was`,
         ["re-publish through op=publish"]
       ));
     }
@@ -100036,7 +100283,7 @@ function checkCaseDocument2(fm, ctx = {}) {
       findings.push(f7(
         C412.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : void 0}'): ZERO is a statement \u2014 nobody but its author acknowledged it \u2014 and is legal; an absent count is silence (BIO_Publication \xA73 rule 11). An acknowledgement is never required to publish`,
+        `a ${CASE_DOCUMENT_FORMAT2} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : void 0}'): ZERO is a statement \u2014 nobody but its author acknowledged it \u2014 and is legal; an absent count is silence (BIO_Publication \xA73 rule 11). An acknowledgement is never required to publish`,
         ["re-publish through op=publish, which lists every acknowledgement of the statement it publishes"]
       ));
     }
@@ -100044,7 +100291,7 @@ function checkCaseDocument2(fm, ctx = {}) {
       findings.push(f7(
         C412.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal \u2014 an ABSENT field is silence about who else read what this case leaves out (BIO_Publication \xA73 rule 11)`,
+        `a ${CASE_DOCUMENT_FORMAT2} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal \u2014 an ABSENT field is silence about who else read what this case leaves out (BIO_Publication \xA73 rule 11)`,
         ["re-publish through op=publish, which lists every acknowledgement of the statement it publishes"]
       ));
     }
@@ -100052,12 +100299,12 @@ function checkCaseDocument2(fm, ctx = {}) {
       findings.push(f7(
         C412.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement \u2014 a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication \xA73 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : void 0}${c && !Object.prototype.hasOwnProperty.call(c, "statement_by") ? ", with no such key" : ""})`,
+        `a ${CASE_DOCUMENT_FORMAT2} case document requires completeness.statement_by, the member who WROTE its exclusion statement \u2014 a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication \xA73 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : void 0}${c && !Object.prototype.hasOwnProperty.call(c, "statement_by") ? ", with no such key" : ""})`,
         ["re-publish through op=publish, which carries the draft's server-stamped statement_by onto the document"]
       ));
     }
   }
-  if (caseDocumentRequiresV4Disclosures(fm)) {
+  if (caseDocumentRequiresV4Disclosures2(fm)) {
     const bm = fm?.bias_manifest;
     if (bm && typeof bm === "object" && !Array.isArray(bm)) {
       const list2 = fm?.bias_manifest_pins_proposed;
@@ -100066,14 +100313,14 @@ function checkCaseDocument2(fm, ctx = {}) {
         findings.push(f7(
           C412.PENDING,
           "error",
-          `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list2) ? `of ${list2.length}` : "absent"}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication \xA73 rule 18)`,
+          `a ${CASE_DOCUMENT_FORMAT2} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list2) ? `of ${list2.length}` : "absent"}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication \xA73 rule 18)`,
           ["re-publish through op=publish, which states every adoption of the scope pinning a proposed revision at signing"]
         ));
       } else if (list2.length !== n) {
         findings.push(f7(
           C412.PENDING,
           "error",
-          `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list2.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
+          `a ${CASE_DOCUMENT_FORMAT2} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list2.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
           ["re-publish through op=publish"]
         ));
       } else {
@@ -100082,26 +100329,26 @@ function checkCaseDocument2(fm, ctx = {}) {
           findings.push(f7(
             C412.PENDING,
             "error",
-            `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest_pins_proposed has ${bad.length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: ${JSON.stringify(bad[0])}): the ruling is that the document names the proposed revision the adoption pinned \u2014 its id \u2014 and a row without it says an adoption was pending without saying which`,
+            `a ${CASE_DOCUMENT_FORMAT2} case document's bias_manifest_pins_proposed has ${bad.length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: ${JSON.stringify(bad[0])}): the ruling is that the document names the proposed revision the adoption pinned \u2014 its id \u2014 and a row without it says an adoption was pending without saying which`,
             ["re-publish through op=publish"]
           ));
         if (!(typeof bm.pins_proposed_stated === "string" && bm.pins_proposed_stated.trim()))
           findings.push(f7(
             C412.PENDING,
             "error",
-            `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
+            `a ${CASE_DOCUMENT_FORMAT2} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
             ["re-publish through op=publish"]
           ));
       }
     }
   }
-  if (caseDocumentRequiresV4Disclosures(fm)) {
+  if (caseDocumentRequiresV4Disclosures2(fm)) {
     const rows = fm?.case_citations;
     if (!Array.isArray(rows)) {
       findings.push(f7(
         C412.CITATIONS,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal \u2014 an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication \xA73 rule 18)`,
+        `a ${CASE_DOCUMENT_FORMAT2} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal \u2014 an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication \xA73 rule 18)`,
         ["re-publish through op=publish, which signs every cites edge of the project with its version"]
       ));
     } else {
@@ -100110,7 +100357,7 @@ function checkCaseDocument2(fm, ctx = {}) {
         findings.push(f7(
           C412.CITATIONS,
           "error",
-          `a ${CASE_DOCUMENT_FORMAT} case document's case_citations has ${bad.length} row(s) that do not state a target and a version from {${CASE_CITATION_VERSIONS2.join(", ")}}, with the 64-hex capture exactly where the version names one (first: ${JSON.stringify(bad[0])}): a citation edge that says it is pinned and omits the pin, or names a capture its version disowns, states a version nobody can verify`,
+          `a ${CASE_DOCUMENT_FORMAT2} case document's case_citations has ${bad.length} row(s) that do not state a target and a version from {${CASE_CITATION_VERSIONS2.join(", ")}}, with the 64-hex capture exactly where the version names one (first: ${JSON.stringify(bad[0])}): a citation edge that says it is pinned and omits the pin, or names a capture its version disowns, states a version nobody can verify`,
           ["re-publish through op=publish"]
         ));
     }
@@ -100179,7 +100426,7 @@ function checkCaseDocument2(fm, ctx = {}) {
       ));
     }
   }
-  if (caseDocumentStatesMemberBlocks(fm)) {
+  if (caseDocumentStatesMemberBlocks2(fm)) {
     const members = Array.isArray(fm?.case_findings) ? fm.case_findings.map((x) => String(x)) : [];
     const rolesRows = Array.isArray(fm?.case_roles) ? fm.case_roles.filter((r) => r && typeof r === "object") : [];
     const rowsFor = (key, m) => (Array.isArray(fm?.[key]) ? fm[key] : []).filter((r) => r && typeof r === "object" && String(r.target ?? "") === m).map(({ target, ...rest }) => rest);
@@ -110573,6 +110820,7 @@ function runProductionsOps(p, url, body) {
 var checks_exports30 = {};
 __export(checks_exports30, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
+  CASE_DISCLOSURE_CHECKS: () => CASE_DISCLOSURE_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
 });
 var at15 = (fn, region) => `src/case-authoring/index.mjs ${fn} > ${region}`;
@@ -110632,6 +110880,23 @@ var STATEMENT_ACK_CHECKS = Object.freeze({
     check: "C-82.7",
     where: at15("acknowledgeStatement", "is-statement-ack-author-undetermined"),
     translation: "The record does not say who wrote this statement, so it cannot tell whether you are its author. For a draft, ask an editor of the project to save the statement again; for a published case, it can be published again from a draft that records who wrote it. You can acknowledge it after that. The case can be published either way."
+  }
+});
+var CASE_DISCLOSURE_CHECKS = Object.freeze({
+  TENSION_NOT_DISCLOSED: {
+    check: "C-120.1",
+    where: at15("#publishCase", "is-tension-disclosed"),
+    translation: "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published."
+  },
+  DISCLOSURE_NOT_STANDING: {
+    check: "C-120.2",
+    where: at15("#publishCase", "is-disclosure-standing"),
+    translation: "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published."
+  },
+  TENSIONS_UNDETERMINED: {
+    check: "C-120.3",
+    where: at15("#undetermined", "is-tensions-determined"),
+    translation: "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."
   }
 });
 
@@ -110770,6 +111035,113 @@ var CASE_CITATION_WORDS = Object.freeze({
   no_capture: "the record held no capture of it at signing",
   no_bytes: "a question, which has no bytes (DEC-21)"
 });
+var TENSION_TEMPLATES = Object.freeze({
+  in_tension: "In tension, not yet resolved: ",
+  explained: "Explained, not yet shown: ",
+  irreconcilable: "Held irreconcilable by the group: ",
+  unseen: "Rests on a side in conflict with a record not shown: "
+});
+var HIGHLIGHT_SENTENCE = "This finding rests on a side in conflict with a record not shown here. The record and who holds it are not named.";
+var CEREMONY_HIGHLIGHT_SENTENCE = "A finding in this case rests on something in conflict with a record you cannot see. You can still publish. The published case will highlight that this finding rests on a side in conflict with a record not shown, and will not name that record or who holds it.";
+var NOT_SHOWN_WORDS = "in conflict with a record not shown";
+var TENSIONS_DEPTH_STATED = "Each conflict disclosed here is on something a finding of this case rests on, one level deep: a finding it rests on in turn discloses its own when that finding is published.";
+function tensionSide(side) {
+  const s = side && typeof side === "object" ? side : {};
+  const src = s.source && typeof s.source === "object" ? s.source : {};
+  const text4 = s.text ?? s.claim ?? s.note ?? s.ref ?? s.content_id ?? null;
+  return {
+    kind: s.kind ?? null,
+    text: text4 == null ? null : String(text4),
+    source: src.inquiry ?? src.bundle ?? s.inquiry ?? s.target ?? null,
+    date: s.date ?? null,
+    doctype: s.doctype ?? null,
+    capture: s.capture_sha ?? null
+  };
+}
+function tensionTemplate(t) {
+  if (t.unseen_other_side) return "unseen";
+  if (t.state === "resolved" && t.kind === "irreconcilable") return "irreconcilable";
+  if (t.state === "explained_not_shown") return "explained";
+  return "in_tension";
+}
+var quoted2 = (x) => (x.text == null ? "(no text stated)" : `'${x.text}'`) + (x.source ? ` (${x.source})` : "");
+function tensionSentence(t) {
+  const k = tensionTemplate(t);
+  const what = k === "unseen" ? quoted2(t.side) : k === "explained" ? `${t.explanation ?? "(no explanation stated)"} \u2014 ${quoted2(t.a)} against ${quoted2(t.b)}` : `${quoted2(t.a)} against ${quoted2(t.b)}`;
+  return `${TENSION_TEMPLATES[k]}${what} (conflict ${t.candidate}). Disclosed by ${t.acknowledged_by} on ${t.acknowledged_at}.`;
+}
+var STATE_WORDS = Object.freeze({
+  open: "open",
+  explained_not_shown: "explained, not yet shown",
+  taken_up: "taken up as a question",
+  resolved: "held irreconcilable, to be reopened by new evidence"
+});
+function tensionsUnreadStated(unread) {
+  return unread.map((u) => `${u.legs} leg(s) of ${u.finding} name no passage the record holds, so a conflict on them could not be looked for; that is stated, not read as none.`).join(" ");
+}
+function tensionFrontmatterLines(tensions, unread = []) {
+  const q6 = (v) => v == null ? "null" : `"${fmSafe6(v)}"`;
+  const sideLines = (prefix, x) => [
+    `    ${prefix}_kind: ${x.kind ?? "null"}`,
+    `    ${prefix}_text: ${q6(x.text)}`,
+    `    ${prefix}_source: ${q6(x.source)}`,
+    `    ${prefix}_date: ${q6(x.date)}`,
+    `    ${prefix}_doctype: ${q6(x.doctype)}`,
+    `    ${prefix}_capture: ${x.capture ?? "null"}`
+  ];
+  return [
+    `tensions_disclosed: ${tensions.length}`,
+    `tensions_highlighted: ${tensions.filter((t) => t.unseen_other_side).length}`,
+    `tensions_depth_stated: "${fmSafe6(TENSIONS_DEPTH_STATED)}"`,
+    "case_tensions_unread:",
+    ...unread.flatMap((u) => [`  - target: ${u.finding}`, `    legs: ${u.legs}`]),
+    "case_tensions:",
+    ...tensions.flatMap((t) => [
+      `  - candidate: ${t.candidate}`,
+      `    finding: ${t.finding}`,
+      `    state: ${t.state}`,
+      `    kind: ${t.kind ?? "null"}`,
+      `    unseen_other_side: ${!!t.unseen_other_side}`,
+      "    depth: 1",
+      `    acknowledged_by: ${t.acknowledged_by}`,
+      `    acknowledged_at: "${t.acknowledged_at}"`,
+      `    words: ${q6(t.words)}`,
+      ...t.unseen_other_side ? [...sideLines("side", t.side), `    highlight: "${fmSafe6(HIGHLIGHT_SENTENCE)}"`] : [`    explanation: ${q6(t.explanation)}`, ...sideLines("a", t.a), ...sideLines("b", t.b)]
+    ]),
+    "case_tension_sentences:",
+    ...tensions.flatMap((t) => [
+      `  - target: ${t.finding}`,
+      `    candidate: ${t.candidate}`,
+      `    template: ${tensionTemplate(t)}`,
+      `    sentence: "${fmSafe6(tensionSentence(t))}"`
+    ])
+  ];
+}
+function tensionBodyLines(tensions, unread = []) {
+  const side = (label, x) => `  - ${label}: ${x.text == null ? "(no text stated)" : x.text} \u2014 source ${x.source ?? "not stated"}, dated ${x.date ?? "not stated"}, ${x.doctype ?? "doctype not stated"}` + (x.capture ? `, capture ${x.capture}` : "");
+  return [
+    "## Tensions Disclosed",
+    "",
+    ...tensions.length ? [
+      "Each unresolved conflict the record holds on what this case's findings rest on, disclosed by the publisher. A case is published with its conflicts disclosed, and never refused because one exists (DEC-76 item 4).",
+      "",
+      ...tensions.flatMap((t) => [
+        `- **${t.finding}**, conflict ${t.candidate}: ${STATE_WORDS[t.state] ?? t.state}${t.unseen_other_side ? " \u2014 HIGHLIGHTED" : ""}.`,
+        ...t.unseen_other_side ? [side("the side this case rests on", t.side), `  - ${HIGHLIGHT_SENTENCE}`] : [
+          side("one side", t.a),
+          side("the other side", t.b),
+          ...t.explanation != null ? [`  - The explanation recorded: ${t.explanation}`] : []
+        ],
+        ...t.words != null ? [`  - In the owner's words: ${t.words}`] : [],
+        `  - Acknowledged by ${t.acknowledged_by} on ${t.acknowledged_at}.`
+      ]),
+      "",
+      TENSIONS_DEPTH_STATED
+    ] : ["The record held no unresolved conflict on what this case's findings rest on when it was published, one level deep. " + TENSIONS_DEPTH_STATED],
+    ...unread.length ? ["", tensionsUnreadStated(unread)] : [],
+    ""
+  ];
+}
 function ackFrontmatterLines(acks) {
   return [
     `  statement_sha: ${acks.statementSha ?? "null"}`,
@@ -110850,7 +111222,9 @@ function caseDocumentText({
   manifest = null,
   acks = { statementSha: null, truncated: false, rows: [] },
   citations = [],
-  attributions = []
+  attributions = [],
+  tensions = [],
+  tensionsUnread = []
 }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest : {
@@ -110869,7 +111243,7 @@ function caseDocumentText({
   const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
   const fm = [
     "---",
-    `format: ${CASE_DOCUMENT_FORMAT}`,
+    `format: ${CASE_DOCUMENT_FORMAT2}`,
     `case_id: ${caseId}`,
     `case_edition: ${edition}`,
     `case_project: ${project}`,
@@ -110923,6 +111297,8 @@ function caseDocumentText({
        compares it with are written by one function. */
     "case_conclusions:",
     ...roster.flatMap((m) => caseConclusionRowLines(m, concOf.get(m) || null)),
+    /* R31 (N345): THE TENSIONS DISCLOSED and each member's tension sentences; always present, zero included. */
+    ...tensionFrontmatterLines(tensions, tensionsUnread),
     "completeness:",
     `  statement: "${fmSafe6(statement)}"`,
     `  subject_position: ${position}`,
@@ -111022,7 +111398,11 @@ function caseDocumentText({
     "",
     "## Findings In This Case",
     "",
-    ...roster.map((m, i) => `${i + 1}. ${m} \u2014 ${roleOf.get(m) === "load_bearing" ? "LOAD-BEARING" : "supporting"}, frozen at version ${pins.get(m) ?? "(unpinned)"}`),
+    ...roster.flatMap((m, i) => [
+      `${i + 1}. ${m} \u2014 ${roleOf.get(m) === "load_bearing" ? "LOAD-BEARING" : "supporting"}, frozen at version ${pins.get(m) ?? "(unpinned)"}`,
+      /* R31: its tension sentences, in its own block. */
+      ...tensions.filter((t) => t.finding === m).map((t) => `   - ${tensionSentence(t)}`)
+    ]),
     "",
     /* DEC-72 clause 4, in prose: a reader is told, in the document that asserts it, which half claims what. */
     "A LOAD-BEARING finding is one this case rests on, and the standard of evidence below was asked of it.",
@@ -111042,6 +111422,7 @@ function caseDocumentText({
     "",
     roster.every((m) => (concOf.get(m) || {}).relationship === "project") ? `Every conclusion this case records is ${project}'s own.` : "AT LEAST ONE MEMBER ENTERED THIS CASE ON A CONCLUSION THAT IS NOT THIS PROJECT'S OWN. That is disclosed rather than smoothed: a conclusion written in a question's own bytes names no project, so the relationship that drew it cannot be established and it is read as the no-project relationship's. A reader weighing this case should know which findings this project concluded for itself and which it took as the record already answered.",
     "",
+    ...tensionBodyLines(tensions, tensionsUnread),
     ...attributions.length ? attributionBodyLines(attributions) : [],
     "## What This Excludes",
     "",
@@ -111154,7 +111535,8 @@ function refusal17(family, key, extra = {}) {
 }
 var derivationRefusal = (key, extra) => refusal17(CASE_DERIVATION_CHECKS, key, extra);
 var fenceRefusal = (key, extra) => refusal17(MACHINE_FENCE_CHECKS, key, extra);
-var CaseAuthoring = class {
+var disclosureRefusal = (key, extra) => refusal17(CASE_DISCLOSURE_CHECKS, key, extra);
+var CaseAuthoring = class _CaseAuthoring {
   #deps;
   constructor({
     storage,
@@ -111169,13 +111551,25 @@ var CaseAuthoring = class {
     reevaluation = null,
     publication = null,
     ratification = null,
+    contradiction = null,
     now = null
   } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification };
+    this.#deps = {
+      host,
+      inquiry,
+      basisVersions,
+      strength,
+      bias,
+      observations,
+      reevaluation,
+      publication,
+      ratification,
+      contradiction
+    };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -111202,6 +111596,9 @@ var CaseAuthoring = class {
   }
   get ratification() {
     return this.#deps.ratification ||= ratificationOf(this.#deps.host);
+  }
+  get contradiction() {
+    return this.#deps.contradiction ||= contradictionOf(this.#deps.host);
   }
   migrate() {
     migrateCaseAuthoring(this.sql);
@@ -111255,6 +111652,7 @@ var CaseAuthoring = class {
     project = null,
     roles = null,
     draft = null,
+    tensionsDisclosed = null,
     viewer = null,
     author = null
   } = {}) {
@@ -111263,40 +111661,9 @@ var CaseAuthoring = class {
       return fenceRefusal("MACHINE_CANNOT_PUBLISH", {
         detail: "publishing puts the group's name on a case. A machine credential may prepare one and may never author the completeness assertion or the position on putting it to its subject, both of which are declared bias. Sign in as a member."
       });
-    const gate = viewerPredicate(viewer);
-    const proj = str13(project);
-    if (!proj)
-      return {
-        ok: false,
-        reason: "NO_PUBLISHING_PROJECT",
-        detail: "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is what supplies the standard of evidence this case is held to, read from that project alone at this moment \u2014 so a publication naming no project is one whose bar nobody declared, and an absent publisher is not a publisher of none."
-      };
-    const pb = this.#one(
-      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-      proj,
-      ...gate.args
-    );
-    if (!pb) {
-      const existence = this.membership.existenceAct(proj, viewer);
-      if (existence) return existence;
-    }
-    if (!pb) return noSuchProject(proj);
-    if (normalizeType(pb.object_type) !== "project")
-      return {
-        ok: false,
-        reason: "NOT_A_PROJECT",
-        project: proj,
-        object_type: pb.object_type,
-        detail: `${proj} is a ${pb.object_type}, and only a PROJECT has a standard of evidence to hold a case to (DEC-72). Publication is wielded at the top of a project's roster.`
-      };
-    if (!this.membership.isProjectOwner(proj, who2))
-      return {
-        ok: false,
-        reason: "NOT_THE_PROJECT_OWNER",
-        project: proj,
-        author: who2,
-        detail: `publishing is ${proj}'s own production and is wielded by an OWNER of it (DEC-72). An administrator sees every project and directs none of them, and a participant who is not an owner contributes to the work without putting the project's name on it.`
-      };
+    const auth = this.#authority(project, viewer, who2);
+    if (auth.refusal) return auth.refusal;
+    const { proj, gate } = auth;
     const set = Array.isArray(targets) ? targets : typeof targets === "string" && targets.trim() ? targets.split(",") : target ? [target] : [];
     const members = set.map((s) => str13(s)).filter(Boolean);
     if (!members.length)
@@ -111402,57 +111769,9 @@ var CaseAuthoring = class {
           detail: `${name} is at most ${COMPLETENESS_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
         };
     }
-    const prepared = [];
-    for (const id of members) {
-      const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
-                           WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
-      if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
-      if (normalizeType(b.object_type) !== "inquiry")
-        return {
-          ok: false,
-          reason: "NOT_AN_INQUIRY",
-          target: id,
-          object_type: b.object_type,
-          detail: "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a member of a case."
-        };
-      const text4 = this.#liveText(id);
-      if (text4 === null)
-        return {
-          ok: false,
-          reason: "NO_DOCUMENT",
-          target: id,
-          detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
-        };
-      const fm = parseFrontmatter(text4).data || {};
-      const head = this.record.head(id);
-      const conc = this.ratification.caseConclusionFor(proj, id, viewer, b.current_state);
-      if (conc.state !== "concluded")
-        return {
-          ok: false,
-          reason: "NOT_CONCLUDED",
-          target: id,
-          project: proj,
-          from: b.current_state,
-          object_type: fm.object_type ?? b.object_type,
-          relationship: conc.relationship,
-          why: conc.why,
-          stance: conc.stance,
-          concluded_elsewhere: conc.concluded_elsewhere,
-          concluded_elsewhere_bounds: conc.concluded_elsewhere_bounds,
-          detail: "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md \xA77.1 item 4). " + (conc.why === "question_not_case_bearing" ? `This question is ${b.current_state}, and a case cannot be asserted over one the group has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ` : conc.why === "project_withdrew_its_conclusion" ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; \xA77.1 item 7 \u2014 the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project=${proj}). ` : conc.why === "project_stance_undetermined" ? `${proj}'s latest entry about this question names an act this plane does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ` : `${proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (\xA77.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project=${proj}&version=<reading>). `) + (conc.concluded_elsewhere.length ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) \u2014 information, never this project's stance (\xA77.1 item 8). ` : "") + "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72)."
-        };
-      const rel = this.publication.caseRelation(id);
-      const recorded = rel && rel.member ? this.ratification.editionsRecordingConclusion(id, rel, conc) : null;
-      prepared.push({
-        id,
-        b,
-        fm,
-        bundleSha: head ? head.bundleSha : null,
-        conclusion: conc,
-        warrant: recorded,
-        preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null
-      });
-    }
+    const judged = this.#judgeMembers(members, proj, viewer, gate);
+    if (judged.refusal) return judged.refusal;
+    const { prepared } = judged;
     const roleMap = roles && typeof roles === "object" && !Array.isArray(roles) ? roles : null;
     if (roles != null && !roleMap)
       return {
@@ -111528,6 +111847,23 @@ var CaseAuthoring = class {
         hunches,
         detail: `${hunches.length} basis leg(s) of this case's findings rest on a HUNCH (` + hunches.map((h) => `${h.target} leg ${h.ord} on ${h.leg_target}`).join("; ") + `). A hunch is temporary declared bias, and it is the one bias that must be cleared before publication (DEC-20): the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.`
       };
+    const listed = this.#disclosuresListed(tensionsDisclosed);
+    if (listed.refusal) return listed.refusal;
+    const read2 = this.#tensionsRead(prepared, viewer);
+    if (read2.refusal) return read2.refusal;
+    const undisclosed = read2.entries.filter((e) => !listed.byCandidate.has(e.candidate));
+    if (undisclosed.length)
+      return disclosureRefusal("TENSION_NOT_DISCLOSED", {
+        undisclosed: undisclosed.map((e) => this.#namedInRefusal(e)),
+        detail: `${undisclosed.length} unresolved conflict(s) on what this case rests on are not disclosed (` + undisclosed.map((e) => `${e.candidate} on ${e.finding}` + (e.unseen_other_side ? `, ${NOT_SHOWN_WORDS}` : "")).join("; ") + `). A case is published with its conflicts disclosed, never refused because one exists (DEC-76 item 4): list each in tensionsDisclosed, or resolve it first. Nothing was published.`
+      });
+    const standing = new Set(read2.entries.map((e) => e.candidate));
+    const notStanding = [...listed.byCandidate.values()].filter((d) => !standing.has(d.candidate));
+    if (notStanding.length)
+      return disclosureRefusal("DISCLOSURE_NOT_STANDING", {
+        not_standing: notStanding.map((d) => ({ candidate: d.candidate, ord: d.ord })),
+        detail: `${notStanding.map((d) => d.candidate).join(", ")} is not an unresolved conflict on this case's findings at the bytes this act pins: it may have been resolved since, or it names nothing this case rests on. Read the list again (op=publishtensions). Nothing was published.`
+      });
     const belongs = /* @__PURE__ */ new Map();
     for (const id of members) {
       const rs = this.#rows(
@@ -111788,7 +112124,15 @@ var CaseAuthoring = class {
       manifest,
       acks,
       citations,
-      attributions: this.publication.attributionStatements(theCase, edition, proj, observations)
+      attributions: this.publication.attributionStatements(theCase, edition, proj, observations),
+      /* R31: each entry, the owner's words marked as the owner's, the acknowledgement the `author` stamp at this act. */
+      tensions: read2.entries.map((e) => ({
+        ...e,
+        words: listed.byCandidate.get(e.candidate).words,
+        acknowledged_by: who2,
+        acknowledged_at: when
+      })),
+      tensionsUnread: read2.unread
     });
     const docBytes = new TextEncoder().encode(docText);
     const stored = this.publication.storeCaseDocument({
@@ -111828,6 +112172,15 @@ var CaseAuthoring = class {
       bias_acknowledgement: back,
       bias_manifest: manifest,
       case_citations: citations,
+      /* R31: what the document discloses, as it states it (R33: a highlighted one carries its seen side only). */
+      tensions: read2.entries.map((e) => ({
+        ...e,
+        words: listed.byCandidate.get(e.candidate).words,
+        acknowledged_by: who2,
+        acknowledged_at: when
+      })),
+      tensions_highlighted: read2.entries.filter((e) => e.unseen_other_side).length,
+      tensions_legs_unread: read2.unread,
       completeness: {
         statement: stmt,
         subject_position: pos,
@@ -111858,6 +112211,225 @@ var CaseAuthoring = class {
       /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE ONE (R24). */
       next: `review the CASE DOCUMENT (op=casedocument&case=${theCase}&edition=${edition}) and ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its bias acknowledgement, its standard of evidence, the whole roster PINNED AT THE VERSION HASHES each finding has now, and each member's own edition and frozen strength as this case reads it \u2014 and your signature over it is what commits them. Nothing was written on any finding (BIO_Publication_v0_1.md \xA73 rule 12). ` + (written.length === 1 ? `Then ratify the finding itself (op=ratify): it is signed on its own bytes because the finding is the unit of truth.` : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed on its own bytes because the finding is the unit of truth, and this case edition becomes servable as a container when the last of them lands.`)
     };
+  }
+  /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
+   *  `who`. Answers `{refusal}` or `{proj, gate}`. */
+  #authority(project, viewer, who2) {
+    const gate = viewerPredicate(viewer);
+    const proj = str13(project);
+    if (!proj)
+      return { refusal: {
+        ok: false,
+        reason: "NO_PUBLISHING_PROJECT",
+        detail: "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is what supplies the standard of evidence this case is held to, read from that project alone at this moment \u2014 so a publication naming no project is one whose bar nobody declared, and an absent publisher is not a publisher of none."
+      } };
+    const pb = this.#one(
+      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      proj,
+      ...gate.args
+    );
+    if (!pb) {
+      const existence = this.membership.existenceAct(proj, viewer);
+      if (existence) return { refusal: existence };
+    }
+    if (!pb) return { refusal: noSuchProject(proj) };
+    if (normalizeType(pb.object_type) !== "project")
+      return { refusal: {
+        ok: false,
+        reason: "NOT_A_PROJECT",
+        project: proj,
+        object_type: pb.object_type,
+        detail: `${proj} is a ${pb.object_type}, and only a PROJECT has a standard of evidence to hold a case to (DEC-72). Publication is wielded at the top of a project's roster.`
+      } };
+    if (!this.membership.isProjectOwner(proj, who2))
+      return { refusal: {
+        ok: false,
+        reason: "NOT_THE_PROJECT_OWNER",
+        project: proj,
+        author: who2,
+        detail: `publishing is ${proj}'s own production and is wielded by an OWNER of it (DEC-72). An administrator sees every project and directs none of them, and a participant who is not an owner contributes to the work without putting the project's name on it.`
+      } };
+    return { proj, gate };
+  }
+  /** R4, asked by `op=publish` and by R32's read alike: each member in order, every one judged before any moves.
+   *  Answers `{refusal}` or `{prepared}`, each prepared member with its current pin (`bundleSha`, R13). */
+  #judgeMembers(members, proj, viewer, gate) {
+    const prepared = [];
+    for (const id of members) {
+      const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+                             WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
+      if (!b) return { refusal: { ok: false, reason: "NO_SUCH_BUNDLE", target: id } };
+      if (normalizeType(b.object_type) !== "inquiry")
+        return { refusal: {
+          ok: false,
+          reason: "NOT_AN_INQUIRY",
+          target: id,
+          object_type: b.object_type,
+          detail: "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a member of a case."
+        } };
+      const text4 = this.#liveText(id);
+      if (text4 === null)
+        return { refusal: {
+          ok: false,
+          reason: "NO_DOCUMENT",
+          target: id,
+          detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
+        } };
+      const fm = parseFrontmatter(text4).data || {};
+      const head = this.record.head(id);
+      const conc = this.ratification.caseConclusionFor(proj, id, viewer, b.current_state);
+      if (conc.state !== "concluded")
+        return { refusal: {
+          ok: false,
+          reason: "NOT_CONCLUDED",
+          target: id,
+          project: proj,
+          from: b.current_state,
+          object_type: fm.object_type ?? b.object_type,
+          relationship: conc.relationship,
+          why: conc.why,
+          stance: conc.stance,
+          concluded_elsewhere: conc.concluded_elsewhere,
+          concluded_elsewhere_bounds: conc.concluded_elsewhere_bounds,
+          detail: "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md \xA77.1 item 4). " + (conc.why === "question_not_case_bearing" ? `This question is ${b.current_state}, and a case cannot be asserted over one the group has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ` : conc.why === "project_withdrew_its_conclusion" ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; \xA77.1 item 7 \u2014 the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project=${proj}). ` : conc.why === "project_stance_undetermined" ? `${proj}'s latest entry about this question names an act this plane does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ` : `${proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (\xA77.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project=${proj}&version=<reading>). `) + (conc.concluded_elsewhere.length ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) \u2014 information, never this project's stance (\xA77.1 item 8). ` : "") + "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72)."
+        } };
+      const rel = this.publication.caseRelation(id);
+      const recorded = rel && rel.member ? this.ratification.editionsRecordingConclusion(id, rel, conc) : null;
+      prepared.push({
+        id,
+        b,
+        fm,
+        bundleSha: head ? head.bundleSha : null,
+        conclusion: conc,
+        warrant: recorded,
+        preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null
+      });
+    }
+    return { prepared };
+  }
+  /** R31's input: `tensionsDisclosed`, `[{candidate, words?}]`, as a map by candidate (a candidate listed twice is
+   *  disclosed once, its first words kept). Absent or null is none. Any malformed shape is R3's `BAD_COMPLETENESS`
+   *  naming the field (K498): a list that is not one, an entry that is not an object naming a `candidate` string, and
+   *  words over `COMPLETENESS_MAX` or holding a character the grammar cannot carry (a double quote, a backslash, a line
+   *  break; an apostrophe is legal inside its quoted string). C-120.2 is only for a well-formed candidate. */
+  #disclosuresListed(list2) {
+    const byCandidate = /* @__PURE__ */ new Map();
+    const bad = (field, detail) => ({ refusal: { ok: false, reason: "BAD_COMPLETENESS", field, detail } });
+    if (list2 == null) return { byCandidate };
+    if (!Array.isArray(list2))
+      return bad("tensionsDisclosed", "tensionsDisclosed is a list of {candidate, words?}, one per conflict disclosed");
+    for (let i = 0; i < list2.length; i++) {
+      const d = list2[i];
+      const candidate = d && typeof d === "object" && !Array.isArray(d) && typeof d.candidate === "string" ? d.candidate.trim() : "";
+      if (!candidate)
+        return bad(`tensionsDisclosed[${i}]`, `tensionsDisclosed[${i}] is not {candidate, words?} naming a candidate`);
+      if (d.words != null && typeof d.words !== "string")
+        return bad(`tensionsDisclosed[${i}].words`, `tensionsDisclosed[${i}].words is the owner's words, a string`);
+      const words = typeof d.words === "string" ? d.words.trim() || null : null;
+      if (words !== null && (words.length > COMPLETENESS_MAX || /["\\\r\n]/.test(words)))
+        return bad(`tensionsDisclosed[${i}].words`, `tensionsDisclosed[${i}].words is at most ${COMPLETENESS_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
+      if (!byCandidate.has(candidate)) byCandidate.set(candidate, { candidate, ord: i, words });
+    }
+    return { byCandidate };
+  }
+  /** R31, R32: THE ONE READ of what a case over `prepared` must disclose: `contradiction.unresolvedRecordOn` (its R29)
+   *  for each member at its pin, as `viewer`. A read that fails or is truncated is C-120.3 (what cannot be read cannot
+   *  be disclosed). A leg the read could name no referent for (`undetermined_legs`: a document leg with no content row)
+   *  is stated, never filled (R26): counted per member in `unread`. Answers `{refusal}` or `{entries, unread}`, one
+   *  entry per candidate and member, each with its sides as the document states them, and a highlighted one with its
+   *  seen side only (R33). Never throws. */
+  #tensionsRead(prepared, viewer) {
+    const entries = [];
+    const failed2 = [];
+    const unread = [];
+    for (const p of prepared) {
+      let r = null;
+      try {
+        r = this.contradiction.unresolvedRecordOn({ finding: p.id, sha: p.bundleSha, viewer });
+      } catch (e) {
+        r = { undetermined: true, why: String(e && e.message || e).slice(0, 160) };
+      }
+      if (!r || r.ok === false || r.undetermined || r.truncated || !Array.isArray(r.candidates)) {
+        failed2.push({
+          finding: p.id,
+          sha: p.bundleSha,
+          why: !r ? "no answer" : r.truncated ? `more than ${r.bound ?? "its bound of"} candidates on it` : r.why || "the read failed"
+        });
+        continue;
+      }
+      if (Number(r.undetermined_legs) > 0) unread.push({ finding: p.id, legs: Number(r.undetermined_legs) });
+      for (const c of r.candidates) {
+        if (c.unseen_other_side)
+          entries.push({
+            candidate: c.candidate,
+            finding: p.id,
+            state: c.state,
+            kind: null,
+            unseen_other_side: true,
+            side: tensionSide(c.side),
+            depth: 1
+          });
+        else
+          entries.push({
+            candidate: c.candidate,
+            finding: p.id,
+            state: c.state,
+            kind: c.kind ?? null,
+            unseen_other_side: false,
+            a: tensionSide(c.a),
+            b: tensionSide(c.b),
+            explanation: c.explanation ?? null,
+            depth: 1
+          });
+      }
+    }
+    if (failed2.length) return { refusal: _CaseAuthoring.#undetermined(failed2) };
+    return { entries, unread };
+  }
+  /* C-120.3's one site: a read of conflicts that could not be made whole, naming each finding and why. */
+  static #undetermined(failed2) {
+    return disclosureRefusal("TENSIONS_UNDETERMINED", {
+      undetermined: failed2,
+      detail: `the record could not be read whole for conflicts on ${failed2.map((f9) => `${f9.finding ?? "this case's findings"} (${f9.why})`).join("; ")}, so what this case must disclose is not known. Nothing was published.`
+    });
+  }
+  /* R31, R33: how C-120.1 names an undisclosed entry. A half-seen one by its candidate and its finding only. */
+  #namedInRefusal(e) {
+    return e.unseen_other_side ? { candidate: e.candidate, finding: e.finding, unseen_other_side: true, says: NOT_SHOWN_WORDS } : { candidate: e.candidate, finding: e.finding, state: e.state, kind: e.kind, a: e.a, b: e.b };
+  }
+  /* ==========================================================================================================
+   * op=publishtensions: tensionsToDisclose (R32; DEC-85: the ceremony tells the publisher before the act)
+   * ========================================================================================================== */
+  /** R32: the candidates `op=publish` would require this act to disclose, read exactly as R31 reads them. R2's
+   *  refusals, then R4's per member, then C-120.3. Writes nothing and never throws. */
+  tensionsToDisclose({ project = null, targets = null, target = null, viewer = null, author = null } = {}) {
+    try {
+      const who2 = str13(author);
+      const auth = this.#authority(project, viewer, who2);
+      if (auth.refusal) return auth.refusal;
+      const { proj, gate } = auth;
+      const set = Array.isArray(targets) ? targets : typeof targets === "string" && targets.trim() ? targets.split(",") : target ? [target] : [];
+      const members = [...new Set(set.map((x) => str13(x)).filter(Boolean))];
+      const judged = this.#judgeMembers(members, proj, viewer, gate);
+      if (judged.refusal) return judged.refusal;
+      const read2 = this.#tensionsRead(judged.prepared, viewer);
+      if (read2.refusal) return read2.refusal;
+      const candidates = read2.entries.map((e) => e.unseen_other_side ? { ...e, highlighted: true, sentence: CEREMONY_HIGHLIGHT_SENTENCE } : e);
+      return {
+        ok: true,
+        wrote: false,
+        project: proj,
+        findings: judged.prepared.map((p) => ({ target: p.id, bundleSha: p.bundleSha })),
+        candidates,
+        count: candidates.length,
+        highlighted: candidates.filter((c) => c.highlighted).length,
+        legs_unread: read2.unread,
+        depth_stated: TENSIONS_DEPTH_STATED,
+        says: "publishing discloses each of these, and is never blocked by a conflict (DEC-76 item 4): list each in tensionsDisclosed at op=publish, with your own words if you choose. A highlighted one rests on a side in conflict with a record you cannot see; the published case will not name that record or who holds it."
+      };
+    } catch (e) {
+      return _CaseAuthoring.#undetermined([{ finding: null, why: String(e && e.message || e).slice(0, 160) }]);
+    }
   }
   /* The project an unsigned preparation of a case names, or null (publication R40: `case_documents`). */
   #preparedProject(caseId) {
@@ -112518,6 +113090,15 @@ function caseAuthoringOps(c, url, body) {
       })(),
       project: q6("project") || b.project || null,
       draft: q6("draft") || b.draft || null,
+      viewer: q6("viewer"),
+      author: q6("author")
+    }),
+    /* R32 (N345): the ceremony's read before op=publish; `viewer` and `author` are the stamps, as op=publish's. */
+    publishtensions: () => c.tensionsToDisclose({
+      ...b,
+      target: q6("target") || b.target,
+      targets: b.targets || q6("targets") || null,
+      project: q6("project") || b.project || null,
       viewer: q6("viewer"),
       author: q6("author")
     }),
