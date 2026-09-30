@@ -4,7 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
-         caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, REAUTHORABLE_SECTIONS,
+         caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
+         REAUTHORABLE_SECTIONS,
          PUBLICATION_TABLES } from "../../../src/publication/index.mjs";
 
 /* One project owned by olive, one finding prepared into CASE-2026-0001 edition 1 (unsigned). */
@@ -119,16 +120,20 @@ test("R3 a document's exclusions are projected whole when it is stored or re-aut
                    [["CASE-2026-0001", 1, "INQ-2026-0001", "case_document"]]);
 });
 
-test("R20 the case document's grammar: /4 is written, /1–/4 accepted, and the three predicates read the token, pure and never throwing", () => {
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/4");
-  assert.deepEqual(CASE_DOCUMENT_FORMATS_ACCEPTED, ["bio-case-document/4", "bio-case-document/3", "bio-case-document/2",
-                                                   "bio-case-document/1"]);
+test("R20 the case document's grammar: /5 is written, /1–/5 accepted, and the four predicates read the token, pure and never throwing", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/5");
+  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/5", "bio-case-document/4",
+    "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
   const f = (v) => ({ format: `bio-case-document/${v}` });
-  assert.deepEqual([4, 3, 2, 1].map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, false]);
-  assert.deepEqual([4, 3, 2, 1].map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, false, false]);
-  assert.deepEqual([4, 3, 2, 1].map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, false, false, false]);
-  for (const odd of [null, undefined, 7, "x", {}, [], { format: null }])
-    for (const pred of [caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures])
+  const vs = [5, 4, 3, 2, 1, 6, 0];
+  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, false, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, false, false, false, false, false, false]);
+  const throwing = { get format() { throw new Error("boom"); } };
+  for (const odd of [null, undefined, 7, "x", {}, [], { format: null }, { format: "bio-case-document/5 " }, throwing])
+    for (const pred of [caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
+                        caseDocumentRequiresTensionSection])
       assert.equal(pred(odd), false);
 });
 

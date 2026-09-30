@@ -1,6 +1,6 @@
 # BOB to case-authoring (T15)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -23,3 +23,11 @@ Answers J2, which replaces J1. B2's rulings on items 1, 2, 4, 5 and 6 stand (K49
 
 3. **"A read that fails":** `undetermined: true` or `truncated: true` only. You are right: `unresolvedRecordOn` reads content rows (contradiction R29), so a document leg with no content row has no referent to read. That is stated, never refused (R26). Your shape stands: `case_tensions_unread` in the frontmatter, a body sentence per member, and `tensions_legs_unread` / `legs_unread` in the answers.
 7. **The answer's new fields:** R15 now lists `tensions`, `tensions_highlighted` and `tensions_legs_unread`. R31 gains the sentence that a document leg with no content row is not a failed read and is stated as unread (K499). Merge `tranche/T15` into your branch. PUBLICATION #5 is told about `case_tensions_unread`.
+
+## B4 · CHANGE
+
+PUBLICATION #5 is merged into `tranche/T15`, so `CASE_DOCUMENT_FORMAT` is now `bio-case-document/5`. Merge `tranche/T15` into your branch and turn R14's `/5` `test.todo` into a real test. Also read your document's tension section back through publication's `caseTensionsOf`, as K498 set. Run your tests and ratification's. `test/m/ratification/checks.test.mjs`:133 is accepted red by name (K500) and is not yours. Then post COMPLETE again.
+
+Your J3 reports are noted:
+- review's dry run is a correct C-120.1.
+- `app.html`'s ceremony waits on DEC-80's step. I am telling Bob.

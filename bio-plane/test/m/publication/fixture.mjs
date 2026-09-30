@@ -97,7 +97,7 @@ const NO_READINGS = {
 /** This module's tests: the world over storage shaped as workerd's (K316). */
 export const planeWorld = (opts = {}) => world({ ...opts, workerd: true });
 
-export function world({ group = "test-group", workerd = false } = {}) {
+export function world({ group = "test-group", workerd = false, contradiction = null } = {}) {
   const st = storage({ workerd });
   const all = (c) => (Array.isArray(c) ? c : c.toArray());
   const host = { storage: st };
@@ -133,7 +133,7 @@ export function world({ group = "test-group", workerd = false } = {}) {
   const r = reevaluationOf(host, { record, membership, promotion, inquiry: k, content, connections, provenance: prov,
                                    basisVersions, now: () => clock.now });
   const p = publicationOf(host, { record, membership, promotion, inquiry: k, basisVersions, reevaluation: r,
-                                  now: () => clock.now });
+                                  ...(contradiction ? { contradiction } : {}), now: () => clock.now });
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef,
@@ -226,10 +226,17 @@ export function world({ group = "test-group", workerd = false } = {}) {
 /** A case document (`bio-case-document/4` unless `format`): the facts this module reads from it. `roles`:
  *  [{target, version_sha, edition?, role?}]; `strength`: [{target, axis, state, grade}]; `excluded`: [{target,
  *  description, reason}]; `attributions`: [{observation, level, shown, chosen_at_edition}] (a run is written only when
- *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given). */
+ *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given);
+ *  `tensions`: the /5 section as case-authoring writes it (case-authoring J1's shape): `{rows, sentences, depth?}`, each
+ *  row's and sentence's fields written as given (a string quoted), `unread` ({target, legs}, K499) when given; with it
+ *  the format defaults to /5. */
 export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findings = null, strength = [], excluded = [],
-                                           attributions = null, citations = [], format = "bio-case-document/4",
+                                           attributions = null, citations = [], tensions = null, format = null,
                                            excludes = "Nothing else.", ack = false } = {}) {
+  format ??= tensions ? "bio-case-document/5" : "bio-case-document/4";
+  const scalar = (v) => (v === null || v === undefined ? "null" : typeof v === "string" ? `"${v}"` : String(v));
+  const rowsOf = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Object.entries(r)
+    .map(([k, v], i) => `${i ? "   " : "  -"} ${k}: ${scalar(v)}`))] : [`${key}: []`]);
   const fm = ["---", `format: ${format}`, `case_id: ${caseId}`, `case_edition: ${edition}`, `case_project: ${project}`,
     "case_roles:", ...roles.flatMap((r) => [`  - target: ${r.target}`, `    version_sha: ${r.version_sha}`,
       `    edition: ${r.edition ?? 1}`, `    role: ${r.role ?? "load_bearing"}`]),
@@ -247,6 +254,11 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
     ...(citations.length ? ["case_citations:", ...citations.flatMap((c) => [`  - target: ${c.target}`,
       `    version: ${c.version}`, ...(c.capture !== undefined ? [`    capture: ${c.capture ?? "null"}`] : [])])]
       : ["case_citations: []"]),
+    ...(tensions ? [`tensions_disclosed: ${tensions.rows.length}`,
+      `tensions_highlighted: ${tensions.rows.filter((r) => r.unseen_other_side).length}`,
+      ...(tensions.depth ? [`tensions_depth_stated: "${tensions.depth}"`] : []),
+      ...(tensions.unread ? rowsOf("case_tensions_unread", tensions.unread) : []),
+      ...rowsOf("case_tensions", tensions.rows), ...rowsOf("case_tension_sentences", tensions.sentences || [])] : []),
     "---"];
   const body = ["", "## Scope", "", "The question.", "",
     ...(ack ? ["**Who else read this statement.** Nobody yet.", ""] : []),
