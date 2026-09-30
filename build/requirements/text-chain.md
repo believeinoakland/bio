@@ -17,7 +17,7 @@ clock, and no function in it throws.
 
 Every check function below returns `null` on success or a refusal `{ok:false, code, check,
 translation, detail}`, where `code` is one of the keys below, and `check`/`translation` are read from
-`legacy-checks`' `TEXT_CHAIN_CHECKS` (family C-35). `detail` is specific to the failure. A chain is a
+this module's own `TEXT_CHAIN_CHECKS` (family C-35, exported). `detail` is specific to the failure. A chain is a
 non-empty array of step objects; `STEP_KINDS` below is the only source of which step names exist.
 
 **`STEP_KINDS`** — a plain object whose keys are every step kind `checkChain` and `appendStep` accept.
@@ -335,7 +335,7 @@ must add a service that:
 ### Errors summary
 
 Every `TEXT_CHAIN_*`, `TEXT_CONFIDENCE_*`, `TEXT_ANCHOR_*` and `TEXT_ATTEST_*` code above is a key of
-`TEXT_CHAIN_CHECKS` (`legacy-checks`, family C-35.1–C-35.14). No other module may mint a C-35 code; a
+`TEXT_CHAIN_CHECKS` (this module's, family C-35.1–C-35.14, K634). No other module may mint a C-35 code; a
 new refusal condition in this module mints the next one in the family and is added there.
 
 - **R87** (N98, D-670; K278) `RECT_USER_SPACE` (`"user"`) and `rectSpace(holder) → string | null`: a holder's `.space` absent or `null` reads as `"user"`; a non-empty string is that space; anything else is `null` (unreadable, comparable to nothing). `readingSource`'s `pdf-page` arm carries `space` (truncated to 40) beside a valid rect only when it is not user space, so an explicit `"user"` and the unstated spelling give the same bytes (R66, R67 unchanged for every position written before D-670); a rect with an unreadable space drops to `null`, as a malformed rect does (R62). `readingSourceJson`, `readingOccurrenceKey` and `readingSourceFromColumns` carry it through.
@@ -348,10 +348,10 @@ new refusal condition in this module mints the next one in the family and is add
 
 ### Uses
 
-- `legacy-checks` (`bio-plane/checks/bio-checks.mjs`): `TEXT_CHAIN_CHECKS` (the C-35 family, `check`
-  and `translation` text for every refusal above); `BASIS_GRADES` (the ordered grade-letter array
-  `rank`/`weaker` compare on) and `EARNED_CAPTURE_CEILING` (the strongest letter `captureBound` may
-  answer); `isMachineIdentity` (whether an attestation's `.member` names a machine credential).
+- `record-grammar`: `BASIS_GRADES` (the ordered grade-letter array `rank`/`weaker` compare on) and
+  `EARNED_CAPTURE_CEILING` (the strongest letter `captureBound` may answer); `isMachineIdentity`
+  (whether an attestation's `.member` names a machine credential). (K634; until T18's text-chain job
+  re-points, read through `legacy-checks`' re-exports.)
 
 ### Invariants
 

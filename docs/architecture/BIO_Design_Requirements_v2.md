@@ -161,13 +161,16 @@ institutional recordkeeping is itself a compliance issue.
 
 **Amended by Bob, 2026-09-26** (`build/layers.md`, layer 9): a seventh stage, **Political Accountability**, entered from Response Evaluation or Escalation to Legal Tools and aimed, like the others, at compliance restored and consequences addressed: asking elected officials to act on the breach, oversight and audit requests, testimony, and legislation that restores or enforces an existing requirement. Policy advocacy and candidate support are not part of it; Operational Principle 1 stands.
 
-Six stages: Discovery and Documentation, Notification, Clock Starts,
-Response Evaluation, Escalation to Legal Tools, Sustained Attention.
+**Amended by Bob, 2026-09-30** (`BIO_Action_v0_1.md` §5 row 2; K102, K608): a met trigger proposes the next stage, with its age; a member advances it or declines with a reason. The protocol never advances itself (Requirement 12).
+
+Seven stages: Discovery and Documentation, Notification, Clock Starts,
+Response Evaluation, Escalation to Legal Tools, Sustained Attention,
+Political Accountability.
 Each stage has defined entry conditions, defined actions, defined
 timelines, and documented trigger conditions for the next stage. Any
 group or individual can initiate the protocol independently. The
 protocol is designed to be mechanical: when trigger conditions are met,
-the next stage activates. This removes the human hesitation that the
+the next stage is proposed, and a member advances it. This removes the human hesitation that the
 protection system exploits.
 
 ### 8. Evidence is separated from legal strategy. Available actions are classified by risk.
@@ -321,7 +324,7 @@ pulling structured information from public sources (ACFRs, budget
 documents, OpenGov portals); a government compliance analysis skill that
 compares specific government actions against applicable legal and policy
 standards; escalation protocol guidance that helps groups determine
-where they are in the six-stage process and what the next step is;
+where they are in the seven-stage process and what the next step is;
 cross-referencing skills that identify related published work products
 across the network; comparison skills that analyze where two groups'
 analyses of the same data diverge; and communication moderation skills
