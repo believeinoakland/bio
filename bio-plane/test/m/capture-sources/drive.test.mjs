@@ -131,6 +131,32 @@ test("R43: driveConvertStep is the conversion as a derivation step, its cap unde
   assert.match(s.measured_by, /^unmeasured/);
 });
 
+/* drive-convert's share (T17 legacy-tests, convert row; DEC-75): the old suite asked, through op=acquire, that each
+   Drive kind's chain head be `convert(google-export, <format>)` with its cap present and null, stated as unmeasured
+   naming what raises it, no calibration, and its format the hop's export_format. Here at the interface, whole. */
+test("R43, R42: for every kind and every host spelling, the step is the hop's conversion, its cap present and null until a calibration raises it", () => {
+  const hosts = ["docs.google.com", "drive.google.com", "sheets.google.com", "slides.google.com", "www.docs.google.com"];
+  for (const k of DRIVE_KINDS) for (const host of hosts) {
+    const d = readDriveAddress(`https://${host}/u/0/${k.segment}/d/${ID}/edit`);
+    const s = driveConvertStep(d);
+    const where = `${k.kind} on ${host}`;
+    assert.deepEqual(Object.keys(s).sort(), ["calibration", "cap", "engine", "format", "measured_by", "step"], where);
+    assert.deepEqual([s.step, s.engine, s.format, s.cap, s.calibration], ["convert", DRIVE_CONVERT_ENGINE, k.format, null, null], where);
+    /* One derivation, two records of it: the step's format is the hop's, from the same address. */
+    const h = driveHop(d, { retrieved: "2026-09-30T00:00:00Z" });
+    assert.equal(s.format, h.export_format, where);
+    /* Stated, not left blank: unmeasured, and what would raise it. */
+    assert.match(s.measured_by, /^unmeasured: /, where);
+    assert.match(s.measured_by, /calibration row raises it/, where);
+    assert.match(s.measured_by, /CAP-11 measures/, where);
+    assert.equal(s.measured_by, driveConvertStep(readDriveAddress(DOC)).measured_by, where);
+  }
+  /* A fresh step each call: a caller that edits one (a later calibration's copy) changes no other. */
+  const a = driveConvertStep(readDriveAddress(DOC));
+  a.cap = "C";
+  assert.equal(driveConvertStep(readDriveAddress(DOC)).cap, null);
+});
+
 test("R44: DRIVE_HOP_FACT_KEYS and callerSuppliedHopFacts answer the own top-level keys, in the list's order", () => {
   assert.deepEqual(DRIVE_HOP_FACT_KEYS, ["export_address", "export_format", "producer", "drive_file_id", "drive_kind", "drive",
                                          "document_address", "provenance_hop"]);
