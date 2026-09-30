@@ -5,9 +5,9 @@ import assert from "node:assert/strict";
 import {
   STEP_KINDS, checkChain, appendStep, layerChain, convertedChain, mergedChain, calibrationsOf,
   derivationCap, isTranscribed, terminalStep, tiersEvidenced, describeChain, chainKindFor, CHAIN_KIND_MIXED,
-  MACHINE_READ_KINDS,
+  MACHINE_READ_KINDS, TEXT_CHAIN_CHECKS,
 } from "../../../src/textchain.mjs";
-import { TEXT_CHAIN_CHECKS, BASIS_GRADES } from "../../../checks/bio-checks.mjs";
+import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 
 const KINDS = Object.keys(STEP_KINDS);
 /* A minimal well-formed step of each kind. */

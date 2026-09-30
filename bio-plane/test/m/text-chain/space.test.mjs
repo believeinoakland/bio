@@ -6,7 +6,7 @@ import {
   RECT_USER_SPACE, rectSpace, readingSource, readingSourceJson, readingOccurrenceKey, readingSourceFromColumns,
   readingPositionInExtent, extentCovers, gradeCeiling,
 } from "../../../src/textchain.mjs";
-import { EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 
 const pdf = (x = {}) => ({ kind: "pdf-page", ref: "p. 1", page: 0, ...x });
 const UNREADABLE = ["", "  ", 3, 0, false, true, {}, [], ["image-px"]];

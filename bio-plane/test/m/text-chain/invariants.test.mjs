@@ -3,7 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as tc from "../../../src/textchain.mjs";
-import { TEXT_CHAIN_CHECKS } from "../../../checks/bio-checks.mjs";
+
+const { TEXT_CHAIN_CHECKS } = tc;
 
 const JUNK = [undefined, null, 0, -1, 1.5, NaN, "", "x", "ocr", true, [], [null], [{}], {}, { page: -1 },
   { kind: "pages", pages: [] }, { step: "ocr" }, [{ step: "layer", extent: "x" }], Symbol.for("s"), () => 1,
@@ -64,7 +65,7 @@ test("R84: no place is named in anything the module answers", () => {
   };
   collect(tc.STEP_KINDS); collect(tc.TIER_RULE);
   for (const [, fn, args] of calls()) { try { collect(fn(...args)); } catch { /* R83 */ } }
-  for (const code of Object.keys(TEXT_CHAIN_CHECKS)) said.push(code);
+  for (const [code, row] of Object.entries(TEXT_CHAIN_CHECKS)) said.push(code, row.check, row.where, row.translation);
   assert.ok(said.length > 1000);
   assert.deepEqual(said.filter((s) => PLACES.test(s)), []);
 });
