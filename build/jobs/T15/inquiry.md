@@ -1,6 +1,6 @@
 # inquiry (T15)
 
-**Status** · session_01Ew9rdcsPSSYPHdbKmBr6Hv · depth 2 · WORKING · handled B2
+**Status** · session_01Ew9rdcsPSSYPHdbKmBr6Hv · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
