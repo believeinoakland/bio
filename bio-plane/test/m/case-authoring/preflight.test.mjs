@@ -8,6 +8,8 @@ import assert from "node:assert/strict";
 import { world, V, T0, sha } from "./fixture.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, SELF_ATTESTED_SENTENCE } from "../../../src/case-authoring/index.mjs";
 import { caseDocumentBlocks, unnamedSourceStatement, sourceStatement } from "../../../src/publication/index.mjs";
+import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -49,7 +51,11 @@ test("R29: C-120.4–C-120.7 are this module's rows, in the family 'a case's dis
     "Publishing a document as self-attested only says why. Give the reason. Nothing was written.",
     "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written.",
     "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."]);
-  for (const [, v] of rows) assert.match(v.where, /^src\/case-authoring\/index\.mjs #\S+ > is-[a-z-]+$/);
+  assert.deepEqual(rows.map(([, v]) => v.where), [
+    "src/case-authoring/index.mjs #selfAttestedJudged > is-co-attestation-acknowledged",
+    "src/case-authoring/index.mjs #selfAttestedJudged > is-self-attested-reasoned",
+    "src/case-authoring/index.mjs #selfAttestedJudged > is-self-attestation-standing",
+    "src/case-authoring/index.mjs #hunchDebt > is-hunch-cleared"], "each names the function that raises it");
 });
 
 test("R12: uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {
@@ -106,6 +112,31 @@ test("R35: each capture a member rests on is stated with its grade (provenance.c
   assert.equal(n.ok, true);
   assert.deepEqual(caseDocumentBlocks(docOf(w3, n).text).captures.map((c) => [c.grade, c.grade_basis, c.co_attested]),
     [[null, "CAPTURE_ROUTE_UNRECORDED", false]]);
+});
+
+test("R35: the grade that needs co-attestation or an acknowledgement is EARNED_CAPTURE_CEILING, provenance R24's one definition (capture R18): the refusal names it, and a load-bearing capture below it (an archive replay's ARCHIVE_CAPTURE_GRADE) that is not co-attested needs none", () => {
+  assert.equal(EARNED_CAPTURE_CEILING, "B");
+  const { w, P, b } = setup();
+  const r = w.publish(P, "alice", [Q]);
+  refused(r, "CO_ATTESTATION_UNACKNOWLEDGED");
+  assert.deepEqual([r.unacknowledged.map((u) => u.grade), w.prov.captureGrade(b).grade], [[EARNED_CAPTURE_CEILING], EARNED_CAPTURE_CEILING]);
+  assert.match(r.detail, new RegExp(`load-bearing Grade ${EARNED_CAPTURE_CEILING} document`));
+  /* an archive replay earns the letter below the ceiling: stated, never asked to be acknowledged */
+  const w2 = world(); w2.member("alice");
+  const c = w2.graded(DOC3, {}, { receipt: false });
+  w2.prov.recordReceipt({ address: `https://example.org/${DOC3}`, addressNorm: `example.org/${DOC3}`, captureSha: c,
+                          retrieved: T0, via: ARCHIVE_VIA });
+  assert.equal(w2.prov.captureGrade(c).grade, ARCHIVE_CAPTURE_GRADE);
+  assert.notEqual(ARCHIVE_CAPTURE_GRADE, EARNED_CAPTURE_CEILING);
+  w2.finding(Q, [{ target: DOC3 }]);
+  const ok = w2.publish(w2.project("Arc", "alice", [Q]), "alice", [Q]);
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  const row = caseDocumentBlocks(docOf(w2, ok).text).captures.find((x) => x.capture === c);
+  assert.deepEqual([row.grade, row.co_attested, row.self_attested_only], [ARCHIVE_CAPTURE_GRADE, false, false]);
+  /* the document's words name the ceiling from the same definition */
+  const acked = w.publish(P, "alice", [Q], { selfAttested: [{ capture: b, reason: REASON }] });
+  assert.ok(bodyOf(docOf(w, acked).text).includes(`A co-attested Grade ${EARNED_CAPTURE_CEILING} document is enough to publish on; `
+    + "one that is not is published only as self-attested"));
 });
 
 test("R35: a document leg names its content row's capture, else every capture its target registers; an inquiry leg names none; one level deep", () => {

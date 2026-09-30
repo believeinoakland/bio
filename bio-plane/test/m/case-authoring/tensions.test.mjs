@@ -69,6 +69,11 @@ test("R29: C-120.1–C-120.3, a case's disclosures, are this module's own family
     "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."]);
   for (const row of Object.values(CASE_DISCLOSURE_CHECKS))
     assert.match(row.where, /^src\/case-authoring\/index\.mjs \S+ > [a-z-]+$/);
+  /* each names the function that raises it (N383): R31's two in `#tensionsJudged`, C-120.3 at its one site */
+  assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).slice(0, 3).map((v) => v.where), [
+    "src/case-authoring/index.mjs #tensionsJudged > is-tension-disclosed",
+    "src/case-authoring/index.mjs #tensionsJudged > is-disclosure-standing",
+    "src/case-authoring/index.mjs #undetermined > is-tensions-determined"]);
 });
 
 test("R31 (C-120.1): an undisclosed tension is refused, naming each, before any id is drawn and with nothing written; disclosed, the case publishes — disclose, never block (DEC-76 item 4)", () => {

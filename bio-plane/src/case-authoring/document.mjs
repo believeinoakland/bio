@@ -13,7 +13,7 @@
  * map holding an array. Hence `completeness` beside `completeness_excluded`, `searched` beside `searched_levels`,
  * `bias_manifest` beside `bias_manifest_bundles`. */
 
-import { createSha256 } from "../../checks/bio-checks.mjs";
+import { createSha256, EARNED_CAPTURE_CEILING } from "../../checks/bio-checks.mjs";
 import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
@@ -57,8 +57,9 @@ function captureBodyLines(captures, sources) {
   return ["## Each Document's Grade And Co-attestation", "",
     ...(byCapture.size
       ? ["Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a "
-         + "trusted timestamp and a third party's co-archive attest it. A co-attested Grade B document is enough to "
-         + "publish on; one that is not is published only as self-attested, by the owner's stated acknowledgement.", "",
+         + "trusted timestamp and a third party's co-archive attest it. "
+         + `A co-attested Grade ${EARNED_CAPTURE_CEILING} document is enough to publish on; `
+         + "one that is not is published only as self-attested, by the owner's stated acknowledgement.", "",
          ...[...byCapture.values()].flatMap((c) => [
            `- ${c.capture} (under ${c.members.join(", ")}): `
              + (c.grade ? `grade ${c.grade} (${c.grade_basis ?? "basis not stated"})`
