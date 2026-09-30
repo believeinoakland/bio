@@ -2,6 +2,12 @@
 
 **Status** · session_018xQkkj4FkEcwbqR1dfGgvx · depth 2 · WORKING · handled B2
 
+## Progress
+
+- 02:35 · N345 applied on K487's reading (B2): `skillpack.mjs` imports `RECOMMEND_PROMPT`, `RECOMMEND_PROMPT_SHA256` from `./contradiction.mjs` and `sha256HexSync` from the catalogue; `disclosed.contradiction` after `refusals` (R5, R27); R1's two new throws; tests: pack.test R1 (child-mocked contradiction entry: null, blank, edited prompt, wrong digest, and the control), R5's key list, R27 (the layer whole, digest recomputed, disclosed not resident, version moves, R24's scan over the prompt); doctrine.test R23 (the prompt's first line typed nowhere in the source) and R24 (the rendered prompt scanned). Committed 06f4ce284f.
+- Verified against a temporary local stub of contradiction's two exports (reverted, never committed): `test/m/skills/` 33/0; legacy `bio-plane/test/skillpack.test.mjs` 1/0.
+- **Next step:** on BOB's word that contradiction has merged, merge `tranche/T15`, run `test/m/skills/` against the real export (R24's scan over the real prompt: report a trip, K487), then steps 6–7; post REPORT (agent-worker's bundle stale) and COMPLETE.
+
 ## J1 · QUESTION
 
 Q1. `build/requirements/skills.md` carries no requirement for N345's entry: nothing names `RECOMMEND_PROMPT`, and R5 lists the disclosed layers exactly, so packaging it changes R5's wording and needs an id to test (P7). My best reading, which I am building against now (import held until you say contradiction has merged):
