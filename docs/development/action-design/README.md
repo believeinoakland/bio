@@ -16,3 +16,5 @@ Design work on the Action layer (layer 9, `build/layers.md`). **The role (Bob, 2
 | `UX-ANSWERS.md` | the UX substrate's open questions and use cases the Action rulings settle, with the text for BOB to enter (K438). Rendered as `ux-answers.html` |
 | `views/plan-page.html` | APPROVED by Bob 2026-09-30. A UX view: an interactive design mock of the plan page with the bond-measure example as sample data |
 | `views/start-and-send.html` | a UX view: starting an option (the ACT preview, the refusal and the override with its disclosure) and preparing, approving, stamping and recording what is sent |
+| `views/matter-page.html` | a UX view: one matter: determination per standard, consequences, the escalation track with a proposed stage, attached actions, pressure recorded |
+| `views/surfaces.html` | UX views: standards in force on a date, a Tier 2 filing draft with unfilled blanks and the advisory, the Tier 3 counsel packet, and the queue items |
