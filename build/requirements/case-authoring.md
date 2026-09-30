@@ -96,7 +96,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 - `basis-versions`: `testimonyReach` (R14).
 - `strength`: `strengthOf`, `projectBar`, `STRENGTH_AXES`, the axis words (R6, R14).
 - `reevaluation`: the raise for a new member edition (R15).
-- `publication`: `caseRelation`, the published registries (R7's derivation), `storeCaseDocument`, `reauthorSection`, `attributionStatements`, `reviewProvider`, `hasCaseStanding`, the format grammar (the `/5` predicate, N345).
+- `publication`: `caseRelation`, the published registries (R7's derivation), `storeCaseDocument`, `reauthorSection`, `attributionStatements`, `reviewProvider`, `hasCaseStanding`, the format grammar (the `/5` predicate, N345; `case-grammar` R1, R2, through `publication`'s re-export, K651).
 - `ratification`: `caseConclusionFor`, `editionsRecordingConclusion` (R4, R8), `completenessFields`, `biasAcknowledgementOf`, `SUBJECT_POSITIONS`, `SEARCHED_SUBJECT_SOURCES`.
 - `contradiction` (N345): `unresolvedRecordOn` (its R29), for R31 and R32.
 - N364: `sources`: `publishableAt` (its R8), for R37. `capture`: `lateAttestationsOf` (its R68), `captureAccountsOf` (its R69), for R35 and R36. `provenance`: `attestationsOf` (its R49), `captureGrade` (its R24–R27, R51), for R35. `ratification`: `caseRatifyPreflight` (its R18), for R34.

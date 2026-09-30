@@ -73,7 +73,7 @@ The answer:
 
 - `runtime-limits`: `PUBLISHED_TOKEN_HASHES`, `sha256hex` (`tokens.mjs`, a bundle input).
 - `bundler`: `discoverMembers`, `writeMember` (the build).
-- `skills`: `reportsAs` and `DEPLOYMENT_SEQUENCE` (tests only, R44); `renderPack` at runtime once R48 is met (K102).
+- `skills`: `reportsAs` and `DEPLOYMENT_SEQUENCE` (tests only, R44); nothing at runtime: the pack arrives rendered in `op=affordances`' answer (R48; K649 (5)).
 - `run-rules`: `AI_RUN_STATE_MAX_BYTES` and `AI_RUN_STATE_TOO_LARGE` (its R10), which R49 keeps within (N293).
 - `ai-runs`, `query-language`, `legacy-checks`: tests only; the suites read `OBSERVATION_LEVELS`, `OBSERVATION_STATES`, `RUN_ENDINGS`, the plane's namespaces and `OPS` table, and `SUGGEST_LEVELS` from the plane's source to pin this member's copies (R44). At runtime it uses them only over the wire.
 
@@ -81,7 +81,7 @@ The answer:
 
 - **R35** Its only binding is the service binding `PLANE`; it has no Durable Object, R2 or secret binding, no plane URL, and reaches the plane by no other route.
 - **R36** It holds no credential: the `ai` credential and `claude_accounts` arrive per call, are never stored, logged or echoed, and no response carries a token.
-- **R37** It judges no scope: it has no op allow-list, scope or class. `PLANE_OPS` is exactly `whoami`, `airun`, `airunlog`, `airunspawn`, `meaningrows`, `basisversions`, `search`, `versionchain`, `affordances` (reads; `affordances` for R48's published catalogue, K181) and `airuntick`, `suggest`, `capturerequest`, `airunclose` (writes the plane makes); it calls no other op, and none of them returns document bytes.
+- **R37** It judges no scope: it has no op allow-list, scope or class. `PLANE_OPS` is exactly `whoami`, `airun`, `airunlog`, `airunspawn`, `meaningrows`, `basisversions`, `search`, `versionchain`, `affordances` (reads; `affordances` for R48's rendered pack, K181, K649 (5)) and `airuntick`, `suggest`, `capturerequest`, `airunclose` (writes the plane makes); it calls no other op, and none of them returns document bytes.
 - **R38** It never writes `runtime-ceiling-reached` or any ending itself; it spends, and the plane writes the condition at its own exit.
 - **R39** No model judgement sets the mode, the step, the pass count or limit, the budget, a bound, the run, the namespace or the target (R16).
 - **R40** A run's model turns run under the Claude account the cascade resolved and the skill pack the run names, within the segment bound.
@@ -92,7 +92,7 @@ The answer:
 - **R45** The committed bundle is byte-identical to a fresh build of `src/index.mjs`, and its manifest names every input, `bio-plane/src/tokens.mjs` included (the check is `bundler`'s).
 - **R46** No place is named in its behaviour or outward text; its `account_id` is the project's one Cloudflare account.
 - **R47** It is reachable only through the plane's service binding.
-- **R48** A run's model is instructed by the pack the run names. When model turns run (R40), this member renders the pack (`skills.renderPack`) and refuses a segment whose run's recorded skill version is not the rendered pack's version, before any turn and as it refuses a run whose recorded payer differs (R10): a 409 refusal carrying both versions. Until turns run it changes nothing.
+- **R48** A run's model is instructed by the pack the run names. When model turns run (R40), this member reads the rendered pack from the plane's untargeted `op=affordances` answer (R37), which carries the composed machine fences and the pack the control plane renders over them (`skills.renderPack`; N157, K649 (5), `draft-T18.md` §1a); it renders nothing itself and imports neither the check catalogue nor `skills`' code. It refuses a segment whose run's recorded skill version is not that pack's version, before any turn and as it refuses a run whose recorded payer differs (R10): a 409 refusal carrying both versions, an answer carrying no pack stating its version undetermined. Until turns run it changes nothing.
 
 ### Satisfies
 
