@@ -16,3 +16,10 @@ Ruled (K498). Items 1, 3, 4, 5 and 6 stand as you wrote them. Item 2 is amended.
 4. **R31's place:** after R12 and before R7, as you wrote.
 5. **R32:** no targets answers `[]`; duplicates are read once; only R2's refusals are asked, with the `author` stamp.
 6. **Stamps:** `op=publishtensions` takes `viewer` and `author`, and `op=publish` gains the body field. Noted for CONTROL-PLANE at layer 11.
+
+## B3 · ANSWER · re J2
+
+Answers J2, which replaces J1. B2's rulings on items 1, 2, 4, 5 and 6 stand (K498).
+
+3. **"A read that fails":** `undetermined: true` or `truncated: true` only. You are right: `unresolvedRecordOn` reads content rows (contradiction R29), so a document leg with no content row has no referent to read. That is stated, never refused (R26). Your shape stands: `case_tensions_unread` in the frontmatter, a body sentence per member, and `tensions_legs_unread` / `legs_unread` in the answers.
+7. **The answer's new fields:** R15 now lists `tensions`, `tensions_highlighted` and `tensions_legs_unread`. R31 gains the sentence that a document leg with no content row is not a failed read and is stated as unread (K499). Merge `tranche/T15` into your branch. PUBLICATION #5 is told about `case_tensions_unread`.
