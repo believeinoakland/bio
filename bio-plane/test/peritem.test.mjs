@@ -286,7 +286,11 @@ try {
     ["taskforward", "per-item", "items", 100], ["taskresolve", "per-item", "items", 100]]);
   /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): the three set acts' owner, and so the `#perItem` that looks up the
      published groups and hands them to record-core, left store.mjs with the queue for `src/queue/index.mjs`. The
-     structural pin below reads the lookup there; the mechanism it hands to is still record-core's. */
+     structural pin below reads the lookup there; the mechanism it hands to is still record-core's.
+     LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved `taskforward`/`taskresolve` and their own copy of
+     `#perItem` to `src/tasks/index.mjs` (tasks R3; its set form is driven in `test/m/tasks/inbox.test.mjs` "R3:
+     taskForward's refusals… both per item as a set"). The pin below is block 9's, about proposedispose's narrowing,
+     whose `#perItem` stays in queue; it reads the file it always read. */
   const queueSrc = readFileSync(fileURLToPath(new URL("../src/queue/index.mjs", import.meta.url)), "utf8");
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; record-core REPORT 5, T5-1): the per-item mechanism left the store
      for record-core's `perItem` (src/record-core/index.mjs); the store's `#perItem` is now its caller, passing the

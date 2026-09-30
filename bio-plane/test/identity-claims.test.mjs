@@ -133,8 +133,11 @@ console.log(`  T8: ${T8_INLINE.reinlined.length} substitutions for the sweep: ${
 /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): the queue's acts (`proposeDispose`, `taskForward`, `taskResolve`, `taskDrain`,
    `queueMute` …) left the store for `src/queue/index.mjs`, and the dispatch map spreads `...queueOps(queueOf(this.ctx),
    url, body)`. The same re-inliner is passed queue's factory as a fourth pass, so each of those ops reads the method its
-   fence now lives in; nothing else changes. */
-const Q_INLINE = reinlineLayer5(STORE_SRC, { ops: true, modules: { queueOf: "queue" } });
+   fence now lives in; nothing else changes.
+   LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the four task ops (`taskdrain`, `tasks`,
+   `taskforward`, `taskresolve`) and their fences out of `queueOps` into `tasksOps` (`src/tasks/`, tasks R1–R3), which
+   the store spreads beside queue's (`...tasksOps(tasksOf(this.ctx), url, body)`); the same pass re-inlines both. */
+const Q_INLINE = reinlineLayer5(STORE_SRC, { ops: true, modules: { queueOf: "queue", tasksOf: "tasks" } });
 STORE_SRC = Q_INLINE.text;
 console.log(`  T12: ${Q_INLINE.reinlined.length} substitutions for the sweep: ${Q_INLINE.reinlined.join(", ")}`);
 

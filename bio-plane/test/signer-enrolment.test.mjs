@@ -95,7 +95,9 @@ const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6, PUBLICATION #1 J4.6): `gateFacts` left the store for
    ratification and `caseDocumentFacts` for publication, each still calling membership's `attestingKeys()`; the corpus
    is the store as it stood before those extractions — store.mjs, membership, ratification and publication. */
-const STORE_SRC = storeCorpus(["membership", "ratification", "publication"]);
+/* LEGACY-TESTS #14 (T16, 2026-09-30; CAPTURE (N364, R69)): capture's signed account (`captureAccount`) verifies against
+   membership's `attestingKeys()`, the same door, so capture joins the corpus and §5 counts it by name. */
+const STORE_SRC = storeCorpus(["membership", "ratification", "publication", "capture"]);
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -375,11 +377,16 @@ const readers = STORE_SRC.split("${Store.SIGNER_ATTESTS}").length - 1 + STORE_SR
 const doorCallers = STORE_SRC.split(".attestingKeys()").length - 1;
 const literals = STORE_SRC.split("s.status='active' AND m.status='active'").length - 1;
 console.log(`    STRUCTURE: ${readers} splice(s) of SIGNER_ATTESTS · ${doorCallers} caller(s) of attestingKeys() · ${literals} occurrence(s) of the predicate's text`);
-t("the predicate has EXACTLY three readers — the roster, `gateFacts` and `caseDocumentFacts` (the latter two "
-+ "through membership's `attestingKeys()`, R70) — and its "
+/* LEGACY-TESTS #14 (T16, 2026-09-30): RE-PINNED 2 -> 4 callers of `attestingKeys()`, each a new reader through the one
+   door and none an inline copy (the text still occurs once): ratification R18's `caseRatifyPreflight` (RATIFICATION #7,
+   N364: `NO_ATTESTING_KEY` when the signer holds no attesting key, `src/ratification/index.mjs`) and capture R69's
+   signed account (CAPTURE, N364: the account's signature verified against the member's attesting keys,
+   `src/capture/index.mjs`). Five readers: the roster, `gateFacts`, `caseDocumentFacts`, the pre-flight, the account. */
+t("the predicate has EXACTLY five readers — the roster, `gateFacts`, `caseDocumentFacts`, ratification's pre-flight "
++ "(R18) and capture's signed account (R69) (the latter four through membership's `attestingKeys()`, R70) — and its "
 + "text occurs ONCE, in the constant itself: a faithful inline copy at any of them is invisible to "
 + "every behavioural assertion in this file and visible only here",
-  [readers, doorCallers, literals], [2, 2, 1]);
+  [readers, doorCallers, literals], [2, 4, 1]);
 /* RE-PINNED 2026-09-28 (T7, legacy-tests): the floor was 2,000,000 characters of store.mjs + membership; layer 6 and 7
    extracted inquiry, citation, basis-versions, strength, contradiction, ai-runs, run-productions, capture-requests,
    intent and reevaluation out of store.mjs (each record's legacy-store removals), so the same corpus now reads 1,501,586.

@@ -112,8 +112,15 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
-import { parseFrontmatter, SEARCHED_SUBJECT_SOURCES,
-         checkCaseDocument, CASE_DOCUMENT_FAMILY } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* LEGACY-TESTS #14 (T16, 2026-09-30; N361, K529): `SEARCHED_SUBJECT_SOURCES`, `checkCaseDocument` and
+   `CASE_DOCUMENT_FAMILY` are ratification's (R8), the catalogue promotion's `runCaseGate` runs when op=caseratify signs
+   this suite's case; the catalogue's own copies have no importer left in the plane and go in T17 (N372). Kept, not
+   retired (K457): `test/m/ratification/checks.test.mjs` asserts the vocabulary's keys and drives C-41.10 by a foreign
+   `subject_source` over a hand-built document; section 2's vocabulary arm over the SIGNED document's own source, and
+   section 8's two directions (an honest `never_looked` negative draws no C-41.10, the same bytes with the section
+   removed draw it, saying silence is not legal), are driven only here. */
+import { SEARCHED_SUBJECT_SOURCES, checkCaseDocument, CASE_DOCUMENT_FAMILY } from "../src/ratification/checks.mjs";
 /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N138; K181 (5), K336; case-authoring R17): `searchedSection` and
    `SEARCHED_LEVEL_OUTCOMES` left `airun.mjs` (ai-runs' copy is gone) for case-authoring's `searched.mjs`, reached
    through case-authoring's index; every arm below reads the same functions from their one owner, unchanged.

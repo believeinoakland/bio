@@ -44,6 +44,12 @@ const named = (out, needle) => out.split("\n").filter((l) => l.startsWith("  FAI
    finding, and an arm that cannot say what it broke has not been run. */
 const failed = (out) => out.split("\n").filter((l) => l.startsWith("  FAIL")).map((l) => l.slice(8).trim());
 
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the control plane's stamp sites live here since K413 (CONTROL-PLANE #2). */
+const CP_FILE = "src/control-plane/index.mjs";
+/* AN ANCHOR THAT MATCHES TWICE ARMS THE WRONG SITE AS SURELY AS ONE THAT MATCHES NONE: replace only where the text
+   occurs exactly once, and otherwise leave the source unchanged so the runner reports the arm NOT RUN. */
+const once = (src, from, to) => (src.split(from).length === 2 ? src.replace(from, () => to) : src);
+
 const arms = [];
 const arm = (id, file, declared, mutate, check) => arms.push({ id, file, declared, mutate, check });
 
@@ -53,16 +59,24 @@ const arm = (id, file, declared, mutate, check) => arms.push({ id, file, declare
    the marker line from the FW-6 stamp site and "a member's constitutive statement"
    stands again over three ops nothing refuses. MUST FAIL, naming the file and the
    field. */
-arm("1-plant-a-false-fence", "src/index.mjs",
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the FW-6 stamp site, its marker and its long-form ruling left `src/index.mjs`
+   for `src/control-plane/index.mjs` (K413, CONTROL-PLANE #2, the move the suite's `CP_SRC` already reads); the arm is
+   re-anchored there on the same marker text, and it arms only where that text occurs EXACTLY ONCE. The field keeps its
+   `@src/index.mjs` name: the suite pins its sets in that spelling across both control-plane files. */
+arm("1-plant-a-false-fence", CP_FILE,
   "block 1 FAILS: declaredBy@src/index.mjs reported DEFECT by name, and the RULED set loses a member",
-  (src) => src.replace(
+  (src) => once(src,
     "       IDENTITY-CLAIM: RULED DEC-52 — a machine credential may declare a relation, and\n       the record names it.\n\n", ""),
   (out) => ({ tally: tally(out), namedByField: named(out, "declaredBy@src/index.mjs"), failed: failed(out) }));
 
 /* (2) THE INVERSE — A LYING MARKER MUST NOT BUY SILENCE. Keep the marker, delete the
    naming half the ruling depends on. Permission is granted against a NAMED actor, so a
    RULED site that stops naming the machine is no longer ruled. MUST FAIL. */
-arm("2-marker-without-the-naming", "src/index.mjs",
+/* LEGACY-TESTS #14 (T16, 2026-09-30): re-anchored in `src/control-plane/index.mjs` with arm (1), and the block now ENDS
+   at the FW-6 stamp's own close (the `/* T5-11 (entities R8` block that follows it) rather than at `/* FW-7`: T5-11 and
+   N345 (entities R8, R4, R28, R38) put the `withdrawnBy` and resolution-defect stamps between the two, each with its
+   own `class:<cls>` marker, and an arm that also rewrote those would break two more sites than the one it names. */
+arm("2-marker-without-the-naming", CP_FILE,
   "the marker check fails and the site falls to DEFECT rather than to a softer verdict",
   (src) => {
     /* THE WHOLE BLOCK, not one sentence. The first draft of this arm removed a single
@@ -71,8 +85,9 @@ arm("2-marker-without-the-naming", "src/index.mjs",
        reported here because an arm whose anchor is too narrow is the same defect as a
        matcher whose corpus is too narrow. */
     const a = src.indexOf("FW-6: the SUBJECT REGISTRY");
-    const b = src.indexOf("/* FW-7", a);
-    if (a < 0 || b < 0) return src;
+    const b = src.indexOf("/* T5-11 (entities R8, R4, R28): WHO WITHDREW", a);
+    if (a < 0 || b < 0 || src.indexOf("FW-6: the SUBJECT REGISTRY", a + 1) >= 0) return src;
+    if (src.slice(a, b).includes("/* FW-7")) return src;   /* the bound must close the FW-6 block, not a later one */
     const block = src.slice(a, b);
     if (!block.includes("class:<cls>")) return src;
     return src.slice(0, a) + block.replaceAll("class:<cls>", "a class name") + src.slice(b);
@@ -85,7 +100,7 @@ arm("2-marker-without-the-naming", "src/index.mjs",
    over a walk that read zero files. */
 arm("3-blind-the-sweep", "scripts/identity-claims.mjs",
   "caught by the corpus FLOOR as a delta, with the corpus size printed — never a clean estate",
-  (src) => src.replace('const STAMP = /MACHINE_(?:CLASS|AUTHOR)_PREFIX/;',
+  (src) => once(src, 'const STAMP = /MACHINE_(?:CLASS|AUTHOR)_PREFIX/;',
                        'const STAMP = /MACHINE_NOTHING_AT_ALL_XYZZY/;'),
   (out) => ({ tally: tally(out), corpusLine: (out.match(/corpus: \d+ identity STAMP SITES[^\n]*/) || [""])[0] }));
 
@@ -100,7 +115,7 @@ arm("3-blind-the-sweep", "scripts/identity-claims.mjs",
    writes "" instead of `class:<cls>`. THE ACT IS PERMITTED; THE ANONYMITY IS NOT. Block 2
    MUST FAIL naming the field, while every source-sweep assertion stays green — which is
    the whole argument for having both blocks. */
-arm("5-strip-the-machine-principal", "src/index.mjs",
+arm("5-strip-the-machine-principal", CP_FILE,
   /* DECLARED: block 2 FAILS naming the field; block 1 unmoved. **MEASURED: block 1 MOVED
      TOO, and the declaration was wrong** — removing the stamp removes the SITE from the
      sweep's corpus, so the RULED set lost a member and (c) failed alongside block 2's
@@ -109,8 +124,10 @@ arm("5-strip-the-machine-principal", "src/index.mjs",
   "block 2 FAILS: declared_by empty on the registry and progression acts (block 1 ALSO moves — see the note)",
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): T5-11 (legacy-index; entities R8, R4, R28) put the `withdrawnBy`
      stamp between the FW-6 stamp and `/* FW-7`, so the anchor now ends on that block's opening words; the FW-6 stamp
-     it strips is the same line. */
-  (src) => src.replace(
+     it strips is the same line.
+     LEGACY-TESTS #14 (T16, 2026-09-30): the same text, stamp and all, now lives in `src/control-plane/index.mjs` (K413,
+     CONTROL-PLANE #2); re-anchored there unchanged, and armed only where it occurs EXACTLY ONCE. */
+  (src) => once(src,
     '        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* T5-11 (entities R8, R4, R28): WHO WITHDREW',
     '        b.declaredBy = viaSession ? sessMember : "";\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* T5-11 (entities R8, R4, R28): WHO WITHDREW'),
   (out) => ({ tally: tally(out), namedPrincipal: named(out, "names the machine principal"), failed: failed(out) }));

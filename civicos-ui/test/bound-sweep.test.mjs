@@ -249,9 +249,13 @@ const SRC = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
    `bio-plane/src/queue/index.mjs`, spread into the dispatch map by `...queueOps(queueOf(this.ctx), url, body)`, still
    capped unconditionally. The corpus gains a fourth pass of the SAME re-inliner over queue's factory, leaving every
    earlier substitution as it was. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved `op=tasks` (`taskList`) and the other task ops out
+   of `queueOps` into tasks' `tasksOps` (`bio-plane/src/tasks/index.mjs`, tasks R2), which the store spreads beside
+   queue's; the same pass re-inlines both factories. Tasks' cap helper `clampLimit` is its own copy of queue's, the
+   same text, read beside it. */
 const STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
   { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text,
-  { ops: true, privates: true, modules: { queueOf: "queue" } }).text;
+  { ops: true, privates: true, modules: { queueOf: "queue", tasksOf: "tasks" } }).text;
 const QUERY = fs.readFileSync(new URL("../../bio-plane/src/query.mjs", import.meta.url), "utf8");
 
 /* ==========================================================================
@@ -380,7 +384,7 @@ const unconditional = (cap) =>
    re-inlined text does not carry), so the helper lookup reads the corpus AND the T5 modules' files. */
 const T5_MODULE_SRC = Object.values(T5_MODULES).map((d) => moduleSources(d)).join("\n");
 /* RE-ANCHORED 2026-09-29 (K409): queue's helper `clampLimit` is a free function of its own source, read beside T5's. */
-const QUEUE_MODULE_SRC = moduleSources("queue");
+const QUEUE_MODULE_SRC = moduleSources(["queue", "tasks"]);
 const classifyOps = (text) => {
   CAP_CORPUS = text + "\n" + T5_MODULE_SRC + "\n" + QUEUE_MODULE_SRC;
   const bodies = methodBodies(text);

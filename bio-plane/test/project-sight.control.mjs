@@ -256,7 +256,17 @@ const ARMS = {
                /* EXTENDED 2026-09-30 (LEGACY-TESTS #13, T15; N352), never exempted: the one helper is also retrieval's,
                   so the next two arms' subjects go red here by name — what one spelling of the rule costs a control. */
                "MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
-               "still a parity check over what she can see", "MOVE NOTHING: op=selectionlist (status"],
+               "still a parity check over what she can see", "MOVE NOTHING: op=selectionlist (status",
+               /* EXTENDED 2026-09-30 (LEGACY-TESTS #14, T16; N363, N352), MEASURED, never exempted: the queue split
+                  moved D-480's candidate walk (`#queueSharedInquiryCandidates`) to queue-producers, which reads
+                  membership's `hiddenBundles(viewer)` (R88) and keeps no private copy, so the ONE helper this arm
+                  neuters is now the walk's too and §10's seven arms go red here by name — the same seven
+                  d480-citers-ungated declares. "One spelling of the sight rule" holds again for store, retrieval and
+                  the feed. Measured on the armed copy: 240/15. */
+               "A HIDDEN PROJECT'S CITATIONS MOVE NOTHING", "A HIDDEN PROJECT'S CITATIONS TAKE NO SLOT",
+               "the bound is the plane's own published figure", "THE PAGE IS EXACTLY FULL",
+               "A TARGET VERA CANNOT SEE TAKES NO SLOT", "STILL LIVE: a target she CAN see DOES take a slot",
+               "STILL LIVE: crowding vera CAN see does reach her"],
   },
   /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
   "indexcheck-whole-index": {
@@ -394,8 +404,10 @@ const ARMS = {
      fails ONE assertion, and the citer arms either side of it stay green. */
   "d480-citers-ungated": {
     /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `#queueSharedInquiryCandidates` is queue's (7c2a3d646a, T12), with
-       queue's own `#hiddenBundles`; the same two lines. */
-    patches: [["queue/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
+       queue's own `#hiddenBundles`; the same two lines.
+       LEGACY-TESTS #14 (T16, 2026-09-30): the walk moved with the producers to `queue-producers/index.mjs` (N363), where
+       `hid` is membership's `hiddenBundles(viewer)` (R88, N352); the same two lines. */
+    patches: [["queue-producers/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
     /* DECLARATION CORRECTED AFTER THE FIRST RUN, AND THE ARM WAS RIGHT WHILE THE DECLARATION WAS
        WRONG. Two of §10's arms read `truncOf(...).every((x) => x === false)`, which is TRUE OVER AN
        EMPTY ARRAY, so with vera's item crowded off her page entirely they PASSED over a feed with
@@ -410,16 +422,20 @@ const ARMS = {
   },
   "d480-targets-ungated": {
     /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `#queueSharedInquiryCandidates` is queue's (7c2a3d646a, T12), with
-       queue's own `#hiddenBundles`; the same two lines. */
-    patches: [["queue/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
+       queue's own `#hiddenBundles`; the same two lines.
+       LEGACY-TESTS #14 (T16, 2026-09-30): the walk moved with the producers to `queue-producers/index.mjs` (N363), where
+       `hid` is membership's `hiddenBundles(viewer)` (R88, N352); the same two lines. */
+    patches: [["queue-producers/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
     mustFail: ["A TARGET VERA CANNOT SEE TAKES NO SLOT"],
   },
   /* D-480 OVER-STRICTNESS: the same subtraction in a spelling the suite did not anticipate — the
      negation outside the membership test rather than inside it. Nothing may fail. */
   "d480-not-in-inverted": {
     /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `#queueSharedInquiryCandidates` is queue's (7c2a3d646a, T12), with
-       queue's own `#hiddenBundles`; the same two lines. */
-    patches: [["queue/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";", "    const where = hid ? ` AND NOT (rf.bundle_id IN ${hid.sql}) AND NOT (rf.target_id IN ${hid.sql})` : \"\";"]],
+       queue's own `#hiddenBundles`; the same two lines.
+       LEGACY-TESTS #14 (T16, 2026-09-30): the walk moved with the producers to `queue-producers/index.mjs` (N363), where
+       `hid` is membership's `hiddenBundles(viewer)` (R88, N352); the same two lines. */
+    patches: [["queue-producers/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";", "    const where = hid ? ` AND NOT (rf.bundle_id IN ${hid.sql}) AND NOT (rf.target_id IN ${hid.sql})` : \"\";"]],
     mustFail: [],
   },
 

@@ -116,7 +116,10 @@ const moduleSrc = (m) => readdirSync(fileURLToPath(new URL(`../src/${m}/`, impor
    queue for `src/queue/index.mjs`, where each calls queue's own one-line delegate `this.#refEdgeSevered(` (to
    connections' `edgeSevered`). The census reads queue's files too; the walk's `consider` pin reads it there. */
 const QUEUE_SRC = moduleSrc("queue");
-const SEVERANCE_SRC = [STORE_SRC, CONNECTIONS_SRC, moduleSrc("inquiry"), moduleSrc("reevaluation"), QUEUE_SRC].join("\n");
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved `#routeTask` to `src/tasks/` (tasks R1) and the
+   producers to `src/queue-producers/`; the census reads both, so the queue is counted as it stood before the split. */
+const SEVERANCE_SRC = [STORE_SRC, CONNECTIONS_SRC, moduleSrc("inquiry"), moduleSrc("reevaluation"), QUEUE_SRC,
+                       moduleSrc("tasks"), moduleSrc("queue-producers")].join("\n");
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -459,7 +462,10 @@ t("NOT WALKED IS NOT DELETED: `op=backlinks` still names the withdrawn project a
    formerly the store's #citesInto). The same six sites, no arrival and no departure; the store's delegate
    `#refEdgeSevered(...a)` is neither. */
 const defs = (SEVERANCE_SRC.match(/(?:#refEdgeSevered|\bedgeSevered)\s*\(citingId/g) || []).length;
-const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connections\.edgeSevered)\(/g) || []).length;
+/* LEGACY-TESTS #14 (T16, 2026-09-30): tasks holds no private delegate; `#routeTask` asks connections' predicate as
+   `this.#connections.edgeSevered(pid, …)`, so that spelling is a call too — but not queue's own delegate's body,
+   `return this.#connections.edgeSevered(...a)`, which forwards and is neither (as the store's never was). */
+const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connections\.edgeSevered|#connections\.edgeSevered(?!\(\.\.\.a\)))\(/g) || []).length;
 /* CORRECTED 2026-08-10 BY D-280, AND THE OLD ASSERTION IS SAID TO BE WRONG
    RATHER THAN EXEMPTED. It read `[1, 3]`. It was RIGHT when written — three was
    every reader of the rule the day D-267 landed — and it became wrong the
@@ -513,6 +519,10 @@ const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connect
    and `#routeTask` MOVED with the queue to `src/queue/index.mjs` and still ask the ONE predicate, through queue's
    delegate `#refEdgeSevered(...a)` (a delegate, like the store's, and neither a definition nor a call). The store's
    own delegate now has no caller. */
+/* CORRECTED 2026-09-30 (LEGACY-TESTS #14, T16; N363, the queue split), SIX STAYS SIX, NO ARRIVAL AND NO DEPARTURE:
+   `#routeTask` MOVED with the obligation inbox to `src/tasks/index.mjs` (tasks R1) and still asks the ONE predicate,
+   now directly (`this.#connections.edgeSevered(pid, bundleId, …)`); `#queueAncestorEdges` stays in queue behind its
+   delegate. The census reads tasks' and queue-producers' files (none of the producers asks the predicate). */
 t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `citesInto`, "
 + "`restsOnLive`, `#queueAncestorEdges`, D-280's two surviving sites `#routeTask` and "
 + "`restingOn`, and inquiry R39's `projectsDrawingOn`; REC-160's `reevaluations` now reads the status "

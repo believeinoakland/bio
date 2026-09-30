@@ -428,7 +428,10 @@ console.log("\n--- 1. the state is gone from the inquiry machine, and nothing ca
      row.object_type)`) left store.mjs with the queue for src/queue/index.mjs, and store.mjs now calls vocabFor
      nowhere. The claim is read where the reads are — the store and the queue it hosts — and the no-copy half over
      every plane source file (PLANE_SRC), which is stronger than store.mjs alone. */
-  const QUEUE_SRC = readFileSync(fileURLToPath(new URL("../src/queue/index.mjs", import.meta.url)), "utf8");
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved one of those reads (`#homesAt`'s) with the
+     producers to src/queue-producers/index.mjs; queue keeps two. The claim reads both files. */
+  const QUEUE_SRC = ["queue/index.mjs", "queue-producers/index.mjs"]
+    .map((f) => readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8")).join("\n");
   t("and the plane keeps NO second copy of the inquiry edge table: the store reads it through the "
   + "catalog's own vocabFor",
     /vocabFor\(STATES,/.test(STORE_SRC + "\n" + QUEUE_SRC) && !/legal:\s*\[\s*["']open["']/.test(PLANE_SRC), true);

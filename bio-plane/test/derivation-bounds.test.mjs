@@ -569,7 +569,15 @@ const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "p
                       ancestor walk and `#routeTask` — six ADMITTED members, two SET 1 claims and one SET 2 method. The
                       corpus widens to it the same way, `<module>/<file>:<method>`, T5-12's reason exactly: a census and a
                       class read off the store alone fell because the READER stopped seeing the moved work. */
-                   "queue"];
+                   "queue",
+                   /* LEGACY-TESTS #14 (T16, 2026-09-30; N363, K561/K562): the queue split. The obligation inbox left
+                      `src/queue/` for `src/tasks/` (TASKS #1, 2f170f04a5: `taskDrain`, `taskList`, `#routeTask` …) and the
+                      feed's producers for `src/queue-producers/` (QUEUE-PRODUCERS #1 and QUEUE #3: the `#conditions*` and
+                      `#findings*` producers, `#conditionHomes`, `#conditionBundlesFor*`, `proposals.mjs`), while queue
+                      keeps the feed's assembly. The corpus widens to both the same way, `<module>/<file>:<method>`, T5-12's
+                      reason exactly: a census and a class read off queue alone fell because the READER stopped seeing the
+                      moved work (the admissions below named four members whose sites had left). */
+                   "tasks", "queue-producers"];
 const MODULE_TEXTS = EXTRACTED.flatMap(moduleFiles)
   .map((f) => [f.replace(/\.mjs$/, ""), readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")])
   /* T12 (legacy-tests), 2026-09-29 (B6 item 2, K414; INSTANCE-SETUP #1): instance-setup is ONE FILE, `src/setup.mjs`,
@@ -641,12 +649,24 @@ const D384_STAYS = [
      while the walk is whole: "Paged by its cursor to the end, as the walk was whole before" (its own comment). The per-row
      work over what the walk found is unchanged. Held by `rowSource.walk`: the call, and the break that ends the walk ONLY
      when the cursor is spent, each AS WRITTEN — a walk given a stop short of the end would no longer be held. */
-  { name: "#conditionsCaptureUnattended", home: "queue/index:#conditionsCaptureUnattended",
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; QUEUE-PRODUCERS #1, QUEUE #3, N363): the three `#conditions*` members
+     below MOVED WHOLE into `src/queue-producers/index.mjs` (`home`) and are RE-READ there, not re-pinned: each site occurs
+     as written, and each row source is the same call (this one's prefix is now `QueueProducers.`'s own constant). What
+     changed is HOW the per-row work reaches queue: `#conditionHomes` asks `#homesOf` and the options `#optionsOf`, which
+     call the closures queue hands `feedItems` (queue R7's `#queueAncestors`, R12's `#queueOptions`). `readsThrough` does
+     not follow a closure, so the hops are held AS WRITTEN in `via` (#restsOnLive's precedent) and the helpers are named
+     where the reads are (queue's `#queueAncestors`, affordances' `affordanceFacts`). */
+  { name: "#conditionsCaptureUnattended", home: "queue-producers/index:#conditionsCaptureUnattended",
     site: "case: this.#conditionHomes([b.bundle_id], viewer),",
-    rowSource: { walk: true, call: "const r = this.#record.manifestByAuthor({ authorPrefix: Queue.QUEUE_MACHINE_AUTHOR_PREFIX, after, limit: page });",
+    rowSource: { walk: true, call: "const r = this.#record.manifestByAuthor({ authorPrefix: QueueProducers.QUEUE_MACHINE_AUTHOR_PREFIX, after, limit: page });",
                  exhausts: "if (!r.cursor || r.bundles.length < page) break;" },
-    via: [{ in: "queue/index:#queueOptions", text: "const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });" }],
-    helpers: ["#conditionHomes", "affordances/facts:affordanceFacts"],
+    via: [{ in: "queue-producers/index:#conditionHomes", text: "const homes = this.#homesOf(subjectIds);" },
+          { in: "queue-producers/index:#homesOf", text: "return this.#homesFn ? this.#homesFn(subjectIds || [])" },
+          { in: "queue-producers/index:#optionsOf", text: "return this.#optionsFn ? this.#optionsFn(subjectIds || [])" },
+          { in: "queue/index:queueFeed", text: "homesOf: (subjects) => this.#queueAncestors(subjects, viewer)," },
+          { in: "queue/index:queueFeed", text: "optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });" },
+          { in: "queue/index:#queueOptions", text: "const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });" }],
+    helpers: ["queue/index:#queueAncestors", "affordances/facts:affordanceFacts"],
     amplification: "per machine-authored bundle, three #one reads of manifest and bundles, then the "
       + "same #conditionHomes ancestor walk and #queueOptions" },
   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor R14): the member's ROW SOURCE — the unbounded
@@ -655,21 +675,31 @@ const D384_STAYS = [
      same loop over every held host, the same per-row call. So its admission is checked through the module's
      interface: the loop must iterate that call (`rowSource.call`), and the module method must still hold an
      unbounded scan (read off `src/host-governor/`'s own segment). Every other admission is read as before. */
-  { name: "#conditionsGovernorHolding", home: "queue/index:#conditionsGovernorHolding",
+  { name: "#conditionsGovernorHolding", home: "queue-producers/index:#conditionsGovernorHolding",
     site: "const subj = this.#conditionBundlesForHost(r.host, viewer);",
     rowSource: { call: "for (const r of this.#governor.governorHolding(", module: "host-governor/index:governorHolding" },
-    via: [{ in: "queue/index:#queueOptions", text: "const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });" }],
-    helpers: ["#conditionBundlesForHost", "#conditionHomes", "affordances/facts:affordanceFacts"],
+    via: [{ in: "queue-producers/index:#conditionHomes", text: "const homes = this.#homesOf(subjectIds);" },
+          { in: "queue-producers/index:#homesOf", text: "return this.#homesFn ? this.#homesFn(subjectIds || [])" },
+          { in: "queue-producers/index:#optionsOf", text: "return this.#optionsFn ? this.#optionsFn(subjectIds || [])" },
+          { in: "queue/index:queueFeed", text: "homesOf: (subjects) => this.#queueAncestors(subjects, viewer)," },
+          { in: "queue/index:queueFeed", text: "optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });" },
+          { in: "queue/index:#queueOptions", text: "const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });" }],
+    helpers: ["#conditionBundlesForHost", "queue/index:#queueAncestors", "affordances/facts:affordanceFacts"],
     amplification: "per host in cool-off, a captured_locators x register scan for the host's bundles, "
       + "then #conditionHomes' ancestor walk and #queueOptions over up to QUEUE_OPTION_SUBJECTS_MAX of them" },
   /* RE-READ 2026-09-29 (T12, QUEUE #2, capture R46): the live-session scan it loops over is capture's
      `liveCaptureSessions` now (`SELECT * FROM capture_sessions WHERE expires > ?`, unbounded), which the member iterates
      in its `for` header — `#conditionsGovernorHolding`'s `rowSource` form exactly. */
-  { name: "#conditionsPartialCapture", home: "queue/index:#conditionsPartialCapture",
+  { name: "#conditionsPartialCapture", home: "queue-producers/index:#conditionsPartialCapture",
     site: "case: this.#conditionHomes(bundleId ? [bundleId] : [], viewer),",
     rowSource: { call: "for (const s of this.#capture.liveCaptureSessions(", module: "capture/index:liveCaptureSessions" },
-    via: [{ in: "queue/index:#queueOptions", text: "const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });" }],
-    helpers: ["#conditionHomes", "affordances/facts:affordanceFacts"],
+    via: [{ in: "queue-producers/index:#conditionHomes", text: "const homes = this.#homesOf(subjectIds);" },
+          { in: "queue-producers/index:#homesOf", text: "return this.#homesFn ? this.#homesFn(subjectIds || [])" },
+          { in: "queue-producers/index:#optionsOf", text: "return this.#optionsFn ? this.#optionsFn(subjectIds || [])" },
+          { in: "queue/index:queueFeed", text: "homesOf: (subjects) => this.#queueAncestors(subjects, viewer)," },
+          { in: "queue/index:queueFeed", text: "optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });" },
+          { in: "queue/index:#queueOptions", text: "const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });" }],
+    helpers: ["queue/index:#queueAncestors", "affordances/facts:affordanceFacts"],
     amplification: "per live capture session, a register read, then #conditionHomes' ancestor walk "
       + "and #queueOptions" },
   { name: "#queueAncestorEdges", home: "queue/index:#queueAncestorEdges", site: "!this.#refEdgeSevered(id, nodeId, rel)",
@@ -700,8 +730,11 @@ const D384_STAYS = [
     amplification: "per basis leg, #refEdgeSevered's document read and #caseRelationOf — two reads "
       + "PLUS #caseClaimInBytes, itself an UNBOUNDED scan of every unsigned case document, parsed: a "
       + "scan per row, the quadratic shape this class exists for" },
-  { name: "#routeTask", home: "queue/index:#routeTask", site: "kinds.every((k) => this.#refEdgeSevered(pid, bundleId, k || null))",
-    via: [{ in: "queue/index:#refEdgeSevered", text: "return this.#connections.edgeSevered(...a);" }],
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; TASKS #1, 2f170f04a5, N363): `#routeTask` MOVED WHOLE into
+     `src/tasks/index.mjs` (`home`), RE-READ there, not re-pinned: the same `.find` over citing project edges, and per edge
+     the same severance read, now called on connections' held service directly (`this.#connections.edgeSevered(…)`) where
+     queue went through its one-line `#refEdgeSevered`. The site is that call as written; no hop is left for `via`. */
+  { name: "#routeTask", home: "tasks/index:#routeTask", site: "kinds.every((k) => this.#connections.edgeSevered(pid, bundleId, k || null))",
     helpers: ["connections/index:edgeSevered"],
     amplification: "per citing project edge, #refEdgeSevered's document read, inside a `.find` — a "
       + "callback form this walk does not follow. It stops at the first live citer, so the read is paid "
@@ -716,13 +749,21 @@ const D384_STAYS = [
      `progression_instances` scan (`this.#rows(…)`) — then `homesOf` (#queueAncestors) and `optionsOf` (#queueOptions) per
      proposal. The site is the call; `via` holds the closure's scan in the store and the per-instance loop in queue's file,
      each as written, since this walk reads neither a closure nor a free function as a method. */
-  { name: "queueFeed", home: "queue/index:queueFeed", site: "const proposalItems = proposalFindingItems(feed, {",
-    via: [{ in: "queue/index:queueFeed", text: "subjectsOf: (pk, eid) => this.#rows(`SELECT DISTINCT pi.bundle_id FROM progression_instances pi" },
-          { in: "queue/index:queueFeed", text: "homesOf: (subjects) => this.#queueAncestors(subjects, viewer)," },
-          { in: "queue/index:queueFeed", text: "optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity)," },
-          { in: "queue/index:queueFeed", text: "const feed = this.#progressions.proposalsFeed(nowMs);" },
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; QUEUE-PRODUCERS #1 J1 (4), QUEUE #3, N363): the per-proposal loop and
+     its closures MOVED into queue-producers — `proposalFindingItems` is `src/queue-producers/proposals.mjs`'s now (queue's
+     `proposals.mjs` is gone) and it is called by the producers' `feedItems`, whose `subjectsOf` closure is the same one
+     `progression_instances` scan; queue's `queueFeed` reaches it through its held producers (`#feedItems`), handing the
+     same `#queueAncestors` and `#queueOptions` as closures. RE-READ, not re-pinned: the member is still `op=queue`'s
+     `queueFeed`, and every hop is held AS WRITTEN where it now is; the site is the feed's call. */
+  { name: "queueFeed", home: "queue/index:queueFeed", site: "const produced = this.#feedItems({ member: me, viewer, now, identity,",
+    via: [{ in: "queue/index:queueFeed", text: "homesOf: (subjects) => this.#queueAncestors(subjects, viewer)," },
+          { in: "queue/index:queueFeed", text: "optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });" },
+          { in: "queue/index:#feedItems", text: "return this.#producers.feedItems(args);" },
+          { in: "queue-producers/index:feedItems", text: "const feed = this.#progressions.proposalsFeed(at) || {};" },
+          { in: "queue-producers/index:feedItems", text: "items.push(...proposalFindingItems(feed, {" },
+          { in: "queue-producers/index:feedItems", text: "subjectsOf: (pk, eid) => this.#rows(`SELECT DISTINCT pi.bundle_id FROM progression_instances pi" },
           { in: "queue/index:#queueOptions", text: "const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });" },
-          { file: "queue/proposals.mjs", text: "for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])" }],
+          { file: "queue-producers/proposals.mjs", text: "for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])" }],
     helpers: ["progressions/index:proposalsFeed", "#queueAncestors", "affordances/facts:affordanceFacts"],
     amplification: "per proposal — proposalsFeed's output, itself derived over an unbounded scan and "
       + "in this class — one progression_instances scan per instance, and #queueAncestors and "
@@ -740,10 +781,13 @@ const D384_LEAVES = [
   /* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): the four queue members of this list (these two, #queueMutes and
      #queueRenotifyWake) MOVED into `src/queue/index.mjs`; `home` names each where it lives, so the OUT check below reads
      the method and not a name nothing carries any more. The reasons are unchanged. */
-  { name: "#conditionsCaptureRequested", home: "queue/index:#conditionsCaptureRequested", why: "its per-row work (#conditionHomes' ancestor walk, #queueOptions) runs over "
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; QUEUE-PRODUCERS #1, N363): the first two MOVED again, into
+     `src/queue-producers/index.mjs`; `home` follows them so the OUT check reads each method, not a name nothing carries.
+     Their loops still iterate capture-requests' `completed()` / `leads()` pages; the reasons are unchanged. */
+  { name: "#conditionsCaptureRequested", home: "queue-producers/index:#conditionsCaptureRequested", why: "its per-row work (#conditionHomes' ancestor walk, #queueOptions) runs over "
       + "capture-requests' `completed()` page, a LIMIT-bounded read at cap + 1 (D-581, capture-requests R26/R27) — no "
       + "unbounded row source is left under the loop" },
-  { name: "#findingsOutOfInquiryLead", home: "queue/index:#findingsOutOfInquiryLead", why: "its per-row work (#leadBasisAbsence's reads, the #queueAncestors walk, "
+  { name: "#findingsOutOfInquiryLead", home: "queue-producers/index:#findingsOutOfInquiryLead", why: "its per-row work (#leadBasisAbsence's reads, the #queueAncestors walk, "
       + "#queueOptions) runs over capture-requests' `leads()` page, a LIMIT-bounded read at cap + 1 (D-581, "
       + "capture-requests R26/R27) — no unbounded row source is left under the loop" },
   { name: "#caseClaimInBytes", why: "one pass over unsigned case documents parsing each row's OWN text — "
@@ -1305,7 +1349,16 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    - reevaluation/index:#corrected (reevaluation R27, N345, the `corrected` cause): the claimed versions of the targets of
      the legs it is handed (keyed on those targets), then contradiction `tensionsOn` in chunks of its own
      TENSIONS_REFERENTS_MAX; its callers page the dependents (`correctedDependents` at CORRECTED_LIMIT_MAX). */
-const CLASS_MEASURED_2026_08_08 = 34;
+/* LEGACY-TESTS #14 (T16, 2026-09-30; REEVALUATION #6, K548): 34 -> 35, from this run's print (`35 in the class (25 by
+   the walk + 10 admitted by name)`), DIFFED BY NAME against the same walk run on T15's close f5554232cb (34), never
+   34 + 1. ONE ARRIVAL, NO DEPARTURE, TAKEN as the handover directs: reevaluation/index:#sourceMoves (reevaluation R28,
+   N364, the `source` cause from sources' rung moves): per leg asked, the moves of the sources behind its captures, two
+   reads keyed by the answer's OWN id lists (the captures and the sources of the legs the caller hands in) with no
+   LIMIT — unbounded by R21, as `#corrected`'s version read is, since a cap would drop a move silently. Its per-row
+   work is in its body, so it is HOIST-STABLE (below). The queue split (N363) moved five ADMITTED members, re-read at
+   their new homes (D384_STAYS): the three `#conditions*` into queue-producers, `#routeTask` into tasks, and `queueFeed`'s
+   per-proposal loop behind the producers' `feedItems`; none left the class. */
+const CLASS_MEASURED_2026_08_08 = 35;
 console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
           + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES), moved to 33 on 2026-09-27 by legacy-tests T5-12 (the walk reads the extracted modules: 9 moved members renamed, 2 admitted in T5_STAYS; arrivals content/index:markStale (R41) and six of T3's and T4's modules' methods, named above the figure), moved to 28 on 2026-09-28 by legacy-tests T7 (five left by fixes — record-core auditPass, capture recordSiteAssets, content markStale, and the admitted #conditionsCaptureRequested and #findingsOutOfInquiryLead; changedFromAudit, reevaluations and #restsOnLive moved; the arrival intent/index:#measure is REPORTED, not taken), held at 28 on 2026-09-28 by legacy-tests T8 (intent/index:#measure left by a fix; five publication members moved; the arrivals actions/index:pendingClocks and publication/index:#promoteNamedEdges are REPORTED, not taken)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
@@ -1634,6 +1687,8 @@ const CLASS_ROSTER_2026_09_18 = [
      ARRIVALS, each named with its requirement at the ratchet; no departure. */
   "contradiction/index:acceptanceRates", "entities/index:migrate", "publication/index:#caseTensionsOne",
   "reevaluation/index:#corrected",
+  /* LEGACY-TESTS #14 (T16, 2026-09-30; REEVALUATION #6, K548): ONE ARRIVAL, named with its requirement at the ratchet. */
+  "reevaluation/index:#sourceMoves",
 ].sort();
 t("M0-40: the class roster is pinned BY NAME beside the ceiling and the floor, so a departure "
 + "names itself instead of reading `34 of 35`. Every movement comment above had to name its "
@@ -1704,8 +1759,11 @@ t("M0-40 OVER-STRICTNESS, the other direction: a member whose BODY carries the a
   HOIST.stable, ["capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome", "entities/index:migrate",
                  "entities/index:namingDocuments",
                  "progressions/index:#assemble", "publication/index:publishedCase",
-                 "record-core/index:commit", "reevaluation/index:#corrected", "retrieval/index:selectionRelease",
-                 "setup:migrate"]);
+                 "record-core/index:commit", "reevaluation/index:#corrected",
+                 /* LEGACY-TESTS #14 (T16, 2026-09-30): the ratchet's one arrival carries an inline row source in a `for`
+                    header and its per-leg work in the body (reevaluation R28, K548). */
+                 "reevaluation/index:#sourceMoves",
+                 "retrieval/index:selectionRelease", "setup:migrate"]);
 
 /* ================================================== THE CENSUS, GRADED (REC-99 · D-365).
  *
@@ -2165,7 +2223,26 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
      - reevaluation/index:{#corrected, #standingCorrected} (reevaluation R27, N345, the `corrected` cause): the claimed
        versions of the targets handed in, and the `inquiry_basis` legs of the dependents handed in, each keyed on a caller
        page (`correctedDependents` reads its dependents `LIMIT ?` at CORRECTED_LIMIT_MAX). */
-const SCANNING_MEASURED_2026_09_15 = 223;
+/* RE-PINNED 2026-09-30 (LEGACY-TESTS #14, T16; N363, N364, N366, N368): 223 -> 235, READ FROM THE CENSUS ROSTER THIS RUN
+   PRINTED (235) over the corpus widened by `tasks` and `queue-producers` (see EXTRACTED) and DIFFED BY NAME against the
+   same census run on T15's close f5554232cb (223), never 223 + 12. FIFTEEN ARRIVALS, THREE DEPARTURES; no row source that
+   had a LIMIT lost it:
+     - DEPARTED BY A FIX (2): contradiction/index:{#entitiesOf, tensionsOn} (CONTRADICTION #3, N368, K546: FACTS_ENTITIES_MAX
+       and TENSIONS_CANDIDATES_MAX, each `LIMIT ?` at the bound + 1, `truncated` measured one past).
+     - MOVED, ONE FOR ONE (1): queue/index:#routeTask -> tasks/index:#routeTask (TASKS #1, N363), the same citing-project read.
+     - THE READERS' OWN DEFINITIONS (+4): `#rows`/`#one` in tasks/index and in queue-producers/index.
+     - queue-producers/index:feedItems (QUEUE-PRODUCERS #1, N363): its `subjectsOf` closure is the one
+       `progression_instances` scan queue's `queueFeed` held (that method stays for its own reads); per key.
+     - capture's N364 reads (CAPTURE #8, R68, R69, R72), each keyed on ONE capture's digest: captureAccountsOf,
+       lateAttestationsOf, pulledKnocksOf, and recordCaptureAccount (its actor check and `MAX(seq)`). (+4)
+     - case-authoring/index:#restingCaptures (CASE-AUTHORING #5 J2 (1)): a member's basis legs and each document's register
+       rows, without a LIMIT, as `#searchedForCase` and `#caseCitations` already do; per publication act.
+     - publication/index:#sourcesLapsed (PUBLICATION, N364, R51/R52): one capture's pulled knocks in `source_knocks`, per
+       `sources:` row of one document.
+     - reevaluation/index:{#legCaptures, #legsOnSource, #sourceMoves} (REEVALUATION #6, R28, K548): reads keyed by the
+       answer's own id lists — the legs, captures and sources handed in — unbounded by R21 (`#sourceMoves` is the CLASS
+       arrival above). */
+const SCANNING_MEASURED_2026_09_15 = 235;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -2477,7 +2554,13 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
       `items.slice(0, cap)` at PAGE_MAX); reevaluation/index:correctedDependents:entries (reevaluation R27: the
       (dependent, candidate) entries pushed across dependent pages read `LIMIT ?` at CORRECTED_LIMIT_MAX, cut
       `entries.slice(0, cap)`). No departure. */
-   "contradiction/index:candidatesFor:items", "reevaluation/index:correctedDependents:entries"].sort());
+   "contradiction/index:candidatesFor:items", "reevaluation/index:correctedDependents:entries",
+   /* DECLARED 2026-09-30 (LEGACY-TESTS #14, T16; TASKS #1, N363, tasks R6), READ FROM THIS ARM'S OWN FAILURE OUTPUT and
+      diffed by name against T15's close: ONE MIGRATION. queue/index:#resolvedLately:rows was GRADED by name (a `#rows(`
+      at `cap + 1`); its rows are now tasks' `resolvedTasks({ viewer, since, limit: cap + 1 })`, a held service's call
+      this grader cannot attribute, so it is ungradeable here; CUT GRADED at the published cap below with zero
+      violations. */
+   "queue/index:#resolvedLately:rows"].sort());
 /* T5-12: the deltas below break the WIDENED corpus (`corpusWith`), since the readers they test read it. */
 const noRowSources = corpusWith((x) => x.replace(/#rows\(/g, "#norows("));
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
@@ -2664,7 +2747,12 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [21, true]);  /* RE-PINNED 2026-09-30 (LEGACY-TESTS #13, T15; N345): 19 -> 21, from the printed `source bound 4 graded, 17
+  [22, true]);  /* RE-PINNED 2026-09-30 (LEGACY-TESTS #14, T16; TASKS #1, N363): 21 -> 22, from the printed `source bound 4
+                   graded, 18 OUT OF REACH`, diffed by name against T15's close: the one arrival declared at REC-99's
+                   ungradeable pin above, queue/index:#resolvedLately:rows, OUT OF REACH (UNCLASSIFIED: its declaration is a
+                   call on a held service, `this.#tasks.resolvedTasks(…)`, a shape `sourceOrigin` does not classify; the
+                   call is passed `cap + 1`). Source-graded unmoved at 4.
+                   RE-PINNED 2026-09-30 (LEGACY-TESTS #13, T15; N345): 19 -> 21, from the printed `source bound 4 graded, 17
                    OUT OF REACH`, diffed by name against the T14 close: the two arrivals declared at REC-99's ungradeable
                    pin above, contradiction/index:candidatesFor:items and reevaluation/index:correctedDependents:entries,
                    both OUT OF REACH (ASSEMBLED). Source-graded unmoved at 4.
@@ -2810,7 +2898,10 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
    "publication/index:caseCitedParts:parts",
    /* RE-PINNED 2026-09-30 (LEGACY-TESTS #13, T15; N345), from the printed roster, diffed by name (15 -> 17): the two
       arrivals declared at REC-99's ungradeable pin above, each ASSEMBLED by `push` (the reason on its row). */
-   "contradiction/index:candidatesFor:items", "reevaluation/index:correctedDependents:entries"].sort());
+   "contradiction/index:candidatesFor:items", "reevaluation/index:correctedDependents:entries",
+   /* RE-PINNED 2026-09-30 (LEGACY-TESTS #14, T16; TASKS #1, N363), from the printed roster, diffed by name (17 -> 18): the
+      arrival declared at REC-99's ungradeable pin above, UNCLASSIFIED (the reason on its row). */
+   "queue/index:#resolvedLately:rows"].sort());
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
    DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND
@@ -2929,7 +3020,13 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
       - publication/index:#caseTensionsOne (R50): enrolled by `PUBLISHES_BOUND`'s literal reading (`truncated = false`, a
         local republishing each member's unresolvedRecordOn cut into `unread`); blind to BOTH halves (PARTITIONED). */
    "contradiction/index:unresolvedRecordOn", "entities/index:concerns", "entities/index:resolutionsFor",
-   "publication/index:#caseTensionsOne"]
+   "publication/index:#caseTensionsOne",
+   /* RE-PINNED 2026-09-30 (LEGACY-TESTS #14, T16; QUEUE-PRODUCERS #1, N363), 17 -> 18, from the printed roster, diffed by
+      name against T15's close. ARRIVED (1): queue-producers/index:feedItems — it holds the `subjectsOf` scan (census,
+      above) and publishes `truncated` in its `facts` (the producers' project bounds, republished; the UNREAD roster
+      below). Blind to BOTH halves (PARTITIONED below), legitimately: `subjectsOf` is keyed on one instance and its
+      figures are measured where each producer reads its projects. */
+   "queue-producers/index:feedItems"]
      .map((n) => (n === "actionQuotes" ? "actions/index:actionQuotes" : n)).sort());
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
@@ -2959,6 +3056,9 @@ t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blin
    /* RE-PINNED 2026-09-30 (LEGACY-TESTS #13, T15; N345), 7 -> 9: contradiction/index:unresolvedRecordOn (R29) and
       publication/index:#caseTensionsOne (R50) ARRIVED, each blind to both halves for the reason at SET 2. */
    "contradiction/index:unresolvedRecordOn", "publication/index:#caseTensionsOne",
+   /* RE-PINNED 2026-09-30 (LEGACY-TESTS #14, T16; N363), 9 -> 10: queue-producers/index:feedItems ARRIVED, blind to both
+      halves for the reason at SET 2. */
+   "queue-producers/index:feedItems",
   ].sort());
 
 /* ---- AND THE CLAIMS THE GRADER'S OWN SPELLING CANNOT READ AT ALL.
@@ -3101,9 +3201,11 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
       the due, scheduled and unscheduled rows cut at MONITORING_READ_MAX), `#findingsExportPerformed`'s `log.truncated` publication's `exportLog` (it measured `page.length > cap` off
       its own read in the store), `#findingsNewerCapture`'s `page.truncated` reevaluation's notices page (R15, N172). Each
       figure is graded where it is computed; none is an unmeasured claim. */
-   "queue/index:#conditionsRecheckDue: plan.truncated === true",
-   "queue/index:#findingsExportPerformed: log.truncated === true",
-   "queue/index:#findingsNewerCapture: page.truncated === true",
+   /* RE-PINNED 2026-09-30 (LEGACY-TESTS #14, T16; QUEUE-PRODUCERS #1, QUEUE #3, N363): these three and two below MOVED with
+      their producers into queue-producers, the same claims under the module's name. */
+   "queue-producers/index:#conditionsRecheckDue: plan.truncated === true",
+   "queue-producers/index:#findingsExportPerformed: log.truncated === true",
+   "queue-producers/index:#findingsNewerCapture: page.truncated === true",
    /* DECLARED 2026-09-30 (LEGACY-TESTS #12, T14; QUEUE #4, N326, N330), from this run's print, diffed by name against
       the T13 close: THREE ARRIVALS, each a REPUBLICATION of the kind declared above (`X.truncated === true`): a
       provider's own bound passed through. `#conditionsArchiveEligible`'s `page.truncated` is monitoring's
@@ -3111,8 +3213,8 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
       monitoring's `flagged({viewer})` (its R48, over flagged visible documents, K391); `#resolvedLately`'s
       `settled.truncated` is bias's `settled({gate, since, limit})` (its R44, measured by reading one more). Each figure
       is graded where it is computed; none is an unmeasured claim. */
-   "queue/index:#conditionsArchiveEligible: page.truncated === true",
-   "queue/index:#findingsSourceFlagged: page.truncated === true",
+   "queue-producers/index:#conditionsArchiveEligible: page.truncated === true",
+   "queue-producers/index:#findingsSourceFlagged: page.truncated === true",
    "queue/index:#resolvedLately: settled.truncated === true",
    "intent/index:contacts: cut } = this.#heldAspirations(viewer",
    /* DECLARED 2026-09-30 (LEGACY-TESTS #13, T15; N345, contradiction R24, R49), from this run's print, diffed by name
@@ -3122,7 +3224,23 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
       (`intent/index:contacts`' kind): `reach: … { projects: parties.all, truncated: parties.truncated } : null`, a
       republication of `#parties`' figure read to the end of the ternary. */
    "contradiction/index:#parties: a.truncated || b.truncated",
-   "contradiction/index:#present: parties.truncated } : null"].sort());
+   /* RE-PINNED 2026-09-30 (LEGACY-TESTS #14, T16; CONTRADICTION #3, N366, K546): `#present` now republishes the VISIBLE
+      reach's cut (`shownReach.truncated`, measured over the projects the viewer sees) where it republished `#parties`'
+      whole figure; the same reader's limit, a new text. */
+   "contradiction/index:#present: shownReach.truncated } : null",
+   /* DECLARED 2026-09-30 (LEGACY-TESTS #14, T16), from this run's print, diffed by name against T15's close: FOUR ARRIVALS,
+      each an aggregate of figures measured where they are computed, none an unmeasured claim.
+      contradiction/index:{contextFacts, tensionsOn} (CONTRADICTION #3, N368): `facts.some((f) => f.truncated === true` and
+      `out.some((r) => r.truncated === true`, the answer's flag over each fact's and each referent's own `truncated`,
+      each read one past its bound (FACTS_ENTITIES_MAX, TENSIONS_CANDIDATES_MAX).
+      queue-producers/index:feedItems (QUEUE-PRODUCERS #1, R8's `facts`): `gaps.truncated === true` and
+      `scope.truncated === true`, the objective-gap and contradiction project bounds republished (queue R6 publishes
+      them) — in T15 queue's `queueFeed` wrote them as `objective_gap_projects_truncated:`, a key this reader does not
+      match, so they were in no roster; the producers' `facts` spells them `truncated:`. */
+   "contradiction/index:contextFacts: facts.some((f) => f.truncated === true",
+   "contradiction/index:tensionsOn: out.some((r) => r.truncated === true",
+   "queue-producers/index:feedItems: gaps.truncated === true",
+   "queue-producers/index:feedItems: scope.truncated === true"].sort());
 
 /* REACH AS A DELTA, for this block's own readers. A walk that matches nothing reports zero
    violations forever, and this estate has recorded that outcome three times. */

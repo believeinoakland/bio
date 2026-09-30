@@ -57,11 +57,15 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("rec88");
 mkdirSync(SAFE, { recursive: true });
 
-const STORE = join(PLANE, "src/store.mjs");
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the capture arm of `earnedBasisRegistry` left `src/store.mjs` for the inquiry
+   module (`src/inquiry/index.mjs`, the earned registry, inquiry R13), and it now hands `captureBound` the capture's OWN
+   byte grade (N82, K182: provenance R24-R26) rather than `EARNED_CAPTURE_CEILING`. `nobound` and `raise` are
+   re-anchored there on that line; `nocheck` (checks/bio-checks.mjs) and `undetpass` (src/textchain.mjs) did not move. */
+const INQUIRY = join(PLANE, "src/inquiry/index.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
 const TEXTCHAIN = join(PLANE, "src/textchain.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const MIN_BYTES = 20000;   // store.mjs is over a megabyte; a restore over a stub must fail loudly.
+const MIN_BYTES = 20000;   // every patched file is well over 60 KB; a restore over a stub must fail loudly.
 
 /* The subject: this item's own suite, run alone. Captured to a FILE-like buffer
    and not a pipe the child can lose — D-282: a suite that calls process.exit()
@@ -91,7 +95,7 @@ function arm(file, find, replace) {
 /* The one line this item added to the capture arm, quoted once so three arms
    patch the SAME anchor and a drift in it shows up as "matched 0×" rather than
    as an arm quietly measuring nothing. */
-const BOUND_CALL = `      const b = captureBound(chain, EARNED_CAPTURE_CEILING);`;
+const BOUND_CALL = `      const b = captureBound(chain, byteGrade);`;   /* LEGACY-TESTS #14 (T16, 2026-09-30): was `(chain, EARNED_CAPTURE_CEILING)` in store.mjs; N82 made the byte grade the capture's own */
 
 const ARMS = {
   baseline: {
@@ -100,10 +104,10 @@ const ARMS = {
     patch: () => ({ armed: true, matches: 0 }),
   },
   nobound: {
-    files: [STORE],
+    files: [INQUIRY],
     why: "THE ITEM'S OWN ARM — compute the bound and THROW IT AWAY, returning the capture axis to "
-       + "exactly what it answered before this item (EARNED_CAPTURE_CEILING for every document the "
-       + "record holds bytes of). This is D-349 restored: `captureBound` present, correct, and asked "
+       + "exactly what it answered before this item (the capture's own BYTE grade — since N82 that is "
+       + "the route's grade, and EARNED_CAPTURE_CEILING for a direct or unrecorded route). This is D-349 restored: `captureBound` present, correct, and asked "
        + "by nobody",
     mustFail: ["THE ITEM: capture grade B on a document this plane OCR'd at C is REFUSED, by name",
                "and the refusal NAMES BOTH LETTERS and the measured fidelity",
@@ -118,12 +122,16 @@ const ARMS = {
     /* THE HELD-OPEN HALF, AND IT IS THE WHOLE POINT OF THIS ARM: if disabling
        the bound also moved what a PUBLISHER-TYPED document earns, this suite
        would be measuring the capture arm as a whole rather than the bound. */
-    mustStayGreen: ["and its entry is BYTE-IDENTICAL to what the PRISTINE pre-item tree printed",
+    /* LEGACY-TESTS #14 (T16, 2026-09-30): the suite's "BYTE-IDENTICAL to what the PRISTINE pre-item tree printed"
+       digest pin is RETIRED (K457; covered by test/m/inquiry/earned.test.mjs "R13 capture" and "R13 R14 capture: …
+       stated as authored"). Held open in its place: the suite's R26 statement arm, beside the STRUCTURAL key list. */
+    mustStayGreen: ["a captured, READ, publisher-typed document still earns the ceiling",
                     "STRUCTURAL: it gained not one key",
+                    "and R26's statement is the route-unrecorded one, never a measured route",
                     "and a leg claiming B on it LANDS, exactly as it always has",
                     "a captured document the record has NEVER READ earns the ceiling"],
-    mustPass: "every publisher-typed arm in section 5 — the digest pin, the key list and the landing leg",
-    patch: () => arm(STORE, BOUND_CALL, `      const b = EARNED_CAPTURE_CEILING;`),
+    mustPass: "every publisher-typed arm in section 5 — the ceiling, the key list, R26's statement and the landing leg",
+    patch: () => arm(INQUIRY, BOUND_CALL, `      const b = byteGrade;`),
   },
   nocheck: {
     files: [CHECKS],
@@ -142,7 +150,7 @@ const ARMS = {
     mustStayGreen: ["a leg claiming ANY letter on an unmeasured transcription is REFUSED, by name",
                     "and the refusal says UNDETERMINED",
                     "the read reports the BOUND letter and its code",
-                    "and its entry is BYTE-IDENTICAL to what the PRISTINE pre-item tree printed"],
+                    "STRUCTURAL: it gained not one key"],   /* LEGACY-TESTS #14 (T16): was the retired digest pin (K457) */
     mustPass: "every READ assertion, and the undetermined refusal, which is a different arm",
     patch: () => arm(CHECKS,
       `    if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(earned.grade)) {`,
@@ -162,14 +170,14 @@ const ARMS = {
                "THE ITEM: the sentence names the UNMEASURED FIDELITY"],
     mustStayGreen: ["THE ITEM: capture grade B on a document this plane OCR'd at C is REFUSED, by name",
                     "the read reports the BOUND letter and its code",
-                    "and its entry is BYTE-IDENTICAL to what the PRISTINE pre-item tree printed"],
+                    "STRUCTURAL: it gained not one key"],   /* LEGACY-TESTS #14 (T16): was the retired digest pin (K457) */
     mustPass: "every MEASURED-fidelity arm — the C document is bounded exactly as before",
     patch: () => arm(TEXTCHAIN,
       `  if (cap == null) return null;`,
       `  if (cap == null) return byteGrade;`),
   },
   raise: {
-    files: [STORE],
+    files: [INQUIRY],
     why: "THE OVER-STRICTNESS DIRECTION, INVERTED — let the FIDELITY set the letter outright instead "
        + "of taking the weaker of the two, so a chain measured at A would RAISE the capture axis "
        + "above the byte ceiling. DEC-4's rule is a MINIMUM and 'OCR never raises a capture grade' is "
@@ -183,10 +191,13 @@ const ARMS = {
                "THE ITEM: the sentence names the UNMEASURED FIDELITY"],
     mustStayGreen: ["THE ITEM: capture grade B on a document this plane OCR'd at C is REFUSED, by name",
                     "and the SAME leg at C lands",
-                    "and its entry is BYTE-IDENTICAL to what the PRISTINE pre-item tree printed"],
+                    "STRUCTURAL: it gained not one key"],   /* LEGACY-TESTS #14 (T16): was the retired digest pin (K457) */
     mustPass: "the fidelity-weaker direction, which this arm leaves alone — a C document is still C",
-    patch: () => arm(STORE, BOUND_CALL,
-      `      const b = isTranscribed(chain) ? (derivationCap(chain) ?? EARNED_CAPTURE_CEILING) : EARNED_CAPTURE_CEILING;`),
+    /* LEGACY-TESTS #14 (T16, 2026-09-30): inquiry imports `captureBound` and `isTranscribed` but not `derivationCap`,
+       so the fidelity is read as `captureBound(chain, "A")` — the weaker of A and the cap IS the cap — with the same
+       fallback as before (an unmeasured transcription takes the byte grade rather than null). */
+    patch: () => arm(INQUIRY, BOUND_CALL,
+      `      const b = isTranscribed(chain) ? (captureBound(chain, "A") ?? byteGrade) : byteGrade;`),
   },
 };
 

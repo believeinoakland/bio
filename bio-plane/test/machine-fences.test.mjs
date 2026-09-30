@@ -200,7 +200,10 @@ const SRC = (f) => join(DIR, "..", "src", f);
    to case-authoring (`#publishCase`), MACHINE_CANNOT_REVIEW to review — so those modules join the corpus. */
 /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE left store.mjs with
    `taskForward` and `taskResolve` for `src/queue/` (rows now queue's QUEUE_MACHINE_CHECKS), so queue joins the corpus. */
-const EXTRACTED = ["promotion", "inquiry", "basis-versions", "strength", "actions", "case-authoring", "review", "queue"];
+/* LEGACY-TESTS #14 (T16, 2026-09-30; TASKS #1, QUEUE #5, N363): `taskForward` and `taskResolve`, and with them
+   MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE, left `src/queue/` for `src/tasks/index.mjs` (the obligation inbox);
+   queue mints no fence now, so `tasks` replaces `queue` in the corpus. */
+const EXTRACTED = ["promotion", "inquiry", "basis-versions", "strength", "actions", "case-authoring", "review", "tasks"];
 const STORE_SRC = [readFileSync(SRC("store.mjs"), "utf8"),
   ...EXTRACTED.flatMap((m) => readdirSync(SRC(m)).filter((f) => f.endsWith(".mjs")).sort()
     .map((f) => readFileSync(SRC(`${m}/${f}`), "utf8")))]
@@ -1009,7 +1012,7 @@ console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence ca
      three OPERATOR_TOKEN_CANNOT_*) which this equality has never been able to see. Those are block
      3b's, harvested and driven there; the two arms together are the whole plane, and neither claims
      to be. The old wording was the defect this file exists to find, in this file. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with the modules extracted from it: promotion, inquiry, basis-versions, strength, actions, case-authoring, review, queue) mints was driven under a COMPLETE payload — the codes "
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with the modules extracted from it: promotion, inquiry, basis-versions, strength, actions, case-authoring, review, tasks) mints was driven under a COMPLETE payload — the codes "
   + "`src/index.mjs` mints are block 3b's, and were outside this corpus, not inside it (D-503)",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);
@@ -1088,7 +1091,12 @@ console.log("\n--- 3b. D-503 · the five fences src/index.mjs mints, DRIVEN thro
   const INDEX_BARE = decomment([readFileSync(SRC("index.mjs"), "utf8"),
                                 readFileSync(SRC("control-plane/index.mjs"), "utf8"),
                                 readFileSync(SRC("control-plane/ops.mjs"), "utf8"),
-                                readFileSync(SRC("ratification/ops.mjs"), "utf8")].join("\n"));
+                                readFileSync(SRC("ratification/ops.mjs"), "utf8"),
+                                /* LEGACY-TESTS #14 (T16, 2026-09-30; RATIFICATION #7 J3, K557): C-32.13's and C-32.15's
+                                   refusals left `caseRatifyOp` for their builders in `src/ratification/refusals.mjs`
+                                   (`machineCaseRefusal`, `operatorCaseRefusal`), which `ops.mjs` returns beside each
+                                   guard; the file joins the Worker's corpus. */
+                                readFileSync(SRC("ratification/refusals.mjs"), "utf8")].join("\n"));
   const INDEX_HARVEST = [...new Set([...INDEX_BARE.matchAll(/"((?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]+)"/g)]
     .map((m) => m[1]))].sort();
   console.log(`    src/index.mjs mints ${INDEX_HARVEST.length} fence code(s): ${INDEX_HARVEST.join(", ")}`);

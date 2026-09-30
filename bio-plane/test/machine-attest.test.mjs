@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/machine-attest.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS A REAL SOURCE (src/index.mjs) while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/machine-attest.control.mjs [arm]`. Every arm is armed ALONE with the others held open, and restored from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by cmp with the byte count printed and a minimum guarded (never `git checkout --`). DECLARED BEFORE ARMING — (a) `baseline`, nothing armed: MUST be green. (b) `ratify` — delete the `ai` fence at op=ratify: the machine's ratification of a member-signed bundle is ACCEPTED, and the arms naming op=ratify MUST FAIL (the refusal, the "not published" read-back, the trace verdict) while every op=caseratify arm MUST PASS — CORRECTED 2026-09-18 by REC-125: the read-back no longer fails in this arm or in (c), because REC-125's session fence (C-32.14/C-32.15) now also refuses an `ai` credential, so the act is doubly fenced; see the control's own note. (c) `caseratify` — delete the fence at op=caseratify: the machine COMMITS the case, and the arms naming op=caseratify MUST FAIL, while op=ratify's refusal arm MUST PASS. (d) `overstrict` — widen both fences from the `ai` class to EVERY caller: the member arms (iris ratifying her own signed bytes through the same two ops) MUST FAIL while every machine refusal STAYS GREEN — a fence that refuses everyone reads as a fence holding, and only the member arm can tell them apart. RESULTS: see the RESULTS line below, written from the harness's own output.
+   RESULTS, RE-RUN 2026-09-30 by LEGACY-TESTS #14 (T16) in a private worktree after `reattest` was driven and the caseratify needle re-anchored on `machineCaseRefusal(cls)` (the arm DID NOT ARM before it): baseline 41/0 · ratify 39/2 · caseratify 39/2 · overstrict 39/2 — ALL FOUR AS DECLARED, every restore byte-identical.
    RESULTS, RE-RUN 2026-09-18 by REC-125 in worktree agent-aac5bdb9dea9c048e on the tree carrying its fence, every restore byte-identical (src/index.mjs 619,467 B, sha256 399829630f43…): baseline 35/0 · ratify 33/2 · caseratify 33/2 · overstrict 33/2 — ALL FOUR AS DECLARED after the correction above.
    RESULTS, RUN 2026-09-18 in worktree agent-ad37cd8c19b30bf8b, every restore byte-identical (src/index.mjs 615,722 B, sha256 f7798e43e7a9…, re-run on the FINAL guard shape): baseline 35/0 · ratify 32/3 · caseratify 32/3 · overstrict 33/2 — ALL FOUR AS DECLARED, no arm failed to arm. THE TRACE ON THE PRE-ITEM TREE, run with REC123_SRC pointing at a `git archive` of 6e50b260: 30/5 — the machine's op=caseratify answered ok:true with attestor {member: iris} and tokenClass ai, and its op=ratify answered ok:true with attestor iris.
  * =========================================================================
@@ -160,8 +161,11 @@ t("each of the three searches FOUND something (an empty search is not a clean on
 /* EVERY op the three searches find is either DRIVEN below or NAMED here with
    the reason it is not an attestation. A new op under any of the three names
    fails this until somebody decides which it is. */
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; N364, capture R68, affordances R2): `reattest` arrived in the OPS table
+   (the `attest` verb, and graded `attested`), and is DRIVEN below beside `attest`, section 5 — no module test asks
+   what an `ai` credential's late co-attestation gets over the wire. */
 const DRIVEN = ["attest", "ratify", "caseratify", "attesttext", "transcriptionattest", "textattest",
-                "expertiseconfirm", "adminendorse", "signeradd", "signerset"];
+                "expertiseconfirm", "adminendorse", "signeradd", "signerset", "reattest"];
 const NOT_AN_ATTESTATION = {
   versionaccept: "a member ACCEPTING a version of a basis — fenced by MACHINE_CANNOT_MOVE_VERSION (C-25.24) and "
                + "driven under a complete payload by machine-fences.test.mjs (REC-73), which this suite checks names it",
@@ -182,12 +186,51 @@ const NOT_AN_ATTESTATION = {
   filingapprove: "a member making a filing DRAFT's text their own before they send it to an outside venue — an "
                + "authored act, never a statement vouching for the record; fenced MACHINE_CANNOT_APPROVE (filings R6, "
                + "R16) and driven with a machine author by test/m/filings/approve-send.test.mjs",
+  /* NAMED 2026-09-30 (LEGACY-TESTS #14, T16; N364): three ops arrived in the OPS table with capture's and membership's
+     N364 routes (CONTROL-PLANE #7, K558/K559), each read off its OPS row and its module, not assumed. */
+  lateattestations: "a READ (mutating: false) of a capture's late co-attestations, capture R68's `lateAttestationsOf`",
+  signerregister: "the matcher's `sign`: a member registering their OWN attesting key from their own signed-in session "
+                + "(membership R89) — it vouches for nothing on the record; its row's `machineClasses: []` refuses "
+                + "every bearer, and an agent credential declaring every write is refused AI_BEYOND_TASK_SCOPE, driven "
+                + "by test/m/control-plane/doorbell.test.mjs (R10–R13), which this suite checks names it",
+  signerrevoke: "the matcher's `sign`: a member revoking their OWN attesting key (membership R90), session-only on the "
+              + "same row shape and driven the same way by test/m/control-plane/doorbell.test.mjs",
+};
+/* NAMED 2026-09-30 (LEGACY-TESTS #14, T16; N364, capture R69, affordances R2; K457): `captureaccount` IS an
+   attestation (graded `attested`: the capturing member's registered key over their account of a capture), and it is
+   not driven here, because this fixture cannot give it a complete payload: a capture's actor is recorded only by a
+   member session's acquire (a network fetch this harness answers 503) or its pull of a knock (refused today by the
+   promotion's dry run, N381), so no capture here has an actor, and a machine refused over a capture nobody may
+   account for proves nothing (REC-73). What an `ai` credential gets is held piecewise by the modules, each named and
+   cross-checked below: the control plane stamps its `by` as `class:ai` whatever it sends
+   (test/m/control-plane/doorbell.test.mjs, "R17, R29 (N364) …", over every caller kind, the agent among them), and
+   capture refuses NOT_THE_CAPTURING_ACTOR (C-118.5) to any `by` it did not record as the capture's actor, the query
+   stamp winning over the body's claim (test/m/capture/knocker.test.mjs, R69). Actors are member ids only. The
+   end-to-end drive is owed once a pull lands (N381). */
+const DRIVEN_AT_ITS_MODULES = {
+  captureaccount: "control-plane doorbell R17/R29 (the agent's `by` is `class:ai`) with capture knocker R69 "
+                + "(NOT_THE_CAPTURING_ACTOR to any `by` not recorded as the capture's actor)",
 };
 const found = [...new Set([...byName, ...byRung, ...byStamp])].sort();
 t("THE CENSUS: every op any search found is DRIVEN here or NAMED as not an attestation — nothing found is unaccounted for",
-  found.filter((o) => !DRIVEN.includes(o) && !(o in NOT_AN_ATTESTATION)), []);
+  found.filter((o) => !DRIVEN.includes(o) && !(o in NOT_AN_ATTESTATION) && !(o in DRIVEN_AT_ITS_MODULES)), []);
 t("and nothing in the trace list is a name the plane does not have (a stale list is a liar's list)",
-  [...DRIVEN, ...Object.keys(NOT_AN_ATTESTATION)].filter((o) => !OPS.has(o)), []);
+  [...DRIVEN, ...Object.keys(NOT_AN_ATTESTATION), ...Object.keys(DRIVEN_AT_ITS_MODULES)].filter((o) => !OPS.has(o)), []);
+/* NAMED 2026-09-30 (LEGACY-TESTS #14, T16): the three cross-references above, checked as versionaccept's is. */
+{
+  const cpDoorbell = readFileSync(fileURLToPath(new URL("./m/control-plane/doorbell.test.mjs", import.meta.url)), "utf8");
+  const knocker = readFileSync(fileURLToPath(new URL("./m/capture/knocker.test.mjs", import.meta.url)), "utf8");
+  t("the N364 cross-references hold: the control plane's doorbell suite drives signerregister and signerrevoke as "
+  + "session-only (an agent refused AI_BEYOND_TASK_SCOPE) and stamps captureaccount's `by` for the agent as `class:ai`; "
+  + "capture's suite refuses a `by` that is not the capture's actor NOT_THE_CAPTURING_ACTOR, the query's stamp winning",
+    [/signerregister:\s*\[SESSION_ACT,/.test(cpDoorbell), /signerrevoke:\s*\[SESSION_ACT,/.test(cpDoorbell),
+     /refused\(await call\(w2\.env, \{ op, token: wide, method: "POST", body: \{\} \}\), 403, "AI_BEYOND_TASK_SCOPE"/.test(cpDoorbell),
+     /captureaccount:\s*\[ACT, "contribute", "captureaccount", byOnly\]/.test(cpDoorbell),
+     /by: "class:ai", author: "token:ai"/.test(cpDoorbell),
+     /captureaccount\?by=m2"\), \{ captureSha: d, text, signature: good, by: "m1" \}[\s\S]{0,80}\.captureaccount\(\);\n\s*assert\.equal\(via\.reason, "NOT_THE_CAPTURING_ACTOR"/.test(knocker),
+     OPS.get("signerregister")?.mutating, OPS.get("signerrevoke")?.mutating, OPS.get("lateattestations")?.mutating],
+    [true, true, true, true, true, true, true, true, false]);
+}
 t("versionaccept's cross-reference holds: machine-fences.test.mjs drives it with a machine credential",
   /"versionaccept"/.test(readFileSync(fileURLToPath(new URL("./machine-fences.test.mjs", import.meta.url)), "utf8")), true);
 /* NAMED 2026-09-28 (legacy-tests T9): filingapprove's cross-reference, as versionaccept's above. */
@@ -455,6 +498,28 @@ t("op=attest by an `ai` credential scoped to it is ACCEPTED — the handler asks
 const hco = await POST(`op=attest&token=${RUTH}`, { sha256: CAP_SHA });
 t("and a member's call answers the same way — the act carries no author to fence",
   [reached(hco), codeOf(hco)], [true, "NO_ATTESTATION"]);
+/* ADDED 2026-09-30 (LEGACY-TESTS #14, T16; N364, capture R68, DEC-81 item 3(a)): `op=reattest`, the LATE form of the
+   same act — a fresh timestamp over a capture already held, each attempt appended `late: true`. The authority is the
+   timestamp service's, never the caller's, so the design verdict is attest's (Intake Doctrine §3). Driven three ways,
+   as every op here: a credential whose scope does not name it (the gate), one whose scope does (the handler), and a
+   member (the over-strictness arm). The harness answers every outbound call 503, so an accepted call records its
+   failed attempt: `ok: true` with the attempts appended is the handler running to its end. */
+const REATTESTER = await mint("rec123-reattester", ["reattest"]);
+const lateCount = async () => ((await GET(`op=lateattestations&token=${RUTH}&capture=${CAP_SHA}`))?.late_attestations ?? [-1]).length;
+const rn = await POST(`op=reattest&token=${AI_N}`, { captureSha: CAP_SHA });
+t("op=reattest with a scope that does not name it: AI_BEYOND_TASK_SCOPE (C-29.6) — the gate, and nothing written",
+  [codeOf(rn), rn && rn.check, await lateCount()], ["AI_BEYOND_TASK_SCOPE", "C-29.6", 0]);
+const mre = await POST(`op=reattest&token=${REATTESTER.token}`, { captureSha: CAP_SHA });
+TRACE.push(["reattest", `${verdict(mre, okTrue)} — PERMITTED BY DESIGN, as op=attest: the timestamp authority vouches `
+  + `for the bytes' existence by its instant, never the caller (capture R68; Intake Doctrine §3)`]);
+t("op=reattest by an `ai` credential scoped to it is ACCEPTED — the handler asks the timestamp authority and appends "
+  + "the late attempt — which is attest's design: the authority vouches, not the caller",
+  [REATTESTER.ok, mre && mre.ok, (mre && mre.late_attestations || []).every((o) => o.late === true), await lateCount() > 0],
+  [true, true, true, true]);
+const before = await lateCount();
+const hre = await POST(`op=reattest&token=${RUTH}`, { captureSha: CAP_SHA });
+t("and a member's call answers the same way, appending after the machine's (append-only)",
+  [hre && hre.ok, (await lateCount()) > before], [true, true]);
 
 /* ===================================================== 6. EXPERTISE VOUCH */
 console.log("\n--- 6. op=expertiseconfirm — one person vouching for another's licence ---");
@@ -489,7 +554,8 @@ t("THE TABLE covers every DRIVEN op, and no machine attestation or ratification 
    ["expertiseconfirm", "REFUSED BY ANOTHER GUARD NOT_AN_ADMIN"],   /* T14 (N327): was ADMIN_ONLY, as above */
    ["adminendorse", "REFUSED BY THE SCOPE CHECK ONLY AI_BEYOND_TASK_SCOPE"],
    ["signeradd", "REFUSED BY THE SCOPE CHECK ONLY AI_BEYOND_TASK_SCOPE"],
-   ["signerset", "REFUSED BY THE SCOPE CHECK ONLY AI_BEYOND_TASK_SCOPE"]]);
+   ["signerset", "REFUSED BY THE SCOPE CHECK ONLY AI_BEYOND_TASK_SCOPE"],
+   ["reattest", "ACCEPTED"]]);   /* T16 (N364): attest's late form, PERMITTED BY DESIGN as attest is (section 5) */
 
 } catch (e) {
   console.log(`  FAIL  the suite threw before its foot: ${e && e.stack || e}`);

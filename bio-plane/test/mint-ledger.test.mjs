@@ -79,7 +79,11 @@ const SCHEMA_SRC = readFileSync(join(SRC_DIR, "schema.mjs"), "utf8");
    `#MINT_LEDGER_LIVE` too; queue seeds its own prefix (`this.#record.seedMintLedger([["TASK", "tasks", "id"]])`), which
    S8 reads with review's as a module seed, so S8 holds the store's PROJ and CASE rows and queue's TASK row against the
    five sites' `taken`. */
-const MODULES = ["record-core", "membership", "promotion", "case-authoring", "review", "queue"];
+/* LEGACY-TESTS #14 (T16, 2026-09-30; TASKS #1, QUEUE #5, N363): the TASK mint and its seed left `src/queue/` for
+   `src/tasks/index.mjs` (`this.#record.mintOpaqueId("TASK", …)`, `seedMintLedger([["TASK", "tasks", "id"]])`), and queue
+   mints and seeds nothing now, so the corpus reads `tasks` where it read `queue`. Sources' `SRC` mint (T16, sources R1)
+   is not one of the five gated prefixes this suite forces: it has no counter era and no pre-ledger ids to seed. */
+const MODULES = ["record-core", "membership", "promotion", "case-authoring", "review", "tasks"];
 const moduleFiles = (d) => readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => `${d}/${f}`);
 const RECORD_CORE_SRC = readFileSync(join(SRC_DIR, "record-core", "index.mjs"), "utf8");
 const RECORD_SCHEMA_SRC = readFileSync(join(SRC_DIR, "record-core", "schema.mjs"), "utf8");

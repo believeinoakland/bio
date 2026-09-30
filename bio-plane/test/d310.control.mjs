@@ -50,7 +50,9 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const F = { affordances: ROOT + "src/affordances.mjs", store: ROOT + "src/store.mjs" };
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the owner fact's `.some(... isProjectOwner ...)` left
+   store.mjs with membership's extraction (T3); arm (2b) arms it in src/membership/index.mjs. */
+const F = { affordances: ROOT + "src/affordances.mjs", membership: ROOT + "src/membership/index.mjs" };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
@@ -242,7 +244,7 @@ arm("2b", "OVER-STRICTNESS, THE OTHER DIRECTION — the fact answers `false` for
   + "property MUST fail and the fixture guard with it (the table goes uniform the other way); the "
   + "MACHINE arm MUST stay green and its bytes UNCHANGED, because a machine is answered `null` and "
   + "this arm cannot reach it — which is what separates the member gate from the machine gate.",
-  [["store", ".some((p) => this.#isProjectOwner(p.project_id, memberId))",
+  [["membership", ".some((p) => this.isProjectOwner(p.project_id, memberId))",
              ".some((p) => p && false)"]],
   [{ name: OWN,
      mustFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY", "FIXTURE GUARD: the table is not uniform"],
@@ -254,18 +256,21 @@ arm("2b", "OVER-STRICTNESS, THE OTHER DIRECTION — the fact answers `false` for
 arm("3", "DEC-69 — THE NARROWED ANSWER TURNED INTO A NAG. The `publish` act grows a PROMPT that "
   + "re-states the owner rule at the act, which is the second telling DEC-69 forbids (*the workflow "
   + "must not be nagging or second-guessing users*) — informing at the act ONCE is respect, and this "
-  + "is the shape that turns it into ceremony. DECLARED: caseproduction's DEC-69 arm MUST fail and "
-  + "affordances' prompt-totality assertion MUST fail with it (a prompt is a published wording and "
-  + "the catalogue holds the set); the agreement property MUST stay green, because nagging is a "
+  + "is the shape that turns it into ceremony. DECLARED: caseproduction's DEC-69 arm MUST fail; the agreement property MUST stay green, because nagging is a "
   + "different defect from disagreeing and an arm that took both down would isolate neither.",
-  [["affordances", `  { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],`,
+  /* RE-ANCHORED by LEGACY-TESTS #14 (T16, 2026-09-30). N364 gave `publish` a prompt of its own by
+     requirement (affordances R5, R28: `prompt: SELF_ATTESTED_PROMPT`, a disclosure about the evidence,
+     not the owner rule), so a key planted ABOVE it was overridden by the row's own later key and the
+     arm armed nothing. The nag now REPLACES the row's prompt. affordances.test.mjs's prompt-totality
+     arm was retired under K457 (covered by test/m/affordances/catalogue.test.mjs R5), so this arm's
+     second declaration moves off it; caseproduction's DEC-69 arm (which now requires exactly
+     SELF_ATTESTED_PROMPT and no owner words) carries the catch. */
+  [["affordances", `  { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],\n    prompt: SELF_ATTESTED_PROMPT,`,
                    `  { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],\n`
                    + `    prompt: "You are an owner of a project. Confirm once more that you mean to publish.",`]],
   [{ name: OWN,
      mustFail: ["DEC-69: the narrowing informs by ABSENCE"],
-     mustNotFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY"] },
-   { name: AFF,
-     mustFail: ["every act that carries a PROMPT carries its own published wording"] }]);
+     mustNotFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY"] }]);
 
 /* ============================== (4) D-311 — THE MACHINE RULE DROPPED: THE BYTE PROBE'S OWN CONTROL */
 arm("4", "D-311's MACHINE RULE DROPPED — `deriveActs` stops withholding MACHINE_REFUSALS, the state "

@@ -78,9 +78,16 @@ const edit = (file, needle, replacement) => {
   writeFileSync(file, src.replace(needle, replacement));
 };
 
-const PASSES = "        if (conc.state === \"concluded\" && rec.same.length) continue;";
-const GATE = "      if (moved.length) {\n        const refusal = (code, detail) => {\n          const row = CASE_CONCLUSION_CHECKS[code];";
-const VIEWER = "      const concViewer = attestorMember ? `member:${attestorMember}` : null;";
+/* LEGACY-TESTS #14 (T16, 2026-09-30): RATIFICATION #7 (b89c9dbab9, R18's pre-flight) moved C-65.1's loop out of the
+   committer into `#conclusionsMoved` (asked by the commit AND by the pre-flight) and the refusal's builder into
+   `src/ratification/refusals.mjs` `conclusionMovedRefusal`. The comparison is now `#sameRecordedConclusion` over this
+   document's own row (was `editionsRecordingConclusion(...).same.length`), the viewer is read from `signerMember` (the
+   commit passes `attestorMember`), and the committer's gate is `if (refusal) return refusal;` after the builder. Each
+   anchor matches once in `index.mjs`; each arm breaks the same thing it broke before. (b) disarms the COMMIT's gate
+   only, as before — the pre-flight is a separate reader the suite does not ask. */
+const PASSES = "      if (conc.state === \"concluded\"\n          && Ratification.#sameRecordedConclusion(had, Ratification.#conclusionRowParsed(m, conc))) continue;";
+const GATE = "        const refusal = conclusionMovedRefusal(id, ed, project, moved);\n        if (refusal) return refusal;";
+const VIEWER = "    const concViewer = signerMember ? `member:${signerMember}` : null;";
 
 /* The suite's OWN assertion labels, quoted as the invariant opening of each. */
 const S1_FIX = "(fixture) A prepares edition 1 of a new case";
@@ -111,8 +118,8 @@ const ARMS = {
 
   a: { files: [STORE],
        label: "(A) THE COMPARISON DROPPED — concluded-ness alone, the row's own named control",
-       apply: () => edit(STORE, PASSES, PASSES.replace("conc.state === \"concluded\" && rec.same.length",
-                                                       "conc.state === \"concluded\"")),
+       apply: () => edit(STORE, PASSES, PASSES.replace("\n          && Ratification.#sameRecordedConclusion(had, Ratification.#conclusionRowParsed(m, conc))",
+                                                       "")),
        mustFail: [S2_AGAIN, S2_NAMES],
        cascade: [S2_NOTHING, S3_SAME, S3_OLD],
        mustNotFail: [S1_FIX, S1_REFUSED, S1_ROW, S1_NAMES, S1_ROUTE, S1_NOTHING, S1_RATIFY, S2_DISC,
@@ -120,15 +127,14 @@ const ARMS = {
 
   b: { files: [STORE],
        label: "(B) THE WHOLE REFUSAL DROPPED — the plane as M-92 measured it",
-       apply: () => edit(STORE, GATE, GATE.replace("if (moved.length) {", "if (false && moved.length) {")),
+       apply: () => edit(STORE, GATE, GATE.replace("const refusal = conclusionMovedRefusal(", "const refusal = null && conclusionMovedRefusal(")),
        mustFail: [S1_REFUSED, S1_ROW, S1_NAMES, S1_ROUTE, S1_NOTHING, S1_RATIFY, S2_AGAIN, S2_NAMES, S2_NOTHING, S3_OLD],
        cascade: [S3_SAME],
        mustNotFail: [S1_FIX, S2_DISC, S3_PUB, S3_RECORDS, S3_RATIFIES, S3_FINDING, S3_SIGNED, S4_OVER, S4_FINDING] },
 
   c: { files: [STORE],
        label: "(C) CONCLUDED-NESS DROPPED — only the comparison asked (declared to show NO effect)",
-       apply: () => edit(STORE, PASSES, PASSES.replace("conc.state === \"concluded\" && rec.same.length",
-                                                       "rec.same.length")),
+       apply: () => edit(STORE, PASSES, PASSES.replace("conc.state === \"concluded\"\n          && ", "")),
        mustFail: [],
        mustNotFail: [S1_FIX, S1_REFUSED, S1_ROW, S1_NAMES, S1_ROUTE, S1_NOTHING, S1_RATIFY, S2_DISC, S2_AGAIN,
                      S2_NAMES, S2_NOTHING, S3_PUB, S3_SAME, S3_RECORDS, S3_RATIFIES, S3_FINDING, S3_SIGNED, S3_OLD,
@@ -136,7 +142,7 @@ const ARMS = {
 
   d: { files: [STORE],
        label: "(D) OVER-STRICTNESS — the signer's sight dropped, so every project reads as never concluded",
-       apply: () => edit(STORE, VIEWER, "      const concViewer = null;"),
+       apply: () => edit(STORE, VIEWER, "    const concViewer = null;"),
        mustFail: [S3_RATIFIES, S4_OVER, S1_NAMES, S2_NAMES],
        cascade: [S3_FINDING, S3_SIGNED, S4_FINDING],
        mustNotFail: [S1_FIX, S1_REFUSED, S1_ROW, S1_ROUTE, S1_NOTHING, S1_RATIFY, S2_DISC, S2_AGAIN, S2_NOTHING,

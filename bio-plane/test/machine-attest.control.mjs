@@ -41,7 +41,11 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 /* The guard exactly as it stands in the source, and the refusal it opens. */
 const GUARD = "if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))";
 const RATIFY_FENCE = `    ${GUARD}\n      return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY", `;
-const CASE_FENCE = `    ${GUARD}\n      return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY_CASE", `;
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; RATIFICATION T16, R18): op=caseratify's refusal left the inline
+   literal for `./refusals.mjs`'s `machineCaseRefusal(cls)`, the one builder the act and R18's pre-flight share (DEC-49),
+   so the guard now returns that builder's answer. The guard is unchanged and is still what the arm opens; the needle
+   is the guard with its new return, and matches once. */
+const CASE_FENCE = `    ${GUARD}\n      return json(machineCaseRefusal(cls), 403);`;
 const open = (fence) => fence.replace(GUARD, `if (false /* ARMED */)`);
 const everyone = (fence) => fence.replace(GUARD, `if (true /* ARMED */)`);
 

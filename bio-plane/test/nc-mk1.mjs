@@ -31,7 +31,10 @@ const REPO = join(PLANE, "..");
 const SAFE = process.env.MK1_PEN || "/tmp/conduct4-mk1/pen";
 mkdirSync(SAFE, { recursive: true });
 const STORE = join(PLANE, "src/store.mjs");
-const INDEX = join(PLANE, "src/index.mjs");
+/* LEGACY-TESTS #14 (T16, 2026-09-30): control-plane (T12, cc81048f65) took the Worker's doors, and with them the
+   `op=testify` author stamp, out of `src/index.mjs` into `src/control-plane/index.mjs`; the stamp arm patches the same
+   line where it now lives (its needle matched nothing in `src/index.mjs` since T12). */
+const INDEX = join(PLANE, "src/control-plane/index.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N57's remainder): provenance (T4 layer 3) took the promote fence
    (C-53.7–C-53.9, the liar and the hijack), `op=testify`'s act (C-53.1, C-53.2) and the canonical bytes
@@ -111,9 +114,14 @@ const ARMS = {
   },
   stamp: {
     files: [INDEX],
-    why: "THE AUTHOR STAMP REMOVED at the control plane: a caller's own ?author= reaches the store unoverwritten",
-    mustFail: ["THE STAMP: a caller's own ?author=mallory is OVERWRITTEN"],
-    mustPass: "the body-author refusal (C-53.2) — a different door, fenced at the store",
+    why: "THE AUTHOR STAMP REMOVED at the control plane: op=testify reaches the store with no server-stamped author",
+    /* RE-MEASURED 2026-09-30 (LEGACY-TESTS #14, T16), on a worktree: control-plane R17 (T12) now DELETES every
+       caller-sent stamp before an op's own are set, so with this line gone the caller's ?author= no longer reaches the
+       store at all — the store sees NO author and refuses every op=testify: 7/24, "op=testify lands" first, the body-
+       author refusal (C-53.2) with it, then the suite throws. The stamp is MORE load-bearing than declared (c181's
+       shape), and the declaration follows the measurement. */
+    mustFail: ["op=testify lands", "THE STAMP: a caller's own ?author=mallory is OVERWRITTEN"],
+    mustPass: "nothing downstream of the testimony — with no stamped author it never lands",
     patch: () => arm([[INDEX, "    if (op === \"testify\")\n      inner.searchParams.set(\"author\",",
                               "    if (false)\n      inner.searchParams.set(\"author\","]]),
   },
@@ -188,9 +196,13 @@ const ARMS = {
     mustFail: ["op=caseratify on a CASE whose finding rests on the observation"],
     mustPass: "both op=ratify refusals",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): MK-7's C-92.10, the gate op=caseratify now holds for a case
-       reaching an observation in §4.1's form (the suite's label names it). */
-    patch: () => arm([[RATOPS, "    if (unchosen.length)\n      return json({ ok: false, reason: \"ATTRIBUTION_UNCHOSEN\",",
-                               "    if (false)\n      return json({ ok: false, reason: \"ATTRIBUTION_UNCHOSEN\","]]),
+       reaching an observation in §4.1's form (the suite's label names it).
+       LEGACY-TESTS #14 (T16, 2026-09-30): RATIFICATION #7 (b89c9dbab9, K557) moved the refusal's body into
+       `src/ratification/refusals.mjs` `attributionUnchosenRefusal`, shared with R18's pre-flight; op=caseratify's gate
+       is now its call in `ops.mjs`'s refusal list. The arm drops THAT call, so only op=caseratify's gate opens (the
+       stale check after it still runs, as before). */
+    patch: () => arm([[RATOPS, "                           attributionUnchosenRefusal(facts.doc.case_id, facts.doc.edition, attr),\n",
+                               "                           null,\n"]]),
   },
   /* `pubdirect` — RETIRED 2026-09-29 (T11, legacy-tests; N298, N57), on `pubcited`'s grounds. Its subject was the
      op=ratify fence seeing a finding that rests on the observation THROUGH another finding (C-53.11's transitive

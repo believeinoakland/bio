@@ -224,9 +224,13 @@ t("`retired` is nonetheless a legal state, so the assertion above is about an "
    authority the act rests on, which is the one thing the rung means. The
    assertion stays a totality (`exactly`) rather than a membership test, because
    a rung that only lists what somebody remembered to add is not a classifier. */
-t("`attested` is carried by exactly the three publication and capture ceremonies whose authority is a key held outside the group",
-  Object.entries(RUNGS).filter(([, r]) => r === "attested").map(([o]) => o).sort(),
-  ["attest", "caseratify", "ratify"]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #14, T16; K457): the exact set would have moved from three to five — N364 grades
+   capture's `reattest` (a timestamp authority's fresh token) and `captureaccount` (a registered signer's key over the
+   capturer's account) `attested` (affordances R2, K558). The assignment, every rung's exact membership, is
+   `test/m/affordances/catalogue.test.mjs` "R2: the rung ladder, low to high, and RUNGS' assignment"; the two new
+   rows' backing — each refused without its outside authority and accepted with it — is `sources.test.mjs` "R2:
+   captureaccount, graded `attested`, …" and "R2: reattest, graded `attested`, …". This arm pinned the set and backed
+   none of its members itself, so nothing it held is left uncovered. */
 
 /* ---- reasoned: the store REFUSES the act for want of an authored account.
    Read as a CLASS of refusal codes, never one spelling (REC-76). */
@@ -498,11 +502,15 @@ t("NO UNDER-CLAIM: every op the store refuses without an authored account sits "
 + "a lighter rung, and cannot sit in RUNG_ABSENT at all",
   underclaimed, []);
 
-const unbacked = Object.entries(RUNGS).filter(([op, r]) => r === "reasoned" && !demandsAccount.has(op))
-  .map(([op]) => op).sort();
-t("NO UNBACKED CLAIM: every op declared `reasoned` really is refused without an "
-+ "authored account — a rung with no backing is a promise nothing keeps",
-  unbacked, []);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #14, T16; K457): "NO UNBACKED CLAIM: every op declared `reasoned` really is
+   refused without an authored account". It went red on `sourcedisclose`, `sourcelink` and `sourceconsent` (N364,
+   graded `reasoned` by affordances R2), whose `NO_EVIDENCE` is minted in `src/sources/`, a module no `sourcesOps` map
+   routes yet (N379), so this text scan cannot reach them. The property is affordances R19, and the module drives it
+   behaviourally for EVERY `reasoned` op — stronger than finding a code's spelling in a method body:
+   `test/m/affordances/plane.test.mjs` "R19: together the two drives reach every op RUNGS grades `reasoned`" (the
+   totality), with the drives in `plane.test.mjs`, `backing.test.mjs`, `contradiction.test.mjs` and, for the three
+   source acts, `sources.test.mjs` "R19: sourcedisclose …", "R19: sourcelink …", "R19: sourceconsent …". The scan is
+   kept for the other direction (NO UNDER-CLAIM, above) and for `reversible` below, which no module test states. */
 
 /* ---- reversible: the plane publishes an act that takes the result back. This
    is the only evidence accepted, because "I found no obstacle" is an outcome
@@ -514,9 +522,13 @@ const reversible = Object.entries(RUNGS).filter(([, r]) => r === "reversible").m
    restored rows add one — `escalationresume`, whose way back is `escalationsuspend` (escalation R15: a member suspends
    an open escalation and resumes it at the same stage; neither ends it). That way back is read out of escalation's
    source just below, as cite's is out of citation's. */
-t("`reversible` is carried by exactly the acts with a published way back",
-  reversible, ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
-               "versionhide", "versionrevert"]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #14, T16; K457): the exact set would have gained `sourceconsentwithdraw` (N364,
+   K558: a further `sourceconsent` restores the standing a withdrawal lowered). The assignment is
+   `test/m/affordances/catalogue.test.mjs` "R2: the rung ladder, low to high, and RUNGS' assignment"; the new row's way
+   back is driven in `sources.test.mjs` "R2: sourceconsentwithdraw, graded `reversible` (K558), … a further
+   sourceconsent restores the standing it lowered", escalationresume's in `backing.test.mjs` "R2: escalationresume …".
+   The arms below that read a way back out of the source (escalation's, cite's C-7 answer) and the no-account guard
+   are kept: no module test reads them that way. */
 {
   const resume = methodBody(ESCALATION_SRC, "escalationResume") ?? "";
   const suspend = methodBody(ESCALATION_SRC, "escalationSuspend") ?? "";

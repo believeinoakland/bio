@@ -107,7 +107,9 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
 /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): op=queue's feed — both slugs' producers, their wiring into the
    FINDING half, and `#dispositionOf`'s per-class answers — left store.mjs for `src/queue/index.mjs`. The two
-   STRUCTURAL arms that read them read them there; what they assert is unchanged. */
+   STRUCTURAL arms that read them read them there; what they assert is unchanged.
+   LEGACY-TESTS #14 (T16, 2026-09-30): the producers moved on to `src/queue-producers/` (N363) and their structural arm
+   is retired (block 1, K457); `#dispositionOf`, the other arm's subject, stays here. */
 const QUEUE_SRC = readFileSync(SRC("queue/index.mjs"), "utf8");
 /* WIDENED 2026-09-28 (BASIS-VERSIONS #1 J4.1, K4): each extracted module now owns its tables in its own
    `src/<module>/schema.mjs`, so "the whole schema source" is schema.mjs AND every module's schema. */
@@ -442,43 +444,13 @@ const accept = async (version, target = INQ) =>
     const u = await POST(`op=queuemute&token=${RUTH}`, { case: A, kinds: [k], unmute: true });
     t(`and unmuting '${k}' restores RUTH's feed for the assertions below`, u.removed, [k]);
   }
-  /* BOTH PRODUCERS EXIST IN SOURCE AND ARE WIRED INTO THE FEED. A slug with no
-     generator is a word, and this project has already shipped one of those
-     (`runtime-ceiling-reached`, IS-9(d)). */
-  /* CORRECTED 2026-08-09 by D-266, never exempted, and the correction is the
-     point rather than the housekeeping: THE ORIGINAL PINNED A SPELLING AND NOT
-     THE PROPERTY IT WAS PROTECTING. Its last two arms required the literal
-     `items.push(...this.#findingsX(` — one of several correct ways to wire a
-     producer into the FINDING half. D-266 needed the second producer's ANSWER
-     held in a local, because it now carries a count of the readings the read
-     could not attribute and that fact has NO ITEM to sit on. So the call became
-     `const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
-     items.push(...fromAnotherTeam);` — a wiring that is correct in every respect
-     this assertion exists to defend — and the check went red. A fence tighter
-     than its rule is not a safer fence.
-     THE PROPERTY, asked instead of the spelling: the producer is CALLED with
-     the feed's own `(viewer, now)`, and what it RETURNS is spread into `items`
-     — directly, or through the local it was assigned to. Two structural forms
-     because the language has two, not a list of spellings that goes stale the
-     next time a producer needs to carry something home. */
-  const wiredIntoItems = (name) => {
-    /* CORRECTED 2026-09-18 by REC-132 (D-422), never exempted: the generators gained a third
-       argument, `identity` (the queue's D-310 owner fact asks WHO, not what the caller sees), so
-       the call is matched with or without it — the property (the producer is CALLED with the
-       feed's own viewer and clock) is unchanged. */
-    const call = new RegExp(`this\\.#${name}\\s*\\(viewer, now(?:, identity)?\\)`).test(QUEUE_SRC);
-    const direct = new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*this\\.#${name}\\s*\\(`).test(QUEUE_SRC);
-    const decl = new RegExp(`(?:const|let)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*this\\.#${name}\\s*\\(`).exec(QUEUE_SRC);
-    const viaLocal = !!(decl && new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*${decl[1]}\\b`).test(QUEUE_SRC));
-    return call && (direct || viaLocal);
-  };
-  t("both slugs have a NAMED PRODUCER wired into queueFeed's FINDING half — a kind with no "
-  + "generator is a word, and this record has shipped one of those before",
-    [/#findingsStanceDiverged\s*\(viewer, now(?:, identity)?\)/.test(QUEUE_SRC),
-     /#findingsVersionFromAnotherTeam\s*\(viewer, now(?:, identity)?\)/.test(QUEUE_SRC),
-     wiredIntoItems("findingsStanceDiverged"),
-     wiredIntoItems("findingsVersionFromAnotherTeam")],
-    [true, true, true, true]);
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): RETIRED (K457), the STRUCTURAL arm "both slugs have a NAMED PRODUCER wired
+     into queueFeed's FINDING half". The queue split (N363) moved both producers and their wiring out of queue's feed
+     into `src/queue-producers/index.mjs`'s `feedItems` (queue-producers R8), and that module's own test drives the
+     wiring rather than reading its spelling: `test/m/queue-producers/feeditems.test.mjs` "R8: every producer's
+     items…" asserts both kinds, stance-changed-here-not-elsewhere and new-version-arrived-from-another-team, among
+     the items `feedItems` answers (queue-producers R2, R8). "SLUG ONE", "SLUG TWO" and "THE MINT ACCEPTS BOTH KINDS" below still DRIVE both
+     kinds through op=queue. */
 }
 
 /* ====================================================================== 2

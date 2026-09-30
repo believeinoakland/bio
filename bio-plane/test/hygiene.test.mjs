@@ -130,6 +130,8 @@ import { STANDARDS_TABLES } from "../src/standards/schema.mjs";
    `INSTANCE_SETUP_SCHEMA`, run by its `migrate`) and declares all six EXEMPT to record-core
    (`declarePurge("instance-setup", [], { exempt: [...INSTANCE_SETUP_TABLES] })`), read here as imported. */
 import { INSTANCE_SETUP_TABLES } from "../src/setup.mjs";
+/* LEGACY-TESTS #14 (T16, 2026-09-30; N364, sources R13): sources declares its six tables EXEMPT, read as imported. */
+import { SOURCES_TABLES } from "../src/sources/schema.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -927,11 +929,23 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
   const fromT8 = [...ACTIONS_TABLES, ...CASE_AUTHORING_TABLES, ...CONFORMANCE_TABLES, ...CONSEQUENCES_TABLES,
                   ...ESCALATION_TABLES, ...FILINGS_TABLES, ...MONITORING_TABLES, ...PUBLICATION_TABLES, ...REVIEW_TABLES,
                   ...STANDARDS_TABLES].map(named);
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): two new owners declare at run time. TASKS (N363, TASKS #1, K562) took `tasks`
+     out of legacy-store's purge literal and declares it inline in `tasksOf` (`declarePurge("tasks", [{name: "tasks",
+     keys: []}])`, live now that QUEUE #5 dropped its copy), read as TEXT like the T7 inline declarations. SOURCES
+     (N364, sources R13) declares every table EXEMPT (`declarePurge("sources", [], { exempt: [...SOURCES_TABLES] })`);
+     its exported list is read as imported, and only once its constructor is seen to pass exactly that list as `exempt`. */
+  const inlineT16 = { tasks: inlineDecl("tasks/index.mjs", 'declarePurge("tasks",') };
+  t(`the inline T16 purge declarations are locatable and name tables (${JSON.stringify(inlineT16)})`,
+    Object.values(inlineT16).every((l) => l.length >= 1), true);
+  const sourcesDeclares = /declarePurge\("sources",\s*\[\],\s*\{\s*exempt:\s*\[\.\.\.SOURCES_TABLES\]\s*\}\)/
+    .test(readFileSync(join(srcRoot, "sources/index.mjs"), "utf8"));
+  t("sources declares SOURCES_TABLES exempt, and nothing purged (sources R13)", [sourcesDeclares, SOURCES_TABLES.length >= 1], [true, true]);
   const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES, ...CAPTURE_PURGED_TABLES, ...provDecl.tables,
-                       ...fromT5, ...fromT7, ...fromT8];
+                       ...fromT5, ...fromT7, ...fromT8, ...Object.values(inlineT16).flat()];
   const moduleExempt = [...RecordCore.EXEMPT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES, ...CAPTURE_EXEMPT_TABLES,
                         ...provDecl.exempt, ...exemptT5, ...PUBLICATION_EXEMPT.map(named),
-                        ...INSTANCE_SETUP_TABLES];   /* T12: instance-setup's six, declared exempt (R28, R41) */
+                        ...INSTANCE_SETUP_TABLES,   /* T12: instance-setup's six, declared exempt (R28, R41) */
+                        ...(sourcesDeclares ? SOURCES_TABLES : [])];   /* T16: sources' six (R13) */
   const fromDeletes = [...purgeSrc.matchAll(/DELETE FROM\s+(\w+)/g)].map((m) => m[1]);
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): legacy-store's list is read as TEXT, and since T5 the store filters
      it at run time by every extracted owner's list (`.filter((t) => !BIAS_TABLES.includes(…))`, `!extractionOwns(t)`,
@@ -1622,6 +1636,36 @@ console.log("\n--- one machine-identity predicate, and every asking site reads i
     }
     return null;
   };
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #14, T16; RATIFICATION #7, K557): ratification moved its case ceremony's
+     refusals into pure BUILDERS, one per code (`src/ratification/refusals.mjs`, `machineCaseRefusal` for
+     MACHINE_CANNOT_RATIFY_CASE), so the anchor now sits in a function with no guard at all, and the guard that produces
+     it is at each CALLER. An anchor whose nearest enclosing line within the lookback is `export function <name>(`
+     therefore resolves to every call site of `<name>` in the walk, each read by `guardFor` as any anchor is. A caller's
+     nearest guard that does not ask the predicate is read WHOLE with the guard enclosing it (the nearest earlier `if (`
+     within the lookback, indented less), for `guardFor`'s own reason: a reader that took only the inner half would lie
+     in the accusing direction. An anchor in a builder nobody calls stays unresolved. */
+  const builderOf = (text, idx) => {
+    const lines = text.split("\n");
+    const at = text.slice(0, idx).split("\n").length - 1;
+    for (let i = at; i >= Math.max(0, at - 8); i--) {
+      const m = /^export function (\w+)\s*\(/.exec(lines[i]);
+      if (m) return m[1];
+    }
+    return null;
+  };
+  const indentOf = (s) => /^\s*/.exec(s)[0].length;
+  const callerGuard = (text, idx) => {
+    const g = guardFor(text, idx);
+    if (!g || CALLS.test(g.src)) return g;
+    const lines = text.split("\n");
+    const at = text.slice(0, idx).split("\n").length - 1;
+    for (let i = g.line - 2; i >= Math.max(0, at - 8); i--) {
+      if (!/^\s*if\s*\(/.test(lines[i]) || indentOf(lines[i]) >= indentOf(lines[g.line - 1])) continue;
+      const outer = guardFor(text, lines.slice(0, i).join("\n").length + (i ? 1 : 0));
+      return outer ? { line: outer.line, src: `${outer.src} … ${g.src.trim()}` } : g;
+    }
+    return g;
+  };
   const sites = [];
   for (const f of files) {
     const text = uncomment(raw.get(f));
@@ -1630,7 +1674,22 @@ console.log("\n--- one machine-identity predicate, and every asking site reads i
       let m;
       while ((m = re.exec(text)) !== null) {
         const g = guardFor(text, m.index);
-        sites.push({ f, at: text.slice(0, m.index).split("\n").length, what: m[0], guard: g });
+        const builder = g ? null : builderOf(text, m.index);
+        if (!builder) { sites.push({ f, at: text.slice(0, m.index).split("\n").length, what: m[0], guard: g }); continue; }
+        const callRe = new RegExp(`(?<![\\w.$])${builder}\\s*\\(`, "g");
+        let called = 0;
+        for (const cf of files) {
+          const ct = uncomment(raw.get(cf));
+          callRe.lastIndex = 0;
+          let c;
+          while ((c = callRe.exec(ct)) !== null) {
+            if (/function\s+$/.test(ct.slice(Math.max(0, c.index - 12), c.index))) continue;
+            called++;
+            sites.push({ f: cf, at: ct.slice(0, c.index).split("\n").length, what: `${m[0]} via ${builder}()`,
+                         guard: callerGuard(ct, c.index) });
+          }
+        }
+        if (!called) sites.push({ f, at: text.slice(0, m.index).split("\n").length, what: m[0], guard: null });
       }
     }
   }

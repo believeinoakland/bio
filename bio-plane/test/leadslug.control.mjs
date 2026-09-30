@@ -45,9 +45,16 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): the lead's producer (`#findingsOutOfInquiryLead`),
    the mint's two kind clauses and `#leadBasisAbsence` left the store with the queue for src/queue/index.mjs; arms (1)
    to (4) edit them there with the same needles. Arm (5)'s per-bundle purge line is still the store's. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the lead's producer (`#findingsOutOfInquiryLead`)
+   and `#leadBasisAbsence` on to src/queue-producers/index.mjs (queue-producers R2); arms (1), (2), (2b), (2c), (3)'s
+   producer edit and (4) edit them there. The mint's two kind clauses (arm (3)'s first two edits) stay in
+   src/queue/index.mjs. Arm (1)'s needle is the producer's new spelling of the same home: queue's R7 walk is passed
+   in as `homesOf` (queue-producers R8), so `this.#queueAncestors([r.lead_inquiry], viewer)` reads
+   `this.#homesOf([r.lead_inquiry])`; the arm files it under `r.target` as before. */
 const F = {
   store: ROOT + "src/store.mjs",
   queue: ROOT + "src/queue/index.mjs",
+  producers: ROOT + "src/queue-producers/index.mjs",
   cr: ROOT + "src/capture-requests/index.mjs",
   vocab: ROOT + "src/observation-log/vocabulary.mjs",
   queuestate: ROOT + "src/queuestate.mjs",
@@ -153,8 +160,8 @@ arm("(1) THE SPINE — THE LEAD IS FILED UNDER THE QUESTION IT BEARS ON. File it
   + "which is precisely why an arm has to be pointed at it. "
   + "DECLARED: the case-set arms MUST fail; every arm about capture, basis absence, options and the "
   + "door MUST stay green.",
-  [["queue", `        case: this.#queueAncestors([r.lead_inquiry], viewer),`,
-             `        case: this.#queueAncestors([r.target], viewer),`]],
+  [["producers", `        case: this.#homesOf([r.lead_inquiry]),`,
+                 `        case: this.#homesOf([r.target]),`]],
   ["its homes are inquiry B's project",
    "inquiry A's project appears NOWHERE in the item"],
   ["the basis entry is ABSENT",
@@ -168,7 +175,7 @@ arm("(2) THE PLAN ROW'S NAMED CONTROL, HALF ONE — AN `N-<n>` ID AT THE MINT. D
   + "and NOTIFICATIONS.md's own numbering is a design document's. Mint the lead under `N-31` and the "
   + "store must refuse the whole feed rather than publish an item no surface has words for. "
   + "DECLARED: every arm that reads a feed MUST fail; the door arms and the schema arms MUST NOT.",
-  [["queue", `        kind: "out-of-inquiry-lead",`, `        kind: "N-31",`]],
+  [["producers", `        kind: "out-of-inquiry-lead",`, `        kind: "N-31",`]],
   ["op=queue ANSWERS — the mint admitted every item it was handed",
    "op=queue carries exactly one out-of-inquiry lead"],
   ["a lead pointing back at the question the run is working is refused by name",
@@ -179,7 +186,7 @@ arm("(2b) THE PLAN ROW'S NAMED CONTROL, HALF TWO — AN UNCATALOGUED SLUG. The s
   + "or a second producer typed from memory produces. "
   + "DECLARED: identical to (2). If this arm and (2) disagreed, the fence would be matching a shape "
   + "rather than asking the catalogue.",
-  [["queue", `        kind: "out-of-inquiry-lead",`, `        kind: "out-of-inquiry-lead-v2",`]],
+  [["producers", `        kind: "out-of-inquiry-lead",`, `        kind: "out-of-inquiry-lead-v2",`]],
   ["op=queue ANSWERS — the mint admitted every item it was handed",
    "op=queue carries exactly one out-of-inquiry lead"],
   ["a lead pointing back at the question the run is working is refused by name"]);
@@ -191,7 +198,7 @@ arm("(2c) THE MISFILING HALF, WHICH (2) AND (2b) CANNOT REACH. Mint the real, ca
   + "doctrine D-125/DEC-16 protects. "
   + "DECLARED: the feed arms MUST fail (the mint refuses whole); the FINDING-class arm in block 1 "
   + "MUST stay green, because the VOCABULARY still says FINDING — only the producer lied.",
-  [["queue", `        class: "FINDING",\n        kind: "out-of-inquiry-lead",`,
+  [["producers", `        class: "FINDING",\n        kind: "out-of-inquiry-lead",`,
              `        class: "CONDITION",\n        kind: "out-of-inquiry-lead",`]],
   ["op=queue ANSWERS — the mint admitted every item it was handed",
    "op=queue carries exactly one out-of-inquiry lead"],
@@ -215,7 +222,7 @@ arm("(3) THE SWEEP, AND THIS ARM TAKES TWO DEFENCES DOWN ON PURPOSE — stated r
    ["queue",
     `      if (classOfKind(it.kind) !== it.class)`,
     `      if (it.class === "CONDITION" && classOfKind(it.kind) !== "CONDITION")`],
-   ["queue", `        kind: "out-of-inquiry-lead",`, `        kind: "N-31",`]],
+   ["producers", `        kind: "out-of-inquiry-lead",`, `        kind: "N-31",`]],
   ["every kind every producer emits is one the catalogue names",
    "op=queue carries exactly one out-of-inquiry lead"],
   /* THE SIGNATURE THAT SEPARATES THIS ARM FROM (2). Under the swept fence the
@@ -234,9 +241,9 @@ arm("(4) THE BASIS ABSENCE IS A MEASUREMENT AND NOT A CONSTANT. Bind the two COU
   + "DECLARED: the `present` arm MUST fail; the `absent` and `undetermined` arms MUST stay green, "
   + "because they are the answers a blind instrument gives by accident and only the third one "
   + "discriminates.",
-  [["queue", `SELECT COUNT(*) AS n FROM inquiry_basis WHERE target_id=?\`, reg.bundle_id).n`,
+  [["producers", `SELECT COUNT(*) AS n FROM inquiry_basis WHERE target_id=?\`, reg.bundle_id).n`,
              `SELECT COUNT(*) AS n FROM inquiry_basis WHERE target_id=?\`, "--none--").n`],
-   ["queue", `SELECT COUNT(*) AS n FROM inquiry_basis_version_legs WHERE target_id=?\`, reg.bundle_id).n`,
+   ["producers", `SELECT COUNT(*) AS n FROM inquiry_basis_version_legs WHERE target_id=?\`, reg.bundle_id).n`,
              `SELECT COUNT(*) AS n FROM inquiry_basis_version_legs WHERE target_id=?\`, "--none--").n`]],
   ["the SAME field now reads `present`"],
   ["the basis entry is ABSENT",

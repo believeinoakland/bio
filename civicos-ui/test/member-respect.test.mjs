@@ -881,7 +881,12 @@ for(const [host, s] of Object.entries(SETS)){
      record-core's per-item weight) and `queueMute`'s signature and undo unchanged; every claim below that read them
      in store.mjs reads them there. */
   const queueSrc = fs.readFileSync(new URL("../../bio-plane/src/queue/index.mjs", import.meta.url).pathname, "utf8");
-  for(const [op, method] of [["proposedispose","proposeDispose"], ["taskresolve","taskResolve"], ["taskforward","taskForward"]])
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): `taskResolve` and `taskForward` RETIRED from this loop (K457). The queue split
+     (N363) moved them with their set branch to `bio-plane/src/tasks/index.mjs`, and tasks R3 holds that branch by
+     driving it: `bio-plane/test/m/tasks/inbox.test.mjs` "R3: taskForward's refusals in order, … both per item as a set"
+     sends `items` to each act and asserts the per-item weight, count, applied and retained outcomes, and the actor
+     forced onto every item. `proposeDispose` stays in queue and stays read here. */
+  for(const [op, method] of [["proposedispose","proposeDispose"]])
     ok(new RegExp(`\\n  ${method}\\(\\{[^}]*\\bitems \\} = \\{\\}\\) \\{\\s*(?:/\\*[\\s\\S]*?\\*/\\s*)?if \\(items !== undefined\\)\\s*return this\\.#perItem\\("${op}"`).test(queueSrc),
        `ARM 4d: \`op=${op}\` (\`${method}\`) no longer opens with the set branch into the per-item weight (\`#perItem\`) — the bulk path in \`queueSelBarHtml\` would be sending a selection the plane cannot take. Re-measure the act.`);
   for(const c of stillScalar)

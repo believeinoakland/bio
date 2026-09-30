@@ -57,7 +57,10 @@ const F = {
   /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K409, QUEUE #2): `#queueConditions` and its two producers
      (`#conditionsCaptureRequested`, `#conditionsRenderDeferred`) left `src/store.mjs` for `src/queue/index.mjs`;
      arms (8) and (19) remove the same spread line there. Found dead by m025's A10. */
-  queue: ROOT + "src/queue/index.mjs",
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved `#queueConditions` and its producers on to
+     `src/queue-producers/index.mjs` (queue-producers R3), where the producers dropped their dead `identity` argument;
+     arms (8) and (19) remove the same spread line there, spelled `(viewer, now)`. */
+  producers: ROOT + "src/queue-producers/index.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -273,7 +276,7 @@ arm("(8) THE COMPLETION NOTIFICATION. §4 requires the run waiting on a capture 
   + "notification is the EXISTING catalogued kind with a different subscriber rather than an invented "
   + "channel. Unregister the producer and a completed capture is silent: the run waits on something "
   + "that already happened, which is the failure mode a notification exists to prevent.",
-  [["queue", `      ...this.#conditionsCaptureRequested(viewer, now, identity),\n`, ``]] /* RE-ANCHORED 2026-09-18 by REC-132: the generators gained `identity` */,
+  [["producers", `      ...this.#conditionsCaptureRequested(viewer, now),\n`, ``]] /* RE-ANCHORED 2026-09-18 by REC-132: the generators gained `identity` */,
   ["a completed request surfaces as an item on the EXISTING catalogued kind"],
   ["a request that can name only ONE principal is refused at the drain BY NAME"]);
 
@@ -401,7 +404,7 @@ arm("(18) THE FIRST DRAFT'S SWEEP — C-83 codes only. A render whose code the R
 arm("(19) THE CONDITION KIND ABSENT — remove the producer from `#queueConditions`. The row still holds and "
   + "still expires correctly, and no member is told a render waits or how it ended: the silence the "
   + "ruling forbids, with the record otherwise right.",
-  [["queue", "      ...this.#conditionsRenderDeferred(viewer, now, identity),\n", ""]],
+  [["producers", "      ...this.#conditionsRenderDeferred(viewer, now),\n", ""]],
   ["D-523 WHILE HELD: op=queue SHOWS the deferred render",
    "and op=queue does not DROP it"],
   ["AT EXPIRY THE DRAIN RELEASES IT",

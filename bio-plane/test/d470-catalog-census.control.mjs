@@ -218,7 +218,9 @@ const ARMS = {
      A12 MUST FAIL, alone. */
   l: { files: [SUITE], label: `(L) A \`moved\` DECLARATION NAMING A DEPARTURE THAT MOVED NOWHERE — C-999.1, planted on ${CURRENT_VERSION}'s entry`,
        apply: () => edit(SUITE, CURRENT_ENTRY, `${CURRENT_ENTRY} moved: [{ count: 1, digest: "${"2".repeat(64)}", `
-         + `source: "${"3".repeat(64)}", by: "arm (l)", into: ["src/queue/checks.mjs"], departed: ["C-999.1"] }],`),
+         + `source: "${"3".repeat(64)}", by: "arm (l)", into: ["src/tasks/checks.mjs"], departed: ["C-999.1"] }],`),
+  /* LEGACY-TESTS #14 (T16, 2026-09-30): `into` re-pointed from `src/queue/checks.mjs` to `src/tasks/checks.mjs`, where
+     the queue split (N363) moved C-76.1's table (TASK_ACTOR_CHECKS); the arm is the same, C-999.1 is in neither. */
        mustFail: [A12], mustNotFail: except(A12) },
 };
 
@@ -365,3 +367,8 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
    (preflight h:2, the A5 literal doubled by REC-150's history comment); after it, 15 anchors LIVE, driver exit 0:
      baseline 13/0 · (b) 11/2 · (c) 11/2 · (d) 11/2 · (e) 13/0 · (f) 12/1 · (g) 12/1 · (h) 13/0 · (i) 13/0 ·
      (j) 13/0 · (k) 13/0 — 11 OF 11 AS DECLARED; bio-checks.mjs, gate.mjs and the suite sha256 OK after the run. */
+
+/* MEASURED 2026-09-30 by LEGACY-TESTS #14 (T16, private worktree of job/T16/legacy-tests + this re-pin; CATALOG_VERSION
+   1.46.0, census 356, esbuild 0.25.12), driver exit 0: baseline 14/0 · (b) 12/2 · (c) 12/2 · (d) 12/2 · (e) 14/0 ·
+   (f) 13/1 · (g) 13/1 · (h) 14/0 · (i) 14/0 · (j) 14/0 · (k) 14/0 · (l) 13/1 — 12 OF 12 AS DECLARED; every restore
+   sha256 MATCH, content IDENTICAL, cmp SAME. */

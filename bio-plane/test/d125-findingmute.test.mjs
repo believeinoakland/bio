@@ -45,9 +45,12 @@ import { itemClassOf, mutedAsItem, MUTE_REFUSAL_DETAIL } from "../src/queuestate
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): every FINDING/CONDITION producer left store.mjs with the queue
    (store.mjs now mints none); the live id shapes are queue's, in `src/queue/index.mjs` and the progression-finding
-   producer `src/queue/proposals.mjs`. The corpus is read over both, with the same floor. */
-const QUEUE_SRC = ["index.mjs", "proposals.mjs"].map((f) =>
-  readFileSync(fileURLToPath(new URL(`../src/queue/${f}`, import.meta.url)), "latin1")).join("\n");
+   producer `src/queue/proposals.mjs`. The corpus is read over both, with the same floor.
+   LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the feed's producers and `proposals.mjs` whole to
+   `src/queue-producers/` (17 FINDING/CONDITION id shapes there, 1 in proposals.mjs); queue keeps one (the progression
+   finding it keys at the mint, `src/queue/index.mjs`). The corpus is read over all three, with the same floor. */
+const QUEUE_SRC = ["queue/index.mjs", "queue-producers/index.mjs", "queue-producers/proposals.mjs"].map((f) =>
+  readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "latin1")).join("\n");
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],

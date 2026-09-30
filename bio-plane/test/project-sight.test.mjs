@@ -1103,8 +1103,13 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
      `src/setup.mjs` (a file, not a directory; `q("<name>")`), which the plane's `Store` routes before the store's own
      map — `instancegroup`, `groupidentity` and `profiles` left the store's map for it and the sweep printed them
      unrouted; they are read into the same table (none carries an id-named parameter today, which the sweep now
-     measures rather than skips). */
-  for (const [mod, fn, witness, file] of [["queue", "queueOps", "tasks", "queue/index.mjs"],
+     measures rather than skips).
+     LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the four task routes (`tasks`, `taskdrain`,
+     `taskforward`, `taskresolve`) out of `queueOps` into `tasksOps` (`src/tasks/index.mjs`, tasks R1–R3, the same
+     `s("<name>")` local), which the store spreads beside queue's. Queue's map is floored by `queuemute` now, and
+     tasks' is read into the same table the same way, floored by the classified read `tasks` it must carry. */
+  for (const [mod, fn, witness, file] of [["queue", "queueOps", "queuemute", "queue/index.mjs"],
+                                          ["tasks", "tasksOps", "tasks", "tasks/index.mjs"],
                                           ["instance-setup", "instanceSetupOps", "groupidentity", "setup.mjs"]]) {
     const xlines = src(file).split("\n");
     const xfn = xlines.findIndex((l) => new RegExp(`^export function ${fn}\\(`).test(l));

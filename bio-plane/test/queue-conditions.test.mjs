@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-08-04, rec32-agent) LEAVE A RESOLVED CONDITION RENDERING — in src/store.mjs's `#conditionsGovernorHolding`, bind the cool-off comparison to the epoch instead of to the read's own instant: change ``SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`, now)) {`` to ``... ORDER BY host`, 0)) {`` (the derivation then reports every host that has EVER been held, which is precisely what a STORED condition row would do once its fact resolved and nothing came back to clear it) -> the assertion "the hold expires and the condition is gone from CAROL's, DAVE's and RUTH's feeds at once" FAILS, naming the stale item three times: got [["CONDITION::governor-holding-host::www.oaklandca.gov"],[same],[same]] against []. Every other assertion still passes, which is the finding: a condition that renders after its fact resolved looks EXACTLY like a live one to every surface, to every member at once, and only a clause that resolves the fact and looks again can tell them apart. Restored, 50 pass. (run 2026-08-04, REC-46) THE MACHINE-WRITER PREFIX IS NO LONGER A COPY PROVEN EQUAL TO AN ORIGINAL, so the pin that compared two hand-typed literals was CORRECTED at the site rather than exempted: both index.mjs and store.mjs now interpolate `MACHINE_AUTHOR_PREFIX` from checks/bio-checks.mjs. ARM: move that constant from `token:` to `bot:` in the catalog ALONE -> 49 pass, 2 FAIL, and the two are exactly the ones that SHOULD fire on a doctrine move — the D-61 basis reads `bot:member` where it pins the wire value `token:member`, and "the machine writer is NAMED and never anonymous" reports the stamp moved — while the composition pins stay GREEN, because they assert that neither file spells a prefix of its own and that is still true. Under the SAME arm the D-61 condition still FIRES and still resolves, which is the point: the store's GLOB and index.mjs's stamp moved together because they are one string now. checks/bio-checks.mjs restored byte-identically, sha256 df71cf184664e696a1ccbb6e4311dbb468443c7185093fa6cff8b972ebfc584e compared before and after; whole suite 51 pass. RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): the arm's site, `#conditionsGovernorHolding`, and every source pin this header names as the store's now live in src/queue/index.mjs, and `QUEUE_MINT_CHECKS` in src/queue/checks.mjs; the run above is recorded as it was measured. */
+/* NEGATIVE CONTROL: (run 2026-08-04, rec32-agent) LEAVE A RESOLVED CONDITION RENDERING — in src/store.mjs's `#conditionsGovernorHolding`, bind the cool-off comparison to the epoch instead of to the read's own instant: change ``SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`, now)) {`` to ``... ORDER BY host`, 0)) {`` (the derivation then reports every host that has EVER been held, which is precisely what a STORED condition row would do once its fact resolved and nothing came back to clear it) -> the assertion "the hold expires and the condition is gone from CAROL's, DAVE's and RUTH's feeds at once" FAILS, naming the stale item three times: got [["CONDITION::governor-holding-host::www.oaklandca.gov"],[same],[same]] against []. Every other assertion still passes, which is the finding: a condition that renders after its fact resolved looks EXACTLY like a live one to every surface, to every member at once, and only a clause that resolves the fact and looks again can tell them apart. Restored, 50 pass. (run 2026-08-04, REC-46) THE MACHINE-WRITER PREFIX IS NO LONGER A COPY PROVEN EQUAL TO AN ORIGINAL, so the pin that compared two hand-typed literals was CORRECTED at the site rather than exempted: both index.mjs and store.mjs now interpolate `MACHINE_AUTHOR_PREFIX` from checks/bio-checks.mjs. ARM: move that constant from `token:` to `bot:` in the catalog ALONE -> 49 pass, 2 FAIL, and the two are exactly the ones that SHOULD fire on a doctrine move — the D-61 basis reads `bot:member` where it pins the wire value `token:member`, and "the machine writer is NAMED and never anonymous" reports the stamp moved — while the composition pins stay GREEN, because they assert that neither file spells a prefix of its own and that is still true. Under the SAME arm the D-61 condition still FIRES and still resolves, which is the point: the store's GLOB and index.mjs's stamp moved together because they are one string now. checks/bio-checks.mjs restored byte-identically, sha256 df71cf184664e696a1ccbb6e4311dbb468443c7185093fa6cff8b972ebfc584e compared before and after; whole suite 51 pass. RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): the arm's site, `#conditionsGovernorHolding`, and every source pin this header names as the store's now live in src/queue/index.mjs, and `QUEUE_MINT_CHECKS` in src/queue/checks.mjs; the run above is recorded as it was measured. LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved `#conditionsGovernorHolding` and the REC-32 region's pins on to src/queue-producers/index.mjs; `QUEUE_MINT_CHECKS` stays in src/queue/checks.mjs. */
 /* REC-32 / HOLE-1: the FIRST CONDITION generator, and the first read in which
  * the mute machinery does anything to a live item.
  *
@@ -74,6 +74,10 @@ import { QUEUE_MINT_CHECKS } from "../src/queue/checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const QUEUE_SRC = readFileSync(fileURLToPath(new URL("../src/queue/index.mjs", import.meta.url)), "utf8");
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the queue split (N363) moved the CONDITION producers (the REC-32 region, the
+   subject bound `QUEUE_CONDITION_SUBJECTS_MAX`, the machine-author binding) to `src/queue-producers/index.mjs`
+   (queue-producers R3); the mint's two codes stay in queue. Each pin below reads the file its code now lives in. */
+const PRODUCERS_SRC = readFileSync(fileURLToPath(new URL("../src/queue-producers/index.mjs", import.meta.url)), "utf8");
 const INDEX_SRC = readFileSync(IDX, "utf8");
 
 const mf = withSurfacingRun(new Miniflare({
@@ -414,7 +418,7 @@ t("and no COUNT of what was withheld is reported either — the count is the lea
 /* ============ R3's bound applies to the SUBJECT gathering too ============== */
 console.log("\n--- a held host with more documents than the bound reports subject_bound, never truncates ---");
 const BOUND_HOST = "records.example.gov";
-const bound = Number(/QUEUE_CONDITION_SUBJECTS_MAX\s*=\s*(\d+)/.exec(QUEUE_SRC)[1]);
+const bound = Number(/QUEUE_CONDITION_SUBJECTS_MAX\s*=\s*(\d+)/.exec(PRODUCERS_SRC)[1]);
 for (let i = 0; i < bound + 1; i++) {
   const id = `INFO-2026-05${String(i).padStart(2, "0")}-bulk-${i}`;
   const cap = sha(`rec32-bulk-${i}`);
@@ -511,12 +515,20 @@ t("the mint REFUSES a kind the catalogue does not name, for a CONDITION and for 
   [true, true, true, true, null, "CONDITION"]);
 
 console.log("\n--- the structural pins: one clock, one map rule, one machine-writer literal ---");
-const REGION = QUEUE_SRC.slice(QUEUE_SRC.indexOf("REC-32 · the CONDITION half of the feed"),
-                               QUEUE_SRC.indexOf("op=queue: the member's ONE feed"));
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the REC-32 region moved to `src/queue-producers/index.mjs` (N363); it runs from
+   its marker to the bias-debt producer that follows the CONDITION derivations there (the old end, op=queue's feed,
+   stayed in queue). The region is asserted FOUND and non-trivial first, so the pin below cannot pass over nothing.
+   The "SELECT-only" pin is RETIRED (K457): queue-producers R3 and R8 ("writes nothing") are held at run time over
+   every statement the producers issue, `test/m/queue-producers/feeditems.test.mjs` ("R8: every producer's items…",
+   "it writes nothing"), which is stronger than this regex over the text. */
+const R0 = PRODUCERS_SRC.indexOf("REC-32 · the CONDITION half of the feed");
+const R1 = PRODUCERS_SRC.indexOf("#obligationsBiasDebt(viewer, me, now) {");
+const REGION = PRODUCERS_SRC.slice(R0, R1);
+t("the REC-32 region is FOUND in the producers' file and holds the CONDITION derivations",
+  [R0 > 0, R1 > R0, /#conditionsGovernorHolding\(/.test(REGION), /#conditionsRenderDeferred\(/.test(REGION)],
+  [true, true, true, true]);
 t("the REC-32 derivations consult NO raw object_type key — every type question goes through the catalog (MAP RULE)",
   /object_type\s*===/.test(REGION), false);
-t("they store nothing and write nothing: the whole block is SELECT-only",
-  /INSERT|UPDATE |DELETE/.test(REGION), false);
 /* The machine-writer literal is stamped at the trust boundary in index.mjs and
    READ here; a drift between the two would make the D-61 condition silently
    stop firing, which is the failure mode nobody would notice.
@@ -536,8 +548,8 @@ t("they store nothing and write nothing: the whole block is SELECT-only",
 t("the prefix this store reads is the one index.mjs actually stamps on an unattended write",
   [/\$\{MACHINE_AUTHOR_PREFIX\}\$\{cls\}/.test(INDEX_SRC),
    /token:\$\{cls\}/.test(INDEX_SRC),
-   /QUEUE_MACHINE_AUTHOR_PREFIX\s*=\s*MACHINE_AUTHOR_PREFIX;/.test(QUEUE_SRC),
-   /QUEUE_MACHINE_AUTHOR_PREFIX\s*=\s*["']/.test(QUEUE_SRC)],
+   /QUEUE_MACHINE_AUTHOR_PREFIX\s*=\s*MACHINE_AUTHOR_PREFIX;/.test(PRODUCERS_SRC),
+   /QUEUE_MACHINE_AUTHOR_PREFIX\s*=\s*["']/.test(PRODUCERS_SRC)],
   [true, false, true, false]);
 /* And the binding both sites resolve to, read from the catalog itself rather
    than described: `store.mjs` cannot be imported here (it pulls
@@ -547,7 +559,7 @@ t("the prefix this store reads is the one index.mjs actually stamps on an unatte
    booting the worker for every other assertion in this file. The constant's
    SHAPE is asserted, never its value: this suite does not restate the prefix. */
 t("and both files take that name from the catalog, which is what makes them one string",
-  [/MACHINE_AUTHOR_PREFIX[\s,}]/.test(QUEUE_SRC), /MACHINE_AUTHOR_PREFIX[\s,}]/.test(INDEX_SRC),
+  [/MACHINE_AUTHOR_PREFIX[\s,}]/.test(PRODUCERS_SRC), /MACHINE_AUTHOR_PREFIX[\s,}]/.test(INDEX_SRC),
    typeof MACHINE_AUTHOR_PREFIX === "string", MACHINE_AUTHOR_PREFIX.length > 0],
   [true, true, true, true]);
 t("the feed REPORTS and never mutates: reading it twice returns the same items",

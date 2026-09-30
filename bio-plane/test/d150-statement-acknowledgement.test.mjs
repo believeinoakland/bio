@@ -143,7 +143,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* LEGACY-TESTS #14 (T16, 2026-09-30; N361, K529): block 7's `checkCaseDocument` is ratification's (R8), the catalogue
+   promotion's `runCaseGate` runs (the catalogue's own copy has no importer left in the plane and goes in T17, N372).
+   Kept, not retired (K457): `test/m/ratification/checks.test.mjs` drives C-41.10 only by its `searched.subject_source`
+   arm; the acknowledgement arms (the author listed as their own second reader, a count that disagrees with its list,
+   a /2 document with no list) over bytes op=publish really authored are driven only here. */
+import { checkCaseDocument } from "../src/ratification/checks.mjs";
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5): C-33's statement-ack rows moved with
    `acknowledgeStatement` into case-authoring's own family. */
 import { STATEMENT_ACK_CHECKS } from "../src/case-authoring/checks.mjs";
