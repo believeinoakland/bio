@@ -34,11 +34,11 @@ Terms. A **source** is the person behind a capture that was given to the group r
 - **R9** `rungOf` answers the ladder: `unknown`; `same_knocker` (proved by the secret); `partly_known`; `known_to_group`; `publicly_known`. Each rung comes with who knows and how, from the history, and a withheld value stays withheld (R5).
 
 **onDisclosure(listener)** (a registration later modules fill once at start; K31's pattern)
-- **R10** Each registration goes through `membership.listenerRefusal`, and each listener is called after every R2, R6 or R7 commit with `{source, entry, rung_before, rung_after}`. A listener's failure never undoes the act.
+- **R10** Each registration goes through `membership.listenerRefusal`, and each listener is called after every R2, R6 or R7 commit with `{source, entry, rung_before, rung_after}`; an R6 `same_secret` link that moves the linked source's rung also calls each listener for that source, with the same entry. A listener's failure never undoes the act.
 
 **consentBySecret({knockerSecret, entry, audience, withdraw?})** (`op=knockerconsent`, no account)
 - **R11** A source proves who they are by presenting their knocker secret (its digest and pseudonym as `capture.knockerDigestOf` answers them), and consents to, or withdraws from, one entry for one audience, as R7 records a consent. `SECRET_NOT_RECOGNISED` (C-121.6) is answered identically for every failure, and the act is rate-bound as a knock is, in the same windows as knocks (`capture` R31): a consent attempt counts as a knock from its source (K530).
-- **R15** (K547) `source_knocks` is a read contract for later modules (`reevaluation` R28), as `inquiry` R40's columns are: one row per pulled knock a source stands behind, `(knock_id, source_id, capture_sha, bytes, received)`, written when the source is minted; it holds no value, secret or contact, and its columns keep these names. *(not yet met: its pin test, N377)*
+- **R15** (K547) `source_knocks` is a read contract for later modules (`reevaluation` R28), as `inquiry` R40's columns are: one row per pulled knock a source stands behind, `(knock_id, source_id, capture_sha, bytes, received)`, written for every pulled knock of the source's pseudonym when the source is minted, and for one pulled later before any act that moves its rung; it holds no value, secret or contact, and its columns keep these names.
 
 ## Private
 
