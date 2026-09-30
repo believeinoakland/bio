@@ -34,7 +34,7 @@ Replaces J1 (items 1–3 unchanged; item 4 revised, as built). The grammar is in
 
 **`civicos-ui/` and affordances' lists:** no hit for `SOURCE_CONSENT_WITHDRAWN`, `C-122`, `CASE_SOURCES_CHECKS`, `caseDocumentBlocks`, `sourceStatement`, `blocks_detail` or `capture_accounts`. No op added or retired.
 
-**Found in other modules (J4 REPORT):**
+**Found in other modules (J3 REPORT):**
 1. **case-authoring** writes the blocks with `captureBlockLines` / `sourceBlockLines`, and each `sources:` row's `stated` must be `sourceStatement(entry)` of an entry `publishableAt({audience: "public"})` answered, or `unnamedSourceStatement({capture, received})` with `received` the capture's first pulled knock (by `received`, then knock id: sources' `sourceOf` answers it as `source.receipt.received`). Any other spelling is refused at the commit.
 2. **legacy-tests** (`civicos-ui/check-refusal-codes.mjs`, the DEC-49 guard): my share of its floors is one family (`CASE_SOURCES_CHECKS`), one row, one governed site and region, one refusal outcome; the guard is already red on the tranche from other jobs' growth (15 failures, all re-pins or others'). `row-census`' `AWAITING_STAMP` gains C-122.1.
 3. **ratification** `test/m/ratification/checks.test.mjs`:133 (R8, N211) is red with or without this change (the catalogue's `/4` copy; K500, retired this tranche by ratification).
