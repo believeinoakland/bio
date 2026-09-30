@@ -1,6 +1,6 @@
 # acquisition (T18)
 
-**Status** · session_016FKEhQzcqEZnTrvcRTaFgY · depth 2 · WORKING · handled B2
+**Status** · session_016FKEhQzcqEZnTrvcRTaFgY · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
