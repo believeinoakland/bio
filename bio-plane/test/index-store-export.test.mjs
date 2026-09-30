@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-09-30, LEGACY-TESTS #12) `src/index.mjs`'s export replaced by `export class Store extends DispatchStore {}` over the same import -> 1 pass 1 fail, the identity arm by name (`[false, true]`: a wrapper stands between them) and the Durable Object arm still green. Restored by `git checkout`, the source verified unchanged. */
 /* index-store-export — N348 (LEGACY-INDEX #10, CONTROL-PLANE #5; LEGACY-TESTS #12, T14).
 
    THE CLAIM. The Worker's `Store`, the Durable Object class `src/index.mjs` exports and wrangler binds as STORE, IS
@@ -10,9 +11,7 @@
    import under node, so the identity is taken inside Miniflare, from an entry that imports both modules exactly as
    the Worker does, and a Durable Object bound to the class the entry exports proves the class is the one that runs.
 
-   NEGATIVE CONTROL (run 2026-09-30, LEGACY-TESTS #12, restored by `git checkout`): `src/index.mjs`'s export replaced by
-   `export class Store extends DispatchStore {}` over the same import -> the identity arm fails naming the wrapper
-   (`false`), and the Durable Object arm still passes (a subclass still answers), so each arm is the one it says. */
+   The negative control is declared on the first line: each arm is the one it says (a subclass still answers). */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
