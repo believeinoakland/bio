@@ -13,7 +13,7 @@ const { STATES, OBJECT_TYPES, BUNDLE_ID_RE, ANN_ID_RE, normalizeType, PROPOSAL_S
 
 test("N-A1 a PLN- id parses and types as action_plan, through the catalogue's grammar", () => {
   assert.match("PLN-2026-0001-river-plan", BUNDLE_ID_RE);
-  assert.match("PLN-2026-0001-river-plan-ANN-0001", ANN_ID_RE);
+  assert.match("PLN-2026-0001-river-plan.ann-20260930T120000Z-a-note", ANN_ID_RE);
   assert.equal(OBJECT_TYPES.PLN, "action_plan");
   assert.equal(normalizeType("action_plan"), "action_plan");
 });
@@ -40,10 +40,10 @@ test("N-A1 checkBundle admits the action_plan@1 schema stamp, as every Action-la
 
 /* ---- N-A1: proposalLabel's two subjects ---- */
 
-const MACHINE = "machine:ai-run";
+const MACHINE = "token:ai";
 const SUBJECTS = {
   plan_option: { noun: /option/, not: /not an option until a member adopts it/ },
-  communication: { noun: /communication|draft/, not: /nobody has approved or sent it/ },
+  communication: { noun: /communication|draft/, not: /nobody has approved or sent it/i },
 };
 
 test("N-A1 proposalLabel answers plan_option and communication in each of the three states, each saying what the proposal is not", () => {
@@ -176,4 +176,42 @@ test("§1b a malformed grammars list throws before any arm runs, naming what is 
 test("deletions: LAW_LEVELS and CASE_MEMBER_ROLES are no longer the catalogue's (jurisdictions and ratification hold them)", () => {
   assert.equal("LAW_LEVELS" in CAT, false);
   assert.equal("CASE_MEMBER_ROLES" in CAT, false);
+});
+
+/* ---- record-grammar R26's cross-module half (B3, K638) ---- */
+
+const REEXPORTED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_TYPES", "LEGACY_TYPE_ALIASES",
+  "normalizeType", "CORE_FIELDS", "FORBIDDEN_ALIASES", "parseFrontmatter", "canonicalJson", "NON_MEMBER_AUTHORS",
+  "ACTOR_CLASSES", "MACHINE_AUTHOR_PREFIX", "MACHINE_CLASS_PREFIX", "MACHINE_STAMP_PREFIXES", "isMachineStamp",
+  "isMachineIdentity", "BASIS_ROLES", "BASIS_GRADES", "GRADE_AXES", "TESTIMONY_GRADE", "GRADE_SOURCES",
+  "EARNED_GRADE_SOURCES", "EARNED_CAPTURE_CEILING", "UNREACHABLE_CAPTURE_GRADE", "isPublicHttpsLocator",
+  "createSha256", "sha256HexSync"];
+
+test("R26 every one of the 29 names the catalogue re-exports is record-grammar's own binding, and b64ToBytes is not re-exported", async () => {
+  const RG = await import("../../../src/record-grammar/index.mjs");
+  assert.equal(REEXPORTED.length, 29);
+  for (const name of REEXPORTED) {
+    assert.ok(name in RG, `record-grammar provides ${name}`);
+    assert.ok(name in CAT, `the catalogue re-exports ${name}`);
+    assert.equal(CAT[name], RG[name], name);
+  }
+  const shared = Object.keys(RG).filter((n) => n in CAT).sort();
+  assert.deepEqual(shared, [...REEXPORTED].sort(), "no other record-grammar name is exported by the catalogue");
+  assert.ok("b64ToBytes" in RG);
+  assert.equal("b64ToBytes" in CAT, false);
+});
+
+test("N-A1 C-2.5's schema stamp admits a type name holding '_' and still refuses a stamp of another type", async () => {
+  const md = (stamp) => `---\nid: PLN-2026-0001-p\nobject_type: action_plan\nschema: ${stamp}\ncurrent_state: open\n---\n`;
+  const c25 = async (stamp) => (await checkBundle({ folderName: "PLN-2026-0001-p", files: new Map([["bundle.md", md(stamp)]]),
+    sha256: async () => "0".repeat(64) })).findings.filter((f) => f.check === "C-2.5").map((f) => f.message);
+  assert.deepEqual(await c25("action_plan@1"), []);
+  assert.match((await c25("goal@1")).join(), /does not match object_type/);
+  assert.match((await c25("_plan@1")).join(), /is not of the form/);
+  assert.match((await c25("action-plan@1")).join(), /is not of the form/);
+});
+
+test("§1b one grammar replaces one arm: a claim spanning two built-in arms throws", async () => {
+  const [a, b] = EXTENSION_ARMS;
+  await assert.rejects(run({ grammars: [{ module: "m", ids: [...a.ids, ...b.ids], arm() {} }] }), RangeError);
 });
