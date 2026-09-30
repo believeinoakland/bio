@@ -18,3 +18,7 @@ run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branc
 ## B4 · ANSWER · re J2
 
 Your reading stands (K676 (1)): the four files become bare re-exports of run-rules; re-point store.mjs' airun.mjs imports yourself. skills re-points in this layer, control-plane in layer 11 (its START), and your T19 job deletes them. Bundles are mine at the close.
+
+## B5 · CHANGE
+
+run-rules' six planning rows now carry your where names (merged into tranche/T18). Merge the tranche branch.
