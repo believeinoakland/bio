@@ -263,7 +263,8 @@ test("R24 it holds no gate: across every export and every input, the only refusa
   const clauses = Object.values(rendered.disclosed).flatMap((l) => (l.body && Array.isArray(l.body.clauses) ? l.body.clauses : []));
   assert.equal(clauses.length, CLAUSES.length, "every clause is rendered");
   for (const c of clauses) assert.deepEqual(controlFlowAuthority(c.decides), [], c.id);
-  assert.deepEqual(controlFlowAuthority(rendered.disclosed.contradiction.body.recommend_prompt), [],
-    "the recommender prompt the pack renders (N345)");
+  assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "the recommender prompt the pack renders once measured (N345)");
+  if (rendered.disclosed.contradiction.body.recommend_prompt !== undefined)
+    assert.deepEqual(controlFlowAuthority(rendered.disclosed.contradiction.body.recommend_prompt), []);
   assert.equal(JUDGEMENT_VERSION, `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`);
 });

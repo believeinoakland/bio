@@ -69,8 +69,9 @@ test("R1 the imported levels or absence states empty: renderPack throws and rend
   }
 });
 
-/* contradiction's prompt cannot be emptied or edited from inside this process, so a child replaces its public entry
-   with its own exports but one, and drives the same renderPack (the pattern R1's arm above uses for observation-log). */
+/* contradiction's prompt and digest cannot be changed from inside this process, so a child replaces its public entry
+   with its own exports but those named, and drives the same renderPack (the pattern R1's arm above uses for
+   observation-log). It prints the rendered contradiction layer, or what was thrown. */
 function renderWithContradiction(over) {
   const file = join(ROOT, "bio-plane/src/contradiction.mjs");
   const script = `
@@ -80,26 +81,36 @@ function renderWithContradiction(over) {
     const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
     const cat = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/checks/bio-checks.mjs"))});
     const pub = { vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }] };
-    try { renderPack(pub, cat); console.log("RENDERED"); } catch (e) { console.log("THREW " + e.message); }`;
-  return execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings",
+    try { const p = renderPack(pub, cat); console.log("RENDERED " + JSON.stringify({ layer: p.disclosed.contradiction, version: p.version })); }
+    catch (e) { console.log("THREW " + e.message); }`;
+  const out = execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings",
     "--input-type=module", "-e", script], { encoding: "utf8" });
+  const m = /^RENDERED (.*)$/m.exec(out);
+  return m ? { rendered: JSON.parse(m[1]), out } : { rendered: null, out };
 }
+const sha256 = (s) => createHash("sha256").update(s, "utf8").digest("hex");
+/* The digest contradiction would set once the recommender is measured over the prompt it holds (its R41). */
+const MEASURED = sha256(RECOMMEND_PROMPT);
 
-test("R1 R27 contradiction's recommender prompt absent, blank or not the one measured under its digest: renderPack throws naming it and renders nothing", () => {
+test("R1 R27 contradiction's recommender prompt absent or blank, or not the prompt its non-null digest measured: renderPack throws naming it and renders nothing", () => {
   const cases = [
     [{ RECOMMEND_PROMPT: null }, /exported no RECOMMEND_PROMPT/],
     [{ RECOMMEND_PROMPT: "" }, /exported no RECOMMEND_PROMPT/],
     [{ RECOMMEND_PROMPT: " \n\t" }, /exported no RECOMMEND_PROMPT/],
-    [{ RECOMMEND_PROMPT: RECOMMEND_PROMPT + " " }, /is not contradiction's RECOMMEND_PROMPT_SHA256/],
+    [{ RECOMMEND_PROMPT: " ", RECOMMEND_PROMPT_SHA256: sha256(" ") }, /exported no RECOMMEND_PROMPT/],
+    [{ RECOMMEND_PROMPT: RECOMMEND_PROMPT + " ", RECOMMEND_PROMPT_SHA256: MEASURED }, /is not contradiction's RECOMMEND_PROMPT_SHA256/],
     [{ RECOMMEND_PROMPT_SHA256: "0".repeat(64) }, /is not contradiction's RECOMMEND_PROMPT_SHA256/],
+    [{ RECOMMEND_PROMPT_SHA256: MEASURED.toUpperCase() }, /is not contradiction's RECOMMEND_PROMPT_SHA256/],
   ];
   for (const [over, re] of cases) {
-    const out = renderWithContradiction(over);
-    assert.match(out, /^THREW /m, `${JSON.stringify(over).slice(0, 80)}: ${out}`);
+    const { rendered, out } = renderWithContradiction(over);
+    assert.equal(rendered, null, `${JSON.stringify(over).slice(0, 80)} rendered: ${out}`);
+    assert.match(out, /^THREW /m);
     assert.match(out, re);
   }
-  /* The control: the same child over the real exports renders. */
-  assert.match(renderWithContradiction({}), /^RENDERED$/m);
+  /* The controls: the measured prompt renders, and so does today's unmeasured one (its layer absent, R27). */
+  assert.ok(renderWithContradiction({ RECOMMEND_PROMPT_SHA256: MEASURED }).rendered);
+  assert.ok(renderWithContradiction({}).rendered);
 });
 
 test("R2 resident holds exactly objective, boundary, four_level, absence, disclosable, each with its source and sourcing", () => {
@@ -171,26 +182,37 @@ test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, 
   }
 });
 
-test("R27 the contradiction layer carries contradiction's RECOMMEND_PROMPT and its measured digest unchanged, imported, and the pack's version moves with the prompt", () => {
-  const { disclosed, resident, version } = renderPack(published(), catalogue);
-  const layer = disclosed.contradiction;
-  assert.deepEqual(Object.keys(layer).sort(), ["body", "load_when", "sourcing"]);
-  assert.equal(layer.sourcing, "imported");
+test("R27 measured, the contradiction layer carries contradiction's RECOMMEND_PROMPT and its digest unchanged, imported; unmeasured, it states its absence and carries no prompt; the version moves with the prompt", () => {
+  /* Measured: the digest contradiction sets once its blind fixture has run under the prompt (its R41). */
+  const measured = renderWithContradiction({ RECOMMEND_PROMPT_SHA256: MEASURED }).rendered.layer;
+  assert.deepEqual(measured, {
+    load_when: "the run judges or recommends on a contradiction candidate's two sides",
+    sourcing: "imported",
+    body: { recommend_prompt: RECOMMEND_PROMPT, recommend_prompt_sha256: MEASURED },
+  });
   assert.equal(SOURCING.contradiction, "imported");
-  assert.equal(layer.load_when, "the run judges or recommends on a contradiction candidate's two sides");
-  assert.deepEqual(Object.keys(layer.body).sort(), ["recommend_prompt", "recommend_prompt_sha256"]);
-  assert.equal(layer.body.recommend_prompt, RECOMMEND_PROMPT, "contradiction's own string, byte for byte");
-  assert.equal(layer.body.recommend_prompt_sha256, RECOMMEND_PROMPT_SHA256);
-  assert.equal(createHash("sha256").update(layer.body.recommend_prompt, "utf8").digest("hex"), RECOMMEND_PROMPT_SHA256,
+  assert.equal(sha256(measured.body.recommend_prompt), measured.body.recommend_prompt_sha256,
     "the carried words are the ones measured under the digest");
+  /* Unmeasured, as contradiction holds it today (RECOMMEND_PROMPT_SHA256 null): the absence stated, R9's form. */
+  const { disclosed, resident } = renderPack(published(), catalogue);
+  const layer = disclosed.contradiction;
+  if (RECOMMEND_PROMPT_SHA256 === null) {
+    assert.deepEqual(Object.keys(layer).sort(), ["absent_because", "body", "load_when", "sourcing"]);
+    assert.equal(layer.load_when, "never, in this edition");
+    assert.equal(layer.sourcing, "absent");
+    assert.deepEqual(layer.body, {});
+    assert.match(layer.absent_because, /no measurement/);
+    assert.ok(!JSON.stringify(disclosed).includes(RECOMMEND_PROMPT.split("\n")[0]), "no unmeasured prompt is carried");
+  } else assert.deepEqual(layer, measured, "contradiction's digest is set: the measured form");
   assert.ok(resident.disclosable.some((d) => d.layer === "contradiction" && d.load_when === layer.load_when));
-  assert.ok(!JSON.stringify(resident).includes(RECOMMEND_PROMPT.slice(0, 40)), "the body is disclosed, never resident");
-  /* The version is an identity over what was rendered: the same pack with other recommender words is another pack. */
-  const { version: _v, ...rest } = renderPack(published(), catalogue);
-  const moved = { ...rest, disclosed: { ...rest.disclosed,
-    contradiction: { ...layer, body: { ...layer.body, recommend_prompt: RECOMMEND_PROMPT + "." } } } };
-  assert.notEqual(packVersion(moved), version);
-  /* The skill holds no gate (R24), and the words it now renders carry no control-flow authority (R16). */
+  assert.ok(!JSON.stringify(resident).includes(RECOMMEND_PROMPT.split("\n")[0]), "the body is disclosed, never resident");
+  /* The version is an identity over what was rendered: measured and unmeasured are two packs, and other words another. */
+  const measuredVersion = renderWithContradiction({ RECOMMEND_PROMPT_SHA256: MEASURED }).rendered.version;
+  const edited = RECOMMEND_PROMPT + ".";
+  const editedVersion = renderWithContradiction({ RECOMMEND_PROMPT: edited, RECOMMEND_PROMPT_SHA256: sha256(edited) }).rendered.version;
+  const unmeasuredVersion = renderWithContradiction({ RECOMMEND_PROMPT_SHA256: null }).rendered.version;
+  assert.equal(new Set([measuredVersion, editedVersion, unmeasuredVersion]).size, 3);
+  /* The skill holds no gate (R24), and the words it may render carry no control-flow authority (R16). */
   assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "contradiction's recommender prompt");
 });
 

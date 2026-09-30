@@ -8,6 +8,24 @@
 - Verified against a temporary local stub of contradiction's two exports (reverted, never committed): `test/m/skills/` 33/0; legacy `bio-plane/test/skillpack.test.mjs` 1/0.
 - **Next step:** on BOB's word that contradiction has merged, merge `tranche/T15`, run `test/m/skills/` against the real export (R24's scan over the real prompt: report a trip, K487), then steps 6–7; post REPORT (agent-worker's bundle stale) and COMPLETE.
 
+## Completion
+
+**Entries applied.** N345 (plan layer 6): contradiction's `RECOMMEND_PROMPT` packaged into the skill pack as the disclosed `contradiction` layer after `refusals` (R5, R27; K487), imported from `bio-plane/src/contradiction.mjs` with `RECOMMEND_PROMPT_SHA256`, digest checked with the catalogue's `sha256HexSync` (R1). Per J2's reading (contradiction merged with the digest `null`, R41 unmeasured, K488): while the digest is null the layer is a stated absence (`absent`, "never, in this edition", body `{}`, `absent_because`), as recipes' is (R9), so the pack still renders for every run; once the digest is set, the prompt and digest are carried `imported` under K487's `load_when`, and R1 throws on a prompt the digest does not measure. R1 always throws on an absent or blank prompt. If BOB rules R1 strict instead (J2), the revert is two lines.
+
+**`not yet met` marks my work meets** (K460): R5's `contradiction` layer (the layer is rendered in both forms). R27: met in its absent form today and in its measured form through a child that mocks a measured digest; its imported form is reachable in the product only when contradiction's R41 is measured, so R27's mark may stay until then — BOB's to judge.
+
+**Deferred.** None of skills'. Contradiction's R41 (the measurement) is the one thing that turns the layer on.
+
+**Reported (REPORT J4).** agent-worker's bundle stale (its requirements.test R45: `skillpack.mjs` changed); BOB rebuilds. No check row added, moved or retired (nothing for promotion to stamp). `civicos-ui/` and affordances' lists: no hit for anything added.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/skills/`: 33 pass, 0 fail (was 31/0 before N345).
+- legacy `bio-plane/test/skillpack.test.mjs`: 1 pass, 0 fail.
+- agent-worker suites against the tranche without and with this change (FAIL counts): agent-worker 5/5, cascade 0/0, fanout 3/3, harness 4/4, versions 2/2, wire-vocabulary 0/0, requirements 0/2 — the two new are R45's stale-bundle arms (reported); the others are red on the tranche already and not skills'.
+- `checks/format.mjs`: 0 failures; `architecture.mjs bio skills`: 0 failures; `coverage.mjs bio skills`: 27 of 27 live ids named, 0 failures; `ownership.mjs bio skills tranche/T15`: 4 files, legacy-checks 0 added, 0 failures.
+
+Size (session_018xQkkj4FkEcwbqR1dfGgvx): test runs 9, module lines 1531
+
 ## J1 · QUESTION
 
 Q1. `build/requirements/skills.md` carries no requirement for N345's entry: nothing names `RECOMMEND_PROMPT`, and R5 lists the disclosed layers exactly, so packaging it changes R5's wording and needs an id to test (P7). My best reading, which I am building against now (import held until you say contradiction has merged):

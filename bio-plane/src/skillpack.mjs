@@ -233,6 +233,7 @@ export const SOURCING = {
   acts:           "driven",     /* op=affordances .catalog */
   member_only:    "driven",     /* op=affordances .catalog, the mode field */
   contradiction:  "imported",   /* contradiction RECOMMEND_PROMPT + its measured digest (N345) */
+  contradiction_unmeasured: "absent", /* while contradiction's RECOMMEND_PROMPT_SHA256 is null (R27) */
   recipes:        "absent",     /* absent until the plane publishes recipes — see the header */
   recipes_published: "driven",  /* op=affordances .recipes, validated against .surfaces and .catalog (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -343,11 +344,13 @@ export function renderPack(published, catalogue) {
       + "read from the published `mode`: the catalogue published none");
 
   /* R1, N345: the recommender's words are contradiction's, measured under their digest. A prompt that is
-     not the measured one is a detector that never passed its fixture, so no pack renders over it. */
+     not the measured one is a detector that never passed its fixture, so no pack renders over it. A digest
+     that is null says no measurement was made: then the layer states its absence (R27) and carries no
+     prompt, as the recipes layer does (R9), and the rest of the pack renders. */
   if (typeof RECOMMEND_PROMPT !== "string" || RECOMMEND_PROMPT.trim() === "")
     throw new Error("the pack carries contradiction's recommender prompt and writes none of its own: "
       + "contradiction exported no RECOMMEND_PROMPT");
-  if (sha256HexSync(RECOMMEND_PROMPT) !== RECOMMEND_PROMPT_SHA256)
+  if (RECOMMEND_PROMPT_SHA256 !== null && sha256HexSync(RECOMMEND_PROMPT) !== RECOMMEND_PROMPT_SHA256)
     throw new Error("the pack carries contradiction's recommender prompt only as it was measured: "
       + "sha256(RECOMMEND_PROMPT) is not contradiction's RECOMMEND_PROMPT_SHA256");
 
@@ -439,10 +442,18 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = 
     /* N345, R27. The words a run recommends under on a contradiction candidate, contradiction's own and
        unchanged, with the digest they were measured under; carried, never reworded, so the pack's version
        moves when they do. */
-    contradiction: {
+    contradiction: RECOMMEND_PROMPT_SHA256 !== null ? {
       load_when: "the run judges or recommends on a contradiction candidate's two sides",
       sourcing: SOURCING.contradiction,
       body: { recommend_prompt: RECOMMEND_PROMPT, recommend_prompt_sha256: RECOMMEND_PROMPT_SHA256 },
+    } : {
+      load_when: "never, in this edition",
+      sourcing: SOURCING.contradiction_unmeasured,
+      body: {},
+      /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+      absent_because: "contradiction's recommender prompt has passed no measurement: its digest is null "
+        + "until the blind fixture of dissolved pairs is run under it and recorded, and a prompt no "
+        + "measurement vouches for is not given to a run as the words it recommends under.",
     },
     recipes: Array.isArray(recipes) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
