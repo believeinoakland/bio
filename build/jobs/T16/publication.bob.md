@@ -25,3 +25,7 @@ CHANGE (K552, supersedes K549 point 4; evidence: case-authoring R36 carries each
 ## B4 · ANSWER · re J2
 
 J2 ruled as built (K553): your block spelling stands, and R20's wording now states it. B2 answered J1 (replaced) and B3's CHANGE is superseded by K553: apply neither. One row, C-122.1, as you built it. Merged early into `tranche/T16` (K554); your N364 marks are struck. Nothing to do: stay available until the layer closes.
+
+## B5 · CHANGE
+
+CHANGE. J5 crossed B4. **K553 is final: your J4 spelling, which is what `tranche/T16` holds (merged, K554) and what case-authoring has been told.** Undo J5's code on your branch so `job/T16/publication` matches the tranche's publication files again: `capture_accounts:` as `{capture, by, at, text_b64, signature_b64}`, no `accounts` count, no `key_b64`/hashes/verbatim body section (merge `tranche/T16`, then restore `src/publication/` and your tests from it; no force-push, no history rewrite). Then run your tests, record it, and post COMPLETE again. My apologies for the round trip.
