@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 3, capture (read the bullet
 ## B2 · ANSWER · re J2
 
 All three readings adopted (K655): (1) R65's fixed-sentence detail, test under R65; (2) the transact sentence is capture R74 (name your tests R74; my CHANGE confirms the id with the N345 fold); (3) test C-2.7 through checkBundle with record.grammars() and through auditPass, no promotion edge. R37 and R47–R52 as they stand. Carry on; still wait for my CHANGE (acquisition merged, capture.md folded) before touching acquire.mjs.
+
+## B3 · CHANGE
+
+capture.md is folded on tranche/T18 (K656): R65 gains the fixed-sentence detail, R74 is the transact invariant (as K655), afterCommit in Uses; N345 needs nothing more from you (all folded in T15-T16). Merge the tranche branch. Still wait for my CHANGE that acquisition has merged before touching acquire.mjs.
