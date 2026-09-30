@@ -76,4 +76,4 @@
 - N416 · 2026-09-30 · **text-chain** (TEXT-CHAIN #3 J2; K641): exported and used, named by no requirement: `weaker`, `stepCovers`, `perPageTierWinner`, `TIER_RULE`, `CONFIDENCE_BASES`, `EXTENT_KINDS`, `READING_POSITION_KINDS`, `READING_POSITION_UNPRODUCED`: word each as an R or rule it internal.
 - N417 · 2026-09-30 · **ratification** (PROMOTION #19 J2; K647): the ratify gate calls `promotionOf(host).runGate`, so registered grammars (record-core R67) reach it. In T18's ratification job.
 - N418 · 2026-09-30 · **capture**, **ai-runs** (RECORD-CORE #10 J2; K650): writes outside `record.transact`, so `afterCommit` (R66) runs held calls at once; bring each write under R32's `transact` in their T18 jobs.
-- N420 · 2026-09-30 · **civicos-process `tools/mail.mjs`** (ACQUISITION #1 J1; K659): `state` (and every command that commits) commits only the file it writes, never other staged files.
+- N420 · 2026-09-30 · **civicos-process `tools/mail.mjs`** (ACQUISITION #1 J1; K659): `state` (and every command that commits) commits only the file it writes, never other staged files. *(fixed: civicos-process 7e51d7c, K659)*
