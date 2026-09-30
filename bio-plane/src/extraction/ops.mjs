@@ -64,6 +64,15 @@ export async function pdfStructureOp(url, env, store, { json, storeSilent, store
   return unanswered(r, op, { json, storeSilent, storeRefusal }) ?? json(r.result.body, r.result.status);
 }
 
+/** The control plane's dispatch of this module's op (legacy-index map §4.4, K649 (7)): `op=pdfstructure` (R31–R35),
+ *  moved out of `src/index.mjs` with the stamps it hands, which stay the control plane's (the caller class, whether
+ *  a member session asked and its capabilities, the viewer, the author). `getStore` answers the Durable Object stub
+ *  the op is scoped to. Answers the op's response, or null for an op that is not this module's. */
+export async function extractionOp(op, url, env, getStore, stamps) {
+  if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
+  return null;
+}
+
 /** R1 (K72 (8)): the acquire op's reading. `answer` is capture's acquire answer; the Durable Object reads the
  *  document it filed (`read`) and the answer carries the reading and its text units on the document, as it always
  *  did. Answers `{response}` (the store's refusal relayed, or a silence, R64) or `{body}`. `json` defaults to the
