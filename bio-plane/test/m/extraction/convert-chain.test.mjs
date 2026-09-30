@@ -19,7 +19,10 @@ import { deflateRawSync } from "node:zlib";
 import { fresh, bundle, hold, doc, sha } from "./fixture.mjs";
 import { readDriveAddress, driveHop, driveConvertStep } from "../../../src/drive.mjs";
 import { archiveHop } from "../../../src/cdx.mjs";
-import { ODT_CONTENT_TYPE, ODS_CONTENT_TYPE, ODP_CONTENT_TYPE } from "../../../src/odf.mjs";
+/* The ODF media types (OpenDocument v1.2 part 3, the mimetype each package declares). */
+const ODT_CONTENT_TYPE = "application/vnd.oasis.opendocument.text";
+const ODS_CONTENT_TYPE = "application/vnd.oasis.opendocument.spreadsheet";
+const ODP_CONTENT_TYPE = "application/vnd.oasis.opendocument.presentation";
 
 /* ---- a zip assembler and ODF packages (drive-convert.test.mjs's) ---- */
 function crc32(buf) {
