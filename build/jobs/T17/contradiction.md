@@ -1,6 +1,6 @@
 # contradiction (T17)
 
-**Status** · session_01PJZi1Tddeq3RdfGvVdcz9C · depth 2 · WORKING · handled B1
+**Status** · session_01PJZi1Tddeq3RdfGvVdcz9C · depth 2 · COMPLETE · handled B1
 
 ## J1 · QUESTION
 
