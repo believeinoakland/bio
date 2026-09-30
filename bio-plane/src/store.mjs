@@ -310,6 +310,7 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
 import { queueOf, queueOps, queueOwns } from "./queue/index.mjs";
+import { tasksOf, tasksOps } from "./tasks/index.mjs";
 import { progressionsOf, progressionOps, PROGRESSIONS_TABLES } from "./progressions/index.mjs";
 import { intentOf, intentOps } from "./intent/index.mjs";
 import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES, barAxisWords } from "./strength/index.mjs";
@@ -491,7 +492,7 @@ export class Store extends DurableObject {
       { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
       { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
       { name: "capture_text_fts", keys: [] }, { name: "selection_items", keys: [] }, { name: "selections", keys: [] }, { name: "statement_acknowledgements", keys: [] },
-      { name: "tasks", keys: [] }, { name: "task_queue", keys: [] }, { name: "source_reachability", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
+      { name: "task_queue", keys: [] }, { name: "source_reachability", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
       { name: "link_verdicts", keys: [] }, { name: "links", keys: [] }, { name: "captured_locators", keys: [] }, { name: "site_asset_refs", keys: [] }, { name: "site_assets", keys: [] }, { name: "reuse_verdicts", keys: [] },
       { name: "capture_sessions", keys: [] }, { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
       { name: "progression_stage_versions", keys: [] }, { name: "progression_def_versions", keys: [] }, { name: "connection_dirty", keys: [] }, { name: "proposal_dispositions", keys: [] }, { name: "finding_dispositions", keys: [] }, { name: "queue_item_mutes", keys: [] },
@@ -579,9 +580,7 @@ export class Store extends DurableObject {
     escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
     monitoringOf(ctx, { env });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
-    /* capture R44, R55 (K72 (9), K99): legacy-store registers with capture the arming of its own task drain (a scheduler
-       consumer, below), and the observation log's rows and the runtime measurement until observation-log and
-       instance-setup are extracted. */
+    /* capture R55 (K99): legacy-store registers with capture the observation log's rows until observation-log does. */
     const capture = captureOf(ctx, { env });
     /* capture-requests (K58, K61): its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs'
        (its R28), and it registers its wait source with ai-runs (ai-runs R41). */
@@ -589,7 +588,7 @@ export class Store extends DurableObject {
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
     const scheduler = schedulerOf(ctx, env);
-    queueOf(ctx, { env });   /* queue (K61): its tables' purge, its two consumers and capture's task notice (R22, R23, R36) */
+    queueOf(ctx, { env }); tasksOf(ctx, { env }).migrate();   /* queue, then tasks (K61, N363); tasks' table (R8), as standards' (N267) */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
@@ -2935,6 +2934,7 @@ export class Store extends DurableObject {
            reads them by entity or by capture; progressiondefine authors an ordered stage
            set (both example progressions expressible as rows); progression reads one. */
         ...queueOps(queueOf(this.ctx), url, body),
+        ...tasksOps(tasksOf(this.ctx), url, body),
         /* D-64: the daily render allowance. `renderadmit` takes a render or records
            a DEFERRAL; `renderspend` adds the browser time a render reported. */
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),

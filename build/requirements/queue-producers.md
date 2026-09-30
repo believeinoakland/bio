@@ -1,6 +1,6 @@
 # queue-producers — requirements
 
-**Status** · DRAFT by a worker for BOB, 2026-09-30, on `tranche/T16`, from `queue.md` under N363: Bob's approval of the queue split (K507), its seams ruled by BOB as drafted (K531, `build/plan/draft-N363-queue-split.md`). R1–R7, R9 and R10–R13 are `queue`'s requirements moved or copied with their meaning unchanged (the bias-debt sentence of `queue` R8; R9; R10; R43; R44; R45; R47; the take-up of R18; the basis half of R16; R33; half of R34; R38); only cross-references are re-pointed, and R2's and R4's bounds are returned for `queue` R6 to publish rather than published here. Layer 11, after `tasks`, before `queue`. No `from` (K531): this module writes its code in its own paths and `queue`'s job removes the moved code. Not yet met: R4–R7 (N345), R8 (N363), a new seam.
+**Status** · DRAFT by a worker for BOB, 2026-09-30, on `tranche/T16`, from `queue.md` under N363: Bob's approval of the queue split (K507), its seams ruled by BOB as drafted (K531, `build/plan/draft-N363-queue-split.md`). R1–R7, R9 and R10–R13 are `queue`'s requirements moved or copied with their meaning unchanged (the bias-debt sentence of `queue` R8; R9; R10; R43; R44; R45; R47; the take-up of R18; the basis half of R16; R33; half of R34; R38); only cross-references are re-pointed, and R2's and R4's bounds are returned for `queue` R6 to publish rather than published here. Layer 11, after `tasks`, before `queue`. No `from` (K531): this module writes its code in its own paths and `queue`'s job removes the moved code. R4–R8 met by QUEUE-PRODUCERS #1 (K561); R9 not yet met (REC-202).
 
 **Size (P6).** About 1,800 lines of today's queue code move here (`queue/index.mjs` :586–2100, :2328–2431, :3590–3643; `proposals.mjs` whole), with about 410 lines of tests (`producers.test.mjs`, `proposals.test.mjs`). Well under one reading.
 
@@ -15,7 +15,7 @@ The feed's producers: each derives, on read and writing nothing, the items one p
 Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queue`'s mint gives it) and without `catalogue_id` (`queue` stamps it from its R2). A **home set**, the **depth bound** and a **case** are `queue`'s.
 
 **feedItems({member, viewer, now, identity, homesOf, optionsOf}) → {items, facts}** (`queue`'s one read of this module)
-- **R8** Answers every item R1–R7 and R9 derive for this member and viewer, each homed through `homesOf(subjectIds)` (`queue` R7's walk, passed in) and carrying `options` from `optionsOf(subjectIds)` (`queue` R12's options, passed in), and `facts`: `objective_gap` `{bound, truncated}` (R2), `unattributed`, `contradiction` `{bound, truncated}` (R4), and the proposals feed's `dispositions` (one `proposalsFeed` read, so R2 and `queue` R15 cannot disagree). A contradiction-duty, -lead or -plurality item's `subject` is `{kind: "contradiction_candidate", id, state, inquiry?, between_projects, parties: [{project, opted_in}]}` (the member's party projects only), and a -duty-unseen or -plurality-unseen item's is `{kind: "contradiction_notice", id, parties: [{project, opted_in}]}`, which `queue` R46's dispositions read (K558). Writes nothing. *(not yet met: N363)*
+- **R8** Answers every item R1–R7 and R9 derive for this member and viewer, each homed through `homesOf(subjectIds)` (`queue` R7's walk, passed in) and carrying `options` from `optionsOf(subjectIds)` (`queue` R12's options, passed in), and `facts`: `objective_gap` `{bound, truncated}` (R2), `unattributed`, `contradiction` `{bound, truncated}` (R4), and the proposals feed's `dispositions` (one `proposalsFeed` read, so R2 and `queue` R15 cannot disagree). A contradiction-duty, -lead or -plurality item's `subject` is `{kind: "contradiction_candidate", id, state, inquiry?, between_projects, parties: [{project, opted_in}]}` (the member's party projects only), and a -duty-unseen or -plurality-unseen item's is `{kind: "contradiction_notice", id, parties: [{project, opted_in}]}`, which `queue` R46's dispositions read (K558). Writes nothing.
 
 **The producers**
 - **R1** Each uncleared bias debt (from `bias`) inside the viewer's gate whose recipients include the member or name nobody, at most 200, keyed `OBLIGATION::bias-debt::<run>`.
@@ -30,9 +30,9 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
   - `lead` → `contradiction-lead`, `open`;
   - `plurality` → `contradiction-plurality`, `open`.
 
-  Each is homed under both sides' ancestors (`queue` R7). *(not yet met: N345)*
-- **R5** `side-corrected`: one per (dependent, candidate) that `reevaluation.correctedDependents` answers (its R27), keyed `FINDING::side-corrected::<dependent>::<candidate>` and homed under the dependent's ancestors. It leaves when the cause closes. *(not yet met: N345)*
-- **R6** `tension-after-publication`: one per (case, candidate) that `publication.caseTensions({project})` answers (its R50), for each project the member owns (`membership` R65), at most 50. It goes to those owners, and to nobody else, keyed `FINDING::tension-after-publication::<case>::<candidate>`. It leaves when a later edition discloses it or the candidate resolves. *(not yet met: N345)*
+  Each is homed under both sides' ancestors (`queue` R7).
+- **R5** `side-corrected`: one per (dependent, candidate) that `reevaluation.correctedDependents` answers (its R27), keyed `FINDING::side-corrected::<dependent>::<candidate>` and homed under the dependent's ancestors. It leaves when the cause closes.
+- **R6** `tension-after-publication`: one per (case, candidate) that `publication.caseTensions({project})` answers (its R50), for each project the member owns (`membership` R65), at most 50. It goes to those owners, and to nobody else, keyed `FINDING::tension-after-publication::<case>::<candidate>`. It leaves when a later edition discloses it or the candidate resolves.
 - **R7** (DEC-85, K456) **The notice and the relay.**
   - **The items.** For each project the member has joined (R4's projects and bound), one item per notice `contradiction.conflictNotices({project})` answers (its R50):
     - weight `duty` → `contradiction-duty-unseen`;
@@ -42,7 +42,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
   - **Its home.** The item's only subject is the side the member may see, so `queue` R7 walks its homes from that side alone and never reaches the other.
   - **Its detail.** The notice's fixed sentence; `asked_by_another`; each of the member's party projects with its opt-in; once revealed, the parties' names; and the relay, `responses` (contradiction R54). The relay is the next notification this project's members receive. Each response carries only what its responder chose to share: the text, and the cover or email address when given, with the responder's project. Never a handle or member id.
   - **What it withholds.** Everything `contradiction` R50 withholds. No count, bound or `truncated` flag in the feed reveals the other side or the number of parties (R11).
-  - **When it leaves.** When the notice leaves `contradiction` R50: the candidate is resolved or dismissed, or the member comes to see both sides (then R4's item answers it). *(not yet met: N345)*
+  - **When it leaves.** When the notice leaves `contradiction` R50: the candidate is resolved or dismissed, or the member comes to see both sides (then R4's item answers it).
 
 ## Private
 

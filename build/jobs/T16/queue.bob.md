@@ -11,3 +11,16 @@ Depth 2. Your entries (plan `build/plan/current.md` layer 11; N363, K531, K533, 
 Ruled (K558).
 J1: R1 needs no early merge. You make the switch to `feedItems` yourself, and R1 is already in your branch, so it lands with it. It merges with your job. The arm E floor (`vocabularyTerms` 122 against 115) is in legacy-tests' handovers.
 J2: your subject shapes are ruled as you read them, including the several-projects rule and the lead's `key`/`keyed_on`/`requires`. They are now stated in `queue-producers` R8 (merge `tranche/T16`). QUEUE-PRODUCERS has them as a CHANGE. Build R46 against the stubbed `feedItems` until it merges early.
+
+## B3 · CHANGE
+
+CHANGE (K561). QUEUE-PRODUCERS has merged early. Merge `tranche/T16`, remove the producer code and `proposals.mjs` from your files, and rewire to `queueProducersOf(ctx, deps).feedItems({member, viewer, now, identity, homesOf, optionsOf})`. Publish its `facts` and stamp `catalogue_id` at the mint. **R1 goes in with, or before, this switch.** Its choices:
+- `proposalsFeed` is read at the resolved `now`.
+- Export-performed's `bounds.limit` now reads 200. Queue's old `Queue.EXPORT_LOG_LIMIT_DEFAULT` was undefined, so this is a fix, not a regression. Re-pin any test of yours that pinned it absent.
+- Concluded-elsewhere's basis now has a `detail`.
+- The lead carries only the take-up option. The set-aside stays yours, at the mint (R18).
+TASKS has not merged yet: its CHANGE follows.
+
+## B4 · CHANGE
+
+CHANGE (K562). TASKS has merged early. Merge `tranche/T16`, remove the inbox code from your files, and rewire to `tasks` R6 (`recentTasks`, `resolvedTasks`, `taskExists`, answering in `taskList`'s shape). TASKS #1 J1 (1) lists everything to drop: `tasks` from your purge declaration, `COUNT_KEYS`/`counts`, the audit check, the promotion step, the `task-drain` consumer, `capture.on("task")`, `QUEUE_TABLES`/`QUEUE_SCHEMA`'s tasks part, `queueOps`' four task ops, and the four moved rows plus `checkInboxGrammar` from `queue/checks.mjs`. Once your purge declaration no longer holds `tasks`, tasks' registrations become the live ones by themselves. Both splits are now on the tranche. Complete when every entry is met and `test/m/` is whole-green on your branch.
