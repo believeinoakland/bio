@@ -36,7 +36,7 @@ N381 applied: C-18.1 admits capture R65's pulled-knock document (no letter, grad
 
 **Checks.** `test/m/provenance/`: 68 pass, 0 fail. `test/m/` whole: 3195 tests, 3171 pass, 1 fail (control-plane's stale assertion, its layer-11 entry's, K581), 23 todo. `format`, `architecture provenance`, `coverage provenance` (51 of 51), `ownership provenance tranche/T17` (5 files; legacy modules 0 added, 0 removed): 0 failures each.
 
-Size (session_01YBB3FhBVLLqxoQXxXj1PVQ): test runs 12, module lines 3297
+Size (session_01YBB3FhBVLLqxoQXxXj1PVQ): test runs 12, module lines 3292
 
 ## J3 · COMPLETE · re B2
 
