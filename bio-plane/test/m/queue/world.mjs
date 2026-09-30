@@ -89,7 +89,9 @@ export function world(fakes = {}, { bare = false } = {}) {
   return w;
 }
 
-/** Every provider the feed and the acts reach, answering nothing until a test says otherwise. */
+/** Every provider the feed and the acts reach, answering nothing until a test says otherwise. queue hands the
+ *  producers' own (governor … contradiction) to `queue-producers`, whose real `feedItems` then reads them, unless a
+ *  test gives `producers` itself. */
 export function defaultFakes() {
   return {
     governor: { governorHolding: () => [] },
@@ -105,12 +107,16 @@ export function defaultFakes() {
     aiRuns: { runFor: () => null },
     bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }),
             settled: ({ limit }) => ({ debts: [], limit, truncated: false }) },
-    publication: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }) },
-    reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }) },
+    publication: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }),
+                   caseTensions: () => ({ ok: true, cases: [], limit: 200, cursor: null }) },
+    reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }),
+                    correctedDependents: () => ({ ok: true, entries: [], limit: 200, truncated: false, cursor: null }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
     monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
                   archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
+    contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
+                     conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
     affordances: { affordanceFacts: () => ({ ok: false }) },
     scheduler: { arm: async () => null, register: () => ({ ok: true }) },
   };
