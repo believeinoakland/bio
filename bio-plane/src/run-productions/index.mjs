@@ -8,7 +8,8 @@
  * `runProductionsOf(ctx, deps)` answers the one instance per Durable Object storage (K61). It reaches `record-core`,
  * `membership`, `content`, `connections`, `ai-runs`, `strength`, `citation` and `basis-versions` through their
  * factories; a run is read only through ai-runs' `runFor` (its R28) and a bound through its `boundOf` and
- * `consumeBound` (its R29), never in this module's SQL (N194). It declares its tables to purge (R17, K23) and registers
+ * `consumeBound` (its R29), never in this module's SQL (N194); whether the caller holds the run is `run-rules`'
+ * `runPrincipalGate` (its R5). It declares its tables to purge (R17, K23) and registers
  * its candidate source with basis-versions (R14; its R40).
  *
  * WHAT THIS MODULE DOES NOT DO (§4, §10): it accepts, hides, rejects or makes current nothing; it captures and requests
@@ -23,7 +24,7 @@ import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
 import { citationOf } from "../citation/index.mjs";
 import { basisVersionsOf, versionsIn, versionAsWritten } from "../basis-versions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
-import { runPrincipalGate } from "../airun.mjs";
+import { runPrincipalGate } from "../run-rules/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
 import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isBoilerplate, isMachineIdentity,
@@ -186,8 +187,8 @@ export class RunProductions {
 
     /* §11: EVERY VERSION NAMES THE RUN THAT PRODUCED IT. Three questions of the run, in this order, and all BEFORE
        R2's memo, whose key carries no caller (REC-165): (a) SIGHT — `ai-runs.runFor` answers null for an absent and
-       an invisible run alike, so both read as the same SUGGEST_NO_RUN but for the id (§7.9); (b) POSITION — ai-runs'
-       R5, relayed whole; (c) STATUS — a version is formed under a LIVE run's conditions (rule 1). Then (d), BOB #28's
+       an invisible run alike, so both read as the same SUGGEST_NO_RUN but for the id (§7.9); (b) POSITION — run-rules'
+       R5 (`runPrincipalGate`), relayed whole; (c) STATUS — a version is formed under a LIVE run's conditions (rule 1). Then (d), BOB #28's
        target rule, after sight and position so a hidden run still reads as absent. */
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.aiRuns.runFor(run, viewer) : null;
