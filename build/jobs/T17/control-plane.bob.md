@@ -20,3 +20,7 @@ Added to your layer-11 work (K606, from TASKS #2): tasks' task-actor fence now r
 ## B3 · ANSWER · re J1
 
 K607: R37, R38 and R40 worded as you proposed; merge the tranche branch. op=stats' disclosure and op=purge's confirm gate stay where they are this tranche: convert only their stamp and admission halves as you said; the rest is N408 (owners ruled before T18; R39 reserved for the gate). Also: tasks has merged early (B2's TASK_NOT_YOURS arrives with its second completion; I will tell you).
+
+## B4 · CHANGE
+
+tasks has merged again with N382 (K606): its refusal is now TASK_NOT_YOURS (C-76.1), row keyed by it. Merge the tranche branch. Your test/m/control-plane/envelope.test.mjs R22 (:511-517) pins tasks' old key NOT_YOURS and now fails: update it, and add the door test from B2 (a forwarded taskresolve/taskforward refusal decorated with C-76.1, not intent's C-111.15).
