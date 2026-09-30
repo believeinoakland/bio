@@ -1,6 +1,6 @@
 # case-authoring (T18)
 
-**Status** · session_01Xx2am8dyaXCugZmbzsHsnk · depth 2 · NEEDS BOB · handled B1
+**Status** · session_01PqWQooG9fBVam8LWu6weou · depth 2 · WORKING · handled B1
 
 ## J1 · BLOCKED
 
