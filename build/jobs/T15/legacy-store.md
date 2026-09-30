@@ -1,6 +1,6 @@
 # legacy-store (T15)
 
-**Status** · session_01AciCMuth1cZd2DkRivax4t · depth 2 · COMPLETE · handled B1
+**Status** · session_01AciCMuth1cZd2DkRivax4t · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
