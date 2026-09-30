@@ -69,3 +69,7 @@ No hit for the new codes, op or rows in `civicos-ui/` or `affordances.mjs`. No g
 ## J4 · COMPLETE
 
 Complete: N345 R14 (section; /5 a todo on PUBLICATION #5's merge, K498), R31, R32, R33, R15's fields, C-120.1–C-120.3 (awaiting stamp, T16). Checks 0 failures; case-authoring 52 pass 0 fail 1 todo; review, control-plane green. Record's Completion has the marks to strike, the stamps for control-plane and the reports.
+
+## J5 · COMPLETE
+
+B4 applied: tranche/T15 merged; R14's /5 is a test (format bio-case-document/5, the section read back through caseTensionsOf: seen, highlighted, member sentences, unread, empty). case-authoring 53 pass 0 fail 0 todo; ratification 73 pass, 1 fail = the accepted checks.test.mjs:133 (K500); publication 100 pass; review 30 pass. Checks 0 failures. Record's Completion updated.
