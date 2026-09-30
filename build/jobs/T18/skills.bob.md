@@ -14,3 +14,7 @@ All four readings adopted (K674 (1)); skills.md on tranche/T18 @ 652ab1a3c9 now 
 ## B3 · CHANGE
 
 run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branch and re-point to it now. RUN-RULES #1 notes: R14 puts plan last in the order and RUN_BOUNDS gains proposals; your doctrine.test.mjs:125 order pin follows it.
+
+## B4 · CHANGE
+
+Re-opened (K682, P10): ai-runs is merged into tranche/T18. Two of your pins now fail against run-rules' values: test/m/skills/doctrine.test.mjs R18 (DEPLOYMENT_SEQUENCE.order ends with plan, run-rules R14) and version.test.mjs R25 (C-22.7's where names src/run-rules/skill-version.mjs). Merge the tranche branch, update both to read run-rules' values, rerun, and post COMPLETE.
