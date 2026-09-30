@@ -502,3 +502,25 @@ test("R33: no place is named in this module's answers", async () => {
   for (const d of [M.aiScopeDeclaration(["purge"]), M.aiScopeDeclaration(["nope"]), M.aiConfinementDeclaration("bio")])
     assert.doesNotMatch(JSON.stringify(d), PLACES);
 });
+
+test("R22 (N363, K562): the door reads tasks' table — INBOX_REFUSED (C-19.2), MACHINE_CANNOT_FORWARD (C-32.10), MACHINE_CANNOT_RESOLVE (C-32.11) each gain their row on a forwarded refusal (NOT_YOURS, held twice, reads intent's), and an answer already carrying one is unchanged", async () => {
+  const T = await import("../../../src/tasks/checks.mjs");
+  assert.ok(M.MODULE_CHECK_FILES.includes(T) || M.MODULE_CHECK_FILES.some((f) => f.TASK_ACTOR_CHECKS === T.TASK_ACTOR_CHECKS), "tasks' checks.mjs is read");
+  const rows = Object.entries(T).filter(([f]) => /_CHECKS$/.test(f)).flatMap(([, t]) => Object.entries(t));
+  assert.deepEqual(rows.map(([code, r]) => [code, r.check]).sort(),
+                   [["INBOX_REFUSED", "C-19.2"], ["MACHINE_CANNOT_FORWARD", "C-32.10"], ["MACHINE_CANNOT_RESOLVE", "C-32.11"], ["NOT_YOURS", "C-76.1"]]);
+  /* NOT_YOURS is held twice, by intent (C-111.15) and by tasks (C-76.1): the door reads intent's first, so a task's
+     refusal meets intent's row unless it carries its own. Reported (CONTROL-PLANE #7 J4); the three unique codes are
+     read from tasks. */
+  const { INTENT_CHECKS } = await import("../../../src/intent/checks.mjs").then((m) => ({ INTENT_CHECKS: Object.values(m).find((t) => t && t.NOT_YOURS) }));
+  assert.equal(M.dec49Row("NOT_YOURS").check, INTENT_CHECKS.NOT_YOURS.check);
+  for (const [code, row] of rows.filter(([c]) => c !== "NOT_YOURS")) {
+    assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
+    const w = world({ answer: (c) => (c.route === "taskresolve" ? reply({ ok: true, result: { ok: false, reason: code } })() : null) });
+    const r = await call(w.env, { op: "taskresolve", token: w.S.ann, method: "POST", body: {} });
+    assert.deepEqual([r.json.result.code, r.json.result.check, r.json.result.translation], [code, row.check, row.translation], code);
+  }
+  /* negative control: a site's own words are never overwritten */
+  const mine = { ok: false, reason: "NOT_YOURS", check: "C-0", translation: "mine" };
+  assert.deepEqual(M.dec49Attach({ ok: true, result: { ...mine } }).result, { ...mine, code: "NOT_YOURS" });
+});

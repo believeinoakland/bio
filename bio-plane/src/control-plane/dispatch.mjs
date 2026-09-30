@@ -7,7 +7,12 @@
 import { Store as LegacyStore } from "../store.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
+import { captureOf } from "../capture/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
+import { recordOf } from "../record-core/index.mjs";
 import { DISPATCH_CHECKS } from "./checks.mjs";
+import { pullAndFile } from "./pull.mjs";
 
 /* ===== REC-196 — A READ NAMING A DISCOVERABLE PROJECT'S OWN ID IS ANSWERED POSITIONALLY (Membership v2 §7, item
  * 7.14, RULED 2026-09-23 by BOB #32, (a)).
@@ -55,6 +60,9 @@ export const PROJECT_NAMING_READS = Object.freeze({
      first. */
   contradictionnotices: ["project"], contradictionresponses: ["project"], contradictioncandidates: ["project", "bundle"],
   publishtensions: ["project"],
+  /* N364: case-authoring's pre-flight names the publishing project, as its ceremony read does, and its first refusal is
+     op=publish's own existence answer (its R34 runs op=publish). */
+  publishpreflight: ["project"],
 });
 export const PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
@@ -88,6 +96,11 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   contradictionfacts: "`candidate` is a contradiction CANDIDATE id — a thing inside the record, never a bundle id",
   contradictiontensions: "`referents` (in the body) are a case's claims, legs and extents at their versions, never a project's own id",
   comparisonfacts: "`contradiction` is a contradiction CANDIDATE id and `standardSide` names its side, never a bundle id",
+  /* N364's reads: a knock's pseudonym or a capture's digest, never a bundle id. Sources' reads are classified when this
+     door dispatches them (N379): a name here must be a store route. */
+  knocksof: "`pseudonym` is a KNOCKER's pseudonym, never a bundle id",
+  pulledknocks: "`capture` is a CAPTURE's digest", lateattestations: "`capture` is a CAPTURE's digest",
+  captureaccounts: "`capture` is a CAPTURE's digest",
 });
 
 /* R27 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1
@@ -179,10 +192,28 @@ export class Store extends LegacyStore {
   }
   async fetch(req) {
     return dispatch(req, {
-      routes: (url, body) => ({ ...this.routes(url, body), ...instanceSetupOps(instanceSetupOf(this.ctx, this.env), url, body) }),
+      routes: (url, body) => ({ ...this.routes(url, body), ...instanceSetupOps(instanceSetupOf(this.ctx, this.env), url, body),
+                                ...controlPlaneRoutes(this.ctx, url, body) }),
       membership: () => membershipOf(this.ctx),
     });
   }
+}
+
+/* N364: the routes this composition root adds to the one map, each passing R26's frame: membership's two own-key acts,
+   which membership keeps out of its map (`by` spread, then overridden, as `signeradd`), and R36's pull, a route of its own
+   beside capture's `inboxpull`, which the Worker's `op=inboxpull` addresses. `sources`' map is not dispatched here: the
+   record store's dispatch of it is N379 (K558). */
+export function controlPlaneRoutes(ctx, url, body) {
+  const q = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+  return {
+    signerregister: () => membershipOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
+    signerrevoke: () => membershipOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
+    inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
+                                       provenance: provenanceOf(ctx) },
+                                     { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
+                                       by: q("by"), identity: q("identity"), viewer: q("viewer") }),
+  };
 }
 
 /* legacy-store's own default export, carried with the class: a bare forwarder to `bio`, so a harness that runs the record

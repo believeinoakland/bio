@@ -324,6 +324,9 @@ const OPS = {
   publish:      { classes: ["admin", "member", "probe"],           mutating: true  },
   /* N345 (case-authoring R32): the ceremony's read before op=publish; publish's classes and its two stamps. */
   publishtensions: { classes: ["admin", "member", "probe"],        mutating: false },
+  /* N364 (case-authoring R34): the ceremony's pre-flight, op=publish run and rolled back; it writes nothing, so it is
+     not mutating. Publish's classes and its stamps. */
+  publishpreflight: { classes: ["admin", "member", "probe"],       mutating: false },
   strengthbar:  { classes: ["admin", "member", "probe"],           mutating: true  },
   strengthbarof:{ classes: ["admin", "member", "probe"],           mutating: false },
   publishededitions: { classes: ["admin", "member", "probe"],      mutating: false },
@@ -354,6 +357,27 @@ const OPS = {
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* N364 (capture R65, R67, R72; R36): the pull, and the two knock reads, are a signed-in member's (R32's fence):
+     `machineClasses: []` refuses every bearer, and so every agent credential. The pull files a capture and promotes it
+     at `collected` in one act (R36); `inboxresolve` to `pulled` is routed as it. */
+  inboxpull:    { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  knocksof:     { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  pulledknocks: { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  /* N364 (capture R68, R69): a late co-attestation and a capture's signed account, `by` stamped; the reads beside them. */
+  reattest:         { classes: ["admin", "member", "probe"],       mutating: true  },
+  lateattestations: { classes: ["admin", "member", "probe"],       mutating: false },
+  captureaccount:   { classes: ["admin", "member", "probe"],       mutating: true  },
+  captureaccounts:  { classes: ["admin", "member", "probe"],       mutating: false },
+  /* N364 (sources R1–R9): a source's disclosures, links and consents, `by` stamped; the reads `viewer`-stamped (a
+     machine credential reads nothing, the module's NO_SUCH_SOURCE); `sourcepublishable` writes nothing. */
+  sourcedisclose:        { classes: ["admin", "member", "probe"], mutating: true  },
+  sourcelink:            { classes: ["admin", "member", "probe"], mutating: true  },
+  sourceconsent:         { classes: ["admin", "member", "probe"], mutating: true  },
+  sourceconsentwithdraw: { classes: ["admin", "member", "probe"], mutating: true  },
+  sourceof:              { classes: ["admin", "member", "probe"], mutating: false },
+  sourcerung:            { classes: ["admin", "member", "probe"], mutating: false },
+  sourcereadlog:         { classes: ["admin", "member", "probe"], mutating: false },
+  sourcepublishable:     { classes: ["admin", "member", "probe"], mutating: false },
   /* REC-159 (§4.9): `member` admits an enrolled administrator's session; `machineClasses` keeps the MEMBER_TOKEN
      bearer and `ai` out. */
   memberadd:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
@@ -585,6 +609,10 @@ const OPS = {
   signeradd:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   signerlist:   { classes: ["admin", "member", "probe"],           mutating: false },
   signerset:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
+  /* N364 (membership R89, R90): a member registers or revokes their own attesting key from their own signed-in
+     session, `by` stamped; `machineClasses: []` refuses every bearer, and so every agent credential. */
+  signerregister: { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  signerrevoke:   { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   /* The unauthenticated surface, each gating itself: bootstrap reveals claimed or not, claim needs the bootstrap
      secret, login the password, enroll a live invitation. */
   bootstrap:  { classes: null,                                   mutating: false },
@@ -596,6 +624,9 @@ const OPS = {
   invitelook: { classes: null,                                   mutating: false },
   verify:     { classes: null,                                   mutating: false },
   knock:      { classes: null,                                   mutating: true  },
+  /* N364 (sources R11): a knocker consents, or withdraws, by their knocker secret, with no account; the connecting
+     address and the instant are stamped as the knock's are, and the attempt is counted in the knock's windows. */
+  knockerconsent: { classes: null,                               mutating: true  },
 };
 
 /* What a signed-in browser session may do, the write arc's evolution of the
@@ -830,6 +861,18 @@ const CUSTODIAL_ACTIONS = ["memberadd", "memberset", "signeradd", "signerset"];
    the §4.7 votes and would be false here (D-270's class), and the second's `by` condition is pinned as one
    expression by the old battery. A bearer stamps `class:<cls>`, which is on no roster, so the store refuses it. */
 const ROSTER_SELF_ACTIONS = ["adminresign", "hostingaccessset", "memberpairingset"];
+/* N364 (membership R89, R90): a member's own attesting key, registered and revoked from their own session. Its own set
+   for ROSTER_SELF_ACTIONS' reason: REACH in both `SESSION_OPS` sets (every bearer is refused by the rows'
+   `machineClasses`), and THE STAMP, `by` from the session, read by membership from the query after the body. */
+const OWN_KEY_ACTIONS = ["signerregister", "signerrevoke"];
+/* N364 (capture R65, R68, R69): the pull, a late co-attestation and a capture's signed account, each a member's act in
+   their own name, `by` stamped and read by capture from the query first; in both session sets. */
+const CAPTURE_MEMBER_ACTIONS = ["inboxpull", "reattest", "captureaccount"];
+/* N364 (sources R2, R6, R7): a member's record of a source's disclosure, link claim, consent and its withdrawal, `by`
+   stamped and read by sources from the query after the body; in both session sets. */
+const SOURCE_ACTIONS = ["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"];
+/* N364 (sources R1, R5, R9): the reads that answer by the caller's sight, `viewer` stamped. */
+const SOURCE_READS = ["sourceof", "sourcerung", "sourcereadlog"];
 /* REC-155 — `BIO_Membership_Architecture_v2.md` §4.10 (RULED by BOB #19, 2026-09-21): five of the seven ops
    that no session reached and no decision explained JOIN BOTH SESSION SETS. Both sets for D-136's reason at
    the spread below: `SESSION_OPS.admin` is the FOUNDER'S session alone, and none of the five is the founder's.
@@ -1153,6 +1196,8 @@ const SESSION_OPS = {
                    ...CUSTODIAL_ACTIONS,
                    /* N43: membership's R10, R11 and R19 acts, in BOTH sets for D-136's reason above. */
                    ...ROSTER_SELF_ACTIONS,
+                   /* N364: a member's own key, capture's member acts and sources' acts, in BOTH sets. */
+                   ...OWN_KEY_ACTIONS, ...CAPTURE_MEMBER_ACTIONS, ...SOURCE_ACTIONS,
                    /* REC-155: §4.10's five, in BOTH sets for D-136's reason above — none
                       of them is the founder's act, and an enrolled administrator is a
                       `member` kind. */
@@ -1269,6 +1314,7 @@ const SESSION_OPS = {
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
                    ...ROSTER_SELF_ACTIONS,
+                   ...OWN_KEY_ACTIONS, ...CAPTURE_MEMBER_ACTIONS, ...SOURCE_ACTIONS,
                    ...PROVENANCE_JUDGEMENT_ACTIONS, ...CALIBRATION_WRITE_ACTIONS,
                    "governorstate", "governorconfig",
                    /* K372 (monitoring R30): the daemon's pause, `governorconfig`'s route — the founder's session. */
@@ -1620,6 +1666,34 @@ const NEEDS = {
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */
   inboxresolve:     "contribute",
+  /* N364 (capture R65, R68, R69; R36): pulling a knock files a capture and a bundle, re-attesting asks a fresh
+     timestamp over a held capture, and an account is appended in the capturer's name — each writes the working record,
+     `inboxresolve`'s and `attest`'s capability, and NO fifth capability token (CAPABILITIES.md §4). */
+  inboxpull:        "contribute",
+  reattest:         "contribute",
+  captureaccount:   "contribute",
+  /* N364 (sources R2, R6, R7): a disclosure, a link claim, a consent and its withdrawal each append a row to a source's
+     history in a member's name, `contribute`, NO fifth token. Who may read or state a value is the module's (R5). */
+  sourcedisclose:        "contribute",
+  sourcelink:            "contribute",
+  sourceconsent:         "contribute",
+  sourceconsentwithdraw: "contribute",
+  /* N364: NO CAPABILITY for the reads, on `contradictionpairs`' reasoning (asking the record is reading it); PRESENT,
+     null, so affordances names each in NON_ACTS (its R7, R12), K516's precedent. The ceremony's pre-flight is
+     `publishtensions`' posture: it tells a publisher what publishing would do and writes nothing. */
+  knocksof:          null,
+  pulledknocks:      null,
+  lateattestations:  null,
+  captureaccounts:   null,
+  sourceof:          null,
+  sourcerung:        null,
+  sourcereadlog:     null,
+  sourcepublishable: null,
+  publishpreflight:  null,
+  /* N364 (membership R89, R90): a member's own attesting key carries NO working capability, `signeradd`'s reasoning:
+     what bounds it is who the session IS, and membership asks the roster of the stamped `by`. */
+  signerregister:    null,
+  signerrevoke:      null,
   /* publish: ratify. The capability governs the SURFACE and the registered
      signing key governs the authority (5). Both exist because before this the
      key was doing the capability's job: a member with no publish reached
@@ -2031,4 +2105,4 @@ const UNATTENDED_BY_DECISION = {
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 };
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
