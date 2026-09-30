@@ -72,6 +72,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - **R23** `group_strength_bar` is keyed by group, not by bundle, and is exempt from purge as an instance setting (K23); the cache columns move to a table of this module's keyed by `bundle_id`, declared to purge (K75 (3)).
 - **R24** Each check moves here as an invariant with its test (K6): C-30.1–C-30.9, C-71.1–C-71.9, C-32.9.
 - **R25** No place is named in this module's behaviour or outward text.
+- **R28** (D-269, DEC-32 clause 1; N395, K595) Every sentence this module answers for a member uses none of the analyst's vocabulary DEC-32 clause 1 forbids: not AND or OR as a word for the relationship, no spelling of disjunction or grounds, nor the terms DEC-32's entry uses for the same construct (partition, conjunct, branch, "independently sufficient"); it names a set of reasons in the elicitation's words. The sentences are each axis's and ground's `detail` and each named member's `why` on every read that answers a pair (`strengthOf`, `inquiryStrength`, `versionStrength`, `candidatePair`, the pair R17 registers); a version answer's `filter` and the `why` of its `graded`, `ungraded` and `hunches` entries; the bar's `detail` and `note` (R14–R16); and every refusal row's `translation` (C-30, C-71, C-32.9, C-107). A value the record holds (an id, a ground label a member wrote) is rendered as written (DEC-8). A refusal's `detail` is the caller's sentence and not in scope (PL-14).
 
 ### Satisfies
 
