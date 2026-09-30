@@ -26,3 +26,7 @@
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs … public-read`: 19 files, 0 failures. `checks/coverage.mjs … public-read`: 16 of 16, 0 failures. `checks/ownership.mjs … public-read tranche/T18`: 21 files, legacy-index 2 lines added (the import and the dispatch line), 65 removed, 0 failures.
 
 Size (session_01KuKtDiAMFXmj1s5RCFABoB): test runs 16, module lines 1024
+
+## J1 · COMPLETE
+
+Done: the split by copy into src/public-read/ (PublicRead, publicReadOf, publicReadOps; R53–R55, rowOf, deliverer and R40's tables only; writes nothing), the door's §4.4 move into public-read/door.mjs (index.mjs: 2 lines added, 65 removed), copied tests R1–R16 and ten converts. N242's share already met (N297). No row moved: nothing awaiting stamp. publication's job may now delete its copies and spread publicReadOps. Tests: public-read 65/65; test/m 3798 pass, 2 fail (K680, K658 baseline). Checks: format, architecture, coverage 16/16, ownership all 0 failures. Record: build/jobs/T18/public-read.md
