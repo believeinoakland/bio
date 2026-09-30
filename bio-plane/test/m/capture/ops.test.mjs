@@ -78,7 +78,7 @@ test("R27 R29: op=links answers what points at an address, a capture's links, an
   assert.equal(sil.status, 502);
 });
 
-test("R42 N103: op=acquire forwards to the service with the control plane's stamps and answers the filed capture alone: no reading, no reading inputs, no second read of the primary", async () => {
+test("R73 (acquisition R8) N103: op=acquire forwards to the service with the control plane's stamps and answers the filed capture alone: no reading, no reading inputs, no second read of the primary", async () => {
   const b = bucket();
   const f = fresh({ evidence: b, env: { INSTANCE_NAME: "i" } });
   const st = stubOf(f.c);

@@ -1,8 +1,9 @@
-/* capture — brings material into the record with its provenance (layer 3): the acquisition act (`acquire.mjs`),
- * the evidence store by digest, what capture learns about sources and sites (reachability, site assets, links and
- * the host's chrome, capture sessions, the platform's ceiling, the render allowance), the event queue an
- * undetermined capture raises, and the doorbell (`doorbell.mjs`). It writes no bundle: no intake path writes live
- * state (R33). Requirements: build/requirements/capture.md (R1–R72). Extracted from `legacy-store` and
+/* capture — what capture keeps (layer 3): the evidence store by digest, what capture learns about sources and sites
+ * (reachability, site assets, links and the host's chrome, capture sessions, the platform's ceiling, the render
+ * allowance), the event queue an undetermined capture raises, the doorbell (`doorbell.mjs`) and the information
+ * grammar (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
+ * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R74). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -15,10 +16,10 @@ import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
 import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
-import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall } from "./acquire.mjs";
+import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
-export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "./acquire.mjs";
+export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf, attest as provenanceAttest, DOORBELL_VIA } from "../provenance/index.mjs";
@@ -271,12 +272,12 @@ export class Capture {
   /** Hands `payload` to the listeners of `event` (the acquisition act calls it for R55's measurement). */
   emit(event, payload) { return this.#emit(event, payload); }
 
-  /* ---- the acquisition act (acquire.mjs) ---- */
+  /* ---- the acquisition act, `acquisition`'s (K617) ---- */
 
-  /** R1–R20: answers `{status, body}`. */
+  /** R73: `acquisition`'s `acquire` (its R1–R23) with this module's store handed in; answers `{status, body}`. */
   acquire(body, opts) { return acquire(this, body, opts); }
 
-  /** R3 */
+  /** R73: `acquisition`'s `archiveLookup` (its R3), likewise. */
   archiveLookup(args) { return archiveLookup(this, args); }
 
   #emitSync(event, payload) {

@@ -163,7 +163,7 @@ test("R67 R70: knocksOf answers the knocks sharing a pseudonym, oldest first, wi
   assert.deepEqual([route.count, route.truncated], [2, true]);
 });
 
-test("R65 R16 R70 R33 R32: a pull holds the bytes under their own digest, writes one doorbell receipt at knock:<id>, marks the knock pulled with the capture, by and instant, and answers the document with the knocker as its unnamed source and never the contact", async () => {
+test("R65 R69 R70 R32: a pull holds the bytes under their own digest, writes one doorbell receipt at knock:<id>, marks the knock pulled with the capture, by and instant, and answers the document with the knocker as its unnamed source and never the contact", async () => {
   const { c, rows, b, prov } = setup();
   const k = await c.knock({ content: "leaked memo", note: "the budget office has this", contact: "tipster@example.org",
                             knockerSecret: SECRET, sourceAddress: "5.5.5.5" });
@@ -288,7 +288,7 @@ test("R65 R67: the routes: inboxpull and knocksof answer through the module's op
   assert.deepEqual(list.result.knocks.map((x) => [x.knock_id, x.capture_sha]), [[k.knockId, sha("via route")]]);
 });
 
-test("R16: a member session's capture names its actor, the member stamp, and is recorded as that member's capture; any other caller's is null", async () => {
+test("R73 R69 (acquisition R16): a member session's capture names its actor, the member stamp, and is recorded as that member's capture; any other caller's is null", async () => {
   const b = bucket();
   const f = fresh({ evidence: b, env: { INSTANCE_NAME: "i" } });
   const net = network({ "https://a.example/x": () => new Response("x bytes", { headers: { "content-type": "text/plain" } }) });

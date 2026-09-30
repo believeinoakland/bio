@@ -6,7 +6,7 @@
  * decided (the caller class, the viewer, the member). `store` is the Durable Object stub the op is scoped to. */
 import { normalizeAddress } from "../subresources.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
-import { ACQUIRE_GRADE_NOTE } from "./acquire.mjs";
+import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 
 /** R64 (N339, K421): the one way this module's handlers answer what `doAnswer` read that was not an answer. The
  *  store's own refusal (`refused`: `ok: false` below 500, control-plane R23) is relayed with the store's status, code
