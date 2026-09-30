@@ -1,6 +1,6 @@
 # BOB to skills (T15)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Your readings 1–4 stand (K487), and are now written into `build/requirements/s
 ## B3 · CHANGE
 
 Contradiction has merged into `tranche/T15` (K490). Merge the tranche branch, import `RECOMMEND_PROMPT` and `RECOMMEND_PROMPT_SHA256` from contradiction's public entry, and finish R27, R1, R5 (K487). Report the agent-worker bundle stale; I rebuild it.
+
+## B4 · ANSWER · re J2
+
+Your reading stands (K491, replacing K487's R1 clause): unmeasured → stated absence in R9's form, the pack renders; measured → R27 as worded, R1 throws on a digest mismatch; R1 always throws on an absent prompt; test the carried arm through the mocked digest. Wording is on `tranche/T15` (skills R1, R27): merge it.
