@@ -37,50 +37,58 @@ export const SOURCES_CHECKS = Object.freeze({
   }),
 });
 
-/* Each code's one site. The code is a string literal inside its region, so the DEC-49 guard can compare it with the
-   row; `extra` adds a caller's own fields and never replaces the refusal's own. */
-const own = (row, code, detail) => ({ ok: false, reason: code, code, check: row.check, translation: row.translation, detail });
-const merged = (extra, base) => ({ ...(extra || {}), ...base });
+/* Each code's one site. The refusal is written whole inside its region, its code a string literal, so the DEC-49
+   guard can compare it with the row; `extra` adds a caller's own fields and never replaces the refusal's own. */
+const ROW = SOURCES_CHECKS;
 
 export function noSuchSource(source, extra) {
   /* DEC-49 REGION is-source-held */
-  return merged(extra, { ...own(SOURCES_CHECKS.NO_SUCH_SOURCE, "NO_SUCH_SOURCE",
-    "no source this caller may see answers to that id, so nothing was written"),
-    source: typeof source === "string" ? source.slice(0, 64) : null });
+  return { ...(extra || {}), ok: false, reason: "NO_SUCH_SOURCE", code: "NO_SUCH_SOURCE",
+           check: ROW.NO_SUCH_SOURCE.check, translation: ROW.NO_SUCH_SOURCE.translation,
+           detail: "no source this caller may see answers to that id, so nothing was written",
+           source: typeof source === "string" ? source.slice(0, 64) : null };
   /* END DEC-49 REGION is-source-held */
 }
 
 export function badDisclosure(field, detail, extra) {
   /* DEC-49 REGION is-disclosure-well-formed */
-  return merged(extra, { ...own(SOURCES_CHECKS.BAD_DISCLOSURE, "BAD_DISCLOSURE", detail), field });
+  return { ...(extra || {}), ok: false, reason: "BAD_DISCLOSURE", code: "BAD_DISCLOSURE",
+           check: ROW.BAD_DISCLOSURE.check, translation: ROW.BAD_DISCLOSURE.translation,
+           detail, field };
   /* END DEC-49 REGION is-disclosure-well-formed */
 }
 
 export function noEvidence(extra) {
   /* DEC-49 REGION is-evidence-named */
-  return merged(extra, own(SOURCES_CHECKS.NO_EVIDENCE, "NO_EVIDENCE",
-    "evidence is a non-empty statement, or a citation {cite}, and none was named, so nothing was written"));
+  return { ...(extra || {}), ok: false, reason: "NO_EVIDENCE", code: "NO_EVIDENCE",
+           check: ROW.NO_EVIDENCE.check, translation: ROW.NO_EVIDENCE.translation,
+           detail: "evidence is a non-empty statement, or a citation {cite}, and none was named, so nothing was written" };
   /* END DEC-49 REGION is-evidence-named */
 }
 
 export function noSightList(detail, extra) {
   /* DEC-49 REGION is-sight-listed */
-  return merged(extra, own(SOURCES_CHECKS.NO_SIGHT_LIST, "NO_SIGHT_LIST", detail));
+  return { ...(extra || {}), ok: false, reason: "NO_SIGHT_LIST", code: "NO_SIGHT_LIST",
+           check: ROW.NO_SIGHT_LIST.check, translation: ROW.NO_SIGHT_LIST.translation,
+           detail };
   /* END DEC-49 REGION is-sight-listed */
 }
 
 export function consentNotStanding(detail, extra) {
   /* DEC-49 REGION is-consent-standing */
-  return merged(extra, own(SOURCES_CHECKS.CONSENT_NOT_STANDING, "CONSENT_NOT_STANDING", detail));
+  return { ...(extra || {}), ok: false, reason: "CONSENT_NOT_STANDING", code: "CONSENT_NOT_STANDING",
+           check: ROW.CONSENT_NOT_STANDING.check, translation: ROW.CONSENT_NOT_STANDING.translation,
+           detail };
   /* END DEC-49 REGION is-consent-standing */
 }
 
 /* R11: one answer, byte for byte, for every failure of a consent by secret, built once and frozen, so no failure can
    be told from another by its fields or their order. */
-export const SECRET_NOT_RECOGNISED_ANSWER = secretNotRecognised();
 export function secretNotRecognised() {
   /* DEC-49 REGION is-secret-recognised */
-  return Object.freeze(own(SOURCES_CHECKS.SECRET_NOT_RECOGNISED, "SECRET_NOT_RECOGNISED",
-    "the secret was not recognised, so nothing was recorded"));
+  return Object.freeze({ ok: false, reason: "SECRET_NOT_RECOGNISED", code: "SECRET_NOT_RECOGNISED",
+                         check: ROW.SECRET_NOT_RECOGNISED.check, translation: ROW.SECRET_NOT_RECOGNISED.translation,
+                         detail: "the secret was not recognised, so nothing was recorded" });
   /* END DEC-49 REGION is-secret-recognised */
 }
+export const SECRET_NOT_RECOGNISED_ANSWER = secretNotRecognised();
