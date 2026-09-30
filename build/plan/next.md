@@ -87,3 +87,5 @@
 - **N423** (K688; REVIEW #5 J2) · review: `src/review/index.mjs` imports `isMachineIdentity` from the catalogue (a re-export since T18 layer 1); re-point it to `record-grammar`, `uses` gaining `record-grammar` (BOB's edge, written before the job) and the Uses section re-worded; the catalogue's re-export is then one importer fewer.
 
 - **N424** (K690; CASE-GRAMMAR #1 J1) · case-authoring: `#reauthorAcknowledgements` spells case-grammar R3's acknowledgements locator a second time, and `document.mjs` keeps its own `fmSafe`; read both from `case-grammar` (`uses` gaining `case-grammar`, BOB's edge, written before the job).
+
+- **N425** (K692; RATIFICATION #9 J2) · promotion R39: `bundles.criticality` is written from the envelope only, so a document whose own front matter says `criticality: crucial` under an envelope that does not is recorded non-crucial; derive the column from the bytes as well (or state that the envelope governs), and name it by a test. Ratification's R22 already counts either (T18).
