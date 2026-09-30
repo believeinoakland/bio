@@ -157,6 +157,6 @@ Replaced at each handoff; the progress log (§4) is the history.
 
 **NEEDS BOB:** archive BOB #67 (`session_019iV4d3YVE4NGg67gtwYeAT`) and BOB #68 (`session_01F6nxZGyhi9Jo7LvgyNVXpS`, idle, its routines deleted by BOB #69): both refused by the safety check (#67 in BOB #68, #68 in BOB #69); the approval is typed in the BOB session that tries again. Their `BOB-final` rows (#67 about 93M, into `metrics/T14.csv`; #68 88.6M read live at takeover, into `metrics/T15.csv`) are written when archived. `WATCH #67` has fired and is disabled: nothing to delete.
 
-**Bob's open items:** **the queue split** (P6: queue's code 5,145 lines; recommended: cut the obligation inbox and the feed producers into their own modules before layer 11; queue's T15 entry is re-cut if he approves, `current.md` says so); the `action-plans` module (PR #5); PR #4 lands on `main` after T15 closes as DEC-86–DEC-90 (K473).
+**Bob's open items:** the `action-plans` module (PR #5); PR #4 lands on `main` after T15 closes as DEC-86–DEC-90 (K473).
 
 **What BOB #68 learned.** (1) New requirement ids folded before their tranche fail coverage at the close: hold them in the draft until the tranche opens (K479). (2) A job's question often exposes a wording that would break a live path (K485: a bound below a user's walk; K491: a strict check that would stop every AI run); read each against its callers before answering. (3) Merging a provider early (inquiry, contradiction) keeps a layer moving; re-run `test/m/` twice before calling a red real (one did not recur, K490).

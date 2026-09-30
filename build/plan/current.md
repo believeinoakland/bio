@@ -49,7 +49,7 @@ Opened by BOB #68, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ 302d008f0b, T
 ## Layer 11
 
 - **affordances** · N345's rungs (wording, K447): R1–R4, R7, R8, R14 (the opt-in; the response graded `RUNG_ABSENT`; "resolve" for "conclude" on a contradiction inquiry). MEMBERSHIP #7's report: `affordances.mjs`:1834 names `ADMIN_ONLY`, now `NOT_AN_ADMIN`. Any code T14's layers 3+ retire or rename that their records find in affordances' lists.
-- **queue** · (P6: its size is before Bob, a split of the inbox and the feed producers recommended; this entry is re-cut if he approves one, before layer 11 starts.) N345: R1 amended; R43–R47 (the conflict duty, not mutable; leads; two-project marks; "something you rest on was corrected"; "a conflict found since publishing"; "in conflict with a record you cannot see"; the opt-in and relayed responses). `uses` gains contradiction. N352's share: `#hiddenBundles` (`queue/index.mjs`:167) reads membership's helper.
+- **queue** · *Moved to T16 by Bob's approval of the split (K507): its N345 entry (R1 amended; R43–R47) and N352's share run there, after the split, on the smaller modules.*
 - **instance-setup** · N348's remainder (K445): `instanceSetupStore` and `instanceSetupRoute` (`setup.mjs`:2439, :2420) go, with the fixture's frame (`test/m/instance-setup/fixture.mjs`:9, :137).
 - **control-plane** · N345: routes, `NEEDS` rows and stamps (`author`, `viewer`, `proposedBy`, `caller`) for the fifteen new ops (contradiction's thirteen, entities' `resolutiondefect`, case-authoring's `publishtensions`). N356: comments still naming `ADMIN_ONLY` (`ops.mjs`:824; `index.mjs`:3057, :3069).
 

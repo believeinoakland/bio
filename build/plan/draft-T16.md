@@ -26,6 +26,10 @@ Cut from T15's "Not in T15" (`current.md`), `next.md`'s open entries, rulings K4
 
 - **ratification** · N354 (R17, worded K477, `not yet met`): the `registerholds` probe (`ratification/ops.mjs`:512–520) reads an unanswered `doAnswer` as not held in parts, so the gate answers `PLANE_MISSING_BYTES`; silence answers `STORE_DID_NOT_ANSWER` with the correlation, a refusal the store's own (`storeRefusal`).
 
+## Layer 11
+
+- **queue split** (N363, K507), first: the obligation inbox and the feed producers cut into two new modules before `queue`; then **queue** · T15's moved entry: N345 R1 amended, R43–R47; N352's share (`#hiddenBundles`, `queue/index.mjs`:167, reads membership R88).
+
 ## Outside a module
 
 - **docs** · N225: `docs/development/SCHEDULER.md` still names twelve consumers in `store.mjs`; the registry is `src/scheduler/index.mjs`:40–44, fifteen (`intent-age`, `notice-sweep` after `bias-debt`). BOB's edit, no job (docs is `not_product`).
