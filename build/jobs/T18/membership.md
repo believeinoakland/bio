@@ -56,3 +56,7 @@ Size (session_016Q1XJGZoALi4j7bA6Be1aY): test runs 3, module lines 8
 ## J1 · COMPLETE
 
 Complete. MODULE_ORDER (R83) follows modules.json's fold: record-grammar, action-clocks, action-plans, op-declarations, admission at their places (index.mjs, +7 -6). Membership tests 125/125; with promotion's 196/196, its registry test (R39/R45/R46) now passing (it failed before). Checks: format, architecture, coverage (91/91), ownership: 0 failures. Stale for the layer close: bio-plane/dist/bio-plane.bundled.mjs (§14). Details in the record.
+
+## J2 · COMPLETE
+
+Complete (B2). tranche/T18 merged; MODULE_ORDER (R83) equals build/modules.json again: acquisition, run-rules, case-grammar, public-read, project-stage at their places (index.mjs, 4 lines). Membership tests 125/125; with promotion's, 212/212, registry test (R39/R45/R46) passing. Checks: format, architecture, coverage (91/91), ownership: 0 failures. Stale for the layer close: bio-plane/dist/bio-plane.bundled.mjs (§14). Details in the record.
