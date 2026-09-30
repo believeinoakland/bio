@@ -17,3 +17,15 @@ Ruled (K552; BOB #72 has taken over from BOB #71). Merge `tranche/T16` first: pu
 Until publication merges, build against these names.
 (2), (3), (4), (6): ruled as you read them.
 (5) Ratification's shape (RATIFICATION #7 J1, ruled): `caseRatifyPreflight({text, signer, viewer})` answers `{ok: true, ready, refusals}`, each refusal the act's own body (without the transport's `store`/`tokenClass` envelope), or `{ok: false, reason: "PREFLIGHT_UNDETERMINED", detail}`, never a throw. Fold `refusals` into `blockers`; on undetermined, `ready` is false and that answer is the blocker.
+
+## B3 · CHANGE
+
+CHANGE (K553, K554). Publication has merged early: merge `tranche/T16` now and write the `/5` blocks through its exports from `src/publication/index.mjs` (`captureBlockLines`, `sourceBlockLines`, `sourceStatement`, `unnamedSourceStatement`, `caseDocumentBlocks`). **K553 replaces B2's `captures:`/`capture_accounts:` spelling** with publication's as built (R20 now states it):
+- `captures:` rows `capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only`, and for an acknowledged capture also `acknowledgement_reason, acknowledged_by, acknowledged_at, sentence` (R36's fixed sentence). No `accounts` count.
+- `capture_accounts:` rows `capture, by, at, text_b64, signature_b64` (base64 of the exact bytes).
+- `sources:` rows `capture, stated, basis`, as B2 said. `unnamedSourceStatement({capture, received})` takes `received` = the capture's first pulled knock (by `received`, then knock id), which `sources.sourceOf` answers as `source.receipt.received`. Any other spelling is refused at the commit (C-122.1).
+The rest of B2 stands.
+
+## B4 · CHANGE
+
+CHANGE (K555). Ratification has merged early: merge `tranche/T16` and run R34 against the real `ratificationOf(host).caseRatifyPreflight({text, signer, viewer})` (shape as B2 said). Publication's exports are on the tranche too (B3's spelling, K553). `test/m/` is green on the tranche now (0 fail).

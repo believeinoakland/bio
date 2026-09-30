@@ -39,9 +39,11 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
-import { parseFrontmatter, normalizeType } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
-         CASE_CONCLUSION_CHECKS, RATIFY_SCOPE_CHECKS } from "./checks.mjs";
+         RATIFY_SCOPE_CHECKS } from "./checks.mjs";
+import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
+         attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal } from "./refusals.mjs";
 
 export * from "./checks.mjs";
 
@@ -296,14 +298,45 @@ export class Ratification {
     const pinned = [];
     for (const e of editions) {
       const d = this.#caseDocumentRow(e.case_id, e.edition);
-      const rows = d && typeof d.text === "string" ? (parseFrontmatter(d.text).data || {}).case_conclusions : null;
-      const had = Array.isArray(rows)
-        ? rows.find((r) => r && typeof r === "object" && String(r.target ?? "") === String(bundleId)) || null
-        : null;
+      const had = Ratification.#recordedRowIn(d ? d.text : null, bundleId);
       pinned.push({ ...e, recorded: Ratification.#recordedConclusionSummary(had),
                     same: Ratification.#sameRecordedConclusion(had, want) });
     }
     return { same: pinned.filter((e) => e.same), pinned };
+  }
+
+  /* The `case_conclusions` row one document's text records for a member, or null (no readable text, or no row). */
+  static #recordedRowIn(text, bundleId) {
+    const rows = typeof text === "string" ? (parseFrontmatter(text).data || {}).case_conclusions : null;
+    return Array.isArray(rows)
+      ? rows.find((r) => r && typeof r === "object" && String(r.target ?? "") === String(bundleId)) || null
+      : null;
+  }
+
+  /* REC-167 / C-65.1's question, asked of one document's TEXT: for each roster member, is the question concluded for
+     the document's project (`caseConclusionFor`, read for the signer), and is that conclusion the one the text
+     records (item 9's comparison, `#sameRecordedConclusion`, the one `editionsRecordingConclusion` makes)? It
+     answers the members that fail, each with what the text recorded and what the project stands on now. The commit
+     asks it of the stored document it is about to sign, and R18's pre-flight of the unsigned text it is given, so the
+     two answer alike. */
+  #conclusionsMoved(text, project, roster, signerMember) {
+    const concViewer = signerMember ? `member:${signerMember}` : null;
+    const moved = [];
+    for (const m of roster) {
+      const bm = this.record.head(m);
+      const conc = this.caseConclusionFor(project, m, concViewer, bm ? bm.currentState : null);
+      const had = Ratification.#recordedRowIn(text, m);
+      if (conc.state === "concluded"
+          && Ratification.#sameRecordedConclusion(had, Ratification.#conclusionRowParsed(m, conc))) continue;
+      moved.push({ target: m, recorded: Ratification.#recordedConclusionSummary(had),
+                   now: conc.state === "concluded"
+                     ? { state: "concluded", relationship: conc.relationship, project: conc.project,
+                         version: conc.version ?? null, claim: conc.claim ? conc.claim.text ?? null : null,
+                         concluded_by: conc.by ?? null, concluded_at: conc.at ?? null }
+                     : { state: "not_concluded", relationship: conc.relationship, project: conc.project,
+                         why: conc.why, stance: conc.stance ?? null } });
+    }
+    return moved;
   }
 
   /* What a NEW edition would record for this member, rendered by the one writer and
@@ -399,19 +432,118 @@ export class Ratification {
     if (facts.doc.doc_sha !== docSha)
       return { ok: false, reason: "CASE_RATIFY_STALE", expected: facts.doc.doc_sha, got: docSha ?? null,
                detail: "the case document has changed since it was reviewed; read it again and re-sign" };
-    const parsedDoc = parseFrontmatter(facts.doc.text);
+    /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): the body (C-3.1's section) and each member's basis at the
+       pinned bytes (C-2.8's testimony and per-ground arms), both from the one facts read. */
+    return this.#caseGateOver(facts.doc.case_id, Number(facts.doc.edition), parseFrontmatter(facts.doc.text),
+                              facts.memberBasis || null, facts.priorCase);
+  }
+
+  /* The one call to promotion's case gate (R8's registered catalogue), for the act's gate and R18's pre-flight alike:
+     `priorCase` is publication's `published_cases` row for the previous ratified edition, or null. */
+  #caseGateOver(caseId, edition, parsed, memberBasis, priorCase) {
     return this.promotion.runCaseGate({
-      caseId: facts.doc.case_id, edition: Number(facts.doc.edition),
-      /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): the body (C-3.1's section) and each member's basis at the
-         pinned bytes (C-2.8's testimony and per-ground arms), both from the one facts read. */
-      body: typeof parsedDoc.body === "string" ? parsedDoc.body : null,
-      memberBasis: facts.memberBasis || null,
-      fm: parsedDoc.data || {},
-      priorCase: facts.priorCase
-        ? { edition: facts.priorCase.edition,
-            statement: facts.priorCase.completeness ? (JSON.parse(facts.priorCase.completeness).statement ?? null) : null,
-            bias_acknowledgement: facts.priorCase.bias_acknowledgement ?? null }
+      caseId, edition,
+      body: typeof parsed.body === "string" ? parsed.body : null,
+      memberBasis,
+      fm: parsed.data || {},
+      priorCase: priorCase
+        ? { edition: priorCase.edition,
+            statement: priorCase.completeness ? (JSON.parse(priorCase.completeness).statement ?? null) : null,
+            bias_acknowledgement: priorCase.bias_acknowledgement ?? null }
         : null });
+  }
+
+  /* ---- R18 (N364; DEC-80 items 3 and 4): THE CASE CEREMONY'S PRE-FLIGHT ----
+
+     What `op=caseratify` (R2) and its commit (R3) would refuse, asked over an unsigned case document's bytes before
+     anybody signs, so the ceremony can say so before its first screen (case-authoring R34). Every refusal that holds
+     is listed, each asked on its own and never stopping at the first, in R18's order:
+       C-32.13 and C-32.15, the credential fences, read from the control plane's `viewer` stamp: an agent
+         credential's `class:ai…` holds both (the act answers the first; lifted, the second would answer), another
+         `class:<cls>` bearer C-32.15, a member's or the founder's session neither; an absent viewer, an internal
+         caller, is not asked;
+       C-53.12, C-92.10, C-92.11 over publication's attribution facts for these bytes;
+       NO_ATTESTING_KEY, the pre-flight's own: `signer` (a member id, or `member:<id>`) holds no key
+         `membership.attestingKeys` answers (R19: whatever the key's origin);
+       CASE_SIGNER_NOT_AN_OWNER through `membership.caseAuthority`, the deliverer not asked (it is fixed only when the
+         act is delivered);
+       C-65.1, the commit's own comparison (`#conclusionsMoved`) over these bytes, read for the signer;
+       the case gate's findings, as the act's GATE_REFUSED: the catalogue over these bytes, with the previous ratified
+         edition (publication R40's `published_cases`) and each member's basis at its pin (record-core R60).
+     Each is built by the function the act answers through (`./refusals.mjs`, membership's `caseAuthority`), so it is
+     the act's own; the act's envelope (`store`, `tokenClass` after the payload's refusals, the HTTP status) is the
+     Worker's and is not here. It writes nothing and never throws: a part it cannot read makes the whole answer
+     PREFLIGHT_UNDETERMINED, never a partial list read as a clear one. */
+  caseRatifyPreflight({ text = null, signer = null, viewer = null } = {}) {
+    try {
+      const src = typeof text === "string" ? text : "";
+      const parsed = parseFrontmatter(src);
+      const fm = parsed.data || {};
+      const caseId = fm.case_id === undefined || fm.case_id === null ? null : String(fm.case_id).trim();
+      const edition = Number.isInteger(fm.case_edition) ? fm.case_edition : null;
+      const project = typeof fm.case_project === "string" && fm.case_project !== "null" ? fm.case_project.trim() : null;
+      const roster = (Array.isArray(fm.case_findings) ? fm.case_findings : [])
+        .map((x) => String(x ?? "").trim()).filter(Boolean);
+      const refusals = [];
+
+      const v = viewer === null || viewer === undefined ? "" : String(viewer).trim();
+      if (v && isMachineIdentity(v)) {
+        const cls = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX)
+          ? v.slice(MACHINE_CLASS_PREFIX.length).split("/")[0] : v;
+        if (cls.toLowerCase() === "ai") refusals.push(machineCaseRefusal(cls));
+        refusals.push(operatorCaseRefusal(cls));
+      }
+
+      const attr = this.publication.attributionFacts({ text: src, case_id: caseId, edition });
+      for (const r of [testimonyCaseRefusal(caseId, edition, attr.legacy),
+                       attributionUnchosenRefusal(caseId, edition, attr),
+                       attributionStaleRefusal(caseId, edition, attr)])
+        if (r) refusals.push(r);
+
+      const signerMember = signer === null || signer === undefined || isMachineIdentity(signer) ? null
+        : String(signer).trim().replace(/^member:/, "") || null;
+      if (!signerMember || !this.membership.attestingKeys().some((k) => k.member_id === signerMember))
+        refusals.push(noAttestingKeyRefusal(signerMember));
+
+      const denied = this.membership.caseAuthority({ project, deliveredBy: null, signer: signerMember,
+        act: "caseratify", subject: `case ${caseId} edition ${edition}`, extra: { caseId, edition } });
+      if (denied) refusals.push(denied);
+
+      const moved = conclusionMovedRefusal(caseId, edition, project,
+                                           this.#conclusionsMoved(src, project, roster, signerMember));
+      if (moved) refusals.push(moved);
+
+      const priorCase = caseId && edition !== null
+        ? this.#one(`SELECT edition, completeness, bias_acknowledgement FROM published_cases
+                      WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
+                    caseId, edition)
+        : null;
+      const gate = this.#caseGateOver(caseId, edition, parsed, this.#memberBasisAtPins(fm), priorCase);
+      if (!gate || !gate.ok)
+        refusals.push({ ok: false, reason: "GATE_REFUSED", gateVersion: gate ? gate.gateVersion : null,
+                        findings: gate && Array.isArray(gate.findings) ? gate.findings : [] });
+
+      return { ok: true, ready: refusals.length === 0, refusals };
+    } catch {
+      return { ok: false, reason: "PREFLIGHT_UNDETERMINED",
+               detail: "part of what signing would be refused for could not be read, so whether this document can be "
+                     + "signed is undetermined; nothing is claimed either way, and nothing was written. Ask again." };
+    }
+  }
+
+  /* Each roster member's `basis` at the bytes its `case_roles` row pins (record-core R60), for the case gate's C-2.8
+     arms; a member whose pinned bytes the record cannot produce is absent, so those arms are left unasked for it
+     (publication's `caseDocumentFacts` builds the act's the same way). */
+  #memberBasisAtPins(fm) {
+    const out = {};
+    for (const r of Array.isArray(fm.case_roles) ? fm.case_roles : []) {
+      if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
+      const text = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
+      if (text === null) continue;
+      const mfm = parseFrontmatter(text).data || {};
+      out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
+    }
+    return out;
   }
 
 
@@ -536,10 +668,10 @@ export class Ratification {
          project's conclusion can move while the finding's bytes and this document do not.
          SO THIS ASKS, PER ROSTER MEMBER, WHAT `op=publish` ASKS, through the SAME two readers and never a
          copy of either: (1) `caseConclusionFor` — is the question concluded FOR THE DOCUMENT'S PUBLISHING
-         PROJECT (the NOT_CONCLUDED gate's one reader), and (2) `editionsRecordingConclusion` applied to
-         THIS ONE DOCUMENT as the preparation — is that conclusion the one the document RECORDS (item 9's
-         comparison: a project conclusion compared as the dated, authored ENTRY; a no-project one by the
-         pin). Concluded-ness ALONE would pass a project that withdrew and concluded again on another
+         PROJECT (the NOT_CONCLUDED gate's one reader), and (2) item 9's comparison, the one
+         `editionsRecordingConclusion` makes, asked of THIS ONE DOCUMENT's text — is that conclusion the one the
+         document RECORDS (a project conclusion compared as the dated, authored ENTRY; a no-project one by the
+         pin). Both are `#conclusionsMoved`, which R18's pre-flight asks of the unsigned text too. Concluded-ness ALONE would pass a project that withdrew and concluded again on another
          claim — the document would then sign claim A for a project standing on claim B — so both are asked.
          THE VIEWER IS THE SIGNER, who `caseAuthority` just established is an OWNER of the project, so the
          project's own record is in sight; an owner cannot be told a project it owns "never concluded"
@@ -549,40 +681,10 @@ export class Ratification {
          `existed`, and this question is asked only of a document about to be signed. ASKED BEFORE ANY
          WRITE, inside the transaction, so a refusal commits nothing. The route is item 9's: publish again,
          and the new document records what the project stands on now (REC-157 made that edition reachable). */
-      const concViewer = attestorMember ? `member:${attestorMember}` : null;
-      const moved = [];
-      for (const m of roster) {
-        const bm = this.record.head(m);
-        const conc = this.caseConclusionFor(project, m, concViewer, bm ? bm.currentState : null);
-        const rec = this.editionsRecordingConclusion(m, { pinned: [], prepared: { case_id: id, edition: ed } }, conc);
-        if (conc.state === "concluded" && rec.same.length) continue;
-        moved.push({ target: m, recorded: rec.pinned.length ? rec.pinned[0].recorded : null,
-                     now: conc.state === "concluded"
-                       ? { state: "concluded", relationship: conc.relationship, project: conc.project,
-                           version: conc.version ?? null, claim: conc.claim ? conc.claim.text ?? null : null,
-                           concluded_by: conc.by ?? null, concluded_at: conc.at ?? null }
-                       : { state: "not_concluded", relationship: conc.relationship, project: conc.project,
-                           why: conc.why, stance: conc.stance ?? null } });
-      }
-      if (moved.length) {
-        const refusal = (code, detail) => {
-          const row = CASE_CONCLUSION_CHECKS[code];
-          return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-                   caseId: id, edition: ed, project, moved };
-        };
-        /* DEC-49 REGION is-caseratify-conclusion-moved */
-        return refusal("CASE_CONCLUSION_MOVED",
-          `case ${id} edition ${ed}'s document records, for ${moved.map((x) => x.target).join(", ")}, a `
-          + `conclusion ${project} no longer stands on: `
-          + moved.map((x) => `${x.target} — ${x.now.state === "concluded"
-              ? `${project} now stands on a DIFFERENT conclusion (reading '${x.now.version ?? "(unnamed)"}', `
-                + `the ${x.now.relationship === "no_project" ? "no-project" : "project's own"} relationship)`
-              : `${project} stands on no conclusion (${x.now.why})`}`).join("; ")
-          + `. A signed edition records the conclusion it rests on (INVESTIGATIVE-SESSION.md §7.1 item 4), so `
-          + `signing this one would publish a conclusion nobody holds. Publish the case again from the project `
-          + `(op=publish) — the new document records what the project stands on now (§7.1 item 9) — and sign `
-          + `that. Nothing was committed.`);
-        /* END DEC-49 REGION is-caseratify-conclusion-moved */
+      {
+        const moved = this.#conclusionsMoved(doc.text, project, roster, attestorMember);
+        const refusal = conclusionMovedRefusal(id, ed, project, moved);
+        if (refusal) return refusal;
       }
       /* ===== END REC-167 ================================================================ */
       const now = stampInstant("millisecond");

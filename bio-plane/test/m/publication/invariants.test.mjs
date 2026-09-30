@@ -5,13 +5,14 @@ import assert from "node:assert/strict";
 import { planeWorld as world, V, SIG, NOW } from "./fixture.mjs";
 import * as CATALOGUE from "../../../checks/bio-checks.mjs";
 import { CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS, ATTRIBUTION_ACT_CHECKS,
-         rowOf } from "../../../src/publication/checks.mjs";
+         CASE_SOURCES_CHECKS, rowOf } from "../../../src/publication/checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, publicationOwns } from "../../../src/publication/index.mjs";
 import { migratePublication } from "../../../src/publication/schema.mjs";
 import { storage } from "./fixture.mjs";
 
 const F = "INQ-2026-0001";
-const MINE = { ...CASE_RESOLUTION_CHECKS, ...PUBLISHED_STORE_CHECKS, ...PUBLISHED_READ_CHECKS, ...ATTRIBUTION_ACT_CHECKS };
+const MINE = { ...CASE_RESOLUTION_CHECKS, ...PUBLISHED_STORE_CHECKS, ...PUBLISHED_READ_CHECKS, ...ATTRIBUTION_ACT_CHECKS,
+               ...CASE_SOURCES_CHECKS };
 
 test("R31 published bytes are exempt from purge; the derived and working tables are declared as the store declared them", () => {
   const w = world();
@@ -57,10 +58,11 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
 });
 
-test("R33 each check moved here with its id, code and translation, is held nowhere else, and names this module's site", () => {
+test("R33 each check moved here with its id, code and translation, is held nowhere else, and names this module's site; R51's new row C-122.1 with them", () => {
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
   assert.deepEqual(ids, ["C-44.2", "C-68.5", "C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8",
-                         "C-92.9", "C-98.1", "C-98.2", "C-98.3", "C-98.4", "C-98.5", "C-98.6", "C-98.7", "C-98.8", "C-98.9"]);
+                         "C-92.9", "C-98.1", "C-98.2", "C-98.3", "C-98.4", "C-98.5", "C-98.6", "C-98.7", "C-98.8", "C-98.9",
+                         "C-122.1"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
     assert.match(row.where, /^src\/(publication\/(index|worker)\.mjs|container\.mjs) /, `${code}'s site is this module's`);
