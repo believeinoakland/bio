@@ -32,3 +32,7 @@ refuse-gate's convert "with legacy-store's share". legacy-store's share (T17 leg
 My best reading, which I am carrying out: the share is converted as the same behaviour at citation's own refuse-weight acts. sever and reinstate over a query selection swapped at a constant count (moved false, digestChanged true) are refused SET_MOVED and no edge moves; an unchanged query selection passes; a fresh selection over the same criterion severs and reinstates normally (R4, R7). The release and retire arms themselves stay in the old suite, which I do not delete (K619), for ratification (release, N400, layer 8) and legacy-store (retire) to carry when their jobs convert it.
 
 Say if you want it otherwise. I am not waiting on the answer: the rest of the job does not depend on it.
+
+## J2 · COMPLETE
+
+Complete. The three converts are carried at citation's interface in three new test files (audit, existence, query-drift; tests 55 pass, 0 fail, was 50); no source change, no row moved, nothing awaiting stamp. legacy-store's share of refuse-gate is carried as my J1 reading (sever and reinstate refuse a constant-count query swap SET_MOVED); if your answer to J1 differs, send a CHANGE. The release and retire arms themselves stay in the old suite for ratification and legacy-store. Format, architecture, coverage (11 of 11) and ownership (legacy-store and legacy-checks 0/0) all 0 failures. Details and the size line in my record's Completion section.
