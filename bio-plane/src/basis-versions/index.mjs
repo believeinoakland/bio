@@ -64,6 +64,8 @@ export const TESTIMONY_REACH_MAX = 200;
 export const TESTIMONY_REACH_DEPTH = 64;
 /** R12, R16: a reason, conclusion, falsifier or commentary written into the frontmatter (no escapes). */
 export const VERSION_REASON_MAX = 500;
+/** R12 (C-25.32): the shortest reason the version grammar stores on a state that needs one (C-25.19's floor). */
+export const VERSION_REASON_MIN = 8;
 /** R14: the six acts and the state each moves a version to; `current` and `hide` move none. */
 export const VERSION_ACT_TO = Object.freeze({
   accept: "accepted", reject: "rejected", consider: "considering", revert: "suggested", current: null, hide: null,
@@ -666,6 +668,11 @@ export class BasisVersions {
         { target, version: vname, known: rows.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
     const row = rows[idx];
     const from = typeof row.state === "string" ? row.state.trim() : "";
+    /* C-25.31 in its place (R12): a row the writer cannot address in place is told before any judgement of the move,
+       so `preview` answers it as the act does (R14). `current` rewrites only the project (R15), asked below. */
+    if (act !== "current" && setVersionField(text, vname, "hidden", row.hidden === true) === null)
+      return refuse("VERSION_ACT_UNWRITABLE",
+        "this question's version block could not be rewritten in place, so nothing was changed.", { target, version: vname });
 
     /* CASE-3 / CASE-4 / DEC-72 clause 3: a state move on a case member is refused and pointed at the route DEC-12
        built (reopen, move, publish a new edition). `hide` and `current` move no state (`to === null`) and stay open.
@@ -696,10 +703,12 @@ export class BasisVersions {
           : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement "
             + "from an oversight"}.`, { target, version: vname, from, to });
     /* C-25.32: a reason that arrived and cannot be stored is a different refusal from one that never arrived. */
-    if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why))
+    if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why)
+        || (versionNeedsReason(to) && why.length < VERSION_REASON_MIN))
       return refuse("VERSION_REASON_MALFORMED",
         `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a `
-        + `backslash, or a newline: the restricted frontmatter grammar has no escapes.`,
+        + `backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a `
+        + `reading aside or turning it down is at least ${VERSION_REASON_MIN} characters, the shortest the record keeps.`,
         { target, version: vname, reason_length: why.length });
     if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
       return refuse("VERSION_ILLEGAL_TRANSITION",
@@ -785,6 +794,11 @@ export class BasisVersions {
         return refuse("VERSION_CURRENT_UNRELATED",
           `${projectId} does not draw on ${target}, so it has no stance on this question to move. `
           + `Cite the question into the project first.`, { target, version: vname, project: projectId });
+      /* C-25.31 on the project's side, before the receipt, so `preview` answers it as the act does (R14) */
+      if (setCurrentVersionRow(ptext, target, vname, who, "") === null)
+        return refuse("VERSION_ACT_UNWRITABLE",
+          `${projectId}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.`,
+          { target, version: vname, project: projectId });
     }
 
     const when = this.now();
