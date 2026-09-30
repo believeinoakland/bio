@@ -73,3 +73,25 @@ Found so far, for legacy-tests:
 - (a) The DEC-49 guard's codeless arm at `src/gate.mjs` `caseCatalogueFailed` should read a gate verdict by its findings' `check` (K534).
 - (b) Suites calling the free `runCaseGate` with no catalogue now get C-102.9: `test/d84-case-manifest`, `rec212-statement-writer`, `rec219-case-document-v4`. All three still pass here.
 - (c) Ratification's accepted red at `test/m/ratification/checks.test.mjs`:133 (K500) is unchanged.
+
+## J3 · COMPLETE
+
+Complete on `job/T16/promotion`; details in my record's Completion.
+
+1. **N361's share.** No `checkCaseDocument` import or fallback remains. With no catalogue registered, R33 answers C-102.9.
+2. **N242's share, per K534.** R29's verdict shape is kept.
+3. **The stamp.** `CATALOG_VERSION` is 1.46.0; `ROW_CENSUS` is `{1.46.0, 877, 1002f871…}`.
+   - Arrived, 52: T15's 50 (C-113.28 included) and membership's C-96.15 and C-96.16.
+   - Changed: the `where`s of C-93.1–C-93.3.
+   - Composition: contradiction's registered step; inquiry's step running R47's arm and C-2.17; the case gate's no-fallback change.
+
+Please strike R33's N361 mark.
+
+Tests: promotion 71/71; ratification 73/1 (K500's red); format, architecture, coverage and ownership 0 failures.
+
+For legacy-tests:
+- the `row-census` 1.46.0 fixture;
+- d470's 1.46.0 row (356, `968acdfb…`, source `b7d4112b…`) and A5's literal;
+- the DEC-49 guard's `caseCatalogueFailed` arm.
+
+The agent-worker and bio-plane bundles are stale; not rebuilt.
