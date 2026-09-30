@@ -1,3 +1,20 @@
 # progressions (T18)
 
 **Status** · session_01Y1NTXoFwdZ8sSRM6EXvaFK · depth 2 · COMPLETE · handled B1
+
+## J1 · COMPLETE
+
+**Entries applied** (layer 5, B1): N242's share, and converts `d266scope` and `queue` (progressions' shares). Tests only; no code moved, so no catalogue, store or `src/index.mjs` edit and no row `awaiting stamp`. Old suites not deleted (K619).
+- **N242's share (C-100's regions marked, the conscripted calls): already met, nothing left to change.** PROGRESSIONS #2 applied it in T10 (K329; K451 dropped it from T14 as met). Verified today with the DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`): all 21 of this module's governed sites resolve, each a marked region over exactly one whole refusal (1 judged each); no region wraps a call into another refusal-maker; each C-100 code is minted once in this module (the shared ones through `#declared`, `#stageNamed`, `#stageOf`, `#documentNamed`, `#concerned`, `#reasonStated`, `notADisposition`). The guard names no progressions failure. Its arm G still lists `BAD_REASON`, `NO_REASON`, `BAD_STAGE`, `NO_SUCH_PROGRESSION` and `NO_DECIDER` as multi-site, but every other site is in another module (queue, inquiry, intent, citation, basis-versions, promotion, `store.mjs`, …; see below).
+- **`d266scope` (row 145, "queue, progressions")**, progressions' share, now a module test (`feeds.test.mjs`, "R18 R22 R12: …"): a decision in the `progression::stage` key shape echoes the pair and names no project; one decision ages its stage's question under **every** instance at once (out of `proposals` and `instances`, `open_finding_count` 0 on each instance); a re-triage from dismissed to deferred replaces it (one row), and the feed, the instance read and `captureProgressions` publish only the new decision, which still ages the finding; the other stage is untouched. Mutation check: freezing the decision (upsert → `DO NOTHING`, d266scope's arm 3) fails this test. Already proved by existing tests: NO_REASON on a blank reason and NOT_A_DISPOSITION (R21, R35), the whole-store purge of `proposal_dispositions` (R29). Queue's share, not this module's: the project-scoped shape, `scope`/`keyed_on`/`projects`/`disposed_by`, NO_PROJECT_SCOPE, NO_FINDING, NO_SUCH_PROJECT and `findingDispositions`.
+- **`queue` (no row)**, progressions' share, now a module test (`feeds.test.mjs`, "R11 R18 R24: …"): the suite's fixture, a `usually` `0..1` predecessor left unplaced under a placed `always` stage, gives one missing finding and one proposal (labels, requiredness, `surfaced_by: machine`); the feed reads the same twice and writes nothing; placing the predecessor leaves nothing to propose. The rest of the suite (the item contract, `case` ancestors, options[], the viewer gate, the task arms) is queue's, affordances' and tasks'.
+
+**Deferred:** none. (R32 stays `test.todo`, deferred by K102.)
+
+**Found in other modules** (not new; for their owners' next N242 or arm-G share): arm G's multi-site codes shared with this module's rows. `BAD_REASON`/`NO_REASON`: minted literally in `store.mjs`, `citation`, `queue`, `inquiry` (three sites each), `basis-versions`, `promotion`, `membership` (three `NO_REASON`, codeless), `entities` (three `NO_REASON`), `intent`, `consequences`, `conformance`, `escalation`, `actions`. `BAD_STAGE`, `NO_SUCH_PROGRESSION`: also minted in `intent` (`index.mjs` 308, 1318). `NO_DECIDER`: also in `queue` (1793). No generated artifact made stale (tests only).
+
+**Tests and checks** (on `job/T18/progressions` after merging `tranche/T18` @ a7ef9dca2a):
+- `node --test bio-plane/test/m/progressions/`: tests 45, pass 44, fail 0, todo 1 (R32). No provided service changed, so no user module's tests re-run; no layer tests in the manifest.
+- `format`: 82 modules, 77 requirements files; 0 failures. `architecture progressions`: 10 product files, 36 relative imports; 0 failures. `coverage progressions`: 35 of 35 live requirement ids named by a test; 0 failures. `ownership progressions tranche/T18`: 1 file; legacy-store 0/0, legacy-checks 0/0; 0 failures.
+
+Size (session_01Y1NTXoFwdZ8sSRM6EXvaFK): test runs 2, module lines 1615
