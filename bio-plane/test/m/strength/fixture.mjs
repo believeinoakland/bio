@@ -2,7 +2,9 @@
    Durable Object's storage, with provenance's `register` and `captured_locators` (its R48 read contract) created from
    its own schema. What it reads from `inquiry` and `basis-versions` are providers the test controls, in the shapes of
    those modules' Provides (inquiry R13, R14, R16; basis-versions R11, and the version rows and legs), as
-   `strengthOf`'s `deps` take them. Every test drives the module at its interface. */
+   `strengthOf`'s `deps` take them; so are the registrations it makes with `promotion` (its R39, `registerStep`) and
+   `retrieval` (its R62, `registerField`), which record what was registered, and `w.promote` runs the registered
+   projection as promotion does, inside one transaction. Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -100,12 +102,37 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
       return v && membership.inSight(project, viewer) ? { project, version: v } : null;
     },
   };
+  /* promotion's and retrieval's registrations (promotion R39, retrieval R62), as they are made. */
+  const steps = [], fields = [];
+  const promotion = {
+    registerStep: (module, step) => { steps.push({ module, ...step }); return { ok: true, module }; },
+    fact: () => ({ ok: false, reason: "FACT_UNAVAILABLE" }),
+  };
+  const retrieval = {
+    registerField: (module, field, relation) => { fields.push({ module, field, ...relation }); return { ok: true, module, field }; },
+  };
   const clock = { now };
-  const s = strengthOf(host, { record, membership, inquiry, versions, producingGroup: () => group, now: () => clock.now });
+  const s = strengthOf(host, { record, membership, inquiry, versions, promotion, retrieval, producingGroup: () => group,
+                               now: () => clock.now });
 
   const w = {
-    st, host, record, membership, s, clock, basis, ceilings, connection, testimony, subjects, currents, calls,
+    st, host, record, membership, s, clock, basis, ceilings, connection, testimony, subjects, currents, calls, steps, fields,
     rows: (q, ...a) => st.sql.exec(q, ...a),
+    /** One promotion of `id` as promotion runs the registered projections (its R39): inside one transaction, which a
+     *  throw after the projection (`fail`) rolls back whole. Answers what the projection answered. */
+    promote(id, type = "inquiry", { fail = false } = {}) {
+      const step = steps.find((x) => x.module === "strength");
+      try {
+        return st.transactionSync(() => {
+          const out = step.project({ bundleId: id, promotedType: type, head: null });
+          if (fail) throw new Error("a later step refused");
+          return out;
+        });
+      } catch (e) {
+        if (!fail) throw e;
+        return { refused: true };
+      }
+    },
     /** A bundle row (record-core's `bundles`, its R37 read contract). */
     bundle(id, type = "information") {
       st.sql.exec(`INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,created,last_updated,bundle_sha)

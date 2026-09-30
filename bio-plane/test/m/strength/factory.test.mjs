@@ -1,6 +1,7 @@
 /* The factory (K61) with no providers given: `strengthOf(host)` reaches `inquiry` and `basis-versions` on the same host
-   itself (N218) and registers its pair with inquiry's grouping act (R17, N152). Driven over the real record-core,
-   membership and inquiry on a real SQLite database, at the module's interface. */
+   itself (N218), registers its pair with inquiry's grouping act (R17, N152), its cache projection with promotion (R13)
+   and the cache's columns with retrieval (R23, N137). Driven over the real record-core, membership, promotion, retrieval
+   and inquiry on a real SQLite database, at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { storage } from "./fixture.mjs";
@@ -9,7 +10,9 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
-import { strengthOf, STRENGTH_AXES } from "../../../src/strength/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
+import { retrievalOf } from "../../../src/retrieval/index.mjs";
+import { strengthOf, STRENGTH_AXES, STRENGTH_CACHE_FIELDS } from "../../../src/strength/index.mjs";
 
 const NOW = "2026-09-28T00:00:00.000Z";
 const statements = (ddl) => ddl.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n")
@@ -103,4 +106,18 @@ test("R17: the registered answer is strengthOf's three axes, so the grouping act
   assert.deepEqual(Object.keys(pair).sort(), [...STRENGTH_AXES].sort());
   for (const axis of STRENGTH_AXES) assert.deepEqual(pair[axis], direct[axis]);
   assert.equal(pair.connection.grade, "B");
+});
+
+test("R13, R23 (N137): the factory's registrations are held by the real promotion and retrieval, once, in strength's name", () => {
+  const h = bareHost();
+  const s = strengthOf(h.host);
+  const again = promotionOf(h.host).registerStep("strength", { project: () => null });
+  assert.equal(again.reason, "STEP_DECLARED", "strength's projection is registered, and a second is refused");
+  for (const field of Object.keys(STRENGTH_CACHE_FIELDS)) {
+    const other = retrievalOf(h.host).registerField("inquiry", field, { table: "t", key: "bundle_id", col: "c" });
+    assert.deepEqual([other.reason, other.declaredBy], ["FIELD_DECLARED", "strength"], field);
+  }
+  /* The table the relation names exists and is the cache's. */
+  assert.deepEqual(h.st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name='strength_cache'`), [{ name: "strength_cache" }]);
+  assert.equal(strengthOf(h.host), s);
 });

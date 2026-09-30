@@ -17,8 +17,11 @@
  * version and over a candidate included, so an inquiry leg contributes the target's own answer (R2) on every path.
  *
  * REACHED as `strengthOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
- * call with `deps`, returned to every later caller. At creation it declares `group_strength_bar` to record-core's purge,
- * exempt (R23), and registers the pair with `inquiry`'s grouping act (`onGrounded("strength", …)`, R17, N152). `deps`:
+ * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge
+ * (`strength_cache` by bundle, `group_strength_bar` exempt, R23), registers its projection with promotion (the cache,
+ * R13, promotion R39), registers the cache's columns with retrieval as the `capture` and `connection` fields (R23,
+ * retrieval R62; N137), and registers the pair with `inquiry`'s grouping act (`onGrounded("strength", …)`, R17, N152).
+ * `deps`:
  *   record       `recordOf(host)` unless given: `readFile` (a project's bundle.md, R14), `declarePurge`.
  *   membership   `membershipOf(host)` unless given: `inSight(id, viewer)` (R6, R22), `isAdministrator(id)` (R15).
  *   inquiry      `basisFor(id) → {legs}`, `earned(subject, targets) → {earned: {capture, connection, testimony},
@@ -28,6 +31,8 @@
  *   versions     `currentOf(project, inquiry, viewer) → {version} | null` (basis-versions R11). Default:
  *                `basisVersionsOf(host)`, reached lazily on the first read that names a project. The version rows and
  *                legs are read from `inquiry_basis_versions` and `inquiry_basis_version_legs`.
+ *   promotion    `promotionOf(host)` unless given: `registerStep(module, {project})` (R13), `fact("producingGroup")`.
+ *   retrieval    `retrievalOf(host)` unless given: `registerField(module, field, {table, key, col})` (R23).
  *   producingGroup  the store's recorded group or null; default: promotion's fact `producingGroup`.
  *   now          the clock for the instants it writes, an ISO string (default: the wall clock).
  *
@@ -37,6 +42,7 @@
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
 import { inquiryOf, legCapped } from "../inquiry/index.mjs";
 import { basisVersionsOf, BASIS_VERSION_LEGS_MAX } from "../basis-versions/index.mjs";
 import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_RE, parseFrontmatter,
@@ -44,12 +50,14 @@ import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_R
 import { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, GRADE_RANK, axisResult } from "./arithmetic.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES, VERSION_STRENGTH_INERT_SOURCES,
          PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS } from "./checks.mjs";
-import { STRENGTH_EXEMPT_TABLES, migrateStrength } from "./schema.mjs";
+import { STRENGTH_EXEMPT_TABLES, STRENGTH_PURGED_TABLES, STRENGTH_CACHE_TABLE, STRENGTH_CACHE_FIELDS,
+         migrateStrength } from "./schema.mjs";
 
-export { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, GRADE_RANK } from "./arithmetic.mjs";
+export { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, GRADE_RANK, STRENGTH_STATES } from "./arithmetic.mjs";
 export { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES, VERSION_STRENGTH_INERT_SOURCES,
          PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS } from "./checks.mjs";
-export { STRENGTH_SCHEMA, STRENGTH_EXEMPT_TABLES } from "./schema.mjs";
+export { STRENGTH_SCHEMA, STRENGTH_EXEMPT_TABLES, STRENGTH_PURGED_TABLES, STRENGTH_CACHE_TABLE,
+         STRENGTH_CACHE_FIELDS } from "./schema.mjs";
 
 /* R8: the legs one version is measured over, and (R11) the most a proposed partition may place, is basis-versions' own
    per-version bound (its R9), `BASIS_VERSION_LEGS_MAX`, read from it and never restated (N184); re-exported under the
@@ -326,6 +334,42 @@ export class Strength {
     const s = this.strengthOf(bundleId);
     return { capture: { grade: s.capture.grade, state: s.capture.state },
              connection: { grade: s.connection.grade, state: s.connection.state }, pair: s };
+  }
+
+  /** R13: writes the cache for one bundle, `strength_cache`'s row, from R1–R5 over the legs as they now stand, and
+   *  answers what it wrote (null for a bundle that is not an inquiry, whose row, if a former revision left one, goes:
+   *  only an inquiry has a pair). Called inside the promotion that writes the legs, so the row is never a revision
+   *  behind them. It is still a cache: a leg raised beneath this inquiry does not re-promote it, and a document re-read
+   *  moves the capture ceiling without re-promoting anything (REC-105), so the row can go stale, never weaker than the
+   *  record earns; REC-108 / D-379 ruled to keep it so and mark the fields cached (`query-language`'s `asOf`) rather than
+   *  re-walk every dependent inside a promotion. `strengthOf` is what anything needing the truth calls. */
+  writeProjection(bundleId, isInquiry) {
+    const c = this.cacheOf(bundleId, isInquiry);
+    if (!c) {
+      this.sql.exec(`DELETE FROM ${STRENGTH_CACHE_TABLE} WHERE bundle_id=?`, bundleId);
+      return null;
+    }
+    this.sql.exec(
+      `INSERT INTO ${STRENGTH_CACHE_TABLE} (bundle_id, capture_grade, capture_state, connection_grade, connection_state)
+       VALUES (?,?,?,?,?)
+       ON CONFLICT(bundle_id) DO UPDATE SET capture_grade=excluded.capture_grade, capture_state=excluded.capture_state,
+         connection_grade=excluded.connection_grade, connection_state=excluded.connection_state`,
+      bundleId, c.capture.grade, c.capture.state, c.connection.grade, c.connection.state);
+    return { capture: c.capture, connection: c.connection };
+  }
+
+  /** R13 (promotion R39): this module's projection in every promotion, run after inquiry's (which writes the legs) in
+   *  the modules' order, inside the one transaction. It adds nothing to the promotion's answer. */
+  project(c) {
+    if (!c || !c.bundleId) return null;
+    this.writeProjection(c.bundleId, c.promotedType === "inquiry");
+    return null;
+  }
+
+  /** R13, R23 (N137): the row the cache holds for one bundle, as search reads it, or null when it holds none. */
+  cachedOf(bundleId) {
+    return this.#one(`SELECT capture_grade, capture_state, connection_grade, connection_state FROM ${STRENGTH_CACHE_TABLE}
+                       WHERE bundle_id=?`, bundleId);
   }
 
   /* ============================================================ the pair over a version (R7–R10; PL-14, §12) */
@@ -754,9 +798,9 @@ export class Strength {
    *  re-collapse the two axes in the one field a reader is most likely to quote. */
   strengthBarSet({ group = null, capture = null, connection = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    const refusal = (code, detail) => {
+    const refusal = (code, detail, extra) => {
       const row = STRENGTH_BAR_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
     };
     /* DEC-49 REGION is-machine-strength-bar */
     if (!who || isMachineIdentity(who))
@@ -783,7 +827,7 @@ export class Strength {
     /* DEC-49 REGION is-strength-bar-grade */
     for (const [axis, v] of [["capture", capture], ["connection", connection]])
       if (v != null && !BASIS_GRADES.includes(v))
-        return { ...refusal("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`), axis };
+        return refusal("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`, { axis });
     /* END DEC-49 REGION is-strength-bar-grade */
     if (capture == null && connection == null)
       return { ok: false, reason: "NO_BAR",
@@ -970,8 +1014,9 @@ export function strengthOps(s, url, body) {
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host, created on the first call with `deps`. It creates its table and declares it to
- *  purge, exempt (R23). */
+/** K61: the one instance per host, created on the first call with `deps`. It creates its tables and declares them to
+ *  purge (R23), joins every promotion with its cache projection (R13), registers the cache's columns with retrieval
+ *  (R23, N137) and its pair with inquiry's grouping act (R17). */
 export function strengthOf(host, deps) {
   let s = instances.get(host);
   if (!s) {
@@ -979,14 +1024,18 @@ export function strengthOf(host, deps) {
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host, { record, membership });
     const producingGroup = d.producingGroup || (() => {
-      const f = promotionOf(host).fact("producingGroup");
+      const f = promotion.fact("producingGroup");
       return f && f.ok ? (f.value || null) : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, producingGroup });
     instances.set(host, s);
     s.migrate();
-    record.declarePurge("strength", [], { exempt: STRENGTH_EXEMPT_TABLES });
+    record.declarePurge("strength", [...STRENGTH_PURGED_TABLES], { exempt: STRENGTH_EXEMPT_TABLES });
+    promotion.registerStep("strength", { project: (c) => s.project(c) });
+    const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
+    for (const [field, relation] of Object.entries(STRENGTH_CACHE_FIELDS)) retrieval.registerField("strength", field, relation);
     s.registerGrounded();
   }
   return s;

@@ -633,21 +633,6 @@ export class Store extends DurableObject {
     const ADDITIVE_COLUMNS = [
       ["manifest", "writer", "TEXT"],
       ["manifest", "operation", "TEXT"],
-      /* REC-12: the derived strength PAIR, cached per axis. TWO grade columns
-         and never one, because a single cached letter is exactly the composed
-         scalar DEC-21 forbids and a column is where one would grow. The STATE
-         column beside each grade is what tells `unrated` (DEC-18's boundary
-         case — nothing on this axis is graded) from `undetermined` (R3 — the
-         walk hit its depth bound) from "never projected", which one nullable
-         grade column cannot do. Additive and nullable: a bundle that is not an
-         inquiry simply has none, and an inquiry promoted before these existed
-         has none until its next promotion re-derives them. THE COLUMN IS A
-         CACHE AND strengthOf() IS THE AUTHORITY — a stored strength goes stale
-         the moment a leg beneath it is raised. */
-      ["bundles", "inquiry_capture_strength", "TEXT"],
-      ["bundles", "inquiry_capture_state", "TEXT"],
-      ["bundles", "inquiry_connection_strength", "TEXT"],
-      ["bundles", "inquiry_connection_state", "TEXT"],
       ["bundles", "inquiry_basis_count", "INTEGER"],
       /* REC-18 / DATA-MODEL D1(b): the registry ENTITY this question is about,
          and it is the whole of the subject-entity linkage — one nullable
@@ -741,13 +726,7 @@ export class Store extends DurableObject {
        here. Idempotent by construction. */
     for (const [legacy, canonical] of Object.entries(LEGACY_TYPE_ALIASES))
       this.sql.exec(`UPDATE bundles SET object_type=? WHERE object_type=?`, canonical, legacy);
-    /* REC-12's two axis columns are indexed for the same reason the rest are:
-       "every inquiry at B or better on the capture axis" must be a seek. The
-       STATE columns are not indexed — they are read WITH a row, never filtered
-       across the corpus, and an index nobody seeks on is cost with no reader. */
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill (K4, R3) */
-    for (const c of ["inquiry_capture_strength", "inquiry_connection_strength"])
-      this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
 
     /* D-432: the opaque minter's ledger learns every gated id that already stands in a live row, and every one the
        counter issued for an untailed gated prefix — LAST, because it reads tables the schema pass above creates.
@@ -1723,13 +1702,7 @@ export class Store extends DurableObject {
 
       /* REC-11, REC-17, REC-82: the superseded-by index and inquiry_basis with its content rows are inquiry's (its R12). */
       /* REC-14 / C-9: inquiry_exclusions is inquiry's projection (its R12). */
-      /* REC-12: re-derive this inquiry's per-axis strength CACHE from the legs
-         just projected, in the SAME transaction, so the cache can never be a
-         revision behind the basis it summarises. It is still only a cache: a
-         leg raised in an inquiry BENEATH this one does not re-promote this
-         document, so the columns go stale by design and strengthOf() is what
-         anything needing the truth calls. */
-      this.#writeStrengthProjection(bundleId, isInquiry);
+      /* REC-12: the per-axis strength cache is strength's projection (its R13). */
 
       /* MK-1 / IC-134: the register row is provenance's projection (R1), written before this one. */
 
@@ -2248,60 +2221,6 @@ export class Store extends DurableObject {
   /* R14: one leg's capture letter against what its target earns: inquiry's `legCapped`. */
   static #capturedAt(...a) { return legCapped(...a); }
 
-
-  /* REC-12: the projection CACHE, per axis, written inside promote's
-     transaction right after the inquiry_basis projection it derives from.
-
-     A CACHE AND NEVER THE AUTHORITY, and the distinction is not decoration: a
-     stored strength goes stale the moment a leg anywhere beneath it is raised
-     (`resolutions` grades are explicitly IMPROVABLE, and an inquiry this one
-     rests on can be re-promoted without touching this row). It exists so that
-     "every inquiry at B or better on an axis" is an indexed query rather than
-     a scan of every basis in the store; anything that must be RIGHT calls
-     strengthOf().
-
-     REC-108 / D-379 RULED ON THIS COLUMN AND LEFT IT EXACTLY AS IT IS, which is
-     worth stating HERE because this is where the next reader will come looking.
-     REC-105 opened a SECOND path to staleness — a DOCUMENT being re-read moves
-     the registry ceiling `strengthOf()` now caps by, so this row can hold a
-     letter STRONGER than the record earns, without any member acting on the
-     question. D-379 rowed two answers: re-walk the dependents at the re-read, or
-     make every route into this column STATE what it is a value of. The second
-     was taken. The first would have made this column fresh along the NEW path
-     and left it stale along REC-12's ORIGINAL one (a leg raised beneath this
-     inquiry still does not re-promote it, and nothing re-projects an ancestor) —
-     a cache fresh one way and stale another, about which the one honest sentence
-     below can no longer be said — and it would have put an unbounded fan-out
-     (every `inquiry_basis.target_id` dependent, each needing a full walk) inside
-     op=promote's transaction. `query.mjs`'s `CACHED_FIELDS` carries the ruling
-     and the evidence; the answer a member reads now names this column, names
-     `op=inquirystrength` as the authority, and says which of the three routes it
-     was reached by. NOTHING HERE MOVED, and that is the disposition, not an
-     omission.
-
-     PER AXIS, in two columns and never one: a single cached letter is exactly
-     the composed scalar DEC-21 forbids, and a column is where one would grow.
-     The STATE column beside each grade is what keeps `unrated` distinguishable
-     from `undetermined` and both distinguishable from "never projected", which
-     one nullable grade column cannot do.
-
-     REC-18 adds `inquiry_subject_entity` to this write, and it is NOT a cache in
-     the same sense as the four columns above: it is a straight projection of one
-     authored scalar, like every S-10 column, and it goes stale only when the
-     document changes — which re-promotes and re-writes it. It is written HERE
-     rather than in #writeProjection because it is inquiry-only and this is the
-     inquiry projection writer; #writeProjection runs for every object type and
-     would have to learn a type test to hold it. */
-  #writeStrengthProjection(bundleId, isInquiry) {
-    if (!isInquiry) return null;
-    const s = this.strengthOf(bundleId);
-    this.sql.exec(
-      `UPDATE bundles SET inquiry_capture_strength=?, inquiry_capture_state=?,
-              inquiry_connection_strength=?, inquiry_connection_state=?
-         WHERE bundle_id=?`,
-      s.capture.grade, s.capture.state, s.connection.grade, s.connection.state, bundleId);
-    return s;
-  }
 
   /* Eviction. The store is append-only by doctrine, so removal is deliberate,
      never implicit, and admin-only at the control plane. Two modes: one bundle
