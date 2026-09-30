@@ -36,7 +36,7 @@ import { queueAnswer } from "./queue/index.mjs";
 
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
-import { governorOp } from "./host-governor/index.mjs";
+import { GOVERNOR_OPS, governorOpResponse } from "./host-governor/index.mjs";
 import { knockOp } from "./capture/doorbell.mjs";
 import { linksOp, captureObjectOp, archiveLookupOp, acquireOp } from "./capture/ops.mjs";
 import { monitorOp } from "./monitoring/index.mjs";
@@ -613,10 +613,7 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       return json({ ok: true, ...p.result });
     }
 
-    {
-      const g = await governorOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { doAnswer, storeRefusal });
-      if (g) return g.refused ? g.response : g.silent ? storeSilent(op, g.correlation) : json(g.body, g.status);
-    }
+    if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { json, doAnswer, storeRefusal, storeSilent });
 
     if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer,
       viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
