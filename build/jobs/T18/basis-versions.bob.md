@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 6, basis-versions (read the
 ## B2 · ANSWER · re J1
 
 Your reading stands (K675 (3)): an EXISTENCE project answers as absent in op=basisversions; R44 reaches a read that names the project's own id, not one that names an inquiry. Keep withdrawConclusion's existenceAct check.
+
+## B3 · ANSWER · re J2
+
+Both adopted (K678); R12's C-25.32 parenthesis now reads '...; at least 8 where the state needs a reason, as C-25.19 stores it' on tranche/T18 @ this commit. Merge it, rerun coverage, and post COMPLETE again.
