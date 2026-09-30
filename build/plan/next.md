@@ -2,7 +2,7 @@
 
 **Status** · Entries awaiting the tranche they join (PROCESS-MECHANICS §5), grouped by module, modules by layer. T18 (opened by BOB #75, 2026-09-30) carries the entries its plan names (`current.md`); an entry it carries only in part stays here for the shares it does not carry. Entries T18 carries stay here while it runs and move to `archive/next-applied.md` at a later opening (K424, K411). N61 moved there at T18's opening (met, K611).
 
-**T19's top priority (Bob, K632):** removing every legacy construct T18 leaves (legacy-checks, legacy-store, legacy-index, legacy-tests; not legacy-ui, K633); other work beside it as sizes allow.
+**T19's priorities (Bob, K632, K648):** removing every legacy construct T18 leaves (legacy-checks, legacy-store, legacy-index, the old process's tooling; not legacy-ui, K633; legacy-tests at the release, K635) and the Action layer in full; everything else safely doable beside them (P19).
 
 ## Later layers
 
@@ -104,3 +104,4 @@ N110, N113 (Bob's, K158: with observation-log's next job), N116 (with monitoring
 - N415 · 2026-09-30 · **membership** (RECORD-GRAMMAR #1 J2): `MODULE_ORDER` (R83; read by R79 and promotion R39/R45/R46's tests) lacks the modules T18's fold added (record-grammar, action-clocks, action-plans, op-declarations, admission); three module tests fail on `tranche/T18` until it gains them.
 - N416 · 2026-09-30 · **text-chain** (TEXT-CHAIN #3 J2; K641): exported and used, named by no requirement: `weaker`, `stepCovers`, `perPageTierWinner`, `TIER_RULE`, `CONFIDENCE_BASES`, `EXTENT_KINDS`, `READING_POSITION_KINDS`, `READING_POSITION_UNPRODUCED`: word each as an R or rule it internal.
 - N417 · 2026-09-30 · **ratification** (PROMOTION #19 J2; K647): the ratify gate calls `promotionOf(host).runGate`, so registered grammars (record-core R67) reach it. In T18's ratification job.
+- N418 · 2026-09-30 · **capture**, **ai-runs** (RECORD-CORE #10 J2; K650): writes outside `record.transact`, so `afterCommit` (R66) runs held calls at once; bring each write under R32's `transact` in their T18 jobs.

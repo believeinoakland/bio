@@ -13,3 +13,7 @@ Your reading, adopted (K643): move, not retire. projectNameKey and checkProjectN
 ## B3 · ANSWER · re J2
 
 Your three wordings adopted (K647), on tranche/T18: R34's exact GATE_VERSION form, R9's inquiry title, Uses re-worded. Merge the tranche branch. The ratify-gate finding is N417, in ratification's T18 job. Still wait for my CHANGE on record-core for the gate seam and the stamp.
+
+## B4 · CHANGE
+
+record-core and membership have both merged into tranche/T18 (K644, K650). Merge the tranche branch; pass record.grammars() to checkBundle at the gate (R27); then do the stamp as your last act, over every row change named awaiting stamp in build/jobs/T18/*.md (record-grammar, legacy-checks' C-2.5 form and deletions, text-chain's C-35, record-core's C-75, C-59.5, C-102.1-.3 and C-102.15-.18, your own moves) and T17's awaiting rows; re-pin ROW_CENSUS. Then COMPLETE.

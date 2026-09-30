@@ -502,6 +502,7 @@ export class Store extends DurableObject {
       .filter((t) => !publicationOwns(t))
       .filter((t) => !queueOwns(t))
       .filter((t) => !inquiryOwns(t)));   /* each extracted owner declares its own (K23) */
+    recordOf(ctx).registerStatsSource("legacy-store", ({ viewer, proof }) => this.#counts({ proof, viewer }));
     /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
        registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
     /* provenance (K61): declares its tables and joins every promotion before legacy-store does, so its register write
@@ -1994,22 +1995,6 @@ export class Store extends DurableObject {
   ]);
 
 
-  /** REC-131 / IC-148 — THE WIRE'S COUNTS. `op=stats`, `op=selftest` and `op=livefire` all read
-   *  this. Every COUNT is the same for every class (BOB #15's corrected ruling,
-   *  `MEMBER-KNOWLEDGE-DESIGN.md` §5): `leads` is on it for no class, and the log is published as
-   *  `observationsNonLead`. It REPLACES REC-129's `operator` stamp (IC-144), which selected an
-   *  admin-only answer over COUNTS.
-   *
-   *  `capacity` IS THE ONE CLASS DISCRIMINATION LEFT, AND IT GOVERNS `dbBytes` AND NOTHING ELSE
-   *  (BOB #15, resuming REC-131). The database's size moves in whole pages on EVERY write, a
-   *  lead's included, so a member diffing it across a colleague's authoring can detect a large
-   *  lead; capacity is an operator need, so the admin class keeps it and member and probe do not.
-   *  It is the SERVER'S word: `index.mjs` sets it from the authenticated class AFTER copying the
-   *  caller's parameters (op=stats, op=selftest's relay, op=livefire's call), so a caller's
-   *  `capacity=` is overwritten, never honoured. An absent stamp is `false` — a door that forgets
-   *  to stamp loses `dbBytes` rather than leaking it. It is a stamp and not a second method
-   *  because it must ride the one DO route every door already fetches. */
-  stats({ capacity = false, viewer } = {}) { return this.#counts({ proof: false, capacity: capacity === true, viewer }); }
 
   /** N191 (K333, K335): ai-runs' R42 tail for the caller's sight — over `observation_log` without `column`, over a
    *  column naming a run id with one. R42 fails CLOSED on an absent viewer, so it is not asked for a viewer never
@@ -2024,7 +2009,7 @@ export class Store extends DurableObject {
    *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
    *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
    *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
-  #counts({ proof, capacity = false, viewer }) {
+  #counts({ proof, viewer }) {
     /* D-464 — A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT (Membership v2 §7.9, *"Not its existence"*).
      *
      * WHAT WAS WRONG, measured at the op (`project-sight.test.mjs` §8; MEASUREMENTS M-122 first saw it): every
@@ -2262,11 +2247,6 @@ export class Store extends DurableObject {
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
       routeMarks: n("provenance_route_marks", "bundle_id"),
-      /* REC-131 / IC-148: the ADMIN class's and purge's only — see `stats()`. THE RESIDUE, STATED
-         RATHER THAN HIDDEN (BOB #15): the admin class still receives a figure that moves in whole
-         pages on every write, a large lead's included, so the operator can detect that SOMETHING
-         large was written; it cannot tell a lead from any other write, and no lead is readable to it. */
-      ...((proof || capacity) ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),
       /* N342 (K445): every module's registered figures (record-core R63), after the literal keys: queue's `tasks`,
          `findingDispositions`, `queueState` and `queueItemMutes` (its R42) among them. */
       ...recordOf(this.ctx).counts(hid),
@@ -2366,13 +2346,13 @@ export class Store extends DurableObject {
      so orphaning them costs storage but cannot corrupt anything. Reclaiming
      them is a separate sweep against the register, not part of this. */
   purge({ bundleId = null } = {}) {
-    const before = this.#counts({ proof: true });
+    const before = recordOf(this.ctx).proofCounts();
     // record-core R22: every declared table (legacy-store's are declared in the constructor), in one transaction.
     recordOf(this.ctx).transact(() => {
       recordOf(this.ctx).purge({ bundleId });
       if (bundleId) captureRequestsOf(this.ctx).clearLead(bundleId);
     });
-    const after = this.#counts({ proof: true });
+    const after = recordOf(this.ctx).proofCounts();
     const d = (k) => before[k] - after[k];
     return {
       ok: true, scope: bundleId || "ALL", before, after,
@@ -3017,7 +2997,7 @@ export class Store extends DurableObject {
                                                       /* D-311: the two act stamps, as the acts receive them */
                                                       author: url.searchParams.get("author"),
                                                       by: url.searchParams.get("by") }),
-        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1",
+        stats: () => recordOf(this.ctx).stats({ capacity: url.searchParams.get("capacity") === "1",
                                    viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         retire: () => this.retire({ handle: url.searchParams.get("handle"),
           reason: url.searchParams.get("reason"),

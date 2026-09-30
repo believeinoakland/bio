@@ -9444,55 +9444,6 @@ function coversImagePlacement(e, container) {
     + `[${want.join(', ')}], the rectangle the extent names`;
 }
 
-/* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection).
- *
- * Bob's requirement: *"select some (or all) to apply the action to. When the handler is applied to a
- * notice, it would then indicate whether that notice can be deleted from the list. If that action
- * didn't work for one or more, they'd stay in the list so that the user can take a different action."*
- * The design's rule: **each item independently succeeds or is RETAINED WITH A REASON**, and the reason is
- * the act's OWN refusal for that item, in the plane's own words — never a sentence this family composes
- * about it. So this family words only what belongs to the SET: a set that is not a set, a set too large
- * to act on, an item that is not an item, an item whose act threw, and the summary that some items were
- * kept. Every retained item still carries its own act's `reason` beside this family's summary.
- *
- *   C-75.1 — no items: `items` is absent from the set form, not an array, or empty.
- *   C-75.2 — too many items: over `PER_ITEM_MAX` (record-core's since T5), refused WHOLE before any item is tried.
- *   C-75.3 — one item is not an object; THAT item is retained and the others are still tried.
- *   C-75.4 — one item's act failed without a refusal (it threw); THAT item is retained and says so.
- *   C-75.5 — the summary: at least one item was retained. Carried beside `items[]`, never instead of it. */
-export const PER_ITEM_CHECKS = {
-  SET_NO_ITEMS: {
-    check: 'C-75.1',
-    where: 'src/record-core/index.mjs perItem > is-per-item-set-shape',
-    translation: 'Nothing was selected, so nothing was done. Choose at least one item and try again.',
-  },
-  SET_TOO_LARGE: {
-    check: 'C-75.2',
-    where: 'src/record-core/index.mjs perItem > is-per-item-set-shape',
-    translation: 'That selection is larger than the record acts on at once, so nothing was done to any of '
-      + 'it. Select fewer items and apply the action again.',
-  },
-  SET_ITEM_MALFORMED: {
-    check: 'C-75.3',
-    where: 'src/record-core/index.mjs perItem > is-per-item-malformed',
-    translation: 'This item could not be read as an item, so it was left as it was. The rest of the '
-      + 'selection was still acted on, one by one.',
-  },
-  SET_ITEM_FAILED: {
-    check: 'C-75.4',
-    where: 'src/record-core/index.mjs perItem > is-per-item-failed',
-    translation: 'The record could not complete the action on this item and did not change it. It stays '
-      + 'in your list. The rest of the selection was still acted on, one by one.',
-  },
-  SET_ITEMS_RETAINED: {
-    check: 'C-75.5',
-    where: 'src/record-core/index.mjs perItem > is-per-item-retained',
-    translation: 'Not every selected item was handled. The ones that were have left your list; the ones that '
-      + 'were not are still there, each with the reason the record gave for it, so you can take a '
-      + 'different action on them.',
-  },
-};
-
 /* =========================================================================
  * C-102 — A LATER MODULE'S REGISTRATION WITH AN EARLIER ONE, AND ITS ANSWER (K31; T6, legacy-checks, N94).
  *

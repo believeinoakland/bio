@@ -4,9 +4,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { checkBundle, PER_ITEM_CHECKS } from "../../../checks/bio-checks.mjs";
+import * as CATALOGUE from "../../../checks/bio-checks.mjs";
 import { recordOf, RecordCore, RECORD_SCHEMA, stampInstant, instantOrder, PER_ITEM_MAX, perItem, EMPTY_STRING_SHA, fileDigestOf,
-         inlineBytesOf, mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
+         inlineBytesOf, mintExhausted, RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "../../../src/record-core/index.mjs";
+const { checkBundle, EXTENSION_ARMS } = CATALOGUE;
 import { storage, bucket } from "./storage.mjs";
 
 const fresh = (opts) => { const s = storage(); const rc = recordOf({ storage: s }, opts); rc.migrate(); return { s, rc }; };
@@ -647,7 +648,8 @@ test("R39: recordOf answers one instance per storage, the same to every caller, 
   for (const m of ["allocId", "allocIdOp", "mintOpaqueId", "acquireLease", "readFile", "readImage", "auditPass", "declarePurge",
                    "purge", "getSetting", "setSetting", "transact", "commit", "bundleInfo", "listBundles", "listByType",
                    "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths", "manifestByAuthor", "isFirstBoot",
-                   "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha", "releaseLease", "registerCounts", "counts"])
+                   "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha", "releaseLease", "registerCounts", "counts",
+                   "afterCommit", "registerGrammar", "grammars", "registerStatsSource", "stats", "proofCounts"])
     assert.equal(typeof a[m], "function", m);
 });
 
@@ -1410,7 +1412,7 @@ test("R62 (N376): mintExhausted(\"SRC\") names a source, as sources answers when
   assert.deepEqual(dump(s), before);
   // naming a source changes no gate and no row: SRC is minted opaque, never refused by allocIdOp (R3), and the row is C-59.6's
   assert.ok(!RecordCore.GATED_ID_PREFIXES.includes("SRC"));
-  assert.deepEqual(Object.keys(RECORD_CORE_CHECKS), ["MINT_EXHAUSTED", "COUNTS_DECLARED", "COUNTS_MALFORMED"]);
+  assert.equal(RECORD_CORE_CHECKS.MINT_EXHAUSTED.check, "C-59.6", "the one row of the condition, whatever else the table holds");
 });
 
 /* R62's other half, every act that answers no free opaque id answering through `mintExhausted`, is met since T13 (K441):
@@ -1552,3 +1554,417 @@ test("R63: a refusal's own fields are never replaced by what it names, and neith
   // the registrations are this instance's, not the module's: another storage's instance holds none
   assert.deepEqual(recordOf({ storage: storage() }).counts(null), {});
 });
+
+/* ---- T18: the rows held here (C-75 moved; C-59.5, C-102.1–.3 copied), R66 `afterCommit` (N406), R67 the grammar
+   seam (§1b), R64/R65 `op=stats`' disclosure (K621), and R28's caller half (the `mint-ledger` convert) ---- */
+
+const BUILD_FAULT = "This is a fault in how the instance was built, not in the record, and nothing in the record changed.";
+
+test("R55 R50 R52: C-75's five rows are this module's own table, PER_ITEM_CHECKS, each where naming perItem's region, and the catalogue holds them no more", () => {
+  assert.deepEqual(Object.keys(PER_ITEM_CHECKS), ["SET_NO_ITEMS", "SET_TOO_LARGE", "SET_ITEM_MALFORMED", "SET_ITEM_FAILED", "SET_ITEMS_RETAINED"]);
+  const want = { SET_NO_ITEMS: ["C-75.1", "is-per-item-set-shape"], SET_TOO_LARGE: ["C-75.2", "is-per-item-set-shape"],
+                 SET_ITEM_MALFORMED: ["C-75.3", "is-per-item-malformed"], SET_ITEM_FAILED: ["C-75.4", "is-per-item-failed"],
+                 SET_ITEMS_RETAINED: ["C-75.5", "is-per-item-retained"] };
+  for (const [code, [check, region]] of Object.entries(want)) {
+    const row = PER_ITEM_CHECKS[code];
+    assert.deepEqual([row.check, row.where], [check, `src/record-core/index.mjs perItem > ${region}`], code);
+    assert.ok(typeof row.translation === "string" && row.translation.length > 40 && !/C-75|SET_/.test(row.translation), `${code}: a member's sentence`);
+    assert.ok(Object.isFrozen(row));
+  }
+  assert.ok(Object.isFrozen(PER_ITEM_CHECKS));
+  assert.equal(CATALOGUE.PER_ITEM_CHECKS, undefined, "the catalogue's copy is gone: one home for C-75");
+  // every refusal perItem answers carries its row's check and translation, read from this table
+  const cases = [perItem("x", {}, {}, () => ({ ok: true })), perItem("x", { items: Array.from({ length: 101 }, () => ({})) }, {}, () => ({ ok: true })),
+                 perItem("x", { items: [7] }, {}, () => ({ ok: true })).items[0], perItem("x", { items: [{}] }, {}, () => { throw new Error("t"); }).items[0],
+                 perItem("x", { items: [{}] }, {}, () => ({ ok: false }))];
+  assert.deepEqual(cases.map((r) => [r.code ?? r.reason, r.check, r.translation]),
+                   ["SET_NO_ITEMS", "SET_TOO_LARGE", "SET_ITEM_MALFORMED", "SET_ITEM_FAILED", "SET_ITEMS_RETAINED"]
+                     .map((c) => [c, PER_ITEM_CHECKS[c].check, PER_ITEM_CHECKS[c].translation]));
+});
+
+test("R3 R27: ALLOCID_PREFIX_GATED's row C-59.5 is held here, its where naming allocIdOp's region, and the refusal carries it", () => {
+  const row = RECORD_CORE_CHECKS.ALLOCID_PREFIX_GATED;
+  assert.deepEqual([row.check, row.where], ["C-59.5", "src/record-core/index.mjs allocIdOp > is-allocid-prefix-gated"]);
+  assert.equal(row.translation, CATALOGUE.PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED.translation, "copied unchanged; the catalogue's copy leaves with its split table (T19)");
+  const r = fresh().rc.allocIdOp("CASE", "2026");
+  assert.deepEqual([r.code, r.check, r.translation], ["ALLOCID_PREFIX_GATED", "C-59.5", row.translation]);
+});
+
+test("R59: registerAuditCheck's refusals carry their code and rows C-102.1 and C-102.2, and a check that threw leaves C-102.3's AUDIT_CHECK_FAILED", async () => {
+  for (const code of ["AUDIT_CHECK_DECLARED", "AUDIT_CHECK_MALFORMED", "AUDIT_CHECK_FAILED"])
+    assert.equal(RECORD_CORE_CHECKS[code].translation, CATALOGUE.REGISTRATION_CHECKS[code].translation, `${code}: copied unchanged`);
+  assert.deepEqual(["AUDIT_CHECK_DECLARED", "AUDIT_CHECK_MALFORMED", "AUDIT_CHECK_FAILED"].map((c) => [RECORD_CORE_CHECKS[c].check, RECORD_CORE_CHECKS[c].where]),
+    [["C-102.1", "src/record-core/index.mjs registerAuditCheck > is-audit-check-registration"],
+     ["C-102.2", "src/record-core/index.mjs registerAuditCheck > is-audit-check-registration"],
+     ["C-102.3", "src/record-core/index.mjs auditPass > is-audit-check-failed"]]);
+  const { rc } = fresh();
+  const bad = rc.registerAuditCheck("", () => []);
+  assert.deepEqual([bad.ok, bad.reason, bad.code, bad.check, bad.translation], [false, "AUDIT_CHECK_MALFORMED", "AUDIT_CHECK_MALFORMED", "C-102.2", RECORD_CORE_CHECKS.AUDIT_CHECK_MALFORMED.translation]);
+  assert.equal(rc.registerAuditCheck("m", () => []).ok, true);
+  const twice = rc.registerAuditCheck("m", () => []);
+  assert.deepEqual([twice.ok, twice.reason, twice.code, twice.check, twice.module], [false, "AUDIT_CHECK_DECLARED", "AUDIT_CHECK_DECLARED", "C-102.1", "m"]);
+  assert.equal(typeof twice.detail, "string");
+});
+
+/* ---- R66: afterCommit ---- */
+
+test("R66: outside any transact, afterCommit runs fn at once; inside one it runs just after the outermost commit, before transact returns, in call order", () => {
+  const { s, rc } = fresh();
+  const log = [];
+  rc.afterCommit(() => log.push("now"));
+  assert.deepEqual(log, ["now"], "no transaction open: run at once");
+  const seen = [];
+  const out = rc.transact(() => {
+    rc.allocId("INQ", "2026");
+    rc.afterCommit(() => { log.push("a"); seen.push(rows(s, `SELECT next FROM seq WHERE scope='INQ-2026'`)[0].next); });
+    rc.transact(() => { rc.afterCommit(() => log.push("b")); return { ok: true }; });
+    rc.afterCommit(() => log.push("c"));
+    assert.deepEqual(log, ["now"], "nothing held runs inside the transaction");
+    return { ok: true, v: 1 };
+  });
+  assert.deepEqual(log, ["now", "a", "b", "c"], "held calls ran, in the order they were made, the committed savepoint's with them");
+  assert.deepEqual(out, { ok: true, v: 1 }, "transact's answer is fn's");
+  assert.deepEqual(seen, [2], "a held call sees what the transaction committed");
+  // before transact returns: the caller's next line sees it done
+  const order = [];
+  rc.transact(() => { rc.afterCommit(() => order.push("held")); return 1; });
+  order.push("returned");
+  assert.deepEqual(order, ["held", "returned"]);
+  // a held call that opens its own transaction and holds again: that one is its own outermost
+  const nested = [];
+  rc.transact(() => { rc.afterCommit(() => { rc.transact(() => { rc.afterCommit(() => nested.push("inner")); return 1; }); nested.push("outer"); }); return 1; });
+  assert.deepEqual(nested, ["inner", "outer"]);
+});
+
+test("R66 R32: a held call is dropped when the transaction, or the savepoint holding it, rolls back by a throw or a refusal", () => {
+  const { rc } = fresh();
+  const log = [];
+  assert.throws(() => rc.transact(() => { rc.afterCommit(() => log.push("thrown")); throw new Error("x"); }), /x/);
+  assert.deepEqual(rc.transact(() => { rc.afterCommit(() => log.push("refused")); return { ok: false, reason: "NO" }; }), { ok: false, reason: "NO" });
+  assert.deepEqual(log, [], "neither a throw nor a refusal runs what it held");
+  // a savepoint rolled back under a committing outer: only the savepoint's held calls are dropped
+  rc.transact(() => {
+    rc.afterCommit(() => log.push("outer-1"));
+    rc.transact(() => { rc.afterCommit(() => log.push("refused-inner")); return { ok: false }; });
+    try { rc.transact(() => { rc.afterCommit(() => log.push("thrown-inner")); throw new Error("inner"); }); } catch { /* the outer decides the rest */ }
+    rc.transact(() => { rc.afterCommit(() => log.push("kept-inner")); return { ok: true }; });
+    rc.afterCommit(() => log.push("outer-2"));
+    return { ok: true };
+  });
+  assert.deepEqual(log, ["outer-1", "kept-inner", "outer-2"]);
+  // a savepoint that committed hands its calls up, and the outer's rollback drops them after all
+  log.length = 0;
+  assert.throws(() => rc.transact(() => { rc.transact(() => { rc.afterCommit(() => log.push("handed-up")); return { ok: true }; }); throw new Error("outer"); }));
+  assert.deepEqual(rc.transact(() => { rc.transact(() => { rc.afterCommit(() => log.push("handed-up-2")); return 1; }); return { ok: false }; }), { ok: false });
+  assert.deepEqual(log, [], "the outer rollback took the committed savepoint's held calls with its rows");
+  // nothing held leaks into a later transaction
+  rc.transact(() => 1);
+  assert.deepEqual(log, []);
+});
+
+test("R66: a held call that throws neither undoes the commit, stops the others, nor changes what transact answers; a non-function is a TypeError", () => {
+  const { rc } = fresh();
+  const log = [];
+  const out = rc.transact(() => {
+    rc.allocId("REL", "2026");
+    rc.afterCommit(() => { log.push(1); throw new Error("listener failed"); });
+    rc.afterCommit(() => log.push(2));
+    return { ok: true, id: "x" };
+  });
+  assert.deepEqual(out, { ok: true, id: "x" });
+  assert.deepEqual(log, [1, 2]);
+  assert.equal(rc.allocId("REL", "2026").id, "REL-2026-0002", "the commit stood");
+  assert.doesNotThrow(() => rc.afterCommit(() => { throw new Error("now"); }), "run at once, a throw stays inside");
+  for (const bad of [null, undefined, 1, "fn", {}]) assert.throws(() => rc.afterCommit(bad), TypeError);
+  assert.throws(() => rc.transact(() => { rc.afterCommit(7); return 1; }), TypeError, "inside a transaction too, and the caller's transaction rolls back with it");
+  // the one instance per storage (R39): a call held through one handle runs at the commit of a transaction opened through another
+  const { s, rc: a } = fresh();
+  const b = recordOf({ storage: s });
+  const got = [];
+  a.transact(() => { b.afterCommit(() => got.push("b")); return 1; });
+  assert.deepEqual(got, ["b"]);
+});
+
+/* ---- R67: the grammar seam ---- */
+
+test("R67: registerGrammar holds a grammar per module in registration order, and grammars() answers them as {module, ids, arm}", () => {
+  const { rc } = fresh();
+  assert.deepEqual(rc.grammars(), []);
+  const info = (ctx, f) => f.push({ check: "C-2.7", severity: "error", message: "info" });
+  const extra = () => {};
+  assert.deepEqual(rc.registerGrammar("capture", { ids: ["C-2.7"], arm: info }), { ok: true, module: "capture", ids: ["C-2.7"] });
+  assert.deepEqual(rc.registerGrammar("promotion", { ids: ["C-18.7", "C-18.6"], arm: extra }).ok, true, "an arm is claimed by all its ids, in any order");
+  assert.deepEqual(rc.registerGrammar("later", { ids: ["C-500.1"], arm: extra }).ok, true, "a grammar that claims no built-in arm");
+  const g = rc.grammars();
+  assert.deepEqual(g.map((x) => [x.module, [...x.ids]]), [["capture", ["C-2.7"]], ["promotion", ["C-18.7", "C-18.6"]], ["later", ["C-500.1"]]]);
+  assert.equal(g[0].arm, info);
+  assert.ok(g.every((x) => Object.isFrozen(x) && Object.isFrozen(x.ids)));
+  g.pop();
+  assert.equal(rc.grammars().length, 3, "a fresh list each call");
+  assert.equal(recordOf({ storage: storage() }).grammars().length, 0, "the registrations are this instance's");
+  // the list is one checkBundle accepts
+  assert.doesNotReject(checkBundle({ folderName: "x", files: new Map(), sha256: async () => "", sha512: async () => new Uint8Array() }, { grammars: rc.grammars() }));
+});
+
+test("R67: a malformed grammar, or one claiming part of an arm or two arms, is GRAMMAR_MALFORMED (C-102.16); a second registration or a held id GRAMMAR_DECLARED (C-102.15); nothing is registered", async () => {
+  assert.deepEqual([RECORD_CORE_CHECKS.GRAMMAR_DECLARED.check, RECORD_CORE_CHECKS.GRAMMAR_MALFORMED.check], ["C-102.15", "C-102.16"]);
+  for (const c of ["GRAMMAR_DECLARED", "GRAMMAR_MALFORMED"]) {
+    assert.equal(RECORD_CORE_CHECKS[c].where, "src/record-core/index.mjs registerGrammar > is-grammar-registration");
+    assert.ok(RECORD_CORE_CHECKS[c].translation.endsWith(BUILD_FAULT));
+  }
+  const { rc } = fresh();
+  const f = () => {};
+  const malformed = [["", { ids: ["C-2.7"], arm: f }], ["  ", { ids: ["C-2.7"], arm: f }], [null, { ids: ["C-2.7"], arm: f }], [7, { ids: ["C-2.7"], arm: f }],
+    ["m", { ids: [], arm: f }], ["m", { ids: "C-2.7", arm: f }], ["m", { ids: ["C-2.7", "2.8"], arm: f }], ["m", { ids: ["c-2.7"], arm: f }],
+    ["m", { ids: [7], arm: f }], ["m", { ids: ["C-2.7"], arm: "f" }], ["m", { ids: ["C-2.7"] }], ["m", undefined], ["m", {}],
+    ["m", { ids: ["C-18.6"], arm: f }], ["m", { ids: ["C-9.1"], arm: f }], ["m", { ids: ["C-2.7", "C-2.8"], arm: f }],
+    ["m", { ids: ["C-2.9", "C-9.1", "C-2.7"], arm: f }]];
+  for (const [m, g] of malformed) {
+    const r = rc.registerGrammar(m, g);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "GRAMMAR_MALFORMED", "GRAMMAR_MALFORMED", "C-102.16", RECORD_CORE_CHECKS.GRAMMAR_MALFORMED.translation],
+                     `${String(m)} ${JSON.stringify(g && g.ids)}`);
+    assert.equal(typeof r.detail, "string");
+    assert.deepEqual(rc.grammars(), [], "nothing registered");
+  }
+  // each refusal names what checkBundle would reject: every arm is claimed whole, never in part
+  for (const arm of EXTENSION_ARMS) if (arm.ids.length > 1)
+    assert.equal(rc.registerGrammar("m", { ids: [arm.ids[0]], arm: f }).reason, "GRAMMAR_MALFORMED", arm.name);
+  assert.equal(rc.registerGrammar("project", { ids: ["C-9.1", "C-2.9"], arm: f }).ok, true);
+  const declared = [["project", { ids: ["C-2.7"], arm: f }, { module: "project", heldBy: "project" }],
+                    ["other", { ids: ["C-2.9", "C-9.1"], arm: f }, { module: "other", id: "C-2.9", heldBy: "project" }],
+                    ["other", { ids: ["C-700.1", "C-700.1"], arm: f }, { module: "other", id: "C-700.1", heldBy: "other" }]];
+  for (const [m, g, named] of declared) {
+    const r = rc.registerGrammar(m, g);
+    assert.deepEqual({ ...r, detail: null }, { ...named, ok: false, reason: "GRAMMAR_DECLARED", code: "GRAMMAR_DECLARED", check: "C-102.15",
+                                              translation: RECORD_CORE_CHECKS.GRAMMAR_DECLARED.translation, detail: null });
+    assert.ok(r.detail.includes(named.heldBy));
+    assert.deepEqual(rc.grammars().map((x) => x.module), ["project"], "a refused registration registers nothing");
+  }
+  assert.equal(rc.registerGrammar("other", { ids: ["C-700.1"], arm: f }).ok, true, "a refused module may still register once");
+  // whatever was refused, checkBundle never meets a list it rejects
+  await checkBundle({ folderName: "x", files: new Map(), sha256: async () => "", sha512: async () => new Uint8Array() }, { grammars: rc.grammars() });
+});
+
+test("R18 R67: auditPass passes grammars() to the catalogue: a grammar runs in its arm's place with the findings checkBundle gives it, and one that throws is one AUDIT_CHECK_FAILED error", async () => {
+  const { rc, ids } = await auditFixture();
+  const known = new Set(ids);
+  const base = await rc.auditPass({ limit: 10 });
+  const calls = [];
+  const arm = (ctx, findings) => {
+    calls.push(ctx.folderName);
+    if (ctx.folderName === ids[1]) findings.push({ check: "C-2.7", code: "INFO_BY_GRAMMAR", severity: "error", message: "the registered arm" });
+  };
+  assert.equal(rc.registerGrammar("capture", { ids: ["C-2.7"], arm }).ok, true);
+  const r = await rc.auditPass({ limit: 10 });
+  assert.deepEqual(calls, ids, "the registered arm ran for every page bundle, in the built-in arm's place");
+  // the same as checkBundle over the same image with the same grammars
+  const tally = {}; let withErrors = 0;
+  for (const id of ids) {
+    const errs = await expected(rc, id, known, {});
+    const img = rc.readImage(id), files = new Map(), elided = new Set();
+    for (const [p, v] of Object.entries(img)) typeof v === "string" ? files.set(p, v) : elided.add(p);
+    const { findings } = await checkBundle({ folderName: id, files, elidedPaths: elided,
+      sha256: async (v) => hexOf(createHash("sha256").update(typeof v === "string" ? v : Buffer.from(v)).digest()),
+      sha512: async (b) => new Uint8Array(createHash("sha512").update(Buffer.from(b)).digest()),
+      resolveTarget: (t) => known.has(t) }, { grammars: [{ module: "capture", ids: ["C-2.7"], arm: (c, f) => { if (c.folderName === ids[1]) f.push({ check: "C-2.7", code: "INFO_BY_GRAMMAR", severity: "error", message: "the registered arm" }); } }] });
+    const e = findings.filter((x) => x.severity === "error");
+    if (e.length) withErrors++;
+    for (const x of e) tally[x.check] = (tally[x.check] || 0) + 1;
+    void errs;
+  }
+  assert.deepEqual(r.tally, tally); assert.equal(r.withErrors, withErrors);
+  assert.equal(r.tallyDetail["C-2.7/INFO_BY_GRAMMAR"], 1);
+  assert.equal(r.clean + r.withErrors, r.checked);
+  assert.ok(!(await rc.auditPass({ limit: 10, visible: (id) => id !== ids[1] })).tallyDetail?.["C-2.7/INFO_BY_GRAMMAR"], "R19 still holds");
+  // a grammar that throws: one error under its module, the bundle not clean, the pass not thrown
+  const { rc: r2 } = await auditFixture();
+  const plain = await r2.auditPass({});
+  r2.registerGrammar("broken", { ids: ["C-2.9", "C-9.1"], arm: () => { throw new Error("grammar bug"); } });
+  const got = await r2.auditPass({});
+  assert.equal(got.tally.broken, plain.checked, "one error per bundle");
+  assert.equal(got.tallyDetail["broken/AUDIT_CHECK_FAILED"], plain.checked);
+  assert.deepEqual([got.clean, got.withErrors], [0, plain.checked]);
+  assert.ok(got.offenders.every((o) => o.errors.length === 5 || o.errors.some((e) => /grammar bug/.test(e.detail))), "its message, where the first five errors reach it");
+  void base;
+});
+
+/* ---- R64, R65: op=stats' disclosure ---- */
+
+/* A source standing for legacy-store's `#counts`: its wire form carries the log as `observationsNonLead`, its proof
+   form the whole log, `leads` and the themes. It records what it was asked. A hostile source may also answer every key
+   in both forms; the disclosure is this module's either way. */
+function statsSource({ hostile = false } = {}) {
+  const asked = [];
+  const figures = ({ viewer, proof }) => {
+    asked.push({ viewer, proof });
+    const hidden = viewer === undefined ? 0 : viewer === "admin" ? 0 : 2;
+    const base = { bundles: 10 - hidden, files: 20 - hidden, textIndexOk: true, tasks: 3 };
+    const wire = { observationsNonLead: 7 - hidden };
+    const proofOnly = { observations: 9, leads: 2, themes: 1, themePlacements: 4 };
+    return hostile ? { ...base, ...wire, ...proofOnly, dbBytes: 123456 }
+      : proof ? { ...base, ...proofOnly } : { ...base, ...wire };
+  };
+  return { asked, figures };
+}
+const sized = (bytes) => { const s = storage(); Object.defineProperty(s.sql, "databaseSize", { get: () => bytes }); return s; };
+
+test("R64 R65: stats answers the source's figures with the same keys for every class, never leads nor observations, the log as observationsNonLead, and dbBytes only when capacity is exactly true", () => {
+  for (const hostile of [false, true]) {
+    const s = sized(4096);
+    const rc = recordOf({ storage: s });
+    const src = statsSource({ hostile });
+    assert.deepEqual(rc.registerStatsSource("legacy-store", src.figures), { ok: true, module: "legacy-store" });
+    const keysOf = (o) => Object.keys(o).sort();
+    const member = rc.stats({ viewer: "member:iris" }), admin = rc.stats({ viewer: "admin", capacity: true });
+    assert.deepEqual(member, { bundles: 8, files: 18, textIndexOk: true, tasks: 3, observationsNonLead: 5 }, `hostile=${hostile}`);
+    assert.deepEqual(admin, { bundles: 10, files: 20, textIndexOk: true, tasks: 3, observationsNonLead: 7, dbBytes: 4096 });
+    assert.deepEqual(keysOf(rc.stats({ viewer: "probe" })), keysOf(member), "the same keys for every class but capacity's one");
+    for (const k of ["leads", "observations", "themes", "themePlacements"])
+      for (const o of [member, admin, rc.stats({}), rc.stats({ capacity: true })]) assert.ok(!(k in o), `${k} is on the wire for no class`);
+    // capacity: only `true` itself
+    for (const c of [undefined, false, "1", 1, "true", {}, [true], null]) assert.ok(!("dbBytes" in rc.stats({ capacity: c, viewer: "admin" })), `capacity ${String(c)}`);
+    assert.equal(rc.stats({ capacity: true }).dbBytes, 4096);
+    assert.ok(!("dbBytes" in rc.stats()), "no argument at all: no capacity");
+    // the viewer reaches the source as sent; never sent stays undefined (a direct internal call, counted whole)
+    src.asked.length = 0;
+    rc.stats({ viewer: "member:iris" }); rc.stats({}); rc.stats({ viewer: "" }); rc.stats();
+    assert.deepEqual(src.asked.map((a) => [a.viewer, a.proof]), [["member:iris", false], [undefined, false], ["", false], [undefined, false]]);
+    assert.equal(rc.stats({}).bundles, 10, "a viewer never sent counts whole");
+  }
+});
+
+test("R64: purge's proof is the private form of the same figures: whole, the log as observations, with leads, the themes and dbBytes, and no observationsNonLead", () => {
+  for (const hostile of [false, true]) {
+    const rc = recordOf({ storage: sized(8192) });
+    const src = statsSource({ hostile });
+    rc.registerStatsSource("legacy-store", src.figures);
+    assert.deepEqual(rc.proofCounts(), { bundles: 10, files: 20, textIndexOk: true, tasks: 3, observations: 9, leads: 2, themes: 1, themePlacements: 4, dbBytes: 8192 });
+    assert.deepEqual(src.asked.at(-1), { viewer: undefined, proof: true }, "asked whole: no viewer");
+    assert.equal(rc.proofCounts.length, 0, "it takes no argument: no caller's sight or class reaches it");
+  }
+  // no route answers it: the store's op map reaches `stats`, never `proofCounts` (read at the interface the plane builds)
+  const rc = recordOf({ storage: sized(1) });
+  assert.deepEqual(rc.proofCounts(), { dbBytes: 1 }, "no source: only what this module holds");
+});
+
+test("R64 R65: with no source, or a source that throws or answers no object, stats answers only what this module holds; stats and proofCounts write nothing and never throw", () => {
+  const plain = fresh().rc;
+  assert.deepEqual(plain.stats({ capacity: true }), { dbBytes: null }, "a storage stating no size: null, never zero");
+  assert.deepEqual(plain.stats({ viewer: "x" }), {});
+  const cases = [() => { throw new Error("no table"); }, () => null, () => 7, () => "x", async () => ({ bundles: 1 }),
+                 () => Object.defineProperty({ ok: 1 }, "boom", { enumerable: true, get() { throw new Error("get"); } }),
+                 () => new Proxy({}, { ownKeys() { throw new Error("keys"); } })];
+  for (const [i, f] of cases.entries()) {
+    const { s, rc } = fresh();
+    rc.registerStatsSource("m", f);
+    const before = dump(s);
+    let a, b;
+    assert.doesNotThrow(() => { a = rc.stats({ capacity: true, viewer: "v" }); b = rc.proofCounts(); }, `case ${i}`);
+    assert.ok(a && typeof a === "object" && b && typeof b === "object");
+    if (i === 5) assert.deepEqual([a.ok, "boom" in a], [1, false], "a field that cannot be read is left out");
+    assert.deepEqual(dump(s), before);
+  }
+  const { s, rc } = fresh();
+  rc.registerStatsSource("m", statsSource().figures);
+  const before = dump(s);
+  rc.stats({ capacity: true, viewer: "v" }); rc.proofCounts();
+  assert.deepEqual(dump(s), before, "writes nothing");
+  // a figure the source answers is never rewritten: its own value, whatever its type (textIndexOk is a boolean)
+  assert.equal(rc.stats({}).textIndexOk, true);
+  const proto = rc.stats({});
+  assert.equal(Object.getPrototypeOf(proto), Object.prototype);
+});
+
+test("R65: a second source is STATS_SOURCE_DECLARED (C-102.17), naming the holder; one without a module name or a function STATS_SOURCE_MALFORMED (C-102.18); nothing is registered", () => {
+  for (const [c, n] of [["STATS_SOURCE_DECLARED", "C-102.17"], ["STATS_SOURCE_MALFORMED", "C-102.18"]]) {
+    const row = RECORD_CORE_CHECKS[c];
+    assert.deepEqual([row.check, row.where], [n, "src/record-core/index.mjs registerStatsSource > is-stats-source-registration"]);
+    assert.ok(row.translation.endsWith(BUILD_FAULT) && Object.isFrozen(row));
+  }
+  const { rc } = fresh();
+  for (const [m, f] of [["", () => ({})], ["  ", () => ({})], [null, () => ({})], [3, () => ({})], ["m", null], ["m", {}], ["m", "f"], [undefined, undefined]]) {
+    const r = rc.registerStatsSource(m, f);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "STATS_SOURCE_MALFORMED", "STATS_SOURCE_MALFORMED", "C-102.18", RECORD_CORE_CHECKS.STATS_SOURCE_MALFORMED.translation]);
+    assert.deepEqual(rc.stats({}), {}, "nothing registered");
+  }
+  const first = statsSource();
+  assert.equal(rc.registerStatsSource("legacy-store", first.figures).ok, true);
+  const r = rc.registerStatsSource("control-plane", () => ({ bundles: 999 }));
+  assert.deepEqual({ ...r, detail: null }, { ok: false, reason: "STATS_SOURCE_DECLARED", code: "STATS_SOURCE_DECLARED", check: "C-102.17",
+    translation: RECORD_CORE_CHECKS.STATS_SOURCE_DECLARED.translation, module: "control-plane", heldBy: "legacy-store", detail: null });
+  assert.ok(r.detail.includes("legacy-store"));
+  assert.equal(rc.registerStatsSource("legacy-store", () => ({})).reason, "STATS_SOURCE_DECLARED", "its own second registration too");
+  assert.equal(rc.stats({}).bundles, 10, "the first still stands");
+  // the source is the instance's (R39): one per storage, reached through every handle
+  const { s, rc: a } = fresh();
+  a.registerStatsSource("legacy-store", first.figures);
+  assert.equal(recordOf({ storage: s }).stats({}).bundles, 10);
+  assert.deepEqual(recordOf({ storage: storage() }).stats({}), {});
+});
+
+/* ---- R28's caller half (the `mint-ledger` convert, K619 (2)): the ids a store held before the ledger existed ---- */
+
+/* A store written before the ledger (REC-151's minter, no ledger write, no seed; the pre-REC-151 op=allocid that served
+   CASE off the counter): live rows of each gated kind in the tables legacy-store's seed names (`#MINT_LEDGER_LIVE`),
+   and a CASE-<year> counter. */
+const MINT_LEDGER_LIVE = [["PROJ", "bundles", "bundle_id"], ["CASE", "cases", "case_id"], ["CASE", "published_cases", "case_id"],
+                          ["CASE", "case_documents", "case_id"], ["CASE", "published_case_members", "case_id"]];
+function preLedgerStore() {
+  const { s, rc } = fresh();
+  for (const t of ["cases", "published_cases", "case_documents", "published_case_members"]) s.db.exec(`CREATE TABLE ${t} (case_id TEXT)`);
+  rc.commit({ bundleId: "PROJ-2026-7316-project-legacy-one", type: "project", snapKey: "K1", files: [file("bundle.md", "p")] });
+  s.sql.exec(`INSERT INTO cases VALUES ('CASE-2026-4001')`);
+  s.sql.exec(`INSERT INTO published_cases VALUES ('CASE-2026-4002')`);
+  s.sql.exec(`INSERT INTO case_documents VALUES ('CASE-2026-4003')`);
+  s.sql.exec(`INSERT INTO published_case_members VALUES ('CASE-2026-4004')`);
+  for (let k = 0; k < 3; k++) rc.allocId("CASE", "2026");        // CASE-2026-0001..0003, off the counter
+  assert.equal(rows(s, `SELECT COUNT(*) AS n FROM minted_ids`)[0].n, 0, "the ledger knows none of them yet");
+  // the legacy store declares the case tables to purge, as its constructor does
+  rc.declarePurge("legacy-store", ["cases", "published_cases", "case_documents", "published_case_members"].map((name) => ({ name, keys: [] })));
+  return { s, rc };
+}
+
+test("R28 R40 R8 (mint-ledger): the pre-ledger PROJ and CASE ids the boot seed learns from their live rows are refused after a whole-store purge, and after a single-bundle one", () => {
+  const { s, rc } = preLedgerStore();
+  rc.seedMintLedger(MINT_LEDGER_LIVE);                            // the boot of the build that has the ledger
+  const pg = rc.purge({});
+  assert.deepEqual([pg.ok, pg.scope, count(s, "bundles"), count(s, "cases"), count(s, "published_cases")], [true, "ALL", 0, 0, 0],
+                   "the purge took every live row the legacy ids stood in");
+  // a draw forced at each legacy id is refused by the ledger and the act still mints a fresh id
+  assert.equal(draws([7316, 7317], () => rc.mintOpaqueId("PROJ", "2026", "-project-legacy-one", () => false)), "PROJ-2026-7317-project-legacy-one");
+  for (const [i, n] of [4001, 4002, 4003, 4004].entries())
+    assert.equal(draws([n, 5000 + i], () => rc.mintOpaqueId("CASE", "2026", "", () => false)), `CASE-2026-${5000 + i}`, `CASE-2026-${n}`);
+  // a seed at a later boot, and after the purge, changes nothing: the ledger is exempt and the seed idempotent
+  rc.seedMintLedger(MINT_LEDGER_LIVE);
+  assert.equal(draws([4001, 6001], () => rc.mintOpaqueId("CASE", "2026", "", () => false)), "CASE-2026-6001");
+  // single-bundle: a pre-ledger project purged by itself stays spent
+  const { rc: r2 } = preLedgerStore();
+  r2.seedMintLedger(MINT_LEDGER_LIVE);
+  r2.purge({ bundleId: "PROJ-2026-7316-project-legacy-one" });
+  assert.equal(r2.bundleInfo("PROJ-2026-7316-project-legacy-one"), null);
+  assert.equal(draws([7316, 1], () => r2.mintOpaqueId("PROJ", "2026", "-project-legacy-one", () => false)), "PROJ-2026-0001-project-legacy-one");
+  // the control: with no seed, the same purge leaves the legacy id drawable again, which is the defect the seed closes
+  const { rc: bare } = preLedgerStore();
+  bare.purge({});
+  assert.equal(draws([7316], () => bare.mintOpaqueId("PROJ", "2026", "-project-legacy-one", () => false)), "PROJ-2026-7316-project-legacy-one");
+});
+
+test("R28 R40 R23 (mint-ledger): CASE-<year> ids the counter issued before CASE moved to the minter are refused, used or not, after a purge", () => {
+  const { s, rc } = preLedgerStore();
+  rc.seedMintLedger(MINT_LEDGER_LIVE);
+  rc.purge({});
+  assert.equal(rows(s, `SELECT next FROM seq WHERE scope='CASE-2026'`)[0].next, 4, "the purge kept the counter (R23)");
+  for (const n of [1, 2, 3])
+    assert.equal(draws([n, 9000 + n], () => rc.mintOpaqueId("CASE", "2026", "", () => false)), `CASE-2026-${9000 + n}`,
+                 `CASE-2026-000${n}, an allocation handed out, is an identifier that has existed`);
+  assert.equal(draws([4], () => rc.mintOpaqueId("CASE", "2026", "", () => false)), "CASE-2026-0004", "one the counter never issued is free");
+  // PROJ and TASK carry a slug the counter never recorded: their counters teach the ledger nothing
+  s.sql.exec(`INSERT INTO seq (scope,next) VALUES ('PROJ-2026', 3), ('TASK-2026', 3)`);
+  rc.seedMintLedger([]);
+  assert.equal(draws([1], () => rc.mintOpaqueId("PROJ", "2026", "", () => false)), "PROJ-2026-0001");
+  // the ledger itself is named by no figure: neither op=stats' form nor purge's proof carries a key for it
+  rc.registerStatsSource("legacy-store", statsSource().figures);
+  for (const o of [rc.stats({ capacity: true }), rc.proofCounts(), rc.counts(null), pgKeys(rc.purge({}))])
+    assert.deepEqual(Object.keys(o).filter((k) => /mint|ledger/i.test(k)), []);
+});
+const pgKeys = (p) => ({ ...p.removed });
