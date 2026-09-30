@@ -39,6 +39,8 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 9. **The doctrine's limits.** CivicOS takes no position on what policy should be (Operational Principle 1). Political accountability asks officials to act on a breach, requests oversight and audits, testifies, and supports legislation that restores or enforces an existing requirement; lobbying is an option only for that. Policy advocacy and candidate support are not actions. Any group may use CivicOS; a group with a stake in a matter discloses it (D6).
 10. **The work varies, not the person.** A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which shapes what the assistant suggests and nothing else. No attribute of a person gates, filters or orders anything (DEC-17, DEC-54).
 11. **Jurisdiction lives in data.** Kinds, venues, templates, offices, legal organisations, deadlines and holidays come from a jurisdiction profile; a missing fact reads undetermined, never a default (`build/layers.md`, "No jurisdiction in the product").
+12. **Hope for good faith; prepare for opposition** (Bob, 2026-09-30; Design Requirements 13 and 14). People are presumed to want better outcomes, and a bad actor is identified by evidence, never by role. The system is nonetheless fully prepared for responses that amount to war: stonewalling, retaliation, discrediting, legal harassment. So every plan is checked for a branch that answers a hostile response; pressure against the group or its supporters is recorded as evidence (Operational Principle 8), and can open an inquiry of its own; what counsel or another group needs to carry a matter on (the counsel packet, the published case, the evidence package) survives the group's disruption.
+13. **The venue sets the standard of evidence** (Bob, 2026-09-30). Courts and other venues hold different standards, some short of Grade A; no action is refused for its evidence grade. Every filing and counsel packet shows each exhibit's grade, and where the profile states a venue's standard, shows it beside them. DEC-81's "Grade A stays the ceiling for adversarial or legal use" is read as the highest grade the product offers, not a minimum.
 
 ## 5. The contradictions, reconciled
 
@@ -58,7 +60,7 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 | 12 | Audience (a reader) against user type (plans vary by it), with no record of either | audience stays a reader of a published case; the user-type difference lives in the project's declared kind of work (rule 10) | D4 |
 | 13 | Case Making listed as canon "whole" but calling itself non-authoritative | this document replaces Case Making's action sections as the authority; Case Making stays readable for why | this document, on Bob's approval |
 | 14 | "Layer 3" means Action (Functional Architecture's analysis) and "the UI surfaces" (its 2026-07-27 addition) | the build's numbering governs: Action is layer 9; the Functional Architecture's "Layer 3: Action" is read as the functional layer, the 2026-07-27 addition as an annotation outside canon | `build/layers.md`; `requirements/README.md` ("not the v3 annotations") |
-| 15 | The Roadmap's "war" and "protection network" against "all stakeholders are presumed to want better outcomes" | *for Bob* (§7, 1) | |
+| 15 | The Roadmap's "war" and "protection network" against "all stakeholders are presumed to want better outcomes" | both hold, for different things: people are treated in good faith and judged by evidence; the system is prepared for opposition (rule 12) | Bob, 2026-09-30; Design Requirement 13 |
 | 16 | DEC-26's refusal of an unestablished outward act against Requirement 12 (no tool gates an action) and Requirement 8 (anyone may initiate Tier 1) | *for Bob* (§7, 2) | |
 
 ## 6. Canon text this changes (on Bob's approval)
@@ -68,13 +70,28 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 - `BIO_Complete_Roadmap_v5.md` §6 and Skill 8: "six" becomes "seven"; §8's Tier 3 gains the counsel packet (Requirement 8 as amended already governs).
 - `BIO_Functional_Architecture_v3.md` Function 3 and the skills inventory: "six-stage" becomes "seven-stage".
 - `BIO_State_Rules_Consistency_v1_5.md` §4.4: the addressee (rule 6), the product and profile kinds, the resolution `completed`, `contact`, `plan` and `option`; §4 gains the action-plan type `PLN-`; §5.1's closed vocabulary gains `action_basis` (action → the inquiry, determination or information it rests on or advances), `responds_to` (a reply → the action) and `references` (a finding of non-response → the action).
+- `BIO_Intake_Doctrine_v1_1.md` §3 and DEC-81 (1): "Grade A stays the ceiling for adversarial or legal use" gains "a ceiling, not a minimum: the venue sets the standard" (rule 13).
 - `requirements/README.md`: this document listed as canon (whole); Case Making's canon part narrowed to exclude §2's action paragraphs and §THE ACTION PLAN.
 
-## 7. Still Bob's
+## 7. Bob's rulings on this draft (2026-09-30) and what is still his
 
-1. **The stance toward government (contradiction 15).** Recommended: the System Design and Case Making stance governs: every stakeholder is presumed to want better outcomes, and bad actors are identified by evidence, never by role. The Roadmap's adversarial framing stays as the founding history, not doctrine. This matters most for unions and oversight bodies, which the Roadmap names as the opposition and Bob's framing names as actors.
-2. **DEC-26 and Requirement 12 (contradiction 16).** Recommended: they agree once read together. What refuses a breach action is the group's own declared bar and its own determination, not a tool's authority; Requirement 12 forbids a tool deciding on its own. Actions that seek evidence, including every Tier 1 records request, are never gated, so "anyone may initiate Tier 1" holds.
-3. **Evidence grade for legal use.** DEC-81 makes co-attested Grade B enough to publish and keeps Grade A "the ceiling for adversarial or legal use", with Grade A deferred. Recommended: no action is refused for its evidence grade; every filing and counsel packet shows each exhibit's grade, and a Tier 2 or 3 filing resting on less than Grade A says so on its face.
-4. **Certification by a licensed professional** (Publication §6, "unmade"). Recommended: defer until a group needs a licensed name on an output; until then a professional who stands behind a filing does so by the attribution levels that exist (Publication §3 rule 7).
-5. **Confidential referral** (a grand jury complaint or auditor referral delivered without publication). Recommended: it is an action addressed to the oversight office, prepared as a filing or communication, sent by the member's own hand and recorded; nothing non-public leaves by a system path, as DEC-31 provides.
-6. **Joint action with another group.** Recommended: beyond this version. A group may name another group as its partner in an action's text; a shared plan or co-signed filing waits for a group that asks for it.
+1. **The stance toward government:** agreed, amended by Bob: the system hopes for good faith and is fully prepared for opposition (rule 12).
+2. **DEC-26 and Requirement 12:** *open*, explained for Bob's decision (§8).
+3. **Evidence grade for legal use:** the venue sets the standard; no grade gate (rule 13).
+4. **Certification by a licensed professional:** deferred until a group needs a licensed name on an output; meanwhile the attribution levels serve (Publication §3 rule 7). Agreed.
+5. **Confidential referral:** an action addressed to the oversight office, prepared as a filing or communication, sent by the member's own hand and recorded; nothing non-public leaves by a system path (DEC-31). Agreed.
+6. **Joint action with another group:** *open*, explained for Bob's decision (§8).
+
+## 8. The two open points
+
+**DEC-26 and Requirement 12.** DEC-26 says the system refuses an outward act whose premise is not established; Requirement 12 says no tool may approve, reject or gate any action, and Requirement 8 that anyone may start a Tier 1 action. Built today: `actions` R8 refuses an action that asserts a breach unless it rests on a live noncompliant determination. Nothing stops a member acting outside CivicOS; the question is what the group's record will prepare and hold in its name. Three readings:
+- (a) *Refuse* (as built): the record never holds a breach claim the group has not established. Protects the group's standard; reads Requirement 12 narrowly.
+- (b) *Warn only*: the act proceeds, marked "rests on an unestablished premise" on the action and everything prepared from it. Honours Requirement 12's letter; DEC-26's gate becomes a label.
+- (c) *Refuse by default, a member may override*: a member proceeds by an attributed act with a stated reason, and the action and everything prepared from it carry the disclosure. The pattern Bob chose for a failed co-attestation (DEC-81 (3)) and for contradictions (DEC-76, disclose-not-block, confirmed in DEC-84).
+Recommended: (c). No tool has the final word, the group's standard is the default, and a departure from it is visible to every reader.
+
+**Joint action with another group.** Deferral was recommended for cost, not doctrine: each group runs its own sovereign instance, membership never crosses a group boundary (Membership §2), and a plan or filing shared across two instances would need cross-instance machinery the canon has not designed (how one group's strength composes with another's is unanswered; UX open questions 12 and 29). Most of what a coalition needs can be supported now without that machinery:
+- each group records the joint act as its own action, naming its partner groups (D1's `group` addressee kind, reused as `partners`);
+- the joint text is one communication draft that each group approves in its own instance; its in-band stamp's hash is identical in both, so either record proves the same bytes were sent;
+- each group's plan may carry the same option, and its published case may cite the other's.
+Recommended: support joint action at that level now; defer only a plan or filing shared live across instances until a coalition needs it.
