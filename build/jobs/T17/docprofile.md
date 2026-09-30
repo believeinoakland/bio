@@ -36,7 +36,7 @@
 - `node checks/format.mjs`: 72 modules, 67 requirements files; 0 failures.
 - `node checks/architecture.mjs … docprofile`: 21 product files, 51 relative imports; 0 failures.
 - `node checks/coverage.mjs … docprofile`: 35 of 35 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs … docprofile tranche/T17`: see the line below, re-run after commit.
+- `node checks/ownership.mjs … docprofile tranche/T17`: 4 files changed by docprofile between tranche/T17 and HEAD; 0 failures.
 - Layer tests: none named in `build/manifest.md`. No provided service changed.
 
 Size (session_01PzNztiLm9r2dBH43cVX69y): test runs 12, module lines 5274
