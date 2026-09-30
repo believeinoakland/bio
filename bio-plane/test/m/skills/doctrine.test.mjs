@@ -8,6 +8,7 @@ import * as strength from "../../../src/strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../../src/run-productions/index.mjs";
 import * as deployment from "../../../src/ai-runs/deployment.mjs";
 import { AI_RUN_OPEN_CHECKS } from "../../../src/ai-runs/checks.mjs";
+import { RECOMMEND_PROMPT } from "../../../src/contradiction.mjs";
 import { ROOT, SRC, catalogue, read, norm, foundIn, section, canonDocuments, published, stringLiterals }
   from "./fixture.mjs";
 
@@ -231,6 +232,10 @@ test("R23 no member of an imported or driven vocabulary appears in the module's 
     }
   }
   assert.equal(machine, 1, "the machine act mode is named once");
+  /* The imported recommender prompt (N345) is not typed here either, whole or by its first line. */
+  const firstLine = RECOMMEND_PROMPT.split("\n")[0];
+  assert.ok(firstLine.length > 20, "the prompt was read");
+  for (const f of SRC) assert.ok(!stringLiterals(read(f)).some((l) => l.includes(firstLine)), `${f} types contradiction's prompt`);
   assert.deepEqual(pack.memberOnlyActs([{ id: "m", mode: "machine" }, { id: "s", mode: "session" }]).map((a) => a.id), ["s"],
     "and it is the spelling that excludes a machine act");
   /* The scanner can fail: the same function over a hand copy finds it. */
@@ -258,5 +263,7 @@ test("R24 it holds no gate: across every export and every input, the only refusa
   const clauses = Object.values(rendered.disclosed).flatMap((l) => (l.body && Array.isArray(l.body.clauses) ? l.body.clauses : []));
   assert.equal(clauses.length, CLAUSES.length, "every clause is rendered");
   for (const c of clauses) assert.deepEqual(controlFlowAuthority(c.decides), [], c.id);
+  assert.deepEqual(controlFlowAuthority(rendered.disclosed.contradiction.body.recommend_prompt), [],
+    "the recommender prompt the pack renders (N345)");
   assert.equal(JUDGEMENT_VERSION, `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`);
 });

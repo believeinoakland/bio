@@ -8,6 +8,9 @@ import { renderPack, machineFences, memberOnlyActs, packVersion, SKILL_PACK_ID, 
 import { judgementLayers } from "../../../src/skilldoctrine.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../../src/observation-log/index.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/airun.mjs";
+import { RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../../../src/contradiction.mjs";
+import { controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
+import { createHash } from "node:crypto";
 import { ROOT, catalogue, published } from "./fixture.mjs";
 
 const SOURCINGS = new Set(["authored", "imported", "driven", "absent"]);
@@ -66,6 +69,39 @@ test("R1 the imported levels or absence states empty: renderPack throws and rend
   }
 });
 
+/* contradiction's prompt cannot be emptied or edited from inside this process, so a child replaces its public entry
+   with its own exports but one, and drives the same renderPack (the pattern R1's arm above uses for observation-log). */
+function renderWithContradiction(over) {
+  const file = join(ROOT, "bio-plane/src/contradiction.mjs");
+  const script = `
+    import { mock } from "node:test";
+    const real = { ...(await import(${JSON.stringify(file + "?real")})) };
+    mock.module(${JSON.stringify("file://" + file)}, { namedExports: { ...real, ...${JSON.stringify(over)} } });
+    const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
+    const cat = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/checks/bio-checks.mjs"))});
+    const pub = { vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }] };
+    try { renderPack(pub, cat); console.log("RENDERED"); } catch (e) { console.log("THREW " + e.message); }`;
+  return execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings",
+    "--input-type=module", "-e", script], { encoding: "utf8" });
+}
+
+test("R1 R27 contradiction's recommender prompt absent, blank or not the one measured under its digest: renderPack throws naming it and renders nothing", () => {
+  const cases = [
+    [{ RECOMMEND_PROMPT: null }, /exported no RECOMMEND_PROMPT/],
+    [{ RECOMMEND_PROMPT: "" }, /exported no RECOMMEND_PROMPT/],
+    [{ RECOMMEND_PROMPT: " \n\t" }, /exported no RECOMMEND_PROMPT/],
+    [{ RECOMMEND_PROMPT: RECOMMEND_PROMPT + " " }, /is not contradiction's RECOMMEND_PROMPT_SHA256/],
+    [{ RECOMMEND_PROMPT_SHA256: "0".repeat(64) }, /is not contradiction's RECOMMEND_PROMPT_SHA256/],
+  ];
+  for (const [over, re] of cases) {
+    const out = renderWithContradiction(over);
+    assert.match(out, /^THREW /m, `${JSON.stringify(over).slice(0, 80)}: ${out}`);
+    assert.match(out, re);
+  }
+  /* The control: the same child over the real exports renders. */
+  assert.match(renderWithContradiction({}), /^RENDERED$/m);
+});
+
 test("R2 resident holds exactly objective, boundary, four_level, absence, disclosable, each with its source and sourcing", () => {
   const { resident } = renderPack(published(), catalogue);
   assert.deepEqual(Object.keys(resident).sort(), ["absence", "boundary", "disclosable", "four_level", "objective"]);
@@ -114,7 +150,7 @@ test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, 
   const pub = published();
   const { disclosed } = renderPack(pub, catalogue);
   assert.deepEqual(Object.keys(disclosed),
-    [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals", "recipes"]);
+    [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals", "contradiction", "recipes"]);
   assert.deepEqual(JUDGEMENT_KEYS.map((k) => disclosed[k]), JUDGEMENT_KEYS.map((k) => judgementLayers()[k]));
   assert.equal(disclosed.vocabularies.body, pub.vocabularies, "the published vocabularies, unchanged");
   assert.equal(disclosed.vocabularies.sourcing, "driven");
@@ -133,6 +169,29 @@ test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, 
     assert.ok(layer.load_when.trim().length > 0, `${k}.load_when is non-empty`);
     assert.ok(SOURCINGS.has(layer.sourcing), `${k}.sourcing is one of the four`);
   }
+});
+
+test("R27 the contradiction layer carries contradiction's RECOMMEND_PROMPT and its measured digest unchanged, imported, and the pack's version moves with the prompt", () => {
+  const { disclosed, resident, version } = renderPack(published(), catalogue);
+  const layer = disclosed.contradiction;
+  assert.deepEqual(Object.keys(layer).sort(), ["body", "load_when", "sourcing"]);
+  assert.equal(layer.sourcing, "imported");
+  assert.equal(SOURCING.contradiction, "imported");
+  assert.equal(layer.load_when, "the run judges or recommends on a contradiction candidate's two sides");
+  assert.deepEqual(Object.keys(layer.body).sort(), ["recommend_prompt", "recommend_prompt_sha256"]);
+  assert.equal(layer.body.recommend_prompt, RECOMMEND_PROMPT, "contradiction's own string, byte for byte");
+  assert.equal(layer.body.recommend_prompt_sha256, RECOMMEND_PROMPT_SHA256);
+  assert.equal(createHash("sha256").update(layer.body.recommend_prompt, "utf8").digest("hex"), RECOMMEND_PROMPT_SHA256,
+    "the carried words are the ones measured under the digest");
+  assert.ok(resident.disclosable.some((d) => d.layer === "contradiction" && d.load_when === layer.load_when));
+  assert.ok(!JSON.stringify(resident).includes(RECOMMEND_PROMPT.slice(0, 40)), "the body is disclosed, never resident");
+  /* The version is an identity over what was rendered: the same pack with other recommender words is another pack. */
+  const { version: _v, ...rest } = renderPack(published(), catalogue);
+  const moved = { ...rest, disclosed: { ...rest.disclosed,
+    contradiction: { ...layer, body: { ...layer.body, recommend_prompt: RECOMMEND_PROMPT + "." } } } };
+  assert.notEqual(packVersion(moved), version);
+  /* The skill holds no gate (R24), and the words it now renders carry no control-flow authority (R16). */
+  assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "contradiction's recommender prompt");
 });
 
 test("R6 version is packVersion(pack), id is investigative-session, edition the authored edition", () => {

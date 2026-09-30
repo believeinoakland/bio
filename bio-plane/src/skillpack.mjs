@@ -148,6 +148,12 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./airun.mjs";
    two suites, and the pack composes them. */
 import { judgementLayers, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
+/* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
+   under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
+   at the render with the catalogue's one synchronous sha256, so a pack built over an unmeasured prompt fails the
+   build (R1); nothing here holds a copy of either. */
+import { RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "./contradiction.mjs";
+import { sha256HexSync } from "../checks/bio-checks.mjs";
 
 /* WHAT THE PACK IS AND WHICH EDITION OF ITS DOCTRINE THIS IS.
    The edition is the AUTHORED half of the version and moves with a release; the
@@ -226,6 +232,7 @@ export const SOURCING = {
   vocabularies:   "driven",     /* op=affordances .vocabularies */
   acts:           "driven",     /* op=affordances .catalog */
   member_only:    "driven",     /* op=affordances .catalog, the mode field */
+  contradiction:  "imported",   /* contradiction RECOMMEND_PROMPT + its measured digest (N345) */
   recipes:        "absent",     /* absent until the plane publishes recipes — see the header */
   recipes_published: "driven",  /* op=affordances .recipes, validated against .surfaces and .catalog (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -335,6 +342,15 @@ export function renderPack(published, catalogue) {
     throw new Error("the machine/member boundary names the acts a machine credential cannot reach, "
       + "read from the published `mode`: the catalogue published none");
 
+  /* R1, N345: the recommender's words are contradiction's, measured under their digest. A prompt that is
+     not the measured one is a detector that never passed its fixture, so no pack renders over it. */
+  if (typeof RECOMMEND_PROMPT !== "string" || RECOMMEND_PROMPT.trim() === "")
+    throw new Error("the pack carries contradiction's recommender prompt and writes none of its own: "
+      + "contradiction exported no RECOMMEND_PROMPT");
+  if (sha256HexSync(RECOMMEND_PROMPT) !== RECOMMEND_PROMPT_SHA256)
+    throw new Error("the pack carries contradiction's recommender prompt only as it was measured: "
+      + "sha256(RECOMMEND_PROMPT) is not contradiction's RECOMMEND_PROMPT_SHA256");
+
   const levels = Object.keys(OBSERVATION_LEVELS);
   const states = Object.keys(OBSERVATION_STATES);
   if (levels.length === 0 || states.length === 0)
@@ -419,6 +435,14 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = 
       sourcing: SOURCING.refusals,
       body: Object.fromEntries(Object.entries(AI_RUN_CHECKS)
         .map(([code, row]) => [code, { check: row.check, says: row.translation }])),
+    },
+    /* N345, R27. The words a run recommends under on a contradiction candidate, contradiction's own and
+       unchanged, with the digest they were measured under; carried, never reworded, so the pack's version
+       moves when they do. */
+    contradiction: {
+      load_when: "the run judges or recommends on a contradiction candidate's two sides",
+      sourcing: SOURCING.contradiction,
+      body: { recommend_prompt: RECOMMEND_PROMPT, recommend_prompt_sha256: RECOMMEND_PROMPT_SHA256 },
     },
     recipes: Array.isArray(recipes) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
