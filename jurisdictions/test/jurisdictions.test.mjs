@@ -4,8 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { list, get, validate, combine, LAW_LEVELS } from "../index.mjs";
 import { applyForm, recogniseIn, systemOf, walkFacts, legacy } from "./helpers.mjs";
-/* PENDING the import of record-grammar's BASIS_GRADES (its R16; K624 (6)), which R39 names. */
-const GRADES = ["A", "B", "C", "D"];
+/* R39's grades are record-grammar's (its R16; K624 (6)). */
+import { BASIS_GRADES as GRADES } from "../../bio-plane/src/record-grammar/index.mjs";
 
 const FIRST = "oakland-alameda";
 const TEST = "test-port-ellery";

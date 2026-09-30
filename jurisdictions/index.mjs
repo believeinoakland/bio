@@ -9,6 +9,7 @@
  * Services: list() · get(id) · validate(profile) · combine(list). */
 import FIRST from "./profiles/oakland-alameda.mjs";
 import TEST from "./profiles/test-port-ellery.mjs";
+import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
 
 /* ------------------------------------------------------------------------------------------------ */
 /* The profile's shape (R1–R7, R23–R26, R31–R33, R39; `locale` and `systems[].links`, N77 and N96). */
@@ -29,9 +30,8 @@ export const COUNTS = Object.freeze(["calendar", "business"]);
 export const STARTS = Object.freeze(["received", "filed", "act", "known"]);
 export const TIERS = Object.freeze([1, 2, 3]);
 export const CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
-/* R39: the grades a venue's evidence standard admits are letters of record-grammar's BASIS_GRADES (its R16).
-   PENDING the import (K624 (6)): this copy stands in until record-grammar merges, then is replaced by it. */
-const BASIS_GRADES = Object.freeze(["A", "B", "C", "D"]);
+/* R39: a venue's evidence standard is named in at most this many characters; the grades it admits are
+   letters of record-grammar's BASIS_GRADES (its R16; K624 (6)). */
 const EVIDENCE_STANDARD_MAX = 200;
 
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
