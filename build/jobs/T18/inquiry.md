@@ -2,6 +2,45 @@
 
 **Status** · session_016DJXNscE3zEJMBXUbRNAPx · depth 2 · RUNNING until 2026-09-30T22:45:19Z (four convert agents (16 old suites) and the module tests of inquiry's users) · handled B3
 
+## Completion (INQUIRY #7)
+
+**Entries applied.**
+- **N405** (K593, K674, K677): R49. `migratedSurfacing(id)` answers the migration replay's surfacing (the shape R49 states) or null, never throws, ungated. It is registered as inquiry's R56 decoration of `surfaced_in` at creation. legacy-store's registration and `#surfacedIn` are deleted from `store.mjs` (§12.2, a pure removal). ai-runs R27 answering it is AI-RUNS #5's (J1, B2).
+- **Grammar face with the registered grammars:** `checkInquiryEntry(md, {grammars})` passes `checkBundle`'s own option. The instance's `checkEntry(md, opts)` passes `record.grammars()` as promotion's gate does (its R27). A grammar that throws is one error naming its module. An unreadable registration list is an error, never read as none. After T19's layer 1, capture's C-2.7 catalogue copy can go.
+- **N136** (R36, R40 as worded, K649 (6)):
+  - `inquiry_basis_count` and `inquiry_superseded_by` are now held in inquiry's own table `inquiry_bundle_facts` (keyed by bundle_id, one row per bundle, declared to purge).
+  - The migration moves a pre-T18 store's values once, idempotently. Later writes win, and the columns are left inert on such a store's `bundles` (dropping record-core's column is not this module's).
+  - The count is registered with retrieval as `legs`' relation (R62). `store.mjs`'s two ADDITIVE_COLUMNS rows are gone.
+  - `inquiry_subject_entity` stays on `bundles` (R40).
+- **N242's share** (`dispose`/`#dispose`): already met by T10's N183 (C-106.1's `where` names `#dispose > is-dispose-shared`). The DEC-49 guard, run once on this job's tree, judges `#dispose > is-dispose-inquiries` and `is-dispose-shared` with no inquiry failure.
+- **Converts** (16 suites, inquiry's shares by their `build/jobs/T17/legacy-tests.md` rows), as requirement-named module tests. No old suite was deleted (K619).
+  - `content-legs.test.mjs` (content-extent-arms, content-extent, content-reads, rec220-version-pin, transcribe): R5, R11, R12, R13, R15.
+  - `testimony-inherited.test.mjs` (testify, testimonyaxis, audit-inheritance): R4, R6, R7, R13.
+  - `case-grammar.test.mjs` (publish, multifinding, caseproduction, grounds): R2, R7, R8, R27, R30, R38.
+  - `lifecycle-reads.test.mjs` (inquiry, rec173-migration-replay, meaningquery, reevaluation): R1, R2, R10, R12, R16, R17, R20, R21, R23, R25, R40, R42, R49.
+  - What each suite's share carried, and what it left to its owners, is in the converters' accounts. Everything left out is other modules' shares or source text; no inquiry behaviour failed.
+- **Fixed in this job:**
+  - R11: a sub-code of C-2.8 with no catalogue row (the testimony arms) carried `translation: undefined`. It now carries its code alone.
+  - `grammar.test.mjs`' R7 arm built a registry shape the check does not read and passed only through a loose assertion. It now uses the edition's axes and asserts C-21.2 exactly.
+
+**Deferred, with why.** R11's R2/R3 arm at the write (J4): `check()` does not judge the entry requirements. The catalogue's arm is not exported and is reachable only through async `checkBundle`, and moving it is inquiry's catalogue share (T19). Proposed: a `not yet met` mark.
+
+**Found in other modules (REPORT J3, J4).**
+- conformance's `reads.test.mjs`:109 writes `bundles.inquiry_superseded_by` directly, so conformance R10 has 1 fail after N136. That is conformance's (layer 9) to fix: supersede through `divide`, or write `inquiry_bundle_facts`.
+- `src` changes stale the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (not_product's, §14).
+- A converter observed that `onRaised`'s raised entries carry `target` through dispose, not through divide. R21 and R25 do not say; noted, not changed.
+
+**Tests and checks.**
+- `node --test test/m/inquiry/`: tests 145, pass 144, fail 0, todo 1 (R31, not yet met, K181).
+- The module tests of every other module (test/m less inquiry): 3540 pass, 2 fail (capture R36, K658, as at layer 5's close; conformance R10, J3).
+- The process checks:
+  - format: 82 modules, 77 requirements files; 0 failures.
+  - architecture: 23 product files, 73 relative imports; 0 failures.
+  - coverage: 49 of 49 live requirement ids named by a test; 0 failures.
+  - ownership (tranche/T18): 13 files; legacy-store 0 added, 30 removed; 0 failures.
+
+Size (session_016DJXNscE3zEJMBXUbRNAPx): test runs 14, module lines 3649
+
 ## J1 · QUESTION
 
 N405, the migrated surfaced_in arm: as registered it cannot reach the answer. retrieval R56 applies decorations in the modules' total order and merges them later-over-earlier (`{...acc, ...v}`, retrieval/index.mjs:449). ai-runs (after inquiry in MODULE_ORDER) answers `surfaced_in` for EVERY inquiry: `{recorded:false, stated:"not recorded", ...}` when it holds no surfacing row (its R27). legacy-store's arm worked only because legacy-store is last. So an inquiry registration's `surfaced_in: {migrated...}` is always overwritten, and the migrated question would read "not recorded" (the rec173-migration-replay convert's arm fails).
