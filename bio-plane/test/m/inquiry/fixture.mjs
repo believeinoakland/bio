@@ -65,6 +65,7 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   prov.migrate();
   const extraction = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
   extraction.migrate();
+  extraction.joinPromotion(promotion);   /* a document's reading (and its text chain) lands through the promotion, R20 */
   const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => clock.now });
   content.migrate();
   const capture = {};   /* connections' link projection is not driven here */
@@ -87,17 +88,27 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   const raisedCalls = [];
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, entities, connections, k, clock, selections, raisedCalls,
+    st, host, record, membership, promotion, prov, extraction, content, entities, connections, k, clock, selections, raisedCalls,
     caseMembers, groupRef,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
-    /** An information bundle registering one capture per text, fetched directly from an address. */
-    doc(id, texts = ["the text of " + id], { via = "direct" } = {}) {
+    /** An information bundle registering one capture per text, fetched directly from an address. `chain`, when given
+     *  (a text-source chain, null for a reading with none, or a function of the capture's index answering either or
+     *  undefined for no reading), gives each capture a reading carrying it, which extraction projects through the
+     *  promotion (its R19, R20). */
+    doc(id, texts = ["the text of " + id], { via = "direct", chain = undefined } = {}) {
       const caps = texts.map((t, i) => ({ path: `snapshots/c${i}.txt`, text: t, sha: sha(t) }));
       const files = [{ path: "bundle.md", text: infoMd(id) }];
       for (const c of caps) files.push({ path: c.path, text: c.text });
-      files.push({ path: "data/provenance.json", text: JSON.stringify({ documents: caps.map((c) => provDoc(c)) }, null, 2) });
+      const readingOf = (i) => {
+        const ch = typeof chain === "function" ? chain(i) : chain;
+        return ch === undefined ? null
+          : { content_type: "meeting_calendar", reader_version: 1, found: false, at: "2026-09-27T00:00:00Z",
+              entities: [], facts: {}, ...(ch === null ? {} : { text_source: ch }) };
+      };
+      files.push({ path: "data/provenance.json", text: JSON.stringify({ documents: caps.map((c, i) =>
+        (readingOf(i) ? { ...provDoc(c), reading: readingOf(i) } : provDoc(c))) }, null, 2) });
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: "member:alice", files,
         meta: { object_type: "information" },
         register: caps.map((c) => ({ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) })) });
