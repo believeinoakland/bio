@@ -578,11 +578,16 @@ console.log("\n--- SWEEP: an ACCESS PATH the schema built for a question no op a
 /* WIDENED 2026-09-28 (T7, legacy-tests; T6's and T7's layers): twelve more modules left the legacy plane with their own
    SQL, and those with tables their own `schema.mjs` (ai-runs took `ai_runs`, `ai_run_bounds` and `ai_runs_context`,
    AI-RUNS #2 REPORT J6.1), so the corpus is widened to their files on BOTH sides, as T3's, T4's and T5's were. */
+/* WIDENED 2026-09-30 (LEGACY-TESTS #12, T14; QUEUE #4 and MONITORING #6, N330): `monitoring` joins the corpus on BOTH
+   sides (its SQL and its `schema.mjs`), because the statement that reads `source_reach_failing`'s leading column
+   (`… FROM source_reachability WHERE consecutive_failures >= ? …`) moved from queue's `#conditionsArchiveEligible`
+   into monitoring's `archiveEligible` (its R47). Measured: 136 -> 138 indexes (monitoring's own two, each read), 13 ->
+   12 unread, the one difference `source_reach_failing`, read again; no other name moved. */
 const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture",
                    "calibration", "extraction", "content", "entities", "connections", "progressions", "bias",
                    "observation-log", "retrieval",
                    "ai-runs", "basis-versions", "capture-requests", "capture-sources", "citation", "contradiction",
-                   "inquiry", "intent", "queue", "reevaluation", "run-productions", "strength"];
+                   "inquiry", "intent", "queue", "reevaluation", "run-productions", "strength", "monitoring"];
 const EXTRACTED_SRC = moduleSources(EXTRACTED);
 const PURGE_COMPOSED = [...(SRC_STORE + "\n" + EXTRACTED_SRC).matchAll(/\{ name: "(\w+)", keys: \[([^\]]*)\]/g)]
   .map((m) => [m[1], [...m[2].matchAll(/"(\w+)"/g)].map((k) => k[1])]).filter(([, keys]) => keys.length)
@@ -814,9 +819,12 @@ t("SWEEP: the roster is still pinned BY NAME as well as by count — `reading_te
 t("SWEEP: and T5's DEPARTURE is pinned by name — `resolutions_grade` is OFF the roster because entities' "
 + "`#restingOn` (R8) filters `resolutions.grade` in a literal WHERE this reader sees",
   unread.some((ix) => ix.index === "resolutions_grade"), false);
-/* RE-PINNED 2026-09-29 (K409, QUEUE #2): T12's departure pinned by name, for REC-116's reason below. */
-t("SWEEP: and T12's DEPARTURE is pinned by name — `source_reach_failing` is OFF the roster because queue's "
-+ "archive-fallback producer filters `source_reachability.consecutive_failures` in a literal WHERE this reader sees",
+/* RE-PINNED 2026-09-29 (K409, QUEUE #2): T12's departure pinned by name, for REC-116's reason below.
+   RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; N330): the reading statement is now monitoring's `archiveEligible`
+   (R47), which queue's producer asks; the corpus follows it (the widening above). KEPT under K457: no module test
+   reads the plane's index roster. */
+t("SWEEP: and T12's DEPARTURE is pinned by name — `source_reach_failing` is OFF the roster because the "
++ "archive-fallback read (monitoring's archiveEligible since T14) filters `source_reachability.consecutive_failures` in a literal WHERE this reader sees",
   unread.some((ix) => ix.index === "source_reach_failing"), false);
 t("SWEEP: and the DEPARTURE is pinned by name too — `provenance_route_marks_finding` is OFF the "
 + "roster because REC-116 gave it the reader it waited 39 days for. Pinning the departure is what "
