@@ -24396,6 +24396,7 @@ var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 // ../bio-plane/src/capture/index.mjs
 var te5 = new TextEncoder();
 var REPLAY_MAX = 256 * 1024 * 1024;
+var WITHIN_FAULT = Symbol("pullKnock: within's fault");
 var TASK_KINDS = Object.freeze(["authority-undetermined"]);
 var SOURCE_OUTCOMES = Object.freeze(["success", "source_refused", "fetch_failed", "governed"]);
 var REACHABILITY_DEFAULTS = Object.freeze({ failures: 3, days: 14, minForAge: 2 });
