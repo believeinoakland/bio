@@ -61250,6 +61250,7 @@ function biasOps(b, url, body) {
 // src/inquiry/index.mjs
 var inquiry_exports = {};
 __export(inquiry_exports, {
+  AUTHORED_ROUTE_BASES: () => AUTHORED_ROUTE_BASES,
   BASIS_ROLES: () => BASIS_ROLES,
   CANDIDATE_RE: () => CANDIDATE_RE,
   CONTRADICTION_COORDINATES: () => CONTRADICTION_COORDINATES,
@@ -61554,7 +61555,7 @@ var INQUIRY_CONTRADICTION_CHECKS = {
   RESOLUTION_INCOMPLETE: {
     check: "C-2.15",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-complete",
-    translation: "This kind of resolution needs one more thing to be complete: the respect in which the sides differ, which side is wrong and why, or the rule that reconciles them. The missing part is named. Nothing was written."
+    translation: "This resolution is not complete. A resolution gives its kind together with what that kind needs: the respect in which the sides differ, which side is wrong and why, or the rule that reconciles them. The part that is missing or not in that form is named. Nothing was written."
   },
   EXPLORES_MALFORMED: {
     check: "C-2.16",
@@ -61565,6 +61566,12 @@ var INQUIRY_CONTRADICTION_CHECKS = {
     check: "C-2.17",
     where: "src/inquiry/index.mjs check > is-candidate-taken-up",
     translation: "That contradiction has already been taken up as another question, which is named. Work on it there, so that one conflict has one place where it is resolved. Nothing was written."
+  },
+  /* N369 (proposed in INQUIRY #5 J1; awaiting T17's stamp): the arm's own failure, which C-2.11's words are not true of. */
+  CONTRADICTION_ARM_FAILED: {
+    check: "C-2.18",
+    where: "src/inquiry/contradiction.mjs contradictionFindings > is-contradiction-arm-judged",
+    translation: "The check of this question's contradiction fields (its link, its resolution, what it explores) stopped with an error instead of answering, so the question is refused rather than let through. The error is in the check and says nothing yet about the document. Nothing was written."
   }
 };
 
@@ -61704,6 +61711,32 @@ function spliceBasisGround(text4, byOrd) {
   }
   return [...lines.slice(0, starts[0]), ...segs.flat(), ...lines.slice(blockEnd + 1)].join("\n");
 }
+function blockEntries(text4, key) {
+  const lines = String(text4 ?? "").split("\n");
+  if (lines[0] !== "---") return null;
+  const end2 = lines.indexOf("---", 1);
+  if (end2 === -1) return null;
+  let at17 = -1;
+  for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
+    at17 = i;
+    break;
+  }
+  if (at17 === -1 || lines[at17].slice(key.length + 1).trim() !== "") return null;
+  const out = [];
+  for (let i = at17 + 1; i < end2; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^ {2}- /.test(lines[i])) {
+      out.push([lines[i]]);
+      continue;
+    }
+    if (/^\s/.test(lines[i]) && out.length) {
+      out[out.length - 1].push(lines[i]);
+      continue;
+    }
+    break;
+  }
+  return out;
+}
 function fmSafe(s) {
   return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 }
@@ -61821,43 +61854,45 @@ function contradictionFindings(fm) {
           "this contradiction inquiry is concluded and its `resolution` names no kind: a contradiction is concluded by saying what the conflict turned out to be.",
           "kind"
         );
-      else if (!isMap(block))
-        find("RESOLUTION_INCOMPLETE", "`resolution` is a block of fields (`kind` and what that kind needs), not a single value.", "resolution");
       else {
-        const family = resolutionFamily(kind);
-        if (!family)
+        const family = isMap(block) ? resolutionFamily(kind) : null;
+        if (isMap(block) && !family)
           find("RESOLUTION_KIND_UNKNOWN", `'${fmSafe(text(kind) ?? typeof kind)}' is not a resolution kind; the kinds are ${RESOLUTION_KINDS.join(", ")}.`, "kind");
         const incomplete = (field, detail) => find("RESOLUTION_INCOMPLETE", detail, field);
-        for (const k of Object.keys(block))
-          if (!RESOLUTION_FIELDS.includes(k))
-            incomplete(k, k === "qualifiers" ? "`qualifiers` is written as `qualifier_a` and `qualifier_b` inside `resolution` (the frontmatter grammar holds no map inside a map); write it through the resolution's own lines." : `\`${k}\` is not a field of a resolution; its fields are ${RESOLUTION_FIELDS.join(", ")}.`);
-        const coords = block.coordinates;
-        const coordsOk = Array.isArray(coords) && coords.length > 0 && coords.every((c) => DISSOLVED_BY.includes(c)) && new Set(coords).size === coords.length;
-        if (kind === "dissolved" && !present(coords))
-          incomplete("coordinates", `a \`dissolved\` resolution names the respects in which the sides differ: one or more distinct \`coordinates\` from ${DISSOLVED_BY.join(", ")}.`);
-        else if (present(coords) && !coordsOk)
-          incomplete("coordinates", `\`coordinates\` is a list of one or more distinct respects from ${DISSOLVED_BY.join(", ")}.`);
-        const side = block.wrong_side;
-        if (family === "CORRECTED" && !present(side))
-          incomplete("wrong_side", "a corrected resolution names the side that is wrong: `wrong_side` is `a` or `b`.");
-        else if (present(side) && side !== "a" && side !== "b")
-          incomplete("wrong_side", "`wrong_side` is `a` or `b`.");
-        const reason = block.reason;
-        if (family === "CORRECTED" && blank(reason))
-          incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
-        else if (present(reason) && (text(reason) === null || text(reason).trim() === ""))
-          incomplete("reason", "`reason` is a non-empty statement.");
-        const canon3 = block.canon;
-        if (kind === "conflict_of_norms" && !present(canon3))
-          incomplete("canon", `a conflict of norms names the canon that reconciles them, or says none does: \`canon\` from ${NORM_CANONS.join(", ")}.`);
-        else if (present(canon3) && !NORM_CANONS.includes(canon3))
-          incomplete("canon", `\`canon\` is one of ${NORM_CANONS.join(", ")}.`);
-        for (const [key, name] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
-          const v = block[key];
-          if (!present(v)) continue;
-          const s = text(v);
-          if (s === null || s.length > QUALIFIER_MAX)
-            incomplete(`qualifiers.${name}`, `a qualifier on side ${name} is a statement of at most ${QUALIFIER_MAX} characters.`);
+        if (!isMap(block))
+          incomplete("resolution", "`resolution` is a block of fields (`kind` and what that kind needs), not a single value.");
+        else {
+          for (const k of Object.keys(block))
+            if (!RESOLUTION_FIELDS.includes(k))
+              incomplete(k, k === "qualifiers" ? "`qualifiers` is written as `qualifier_a` and `qualifier_b` inside `resolution` (the frontmatter grammar holds no map inside a map); write it through the resolution's own lines." : `\`${k}\` is not a field of a resolution; its fields are ${RESOLUTION_FIELDS.join(", ")}.`);
+          const coords = block.coordinates;
+          const coordsOk = Array.isArray(coords) && coords.length > 0 && coords.every((c) => DISSOLVED_BY.includes(c)) && new Set(coords).size === coords.length;
+          if (kind === "dissolved" && !present(coords))
+            incomplete("coordinates", `a \`dissolved\` resolution names the respects in which the sides differ: one or more distinct \`coordinates\` from ${DISSOLVED_BY.join(", ")}.`);
+          else if (present(coords) && !coordsOk)
+            incomplete("coordinates", `\`coordinates\` is a list of one or more distinct respects from ${DISSOLVED_BY.join(", ")}.`);
+          const side = block.wrong_side;
+          if (family === "CORRECTED" && !present(side))
+            incomplete("wrong_side", "a corrected resolution names the side that is wrong: `wrong_side` is `a` or `b`.");
+          else if (present(side) && side !== "a" && side !== "b")
+            incomplete("wrong_side", "`wrong_side` is `a` or `b`.");
+          const reason = block.reason;
+          if (family === "CORRECTED" && blank(reason))
+            incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
+          else if (present(reason) && (text(reason) === null || text(reason).trim() === ""))
+            incomplete("reason", "`reason` is a non-empty statement.");
+          const canon3 = block.canon;
+          if (kind === "conflict_of_norms" && !present(canon3))
+            incomplete("canon", `a conflict of norms names the canon that reconciles them, or says none does: \`canon\` from ${NORM_CANONS.join(", ")}.`);
+          else if (present(canon3) && !NORM_CANONS.includes(canon3))
+            incomplete("canon", `\`canon\` is one of ${NORM_CANONS.join(", ")}.`);
+          for (const [key, name] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
+            const v = block[key];
+            if (!present(v)) continue;
+            const s = text(v);
+            if (s === null || s.length > QUALIFIER_MAX)
+              incomplete(`qualifiers.${name}`, `a qualifier on side ${name} is a statement of at most ${QUALIFIER_MAX} characters.`);
+          }
         }
       }
     }
@@ -61865,10 +61900,10 @@ function contradictionFindings(fm) {
       find("EXPLORES_MALFORMED", `\`explores\` names exactly one of \`coordinate\` (from ${DISSOLVED_BY.join(", ")}), \`canon\` (from ${NORM_CANONS.join(", ")}) or \`hypothesis\` (non-empty, at most ${HYPOTHESIS_MAX} characters), and nothing else.`);
   } catch (e) {
     out.push({
-      check: INQUIRY_CONTRADICTION_CHECKS.CONTRADICTION_LINK_MALFORMED.check,
-      code: "CONTRADICTION_LINK_MALFORMED",
-      detail: `the contradiction arm could not judge this document: ${e && e.message}`,
-      translation: INQUIRY_CONTRADICTION_CHECKS.CONTRADICTION_LINK_MALFORMED.translation
+      check: INQUIRY_CONTRADICTION_CHECKS.CONTRADICTION_ARM_FAILED.check,
+      code: "CONTRADICTION_ARM_FAILED",
+      detail: `the contradiction arm stopped with an error before it could judge this document's link, resolution and explores: ${fmSafe(e && e.message)}`,
+      translation: INQUIRY_CONTRADICTION_CHECKS.CONTRADICTION_ARM_FAILED.translation
     });
   }
   return out;
@@ -61927,6 +61962,7 @@ var INQUIRY_DISPOSE_CHECKS = {
     translation: "More than one project draws on this question, and setting it down here would set it down for every one of them. One team's disposition never moves another team's stance: set it aside for your own project instead, which leaves the question where the other projects have it."
   }
 };
+var AUTHORED_ROUTE_BASES = Object.freeze(["CAPTURE_ROUTE_UNRECORDED", "CAPTURE_RECEIVED_NOT_FETCHED"]);
 var GRADE_RANK = gradeRank;
 var safeJson9 = (s) => {
   try {
@@ -61989,6 +62025,20 @@ var mdFile = (text4) => {
   const bytes2 = new TextEncoder().encode(text4);
   return { path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() };
 };
+var LEG_FIELDS = ["target", "role", "grade", "grade_axis", "grade_source", "target_edition", "author", "date", "ground"];
+function legRebuilt(l) {
+  const val2 = (v) => Array.isArray(v) ? `[${v.map((x) => fmSafe(x).replace(/[,[\]]/g, " ")).join(", ")}]` : typeof v === "string" && /[:#"'\[\]{},]|^\s|\s$|^$/.test(v) ? `"${fmSafe(v)}"` : String(v);
+  const keys = [
+    ...LEG_FIELDS.filter((k) => k !== "target" && k !== "role"),
+    ...Object.keys(l).filter((k) => k === "content_id" || k.startsWith("extent_")).sort()
+  ];
+  return [
+    `  - target: ${l.target}`,
+    `    role: ${l.role ?? "supports"}`,
+    ...keys.filter((k) => l[k] !== void 0 && l[k] !== null && l[k] !== "").map((k) => `    ${k}: ${val2(l[k])}`),
+    ...typeof l.note === "string" ? [`    note: "${fmSafe(l.note)}"`] : []
+  ];
+}
 var Inquiry = class _Inquiry {
   #onRaised = null;
   // {module, fn}: reevaluation's obligation (R21, R25)
@@ -63145,6 +63195,19 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         "inquirydivide",
         `${target}'s children would be new documents that must name the group that produced them; this store records none and ${target}'s own document names none, so nothing was divided.`
       );
+    const allBasis = Array.isArray(fm.basis) ? fm.basis : [];
+    const basisRows = blockEntries(parentText, "basis");
+    const rawLegs = basisRows && basisRows.length === allBasis.length ? allBasis.flatMap((l, i) => l && typeof l === "object" ? [basisRows[i]] : []) : null;
+    const ordGround = legs.map((l) => typeof l.ground === "string" && l.ground.trim() ? l.ground.trim() : null);
+    const groupOrds = /* @__PURE__ */ new Map();
+    ordGround.forEach((g, i) => {
+      if (g !== null) groupOrds.set(g, [...groupOrds.get(g) || [], i]);
+    });
+    const groundRows = blockEntries(parentText, "grounds");
+    const rawGrounds = groundRows && Array.isArray(fm.grounds) && groundRows.length === fm.grounds.length ? groundRows.map((lines, i) => ({
+      lines,
+      label: fm.grounds[i] && typeof fm.grounds[i].ground === "string" ? fm.grounds[i].ground.trim() : null
+    })).filter((r) => r.label !== null) : null;
     const plans = [];
     for (let k = 0; k < kids.length; k++) {
       const id = ids[k];
@@ -63178,17 +63241,18 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         "    status: confirmed",
         `    reason: "${fmSafe(why)}"`
       ]);
-      text5 = setOrAddBlock(text5, "basis", childLegs.flatMap((l) => [
-        `  - target: ${l.target}`,
-        `    role: ${l.role ?? "supports"}`,
-        ...l.grade !== void 0 && l.grade !== null ? [`    grade: ${l.grade}`] : [],
-        ...l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : [],
-        ...l.grade_source ? [`    grade_source: ${l.grade_source}`] : [],
-        ...l.target_edition !== void 0 ? [`    target_edition: ${l.target_edition}`] : [],
-        ...l.author ? [`    author: ${l.author}`] : [],
-        ...l.date ? [`    date: ${l.date}`] : [],
-        ...typeof l.note === "string" ? [`    note: "${fmSafe(l.note)}"`] : []
-      ]));
+      const grouped = ordGround.some((g) => g !== null);
+      const keepGroups = grouped && !!rawGrounds && mine.every((ord) => ordGround[ord] !== null && groupOrds.get(ordGround[ord]).every((o) => mine.includes(o)) && rawGrounds.some((r) => r.label === ordGround[ord]));
+      const legLines = (ord) => {
+        const seg = rawLegs ? rawLegs[ord] : null;
+        const lines = seg || legRebuilt(legs[ord]);
+        return keepGroups ? lines : lines.filter((ln) => !/^\s+ground:/.test(ln));
+      };
+      text5 = setOrAddBlock(text5, "basis", mine.flatMap(legLines));
+      if (keepGroups) {
+        const labels = new Set(mine.map((ord) => ordGround[ord]));
+        text5 = setOrAddBlock(text5, "grounds", rawGrounds.filter((r) => labels.has(r.label)).flatMap((r) => r.lines));
+      } else text5 = removeBlock(text5, "grounds");
       text5 = removeBlock(text5, "division");
       text5 = removeBlock(text5, "division_apportionment");
       text5 = removeBlock(text5, "contradiction");
@@ -64017,7 +64081,16 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     )) {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
-        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0, byteBest: null, unruled: 0 });
+        perBundle.set(r.bundle_id, {
+          n: 0,
+          bound: null,
+          transcribed: 0,
+          authored: 0,
+          byteBest: null,
+          unruled: 0,
+          measured: 0,
+          authoredRoutes: []
+        });
       const e = perBundle.get(r.bundle_id);
       if (r.authored === 1) {
         e.authored++;
@@ -64026,12 +64099,16 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
       e.n++;
       const chain2 = safeJson9(r.chain);
       const cg = this.provenance.captureGrade(r.capture_sha) || {};
-      const byteGrade = cg.determined && cg.grade ? cg.grade : cg.basis === "CAPTURE_ROUTE_UNRECORDED" ? EARNED_CAPTURE_CEILING : null;
+      const authoredRoute = !(cg.determined && cg.grade) && AUTHORED_ROUTE_BASES.includes(cg.basis);
+      const byteGrade = cg.determined && cg.grade ? cg.grade : authoredRoute ? cg.ceiling || EARNED_CAPTURE_CEILING : null;
       if (byteGrade == null) {
         e.unruled++;
         if (isTranscribed(chain2)) e.transcribed++;
         continue;
       }
+      if (authoredRoute) {
+        if (!e.authoredRoutes.includes(cg.basis)) e.authoredRoutes.push(cg.basis);
+      } else e.measured++;
       e.byteBest = e.byteBest == null ? byteGrade : BASIS_GRADES.indexOf(byteGrade) < BASIS_GRADES.indexOf(e.byteBest) ? byteGrade : e.byteBest;
       const b = captureBound(chain2, byteGrade);
       if (isTranscribed(chain2)) e.transcribed++;
@@ -64063,6 +64140,11 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
       if (!e.n) continue;
       const captureWord = `${bundleId} holds ${e.n} capture(s) in the record`;
       const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
+      const asAuthored = !e.measured && e.authoredRoutes.length ? {
+        stated_as: "authored",
+        route_basis: [...e.authoredRoutes].sort(),
+        why: `${captureWord}, and none of them was fetched by a route that measures a capture grade (${e.authoredRoutes.includes("CAPTURE_RECEIVED_NOT_FETCHED") ? "received through the doorbell" : ""}${e.authoredRoutes.length > 1 ? "; " : ""}${e.authoredRoutes.includes("CAPTURE_ROUTE_UNRECORDED") ? "no fetch route recorded" : ""}), so a leg on it keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored and never as measured.`
+      } : null;
       if (!e.transcribed && e.bound === EARNED_CAPTURE_CEILING) {
         out.earned.capture[bundleId] = {
           /* mode 'ceiling', and the difference from the connection axis is not a
@@ -64078,7 +64160,8 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
           grade: EARNED_CAPTURE_CEILING,
           captures: e.n,
           why: `${captureWord}, so the strongest capture grade it can earn is ${EARNED_CAPTURE_CEILING} \u2014 the bytes as this instance fetched them, hashed at receipt.`,
-          ceiling
+          ceiling,
+          ...asAuthored || {}
         };
         continue;
       }
@@ -64114,7 +64197,8 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
           grade: EARNED_CAPTURE_CEILING,
           captures: e.n,
           why: `${captureWord}, so the strongest capture grade it can earn is ${EARNED_CAPTURE_CEILING} \u2014 the bytes as this instance fetched them, hashed at receipt.`,
-          ceiling
+          ceiling,
+          ...asAuthored || {}
         };
         continue;
       }
@@ -67184,6 +67268,8 @@ var REACH_INQUIRIES_MAX = 32;
 var PAGE_MAX = 50;
 var CANDIDATES_SCAN_MAX = 2e3;
 var TENSIONS_REFERENTS_MAX = 200;
+var TENSIONS_CANDIDATES_MAX = 200;
+var FACTS_ENTITIES_MAX = 500;
 var UNRESOLVED_MAX = 200;
 var TEXT_CAPS = Object.freeze({
   explanation: 1e3,
@@ -68303,23 +68389,32 @@ var Contradiction = class _Contradiction {
   /** R24, R49: the projects reached through one side, and whether the list was cut. A claim, leg or stance side reaches
    *  the projects drawing on its inquiry (`basis-versions` R37); an extent side, those drawing on each inquiry with a leg
    *  on its content row (`inquiry` R40), at most `REACH_INQUIRIES_MAX` inquiries; a stance side of K5, its own project.
-   *  At most `REACH_PROJECTS_MAX` projects per inquiry. Read as the record holds it, whoever asks. */
-  #reachOf(side) {
+   *  At most `REACH_PROJECTS_MAX` projects per inquiry.
+   *
+   *  `viewer` is whose sight the list is read under (N366). R49's parties are about the record, never about who asks,
+   *  so the notice, the opt-in, the reveal and the marks read it as `INTERNAL`, the default. What a viewer is SHOWN as a
+   *  duty's reach is read under that viewer: only projects they see (membership R43, R80), through only the inquiries
+   *  they see, so neither a hidden project's id nor a bound it fills reaches them (R19, R55). */
+  #reachOf(side, viewer = INTERNAL) {
     const out = { projects: [], truncated: false };
     const add = (id) => {
       if (id && !out.projects.includes(id)) out.projects.push(id);
     };
     if (!side) return out;
     if (side.kind === "stance") {
-      add(side.project);
+      if (side.project && this.#sees(side.project, viewer)) add(side.project);
       return out;
     }
     let inquiries = [];
-    if (side.kind === "claim" || side.kind === "leg") inquiries = side.inquiry ? [side.inquiry] : [];
+    if (side.kind === "claim" || side.kind === "leg")
+      inquiries = side.inquiry && this.#sees(side.inquiry, viewer) ? [side.inquiry] : [];
     else if (side.content_id) {
+      const g = this.#gate("ib.bundle_id", viewer);
       const rows = this.#rows(
-        `SELECT DISTINCT bundle_id FROM inquiry_basis WHERE content_id=? ORDER BY bundle_id LIMIT ?`,
+        `SELECT DISTINCT ib.bundle_id AS bundle_id FROM inquiry_basis ib
+                                WHERE ib.content_id=? AND (${g.sql}) ORDER BY ib.bundle_id LIMIT ?`,
         String(side.content_id),
+        ...g.args,
         REACH_INQUIRIES_MAX + 1
       );
       if (rows.length > REACH_INQUIRIES_MAX) out.truncated = true;
@@ -68327,7 +68422,7 @@ var Contradiction = class _Contradiction {
     }
     const bv = this.#b();
     for (const inq of inquiries) {
-      const list2 = bv && typeof bv.projectsDrawingOn === "function" ? bv.projectsDrawingOn(inq, INTERNAL) || [] : [];
+      const list2 = bv && typeof bv.projectsDrawingOn === "function" ? bv.projectsDrawingOn(inq, viewer) || [] : [];
       if (list2.truncated) out.truncated = true;
       for (const p of list2.slice(0, REACH_PROJECTS_MAX)) add(p.id);
     }
@@ -68335,9 +68430,9 @@ var Contradiction = class _Contradiction {
     return out;
   }
   /** R24: the reach of a candidate (the projects its duty is held for), and R49's parties, which are the same set read
-   *  side by side. */
-  #parties(row2) {
-    const a = this.#reachOf(row2.a), b = this.#reachOf(row2.b);
+   *  side by side; under `viewer`'s sight when one is given (N366), else as the record holds it. */
+  #parties(row2, viewer = INTERNAL) {
+    const a = this.#reachOf(row2.a, viewer), b = this.#reachOf(row2.b, viewer);
     const all = [.../* @__PURE__ */ new Set([...a.projects, ...b.projects])].sort();
     return { a, b, all, truncated: a.truncated || b.truncated };
   }
@@ -68508,7 +68603,9 @@ var Contradiction = class _Contradiction {
   }
   /** A candidate as R25 answers it to a viewer who sees it whole. */
   #present(row2, view, viewer) {
-    const parties = view.weight === "duty" || view.weight === "plurality" || view.weight === "lead" ? this.#parties(row2) : null;
+    const reaches = view.weight === "duty" || view.weight === "plurality" || view.weight === "lead";
+    const parties = reaches ? this.#parties(row2) : null;
+    const shownReach = reaches ? this.#parties(row2, viewer) : null;
     const member = viewerPredicate(viewer).member;
     const m = this.#m();
     const between = parties && isProjectConflict(view.weight, view.state) && member ? parties.all.filter((p) => m && typeof m.isJoinedParticipant === "function" && m.isJoinedParticipant(p, member)).map((p) => ({ project: p, ...this.#partyView(row2, p) })) : [];
@@ -68524,7 +68621,7 @@ var Contradiction = class _Contradiction {
       resolution: this.#resolutionOf(view),
       inquiry: view.inquiry,
       recommendations: this.#standing(row2, view),
-      reach: parties && view.weight !== "not_shown" ? { projects: parties.all, truncated: parties.truncated } : null,
+      reach: shownReach ? { projects: shownReach.all, truncated: shownReach.truncated } : null,
       default_question: this.#defaultQuestion(row2),
       ...between.length ? { between_projects: between } : {}
     };
@@ -68625,7 +68722,8 @@ var Contradiction = class _Contradiction {
       }
       const n = Number(limit);
       const cap = limit === null || limit === void 0 || limit === "" || !Number.isFinite(n) || n < 1 ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
-      const ids = this.#candidatesNaming(subject);
+      const fenced = subject.kind === "project" && !this.#sees(subject.id, viewer);
+      const ids = fenced ? [] : this.#candidatesNaming(subject);
       const scanCut = ids.length > CANDIDATES_SCAN_MAX;
       const notShown = { precision: 0, unrelated: 0 };
       let unmeasured = 0, visible = 0, shown2 = 0;
@@ -68756,16 +68854,31 @@ var Contradiction = class _Contradiction {
     if (family === "CORRECTED") {
       const wrong = view.inquiry ? res.wrong_side : act.wrong_side;
       if (wrong !== which) return [];
+      const says = "this side was named wrong by a member's resolution; it still resolves, and says it was corrected";
+      if (!view.inquiry)
+        return [{
+          mark: "stale",
+          candidate: c,
+          corrected: true,
+          kind: view.kind,
+          reason: act.wrong_reason,
+          member: act.author,
+          at: act.at,
+          act: act.act_id,
+          says
+        }];
+      const concluding = [...view.acts].reverse().find((a) => a.act === "resolve" && a.inquiry === view.inquiry) || null;
       return [{
         mark: "stale",
         candidate: c,
         corrected: true,
         kind: view.kind,
-        reason: view.inquiry ? res.reason ?? null : act.wrong_reason,
-        member: view.inquiry ? null : act.author,
-        at: view.inquiry ? null : act.at,
-        ...view.inquiry ? { inquiry: view.inquiry } : { act: act.act_id },
-        says: "this side was named wrong by a member's resolution; it still resolves, and says it was corrected"
+        reason: res.reason ?? null,
+        member: concluding ? concluding.author : null,
+        at: concluding ? concluding.at : null,
+        inquiry: view.inquiry,
+        ...concluding ? { act: concluding.act_id } : { why: "concluded through basis-versions' own door; no concluding act of this module" },
+        says
       }];
     }
     if (view.kind === "dissolved")
@@ -68802,21 +68915,29 @@ var Contradiction = class _Contradiction {
         if (!ref) return { referent: x ?? null, marks: [], undetermined: true, why: "not a referent at a version" };
         const ids = this.#rows(
           `SELECT candidate FROM contradiction_candidates
-                                 WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq`,
+                                 WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq LIMIT ?`,
           ref.ref,
           ref.version,
           ref.ref,
-          ref.version
+          ref.version,
+          TENSIONS_CANDIDATES_MAX + 1
         ).map((r) => r.candidate);
+        const truncated3 = ids.length > TENSIONS_CANDIDATES_MAX;
         const marks = [];
-        for (const id of ids) {
+        for (const id of ids.slice(0, TENSIONS_CANDIDATES_MAX)) {
           const row2 = this.#candidate(id);
           const which = row2 ? _Contradiction.#whichSide(row2, ref) : null;
           if (which) marks.push(...this.#marksOn(row2, which, viewer));
         }
-        return { referent: ref, marks };
+        return { referent: ref, marks, truncated: truncated3 };
       });
-      return { ok: true, wrote: false, referents: out };
+      return {
+        ok: true,
+        wrote: false,
+        referents: out,
+        limit: TENSIONS_CANDIDATES_MAX,
+        truncated: out.some((r) => r.truncated === true)
+      };
     } catch (e) {
       return { ok: true, wrote: false, referents: [], undetermined: true, why: String(e && e.message || e).slice(0, 160) };
     }
@@ -68834,13 +68955,13 @@ var Contradiction = class _Contradiction {
       ...extra
     };
   }
-  /** The established resolutions of a capture (entities R35's read contract): the entities it is about. */
+  /** The established resolutions of a capture (entities R35's read contract): the entities it is about, at most
+   *  `FACTS_ENTITIES_MAX` in id order, with `truncated` observed by reading one past (R28, N368). */
   #entitiesOf(capture) {
-    if (!capture) return null;
-    return this.#rows(
-      `SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=? AND established=1 ORDER BY entity_id`,
-      capture
-    ).map((r) => r.entity_id);
+    if (!capture) return { ids: null, truncated: false };
+    const rows = this.#rows(`SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=? AND established=1
+                              ORDER BY entity_id LIMIT ?`, capture, FACTS_ENTITIES_MAX + 1).map((r) => r.entity_id);
+    return { ids: rows.slice(0, FACTS_ENTITIES_MAX), truncated: rows.length > FACTS_ENTITIES_MAX };
   }
   /** R28's facts for a candidate, computed from what its sides already carry. */
   #facts(row2) {
@@ -68865,8 +68986,23 @@ var Contradiction = class _Contradiction {
     const subject = (s) => {
       if (isPart(s)) return this.#entitiesOf(s.capture_sha);
       const r = s && s.inquiry ? this.#one(`SELECT inquiry_subject_entity AS e FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
-      return r && r.e ? [r.e] : null;
+      return { ids: r && r.e ? [r.e] : null, truncated: false };
     };
+    const sa = subject(A), sb = subject(B);
+    const entities = fact(
+      "subject",
+      "resolved_entities",
+      sa.ids,
+      sb.ids,
+      "no established resolution or subject is held",
+      "no established resolution or subject is held"
+    );
+    if (sa.truncated || sb.truncated) Object.assign(entities, {
+      truncated: true,
+      limit: FACTS_ENTITIES_MAX,
+      ...sa.truncated ? { a_truncated: true } : {},
+      ...sb.truncated ? { b_truncated: true } : {}
+    });
     const facts = [
       fact("time_or_occasion", "stated_date", A.date, B.date, noDate(A), noDate(B)),
       fact("observer_or_method", "doctype", A.doctype, B.doctype, noType(A), noType(B)),
@@ -68878,14 +69014,7 @@ var Contradiction = class _Contradiction {
         isPart(A) ? "the passage is not held" : "a held claim rests on no one capture",
         isPart(B) ? "the passage is not held" : "a held claim rests on no one capture"
       ),
-      fact(
-        "subject",
-        "resolved_entities",
-        subject(A),
-        subject(B),
-        "no established resolution or subject is held",
-        "no established resolution or subject is held"
-      )
+      entities
     ];
     if (row2.key === "K5") facts.push(fact("scope", "project", A.project ?? null, B.project ?? null, "no project", "no project"));
     return facts;
@@ -68896,12 +69025,15 @@ var Contradiction = class _Contradiction {
       const row2 = this.#candidate(candidate);
       if (!row2 || !this.#sideSeen(row2.a, viewer) || !this.#sideSeen(row2.b, viewer))
         return _Contradiction.#noSuch("no contradiction you can see answers to that id");
+      const facts = this.#facts(row2);
       return {
         ok: true,
         wrote: false,
         candidate: row2.candidate,
         key: row2.key,
-        facts: this.#facts(row2),
+        facts,
+        limit: FACTS_ENTITIES_MAX,
+        truncated: facts.some((f9) => f9.truncated === true),
         says: "each fact is the record's, as its sides carry it, and none is machine work. A fact not stated is undetermined, with why, never guessed"
       };
     } catch (e) {
@@ -69522,6 +69654,26 @@ var Contradiction = class _Contradiction {
       return f9 && typeof f9.text === "string" ? { path, text: f9.text } : { path, blobSha: f9.blobSha, bytes: f9.bytes };
     });
   }
+  /** R36's C-93.27 check and R56's one predicate: the candidate a contradiction inquiry names, when the inquiry is held
+   *  and one the viewer may see, it names a candidate this module holds (`inquiry` R48's `contradictionLink`), and the
+   *  viewer may see both of its sides (R10); else null. */
+  #linkedCandidate(id, viewer) {
+    const i = this.#i();
+    const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id) && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
+    const row2 = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
+    return row2 && this.#sideSeen(row2.a, viewer) && this.#sideSeen(row2.b, viewer) ? row2 : null;
+  }
+  /** R56 (N365; in-process, read as the viewer, for `affordances` R14): whether R36's `NOT_A_CONTRADICTION_INQUIRY`
+   *  check passes for this viewer, answered by the very predicate `resolve` applies, so the offer and the act cannot
+   *  disagree. `false` for an absent viewer and for anything it cannot read. Writes nothing; never throws. */
+  candidateSidesSeen({ inquiry = null, viewer = null } = {}) {
+    try {
+      const id = typeof inquiry === "string" ? inquiry.trim() : "";
+      return !!this.#linkedCandidate(id, viewer);
+    } catch {
+      return false;
+    }
+  }
   /** op=contradictionresolve — R36: a contradiction inquiry's conclusion, with its resolution. */
   resolve({
     inquiry = null,
@@ -69539,9 +69691,8 @@ var Contradiction = class _Contradiction {
     if (machine3) return machine3;
     const id = typeof inquiry === "string" ? inquiry.trim() : "";
     const i = this.#i();
-    const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id) && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
-    const row2 = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
-    if (!row2 || !this.#sideSeen(row2.a, viewer) || !this.#sideSeen(row2.b, viewer))
+    const row2 = this.#linkedCandidate(id, viewer);
+    if (!row2)
       return _Contradiction.#notContradictionInquiry("no question you can see answers to that id as one taken up from a contradiction");
     const res = resolution && typeof resolution === "object" && !Array.isArray(resolution) ? resolution : {};
     const family = this.#family(res.kind);

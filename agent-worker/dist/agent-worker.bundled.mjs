@@ -25964,6 +25964,9 @@ var INQUIRY_ROWS = Object.freeze({
   // C-32.8
 });
 
+// ../bio-plane/src/inquiry/index.mjs
+var AUTHORED_ROUTE_BASES = Object.freeze(["CAPTURE_ROUTE_UNRECORDED", "CAPTURE_RECEIVED_NOT_FETCHED"]);
+
 // ../bio-plane/src/basis-versions/schema.mjs
 var BASIS_VERSIONS_TABLES = Object.freeze(["inquiry_basis_versions", "inquiry_basis_version_legs"]);
 
