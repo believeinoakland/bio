@@ -25787,6 +25787,25 @@ var GENERIC_CODES = Object.freeze(["NO_KEY"]);
 // ../bio-plane/src/progressions/index.mjs
 var STAGE_REQUIREDNESS = Object.freeze(["always", "usually", "sometimes", "never", "unless_exception"]);
 
+// ../bio-plane/src/inquiry/contradiction.mjs
+var freeze = (a) => Object.freeze([...a]);
+var CONTRADICTION_COORDINATES = freeze(["time_or_occasion", "scope", "meaning", "observer_or_method", "subject"]);
+var PLURALITY_DIFFERENCES = freeze(["scope", "time_or_occasion", "standard", "evidence_set", "weighing"]);
+var DISSOLVED_BY = freeze([.../* @__PURE__ */ new Set([...CONTRADICTION_COORDINATES, ...PLURALITY_DIFFERENCES, "precision", "opinion"])]);
+var NORM_CANONS = freeze(["higher_over_lower", "later_over_earlier", "specific_over_general", "harmonization", "unreconciled"]);
+var FAMILY = Object.freeze({
+  dissolved: "DISSOLVED",
+  misquote: "CORRECTED",
+  transcription_or_reading_error: "CORRECTED",
+  superseded_version: "CORRECTED",
+  corrected: "CORRECTED",
+  double_speak_or_reversal: "GENUINE",
+  obligation_against_act: "GENUINE",
+  conflict_of_norms: "GENUINE",
+  irreconcilable: "GENUINE"
+});
+var RESOLUTION_KINDS = freeze(Object.keys(FAMILY));
+
 // ../bio-plane/src/inquiry/grammar.mjs
 var INQUIRY_MACHINE = STATES.inquiry;
 var INQUIRY_ROWS = Object.freeze({

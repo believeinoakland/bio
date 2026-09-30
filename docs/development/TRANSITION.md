@@ -157,4 +157,4 @@ Replaced at each handoff; the progress log (§4) is the history.
 
 **Bob's open items:** his weekly meter (asked at T14's close); the queue split (P6: queue's code 5,145 lines; recommended: cut the obligation inbox and the feed producers into their own modules before layer 11; queue's T15 entry is re-cut if he approves); the `action-plans` module (PR #5); PR #4 lands after T14 as DEC-86–DEC-90 (K473) — now due.
 
-**Next:** layer 2 (membership R88 and its T15 entries, merged early; promotion's 1.45.0 stamp, last), STARTs prepared a layer ahead against the code (BOB #67's practice).
+**Next:** layers 1, 2, 5 closed (K482, K483, K486); layer 6 running (INQUIRY #4 `session_01Ew9rdcsPSSYPHdbKmBr6Hv`, CONTRADICTION #2 `session_0171p4zErPrN1VgxXfWEhXn7`, SKILLS #5 `session_018xQkkj4FkEcwbqR1dfGgvx`): inquiry merges early for contradiction; skills waits on contradiction's merge. STARTs for layers 7–9 are in `build/plan/starts-T15/`; control-plane's and legacy-tests' hold their handovers (write their STARTs from them). Queue's layer-11 entry waits on Bob's split ruling.

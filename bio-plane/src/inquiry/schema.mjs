@@ -1,6 +1,6 @@
 /* inquiry's tables (requirements: `build/requirements/inquiry.md`, R36). Moved out of the legacy `schema.mjs` at this
  * module's extraction (layers.md ruling 3, "each module owns its tables"): `inquiry_basis`, `inquiry_exclusions` and
- * `inquiry_migration_replays` (and, since T10, `inquiry_member_agents`), with the comments that record why each is shaped as it is. Each carries `bundle_id`
+ * `inquiry_migration_replays` (and, since T10, `inquiry_member_agents`; since T15, `inquiry_contradiction_links`), with the comments that record why each is shaped as it is. Each carries `bundle_id`
  * and is declared to record-core's purge by this module (K23). `migrateInquiry` brings a store created under an
  * earlier shape to this one (the `ground` and `content_id` columns REC-42 and REC-82 added, moved here from the
  * store's additive list). */
@@ -202,10 +202,27 @@ CREATE TABLE IF NOT EXISTS inquiry_member_agents (
   user_agent  TEXT NOT NULL,
   at          TEXT NOT NULL
 );
+
+-- R48 (N345): the contradiction link R47's grammar judges, as the inquiry's latest promotion projected it. A projection
+-- of the document's own 'contradiction', 'resolution' and 'explores' blocks, re-derived whole at every promotion (D-21),
+-- one row per inquiry that carries a link or an 'explores' block and none for a plain inquiry. candidate is the
+-- contradiction candidate's id (contradiction R15), NULL for a sub-inquiry that only explores. resolution is the logical
+-- resolution as JSON, written only while the document is concluded (R47: kept, never read, at any other state), so a
+-- reopened inquiry answers NULL with no edit. explores is the logical block as JSON, or NULL. The candidate index is the
+-- one lookup R11's one-candidate rule (C-2.17) and inquiryOfCandidate ask. Keyed by bundle_id and declared to purge (R36).
+CREATE TABLE IF NOT EXISTS inquiry_contradiction_links (
+  bundle_id   TEXT PRIMARY KEY,
+  candidate   TEXT,
+  resolution  TEXT,
+  explores    TEXT,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS inquiry_contradiction_links_candidate ON inquiry_contradiction_links(candidate);
 `;
 
 /** R36: the tables this module declares to purge, each keyed to a bundle by its `bundle_id`. */
-export const INQUIRY_TABLES = ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents"];
+export const INQUIRY_TABLES = ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
+                              "inquiry_contradiction_links"];
 
 const ADDITIVE = [["inquiry_basis", "ground", "TEXT"], ["inquiry_basis", "content_id", "TEXT"]];
 

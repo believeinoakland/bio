@@ -116,7 +116,10 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   const w = world(); w.doc(A);
   assert.equal(w.promote("INQ-2026-0001-q", inquiryMd("INQ-2026-0001-q", { legs: [{ target: A }] }), null,
     { memberUserAgent: "Mozilla/5.0" }).ok, true);
-  assert.deepEqual(INQUIRY_TABLES, ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents"]);
+  assert.equal(w.promote("INQ-2026-0001-q", w.text("INQ-2026-0001-q").replace("---\n\n## Question",
+    `contradiction:\n  candidate: ${"c".repeat(64)}\n---\n\n## Question`)).ok, true);
+  assert.deepEqual(INQUIRY_TABLES, ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
+                                    "inquiry_contradiction_links"]);
   for (const t of INQUIRY_TABLES) {
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "bundle_id"), t);
     assert.ok(inquiryOwns(t) && inquiryOwns({ name: t }));
@@ -124,6 +127,7 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   const r = w.record.purge({ bundleId: "INQ-2026-0001-q" });
   assert.equal(w.count("inquiry_basis"), 0);
   assert.equal(w.count("inquiry_member_agents"), 0);
+  assert.equal(w.count("inquiry_contradiction_links"), 0, "R48's projection is purged with its inquiry");
   assert.ok(JSON.stringify(r).includes("inquiry_basis"), JSON.stringify(r).slice(0, 300));
 });
 

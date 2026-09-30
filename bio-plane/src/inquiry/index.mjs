@@ -38,11 +38,16 @@ import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, migrateInquiry } from "./schema.mjs";
+import { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
+import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, fmSafe, rand } from "./text.mjs";
 
 export { INQUIRY_SCHEMA, INQUIRY_TABLES } from "./schema.mjs";
 export * from "./grammar.mjs";
+export { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
+export { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
+         resolutionLines, CANDIDATE_RE, QUALIFIER_MAX, HYPOTHESIS_MAX } from "./contradiction.mjs";
 
 /** R20, R27, R9: a reason's bound (the edge-reason bound, K57: each module holds its own copy) and the longer bound on a
  *  division's or a grouping's reason and a child's question, which are accounts rather than labels. */
@@ -86,7 +91,8 @@ const GRADE_RANK = gradeRank;
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
 /** The catalogue row a refusal code has, if any: its check id and canned translation travel with it (DEC-49). */
-const ROW_FAMILIES = [ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS, INQUIRY_DISPOSE_CHECKS];
+const ROW_FAMILIES = [ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS, INQUIRY_DISPOSE_CHECKS,
+                      INQUIRY_CONTRADICTION_CHECKS];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
   const row = ROW_FAMILIES.map((f) => f && f[answer.reason]).find((r) => r && r.check);
@@ -372,6 +378,22 @@ export class Inquiry {
                                + `An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.` });
       /* END DEC-49 REGION is-basis-acyclic */
     }
+    /* R47 (N345, C-2.11–C-2.16): the contradiction arm, judged as C-2.8's entry requirements are, so every door that
+       writes an inquiry (a take-up, a resolve, basis-versions' `conclude`, a member's own edit) meets it. Each finding
+       carries its code and translation, inside BASIS_REFUSED. A replay is exempt, as from every shape arm above. */
+    if (isInquiry && docFm && !replay) {
+      const cf = contradictionFindings(docFm);
+      if (cf.length) return { ok: false, reason: "BASIS_REFUSED", findings: cf };
+      /* DEC-49 REGION is-candidate-taken-up — C-2.17: one candidate has one contradiction inquiry. */
+      const candidate = candidateOf(docFm);
+      const holder = candidate ? this.inquiryOfCandidate(candidate, bundleId) : null;
+      if (holder)
+        return withRow({ ok: false, reason: "CANDIDATE_ALREADY_TAKEN_UP", code: "CANDIDATE_ALREADY_TAKEN_UP",
+                         candidate, inquiry: holder,
+                         detail: `the contradiction candidate ${candidate} is already taken up as ${holder}, and one `
+                               + `conflict has one question where it is resolved. Work on it in ${holder}.` });
+      /* END DEC-49 REGION is-candidate-taken-up */
+    }
     return null;
   }
 
@@ -480,6 +502,18 @@ export class Inquiry {
         ? basisFm.subject_entity.trim() : null;
       this.sql.exec(`UPDATE bundles SET inquiry_basis_count=?, inquiry_subject_entity=? WHERE bundle_id=?`, n, subject, bundleId);
     }
+    /* R48 (N345): the contradiction link, its resolution while the document is concluded, and `explores`, re-derived
+       whole from the document; no row for a plain inquiry. */
+    this.sql.exec(`DELETE FROM inquiry_contradiction_links WHERE bundle_id=?`, bundleId);
+    if (isInquiry && docFm) {
+      const candidate = candidateOf(docFm), explores = exploresOf(docFm);
+      if (candidate || explores) {
+        const resolution = candidate && docFm.current_state === "concluded" ? readResolution(docFm.resolution) : null;
+        this.sql.exec(`INSERT INTO inquiry_contradiction_links (bundle_id, candidate, resolution, explores, at) VALUES (?,?,?,?,?)`,
+          bundleId, candidate, resolution ? JSON.stringify(resolution) : null, explores ? JSON.stringify(explores) : null,
+          this.#when());
+      }
+    }
     /* REC-173: a creation admitted as a migration replay records its capture and promotion key, in its own transaction. */
     let migrated = null;
     const surfacing = typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim();
@@ -549,6 +583,29 @@ export class Inquiry {
     return { ok: true, id, transitions: rows.map((r) => ({
       at: r.timestamp ?? null, from: r.from_state ?? null, to: r.to_state ?? null,
       by: r.author ?? null, reason: r.blurb ?? null })) };
+  }
+
+  /** R48 (N345): the inquiry's recorded `{candidate, resolution, explores}` as its latest promotion projected them, with
+   *  `resolution` null unless the document was concluded; null for a plain inquiry. Not gated; for in-process callers
+   *  (`contradiction`). Never throws. */
+  contradictionLink(id) {
+    try {
+      if (!id || typeof id !== "string") return null;
+      const r = this.#one(`SELECT candidate, resolution, explores FROM inquiry_contradiction_links WHERE bundle_id=?`, id);
+      if (!r) return null;
+      return { candidate: r.candidate ?? null, resolution: safeJson(r.resolution), explores: safeJson(r.explores) };
+    } catch { return null; }
+  }
+
+  /** R48 (N345): the one inquiry whose document names `candidate`, or null (`except` leaves one inquiry out: R11's
+   *  one-candidate rule asks it of every inquiry but the one being written). Not gated; never throws. */
+  inquiryOfCandidate(candidate, except = null) {
+    try {
+      if (typeof candidate !== "string" || !CANDIDATE_RE.test(candidate)) return null;
+      const r = this.#one(`SELECT bundle_id FROM inquiry_contradiction_links WHERE candidate=? AND bundle_id IS NOT ?
+                            ORDER BY bundle_id LIMIT 1`, candidate, except);
+      return r ? r.bundle_id : null;
+    } catch { return null; }
   }
 
   /** R44: the member-browser agent recorded when the inquiry was created (the control plane's stamp, N149; a division's
@@ -1265,6 +1322,10 @@ export class Inquiry {
          carrying one would claim to have been divided itself. */
       text = removeBlock(text, "division");
       text = removeBlock(text, "division_apportionment");
+      /* R47, C-2.17 (N345): the parent's contradiction link and its resolution are the parent's. A child naming the same
+         candidate would be a second question for one conflict, and a resolution without the link is refused (C-2.12). */
+      text = removeBlock(text, "contradiction");
+      text = removeBlock(text, "resolution");
       text = setSection(text, "## Question", [q]);
       /* THE DISCLOSURE FOR A PERSON TO READ, beside the frontmatter the gates
          and the projections read — the same two-places discipline op=publish
@@ -1319,6 +1380,8 @@ export class Inquiry {
            apportioned earned leg is re-confirmed against the record rather than
            carried across on trust. */
         this.earnedForDoc(cf, pl.legs));
+      /* R47: the contradiction arm, as the child's promotion will judge it */
+      for (const x of contradictionFindings(cf)) findings.push({ check: x.check, severity: "error", message: x.detail });
       const errs = findings.filter((x) => x.severity === "error");
       if (errs.length)
         return { ok: false, reason: "CHILD_REFUSED", target, child: pl.id,

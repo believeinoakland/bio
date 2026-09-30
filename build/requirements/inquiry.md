@@ -27,8 +27,8 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - **R10** `deriveInquiryTitle` is the question's first non-empty line, whitespace folded, cut at a word under 120 characters with an ellipsis, null when empty; `inquiryQuestionOf` answers the `## Question` section or `''`.
 
 **Its share of a promotion** (a check and a projection registered with `promotion`, its R39; K31)
-- **R11** Check, for an inquiry that is not a replay: R2–R9 over the document (`BASIS_REFUSED` with each finding, its code and translation), `content.citationRefusals` over the legs (content R27), an unknown `subject_entity` (`SUBJECT_REFUSED`, C-2.8, through `entities.has`), a supersedes target that is the bundle itself or unknown (`SUPERSESSION_REFUSED`), a child whose parent does not list it or whose siblings differ from the parent's list (`NO_SIBLING_DISCLOSURE`), a leg resting on the bundle itself (`SELF_BASIS`, C-33.22) or closing a cycle through inquiry legs (`BASIS_CYCLE`, C-33.23, naming the whole path); R47's arm over the document (inside `BASIS_REFUSED`, each finding with its code and translation); and a candidate another inquiry already names, `CANDIDATE_ALREADY_TAKEN_UP` (C-2.17, naming that inquiry), so that one candidate has one contradiction inquiry. *(not yet met: N345)*
-- **R12** Projection, in the promotion's transaction: `inquiry_basis` re-derived whole from `basis[]` (never from a payload field); each document leg's content row is the one it names, else the row it held before at the same extent (and capture, when it names one), else `content.resolveCitation`'s, the answer listing what was named, carried or minted; `inquiry_exclusions` re-derived from `completeness_excluded[]`; the superseded-by index rewritten for every target the revision added or dropped; the subject entity and leg count recorded; the contradiction link, resolution and `explores` recorded (R48); a creation admitted as a migration replay records its capture and promotion key (REC-173). *(not yet met: N345)*
+- **R11** Check, for an inquiry that is not a replay: R2–R9 over the document (`BASIS_REFUSED` with each finding, its code and translation), `content.citationRefusals` over the legs (content R27), an unknown `subject_entity` (`SUBJECT_REFUSED`, C-2.8, through `entities.has`), a supersedes target that is the bundle itself or unknown (`SUPERSESSION_REFUSED`), a child whose parent does not list it or whose siblings differ from the parent's list (`NO_SIBLING_DISCLOSURE`), a leg resting on the bundle itself (`SELF_BASIS`, C-33.22) or closing a cycle through inquiry legs (`BASIS_CYCLE`, C-33.23, naming the whole path); R47's arm over the document (inside `BASIS_REFUSED`, each finding with its code and translation); and a candidate another inquiry already names, `CANDIDATE_ALREADY_TAKEN_UP` (C-2.17, naming that inquiry), so that one candidate has one contradiction inquiry.
+- **R12** Projection, in the promotion's transaction: `inquiry_basis` re-derived whole from `basis[]` (never from a payload field); each document leg's content row is the one it names, else the row it held before at the same extent (and capture, when it names one), else `content.resolveCitation`'s, the answer listing what was named, carried or minted; `inquiry_exclusions` re-derived from `completeness_excluded[]`; the superseded-by index rewritten for every target the revision added or dropped; the subject entity and leg count recorded; the contradiction link, resolution and `explores` recorded (R48); a creation admitted as a migration replay records its capture and promotion key (REC-173).
 
 **The earned registry: earned(subjectEntity, targetIds, contentIds?), earnedForDoc(fm, legs), legCapped(stated, earned, targetId), earnedBasis({id, targets, viewer})** (`op=earnedbasis`)
 - **R13** `earned` answers, per target, the connection grade earned (the strongest A–C resolution of its captures to the subject, by `entities.strongestByCapture`; a D resolution earns nothing), the capture ceiling (`EARNED_CAPTURE_CEILING`, bounded by `text-chain.captureBound` over machine transcriptions, undetermined when every transcription is unmeasured), and for a member's authored observation the testimony grade D with its capture axis stated as not applicable. Each carries a `why`. With content ids it adds each row's standing (`content.standings`, `connections.portionGrades`); without, the answer is unchanged.
@@ -82,7 +82,7 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
     - `misquote`, `transcription_or_reading_error`, `superseded_version` and `corrected` (the last with its category not stated) (family CORRECTED)
     - `double_speak_or_reversal`, `obligation_against_act`, `conflict_of_norms` and `irreconcilable` (family GENUINE)
 
-  `resolutionLines` answers the frontmatter lines of a resolution in one fixed order, frontmatter-safe (`basis-versions` R5's normalising), for `contradiction` to write. These are the one list of each: `contradiction`, `affordances` and `queue` read them from here. *(not yet met: N345)*
+  `resolutionLines` answers the frontmatter lines of a resolution in one fixed order, frontmatter-safe (`basis-versions` R5's normalising), for `contradiction` to write. These are the one list of each: `contradiction`, `affordances` and `queue` read them from here.
 
 **The grammar's arm** (C-2.11–C-2.16; judged by R11 as C-2.8's entry requirements are)
 - **R47**
@@ -95,14 +95,14 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
     - `conflict_of_norms` names a `canon` from `NORM_CANONS`.
     - `qualifiers`, when present, is `{a?, b?}`, each at most 200 characters.
   - **Other states.** `resolution` is read only while the document is `concluded`. It is kept, never read, while the document is at any other state, so that reopening (R1) needs no edit.
-  - **Sub-inquiries.** A document carrying `explores` names exactly one of `coordinate` (from `DISSOLVED_BY`), `canon` (from `NORM_CANONS`) or `hypothesis` (non-empty, at most 500 characters). Anything else is `EXPLORES_MALFORMED` (C-2.16). *(not yet met: N345)*
+  - **Sub-inquiries.** A document carrying `explores` names exactly one of `coordinate` (from `DISSOLVED_BY`), `canon` (from `NORM_CANONS`) or `hypothesis` (non-empty, at most 500 characters). Anything else is `EXPLORES_MALFORMED` (C-2.16).
 
 **contradictionLink(id), inquiryOfCandidate(candidate)** (reads for `contradiction`)
 - **R48** The reads R47's projection needs.
   - `contradictionLink` answers the inquiry's recorded `{candidate, resolution, explores}` as its latest promotion projected them (R12), with `resolution` null unless it is `concluded`, or null for a plain inquiry.
   - `inquiryOfCandidate` answers the one inquiry whose document names that candidate, or null.
 
-  Neither read is gated, and both are for in-process callers (R16's terms). Neither throws. *(not yet met: N345)*
+  Neither read is gated, and both are for in-process callers (R16's terms). Neither throws.
 
 ## Private
 
@@ -131,9 +131,9 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - **R33** Every act and read naming an inquiry or project the viewer may not see answers exactly as an absent one.
 - **R34** A leg that cuts against travels every path a supporting leg does: apportionment, projection, grounds (Invariant 7).
 - **R35** A published case member cannot be divided, re-grouped or set down; the route is reopen (DEC-12, DEC-72).
-- **R36** `inquiry_basis`, `inquiry_exclusions`, `inquiry_migration_replays` and `inquiry_member_agents` carry `bundle_id` and are declared to record-core's purge (K23); the columns this module writes on `bundles` today (`inquiry_basis_count`, `inquiry_subject_entity`, `inquiry_superseded_by`) move to a table of its own keyed by `bundle_id` (K75 (3)); the table that holds R48's projection is keyed by `bundle_id` and declared to purge. *(not yet met: N345)*
+- **R36** `inquiry_basis`, `inquiry_exclusions`, `inquiry_migration_replays` and `inquiry_member_agents` carry `bundle_id` and are declared to record-core's purge (K23); the columns this module writes on `bundles` today (`inquiry_basis_count`, `inquiry_subject_entity`, `inquiry_superseded_by`) move to a table of its own keyed by `bundle_id` (K75 (3)); the table that holds R48's projection is keyed by `bundle_id` and declared to purge. *(its N345 clause met; the older clause moving the `bundles` columns not yet met: N358)*
 - **R37** No place is named in this module's behaviour or outward text.
-- **R38** Each check moves here as an invariant with its test (K6): C-2.8 and C-21.2 as the grammar uses them, C-6.1's supersession and division arms, C-6.3, C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8 (cite's rows are `citation`'s, its R11). C-2.11–C-2.17 are held in this module's own table (DEC-49; K343's pattern in the C-2 family), this module's first `checks.mjs`; C-2.1–C-2.10 stay the catalogue's. Promotion stamps them. *(not yet met: N345)*
+- **R38** Each check moves here as an invariant with its test (K6): C-2.8 and C-21.2 as the grammar uses them, C-6.1's supersession and division arms, C-6.3, C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8 (cite's rows are `citation`'s, its R11). C-2.11–C-2.17 are held in this module's own table (DEC-49; K343's pattern in the C-2 family), this module's first `checks.mjs`; C-2.1–C-2.10 stay the catalogue's. Promotion stamps them.
 
 Rows C-2.11–C-2.17 (R38; N345), with their translations:
 
