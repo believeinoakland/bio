@@ -73,3 +73,7 @@ B3 (publication merged early, K553) and B4 (ratification merged early, K555) app
 **Tests and checks:** `test/m/case-authoring/` 68/68; case-authoring, review, ratification and publication together 291 pass, 0 fail, 2 todo (publication's R30, R32); `test/m/` whole 3,068 pass, 0 fail, 21 todo. `format` 0 failures; `architecture case-authoring` 14 files, 0 failures; `coverage case-authoring` 37 of 37; `ownership case-authoring tranche/T16` 9 files, legacy 0/0, 0 failures.
 
 Size (session_01Q1akymVhSfhfv5f25VnNRw): test runs 25, module lines 3112
+
+## J4 · COMPLETE
+
+B3 and B4 applied: tranche merged; the blocks already went through publication's K553 exports, so no code change; R34 now also tested against the real ratification R18. case-authoring 68/68; test/m whole 3,068 pass, 0 fail, 21 todo; four checks pass. Record: 'Completion after B3, B4'.
