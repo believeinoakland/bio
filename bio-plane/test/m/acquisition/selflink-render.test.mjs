@@ -53,8 +53,9 @@ test("R19: a self-linking page's own link is handed to recordLinks with the page
   assert.deepEqual(manifest.counts.links, { anchor: 0, intra: 0, deferred: 3, refused: 0 }, "the manifest counts the self-link");
   const mSelf = manifest.links.find((l) => l.address === CAL);
   assert.ok(mSelf, "and lists it");
-  assert.deepEqual([mSelf.type, mSelf.held_at_capture, mSelf.as_of], ["deferred", false, r.body.document.retrieved],
-                   "deferred, not held at capture (this capture was not yet filed), as of the page's own retrieval");
+  assert.deepEqual([mSelf.type, mSelf.held_at_capture], ["deferred", false], "deferred, not held at capture (this capture was not yet filed)");
+  /* `as_of` is the walk's own clock (subresources R15), read after the page's retrieval, so it is never before it. */
+  assert.ok(Date.parse(mSelf.as_of) >= Date.parse(r.body.document.retrieved), "as of the walk, never before the page's retrieval");
   /* negative control: without `subresources: true` nothing is walked, so no links are handed in */
   const plain = world();
   const p = await run(plain, { [CAL]: () => page(CAL_PAGE) }, { locator: CAL });
