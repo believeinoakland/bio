@@ -48,6 +48,13 @@ export const PROJECT_NAMING_READS = Object.freeze({
   /* N321 (publication R44): the stage read names the project by its own id; publication answers the same C-70.1 through
      the same `existenceAct`, so the door's answer and the route's agree. */
   projectstage: ["project"],
+  /* N345: contradiction's notices and responses name the project a member reads on its own side, and contradiction's first
+     refusal for it is the same `existenceAct` (its R50), so the door's answer and the route's agree; the candidates read
+     may name a project, or a bundle, as its subject (its R25) — the body's `on: {project}` form is not read here, only a
+     top-level field; case-authoring's ceremony read names the publishing project, whose R2 answers the same existence
+     first. */
+  contradictionnotices: ["project"], contradictionresponses: ["project"], contradictioncandidates: ["project", "bundle"],
+  publishtensions: ["project"],
 });
 export const PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
@@ -77,6 +84,10 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   /* N216's layer-9 reads whose id names a row inside a project, never a bundle. */
   comparison: "`id` is a comparison PROPOSAL id — a thing inside a project, whose existence is contents",
   counselpacketread: "`id` is a COUNSEL PACKET id — a thing inside a project, whose existence is contents",
+  /* N345's reads whose parameters name a candidate or a referent, never a project's own id. */
+  contradictionfacts: "`candidate` is a contradiction CANDIDATE id — a thing inside the record, never a bundle id",
+  contradictiontensions: "`referents` (in the body) are a case's claims, legs and extents at their versions, never a project's own id",
+  comparisonfacts: "`contradiction` is a contradiction CANDIDATE id and `standardSide` names its side, never a bundle id",
 });
 
 /* R27 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1
