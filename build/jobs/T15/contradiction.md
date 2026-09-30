@@ -2,6 +2,11 @@
 
 **Status** · session_0171p4zErPrN1VgxXfWEhXn7 · depth 2 · WORKING · handled B3
 
+## Progress
+
+- Steps 1–3 done: started, read whole (requirements, uses' public parts, layer 6's contract, module code and tests, plan entry, B1–B3); J1 answered by B2 (K488); inquiry merged (B3, K489), tranche merged into this branch.
+- Step 4 in progress: the N345 services are written (`src/contradiction/index.mjs`, `derive.mjs`, `text.mjs`, `checks.mjs`, `schema.mjs`, `../contradiction.mjs`); the fixture now drives the real record-core, membership, promotion, content, extraction, entities, connections and inquiry. Next: tests for R5–R55 at the interface (step 5), then the checks.
+
 ## J1 · QUESTION
 
 Six readings I am building on; I carry on with each unless you answer otherwise.
