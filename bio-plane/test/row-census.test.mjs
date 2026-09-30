@@ -40,26 +40,76 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* 1.43.0's two (review's C-87.12 departure, control-plane's C-69.4 arrival) are stamped in 1.44.0 (PROMOTION #15,
-     N318) and retired here (LEGACY-TESTS #12, T14). T14's rows changed after promotion's layer-2 stamp, each named
-     `awaiting stamp` by its layer-3-or-later job record, for T15's layer-2 stamp (N318): */
-  { after: "1.44.0", kind: "departed", by: "CAPTURE #7 (N347, the re-key's old key)", record: "build/jobs/T14/capture.md",
-    line: ["C-118.1", "NOT_FOUND", "src/capture/ops.mjs evidenceAbsent > is-evidence-held", "The record holds no stored copy of a document under this fingerprint."] },
-  { after: "1.44.0", kind: "arrived", by: "CAPTURE #7 (N347, C-118.1 re-keyed EVIDENCE_NOT_HELD)", record: "build/jobs/T14/capture.md",
-    check: "C-118.1", code: "EVIDENCE_NOT_HELD" },
-  { after: "1.44.0", kind: "departed", by: "BIAS #3 (N327, C-26.20 retired)", record: "build/jobs/T14/bias.md",
-    line: ["C-26.20", "BIAS_ADOPTION_NOT_AN_ADMINISTRATOR", "src/bias/index.mjs biasAdopt, reached from op=biasadopt", "Nothing was adopted. A lens over the whole instance is set by its administrators, and you are not one. A project's owners set a lens over that project's work: ask an administrator to adopt this set for the instance, or adopt it for a project you own."] },
-  { after: "1.44.0", kind: "departed", by: "INTENT #6 (N327, C-111.16 retired)", record: "build/jobs/T14/intent.md",
-    line: ["C-111.16", "GROUP_ASPIRATION_NOT_ADMIN", "src/intent/index.mjs #aspirationAuthority > is-group-aspiration-admin", "An aspiration the whole group holds is declared, revised and retired by an administrator, and the act carries their name and date. Ask an administrator. Nothing was written."] },
-  { after: "1.44.0", kind: "arrived", by: "QUEUE #4 (N325, C-19.2 new)", record: "build/jobs/T14/queue.md",
-    check: "C-19.2", code: "INBOX_REFUSED" },
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; PROMOTION #16, N318, K483): over 1.45.0, the stamp's own lines
+     (`fixtures/row-census-1.45.0.jsonl`, 825 lines) reproduced by this reader on the stamp commit 2545e421b6 (825 rows,
+     dacbe36f…). 1.44.0's declarations (C-118.1's re-key, C-26.20, C-111.16, C-19.2) are stamped in 1.45.0 and retired.
+     T15's rows added or changed after the layer-2 stamp, each named `awaiting stamp` by its job record, for T16's
+     stamp (N345): 50 arrived (C-91.7; C-2.11–C-2.17; C-60.2, C-60.3, C-93.8–C-93.39; C-120.1–C-120.3;
+     C-113.24–C-113.28) and 3 changed (C-93.1–C-93.3). `named` is the text the record's line carries when it names a
+     range rather than the row; `changed` carries the line as the stamp read it. */
+  { after: "1.45.0", kind: "arrived", by: "INQUIRY #4 (N345, R11, R47)", record: "build/jobs/T15/inquiry.md", check: "C-2.11", code: "CONTRADICTION_LINK_MALFORMED" },
+  { after: "1.45.0", kind: "arrived", by: "INQUIRY #4 (N345, R11, R47)", record: "build/jobs/T15/inquiry.md", check: "C-2.12", code: "RESOLUTION_WITHOUT_CONTRADICTION" },
+  { after: "1.45.0", kind: "arrived", by: "INQUIRY #4 (N345, R11, R47)", record: "build/jobs/T15/inquiry.md", check: "C-2.13", code: "RESOLUTION_MISSING" },
+  { after: "1.45.0", kind: "arrived", by: "INQUIRY #4 (N345, R11, R47)", record: "build/jobs/T15/inquiry.md", check: "C-2.14", code: "RESOLUTION_KIND_UNKNOWN" },
+  { after: "1.45.0", kind: "arrived", by: "INQUIRY #4 (N345, R11, R47)", record: "build/jobs/T15/inquiry.md", check: "C-2.15", code: "RESOLUTION_INCOMPLETE" },
+  { after: "1.45.0", kind: "arrived", by: "INQUIRY #4 (N345, R11, R47)", record: "build/jobs/T15/inquiry.md", check: "C-2.16", code: "EXPLORES_MALFORMED" },
+  { after: "1.45.0", kind: "arrived", by: "INQUIRY #4 (N345, R11, R47)", record: "build/jobs/T15/inquiry.md", check: "C-2.17", code: "CANDIDATE_ALREADY_TAKEN_UP" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-60.2", code: "CANDIDATES_NO_SUBJECT" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-60.3", code: "TENSIONS_TOO_MANY" },
+  { after: "1.45.0", kind: "arrived", by: "ENTITIES #4 (N345, R38)", record: "build/jobs/T15/entities.md", check: "C-91.7", code: "NO_SUCH_RESOLUTION" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.8", code: "NO_CANDIDATE" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.9", code: "NO_SUCH_CANDIDATE", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.10", code: "MACHINE_CANNOT_ACT_ON_CANDIDATE", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.11", code: "CANDIDATE_CLOSED", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.12", code: "CANDIDATE_TAKEN_UP", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.13", code: "RECORD_CANNOT_BE_DISMISSED", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.14", code: "DISMISSAL_REASON_UNKNOWN", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.15", code: "CLARIFY_NOT_A_TENSION", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.16", code: "CLARIFY_CHOICE_UNKNOWN", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.17", code: "CLARIFY_COORDINATE_UNKNOWN", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.18", code: "CLARIFY_NO_EXPLANATION", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.19", code: "EVIDENCE_NOT_SEEN", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.20", code: "WRONG_SIDE_UNNAMED", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.21", code: "WRONG_SIDE_NO_REASON", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.22", code: "PLURALITY_HAS_NO_WRONG_SIDE", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.23", code: "TAKE_UP_NO_QUESTION", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.24", code: "TAKE_UP_NO_FRAME", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.25", code: "ACCEPTANCE_NOT_STANDING", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.26", code: "ACCEPTANCE_VALUE_DIFFERS", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.27", code: "NOT_A_CONTRADICTION_INQUIRY", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.28", code: "RECOMMEND_NO_COORDINATES", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.29", code: "RECOMMEND_COORDINATE_UNKNOWN", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.30", code: "RECOMMEND_NO_REASON", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.31", code: "RECOMMEND_CANDIDATE_NOT_STANDING", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.32", code: "CANDIDATE_NOT_HELD", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.33", code: "WORDS_MALFORMED", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.34", code: "NOT_A_PARTY", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.35", code: "NOT_A_PROJECT_CONFLICT", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.36", code: "RESPONSE_BEFORE_OPT_IN", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.37", code: "RESPONSE_NO_TEXT", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.38", code: "DISCLOSURE_MALFORMED", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONTRADICTION #2 (N345)", record: "build/jobs/T15/contradiction.md", check: "C-93.39", code: "DISCLOSURE_NOT_YOURS", named: "C-93.8–C-93.39" },
+  { after: "1.45.0", kind: "arrived", by: "CONFORMANCE #4 (N345, R21, R22)", record: "build/jobs/T15/conformance.md", check: "C-113.24", code: "NO_SUCH_CONTRADICTION_INQUIRY" },
+  { after: "1.45.0", kind: "arrived", by: "CONFORMANCE #4 (N345, R21, R22)", record: "build/jobs/T15/conformance.md", check: "C-113.25", code: "CAUSE_NOT_EVIDENCED" },
+  { after: "1.45.0", kind: "arrived", by: "CONFORMANCE #4 (N345, R21, R22)", record: "build/jobs/T15/conformance.md", check: "C-113.26", code: "CAUSE_UNSTATED" },
+  { after: "1.45.0", kind: "arrived", by: "CONFORMANCE #4 (N345, R21, R22)", record: "build/jobs/T15/conformance.md", check: "C-113.27", code: "RECOMMENDATION_IS_AN_ACTION" },
+  { after: "1.45.0", kind: "arrived", by: "CONFORMANCE #4 (N345, R21, R22)", record: "build/jobs/T15/conformance.md", check: "C-113.28", code: "STANDARD_SIDE_UNNAMED" },
+  { after: "1.45.0", kind: "arrived", by: "CASE-AUTHORING #4 (N345, R31-R33)", record: "build/jobs/T15/case-authoring.md", check: "C-120.1", code: "TENSION_NOT_DISCLOSED" },
+  { after: "1.45.0", kind: "arrived", by: "CASE-AUTHORING #4 (N345, R31-R33)", record: "build/jobs/T15/case-authoring.md", check: "C-120.2", code: "DISCLOSURE_NOT_STANDING" },
+  { after: "1.45.0", kind: "arrived", by: "CASE-AUTHORING #4 (N345, R31-R33)", record: "build/jobs/T15/case-authoring.md", check: "C-120.3", code: "TENSIONS_UNDETERMINED" },
+  { after: "1.45.0", kind: "changed", by: "CONTRADICTION #2 (N345, `where` moved to #runRefusals)", record: "build/jobs/T15/contradiction.md",
+    line: ["C-93.1", "CANDIDATE_NO_PROPOSER", "src/contradiction/index.mjs propose > is-candidate-no-proposer", "A proposed contradiction records who proposed it, and this request arrived by a route that does not say. Rather than write a proposal nobody can be held to, nothing was written."] },
+  { after: "1.45.0", kind: "changed", by: "CONTRADICTION #2 (N345, `where` moved to #runRefusals)", record: "build/jobs/T15/contradiction.md",
+    line: ["C-93.2", "CANDIDATE_NO_RUN", "src/contradiction/index.mjs propose > is-candidate-no-run", "A proposed contradiction is machine work, and machine work happens inside a run a member opened. No open run by that name is visible here, so nothing was written. Open a run, then propose."] },
+  { after: "1.45.0", kind: "changed", by: "CONTRADICTION #2 (N345, `where` moved to #runRefusals)", record: "build/jobs/T15/contradiction.md",
+    line: ["C-93.3", "CANDIDATE_RUN_NOT_RUNNING", "src/contradiction/index.mjs propose > is-candidate-run-not-running", "That run has ended. Its work is read against the conditions it was formed under, and those stopped being current when it stopped, so nothing was written. Open a new run to go on working."] },
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
-   declared here by name, verified against its record like a row, and listed (R50, K408, K464). `checkBundle`'s
-   layer-1 change (C-19.1 left it) is in 1.44.0 (K464); queue's registration of C-19.1 at the promote gate is T15's. */
+   declared here by name, verified against its record like a row, and listed (R50, K408, K464). Queue's registered step
+   (1.44.0's declaration) is stamped in 1.45.0 and retired (LEGACY-TESTS #13, T15). */
 const COMPOSITIONS_AWAITING = [
-  { after: "1.44.0", what: "the promote gate gains queue's registered step (C-19.1 at the write, refusing C-19.2)",
-    by: "QUEUE #4 (N325)", record: "build/jobs/T14/queue.md", needle: "composition" },
+  { after: "1.45.0", what: "the promote gate's inquiry step runs R47's contradiction arm and C-2.17",
+    by: "INQUIRY #4 (N345)", record: "build/jobs/T15/inquiry.md", needle: "composition" },
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
 let pass = 0, fail = 0;
@@ -86,6 +136,10 @@ function compare(lines, { pin = ROW_CENSUS, awaiting = AWAITING_STAMP, stamped =
       const l = JSON.stringify(a.line);
       if (byKey.has(keyOf(a.line[0], a.line[1]))) problems.push(`declared departed after ${a.after} but still in the tree: ${keyOf(a.line[0], a.line[1])} (${a.by})`);
       else { rebuilt.push(l); listed.push(`awaiting stamp, departed: ${keyOf(a.line[0], a.line[1])} (${a.by})`); }
+    } else if (a.kind === "changed") {
+      const was = JSON.stringify(a.line), l = byKey.get(keyOf(a.line[0], a.line[1]));
+      if (!l || l === was) problems.push(`declared changed after ${a.after} but ${l ? "unchanged" : "not"} in the tree: ${keyOf(a.line[0], a.line[1])} (${a.by})`);
+      else { drop(l); rebuilt.push(was); listed.push(`awaiting stamp, changed: ${keyOf(a.line[0], a.line[1])} (${a.by})`); }
     }
   }
   const c = censusOf(rebuilt.map((l) => { const [check, code, where, translation] = JSON.parse(l); return { check, code, where, translation }; }));
@@ -149,7 +203,7 @@ test("R50 R34: the pin names the stamp it moves with — ROW_CENSUS.version is C
 
 test("R50: every row awaiting stamp is named so by its job record", () => {
   for (const a of AWAITING_STAMP.filter((x) => x.after === ROW_CENSUS.version)) {
-    const check = a.kind === "departed" ? a.line[0] : a.check;
+    const check = a.named ?? (a.kind === "arrived" ? a.check : a.line[0]);
     const text = readFileSync(join(REPO, a.record), "utf8");
     assert.ok(text.split("\n").some((l) => l.includes(check) && /awaiting stamp/i.test(l)),
       `${a.record} has no line naming ${check} and "awaiting stamp" (${a.by})`);
@@ -163,7 +217,7 @@ test("R50: every row awaiting stamp is named so by its job record", () => {
   for (const c of COMPOSITIONS_AWAITING.filter((x) => x.after !== ROW_CENSUS.version))
     console.log(`  STAMPED SINCE, retire this declaration: composition ${c.what} (after ${c.after})`);
   for (const a of AWAITING_STAMP.filter((x) => x.after !== ROW_CENSUS.version))
-    console.log(`  STAMPED SINCE, retire this declaration: ${a.kind} ${a.kind === "departed" ? keyOf(a.line[0], a.line[1]) : keyOf(a.check, a.code)} (after ${a.after})`);
+    console.log(`  STAMPED SINCE, retire this declaration: ${a.kind} ${a.kind === "arrived" ? keyOf(a.check, a.code) : keyOf(a.line[0], a.line[1])} (after ${a.after})`);
 });
 
 test("R50: the stamp's own lines are the pin — the snapshot this suite names rows against is the stamp's", () => {
@@ -199,6 +253,11 @@ test("R50 NEGATIVE CONTROL: a row added without a re-pin fails, naming it; so do
     { after: ROW_CENSUS.version, kind: "arrived", by: "a control arm", record: "-", check: "C-999.2", code: "NOWHERE" }] });
   assert.equal(x.held, false);
   assert.ok(x.problems.some((p) => p.includes("C-999.2 NOWHERE")), x.problems.join("; "));
+  /* A row declared changed whose line the tree still bears as stamped is a failure too (LEGACY-TESTS #13, T15). */
+  const y = compare(now.lines, { stamped, awaiting: [...AWAITING_STAMP,
+    { after: ROW_CENSUS.version, kind: "changed", by: "a control arm", record: "-", line: JSON.parse(gone) }] });
+  assert.equal(y.held, false);
+  assert.ok(y.problems.some((p) => p.includes("unchanged in the tree: C-59.6 MINT_EXHAUSTED")), y.problems.join("; "));
 });
 
 console.log(`\nrow-census: ${pass} pass, ${fail} fail`);

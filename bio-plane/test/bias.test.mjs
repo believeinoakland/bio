@@ -331,8 +331,12 @@ t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning ca
    measured print (-525: N331's `filingsOf` without `producingGroup`, N342's `...recordOf(ctx).counts(hid)`, N343's
    boot calling bias's `migrate()` with `settled_kind` gone from ADDITIVE_COLUMNS). ops.mjs's floor is unmoved.
    Both still blindness floors at the measured figures, never below them. */
+/* RE-PINNED 2026-09-30 (LEGACY-TESTS #13, T15; K513, LEGACY-STORE #7, 16926708d8): store.mjs 212,573 -> 210,035
+   characters, the measured print (-2,538: N342's drop of queue's four reads and the TASK seed, N352's `#hiddenBundles`
+   now reading membership R88, K500's unused CASE_DOCUMENT_FORMAT import). ops.mjs's floor is unmoved. Both still
+   blindness floors at the measured figures, never below them. */
 t("CORPUS PRINTED — the size of what every source arm below is read over",
-  [STORE_SRC.length >= 212_573, OPS_SRC.length >= 149_682], [true, true]);
+  [STORE_SRC.length >= 210_035, OPS_SRC.length >= 149_682], [true, true]);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
           + `index.mjs ${INDEX_SRC.length}, control-plane/ops.mjs ${OPS_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, `
           + `src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);

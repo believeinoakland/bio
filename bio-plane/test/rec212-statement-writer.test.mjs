@@ -124,6 +124,7 @@ import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
 import { runCaseGate } from "../src/gate.mjs";
+import { checkCaseDocument } from "../src/ratification/checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- rec212-statement-writer ---");
@@ -295,8 +296,15 @@ const ratify = async (who, token, caseId, edition, docSha) =>
    else does. `body` is passed where the arm is about the document this plane authored; a mutated
    fixture needs no body, because C-3.1's section arm is BLINDED by its absence rather than softened
    and every arm asserted below names its own check. */
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20, case-authoring R14: /5): op=publish authors
+   `bio-case-document/5`, and op=caseratify's gate runs the catalogue promotion holds — ratification's
+   `checkCaseDocument` (ratification R8) — never the catalogue's own copy, which still knows only /4 and older (N361,
+   T16). So the door is driven with that catalogue, as op=caseratify drives it. /5 carries every /3 obligation (C-41.13
+   asks it `statement_by`), so the "/3" rows below read "/3 or later" and run over the /5 bytes this plane authored.
+   Kept: no module test drives C-41.10's writer exclusion or C-41.13 over a /5 document op=publish really wrote
+   (ratification's `checks.test.mjs` mutates a synthetic /4). */
 const gate = (fm, body = null) => runCaseGate({ caseId: fm.case_id, edition: fm.case_edition, fm,
-                                                priorCase: null, body });
+                                                priorCase: null, body }, checkCaseDocument);
 const checksOf = (fm, body = null) => gate(fm, body).findings.map((x) => x.check);
 /* THE INSTRUMENT IS HARDENED AGAINST ITS OWN ABSENT FINDING, and this is a FINDING ABOUT THIS SUITE
    RATHER THAN A PRECAUTION: the first run of control arm (a) below reached `findings[0].detail` on a

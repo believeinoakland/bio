@@ -1119,6 +1119,13 @@ t("D-240 (b) THE WIDENING SEES MORE, AND LOSES NOTHING — the declared-refusal 
      carries a collection, so no roster moves on them. Still red, and not re-pinned: the arm's own property (nothing the
      old literal excluded is now graded) does not hold over those seven, and reading a route envelope's `body` is a change
      to D-240's shared reader, which this job does not make. Owner: extraction (the envelope) with the D-240 reader. */
+  /* RE-READ 2026-09-30 (LEGACY-TESTS #13, T15): still red, T14's cause plus ONE ARRIVAL OF THE SAME CLASS. Extraction's
+     `pdfStructure[silent]` is x6 now (x6 on this tree before the T15 entities merge, 7a11a8b887, too). SEVEN arrive
+     with case-authoring's N345 split (a2f38ef798, R31–R33): `#authority$caseAuthoringOf[silent]` x3 and
+     `#judgeMembers$caseAuthoringOf[silent]` x4 (src/case-authoring/index.mjs:758, :792), R2's and R4's refusals moved out
+     of `publish` into helpers that answer `{ refusal: { ok: false, … } }` — the verdict one level down, the shape citation's
+     `#document` had until T10. None carries a collection, so no roster moves on them. Not re-pinned (the arm's property
+     does not hold over them). Owners: extraction (the route envelope) and case-authoring (the nested refusal). */
   [EX.newlyDeclared > 0, EX.spellings.size > 1, EX.lostByWidening],
   [true, true, []]);
 /* (c) OVER-STRICTNESS — THE ARM THAT REFUSED THIS EDIT'S FIRST DRAFT, and it is
@@ -1516,6 +1523,17 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
      Every other move of the widening is off the BARE roster and named in the job record: BOUNDED gains
      `partitionindependence` (strength's `#independenceOf`) and `reading` (extraction's `#readingHistoryOf`); UNJUDGED
      gains `aicredentialmint`, `aicredentialrevoke`, `casegate` and `goal` (each read off a delegate with no row scan). */
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N351 entities R39, N345 contradiction R27/R28): NOT MOVED, 40 -> 40, and
+     an unchanged figure is NOT an unchanged roster. The walk PRINTS 40, DIFFED BY NAME against its own print on this tree
+     before the T15 entities merge (7a11a8b887, 40):
+       TWO DEPARTURES BY A FIX (entities R39, N351): `aliaswithdraw -> withdrawAlias` and `entity -> readEntity`, T13's two
+         reader arrivals, now bounded at 500 each (relations 1,000) with `truncated` per collection; on the BOUNDED roster.
+       TWO ARRIVALS, NEW READS (contradiction, N345): `contradictiontensions -> tensionsOn` (R27: `referents`, each with
+         `marks` off every candidate on that referent, scanned with no LIMIT; the referents asked are capped at 200, the
+         per-referent scan is not) and `contradictionfacts -> contextFacts` (R28: `facts`, read as a BARE ARRAY, four or five
+         coordinates whose `resolved_entities` come off `#entitiesOf`, an unbounded scan keyed on one capture). Both are
+         keyed on one parent row, the class entities R39 bounded; the figure 38 the handover expected is 40 - 2 and is NOT
+         what this walk printed. REPORTED to contradiction (src/contradiction/index.mjs:1446, :1527) rather than absorbed. */
   BARE_OPS.length <= 40, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
@@ -1561,6 +1579,8 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      is byte-identical by name to the T9 close's (ac699662aa): no arrival, no departure. Still red for caseratify alone. */
   /* MOVED 38 -> 40, 2026-09-29 (LEGACY-TESTS #11, T13; N238), IN THE SAME EDIT AS ITS CEILING, whose note names the three:
      caseratify seen again, and `aliaswithdraw` and `entity` credited by the widened reader. */
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15): NOT MOVED; the ceiling's T15 note names the swap (entities' two out
+     by R39's fix, contradiction's two in by N345). */
   BARE_OPS.length >= 40, true);
 
 /* ==========================================================================
@@ -1651,6 +1671,8 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
            /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `chooseConnectionPair` is connections' `choose` (T5-5),
               the same act, reached through `connectionsOps`' entry. */
            "connectionchoose->choose",
+           /* RE-READ 2026-09-30 (LEGACY-TESTS #13, T15): still red for record-core's pair alone (`audit->auditPass`
+              arrived, `projectfork->forkProject` left), unchanged from T14 (the same two on 7a11a8b887, before the T15 entities merge). */
            "projectfork->forkProject", "projectionplan->projectionPlan",
            /* REMOVED 2026-09-28 (legacy-tests T9): `projectowneradd->projectOwnerAdd` — its departure (T6, the note at the
               end of this list) was N70's, and MEMBERSHIP #3 (J4, R82) closed that share: the votes read is membership's

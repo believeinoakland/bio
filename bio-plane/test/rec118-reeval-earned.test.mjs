@@ -445,8 +445,14 @@ console.log("\n--- 5. SOURCE PINS — ONE ARITHMETIC, AND A THREE-SITE DRIFT DET
   t("the leg SELECT now reads `target_type`, without which the no-referent arm cannot be applied at all",
     /* RE-ANCHORED 2026-09-28 (REEVALUATION #1 J2.10): the legs now arrive through inquiry's `restingOn`, and the
        obligation stamps each with its target's type (`target_type: moved.object_type`) before the resolver runs. */
-    /legs: mine\.map\(\(l\) => \(\{ \.\.\.l, target_id: t, target_type: moved\.object_type/.test(REEVAL_SRC),
-    true);
+    /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 reevaluation R27, the `corrected` cause): a target whose only
+       cause is R27's is not `moved`, so the obligation now reads the target's own state and type into `own` (the moved
+       target's `object_type`, else the `bundles` row's) and stamps `target_type: own.object_type`. The same type reaches
+       the resolver's no-referent arm on both routes. KEPT: reevaluation's own R5 test (test/m/reevaluation/
+       obligation.test.mjs) drives the cap on a document target, not the inquiry-target exemption this stamp feeds. */
+    [/legs: mine\.map\(\(l\) => \(\{ \.\.\.l, target_id: t, target_type: own\.object_type/.test(REEVAL_SRC),
+     /const own = moved \? \{ state: moved\.state, object_type: moved\.object_type \}\s*: this\.#one\(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=\?`, t\)/.test(REEVAL_SRC)],
+    [true, true]);
 }
 
 console.log("\n--- 6. OVER-STRICTNESS — NOTHING IS CAPPED THAT MUST NOT BE ---");

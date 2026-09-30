@@ -359,6 +359,26 @@ function demandsInBody(body, src, depth = 0) {
       const mb = methodBody(MODULE_SRC[of], name);
       if (mb != null && demandsInBody(mb, MODULE_SRC[of], 1)) return true;
     }
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345, affordances R2/R19, contradiction R36): `contradictionresolve`
+     records a resolution and then CONCLUDES through basis-versions' own act — `this.#b().conclude({…})`, the module's
+     accessor to basis-versions — whose `NO_CONCLUSION` is the account the rung names. A body that performs ANOTHER
+     module's routed mutating act through such an accessor carries that act's requirement, so the hop is followed into
+     the method that act's op routes to (one hop, read in that module's source with its own helpers). Only a method that
+     routed mutating ops of exactly one other module route to is followed: the write substrate (`promote`, `transact`) is
+     no such op and stays unfollowed, as above. */
+  if (depth === 0)
+    for (const name of new Set([...body.matchAll(/\bthis\.#[A-Za-z][A-Za-z0-9_]*\(\)\.([A-Za-z][A-Za-z0-9_]*)\s*\(/g)]
+      .map((x) => x[1]))) {
+      const srcs = [...new Set([...T5_ROUTES].filter(([op, r]) => r.method === name && r.src !== src && table.mutating.has(op))
+        .map(([, r]) => r.src))];
+      if (srcs.length !== 1) continue;
+      const asrc = srcs[0];
+      const ab = methodBody(asrc, name);
+      const saved = helperSrc; helperSrc = asrc;
+      const hit = ab != null && demandsInBody(ab, asrc, 1);
+      helperSrc = saved;
+      if (hit) return true;
+    }
   return false;
 }
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): T5's layers 2, 4 and 5 moved more acts out of the store; the store's

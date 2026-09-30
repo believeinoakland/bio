@@ -430,42 +430,39 @@ t("NO PAIR CARRIES A LABEL, A VERDICT OR A SCORE — not one of section 5's five
   again.pairs.some((p) => ["label", "verdict", "score", "conflict", "kind_of_conflict"]
     .some((f) => Object.prototype.hasOwnProperty.call(p, f))
     || /\b(world|record|precision|unrelated|undetermined)\b/.test(String(p.label ?? ""))), false);
-t("the answer states the judgement step is NOT REACHED and names the item that will reach it — an "
-+ "empty verdict column would have read as a detector that declined to label",
-  [again.judgement?.state ?? null, /section 9 item 3/.test(again.judgement?.item ?? "")],
-  ["NOT_REACHED", true]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K457): the NOT_REACHED judgement arm — N345 amended contradiction R12 to
+   `judgement: {state: "HELD_APART", read: "candidatesFor"}`; covered by contradiction R12, test/m/contradiction/pairs.test.mjs. */
 t("and it says in words that a pair is a claim that two things are WORTH COMPARING and nothing more",
   /WORTH COMPARING, by the named key, and nothing more/.test(again.judgement?.why ?? ""), true);
 
 /* ===== 6. THE KEY IS SELECTED, AND A KEY THE RECORD HAS NOT IS REFUSED == */
 console.log("\n--- 6. keys are added, not tuned: an unknown key is refused by name ---");
 
-const bad = await pairsRead("key=K5");
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 contradiction R5: K5 is a held key, so the unknown key asked is
+   K6). KEPT, though contradiction R5 is covered at the interface by test/m/contradiction/pairs.test.mjs, because this
+   label is the `must_pass` of negative-control arm (a) `viewer` in test/nc-rec146.mjs: over the plane's op, with the
+   viewer stamp removed, the refusal must still come back (an outage, never a leak). */
+const bad = await pairsRead("key=K6");
 t("AN UNKNOWN KEY IS REFUSED BY NAME, with its C-number and its canned translation from the "
 + "catalogue — never answered from a different key",
   [bad.ok, bad.code, bad.check, bad.translation === CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN.translation],
   [false, "CONTRADICTION_KEY_UNKNOWN", "C-60.1", true]);
-t("and the refusal NAMES the keys the record holds, so the caller is not left guessing",
-  bad.keys, ["K1", "K2", "K3", "K4"]);
-t("the family is ONE row, all C-60, with a translation worth reading",
-  [Object.keys(CONTRADICTION_PAIR_CHECKS).length,
-   Object.values(CONTRADICTION_PAIR_CHECKS).every((r) => /^C-60\.\d+$/.test(r.check) && r.translation.length > 60)],
-  [1, true]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K457): "the refusal NAMES the keys the record holds" (now five) — covered by
+   contradiction R5, test/m/contradiction/pairs.test.mjs. */
+/* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K457): "the family is ONE row, all C-60" (N345 added C-60.2, C-60.3) —
+   covered by contradiction R20, test/m/contradiction/propose.test.mjs. */
 const only2 = await pairsRead("key=K2");
-t("A NAMED KEY RUNS ALONE, and the three that did not run SAY SO — `not_run` is a fifth answer "
-+ "and must never read as `found nothing`",
-  [only2.keys.map((k) => k.ran), levelOf(only2, "K1"), levelOf(only2, "K3")],
-  [[false, true, false, false], "not_run", "not_run"]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K457): "A NAMED KEY RUNS ALONE" (four keys; N345 added K5) — covered by
+   contradiction R7, test/m/contradiction/pairs.test.mjs (an unnamed key answers ran false, absence `not_run`). */
 t("and the not-run sentence refuses the inference explicitly",
   /Nothing here is a statement about what K1 would have found/.test(keyOf(only2, "K1")?.absence?.says ?? ""),
   true);
 
 /* ===== 7. THE VOCABULARY TRAVELS, AND WHAT THIS SUITE CANNOT SEE ======== */
 console.log("\n--- 7. the keys are published as a vocabulary, with what each can feed ---");
-t("every key publishes its NAME, its JOIN and the CASE it can feed, so a surface renders what the "
-+ "plane holds instead of a literal it learned once (PL-17)",
-  again.keys.map((k) => [k.key, k.feeds, typeof k.join === "string" && k.join.length > 30]),
-  [["K1", "world", true], ["K2", "record", true], ["K3", "record", true], ["K4", "world", true]]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K457): "every key publishes its NAME, its JOIN and the CASE it can feed"
+   (four keys; N345 added K5) — covered by contradiction R7, test/m/contradiction/pairs.test.mjs (each key's catalogue
+   entry, key/name/feeds/join/why, travels with it). */
 t("K3 publishes BOTH ARMS separately — a passage arm and a whole-document arm — because one figure "
 + "over two joins that mean different things is the figure the per-key census exists to keep apart",
   [Object.keys(keyOf(again, "K3")?.arms ?? {}), typeof keyOf(again, "K3")?.arms?.passage?.formed],

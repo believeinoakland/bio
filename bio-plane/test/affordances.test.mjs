@@ -750,10 +750,14 @@ const cat = await affordances(null);
 /* CORRECTED 2026-09-24 (REC-214): THIRTY, with `actionrisktier` — a member's authored, append-only revision of an
    action's risk tier (BOB #33). Corrected, not loosened: it moved by exactly the one object-directed op REC-214
    added. */
-t("no target -> the whole catalogue: thirty acts, each with id/label/weight/needs/mode/rung/prompt",
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345, affordances R1 and R8): THIRTY-ONE, with `contradictionresolve`
+   — the contradiction inquiry's one act on a BUNDLE, offered where `conclude` is withheld (affordances 1147dc9b3b).
+   Corrected, not loosened: it moved by exactly the one object-directed act N345 added to ACTS; its other ops are
+   NON_ACTS (R7). */
+t("no target -> the whole catalogue: thirty-one acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 30, true]);
+  [true, 31, true]);
 
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach

@@ -26,6 +26,15 @@ const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
    figure is READ from the suite at arm time (it was 103; the census is re-pinned by name as modules move, so a typed
    figure dies at each re-pin). NOT RUN: the baseline refuses to arm unless derivation-bounds is clean, and it is
    red on other modules' reads (64/10 at 84dee21913). */
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; entities 326b976ab4, R38 and R14/R15): `resolutionsFor` and `concerns`
+   now name their scan SQL (`const scan = `…`` / `const scanSql = `…``) so R38's `#defectsOf` can read the same rows,
+   and pass it to `this.#rows(scan, captureSha, cap + 1)` / `this.#rows(scanSql, entityId, cap + 1)`. The one-line
+   anchors of arms (8), (9), (10) and (11) (`… LIMIT ?`, captureSha, cap + 1);`) matched nothing after it. Each arm now
+   quotes the SQL's last line AND the `#rows` call beneath it, and makes the same edit it always made (drop `LIMIT ?`
+   and `cap + 1`; a literal `LIMIT 5000`; the alias `window`), so the reads are still armed, not retired. `connectionsFor`'s
+   entity arm (connections' `read`, arm 9b) was untouched by T15 and its anchor is live. NOT RUN: derivation-bounds is
+   red at baseline (its TRUNCATION SOURCE grader reads the `#rows(` call and does not yet follow the named SQL), so the
+   harness refuses to arm; its declared failures name the reads by their module names. */
 const STORE = new URL("../src/entities/index.mjs", import.meta.url).pathname;
 const CONNECTIONS = new URL("../src/connections/index.mjs", import.meta.url).pathname;
 const SUITE = new URL("./derivation-bounds.test.mjs", import.meta.url).pathname;
@@ -58,40 +67,40 @@ const ARMS = [
     "MUST FAIL: the CENSUS FLOOR, naming the count. MUST NOT: the ceiling, the truncation arms, "
   + "the class ratchet, anything live."],
 
-  ["(8) `LIMIT ?` AND ITS `cap + 1` REMOVED FROM `resolutionsForCapture` — D-365's own arm, the "
+  ["(8) `LIMIT ?` AND ITS `cap + 1` REMOVED FROM entities' `resolutionsFor` (was `resolutionsForCapture`) — D-365's own arm, the "
  + "one that left every bounds suite green", STORE,
-    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`, captureSha, cap + 1);",
-    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id`, captureSha);",
-    "MUST FAIL: the TRUNCATION SOURCE arm NAMING `resolutionsForCapture`, plus the census CEILING "
+    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`;\n    const rows = this.#rows(scan, captureSha, cap + 1);",
+    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id`;\n    const rows = this.#rows(scan, captureSha);",
+    "MUST FAIL: the TRUNCATION SOURCE arm NAMING `entities/index:resolutionsFor:rows`, plus the census CEILING "
   + "(103 -> 104). MUST NOT: the envelope arms in `bounds`/`meaning-bounds`, which is exactly what "
   + "D-365 measured and what makes the two halves independent."],
 
-  ["(9) THE SAME ON `documentsConcerning`", STORE,
-    "FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha LIMIT ?`, entityId, cap + 1);",
-    "FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha`, entityId);",
-    "MUST FAIL: the TRUNCATION SOURCE arm NAMING `documentsConcerning`, plus the census CEILING."],
+  ["(9) THE SAME ON entities' `concerns` (was `documentsConcerning`)", STORE,
+    "FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha LIMIT ?`;\n    const scan = this.#rows(scanSql, entityId, cap + 1);",
+    "FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha`;\n    const scan = this.#rows(scanSql, entityId);",
+    "MUST FAIL: the TRUNCATION SOURCE arm NAMING `entities/index:concerns:scan`, plus the census CEILING."],
 
   ["(9b) THE SAME ON `connectionsFor`'s ENTITY ARM — the read D-224's k(k-1)/2 curve was raised "
  + "for, and the arm that proves a method assigning its scan in TWO branches is graded on BOTH",
     CONNECTIONS,
     "`SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha LIMIT ?`,\n                        entityId, cap + 1);",
     "`SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha`,\n                        entityId);",
-    "MUST FAIL: the TRUNCATION SOURCE arm NAMING `connectionsFor`, plus the census CEILING. MUST "
+    "MUST FAIL: the TRUNCATION SOURCE arm NAMING `connections/index:read:scan`, plus the census CEILING. MUST "
   + "NOT: the capture arm's own grading, which is untouched and must stay graded."],
 
   ["(10) THE CAP THAT IS NOT THE PUBLISHED CAP — `LIMIT ?`/`cap + 1` replaced by a LITERAL "
- + "`LIMIT 5000` on `resolutionsForCapture`. THE ARM THAT DECIDES WHETHER HALF (2) EARNS ITS "
+ + "`LIMIT 5000` on `resolutionsFor`. THE ARM THAT DECIDES WHETHER HALF (2) EARNS ITS "
  + "PLACE: the SQL is still bounded, so the CENSUS CANNOT MOVE", STORE,
-    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`, captureSha, cap + 1);",
-    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT 5000`, captureSha);",
-    "MUST FAIL: the TRUNCATION SOURCE arm NAMING `resolutionsForCapture` as `SQL bound is not the "
+    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`;\n    const rows = this.#rows(scan, captureSha, cap + 1);",
+    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT 5000`;\n    const rows = this.#rows(scan, captureSha);",
+    "MUST FAIL: the TRUNCATION SOURCE arm NAMING `entities/index:resolutionsFor:rows` as `SQL bound is not the "
   + "published cap`. MUST NOT: the census ceiling or floor — the figure MUST stay at 103, and if "
   + "it moves this arm has proved something other than what it claims."],
 
   ["(11) OVER-STRICTNESS — a CORRECT read in a spelling this grader did not anticipate: the cap "
  + "passed through an ALIAS (`const window = cap + 1`) instead of inline. It must PASS", STORE,
-    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`, captureSha, cap + 1);",
-    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`, captureSha, window);",
+    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`;\n    const rows = this.#rows(scan, captureSha, cap + 1);",
+    "FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`;\n    const rows = this.#rows(scan, captureSha, window);",
     "MUST NOT FAIL — anything. The read is correct and only its spelling changed; a grader that "
   + "reds here is tighter than its rule, which is an undeclared interface change wearing the "
   + "costume of caution."],
@@ -121,8 +130,8 @@ for (const [label, file, find, replace, declared] of ARMS) {
   /* arm (11) needs the alias to exist as well as be used */
   let patched = before.replace(find, replace);
   if (tag === "11") patched = patched.replace(
-    "    const cap = this.#clamp(limit);\n    const rows = this.#rows(`SELECT capture_sha, bundle_id, ref, entity_id, grade",
-    "    const cap = this.#clamp(limit);\n    const window = cap + 1;\n    const rows = this.#rows(`SELECT capture_sha, bundle_id, ref, entity_id, grade");
+    "    const cap = this.#clamp(limit);\n    const scan = `SELECT capture_sha, bundle_id, ref, entity_id, grade",
+    "    const cap = this.#clamp(limit);\n    const window = cap + 1;\n    const scan = `SELECT capture_sha, bundle_id, ref, entity_id, grade");
   writeFileSync(file, patched);
   armed++;
 

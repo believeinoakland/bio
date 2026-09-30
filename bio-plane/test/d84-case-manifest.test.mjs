@@ -146,7 +146,11 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
-import { parseFrontmatter, checkCaseDocument, STATES, vocabFor } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, STATES, vocabFor } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20, case-authoring R14: /5): op=publish authors
+   `bio-case-document/5`, and the case gate op=caseratify runs is ratification's `checkCaseDocument` (ratification R8,
+   the catalogue promotion's `runCaseGate` runs); the catalogue's own copy still knows only /4 and older (N361, T16). */
+import { checkCaseDocument } from "../src/ratification/checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- d84-case-manifest ---");
@@ -434,6 +438,9 @@ t("a PERSON reads each pair and the hash in the body",
   [true, true, true]);
 t("the manifest sits BESIDE the authored acknowledgement and does not replace it (DEC-46: two claims)",
   [typeof FB.bias_acknowledgement, /^## Bias Acknowledgement$/m.test(docB.text)], ["string", true]);
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345: /5): the live gate (ratification's, imported above) over the
+   /5 document op=publish authored and op=caseratify signed. Kept: an end-to-end drive (bias adoption, publish, a real
+   signature) no module test makes. */
 t("and the gate accepts the document it signed — no finding of any kind",
   checkCaseDocument(FB, { body: docB.text }).filter((f) => f.severity === "error").map((f) => f.check), []);
 });
@@ -659,17 +666,24 @@ console.log("\n--- 5. REC-188: a published case reads /3, and the gate refuses a
 await block("5", async () => {
   needs("1, 2 and 3", { FA, docA, FB, docB, FC });
   const { runCaseGate } = await import("../src/gate.mjs");
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20: /5): driven with ratification's catalogue, as
+     op=caseratify drives it. /5 carries every /3 obligation (publication R20), so the "/3" rows below read "/3 or
+     later" and run over the /5 bytes this plane authored. Kept: no module test asks C-41.13 of a /5 document, nor of
+     bytes op=publish really wrote (ratification's `checks.test.mjs` mutates a synthetic /4). */
   const gateOf = (fm, body = null) => runCaseGate({ caseId: fm.case_id, edition: fm.case_edition, fm, priorCase: null,
-                                                     body });
+                                                     body }, checkCaseDocument);
   const idsOf = (g) => g.findings.map((x) => x.check);
   const has41_13 = (g) => idsOf(g).filter((c) => c === "C-41.13");
   /* CORRECTED 2026-09-25 (REC-219), never exempted: this row pinned `bio-case-document/3`, which was the token
      op=publish authored until §3 rule 18 moved it to `/4` (BOB #34, 2026-09-24 23:08Z). /4 carries every /3
      obligation this section asserts (`caseDocumentRequiresDisclosures` answers yes for both), so every
      other row here stands as written; a /3 document keeps ratifying, which `rec219-case-document-v4` asserts. */
-  t("PUBLISHED-READS-/4: every case this suite published and ratified is `bio-case-document/4` — "
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 case-authoring R14: /5): op=publish authors /5 now, which
+     carries every /3 and /4 obligation (publication R20). Kept: it reads the format of cases this suite really
+     published AND ratified through the ops, end to end. */
+  t("PUBLISHED-READS-/5: every case this suite published and ratified is `bio-case-document/5` — "
   + "with no lens, under one, and after it moved",
-    [FA.format, FB.format, FC.format], ["bio-case-document/4", "bio-case-document/4", "bio-case-document/4"]);
+    [FA.format, FB.format, FC.format], ["bio-case-document/5", "bio-case-document/5", "bio-case-document/5"]);
   t("REACH: each carries the two disclosures the row makes required — the manifest map, its bundle list, "
   + "the acknowledged count (ZERO: nobody acknowledged) and its EMPTY list",
     [typeof FB.bias_manifest, Array.isArray(FB.bias_manifest_bundles), FB.completeness?.acknowledged,

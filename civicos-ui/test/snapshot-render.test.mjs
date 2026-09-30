@@ -90,7 +90,9 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
     const q = new URL(u, "https://x.test").searchParams;
     if (q.get("op") === "capture") {
       const b = SERVE.get(q.get("sha256"));
-      if (!b) return { ok:false, json: async () => ({ ok:false, reason:"NOT_FOUND" }) };
+      /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N347, K458): the plane answers an absent digest with capture
+         R63's EVIDENCE_NOT_HELD (C-118.1), no longer NOT_FOUND; the fixture imitates what it now sends, at 404. */
+      if (!b) return { ok:false, status:404, json: async () => ({ ok:false, reason:"EVIDENCE_NOT_HELD", code:"EVIDENCE_NOT_HELD", check:"C-118.1" }) };
       return { ok:true, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) };
     }
     return { ok:true, json: async () => ({ ok:true, result:{} }) };
@@ -165,7 +167,7 @@ SERVE = new Map(STORE);
 SERVE.delete(cssSha);
 const gone = await G.resolveSnapshot(MAN, G.fetchCapture);
 ok("a missing part refuses the whole render", gone.ok === false);
-ok("carrying the plane's own reason", gone.reason === "NOT_FOUND");
+ok("carrying the plane's own reason", gone.reason === "EVIDENCE_NOT_HELD");
 
 /* ---- a missing companion is not silently tolerated ---- */
 SERVE = new Map(STORE);

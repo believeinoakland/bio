@@ -143,7 +143,9 @@ import vm from "vm";
 import { createHash, webcrypto } from "crypto";
 import { SETUP_HTML } from "../../bio-plane/src/setup.mjs";
 import { STATES, HEADINGS, OBJECT_TYPES, normalizeType } from "../../bio-plane/checks/bio-checks.mjs";
-import { checkBundle, withProducingGroup } from "../../bio-plane/checks/bio-checks.mjs";
+import { checkBundle, withProducingGroup, parseFrontmatter } from "../../bio-plane/checks/bio-checks.mjs";
+/* ADDED 2026-09-30 (LEGACY-TESTS #13, T15): actions R37's audit arm, which C-2.10's action checks moved to (T8). */
+import { checkActionExtension } from "../../bio-plane/src/actions/checks.mjs";
 /* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172), never exempted. The catalogue arms below judged `mdFor`'s bytes AS THE
    SURFACE SENDS THEM, and those bytes cleared C-2.2 only because they carried a LITERAL producing group — one group's
    slug, true of one instance and false of every instance `newgroup` installs. The surface now sends NO `group:` line:
@@ -706,7 +708,13 @@ const actionErrs = async (act) => {
                        "Ask for the transfer ledger.", NOW, false, null, act));   /* UI-79: as the plane holds it */
   const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
     sha256, sha512, resolveTarget: () => true });
-  return { text, errs: findings.filter((x) => x.severity === "error") };
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15): C-2.10's action arms (the counterparty among them) left the
+     catalogue's `checkBundle` with the Action object (ACTIONS, T8); the audit runs them as actions R37,
+     `checkActionExtension` over the document (`Actions#audit`, record-core R59). The writer's output is held to both
+     halves, as the audit holds a held action. */
+  const audit = [];
+  checkActionExtension({ fm: parseFrontmatter(text).data, nowMs: Date.parse(NOW) }, audit);
+  return { text, errs: [...findings, ...audit].filter((x) => x.severity === "error") };
 };
 const named = await actionErrs(AUTHORED);
 for (const e of named.errs) console.log(`         action(named): ${e.check}: ${String(e.message).slice(0, 140)}`);

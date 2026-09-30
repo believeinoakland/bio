@@ -186,7 +186,10 @@ t("(a) the sweep reaches the stamp sites at all — corpus floored, never assume
    CORRECTED 2026-09-30 (LEGACY-TESTS #12, T14; N348, LEGACY-INDEX #10, CONTROL-PLANE #5): the door that routes them is
    now control-plane's `Store` (`src/control-plane/dispatch.mjs`, which composes legacy-store's routes with
    `instanceSetupOps`), exported unwrapped from `src/index.mjs`; the wrapper named above is gone. The figure is unmoved:
-   still no spread of the store's map. */
+   still no spread of the store's map.
+   CORRECTED 2026-09-30 (LEGACY-TESTS #13, T15; N348, INSTANCE-SETUP #4): `instanceSetupRoute`, named above as the door
+   of 2026-09-29, is gone from src/setup.mjs (816faed8f4) with `instanceSetupStore`; control-plane's `Store` is the only
+   door, and the figure is unmoved. */
 t("(a) the store's dispatch table is read and non-trivial", S.enforcement.size >= 145, true);
 t("(a) machine fences ARE found — a fence detector that finds none would pass everything",
   fencedCount >= 15, true);
@@ -247,7 +250,10 @@ t("(d) ENFORCED-ELSEWHERE: the expertise pair, refused but NOT as a machine",
   setOf("ENFORCED-ELSEWHERE"), ["by@src/index.mjs", "memberId@src/index.mjs"]);
 t("(d) and each names the code that actually fires, so a code that stops firing fails",
   [...new Set(sites.filter((s) => s.verdict === "ENFORCED-ELSEWHERE").flatMap((s) => s.markerCodes))].sort(),
-  ["ADMIN_ONLY", "NO_SUCH_MEMBER"]);
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; CONTROL-PLANE #6 J2 (2), N356): the marker at
+     `src/control-plane/index.mjs` (IDENTITY-CLAIM: ENFORCED-ELSEWHERE) now names NOT_AN_ADMIN, the code (i) below drives
+     op=expertiseconfirm answering (membership C-96.1, R22 through R84). */
+  ["NOT_AN_ADMIN", "NO_SUCH_MEMBER"]);
 
 /* THE OPEN LEDGER. Two sites make a member-only claim that nothing enforces AND that
    DEC-52 does not reach. REC-65 neither fenced them nor extended the ruling by analogy —
@@ -360,8 +366,9 @@ t("(i) a machine credential is REFUSED at both expertise acts",
 /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; MEMBERSHIP #7, N327): the membership guard at op=expertiseconfirm
    answers NOT_AN_ADMIN (C-96.1, R22 through R84) where it answered ADMIN_ONLY. KEPT under K457: the claim is the
    WIRING, a machine stamp refused by the member's guard and not by a fence, across control-plane and membership.
-   The source marker (d) reads (`src/control-plane/index.mjs` IDENTITY-CLAIM: ENFORCED-ELSEWHERE NO_SUCH_MEMBER
-   ADMIN_ONLY) still names the old code: control-plane's comment, REPORTED, and (d) keeps pinning what the marker says. */
+   The source marker (d) reads (`src/control-plane/index.mjs` IDENTITY-CLAIM: ENFORCED-ELSEWHERE) named ADMIN_ONLY in
+   T14 and names NOT_AN_ADMIN since CONTROL-PLANE #6 (N356, T15), so (d) and (i) pin the same code
+   (CORRECTED 2026-09-30, LEGACY-TESTS #13, T15). */
 t("(i) and what refuses is the MEMBERSHIP guard, named — not a machine fence (D-229's shape)",
   [val(mExpD, "reason"), val(mExpC, "reason")], ["NO_SUCH_MEMBER", "NOT_AN_ADMIN"]);
 t("(i) the same payloads succeed for a member and an administrator, so the refusal is attributable",

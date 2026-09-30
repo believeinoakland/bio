@@ -1139,6 +1139,63 @@ console.log("\n--- T13's read (publication's projectstage), driven on the hidden
 }
 
 /* ------------------------------------------------------------------------- *
+ *  T15's READS, DRIVEN ON THE HIDDEN PROJECT (2026-09-30, LEGACY-TESTS #13; N345: contradiction R25–R28, R50, R54,
+ *  case-authoring R32, conformance R21). Seven reads arrived unclassified. The four that NAME a project or a
+ *  question by id are asked here by dave, never invited to carol's project, and by carol, who owns it, so their
+ *  classification below is written from what the plane ANSWERED. The candidate-addressed three (`contradictionfacts`,
+ *  `contradictiontensions`, `contradictioncandidates`) need a run's proposed candidate this fixture does not hold;
+ *  their sight is driven at contradiction's interface (test/m/contradiction/present.test.mjs R25/R27/R28,
+ *  projects.test.mjs R49–R55), and `contradictioncandidates` is LEFT UNCLASSIFIED (see the classification's note).
+ * ------------------------------------------------------------------------- */
+console.log("\n--- T15's reads (contradiction, case-authoring, conformance), driven on the hidden project ---");
+{
+  const flatten = (r, ...ids) => JSON.parse(ids.reduce((s, id) => s.split(id).join("<ASKED>"), JSON.stringify(r)));
+  const ABSENT_PROJ = "PROJ-2026-9999-none";
+  const pair = async (q) => [await GET(q(PROJ)), await GET(q(ABSENT_PROJ))];
+
+  /* contradiction R50: the notices to a project's members, behind membership's existence answer, NO_SUCH_PROJECT and
+     the joined-participant test, in that order. */
+  const nC = await GET(`op=contradictionnotices&token=${carol}&project=${PROJ}`);
+  t("op=contradictionnotices: the OWNER, a joined participant, is answered her project's notices (the arm is live)",
+    [nC.body.result?.ok, nC.body.result?.project, Array.isArray(nC.body.result?.notices)], [true, PROJ, true]);
+  const [nH, nA] = await pair((p) => `op=contradictionnotices&token=${dave}&project=${p}`);
+  t("op=contradictionnotices: the hidden project answers dave byte-identically to one that does not exist, the id aside",
+    flatten(nH, PROJ), flatten(nA, ABSENT_PROJ));
+  t("op=contradictionnotices: that answer is NO_SUCH_PROJECT, with no notice in it",
+    [nH.body.result?.ok, nH.body.result?.reason, "notices" in (nH.body.result || {})], [false, "NO_SUCH_PROJECT", false]);
+
+  /* contradiction R54's read: the project's refusals first, then the candidate. */
+  const rC = await GET(`op=contradictionresponses&token=${carol}&project=${PROJ}`);
+  t("op=contradictionresponses: the OWNER passes the project's gate and is asked for a candidate (the arm is live)",
+    rC.body.result?.reason, "NO_CANDIDATE");
+  const [rH, rA] = await pair((p) => `op=contradictionresponses&token=${dave}&project=${p}&candidate=${"0".repeat(64)}`);
+  t("op=contradictionresponses: the hidden project answers dave byte-identically to one that does not exist, the id aside",
+    flatten(rH, PROJ), flatten(rA, ABSENT_PROJ));
+  t("op=contradictionresponses: that answer is NO_SUCH_PROJECT, asked before any candidate",
+    [rH.body.result?.ok, rH.body.result?.reason], [false, "NO_SUCH_PROJECT"]);
+
+  /* case-authoring R32: the ceremony's read, behind op=publish's own authority refusals (R2). */
+  const pC = await GET(`op=publishtensions&token=${carol}&project=${PROJ}`);
+  t("op=publishtensions: the OWNER is answered the ceremony's read for her project (the arm is live)",
+    [pC.body.result?.ok, pC.body.result?.project, pC.body.result?.wrote], [true, PROJ, false]);
+  const [pH, pA] = await pair((p) => `op=publishtensions&token=${dave}&project=${p}`);
+  t("op=publishtensions: the hidden project answers dave byte-identically to one that does not exist, the id aside",
+    flatten(pH, PROJ), flatten(pA, ABSENT_PROJ));
+  t("op=publishtensions: that answer is NO_SUCH_PROJECT, with no candidate, finding or count in it",
+    [pH.body.result?.ok, pH.body.result?.reason, "candidates" in (pH.body.result || {}), "findings" in (pH.body.result || {})],
+    [false, "NO_SUCH_PROJECT", false, false]);
+
+  /* conformance R21 (R12's refusal): a contradiction inquiry the viewer may see, else one answer for absent, unseen and a
+     question that is not a contradiction inquiry. Asked of the hidden project's id and of an absent one. */
+  const [cH, cA] = await pair((p) => `op=comparisonfacts&token=${dave}&contradiction=${p}&standardSide=a`);
+  t("op=comparisonfacts: the hidden project's id answers dave byte-identically to an absent one, the id aside",
+    flatten(cH, PROJ), flatten(cA, ABSENT_PROJ));
+  t("op=comparisonfacts: that answer is NO_SUCH_CONTRADICTION_INQUIRY, carrying no fact, side or resolution",
+    [cH.body.result?.ok, cH.body.result?.reason, "rows" in (cH.body.result || {})],
+    [false, "NO_SUCH_CONTRADICTION_INQUIRY", false]);
+}
+
+/* ------------------------------------------------------------------------- *
  *  THE DELIBERATELY UNGATED READS, AND WHY — recorded here rather than in a
  *  document, because a rule that is not in the loop the reader runs is not a
  *  rule. The assertion below is STRUCTURAL: it parses index.mjs's OPS table and
@@ -1884,6 +1941,61 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "told her escalation's proposed edge 1 -> 2, and dave's answer names neither the escalation, its project nor its "
       + "determination. Stamped fail-closed with ESCALATION_READS; the same load-bearing stamp as op=escalation. "
       + "It writes nothing.",
+    /* CLASSIFIED 2026-09-30 (LEGACY-TESTS #13, T15; N345, K490, K516): six of the seven reads T15's contradiction,
+       case-authoring and conformance jobs added, each reason read off its code path whole (src/contradiction/index.mjs
+       `tensionsOn` with `#marksOn`, `contextFacts`, `conflictNotices` and `conflictResponses` with `#projectRefusals`,
+       `#sideSeen`, `#seenPartySide`, `#partyView`; src/case-authoring/index.mjs `tensionsToDisclose` with `#authority`,
+       `#judgeMembers`, `#tensionsRead`; src/conformance/index.mjs `comparisonFacts` with `#contradictionInquiry`) and the
+       control plane's stamp (CONTRADICTION_READS, CONFORMANCE_READS and `publishtensions`, all in the fail-closed viewer
+       list in src/control-plane/index.mjs). The four naming a project or a question are DRIVEN in this suite's T15 section.
+       LEFT UNCLASSIFIED AND RED, on T7's and T9's precedent, because it reads a hidden project's material without
+       gating it: `contradictioncandidates` (contradiction R25). Its `reach.projects` (`#present`, from `#parties` /
+       `#reachOf`, read as INTERNAL, the machine) names EVERY project drawing on either side, those the viewer may not
+       see included, to any viewer who sees both sides; and `on: {project}` for a hidden project lists the candidates its
+       reach includes (`#projectInquiries` reads basis-versions' viewer-free `projectQuestions`), where an absent project
+       answers `none_judged`. Measured at the module's interface over contradiction's own fixture (a project m1 is not
+       in, drawing on a K2 duty's inquiry): m1 is shown `reach: {projects: ["<hidden id>"]}`, and asked by the hidden id
+       is answered the candidate. Reported to contradiction; not classified away. */
+    contradictiontensions: "contradiction R27, R19, R55: each referent's marks from every candidate the viewer may see "
+      + "on it. GATED per side: `#marksOn` answers nothing for a side the viewer may not see (`#sideSeen`, every bundle "
+      + "the side lives in through viewerPredicate), and a candidate seen whole marks only by its derived state, naming "
+      + "no project; a candidate seen HALF puts only `unseen_conflict`, carrying the candidate, the weight and a party "
+      + "project the viewer is a JOINED participant of (membership `isJoinedParticipant`), and nothing of the other "
+      + "side. A referent is `{ref, version}` of a claim, leg or extent, never a project's id. Stamped fail-closed with "
+      + "CONTRADICTION_READS (an absent stamp sees no side, so every mark is empty). It writes nothing.",
+    contradictionfacts: "contradiction R28, R10: the facts the record holds on each coordinate of ONE candidate. GATED: "
+      + "a candidate absent, or with a side the viewer may not see, answers NO_SUCH_CANDIDATE (C-93.9), one answer, "
+      + "before any fact is read; the facts are read only from the two sides the viewer sees whole (stated date, "
+      + "doctype, capture, resolved entities, and on K5 the two projects of those seen sides). Stamped fail-closed with "
+      + "CONTRADICTION_READS. It writes nothing.",
+    contradictionnotices: "contradiction R50, R55 (DEC-85): the notices to one project's members, on their own side. "
+      + "GATED on the PROJECT first, in R50's order: membership's existence answer (C-70.1), NO_SUCH_PROJECT for one "
+      + "absent, not a project or not in sight (one answer), then a viewer who is not a joined participant "
+      + "(`notAParticipant`, C-56.3); a notice carries only the side the viewer sees, with no key, reason, other side, "
+      + "its project or members, or party count, and names other parties only after R52's reveal, to an opted-in "
+      + "party. DRIVEN in the T15 section above: carol is answered; dave is answered the hidden project byte-identically "
+      + "to an absent one. Stamped fail-closed with CONTRADICTION_READS and named in PROJECT_NAMING_READS. It writes "
+      + "nothing.",
+    contradictionresponses: "contradiction R54, R55: one conflict's responses for one project. GATED as "
+      + "op=contradictionnotices on the PROJECT first (the same three refusals), then NO_CANDIDATE, then "
+      + "NO_SUCH_CANDIDATE for a candidate absent, of which the viewer sees neither side, or of which the project is no "
+      + "party through a side the viewer sees; the others' responses are relayed only once revealed, with only what "
+      + "each responder chose to share. DRIVEN in the T15 section above. Stamped fail-closed with CONTRADICTION_READS "
+      + "and named in PROJECT_NAMING_READS. It writes nothing.",
+    publishtensions: "case-authoring R32, R33 (DEC-85): the ceremony's read of what publishing will disclose. GATED "
+      + "exactly as op=publish: `#authority` asks the project through viewerPredicate (the existence answer at "
+      + "EXISTENCE, else NO_SUCH_PROJECT, one answer) and the OWNER test, then each member through the same gate "
+      + "(NO_SUCH_BUNDLE for absent and invisible alike); the candidates come from contradiction's `unresolvedRecordOn` "
+      + "under the same viewer, so a side the publisher may not see is `unseen_other_side` with its seen side only. "
+      + "DRIVEN in the T15 section above. Stamped with the viewer and publish's `author`, fail-closed, and named in "
+      + "PROJECT_NAMING_READS. It writes nothing.",
+    comparisonfacts: "conformance R21, R12 (N345): the facts a comparison may start from, off a contradiction "
+      + "inquiry's candidate. GATED twice: the inquiry is asked `inSight` (membership) and must be a contradiction "
+      + "inquiry, else NO_SUCH_CONTRADICTION_INQUIRY (C-113.24), one answer for absent, unseen and plain; then its "
+      + "candidate is read through contradiction's `candidatesFor` on `{candidate}` under the same viewer, and one "
+      + "whose two sides the viewer may not both see answers that same refusal, so no fact of an unseen side is "
+      + "answered (the fields it copies are the sides' own, never `reach`). DRIVEN in the T15 section above. Stamped "
+      + "fail-closed with CONFORMANCE_READS. It writes nothing.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */

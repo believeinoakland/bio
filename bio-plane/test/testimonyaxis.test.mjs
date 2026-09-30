@@ -62,9 +62,14 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { GRADE_AXES, TESTIMONY_GRADE, TESTIMONY_CHECKS as CATALOGUE_TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, BASIS_GRADES,
-         checkInquiryBasis, checkBundle, parseFrontmatter,
-         /* D-442: the frozen rows moved into the case document; its gate is what judges them now. */
-         checkCaseDocument, caseDocumentStatesMemberBlocks } from "../checks/bio-checks.mjs";
+         checkInquiryBasis, checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+/* D-442: the frozen rows moved into the case document; its gate is what judges them now.
+   RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20, case-authoring R14: /5): op=publish authors
+   `bio-case-document/5`, so the gate is the LIVE one — ratification's `checkCaseDocument` (ratification R8, the
+   catalogue promotion's `runCaseGate` runs) — and the grammar publication's (R20); the catalogue's copies still know
+   only /4 and older (N361, T16). */
+import { checkCaseDocument } from "../src/ratification/checks.mjs";
+import { caseDocumentStatesMemberBlocks } from "../src/publication/checks.mjs";
 const TESTIMONY_CHECKS = { ...CATALOGUE_TESTIMONY_CHECKS, ...RATIFY_TESTIMONY_CHECKS };
 
 const SRC_DIR = fileURLToPath(new URL("../src", import.meta.url));
@@ -525,7 +530,10 @@ t("INHERITED: an edition that froze NO testimony axis gives nothing to inherit o
   judge(fmOf([inh]), pubReg(null), reg).map(([c]) => c), ["C-21.2"]);
 t("…while one that froze testimony D is inherited on the same axis, like any other",
   judge(fmOf([inh]), pubReg({ state: "graded", grade: TESTIMONY_GRADE }), reg), []);
-/* The frozen block, through the case gate over a REAL case document (FT's, as op=publish wrote it), with only
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345: /5): the arms below run ratification's gate over the /5 document
+   op=publish wrote. Kept: no module test asks C-2.8's case arm of a /5 document, nor of a REAL three-row (testimony)
+   member (ratification's `checks.test.mjs` asks it of a synthetic /4 document's two-row members).
+   The frozen block, through the case gate over a REAL case document (FT's, as op=publish wrote it), with only
    FT's `case_strength` rows varied.
    CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: this block ran the WHOLE
    member-bytes catalogue over FT's bytes with `published_strength` varied, because that is where op=publish
