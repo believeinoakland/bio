@@ -32,7 +32,7 @@
  * removed out of band.
  */
 
-import { checkBundle, REGISTRATION_CHECKS } from "../checks/bio-checks.mjs";
+import { checkBundle } from "../checks/bio-checks.mjs";
 import { recordChecks } from "./promotion/record-checks.mjs";
 
 /* 1.21.0 (D-470, 2026-09-24): THE VERSION CATCHES UP WITH THE CATALOG, AND IS
@@ -475,15 +475,13 @@ const te = new TextEncoder();
    itself — its BODY (C-3.1's section followed the block into it) and each member's `basis` at the
    PINNED bytes (C-2.8's testimony-row and per-ground arms read it). Omitting `memberBasis` BLINDS
    those two arms rather than softening them; the store supplies it with the rest of the facts. */
-/* R33, N254, N275, N242: the one refusal the case gate makes of its own, CASE_CATALOGUE_FAILED (C-102.9), when no
-   case-document catalogue is registered, or the one registered threw `e` or answered no list of findings: nothing has
-   judged the document, so it is not passed. It builds the gate's whole answer, R29's shape with its verdict `ok: false`
-   at the top, and carries its code and row beside them as every refusal does (DEC-49), so the region C-102.9's `where`
-   names holds the refusal's verdict and its code. */
+/* R33, N254, N275: the one refusal the case gate makes of its own, CASE_CATALOGUE_FAILED (C-102.9), when no
+   case-document catalogue is registered (K529), or the one registered threw `e` or answered no list of findings: nothing
+   has judged the document, so it is not passed. It builds the gate's whole answer, R29's verdict with `ok: false` at the
+   top and its one finding naming C-102.9's code, so the region C-102.9's `where` names holds the refusal's verdict. The
+   answer is a verdict, never a refusal with a `reason` (K534). */
 function caseCatalogueFailed(e) {
-  const row = REGISTRATION_CHECKS.CASE_CATALOGUE_FAILED;
-  return { gateVersion: GATE_VERSION, ok: false, reason: "CASE_CATALOGUE_FAILED", code: "CASE_CATALOGUE_FAILED",
-           check: row.check, translation: row.translation,
+  return { gateVersion: GATE_VERSION, ok: false,
            findings: [{ check: "CASE_CATALOGUE_FAILED",
                         detail: `the case-document catalogue could not judge this document, so it is not passed: `
                               + String(e && e.message ? e.message : e).slice(0, 200) }],

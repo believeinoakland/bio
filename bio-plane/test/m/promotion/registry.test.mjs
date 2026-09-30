@@ -299,7 +299,7 @@ test("R47: registerCaseCatalogue — a later module registers the case-document 
                 priorCase: { assertions: [] }, body: "the body", memberBasis: { "INQ-2026-0001": [] } };
   /* Before any registration, nothing judges the document: C-102.9, as the free gate answers with no catalogue (R33, K529). */
   const unjudged = runCaseGate(ctx);
-  assert.deepEqual([unjudged.ok, unjudged.code], [false, "CASE_CATALOGUE_FAILED"]);
+  assert.deepEqual([unjudged.ok, unjudged.findings.map((f) => f.check)], [false, ["CASE_CATALOGUE_FAILED"]]);
   assert.deepEqual(p.runCaseGate(ctx), unjudged);
   for (const [m, fn] of [["ratification", "not a function"], ["ratification", null], ["", () => []], [null, () => []]]) {
     const r = p.registerCaseCatalogue(m, fn);
@@ -336,10 +336,8 @@ test("R33: the case gate never throws: a registered catalogue that throws or ans
       assert.equal(r.ok, false);
       assert.deepEqual(r.findings.map((f) => f.check), ["CASE_CATALOGUE_FAILED"]);
       assert.equal(typeof r.findings[0].detail, "string");
-      /* R29's shape (N275), with the refusal's code and row beside it (N242, DEC-49): the one finding, no warnings, the
-         one GATE_VERSION, and C-102.9. */
-      assert.deepEqual(Object.keys(r).sort(), ["check", "code", "findings", "gateVersion", "ok", "reason", "translation", "warnings"]);
-      assert.deepEqual([r.reason, r.code, r.check], ["CASE_CATALOGUE_FAILED", "CASE_CATALOGUE_FAILED", "C-102.9"]);
+      /* R29's shape, whole (N275): the one finding, no warnings, the one GATE_VERSION. */
+      assert.deepEqual(Object.keys(r), ["gateVersion", "ok", "findings", "warnings"]);
       assert.deepEqual(Object.keys(r.findings[0]), ["check", "detail"]);
       assert.deepEqual([r.gateVersion, r.warnings], [GATE_VERSION, 0]);
     }

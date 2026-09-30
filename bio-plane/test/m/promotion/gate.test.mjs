@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../../../src/promotion/index.mjs";
-import { checkBundle, parseFrontmatter, REGISTRATION_CHECKS } from "../../../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
 import { doc, T0, makePromotion } from "./fixtures.mjs";
 
 const ID = "INFO-2026-0001-report";
@@ -122,17 +122,15 @@ test("R33: runCaseGate runs the case catalogue it is given with the facts suppli
   }
 });
 
-test("R33 (K529): with no catalogue registered, runCaseGate runs no fallback and answers C-102.9 CASE_CATALOGUE_FAILED, its code and row at the top, fail closed", () => {
-  const row = REGISTRATION_CHECKS.CASE_CATALOGUE_FAILED;
-  assert.equal(row.check, "C-102.9");
+test("R33 (K529): with no catalogue registered, runCaseGate runs no fallback and answers C-102.9 CASE_CATALOGUE_FAILED as R29's verdict, fail closed", () => {
   /* A document every catalogue would pass is not passed when nothing judges it. */
   for (const args of [{ caseId: "CASE-2026-0001", edition: 1, fm: { schema: "bio-case-document/5", case_id: "CASE-2026-0001" },
                         priorCase: null }, {}, undefined]) {
     for (const none of [undefined, null, "checkCaseDocument", {}]) {
       const r = runCaseGate(args, none);
-      assert.deepEqual(Object.keys(r).sort(), ["check", "code", "findings", "gateVersion", "ok", "reason", "translation", "warnings"]);
-      assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.gateVersion, r.warnings],
-                       [false, "CASE_CATALOGUE_FAILED", "CASE_CATALOGUE_FAILED", row.check, row.translation, GATE_VERSION, 0]);
+      /* R29's shape, whole (K534): a verdict, its one finding naming C-102.9's code; no warnings; the one GATE_VERSION. */
+      assert.deepEqual(Object.keys(r), ["gateVersion", "ok", "findings", "warnings"]);
+      assert.deepEqual([r.ok, r.gateVersion, r.warnings], [false, GATE_VERSION, 0]);
       assert.deepEqual(r.findings.map((f) => [Object.keys(f), f.check]), [[["check", "detail"], "CASE_CATALOGUE_FAILED"]]);
       assert.match(r.findings[0].detail, /no case-document catalogue is registered/);
     }
