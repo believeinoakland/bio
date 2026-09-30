@@ -11370,6 +11370,14 @@ function viewerPredicate(viewer) {
     scope: "participant"
   };
 }
+function hiddenBundles(viewer) {
+  const gate = viewerPredicate(viewer);
+  if (gate.scope === "member") return null;
+  return {
+    sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`,
+    args: [...gate.args]
+  };
+}
 var NO_SUCH_PROJECT_DETAIL = "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way.";
 var NO_SUCH_PROJECT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
 function noSuchProject(projectId, extra = null) {
@@ -46805,7 +46813,6 @@ var CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
 var CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
 var CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
                   WHERE p.fts_id IS NOT NULL`;
-var hiddenSet = (gate) => gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
 var VIA = Object.freeze({ projection: PROJECTION_RELATION });
 var safeJson6 = (s) => {
   try {
@@ -47491,8 +47498,8 @@ var Retrieval = class {
    *  for every visible bundle from the stored files and compares it against what the index holds. Paginated and
    *  resumable by cursor. REC-30: every finding NAMES a bundle, so the page carries the D-15 predicate; `orphans` are
    *  index rows no bundle claims, which name nothing and stay whole. D-464: `indexed` drops the rows a bundle the gate
-   *  does NOT pass claims and keeps every orphan, so parity is `indexed` against `keyed` plus the orphans, over what
-   *  the caller can see. */
+   *  does NOT pass claims (membership's `hiddenBundles`, its R88: the one spelling of that set) and keeps every orphan,
+   *  so parity is `indexed` against `keyed` plus the orphans, over what the caller can see. */
   searchIndexCheck({ after = "", limit = 200, viewer = null } = {}) {
     const cap = Math.max(1, Math.min(1e3, Math.floor(Number(limit) || 200)));
     const gate = viewerPredicate(viewer);
@@ -47535,7 +47542,7 @@ var Retrieval = class {
       orphans,
       counts: {
         bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
-        indexed: this.#indexedCount(hiddenSet(gate)),
+        indexed: this.#indexedCount(hiddenBundles(viewer)),
         keyed: this.#one(`SELECT count(*) c FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
                                    WHERE bp.fts_id IS NOT NULL AND (${gate.sql})`, ...gate.args).c
       },
@@ -47782,8 +47789,8 @@ var Retrieval = class {
     };
   }
   /** R21: the owner's selections newest first, the caps, and the instance's selection bytes. D-464: a row naming a
-   *  bundle the caller cannot see is not in the bytes (the complement of the one gate); `viewer === undefined` is a
-   *  direct internal call and stays whole. */
+   *  bundle the caller cannot see is not in the bytes (the complement of the one gate, membership's `hiddenBundles`,
+   *  its R88); `viewer === undefined` is a direct internal call and stays whole. */
   selectionList({ owner = null, viewer } = {}) {
     this.sweepSelections();
     if (!owner) return { ok: false, reason: "NO_OWNER" };
@@ -47796,7 +47803,7 @@ var Retrieval = class {
       ),
       caps: { maxItems: SELECTION_MAX_ITEMS, maxPerOwner: SELECTION_MAX_PER_OWNER },
       bytes: (() => {
-        const hid = viewer === void 0 ? null : hiddenSet(viewerPredicate(viewer));
+        const hid = viewer === void 0 ? null : hiddenBundles(viewer);
         return this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items` + (hid ? ` WHERE bundle_id NOT IN ${hid.sql}` : ""), ...hid ? hid.args : []).b;
       })()
     };
@@ -52820,7 +52827,29 @@ CREATE INDEX IF NOT EXISTS resolutions_entity ON resolutions(entity_id);
 CREATE INDEX IF NOT EXISTS resolutions_grade ON resolutions(grade, bundle_id);
 CREATE INDEX IF NOT EXISTS resolutions_capture ON resolutions(capture_sha);
 CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
+-- R38 (N345, DEC-76 item 3): A REPORT THAT A RESOLUTION MATCHED THE WRONG SUBJECT. Appended, never edited: a report
+-- moves nothing (the grade, the resolution and every connection stay), it is read beside the resolution it names
+-- (capture_sha, ref, entity_id), so a member can re-resolve. source_module/source_id name what raised it (a
+-- contradiction candidate) or are both NULL for a member's own report; reported_by is the control plane's stamp (R4).
+-- One report per (resolution, reported_by, source): a repeat writes nothing. Keyed to its bundle (R30).
+CREATE TABLE IF NOT EXISTS resolution_defects (
+  defect_id     INTEGER PRIMARY KEY,
+  capture_sha   TEXT NOT NULL,
+  bundle_id     TEXT NOT NULL,
+  ref           TEXT NOT NULL,
+  entity_id     TEXT NOT NULL,
+  reason        TEXT NOT NULL,
+  source_module TEXT,
+  source_id     TEXT,
+  reported_by   TEXT,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS resolution_defects_key ON resolution_defects(capture_sha, ref, entity_id);
+CREATE INDEX IF NOT EXISTS resolution_defects_entity ON resolution_defects(entity_id, at);
+CREATE INDEX IF NOT EXISTS resolution_defects_bundle ON resolution_defects(bundle_id);
 `;
+var BASIS_NORM_COLUMN = Object.freeze(["resolutions", "basis_norm"]);
+var BASIS_NORM_INDEX = "CREATE INDEX IF NOT EXISTS resolutions_entity_basis ON resolutions(entity_id, basis_norm)";
 var WITHDRAWAL_COLUMNS = Object.freeze([
   ["entity_aliases", "withdrawn_by"],
   ["entity_aliases", "withdrawn_at"],
@@ -52880,6 +52909,13 @@ var ENTITY_CHECKS = Object.freeze({
     check: "C-91.6",
     where: "src/entities/index.mjs createEntity > is-entity-labelled",
     translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written."
+  }),
+  /* R29, R38 (N345, DEC-76 item 3): a defect report names a resolution (capture, reference, subject) the record does
+     not hold. The next of C-91. */
+  NO_SUCH_RESOLUTION: Object.freeze({
+    check: "C-91.7",
+    where: "src/entities/index.mjs reportResolutionDefect > is-resolution-held",
+    translation: "The record holds no resolution of that reference to that subject, so there is nothing to report as wrong. Read the capture's resolutions and name one of them. Nothing was written."
   })
 });
 
@@ -52905,7 +52941,10 @@ var NAMING_LIMIT_DEFAULT = 100;
 var NAMING_LIMIT_MAX = 500;
 var IDMATCH_ADDRESS_LIMIT = 32;
 var WITHDRAW_REASON_MAX = 2e3;
-var ENTITIES_TABLES = Object.freeze(["resolutions", "entity_relations", "entity_aliases", "entities"]);
+var ENTITY_COLLECTION_LIMIT = 500;
+var ENTITY_RELATIONS_LIMIT = 1e3;
+var DEFECT_REASON_MAX = 2e3;
+var ENTITIES_TABLES = Object.freeze(["resolution_defects", "resolutions", "entity_relations", "entity_aliases", "entities"]);
 var RESOLVE_ITEM_KEYS = [["captureSha"], ["captureSha", "ref"]];
 var RESOLVE_SHARED_KEYS = ["ref"];
 var NO_SUCH_ENTITY_DETAIL = "no entity with that id is registered in the subject registry; an entity is registered with op=entitycreate before anything can name it";
@@ -53035,13 +53074,27 @@ var Entities = class _Entities {
     }
     for (const [table2, column] of WITHDRAWAL_COLUMNS)
       if (!this.#cols(table2).includes(column)) this.#sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} TEXT`);
+    const [bt, bc] = BASIS_NORM_COLUMN;
+    if (!this.#cols(bt).includes(bc)) {
+      this.#sql.exec(`ALTER TABLE ${bt} ADD COLUMN ${bc} TEXT`);
+      for (const r of this.#rows(`SELECT capture_sha, ref, entity_id, basis FROM resolutions WHERE grade <> 'D' AND basis IS NOT NULL`))
+        this.#sql.exec(
+          `UPDATE resolutions SET basis_norm=? WHERE capture_sha=? AND ref=? AND entity_id=?`,
+          normAlias(r.basis) || null,
+          r.capture_sha,
+          r.ref,
+          r.entity_id
+        );
+    }
+    this.#sql.exec(BASIS_NORM_INDEX);
     this.declarePurge();
   }
-  /** R30 (K23, record-core R21/R46): `resolutions` keyed to its bundle; the registry cleared by the whole-store
-   *  purge only. Once per instance. */
+  /** R30 (K23, record-core R21/R46): `resolutions` and `resolution_defects` keyed to their bundle; the registry
+   *  cleared by the whole-store purge only. Once per instance. */
   declarePurge() {
     if (this.#declared) return { ok: true, already: true };
     const r = this.#record.declarePurge("entities", [
+      "resolution_defects",
       "resolutions",
       { name: "entity_relations", keys: [] },
       { name: "entity_aliases", keys: [] },
@@ -53211,16 +53264,16 @@ var Entities = class _Entities {
   }
   /** R5: an entry BY KEY, with its aliases (canonical first; each withdrawn one shown as withdrawn, R8) and every
    *  declared relation it is an end of, oldest first, each with its direction and none with a grade. */
-  readEntity({ entityId } = {}) {
+  readEntity({ entityId, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an entity is read by its id (op=entity&id=ENT-...)");
     const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at FROM entities WHERE entity_id=?`, entityId);
     if (!e) return { ok: true, found: false, entity_id: entityId, entity: null };
-    return { ok: true, found: true, entity: this.#entityView(e) };
+    return { ok: true, found: true, entity: this.#entityView(e, this.#redactor(viewer)) };
   }
   /** R6: every entity holding the alias's fold through a live alias, in id order; an ambiguity is kept, never
    *  resolved. A name that folds to nothing answers `count: 0`. */
-  entitiesByAlias({ alias } = {}) {
+  entitiesByAlias({ alias, viewer = null } = {}) {
     const norm = normAlias(alias);
     if (!norm) return { ok: true, alias: typeof alias === "string" ? alias : null, count: 0, entities: [] };
     const hits = this.#rows(
@@ -53229,7 +53282,8 @@ var Entities = class _Entities {
         WHERE a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`,
       norm
     );
-    return { ok: true, alias, alias_norm: norm, count: hits.length, entities: hits.map((e) => this.#entityView(e)) };
+    const keep = this.#redactor(viewer);
+    return { ok: true, alias, alias_norm: norm, count: hits.length, entities: hits.map((e) => this.#entityView(e, keep)) };
   }
   /** R6: one declared relation by its id; it has a justification and a citation and no grade key (D-83). */
   readRelation({ relationId } = {}) {
@@ -53283,12 +53337,15 @@ var Entities = class _Entities {
     const by = withdrawnBy == null ? null : String(withdrawnBy);
     this.#sql.exec(`UPDATE entity_aliases SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=?
                      WHERE entity_id=? AND alias_norm=?`, by, at17, why, entityId, norm);
+    const resting = this.#restingOn(entityId, norm);
     return {
       ok: true,
       entity_id: entityId,
       alias: a.alias,
       withdrawn: { by, at: at17, reason: why },
-      resolutions_resting: this.#restingOn(entityId, norm),
+      resolutions_resting: resting.rows,
+      resolutions_resting_truncated: resting.truncated,
+      limit: ENTITY_COLLECTION_LIMIT,
       detail: "the name matches nothing new and no longer finds this entity; resolutions already made through it are kept and marked as resting on a withdrawn name, so a member can re-resolve them"
     };
   }
@@ -53316,9 +53373,18 @@ var Entities = class _Entities {
     );
     return { ok: true, relation: this.#relationView(this.#one(`SELECT * FROM entity_relations WHERE relation_id=?`, relationId)) };
   }
-  /* How many of the entity's recogniser resolutions rest on this fold (R8). */
+  /* R8, R39: the entity's recogniser resolutions resting on this fold, by capture then reference, at most the bound,
+     `truncated` by reading one past. Only the digest and the reference: what the record read stays visible (R32). */
   #restingOn(entityId, norm) {
-    return this.#rows(`SELECT basis FROM resolutions WHERE entity_id=? AND grade <> 'D' AND basis IS NOT NULL`, entityId).filter((r) => normAlias(r.basis) === norm).length;
+    const rows = this.#rows(
+      `SELECT capture_sha, ref, grade FROM resolutions
+                              WHERE entity_id=? AND basis_norm=? AND grade <> 'D' ORDER BY capture_sha, ref LIMIT ?`,
+      entityId,
+      norm,
+      ENTITY_COLLECTION_LIMIT + 1
+    );
+    const truncated3 = rows.length > ENTITY_COLLECTION_LIMIT;
+    return { rows: (truncated3 ? rows.slice(0, ENTITY_COLLECTION_LIMIT) : rows).map((r) => ({ capture_sha: r.capture_sha, ref: r.ref, grade: r.grade })), truncated: truncated3 };
   }
   #relationView(r, from = null) {
     return {
@@ -53334,23 +53400,42 @@ var Entities = class _Entities {
       withdrawn: r.withdrawn_at ? { by: r.withdrawn_by, at: r.withdrawn_at, reason: r.withdrawn_reason } : null
     };
   }
-  #entityView(e) {
-    const aliases = this.#rows(
+  /* R39: one collection keyed on one entity, at most `max` in its stated order, `truncated` by reading one past. */
+  #bounded(max, q6, ...a) {
+    const rows = this.#rows(`${q6} LIMIT ?`, ...a, max + 1);
+    const truncated3 = rows.length > max;
+    return { rows: truncated3 ? rows.slice(0, max) : rows, truncated: truncated3 };
+  }
+  /* R5, R39, R38: the entity with its aliases (canonical first), the relations it is an end of (oldest first, at most
+     1,000) and the defect reports on its resolutions (oldest first), the others at most 500; `keep` is the viewer's redactor (R32). */
+  #entityView(e, keep) {
+    const al = this.#bounded(
+      ENTITY_COLLECTION_LIMIT,
       `SELECT alias, canonical, declared_by, at, withdrawn_by, withdrawn_at, withdrawn_reason FROM entity_aliases
         WHERE entity_id=? ORDER BY canonical DESC, alias`,
       e.entity_id
-    ).map((a) => ({
+    );
+    const aliases = al.rows.map((a) => ({
       alias: a.alias,
       canonical: !!a.canonical,
       declared_by: a.declared_by,
       at: a.at,
       withdrawn: a.withdrawn_at ? { by: a.withdrawn_by, at: a.withdrawn_at, reason: a.withdrawn_reason } : null
     }));
-    const relations = this.#rows(
+    const rel = this.#bounded(
+      ENTITY_RELATIONS_LIMIT,
       `SELECT * FROM entity_relations WHERE from_entity=? OR to_entity=? ORDER BY at, relation_id`,
       e.entity_id,
       e.entity_id
-    ).map((r) => this.#relationView(r, e.entity_id));
+    );
+    const relations = rel.rows.map((r) => this.#relationView(r, e.entity_id));
+    const def = this.#bounded(
+      ENTITY_COLLECTION_LIMIT,
+      `SELECT capture_sha, bundle_id, ref, reason, source_module, source_id, reported_by, at FROM resolution_defects
+        WHERE entity_id=? ORDER BY at, defect_id`,
+      e.entity_id
+    );
+    const defects = def.rows.map((d) => ({ capture_sha: d.capture_sha, ref: d.ref, ..._Entities.#defectView(d, keep) }));
     return {
       entity_id: e.entity_id,
       kind: e.kind,
@@ -53359,7 +53444,24 @@ var Entities = class _Entities {
       declared_by: e.declared_by,
       at: e.at,
       aliases,
-      relations
+      relations,
+      defects,
+      defect_count: defects.length,
+      limit: ENTITY_COLLECTION_LIMIT,
+      relations_limit: ENTITY_RELATIONS_LIMIT,
+      aliases_truncated: al.truncated,
+      relations_truncated: rel.truncated,
+      defects_truncated: def.truncated
+    };
+  }
+  /* R38, R32: one report as it is read, `by` withheld where its document sits out of the viewer's sight. */
+  static #defectView(d, keep) {
+    const hidden = !!d.bundle_id && keep(d.bundle_id) == null;
+    return {
+      reason: d.reason,
+      source: d.source_module == null ? null : { module: d.source_module, id: d.source_id },
+      by: hidden ? null : d.reported_by,
+      at: d.at
     };
   }
   /* ===================================================================== *
@@ -53409,6 +53511,7 @@ var Entities = class _Entities {
     const at17 = this.#now();
     const est = isEstablished(grade) ? 1 : 0;
     const b = basis == null ? null : String(basis).slice(0, 400);
+    const bn = grade === "D" || b == null ? null : normAlias(b) || null;
     const by = resolvedBy == null ? null : String(resolvedBy).slice(0, 200);
     const existing = this.#one(`SELECT grade FROM resolutions WHERE capture_sha=? AND ref=? AND entity_id=?`, captureSha, ref, entityId);
     if (existing && !(gradeRank[grade] > (gradeRank[existing.grade] || 0)))
@@ -53424,15 +53527,16 @@ var Entities = class _Entities {
         kept: true
       };
     if (!existing)
-      this.#sql.exec(`INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,established,raised_from,resolved_by,at)
-                      VALUES (?,?,?,?,?,?,?,?,?,?,?)`, captureSha, bundleId, ref, entityId, grade, method, b, est, null, by, at17);
+      this.#sql.exec(`INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,basis_norm,established,raised_from,resolved_by,at)
+                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`, captureSha, bundleId, ref, entityId, grade, method, b, bn, est, null, by, at17);
     else
       this.#sql.exec(
-        `UPDATE resolutions SET grade=?, method=?, basis=?, established=?, raised_from=?, resolved_by=?, at=?
+        `UPDATE resolutions SET grade=?, method=?, basis=?, basis_norm=?, established=?, raised_from=?, resolved_by=?, at=?
                        WHERE capture_sha=? AND ref=? AND entity_id=?`,
         grade,
         method,
         b,
+        bn,
         est,
         existing.grade,
         by,
@@ -53588,6 +53692,106 @@ var Entities = class _Entities {
     return { ok: true };
   }
   /* ===================================================================== *
+   * THE DEFECT REPORT (R38; N345, DEC-76 item 3). A report that a resolution matched the wrong subject. IT MOVES
+   * NOTHING: the grade (R27), the resolution and every connection stay; the report is read beside the resolution
+   * (R5, R14, R15), so a member can re-resolve (R8's pattern).
+   * ===================================================================== */
+  /** R38. `by` is the control plane's stamp (R4); `source` is `{module, id}` (what raised the report, such as a
+   *  contradiction candidate) or null for a member's own report; a value without both strings is read as null. */
+  reportResolutionDefect({ captureSha, ref, entityId, reason, source = null, by = null } = {}) {
+    if (typeof captureSha !== "string" || !captureSha)
+      return noSha("a defect report names the resolution's captured document, by its capture sha256");
+    if (typeof ref !== "string" || !ref)
+      return { ok: false, reason: "NO_REF", detail: "a defect report names the resolution's raw reference (kind:key)" };
+    if (typeof entityId !== "string" || !entityId)
+      return noEntity("a defect report names the subject the reference was resolved to, by its entity id");
+    const why = typeof reason === "string" ? reason.trim().slice(0, DEFECT_REASON_MAX) : "";
+    if (!why) return {
+      ok: false,
+      reason: "NO_REASON",
+      detail: "a defect report says why the match is wrong; it is kept beside the resolution for as long as the record lasts"
+    };
+    const held = this.#one(`SELECT bundle_id FROM resolutions WHERE capture_sha=? AND ref=? AND entity_id=?`, captureSha, ref, entityId);
+    if (!held) {
+      const row2 = ENTITY_CHECKS.NO_SUCH_RESOLUTION;
+      return {
+        ok: false,
+        reason: "NO_SUCH_RESOLUTION",
+        code: "NO_SUCH_RESOLUTION",
+        check: row2.check,
+        translation: row2.translation,
+        capture_sha: captureSha,
+        ref,
+        entity_id: entityId,
+        detail: "no resolution of that reference of that captured document to that entity is held"
+      };
+    }
+    const src = source && typeof source === "object" && typeof source.module === "string" && source.module.trim() && typeof source.id === "string" && source.id.trim() ? { module: source.module.trim().slice(0, 200), id: source.id.trim().slice(0, 200) } : null;
+    const reporter = by == null ? null : String(by).slice(0, 200);
+    const key = [captureSha, ref, entityId];
+    return this.#record.transact(() => {
+      const prior = this.#one(
+        `SELECT reason, source_module, source_id, reported_by, at FROM resolution_defects
+                                WHERE capture_sha=? AND ref=? AND entity_id=? AND reported_by IS ? AND source_module IS ?
+                                  AND source_id IS ? ORDER BY defect_id LIMIT 1`,
+        ...key,
+        reporter,
+        src ? src.module : null,
+        src ? src.id : null
+      );
+      const count = () => Number(this.#one(`SELECT COUNT(*) AS n FROM resolution_defects WHERE capture_sha=? AND ref=? AND entity_id=?`, ...key).n);
+      const answer = { ok: true, capture_sha: captureSha, ref, entity_id: entityId };
+      if (prior)
+        return { ...answer, already: true, defect: _Entities.#defectView({ ...prior, bundle_id: null }, (id) => id), defect_count: count() };
+      const at17 = this.#now();
+      this.#sql.exec(
+        `INSERT INTO resolution_defects (capture_sha,bundle_id,ref,entity_id,reason,source_module,source_id,reported_by,at)
+                      VALUES (?,?,?,?,?,?,?,?,?)`,
+        captureSha,
+        held.bundle_id,
+        ref,
+        entityId,
+        why,
+        src ? src.module : null,
+        src ? src.id : null,
+        reporter,
+        at17
+      );
+      return {
+        ...answer,
+        defect: { reason: why, source: src, by: reporter, at: at17 },
+        defect_count: count(),
+        detail: "the report is kept beside the resolution; the grade, the resolution and every connection are unchanged"
+      };
+    });
+  }
+  /* R38, R14, R15: the reports on the resolutions `scanSql` names (a statement answering capture_sha, ref, entity_id),
+     keyed `capture\0ref\0entity`: each resolution's reports oldest first, at most the bound, and its whole count. */
+  #defectsOf(scanSql, args, keep) {
+    const out = /* @__PURE__ */ new Map();
+    const rows = this.#rows(
+      `SELECT * FROM (SELECT d.capture_sha, d.bundle_id, d.ref, d.entity_id, d.reason, d.source_module, d.source_id,
+                             d.reported_by, d.at,
+                             ROW_NUMBER() OVER (PARTITION BY d.capture_sha, d.ref, d.entity_id ORDER BY d.at, d.defect_id) AS rn,
+                             COUNT(*) OVER (PARTITION BY d.capture_sha, d.ref, d.entity_id) AS n
+                        FROM resolution_defects d
+                        JOIN (${scanSql}) p ON p.capture_sha = d.capture_sha AND p.ref = d.ref AND p.entity_id = d.entity_id)
+        WHERE rn <= ? ORDER BY capture_sha, ref, entity_id, rn`,
+      ...args,
+      ENTITY_COLLECTION_LIMIT
+    );
+    for (const d of rows) {
+      const k = `${d.capture_sha}\0${d.ref}\0${d.entity_id}`;
+      if (!out.has(k)) out.set(k, { defects: [], defect_count: Number(d.n) });
+      out.get(k).defects.push(_Entities.#defectView(d, keep));
+    }
+    return out;
+  }
+  static #defectsFor(map, r) {
+    const d = map.get(`${r.capture_sha}\0${r.ref}\0${r.entity_id}`);
+    return d ? { defects: d.defects, defect_count: d.defect_count } : { defects: [], defect_count: 0 };
+  }
+  /* ===================================================================== *
    * THE REVERSE READS (R14–R16). R32 (K102): a document's digest and what the record read from it stay
    * visible; the project that holds it, its id and its members' acts are hidden — `bundle_id`, `resolved_by` and
    * a testimony's testifier are withheld for a document the viewer may not see.
@@ -53613,17 +53817,19 @@ var Entities = class _Entities {
     return Math.max(1, Math.min(Number(limit) || MEANING_LIMIT_DEFAULT2, MEANING_LIMIT_MAX2));
   }
   /** R14: a capture's resolutions, ordered by reference then entity, bounded, `truncated` measured by reading one
-   *  more; R32's withholding; R8's `withdrawn_name`. */
+   *  more; R32's withholding; R8's `withdrawn_name`; R38's reports beside each. */
   resolutionsFor({ captureSha, limit = null, viewer = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return noSha("resolutions are read for a captured document, by its capture sha256");
     const cap = this.#clamp(limit);
-    const rows = this.#rows(`SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
-                               FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`, captureSha, cap + 1);
+    const scan = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
+                    FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`;
+    const rows = this.#rows(scan, captureSha, cap + 1);
     const truncated3 = rows.length > cap;
     const page = truncated3 ? rows.slice(0, cap) : rows;
     const keep = this.#redactor(viewer);
     const withdrawn = this.#withdrawnNames(page.map((r) => r.entity_id));
+    const defects = this.#defectsOf(scan, [captureSha, cap], keep);
     return {
       ok: true,
       capture_sha: captureSha,
@@ -53645,7 +53851,8 @@ var Entities = class _Entities {
           raised_from: r.raised_from,
           resolved_by: hidden ? null : r.resolved_by,
           at: r.at,
-          withdrawn_name: _Entities.#restsOn(withdrawn, r)
+          withdrawn_name: _Entities.#restsOn(withdrawn, r),
+          ..._Entities.#defectsFor(defects, r)
         };
       })
     };
@@ -53668,11 +53875,13 @@ var Entities = class _Entities {
     const keep = this.#redactor(viewer);
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const cap = this.#clamp(limit);
-    const scan = this.#rows(`SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, at
-                               FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha LIMIT ?`, entityId, cap + 1);
+    const scanSql = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, at
+                       FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha LIMIT ?`;
+    const scan = this.#rows(scanSql, entityId, cap + 1);
     const truncated3 = scan.length > cap;
     const rows = truncated3 ? scan.slice(0, cap) : scan;
     const withdrawn = this.#withdrawnNames([entityId]);
+    const defects = this.#defectsOf(scanSql, [entityId, cap], keep);
     const documents = [..._Entities.#collapse(rows).values()].map((r) => {
       const bundle = keep(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
       return {
@@ -53684,7 +53893,8 @@ var Entities = class _Entities {
         needs_confirmation: r.grade === "C",
         method: hidden && r.grade === "D" ? _Entities.#TESTIMONY_WITHHELD : r.method,
         at: r.at,
-        withdrawn_name: _Entities.#restsOn(withdrawn, r)
+        withdrawn_name: _Entities.#restsOn(withdrawn, r),
+        ..._Entities.#defectsFor(defects, r)
       };
     });
     return {
@@ -53989,8 +54199,9 @@ function entitiesOps(e, url, body) {
     relationdeclare: () => e.declareRelation(body || {}),
     aliaswithdraw: () => e.withdrawAlias(body || {}),
     relationwithdraw: () => e.withdrawRelation(body || {}),
-    entity: () => e.readEntity({ entityId: q6("id") }),
-    entitybyalias: () => e.entitiesByAlias({ alias: q6("alias") }),
+    resolutiondefect: () => e.reportResolutionDefect(body || {}),
+    entity: () => e.readEntity({ entityId: q6("id"), viewer: q6("viewer") }),
+    entitybyalias: () => e.entitiesByAlias({ alias: q6("alias"), viewer: q6("viewer") }),
     relation: () => e.readRelation({ relationId: q6("id") }),
     resolutions: () => e.resolutionsFor({ captureSha: q6("sha256"), limit: q6("limit"), viewer: q6("viewer") }),
     concerns: () => e.concerns({ entityId: q6("id"), limit: q6("limit"), viewer: q6("viewer") }),

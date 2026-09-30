@@ -24849,6 +24849,7 @@ var SPACES2 = Object.freeze({
 var SPACE_NAMES = Object.keys(SPACES2);
 
 // ../bio-plane/src/entities/schema.mjs
+var BASIS_NORM_COLUMN = Object.freeze(["resolutions", "basis_norm"]);
 var WITHDRAWAL_COLUMNS = Object.freeze([
   ["entity_aliases", "withdrawn_by"],
   ["entity_aliases", "withdrawn_at"],
@@ -24896,6 +24897,13 @@ var ENTITY_CHECKS = Object.freeze({
     check: "C-91.6",
     where: "src/entities/index.mjs createEntity > is-entity-labelled",
     translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written."
+  }),
+  /* R29, R38 (N345, DEC-76 item 3): a defect report names a resolution (capture, reference, subject) the record does
+     not hold. The next of C-91. */
+  NO_SUCH_RESOLUTION: Object.freeze({
+    check: "C-91.7",
+    where: "src/entities/index.mjs reportResolutionDefect > is-resolution-held",
+    translation: "The record holds no resolution of that reference to that subject, so there is nothing to report as wrong. Read the capture's resolutions and name one of them. Nothing was written."
   })
 });
 
@@ -24914,7 +24922,7 @@ var ENTITY_KINDS = Object.freeze([
 ]);
 var RELATION_KINDS = Object.freeze(["proxy_for", "member_of", "overlaps"]);
 var gradeRank = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
-var ENTITIES_TABLES = Object.freeze(["resolutions", "entity_relations", "entity_aliases", "entities"]);
+var ENTITIES_TABLES = Object.freeze(["resolution_defects", "resolutions", "entity_relations", "entity_aliases", "entities"]);
 var CORRESPONDENCE = {
   ref: { whole: "reference", part: "name_in_reference" },
   key: { whole: "reference_key", part: "name_in_reference" },
