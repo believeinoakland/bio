@@ -317,13 +317,10 @@ __export(bio_checks_exports, {
   NARROW_CHECKS: () => NARROW_CHECKS,
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
-  PER_ITEM_CHECKS: () => PER_ITEM_CHECKS,
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
-  PROJECT_CREATION_VISIBILITY_CHECKS: () => PROJECT_CREATION_VISIBILITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   PROJECT_JOIN_REQUEST_CHECKS: () => PROJECT_JOIN_REQUEST_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
-  PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
   PROPOSAL_STATES: () => PROPOSAL_STATES,
   PROVENANCE_ACT_CHECKS: () => PROVENANCE_ACT_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
@@ -369,7 +366,6 @@ __export(bio_checks_exports, {
   checkContentExtent: () => checkContentExtent,
   checkInquiryBasis: () => checkInquiryBasis,
   checkLegExtentGrammar: () => checkLegExtentGrammar,
-  checkProjectNameUniqueness: () => checkProjectNameUniqueness,
   civicosUserAgent: () => civicosUserAgent,
   contentCitedAs: () => contentCitedAs,
   contentIdFor: () => contentIdFor,
@@ -399,7 +395,6 @@ __export(bio_checks_exports, {
   lifecycleFindings: () => lifecycleFindings,
   normalizeType: () => normalizeType,
   parseFrontmatter: () => parseFrontmatter,
-  projectNameKey: () => projectNameKey,
   proposalLabel: () => proposalLabel,
   quoteFindings: () => quoteFindings,
   quoteValue: () => quoteValue,
@@ -412,8 +407,7 @@ __export(bio_checks_exports, {
   themeLegFindings: () => themeLegFindings,
   userAgentIsLegible: () => userAgentIsLegible,
   versionNeedsReason: () => versionNeedsReason,
-  vocabFor: () => vocabFor,
-  withProducingGroup: () => withProducingGroup
+  vocabFor: () => vocabFor
 });
 
 // src/record-grammar/ids.mjs
@@ -3171,58 +3165,6 @@ var MECHANICAL_FIELD_SETS = {
   "deadline-recheck": ["clock[].status", "last_updated"],
   "member-attest": ["last_updated"]
 };
-function projectNameKey(title) {
-  return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-}
-function checkProjectNameUniqueness(corpus) {
-  const findings = [];
-  const keyed = [];
-  let projects = 0;
-  for (const input of corpus || []) {
-    const raw = input && input.files && input.files.get ? input.files.get("bundle.md") : void 0;
-    const fm = raw == null ? null : parseFrontmatter(asText(raw)).data;
-    const label = fm && typeof fm.id === "string" && fm.id || input && input.folderName || "(unnamed bundle)";
-    if (!fm) {
-      findings.push(f2(
-        "C-77.2",
-        "warning",
-        `${label}: bundle.md is ${raw == null ? "absent" : "unreadable"}, so whether it is a project, and whether its name collides, is UNDETERMINED`,
-        ["hand the corpus with this bundle's bundle.md readable and run the check again"]
-      ));
-      continue;
-    }
-    if (normalizeType(fm.object_type) !== "project") continue;
-    projects++;
-    const key = projectNameKey(fm.title);
-    if (!key) {
-      findings.push(f2(
-        "C-77.2",
-        "warning",
-        `${label}: a project with no title cannot be compared for name uniqueness (the write path refuses it NO_TITLE)`,
-        ["give the project a title unique across the instance"]
-      ));
-      continue;
-    }
-    keyed.push({ id: label, title: String(fm.title), state: fm.current_state, key });
-  }
-  for (let i = 0; i < keyed.length; i++) {
-    for (let j = i + 1; j < keyed.length; j++) {
-      const a = keyed[i], b = keyed[j];
-      if (a.key !== b.key) continue;
-      const st = (p) => p.state === void 0 ? "" : ` [${p.state}]`;
-      findings.push(f2(
-        "C-77.1",
-        "error",
-        `project names collide: ${a.id} "${a.title}"${st(a)} and ${b.id} "${b.title}"${st(b)} are the same name compared case-insensitively with whitespace collapsed (Membership v2 \xA77.1), which holds across deactivated projects too`,
-        [
-          "rename one of the two projects so each name identifies one project",
-          "if one is deactivated, rename the live one: the deactivated project is still cited by its name"
-        ]
-      ));
-    }
-  }
-  return { pass: !findings.some((x) => x.severity === "error"), findings, projects, judged: keyed.length };
-}
 var EXTENSION_ARMS = Object.freeze([
   { name: "checkInformationExtension", ids: ["C-2.7"] },
   { name: "checkInfo2Contract", ids: ["C-18.6", "C-18.7"] },
@@ -5984,18 +5926,6 @@ var PROJECT_JOIN_REQUEST_CHECKS = {
     translation: "A project's requests to join are seen by the people who asked, its owners and administrators. You can read your own requests without naming a project."
   }
 };
-var PROJECT_CREATION_VISIBILITY_CHECKS = {
-  PROJECT_VISIBILITY_NO_OWNER: {
-    check: "C-97.1",
-    where: "src/promotion/index.mjs #promote > is-project-creation-ownerless",
-    translation: "Whether a project can be found is chosen by its owners, and a project created by a machine credential has no owner, so it is created hidden and cannot be made discoverable here. Nothing was created. Create it without the setting; an owner who joins it later can make it discoverable."
-  },
-  PROJECT_VISIBILITY_NOT_A_CREATION: {
-    check: "C-97.2",
-    where: "src/promotion/index.mjs #promote > is-project-creation-visibility",
-    translation: "Whether a project can be found is chosen when it is created or forked, and this was not a project being created. Nothing was changed. An owner changes an existing project's setting in its settings."
-  }
-};
 var CASE_AUTHORITY_CHECKS = {
   CASE_SIGNER_NOT_AN_OWNER: {
     check: "C-57.1",
@@ -6073,20 +6003,6 @@ var INSTANCE_GROUP_CHECKS = {
     translation: "This copy has not recorded which group it belongs to, and nothing in this request says, so the record cannot write a document that must name the group that produced it. A copy records its group once: when it is first installed, or by one act of whoever holds its administrator token in the hosting account. Nothing was written."
   }
 };
-function withProducingGroup(text4, slug) {
-  if (typeof text4 !== "string" || typeof slug !== "string" || !slug) return text4;
-  if (parseFrontmatter(text4).data?.group === slug) return text4;
-  const lines = text4.split("\n");
-  if (lines[0] !== "---") return text4;
-  const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text4;
-  for (let i = 1; i < end2; i++)
-    if (lines[i].startsWith("group:")) {
-      lines[i] = `group: ${slug}`;
-      return lines.join("\n");
-    }
-  return [...lines.slice(0, end2), `group: ${slug}`, ...lines.slice(end2)].join("\n");
-}
 function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
   const refusal19 = (code, message2, repairs) => f2(LEAD_CHECKS[code].check, "error", message2, repairs, code);
@@ -6496,33 +6412,6 @@ function coversImagePlacement(e, container2) {
   const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(", ")}]`).join(" ");
   return `page ${e.page} of this capture paints ${onPage.length} image(s)${onPage.length ? ` (${listed}${onPage.length > 6 ? " \u2026" : ""})` : ""} and none at [${want.join(", ")}], the rectangle the extent names`;
 }
-var PER_ITEM_CHECKS = {
-  SET_NO_ITEMS: {
-    check: "C-75.1",
-    where: "src/record-core/index.mjs perItem > is-per-item-set-shape",
-    translation: "Nothing was selected, so nothing was done. Choose at least one item and try again."
-  },
-  SET_TOO_LARGE: {
-    check: "C-75.2",
-    where: "src/record-core/index.mjs perItem > is-per-item-set-shape",
-    translation: "That selection is larger than the record acts on at once, so nothing was done to any of it. Select fewer items and apply the action again."
-  },
-  SET_ITEM_MALFORMED: {
-    check: "C-75.3",
-    where: "src/record-core/index.mjs perItem > is-per-item-malformed",
-    translation: "This item could not be read as an item, so it was left as it was. The rest of the selection was still acted on, one by one."
-  },
-  SET_ITEM_FAILED: {
-    check: "C-75.4",
-    where: "src/record-core/index.mjs perItem > is-per-item-failed",
-    translation: "The record could not complete the action on this item and did not change it. It stays in your list. The rest of the selection was still acted on, one by one."
-  },
-  SET_ITEMS_RETAINED: {
-    check: "C-75.5",
-    where: "src/record-core/index.mjs perItem > is-per-item-retained",
-    translation: "Not every selected item was handled. The ones that were have left your list; the ones that were not are still there, each with the reason the record gave for it, so you can take a different action on them."
-  }
-};
 var REGISTRATION_CHECKS = {
   AUDIT_CHECK_DECLARED: {
     check: "C-102.1",
@@ -6660,37 +6549,6 @@ var CONNECTION_CHOICE_CHECKS = {
     check: "C-74.4",
     where: "src/connections/index.mjs choose > is-connection-choice",
     translation: "That reference was read at more than one place in this document, and each place is its own mention. Say which one is on point \u2014 by the occurrence the record lists for it, or by the place as the record names it \u2014 and the choice will rest on that place alone."
-  }
-};
-var PROMOTED_TYPE_CHECKS = {
-  ENVELOPE_TYPE_DISAGREES: {
-    check: "C-86.1",
-    where: "src/promotion/index.mjs #promote > is-promoted-type-disagrees",
-    translation: "The document being filed says what kind of thing it is, and the request that carried it says something different. The record goes by the document, so rather than file an action as information \u2014 or the reverse \u2014 and index it as neither, it stops and tells you both answers. Nothing was written. Send it again with the request naming the type the document names, or change the document first."
-  },
-  /* D-547 (2026-09-25) — the SECOND way a promotion's type can be wrong, and it is not the first one twice: C-86.1
-   * compares the two statements in ONE request; this compares the request with the RECORD. A revision whose document
-   * names a different type than the bundle already holds would rewrite `bundles.object_type` in place, and every
-   * type-scoped fence would then ask the wrong machine. Replay is exempt, as for C-86.1. */
-  REVISION_RETYPES_BUNDLE: {
-    check: "C-86.2",
-    where: "src/promotion/index.mjs #promote > is-promote-retypes-bundle",
-    translation: "This change would turn something the record already holds into a different kind of thing, an item of information into an action, say. A change can alter what a document says, but not what it is, because what it is decides which rules protect it. Nothing was written. To record it as the other kind, create a new one of that kind and link the two."
-  },
-  /* D-563 (2026-09-25) — C-86.1's rule one field over, twice: the document states what it is CALLED and where it STANDS,
-   * and a request whose label contradicts either is refused rather than obeyed. The name is what 7.1 holds unique and
-   * the state decides who may move the item (7.11) and what may cite it (REC-181), so a label a caller can steer was
-   * an authority over both. Only a contradiction between two statements: a label stating nothing takes the document's
-   * word. Replay is exempt, as for C-86.1. */
-  ENVELOPE_TITLE_DISAGREES: {
-    check: "C-86.3",
-    where: "src/promotion/index.mjs #promote > is-promoted-title-disagrees",
-    translation: "The document being filed gives itself one name, and the request that carried it gives another. The record goes by the document, and names are held unique across the instance, so rather than file it under a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request naming the document's title, or naming none, or change the document first."
-  },
-  ENVELOPE_STATE_DISAGREES: {
-    check: "C-86.4",
-    where: "src/promotion/index.mjs #promote > is-promoted-state-disagrees",
-    translation: "The document being filed says where it stands, and the request that carried it says something different. Where a thing stands decides who may move it and what may cite it, and the record goes by the document, so it stops and tells you both. Nothing was written. Send it again with the request saying what the document says, or saying nothing about it, or change the document first."
   }
 };
 function contentIdFor(captureSha, extent, chain2) {
@@ -9053,9 +8911,11 @@ var ACTION_CATALOGUE_CHECKS = {
 // src/record-core/checks.mjs
 var checks_exports2 = {};
 __export(checks_exports2, {
+  PER_ITEM_CHECKS: () => PER_ITEM_CHECKS,
   RECORD_CORE_CHECKS: () => RECORD_CORE_CHECKS
 });
 var at = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
+var BUILD_FAULT = "This is a fault in how the instance was built, not in the record, and nothing in the record changed.";
 var RECORD_CORE_CHECKS = Object.freeze({
   MINT_EXHAUSTED: Object.freeze({
     check: "C-59.6",
@@ -9071,6 +8931,77 @@ var RECORD_CORE_CHECKS = Object.freeze({
     check: "C-102.14",
     where: at("registerCounts", "is-counts-registration"),
     translation: "A part of this instance tried to register its figures without naming itself, the figures or a function to count them, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  }),
+  /* Copied from the catalogue's PROJECT_ID_CHECKS (REC-151, Membership v2 §7, "A MINTED ID CARRIES NO COUNT"). */
+  ALLOCID_PREFIX_GATED: Object.freeze({
+    check: "C-59.5",
+    where: at("allocIdOp", "is-allocid-prefix-gated"),
+    translation: "Ids of this kind are given by the record when the thing itself is created, and are not handed out in advance. Create the project, case, draft, grant or task through its own action and the record will answer with its id. Nothing was allocated."
+  }),
+  /* Copied from the catalogue's REGISTRATION_CHECKS (K31; N94). */
+  AUDIT_CHECK_DECLARED: Object.freeze({
+    check: "C-102.1",
+    where: at("registerAuditCheck", "is-audit-check-registration"),
+    translation: "A part of this instance tried to register its audit check a second time. Each part registers once, when it starts, so the second was refused and the first still runs. " + BUILD_FAULT
+  }),
+  AUDIT_CHECK_MALFORMED: Object.freeze({
+    check: "C-102.2",
+    where: at("registerAuditCheck", "is-audit-check-registration"),
+    translation: "A part of this instance tried to register an audit check without naming itself or without a check to run, so nothing was registered. " + BUILD_FAULT
+  }),
+  AUDIT_CHECK_FAILED: Object.freeze({
+    check: "C-102.3",
+    where: at("auditPass", "is-audit-check-failed"),
+    translation: "One of the checks the audit runs over this document stopped with an error instead of answering, so the document is counted as having an error rather than as clean. The error is in the check and says nothing yet about the document. The audit changes nothing in the record."
+  }),
+  /* New (§1b): a type grammar registered for the catalogue's `checkBundle`. */
+  GRAMMAR_DECLARED: Object.freeze({
+    check: "C-102.15",
+    where: at("registerGrammar", "is-grammar-registration"),
+    translation: "A part of this instance tried to register a document grammar a second time, or to claim a check another part's grammar already claims, so the second registration was refused and the first still stands. " + BUILD_FAULT
+  }),
+  GRAMMAR_MALFORMED: Object.freeze({
+    check: "C-102.16",
+    where: at("registerGrammar", "is-grammar-registration"),
+    translation: "A part of this instance tried to register a document grammar without naming itself, the checks it takes over or a function to run, or claimed only part of one of the record's own checks, so nothing was registered. " + BUILD_FAULT
+  }),
+  /* New (R64's source, K621): the one registered source of the instance's figures. */
+  STATS_SOURCE_DECLARED: Object.freeze({
+    check: "C-102.17",
+    where: at("registerStatsSource", "is-stats-source-registration"),
+    translation: "A part of this instance tried to supply the instance's figures when another part already supplies them, so the second was refused and the first still stands. " + BUILD_FAULT
+  }),
+  STATS_SOURCE_MALFORMED: Object.freeze({
+    check: "C-102.18",
+    where: at("registerStatsSource", "is-stats-source-registration"),
+    translation: "A part of this instance tried to supply the instance's figures without naming itself or without a function to count them, so nothing was registered. " + BUILD_FAULT
+  })
+});
+var PER_ITEM_CHECKS = Object.freeze({
+  SET_NO_ITEMS: Object.freeze({
+    check: "C-75.1",
+    where: at("perItem", "is-per-item-set-shape"),
+    translation: "Nothing was selected, so nothing was done. Choose at least one item and try again."
+  }),
+  SET_TOO_LARGE: Object.freeze({
+    check: "C-75.2",
+    where: at("perItem", "is-per-item-set-shape"),
+    translation: "That selection is larger than the record acts on at once, so nothing was done to any of it. Select fewer items and apply the action again."
+  }),
+  SET_ITEM_MALFORMED: Object.freeze({
+    check: "C-75.3",
+    where: at("perItem", "is-per-item-malformed"),
+    translation: "This item could not be read as an item, so it was left as it was. The rest of the selection was still acted on, one by one."
+  }),
+  SET_ITEM_FAILED: Object.freeze({
+    check: "C-75.4",
+    where: at("perItem", "is-per-item-failed"),
+    translation: "The record could not complete the action on this item and did not change it. It stays in your list. The rest of the selection was still acted on, one by one."
+  }),
+  SET_ITEMS_RETAINED: Object.freeze({
+    check: "C-75.5",
+    where: at("perItem", "is-per-item-retained"),
+    translation: "Not every selected item was handled. The ones that were have left your list; the ones that were not are still there, each with the reason the record gave for it, so you can take a different action on them."
   })
 });
 
@@ -9202,6 +9133,11 @@ CREATE INDEX IF NOT EXISTS settings_name ON settings(name);
 
 // src/record-core/index.mjs
 var IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
+var C_ID = /^C-\d+(\.\d+)?$/;
+function refusedAs(code, detail, more) {
+  const row2 = RECORD_CORE_CHECKS[code];
+  return { ...more, ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail };
+}
 var REFUSED = Symbol("record-core-refusal");
 var hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -9359,16 +9295,21 @@ var RecordCore = class _RecordCore {
   static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings"]);
   #storage;
   #sql;
-  #depth = 0;
   #declared = /* @__PURE__ */ new Map();
   #order = [];
   #evidence;
   #evidencePrefix;
   #firstBoot;
+  #held = [];
+  // R66: one list per open `transact`, outermost first, of what `afterCommit` held
   #auditChecks = [];
   // R59: {module, check}, in registration order
+  #grammars = [];
+  // R67: {module, ids, arm}, in registration order
   #countsBy = [];
   // R63: {module, keys, counts}, in registration order
+  #statsSource = null;
+  // R65: {module, figures}, the one source of the instance's figures
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
@@ -9400,26 +9341,51 @@ var RecordCore = class _RecordCore {
     if (cols.length && !cols.includes("project")) this.#sql.exec(`ALTER TABLE bundles ADD COLUMN project TEXT`);
     this.#sql.exec(`CREATE INDEX IF NOT EXISTS bundles_project ON bundles(project, bundle_id)`);
   }
-  /* ---- transactions (R32) ---- */
+  /* ---- transactions (R32, R66) ---- */
   /** Runs `fn` as one transaction over the whole store. A throw, or a returned refusal (`ok:false`),
    *  rolls back every row written inside it, in any module's tables; a refusal is then returned, a
    *  throw rethrown. A call made inside another joins it as a savepoint (a Durable Object's
    *  `transactionSync` nests so, measured in Miniflare): a nested call that throws or refuses rolls back
    *  its own writes and ids and nothing else, and the outer call decides the rest (R32, K133). */
   transact(fn) {
-    let result;
-    this.#depth++;
+    let result, out, committed = false;
+    const held = [];
+    this.#held.push(held);
     try {
-      return this.#storage.transactionSync(() => {
+      out = this.#storage.transactionSync(() => {
         result = fn();
         if (result && typeof result === "object" && result.ok === false) throw REFUSED;
         return result;
       });
+      committed = true;
     } catch (e) {
-      if (e === REFUSED) return result;
-      throw e;
+      if (e !== REFUSED) throw e;
+      out = result;
     } finally {
-      this.#depth--;
+      this.#held.pop();
+    }
+    if (committed) {
+      if (this.#held.length) this.#held[this.#held.length - 1].push(...held);
+      else _RecordCore.#runHeld(held);
+    }
+    return out;
+  }
+  /** R66 (N406, K598): `fn` runs after the record has committed what it was asked in: at once outside any `transact`;
+   *  inside one, synchronously just after the outermost `transact` commits and before that call returns, in the order
+   *  the calls were made; never when the transaction, or the savepoint holding it, rolls back (a throw or an `ok:false`
+   *  answer). A held `fn` that throws does not undo the commit, stop the others or change what `transact` answers: a
+   *  caller that must know (reevaluation's `listeners_failed`) catches its own. A non-function is a caller's defect. */
+  afterCommit(fn) {
+    if (typeof fn !== "function") throw new TypeError("afterCommit: fn is not a function");
+    if (this.#held.length) this.#held[this.#held.length - 1].push(fn);
+    else _RecordCore.#runHeld([fn]);
+  }
+  static #runHeld(fns) {
+    for (const fn of fns) {
+      try {
+        fn();
+      } catch {
+      }
     }
   }
   /* ---- ids (R1–R9) ---- */
@@ -9443,7 +9409,7 @@ var RecordCore = class _RecordCore {
     const scope = `${prefix}-${year}`;
     const gated = _RecordCore.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));
     if (gated) {
-      const row2 = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;
+      const row2 = RECORD_CORE_CHECKS.ALLOCID_PREFIX_GATED;
       return {
         ok: false,
         reason: "ALLOCID_PREFIX_GATED",
@@ -10057,7 +10023,95 @@ var RecordCore = class _RecordCore {
     }
     return Object.fromEntries(out);
   }
-  /* ---- the audit sweep (R18–R20, R45, R59) ---- */
+  /* ---- the instance's figures and what each caller is told of them (R64, R65; K621) ---- */
+  /* REC-131 / IC-148 (BOB #15's corrected ruling, `MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A DISCLOSURE OF
+     EXISTENCE*): a count over rows a caller could not all read goes only to a caller who could read them all, and for
+     members' leads THAT CALLER DOES NOT EXIST, so `leads` is on the wire for no class. ONE KEY NEVER CARRIES TWO
+     MEANINGS: the wire's log count excludes lead looks and is published as `observationsNonLead`, a name that states
+     its predicate; purge's `observations` keeps the whole log, and the wire carries no `observations` key, so no reader
+     compares the two under one name. The themes and their placements (D-162) are purge's proof only: a count of
+     members' lenses is not an operator fact. */
+  static #PROOF_ONLY = Object.freeze(["leads", "observations", "themes", "themePlacements"]);
+  static #WIRE_ONLY = Object.freeze(["observationsNonLead"]);
+  /** R65 (K621): the one source of the instance's figures, registered once at start, `figures({viewer, proof})`
+   *  answering them through the caller's sight (`viewer` exactly as the caller sent it, `undefined` when never sent,
+   *  a direct internal call that counts whole). The sight and the counting are the source's, over the tables it
+   *  reads; which figures each caller is told is this module's (R64). A second source is `STATS_SOURCE_DECLARED`,
+   *  naming the holder; one without a module name or a function `STATS_SOURCE_MALFORMED`. */
+  registerStatsSource(module, figures) {
+    if (typeof module !== "string" || !module.trim() || typeof figures !== "function")
+      return refusedAs(
+        "STATS_SOURCE_MALFORMED",
+        "a statistics source names its module and is a function; nothing was registered.",
+        { module: typeof module === "string" ? module : null }
+      );
+    if (this.#statsSource)
+      return refusedAs("STATS_SOURCE_DECLARED", `the instance's figures are already supplied by ${this.#statsSource.module}; nothing was registered.`, { module, heldBy: this.#statsSource.module });
+    this.#statsSource = { module, figures };
+    return { ok: true, module };
+  }
+  /* The source's figures, as a plain object of its own enumerable fields; none (`{}`) when no source is registered or
+     it threw or answered no object. A field that cannot be read is left out. */
+  #figures(viewer, proof) {
+    const out = {};
+    if (!this.#statsSource) return out;
+    let got;
+    try {
+      got = this.#statsSource.figures({ viewer, proof });
+    } catch {
+      return out;
+    }
+    if (!got || typeof got !== "object" || typeof got.then === "function") return out;
+    let keys = [];
+    try {
+      keys = Object.keys(got);
+    } catch {
+      return out;
+    }
+    for (const k of keys) {
+      try {
+        Object.defineProperty(out, k, { value: got[k], enumerable: true, writable: true, configurable: true });
+      } catch {
+      }
+    }
+    return out;
+  }
+  /* The database's size, a figure of this object's storage and no table's; null when the storage states none. */
+  #dbBytes() {
+    try {
+      const n = this.#sql.databaseSize;
+      return typeof n === "number" && Number.isFinite(n) ? n : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R64 (N408, K621): `op=stats`. The instance's figures through the caller's sight (R65's source), with the same
+   *  keys for every class of caller: never `leads` nor `observations` (nor the themes, purge's only), whatever the
+   *  source answers; the observation log as `observationsNonLead`. `capacity` IS THE ONE CLASS DISTINCTION, AND IT
+   *  GOVERNS `dbBytes` AND NOTHING ELSE (BOB #15, resuming REC-131): the database's size moves in whole pages on every
+   *  write, a lead's included, so a member diffing it across a colleague's authoring could detect a large lead;
+   *  capacity is an operator need. It is the control plane's word, set from the authenticated class after the
+   *  caller's parameters are copied, so only `true` itself grants it: an absent or any other value is false, and a
+   *  door that forgets to stamp loses `dbBytes` rather than leaking it. THE RESIDUE, STATED RATHER THAN HIDDEN: the
+   *  admin class still receives a figure that moves on every write, so an operator can tell that something large was
+   *  written, never that it was a lead, and no lead is readable to it. Writes nothing; never throws. */
+  stats({ capacity = false, viewer } = {}) {
+    const f10 = this.#figures(viewer, false);
+    for (const k of [..._RecordCore.#PROOF_ONLY, "dbBytes"]) delete f10[k];
+    if (capacity === true) f10.dbBytes = this.#dbBytes();
+    return f10;
+  }
+  /** R64: purge's proof of what it removed, the private form of the same figures, WHOLE (§5: *the purge proof's own
+   *  count stays whole*): the whole log as `observations`, with `leads`, the themes and `dbBytes`, and no
+   *  `observationsNonLead`. No route answers it: purge reads it before and after it clears. Writes nothing; never
+   *  throws. */
+  proofCounts() {
+    const f10 = this.#figures(void 0, true);
+    for (const k of [..._RecordCore.#WIRE_ONLY, "dbBytes"]) delete f10[k];
+    f10.dbBytes = this.#dbBytes();
+    return f10;
+  }
+  /* ---- the audit sweep (R18–R20, R45, R59, R67) ---- */
   /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
    *  runs over every bundle of a page beside the catalogue, called `check(image, context)`: `image` is what
    *  `checkBundle` gets (`bundleId`/`folderName`, `files`, `elidedPaths`, `sha256`, `sha512`, R19's `resolveTarget`)
@@ -10065,11 +10119,48 @@ var RecordCore = class _RecordCore {
    *  lost to the audit, and the bundle is judged once, whole. */
   registerAuditCheck(module, check) {
     if (typeof module !== "string" || !module || typeof check !== "function")
-      return { ok: false, reason: "AUDIT_CHECK_MALFORMED", detail: "an audit check names its module and is a function" };
+      return refusedAs("AUDIT_CHECK_MALFORMED", "an audit check names its module and is a function; nothing was registered.");
     if (this.#auditChecks.some((c) => c.module === module))
-      return { ok: false, reason: "AUDIT_CHECK_DECLARED", module, detail: `${module} has already registered its audit check` };
+      return refusedAs("AUDIT_CHECK_DECLARED", `${module} has already registered its audit check; the first still runs.`, { module });
     this.#auditChecks.push({ module, check });
     return { ok: true, module };
+  }
+  /** R67 (§1b, K585 (2)): a type grammar leaves the check catalogue by registering here, once, at its module's start:
+   *  `ids` are the catalogue check ids its `arm(ctx, findings)` raises, and a grammar that claims all the ids of one of
+   *  the catalogue's `EXTENSION_ARMS` runs in that arm's place (legacy-checks' `checkBundle`, `opts.grammars`). What
+   *  the catalogue would throw on is refused here, before anything is registered, so the audit and the gate never meet
+   *  a grammar list the catalogue rejects: a malformed entry, a claim of part of one arm or of two arms
+   *  (`GRAMMAR_MALFORMED`), a module's second registration or an id another registration holds (`GRAMMAR_DECLARED`,
+   *  naming the holder). */
+  registerGrammar(module, { ids, arm } = {}) {
+    const named = typeof module === "string" && module.trim() !== "";
+    if (!named || !Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === "string" && C_ID.test(id)) || typeof arm !== "function")
+      return refusedAs("GRAMMAR_MALFORMED", "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.", { module: named ? module : null });
+    const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => ids.includes(id)));
+    if (touched.length > 1 || touched.length === 1 && !touched[0].ids.every((id) => ids.includes(id)))
+      return refusedAs(
+        "GRAMMAR_MALFORMED",
+        touched.length > 1 ? `the grammar claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar takes the place of one of the catalogue's arms. Nothing was registered.` : `the grammar claims part of ${touched[0].name}, whose ids are ${touched[0].ids.join(", ")}; an arm is claimed whole. Nothing was registered.`,
+        { module }
+      );
+    const twice = ids.find((id, i) => ids.indexOf(id) < i);
+    const clash = this.#grammars.some((g) => g.module === module) ? { heldBy: module } : twice !== void 0 ? { id: twice, heldBy: module } : (() => {
+      for (const id of ids) {
+        const g = this.#grammars.find((x) => x.ids.includes(id));
+        if (g) return { id, heldBy: g.module };
+      }
+      return null;
+    })();
+    if (clash)
+      return refusedAs("GRAMMAR_DECLARED", clash.id === void 0 ? `${module} has already registered its grammar; the first still stands.` : `the check ${clash.id} is already claimed by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+    this.#grammars.push(Object.freeze({ module, ids: Object.freeze([...ids]), arm }));
+    return { ok: true, module, ids: [...ids] };
+  }
+  /** R67: every registered grammar, `{module, ids, arm}`, in registration order: what the audit (R18) and promotion's
+   *  gate pass to `checkBundle` as `opts.grammars`, so a bundle is judged by one grammar list at both. A fresh list
+   *  each call; the entries are frozen. */
+  grammars() {
+    return [...this.#grammars];
   }
   /** R18–R20: the check catalogue over a bounded page of bundles in id order after `after`, run WHERE
    *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). What a reference
@@ -10110,6 +10201,13 @@ var RecordCore = class _RecordCore {
       }
       const extra = typeof context === "function" ? context(id) || {} : {};
       const resolveTarget2 = (t) => typeof t === "string" && !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=? LIMIT 1`, t);
+      const grammars = this.#grammars.map((g) => ({ module: g.module, ids: g.ids, arm: async (ctx, found) => {
+        try {
+          await g.arm(ctx, found);
+        } catch (e) {
+          found.push(_RecordCore.#checkFailed(g.module, id, e));
+        }
+      } }));
       const { findings } = await checkBundle({
         folderName: id,
         files,
@@ -10118,7 +10216,7 @@ var RecordCore = class _RecordCore {
         sha512,
         resolveTarget: resolveTarget2,
         ...extra
-      });
+      }, { grammars });
       for (const { module, check } of this.#auditChecks) {
         let more;
         try {
@@ -10133,12 +10231,7 @@ var RecordCore = class _RecordCore {
             resolveTarget: resolveTarget2
           }, extra);
         } catch (e) {
-          more = [{
-            check: module,
-            code: "AUDIT_CHECK_FAILED",
-            severity: "error",
-            message: `${module}'s audit check threw on ${id}: ${String(e && e.message || e).slice(0, 200)}`
-          }];
+          more = [_RecordCore.#checkFailed(module, id, e)];
         }
         if (Array.isArray(more)) findings.push(...more.filter((f10) => f10 && typeof f10 === "object"));
       }
@@ -10170,6 +10263,16 @@ var RecordCore = class _RecordCore {
       limit: cap,
       cursor: page.length === cap ? last : null,
       page
+    };
+  }
+  /** R59, R67: the one finding a registered check or grammar that threw on a bundle leaves, an error under its module's
+   *  name (C-102.3), so the bundle is counted as having an error and never as clean. */
+  static #checkFailed(module, id, e) {
+    return {
+      check: module,
+      code: "AUDIT_CHECK_FAILED",
+      severity: "error",
+      message: `${module}'s audit check threw on ${id}: ${String(e && e.message || e).slice(0, 200)}`
     };
   }
   /* ---- purge (R21–R24) ---- */
@@ -10825,6 +10928,7 @@ function notAParticipant(projectId, by, extra = null) {
 }
 var MODULE_ORDER = Object.freeze([
   /* 1 */
+  "record-grammar",
   "legacy-checks",
   "jurisdictions",
   "test-support",
@@ -10890,8 +10994,10 @@ var MODULE_ORDER = Object.freeze([
   "conformance",
   "consequences",
   "actions",
+  "action-clocks",
   "filings",
   "escalation",
+  "action-plans",
   /* 10 */
   "monitoring",
   "scheduler",
@@ -10902,6 +11008,8 @@ var MODULE_ORDER = Object.freeze([
   "queue-producers",
   "queue",
   "instance-setup",
+  "op-declarations",
+  "admission",
   "control-plane",
   "legacy-index",
   "legacy-ui",
@@ -14372,6 +14480,8 @@ function membershipOps(m, url, body, env) {
 // src/promotion/checks.mjs
 var checks_exports4 = {};
 __export(checks_exports4, {
+  PROJECT_CREATION_VISIBILITY_CHECKS: () => PROJECT_CREATION_VISIBILITY_CHECKS,
+  PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
   PROMOTION_CHECKS: () => PROMOTION_CHECKS
 });
 var PROMOTION_CHECKS = {
@@ -14436,6 +14546,49 @@ var PROMOTION_CHECKS = {
     translation: "The document in this change cannot be read: it is not held as text, or it does not begin with a readable front matter block. Every rule about a change reads the document first, so nothing was written. Send the document as text with its front matter, and send it again."
   }
 };
+var PROMOTED_TYPE_CHECKS = {
+  ENVELOPE_TYPE_DISAGREES: {
+    check: "C-86.1",
+    where: "src/promotion/index.mjs #promote > is-promoted-type-disagrees",
+    translation: "The document being filed says what kind of thing it is, and the request that carried it says something different. The record goes by the document, so rather than file an action as information \u2014 or the reverse \u2014 and index it as neither, it stops and tells you both answers. Nothing was written. Send it again with the request naming the type the document names, or change the document first."
+  },
+  /* D-547 (2026-09-25) — the SECOND way a promotion's type can be wrong, and it is not the first one twice: C-86.1
+   * compares the two statements in ONE request; this compares the request with the RECORD. A revision whose document
+   * names a different type than the bundle already holds would rewrite `bundles.object_type` in place, and every
+   * type-scoped fence would then ask the wrong machine. Replay is exempt, as for C-86.1. */
+  REVISION_RETYPES_BUNDLE: {
+    check: "C-86.2",
+    where: "src/promotion/index.mjs #promote > is-promote-retypes-bundle",
+    translation: "This change would turn something the record already holds into a different kind of thing, an item of information into an action, say. A change can alter what a document says, but not what it is, because what it is decides which rules protect it. Nothing was written. To record it as the other kind, create a new one of that kind and link the two."
+  },
+  /* D-563 (2026-09-25) — C-86.1's rule one field over, twice: the document states what it is CALLED and where it STANDS,
+   * and a request whose label contradicts either is refused rather than obeyed. The name is what 7.1 holds unique and
+   * the state decides who may move the item (7.11) and what may cite it (REC-181), so a label a caller can steer was
+   * an authority over both. Only a contradiction between two statements: a label stating nothing takes the document's
+   * word. Replay is exempt, as for C-86.1. */
+  ENVELOPE_TITLE_DISAGREES: {
+    check: "C-86.3",
+    where: "src/promotion/index.mjs #promote > is-promoted-title-disagrees",
+    translation: "The document being filed gives itself one name, and the request that carried it gives another. The record goes by the document, and names are held unique across the instance, so rather than file it under a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request naming the document's title, or naming none, or change the document first."
+  },
+  ENVELOPE_STATE_DISAGREES: {
+    check: "C-86.4",
+    where: "src/promotion/index.mjs #promote > is-promoted-state-disagrees",
+    translation: "The document being filed says where it stands, and the request that carried it says something different. Where a thing stands decides who may move it and what may cite it, and the record goes by the document, so it stops and tells you both. Nothing was written. Send it again with the request saying what the document says, or saying nothing about it, or change the document first."
+  }
+};
+var PROJECT_CREATION_VISIBILITY_CHECKS = {
+  PROJECT_VISIBILITY_NO_OWNER: {
+    check: "C-97.1",
+    where: "src/promotion/index.mjs #promote > is-project-creation-ownerless",
+    translation: "Whether a project can be found is chosen by its owners, and a project created by a machine credential has no owner, so it is created hidden and cannot be made discoverable here. Nothing was created. Create it without the setting; an owner who joins it later can make it discoverable."
+  },
+  PROJECT_VISIBILITY_NOT_A_CREATION: {
+    check: "C-97.2",
+    where: "src/promotion/index.mjs #promote > is-project-creation-visibility",
+    translation: "Whether a project can be found is chosen when it is created or forked, and this was not a project being created. Nothing was changed. An owner changes an existing project's setting in its settings."
+  }
+};
 
 // src/promotion/history.mjs
 var f4 = (check, severity, message2, repairs) => ({ check, severity, message: message2, ...repairs ? { repairs } : {} });
@@ -14455,6 +14608,19 @@ function historyWriteOrder(raw) {
   const write = list2.length > 0 && seqs.every((s) => Number.isSafeInteger(s)) && new Set(seqs).size === list2.length;
   return write ? { order: "write", entries: [...list2].sort((a, b) => a.seq - b.seq) } : { order: "key", entries: [...list2].sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0) };
 }
+var MECHANICAL_FIELD_SETS2 = Object.freeze({
+  "monitor-tick": Object.freeze([
+    "source_status",
+    "monitoring.last_checked",
+    "reeval_pending.flag",
+    "reeval_pending.since",
+    "reeval_pending.source",
+    "last_updated"
+  ]),
+  "sweep": Object.freeze([]),
+  "deadline-recheck": Object.freeze(["clock[].status", "last_updated"]),
+  "member-attest": Object.freeze(["last_updated"])
+});
 var MECHANICAL_APPEND_FILES = ["data/changes.json", "data/provenance.json", "data/snapshot-manifest.json"];
 function flattenFm(fm) {
   const out = {};
@@ -14510,7 +14676,7 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
     const rec = r.value, man2 = rec.manifest || rec;
     if ((man2.writer || rec.writer) !== "mechanical") continue;
     const op = man2.operation || rec.operation;
-    if (!op || !Object.prototype.hasOwnProperty.call(MECHANICAL_FIELD_SETS, op)) {
+    if (!op || !Object.prototype.hasOwnProperty.call(MECHANICAL_FIELD_SETS2, op)) {
       findings.push(f4(
         "C-20.1",
         "error",
@@ -14556,7 +14722,7 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
       continue;
     }
     const prev = parseFrontmatter(asText2(preSnap));
-    const allowed = new Set(MECHANICAL_FIELD_SETS[op]);
+    const allowed = new Set(MECHANICAL_FIELD_SETS2[op]);
     for (const path of fmDiffPaths(prev.data || {}, post.data || {}))
       if (!allowed.has(path))
         findings.push(f4(
@@ -15101,6 +15267,11 @@ async function recordChecks({ folderName, files, releaseRegistry = null, sha256:
   return findings;
 }
 
+// src/promotion/names.mjs
+function projectNameKey(title) {
+  return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 // src/promotion/text.mjs
 function appendStateHistory(text4, e) {
   const lines = text4.split("\n");
@@ -15189,14 +15360,28 @@ function spliceReferences(text4, additions) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
+function withProducingGroup(text4, slug) {
+  if (typeof text4 !== "string" || typeof slug !== "string" || !slug) return text4;
+  if (parseFrontmatter(text4).data?.group === slug) return text4;
+  const lines = text4.split("\n");
+  if (lines[0] !== "---") return text4;
+  const end2 = lines.indexOf("---", 1);
+  if (end2 === -1) return text4;
+  for (let i = 1; i < end2; i++)
+    if (lines[i].startsWith("group:")) {
+      lines[i] = `group: ${slug}`;
+      return lines.join("\n");
+    }
+  return [...lines.slice(0, end2), `group: ${slug}`, ...lines.slice(end2)].join("\n");
+}
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.47.0";
+var CATALOG_VERSION = "1.48.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 879,
-  digest: "b8bbd059390f894eb419d10b40c4683bc0d5a85f022c3a354e9c67925cde3f11"
+  rows: 887,
+  digest: "bfda481e4d45df7944bd4a6584614c8d397fd55f5028c61c3cf4a8efd04f2532"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
@@ -15239,7 +15424,8 @@ async function runGate({
   releaseRegistry,
   publishedRegistry,
   publishedCaseRegistry,
-  earnedRegistry
+  earnedRegistry,
+  grammars = null
 }) {
   const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
   for (const [path, v] of Object.entries(image || {})) {
@@ -15277,7 +15463,7 @@ async function runGate({
        refuses the leg outright rather than waving it through, which is why the
        blinding is loud instead of silent. */
     earnedRegistry: earnedRegistry || null
-  });
+  }, { grammars });
   const findings = [...catalogue, ...await recordChecks({
     folderName: bundleId,
     files,
@@ -15615,6 +15801,27 @@ var Promotion = class {
   runCaseGate(args = {}) {
     return runCaseGate(args || {}, this.#caseCatalogue ? this.#caseCatalogue.fn : null);
   }
+  /* ---------------------------------------------------------------- R27: the gate, with the registered grammars */
+  /* R27 (§1b): the bundle gate with the type grammars later modules registered with record-core (its `grammars()`), so
+     a grammar that left the catalogue judges a bundle here as it does at the audit. `args` are `runGate`'s own; a
+     caller's `grammars` is never taken, since the record's registrations are the one list. A record that cannot answer
+     its registrations rejects the gate: an unread list is never read as empty (R37). A grammar whose arm throws is one
+     error of its own on the bundle, naming its module, as record-core's audit counts it (its R67, R59): the gate fails
+     closed with a verdict, never passes and never throws out. */
+  async runGate(args = {}) {
+    const grammars = this.#record.grammars().map((g) => ({ module: g.module, ids: g.ids, arm: async (ctx, found) => {
+      try {
+        await g.arm(ctx, found);
+      } catch (e) {
+        found.push({
+          check: g.module,
+          severity: "error",
+          message: `${g.module}'s grammar threw on ${ctx && ctx.folderName}, so it judged nothing and the bundle is not passed: ${cut(e && e.message ? e.message : e, 200)}`
+        });
+      }
+    } }));
+    return runGate({ ...args || {}, grammars });
+  }
   /* ---------------------------------------------------------------- promote */
   promote(pkg) {
     try {
@@ -15636,11 +15843,11 @@ var Promotion = class {
     let { bundleId, files } = pkg;
     const writer = pkg.writer === "mechanical" ? "mechanical" : null;
     const operation = writer ? pkg.operation : null;
-    if (writer && !(typeof operation === "string" && Object.prototype.hasOwnProperty.call(MECHANICAL_FIELD_SETS, operation)))
+    if (writer && !(typeof operation === "string" && Object.prototype.hasOwnProperty.call(MECHANICAL_FIELD_SETS2, operation)))
       return {
         ok: false,
         reason: "UNDECLARED_OPERATION",
-        detail: `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS).join(", ")}`,
+        detail: `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS2).join(", ")}`,
         got: operation ?? null
       };
     if (Array.isArray(pkg.refs) && pkg.refs.length)
@@ -118323,6 +118530,7 @@ var Store = class _Store extends DurableObject {
       { name: "leads", keys: [] },
       { name: "themes", keys: [] }
     ].filter((t) => !captureOwns(t) && !extractionOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name)).filter((t) => !PROGRESSIONS_TABLES.some((x) => (x.name || x) === (typeof t === "string" ? t : t.name))).filter((t) => !CONTENT_TABLES.includes(typeof t === "string" ? t : t.name)).filter((t) => !ENTITIES_TABLES.includes(typeof t === "string" ? t : t.name)).filter((t) => !RETRIEVAL_TABLES.includes(typeof t === "string" ? t : t.name)).filter((t) => !observationLogOwns(t)).filter((t) => !monitoringOwns(t)).filter((t) => !runProductionsOwns(t)).filter((t) => !connectionsOwns(t)).filter((t) => !caseAuthoringOwns(t)).filter((t) => !publicationOwns(t)).filter((t) => !queueOwns(t)).filter((t) => !inquiryOwns(t)));
+    recordOf(ctx).registerStatsSource("legacy-store", ({ viewer, proof }) => this.#counts({ proof, viewer }));
     const observations = observationLogOf(ctx, {
       extraction: null,
       provenance: provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" })
@@ -119780,24 +119988,6 @@ Mitigation: ${mit}
     ["CASE", "case_documents", "case_id"],
     ["CASE", "published_case_members", "case_id"]
   ]);
-  /** REC-131 / IC-148 — THE WIRE'S COUNTS. `op=stats`, `op=selftest` and `op=livefire` all read
-   *  this. Every COUNT is the same for every class (BOB #15's corrected ruling,
-   *  `MEMBER-KNOWLEDGE-DESIGN.md` §5): `leads` is on it for no class, and the log is published as
-   *  `observationsNonLead`. It REPLACES REC-129's `operator` stamp (IC-144), which selected an
-   *  admin-only answer over COUNTS.
-   *
-   *  `capacity` IS THE ONE CLASS DISCRIMINATION LEFT, AND IT GOVERNS `dbBytes` AND NOTHING ELSE
-   *  (BOB #15, resuming REC-131). The database's size moves in whole pages on EVERY write, a
-   *  lead's included, so a member diffing it across a colleague's authoring can detect a large
-   *  lead; capacity is an operator need, so the admin class keeps it and member and probe do not.
-   *  It is the SERVER'S word: `index.mjs` sets it from the authenticated class AFTER copying the
-   *  caller's parameters (op=stats, op=selftest's relay, op=livefire's call), so a caller's
-   *  `capacity=` is overwritten, never honoured. An absent stamp is `false` — a door that forgets
-   *  to stamp loses `dbBytes` rather than leaking it. It is a stamp and not a second method
-   *  because it must ride the one DO route every door already fetches. */
-  stats({ capacity = false, viewer } = {}) {
-    return this.#counts({ proof: false, capacity: capacity === true, viewer });
-  }
   /** N191 (K333, K335): ai-runs' R42 tail for the caller's sight — over `observation_log` without `column`, over a
    *  column naming a run id with one. R42 fails CLOSED on an absent viewer, so it is not asked for a viewer never
    *  sent: this store's own convention keeps a direct internal call WHOLE (the empty tail), as `#counts`' bundle subtraction does. */
@@ -119809,7 +119999,7 @@ Mitigation: ${mit}
    *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
    *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
    *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
-  #counts({ proof, capacity = false, viewer }) {
+  #counts({ proof, viewer }) {
     const hid = viewer === void 0 ? null : hiddenBundles(viewer);
     const runTail = this.#hiddenRunTail(viewer), boundsTail = this.#hiddenRunTail(viewer, "run");
     const nx = (t, where, keys = []) => {
@@ -120032,11 +120222,6 @@ Mitigation: ${mit}
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
       routeMarks: n("provenance_route_marks", "bundle_id"),
-      /* REC-131 / IC-148: the ADMIN class's and purge's only — see `stats()`. THE RESIDUE, STATED
-         RATHER THAN HIDDEN (BOB #15): the admin class still receives a figure that moves in whole
-         pages on every write, a large lead's included, so the operator can detect that SOMETHING
-         large was written; it cannot tell a lead from any other write, and no lead is readable to it. */
-      ...proof || capacity ? { dbBytes: this.ctx.storage.sql.databaseSize } : {},
       /* N342 (K445): every module's registered figures (record-core R63), after the literal keys: queue's `tasks`,
          `findingDispositions`, `queueState` and `queueItemMutes` (its R42) among them. */
       ...recordOf(this.ctx).counts(hid)
@@ -120145,12 +120330,12 @@ Mitigation: ${mit}
        so orphaning them costs storage but cannot corrupt anything. Reclaiming
        them is a separate sweep against the register, not part of this. */
   purge({ bundleId = null } = {}) {
-    const before = this.#counts({ proof: true });
+    const before = recordOf(this.ctx).proofCounts();
     recordOf(this.ctx).transact(() => {
       recordOf(this.ctx).purge({ bundleId });
       if (bundleId) captureRequestsOf(this.ctx).clearLead(bundleId);
     });
-    const after = this.#counts({ proof: true });
+    const after = recordOf(this.ctx).proofCounts();
     const d = (k) => before[k] - after[k];
     return {
       ok: true,
@@ -120366,10 +120551,6 @@ Mitigation: ${mit}
   forkProject({ projectId, newId, title, by, viewer = null, visibility = null } = {}) {
     return promotionOf(this.ctx).forkProject({ projectId, newId, title, by, viewer, visibility });
   }
-  /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same
-   *  function object, imported, never a copy), so `promote`'s and the fork's NAME_TAKEN and the catalog's C-77
-   *  corpus check cannot disagree about what a collision is. `test/d50-project-names.test.mjs` asserts identity. */
-  static projectNameKey = projectNameKey;
   expertiseDeclare(...a) {
     return membershipOf(this.ctx).expertiseDeclare(...a);
   }
@@ -120978,7 +121159,7 @@ Mitigation: ${mit}
         author: url.searchParams.get("author"),
         by: url.searchParams.get("by")
       }),
-      stats: () => this.stats({
+      stats: () => recordOf(this.ctx).stats({
         capacity: url.searchParams.get("capacity") === "1",
         viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
       }),
