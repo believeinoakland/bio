@@ -35,3 +35,7 @@
 - `node checks/ownership.mjs … acquisition tranche/T18` → 10 files changed; legacy-checks: 0 lines added, 0 removed; 0 failures
 
 Size (session_016FKEhQzcqEZnTrvcRTaFgY): test runs 16, module lines 1247
+
+## J1 · REPORT
+
+Other modules: (1) tools/mail.mjs: 'mail state' commits everything staged with the record (my staged module files went into 0933c8141b under a state message); it should commit only the record. (2) capture: capture/index.mjs imports profileOf, profileView, governedFetch, governedCall from acquire.mjs for its own uses; capture's job re-points them with the re-export, and deletes its acquire.test.mjs (duplicated here). (3) For BOB, not blocking: R17's 'first KiB read back' leaves office files over 1 KiB served as octet-stream with format undetermined (and ODF with no container digest); reading whole up to ODF_DIGEST_MAX would fix it if you re-word R17. No generated artifact stale.
