@@ -105,6 +105,8 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 
   Neither read is gated, and both are for in-process callers (R16's terms). Neither throws.
 
+- **R49** (N405, K674, K677) `migratedSurfacing(id)` → for a question the migration replay recorded, its surfacing as the replay recorded it, `{recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null, migrated: {capture, promotion, at}}`; null for any other question. Never throws, not gated (for in-process callers). The module also registers it as its `retrieval` R56 decoration of `surfaced_in`, which holds wherever no later module answers that key; `ai-runs` R27 answers it for a question it holds no surfacing row for.
+
 ## Private
 
 ### Uses
