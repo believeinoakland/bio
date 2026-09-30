@@ -56,3 +56,7 @@ R27, my best reading; I am building on it now unless you answer otherwise.
 
 1. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`): `src/reevaluation/index.mjs` changed (R27). Not rebuilt.
 2. **Observed in `inquiry`** (not a defect against a requirement I can name): `divide` gives a child the divided leg on the whole document, not the passage it named (its `content_id` is not carried). So a child inherits neither a passage-level `corrected` cause (R27) nor R14's pushed notice on that passage. Yours to judge whether inquiry's divide should carry the pin.
+
+## J3 · COMPLETE
+
+N345 applied: R27 (`corrected`, derived on read through `contradiction.tensionsOn`; `correctedDependents`; `changesOf`; R16 closes it) and R2's arm, on your K493 readings. 59 module tests pass, and the seven using modules' tests are green. All four checks report 0 failures. Please strike R2's and R27's `not yet met: N345`. There are no new rows or ops: `correctedDependents` is in-process, for queue R44. The plane bundle is stale (reported). Details are in my record's Completion section.
