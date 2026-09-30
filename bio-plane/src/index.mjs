@@ -31,14 +31,13 @@ import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, vocabulari
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
    doctrine, so its two grade letters come from the same place the refusal reads
    them. N80 (T8): the note is capture's (`acquireGradeNote`, capture's Provides), composed where acquire is. */
-import { ACQUIRE_GRADE_NOTE } from "./capture/index.mjs";
 import { queueAnswer } from "./queue/index.mjs";
 
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
 import { governorOp } from "./host-governor/index.mjs";
-import { knockOp } from "./capture/doorbell.mjs";
-import { linksOp, captureObjectOp, archiveLookupOp, acquireOp } from "./capture/ops.mjs";
+import { capturePublicOp } from "./capture/doorbell.mjs";
+import { captureOp } from "./capture/ops.mjs";
 import { monitorOp } from "./monitoring/index.mjs";
 import { pdfStructureOp, acquireReadingOp } from "./extraction/ops.mjs";
 import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
@@ -314,7 +313,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
          bio/inbox/<sha256> in the working bucket and nowhere else, the way
          probe is confined to scratch. Nothing is read back out except by a
          signed-in member. */
-      if (op === "knock") return knockOp(req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
+      { const knocked = await capturePublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (knocked) return knocked; }
       /* REC-52: the same spread as section 7a's. A store silence used to leave
          a `{ok:true}` carrying the service name, the version and the bootstrap
          flag and NOTHING the store knows — an instance answering "here is what
@@ -618,31 +617,19 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       if (g) return g.refused ? g.response : g.silent ? storeSilent(op, g.correlation) : json(g.body, g.status);
     }
 
-    if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer,
-      viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
-
-    if (op === "capture") return captureObjectOp(req, url, env,
-      { json, storageAbsent, requiredArgument, key: (s) => captureKey(storeName, s), storeName, cls });
+    {
+      const c = await captureOp(op, req, url, env, () => env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal,
+        doAnswer, storageAbsent, requiredArgument, cls, member: viaSession, sessMember, storeName, key: (s) => captureKey(storeName, s),
+        viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`,
+        readAcquired: (answer, store) => acquireReadingOp(answer, store, { json, storeSilent, storeRefusal, doAnswer, storeName }) });
+      if (c) return c;
+    }
 
     /* R31–R35: op=pdfstructure is extraction's; the control plane stamps who asks. */
     if (op === "pdfstructure") return pdfStructureOp(url, env, env.STORE.get(env.STORE.idFromName(storeName)),
       { json, storeSilent, storeRefusal, doAnswer, storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps,
         viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`,
         author: viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`, storeName });
-
-    if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer });
-
-    if (op === "acquire") {
-      /* K72 (8), (11); N265: the acquisition is capture's service in the Durable Object, and the reading of what it
-         filed is extraction's (R1, `acquireReadingOp`). This op forwards to the one, hands the other the filed document,
-         and adds only the grade note; it runs no reading of its own. */
-      const acquired = await acquireOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent,
-        storeRefusal, storageAbsent, doAnswer, cls, member: viaSession, sessMember, storeName });
-      if (acquired.response) return acquired.response;
-      const read = await acquireReadingOp(acquired.answer, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer, storeName });
-      if (read.response) return read.response;
-      return json(Object.assign(read.body, { note: ACQUIRE_GRADE_NOTE }), 200);
-    }
 
     /* Co-attestation over a capture hash.
      *

@@ -133,3 +133,10 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
                 pseudonym: typeof rec.pseudonym === "string" ? rec.pseudonym : null,
                 ...(typeof rec.secret === "string" ? { secret: rec.secret } : {}) }, 200);
 }
+
+/** The legacy-index map's §4.4 plain move (K649 (7)): the dispatch of this module's one public op, `knock` (the door
+ *  anyone may ring, with no token and no session), moved out of `src/index.mjs`. Kept apart from `captureOp` so that
+ *  nothing but the doorbell is reachable before authentication. Answers `knockOp`'s Response, or null for another op. */
+export function capturePublicOp(op, req, env, store, hooks) {
+  return op === "knock" ? knockOp(req, env, store, hooks) : null;
+}

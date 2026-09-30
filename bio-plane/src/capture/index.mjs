@@ -13,6 +13,7 @@
 import { isPublicHttpsLocator, createSha256 } from "../../checks/bio-checks.mjs";
 import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
 import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
+import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall } from "./acquire.mjs";
 import { verifySshsig, NS_RATIFY } from "../sshsig.mjs";
@@ -25,6 +26,7 @@ import { viewerPredicate, GATE_MARK, listenerRefusal, membershipOf } from "../me
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
 export { CAPTURE_SCHEMA } from "./schema.mjs";
+export { MONITOR_FREQ, INFORMATION_GRAMMAR, checkInformationExtension } from "./grammar.mjs";
 
 /* A whole-second instant, the record's `…:00Z` spelling. */
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
@@ -149,6 +151,7 @@ export function captureOf(ctx, opts = {}) {
                                provenance: opts.provenance ?? provenanceOf(ctx) });
     instances.set(storage, c);
     supplied.set(c, new Set(["env", "governor", "record", "provenance"].filter((k) => opts[k] != null)));
+    registerGrammar(c.core);
     return c;
   }
   const given = supplied.get(c);
@@ -164,6 +167,17 @@ export function captureOf(ctx, opts = {}) {
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
   return c;
+}
+
+/** R37 (C-2.7; K585 (3)): the information grammar, registered with record-core's seam (its R67) once per storage, when
+ *  the instance is first made, so the audit and the gate run it in the catalogue arm's place. A record with no seam (a
+ *  test's stand-in) is left alone; a refusal is a defect of the wiring (another module holding C-2.7, or capture
+ *  registering twice) and throws, as the purge declaration's does, rather than leave the grammar silently unrun. */
+function registerGrammar(record) {
+  if (!record || typeof record.registerGrammar !== "function") return;
+  const answer = record.registerGrammar("capture", INFORMATION_GRAMMAR);
+  if (answer && answer.ok === false)
+    throw new Error(`capture: record-core refused the information grammar: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
 export class Capture {
