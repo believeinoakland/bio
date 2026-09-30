@@ -39,3 +39,7 @@ Size (session_016FKEhQzcqEZnTrvcRTaFgY): test runs 16, module lines 1247
 ## J1 · REPORT
 
 Other modules: (1) tools/mail.mjs: 'mail state' commits everything staged with the record (my staged module files went into 0933c8141b under a state message); it should commit only the record. (2) capture: capture/index.mjs imports profileOf, profileView, governedFetch, governedCall from acquire.mjs for its own uses; capture's job re-points them with the re-export, and deletes its acquire.test.mjs (duplicated here). (3) For BOB, not blocking: R17's 'first KiB read back' leaves office files over 1 KiB served as octet-stream with format undetermined (and ODF with no container digest); reading whole up to ODF_DIGEST_MAX would fix it if you re-word R17. No generated artifact stale.
+
+## J2 · COMPLETE
+
+acquisition built by copy and merged-ready on job/T18/acquisition: src/acquisition/index.mjs (the act, from capture/acquire.mjs) and checks.mjs (C-83.1-.8, C-48.1-.7, C-28.13, civicosUserAgent, CIVICOS_CONTACT_URL; rows identical to the catalogue's, where re-pointed, awaiting stamp for T19). All nine converts done. Fixed in the job: R4 (a Drive export over 1 KiB was 'confirmed from the bytes' on its declared type), R28 fence on hand-followed redirects. R17's N3/N10 mark can be struck (met); R7 (N77) stays. Tests 55/55; format, architecture, coverage, ownership 0 failures. Record: build/jobs/T18/acquisition.md.
