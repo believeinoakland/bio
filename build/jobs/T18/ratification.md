@@ -21,3 +21,13 @@ Two points; I am carrying on with my best reading of each.
 - [x] K649: `checks.mjs`' `STRENGTH_STATES` re-pointed to `strength` (the architecture check fails until `strength` is in ratification's `uses`: REPORT J2); `ops.mjs`' `userAgent` re-pointed to `acquisition`.
 - [x] N407 (K649 (4)): R18's pre-flight reads a viewer `{stamp, aiCred}`; an agent credential holds C-32.13 and C-32.15 whatever its stamp (tested with a stub viewer; admission stamps it in layer 11).
 - [x] legacy-index map §4.4: `src/index.mjs`' `caseratify` and `ratify` dispatch lines replaced by one call to `ratificationOp` (`ops.mjs`), the context both handlers read handed in (2 lines added, 3 removed there). `assembleCaseContainer` still handed in by the door until public-read merges (its re-point waits for BOB's CHANGE, with `ratify-op.test.mjs`:210–211's).
+
+## J2 · REPORT
+
+Two things for you, each needing an edit only you make.
+
+1. `uses` edge: the plan's K649 addition re-points `ratification/checks.mjs`' `STRENGTH_STATES` to `strength`, which is not in ratification's `uses` (`modules.json`) or its requirements' Uses. The re-point is pushed (93c1acda9e); `node checks/architecture.mjs bio ratification` fails on it ("imports ... strength, which ratification does not declare in uses") until you add `strength` (layer 6) to both. Proposed Uses line: "- `strength`: `STRENGTH_STATES` (R9, C-2.8's frozen-axis states)."
+
+2. N407's shape, for admission (layer 11) and a wording for R18: the pre-flight now reads a viewer that is either the control plane's stamp (as today) or `{stamp, aiCred}`; a viewer carrying `aiCred` (a minted agent credential) holds C-32.13 and C-32.15, each byte-identical to the act's own for class `ai`, whatever its stamp. Proposed R18 addition after the fences: "a viewer carrying a minted agent credential (`{stamp, aiCred}`, admission's stamp) holds both, whatever its stamp (N407)." Tested with a stub viewer (`preflight.test.mjs`, "R18 (N407)").
+
+Also, for the record: the bulk release (N400) is extracted and pushed (5ad5eca9f2), R20–R27 tested (`release.test.mjs`, 16 tests, the refuse-gate release arm among them, K674 (4)). One flaw fixed in doing it: R22's crucial class read only `bundles.criticality`, which promotion writes from the envelope and never from the bytes, so a document whose own front matter says `criticality: crucial` under an envelope that did not could ride a batch (R27). It now counts as crucial when the column or the document says so (tested). The envelope-only column is promotion's (R39's `meta`); I report it, not change it.
