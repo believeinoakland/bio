@@ -1,2 +1,3 @@
 (Handovers.)
 - Layer 6 (K490, CONTRADICTION #2 J2): `src/affordances.mjs`:1983 describes `contradictionpairs` "by the four named keys"; the pairing now runs five (K5).
+- Layer 9 (CONFORMANCE #4 J2): `comparisonfacts` is a new op in neither of affordances' lists; `comparisonpropose`'s lines (`affordances.mjs`:1057, :2388) may add the contradiction link.
