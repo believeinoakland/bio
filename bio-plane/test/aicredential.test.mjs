@@ -72,8 +72,10 @@ const SRC = (f) => join(DIR, "..", "src", f);
    fences that never were the store's and are not routed in T8, K263/K264; not widened to.) */
 /* WIDENED 2026-09-29 (K409, QUEUE #2): the task acts' fences (MACHINE_CANNOT_FORWARD, MACHINE_CANNOT_RESOLVE) left the
    store with the obligation inbox for `src/queue/`; the corpus is the store's as it stood before that extraction too. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30; TASKS #1, QUEUE #5, N363): the task acts and their two fences left `src/queue/`
+   for `src/tasks/index.mjs` (the obligation inbox), so `tasks` replaces `queue` in the corpus. */
 const STORE_SRC = storeCorpus(["membership", "promotion", "basis-versions", "inquiry", "strength", "actions",
-                               "case-authoring", "review", "queue"]);
+                               "case-authoring", "review", "tasks"]);
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 /* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): `classify`, the `ai` branch's lookup, `aiTaskScope`, the scope and
    confinement declarations with their DEC-49 regions moved out of `src/index.mjs` into `src/control-plane/index.mjs`,
@@ -706,10 +708,19 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
      `machine-fences.test.mjs` block 3b (D-503). The corpus is NOT widened here: this suite's subject
      is the store's fence set under a credential, and widening it would make this arm red over acts
      it was never written to drive. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/membership/` and `src/promotion/`, extracted from it, T3, and `src/basis-versions/`, `src/inquiry/` and `src/strength/`, T7, `src/{actions,case-authoring,review}/`, T8, and `src/queue/`, T12) mints was driven under an `ai` credential — a complete "
+  /* LEGACY-TESTS #14 (T16, 2026-09-30; K457): MACHINE_CANNOT_REGISTER_KEY is a fence membership minted in T16 for its
+     own-key acts (R89 `signerRegisterOwn`, R90; N364, K509) and never was the store's, like intent's and reevaluation's
+     above. It is not driven here: membership's `test/m/membership/t16-own-keys.test.mjs` ("R89 refusals in order")
+     drives it first, whatever the key, for no stamp, `class:admin`, `class:member`, `class:ai` and `token:daemon`, and
+     control-plane's `doorbell.test.mjs` (R35) routes the door's `by` to it. It is held OUT OF this sweep by name, so a
+     second fence arriving in the corpus still fails here. */
+  const NEVER_THE_STORES = { MACHINE_CANNOT_REGISTER_KEY: "membership R89/R90, test/m/membership/t16-own-keys.test.mjs" };
+  t("(each fence held out of the sweep by name is still minted in the corpus — a stale exclusion is slack)",
+    Object.keys(NEVER_THE_STORES).filter((c) => !minted.includes(c)), []);
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/membership/` and `src/promotion/`, extracted from it, T3, and `src/basis-versions/`, `src/inquiry/` and `src/strength/`, T7, `src/{actions,case-authoring,review}/`, T8, and `src/tasks/`, T12/T16) mints, less membership's own-key fence (T16, driven at its interface),  was driven under an `ai` credential — a complete "
   + "sweep OF THAT CORPUS, and it says so because it was checked, not because it looks like one. The "
   + "five `src/index.mjs` mints are machine-fences.test.mjs block 3b's (D-503)",
-    minted.filter((c) => !(c in ACTS)), []);
+    minted.filter((c) => !(c in ACTS) && !(c in NEVER_THE_STORES)), []);
   t("and nothing was graded that the plane does not mint", Object.keys(ACTS).filter((c) => !minted.includes(c)), []);
 
   /* D-199 (5)'s CLAIM, STATED AS A PROPERTY OF THE PREDICATE. The control's

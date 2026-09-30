@@ -45,7 +45,10 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 /* The guard exactly as it stands in the source, at each of the two regions. */
 const GUARD = "if (!viaSession)";
 const RATIFY_FENCE = `    ${GUARD}\n      return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY",`;
-const CASE_FENCE = `    ${GUARD}\n      return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",`;
+/* LEGACY-TESTS #14 (T16, 2026-09-30; RATIFICATION #7 J3, K557): C-32.15's refusal is built by `operatorCaseRefusal` in
+   `src/ratification/refusals.mjs` now, so op=caseratify's guard in `ops.mjs` returns the builder's answer; the needle is
+   that guard, still once in `ops.mjs`, and every arm edits the guard exactly as before. */
+const CASE_FENCE = `    ${GUARD}\n      return json(operatorCaseRefusal(cls), 403);`;
 const both = (to) => [[RATIFY_FENCE, RATIFY_FENCE.replace(GUARD, to)], [CASE_FENCE, CASE_FENCE.replace(GUARD, to)]];
 
 const L = {

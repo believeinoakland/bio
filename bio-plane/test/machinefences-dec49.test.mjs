@@ -253,7 +253,9 @@ console.log("\nBLOCK B — every fence sits inside a GOVERNED span (source; REC-
     /* RE-ANCHORED 2026-09-29 (T12, legacy-tests; K409): + queue, which took MACHINE_CANNOT_FORWARD and
        MACHINE_CANNOT_RESOLVE (`taskForward > is-machine-forward`, `taskResolve > is-machine-resolve`) out of the store
        WITH their regions (QUEUE #2). */
-    ...["inquiry", "basis-versions", "strength", "actions", "case-authoring", "review", "queue"]
+    /* LEGACY-TESTS #14 (T16, 2026-09-30; TASKS #1, QUEUE #5, N363): the two task fences and their regions moved on
+       from queue to `src/tasks/index.mjs`; queue's index mints no fence now. */
+    ...["inquiry", "basis-versions", "strength", "actions", "case-authoring", "review", "tasks"]
       .map((m) => fs.readFileSync(path.join(SRC, m, "index.mjs"), "utf8"))]
     .join("\n");   /* each module's minting code (index.mjs); its checks.mjs holds the rows, and their prose */
   const regionSpans = [];
@@ -543,7 +545,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     "ratification RATIFY_MACHINE_FENCE_CHECKS": (await import("../src/ratification/checks.mjs")).RATIFY_MACHINE_FENCE_CHECKS,
     "review REVIEW_COPY_CHECKS": (await import("../src/review/checks.mjs")).REVIEW_COPY_CHECKS,
     /* T12 (legacy-tests, 2026-09-29): see the RE-PINNED note below. */
-    "queue QUEUE_MACHINE_CHECKS": (await import("../src/queue/checks.mjs")).QUEUE_MACHINE_CHECKS,
+    /* LEGACY-TESTS #14 (T16, 2026-09-30; TASKS #1, QUEUE #5, N363): C-32.10 and C-32.11 moved on from queue with the
+       task acts to `src/tasks/checks.mjs`, the family keeping its name (`QUEUE_MACHINE_CHECKS`), ids, codes and words;
+       queue's copy is gone (ARM A3 holds one home). C-33.27 and C-33.44 stay queue's (`QUEUE_ACT_CHECKS`). */
+    "tasks QUEUE_MACHINE_CHECKS": (await import("../src/tasks/checks.mjs")).QUEUE_MACHINE_CHECKS,
     "queue QUEUE_ACT_CHECKS": (await import("../src/queue/checks.mjs")).QUEUE_ACT_CHECKS,
     "control-plane OPERATOR_FENCE_CHECKS": (await import("../src/control-plane/checks.mjs")).OPERATOR_FENCE_CHECKS,
   };
@@ -596,8 +601,8 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-32.14", "OPERATOR_TOKEN_CANNOT_RATIFY", "ratification RATIFY_MACHINE_FENCE_CHECKS"],
     ["C-32.15", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", "ratification RATIFY_MACHINE_FENCE_CHECKS"],
     ["C-32.16", "MACHINE_CANNOT_REVIEW", "review REVIEW_COPY_CHECKS"],
-    ["C-32.10", "MACHINE_CANNOT_FORWARD", "queue QUEUE_MACHINE_CHECKS"],
-    ["C-32.11", "MACHINE_CANNOT_RESOLVE", "queue QUEUE_MACHINE_CHECKS"],
+    ["C-32.10", "MACHINE_CANNOT_FORWARD", "tasks QUEUE_MACHINE_CHECKS"],
+    ["C-32.11", "MACHINE_CANNOT_RESOLVE", "tasks QUEUE_MACHINE_CHECKS"],
     ["C-33.27", "KIND_NOT_PERSONAL", "queue QUEUE_ACT_CHECKS"],
     ["C-33.44", "CLASS_NOT_DISPOSED", "queue QUEUE_ACT_CHECKS"],
     ["C-32.17", "OPERATOR_TOKEN_CANNOT_GOVERN", "control-plane OPERATOR_FENCE_CHECKS"],

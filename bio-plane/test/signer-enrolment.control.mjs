@@ -73,7 +73,7 @@ const L = {
   bothSides:   "FLOOR: neither side of the comparison is empty",
   invariant:   "THE INVARIANT: op=signerlist says a key attests EXACTLY when op=ratify accepts",
   /* THE STRUCTURAL PIN. */
-  structure:   "the predicate has EXACTLY three readers",
+  structure:   "the predicate has EXACTLY five readers", // LEGACY-TESTS #14 (T16, 2026-09-30): the suite pins five readers now (ratification R18, capture R69)
 };
 
 const ARMS = {

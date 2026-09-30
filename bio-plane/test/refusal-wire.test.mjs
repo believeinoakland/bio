@@ -533,8 +533,12 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
      store's status, spreading the store's own envelope as the tail always has. Before, the same answer left by the
      status-variable forward on the next line, which this walk cannot classify; the 404 makes it a named forward. The
      code, check and translation are the store's, carried under `result`. No departure. */
+  /* LEGACY-TESTS #14 (T16, 2026-09-30; RATIFICATION #7 J3, K557), LOOKED AT as this assertion asks, by name: `refusal`
+     ARRIVED — op=caseratify's pre-flight door (`src/ratification/ops.mjs`, R18) forwards the refusal its builders in
+     `src/ratification/refusals.mjs` built (C-32.13, C-32.15, C-53.12, C-92.10, C-92.11, C-65.1), each carrying its
+     row's code, check and translation. No departure. */
   ["body", "built", "c", "confinement.error", "declared.error", "facts", "gate", "r", "r.body", "rec",
-   "scoped.error", "storeAbsent", "zip"]);
+   "refusal", "scoped.error", "storeAbsent", "zip"]);
 
 /* ====================================================================== 3
  * THE TWELVE — HARVESTED FROM `store.mjs`, SO A THIRTEENTH CANNOT ARRIVE
@@ -557,11 +561,13 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
    its row asked of every family (`ALL_ROWS`), so none arrives unmeasured. */
 /* RE-POINTED 2026-09-29 (K409, QUEUE #2): MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE left the store with the task
    acts for `src/queue/` (rows now queue's QUEUE_MACHINE_CHECKS) and are harvested where they went. */
+/* LEGACY-TESTS #14 (T16, 2026-09-30; TASKS #1, QUEUE #5, N363): the task acts and their two fences (rows still named
+   QUEUE_MACHINE_CHECKS, C-32.10, C-32.11) left `src/queue/` for `src/tasks/`, and are harvested there; queue mints none. */
 const FENCE_SOURCES = [STORE_BARE, ...["basis-versions", "inquiry", "case-authoring", "actions", "review",
-  "standards", "conformance", "consequences", "filings", "escalation", "queue"].flatMap(moduleFiles)
+  "standards", "conformance", "consequences", "filings", "escalation", "tasks"].flatMap(moduleFiles)
   .map((f) => decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")))];
 const FENCES = [...new Set(FENCE_SOURCES.flatMap((b) => [...b.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1])))].sort();
-console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry,case-authoring,actions,review,standards,conformance,consequences,filings,escalation,queue}/: ${FENCES.length} code(s)`);
+console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry,case-authoring,actions,review,standards,conformance,consequences,filings,escalation,tasks}/: ${FENCES.length} code(s)`);
 /* THE FLOOR MOVED 12 -> 14 BY REC-185, 2026-09-24, FROM THIS LINE'S OWN PRINT ON ITS TREE — AND IT
    WAS FOUND BY A CONTROL COMING BACK GREEN, NOT BY READING IT. Arm (f) of this file's driver drops
    one code out of the harvest and is DECLARED RED. On 2026-09-24 it came back **GREEN, 33/0**. The
@@ -650,7 +656,9 @@ const HARVESTED = [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE],
   /* T9 (legacy-tests, 2026-09-28): layer 9's five modules, routed by LEGACY-INDEX #6 (K312), where seventeen fences
      are minted with their rows in the modules' own families (section 3's re-anchor). */
   ...["record-core", "membership", "promotion", "basis-versions", "inquiry", "case-authoring", "actions", "review",
-      "ratification", "standards", "conformance", "consequences", "filings", "escalation", "queue"].flatMap(moduleFiles).map((f) =>
+      /* LEGACY-TESTS #14 (T16, 2026-09-30): `tasks`, where the two task fences went from `queue` (N363); and
+         ratification's `refusals.mjs` is read as one of its files (K557), where C-32.13's and C-32.15's builders are. */
+      "ratification", "standards", "conformance", "consequences", "filings", "escalation", "tasks"].flatMap(moduleFiles).map((f) =>
     [`src/${f}`, decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8"))])];
 for (const [file, bare] of HARVESTED) {
   for (const m of bare.matchAll(FENCE_LITERAL)) {

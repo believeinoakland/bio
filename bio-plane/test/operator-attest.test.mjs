@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/operator-attest.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS A REAL SOURCE (src/index.mjs) while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/operator-attest.control.mjs [arm]`. ONE ARM PER REFUSED CREDENTIAL CLASS, each armed ALONE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND byte comparison (never `git checkout --`). DECLARED BEFORE ARMING — (a) `baseline`, nothing armed: MUST be green. (b) `admin`, (c) `member`, (d) `probe` — THAT CLASS exempted from BOTH fences (`&& cls !== ["a","d",...].join("")` added to the guard, the class SPELLED so the arm puts no class literal into the region and perturbs only the drive): its ratification of a member-signed case and finding is ACCEPTED, so exactly five MUST FAIL — that class's two refusals (each naming the class), the two read-backs that say nothing landed, and the trace table — while every other class's refusal, the structural pin and the member's own session STAY GREEN. (e) `overstrict` — both guards widened to `if (true)`: the two member-session arms MUST FAIL (and the structural pin, whose guard is no longer keyed on `viaSession`) while every bearer refusal stays green, which is the only thing that tells a fence refusing everyone from a fence holding. (f) `tokenstring` — THE LIAR THE ROW NAMES: the guard rewritten to refuse by token STRING (the ADMIN and MEMBER binding values) instead of by how the caller arrived: probe walks straight through, so probe's two refusals, both read-backs and the table MUST FAIL, and both structural pins MUST FAIL on the env binding in the guard. RESULTS: see the RESULTS line below, written from the harness's own output.
    RESULTS, RUN 2026-09-18 in worktree agent-aac5bdb9dea9c048e, every restore byte-identical (src/index.mjs 619,467 B, sha256 399829630f43…): baseline 18/0 · admin 13/5 · member 13/5 · probe 13/5 · overstrict 14/4 · tokenstring 11/7 — ALL SIX AS DECLARED, no arm failed to arm. THE TRACE ON THE PRE-ITEM TREE (fbcefa1b's src/index.mjs and checks, this suite unchanged): 7/11 — admin, member and probe each ACCEPTED at op=caseratify and op=ratify carrying iris's signature; daemon CLASS_FORBIDDEN by the OPS row, before and after.
    RE-RUN 2026-09-29 (legacy-tests T12, K413) in a scratch worktree after block 0 was re-anchored on control-plane's `classify()` and `OPS`: baseline 18/0 · admin 14/4 · member 14/4 · probe 14/4 · overstrict 14/4 · tokenstring 12/6 — ALL SIX AS DECLARED, src/ratification/ops.mjs restored byte-identical (70,088 B, sha256 946e74ce238f…) after every arm.
+   RE-RUN 2026-09-30 (LEGACY-TESTS #14, T16; K557) in a private worktree at aa737273c3 after the caseratify structure and the control's CASE_FENCE were re-anchored on `operatorCaseRefusal` (src/ratification/refusals.mjs): baseline 18/0 · admin 14/4 · member 14/4 · probe 14/4 · overstrict 14/4 · tokenstring 12/6 — ALL SIX AS DECLARED, src/ratification/ops.mjs restored byte-identical (68,469 B, sha256 3f51c1b4ab69…).
  * =========================================================================
  * REC-125 — D-421, DECIDED BY BOB #14: AN ATTESTED ACT IS DELIVERED ONLY BY A
  * NAMED MEMBER'S OWN AUTHENTICATED SESSION.
@@ -111,8 +112,30 @@ const region = (name) => {
   return a < 0 || b < a ? null : OPS_SRC.slice(a, b).replace(/\/\*[\s\S]*?\*\//g, "");
 };
 const REGIONS = { ratify: "is-operator-ratify-bundle", caseratify: "is-operator-ratify-case" };
+/* LEGACY-TESTS #14 (T16, 2026-09-30; RATIFICATION #7 J3, K557): C-32.15's refusal left `caseRatifyOp` for its builder
+   `operatorCaseRefusal` in `src/ratification/refusals.mjs`, which holds the region `is-operator-ratify-case` and only
+   the refusal; the fence's GUARD stayed in `ops.mjs` (`if (!viaSession)\n return json(operatorCaseRefusal(cls), 403)`).
+   So op=caseratify's structure is read as the two halves together: the guard statement in `ops.mjs` that returns the
+   builder's refusal, and the builder's region. Same four questions, asked of the whole fence. op=ratify's fence is
+   still one region in `ops.mjs`. */
+const REFUSALS_SRC = readFileSync(fileURLToPath(new URL("../src/ratification/refusals.mjs", import.meta.url)), "utf8");
+const builderRegion = (name) => {
+  const a = REFUSALS_SRC.indexOf(`/* DEC-49 REGION ${name}`), b = REFUSALS_SRC.indexOf(`/* END DEC-49 REGION ${name} */`);
+  return a < 0 || b < a ? null : REFUSALS_SRC.slice(a, b).replace(/\/\*[\s\S]*?\*\//g, "");
+};
+const guardReturning = (builder) => {
+  const at = OPS_SRC.indexOf(`return json(${builder}(`);
+  if (at < 0 || OPS_SRC.indexOf(`return json(${builder}(`, at + 1) >= 0) return null;   /* exactly one such return */
+  const from = OPS_SRC.lastIndexOf("\n    if (", at), to = OPS_SRC.indexOf("\n", at);
+  return from < 0 ? null : OPS_SRC.slice(from + 1, to).replace(/\/\*[\s\S]*?\*\//g, "");
+};
+const fenceCode = (op) => {
+  if (op !== "caseratify") return region(REGIONS[op]);
+  const g = guardReturning("operatorCaseRefusal"), r = builderRegion(REGIONS[op]);
+  return g === null || r === null ? null : `${g}\n${r}`;
+};
 for (const op of ACTS) {
-  const code = region(REGIONS[op]);
+  const code = fenceCode(op);
   t(`STRUCTURE, op=${op}: the fence refuses on how the caller ARRIVED — its guard is \`!viaSession\` and it names no class, no env binding and no token`,
     code === null ? "REGION MISSING" : {
       guard: /if \(!viaSession\b[^\n]*\)\s*\n\s*return json\(/.test(code),

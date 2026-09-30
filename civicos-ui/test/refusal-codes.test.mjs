@@ -2109,6 +2109,100 @@ withTree({ ...SELECTION_TREE, mutateGuard: g => g.replace("&& isSelection(v)) {"
     /FLOOR SLACK — `families`: floor 2, measured 3/.test(r.out), true);
 });
 
+/* ============================================================
+   ARM 18, 19 — LEGACY-TESTS #14 (T16, 2026-09-30): two refusals arm C could not see, each on the real tree.
+   (18) K534: a GATE VERDICT names its refusal by its finding's `check`. `runCaseGate`'s C-102.9 answer
+        (`caseCatalogueFailed`, src/gate.mjs) is R29's four-key verdict `{ gateVersion, ok: false, findings: [{ check:
+        "CASE_CATALOGUE_FAILED", detail }], warnings }`, kept so by K534, and arm C read it as a CODELESS refusal.
+   (19) N369: a FINDING PUSHED WHOLE, its code a literal and its translation a row's. inquiry's `contradictionFindings`
+        catch pushes C-2.18's finding inside `is-contradiction-arm-judged`, and the region judged NOTHING.
+   THE FIXTURE: one region returning a gate verdict, one pushing a finding, each its own row.
+   ============================================================ */
+const VERDICT_SRC = (findingCheck = "\"FIXTURE_GATE_FAILED\"", pushedCode = "\"FIXTURE_ARM_FAILED\"",
+                     pushedTranslation = "ROWS.FIXTURE_ARM_FAILED.translation") => `
+const ROWS = { FIXTURE_ARM_FAILED: { check: "C-93.2", translation: "t" } };
+export function gateFixture(e) {
+  /* DEC-49 REGION fixture-gate-verdict
+     the gate's own refusal, answered as a verdict whose one finding names the row. */
+  return { gateVersion: "fixture/1", ok: false,
+           findings: [{ check: ${findingCheck},
+                        detail: "the catalogue could not judge this document, so it is not passed: " + String(e) }],
+           warnings: 0 };
+  /* END DEC-49 REGION fixture-gate-verdict */
+}
+export function armFixture(fm) {
+  const out = [];
+  try {
+    if (!fm) return out;
+  } catch (e) {
+    /* DEC-49 REGION fixture-arm-judged
+       an arm that stopped with an error refuses the document under its own row. */
+    out.push({ check: ROWS.FIXTURE_ARM_FAILED.check, code: ${pushedCode},
+               detail: "the arm stopped with an error before it could judge this document: " + String(e),
+               translation: ${pushedTranslation} });
+    /* END DEC-49 REGION fixture-arm-judged */
+  }
+  return out;
+}
+`;
+const VERDICT_ROWS = {
+  FIXTURE_GATE_FAILED: { check: "C-93.1", where: "src/fixture.mjs gateFixture > fixture-gate-verdict", translation: DEFAULT_TRANSLATION },
+  FIXTURE_ARM_FAILED: { check: "C-93.2", where: "src/fixture.mjs armFixture > fixture-arm-judged",
+    translation: "The check of this document stopped with an error instead of answering, so the document is "
+      + "refused rather than let through. The error is in the check and says nothing yet about the document." },
+};
+/* The floors are the figures the guard PRINTED over this tree (its `ratchet:` lines), never derived here. */
+const verdictTree = (over = {}) => Object.assign({
+  fixtureSrc: VERDICT_SRC(), rows: VERDICT_ROWS,
+  floor: { families: 1, rows: 2, census: 6, reach: 6, governedSites: 2, surfaceTables: 1, bodyLines: 6,
+           vocabularies: 2, vocabularyTerms: 4, regions: 2, regionLines: 11, codesChecked: 2,
+           outcomeReturns: 1, refusalsJudged: 2, untranslated: 0 },
+}, over);
+
+console.log("\n--- ARM 18 · a GATE VERDICT is read by its finding's `check`, and a PUSHED FINDING is judged — GREEN ---");
+withTree(verdictTree(), tree => {
+  const r = runGuard(tree);
+  if (r.exit !== 0) console.log(r.out.split("\n").filter(l => /FAIL|ratchet:/.test(l)).join("\n"));
+  t("ARM 18: exits 0", r.exit, 0);
+  t("ARM 18: the gate verdict's region judged its ONE refusal and compared the finding's `check`",
+    /gateFixture > fixture-gate-verdict \d+L \(1 judged, 1 code\(s\) checked\)/.test(r.out), true);
+  t("ARM 18: the pushed finding's region judged its ONE refusal and compared its code",
+    /armFixture > fixture-arm-judged \d+L \(1 judged, 1 code\(s\) checked\)/.test(r.out), true);
+  t("ARM 18: and neither is a codeless refusal", /CODELESS REFUSAL/.test(r.out), false);
+});
+
+console.log("\n--- ARM 18b · THE TEETH: a gate verdict whose finding names NO literal `check` is still CODELESS — RED ---");
+withTree(verdictTree({ fixtureSrc: VERDICT_SRC("String(e)") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 18b: exits 1", r.exit, 1);
+  t("ARM 18b: naming the gate verdict as a CODELESS REFUSAL",
+    /\(in gateFixture > fixture-gate-verdict\) returns a CODELESS REFUSAL/.test(r.out), true);
+});
+
+console.log("\n--- ARM 18c · THE TEETH: a finding `check` that is not this region's row FAILS by name ---");
+withTree(verdictTree({ fixtureSrc: VERDICT_SRC("\"FIXTURE_GATE_ELSEWHERE\"") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 18c: exits 1", r.exit, 1);
+  t("ARM 18c: naming the finding's check",
+    /\(in gateFixture > fixture-gate-verdict\) refuses with code FIXTURE_GATE_ELSEWHERE, which is NOT a row/.test(r.out), true);
+});
+
+console.log("\n--- ARM 19 · THE TEETH THROUGH THE PUSH: a pushed code that is not this region's row FAILS by name ---");
+withTree(verdictTree({ fixtureSrc: VERDICT_SRC(undefined, "\"FIXTURE_ARM_ELSEWHERE\"") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 19: exits 1", r.exit, 1);
+  t("ARM 19: naming the pushed code",
+    /\(in armFixture > fixture-arm-judged\) pushes a finding with code FIXTURE_ARM_ELSEWHERE, which is NOT a row/.test(r.out), true);
+});
+
+console.log("\n--- ARM 19b · OVER-REACH REFUSED: a pushed record with no row's translation is not a refusal — RED as a drifted marker ---");
+withTree(verdictTree({ fixtureSrc: VERDICT_SRC(undefined, undefined, "\"the words, typed here\"") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 19b: exits 1", r.exit, 1);
+  t("ARM 19b: the region judged NOTHING, because the object carries no translation read off a row",
+    /judged NO refusal inside the region `fixture-arm-judged`/.test(r.out), true);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -2164,5 +2258,9 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `the helper walk reads a refusal through a FUNCTION-LOCAL ALIAS and one whose code is a CONDITIONAL between two `
   + `literals (16), refuses an arrow that does not pass its code on (16b), and fails by name a code either sends that `
   + `is not the region's row (16c, 16d). AND SINCE T11 (legacy-tests #8) a family SELECTED BY KEY from a module's `
-  + `table is read as a view wherever its file sorts (17), and with that rule removed it is a family nobody wrote (17b)`);
+  + `table is read as a view wherever its file sorts (17), and with that rule removed it is a family nobody wrote (17b). `
+  + `AND SINCE T16 (legacy-tests #14) a GATE VERDICT is read by its findings' literal \`check\` (K534) and a FINDING PUSHED `
+  + `whole with a literal code and a row's translation is judged (18); a verdict whose finding names no literal check is `
+  + `still codeless (18b), and a check (18c) or a pushed code (19) that is not the region's row fails by name, while a `
+  + `pushed record carrying no row's translation is not read as a refusal (19b)`);
 if (bad) process.exit(1);
