@@ -29,6 +29,13 @@ test("R43 viewerPredicate is the one rule of sight, and returns the viewer's mem
     assert.equal(viewerPredicate(`${MACHINE_CLASS_PREFIX}${cls}`).member, null);
   }
   assert.deepEqual(sees(w, "admin"), all, "the founder's viewer");
+  /* N357: the founder's viewer spelled `member:admin` sees every bundle too, and names the member `admin`; the
+     founder has no roster row, and neither spelling asks one, claimed or not. */
+  assert.deepEqual(sees(w, V("admin")), all, "the founder's viewer, as member:admin");
+  assert.equal(viewerPredicate(V("admin")).member, "admin");
+  const unclaimed = world();
+  unclaimed.project("PROJ-U");
+  for (const v of ["admin", V("admin")]) assert.deepEqual(sees(unclaimed, v), ["PROJ-U"], `${v}: the same rule before the claim`);
   assert.deepEqual(sees(w, V("ann")), all, "owner");
   assert.deepEqual(sees(w, V("bob")), ["INFO-I", "PROJ-H"], "an invited participant sees the project");
   assert.deepEqual(sees(w, V("cal")), ["INFO-I"], "a non-participant sees every non-project bundle");
