@@ -438,7 +438,7 @@ Institutional framing: roles, not individuals.
 
 ### Escalation
 
-**Requirement 7: Six-stage escalation protocol** with documented trigger
+**Requirement 7: Seven-stage escalation protocol** with documented trigger
 conditions.
 
 **Requirement 8: Evidence separated from legal strategy.** Three-tier
@@ -530,7 +530,12 @@ included with advisory notes.
 **Tier 3 --- Do not file without counsel.** Prop 218 challenges, CCP
 526a taxpayer actions, consent decree motions. Evidence published;
 filing templates NOT included. Contact information for legal
-organizations provided.
+organizations provided. For counsel the group names, CivicOS prepares
+a counsel packet (the facts with their citations, a chronology, exhibits
+with provenance, the standards' text, candidate legal theories and
+remedies, and any deadline that binds a claim), marked as prepared for
+counsel's review, never published and never fileable as it stands
+(Design Requirement 8 as amended 2026-09-26; `BIO_Action_v0_1.md` §3).
 
 ➜ See: BIO_Communications_Platforms.docx, section on Evidence Package
 Publication and Risk Classification, for the complete specification.
@@ -621,7 +626,7 @@ build, after the composite bundle skill core (see Section 14, Phase 1).
 
 ### Skill 8: Escalation Protocol
 
-Guides groups through the six escalation stages. Identifies current
+Guides groups through the seven escalation stages. Identifies current
 stage, trigger conditions, available actions by tier, deadlines.
 Produces Tier 1 and 2 filing templates pre-populated with case-specific
 facts. Operates at the Escalate phase (Layer 3: Action).
