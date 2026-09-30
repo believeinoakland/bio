@@ -1,6 +1,6 @@
 # Changes to existing modules and build state
 
-**Status** · DRAFT by ACTION_DESIGN #1, 2026-09-30, from `MATRIX.md` §5 and Bob's decisions D1–D6 (agreed 2026-09-30); for BOB's review and fold. Wording is proposed; the requirement ids are the next free in each file as of `main` @ `5bb688333c`, for BOB to confirm. Items marked **Bob** change a layer contract, a module list or a vocabulary members see, and were approved in substance by Bob's rulings cited; items marked **BOB** are BOB's (P17).
+**Status** · Reviewed by Bob 2026-09-30: "correct and complete enough". DRAFT by ACTION_DESIGN #1, 2026-09-30, from `MATRIX.md` §5 and Bob's decisions D1–D6 (agreed 2026-09-30); for BOB's review and fold. Wording is proposed; the requirement ids are the next free in each file as of `main` @ `5bb688333c`, for BOB to confirm. Items marked **Bob** change a layer contract, a module list or a vocabulary members see, and were approved in substance by Bob's rulings cited; items marked **BOB** are BOB's (P17).
 
 ## 1. `build/layers.md` and `modules.json` (the contract wording follows Bob's rulings 1, 5, 10 and D1; adding the module is BOB's)
 
@@ -30,7 +30,7 @@
 ## 4. `monitoring`, `scheduler`, `queue` (BOB)
 
 - `scheduler` gains a `deadline-recheck` consumer calling `monitoring.deadlineRecheck` on its cadence, so `monitoring` R34–R35 reach members (today nothing calls it outside tests).
-- `queue` gains three kinds: an action's clock entry overdue (a CONDITION: the counterparty's deadline), an escalation stage proposed (from `escalation.escalationsDue`, an OBLIGATION), and a plan checkpoint due (from `action-plans` R17, an OBLIGATION of the group's own, never a FINDING). Each is one item per occurrence, never repeated for the same one (DEC-69). A fourth: when a member marks a received entry as pressure of a legal kind (a threat of suit, a subpoena, a demand to preserve), an OBLIGATION for an administrator to consider a litigation hold, which suspends the routine purge of transcripts (DEC-61, Bob, on the `coord` ledger); the item decides nothing (Bob, 2026-09-30: prepared for opposition).
+- `queue` gains three kinds: an action's clock entry overdue (a CONDITION: the counterparty's deadline), an escalation stage proposed (from `escalation.escalationsDue`, an OBLIGATION), and a plan checkpoint due (from `action-plans` R17, an OBLIGATION of the group's own, never a FINDING). How each reaches a member follows Bob's rulings on notification (DEC-10, DEC-69, DEC-70: an item informs once at the occurrence, is dispositionable and ages; it notifies the member who authored the thing it concerns, falling back to the project manager, then an administrator; muting is personal; an overdue condition may notify again only at its own stage's interval; no reminder is detached from an act). A fourth: when a member marks a received entry as pressure of a legal kind (a threat of suit, a subpoena, a demand to preserve), an OBLIGATION for an administrator to consider a litigation hold, which suspends the routine purge of transcripts (DEC-61, Bob, on the `coord` ledger); the item decides nothing (Bob, 2026-09-30: prepared for opposition).
 - Strike the stale "not yet met" marks on `monitoring` R34, R35 and `publication` R36, R37 once the wiring lands.
 
 ## 5. `skills` (BOB, with the pack's doctrine)

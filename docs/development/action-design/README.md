@@ -14,5 +14,5 @@ Design work on the Action layer (layer 9, `build/layers.md`). **The role (Bob, 2
 | `HANDOFF.md` | the handoff to BOB: Bob's rulings to record, what to fold, what was found on the way |
 | `BIO_Action_v0_1.md` | the proposed level-1 home of the Action layer: purpose, contract, constructs, rules, the sixteen contradictions reconciled, the canon text to change, and six points still Bob's. Rendered as `action-home.html` |
 | `UX-ANSWERS.md` | the UX substrate's open questions and use cases the Action rulings settle, with the text for BOB to enter (K438). Rendered as `ux-answers.html` |
-| `views/plan-page.html` | a UX view: an interactive design mock of the plan page with the bond-measure example as sample data |
+| `views/plan-page.html` | APPROVED by Bob 2026-09-30. A UX view: an interactive design mock of the plan page with the bond-measure example as sample data |
 | `views/start-and-send.html` | a UX view: starting an option (the ACT preview, the refusal and the override with its disclosure) and preparing, approving, stamping and recording what is sent |

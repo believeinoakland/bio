@@ -108,4 +108,6 @@ Every cell of §2–§4 re-checked against Bob's rulings of 2026-09-29 and 2026-
 | Opposition: pressure against the group | **Drafted** (`actions` R47); a legal threat prompts a litigation-hold reminder (§4, DEC-61) |
 | Certification by a licensed professional | **Deferred** (trigger: a group needs a licensed name on an output) |
 
+**Bob, 2026-09-30:** content with where this stands, and asks that completing the Action design, and the development BOB manages from it, be given priority high enough that Action-related development catches up with the rest of CivicOS and keeps up.
+
 **The result.** No cell is a gap. Everything is built, drafted, resolved by a ruling, or deferred by Bob with a trigger.
