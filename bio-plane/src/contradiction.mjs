@@ -10,7 +10,7 @@
  *
  * THE PROMPT IS PINNED BY ITS DIGEST, NOT BY ITS WORDS. M-162 measured THIS prompt, byte for byte (its sha256 is
  * JUDGEMENT_PROMPT_SHA256 below), on M0-71's gate. A prompt edited without a new measurement is a detector that
- * never passed the gate, so contradiction-overstrict.test.mjs fails naming the digest when the two part: re-measure,
+ * never passed the gate, so test/m/contradiction/gate.test.mjs (R2, R57) fails when the two part: re-measure,
  * record the figures in a new measurement, and move the digest in the same commit (§7: a detector above the
  * threshold does not reach a member).
  *
@@ -24,7 +24,7 @@
  * re-run over unchanged referents writes nothing (the table's key). A model that ignored every word here could
  * propose a wrong label and nothing else. */
 
-/* §5's five words, in §5's order. The gate's own copy (test/contradiction-gate.mjs LABELS) is asserted equal. */
+/* §5's five words, in §5's order. The gate's own copy (test/m/contradiction/gate-measure.mjs LABELS) is asserted equal. */
 export const CONTRADICTION_LABELS = Object.freeze(["world", "record", "precision", "unrelated", "undetermined"]);
 
 export const JUDGEMENT_PROMPT = `You are judging CANDIDATE CONTRADICTIONS for a civic research record. For each pair below, a deterministic pairing
