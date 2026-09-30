@@ -25,3 +25,7 @@ CHANGE (K553, K554). Publication has merged early: merge `tranche/T16` now and w
 - `capture_accounts:` rows `capture, by, at, text_b64, signature_b64` (base64 of the exact bytes).
 - `sources:` rows `capture, stated, basis`, as B2 said. `unnamedSourceStatement({capture, received})` takes `received` = the capture's first pulled knock (by `received`, then knock id), which `sources.sourceOf` answers as `source.receipt.received`. Any other spelling is refused at the commit (C-122.1).
 The rest of B2 stands.
+
+## B4 · CHANGE
+
+CHANGE (K555). Ratification has merged early: merge `tranche/T16` and run R34 against the real `ratificationOf(host).caseRatifyPreflight({text, signer, viewer})` (shape as B2 said). Publication's exports are on the tranche too (B3's spelling, K553). `test/m/` is green on the tranche now (0 fail).
