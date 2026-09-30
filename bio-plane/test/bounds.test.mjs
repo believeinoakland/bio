@@ -180,7 +180,10 @@ const t = (label, got, want) => {
    CORRECTED 2026-09-30 (LEGACY-TESTS #12, T14; N348): the `Store` that routes `instanceSetupOps` before the store's own
    map is now control-plane's (`src/control-plane/dispatch.mjs`, exported unwrapped from `src/index.mjs`); instance-setup's
    own wrapper is gone from the plane's export (its `instanceSetupStore` goes in T15). The appendix reads instance-setup's
-   class and route map, which did not move, so the roster is unmoved. */
+   class and route map, which did not move, so the roster is unmoved.
+   CORRECTED 2026-09-30 (LEGACY-TESTS #13, T15; N348, INSTANCE-SETUP #4): `instanceSetupStore` and `instanceSetupRoute`
+   are gone from `src/setup.mjs` (816faed8f4); what is read here, `InstanceSetup` and `instanceSetupOps`, is all it
+   routes, and control-plane's `Store` spreads `instanceSetupOps` over legacy-store's map (so its entries win). */
 const SRC_SETUP = readFileSync(new URL("../src/setup.mjs", import.meta.url), "utf8");
 const setupAppendix = (() => {
   const L = SRC_SETUP.split("\n");
@@ -825,7 +828,16 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      op=tasks, op=queue, op=taskdrain and op=groupidentity off the walk (it printed 69) while all four were still capped
      and driven; the corpus re-inlines both (see SRC_STORE) and the roster is the same 73 BY NAME, the four back under
      their own method names (`taskList`, `queueFeed`, `taskDrain`, `groupIdentity`). NO ARRIVAL, NO DEPARTURE. */
-  OPS.size, 73);
+  /* RE-PINNED 2026-09-30 (LEGACY-TESTS #13, T15; N351 entities R39, N345 contradiction R25/R50/R54): 73 -> 77 from this
+     suite's print (`106 carrying a cap, reaching 77 ops`), the roster DIFFED BY NAME against T14's 73. NO DEPARTURE.
+     FOUR ARRIVALS: op=aliaswithdraw (`withdrawAlias`, entities R39: `resolutions_resting` at most
+     ENTITY_COLLECTION_LIMIT (500), `LIMIT ?` at cap + 1, `limit` and `resolutions_resting_truncated` published), and
+     contradiction's three pages, each at most PAGE_MAX (50) with `limit`, `truncated` (one past) and `cursor`:
+     op=contradictioncandidates (`candidatesFor`, R25), op=contradictionnotices (`conflictNotices`, R50) and
+     op=contradictionresponses (`conflictResponses`, R54). The other N345/N351 bounds the handover named
+     (`resolutiondefect`, `entity`'s aliases and relations, `publishtensions`) put no op on this roster: the walk does
+     not find a cap in their dispatched segments. */
+  OPS.size, 77);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1822,7 +1834,22 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      bound published as `work_products_limit`) and "R45 at the held-question cap …"
                                      (`questions.truncated` true past 2,000, false at it). Its envelope is below, asked at the
                                      Durable Object: its control-plane route is legacy-index's (N321, layer 11). */
-                                  "projectstage"]);
+                                  "projectstage",
+                                  /* ADDED 2026-09-30 (LEGACY-TESTS #13, T15; N351, N345): three of the four T15 arrivals
+                                     (the roster pin names them), each bite driven at its module's interface in this
+                                     loop's shape: op=aliaswithdraw in `test/m/entities/defects.test.mjs` "R39 R8 alias
+                                     withdrawal's resolutions_resting is at most 500 …" (501 resting cut at 500 with
+                                     `resolutions_resting_truncated` true, three read whole with it false);
+                                     op=contradictioncandidates in `test/m/contradiction/present.test.mjs` "R25, R45: …
+                                     filters, page, cursor" (a limit of one over two, `truncated` true with a cursor, the
+                                     next page false, every non-number and over-ask answered at 50); op=contradictionresponses
+                                     in `test/m/contradiction/projects.test.mjs` "R54: the read — … a page of 50" (two read
+                                     whole with `truncated` false, a limit of one cut with it true, the cursor resumed).
+                                     NOT ADDED, and the PIN names it: op=contradictionnotices. R50 bounds its page the same
+                                     way, but its one module test (`projects.test.mjs` "R50, R55: a notice carries …") reads
+                                     only `limit` 50 and `truncated` false over one notice; no suite drives the bite.
+                                     REPORTED to contradiction. Its envelope is below. */
+                                  "aliaswithdraw", "contradictioncandidates", "contradictionresponses"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -2517,7 +2544,35 @@ const answersByOp = new Map([
                                                       limit: 1 })],
   ["recordlinkverdict", await DO("recordlinkverdict", { sourceCapture: "0".repeat(64),
     addressNorm: "https://example.gov/bounds-envelope", verdict: "offsite", basis: "bounds envelope", limit: 1 })],
+  /* ADDED 2026-09-30 (LEGACY-TESTS #13, T15; N345, N351): the four T15 arrivals' ENVELOPES, for CPDF-10's reason (the
+     bites are where DRIVEN_ELSEWHERE says, or nowhere where the PIN names it). Contradiction's three reads are asked at the
+     Durable Object with the viewer stamped, `projectstage`'s precedent, over D-479's owned project and a document this
+     store holds (neither has a candidate, so each answers its page empty and whole); the responses read names no candidate
+     and answers its refusal object (the one dead answer). The alias withdrawal is a WRITE, so it is asked LAST, on an
+     entity made for it alone, so no arm above reads a withdrawn name. */
+  ["contradictioncandidates", await DO(`contradictioncandidates?bundle=INFO-2026-0001-r57&limit=1&viewer=member:d479own`)],
+  ["contradictionnotices", await DO(`contradictionnotices?project=${encodeURIComponent(D479_PROJECTS[0])}&limit=1`
+                                    + `&viewer=member:d479own`)],
+  ["contradictionresponses", await DO(`contradictionresponses?project=${encodeURIComponent(D479_PROJECTS[0])}&limit=1`
+                                      + `&viewer=member:d479own`)],
+  ["aliaswithdraw", await (async () => {
+    const id = (await POST("op=entitycreate&token=mem-r57", { kind: "contract", label: "Bounds Envelope Alias T15",
+                                                               aliases: ["bounds envelope withdrawn name"] })).entity_id;
+    return POST("op=aliaswithdraw&token=mem-r57", { entityId: id, alias: "bounds envelope withdrawn name",
+                                                    reason: "bounds envelope: a name withdrawn to read the answer's shape" });
+  })()],
 ]);
+/* ADDED 2026-09-30 (LEGACY-TESTS #13, T15): the envelopes above are ANSWERS, not refusals standing in for them, where an
+   answer is reachable here — each publishes the bound it applied (R25, R50: the asked limit of 1, under PAGE_MAX, with
+   `truncated`; R39: `limit` 500 beside `resolutions_resting_truncated`). */
+t("op=contradictioncandidates, op=contradictionnotices and op=aliaswithdraw: each envelope is an answer publishing its bound",
+  [answersByOp.get("contradictioncandidates")?.ok, answersByOp.get("contradictioncandidates")?.limit,
+   answersByOp.get("contradictioncandidates")?.truncated,
+   answersByOp.get("contradictionnotices")?.ok, answersByOp.get("contradictionnotices")?.limit,
+   answersByOp.get("contradictionnotices")?.truncated,
+   answersByOp.get("aliaswithdraw")?.ok, answersByOp.get("aliaswithdraw")?.limit,
+   answersByOp.get("aliaswithdraw")?.resolutions_resting_truncated],
+  [true, 1, false, true, 1, false, true, 500, false]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "
 + "through the op rather than asserted about it",

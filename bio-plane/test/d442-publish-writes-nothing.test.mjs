@@ -52,7 +52,11 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { ratifyCase } from "./caseceremony.mjs";
-import { parseFrontmatter, checkCaseDocument } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20, case-authoring R14: /5): op=publish authors
+   `bio-case-document/5`, and the case gate op=caseratify runs is ratification's `checkCaseDocument` (ratification R8,
+   the catalogue promotion's `runCaseGate` runs); the catalogue's own copy still knows only /4 and older (N361, T16). */
+import { checkCaseDocument } from "../src/ratification/checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- d442-publish-writes-nothing ---");
@@ -320,9 +324,12 @@ t("(fixture) B's case document is readable and non-empty", [docB?.ok, (docB?.tex
      CORRECTED AGAIN 2026-09-25 (REC-219), never exempted: `/3` was right until op=publish moved to `/4` (§3
      rule 18 — /3's shape plus the adoptions pinning a proposed revision at signing), which states every
      block this row is about exactly as /3 did; `caseDocumentStatesMemberBlocks` answers yes for /4 too. */
-  t("THE CASE DOCUMENT CARRIES EVERY MOVED BLOCK: the format op=publish authors (/4, rule 12's shape); per "
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 case-authoring R14: /5): op=publish authors `/5`, which
+     states every block this row is about exactly as /4 did (publication R20: `caseDocumentStatesMemberBlocks` is
+     true for /5). The pin stays EXACT. Kept: it reads what op=publish really wrote, end to end. */
+  t("THE CASE DOCUMENT CARRIES EVERY MOVED BLOCK: the format op=publish authors (/5, rule 12's shape); per "
   + "member its role, its pinned sha and its own edition",
-    [fmB.format, row.role, row.version_sha === PIN, row.edition], ["bio-case-document/4", "load_bearing", true, 1]);
+    [fmB.format, row.role, row.version_sha === PIN, row.edition], ["bio-case-document/5", "load_bearing", true, 1]);
   t("… the frozen pair, capture and connection once each, equal to what op=publish answered",
     [sRows.map((r) => r.axis).sort(),
      JSON.stringify(sRows.map((r) => ({ axis: r.axis, state: r.state, grade: r.grade, weakest: r.weakest })))
@@ -428,6 +435,10 @@ t("Q's own bytes carry NONE of the blocks (so a reader left on them would read n
    5. THE CATALOGUE FOLLOWS THE BLOCK.
    ======================================================================= */
 console.log("\n--- 5. C-2.8 and C-3.1 fire on the case document when a moved block is removed ---");
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345: /5): the arms below run ratification's gate over the /5
+   document op=publish wrote ("the real /2 document" in the guard's label is the rule-12 shape, now at /5; the label is
+   kept for the driver's declaration). Kept: no module test runs the case gate over a /5 document, nor over bytes
+   op=publish authored (ratification's `checks.test.mjs` mutates a synthetic /4). */
 const idsOf = (fs) => fs.filter((x) => x.severity === "error").map((x) => x.check);
 const ctx = { caseId: pubB.caseId, edition: pubB.edition, body: bodyB, memberBasis: { [Q]: [] } };
 t("the real /2 document passes the case gate (the non-empty guard for the arms below)",

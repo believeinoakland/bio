@@ -173,8 +173,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { checkCaseDocument, CASE_DOCUMENT_FAMILY, CASE_DOCUMENT_FORMAT,
-         parseFrontmatter } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20, case-authoring R14: /5): op=publish authors
+   `bio-case-document/5` (publication's CASE_DOCUMENT_FORMAT, R20), and the case gate op=caseratify runs is
+   ratification's `checkCaseDocument` with its `CASE_DOCUMENT_FAMILY` (ratification R8, the catalogue promotion's
+   `runCaseGate` runs); the catalogue's own copy still knows only /4 and older (N361, T16). */
+import { checkCaseDocument, CASE_DOCUMENT_FAMILY } from "../src/ratification/checks.mjs";
+import { CASE_DOCUMENT_FORMAT } from "../src/publication/checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- casesign ---");
@@ -1004,6 +1009,10 @@ console.log("\n--- 6. OVER-STRICTNESS: a legitimately signed case publishes, and
  * ========================================================================= */
 console.log("\n--- 7. C-41: every arm of the case document's gate, driven over a real document ---");
 {
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345: /5): every arm below runs ratification's gate over the /5
+     document op=publish authored. Kept, not retired under K457: ratification's `checks.test.mjs` fires each C-41 arm
+     over a synthetic /4 only, and no module test asks the gate to accept a /5 document or fires C-41.13–C-41.15 on
+     one; this section does, over bytes op=publish really wrote. */
   const fm = parseFrontmatter(doc1.text).data;
   const ctx = { caseId: CASE, edition: 1 };
   const fires = (mutate, check) => checkCaseDocument(mutate({ ...fm }), ctx)

@@ -35,7 +35,9 @@ const SIGHT_LINE = "if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.
    `projectCreated`, `visibilitySettingRefusal`, the private `#existenceOnly`), a creation's visibility checks to
    promotion (`promotion/index.mjs`), `op=searchindexcheck` and `op=selectionlist` to retrieval
    (`retrieval/index.mjs`), and the frontier to retrieval (`retrieval/frontier.mjs`, whose three levels share one
-   `#tally`). The store keeps `#inSight` as a delegation, `#hiddenSets`, `#existenceRead` and D-480's walk. */
+   `#tally`). The store keeps `#inSight` as a delegation, `#hiddenSets`, `#existenceRead` and D-480's walk.
+   CORRECTED 2026-09-30 (LEGACY-TESTS #13, T15; N352): of those, the bundle complement is now membership's exported
+   `hiddenBundles` (R88), called by the store and by retrieval; D-480's walk is queue's, with queue's own copy. */
 /* The C-70.1 answer `#existenceOnly` mints is membership's PRIVATE method now; the two REC-196 liars that answered it
    from the store's read check reach it through this one-line accessor, added by the arm itself (it changes no
    behaviour: nothing else calls it). */
@@ -220,7 +222,12 @@ const ARMS = {
        `#hiddenBundles` and moved D-486's RUN subtraction out of it to ai-runs' R42 (`hiddenRuns`); `#counts` still
        takes `hid` from it and hands it to retrieval's and run-productions' `counts(hid)`. The arm neuters that `hid`
        at its source, as before. */
-    patches: [["store.mjs", `    return gate && gate.scope !== "member"\n`, `    return null && gate && gate.scope !== "member"\n`]],
+    /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N352, membership R88): the store's private `#hiddenBundles` is gone.
+       The complement is membership's exported `hiddenBundles` (`if (gate.scope === "member") return null;`), which the
+       store's `#counts` (op=stats) and retrieval's op=searchindexcheck `indexed` and op=selectionlist `bytes` all call, so
+       the arm neuters it at that ONE source (it answers `null`, nothing subtracted, for every viewer). Queue still spells
+       its own private `#hiddenBundles` (queue/index.mjs), which this patch does not reach, so §10 stays green. */
+    patches: [["membership/index.mjs", `  if (gate.scope === "member") return null;\n`, `  if (gate) return null;\n`]],
     /* DECLARATION EXTENDED 2026-09-24 BY D-486, never exempted: this arm breaks `op=stats` for EVERY key, and
        §9 now reads two of its keys, so §9's arms go red too. They are DECLARED rather than left as
        "failed but not declared" — an arm whose declaration is stale reads as a control that surprised its
@@ -244,7 +251,11 @@ const ARMS = {
        moves it; the document frontier half of that arm stayed byte-identical). */
     mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
                "EXACT: the ADMIN token's bundles less vera's",
-               "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier"],
+               "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier",
+               /* EXTENDED 2026-09-30 (LEGACY-TESTS #13, T15; N352), never exempted: the one helper is also retrieval's,
+                  so the next two arms' subjects go red here by name — what one spelling of the rule costs a control. */
+               "MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
+               "still a parity check over what she can see", "MOVE NOTHING: op=selectionlist (status"],
   },
   /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
   "indexcheck-whole-index": {
@@ -252,7 +263,8 @@ const ARMS = {
     /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): retrieval T10 (3d5dacebe7, N106/N171) counts `indexed` through
        one `#indexedCount(hid)`, shared with `counts(hid)` (op=stats' `indexed`); the arm hands op=searchindexcheck's
        call alone no set, so ONLY that reader counts the whole index again. */
-    patches: [["retrieval/index.mjs", "indexed: this.#indexedCount(hiddenSet(gate)),",
+    /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N352): the set is membership's `hiddenBundles(viewer)` (R88). */
+    patches: [["retrieval/index.mjs", "indexed: this.#indexedCount(hiddenBundles(viewer)),",
                "indexed: this.#indexedCount(null),"]],
     mustFail: ["MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
                "still a parity check over what she can see"],
@@ -262,7 +274,8 @@ const ARMS = {
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=selectionlist is retrieval's. */
     /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): retrieval T10 (3d5dacebe7) spells the bytes' subtraction as
        `hiddenSet(viewerPredicate(viewer))`, the module's one complement; the arm takes no set, as before. */
-    patches: [["retrieval/index.mjs", "        const hid = viewer === undefined ? null : hiddenSet(viewerPredicate(viewer));",
+    /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N352): the set is membership's `hiddenBundles(viewer)` (R88). */
+    patches: [["retrieval/index.mjs", "        const hid = viewer === undefined ? null : hiddenBundles(viewer);",
                "        const hid = null;"]],
     mustFail: ["MOVE NOTHING: op=selectionlist (status"],
   },
@@ -290,7 +303,9 @@ const ARMS = {
      spelling the suite did not anticipate (an unfiltered gate's complement is empty). Nothing may fail. */
   "subtract-for-everyone": {
     /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `#hiddenSets` is legacy-store's `#hiddenBundles` (892b92d95a). */
-    patches: [["store.mjs", `    return gate && gate.scope !== "member"\n`, `    return gate\n`]],
+    /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N352): the helper is membership's `hiddenBundles` (R88); its early
+       `null` for an unfiltered gate is dropped, so the unfiltered gate's (empty) complement is subtracted too. */
+    patches: [["membership/index.mjs", `  if (gate.scope === "member") return null;\n`, ``]],
     mustFail: [],
   },
 
