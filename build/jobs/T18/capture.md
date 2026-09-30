@@ -36,3 +36,30 @@ Everything but the split's deletion is built, tested and pushed (`job/T18/captur
 6. **Rows `awaiting stamp` (T19):** C-85.1–.5 moved to `capture/checks.mjs` `KNOCK_CHECKS` (✱, catalogue copy deleted; rows and `where`s unchanged); C-2.7 now registered by capture (`capture/grammar.mjs`), the catalogue's arm kept until inquiry's face passes grammars.
 
 `test/m` whole: 3374 tests, 3348 pass, 4 fail (the four above), 22 todo.
+
+## J4 · COMPLETE
+
+**Entries applied** (layer 3, capture; `current.md` capture bullet, B1–B4, K655, K656, K659):
+- **The split's deletion (K617, K649 (1), K624 (1)).** `capture/acquire.mjs` is a re-export of `acquisition` only (its 14 names), for `ratification/ops.mjs`, `monitoring/index.mjs`, `test/m/capture-requests/drain.test.mjs` and `test/m/monitoring/tick.test.mjs`; capture's next job deletes it. `capture/index.mjs` and `ops.mjs` import `acquisition` (R73: `acquire`, `archiveLookup`, `profileOf`, `profileView`, `governedFetch`, `governedCall`, the grade note). `acquire.test.mjs` deleted (its Rs are acquisition's); the live capture Rs it alone named are now proved in `act.test.mjs`: R73 (same answer as acquisition's act over this store, what it learns landing in capture's tables), R55 (the compute measurement), R38 (no place named; profiling only through the instance's view).
+- **N409 (K609, R65).** `PULL_WITHIN_FAILED` answers one fixed sentence (`PULL_WITHIN_FAILED_DETAIL`), never what was thrown.
+- **N418 (K650, R74).** Every write goes through `record-core.transact` (`#tx`; the storage's `transactionSync` only for a Capture built with no record): all 23 writers, the doorbell's two former `transactionSync` calls included. Tested by a sweep of every writer's statements, by atomicity under a failing statement, and by `afterCommit` held until the (caller's) commit.
+- **C-2.7 (K585 (3)).** `capture/grammar.mjs` (`checkInformationExtension`, `INFO_ENUMS`, `CONTENT_HASH_RE`, `MONITOR_FREQ`, copied whole) registered in `captureOf` through `record.registerGrammar("capture", {ids: ["C-2.7"]})`; identical findings to the catalogue's arm through `checkBundle` with `record.grammars()` and through `auditPass` (K655 (3): no promotion edge). The catalogue's arm stays until inquiry's face passes grammars (T19).
+- **✱ C-85.** `KNOCK_CHECKS` moved into `capture/checks.mjs` with its reasoning; the catalogue's copy deleted (146 lines); `doorbell.mjs` and `index.mjs` read the module's table.
+- **The legacy-index map's §4.4 plain move (K649 (7)).** `capturePublicOp` (knock alone, public) and `captureOp` (links, capture, archivelookup, acquire; acquire handing its answer to the door's `readAcquired`, extraction's `acquireReadingOp`); `src/index.mjs` rewired (§12.2). Proved by unit tests and a whole-plane Miniflare test (`plane.test.mjs`).
+- **Converts:** `cap13-reuse-pages` (R24), `cap14-reused-from` (R25, with the additive-column migration), `d522-unattended-render` (R39, R40), `subresources` (the `capturelimit`, `siteassets`, `sitechrome` routes: R23, R24, R25) in `converts.test.mjs`.
+
+**Rows `awaiting stamp` (T19):** C-85.1–.5 moved (rows and `where`s unchanged); C-2.7 registered by capture.
+
+**Deferred:** nothing of this module. `KNOCK_CHECKS` is deliberately not frozen (R52's negative control removes a row).
+
+**Found in other modules** (J3): control-plane's R36 test asserts the thrown message capture no longer carries (its fix: assert `PULL_WITHIN_FAILED_DETAIL`; `pull.mjs`' `promoteOrFault` comment stale); plane and agent-worker bundles stale; the DEC-49 guard harvests the catalogue only (C-85 reads unregistered there; `nc-d508`, `nc-d513`, `d470` census at the release); monitoring may re-point `MONITOR_FREQ` to capture's export.
+
+**Tests and checks:**
+- `node --test test/m/capture/*.test.mjs`: tests 89, pass 89, fail 0.
+- `node --test "test/m/**/*.test.mjs"` whole (after the deletion): tests 3412, pass 3389, fail 1, todo 22; the one failure is control-plane's R36 above (J3). The three module-order failures of J3 are gone on the tranche.
+- `format`: 82 modules, 77 requirements files; 0 failures.
+- `architecture capture`: 18 product files, 67 relative imports; 0 failures.
+- `coverage capture`: 47 of 47 live requirement ids named by a test; 0 failures.
+- `ownership capture tranche/T18`: 15 files changed; legacy-index 10 added, 23 removed; legacy-checks 0 added, 146 removed; legacy-store 0; 0 failures. The 10 added lines are `src/index.mjs`:39–40 (the two imports), :316 (`capturePublicOp`) and :620–626 (the `captureOp` block handing the stamps and `readAcquired`).
+
+Size (session_01F2hRC49z1gH7T1KRC7gwwg): test runs 16, module lines 2964
