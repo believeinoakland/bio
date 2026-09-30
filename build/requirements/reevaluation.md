@@ -1,6 +1,6 @@
 # reevaluation — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 7. Code today (measured on `tranche/T3` @ `f324df9b0f`; `build/extraction/reevaluation.md` has the table): `bio-plane/src/store.mjs` 4792–4803 (`#reevalRaisedBy`), 31193–31557 (the REC-17 header, `reevaluations`, `#reevalLegsEarned`, `#reevalMoved`, `#frontmatterOf`, `#basisFrontmatter`), 36670–36768 (`changedFromAudit` and its bounds), 36770–36824 (the D-394 header, `VERSION_NOTICE_LEGS_MAX`), 37182–37254 (`versionNotice`), the `reevaluation` answer fields of four acts (4782–4789 dispose, 7894–7897 reopen, 8980–8986 a new edition, 12714–12721 divide), and the dispatch entries `changedfromaudit`, `reevaluations`, `versionnotice`. `bio-plane/checks/bio-checks.mjs` 1226–1274 (C-10.1: `REEVAL_SOURCES`, `checkReevalPending`, called at 1223) and 14039–14070 (the C-80 header, C-80.1, C-80.2). `schema.mjs`: no table. `from`: `legacy-store` as declared; the map proposes `legacy-store` and `legacy-checks`. Not yet met: R8, R9 (the registration layer 9 needs), R14 (REC-222), R15 (REC-223), R16 (K102), R17 (K102). N178 folded by BOB #54 (K228): `raiseNotices` stated (K199 (1), met); R25, the sweep's due, wake and tick, not yet met.
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 7. Code today (measured on `tranche/T3` @ `f324df9b0f`; `build/extraction/reevaluation.md` has the table): `bio-plane/src/store.mjs` 4792–4803 (`#reevalRaisedBy`), 31193–31557 (the REC-17 header, `reevaluations`, `#reevalLegsEarned`, `#reevalMoved`, `#frontmatterOf`, `#basisFrontmatter`), 36670–36768 (`changedFromAudit` and its bounds), 36770–36824 (the D-394 header, `VERSION_NOTICE_LEGS_MAX`), 37182–37254 (`versionNotice`), the `reevaluation` answer fields of four acts (4782–4789 dispose, 7894–7897 reopen, 8980–8986 a new edition, 12714–12721 divide), and the dispatch entries `changedfromaudit`, `reevaluations`, `versionnotice`. `bio-plane/checks/bio-checks.mjs` 1226–1274 (C-10.1: `REEVAL_SOURCES`, `checkReevalPending`, called at 1223) and 14039–14070 (the C-80 header, C-80.1, C-80.2). `schema.mjs`: no table. `from`: `legacy-store` as declared; the map proposes `legacy-store` and `legacy-checks`. Not yet met: R8, R9 (the registration layer 9 needs), R14 (REC-222), R15 (REC-223), R16 (K102), R17 (K102). N178 folded by BOB #54 (K228): `raiseNotices` stated (K199 (1), met); R25, the sweep's due, wake and tick, not yet met. N345's contradiction part folded for T15 by a worker for BOB #68, 2026-09-30 (K455, K456, K459).
 
 **Size (P6).** About 700 lines move (about 330 without comment-only and blank lines): `store.mjs` 622, `bio-checks.mjs` 81. REC-222 and REC-223 add a notice table and two acts. Well under 4,000.
 
@@ -12,11 +12,11 @@ When something a finding rests on changes, this module says which findings are a
 
 ### Provides
 
-Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_basis`). A **cause** is `{source, since, detail, …}`, `source` one of `supersession`, `edition`, `deferred`, `reopened`, `dismissed`. An **obligation** is `{bundle_id, title, object_type, current_state, target, target_state, legs, reeval, causes, stored, strength, superseded_by?}`.
+Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_basis`). A **cause** is `{source, since, detail, …}`, `source` one of `supersession`, `edition`, `deferred`, `reopened`, `dismissed`, `corrected` (R27; N345). An **obligation** is `{bundle_id, title, object_type, current_state, target, target_state, legs, reeval, causes, stored, strength, superseded_by?}`.
 
 **reevaluations({target, viewer})** (`op=reevaluations`; admin, member, probe)
 - **R1** A target that is absent or that the viewer may not see is refused `NO_SUCH_BUNDLE`. With no target, every id any basis leg names is asked. It writes nothing.
-- **R2** Causes are facts about the target's own row: `supersession` when something supersedes it (`since` the latest superseder's `last_updated`; a superseding id the viewer may not see is null in `superseded_by`, and the cause stands); `deferred` or `dismissed` from its state; `reopened` when it is `open` with a prior state that is a disposition or `concluded`; `edition`, per leg, when the target's latest edition (the greater of the latest ratified and the document's authored edition, only above 1) exceeds the edition the leg names or the leg names none, carrying `cited_edition`, `latest_edition` and `latest_ratified_edition`. A dependent with no cause is not listed.
+- **R2** Causes are facts about the target's own row: `supersession` when something supersedes it (`since` the latest superseder's `last_updated`; a superseding id the viewer may not see is null in `superseded_by`, and the cause stands); `deferred` or `dismissed` from its state; `reopened` when it is `open` with a prior state that is a disposition or `concluded`; `corrected` by R27; `edition`, per leg, when the target's latest edition (the greater of the latest ratified and the document's authored edition, only above 1) exceeds the edition the leg names or the leg names none, carrying `cited_edition`, `latest_edition` and `latest_ratified_edition`. A dependent with no cause is not listed. *(not yet met: N345)*
 - **R3** A dependent the viewer may not see is withheld whole, with no count of what was withheld. A withdrawn leg is listed with `status: severed` and a sentence saying it supports nothing and is listed because the connection still informs a second look (DEC-70); every other leg is `confirmed` (`connections.edgeSevered`).
 - **R4** Each obligation carries `reeval: {flag: true, since, source}` from its first cause; `stored`, the dependent's own authored `reeval_pending` triple (null where unstated), beside it and never merged; and `strength`, the dependent's pair per axis with its depth bound (`strength.strengthOf`), unaltered.
 - **R5** Each leg is `{ord, role, grade, grade_axis, grade_source, target_edition, status, grade_authored, grade_why}`: a capture-axis letter on a leg whose target is not an inquiry is bounded by what the target earns (`inquiry.legCapped`), `grade_authored` the letter as written and `grade_why` null when not bounded. Both fields are always present.
@@ -51,6 +51,19 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 - **R16** `recordReevaluation({dependent, target, source, since, note, author})` records a member's re-evaluation, closing that cause for that dependent until the target moves again (a later `since`); the obligation read lists closed causes apart, with who and when. §5.4's cascade events (a deletion, an Information `source_status` change, a work product retracted or re-distributed, an annotation addressed with a substantive change) are causes like R2's. A machine is refused. *(not yet met: K102)*
 - **R17** A dependent at a published edition carries the cause `weakened` when its derived pair now reads weaker on an axis than that edition's frozen pair, naming both per axis; neither pair is altered. *(not yet met: layers.md layer 7's "a weaker derivation, a changed grade"; K102)*
 
+**The corrected side** (N345; DEC-84 item 7)
+- **R27**
+  - **The cause.** R2 gains one cause arm, derived on read: a dependent carries `corrected` when a live leg of it (R7's legs) rests on a side that `contradiction.tensionsOn` (its R27) marks `stale`:
+    - a leg naming the stale claim's or stance's inquiry;
+    - the stale leg's own inquiry;
+    - an inquiry with a leg on the stale leg's or extent's content row.
+
+    The cause carries the candidate, the reason, the member and `since`, the instant of the marking act. It closes as any cause does (R16). Nothing moves: no strength, conclusion or case changes (R19).
+  - **The listing.** `correctedDependents({after, limit, viewer})` answers each (dependent, candidate) so caused, in dependent then candidate order after `after`, at most `limit` (1–200, default 200), with `cursor`. A dependent the viewer may not see is withheld and not counted (R20).
+  - **The recovery read.** `changesOf` (R9) answers it too.
+
+  It writes nothing. *(not yet met: N345)*
+
 ## Private
 
 ### Uses
@@ -65,6 +78,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 - `inquiry`: `restsOnLive`, `supersededBy`, `legCapped`, `earned`, the `inquiry_basis` read contract, the `onRaised` registration (R2–R7).
 - `basis-versions`: the new version R15 writes.
 - `strength`: `strengthOf` (R4, R17).
+- `contradiction` (N345): `tensionsOn` (its R27), for R27.
 
 ### Invariants
 
@@ -83,6 +97,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 - `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.8 (the grade vocabulary R14 reads).
 - `docs/development/NOTIFICATIONS.md` (the queue and mute kinds on D-534's model).
 - DEC-12 (editions), DEC-19, DEC-69, DEC-70, DEC-72; `build/layers.md` layer 7.
+- DEC-84 item 7 and `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §9 ("telling the holders"): R27 (N345).
 - State Rules §5.4 is amended to say the obligation is derived on read, not a stored flag a cascade sets, with its four cascade events as causes and a member's recorded re-evaluation closing one cause for one dependent until the target moves again (R16, R18; K102, a change to the canon's text).
 
 ### Suggestions
@@ -91,7 +106,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 - **The stored triple** (R4) is read off the dependent's document, as `target_edition` already is, rather than off `bundles.reeval_*`, which `retrieval` takes as projection columns (K75 (3)).
 - **Callers.** `publication` calls `raise` at a new edition and reads R1 and R9 for which findings still stand; `conformance` and `consequences` fill R8 and read R9; `monitoring` raises §5.4's `source_status` cause (R16) and watches what R14 needs; `queue` renders R14 and holds the queue door that offers R15 in a named, joined project (REC-202, K83 (4)). `scheduler` runs R25's sweep (its R5).
 - **R14's order.** Its pins come first: D-580 (first-held order), D-579 (action legs, `actions`) and D-595 (suggested legs, `run-productions`).
-- Tests: `versionnotice.test.mjs`'s all-tables digest across R10–R11; C-80.1, C-80.2 and each C-10.1 arm get negative controls; R8 gets an arm where a listener throws and the act still lands.
+- Tests: `versionnotice.test.mjs`'s all-tables digest across R10–R11; C-80.1, C-80.2 and each C-10.1 arm get negative controls; R8 gets an arm where a listener throws and the act still lands. R27 (N345): a leg on a side marked stale gives the dependent `corrected`; a hidden dependent is withheld; a recorded re-evaluation closes the cause; no table changes across the read (R18: R27 writes no row).
 
 ## Open for Bob
 

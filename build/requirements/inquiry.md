@@ -1,6 +1,6 @@
 # inquiry — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #42, 2026-09-26 (P18), from a reading of the code; for Bob's approval (a product module, P17). Layer 6. Split by N55 (K83 (2)): `cite`, `sever`, `reinstate`, the retired-target predicate and their rows are `build/requirements/citation.md`'s, next in the order; the earned registry stays here (K83 (3)). Code today (measured on `tranche/T3` @ `35ea098`, after promotion's merge, unchanged at `1c205209`; `build/extraction/inquiry.md` has the table): `bio-plane/src/store.mjs` 1872–1907 (the superseded-by index), 4314–4318 (`RELEASE_ACK_MAX`), 4552–4790 (dispose), 5198–5252 (`#restsOnLive`), 12199–13169 (`divide`, `groundInquiry`), 13389–13433 and 15566–15636 (splice helpers), inside `#promoteChecks` 17551–17671, 17844–17899, 18037–18063 and `#promoteProjections` 18154–18351, 18618–18645, 18745–18760, 22686–22745 and 23166–23214 (leg content backfill), 26364–26744 (the earned registry), 31123–31191 (cycle guard, `basisFor`, `restingOn`), 31922–31995 (`#capturedAt`), 35552–35759 (`earnedBasis`), and the dispatch entries `basis`, `restson`, `earnedbasis`, `dispose`, `inquirydivide`, `inquiryground`. `bio-plane/checks/bio-checks.mjs` 55–75, 409–434 (`STATES.inquiry`), 2330–2364, 2406–2448, 2615–2931, 3276–4177 (the leg grammar), 14177–14222 (`leadLegFindings`), and rows C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8. `schema.mjs`: `inquiry_basis`, `inquiry_exclusions`, `inquiry_migration_replays`. `from`: `legacy-store` and `legacy-checks` (K64's pattern, K83 (1)); `index.mjs` holds only these ops' routing, gates and stamps, which stay with `control-plane` (K3). Not yet met: R31 (MK-5, K181); R19, R22, R26 and R39 hold (INQUIRY #3, T12; K389). Old-plan rows carried to `inquiry`: MK-5; REC-202, D-572 and D-592 are re-targeted to `queue`, `ai-runs` and `promotion` (K83 (4)), R19 reading the history `promotion`'s `reopen` writes (N56). Ids renumbered by the split (old → new): R1–R28 unchanged; R29, R30, R31 → citation R1, R2 (and R3), R4; R32 → R29, R33 → R30, R34 → R31, R35 → R32, R36 → R33, R37 → R34, R38 → R35, R39 → R36, R40 → R37, R41 → R38 (its C-33.15–C-33.19, C-33.39 and C-45.7–C-45.10 → citation R11).
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #42, 2026-09-26 (P18), from a reading of the code; for Bob's approval (a product module, P17). Layer 6. Split by N55 (K83 (2)): `cite`, `sever`, `reinstate`, the retired-target predicate and their rows are `build/requirements/citation.md`'s, next in the order; the earned registry stays here (K83 (3)). Code today (measured on `tranche/T3` @ `35ea098`, after promotion's merge, unchanged at `1c205209`; `build/extraction/inquiry.md` has the table): `bio-plane/src/store.mjs` 1872–1907 (the superseded-by index), 4314–4318 (`RELEASE_ACK_MAX`), 4552–4790 (dispose), 5198–5252 (`#restsOnLive`), 12199–13169 (`divide`, `groundInquiry`), 13389–13433 and 15566–15636 (splice helpers), inside `#promoteChecks` 17551–17671, 17844–17899, 18037–18063 and `#promoteProjections` 18154–18351, 18618–18645, 18745–18760, 22686–22745 and 23166–23214 (leg content backfill), 26364–26744 (the earned registry), 31123–31191 (cycle guard, `basisFor`, `restingOn`), 31922–31995 (`#capturedAt`), 35552–35759 (`earnedBasis`), and the dispatch entries `basis`, `restson`, `earnedbasis`, `dispose`, `inquirydivide`, `inquiryground`. `bio-plane/checks/bio-checks.mjs` 55–75, 409–434 (`STATES.inquiry`), 2330–2364, 2406–2448, 2615–2931, 3276–4177 (the leg grammar), 14177–14222 (`leadLegFindings`), and rows C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8. `schema.mjs`: `inquiry_basis`, `inquiry_exclusions`, `inquiry_migration_replays`. `from`: `legacy-store` and `legacy-checks` (K64's pattern, K83 (1)); `index.mjs` holds only these ops' routing, gates and stamps, which stay with `control-plane` (K3). Not yet met: R31 (MK-5, K181); R19, R22, R26 and R39 hold (INQUIRY #3, T12; K389). Old-plan rows carried to `inquiry`: MK-5; REC-202, D-572 and D-592 are re-targeted to `queue`, `ai-runs` and `promotion` (K83 (4)), R19 reading the history `promotion`'s `reopen` writes (N56). Ids renumbered by the split (old → new): R1–R28 unchanged; R29, R30, R31 → citation R1, R2 (and R3), R4; R32 → R29, R33 → R30, R34 → R31, R35 → R32, R36 → R33, R37 → R34, R38 → R35, R39 → R36, R40 → R37, R41 → R38 (its C-33.15–C-33.19, C-33.39 and C-45.7–C-45.10 → citation R11). N345's contradiction part folded for T15 by a worker for BOB #68, 2026-09-30 (K455, K456, K459).
 
 **Size (P6).** About 4,320 lines move (about 1,940 without comment-only and blank lines): `store.mjs` 2,748 (1,343 code), `bio-checks.mjs` 1,390 (560), `schema.mjs` 185 (37); the check rows are not counted. Still past the 4,000 mark after the split (K83 (2)): `citation` (about 1,480 lines, 680 of code) is its own module next in the order. One session reads the rest with its uses' public parts, as K74 accepted for `extraction`: well under half of it is code. It counts the earned registry here (K83 (3)).
 
@@ -27,8 +27,8 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - **R10** `deriveInquiryTitle` is the question's first non-empty line, whitespace folded, cut at a word under 120 characters with an ellipsis, null when empty; `inquiryQuestionOf` answers the `## Question` section or `''`.
 
 **Its share of a promotion** (a check and a projection registered with `promotion`, its R39; K31)
-- **R11** Check, for an inquiry that is not a replay: R2–R9 over the document (`BASIS_REFUSED` with each finding, its code and translation), `content.citationRefusals` over the legs (content R27), an unknown `subject_entity` (`SUBJECT_REFUSED`, C-2.8, through `entities.has`), a supersedes target that is the bundle itself or unknown (`SUPERSESSION_REFUSED`), a child whose parent does not list it or whose siblings differ from the parent's list (`NO_SIBLING_DISCLOSURE`), a leg resting on the bundle itself (`SELF_BASIS`, C-33.22) or closing a cycle through inquiry legs (`BASIS_CYCLE`, C-33.23, naming the whole path).
-- **R12** Projection, in the promotion's transaction: `inquiry_basis` re-derived whole from `basis[]` (never from a payload field); each document leg's content row is the one it names, else the row it held before at the same extent (and capture, when it names one), else `content.resolveCitation`'s, the answer listing what was named, carried or minted; `inquiry_exclusions` re-derived from `completeness_excluded[]`; the superseded-by index rewritten for every target the revision added or dropped; the subject entity and leg count recorded; a creation admitted as a migration replay records its capture and promotion key (REC-173).
+- **R11** Check, for an inquiry that is not a replay: R2–R9 over the document (`BASIS_REFUSED` with each finding, its code and translation), `content.citationRefusals` over the legs (content R27), an unknown `subject_entity` (`SUBJECT_REFUSED`, C-2.8, through `entities.has`), a supersedes target that is the bundle itself or unknown (`SUPERSESSION_REFUSED`), a child whose parent does not list it or whose siblings differ from the parent's list (`NO_SIBLING_DISCLOSURE`), a leg resting on the bundle itself (`SELF_BASIS`, C-33.22) or closing a cycle through inquiry legs (`BASIS_CYCLE`, C-33.23, naming the whole path); R47's arm over the document (inside `BASIS_REFUSED`, each finding with its code and translation); and a candidate another inquiry already names, `CANDIDATE_ALREADY_TAKEN_UP` (C-2.17, naming that inquiry), so that one candidate has one contradiction inquiry. *(not yet met: N345)*
+- **R12** Projection, in the promotion's transaction: `inquiry_basis` re-derived whole from `basis[]` (never from a payload field); each document leg's content row is the one it names, else the row it held before at the same extent (and capture, when it names one), else `content.resolveCitation`'s, the answer listing what was named, carried or minted; `inquiry_exclusions` re-derived from `completeness_excluded[]`; the superseded-by index rewritten for every target the revision added or dropped; the subject entity and leg count recorded; the contradiction link, resolution and `explores` recorded (R48); a creation admitted as a migration replay records its capture and promotion key (REC-173). *(not yet met: N345)*
 
 **The earned registry: earned(subjectEntity, targetIds, contentIds?), earnedForDoc(fm, legs), legCapped(stated, earned, targetId), earnedBasis({id, targets, viewer})** (`op=earnedbasis`)
 - **R13** `earned` answers, per target, the connection grade earned (the strongest A–C resolution of its captures to the subject, by `entities.strongestByCapture`; a D resolution earns nothing), the capture ceiling (`EARNED_CAPTURE_CEILING`, bounded by `text-chain.captureBound` over machine transcriptions, undetermined when every transcription is unmeasured), and for a member's authored observation the testimony grade D with its capture axis stated as not applicable. Each carries a `why`. With content ids it adds each row's standing (`content.standings`, `connections.portionGrades`); without, the answer is unchanged.
@@ -69,6 +69,41 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 **actNoBasis(detail, extra?) → refusal** (N186, D-484; a module-level function)
 - **R45** The one site that mints `NO_BASIS` (C-33.40): it answers `{ok: false, reason: "NO_BASIS", code: "NO_BASIS", check, translation, detail}`, the row the catalogue's. `extra` adds the caller's fields and never replaces these. It is what this module's R27 and `basis-versions`' R17 answer for nothing to rest on. It writes nothing and never throws.
 
+#### The contradiction inquiry (N345)
+
+**The vocabulary and its helpers: CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, RESOLUTION_KINDS, DISSOLVED_BY, NORM_CANONS, resolutionFamily(kind), resolutionLines(resolution)** Pure; never throw. (N345; DEC-76 items 1 and 3, DEC-84 item 3)
+- **R46** The frozen vocabularies:
+  - `CONTRADICTION_COORDINATES`: `time_or_occasion`, `scope`, `meaning`, `observer_or_method`, `subject`. These are DEC-77's clarifier choices.
+  - `PLURALITY_DIFFERENCES`: `scope`, `time_or_occasion`, `standard`, `evidence_set`, `weighing`. These are DEC-84 item 3's named differences between two projects' conclusions.
+  - `DISSOLVED_BY`: the union of both lists, plus `precision` and `opinion`.
+  - `NORM_CANONS`: `higher_over_lower`, `later_over_earlier`, `specific_over_general`, `harmonization`, `unreconciled`.
+  - `RESOLUTION_KINDS`, with `resolutionFamily` answering each kind's family and null for anything else:
+    - `dissolved` (family DISSOLVED)
+    - `misquote`, `transcription_or_reading_error`, `superseded_version` and `corrected` (the last with its category not stated) (family CORRECTED)
+    - `double_speak_or_reversal`, `obligation_against_act`, `conflict_of_norms` and `irreconcilable` (family GENUINE)
+
+  `resolutionLines` answers the frontmatter lines of a resolution in one fixed order, frontmatter-safe (`basis-versions` R5's normalising), for `contradiction` to write. These are the one list of each: `contradiction`, `affordances` and `queue` read them from here. *(not yet met: N345)*
+
+**The grammar's arm** (C-2.11–C-2.16; judged by R11 as C-2.8's entry requirements are)
+- **R47**
+  - **The link.** A **contradiction inquiry** is one whose document carries `contradiction: {candidate}`, where `candidate` is 64 lowercase hex (`contradiction` R15's id). Anything else is `CONTRADICTION_LINK_MALFORMED` (C-2.11).
+  - **Where a resolution may appear.** A document that is not a contradiction inquiry and carries `resolution` is `RESOLUTION_WITHOUT_CONTRADICTION` (C-2.12).
+  - **Concluding.** A contradiction inquiry at `concluded` carries `resolution: {kind, coordinates?, qualifiers?, wrong_side?, reason?, canon?}`. With none, it is `RESOLUTION_MISSING` (C-2.13), so no door concludes one without its kind. A kind outside R46 is `RESOLUTION_KIND_UNKNOWN` (C-2.14).
+  - **What each kind requires.** Each missing or ill-formed field is `RESOLUTION_INCOMPLETE` (C-2.15), naming the field:
+    - `dissolved` names one or more distinct `coordinates` from `DISSOLVED_BY`.
+    - A CORRECTED kind names `wrong_side` (`a` or `b`) and a non-empty `reason`.
+    - `conflict_of_norms` names a `canon` from `NORM_CANONS`.
+    - `qualifiers`, when present, is `{a?, b?}`, each at most 200 characters.
+  - **Other states.** `resolution` is read only while the document is `concluded`. It is kept, never read, while the document is at any other state, so that reopening (R1) needs no edit.
+  - **Sub-inquiries.** A document carrying `explores` names exactly one of `coordinate` (from `DISSOLVED_BY`), `canon` (from `NORM_CANONS`) or `hypothesis` (non-empty, at most 500 characters). Anything else is `EXPLORES_MALFORMED` (C-2.16). *(not yet met: N345)*
+
+**contradictionLink(id), inquiryOfCandidate(candidate)** (reads for `contradiction`)
+- **R48** The reads R47's projection needs.
+  - `contradictionLink` answers the inquiry's recorded `{candidate, resolution, explores}` as its latest promotion projected them (R12), with `resolution` null unless it is `concluded`, or null for a plain inquiry.
+  - `inquiryOfCandidate` answers the one inquiry whose document names that candidate, or null.
+
+  Neither read is gated, and both are for in-process callers (R16's terms). Neither throws. *(not yet met: N345)*
+
 ## Private
 
 ### Uses
@@ -96,9 +131,21 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - **R33** Every act and read naming an inquiry or project the viewer may not see answers exactly as an absent one.
 - **R34** A leg that cuts against travels every path a supporting leg does: apportionment, projection, grounds (Invariant 7).
 - **R35** A published case member cannot be divided, re-grouped or set down; the route is reopen (DEC-12, DEC-72).
-- **R36** `inquiry_basis`, `inquiry_exclusions`, `inquiry_migration_replays` and `inquiry_member_agents` carry `bundle_id` and are declared to record-core's purge (K23); the columns this module writes on `bundles` today (`inquiry_basis_count`, `inquiry_subject_entity`, `inquiry_superseded_by`) move to a table of its own keyed by `bundle_id` (K75 (3)).
+- **R36** `inquiry_basis`, `inquiry_exclusions`, `inquiry_migration_replays` and `inquiry_member_agents` carry `bundle_id` and are declared to record-core's purge (K23); the columns this module writes on `bundles` today (`inquiry_basis_count`, `inquiry_subject_entity`, `inquiry_superseded_by`) move to a table of its own keyed by `bundle_id` (K75 (3)); the table that holds R48's projection is keyed by `bundle_id` and declared to purge. *(not yet met: N345)*
 - **R37** No place is named in this module's behaviour or outward text.
-- **R38** Each check moves here as an invariant with its test (K6): C-2.8 and C-21.2 as the grammar uses them, C-6.1's supersession and division arms, C-6.3, C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8 (cite's rows are `citation`'s, its R11).
+- **R38** Each check moves here as an invariant with its test (K6): C-2.8 and C-21.2 as the grammar uses them, C-6.1's supersession and division arms, C-6.3, C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8 (cite's rows are `citation`'s, its R11). C-2.11–C-2.17 are held in this module's own table (DEC-49; K343's pattern in the C-2 family), this module's first `checks.mjs`; C-2.1–C-2.10 stay the catalogue's. Promotion stamps them. *(not yet met: N345)*
+
+Rows C-2.11–C-2.17 (R38; N345), with their translations:
+
+| row | code | translation |
+|---|---|---|
+| C-2.11 | `CONTRADICTION_LINK_MALFORMED` | "A contradiction inquiry names the candidate it was taken up from by that candidate's id, and this document's link is not one. Take the candidate up again from where it is shown. Nothing was written." |
+| C-2.12 | `RESOLUTION_WITHOUT_CONTRADICTION` | "Only an inquiry taken up from a contradiction records what kind of contradiction it turned out to be, and this one was not taken up from one. Remove the resolution, or take the contradiction up first. Nothing was written." |
+| C-2.13 | `RESOLUTION_MISSING` | "A contradiction inquiry is concluded by saying what the conflict turned out to be: how the two sides differ, which one is wrong, or that the conflict is real. This conclusion does not say. Name its kind. Nothing was written." |
+| C-2.14 | `RESOLUTION_KIND_UNKNOWN` | "That is not one of the kinds a contradiction can be resolved as. The kinds are listed with the question. Nothing was written." |
+| C-2.15 | `RESOLUTION_INCOMPLETE` | "This kind of resolution needs one more thing to be complete: the respect in which the sides differ, which side is wrong and why, or the rule that reconciles them. The missing part is named. Nothing was written." |
+| C-2.16 | `EXPLORES_MALFORMED` | "A question that explores a contradiction names one thing it explores: one respect in which the sides may differ, one rule that may reconcile them, or one hypothesis. This one names none, several, or one the record does not know. Nothing was written." |
+| C-2.17 | `CANDIDATE_ALREADY_TAKEN_UP` | "That contradiction has already been taken up as another question, which is named. Work on it there, so that one conflict has one place where it is resolved. Nothing was written." |
 
 ### Satisfies
 
@@ -110,6 +157,7 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - `docs/architecture/BIO_Declared_Bias_v0_1.md`, "a HUNCH is temporary declared bias" (DEC-15).
 - `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §14.4 (the leg and its part; REC-220's pin).
 - DEC-12, DEC-18, DEC-21, DEC-28, DEC-29, DEC-30, DEC-32, DEC-72.
+- N345 (R46–R48, R11's and R12's contradiction arms): `BIO_Case_Making_v0_1.md` §CONTRADICTION, "RULED 2026-09-29 (DEC-76)"; DEC-76 items 2 and 3; DEC-84 items 3, 4 and 16; `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §8, §9 and §12.
 
 ### Suggestions
 
@@ -118,6 +166,7 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - **What `citation` reaches (next in the order).** `earned` (R13) to fill a leg's grade, `checkLegExtentGrammar` (R5) to judge a named part before the write, `BASIS_ROLES` (R4) for the role; the legs it writes are judged and projected by R11 and R12 like any other. `EDGE_REASON_MAX` (160) is held by both, each its own copy (K57).
 - **Callers' obligations.** `op=basis` and `op=restson` stay in-process: the control plane routes neither (R16). `DISPOSITIONS` is progressions' one list (its R35), re-exported here; `affordances` re-exports it from here (K78 (3); K389).
 - Tests: every refusal gets a negative control; R12's carry-forward and R28's carry rule get over-strictness arms (a re-promotion keeps each leg's content row and each unchanged group's stamp byte for byte).
+- Tests for N345: each C-2.11–C-2.17 finding gets a negative control; a contradiction inquiry concluded through `basis-versions`' `conclude` without a resolution is refused C-2.13 (the "another door" arm); reopening a resolved contradiction inquiry is admitted with its resolution kept, and `contradictionLink` answers `resolution: null`; a second inquiry naming a held candidate gets C-2.17.
 
 ## Open for Bob
 
