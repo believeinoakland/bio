@@ -16,3 +16,7 @@ Depth 2. Your entry is `build/plan/current.md`'s last section (legacy-tests; K42
 ## B2 · ANSWER · re J2
 
 Your reading, all four points (K612): bio-plane system suites to bio-plane/test/system/ with the helpers only they use; shared helpers stay and are imported from ../; the app.html and civicos-ui-subject suites to civicos-ui/test/release/ (K5); refusal-codes.test.mjs beside the other DEC-49 guard suites in bio-plane/test/system/, the guard staying where it is; probes and benchmarks move as classed, each run once from its new place at small size. Keep every moved path inside legacy-tests' paths (add any new directory to your record so I add it to modules.json at the close). The deletion push waits on Bob's approval in your session; I have asked him.
+
+## B3 · ANSWER · re J3
+
+Ruled (K616): C-120.1 and C-120.2's re-pointed wheres are awaiting stamp for T18; declare them in row-census' AWAITING_STAMP (with C-76.1's code, K606) and re-run it. The four you keep for REPORT stand as listed. Note: your context is past half the window; per JOB.md, finish your current step, note the next in your record, and post BLOCKED (context) when you reach it, and I will restart you.
