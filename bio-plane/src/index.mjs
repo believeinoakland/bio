@@ -39,7 +39,7 @@ import { GOVERNOR_OPS, governorOpResponse } from "./host-governor/index.mjs";
 import { capturePublicOp } from "./capture/doorbell.mjs";
 import { captureOp } from "./capture/ops.mjs";
 import { monitorOp } from "./monitoring/index.mjs";
-import { pdfStructureOp, acquireReadingOp } from "./extraction/ops.mjs";
+import { EXTRACTION_OPS, extractionOp, acquireReadingOp } from "./extraction/ops.mjs";
 import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
 /* N348 (control-plane R35): the Durable Object class is control-plane's, which starts instance-setup and routes its ops
    inside the store's one frame. */
@@ -605,8 +605,7 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       if (c) return c;
     }
 
-    /* R31–R35: op=pdfstructure is extraction's; the control plane stamps who asks. */
-    if (op === "pdfstructure") return pdfStructureOp(url, env, env.STORE.get(env.STORE.idFromName(storeName)),
+    if (EXTRACTION_OPS.includes(op)) return extractionOp(op, url, env, () => env.STORE.get(env.STORE.idFromName(storeName)),
       { json, storeSilent, storeRefusal, doAnswer, storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps,
         viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`,
         author: viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`, storeName });
