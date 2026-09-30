@@ -2,8 +2,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0, inquiryMd } from "./world.mjs";
-import { SURFACE_RUN_CHECKS } from "../../../src/ai-runs/index.mjs";
-import { AI_RUN_CHECKS } from "../../../src/airun.mjs";
+import { SURFACE_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
+import { AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 
 const HIDDEN = "PROJ-2026-0009";

@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0, sha, inquiryMd } from "./world.mjs";
-import { RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS, OBSERVATION_COVERAGE_UNDETERMINED } from "../../../src/airun.mjs";
+import { RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS, OBSERVATION_COVERAGE_UNDETERMINED } from "../../../src/run-rules/index.mjs";
 
 const CAP = "c".repeat(64);
 const HIDDEN = "PROJ-2026-0009", INQ2 = "INQ-2026-0002";

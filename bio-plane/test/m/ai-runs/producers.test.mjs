@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, ORG, T0 } from "./world.mjs";
-import { AI_RUN_CHECKS } from "../../../src/airun.mjs";
+import { AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";

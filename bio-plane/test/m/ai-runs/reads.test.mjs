@@ -4,8 +4,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0 } from "./world.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS, OBSERVATION_STATES, OBSERVATION_LEVELS, OBSERVATION_COVERAGE,
-         OBSERVATION_COVERAGE_UNDETERMINED } from "../../../src/airun.mjs";
-import { AI_RUNS_CONTEXT_CHECKS } from "../../../src/ai-runs/index.mjs";
+         OBSERVATION_COVERAGE_UNDETERMINED } from "../../../src/run-rules/index.mjs";
+import { AI_RUNS_CONTEXT_CHECKS } from "../../../src/run-rules/index.mjs";
 
 const CAP = "b".repeat(64);
 const INQ2 = "INQ-2026-0002", HIDDEN = "PROJ-2026-0009", INFO = "INF-2026-0001";

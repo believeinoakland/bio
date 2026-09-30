@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0 } from "./world.mjs";
-import { hiddenRuns, DEPLOYMENT_SEQUENCE, GATE_ADDRESS, DEPLOYED_MODES, AI_RUN_OPEN_CHECKS } from "../../../src/ai-runs/index.mjs";
+import { hiddenRuns } from "../../../src/ai-runs/index.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
 
@@ -148,15 +148,4 @@ test("R43: onRunOpened — one registration per module, a malformed or second on
   /* the next open is heard again, once each */
   await w.runs.open(OPEN({ run: "R2" }));
   assert.deepEqual(heard.slice(3).map(([m, e]) => [m, e.run]), [["monitoring", "R2"], ["scheduler", "R2"], ["legacy-store", "R2"]]);
-});
-
-test("R44: DEPLOYMENT_SEQUENCE is the one deployment order — order check, investigate, extract; its first member the first deployed mode; enforced by C-109.1 (R40's refusal); GATE_ADDRESS naming agent-worker's gate", () => {
-  assert.deepEqual(DEPLOYMENT_SEQUENCE.order, ["check", "investigate", "extract"]);
-  assert.equal(DEPLOYMENT_SEQUENCE.first_deployed_mode, DEPLOYMENT_SEQUENCE.order[0]);
-  assert.deepEqual(DEPLOYMENT_SEQUENCE.enforced_by, ["C-109.1"]);
-  assert.equal(AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check, DEPLOYMENT_SEQUENCE.enforced_by[0]);
-  assert.equal(DEPLOYMENT_SEQUENCE.gate, GATE_ADDRESS);
-  assert.deepEqual([GATE_ADDRESS.file, GATE_ADDRESS.row, GATE_ADDRESS.modes_export, GATE_ADDRESS.table_export],
-                   ["agent-worker/src/harness.mjs", "gate-mode", "MODES", "CONTROL_FLOW"]);
-  assert.deepEqual(DEPLOYED_MODES, [DEPLOYMENT_SEQUENCE.first_deployed_mode]);
 });

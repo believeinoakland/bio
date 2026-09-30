@@ -1,9 +1,9 @@
-/* ai-runs R45 (N293): the ceiling on a run's `state` — the pure check, and its refusal at the open and at the tick. */
+/* ai-runs R45 (N293): the ceiling on a run's `state` refused at the open and at the tick (the figure and its pure check are
+   run-rules' R10, tested there). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG } from "./world.mjs";
-import { checkRunState, AI_RUN_STATE_MAX_BYTES as FROM_RULES, AI_RUN_CHECKS } from "../../../src/airun.mjs";
-import { AI_RUN_STATE_MAX_BYTES, AI_RUNS_CHECKS } from "../../../src/ai-runs/index.mjs";
+import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
 const LIMIT = 262144;
 const ROW = AI_RUNS_CHECKS.AI_RUN_STATE_TOO_LARGE;
@@ -17,29 +17,6 @@ function tooLarge(r, state) {
   assert.deepEqual([r.code, r.check, r.translation], ["AI_RUN_STATE_TOO_LARGE", "C-22.18", ROW.translation], JSON.stringify(r).slice(0, 200));
   assert.deepEqual([r.bytes, r.limit], [bytesOf(state), LIMIT]);
 }
-
-test("R45: AI_RUN_STATE_MAX_BYTES is 262,144; checkRunState measures the UTF-8 length of the state's JSON, passes it at or under the ceiling and refuses it over, naming bytes and limit (C-22.18); an absent or null state is not measured", () => {
-  assert.equal(AI_RUN_STATE_MAX_BYTES, LIMIT);
-  assert.equal(FROM_RULES, LIMIT);
-  assert.equal(AI_RUN_CHECKS.AI_RUN_STATE_TOO_LARGE, ROW);
-  for (const s of [null, undefined]) assert.equal(checkRunState(s), null);
-  for (const s of [{}, [], 0, "", false, sized(LIMIT), wide(LIMIT), ["x".repeat(LIMIT - 4)], "x".repeat(LIMIT - 2)]) {
-    assert.ok(bytesOf(s) <= LIMIT);
-    assert.equal(checkRunState(s), null, `${bytesOf(s)} bytes`);
-  }
-  for (const s of [sized(LIMIT + 1), wide(LIMIT + 1), wide(LIMIT + 3), ["x".repeat(LIMIT - 3)], "x".repeat(LIMIT - 1),
-                   { deep: { list: Array.from({ length: 30000 }, (_, i) => `item ${i}`) } }]) {
-    assert.ok(bytesOf(s) > LIMIT);
-    const r = checkRunState(s);
-    assert.equal(r.ok, false);
-    tooLarge(r, s);
-    assert.match(r.detail, new RegExp(`^the run's state is ${bytesOf(s)} bytes as JSON, over the ${LIMIT}`));
-  }
-  /* bytes, not characters: under the ceiling in UTF-16 units and over it in UTF-8 */
-  const w = wide(LIMIT + 1);
-  assert.ok(JSON.stringify(w).length < LIMIT);
-  tooLarge(checkRunState(w), w);
-});
 
 test("R45: the open refuses a state over the ceiling after R3 over the bounds and before the id is asked, with nothing written; a state at the ceiling opens and is stored whole", async () => {
   const w = world();

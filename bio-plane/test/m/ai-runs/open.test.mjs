@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0 } from "./world.mjs";
-import { AI_RUNS_CHECKS, DEPLOYED_MODES, DEPLOYMENT_SEQUENCE } from "../../../src/ai-runs/index.mjs";
+import { AI_RUNS_CHECKS, DEPLOYED_MODES, DEPLOYMENT_SEQUENCE } from "../../../src/run-rules/index.mjs";
 
 const HIDDEN = "PROJ-2026-0002", OPENP = "PROJ-2026-0003";
 

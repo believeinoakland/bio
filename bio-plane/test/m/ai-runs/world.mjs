@@ -72,7 +72,11 @@ function cursor(rows) {
   return c;
 }
 
-export function world({ env = {} } = {}) {
+/** inquiry's R49 as this module reaches it (K674): a stub at the interface, answering from `migrated` by question id,
+ *  null otherwise; inquiry builds the real one in this layer. */
+export const inquiryStub = (migrated = {}) => ({ migratedSurfacing: (id) => migrated[id] ?? null });
+
+export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undefined } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) {
     const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
@@ -102,7 +106,7 @@ export function world({ env = {} } = {}) {
   connectionsOf(ctx, { env }).migrate();
   const bias = biasOf(ctx, { env });
   retrievalOf(ctx).migrate();
-  const runs = aiRunsOf(ctx, env);
+  const runs = aiRunsOf(ctx, env, { inquiry, ...(deployedModes ? { deployedModes } : {}) });
   runs.migrate();
   let k = 0;
   const w = {
