@@ -85,7 +85,7 @@ function bundleGate(col, viewer) {
 }
 
 /* ======================================================================= *
- * CAPTURE GRADE, FROM THE ROUTE (R24–R27; D-177, D-693, D-709; DEC-75: capture grade is about the fetch path).
+ * CAPTURE GRADE, FROM THE ROUTE (R24–R27, R51; D-177, D-693, D-709, N364; DEC-75: capture grade is about the fetch path).
  * ======================================================================= */
 
 /** The receipt `via` of a capture read through an archive replay (D-96's split; ARCHIVE-FALLBACK.md). */
@@ -99,6 +99,12 @@ export const ARCHIVE_VIA = "archive.org";
  *  the ceiling were ever the weakest letter. The one definition, exported for every reader (op=acquire's stamp on
  *  an archive capture, the earned registry). */
 export const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
+
+/** R51 · N364 (Bob, K509 (3)): the receipt `via` of material handed to the group through the doorbell and brought in
+ *  by a member's pull (`capture.pullKnock`, its R65), at the address `knock:<knockId>`. The material was RECEIVED,
+ *  never fetched: no instance asked any address for it, so it earns no fetched letter. The one spelling, exported
+ *  for the writer. */
+export const DOORBELL_VIA = "doorbell";
 
 /* ======================================================================= *
  * THE CHAIN (R19) AND THE ROUTE FINDING (R23), both pure.
@@ -1286,7 +1292,7 @@ class Provenance {
   }
 
   /* ===================================================================== *
-   * R24–R27: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
+   * R24–R27, R51: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
    * ===================================================================== */
 
   /** `captureGrade(captureSha) → {grade, route, determined, basis, why}`. The route is the record's own fact about
@@ -1316,6 +1322,24 @@ class Provenance {
                why: `this instance fetched these bytes only through an archive replay (${ARCHIVE_VIA}), never from `
                   + `their publisher: one more party stands between the record and the publisher, so their capture `
                   + `grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture` };
+    /* R51 · N364 (K509 (3)): received through the doorbell, not fetched. A fetched route above, when one was also
+       recorded, is measured and answers first; with none, the bytes earn no fetched letter: a leg on them keeps its
+       author's letter under the ceiling, stated as authored. What the receipt DOES prove is existence: the plane
+       held these bytes at the pull's instant, by its own receipt at the knock's address (the chain of custody from
+       the knock's receipt), so the earliest such receipt is named. */
+    if (vias.includes(DOORBELL_VIA)) {
+      const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
+                            WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
+                          s, DOORBELL_VIA);
+      return { grade: null, route: "doorbell", determined: false, basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+               ceiling: EARNED_CAPTURE_CEILING,
+               received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
+               why: "these bytes were handed to the group through the doorbell and brought in by a member, never "
+                  + "fetched from an address, so no capture grade is measured from how they were fetched. A leg on "
+                  + `them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as `
+                  + `authored. That the record held them at ${r.first_retrieved} is proven by this plane's own `
+                  + `receipt at ${r.address}` };
+    }
     /* R26 · D-709: no recorded route at all: stated, never guessed. A leg on it keeps its author's letter, under the
        ceiling, and that letter is the author's account, not a measurement. */
     if (!vias.length)
