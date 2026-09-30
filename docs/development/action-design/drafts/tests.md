@@ -26,6 +26,7 @@
 | R18 | starting a chosen option creates an action with the option's addressee, dated clock entries with bases, `rests_on` legs, `plan` and `option`, and `contact`; the plan records the link | an unchosen option refuses `OPTION_NOT_CHOSEN`; `breach: true` on an inquiry-only subject is refused by `actions` R8 |
 | R19 | each check appears with its reason (past date, unbranched outcome, dead subject, outward option on hypothetical subjects, superseded `enforces`) and changes nothing | a plan with none of these answers no checks |
 | R19b | a scenario whose outward options have no branch for a hostile response is flagged | adding a `not_met` branch to a refusal clears it |
+| R29 | choosing a dated option shows default reminders the member can change; the schedule reaches the action R18 creates and fires as asked; the response offers another reminder or none; an overdue date notifies once; a nearing date changes display only | nothing reminds when the member set none; a machine setting reminders refuses; no outside channel is used |
 | R20 | a member closes with a reason; the plan stays readable; its subjects join a new plan | no reason refuses; closing twice refuses `PLAN_CLOSED`; a machine refuses; nothing closes a plan on its own (advance the clock a year: still open) |
 | R21 | an owner sets `work_kinds: ["reporting"]`; `planRead` shows it; a proposal made with and without it lands identically in R11's checks | an unknown kind refuses `WORK_KIND_UNKNOWN`; a machine refuses |
 | R22 | every `NO_SUCH_PLAN` site answers through `noSuchPlan`, one code and sentence | an existing visible plan never answers it |
@@ -68,5 +69,6 @@
 | change | test | negative control |
 | --- | --- | --- |
 | scheduler `deadline-recheck` | a pending clock entry past its date is marked overdue within one cadence, and escalation is asked | an entry dated today stays pending |
-| queue kinds | one item each for an overdue clock (CONDITION), a proposed stage (OBLIGATION), a due checkpoint (OBLIGATION); each follows DEC-10, DEC-69 and DEC-70 (informs once, dispositionable, ages; an overdue clock re-notifies only at its stage's interval) | a checkpoint judged before its item is read removes the item |
-| litigation-hold reminder | a received entry marked `pressure` of kind `legal` yields one OBLIGATION for an administrator; the item changes nothing by itself | kind `retaliation` yields none |
+| queue kinds | a reminder the member asked for fires as asked and offers another or none; an overdue clock (CONDITION) notifies once; a proposed stage and a due checkpoint (OBLIGATIONs) appear once; none repeats unless the member asks | an unrequested 'due within N days' produces no item |
+| litigation-hold reminder | a `legal` pressure entry yields one OBLIGATION for an administrator; it stays open until cleared, and responding may clear it | kind `retaliation` yields none; the item is not repeated unless asked |
+| template library | a member keeps an approved draft as a group template; `filingPrepare` fills it for the kind; an assistant draft is a proposal until adopted | a machine calling `templateSave` refuses |
