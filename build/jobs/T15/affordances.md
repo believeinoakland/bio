@@ -37,3 +37,43 @@ Three readings I am building on; each is my best reading, and I carry on with it
 3. **`comparisonfacts` (conformance R21, CONFORMANCE #4's handover).** It is a read. Conformance's reads carry no `NEEDS` row (`CONFORMANCE_READS`), so under R12 it belongs in none of affordances' registries: `op=projectstage`'s precedent, K424. **Best reading:** no row, with a test that it is named nowhere and leaves nothing unaccounted as an ungated read. This holds only if control-plane gives it no `NEEDS` row. If CONTROL-PLANE #6 gives it one, it needs a `NON_ACTS` row ("read: …"). Please confirm which, since the two jobs must agree.
 
 Also noted, not asked: the R7 reads (`contradictioncandidates`, `contradictiontensions`, `contradictionfacts`, `contradictionnotices`, `contradictionresponses`, `publishtensions`) get `NON_ACTS` rows as R7 says. So control-plane must give each a `NEEDS` row (as `contradictionpairs: null` has), or R12 reads them `stale`.
+
+## J2 · REPORT
+
+Found outside affordances, against each module's requirements:
+
+1. **control-plane (layer 11, beside me): the rows my lists now need.** Every N345 op is in affordances' registries, so `unaccounted` (R12) is empty only when control-plane's table carries:
+   - the eight writes as mutating and gated: `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionresolve`, `contradictionrecommend`, `contradictionoptin`, `contradictionrespond`, `resolutiondefect`;
+   - the six reads as gated (a `NEEDS` row, `contradictionpairs: null`'s pattern): `contradictioncandidates`, `contradictiontensions`, `contradictionfacts`, `contradictionnotices`, `contradictionresponses`, `publishtensions`;
+   - `comparisonfacts` with no `NEEDS` row (J1 item 3).
+
+   `contradictionresolve` also needs session reach (`SESSION_OPS`) and a `NEEDS` capability. Until then `op=affordances` decorates it `mode: "machine"`, `needs: null`.
+
+2. **legacy-tests: seven suites newly red on this branch**, each green on `tranche/T15`.
+   - **Go green once control-plane's rows land:**
+     - `test/rung-ladder.test.mjs`: BACKWARD, and `unaccounted`'s agreement.
+     - `test/affordances.test.mjs`:
+       - "NON_ACTS names only ops that exist in NEEDS";
+       - "every published act is a real op in the OPS table";
+       - "every published act carries a NEEDS entry";
+       - the `[contribute, session]` list.
+     - `test/skillpack.test.mjs` A9 (one act at `mode: machine`).
+     - `test/skillpack.control.mjs`.
+   - **Pins legacy-tests re-anchors:**
+     - `test/affordances.test.mjs`: "thirty acts" is now 31.
+     - `test/rung-ladder.test.mjs`: "EXACTLY 170" is now 178, with control-plane's eight.
+     - `test/rung-ladder.test.mjs`: "NO UNBACKED CLAIM" scans source for the five new `reasoned` ops' codes. They are backed, and driven at contradiction's and entities' interfaces in `test/m/affordances/contradiction.test.mjs`.
+     - `test/d311-roster-affordances.test.mjs`: the FIXTURE GUARD wants a drive for `contradictionresolve`, and the suite then throws at :373. It is driven in `test/m/affordances/plane.test.mjs` R20 through the durable object's route, answering `MACHINE_CANNOT_ACT_ON_CANDIDATE`.
+     - `test/d311.control.mjs`: red for the same drive.
+   - 15 other files red here are red on the base too.
+
+3. **affordances' own requirements, wording (BOB's):**
+   - R27 says N345's three make **59** `undetermined` ops (K481: 56 → 59). The table held 57 before them, the 57 R27's own test names (T8 layer 11's `actionriskpropose` is the one the count missed), so it is **60** now.
+   - R7 names `contradictionmeasures` (J1 item 1).
+
+4. **contradiction R36 against affordances R18: a residue.**
+   - `contradiction.resolve` refuses `NOT_A_CONTRADICTION_INQUIRY` to a viewer who may see the inquiry but not both of its candidate's sides (`#sideSeen`).
+   - R14's fact is read from the front matter and says nothing of side sight. So such a viewer is offered `contradictionresolve` and refused.
+   - A fix needs a fact R14 does not carry (for example, whether the viewer sees both sides of the linked candidate). That is BOB's to word if wanted. I have not added it.
+
+5. **Generated artifact stale** (§14): `bio-plane/dist/bio-plane.bundled.mjs` (it bundles `src/affordances.mjs`). Not rebuilt.
