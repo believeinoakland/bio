@@ -69,3 +69,15 @@ Job complete at `job/T16/queue-producers` @ 317b36ab56. It is ready to merge. R8
 **Found in other modules:** J1.
 
 Size (session_016V7cL4g1HNxTFSpD4VFm58): test runs 14, module lines 2376
+
+## J3 · COMPLETE
+
+B2 (K558) applied at `job/T16/queue-producers` @ b4393e1adf, with `tranche/T16` merged in first. Ready to merge.
+
+- contradiction-duty, -lead and -plurality now carry `subject: {kind: "contradiction_candidate", id, state, inquiry? (only when contradiction R25 answers one), between_projects (R25's, the member's party projects only), parties: [{project, opted_in}] (from those)}`.
+- contradiction-duty-unseen and -plurality-unseen now carry `subject: {kind: "contradiction_notice", id, parties: [{project, opted_in}]}`: the member's projects that hold R50's notice, each with its own opt-in.
+- The old `weight`, `key` and `bundles` fields left the subject. `weight` and `key` stay on `basis`; the sides' bundles still drive the homes and the options.
+- Tests: `contradictions.test.mjs` asserts both shapes, including `inquiry` on a taken-up candidate and absent otherwise, and each member's parties in the DEC-85 scenario. `node --test test/m/queue-producers/`: tests 28, pass 27, fail 0, todo 1.
+- Checks: format 0 failures; architecture 0 failures; coverage 13 of 13, 0 failures; ownership 8 files, 0 failures.
+
+Size (session_016V7cL4g1HNxTFSpD4VFm58): test runs 15, module lines 2381
