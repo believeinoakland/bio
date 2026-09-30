@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, governor, provenance, network, sha, register, newKey, sshsign, signer, H } from "./fixture.mjs";
-import { captureOps, captureAccountStatement, CAPTURE_ACCOUNT_TOKEN, pseudonymOf, READ_LIMIT } from "../../../src/capture/index.mjs";
+import { captureOps, captureAccountStatement, CAPTURE_ACCOUNT_TOKEN, pseudonymOf, READ_LIMIT, PULL_WITHIN_FAILED_DETAIL } from "../../../src/capture/index.mjs";
 import { knockOp, KNOCK, KNOCKER_SECRET_MIN } from "../../../src/capture/doorbell.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
@@ -466,7 +466,7 @@ test("R71 R31: knockAttempt asks the knock's two windows exactly as a knock does
   assert.equal((await c.knock({ content: "k", sourceAddress: "6.6.6.6", now: t0 + 20 })).ok, true);
   const counted = rateRows(rows);
   const r = await c.knockAttempt({ sourceAddress: "6.6.6.6", now: t0 + 30 });
-  const row = (await import("../../../checks/bio-checks.mjs")).KNOCK_CHECKS.RATE_IP;
+  const row = (await import("../../../src/capture/checks.mjs")).KNOCK_CHECKS.RATE_IP;
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.stated], [false, "RATE_IP", "RATE_IP", row.check, row.translation, KNOCK.statedPerIp]);
   assert.equal(rateRows(rows), counted, "a refused attempt counts nothing");
   assert.equal((await c.knock({ content: "k2", sourceAddress: "6.6.6.6", now: t0 + 40 })).reason, "RATE_IP", "and the knock after it is refused alike");
@@ -549,14 +549,17 @@ test("R65 (N380): within's refusal, its throw, or an answer that is not synchron
   const refused = await c.pullKnock({ knockId: k.knockId, by: "m1", within: () => { write(); return { ok: false, reason: "NO_GROUP_RECORDED", check: "C-64.1", status: 409 }; } });
   assert.deepEqual([refused.ok, refused.reason, refused.check, refused.status, refused.knockId], [false, "NO_GROUP_RECORDED", "C-64.1", 409, k.knockId]);
   assert.deepEqual(state(), before, "nothing written");
-  /* a throw, and a promise: PULL_WITHIN_FAILED, 500, nothing written */
-  for (const within of [() => { write(); throw new Error("promotion store fault"); }, async () => { write(); return { ok: true }; }]) {
+  /* a throw (of anything), and a promise: PULL_WITHIN_FAILED, 500, one fixed sentence (N409), nothing written */
+  const fault = "promotion store fault: no such table: bundles_secret at /srv/plane/src/promotion/index.mjs:88";
+  for (const within of [() => { write(); throw new Error(fault); }, () => { write(); throw fault; }, () => { throw { message: fault, stack: fault }; },
+                        () => { throw undefined; }, async () => { write(); return { ok: true }; }, async () => { throw new Error(fault); }]) {
     const r = await c.pullKnock({ knockId: k.knockId, by: "m1", within });
-    assert.deepEqual([r.ok, r.reason, r.status, r.knockId], [false, "PULL_WITHIN_FAILED", 500, k.knockId]);
-    assert.match(r.detail, /rolled back and nothing was written/);
+    assert.deepEqual(r, { ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId: k.knockId, detail: PULL_WITHIN_FAILED_DETAIL },
+                     "the answer whole: no field carries what was thrown");
+    assert.ok(!JSON.stringify(r).includes("bundles_secret") && !JSON.stringify(r).includes("/srv/"), "never the thrown message");
     assert.deepEqual(state(), before, "nothing written");
   }
-  assert.match((await c.pullKnock({ knockId: k.knockId, by: "m1", within: () => { throw new Error("promotion store fault"); } })).detail, /promotion store fault/);
+  assert.equal(PULL_WITHIN_FAILED_DETAIL, "the act run with the pull did not complete, so the pull was rolled back and nothing was written");
   assert.equal(c.inboxGet(k.knockId).item.status, "new");
   /* a fault of the pull's own is not the caller's: it still throws, and nothing lands */
   const broken = setup();

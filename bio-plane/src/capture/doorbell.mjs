@@ -4,9 +4,8 @@
  * capture and not a bundle: it lands in the inbox, which only a signed-in member reads. The response envelope,
  * `requiredArgument`, the store-silence refusal and the Durable Object envelope's reader (`doAnswer`, N247) are the
  * control plane's, passed in by the caller. */
-import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
 import { relayUnanswered } from "./ops.mjs";
-import { CAPTURE_CHECKS } from "./checks.mjs";
+import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 
 /* R31, R49, R50. The limits the instance runs, and D-496's published sentences BUILT FROM THEM, so the words and
    the numbers cannot drift apart (BOB #32: a published limit is a BOUND). "Estimated by a sliding window" because

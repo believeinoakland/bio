@@ -10,9 +10,9 @@
  * membership's `viewerPredicate` (R43) for what a viewer may see. It reads provenance's `register` and
  * `captured_locators` only on their stated read contract (provenance R48). It calls no later module: a later
  * module registers a listener (R44, R55; `on`). */
-import { KNOCK_CHECKS, isPublicHttpsLocator, createSha256 } from "../../checks/bio-checks.mjs";
+import { isPublicHttpsLocator, createSha256 } from "../../checks/bio-checks.mjs";
 import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
-import { CAPTURE_CHECKS } from "./checks.mjs";
+import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall } from "./acquire.mjs";
 import { verifySshsig, NS_RATIFY } from "../sshsig.mjs";
@@ -69,6 +69,9 @@ const REPLAY_MAX = 256 * 1024 * 1024;
 
 /* N380: the tag a throw of `pullKnock`'s `within` is carried out of the transaction under. */
 const WITHIN_FAULT = Symbol("pullKnock: within's fault");
+/** R65 (N409, K609): the one sentence `PULL_WITHIN_FAILED` answers, whatever `within` threw or answered. */
+export const PULL_WITHIN_FAILED_DETAIL =
+  "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
 
 /* ---- D-98 event queue: module scope because they are pure ----
    The F5 bound lives HERE, at the producer boundary, so a subject is inert before it is stored rather than after
@@ -183,6 +186,13 @@ export class Capture {
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
+  /* N418 (K650): every write this module makes runs through record-core's `transact` (its R32): one transaction, a
+     savepoint inside a caller's, rolled back whole by a throw or an `ok: false` answer, and record-core's `afterCommit`
+     (its R66) holds what a listener asks inside it until the outermost commit. Only a Capture built with no record (a
+     bare storage) falls back to the storage's own `transactionSync`. `fn` is synchronous. */
+  #tx(fn) {
+    return this.core && typeof this.core.transact === "function" ? this.core.transact(fn) : this.#storage.transactionSync(fn);
+  }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
   #cols(t) { return this.#rows(`PRAGMA table_info(${t})`).map((r) => r.name); }
 
@@ -302,7 +312,7 @@ export class Capture {
     if (!r) {
       const k = new Uint8Array(32);
       crypto.getRandomValues(k);
-      this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf(k), stampSecond());
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf(k), stampSecond()));
       r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
     }
     return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
@@ -327,7 +337,7 @@ export class Capture {
       if (!create) return null;
       const k = new Uint8Array(32);
       crypto.getRandomValues(k);
-      this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf(k), stampSecond());
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf(k), stampSecond()));
       r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
     }
     return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
@@ -355,10 +365,10 @@ export class Capture {
     } catch { return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" }; }
   }
 
-  /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from the catalogue at
-     the moment of the refusal, so this file holds no member-facing word, and THE CODE STAYS A STRING LITERAL AT ITS
-     SITE. It THROWS on a missing row (R52): a throw is a 500 in a test, which is loud, where a missing sentence is
-     silent and reaches a stranger with no account and no other way to find out what happened. */
+  /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from this module's
+     table (`KNOCK_CHECKS`, C-85) at the moment of the refusal, so this file holds no member-facing word, and THE CODE
+     STAYS A STRING LITERAL AT ITS SITE. It THROWS on a missing row (R52): a throw is a 500 in a test, which is loud,
+     where a missing sentence is silent and reaches a stranger with no account and no other way to find out. */
   static #rateRefusal(code, extra) {
     const row = KNOCK_CHECKS[code];
     if (!row || typeof row.translation !== "string" || !row.translation)
@@ -414,7 +424,7 @@ export class Capture {
   async knockAttempt({ sourceAddress = null, now = null } = {}) {
     const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     const rate = await this.#rateWindows({ sourceAddress, nowMs });
-    const refusal = this.#knockRateRefusal(rate) || this.#storage.transactionSync(() => this.#countKnock(rate));
+    const refusal = this.#knockRateRefusal(rate) || this.#tx(() => this.#countKnock(rate));
     if (!refusal) return null;
     return { ...refusal, stated: refusal.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal };
   }
@@ -463,7 +473,7 @@ export class Capture {
     const pseudonym = knockerDigest ? pseudonymOf(knockerDigest) : null;
     const knockId = `KNOCK-${new Date(nowMs).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
     const received = new Date(nowMs).toISOString();
-    const answer = this.#storage.transactionSync(() => {
+    const answer = this.#tx(() => {
       const late = this.#countKnock(rate);
       if (late) return late;
       this.#sql.exec(
@@ -520,8 +530,8 @@ export class Capture {
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
     if (status === "pulled") return this.pullKnock({ knockId, by });
-    this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
-                   status, new Date().toISOString(), by ?? null, knockId);
+    this.#tx(() => this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
+                                  status, new Date().toISOString(), by ?? null, knockId));
     return { ok: true, knockId, status };
   }
 
@@ -592,11 +602,12 @@ export class Capture {
                                       view: profileView(this.core), retrieved: when });
     const document = this.#pulledDocument(row, { by, at: when, profile });
     const receiptOf = (fn) => { try { return fn(); } catch (e) { return { recorded: false, error: String(e && e.message || e).slice(0, 200) }; } };
-    const withinFailed = (why) => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId,
-      detail: `the act run with the pull did not complete (${String(why).slice(0, 200)}), so the pull was rolled back and nothing was written` });
+    /* N409 (K609): one fixed sentence. A thrown message is the caller's internals (a store fault names a table, a
+       stack names a file), so it never rides in the answer; the fault is a programming fault, found in the caller. */
+    const withinFailed = () => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId, detail: PULL_WITHIN_FAILED_DETAIL });
     let done;
     try {
-      done = this.core.transact(() => {
+      done = this.#tx(() => {
         const receipt = receiptOf(() => this.provenance?.recordReceipt?.({ address, addressNorm: address, captureSha: sha, retrieved: when,
                                                                             via: DOORBELL_VIA, retrievalLocator: null }));
         if (!receipt || receipt.recorded !== true)
@@ -608,16 +619,17 @@ export class Capture {
         if (typeof within !== "function") return { ok: true, receipt };
         /* N380: the caller's act, in this transaction. Its throw is tagged so a fault of the pull's own still throws. */
         let w;
-        try { w = within(structuredClone(document)); } catch (e) { throw { [WITHIN_FAULT]: e && e.message || e }; }
+        try { w = within(structuredClone(document)); } catch { throw { [WITHIN_FAULT]: true }; }
         if (w && typeof w.then === "function") {
+          /* A promise would outlive the transaction; its outcome is dropped with it. */
           Promise.resolve(w).catch(() => {});
-          throw { [WITHIN_FAULT]: "its answer was a promise, which would outlive the transaction" };
+          throw { [WITHIN_FAULT]: true };
         }
         if (w && typeof w === "object" && w.ok === false) return { ...w, knockId: w.knockId ?? knockId };
         return { ok: true, receipt, within: w ?? null };
       });
     } catch (e) {
-      if (e && typeof e === "object" && WITHIN_FAULT in e) return withinFailed(e[WITHIN_FAULT]);
+      if (e && typeof e === "object" && WITHIN_FAULT in e) return withinFailed();
       throw e;
     }
     if (!done.ok) return done;
@@ -693,8 +705,8 @@ export class Capture {
    *  per pair, at the first instant. */
   recordCaptureActor({ captureSha, actor, at = null } = {}) {
     if (typeof captureSha !== "string" || !HEX64.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
-    this.#sql.exec(`INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
-                   captureSha, actor, at && ISO_INSTANT.test(at) ? at : stampSecond());
+    this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
+                                  captureSha, actor, at && ISO_INSTANT.test(at) ? at : stampSecond()));
     return { recorded: true };
   }
 
@@ -731,9 +743,12 @@ export class Capture {
                detail: "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written" };
     }
     const when = at && ISO_INSTANT.test(at) ? at : stampSecond();
-    const seq = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM capture_accounts WHERE capture_sha = ?`, sha).n) + 1;
-    this.#sql.exec(`INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                   sha, seq, by, text, signature, v.keyB64, when);
+    const seq = this.#tx(() => {
+      const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM capture_accounts WHERE capture_sha = ?`, sha).n) + 1;
+      this.#sql.exec(`INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                     sha, n, by, text, signature, v.keyB64, when);
+      return n;
+    });
     return { ok: true, captureSha: sha, seq, by, at: when, key_b64: v.keyB64 };
   }
 
@@ -797,7 +812,7 @@ export class Capture {
       if (coArchive) Object.assign(o, await this.#replayMatches(sha, o.ok ? a.archived_locator : null));
       outcomes.push(o);
     }
-    this.#storage.transactionSync(() => {
+    this.#tx(() => {
       let seq = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM late_attestations WHERE capture_sha = ?`, sha).n);
       for (const o of outcomes)
         this.#sql.exec(`INSERT INTO late_attestations (capture_sha, seq, kind, service, ok, at, by, outcome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -859,62 +874,66 @@ export class Capture {
    *  the concurrency cap (D-520) is the throttle, decided first and taking nothing from the day. Slots EXPIRE at
    *  admission plus reservation, so a render that never reports cannot hold one for ever. */
   renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null } = {}) {
-    const now = at || stampSecond();
-    const day = now.slice(0, 10);
-    const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
-    /* CEILED, never floored: a reservation rounded DOWN is short of the cost it stands for. */
-    const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
-    const capN = Number.isInteger(Number(cap)) && Number(cap) > 0 ? Number(cap) : null;
-    const nowMs = Date.parse(now);
-    if (capN !== null) {
-      if (Number.isFinite(nowMs)) this.#sql.exec(`DELETE FROM render_slots WHERE expires_ms <= ?`, nowMs);
-      const running = this.#one(`SELECT COUNT(*) AS n FROM render_slots`).n;
-      if (running >= capN)
-        return { state: "waiting", day, cap: capN, running, reserve_ms: reserve,
-                 why: `${running} renders are running and this instance runs at most ${capN} at once` };
-    }
-    const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
-    const spent = cur ? cur.spent_ms : 0;
-    const reserved = cur ? (cur.reserved_ms || 0) : 0;
-    const defer = (why) => {
-      if (cur) this.#sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
-      else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day, now);
-      return { state: "deferred", day, spent_ms: spent, reserved_ms: reserved, reserve_ms: reserve,
-               allowance_ms: allowance, deferred: (cur ? cur.deferred : 0) + 1, renders: cur ? cur.renders : 0, why };
-    };
-    /* A CALLER THAT OFFERS NO RESERVATION IS DEFERRED, NOT ADMITTED: a fence a caller can switch off by omission
-       is no fence. */
-    if (!(reserve > 0)) return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
-    if (spent + reserved + reserve > allowance) return defer(null);
-    if (cur) this.#sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
-    else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
-    const slot = crypto.randomUUID();
-    this.#sql.exec(`INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
-                   slot, now, (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve);
-    return { state: "admitted", day, spent_ms: spent, reserved_ms: reserved + reserve, reserve_ms: reserve,
-             allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0,
-             slot, cap: capN };
+    return this.#tx(() => {
+      const now = at || stampSecond();
+      const day = now.slice(0, 10);
+      const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+      /* CEILED, never floored: a reservation rounded DOWN is short of the cost it stands for. */
+      const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
+      const capN = Number.isInteger(Number(cap)) && Number(cap) > 0 ? Number(cap) : null;
+      const nowMs = Date.parse(now);
+      if (capN !== null) {
+        if (Number.isFinite(nowMs)) this.#sql.exec(`DELETE FROM render_slots WHERE expires_ms <= ?`, nowMs);
+        const running = this.#one(`SELECT COUNT(*) AS n FROM render_slots`).n;
+        if (running >= capN)
+          return { state: "waiting", day, cap: capN, running, reserve_ms: reserve,
+                   why: `${running} renders are running and this instance runs at most ${capN} at once` };
+      }
+      const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
+      const spent = cur ? cur.spent_ms : 0;
+      const reserved = cur ? (cur.reserved_ms || 0) : 0;
+      const defer = (why) => {
+        if (cur) this.#sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
+        else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day, now);
+        return { state: "deferred", day, spent_ms: spent, reserved_ms: reserved, reserve_ms: reserve,
+                 allowance_ms: allowance, deferred: (cur ? cur.deferred : 0) + 1, renders: cur ? cur.renders : 0, why };
+      };
+      /* A CALLER THAT OFFERS NO RESERVATION IS DEFERRED, NOT ADMITTED: a fence a caller can switch off by omission
+         is no fence. */
+      if (!(reserve > 0)) return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
+      if (spent + reserved + reserve > allowance) return defer(null);
+      if (cur) this.#sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
+      else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
+      const slot = crypto.randomUUID();
+      this.#sql.exec(`INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
+                     slot, now, (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve);
+      return { state: "admitted", day, spent_ms: spent, reserved_ms: reserved + reserve, reserve_ms: reserve,
+               allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0,
+               slot, cap: capN };
+    });
   }
 
   /** R40. Frees the slot on every path; adds the REPORTED browser time and releases at most the reservation still
    *  held (never below zero). AN UNREPORTED RENDER STAYS CHARGED: it may have burned any time up to its
    *  reservation, so the reservation is kept for the day, which under-uses the allowance and cannot overrun. */
   renderSpend({ ms, releaseMs = 0, slot = null, at = null } = {}) {
-    if (typeof slot === "string" && slot) this.#sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
-    const now = at || stampSecond();
-    const day = now.slice(0, 10);
-    const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
-    const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
-    const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
-    if (n === null)
-      return { day, spent_ms: cur ? cur.spent_ms : 0, reserved_ms: cur ? (cur.reserved_ms || 0) : 0, released_ms: 0,
-               why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day" };
-    const held = cur ? (cur.reserved_ms || 0) : 0;
-    const released = Math.min(held, rel);
-    if (cur) this.#sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
-                            n, held - released, now, day);
-    else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, 0, ?)`, day, n, now);
-    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n, reserved_ms: held - released, released_ms: released };
+    return this.#tx(() => {
+      if (typeof slot === "string" && slot) this.#sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
+      const now = at || stampSecond();
+      const day = now.slice(0, 10);
+      const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
+      const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
+      const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
+      if (n === null)
+        return { day, spent_ms: cur ? cur.spent_ms : 0, reserved_ms: cur ? (cur.reserved_ms || 0) : 0, released_ms: 0,
+                 why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day" };
+      const held = cur ? (cur.reserved_ms || 0) : 0;
+      const released = Math.min(held, rel);
+      if (cur) this.#sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
+                              n, held - released, now, day);
+      else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, 0, ?)`, day, n, now);
+      return { day, spent_ms: (cur ? cur.spent_ms : 0) + n, reserved_ms: held - released, released_ms: released };
+    });
   }
 
   /* ==================================================================== *
@@ -927,39 +946,41 @@ export class Capture {
    *  (R28), re-derived here for this capture in the same write. A row filed again keeps the instant it was FIRST
    *  filed (R57: `first_seen` is a read contract, and a continuation re-files every link of its page). */
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] } = {}) {
-    if (!sourceCapture) return { recorded: 0 };
-    const now = stampSecond();
-    /* Filed in place: a row this capture already holds is updated and keeps `first_seen`, a new one takes now, and
-       the rows the new set no longer names are removed after. The first of two links with one key is the one kept. */
-    const kept = new Set();
-    let n = 0;
-    for (const l of links) {
-      /* address_norm is required; citation_norm falls back to it for a link that names no element. */
-      if (!l || !l.address_norm) continue;
-      n++;
-      const ref = String(l.ref || l.address), citation = l.citation_norm || l.address_norm;
-      const key = JSON.stringify([ref, citation]);
-      if (kept.has(key)) continue;
-      kept.add(key);
+    return this.#tx(() => {
+      if (!sourceCapture) return { recorded: 0 };
+      const now = stampSecond();
+      /* Filed in place: a row this capture already holds is updated and keeps `first_seen`, a new one takes now, and
+         the rows the new set no longer names are removed after. The first of two links with one key is the one kept. */
+      const kept = new Set();
+      let n = 0;
+      for (const l of links) {
+        /* address_norm is required; citation_norm falls back to it for a link that names no element. */
+        if (!l || !l.address_norm) continue;
+        n++;
+        const ref = String(l.ref || l.address), citation = l.citation_norm || l.address_norm;
+        const key = JSON.stringify([ref, citation]);
+        if (kept.has(key)) continue;
+        kept.add(key);
+        this.#sql.exec(
+          `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
+             citation_norm, fragment, partition, origin, chrome, chrome_basis, captured_at, first_seen)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(source_capture, link_ref, citation_norm) DO UPDATE SET source_bundle = excluded.source_bundle,
+             address = excluded.address, address_norm = excluded.address_norm, fragment = excluded.fragment,
+             partition = excluded.partition, origin = excluded.origin, chrome = excluded.chrome,
+             chrome_basis = excluded.chrome_basis, captured_at = excluded.captured_at`,
+          sourceBundle, sourceCapture, ref, l.address || l.address_norm,
+          l.address_norm, citation, l.fragment || null,
+          l.type || "deferred", l.origin || null, l.chrome ? 1 : 0,
+          l.chrome ? (String(l.chrome_basis || "") || null) : null, capturedAt || now, now);
+      }
       this.#sql.exec(
-        `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
-           citation_norm, fragment, partition, origin, chrome, chrome_basis, captured_at, first_seen)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(source_capture, link_ref, citation_norm) DO UPDATE SET source_bundle = excluded.source_bundle,
-           address = excluded.address, address_norm = excluded.address_norm, fragment = excluded.fragment,
-           partition = excluded.partition, origin = excluded.origin, chrome = excluded.chrome,
-           chrome_basis = excluded.chrome_basis, captured_at = excluded.captured_at`,
-        sourceBundle, sourceCapture, ref, l.address || l.address_norm,
-        l.address_norm, citation, l.fragment || null,
-        l.type || "deferred", l.origin || null, l.chrome ? 1 : 0,
-        l.chrome ? (String(l.chrome_basis || "") || null) : null, capturedAt || now, now);
-    }
-    this.#sql.exec(
-      `DELETE FROM links WHERE source_capture = ? AND NOT EXISTS (SELECT 1 FROM json_each(?) k
-         WHERE json_extract(k.value, '$[0]') = links.link_ref AND json_extract(k.value, '$[1]') = links.citation_norm)`,
-      sourceCapture, `[${[...kept].join(",")}]`);
-    const chrome = this.#chromeDeriveCapture(sourceCapture, now);
-    return { recorded: n, source_capture: sourceCapture, site_chrome: chrome };
+        `DELETE FROM links WHERE source_capture = ? AND NOT EXISTS (SELECT 1 FROM json_each(?) k
+           WHERE json_extract(k.value, '$[0]') = links.link_ref AND json_extract(k.value, '$[1]') = links.citation_norm)`,
+        sourceCapture, `[${[...kept].join(",")}]`);
+      const chrome = this.#chromeDeriveCapture(sourceCapture, now);
+      return { recorded: n, source_capture: sourceCapture, site_chrome: chrome };
+    });
   }
 
   /** R27, D-701, N90. Everything that points AT an address, matched on the RESOURCE key so the citations of its
@@ -1106,19 +1127,21 @@ export class Capture {
    *  answered is the newest `limit` verdicts, oldest first, with the `total` and whether it was cut. */
   recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null,
                       at = null, limit = null } = {}) {
-    const now = at || stampSecond();
-    this.#sql.exec(
-      `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
-      sourceCapture, addressNorm, verdict, basis, targetBundle, targetCapture, now, detail);
-    const cap = limitOf(limit);
-    const total = Number(this.#one(`SELECT COUNT(*) AS n FROM link_verdicts WHERE source_capture = ? AND address_norm = ?`,
-                                   sourceCapture, addressNorm).n);
-    const found = this.#rows(`SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at DESC LIMIT ?`,
-                             sourceCapture, addressNorm, cap + 1);
-    const history = found.slice(0, cap).reverse();
-    return { current: history[history.length - 1] || null, history, changed: total > 1, total, limit: cap,
-             truncated: found.length > cap };
+    return this.#tx(() => {
+      const now = at || stampSecond();
+      this.#sql.exec(
+        `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
+        sourceCapture, addressNorm, verdict, basis, targetBundle, targetCapture, now, detail);
+      const cap = limitOf(limit);
+      const total = Number(this.#one(`SELECT COUNT(*) AS n FROM link_verdicts WHERE source_capture = ? AND address_norm = ?`,
+                                     sourceCapture, addressNorm).n);
+      const found = this.#rows(`SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at DESC LIMIT ?`,
+                               sourceCapture, addressNorm, cap + 1);
+      const history = found.slice(0, cap).reverse();
+      return { current: history[history.length - 1] || null, history, changed: total > 1, total, limit: cap,
+               truncated: found.length > cap };
+    });
   }
 
   /* ---- R28, R29: the host's chrome, derived per HOST ---- */
@@ -1232,24 +1255,26 @@ export class Capture {
    *  and the receipts. Bounded and paged: the first page (no `after`) clears the host's derived rows; each page
    *  re-derives up to `limit` captures in capture-sha order and says whether more remain. */
   deriveSiteChrome({ host, limit = null, after = null } = {}) {
-    const h = String(host || "").trim().toLowerCase();
-    const asked = Number(limit);
-    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(2000, Math.floor(asked)) : 500;
-    if (!h) return { host: null, captures: 0, derived: [], limit: cap, truncated: false, next: null };
-    const from = String(after || "");
-    if (!from) for (const t of ["site_chrome_refs", "site_chrome", "link_chrome"]) this.#sql.exec(`DELETE FROM ${t} WHERE host = ?`, h);
-    const found = this.#rows(
-      `SELECT DISTINCT capture_sha FROM captured_locators
-        WHERE via = 'direct' AND capture_sha > ? AND (substr(address_norm, 1, ?) = ? OR substr(address_norm, 1, ?) = ?)
-        ORDER BY capture_sha LIMIT ?`,
-      from, `https://${h}/`.length, `https://${h}/`, `http://${h}/`.length, `http://${h}/`, cap + 1);
-    const page = found.slice(0, cap);
-    const at = stampSecond();
-    for (const r of page) this.#chromeDeriveCapture(r.capture_sha, at);
-    const truncated = found.length > cap;
-    return { host: h, captures: page.length, derived: page.map((r) => r.capture_sha), limit: cap, truncated,
-             next: truncated ? page[page.length - 1].capture_sha : null,
-             ...(truncated ? { partial: "more captures of this host remain: its chrome is PARTIAL until the page naming `next` is derived" } : {}) };
+    return this.#tx(() => {
+      const h = String(host || "").trim().toLowerCase();
+      const asked = Number(limit);
+      const cap = Number.isFinite(asked) && asked > 0 ? Math.min(2000, Math.floor(asked)) : 500;
+      if (!h) return { host: null, captures: 0, derived: [], limit: cap, truncated: false, next: null };
+      const from = String(after || "");
+      if (!from) for (const t of ["site_chrome_refs", "site_chrome", "link_chrome"]) this.#sql.exec(`DELETE FROM ${t} WHERE host = ?`, h);
+      const found = this.#rows(
+        `SELECT DISTINCT capture_sha FROM captured_locators
+          WHERE via = 'direct' AND capture_sha > ? AND (substr(address_norm, 1, ?) = ? OR substr(address_norm, 1, ?) = ?)
+          ORDER BY capture_sha LIMIT ?`,
+        from, `https://${h}/`.length, `https://${h}/`, `http://${h}/`.length, `http://${h}/`, cap + 1);
+      const page = found.slice(0, cap);
+      const at = stampSecond();
+      for (const r of page) this.#chromeDeriveCapture(r.capture_sha, at);
+      const truncated = found.length > cap;
+      return { host: h, captures: page.length, derived: page.map((r) => r.capture_sha), limit: cap, truncated,
+               next: truncated ? page[page.length - 1].capture_sha : null,
+               ...(truncated ? { partial: "more captures of this host remain: its chrome is PARTIAL until the page naming `next` is derived" } : {}) };
+    });
   }
 
   /** R29, D-701. THE PER-HOST READ: how a host's navigation changed between captures. Observations (only those the
@@ -1315,39 +1340,45 @@ export class Capture {
   /** SCRATCH, not record. Expired rows are pruned on the way past, so an abandoned session costs one row until its
    *  hour is up. The primary is never stored here: it is in the store under its own digest. */
   saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 3600000, at = null } = {}) {
-    const now = at ? new Date(at) : new Date();
-    const iso = (d) => stampSecond(d.getTime());
-    this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
-    if (!session || !state) return { session: null, saved: false };
-    const cur = this.#one(`SELECT ticks FROM capture_sessions WHERE session = ?`, session);
-    const body = JSON.stringify(state);
-    const expires = iso(new Date(now.getTime() + (Number(ttlMs) || 3600000)));
-    if (cur) {
-      this.#sql.exec(`UPDATE capture_sessions SET updated = ?, expires = ?, ticks = ticks + 1, state = ? WHERE session = ?`,
-                     iso(now), expires, body, session);
-      return { session, saved: true, ticks: cur.ticks + 1, bytes: body.length };
-    }
-    this.#sql.exec(`INSERT INTO capture_sessions (session, locator, primary_sha, primary_file, base, created, updated, expires, ticks, state)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-                   session, locator, primarySha, primaryFile, base, iso(now), iso(now), expires, body);
-    return { session, saved: true, ticks: 1, bytes: body.length };
+    return this.#tx(() => {
+      const now = at ? new Date(at) : new Date();
+      const iso = (d) => stampSecond(d.getTime());
+      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
+      if (!session || !state) return { session: null, saved: false };
+      const cur = this.#one(`SELECT ticks FROM capture_sessions WHERE session = ?`, session);
+      const body = JSON.stringify(state);
+      const expires = iso(new Date(now.getTime() + (Number(ttlMs) || 3600000)));
+      if (cur) {
+        this.#sql.exec(`UPDATE capture_sessions SET updated = ?, expires = ?, ticks = ticks + 1, state = ? WHERE session = ?`,
+                       iso(now), expires, body, session);
+        return { session, saved: true, ticks: cur.ticks + 1, bytes: body.length };
+      }
+      this.#sql.exec(`INSERT INTO capture_sessions (session, locator, primary_sha, primary_file, base, created, updated, expires, ticks, state)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+                     session, locator, primarySha, primaryFile, base, iso(now), iso(now), expires, body);
+      return { session, saved: true, ticks: 1, bytes: body.length };
+    });
   }
 
   loadCaptureSession({ session, at = null } = {}) {
-    const now = at ? new Date(at) : new Date();
-    this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond(now.getTime()));
-    const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
-    if (!r) return { session, found: false,
-      note: "no such capture session: it either never existed, was already finished, or expired" };
-    let state = null;
-    try { state = JSON.parse(r.state); } catch { return { session, found: false, note: "session state did not parse" }; }
-    return { session, found: true, locator: r.locator, primarySha: r.primary_sha,
-             primaryFile: r.primary_file, base: r.base, ticks: r.ticks, created: r.created, state };
+    return this.#tx(() => {
+      const now = at ? new Date(at) : new Date();
+      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond(now.getTime()));
+      const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
+      if (!r) return { session, found: false,
+        note: "no such capture session: it either never existed, was already finished, or expired" };
+      let state = null;
+      try { state = JSON.parse(r.state); } catch { return { session, found: false, note: "session state did not parse" }; }
+      return { session, found: true, locator: r.locator, primarySha: r.primary_sha,
+               primaryFile: r.primary_file, base: r.base, ticks: r.ticks, created: r.created, state };
+    });
   }
 
   dropCaptureSession({ session } = {}) {
-    this.#sql.exec(`DELETE FROM capture_sessions WHERE session = ?`, session);
-    return { session, dropped: true };
+    return this.#tx(() => {
+      this.#sql.exec(`DELETE FROM capture_sessions WHERE session = ?`, session);
+      return { session, dropped: true };
+    });
   }
 
   /** R46: every live session, for `queue`'s partial-capture condition. Writes nothing, never throws. */
@@ -1413,65 +1444,67 @@ export class Capture {
    *  every posthoc verdict appended, but the answer lists at most `limit` changes, each naming at most `limit`
    *  reusers, and says when either was cut. */
   recordSiteAssets({ host, primarySha, observations = [], at = null, limit = null } = {}) {
-    if (!host || !primarySha) return { host: null, recorded: 0 };
-    const now = at || stampSecond();
-    const cap = limitOf(limit);
-    let truncated = false;
-    let added = 0, changedCount = 0;
-    const changed = [];
-    const fromObs = (o) => (typeof o.reused_from === "string" && HEX64.test(o.reused_from)) ? o.reused_from : null;
-    for (const o of observations) {
-      if (!o || !o.address_norm || !o.sha256) continue;
-      const cur = this.#one(`SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`, host, o.address_norm);
-      if (!cur) {
+    return this.#tx(() => {
+      if (!host || !primarySha) return { host: null, recorded: 0 };
+      const now = at || stampSecond();
+      const cap = limitOf(limit);
+      let truncated = false;
+      let added = 0, changedCount = 0;
+      const changed = [];
+      const fromObs = (o) => (typeof o.reused_from === "string" && HEX64.test(o.reused_from)) ? o.reused_from : null;
+      for (const o of observations) {
+        if (!o || !o.address_norm || !o.sha256) continue;
+        const cur = this.#one(`SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`, host, o.address_norm);
+        if (!cur) {
+          this.#sql.exec(
+            `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
+               first_seen, last_seen, last_fetched, stable_since, changes, last_fetched_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+            host, o.address_norm, o.address || o.address_norm, o.sha256, o.content_type || null,
+            o.bytes || 0, o.kind || null, now, now, now, now, o.reused ? fromObs(o) : primarySha);
+          added++;
+        } else if (!o.reused && cur.sha256 !== o.sha256) {
+          /* INSERT OR IGNORE: the key carries the second, so two changes within one second fold into the first. Every
+             reuser's verdict is appended in the one statement, whatever the answer below lists. */
+          this.#sql.exec(
+            `INSERT OR IGNORE INTO reuse_verdicts
+               (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
+             SELECT primary_sha, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?
+               FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+            host, o.address_norm, cur.sha256, o.sha256,
+            "a later direct capture of this host fetched different bytes for this address; "
+              + "this earlier capture reused the old ones, which are now unverified against the source", now,
+            host, o.address_norm);
+          this.#sql.exec(
+            `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
+               last_fetched_by = ?, stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
+            o.sha256, o.content_type || cur.content_type, o.bytes || 0, now, now, primarySha, now, host, o.address_norm);
+          changedCount++;
+          if (changed.length < cap) {
+            const reusedBy = this.#rows(`SELECT primary_sha FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1
+                                          ORDER BY primary_sha LIMIT ?`, host, o.address_norm, cap + 1);
+            const count = Number(this.#one(`SELECT COUNT(*) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+                                           host, o.address_norm).n);
+            if (reusedBy.length > cap) truncated = true;
+            changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256,
+                           reused_by: reusedBy.slice(0, cap).map((a) => a.primary_sha), reused_by_count: count });
+          } else truncated = true;
+        } else if (!o.reused) {
+          this.#sql.exec(`UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
+                         now, now, primarySha, host, o.address_norm);
+        } else {
+          /* A reuse confirms nothing about the source: last_fetched and last_fetched_by do not move. */
+          this.#sql.exec(`UPDATE site_assets SET last_seen = ? WHERE host = ? AND address_norm = ?`, now, host, o.address_norm);
+        }
         this.#sql.exec(
-          `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
-             first_seen, last_seen, last_fetched, stable_since, changes, last_fetched_by)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-          host, o.address_norm, o.address || o.address_norm, o.sha256, o.content_type || null,
-          o.bytes || 0, o.kind || null, now, now, now, now, o.reused ? fromObs(o) : primarySha);
-        added++;
-      } else if (!o.reused && cur.sha256 !== o.sha256) {
-        /* INSERT OR IGNORE: the key carries the second, so two changes within one second fold into the first. Every
-           reuser's verdict is appended in the one statement, whatever the answer below lists. */
-        this.#sql.exec(
-          `INSERT OR IGNORE INTO reuse_verdicts
-             (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
-           SELECT primary_sha, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?
-             FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
-          host, o.address_norm, cur.sha256, o.sha256,
-          "a later direct capture of this host fetched different bytes for this address; "
-            + "this earlier capture reused the old ones, which are now unverified against the source", now,
-          host, o.address_norm);
-        this.#sql.exec(
-          `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
-             last_fetched_by = ?, stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
-          o.sha256, o.content_type || cur.content_type, o.bytes || 0, now, now, primarySha, now, host, o.address_norm);
-        changedCount++;
-        if (changed.length < cap) {
-          const reusedBy = this.#rows(`SELECT primary_sha FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1
-                                        ORDER BY primary_sha LIMIT ?`, host, o.address_norm, cap + 1);
-          const count = Number(this.#one(`SELECT COUNT(*) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
-                                         host, o.address_norm).n);
-          if (reusedBy.length > cap) truncated = true;
-          changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256,
-                         reused_by: reusedBy.slice(0, cap).map((a) => a.primary_sha), reused_by_count: count });
-        } else truncated = true;
-      } else if (!o.reused) {
-        this.#sql.exec(`UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
-                       now, now, primarySha, host, o.address_norm);
-      } else {
-        /* A reuse confirms nothing about the source: last_fetched and last_fetched_by do not move. */
-        this.#sql.exec(`UPDATE site_assets SET last_seen = ? WHERE host = ? AND address_norm = ?`, now, host, o.address_norm);
+          `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256, reused_from)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
+             reused = excluded.reused, sha256 = excluded.sha256, reused_from = excluded.reused_from`,
+          host, o.address_norm, primarySha, now, o.reused ? 1 : 0, o.sha256, o.reused ? fromObs(o) : null);
       }
-      this.#sql.exec(
-        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256, reused_from)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
-           reused = excluded.reused, sha256 = excluded.sha256, reused_from = excluded.reused_from`,
-        host, o.address_norm, primarySha, now, o.reused ? 1 : 0, o.sha256, o.reused ? fromObs(o) : null);
-    }
-    return { host, recorded: observations.length, added, changed: changedCount, changes: changed, limit: cap, truncated };
+      return { host, recorded: observations.length, added, changed: changedCount, changes: changed, limit: cap, truncated };
+    });
   }
 
   /** CAP-4: the reused subresource PARTS of a bundle, so ratification can re-fetch each. Scoped to THIS bundle by
@@ -1495,31 +1528,33 @@ export class Capture {
    *  because a look not taken is NEVER_LOOKED, the absence of a row) is handed to the `observation` listener;
    *  refusals are collected and reported, never thrown. */
   recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
-    const now = at || stampSecond();
-    let recorded = 0;
-    const refusals = [];
-    for (const v of verdicts) {
-      if (!v || !v.source_capture || !v.address_norm || !v.verdict) continue;
-      this.#sql.exec(
-        `INSERT OR IGNORE INTO reuse_verdicts
-           (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
-         VALUES (?, ?, ?, ?, 'ratify', ?, ?, ?, ?, ?)`,
-        v.source_capture, bundleId, v.host || "", v.address_norm, v.verdict,
-        v.reused_sha || "", v.observed_sha ?? null, v.basis || "", now);
-      recorded++;
-      const mapped =
-        v.verdict === "confirmed" ? { state: "PRESENT", detail: "unchanged", ref: v.reused_sha || null }
-      : v.verdict === "changed" ? { state: "PRESENT", detail: "changed", ref: v.observed_sha || v.reused_sha || null }
-      : v.verdict === "unreachable" ? { state: "LOOKED_INDETERMINATE", detail: "unreachable", ref: null }
-      : null;
-      if (mapped)
-        for (const o of this.#emitSync("observation", { at: now, row: {
-          actorClass: "plane", authorityKind: "ratify", authority: bundleId || v.source_capture,
-          level: "document", subjectKind: "address", subject: v.address_norm, state: mapped.state,
-          resultKind: mapped.ref ? "capture" : null, resultRef: mapped.ref, detail: mapped.detail } }))
-          refusals.push(o.ok ? o.result : { reason: "LISTENER_FAILED", module: o.module, detail: o.error });
-    }
-    return { ok: true, bundleId, recorded, at: now, observation_refusals: refusals.filter(Boolean) };
+    return this.#tx(() => {
+      const now = at || stampSecond();
+      let recorded = 0;
+      const refusals = [];
+      for (const v of verdicts) {
+        if (!v || !v.source_capture || !v.address_norm || !v.verdict) continue;
+        this.#sql.exec(
+          `INSERT OR IGNORE INTO reuse_verdicts
+             (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
+           VALUES (?, ?, ?, ?, 'ratify', ?, ?, ?, ?, ?)`,
+          v.source_capture, bundleId, v.host || "", v.address_norm, v.verdict,
+          v.reused_sha || "", v.observed_sha ?? null, v.basis || "", now);
+        recorded++;
+        const mapped =
+          v.verdict === "confirmed" ? { state: "PRESENT", detail: "unchanged", ref: v.reused_sha || null }
+        : v.verdict === "changed" ? { state: "PRESENT", detail: "changed", ref: v.observed_sha || v.reused_sha || null }
+        : v.verdict === "unreachable" ? { state: "LOOKED_INDETERMINATE", detail: "unreachable", ref: null }
+        : null;
+        if (mapped)
+          for (const o of this.#emitSync("observation", { at: now, row: {
+            actorClass: "plane", authorityKind: "ratify", authority: bundleId || v.source_capture,
+            level: "document", subjectKind: "address", subject: v.address_norm, state: mapped.state,
+            resultKind: mapped.ref ? "capture" : null, resultRef: mapped.ref, detail: mapped.detail } }))
+            refusals.push(o.ok ? o.result : { reason: "LISTENER_FAILED", module: o.module, detail: o.error });
+      }
+      return { ok: true, bundleId, recorded, at: now, observation_refusals: refusals.filter(Boolean) };
+    });
   }
 
   /** R26, N90. The reuse verdicts, newest first, by bundle (ratify) or by source capture (which also surfaces the free
@@ -1578,25 +1613,27 @@ export class Capture {
   /** R23. A run never refused is NOT evidence about where the ceiling is: it only advances the counter. A ceiling
    *  that MOVED keeps the old value and the date ("51 until Tuesday, now 1000" is the fact worth acting on). */
   recordCaptureLimit({ runtime = "subrequests", observed = null, at = null } = {}) {
-    const now = at || stampSecond();
-    const cur = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
-    if (observed == null) {
-      if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
-      return { runtime, observed: cur ? cur.observed : null, recorded: false,
-               note: "a run that was never refused says the ceiling is at least what it spent, and nothing about where it is" };
-    }
-    if (!cur) {
-      this.#sql.exec(`INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe) VALUES (?, ?, ?, ?, 1, 0)`,
-                     runtime, observed, now, now);
-      return { runtime, observed, recorded: true, moved: false, samples: 1 };
-    }
-    if (cur.observed === observed) {
-      this.#sql.exec(`UPDATE capture_limits SET observed_at = ?, samples = samples + 1, since_probe = 0 WHERE runtime = ?`, now, runtime);
-      return { runtime, observed, recorded: true, moved: false, samples: cur.samples + 1 };
-    }
-    this.#sql.exec(`UPDATE capture_limits SET previous = observed, moved_at = ?, observed = ?, observed_at = ?, samples = 1, since_probe = 0
-                    WHERE runtime = ?`, now, observed, now, runtime);
-    return { runtime, observed, previous: cur.observed, moved: true, moved_at: now, recorded: true, samples: 1 };
+    return this.#tx(() => {
+      const now = at || stampSecond();
+      const cur = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
+      if (observed == null) {
+        if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
+        return { runtime, observed: cur ? cur.observed : null, recorded: false,
+                 note: "a run that was never refused says the ceiling is at least what it spent, and nothing about where it is" };
+      }
+      if (!cur) {
+        this.#sql.exec(`INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe) VALUES (?, ?, ?, ?, 1, 0)`,
+                       runtime, observed, now, now);
+        return { runtime, observed, recorded: true, moved: false, samples: 1 };
+      }
+      if (cur.observed === observed) {
+        this.#sql.exec(`UPDATE capture_limits SET observed_at = ?, samples = samples + 1, since_probe = 0 WHERE runtime = ?`, now, runtime);
+        return { runtime, observed, recorded: true, moved: false, samples: cur.samples + 1 };
+      }
+      this.#sql.exec(`UPDATE capture_limits SET previous = observed, moved_at = ?, observed = ?, observed_at = ?, samples = 1, since_probe = 0
+                      WHERE runtime = ?`, now, observed, now, runtime);
+      return { runtime, observed, previous: cur.observed, moved: true, moved_at: now, recorded: true, samples: 1 };
+    });
   }
 
   /* ==================================================================== *
@@ -1618,10 +1655,13 @@ export class Capture {
     const text = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
     const now = at && ISO_INSTANT.test(at) ? at : stampSecond();
-    const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
-    if (!existing)
-      this.#sql.exec(`INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
-                     kind, captureSha, text, loc, now);
+    const existing = this.#tx(() => {
+      const held = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
+      if (!held)
+        this.#sql.exec(`INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
+                       kind, captureSha, text, loc, now);
+      return held;
+    });
     const heard = await this.#emit("task", { kind, captureSha, subject: text, locator: loc, enqueued: now, deduped: !!existing });
     const armedAt = heard.map((h) => h.ok && h.result && h.result.armedAt).find((x) => x != null) ?? null;
     return existing ? { ok: true, queued: false, deduped: true, kind, captureSha, armedAt }
@@ -1647,19 +1687,23 @@ export class Capture {
   /** R45 */
   taskEventAttempt({ kind, captureSha, at } = {}) {
     try {
-      if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
-      this.#sql.exec(`UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
-                     at ?? stampSecond(), kind, captureSha);
-      return { found: true };
+      return this.#tx(() => {
+        if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
+        this.#sql.exec(`UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
+                       at ?? stampSecond(), kind, captureSha);
+        return { found: true };
+      });
     } catch { return { found: false }; }
   }
 
   /** R45 */
   taskEventRemove({ kind, captureSha } = {}) {
     try {
-      if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
-      this.#sql.exec(`DELETE FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
-      return { found: true };
+      return this.#tx(() => {
+        if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
+        this.#sql.exec(`DELETE FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
+        return { found: true };
+      });
     } catch { return { found: false }; }
   }
 
@@ -1674,10 +1718,10 @@ export class Capture {
     try {
       if (typeof addressNorm !== "string" || !addressNorm || typeof captureSha !== "string" || !HEX64.test(captureSha))
         return { recorded: false };
-      this.#sql.exec(`INSERT INTO capture_validators (address_norm, capture_sha, etag, last_modified, at) VALUES (?, ?, ?, ?, ?)
-                      ON CONFLICT(address_norm, capture_sha) DO UPDATE SET etag = excluded.etag,
-                        last_modified = excluded.last_modified, at = excluded.at`,
-                     addressNorm, captureSha, etag || null, lastModified || null, at && ISO_INSTANT.test(at) ? at : stampSecond());
+      this.#tx(() => this.#sql.exec(`INSERT INTO capture_validators (address_norm, capture_sha, etag, last_modified, at) VALUES (?, ?, ?, ?, ?)
+                                     ON CONFLICT(address_norm, capture_sha) DO UPDATE SET etag = excluded.etag,
+                                       last_modified = excluded.last_modified, at = excluded.at`,
+                                    addressNorm, captureSha, etag || null, lastModified || null, at && ISO_INSTANT.test(at) ? at : stampSecond()));
       return { recorded: true };
     } catch { return { recorded: false }; }
   }
@@ -1724,19 +1768,21 @@ export class Capture {
       return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
     const now = at && ISO_INSTANT.test(at) ? at : stampSecond();
     const st = Number.isInteger(status) ? status : null;
-    this.#sql.exec(`INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?) ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
-    if (outcome === "governed")
-      this.#sql.exec(`UPDATE source_reachability SET governed_refusals = governed_refusals + 1, last_outcome = ?, updated_at = ?
-                       WHERE address_norm = ?`, outcome, now, addressNorm);
-    else if (outcome === "success")
-      this.#sql.exec(`UPDATE source_reachability SET attempts = attempts + 1, consecutive_failures = 0, first_failure_since = NULL,
-                        last_success = ?, last_outcome = ?, last_status = ?, updated_at = ? WHERE address_norm = ?`,
-                     now, outcome, st, now, addressNorm);
-    else
-      this.#sql.exec(`UPDATE source_reachability SET attempts = attempts + 1, failures_total = failures_total + 1,
-                        consecutive_failures = consecutive_failures + 1, first_failure_since = COALESCE(first_failure_since, ?),
-                        last_failure = ?, last_outcome = ?, last_status = ?, updated_at = ? WHERE address_norm = ?`,
-                     now, now, outcome, st, now, addressNorm);
+    this.#tx(() => {
+      this.#sql.exec(`INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?) ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
+      if (outcome === "governed")
+        this.#sql.exec(`UPDATE source_reachability SET governed_refusals = governed_refusals + 1, last_outcome = ?, updated_at = ?
+                         WHERE address_norm = ?`, outcome, now, addressNorm);
+      else if (outcome === "success")
+        this.#sql.exec(`UPDATE source_reachability SET attempts = attempts + 1, consecutive_failures = 0, first_failure_since = NULL,
+                          last_success = ?, last_outcome = ?, last_status = ?, updated_at = ? WHERE address_norm = ?`,
+                       now, outcome, st, now, addressNorm);
+      else
+        this.#sql.exec(`UPDATE source_reachability SET attempts = attempts + 1, failures_total = failures_total + 1,
+                          consecutive_failures = consecutive_failures + 1, first_failure_since = COALESCE(first_failure_since, ?),
+                          last_failure = ?, last_outcome = ?, last_status = ?, updated_at = ? WHERE address_norm = ?`,
+                       now, now, outcome, st, now, addressNorm);
+    });
     await this.#emit("source-outcome", { addressNorm, outcome, status: st, at: now, counted: outcome !== "governed" });
     return { ok: true, counted: outcome !== "governed", ...this.sourceReachability({ addressNorm, now }) };
   }

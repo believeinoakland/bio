@@ -409,3 +409,48 @@ test("R59 (N166): source_reachability is a read contract: one row per address_no
     assert.deepEqual([r.consecutive_failures, r.first_failure_since], [row(x)[0].consecutive_failures, row(x)[0].first_failure_since], x);
   }
 });
+
+/* N418 (K650): every write goes through record-core's `transact` (its R32), so a writer's own statements land or roll
+   back together, a write made inside a caller's transaction joins it, and `afterCommit` (its R66) called by a listener
+   inside a write is held until the outermost commit. Observed at the interface: a trigger that fails a writer's later
+   statement, a listener that asks `afterCommit`, and a caller's transaction that refuses. */
+test("R26 R44 (N418): a writer's statements land or roll back as one, a listener's afterCommit waits for the commit, and a write inside a caller's refused transaction leaves nothing and runs nothing", async () => {
+  const { c, core, s, rows } = fresh();
+  /* one act: the second statement of each writer fails, and the first is undone with it */
+  s.db.exec(`CREATE TRIGGER fail_reach BEFORE UPDATE ON source_reachability BEGIN SELECT RAISE(ABORT, 'reach down'); END`);
+  await assert.rejects(c.recordSourceOutcome({ addressNorm: "https://x.example/", outcome: "fetch_failed" }), /reach down/);
+  assert.equal(rows(`SELECT count(*) n FROM source_reachability`)[0].n, 0, "the row inserted first is rolled back");
+  s.db.exec(`CREATE TRIGGER fail_chrome BEFORE INSERT ON site_chrome_refs BEGIN SELECT RAISE(ABORT, 'chrome down'); END`);
+  receipt(s, { address: "https://h.example/p", capture: A, first: "2026-01-01T00:00:00Z" });
+  assert.throws(() => c.recordLinks({ sourceCapture: A, capturedAt: "2026-01-01T00:00:00Z",
+    links: [{ ref: "n", address: "https://h.example/n", address_norm: "https://h.example/n", chrome: true, chrome_basis: "<nav>" }] }), /chrome down/);
+  assert.equal(rows(`SELECT count(*) n FROM links`)[0].n, 0, "no link filed without its chrome derivation");
+  s.db.exec(`CREATE TRIGGER fail_slot BEFORE INSERT ON render_slots BEGIN SELECT RAISE(ABORT, 'slots down'); END`);
+  assert.throws(() => c.renderAdmit({ allowanceMs: 1000, reserveMs: 10, at: "2026-04-01T00:00:00Z" }), /slots down/);
+  assert.equal(rows(`SELECT count(*) n FROM render_allowance`)[0].n, 0, "no reservation counted without its slot");
+  /* afterCommit asked by a listener inside a write waits until the write's statements are all committed */
+  const seen = [];
+  c.on("observation", "log", () => { core.afterCommit(() => seen.push(rows(`SELECT count(*) n FROM reuse_verdicts`)[0].n)); return null; });
+  const v = (i) => ({ source_capture: B, host: "x.example", address_norm: `https://x.example/${i}`, verdict: "confirmed", reused_sha: H("1") });
+  c.recordReuseVerdicts({ bundleId: "INFO-1", verdicts: [v(1), v(2), v(3)], at: "2026-01-01T00:00:00Z" });
+  assert.deepEqual(seen, [3, 3, 3], "each held call ran after all three verdicts were committed, in order");
+  /* inside a caller's transaction that refuses: nothing of the write stands and nothing held runs */
+  seen.length = 0;
+  const before = rows(`SELECT count(*) n FROM reuse_verdicts`)[0].n;
+  const out = core.transact(() => {
+    c.recordReuseVerdicts({ bundleId: "INFO-2", verdicts: [v(4)], at: "2026-01-02T00:00:00Z" });
+    c.recordCaptureLimit({ runtime: "subrequests", observed: 50 });
+    return { ok: false, reason: "CALLER_REFUSED" };
+  });
+  assert.deepEqual([out.reason, rows(`SELECT count(*) n FROM reuse_verdicts`)[0].n, rows(`SELECT count(*) n FROM capture_limits`)[0].n, seen],
+                   ["CALLER_REFUSED", before, 0, []]);
+  /* and inside one that commits, the held call runs once the caller's transaction commits, not before */
+  const order = [];
+  core.transact(() => {
+    c.on("observation", "order", () => { core.afterCommit(() => order.push("held")); return null; });
+    c.recordReuseVerdicts({ bundleId: "INFO-3", verdicts: [v(5)], at: "2026-01-03T00:00:00Z" });
+    order.push("caller still open");
+    return { ok: true };
+  });
+  assert.deepEqual(order, ["caller still open", "held"]);
+});
