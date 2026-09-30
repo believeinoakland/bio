@@ -75,7 +75,13 @@ CREATE TABLE IF NOT EXISTS signers (
   status    TEXT NOT NULL DEFAULT 'active',
   added     TEXT NOT NULL,
   -- REC-159: the administrator whose act last set the key's status; NULL reads 'not recorded'.
-  status_by TEXT
+  status_by TEXT,
+  -- R27 (N364, DEC-80 item 4): how the key was registered, 'admin' by an administrator (R25) or 'self' by its own
+  -- member from a signed-in session (R89), and who registered it. A row written before these columns was
+  -- registered by R25, the only door there was, so a NULL origin reads 'admin'; NULL registered_by reads
+  -- 'not recorded'. Neither is back-filled. attests never reads origin (R91).
+  origin    TEXT,
+  registered_by TEXT
 );
 
 -- PL-11 / IS-5 / D-199: THE ai CREDENTIAL'S DECLARED TASK SCOPE, AND THE
@@ -342,6 +348,8 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["members", "pairing_published", "INTEGER NOT NULL DEFAULT 0"],
   ["project_participants", "owner_order", "INTEGER"],
   ["signers", "status_by", "TEXT"],
+  ["signers", "origin", "TEXT"],
+  ["signers", "registered_by", "TEXT"],
   ["ai_credentials", "confined_to", "TEXT"],
 ];
 

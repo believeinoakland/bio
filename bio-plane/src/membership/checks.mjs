@@ -26,7 +26,12 @@
  * N335 (K275, K380): NOT_A_PARTICIPANT names one condition, the caller holds no participation in the project, minted at
  * `notAParticipant` (R87), which promotion's fork calls too; a TARGET holding none (R36) and a target not joined (R39)
  * are their own conditions and codes (`TARGET_NOT_AN_ADMIN`'s precedent). They take the next free numbers of C-56, a
- * person's position in a project. NOT_PROPOSED (R6) takes the next free number of C-96. */
+ * person's position in a project. NOT_PROPOSED (R6) takes the next free number of C-96.
+ *
+ * N364 (DEC-80 item 4, K509 (2)): SIGNER_KEY_HELD_BY_ANOTHER is R89's, a member registering a key another member holds,
+ * minted at its one site in `signerRegisterOwn`; its row is C-96.15, as the requirement names it, worded there.
+ * SIGNER_KEY_REVOKED is R89's too (K535): a member registering again a key of theirs that was revoked, which only an
+ * administrator re-activates (R26); its row is C-96.16, beside it. */
 
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
@@ -74,6 +79,16 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     translation: 'A part of this instance tried to register a listener it had already registered, or one that '
       + 'another part already holds, so the second registration was refused and the first still stands. This is a '
       + 'fault in how the instance was built, not in the record, and nothing in the record changed.',
+  }),
+  SIGNER_KEY_HELD_BY_ANOTHER: Object.freeze({
+    check: 'C-96.15', where: at("signerRegisterOwn", "is-signer-key-held"),
+    translation: 'This key is registered to another member, so it cannot be yours. Make a new key in this browser. '
+      + 'Nothing was changed.',
+  }),
+  SIGNER_KEY_REVOKED: Object.freeze({
+    check: 'C-96.16', where: at("signerRegisterOwn", "is-signer-key-revoked"),
+    translation: 'This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an '
+      + 'administrator. Nothing was changed.',
   }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: 'C-96.13', where: at("expertiseDeclare", "is-expertise-labelled"),
