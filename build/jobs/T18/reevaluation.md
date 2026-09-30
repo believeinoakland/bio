@@ -28,3 +28,7 @@ Size (session_016zab9sf3ptyXgQqgWMhoeh): test runs 12, module lines 1997
 ## J1 · REPORT
 
 inquiry (its R42): #raise copies listeners_failed out of reevaluation's answer when raise returns. Under N406 a raise inside a transaction writes listeners_failed only after the outermost commit, so the copy misses it: staled runs inside content's transaction, so a re-read's reply never names a failed listener in the plane (dispose and divide too, if a caller wraps them in a transaction). Fix is inquiry's: carry raise's answer object itself, as promotion's reopen and case-authoring do. Also record-core: registerGrammar's answer (src/record-core/index.mjs:970) is the DEC-49 guard's one unclassified outcome. Details in my record, Completion.
+
+## J2 · COMPLETE
+
+Done: N406's share (raise, raiseNotices and sourceMoved tell R8's listeners through record-core's afterCommit; listeners_failed written onto the returned answer; tested with rolled-back callers and a savepoint rolled back under a committing outer); converts reevaluation and versionnotice at the interface; VERSION_NOTICE_CHECKS re-pointed to content; N242's share already met (no reevaluation outcome unclassified in the guard). Module tests 73/73; users' tests green but for the layer-6 known reds (conformance R10 K680, control-plane R36 K658); format, architecture, coverage (28/28), ownership: 0 failures. Nothing awaiting stamp; no artifact stale. Record: build/jobs/T18/reevaluation.md on job/T18/reevaluation.
