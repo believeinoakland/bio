@@ -1,6 +1,6 @@
 # legacy-tests (T17)
 
-**Status** · session_01G96r3KaiubF4taKLzus78v · depth 2 · COMPLETE · handled B6
+**Status** · session_01G96r3KaiubF4taKLzus78v · depth 2 · COMPLETE · handled B7
 
 ## Progress
 
