@@ -28,7 +28,7 @@ import { MECHANICAL_FIELD_SETS } from "./history.mjs";
 import { projectNameKey } from "./names.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences,
          withProducingGroup } from "./text.mjs";
-import { runCaseGate as runCaseCatalogue } from "../gate.mjs";
+import { runCaseGate as runCaseCatalogue, runGate as runBundleGate } from "../gate.mjs";
 
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../gate.mjs";
 export { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "./checks.mjs";
@@ -294,6 +294,16 @@ class Promotion {
   /* R33: the case gate over the registered catalogue; with none registered, C-102.9 (K529). Same GATE_VERSION (R34). */
   runCaseGate(args = {}) {
     return runCaseCatalogue(args || {}, this.#caseCatalogue ? this.#caseCatalogue.fn : null);
+  }
+
+  /* ---------------------------------------------------------------- R27: the gate, with the registered grammars */
+
+  /* R27 (§1b): the bundle gate with the type grammars later modules registered with record-core (its `grammars()`), so
+     a grammar that left the catalogue judges a bundle here as it does at the audit. `args` are `runGate`'s own; a
+     caller's `grammars` is never taken, since the record's registrations are the one list. A record that cannot answer
+     its registrations rejects the gate: an unread list is never read as empty (R37). */
+  async runGate(args = {}) {
+    return runBundleGate({ ...(args || {}), grammars: this.#record.grammars() });
   }
 
   /* ---------------------------------------------------------------- promote */

@@ -165,3 +165,37 @@ test("R50: ROW_CENSUS is a frozen {version, rows, digest}: the stamp's CATALOG_V
   assert.equal(Object.getOwnPropertyDescriptor(ROW_CENSUS, "rows").writable, false);
 });
 
+
+test("R27 (§1b): the gate passes the registered grammars to the catalogue: a grammar claiming an arm runs in its place, one claiming none runs after, and the findings are the catalogue's own with the same grammars", async () => {
+  const image = { "bundle.md": md({ source_status: "nonsense" }) };
+  const claim = { module: "capture", ids: ["C-2.7"],
+                  arm: (ctx, findings) => { findings.push({ check: "C-2.7", severity: "error", message: "from capture's grammar" }); } };
+  const extra = { module: "later", ids: ["C-999.1"],
+                  arm: (ctx, findings) => { findings.push({ check: "C-999.1", severity: "error", message: `after, over ${ctx.folderName}` }); } };
+  const catalogueWith = async (grammars) => {
+    const files = new Map(Object.entries(image));
+    const { findings } = await checkBundle({ folderName: ID, files, elidedPaths: new Set(),
+      sha256: async (v) => hex(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)),
+      sha512: async (b) => new Uint8Array(createHash("sha512").update(b).digest()),
+      resolveTarget: (id) => id === ID, releaseRegistry: null, publishedRegistry: null, publishedCaseRegistry: null,
+      earnedRegistry: null }, { grammars });
+    return findings.filter((f) => f.severity === "error").map((f) => [f.check, f.message]);
+  };
+  const builtIn = (await runGate(base(image))).findings.map((f) => [f.check, f.detail]);
+  assert.ok(builtIn.some(([c]) => c === "C-2.7"), "the built-in information arm judges this document");
+  /* Through promotion's instance: the record's registrations, and no caller's. */
+  const { p, record } = makePromotion();
+  record.grammarList = [claim, extra];
+  const got = (await p.runGate(base(image, { grammars: [] }))).findings.map((f) => [f.check, f.detail]);
+  assert.deepEqual(got, (await catalogueWith([claim, extra])).concat(
+    (await runGate(base(image))).findings.filter((f) => !f.check.startsWith("C-")).map((f) => [f.check, f.detail])));
+  const c27 = got.filter(([c]) => c === "C-2.7");
+  assert.deepEqual(c27, [["C-2.7", "from capture's grammar"]], "the built-in arm is skipped, never run twice");
+  assert.deepEqual(got.filter(([c]) => c === "C-999.1"), [["C-999.1", `after, over ${ID}`]]);
+  /* With none registered, the instance's gate is the built-in catalogue's. */
+  record.grammarList = [];
+  assert.deepEqual((await p.runGate(base(image))).findings.map((f) => [f.check, f.detail]), builtIn);
+  /* A record that cannot answer its registrations rejects the gate: an unread list is never read as empty (R37). */
+  record.grammars = () => { throw new Error("registrations unreadable"); };
+  await assert.rejects(p.runGate(base(image)), /registrations unreadable/);
+});

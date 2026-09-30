@@ -555,8 +555,13 @@ export function runCaseGate({ caseId, edition, fm, priorCase, body = null, membe
   };
 }
 
+/* R27 (§1b, K585 (2)): `grammars` are the type grammars later modules registered with record-core
+   (`record.grammars()`, `[{module, ids, arm}]` in module order), passed to `checkBundle` as its `opts.grammars`: a
+   grammar claiming a built-in arm's ids runs in that arm's place, so a grammar that left the catalogue judges the
+   bundle at the gate exactly as at the audit. Promotion's instance passes its record's (`Promotion#runGate`); a caller
+   of this function with none passes none, and the catalogue's built-in arms run. */
 export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry,
-                                publishedRegistry, publishedCaseRegistry, earnedRegistry }) {
+                                publishedRegistry, publishedCaseRegistry, earnedRegistry, grammars = null }) {
   const files = new Map(), elided = new Set();
   for (const [path, v] of Object.entries(image || {})) {
     if (typeof v === "string") files.set(path, v);
@@ -594,7 +599,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        refuses the leg outright rather than waving it through, which is why the
        blinding is loud instead of silent. */
     earnedRegistry: earnedRegistry || null,
-  });
+  }, { grammars });
   /* R30–R32 (K64): the checks that read a bundle's record of promotions and its release signatures (C-4.2, C-17.2,
      C-18.8, C-20.1) left the catalogue for this module, and run here, after it, over the same image. */
   const findings = [...catalogue, ...await recordChecks({ folderName: bundleId, files,
