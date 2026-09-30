@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { world, sha, provDoc, infoMd } from "./fixture.mjs";
 import * as provenance from "../../../src/provenance/index.mjs";
 import { registerChecks, withRegisterChecks } from "../../../src/provenance/index.mjs";
-import { PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
+import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/checks.mjs";
 import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 const run = (docs, { md = infoMd("INFO-2026-0001-x"), files = {}, reg = null } = {}) => registerChecks({

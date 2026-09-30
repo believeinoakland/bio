@@ -34,7 +34,7 @@ import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, vocabulari
 import { ACQUIRE_GRADE_NOTE } from "./capture/index.mjs";
 import { queueAnswer } from "./queue/index.mjs";
 
-import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
+import { registerAuditOp, attestOp } from "./provenance/ops.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
 import { governorOp } from "./host-governor/index.mjs";
 import { knockOp } from "./capture/doorbell.mjs";
@@ -101,8 +101,6 @@ function storageAbsent(op, error) {
                 ...installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"), error, op }, 503);
   /* END DEC-49 REGION is-storage-absent */
 }
-
-/* D-533: `partsHeld`, the one rule for a capture held in parts, is provenance's (R7; imported above). */
 
 bindPublishedPlane({ json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON,
                     STORE_SILENT_DETAIL, PUBLISHED_STORE });
@@ -493,23 +491,8 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       return json({ ok: true, result: queueAnswer(r, { gate: ACT_GATE, kinds: qkOut.result?.kinds }).result, store: storeName, tokenClass: cls }, 200);
     }
 
-    if (op === "registeraudit") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      /* REC-52: this one CRASHED rather than lied — `r.unresolved` on an absent
-         result throws a TypeError and the caller gets a platform 500 — so it is
-         the less dangerous half of the class. It is converted anyway, because
-         the answer below is a SOUNDNESS VERDICT about the register ("sound:
-         true") and an audit that reports on a register it could not read is the
-         worst possible place to be one line away from a false clean bill. */
-      const aOut = await doAnswer(st.fetch("http://do/registeraudit"));
-      if (aOut.refused) return storeRefusal(aOut);
-      if (!aOut.answered) return storeSilent("registeraudit", aOut.correlation);
-      if (!aOut.result) return storeSilent("registeraudit");
-      /* R8, R9: provenance's report, each unresolved row probed in the working bucket (D-533's parts included). */
-      return json({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function"
-        ? { head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)), get: (sha) => env.CAPTURES.get(captureKey(storeName, sha)) }
-        : null), store: storeName, tokenClass: cls }, 200);
-    }
+    if (op === "registeraudit") return registerAuditOp(env, env.STORE.get(env.STORE.idFromName(storeName)),
+      { json, doAnswer, storeSilent, storeRefusal, captureKey, storeName, cls });
 
     /* selftest reports deployment health as JSON, so "did the deploy work" is a
        link rather than a command. It asserts every binding is present and that
@@ -644,39 +627,8 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       return json(Object.assign(read.body, { note: ACQUIRE_GRADE_NOTE }), 200);
     }
 
-    /* Co-attestation over a capture hash.
-     *
-     * The doctrine's asymmetry: a self-recorded hash proves integrity since
-     * capture and nothing about origin, because it is the group attesting to
-     * itself. A timestamp token is issued by somebody the group does not
-     * control, so it proves the capture EXISTED at the claimed instant, which
-     * is the part an attacker holding a write token cannot forge.
-     *
-     * Every attempt is recorded, successes and failures alike, in the shape
-     * C-18.1 requires. The doctrine is explicit that a failed attempt is
-     * recorded with its reason and never omitted: a provenance register showing
-     * no attempt and one showing an attempt that failed are different claims,
-     * and collapsing them would let an absence read as a success.
-     */
-    if (op === "attest") {
-      if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
-      if (typeof env.CAPTURES?.put !== "function")
-        return storageAbsent(op, "this instance has no evidence storage configured");
-      // R31–R33: provenance's `attest`, over the working bucket by digest, the network, and the store's register and
-      // receipts (D-476's `registerholds`, which answers whether a receipt or the register names the hash).
-      const body = await req.json().catch(() => null);
-      const attested = await attest(body || {}, {
-        head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)),
-        put: (sha, bytes) => env.CAPTURES.put(captureKey(storeName, sha), bytes, { sha256: sha }),
-        fetch: (...a) => fetch(...a),
-        holds: async (sha) => {
-          const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
-            `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
-          return hOut.answered ? hOut.result : null;
-        },
-      });
-      return json({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
-    }
+    if (op === "attest") return attestOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)),
+      { json, doAnswer, storageAbsent, captureKey, storeName, cls });
 
     /* K372 (N278, N247): `doAnswer` is handed in, as it is to `knockOp`, so the one envelope reader opens monitoring's. */
     if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, requiredArgument, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
