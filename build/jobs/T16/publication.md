@@ -1,6 +1,6 @@
 # publication (T16)
 
-**Status** · session_019hjZa97BwV8fCGD6XMVLQD · depth 2 · WORKING · handled B1
+**Status** · session_019hjZa97BwV8fCGD6XMVLQD · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
@@ -20,8 +20,8 @@ Replaces J1 (items 1–3 unchanged; item 4 revised, as built). The grammar is in
 
 ## Completion
 
-**Entries applied** (N364; DEC-81 items 1 and 3, DEC-78 item 5; K497, K509, K530, K539), on the reading in J2 (which replaces J1):
-- **R20** `/5` states two blocks. The grammar is one file, `src/publication/blocks.mjs`: `captures:` rows (`capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only`, and for an acknowledged capture `acknowledgement_reason, acknowledged_by, acknowledged_at, sentence`), `capture_accounts:` rows (`capture, by, at, text_b64, signature_b64`: exact bytes, so an account's signature still verifies), and `sources:` rows (`capture, stated, basis`, no source or entry id). Writers `captureBlockLines(rows)` and `sourceBlockLines(rows)` (for case-authoring R14, R35–R37), the one reader `caseDocumentBlocks(text)` (before `/5`: both null with `BLOCKS_PREDATE_SENTENCE`; a `/5` missing a block: that block null with `BLOCK_UNREADABLE_SENTENCE`; never throws), and the one spelling of a stated source detail, `sourceStatement(entry)` and `unnamedSourceStatement({capture, received})`. All exported from `src/publication/index.mjs`.
+**Entries applied** (N364; DEC-81 items 1 and 3, DEC-78 item 5; K497, K509, K530, K539), as ruled final in B4/B5 (K553: J2's spelling; B2 and B3 superseded; merged early, K554):
+- **R20** `/5` states the blocks. The grammar is one file, `src/publication/blocks.mjs`: `captures:` rows (`capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only`, and for an acknowledged capture `acknowledgement_reason, acknowledged_by, acknowledged_at, sentence`), `capture_accounts:` rows (`capture, by, at, text_b64, signature_b64`: exact bytes, so an account's signature still verifies), and `sources:` rows (`capture, stated, basis`, no source or entry id). Writers `captureBlockLines(rows)` and `sourceBlockLines(rows)`, the one reader `caseDocumentBlocks(text)` (before `/5`: both null with `BLOCKS_PREDATE_SENTENCE`; a `/5` missing a block: that block null with `BLOCK_UNREADABLE_SENTENCE`; never throws), and the one spelling of a stated source detail, `sourceStatement(entry)` and `unnamedSourceStatement({capture, received})`. All exported from `src/publication/index.mjs`.
 - **R2** `caseDocumentFacts` answers `captures`, `sources` and `blocks_detail` beside what it answered, under the same fence.
 - **R10** `publishedCase` answers `captures`, `sources` and `blocks_detail` from the signed document, never live; null with a sentence for an older document, an unsigned edition or a loose bundle. `op=publishedcase` carries them (the Worker spreads the store's answer).
 - **R51** `commitCaseEdition`, after its existing refusals and before any write, re-reads each `sources:` row at the commit's instant: the sources behind the row's capture from `sources`' `source_knocks` read contract (its R15), `publishableAt({source, audience: "public", at})` asked of each; a row holds only as an answered entry's spelling with the same basis, or as the capture's unnamed statement. Any other row: `SOURCE_CONSENT_WITHDRAWN` (C-122.1, its check and translation), naming the captures, nothing written. A retry of a signature already committed answers `existed: true` as before (not re-read: the signed edition stands, DEC-78 item 5(d)). A source that cannot be read fails closed.
@@ -41,16 +41,18 @@ Replaces J1 (items 1–3 unchanged; item 4 revised, as built). The grammar is in
 4. **Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale (plane source changed); not rebuilt (§14).
 5. **sources** R15 (`source_knocks` as a read contract) is still `not yet met: its pin test, N377`; publication now reads it, so its columns `capture_sha`, `source_id`, `received`, `knock_id` are relied on.
 
-**Deferred:** none. R30, R32 stay `test.todo` with their causes (unchanged). A second row for "a stated detail never publishable" is asked in J2; built as C-122.1 until answered.
+**Deferred:** none. R30, R32 stay `test.todo` with their causes (unchanged). One row only, C-122.1 (K549).
 
 **Note:** the code was pushed inside the mail commit `89fe8baf52` ("J2 QUESTION"): `mail post` commits what is staged. Not rewritten (no force-push).
 
 **Tests and checks:**
-- `node --test test/m/publication/`: 110 tests, 108 pass, 0 fail, 2 todo (R30, R32). New `sources.test.mjs`: R20 ×2, R2, R10, R51 ×3, R52. Negative control: with R51's refusal disabled, three tests fail (both R51 arms that refuse, and R52).
+- `node --test test/m/publication/`: 110 tests, 108 pass, 0 fail, 2 todo (R30, R32), as merged (K554). New `sources.test.mjs`: R20 ×2, R2, R10, R51 ×3, R52. Negative control: with R51's refusal disabled, three tests fail (both R51 arms that refuse, and R52).
 - Users of publication (P11): case-authoring 53/0, review 30/0, conformance 46/0, filings 35/0, monitoring 65/0 (6 todo), affordances 90/0, queue 69/0, control-plane 57/0; ratification 73/1, the pre-existing failure above (same without this change). queue-producers has no tests directory yet.
 - `format`: 72 modules, 0 failures. `architecture publication`: 22 files, 76 imports, 0 failures. `coverage publication`: 52 of 52 live ids, 0 failures. `ownership publication tranche/T16`: 7 files, legacy 0 added / 0 removed, 0 failures.
 
-Size (session_019hjZa97BwV8fCGD6XMVLQD): test runs 18, module lines 6185
+After B5: B3's code undone (merged `tranche/T16`, `src/publication/` and the tests restored from it; no history rewritten), so this branch's publication files equal the tranche's; publication 108/0/2 todo, users re-run with the same results, the four checks 0 failures.
+
+Size (session_019hjZa97BwV8fCGD6XMVLQD): test runs 41, module lines 6185
 
 ## J3 · REPORT
 
@@ -59,3 +61,11 @@ Found in other modules (record, Completion): (1) case-authoring: write the /5 bl
 ## J4 · COMPLETE
 
 R2, R10, R20, R51, R52 and row C-122.1 (awaiting stamp, T17) applied, on J2's reading (replaces J1); ready to merge early for case-authoring (K425). Strike the N364 not-yet-met marks on R2, R10, R20, R51, R52. publication 108 pass / 0 fail / 2 todo; users green except ratification's pre-existing K500 red; four checks 0 failures. Record: build/jobs/T16/publication.md, Completion. J2's questions still open: a ruling other than my reading re-opens it by CHANGE.
+
+## J5 · COMPLETE
+
+B3 (K552) applied on merged tranche/T16: captures: flat (accounts a count, acknowledgement and sentence null unless self-attested), capture_accounts: {capture, seq, by, at, key_b64, text, text_sha256, signature_sha256} with each account's text and armored signature verbatim in the body (## Capture Accounts, captureAccountsBodyLines), sources: as K549; caseDocumentBlocks reads all three, caseDocumentFacts and publishedCase answer all three. B2 (K549): one row C-122.1, as built. Provider part met: ready to merge early (K425); case-authoring's helpers are captureBlockLines, captureAccountsBodyLines, sourceBlockLines, sourceStatement, unnamedSourceStatement, caseDocumentBlocks. Strike N364's not-yet-met marks on R2, R10, R20, R51, R52. publication 108/0/2 todo; users green but ratification's pre-existing K500 red; four checks 0 failures. Record: Completion.
+
+## J6 · COMPLETE
+
+B5 applied: J5's code undone (merged tranche/T16, src/publication/ and tests restored from it, no history rewritten); job/T16/publication's publication files now equal the tranche's (K553 spelling). publication 108 pass / 0 fail / 2 todo; users unchanged (ratification's pre-existing K500 red only); four checks 0 failures. Record updated.
