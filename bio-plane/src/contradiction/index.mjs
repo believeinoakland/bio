@@ -26,19 +26,31 @@
    `inquiry_basis_versions`, `inquiry_basis_version_legs` and `resolutions` as their owners' read contracts
    (CONTRADICTION #1 QUESTION J1). */
 import { recordOf } from "../record-core/index.mjs";
-import { viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { viewerPredicate, GATE_MARK, membershipOf, noSuchProject, notAParticipant } from "../membership/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
-import { sha256HexSync, canonicalJson } from "../../checks/bio-checks.mjs";
+import { promotionOf } from "../promotion/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
+import { basisVersionsOf, versionsIn } from "../basis-versions/index.mjs";
+/* `inquiry`'s N345 services (its R46–R48) are read through the namespace, so a name its job has not yet exported reads
+   `undefined` rather than failing the import: this module is built against their stated interface (START, K481). */
+import * as inquiryModule from "../inquiry/index.mjs";
+import { sha256HexSync, canonicalJson, isMachineIdentity, parseFrontmatter } from "../../checks/bio-checks.mjs";
 import { CONTRADICTION_LABELS, JUDGEMENT_PROMPT, JUDGEMENT_PROMPT_SHA256, judgementSide,
-         renderJudgementInput } from "../contradiction.mjs";
-import { CONTRADICTION_SCHEMA } from "./schema.mjs";
+         renderJudgementInput, RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../contradiction.mjs";
+import { CONTRADICTION_SCHEMA, CONTRADICTION_COLUMNS } from "./schema.mjs";
 import { CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS } from "./checks.mjs";
+import { WEIGHTS, STATES, K5_GATE_MEASURED, K5_UNSHOWN_WHY, weightOf, stateOf, isClosed, isProjectConflict,
+         isStanding } from "./derive.mjs";
+import { fmSafe, setFrontmatterLines, appendSessionLog, setOrAddScalar, rand } from "./text.mjs";
 
 export { CONTRADICTION_LABELS, JUDGEMENT_PROMPT, JUDGEMENT_PROMPT_SHA256, judgementSide, renderJudgementInput,
-         CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS, CONTRADICTION_SCHEMA };
+         RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256, CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS,
+         CONTRADICTION_SCHEMA, WEIGHTS, STATES, K5_GATE_MEASURED };
 
-/* R22 (K23): the one table this module owns, keyed to a bundle by either side's. */
-export const CONTRADICTION_TABLES = Object.freeze(["contradiction_candidates"]);
+/* R22, R47 (K23): the tables this module owns, each keyed to a bundle by both sides' (and, for an opt-in or a
+   response, by its project too). */
+export const CONTRADICTION_TABLES = Object.freeze(["contradiction_candidates", "contradiction_acts",
+  "contradiction_recommendations", "contradiction_optins", "contradiction_responses"]);
 
 /** R6: the per-key bound. Section 6: *it is bounded, and the bound is stated* — a capped answer that drops its bound
  *  reads as COMPLETENESS. */
@@ -46,6 +58,48 @@ export const CONTRADICTION_PAIRS_MAX = 50;
 
 /** R15: a proposal's reason, at most. */
 export const CANDIDATE_REASON_MAX = 2000;
+
+/** K5's scan: at most this many inquiries are examined for two concluded stances; reaching it with more left is
+ *  truncation, stated (R7). */
+export const K5_INQUIRIES_EXAMINED = 1000;
+
+/** R24, R49: the reach of a duty and a candidate's parties, bounded per inquiry and per content row. */
+export const REACH_PROJECTS_MAX = 32;
+export const REACH_INQUIRIES_MAX = 32;
+
+/** R25, R50, R54: a page of candidates, notices or responses. */
+export const PAGE_MAX = 50;
+/** R25: the candidates a subject's read examines; reaching it with more left is `truncated`. */
+export const CANDIDATES_SCAN_MAX = 2000;
+/** R27: referents in one request. */
+export const TENSIONS_REFERENTS_MAX = 200;
+/** R29: candidates per finding. */
+export const UNRESOLVED_MAX = 200;
+/** R30, R51, R53: the caps on a member's free text, by field. */
+export const TEXT_CAPS = Object.freeze({ explanation: 1000, reason: 500, words: 500, qualifier: 200, question: 500,
+                                         text: 2000 });
+/** R53: an email address, at most. */
+export const EMAIL_MAX = 254;
+/** R54: the relayed responses carried in one notice. */
+export const NOTICE_RESPONSES_MAX = 20;
+/** R31 (DEC-84 item 17): the three reasons a lead is dismissed for. */
+export const DISMISSAL_REASONS = Object.freeze(["same_fact_different_precision", "not_same_matter",
+                                                "real_conflict_not_pursued"]);
+/** R40: the two that count as a false conflict. */
+export const FALSE_CONFLICT_REASONS = Object.freeze(["same_fact_different_precision", "not_same_matter"]);
+/** R32–R34: the answers to "how do these differ?". */
+export const CLARIFY_CHOICES = Object.freeze(["differs", "one_wrong", "no_difference"]);
+/** R39: when an acceptance rate is due for review (DEC-77 item 3; §15 point 15). PROVISIONAL, as IDENTIFY's was. */
+export const ACCEPTANCE_REVIEW = Object.freeze({ rate: 0.95, min_offered: 30, status: "PROVISIONAL" });
+/** R50: the one sentence a notice carries. */
+export const NOTICE_SENTENCE = "Something this project rests on is in conflict with a record you cannot see. Neither "
+  + "that record nor who holds it is shown. Your project can ask to resolve it. If every project holding a side asks, "
+  + "the projects are named to each other's members, and you can respond.";
+
+/* The viewer the module's own internal reads are made as (a machine credential sees every bundle, membership R43): the
+   reach of a duty and a candidate's parties are about the record, never about who asks. What a viewer is then shown
+   is gated separately. */
+const INTERNAL = "class:daemon";
 
 /** The keys, section 4, as the VOCABULARY rather than as four spellings in four places (PL-17's rule: the vocabulary
  *  travels with the answer). Section 4: *keys are ADDED, not tuned* (R18) — a fifth key is a design change and a new
@@ -67,10 +121,16 @@ export const CONTRADICTION_KEYS = Object.freeze({
         join: "two cited passages whose documents RESOLVE (established) to the same entity, from "
             + "different doctypes, or with different dates, AS THEIR READERS STATE THEM",
         why: "a rule against the act it governs, or one body's statement at one date against its statement at another" }),
+  /* N345, DEC-84 item 3: added, not tuned (R18). Two projects' conclusions are plurality, not a defect, until a member
+     finds no named difference between them (R24, R34). */
+  K5: Object.freeze({ key: "K5", name: "one question, two projects' conclusions", feeds: "record",
+        join: "two projects whose stances on the SAME inquiry are both concluded, adopting claims whose text differs",
+        why: "two projects answered one question differently" }),
 });
 
 /* R11: each key's own last level, named when every rung of its ladder is present and the join still formed nothing. */
-const LAST_LEVEL = Object.freeze({ K1: "shared_side", K2: "shared_subject", K3: "shared_referent", K4: "discriminator" });
+const LAST_LEVEL = Object.freeze({ K1: "shared_side", K2: "shared_subject", K3: "shared_referent", K4: "discriminator",
+                                   K5: "shared_question" });
 
 /** R11: the sentence a member reads when a key found nothing. ONE place, so a surface renders what the plane holds
  *  and never composes this itself — the second place a distinction is made is the first place it can drift. */
@@ -117,11 +177,23 @@ export const CONTRADICTION_ABSENCE = Object.freeze({
   shared_referent: "held claims rest on passages, and no two claims of DIFFERENT questions rest on "
                  + "the same one. Each passage is read by at most one held claim, so no text is read "
                  + "two ways here",
+  drawing_projects: "questions exist and no project you can see draws on any of them. K5 compares two projects' "
+                  + "answers to one question, so there is nothing to compare until projects rest on the questions",
+  concluded_stances: "projects draw on questions and none of them has concluded one. A project that has not "
+                   + "concluded holds no answer, so there is no answer to set beside another",
+  differing_claim: "projects have concluded, and no two concluded answers differ in their words. That is "
+                 + "agreement in the claims adopted, as far as their text goes, not a finding that they agree",
+  shared_question: "projects have concluded with differing answers, but never on the SAME question. Each question "
+                 + "has at most one concluded answer, so no question is answered two ways here",
   discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by "
                + "kind or by date. Either the readers state the same kind and the same date on "
                + "both, or they state neither — and where a value is missing the pair was left "
                + "unformed rather than guessed. The counts beside this say which",
 });
+
+/* R15, R16: a candidate's stored row as every answer gives it. */
+const STORED_ROW = `candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind, b_ref, b_version, b_bundle_id, run,
+  proposed_by, label, reason, state, origin, at, a_side, b_side`;
 
 const RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 const RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
@@ -129,48 +201,104 @@ const RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
 const instances = new WeakMap();
 
 /** K61: the one Contradiction for this object's storage. `opts` is read on the first call only: `record`
- *  (`recordOf(ctx)`), `extraction` (`extractionOf(ctx)`, reached on first use), `now` (a clock). A test may pass its
- *  own. */
+ *  (`recordOf(ctx)`), `extraction` (`extractionOf(ctx)`), `membership`, `promotion`, `entities`, `basisVersions`
+ *  (each its module's factory), `inquiry` (inquiry's N345 services, R46–R48: by default its module's exports and its
+ *  instance's `contradictionLink` and `inquiryOfCandidate`), `now` (a clock). Every service but `record` is reached on
+ *  first use. A test may pass its own. The promotion check (R38) is registered here, once. */
 export function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = instances.get(storage);
   if (!c) {
-    c = new Contradiction(storage, { ...opts, record: opts.record ?? recordOf(ctx),
-                                     extraction: opts.extraction ?? (() => extractionOf(ctx)) });
+    const record = opts.record ?? recordOf(ctx);
+    const lazy = (given, make) => given ?? make;
+    c = new Contradiction(storage, {
+      ...opts, record,
+      extraction: lazy(opts.extraction, () => extractionOf(ctx)),
+      membership: lazy(opts.membership, () => membershipOf(ctx, { record })),
+      promotion: lazy(opts.promotion, () => promotionOf(ctx, { record })),
+      entities: lazy(opts.entities, () => entitiesOf(ctx, { record })),
+      basisVersions: lazy(opts.basisVersions, () => basisVersionsOf(ctx, { record })),
+      inquiry: lazy(opts.inquiry, () => inquiryServices(ctx)),
+    });
     instances.set(storage, c);
+    const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
+    if (promotion && typeof promotion.registerStep === "function")
+      promotion.registerStep("contradiction", { check: (step) => c.promotionCheck(step) });
   }
   return c;
 }
 
+/** `inquiry`'s N345 services as this module reads them (its R46–R48): the frozen vocabularies and helpers from its
+ *  module, the two reads from its instance. A name inquiry does not yet export reads `undefined`, and every use here
+ *  answers what it cannot judge rather than guessing. */
+export function inquiryServices(ctx) {
+  const m = inquiryModule;
+  let k = null;
+  const inst = () => (k ||= m.inquiryOf(ctx));
+  return {
+    CONTRADICTION_COORDINATES: m.CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES: m.PLURALITY_DIFFERENCES,
+    DISSOLVED_BY: m.DISSOLVED_BY, RESOLUTION_KINDS: m.RESOLUTION_KINDS, NORM_CANONS: m.NORM_CANONS,
+    resolutionFamily: m.resolutionFamily, resolutionLines: m.resolutionLines,
+    deriveInquiryTitle: m.deriveInquiryTitle,
+    contradictionLink: (id) => { const i = inst(); return typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null; },
+    inquiryOfCandidate: (cand) => { const i = inst(); return typeof i.inquiryOfCandidate === "function" ? i.inquiryOfCandidate(cand) : null; },
+  };
+}
+
 export class Contradiction {
   #sql; #record; #extraction; #now; #runGate = null; #declared = false;
+  #membership; #promotion; #entities; #bv; #inquiry;
 
-  constructor(storage, { record, extraction = null, now = null } = {}) {
+  constructor(storage, { record, extraction = null, now = null, membership = null, promotion = null, entities = null,
+                         basisVersions = null, inquiry = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#extraction = extraction;
+    this.#membership = membership;
+    this.#promotion = promotion;
+    this.#entities = entities;
+    this.#bv = basisVersions;
+    this.#inquiry = inquiry;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
   #x() { return typeof this.#extraction === "function" ? (this.#extraction = this.#extraction()) : this.#extraction; }
+  /* Each service reached on first use: a function given is called once and its answer kept. */
+  #m() { return typeof this.#membership === "function" ? (this.#membership = this.#membership()) : this.#membership; }
+  #p() { return typeof this.#promotion === "function" ? (this.#promotion = this.#promotion()) : this.#promotion; }
+  #e() { return typeof this.#entities === "function" ? (this.#entities = this.#entities()) : this.#entities; }
+  #b() { return typeof this.#bv === "function" ? (this.#bv = this.#bv()) : this.#bv; }
+  #i() { return typeof this.#inquiry === "function" ? (this.#inquiry = this.#inquiry()) : (this.#inquiry || {}); }
 
   /* ---- boot (K4) ---- */
 
-  /** This module's table at every boot, idempotent, and the purge declaration (R22) once. */
+  /** This module's tables at every boot, idempotent (the columns added since a table was first created included),
+   *  and the purge declaration (R22, R47) once. */
   migrate() {
     const bare = CONTRADICTION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
+    for (const [table, col, type] of CONTRADICTION_COLUMNS) {
+      const held = this.#rows(`SELECT name FROM pragma_table_info(?)`, table).some((r) => r.name === col);
+      if (!held) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+    }
     this.declarePurge();
   }
 
-  /** R17, R22 (K23, record-core R21/R46): a candidate is keyed to the bundles both its sides live in, so a purge of
-   *  either end takes the row (D-113), as connections do. Nothing else updates or deletes one. Once per instance. */
+  /** R17, R22, R47 (K23, record-core R21/R46): every row is keyed to the bundles both sides of its candidate live in,
+   *  so a purge of either end takes it (D-113), as connections do; an opt-in and a response also by their project.
+   *  Nothing else updates or deletes one. Once per instance. */
   declarePurge() {
     if (this.#declared) return { ok: true, already: true };
-    const r = this.#record.declarePurge("contradiction",
-      [{ name: "contradiction_candidates", keys: ["a_bundle_id", "b_bundle_id"] }]);
+    const both = ["a_bundle_id", "b_bundle_id"];
+    const r = this.#record.declarePurge("contradiction", [
+      { name: "contradiction_candidates", keys: both },
+      { name: "contradiction_acts", keys: both },
+      { name: "contradiction_recommendations", keys: both },
+      { name: "contradiction_optins", keys: [...both, "project_id"] },
+      { name: "contradiction_responses", keys: [...both, "project_id"] },
+    ]);
     if (r && r.ok !== false) this.#declared = true;
     return r;
   }
@@ -482,6 +610,65 @@ export class Contradiction {
                : [] };
   }
 
+  /** K5 (N345, DEC-84 item 3) — one question, two projects' conclusions. For each inquiry this viewer may see, in id
+   *  order, the projects the viewer may see that draw on it (`basis-versions` R37, at `FULL`, membership R44) and each
+   *  one's stance read through `conclusionOf` (its R22): two stances both `concluded`, adopting claims whose text
+   *  differs, are a pair, counted once (the lower project id is side A). The same scan answers K5's ladder (R11), so a
+   *  rung and the join cannot disagree. At most `K5_INQUIRIES_EXAMINED` inquiries are examined; reaching it with more
+   *  left is truncation, and a note says so. */
+  #k5(viewer, cap) {
+    const bv = this.#b();
+    const found = { inquiry: false, drawing_projects: false, concluded_stances: false, differing_claim: false };
+    const pairs = [];
+    let truncated = false, examinedCut = false;
+    const claims = new Set();
+    if (!bv || typeof bv.projectsDrawingOn !== "function" || typeof bv.conclusionOf !== "function")
+      return { pairs, truncated, found, notes: ["basis-versions' reads are not reachable here, so K5 compared nothing"] };
+    const vp = viewerPredicate(viewer);
+    let after = "", examined = 0;
+    outer: for (;;) {
+      const page = this.#rows(
+        `SELECT b.bundle_id AS id FROM bundles b WHERE b.object_type='inquiry' AND b.bundle_id > ? AND (${vp.sql})
+          ORDER BY b.bundle_id LIMIT 100`, after, ...vp.args);
+      if (!page.length) break;
+      for (const r of page) {
+        after = r.id;
+        if (examined >= K5_INQUIRIES_EXAMINED) { truncated = true; examinedCut = true; break outer; }
+        examined += 1;
+        found.inquiry = true;
+        const projects = bv.projectsDrawingOn(r.id, viewer) || [];
+        if (projects.length) found.drawing_projects = true;
+        const stances = [];
+        for (const pr of projects) {
+          const st = bv.conclusionOf(pr.id, r.id, viewer);
+          const text = st ? (typeof st.claim === "string" ? st.claim : st.claim && typeof st.claim.text === "string" ? st.claim.text : null) : null;
+          if (!st || text === null || !text.trim()) continue;
+          found.concluded_stances = true;
+          stances.push({ project: pr.id, version: st.version ?? null, claim: text });
+          claims.add(text.trim());
+        }
+        if (claims.size > 1) found.differing_claim = true;
+        stances.sort((x, y) => (x.project < y.project ? -1 : x.project > y.project ? 1 : 0));
+        for (let i = 0; i < stances.length; i++) for (let j = i + 1; j < stances.length; j++) {
+          const a = stances[i], b = stances[j];
+          if (a.claim.trim() === b.claim.trim()) continue;
+          if (pairs.length === cap) { truncated = true; break outer; }
+          pairs.push({
+            key: "K5", inquiry: r.id,
+            a: { kind: "stance", inquiry: r.id, project: a.project, version: a.version, claim: a.claim },
+            b: { kind: "stance", inquiry: r.id, project: b.project, version: b.version, claim: b.claim },
+            why: "two projects concluded the same question, each adopting a claim, and the claims' words differ. "
+               + "Two projects' answers are plurality, not a defect, until a member finds no named difference",
+          });
+        }
+      }
+      if (page.length < 100) break;
+    }
+    return { pairs, truncated, found,
+             notes: examinedCut ? [`K5 examined the first ${K5_INQUIRIES_EXAMINED} questions this viewer may see and `
+                                 + `stopped: the questions after them were not compared`] : [] };
+  }
+
   /** R11: WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED. A LADDER OF EXISTENCE PROBES, and existence is
    *  deliberately not a count: a census would cost an unbounded scan per rung on the one surface whose subject is
    *  that the record is sparse. Each probe is `LIMIT 1` and rides the same viewer gate as the key's own join, so a
@@ -491,9 +678,17 @@ export class Contradiction {
    *  `viewer` IS A RUNG AND IT IS THE FIRST ONE: a read made with no viewer stamp, or one the gate does not recognise,
    *  is empty for a reason that is not about the record at all (R10), and nothing below it can be believed when it
    *  fires. */
-  #ladder(key, viewer, scope) {
+  #ladder(key, viewer, scope, out = null) {
     const rung = (level, sql, ...args) => ({ level, present: !!this.#one(sql, ...args) });
     if (scope === "DENY") return [{ level: "viewer", present: false }];
+    /* K5's rungs are read from its own scan, under the same gate, rather than probed a second time. */
+    if (key === "K5") {
+      const f = (out && out.found) || {};
+      return [{ level: "viewer", present: true }, { level: "inquiry", present: !!f.inquiry },
+              { level: "drawing_projects", present: !!f.drawing_projects },
+              { level: "concluded_stances", present: !!f.concluded_stances },
+              { level: "differing_claim", present: !!f.differing_claim }];
+    }
     const gi = this.#gate("ib.bundle_id", viewer);
     const gv = this.#gate("v.bundle_id", viewer);
     const gs = this.#gate("s.bundle_id", viewer);
@@ -596,9 +791,10 @@ export class Contradiction {
         : name === "K1" ? this.#k1(viewer, cap)
         : name === "K2" ? this.#k2(viewer, cap)
         : name === "K3" ? this.#k3(viewer, cap)
-        : this.#k4(viewer, cap);
+        : name === "K4" ? this.#k4(viewer, cap)
+        : this.#k5(viewer, cap);
       pairs.push(...out.pairs);
-      const ladder = this.#ladder(name, viewer, scope);
+      const ladder = this.#ladder(name, viewer, scope, out);
       /* THE FIRST EMPTY RUNG IS THE ANSWER. Where every rung is populated and the key still formed nothing, the join
          itself is what came back empty and the key's own last level names it — never a bare zero. */
       const empty = ladder.find((r) => !r.present);
@@ -618,15 +814,16 @@ export class Contradiction {
     return {
       ok: true, wrote: false, pairs_formed: formed, limit: cap, bound: max, bounded: true,
       viewer_scope: scope, keys, pairs,
+      /* R12 (N345): a run's judgements over these pairs are held APART from the pairing, and read through
+         `candidatesFor` (R25), which shows each only at the weight its label and key give it. */
       judgement: {
-        state: "NOT_REACHED",
+        state: "HELD_APART",
+        read: "candidatesFor",
         by: "the machine, inside an investigative run, as labelled machine work (DEC-24)",
-        item: "CONTRADICTION-IDENTIFY-DESIGN.md section 9 item 3",
-        why: "whether either side of a pair here CONTRADICTS the other — and whether that would be a "
-           + "contradiction in the WORLD, one in OUR RECORD, or merely the same fact stated at two "
-           + "precisions — is semantic work this plane cannot do and has not done. NOTHING here is a "
-           + "finding, and a pair is not a claim that its two sides disagree: it is a claim that they "
-           + "are WORTH COMPARING, by the named key, and nothing more",
+        why: "whether either side of a pair here CONTRADICTS the other is semantic work this read does not "
+           + "do. A run's judgement over a pair enters only as a labelled proposal, and is read through "
+           + "candidatesFor, never here. A pair is not a claim that its two sides disagree: it is a claim "
+           + "that they are WORTH COMPARING, by the named key, and nothing more",
       },
       says: denied
         ? "this read compared NOTHING, because no viewer the record recognises was stamped on it. That "
@@ -639,7 +836,8 @@ export class Contradiction {
                         + `that is COUNTED rather than rounded to agreement` : "")
         + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is `
         + `never evidence of absence at the next, and a key with nothing to join says the record is `
-        + `SPARSE there, not that it is consistent`,
+        + `SPARSE there, not that it is consistent. The pairing answers pairs; a run's judgements over them `
+        + `are read through candidatesFor`,
     };
   }
 
@@ -655,6 +853,12 @@ export class Contradiction {
     if (s && s.kind === "claim")
       return { kind: "claim", ref: `${String(s.inquiry ?? "")}|${String(s.version ?? "")}`,
                version: sha256HexSync(String(s.claim ?? "")), bundle: s.inquiry == null ? null : String(s.inquiry) };
+    /* K5 (N345): a stance is its project's adoption on one inquiry at one version, versioned by the adopted claim's
+       digest; it lives in its project's document, so the project is where a purge takes it. */
+    if (s && s.kind === "stance")
+      return { kind: "stance",
+               ref: `${String(s.inquiry ?? "")}|${String(s.project ?? "")}|${String(s.version ?? "")}`,
+               version: sha256HexSync(String(s.claim ?? "")), bundle: s.project == null ? null : String(s.project) };
     const cap = s?.capture_sha == null ? "" : String(s.capture_sha);
     const cid = s?.content_id == null || s.content_id === "" ? null : String(s.content_id);
     const home = cid ? this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, cid)
@@ -668,12 +872,14 @@ export class Contradiction {
    *  was. Answers whether a row was written. Nothing updates or deletes a candidate but its bundles' purge. */
   #append(row) {
     if (this.#one(`SELECT candidate FROM contradiction_candidates WHERE candidate=?`, row.candidate)) return false;
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_candidates`)?.n ?? 0) + 1;
     this.#sql.exec(
       `INSERT OR IGNORE INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id,
-         b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed','machine',?)`,
+         b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at, a_side, b_side, seq)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed','machine',?,?,?,?)`,
       row.candidate, row.key, row.a.kind, row.a.ref, row.a.version, row.a.bundle,
-      row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason, row.at);
+      row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason, row.at,
+      JSON.stringify(row.a_side), JSON.stringify(row.b_side), seq);
     return true;
   }
 
@@ -695,35 +901,10 @@ export class Contradiction {
       return { ok: false, reason: code, code, check: row.check, translation: row.translation,
                detail, ...(extra || {}) };
     };
-    /* DEC-49 REGION is-candidate-no-proposer */
-    if (typeof proposedBy !== "string" || !proposedBy.trim())
-      return refusal("CANDIDATE_NO_PROPOSER",
-        "a proposed contradiction records who proposed it; the plane stamps that from the credential that asked, "
-        + "so an empty one means the act arrived by a route that does not attribute it");
-    /* END DEC-49 REGION is-candidate-no-proposer */
-    const runId = typeof run === "string" ? run.trim() : "";
-    /* R21: SIGHT, THEN POSITION, THEN STATUS — the tick's order (REC-152, REC-165), asked of the registered run gate.
-       A run the viewer cannot see answers exactly as one never minted (§7.9), and with no gate registered nothing
-       can say a run is open, so the answer is the same. */
-    const r = runId && this.#runGate ? this.#runGate.gate(runId, viewer, caller) : null;
-    /* DEC-49 REGION is-candidate-no-run */
-    if (!r || r.found !== true)
-      return refusal("CANDIDATE_NO_RUN",
-        runId ? `no run named '${runId.slice(0, 60)}' is open in this store`
-              : "pass run=<the run whose judgement this is>: a candidate is machine work and names the run it came from",
-        { run: runId || null });
-    /* END DEC-49 REGION is-candidate-no-run */
-    const np = r.refusal;
-    if (np)
-      return { ok: false, reason: np.code, code: np.code, check: np.check, translation: np.translation,
-               detail: np.detail, run: runId,
-               note: "a proposed contradiction names a run its caller holds. Nothing was written" };
-    /* DEC-49 REGION is-candidate-run-not-running */
-    if (r.running !== true)
-      return refusal("CANDIDATE_RUN_NOT_RUNNING",
-        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`,
-        { run: runId });
-    /* END DEC-49 REGION is-candidate-run-not-running */
+    /* R13's first four: proposer, run (sight), principal, running, asked of the registered run gate (R21). */
+    const gate = this.#runRefusals({ run, proposedBy, viewer, caller });
+    if (gate.refusal) return gate.refusal;
+    const runId = gate.run;
     const list = Array.isArray(proposals) ? proposals : [];
     /* DEC-49 REGION is-candidate-no-proposals */
     if (list.length === 0)
@@ -755,7 +936,7 @@ export class Contradiction {
     const formed = new Map();
     for (const q of Array.isArray(read.pairs) ? read.pairs : []) {
       const a = this.#side(q.a), b = this.#side(q.b);
-      formed.set(`${q.key}:${[handle(a), handle(b)].sort().join(" <> ")}`, { key: q.key, a, b });
+      formed.set(`${q.key}:${[handle(a), handle(b)].sort().join(" <> ")}`, { key: q.key, a, b, pair: q });
     }
     const cutKeys = (read.keys ?? []).filter((k) => k.truncated).map((k) => k.key);
     const stamp = at || this.#now();
@@ -773,34 +954,1511 @@ export class Contradiction {
           { run: runId, index: i, cut_keys: cutKeys });
       /* END DEC-49 REGION is-candidate-pair-not-formed */
       /* R15: the PLANE's referents, ordered so the row reads the way its digest was taken. */
-      const [x, y] = handle(f.a) <= handle(f.b) ? [f.a, f.b] : [f.b, f.a];
+      const inOrder = handle(f.a) <= handle(f.b);
+      const [x, y] = inOrder ? [f.a, f.b] : [f.b, f.a];
+      /* The sides as the plane formed them, in the row's order, with the pair's own context (its referent, subject or
+         entity, and the sentence saying why it was paired), so a read shows them verbatim without re-pairing. */
+      const { a: pa, b: pb, key: _k, ...context } = f.pair;
+      const [sx, sy] = inOrder ? [pa, pb] : [pb, pa];
       rows.push({ candidate: sha256HexSync(canonicalJson({ v: 1, key: f.key, sides: [handle(x), handle(y)] })),
                   key: f.key, a: x, b: y, run: runId, proposed_by: proposedBy.trim(),
+                  a_side: { ...sx, context }, b_side: { ...sy, context },
                   label: p.label, reason: p.reason.trim().slice(0, CANDIDATE_REASON_MAX), at: stamp });
     }
     const written = this.#record.transact(() => rows.map((row) => this.#append(row)));
     const candidates = rows.map((row, i) => ({
-      new: written[i], ...this.#one(`SELECT candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind, b_ref,
-        b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at
-        FROM contradiction_candidates WHERE candidate=?`, row.candidate) }));
+      new: written[i], ...this.#one(`SELECT ${STORED_ROW} FROM contradiction_candidates WHERE candidate=?`, row.candidate) }));
     const n = written.filter(Boolean).length;
     return { ok: true, run: runId, proposed: rows.length, written: n, unchanged: rows.length - n, candidates,
              says: `${n} candidate(s) written as PROPOSED machine work; ${rows.length - n} named two referents at `
                  + `versions already proposed over, and were left exactly as they were (§8). A candidate is a `
                  + `proposal about two things as they were, never a finding: no member has judged it.` };
   }
+  /* ===================================================================== *
+   * PRESENT (N345; R24–R29). What a candidate IS at a read is derived from the candidate, its acts and its inquiry's
+   * document (`./derive.mjs`), never stored (R42).
+   * ===================================================================== */
+
+  /** A viewer's sight of one bundle (membership R43): a machine sees every bundle; a member through the gate; an
+   *  absent or unrecognised viewer nothing. A null bundle names nothing to withhold and passes; one that is gone is
+   *  withheld from a member (fail closed). */
+  #sees(bundleId, viewer) {
+    const g = viewerPredicate(viewer);
+    if (g.scope === "DENY") return false;
+    if (g.scope === "member") return true;
+    if (bundleId === null || bundleId === undefined || bundleId === "") return true;
+    return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${g.sql})`, String(bundleId), ...g.args);
+  }
+
+  /** The bundle a content row is filed in, or null when the row is not held. */
+  #contentHome(contentId) {
+    if (!contentId) return null;
+    const r = this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, String(contentId));
+    return r ? r.bundle_id : null;
+  }
+
+  /** Where a side lives (R10): a claim in its inquiry; a leg in its inquiry and its content row's bundle; an extent in
+   *  its content row's bundle; a stance in its inquiry and its project. */
+  #homes(side) {
+    if (!side) return [];
+    if (side.kind === "claim") return [side.inquiry];
+    if (side.kind === "stance") return [side.inquiry, side.project];
+    if (side.kind === "leg") return [side.inquiry, this.#contentHome(side.content_id)];
+    return [this.#contentHome(side.content_id)];
+  }
+
+  /** R10: a viewer may see a side when they may see every bundle it lives in. */
+  #sideSeen(side, viewer) {
+    return this.#homes(side).every((b) => this.#sees(b, viewer));
+  }
+
+  /** A candidate row read back: its sides as the plane formed them. A row written before the sides were kept is read
+   *  from its referents (a claim's inquiry and version, a part's content id), which is all it holds. */
+  #candidate(id) {
+    if (typeof id !== "string" || !id.trim()) return null;
+    const r = this.#one(`SELECT ${STORED_ROW}, seq FROM contradiction_candidates WHERE candidate=?`, id.trim());
+    if (!r) return null;
+    const side = (json, kind, ref) => {
+      try { if (json) return JSON.parse(json); } catch { /* read from the referent below */ }
+      if (kind === "claim") { const [inquiry, version] = String(ref).split("|"); return { kind, inquiry, version }; }
+      if (kind === "stance") { const [inquiry, project, version] = String(ref).split("|"); return { kind, inquiry, project, version }; }
+      return { kind, content_id: ref };
+    };
+    return { ...r, a: side(r.a_side, r.a_kind, r.a_ref), b: side(r.b_side, r.b_kind, r.b_ref) };
+  }
+
+  /** A candidate's acts, oldest first, with their JSON columns read. */
+  #acts(candidate) {
+    const j = (v) => { try { return v === null || v === undefined ? null : JSON.parse(v); } catch { return null; } };
+    return this.#rows(`SELECT * FROM contradiction_acts WHERE candidate=? ORDER BY seq`, candidate).map((a) => ({
+      ...a, coordinates: j(a.coordinates), evidence: j(a.evidence), qualifiers: j(a.qualifiers),
+      acceptance: j(a.acceptance), standing: j(a.standing) }));
+  }
+
+  /** The candidate's contradiction inquiry (`inquiry` R48): its id and its link, or nulls. A read that fails answers
+   *  none, never a guess. */
+  #linkOf(candidate) {
+    const i = this.#i();
+    try {
+      const id = typeof i.inquiryOfCandidate === "function" ? i.inquiryOfCandidate(candidate) : null;
+      if (!id) return { inquiry: null, link: null };
+      const link = typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
+      return { inquiry: id, link };
+    } catch { return { inquiry: null, link: null }; }
+  }
+
+  /** R24, R26: what a candidate is now. */
+  #view(row) {
+    const acts = this.#acts(row.candidate);
+    const noDifference = acts.some((a) => a.act === "clarify" && a.choice === "no_difference");
+    const { weight, why } = weightOf(row.label, row.key, noDifference);
+    const { inquiry, link } = this.#linkOf(row.candidate);
+    const st = stateOf(acts, link, inquiry);
+    return { weight, unshown_why: why, ...st, acts, no_difference: noDifference };
+  }
+
+  /** The family of a resolution kind, through `inquiry` R46; null when it is not a kind or cannot be read. */
+  #family(kind) {
+    const f = this.#i().resolutionFamily;
+    if (typeof f === "function") { try { return f(kind); } catch { return null; } }
+    return null;
+  }
+
+  /** R24, R49: the projects reached through one side, and whether the list was cut. A claim, leg or stance side reaches
+   *  the projects drawing on its inquiry (`basis-versions` R37); an extent side, those drawing on each inquiry with a leg
+   *  on its content row (`inquiry` R40), at most `REACH_INQUIRIES_MAX` inquiries; a stance side of K5, its own project.
+   *  At most `REACH_PROJECTS_MAX` projects per inquiry. Read as the record holds it, whoever asks. */
+  #reachOf(side) {
+    const out = { projects: [], truncated: false };
+    const add = (id) => { if (id && !out.projects.includes(id)) out.projects.push(id); };
+    if (!side) return out;
+    if (side.kind === "stance") { add(side.project); return out; }
+    let inquiries = [];
+    if (side.kind === "claim" || side.kind === "leg") inquiries = side.inquiry ? [side.inquiry] : [];
+    else if (side.content_id) {
+      const rows = this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis WHERE content_id=? ORDER BY bundle_id LIMIT ?`,
+                              String(side.content_id), REACH_INQUIRIES_MAX + 1);
+      if (rows.length > REACH_INQUIRIES_MAX) out.truncated = true;
+      inquiries = rows.slice(0, REACH_INQUIRIES_MAX).map((r) => r.bundle_id);
+    }
+    const bv = this.#b();
+    for (const inq of inquiries) {
+      const list = bv && typeof bv.projectsDrawingOn === "function" ? bv.projectsDrawingOn(inq, INTERNAL) || [] : [];
+      if (list.truncated) out.truncated = true;
+      for (const p of list.slice(0, REACH_PROJECTS_MAX)) add(p.id);
+    }
+    out.projects.sort();
+    return out;
+  }
+
+  /** R24: the reach of a candidate (the projects its duty is held for), and R49's parties, which are the same set read
+   *  side by side. */
+  #parties(row) {
+    const a = this.#reachOf(row.a), b = this.#reachOf(row.b);
+    const all = [...new Set([...a.projects, ...b.projects])].sort();
+    return { a, b, all, truncated: a.truncated || b.truncated };
+  }
+
+  /** The stated doctype and date of a capture (R9), as the pairing reads them. */
+  #docOf(capture) {
+    if (!capture) return { read: false, doctype: null, date: null };
+    try { return this.#doc(capture, new Map()); } catch { return { read: false, doctype: null, date: null }; }
+  }
+
+  /** A side as a member reads it (R25, R50): verbatim, with its source, stated date, doctype and capture, from what
+   *  the record holds now. */
+  #shown(side) {
+    if (!side) return null;
+    const { context: _c, ...s } = side;
+    if (s.kind === "claim" || s.kind === "stance") {
+      const t = s.inquiry ? this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
+      return { ...s, text: s.claim ?? null, source: { inquiry: s.inquiry ?? null, title: t ? t.title : null,
+               ...(s.kind === "stance" ? { project: s.project ?? null } : {}) },
+               date: null, doctype: null, capture_sha: null };
+    }
+    const row = s.content_id
+      ? this.#one(`SELECT capture_sha, bundle_id, ref, extent_kind, stale FROM content WHERE content_id=?`, s.content_id) : null;
+    const capture = row ? row.capture_sha : (s.capture_sha ?? null);
+    const d = this.#docOf(capture);
+    return { ...s, capture_sha: capture, ref: row ? row.ref : (s.ref ?? null),
+             source: { bundle: row ? row.bundle_id : null, ref: row ? row.ref : (s.ref ?? null) },
+             date: d.date, doctype: d.doctype, stale: row ? !!row.stale : (s.stale ?? null) };
+  }
+
+  /** R37: the recommendations standing for a candidate now (its state open or explained), each labelled machine work. */
+  #standing(row, view) {
+    if (!isStanding(view.state)) return [];
+    return this.#rows(`SELECT recommendation, run, coordinate, proposed_by, reason, origin, at
+                         FROM contradiction_recommendations WHERE candidate=? ORDER BY seq`, row.candidate)
+      .map((r) => ({ ...r, machine_work: true,
+                     says: "a machine's recommendation of a respect in which the two may differ: not a member's choice" }));
+  }
+
+  /** R25's `default_question`: the plane's stated default wording, which a member accepts or rewrites (R35). It is
+   *  shown, never sent for them. */
+  #defaultQuestion(row) {
+    const t = (s) => { const v = this.#shown(s); return String(v?.text ?? v?.ref ?? v?.content_id ?? "").replace(/\s+/g, " ").trim(); };
+    const q = `Can both of these hold, and if not, which is so: "${t(row.a).slice(0, 180)}" and "${t(row.b).slice(0, 180)}"?`;
+    return q.slice(0, TEXT_CAPS.question);
+  }
+
+  /** The machine's label and reason, labelled as the machine's (DEC-24). */
+  #machine(row) {
+    return { label: row.label, reason: row.reason, run: row.run, proposed_by: row.proposed_by, at: row.at,
+             origin: "machine", machine_work: true, says: "proposed machine work, no finding: a member decides" };
+  }
+
+  /** R26's resolution as a member reads it: the kind, who made it and how. */
+  #resolutionOf(view) {
+    if (view.state !== "resolved") return null;
+    if (view.inquiry) return { kind: view.kind, family: this.#family(view.kind), by: "inquiry", inquiry: view.inquiry,
+                               resolution: view.resolution };
+    const a = view.act;
+    return { kind: view.kind, family: view.kind === "corrected" ? "CORRECTED" : "DISSOLVED", by: "act",
+             member: a.author, at: a.at, choice: a.choice, coordinates: a.coordinates, explanation: a.explanation,
+             evidence: a.evidence, wrong_side: a.wrong_side, reason: a.wrong_reason, qualifiers: a.qualifiers };
+  }
+
+  /** A project's name, for a revealed party (R52): the bundle's title. */
+  #projectName(id) {
+    const r = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, id);
+    return r ? r.title : null;
+  }
+
+  /** R51, R52: a candidate's opt-ins and whether a reveal is recorded. */
+  #optins(candidate) {
+    const rows = this.#rows(`SELECT * FROM contradiction_optins WHERE candidate=? ORDER BY seq`, candidate);
+    const optins = rows.filter((r) => r.kind === "optin");
+    const revealed = rows.find((r) => r.kind === "revealed") || null;
+    return { optins, revealed, opted: [...new Set(optins.map((r) => r.project_id))] };
+  }
+
+  /** R50–R54's per-party view of a conflict between projects, for `project`. Nothing here names the other side or
+   *  counts the parties; before a reveal, no other party is named. */
+  #partyView(row, project) {
+    const { optins, revealed, opted } = this.#optins(row.candidate);
+    const own = optins.find((r) => r.project_id === project) || null;
+    const isRevealed = !!revealed && opted.includes(project);
+    const parties = isRevealed ? opted.filter((p) => p !== project).map((p) => ({ id: p, name: this.#projectName(p) })) : null;
+    return {
+      opted_in: own ? { member: own.author, at: own.at, words: own.words ?? null } : null,
+      asked_by_another: opted.some((p) => p !== project),
+      revealed: isRevealed,
+      ...(isRevealed ? { parties } : {}),
+      ...this.#relayed(row, project, isRevealed, opted),
+    };
+  }
+
+  /** R54: the responses relayed to `project` in its notice: the other opted-in parties' responses made after this
+   *  project's own latest one (all of them when it has none), newest first, at most `NOTICE_RESPONSES_MAX`. Nothing is
+   *  relayed before the reveal. A relayed response carries its text, its chosen disclosures, its project and its
+   *  instant, and never its author. */
+  #relayed(row, project, isRevealed, opted) {
+    if (!isRevealed) return { responses: [], responses_truncated: false };
+    const ownLast = this.#one(`SELECT MAX(seq) AS s FROM contradiction_responses WHERE candidate=? AND project_id=?`,
+                              row.candidate, project)?.s ?? 0;
+    const others = opted.filter((p) => p !== project);
+    if (!others.length) return { responses: [], responses_truncated: false };
+    const rs = this.#rows(`SELECT * FROM contradiction_responses WHERE candidate=? AND seq > ?
+                             AND project_id IN (SELECT value FROM json_each(?)) ORDER BY seq DESC LIMIT ?`,
+                          row.candidate, ownLast, JSON.stringify(others), NOTICE_RESPONSES_MAX + 1);
+    return { responses: rs.slice(0, NOTICE_RESPONSES_MAX).map((r) => this.#relay(r)),
+             responses_truncated: rs.length > NOTICE_RESPONSES_MAX };
+  }
+
+  /** One response as relayed (R54): what its responder chose to share, and nothing else. */
+  #relay(r) {
+    return { response: r.response, text: r.text,
+             ...(r.cover !== null && r.cover !== undefined ? { cover: r.cover } : {}),
+             ...(r.email ? { email: r.email, email_says: "stated, not verified" } : {}),
+             project: { id: r.project_id, name: this.#projectName(r.project_id) }, at: r.at };
+  }
+
+  /** A candidate as R25 answers it to a viewer who sees it whole. */
+  #present(row, view, viewer) {
+    const parties = (view.weight === "duty" || view.weight === "plurality" || view.weight === "lead") ? this.#parties(row) : null;
+    const member = viewerPredicate(viewer).member;
+    const m = this.#m();
+    const between = parties && isProjectConflict(view.weight, view.state) && member
+      ? parties.all.filter((p) => m && typeof m.isJoinedParticipant === "function" && m.isJoinedParticipant(p, member))
+          .map((p) => ({ project: p, ...this.#partyView(row, p) }))
+      : [];
+    return {
+      candidate: row.candidate, key: row.key, why: row.a?.context?.why ?? CONTRADICTION_KEYS[row.key]?.why ?? null,
+      a: this.#shown(row.a), b: this.#shown(row.b),
+      machine: this.#machine(row), weight: view.weight, state: view.state,
+      resolution: this.#resolutionOf(view), inquiry: view.inquiry,
+      recommendations: this.#standing(row, view),
+      reach: parties && view.weight !== "not_shown" ? { projects: parties.all, truncated: parties.truncated } : null,
+      default_question: this.#defaultQuestion(row),
+      ...(between.length ? { between_projects: between } : {}),
+    };
+  }
+
+  /** R25's subject: exactly one of the six. */
+  #subjectOf(on) {
+    const o = on && typeof on === "object" && !Array.isArray(on) ? on : {};
+    const named = ["inquiry", "content", "entity", "bundle", "project", "candidate"]
+      .filter((k) => typeof o[k] === "string" && o[k].trim());
+    return named.length === 1 ? { kind: named[0], id: o[named[0]].trim() } : null;
+  }
+
+  /** The candidates a subject names, newest first, at most `CANDIDATES_SCAN_MAX` (+1, to observe truncation). */
+  #candidatesNaming(subject) {
+    const cap = CANDIDATES_SCAN_MAX + 1;
+    const side = (col) => `json_extract(${col}, '$.inquiry')`;
+    const q = (where, ...args) => this.#rows(
+      `SELECT candidate FROM contradiction_candidates WHERE ${where} ORDER BY seq DESC, candidate LIMIT ?`, ...args, cap)
+      .map((r) => r.candidate);
+    switch (subject.kind) {
+      case "candidate": return q(`candidate = ?`, subject.id);
+      case "inquiry": return q(`(${side("a_side")} = ? OR ${side("b_side")} = ?)`, subject.id, subject.id);
+      case "content": return q(`(json_extract(a_side, '$.content_id') = ? OR json_extract(b_side, '$.content_id') = ?
+                                  OR (a_kind IN ('leg','extent') AND a_ref = ?) OR (b_kind IN ('leg','extent') AND b_ref = ?))`,
+                               subject.id, subject.id, subject.id, subject.id);
+      case "entity": return q(`(json_extract(a_side, '$.context.subject_entity') = ? OR json_extract(a_side, '$.context.entity_id') = ?)`,
+                              subject.id, subject.id);
+      case "bundle": return q(`(a_bundle_id = ? OR b_bundle_id = ? OR ${side("a_side")} = ? OR ${side("b_side")} = ?)`,
+                              subject.id, subject.id, subject.id, subject.id);
+      case "project": {
+        /* R25 (Suggestion): the project's inquiries (`basis-versions` R41), then the candidates whose side's inquiry, or
+           content row cited by one of them, is among them, or whose stance is the project's own. */
+        const ids = this.#projectInquiries(subject.id);
+        const j = JSON.stringify(ids);
+        return q(`(${side("a_side")} IN (SELECT value FROM json_each(?)) OR ${side("b_side")} IN (SELECT value FROM json_each(?))
+                   OR json_extract(a_side, '$.project') = ? OR json_extract(b_side, '$.project') = ?
+                   OR json_extract(a_side, '$.content_id') IN (SELECT content_id FROM inquiry_basis
+                        WHERE content_id IS NOT NULL AND bundle_id IN (SELECT value FROM json_each(?)))
+                   OR json_extract(b_side, '$.content_id') IN (SELECT content_id FROM inquiry_basis
+                        WHERE content_id IS NOT NULL AND bundle_id IN (SELECT value FROM json_each(?))))`,
+                 j, j, subject.id, subject.id, j, j);
+      }
+      default: return [];
+    }
+  }
+
+  /** Every inquiry a project draws on (`basis-versions` R41, page by page). */
+  #projectInquiries(project) {
+    const bv = this.#b();
+    if (!bv || typeof bv.projectQuestions !== "function") return [];
+    const out = [];
+    let after = null;
+    for (let i = 0; i < 64; i++) {
+      const page = bv.projectQuestions({ project, after, limit: 500 }) || { items: [] };
+      for (const it of page.items || []) out.push(it.inquiry);
+      if (!page.cursor) break;
+      after = page.cursor;
+    }
+    return out;
+  }
+
+  /** op=contradictioncandidates — R25: the candidates shown to a viewer about one thing. */
+  candidatesFor({ on = null, label = null, weight = null, state = null, after = null, limit = null, viewer = null } = {}) {
+    try {
+      const subject = this.#subjectOf(on);
+      /* DEC-49 REGION is-candidates-no-subject */
+      if (!subject) {
+        const row = CONTRADICTION_PAIR_CHECKS.CANDIDATES_NO_SUBJECT;
+        return { ok: false, reason: "CANDIDATES_NO_SUBJECT", code: "CANDIDATES_NO_SUBJECT", check: row.check,
+                 translation: row.translation,
+                 detail: "name exactly one of inquiry, content, entity, bundle, project or candidate" };
+      }
+      /* END DEC-49 REGION is-candidates-no-subject */
+      const n = Number(limit);
+      const cap = limit === null || limit === undefined || limit === "" || !Number.isFinite(n) || n < 1
+        ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
+      const ids = this.#candidatesNaming(subject);
+      const scanCut = ids.length > CANDIDATES_SCAN_MAX;
+      const notShown = { precision: 0, unrelated: 0 };
+      let unmeasured = 0, visible = 0, shown = 0;
+      let items = [];
+      for (const id of ids.slice(0, CANDIDATES_SCAN_MAX)) {
+        const row = this.#candidate(id);
+        if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer)) continue;
+        visible += 1;
+        const view = this.#view(row);
+        if (view.weight === "not_shown") {
+          if (view.unshown_why === K5_UNSHOWN_WHY) unmeasured += 1;
+          else if (notShown[row.label] !== undefined) notShown[row.label] += 1;
+          continue;
+        }
+        shown += 1;
+        if (subject.kind === "project") {
+          const reach = this.#parties(row);
+          if (!reach.all.includes(subject.id)) continue;
+        }
+        if (label !== null && label !== undefined && label !== "" && row.label !== label) continue;
+        if (weight !== null && weight !== undefined && weight !== "" && view.weight !== weight) continue;
+        if (state !== null && state !== undefined && state !== "" && view.state !== state) continue;
+        items.push({ row, view });
+      }
+      /* {entity}: in the stated date of the earlier-dated side (R9), undated last and counted, never placed by guess. */
+      let undated = 0;
+      if (subject.kind === "entity") {
+        const dateOf = (x) => { const ds = [this.#shown(x.row.a)?.date, this.#shown(x.row.b)?.date].filter(Boolean).sort(); return ds[0] ?? null; };
+        const dated = [], none = [];
+        for (const x of items) { const d = dateOf(x); if (d) dated.push({ ...x, d }); else none.push(x); }
+        dated.sort((p, q) => (p.d < q.d ? -1 : p.d > q.d ? 1 : 0));
+        undated = none.length;
+        items = [...dated, ...none];
+      }
+      if (typeof after === "string" && after) {
+        const at = items.findIndex((x) => x.row.candidate === after);
+        items = at === -1 ? [] : items.slice(at + 1);
+      }
+      const page = items.slice(0, cap);
+      const truncated = items.length > cap || scanCut;
+      const candidates = page.map((x) => this.#present(x.row, x.view, viewer));
+      const empty = candidates.length ? null
+        : visible === 0
+          ? { level: "none_judged", says: "no candidate this viewer may see names it: no run's judgement is held here. "
+                                        + "Whether the pairing forms pairs here is the pairing read's answer" }
+          : shown === 0
+            ? { level: "none_shown", says: "candidates are held here, and each is one the record does not show as a tension",
+                not_shown: notShown, ...(unmeasured ? { unmeasured } : {}) }
+            : { level: "none_matching", says: "candidates are shown here, and none matches the filters or follows the cursor asked" };
+      return { ok: true, wrote: false, on: { [subject.kind]: subject.id }, limit: cap, truncated,
+               cursor: candidates.length ? candidates[candidates.length - 1].candidate : null,
+               candidates, not_shown: notShown, ...(unmeasured ? { unmeasured, unmeasured_why: K5_UNSHOWN_WHY } : {}),
+               ...(subject.kind === "entity" ? { undated } : {}), empty };
+    } catch (e) {
+      return { ok: true, wrote: false, candidates: [], truncated: false, undetermined: true,
+               empty: { level: "undetermined", says: `the read failed and nothing is claimed about it (${String(e && e.message || e).slice(0, 120)})` } };
+    }
+  }
+
+  /** A referent as asked (R27): `{ref, version}`, or a side as the pairing forms it, read as R14 reads it. */
+  #referentOf(x) {
+    if (!x || typeof x !== "object") return null;
+    if (typeof x.ref === "string" && x.ref && typeof x.version === "string" && x.version)
+      return { ref: x.ref, version: x.version };
+    if (typeof x.kind === "string") { const s = this.#side(x); return s.ref ? { ref: s.ref, version: s.version } : null; }
+    return null;
+  }
+
+  /** Which side of a candidate a referent is: `a`, `b` or null. */
+  static #whichSide(row, ref) {
+    if (row.a_ref === ref.ref && row.a_version === ref.version) return "a";
+    if (row.b_ref === ref.ref && row.b_version === ref.version) return "b";
+    return null;
+  }
+
+  /** R27's marks one candidate puts on one of its sides, for a viewer. */
+  #marksOn(row, which, viewer) {
+    const other = which === "a" ? "b" : "a";
+    if (!this.#sideSeen(row[which], viewer)) return [];
+    const view = this.#view(row);
+    const c = row.candidate;
+    if (!this.#sideSeen(row[other], viewer)) {
+      /* DEC-85: seen half. Told only to a joined participant of a party reached through the side they may see, and
+         carrying nothing of the other side. */
+      if (!isProjectConflict(view.weight, view.state)) return [];
+      const member = viewerPredicate(viewer).member;
+      const m = this.#m();
+      if (!member || !m || typeof m.isJoinedParticipant !== "function") return [];
+      return this.#reachOf(row[which]).projects.filter((p) => m.isJoinedParticipant(p, member))
+        .map((p) => ({ mark: "unseen_conflict", candidate: c, weight: view.weight, project: p }));
+    }
+    if (view.weight === "not_shown") return [];
+    const res = view.inquiry ? (view.resolution || {}) : null;
+    const act = view.act;
+    if (view.state === "open" && view.weight === "lead") return [{ mark: "lead", candidate: c }];
+    if (view.state === "open" && view.weight === "plurality") return [{ mark: "plurality", candidate: c }];
+    if ((view.state === "open" || view.state === "taken_up") && view.weight === "duty")
+      return [{ mark: "in_tension", candidate: c, ...(view.inquiry ? { inquiry: view.inquiry } : {}) }];
+    if (view.state === "taken_up") return [];
+    if (view.state === "explained_not_shown")
+      return [{ mark: "softened", candidate: c, explanation: act.explanation ?? null, member: act.author,
+                coordinates: act.coordinates ?? [], qualifier: act.qualifiers ? act.qualifiers[which] ?? null : null,
+                qualifier_standing: "hypothesis" }];
+    if (view.state !== "resolved") return [];
+    const family = view.inquiry ? this.#family(view.kind) : view.kind === "corrected" ? "CORRECTED" : "DISSOLVED";
+    if (family === "CORRECTED") {
+      const wrong = view.inquiry ? res.wrong_side : act.wrong_side;
+      if (wrong !== which) return [];
+      return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind,
+                reason: view.inquiry ? res.reason ?? null : act.wrong_reason, member: view.inquiry ? null : act.author,
+                at: view.inquiry ? null : act.at, ...(view.inquiry ? { inquiry: view.inquiry } : { act: act.act_id }),
+                says: "this side was named wrong by a member's resolution; it still resolves, and says it was corrected" }];
+    }
+    if (view.kind === "dissolved")
+      return [{ mark: "qualified", candidate: c,
+                coordinates: (view.inquiry ? res.coordinates : act.coordinates) ?? [],
+                qualifier: (view.inquiry ? res.qualifiers : act.qualifiers)?.[which] ?? null,
+                explanation: view.inquiry ? null : act.explanation ?? null, qualifier_standing: "evidenced" }];
+    if (view.kind === "irreconcilable") return [{ mark: "held_irreconcilable", candidate: c, inquiry: view.inquiry }];
+    return [];
+  }
+
+  /** op=contradictiontensions — R27: each referent's marks, at its version, from every candidate the viewer may see on
+   *  it. Every surface that shows a side reads this, so none holds a copy of the rule. */
+  tensionsOn({ referents = null, viewer = null } = {}) {
+    try {
+      const list = Array.isArray(referents) ? referents : [];
+      /* DEC-49 REGION is-tensions-too-many */
+      if (list.length > TENSIONS_REFERENTS_MAX) {
+        const row = CONTRADICTION_PAIR_CHECKS.TENSIONS_TOO_MANY;
+        return { ok: false, reason: "TENSIONS_TOO_MANY", code: "TENSIONS_TOO_MANY", check: row.check,
+                 translation: row.translation, max: TENSIONS_REFERENTS_MAX,
+                 detail: `${list.length} referents were asked about; at most ${TENSIONS_REFERENTS_MAX} are read at once` };
+      }
+      /* END DEC-49 REGION is-tensions-too-many */
+      const out = list.map((x) => {
+        const ref = this.#referentOf(x);
+        if (!ref) return { referent: x ?? null, marks: [], undetermined: true, why: "not a referent at a version" };
+        const ids = this.#rows(`SELECT candidate FROM contradiction_candidates
+                                 WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq`,
+                               ref.ref, ref.version, ref.ref, ref.version).map((r) => r.candidate);
+        const marks = [];
+        for (const id of ids) {
+          const row = this.#candidate(id);
+          const which = row ? Contradiction.#whichSide(row, ref) : null;
+          if (which) marks.push(...this.#marksOn(row, which, viewer));
+        }
+        return { referent: ref, marks };
+      });
+      return { ok: true, wrote: false, referents: out };
+    } catch (e) {
+      return { ok: true, wrote: false, referents: [], undetermined: true, why: String(e && e.message || e).slice(0, 160) };
+    }
+  }
+
+  /** The refusal every act and read answers for an absent candidate, or one the viewer may not see. */
+  static #noSuch(detail, extra = {}) {
+    const row = CONTRADICTION_CANDIDATE_CHECKS.NO_SUCH_CANDIDATE;
+    /* DEC-49 REGION is-no-such-candidate */
+    return { ok: false, reason: "NO_SUCH_CANDIDATE", code: "NO_SUCH_CANDIDATE", check: row.check,
+             translation: row.translation, detail, ...extra };
+    /* END DEC-49 REGION is-no-such-candidate */
+  }
+
+  /** The established resolutions of a capture (entities R35's read contract): the entities it is about. */
+  #entitiesOf(capture) {
+    if (!capture) return null;
+    return this.#rows(`SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=? AND established=1 ORDER BY entity_id`,
+                      capture).map((r) => r.entity_id);
+  }
+
+  /** R28's facts for a candidate, computed from what its sides already carry. */
+  #facts(row) {
+    const A = this.#shown(row.a), B = this.#shown(row.b);
+    const isPart = (s) => s && (s.kind === "leg" || s.kind === "extent");
+    const fact = (coordinate, name, a, b, whyA, whyB) => {
+      const miss = [];
+      if (a === null || a === undefined || (Array.isArray(a) && !a.length)) miss.push(`side A: ${whyA}`);
+      if (b === null || b === undefined || (Array.isArray(b) && !b.length)) miss.push(`side B: ${whyB}`);
+      return { coordinate, fact: name, a: a ?? null, b: b ?? null, source: "record", machine_work: false,
+               ...(miss.length ? { undetermined: true, why: miss.join("; ") } : {}) };
+    };
+    const noDate = (s) => (isPart(s) ? (s.capture_sha ? "its reader states no date" : "the passage is not held")
+                                     : "a held claim states no document date");
+    const noType = (s) => (isPart(s) ? (s.capture_sha ? "its reader states no kind" : "the passage is not held")
+                                     : "a held claim is not a document");
+    const subject = (s) => {
+      if (isPart(s)) return this.#entitiesOf(s.capture_sha);
+      const r = s && s.inquiry ? this.#one(`SELECT inquiry_subject_entity AS e FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
+      return r && r.e ? [r.e] : null;
+    };
+    const facts = [
+      fact("time_or_occasion", "stated_date", A.date, B.date, noDate(A), noDate(B)),
+      fact("observer_or_method", "doctype", A.doctype, B.doctype, noType(A), noType(B)),
+      fact("observer_or_method", "capture", A.capture_sha, B.capture_sha,
+           isPart(A) ? "the passage is not held" : "a held claim rests on no one capture",
+           isPart(B) ? "the passage is not held" : "a held claim rests on no one capture"),
+      fact("subject", "resolved_entities", subject(A), subject(B), "no established resolution or subject is held",
+           "no established resolution or subject is held"),
+    ];
+    if (row.key === "K5") facts.push(fact("scope", "project", A.project ?? null, B.project ?? null, "no project", "no project"));
+    return facts;
+  }
+
+  /** op=contradictionfacts — R28: the facts the record holds that bear on each coordinate, each labelled the record's. */
+  contextFacts({ candidate = null, viewer = null } = {}) {
+    try {
+      const row = this.#candidate(candidate);
+      if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer))
+        return Contradiction.#noSuch("no contradiction you can see answers to that id");
+      return { ok: true, wrote: false, candidate: row.candidate, key: row.key, facts: this.#facts(row),
+               says: "each fact is the record's, as its sides carry it, and none is machine work. A fact not stated is "
+                   + "undetermined, with why, never guessed" };
+    } catch (e) {
+      return Contradiction.#noSuch(`the candidate could not be read (${String(e && e.message || e).slice(0, 80)})`);
+    }
+  }
+
+  /** R29's referents of a finding pinned at `sha`, held one level deep. `null` when no text answers to the bytes. */
+  #heldAt(finding, sha) {
+    const text = this.#record.textAtSha(finding, sha);
+    if (typeof text !== "string") return null;
+    const fm = parseFrontmatter(text).data || {};
+    const refs = new Set();
+    const held = (v) => v && v.state === "accepted" && !v.hidden && typeof v.claim === "string" && v.claim.trim();
+    for (const v of versionsIn(fm)) if (held(v)) refs.add(`${finding}|${v.name}@${sha256HexSync(String(v.claim))}`);
+    const current = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, finding);
+    const atHead = !!current && current.bundle_sha === sha;
+    const legs = Array.isArray(fm.basis) ? fm.basis : [];
+    let undetermined = 0;
+    legs.forEach((leg, ord) => {
+      if (!leg || typeof leg !== "object") return;
+      const target = String(leg.target ?? "");
+      const t = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, target);
+      if (t && t.object_type === "inquiry") {
+        for (const v of this.#rows(`SELECT name, claim FROM inquiry_basis_versions WHERE bundle_id=? AND state='accepted'
+                                      AND hidden=0 AND claim IS NOT NULL AND claim <> ''`, target))
+          refs.add(`${target}|${v.name}@${sha256HexSync(String(v.claim))}`);
+        return;
+      }
+      let cid = typeof leg.content_id === "string" && /^[0-9a-f]{64}$/.test(leg.content_id) ? leg.content_id : null;
+      if (!cid && atHead) cid = this.#one(`SELECT content_id FROM inquiry_basis WHERE bundle_id=? AND ord=?`, finding, ord)?.content_id ?? null;
+      if (!cid) { undetermined += 1; return; }
+      const c = this.#one(`SELECT capture_sha FROM content WHERE content_id=?`, cid);
+      if (c) refs.add(`${cid}@${c.capture_sha}`);
+    });
+    return { refs, undetermined_legs: undetermined };
+  }
+
+  /** R29 (in-process; read as the plane): the candidates a case pinning `finding` at `sha` must disclose. */
+  unresolvedRecordOn({ finding = null, sha = null, viewer = undefined } = {}) {
+    try {
+      const f = typeof finding === "string" ? finding.trim() : "";
+      const h = typeof sha === "string" ? sha.trim() : "";
+      const held = f && h ? this.#heldAt(f, h) : null;
+      if (!held) return { ok: true, wrote: false, finding: f || null, sha: h || null, candidates: [], truncated: false,
+                          undetermined: true, why: "no text of that finding answers to those bytes" };
+      const ids = this.#rows(`SELECT candidate, a_ref, a_version, b_ref, b_version FROM contradiction_candidates ORDER BY seq`)
+        .filter((r) => held.refs.has(`${r.a_ref}@${r.a_version}`) || held.refs.has(`${r.b_ref}@${r.b_version}`))
+        .map((r) => r.candidate);
+      const out = [];
+      let truncated = false;
+      for (const id of ids) {
+        const row = this.#candidate(id);
+        const view = this.#view(row);
+        if (view.weight !== "duty") continue;
+        const standing = view.state === "open" || view.state === "explained_not_shown" || view.state === "taken_up"
+          || (view.state === "resolved" && view.kind === "irreconcilable");
+        if (!standing) continue;
+        if (out.length === UNRESOLVED_MAX) { truncated = true; break; }
+        const asked = viewer !== undefined && viewer !== null;
+        const seenA = !asked || this.#sideSeen(row.a, viewer), seenB = !asked || this.#sideSeen(row.b, viewer);
+        const explanation = view.state === "explained_not_shown" ? view.act?.explanation ?? null : null;
+        if (seenA && seenB)
+          out.push({ candidate: row.candidate, key: row.key, a: this.#shown(row.a), b: this.#shown(row.b), state: view.state,
+                     ...(view.kind ? { kind: view.kind } : {}), explanation, inquiry: view.inquiry, depth: 1 });
+        else {
+          /* DEC-85: a side the stated viewer may not see is withheld whole, and so is anything that may quote it. */
+          const seen = seenA ? "a" : seenB ? "b" : null;
+          out.push({ candidate: row.candidate, unseen_other_side: true, state: view.state, depth: 1,
+                     ...(seen ? { side: this.#shown(row[seen]) } : {}) });
+        }
+      }
+      return { ok: true, wrote: false, finding: f, sha: h, candidates: out, truncated, bound: UNRESOLVED_MAX,
+               ...(held.undetermined_legs ? { undetermined_legs: held.undetermined_legs } : {}),
+               says: "each is a tension on something this finding rests on, one level deep; deeper findings disclose "
+                   + "their own when published" };
+    } catch (e) {
+      return { ok: true, wrote: false, candidates: [], truncated: false, undetermined: true,
+               why: String(e && e.message || e).slice(0, 160) };
+    }
+  }
+
+  /* ===================================================================== *
+   * RESOLVE (N345; R30–R38). A member's attributed act says what a candidate turned out to be; the machine may only
+   * recommend in which respects the sides may differ. Nothing here edits a side (R19).
+   * ===================================================================== */
+
+  /** A refusal from this module's rows (R20), with its catalogue fields. */
+  static #refuse(code, detail, extra = {}) {
+    const row = CONTRADICTION_CANDIDATE_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
+  }
+
+  /** The coordinate vocabulary for a key (R32): `inquiry` R46's, or null while it cannot be read. */
+  #vocab(key) {
+    const i = this.#i();
+    const v = key === "K5" ? i.PLURALITY_DIFFERENCES : i.CONTRADICTION_COORDINATES;
+    return Array.isArray(v) ? v : null;
+  }
+
+  /** R30's refusals common to every act, first and in order: a machine or empty author; no candidate; one absent, one
+   *  with a side the viewer may not see, or one `not_shown` (the same answer); free text over its cap. Answers
+   *  `{refusal}` or `{row, view}`. */
+  #actRefusals({ candidate, author, viewer, texts = {} }) {
+    const machine = this.#machineRefusal(author);
+    if (machine) return { refusal: machine };
+    const none = Contradiction.#noCandidate(candidate);
+    if (none) return { refusal: none };
+    const row = this.#candidate(candidate);
+    const view = row && this.#sideSeen(row.a, viewer) && this.#sideSeen(row.b, viewer) ? this.#view(row) : null;
+    if (!view || view.weight === "not_shown")
+      return { refusal: Contradiction.#noSuch("no contradiction you can see answers to that id") };
+    const over = this.#overCap(texts);
+    if (over) return { refusal: over };
+    return { row, view };
+  }
+
+  /** R30's first refusal (and R36's, R51's): an empty or machine author. */
+  #machineRefusal(author) {
+    /* DEC-49 REGION is-machine-cannot-act-on-candidate */
+    if (typeof author !== "string" || !author.trim() || isMachineIdentity(author))
+      return Contradiction.#refuse("MACHINE_CANNOT_ACT_ON_CANDIDATE",
+        "saying what a contradiction turned out to be is a member's act; this one names no member");
+    /* END DEC-49 REGION is-machine-cannot-act-on-candidate */
+    return null;
+  }
+
+  /** R30's second refusal (and R51's, R54's): no candidate named. */
+  static #noCandidate(candidate) {
+    /* DEC-49 REGION is-no-candidate */
+    if (typeof candidate !== "string" || !candidate.trim())
+      return Contradiction.#refuse("NO_CANDIDATE", "name the candidate this act is about by its id");
+    /* END DEC-49 REGION is-no-candidate */
+    return null;
+  }
+
+  /** R30's caps (and R51's, R53's): the first free-text field over its cap, as `WORDS_MALFORMED` naming it. */
+  #overCap(texts) {
+    for (const [field, value] of Object.entries(texts)) {
+      const cap = TEXT_CAPS[field.startsWith("qualifier") ? "qualifier" : field];
+      /* DEC-49 REGION is-words-malformed */
+      if (typeof value === "string" && cap && value.length > cap)
+        return Contradiction.#refuse("WORDS_MALFORMED", `${field} is ${value.length} characters; at most ${cap}`,
+                                     { field, limit: cap });
+      /* END DEC-49 REGION is-words-malformed */
+    }
+    return null;
+  }
+
+  /** R31's closed-state refusals, asked after R30's by every act but R37. `takeUp` asks only the first. */
+  static #closed(view, { takenUp = true } = {}) {
+    /* DEC-49 REGION is-candidate-closed */
+    if (isClosed(view.state))
+      return Contradiction.#refuse("CANDIDATE_CLOSED",
+        `this contradiction was ${view.state}${view.act ? ` by ${view.act.author}` : ""}, and it stays as they left it`,
+        { state: view.state, by: view.act ? view.act.author : null, ...(view.inquiry ? { inquiry: view.inquiry } : {}) });
+    /* END DEC-49 REGION is-candidate-closed */
+    /* DEC-49 REGION is-candidate-taken-up */
+    if (takenUp && view.state === "taken_up")
+      return Contradiction.#refuse("CANDIDATE_TAKEN_UP", `this contradiction was taken up as ${view.inquiry}`,
+                                   { inquiry: view.inquiry });
+    /* END DEC-49 REGION is-candidate-taken-up */
+    return null;
+  }
+
+  /** R30's acceptance basis for the coordinates an act records: each `accepted`, naming the standing recommendation it
+   *  accepts, else `unaided`. Refuses an acceptance naming a recommendation not standing for this candidate
+   *  (C-93.25), or one whose coordinate the act does not record (C-93.26). Answers `{refusal}` or `{basis, standing}`,
+   *  `standing` the recommendations standing at the act's instant. */
+  #acceptance(row, view, accepted, recorded) {
+    const standing = this.#standing(row, view);
+    const named = accepted === null || accepted === undefined || accepted === "" ? []
+      : (Array.isArray(accepted) ? accepted : [accepted]).map((x) => String(x ?? "").trim());
+    const basis = {};
+    for (const id of named) {
+      const rec = standing.find((r) => r.recommendation === id);
+      /* DEC-49 REGION is-acceptance-not-standing */
+      if (!rec) return { refusal: Contradiction.#refuse("ACCEPTANCE_NOT_STANDING",
+        `recommendation '${id.slice(0, 64)}' is not standing for this contradiction`, { recommendation: id || null }) };
+      /* END DEC-49 REGION is-acceptance-not-standing */
+      /* DEC-49 REGION is-acceptance-value-differs */
+      if (!recorded.includes(rec.coordinate)) return { refusal: Contradiction.#refuse("ACCEPTANCE_VALUE_DIFFERS",
+        `the recommendation accepted names ${rec.coordinate}, which this act does not record`,
+        { recommendation: id, coordinate: rec.coordinate }) };
+      /* END DEC-49 REGION is-acceptance-value-differs */
+      basis[rec.coordinate] = { basis: "accepted", recommendation: rec.recommendation };
+    }
+    for (const c of recorded) if (!basis[c]) basis[c] = { basis: "unaided" };
+    return { basis, standing: standing.map((r) => ({ recommendation: r.recommendation, coordinate: r.coordinate })) };
+  }
+
+  /** The one append site of `contradiction_acts` (R30, R42). Answers the row as written. */
+  #appendAct(row, view, fields) {
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_acts`)?.n ?? 0) + 1;
+    const at = fields.at || this.#now();
+    const id = sha256HexSync(canonicalJson({ v: 1, candidate: row.candidate, seq, at, author: fields.author }));
+    const j = (v) => (v === undefined || v === null ? null : JSON.stringify(v));
+    this.#sql.exec(
+      `INSERT INTO contradiction_acts (act_id, candidate, act, choice, author, at, seq, reason, words, coordinates,
+         explanation, evidence, wrong_side, wrong_reason, qualifiers, acceptance, standing, inquiry, kind,
+         a_bundle_id, b_bundle_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      id, row.candidate, fields.act, fields.choice ?? null, fields.author, at, seq, fields.reason ?? null,
+      fields.words ?? null, j(fields.coordinates), fields.explanation ?? null, j(fields.evidence),
+      fields.wrong_side ?? null, fields.wrong_reason ?? null, j(fields.qualifiers), j(fields.acceptance),
+      j(fields.standing), fields.inquiry ?? null, fields.kind ?? null, row.a_bundle_id, row.b_bundle_id);
+    return this.#acts(row.candidate).find((a) => a.act_id === id);
+  }
+
+  /** op=contradictiondismiss — R31: a lead is dismissed, with one of three reasons. */
+  dismiss({ candidate = null, reason = null, words = null, viewer = null, author = null, at = null } = {}) {
+    const g = this.#actRefusals({ candidate, author, viewer, texts: { reason, words } });
+    if (g.refusal) return g.refusal;
+    const { row, view } = g;
+    const closed = Contradiction.#closed(view);
+    if (closed) return closed;
+    /* DEC-49 REGION is-record-cannot-be-dismissed */
+    if (view.weight === "duty" || view.weight === "plurality")
+      return Contradiction.#refuse("RECORD_CANNOT_BE_DISMISSED",
+        "this is a conflict the record holds; it closes only by a resolution", { weight: view.weight });
+    /* END DEC-49 REGION is-record-cannot-be-dismissed */
+    /* DEC-49 REGION is-dismissal-reason-unknown */
+    if (!DISMISSAL_REASONS.includes(reason))
+      return Contradiction.#refuse("DISMISSAL_REASON_UNKNOWN",
+        `a lead is dismissed for one of ${DISMISSAL_REASONS.join(", ")}`, { reasons: [...DISMISSAL_REASONS] });
+    /* END DEC-49 REGION is-dismissal-reason-unknown */
+    const act = this.#record.transact(() => this.#appendAct(row, view, {
+      act: "dismiss", author: author.trim(), reason, words: typeof words === "string" && words.trim() ? words.trim() : null, at }));
+    return { ok: true, candidate: row.candidate, state: "dismissed", act,
+             says: "the lead was dismissed by the member named, with the reason given; nothing either side says was changed" };
+  }
+
+  /** R32's evidence items, each one the viewer may see: `{content}`, `{inquiry, ord}` or `{fact: coordinate}` (a fact R28
+   *  states for that coordinate). Answers the first item that fails, or null. */
+  #evidenceRefusal(row, evidence, viewer) {
+    const facts = this.#facts(row);
+    for (let i = 0; i < evidence.length; i++) {
+      const e = evidence[i];
+      let ok = false;
+      if (e && typeof e === "object" && !Array.isArray(e)) {
+        if (typeof e.content === "string" && e.content) {
+          const home = this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, e.content);
+          ok = !!home && this.#sees(home.bundle_id, viewer);
+        } else if (typeof e.inquiry === "string" && e.inquiry && e.ord !== undefined && e.ord !== null) {
+          const leg = this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE bundle_id=? AND ord=?`, e.inquiry, Number(e.ord));
+          ok = !!leg && this.#sees(e.inquiry, viewer);
+        } else if (typeof e.fact === "string" && e.fact) {
+          ok = facts.some((f) => f.coordinate === e.fact && !f.undetermined);
+        }
+      }
+      /* DEC-49 REGION is-evidence-not-seen */
+      if (!ok) return Contradiction.#refuse("EVIDENCE_NOT_SEEN",
+        `evidence item ${i} is not one you can see, or is a fact the record does not state`, { index: i });
+      /* END DEC-49 REGION is-evidence-not-seen */
+    }
+    return null;
+  }
+
+  /** op=contradictionclarify — R32–R34: a member says how the two differ, that one is wrong, or (K5) that they found no
+   *  named difference. */
+  clarify({ candidate = null, choice = null, coordinates = null, explanation = null, evidence = null, qualifiers = null,
+            wrongSide = null, reason = null, accepted = null, viewer = null, author = null, at = null } = {}) {
+    const q = qualifiers && typeof qualifiers === "object" && !Array.isArray(qualifiers) ? qualifiers : {};
+    const g = this.#actRefusals({ candidate, author, viewer,
+      texts: { explanation, reason, qualifier_a: q.a, qualifier_b: q.b } });
+    if (g.refusal) return g.refusal;
+    const { row, view } = g;
+    const closed = Contradiction.#closed(view);
+    if (closed) return closed;
+    /* DEC-49 REGION is-clarify-not-a-tension */
+    if (view.weight === "lead")
+      return Contradiction.#refuse("CLARIFY_NOT_A_TENSION", "a lead is dismissed or taken up, never clarified");
+    /* END DEC-49 REGION is-clarify-not-a-tension */
+    /* DEC-49 REGION is-clarify-choice-unknown */
+    if (!CLARIFY_CHOICES.includes(choice) || (choice === "no_difference" && row.key !== "K5"))
+      return Contradiction.#refuse("CLARIFY_CHOICE_UNKNOWN",
+        `the answers here are ${(row.key === "K5" ? CLARIFY_CHOICES : CLARIFY_CHOICES.filter((c) => c !== "no_difference")).join(", ")}`,
+        { choices: row.key === "K5" ? [...CLARIFY_CHOICES] : CLARIFY_CHOICES.filter((c) => c !== "no_difference") });
+    /* END DEC-49 REGION is-clarify-choice-unknown */
+    const who = author.trim();
+    if (choice === "differs") {
+      const vocab = this.#vocab(row.key) || [];
+      const coords = Array.isArray(coordinates) ? [...new Set(coordinates)] : [];
+      /* DEC-49 REGION is-clarify-coordinate-unknown */
+      if (!coords.length || coords.some((c) => !vocab.includes(c)))
+        return Contradiction.#refuse("CLARIFY_COORDINATE_UNKNOWN",
+          `name at least one of ${vocab.join(", ") || "(the vocabulary is not held here)"}`, { coordinates: [...vocab] });
+      /* END DEC-49 REGION is-clarify-coordinate-unknown */
+      const acc = this.#acceptance(row, view, accepted, coords);
+      if (acc.refusal) return acc.refusal;
+      const allAccepted = coords.every((c) => acc.basis[c].basis === "accepted");
+      const words = typeof explanation === "string" && explanation.trim() ? explanation.trim() : null;
+      /* DEC-49 REGION is-clarify-no-explanation */
+      if (!words && !allAccepted)
+        return Contradiction.#refuse("CLARIFY_NO_EXPLANATION", "explain in your own words how the two differ");
+      /* END DEC-49 REGION is-clarify-no-explanation */
+      const items = Array.isArray(evidence) ? evidence : [];
+      const bad = this.#evidenceRefusal(row, items, viewer);
+      if (bad) return bad;
+      const quals = {};
+      for (const k of ["a", "b"]) if (typeof q[k] === "string" && q[k].trim()) quals[k] = q[k].trim();
+      const evidenced = items.length > 0;
+      return this.#record.transact(() => {
+        const act = this.#appendAct(row, view, {
+          act: "clarify", choice, author: who, coordinates: coords, explanation: words, evidence: items,
+          qualifiers: Object.keys(quals).length ? quals : null, acceptance: acc.basis, standing: acc.standing, at });
+        /* K4's `subject`: the resolutions that paired the two sides are reported as a defect (entities R38), with the
+           member's explanation as the reason and this candidate as the source. */
+        const defects = row.key === "K4" && coords.includes("subject") ? this.#reportDefects(row, words, who) : null;
+        if (defects && defects.refusal) return defects.refusal;
+        return { ok: true, candidate: row.candidate, choice,
+                 state: evidenced ? "resolved" : "explained_not_shown", ...(evidenced ? { kind: "dissolved" } : {}),
+                 qualifier_standing: evidenced ? "evidenced" : "hypothesis", act,
+                 ...(words ? {} : { own_words: false, says_words: "no words of the member's own were given: each respect recorded was the accepted recommendation" }),
+                 ...(defects ? { defects: defects.reports } : {}),
+                 says: evidenced
+                   ? "the member found the two differ in the respects named, on the evidence named: the contradiction is resolved as dissolved, and neither side was changed"
+                   : "the member explained how the two differ without evidence: the mark softens and does not clear, and any duty stays" };
+      });
+    }
+    if (choice === "one_wrong") {
+      /* DEC-49 REGION is-wrong-side-unnamed */
+      if (wrongSide !== "a" && wrongSide !== "b")
+        return Contradiction.#refuse("WRONG_SIDE_UNNAMED", "name the side that is wrong: a or b");
+      /* END DEC-49 REGION is-wrong-side-unnamed */
+      /* DEC-49 REGION is-wrong-side-no-reason */
+      if (typeof reason !== "string" || !reason.trim())
+        return Contradiction.#refuse("WRONG_SIDE_NO_REASON", "say why that side is wrong");
+      /* END DEC-49 REGION is-wrong-side-no-reason */
+      /* DEC-49 REGION is-plurality-has-no-wrong-side */
+      if (row.key === "K5")
+        return Contradiction.#refuse("PLURALITY_HAS_NO_WRONG_SIDE", "two projects' conclusions have no wrong side");
+      /* END DEC-49 REGION is-plurality-has-no-wrong-side */
+      const acc = this.#acceptance(row, view, accepted, []);
+      if (acc.refusal) return acc.refusal;
+      const act = this.#record.transact(() => this.#appendAct(row, view, {
+        act: "clarify", choice, author: who, wrong_side: wrongSide, wrong_reason: reason.trim(),
+        acceptance: acc.basis, standing: acc.standing, at }));
+      return { ok: true, candidate: row.candidate, choice, state: "resolved", kind: "corrected", wrong_side: wrongSide, act,
+               says: "the member named one side wrong, with the reason: it is marked stale and still resolves; nothing is deleted, and nothing resting on it moves" };
+    }
+    /* R34: no_difference (K5 only). */
+    const acc = this.#acceptance(row, view, accepted, []);
+    if (acc.refusal) return acc.refusal;
+    const act = this.#record.transact(() => this.#appendAct(row, view, {
+      act: "clarify", choice, author: who, explanation: typeof explanation === "string" && explanation.trim() ? explanation.trim() : null,
+      acceptance: acc.basis, standing: acc.standing, at }));
+    return { ok: true, candidate: row.candidate, choice, state: "open", weight: "duty", act,
+             says: "the member found no named difference between the two projects' conclusions: it is now a duty for both" };
+  }
+
+  /** K4 `subject` (R32): report a defect on each established resolution that paired the two sides. */
+  #reportDefects(row, words, who) {
+    const e = this.#e();
+    const entity = row.a?.context?.entity_id ?? null;
+    if (!e || typeof e.reportResolutionDefect !== "function" || !entity) return { reports: [] };
+    const reason = words || `a member found these two sides differ in subject (contradiction ${row.candidate}); no words of their own were given`;
+    const reports = [];
+    for (const side of [row.a, row.b]) {
+      const cap = side.capture_sha ?? this.#one(`SELECT capture_sha FROM content WHERE content_id=?`, side.content_id)?.capture_sha;
+      if (!cap) continue;
+      for (const r of this.#rows(`SELECT ref FROM resolutions WHERE capture_sha=? AND entity_id=? AND established=1 ORDER BY ref`, cap, entity)) {
+        const out = e.reportResolutionDefect({ captureSha: cap, ref: r.ref, entityId: entity, reason,
+                                               source: { module: "contradiction", id: row.candidate }, by: who });
+        if (out && out.ok === false) return { refusal: out };
+        reports.push({ capture_sha: cap, ref: r.ref, entity_id: entity, already: !!(out && out.already) });
+      }
+    }
+    return { reports };
+  }
+
+  /** The frontmatter of a new contradiction inquiry (R35): open, surfaced by a member, titled from the question,
+   *  linked to the candidate, both sides as legs (the framed side supporting), with no grade. */
+  #takeUpDocument(id, row, question, frame, who, at) {
+    const i = this.#i();
+    const title = typeof i.deriveInquiryTitle === "function" ? i.deriveInquiryTitle(question) : null;
+    const leg = (side, name) => {
+      const target = side.kind === "claim" || side.kind === "stance" ? side.inquiry : this.#contentHome(side.content_id);
+      return { target, content_id: side.kind === "leg" || side.kind === "extent" ? side.content_id : null,
+               note: `side ${name} of contradiction ${row.candidate}` };
+    };
+    const framed = frame === "a" ? leg(row.a, "a") : leg(row.b, "b");
+    const other = frame === "a" ? leg(row.b, "b") : leg(row.a, "a");
+    if (!framed.target || !other.target) return null;
+    const targets = [...new Set([framed.target, other.target])];
+    const legLines = (l, role) => [`  - target: ${l.target}`, `    role: ${role}`,
+      ...(l.content_id ? [`    content_id: ${l.content_id}`] : []), `    note: "${fmSafe(l.note)}"`];
+    const text = ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
+      `title: "${fmSafe(title ?? question)}"`, "current_state: open", "prior_state: null",
+      `created: "${at}"`, `last_updated: "${at}"`, "surfaced_by: human",
+      "contradiction:", `  candidate: "${row.candidate}"`,
+      "references:", ...targets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
+      "basis:", ...legLines(framed, "supports"), ...legLines(other, "cuts_against"),
+      "state_history: []", "---", "", "## Question", "", fmSafe(question), "", "## Session Log", "",
+      `- ${at} · ${who} · taken up from contradiction ${row.candidate}, framed around side ${frame}`, ""].join("\n");
+    return { text, title: title ?? question };
+  }
+
+  /** op=contradictiontakeup — R35: take a candidate up as a contradiction inquiry, in one act through
+   *  `promotion.promote`. */
+  takeUp({ candidate = null, question = null, frame = null, viewer = null, author = null, at = null } = {}) {
+    const g = this.#actRefusals({ candidate, author, viewer, texts: { question } });
+    if (g.refusal) return g.refusal;
+    const { row, view } = g;
+    const closed = Contradiction.#closed(view, { takenUp: false });
+    if (closed) return closed;
+    if (view.state === "taken_up")
+      return { ok: true, existed: true, candidate: row.candidate, inquiry: view.inquiry, wrote: false,
+               says: "this contradiction is already taken up as the question named; nothing was written" };
+    /* DEC-49 REGION is-take-up-no-question */
+    if (typeof question !== "string" || !question.trim())
+      return Contradiction.#refuse("TAKE_UP_NO_QUESTION", "word the question, or accept the default shown with the candidate",
+                                   { default_question: this.#defaultQuestion(row) });
+    /* END DEC-49 REGION is-take-up-no-question */
+    /* DEC-49 REGION is-take-up-no-frame */
+    if (frame !== "a" && frame !== "b")
+      return Contradiction.#refuse("TAKE_UP_NO_FRAME", "choose the side the question is asked around: a or b");
+    /* END DEC-49 REGION is-take-up-no-frame */
+    const who = author.trim();
+    const when = at || this.#now();
+    const p = this.#p();
+    return this.#record.transact(() => {
+      const id = `${this.#record.allocId("INQ", String(when).slice(0, 4)).id}-contradiction`;
+      const doc = this.#takeUpDocument(id, row, question.trim(), frame, who, when);
+      if (!doc) return Contradiction.#refuse("NO_SUCH_CANDIDATE", "a side of this contradiction is no longer held");
+      const promoted = p.promote({ bundleId: id, base: null, snapKey: `takeup_${String(when).replace(/[-:.]/g, "")}_${rand(4)}`,
+        author: who, actorIdentity: who, actorViewer: viewer,
+        files: [{ path: "bundle.md", text: doc.text }],
+        meta: { object_type: "inquiry", title: doc.title, current_state: "open", prior_state: null,
+                created: when, last_updated: when } });
+      /* A promotion refusal is relayed whole, and nothing is written (the transaction rolls back on it). */
+      if (!promoted || promoted.ok === false) return promoted || { ok: false, reason: "PROMOTE_FAILED" };
+      const act = this.#appendAct(row, view, { act: "take_up", author: who, inquiry: id, at: when,
+                                                words: question.trim() });
+      return { ok: true, candidate: row.candidate, inquiry: id, state: "taken_up", frame, act,
+               promoted: { bundleId: promoted.bundleId, bundleSha: promoted.bundleSha },
+               says: "the contradiction was taken up as a new question, framed around the side named; it is resolved by that question's conclusion" };
+    });
+  }
+
+  /** The live files of a bundle, carried whole into a revision (promotion R7: a revision drops no path unnamed). */
+  #liveFiles(id) {
+    const paths = this.#record.livePaths(id) || [];
+    return paths.map((path) => {
+      const f = this.#record.readFile(id, path);
+      return f && typeof f.text === "string" ? { path, text: f.text } : { path, blobSha: f.blobSha, bytes: f.bytes };
+    });
+  }
+
+  /** op=contradictionresolve — R36: a contradiction inquiry's conclusion, with its resolution. */
+  resolve({ inquiry = null, resolution = null, conclusion = null, version = null, falsifier = null, noFalsifier = false,
+            accepted = null, viewer = null, author = null, at = null } = {}) {
+    const machine = this.#machineRefusal(author);
+    if (machine) return machine;
+    const id = typeof inquiry === "string" ? inquiry.trim() : "";
+    const i = this.#i();
+    const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id)
+      && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
+    const row = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
+    /* DEC-49 REGION is-not-a-contradiction-inquiry */
+    if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer))
+      return Contradiction.#refuse("NOT_A_CONTRADICTION_INQUIRY", "no question you can see answers to that id as one taken up from a contradiction");
+    /* END DEC-49 REGION is-not-a-contradiction-inquiry */
+    const res = resolution && typeof resolution === "object" && !Array.isArray(resolution) ? resolution : {};
+    const family = this.#family(res.kind);
+    if (row.key === "K5" && (family === "CORRECTED" || res.kind === "double_speak_or_reversal"))
+      return Contradiction.#refuse("PLURALITY_HAS_NO_WRONG_SIDE", "two projects' conclusions have no wrong side and no double-speak");
+    const view = this.#view(row);
+    const coords = Array.isArray(res.coordinates) ? res.coordinates.filter((c) => typeof c === "string") : [];
+    const acc = this.#acceptance(row, view, accepted, coords);
+    if (acc.refusal) return acc.refusal;
+    if (typeof i.resolutionLines !== "function")
+      return { ok: false, reason: "RESOLUTION_UNWRITABLE", code: "RESOLUTION_UNWRITABLE",
+               detail: "inquiry's resolutionLines is not reachable here, so no resolution can be written; nothing was written" };
+    const who = author.trim();
+    const when = at || this.#now();
+    return this.#record.transact(() => {
+      const head = this.#record.head(id);
+      const files = this.#liveFiles(id);
+      const md = files.find((f) => f.path === "bundle.md");
+      if (!head || !md || typeof md.text !== "string")
+        return Contradiction.#refuse("NOT_A_CONTRADICTION_INQUIRY", "the question's document is not held as text");
+      let lines = i.resolutionLines(res);
+      lines = Array.isArray(lines) ? lines : String(lines ?? "").split("\n").filter(Boolean);
+      if (!lines.length || !/^resolution:/.test(lines[0])) lines = ["resolution:", ...lines.map((l) => `  ${l.replace(/^\s*/, "")}`)];
+      let text = setFrontmatterLines(md.text, "resolution", lines);
+      text = setOrAddScalar(text, "last_updated", `"${when}"`);
+      text = appendSessionLog(text, `- ${when} · ${who} · resolution recorded as ${fmSafe(res.kind)} (contradiction ${row.candidate})`);
+      const written = this.#p().promote({ bundleId: id, base: head.bundleSha, snapKey: `resolve_${String(when).replace(/[-:.]/g, "")}_${rand(4)}`,
+        author: who, actorIdentity: who, actorViewer: viewer,
+        files: files.map((f) => (f.path === "bundle.md" ? { path: "bundle.md", text } : f)),
+        meta: { object_type: "inquiry", last_updated: when } });
+      if (!written || written.ok === false) return written || { ok: false, reason: "PROMOTE_FAILED" };
+      const concluded = this.#b().conclude({ target: id, conclusion: conclusion ?? "", version: version ?? "",
+        falsifier: falsifier ?? "", noFalsifier: !!noFalsifier, viewer, author: who, identity: who });
+      if (!concluded || concluded.ok === false) return concluded || { ok: false, reason: "CONCLUDE_FAILED" };
+      const act = this.#appendAct(row, view, { act: "resolve", author: who, inquiry: id, kind: res.kind ?? null,
+        coordinates: coords.length ? coords : null, wrong_side: res.wrong_side ?? null, wrong_reason: res.reason ?? null,
+        qualifiers: res.qualifiers ?? null, acceptance: acc.basis, standing: acc.standing, at: when });
+      return { ok: true, inquiry: id, candidate: row.candidate, state: "resolved", kind: res.kind, family, act,
+               conclusion: concluded,
+               says: "the question was concluded with its resolution: the question's own conclusion, never a project's stance" };
+    });
+  }
+
+  /** op=contradictionrecommend — R37: the machine's one act. */
+  recommend({ run = null, candidate = null, coordinates = null, proposedBy = null, viewer = null, caller = null, at = null } = {}) {
+    const gate = this.#runRefusals({ run, proposedBy, viewer, caller });
+    if (gate.refusal) return gate.refusal;
+    const runId = gate.run;
+    const list = Array.isArray(coordinates) ? coordinates : [];
+    /* DEC-49 REGION is-recommend-no-coordinates */
+    if (!list.length)
+      return Contradiction.#refuse("RECOMMEND_NO_COORDINATES", "name at least one respect in which the sides may differ", { run: runId });
+    /* END DEC-49 REGION is-recommend-no-coordinates */
+    const row = typeof candidate === "string" ? this.#candidate(candidate) : null;
+    const vocab = row ? (this.#vocab(row.key) || [])
+      : [...new Set([...(this.#vocab("K1") || []), ...(this.#vocab("K5") || [])])];
+    for (let n = 0; n < list.length; n++) {
+      const c = list[n] && typeof list[n] === "object" ? list[n].coordinate : null;
+      /* DEC-49 REGION is-recommend-coordinate-unknown */
+      if (!vocab.includes(c))
+        return Contradiction.#refuse("RECOMMEND_COORDINATE_UNKNOWN", `recommendation ${n} names '${String(c).slice(0, 40)}'`,
+                                     { run: runId, index: n, coordinates: [...vocab] });
+      /* END DEC-49 REGION is-recommend-coordinate-unknown */
+    }
+    for (let n = 0; n < list.length; n++) {
+      /* DEC-49 REGION is-recommend-no-reason */
+      if (typeof list[n].reason !== "string" || !list[n].reason.trim())
+        return Contradiction.#refuse("RECOMMEND_NO_REASON", `recommendation ${n} carries no reason`, { run: runId, index: n });
+      /* END DEC-49 REGION is-recommend-no-reason */
+    }
+    const seen = row && this.#sideSeen(row.a, viewer) && this.#sideSeen(row.b, viewer);
+    const view = seen ? this.#view(row) : null;
+    /* DEC-49 REGION is-recommend-candidate-not-standing */
+    if (!view || view.weight === "not_shown" || !isStanding(view.state))
+      return Contradiction.#refuse("RECOMMEND_CANDIDATE_NOT_STANDING", "that contradiction is not open to recommendation",
+                                   { run: runId });
+    /* END DEC-49 REGION is-recommend-candidate-not-standing */
+    const when = at || this.#now();
+    const written = this.#record.transact(() => list.map((x) => {
+      const id = sha256HexSync(canonicalJson({ v: 1, run: runId, candidate: row.candidate, coordinate: x.coordinate }));
+      if (this.#one(`SELECT 1 AS x FROM contradiction_recommendations WHERE recommendation=?`, id)) return { id, new: false };
+      const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_recommendations`)?.n ?? 0) + 1;
+      this.#sql.exec(`INSERT INTO contradiction_recommendations (recommendation, candidate, run, coordinate, proposed_by,
+          reason, origin, at, seq, a_bundle_id, b_bundle_id) VALUES (?,?,?,?,?,?,'machine',?,?,?,?)`,
+        id, row.candidate, runId, x.coordinate, proposedBy.trim(), x.reason.trim().slice(0, CANDIDATE_REASON_MAX), when, seq,
+        row.a_bundle_id, row.b_bundle_id);
+      return { id, new: true };
+    }));
+    const recs = written.map((w) => ({ new: w.new, ...this.#one(`SELECT recommendation, candidate, run, coordinate, proposed_by,
+      reason, origin, at FROM contradiction_recommendations WHERE recommendation=?`, w.id), machine_work: true }));
+    const n = written.filter((w) => w.new).length;
+    return { ok: true, run: runId, candidate: row.candidate, written: n, unchanged: written.length - n, recommendations: recs,
+             says: "each is a machine's recommendation of a respect in which the two may differ: machine work, not a member's choice" };
+  }
+
+  /** R13's first four refusals, shared by `propose` and `recommend` (R37): proposer, run, principal, running. */
+  #runRefusals({ run, proposedBy, viewer, caller }) {
+    /* DEC-49 REGION is-candidate-no-proposer */
+    if (typeof proposedBy !== "string" || !proposedBy.trim())
+      return { refusal: Contradiction.#refuse("CANDIDATE_NO_PROPOSER",
+        "machine work records who proposed it; the plane stamps that from the credential that asked, "
+        + "so an empty one means the act arrived by a route that does not attribute it") };
+    /* END DEC-49 REGION is-candidate-no-proposer */
+    const runId = typeof run === "string" ? run.trim() : "";
+    const r = runId && this.#runGate ? this.#runGate.gate(runId, viewer, caller) : null;
+    /* DEC-49 REGION is-candidate-no-run */
+    if (!r || r.found !== true)
+      return { refusal: Contradiction.#refuse("CANDIDATE_NO_RUN",
+        runId ? `no run named '${runId.slice(0, 60)}' is open in this store`
+              : "pass run=<the run whose work this is>: machine work names the run it came from",
+        { run: runId || null }) };
+    /* END DEC-49 REGION is-candidate-no-run */
+    const np = r.refusal;
+    if (np)
+      return { refusal: { ok: false, reason: np.code, code: np.code, check: np.check, translation: np.translation,
+                          detail: np.detail, run: runId, note: "machine work names a run its caller holds. Nothing was written" } };
+    /* DEC-49 REGION is-candidate-run-not-running */
+    if (r.running !== true)
+      return { refusal: Contradiction.#refuse("CANDIDATE_RUN_NOT_RUNNING",
+        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`, { run: runId }) };
+    /* END DEC-49 REGION is-candidate-run-not-running */
+    return { run: runId };
+  }
+
+  /** R38: the promotion check registered with `promotion` (its R39). A non-replay promotion whose document names a
+   *  candidate this module does not hold, or one with a side its author may not see, is refused `CANDIDATE_NOT_HELD`
+   *  (C-93.32): `inquiry` R47's link is enforced at the record's one door. */
+  promotionCheck(c) {
+    try {
+      if (!c || c.replay || (c.pkg && c.pkg.replay)) return null;
+      const fm = c.docFm && typeof c.docFm === "object" ? c.docFm : null;
+      const link = fm && fm.contradiction && typeof fm.contradiction === "object" ? fm.contradiction : null;
+      if (!link || link.candidate === undefined || link.candidate === null) return null;
+      const who = (c.pkg && (c.pkg.actorViewer || c.pkg.actorIdentity)) || c.author || null;
+      const row = typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
+      /* DEC-49 REGION is-candidate-not-held */
+      if (!row || !this.#sideSeen(row.a, who) || !this.#sideSeen(row.b, who))
+        return Contradiction.#refuse("CANDIDATE_NOT_HELD",
+          "this question names a contradiction the record does not hold, or one whose side its author may not see",
+          { candidate: typeof link.candidate === "string" ? link.candidate : null });
+      /* END DEC-49 REGION is-candidate-not-held */
+      return null;
+    } catch (e) {
+      return Contradiction.#refuse("CANDIDATE_NOT_HELD", `the candidate could not be read (${String(e && e.message || e).slice(0, 80)})`);
+    }
+  }
+
+  /* ===================================================================== *
+   * THE MEASURES (N345; R39–R41).
+   * ===================================================================== */
+
+  /** R39: acceptance per coordinate, counted over the acts that record a coordinate (clarify, resolve). Counts only,
+   *  never a bare percentage; `review_due` by `ACCEPTANCE_REVIEW`, PROVISIONAL. Never throws. */
+  acceptanceRates({ coordinate = null, since = null } = {}) {
+    const per = {};
+    const slot = (c) => (per[c] ||= { coordinate: c, offered: 0, accepted: 0, chosen_unaided: 0, chose_otherwise: 0 });
+    try {
+      const acts = this.#rows(`SELECT act, at, coordinates, acceptance, standing FROM contradiction_acts
+                                WHERE act IN ('clarify', 'resolve') ORDER BY seq`);
+      for (const a of acts) {
+        if (typeof since === "string" && since && !(a.at >= since)) continue;
+        const j = (v) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
+        const recorded = j(a.coordinates) || [];
+        const basis = j(a.acceptance) || {};
+        const standing = [...new Set((j(a.standing) || []).map((r) => r.coordinate))];
+        for (const c of standing) {
+          const s = slot(c);
+          s.offered += 1;
+          if (!recorded.includes(c)) s.chose_otherwise += 1;
+        }
+        for (const c of recorded) {
+          const s = slot(c);
+          if (basis[c] && basis[c].basis === "accepted") s.accepted += 1;
+          else s.chosen_unaided += 1;
+        }
+      }
+    } catch { /* never throws: what was counted stands */ }
+    const rows = Object.values(per).filter((r) => !coordinate || r.coordinate === coordinate)
+      .sort((x, y) => (x.coordinate < y.coordinate ? -1 : 1))
+      .map((r) => ({ ...r, review_due: r.offered >= ACCEPTANCE_REVIEW.min_offered
+                                          && r.accepted / r.offered >= ACCEPTANCE_REVIEW.rate }));
+    return { ok: true, wrote: false, coordinates: rows, threshold: { ...ACCEPTANCE_REVIEW },
+             says: "counts, never a bare percentage: a recommendation accepted nearly every time has become a decision, "
+                 + "and is reviewed. The threshold is PROVISIONAL" };
+  }
+
+  /** R40: dismissed leads, counted by reason, by key and by label; `false_conflicts` counts only the first two reasons.
+   *  Never throws. */
+  dismissalMeasure({ since = null } = {}) {
+    const byReason = Object.fromEntries(DISMISSAL_REASONS.map((r) => [r, 0]));
+    const byKey = {}, byLabel = {};
+    let total = 0;
+    try {
+      for (const a of this.#rows(`SELECT a.reason, a.at, c.key, c.label FROM contradiction_acts a
+                                    JOIN contradiction_candidates c ON c.candidate = a.candidate
+                                   WHERE a.act = 'dismiss' ORDER BY a.seq`)) {
+        if (typeof since === "string" && since && !(a.at >= since)) continue;
+        total += 1;
+        byReason[a.reason] = (byReason[a.reason] || 0) + 1;
+        byKey[a.key] = (byKey[a.key] || 0) + 1;
+        byLabel[a.label] = (byLabel[a.label] || 0) + 1;
+      }
+    } catch { /* never throws */ }
+    return { ok: true, wrote: false, dismissed: total, by_reason: byReason, by_key: byKey, by_label: byLabel,
+             false_conflicts: FALSE_CONFLICT_REASONS.reduce((n, r) => n + (byReason[r] || 0), 0),
+             says: "a real conflict not pursued now is never counted as a false conflict" };
+  }
+
+  /* ===================================================================== *
+   * A CONFLICT WITH A SIDE THE MEMBER CANNOT SEE (DEC-85 as K456 clarified it; R49–R55). A member who sees a conflict
+   * between projects half is told on their own side only: never the other side, its kind, bundle, source, project or
+   * members, the key or the machine's words, or how many parties there are.
+   * ===================================================================== */
+
+  /** R50's three refusals for `project`, in order: the existence answer (membership R77), no such project (R78), a
+   *  viewer who is not a joined participant (R87). Answers a refusal or `{member}`. */
+  #projectRefusals(project, viewer) {
+    const m = this.#m();
+    const pid = typeof project === "string" ? project.trim() : "";
+    const ex = pid && m && typeof m.existenceAct === "function" ? m.existenceAct(pid, viewer) : null;
+    if (ex) return { refusal: ex };
+    const held = pid ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid) : null;
+    if (!held || held.object_type !== "project" || !this.#sees(pid, viewer)) return { refusal: noSuchProject(pid || null) };
+    const member = viewerPredicate(viewer).member;
+    if (!member || !m || !m.isJoinedParticipant(pid, member)) return { refusal: notAParticipant(pid, member) };
+    return { project: pid, member };
+  }
+
+  /** The candidates `project` is a party of (R49), in id order: those whose side's inquiry the project draws on, whose
+   *  side's content row one of its inquiries cites, or whose stance is its own. */
+  #partyCandidates(project) {
+    return this.#candidatesNaming({ kind: "project", id: project }).sort();
+  }
+
+  /** R49, R50: whether `project` is a party through a side the viewer may see, and which side that is. */
+  #seenPartySide(row, project, viewer) {
+    for (const which of ["a", "b"]) {
+      if (!this.#sideSeen(row[which], viewer)) continue;
+      if (this.#reachOf(row[which]).projects.includes(project)) return which;
+    }
+    return null;
+  }
+
+  /** op=contradictionnotices — R50: the notices to a project's members, on their own side. */
+  conflictNotices({ project = null, after = null, limit = null, viewer = null } = {}) {
+    try {
+      const g = this.#projectRefusals(project, viewer);
+      if (g.refusal) return g.refusal;
+      const n = Number(limit);
+      const cap = limit === null || limit === undefined || limit === "" || !Number.isFinite(n) || n < 1
+        ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
+      const notices = [];
+      let truncated = false;
+      for (const id of this.#partyCandidates(g.project)) {
+        if (typeof after === "string" && after && !(id > after)) continue;
+        const row = this.#candidate(id);
+        const seenA = this.#sideSeen(row.a, viewer), seenB = this.#sideSeen(row.b, viewer);
+        if (seenA === seenB) continue;                 /* whole, or not at all: not a notice */
+        const which = seenA ? "a" : "b";
+        if (!this.#reachOf(row[which]).projects.includes(g.project)) continue;
+        const view = this.#view(row);
+        if (!isProjectConflict(view.weight, view.state)) continue;
+        if (notices.length === cap) { truncated = true; break; }
+        const parties = this.#parties(row);
+        notices.push({ candidate: row.candidate, project: g.project, weight: view.weight, state: view.state,
+                       side: this.#shown(row[which]), says: NOTICE_SENTENCE,
+                       ...this.#partyView(row, g.project),
+                       ...(parties.truncated ? { reveal_undetermined: true,
+                         reveal_why: "the projects holding a side could not all be read, so whether every one has asked is undetermined and no reveal is recorded" } : {}) });
+      }
+      return { ok: true, wrote: false, project: g.project, limit: cap, truncated,
+               cursor: notices.length ? notices[notices.length - 1].candidate : null, notices };
+    } catch (e) {
+      return { ok: true, wrote: false, notices: [], truncated: false, undetermined: true,
+               why: String(e && e.message || e).slice(0, 160) };
+    }
+  }
+
+  /** R51's refusals shared with R53 (its first seven), in order. Answers a refusal or `{row, view, project, member}`. */
+  #partyRefusals({ candidate, project, viewer, author }) {
+    const machine = this.#machineRefusal(author);
+    if (machine) return { refusal: machine };
+    const none = Contradiction.#noCandidate(candidate);
+    if (none) return { refusal: none };
+    const g = this.#projectRefusals(project, viewer);
+    if (g.refusal) return { refusal: g.refusal };
+    const row = this.#candidate(candidate);
+    if (!row || (!this.#sideSeen(row.a, viewer) && !this.#sideSeen(row.b, viewer)))
+      return { refusal: Contradiction.#noSuch("no contradiction you can see answers to that id") };
+    /* DEC-49 REGION is-not-a-party */
+    if (!this.#seenPartySide(row, g.project, viewer))
+      return { refusal: Contradiction.#refuse("NOT_A_PARTY",
+        "the project named does not rest on the side of this conflict you can see", { project: g.project }) };
+    /* END DEC-49 REGION is-not-a-party */
+    const view = this.#view(row);
+    /* DEC-49 REGION is-not-a-project-conflict */
+    if (view.weight !== "duty" && view.weight !== "plurality")
+      return { refusal: Contradiction.#refuse("NOT_A_PROJECT_CONFLICT",
+        "a lead is not a conflict the record holds between projects") };
+    /* END DEC-49 REGION is-not-a-project-conflict */
+    const closed = Contradiction.#closed(view, { takenUp: false });
+    if (closed) return { refusal: closed };
+    return { row, view, project: g.project, member: g.member };
+  }
+
+  /** op=contradictionoptin — R51, R52: a project asks to resolve the conflict; the opt-in that leaves every party opted
+   *  in records the reveal in the same act. */
+  optIn({ candidate = null, project = null, words = null, viewer = null, author = null, at = null } = {}) {
+    const g = this.#partyRefusals({ candidate, project, viewer, author });
+    if (g.refusal) return g.refusal;
+    const over = this.#overCap({ words });
+    if (over) return over;
+    const { row } = g;
+    const who = author.trim();
+    const when = at || this.#now();
+    return this.#record.transact(() => {
+      const held = this.#optins(row.candidate);
+      const first = held.optins.find((r) => r.project_id === g.project);
+      if (first)
+        return { ok: true, already: true, wrote: false, candidate: row.candidate, project: g.project,
+                 opted_in: { member: first.author, at: first.at, words: first.words ?? null },
+                 says: "this project had already asked to resolve it; nothing was written" };
+      const seq = () => (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_optins`)?.n ?? 0) + 1;
+      const put = (kind, fields) => {
+        const s = seq();
+        const id = sha256HexSync(canonicalJson({ v: 1, candidate: row.candidate, kind, seq: s, at: when }));
+        this.#sql.exec(`INSERT INTO contradiction_optins (optin, candidate, kind, project_id, author, at, seq, words,
+            parties, a_bundle_id, b_bundle_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+          id, row.candidate, kind, fields.project ?? null, fields.author ?? null, when, s, fields.words ?? null,
+          fields.parties ? JSON.stringify(fields.parties) : null, row.a_bundle_id, row.b_bundle_id);
+      };
+      put("optin", { project: g.project, author: who, words: typeof words === "string" && words.trim() ? words.trim() : null });
+      /* R52: the parties re-read here, inside the act, so two last opt-ins at once record one reveal. */
+      const parties = this.#parties(row);
+      const now = this.#optins(row.candidate);
+      let revealed = !!now.revealed;
+      if (!now.revealed && !parties.truncated && parties.all.length > 0 && parties.all.every((p) => now.opted.includes(p))) {
+        put("revealed", { parties: parties.all });
+        revealed = true;
+      }
+      return { ok: true, candidate: row.candidate, project: g.project, wrote: true,
+               revealed: revealed && this.#optins(row.candidate).opted.includes(g.project),
+               ...(parties.truncated ? { reveal_undetermined: true } : {}),
+               says: revealed
+                 ? "this project asked to resolve it, and every project holding a side has asked: the projects are named to each other's members"
+                 : "this project asked to resolve it; the other projects are told only that another project has asked" };
+    });
+  }
+
+  /** R53's disclosures, as the responder chose them: `{cover?, email?}`, or a refusal. */
+  #disclosure(disclose, member, who) {
+    if (disclose === undefined || disclose === null) return { cover: null, email: null };
+    const bad = (part) => Contradiction.#refuse("DISCLOSURE_MALFORMED", `the part of the disclosure that is not one of cover or email: ${part}`, { part });
+    /* DEC-49 REGION is-disclosure-malformed */
+    if (typeof disclose !== "object" || Array.isArray(disclose)) return { refusal: bad("the disclosure itself") };
+    const extra = Object.keys(disclose).find((k) => k !== "cover" && k !== "email");
+    if (extra) return { refusal: bad(extra) };
+    const cover = disclose.cover;
+    if (cover !== undefined && cover !== true && typeof cover !== "string") return { refusal: bad("cover") };
+    const email = disclose.email;
+    if (email !== undefined && (typeof email !== "string" || email.length > EMAIL_MAX
+        || !/^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(email.trim())))
+      return { refusal: bad("email") };
+    /* END DEC-49 REGION is-disclosure-malformed */
+    const facts = this.#m() && typeof this.#m().memberFacts === "function" ? this.#m().memberFacts(member) : null;
+    const own = facts && typeof facts.cover === "string" ? facts.cover : null;
+    const e = typeof email === "string" ? email.trim() : null;
+    const taken = e ? this.#one(`SELECT 1 AS x FROM contradiction_responses WHERE lower(email) = lower(?) AND author <> ?`,
+                                e, who) : null;
+    /* DEC-49 REGION is-disclosure-not-yours */
+    if ((typeof cover === "string" && cover !== own) || taken)
+      return { refusal: Contradiction.#refuse("DISCLOSURE_NOT_YOURS",
+        "a response may share only your own cover or your own email address", { part: taken ? "email" : "cover" }) };
+    /* END DEC-49 REGION is-disclosure-not-yours */
+    return { cover: cover === true ? own : (typeof cover === "string" ? cover : null), email: e };
+  }
+
+  /** op=contradictionrespond — R53: a member responds to the notice, sharing only what they choose. */
+  respond({ candidate = null, project = null, text = null, disclose = undefined, viewer = null, author = null, at = null } = {}) {
+    const g = this.#partyRefusals({ candidate, project, viewer, author });
+    if (g.refusal) return g.refusal;
+    const { row } = g;
+    /* DEC-49 REGION is-response-before-opt-in */
+    if (!this.#optins(row.candidate).opted.includes(g.project))
+      return Contradiction.#refuse("RESPONSE_BEFORE_OPT_IN", "this project has not asked to resolve it yet", { project: g.project });
+    /* END DEC-49 REGION is-response-before-opt-in */
+    /* DEC-49 REGION is-response-no-text */
+    if (typeof text !== "string" || !text.trim())
+      return Contradiction.#refuse("RESPONSE_NO_TEXT", "a response says something in the responder's own words");
+    /* END DEC-49 REGION is-response-no-text */
+    const over = this.#overCap({ text });
+    if (over) return over;
+    const d = this.#disclosure(disclose, g.member, author.trim());
+    if (d.refusal) return d.refusal;
+    const who = author.trim();
+    const when = at || this.#now();
+    return this.#record.transact(() => {
+      const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_responses`)?.n ?? 0) + 1;
+      const id = sha256HexSync(canonicalJson({ v: 1, candidate: row.candidate, project: g.project, seq, at: when }));
+      this.#sql.exec(`INSERT INTO contradiction_responses (response, candidate, project_id, author, at, seq, text, cover,
+          email, a_bundle_id, b_bundle_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        id, row.candidate, g.project, who, when, seq, text.trim(), d.cover, d.email, row.a_bundle_id, row.b_bundle_id);
+      return { ok: true, candidate: row.candidate, project: g.project, response: id, at: when,
+               shared: { cover: d.cover !== null, email: d.email !== null },
+               ...(d.email ? { email_says: "stated, not verified" } : {}),
+               says: "the response is held; it reaches the other projects' members, with only what you chose to share, once every project holding a side has asked" };
+    });
+  }
+
+  /** op=contradictionresponses — R54's read: this project's own responses, attributed, and once revealed the other
+   *  parties' as relayed, in the order written. */
+  conflictResponses({ candidate = null, project = null, after = null, limit = null, viewer = null } = {}) {
+    try {
+      const g = this.#projectRefusals(project, viewer);
+      if (g.refusal) return g.refusal;
+      const none = Contradiction.#noCandidate(candidate);
+      if (none) return none;
+      const row = this.#candidate(candidate);
+      if (!row || (!this.#sideSeen(row.a, viewer) && !this.#sideSeen(row.b, viewer)) || !this.#seenPartySide(row, g.project, viewer))
+        return Contradiction.#noSuch("no contradiction you can see answers to that id for this project");
+      const n = Number(limit);
+      const cap = limit === null || limit === undefined || limit === "" || !Number.isFinite(n) || n < 1
+        ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
+      const { revealed, opted } = this.#optins(row.candidate);
+      const isRevealed = !!revealed && opted.includes(g.project);
+      const others = isRevealed ? opted.filter((p) => p !== g.project) : [];
+      const afterSeq = typeof after === "string" && after
+        ? this.#one(`SELECT seq FROM contradiction_responses WHERE response=?`, after)?.seq ?? Infinity : 0;
+      const rows = this.#rows(`SELECT * FROM contradiction_responses WHERE candidate=? AND seq > ?
+                                  AND (project_id = ? OR project_id IN (SELECT value FROM json_each(?)))
+                                ORDER BY seq LIMIT ?`, row.candidate, afterSeq, g.project, JSON.stringify(others), cap + 1);
+      const items = rows.slice(0, cap).map((r) => (r.project_id === g.project
+        ? { response: r.response, own: true, author: r.author, text: r.text, cover: r.cover, email: r.email,
+            ...(r.email ? { email_says: "stated, not verified" } : {}), project: g.project, at: r.at }
+        : { own: false, ...this.#relay(r) }));
+      return { ok: true, wrote: false, candidate: row.candidate, project: g.project, revealed: isRevealed, limit: cap,
+               truncated: rows.length > cap, cursor: items.length ? (items[items.length - 1].response) : null,
+               responses: items };
+    } catch (e) {
+      return { ok: true, wrote: false, responses: [], truncated: false, undetermined: true,
+               why: String(e && e.message || e).slice(0, 160) };
+    }
+  }
+
 }
 
 /* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads
-   them in, K3). `url` carries the control plane's stamps (`viewer`, `proposedBy`, `principal`), never the caller's;
-   `body` the parsed body, of which only `run`, `proposals` and `at` are read. `key` and `limit` are the caller's,
-   and both are answered rather than trusted (R5, R6). */
+   them in, K3). `url` carries the control plane's stamps (`viewer`, `author`, `proposedBy`, `principal`), never the
+   caller's; `body` the parsed body, from which each op reads only its own named fields (a stamp in the body is never
+   read). `key` and `limit` are the caller's, and both are answered rather than trusted (R5, R6). The control plane
+   routes the thirteen N345 ops at layer 11 (control-plane's entry). */
 export function contradictionOps(c, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
+  const v = (k) => (b[k] !== undefined ? b[k] : q(k));
+  const stamps = () => ({ viewer: q("viewer"), author: q("author") });
   return {
     contradictionpropose: () => c.propose({ run: b.run, proposals: b.proposals, at: b.at || null,
                                             proposedBy: q("proposedBy"), viewer: q("viewer"), caller: q("principal") }),
     contradictionpairs: () => c.pairs({ key: q("key"), limit: q("limit"), viewer: q("viewer") }),
+    contradictioncandidates: () => c.candidatesFor({ on: b.on && typeof b.on === "object" ? b.on
+        : Object.fromEntries(["inquiry", "content", "entity", "bundle", "project", "candidate"].filter((k) => q(k)).map((k) => [k, q(k)])),
+      label: v("label"), weight: v("weight"), state: v("state"), after: v("after"), limit: v("limit"), viewer: q("viewer") }),
+    contradictiontensions: () => c.tensionsOn({ referents: b.referents, viewer: q("viewer") }),
+    contradictionfacts: () => c.contextFacts({ candidate: v("candidate"), viewer: q("viewer") }),
+    contradictiondismiss: () => c.dismiss({ candidate: v("candidate"), reason: v("reason"), words: v("words"), ...stamps() }),
+    contradictionclarify: () => c.clarify({ candidate: v("candidate"), choice: v("choice"), coordinates: b.coordinates,
+      explanation: v("explanation"), evidence: b.evidence, qualifiers: b.qualifiers, wrongSide: v("wrongSide"),
+      reason: v("reason"), accepted: b.accepted, ...stamps() }),
+    contradictiontakeup: () => c.takeUp({ candidate: v("candidate"), question: v("question"), frame: v("frame"), ...stamps() }),
+    contradictionresolve: () => c.resolve({ inquiry: v("inquiry"), resolution: b.resolution, conclusion: v("conclusion"),
+      version: v("version"), falsifier: v("falsifier"), noFalsifier: v("noFalsifier"), accepted: b.accepted, ...stamps() }),
+    contradictionrecommend: () => c.recommend({ run: b.run, candidate: b.candidate, coordinates: b.coordinates, at: b.at || null,
+                                                proposedBy: q("proposedBy"), viewer: q("viewer"), caller: q("principal") }),
+    contradictionnotices: () => c.conflictNotices({ project: v("project"), after: v("after"), limit: v("limit"), viewer: q("viewer") }),
+    contradictionoptin: () => c.optIn({ candidate: v("candidate"), project: v("project"), words: v("words"), ...stamps() }),
+    contradictionrespond: () => c.respond({ candidate: v("candidate"), project: v("project"), text: v("text"),
+                                            disclose: b.disclose, ...stamps() }),
+    contradictionresponses: () => c.conflictResponses({ candidate: v("candidate"), project: v("project"), after: v("after"),
+                                                        limit: v("limit"), viewer: q("viewer") }),
   };
 }
