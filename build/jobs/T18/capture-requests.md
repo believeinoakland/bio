@@ -1,6 +1,6 @@
 # capture-requests (T18)
 
-**Status** · session_01Ff7skf5DLANXvvLjjJWTYg · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01Ff7skf5DLANXvvLjjJWTYg · depth 2 · WAITING ON BOB (J1) · handled B2
 
 **Completion** (CAPTURE-REQUESTS #4, 2026-09-30)
 
