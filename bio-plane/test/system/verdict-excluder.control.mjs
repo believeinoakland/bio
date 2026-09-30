@@ -234,7 +234,7 @@ const BASE_MB = b0.pass, BASE_PE = b1.pass;
    import tail is the guard's, and every one is asserted to occur exactly once. */
 const DRIFT_FROM = "  if (/^Boolean\\s*\\(/.test(s)) return \"expr\";";
 const DRIFT_TO = "  if (/^Boolean\\s*\\(/.test(s)) return \"exprr\";";
-const IMPORT_TAIL = "\n         verdictKind, verdictOf } from \"../bio-plane/test/verdict-reader.mjs\";\n";
+const IMPORT_TAIL = "\n         verdictKind, verdictOf } from \"../bio-plane/test/system/verdict-reader.mjs\";\n";
 const GUARD_IMPORT = "import { skipString, matchBrace, outcomeReturns, topLevelParts, topLevelProps, topLevelSpreads,"
                    + IMPORT_TAIL;
 const READER_SRC = readFileSync(P.reader, "utf8");   /* pristine: read before any arm touches it */
@@ -250,7 +250,7 @@ const oneLine = (r) => `mb ${r.mb.pass}/${r.mb.fail} (a:${named(r.mb, "D-240 \\(
   const home = fnSource(READER_SRC, "verdictKind");
   if (!home || home.split(DRIFT_FROM).length - 1 !== 1)
     throw new Error("ARM 3: the drift anchor is not inside the reader's verdictKind exactly once — the arm cannot arm");
-  patch("guard", IMPORT_TAIL, "\n         verdictOf } from \"../bio-plane/test/verdict-reader.mjs\";\n"
+  patch("guard", IMPORT_TAIL, "\n         verdictOf } from \"../bio-plane/test/system/verdict-reader.mjs\";\n"
     + "/* D-254 CONTROL ARM 3: a second verdictKind, grown back with one character of drift */\n"
     + home.replace(DRIFT_FROM, DRIFT_TO));
   const r = { mb: run("mb"), pe: run("pe"), g: runGuard() };
@@ -326,7 +326,7 @@ const oneLine = (r) => `mb ${r.mb.pass}/${r.mb.fail} (a:${named(r.mb, "D-240 \\(
   const s = snapshot("a3d", ["guard"]);
   patch("guard", GUARD_IMPORT, "import {\n  verdictOf,\n  verdictKind,\n  topLevelSpreads,\n  topLevelProps,\n"
     + "  topLevelParts as d254AliasedParts,\n  outcomeReturns,\n  matchBrace,\n  skipString,\n"
-    + "} from '../bio-plane/test/verdict-reader.mjs';\n");
+    + "} from '../bio-plane/test/system/verdict-reader.mjs';\n");
   const r = { mb: run("mb"), pe: run("pe"), g: runGuard() };
   record("3d OVER-STRICTNESS on the import pin: the guard's import re-spelled (reversed, one per line, trailing comma, "
        + "single quotes, an `as` alias)",
