@@ -533,7 +533,7 @@ export class Store extends DurableObject {
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     /* inquiry (K31, K61): its check and projection join promotion before legacy-store's step; strength R28 here. */
     ratificationOf(ctx);   /* ratification (K61): its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
-    strengthModule(ctx);   /* strength (K61): reaches inquiry and basis-versions itself, and registers its pair (R17) */
+    strengthModule(ctx, { retrieval });   /* strength (K61): registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
     /* bias (K61): joins every promotion before legacy-store (R8–R10). */
     biasOf(ctx, { env });
     /* run-productions (K61, K120): created here, after content, connections, strength and citation, so it declares its

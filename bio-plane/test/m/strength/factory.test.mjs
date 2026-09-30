@@ -108,16 +108,24 @@ test("R17: the registered answer is strengthOf's three axes, so the grouping act
   assert.equal(pair.connection.grade, "B");
 });
 
-test("R13, R23 (N137): the factory's registrations are held by the real promotion and retrieval, once, in strength's name", () => {
+test("R13, R23 (N137): promotion holds strength's projection from its build; retrieval holds the cache's fields from the first call that hands it in, once", () => {
   const h = bareHost();
   const s = strengthOf(h.host);
   const again = promotionOf(h.host).registerStep("strength", { project: () => null });
   assert.equal(again.reason, "STEP_DECLARED", "strength's projection is registered, and a second is refused");
+  /* The store hands its retrieval in at boot, after whatever built strength first (K61). */
+  const retrieval = retrievalOf(h.host);
+  assert.equal(strengthOf(h.host, { retrieval }), s, "one instance per host");
   for (const field of Object.keys(STRENGTH_CACHE_FIELDS)) {
-    const other = retrievalOf(h.host).registerField("inquiry", field, { table: "t", key: "bundle_id", col: "c" });
+    const other = retrieval.registerField("inquiry", field, { table: "t", key: "bundle_id", col: "c" });
     assert.deepEqual([other.reason, other.declaredBy], ["FIELD_DECLARED", "strength"], field);
   }
+  assert.equal(strengthOf(h.host, { retrieval }), s);
+  assert.equal(s.joinRetrieval(retrieval), null, "registered once, never twice");
   /* The table the relation names exists and is the cache's. */
   assert.deepEqual(h.st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name='strength_cache'`), [{ name: "strength_cache" }]);
-  assert.equal(strengthOf(h.host), s);
+  /* A host whose strength is never handed a retrieval registers nothing there. */
+  const b = bareHost();
+  strengthOf(b.host);
+  assert.equal(retrievalOf(b.host).registerField("inquiry", "capture", { table: "t", key: "bundle_id", col: "c" }).ok, true);
 });

@@ -19,8 +19,10 @@
  * REACHED as `strengthOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge
  * (`strength_cache` by bundle, `group_strength_bar` exempt, R23), registers its projection with promotion (the cache,
- * R13, promotion R39), registers the cache's columns with retrieval as the `capture` and `connection` fields (R23,
- * retrieval R62; N137), and registers the pair with `inquiry`'s grouping act (`onGrounded("strength", …)`, R17, N152).
+ * R13, promotion R39) and the pair with `inquiry`'s grouping act (`onGrounded("strength", …)`, R17, N152). The cache's
+ * columns are registered with retrieval as the `capture` and `connection` fields (R23, retrieval R62; N137) by the first
+ * call that hands `retrieval` in, whenever it comes (the store's, at boot), as basis-versions takes it; a host with no
+ * retrieval (a test's) is not given one, which would join retrieval's projection to every promotion there.
  * `deps`:
  *   record       `recordOf(host)` unless given: `readFile` (a project's bundle.md, R14), `declarePurge`.
  *   membership   `membershipOf(host)` unless given: `inSight(id, viewer)` (R6, R22), `isAdministrator(id)` (R15).
@@ -32,7 +34,7 @@
  *                `basisVersionsOf(host)`, reached lazily on the first read that names a project. The version rows and
  *                legs are read from `inquiry_basis_versions` and `inquiry_basis_version_legs`.
  *   promotion    `promotionOf(host)` unless given: `registerStep(module, {project})` (R13), `fact("producingGroup")`.
- *   retrieval    `retrievalOf(host)` unless given: `registerField(module, field, {table, key, col})` (R23).
+ *   retrieval    when given: `registerField(module, field, {table, key, col})` (R23).
  *   producingGroup  the store's recorded group or null; default: promotion's fact `producingGroup`.
  *   now          the clock for the instants it writes, an ISO string (default: the wall clock).
  *
@@ -42,7 +44,6 @@
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { retrievalOf } from "../retrieval/index.mjs";
 import { inquiryOf, legCapped } from "../inquiry/index.mjs";
 import { basisVersionsOf, BASIS_VERSION_LEGS_MAX } from "../basis-versions/index.mjs";
 import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_RE, parseFrontmatter,
@@ -105,6 +106,7 @@ function inquiryReader(k) {
 
 export class Strength {
   #deps;
+  #joined = false;
 
   constructor({ storage, record, membership, inquiry = null, versions = null, producingGroup = null, now = null,
                 host = null }) {
@@ -140,6 +142,14 @@ export class Strength {
   }
 
   migrate() { migrateStrength(this.sql); }
+
+  /** R23 (N137): registers the cache's two grade columns with retrieval as the `capture` and `connection` fields (its
+   *  R62), once per instance; answers retrieval's answers, or null when this instance has registered already. */
+  joinRetrieval(retrieval) {
+    if (this.#joined || !retrieval || typeof retrieval.registerField !== "function") return null;
+    this.#joined = true;
+    return Object.entries(STRENGTH_CACHE_FIELDS).map(([field, relation]) => retrieval.registerField("strength", field, relation));
+  }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { return this.#rows(q, ...a)[0] ?? null; }
@@ -1015,8 +1025,8 @@ export function strengthOps(s, url, body) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It creates its tables and declares them to
- *  purge (R23), joins every promotion with its cache projection (R13), registers the cache's columns with retrieval
- *  (R23, N137) and its pair with inquiry's grouping act (R17). */
+ *  purge (R23), joins every promotion with its cache projection (R13) and registers its pair with inquiry's grouping
+ *  act (R17). Any call handing `retrieval` in registers the cache's columns with it, once (R23, N137). */
 export function strengthOf(host, deps) {
   let s = instances.get(host);
   if (!s) {
@@ -1034,9 +1044,8 @@ export function strengthOf(host, deps) {
     s.migrate();
     record.declarePurge("strength", [...STRENGTH_PURGED_TABLES], { exempt: STRENGTH_EXEMPT_TABLES });
     promotion.registerStep("strength", { project: (c) => s.project(c) });
-    const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
-    for (const [field, relation] of Object.entries(STRENGTH_CACHE_FIELDS)) retrieval.registerField("strength", field, relation);
     s.registerGrounded();
   }
+  if (deps && deps.retrieval) s.joinRetrieval(deps.retrieval);
   return s;
 }
