@@ -1,0 +1,2 @@
+(Handovers, folded at each layer close; the START is written from these before layer 11.)
+- Layer 5 (K485, ENTITIES #4 J2): route `op=resolutiondefect` → entities' `reportResolutionDefect(body)` (R38), stamping `by`; stamp `viewer` on `op=entity` and `op=entitybyalias`, which now read it (R32 on a report's `by`). The DO entry is in `entitiesOps`.
