@@ -41,6 +41,6 @@ Early merge (K425): N374 and N373's share pass, pushed on job/T17/tasks (record:
 - `legacy-tests`: `test/task-fence.test.mjs`:151, :157, :198 assert `reason` `NOT_YOURS`; now `TASK_NOT_YOURS`. The DEC-49 guard's arm A double for `NOT_YOURS` is gone (legacy-tests' entry already names "arm A's `NOT_YOURS` once N382 lands").
 - Comments naming the task refusal `NOT_YOURS`: `affordances.mjs`:2402, `control-plane/ops.mjs`:920, :1840 (their owners, when next touched).
 
-**Tests and checks.** `test/m/tasks/`: 68 tests, 68 pass, 0 fail. `test/m/queue/`: 45, 44 pass, 1 fail (R19, above). `test/m/control-plane/`: 70, 67 pass, 2 fail (R22, above; R36/R35, pre-existing), 1 todo. format (72 modules; 0 failures), architecture (8 files, 29 imports; 0 failures), coverage (11 of 11; 0 failures), ownership (below).
+**Tests and checks.** `test/m/tasks/`: 68 tests, 68 pass, 0 fail. `test/m/queue/`: 45, 44 pass, 1 fail (R19, above). `test/m/control-plane/`: 70, 67 pass, 2 fail (R22, above; R36/R35, pre-existing), 1 todo. format (72 modules; 0 failures), architecture (8 files, 29 imports; 0 failures), coverage (11 of 11; 0 failures), ownership (4 files, legacy 0/0; 0 failures).
 
-Size (session_01BCChBKLgkZzLgjYXWvQhQh): test runs 9, module lines 1851
+Size (session_01BCChBKLgkZzLgjYXWvQhQh): test runs 9, module lines 1852
