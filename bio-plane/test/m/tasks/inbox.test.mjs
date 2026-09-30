@@ -201,7 +201,7 @@ test("R3: taskForward's refusals in order, then forwarded with its history; task
   assert.equal(fwd({ id: "TASK-2026-0003-c", to: "bob", actor: "alice" }).reason, "ALREADY_RESOLVED");
   const ny = fwd({ id: "TASK-2026-0001-a", to: "bob", actor: "bob" });
   assert.deepEqual([ny.reason, ny.code, ny.check, ny.translation, ny.assignee, ny.assignee_role],
-    ["NOT_YOURS", "NOT_YOURS", "C-76.1", TASK_ACTOR_CHECKS.NOT_YOURS.translation, "alice", "project-manager"]);
+    ["TASK_NOT_YOURS", "TASK_NOT_YOURS", "C-76.1", TASK_ACTOR_CHECKS.TASK_NOT_YOURS.translation, "alice", "project-manager"]);
   assert.equal(fwd({ id: "TASK-2026-0001-a", to: "gone", actor: "alice" }).reason, "NO_SUCH_MEMBER");
   assert.equal(fwd({ id: "TASK-2026-0001-a", to: "nobody", actor: "alice" }).reason, "NO_SUCH_MEMBER");
   assert.equal(fwd({ id: "TASK-2026-0001-a", to: "alice", actor: "alice" }).reason, "ALREADY_THEIRS");
@@ -222,7 +222,9 @@ test("R3: taskForward's refusals in order, then forwarded with its history; task
   const before = w.all(`SELECT * FROM tasks WHERE id='TASK-2026-0003-c'`)[0];
   assert.deepEqual(res({ id: "TASK-2026-0003-c", actor: "bob" }), { ok: true, id: "TASK-2026-0003-c", already: true, resolved_at: iso(NOW) });
   assert.deepEqual(w.all(`SELECT * FROM tasks WHERE id='TASK-2026-0003-c'`)[0], before, "an already resolved task writes nothing");
-  assert.equal(res({ id: "TASK-2026-0001-a", actor: "bob" }).reason, "NOT_YOURS");
+  const nyr = res({ id: "TASK-2026-0001-a", actor: "bob" });
+  assert.deepEqual([nyr.ok, nyr.reason, nyr.code, nyr.check, nyr.translation, nyr.assignee],
+    [false, "TASK_NOT_YOURS", "TASK_NOT_YOURS", "C-76.1", TASK_ACTOR_CHECKS.TASK_NOT_YOURS.translation, "alice"]);
   const done = res({ id: "TASK-2026-0001-a", actor: "alice", now: iso(NOW) });
   assert.deepEqual(done, { ok: true, id: "TASK-2026-0001-a", status: "resolved", resolved_at: iso(NOW) });
   const r2 = w.all(`SELECT status, resolved_at, history FROM tasks WHERE id='TASK-2026-0001-a'`)[0];
@@ -246,19 +248,47 @@ test("R3: an administrator resolves another member's task; the founder's session
   w.task("TASK-2026-0001-a", DOC, { assignee: "alice", role: "project-manager" });
   w.task("TASK-2026-0002-b", DOC2, { assignee: "alice", role: "member", status: "forwarded" });
   assert.equal(w.t.taskResolve({ id: "TASK-2026-0001-a", actor: "ada" }).ok, true);
-  assert.equal(w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "admin" }).reason, "NOT_YOURS", "an unclaimed founder is no administrator");
+  assert.equal(w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "admin" }).reason, "TASK_NOT_YOURS", "an unclaimed founder is no administrator");
   w.run(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin', 's', 'h', 1, ?)`, iso(NOW));
   assert.equal(w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "admin" }).ok, true, "the bare `admin` is not a machine stamp");
+});
+
+test("R3, R7 (N382): the task-actor fence answers its own code, TASK_NOT_YOURS, never intent's NOT_YOURS, and each refusal's code keys its own row", () => {
+  const w = box();
+  w.member("alice"); w.member("bob"); w.bundle(DOC); w.bundle(DOC2);
+  w.task("TASK-2026-0001-a", DOC, { assignee: "alice", role: "project-manager" });
+  w.task("TASK-2026-0002-b", DOC2, { assignee: "alice", role: "member", status: "forwarded" });
+  const rows = { ...QUEUE_MACHINE_CHECKS, ...TASK_ACTOR_CHECKS, ...QUEUE_INBOX_CHECKS };
+  assert.equal("NOT_YOURS" in rows, false, "no row of this module is keyed NOT_YOURS");
+  const refusals = [
+    w.t.taskForward({ id: "TASK-2026-0001-a", to: "bob", actor: "bob" }),
+    w.t.taskResolve({ id: "TASK-2026-0001-a", actor: "bob" }),
+    w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "bob" }),
+    w.t.taskForward({ id: "TASK-2026-0001-a", to: "bob", actor: "token:daemon" }),
+    w.t.taskResolve({ id: "TASK-2026-0001-a", actor: "token:daemon" }),
+    w.t.inboxCheck({ files: [{ path: "data/inbox.json", text: "[]" }] }),
+  ];
+  for (const r of refusals) {
+    assert.equal(r.ok, false);
+    assert.equal(r.reason, r.code, "the code a door reads first is the row's code");
+    assert.ok(rows[r.code], `${r.code} keys a row of this module`);
+    assert.deepEqual([r.check, r.translation], [rows[r.code].check, rows[r.code].translation]);
+  }
+  assert.deepEqual(refusals.slice(0, 3).map((r) => r.code), ["TASK_NOT_YOURS", "TASK_NOT_YOURS", "TASK_NOT_YOURS"]);
+  // the set form carries the same refusal per item
+  const set = w.t.taskResolve({ items: [{ id: "TASK-2026-0001-a" }], actor: "bob" });
+  assert.equal(JSON.stringify(set).includes('"TASK_NOT_YOURS"'), true);
+  assert.equal(/"NOT_YOURS"/.test(JSON.stringify(set)), false);
 });
 
 test("R7: the moved checks carry their ids and words: C-19.1 and its C-19.2, C-32.10, C-32.11, C-76.1, each row naming this module's file", () => {
   const rows = { ...QUEUE_MACHINE_CHECKS, ...TASK_ACTOR_CHECKS, ...QUEUE_INBOX_CHECKS };
   assert.deepEqual(Object.fromEntries(Object.entries(rows).map(([k, r]) => [k, r.check])), {
-    MACHINE_CANNOT_FORWARD: "C-32.10", MACHINE_CANNOT_RESOLVE: "C-32.11", NOT_YOURS: "C-76.1", INBOX_REFUSED: "C-19.2" });
+    MACHINE_CANNOT_FORWARD: "C-32.10", MACHINE_CANNOT_RESOLVE: "C-32.11", TASK_NOT_YOURS: "C-76.1", INBOX_REFUSED: "C-19.2" });
   assert.deepEqual(Object.fromEntries(Object.entries(rows).map(([k, r]) => [k, r.where])), {
     MACHINE_CANNOT_FORWARD: "src/tasks/index.mjs taskForward > is-machine-forward",
     MACHINE_CANNOT_RESOLVE: "src/tasks/index.mjs taskResolve > is-machine-resolve",
-    NOT_YOURS: "src/tasks/index.mjs #refuseNotYours > is-task-actor-fence",
+    TASK_NOT_YOURS: "src/tasks/index.mjs #refuseNotYours > is-task-actor-fence",
     INBOX_REFUSED: "src/tasks/index.mjs inboxCheck > is-inbox-refused" });
   for (const r of Object.values(rows)) { assert.ok(Object.isFrozen(r)); assert.ok(r.translation.length > 20); }
   // each row's region is where its code is answered

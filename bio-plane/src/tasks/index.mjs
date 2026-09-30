@@ -504,7 +504,7 @@ export class Tasks {
    *  THIS one answers *is this THIS member's task*, and the act refusal answers
    *  *is this a person at all*.
    *
-   *  Returns a NOT_YOURS refusal NAMING who it is with, or null to proceed. */
+   *  Returns a TASK_NOT_YOURS refusal (N382: its own code, apart from intent's NOT_YOURS) NAMING who it is with, or null to proceed. */
   #refuseNotYours(row, actor, verb) {
     if (row.assignee === "unassigned") return null;
     if (actor === row.assignee) return null;
@@ -513,10 +513,10 @@ export class Tasks {
        its code, check and translation; `reason`, `detail` and the assignee name who holds the task. */
     return {
       ok: false,
-      reason: "NOT_YOURS",
-      code: "NOT_YOURS",
-      check: TASK_ACTOR_CHECKS.NOT_YOURS.check,
-      translation: TASK_ACTOR_CHECKS.NOT_YOURS.translation,
+      reason: "TASK_NOT_YOURS",
+      code: "TASK_NOT_YOURS",
+      check: TASK_ACTOR_CHECKS.TASK_NOT_YOURS.check,
+      translation: TASK_ACTOR_CHECKS.TASK_NOT_YOURS.translation,
       detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
       assignee: row.assignee,
       assignee_role: row.assignee_role,

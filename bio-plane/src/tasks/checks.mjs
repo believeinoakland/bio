@@ -37,9 +37,11 @@ export const QUEUE_MACHINE_CHECKS = Object.freeze({
 
 /* D-126 / C-76 — THE TASK-ACTOR FENCE'S REFUSAL (REC-4): a member who is neither a task's assignee nor an administrator
  * may not resolve or forward it, unless it is `unassigned` (R3). A selection can meet it, so it carries its sentence.
- * The `detail` names who holds the task; the translation does not, because it is canned. */
+ * The `detail` names who holds the task; the translation does not, because it is canned. Its code is its own,
+ * `TASK_NOT_YOURS` (N382, K606), apart from intent's `NOT_YOURS` (C-111.15), so the control plane's door, which keys rows
+ * by code, finds this row and not intent's. */
 export const TASK_ACTOR_CHECKS = Object.freeze({
-  NOT_YOURS: Object.freeze({
+  TASK_NOT_YOURS: Object.freeze({
     check: 'C-76.1',
     where: at("#refuseNotYours", "is-task-actor-fence"),
     translation: 'This task is not yours to act on: it is with another member now, so nothing was done to it. '
