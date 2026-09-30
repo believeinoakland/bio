@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { checkSkillVersion, parseSkillVersion, renderPack, SKILL_CHECKS, SKILL_CHECK_KEYS }
   from "../../../src/skillpack.mjs";
 import { CLAUSES } from "../../../src/skilldoctrine.mjs";
-import * as airun from "../../../src/airun.mjs";
+import * as runRules from "../../../src/run-rules/index.mjs";
 import { catalogue, published } from "./fixture.mjs";
 
-/* C-22.7's row, read through ai-runs (its AI_RUN_CHECKS, R35), never from the catalogue: the row this module names
-   is ai-runs' (R25, N289), and the catalogue's interim copy left in T12 (N299, K381). */
-const ROW = airun.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED;
+/* C-22.7's row, read through run-rules (its AI_RUN_CHECKS, R11), never from the catalogue: the row this module names
+   is run-rules' (R25, N289, K617), and the catalogue's interim copy left in T12 (N299, K381). */
+const ROW = runRules.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED;
 
 /* Every value R12 refuses, and every value it accepts, the malformed ones one of each shape. */
 const REFUSED_BLANK = [undefined, null, 0, 3, true, {}, [], "", " ", "\t\n  "];
@@ -39,9 +39,9 @@ test("R12 a trimmed value not <pack>@<edition> with no whitespace and exactly on
   }
 });
 
-test("R12 R13 checkSkillVersion and parseSkillVersion are ai-runs' own (its R8), re-exported with no copy", () => {
-  assert.equal(checkSkillVersion, airun.checkSkillVersion);
-  assert.equal(parseSkillVersion, airun.parseSkillVersion);
+test("R12 R13 checkSkillVersion and parseSkillVersion are run-rules' own (its R8), re-exported with no copy", () => {
+  assert.equal(checkSkillVersion, runRules.checkSkillVersion);
+  assert.equal(parseSkillVersion, runRules.parseSkillVersion);
 });
 
 test("R12 every well-formed value is accepted, including one this module never rendered, and a rendered version is", () => {
@@ -65,12 +65,12 @@ test("R13 parseSkillVersion returns {pack, edition, digest} for an accepted valu
   for (const v of ACCEPTED) assert.notEqual(parseSkillVersion(v), null, v);
 });
 
-test("R25 C-22.7 is named here by key through ai-runs, never copied: its code, number and translation unchanged, and SKILL_CHECKS' row is the one checkSkillVersion mints", () => {
+test("R25 C-22.7 is named here by key through run-rules, never copied: its code, number and translation unchanged, and SKILL_CHECKS' row is the one checkSkillVersion mints", () => {
   assert.deepEqual(SKILL_CHECK_KEYS, ["AI_RUN_SKILL_VERSION_UNNAMED"]);
   assert.deepEqual(Object.keys(SKILL_CHECKS), ["AI_RUN_SKILL_VERSION_UNNAMED"]);
-  assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, ROW, "ai-runs' row, never a copy");
+  assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, ROW, "run-rules' row, never a copy");
   assert.equal(ROW.check, "C-22.7");
-  assert.equal(airun.translationOf("AI_RUN_SKILL_VERSION_UNNAMED"), ROW.translation, "ai-runs resolves the code to this row");
+  assert.equal(runRules.translationOf("AI_RUN_SKILL_VERSION_UNNAMED"), ROW.translation, "run-rules resolves the code to this row");
   assert.equal(ROW.translation, "This run did not say which version of its instructions it was working under. "
     + "What a run found can only be read against the instructions it was given, so the record "
     + "asks for that version before the run starts rather than guessing at it afterwards.");
@@ -79,8 +79,8 @@ test("R25 C-22.7 is named here by key through ai-runs, never copied: its code, n
   assert.ok(CLAUSES.some((c) => c.enforced_by.includes(ROW.check)), "the doctrine cites the row by its number");
 });
 
-test("R25 C-22.7's row is held in ai-runs' own table with its one minting site, and no catalogue family holds a copy", () => {
-  assert.ok(ROW.where.startsWith("src/ai-runs/skill-version.mjs checkSkillVersion"), `ai-runs' minting site: ${ROW.where}`);
+test("R25 C-22.7's row is held in run-rules' own table with its one minting site, and no catalogue family holds a copy", () => {
+  assert.ok(ROW.where.startsWith("src/run-rules/skill-version.mjs checkSkillVersion"), `run-rules' minting site: ${ROW.where}`);
   for (const [family, rows] of Object.entries(catalogue))
     if (rows && typeof rows === "object" && !Array.isArray(rows)) {
       assert.ok(!Object.hasOwn(rows, "AI_RUN_SKILL_VERSION_UNNAMED"), `the catalogue's ${family} holds no copy of the code (N299)`);

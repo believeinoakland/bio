@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import * as pack from "../../../src/skillpack.mjs";
 import * as doctrine from "../../../src/skilldoctrine.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "../../../src/observation-log/index.mjs";
-import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/airun.mjs";
+import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import * as strength from "../../../src/strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../../src/run-productions/index.mjs";
-import * as deployment from "../../../src/ai-runs/deployment.mjs";
-import { AI_RUN_OPEN_CHECKS } from "../../../src/ai-runs/checks.mjs";
+import * as deployment from "../../../src/run-rules/index.mjs";
+import { AI_RUN_OPEN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { RECOMMEND_PROMPT } from "../../../src/contradiction.mjs";
 import { ROOT, SRC, catalogue, read, norm, foundIn, section, canonDocuments, published, stringLiterals }
   from "./fixture.mjs";
@@ -31,7 +31,7 @@ function table() {
 }
 
 /* Every C-number any keyed row of the catalogue, or of a family moved to its module (strength, run-productions,
-   ai-runs: C-22.7 is held only in ai-runs' own AI_RUN_CHECKS since the catalogue's copy left, N299), carries. */
+   run-rules: C-22.7 is held only in run-rules' own AI_RUN_CHECKS (its R11) since the catalogue's copy left, N299, K617), carries. */
 function keyedNumbers() {
   const out = new Set();
   for (const rows of [...Object.values(catalogue), strength.VERSION_STRENGTH_CHECKS, SUGGEST_CHECKS, AI_RUN_CHECKS])
@@ -119,20 +119,27 @@ test("R17 five prohibitions, each text and because verbatim in its source, named
   assert.equal(layer.permitted_auto_composition, PERMITTED_AUTO_COMPOSITION);
 });
 
-test("R18 the deployment sequence is ai-runs' own, re-exported unchanged: check, investigate, extract, check first, unverified, enforced by the plane's C-109.1, holding no flag, predicate or decision; the gate is agent-worker's", () => {
+test("R18 R29 the deployment sequence is run-rules' own, re-exported unchanged: check, investigate, extract, plan last, check first, unverified, enforced by the plane's C-109.1, holding no flag, predicate or decision; the gate is agent-worker's", () => {
   for (const k of ["DEPLOYMENT_SEQUENCE", "GATE_ADDRESS", "SEQUENCING_SOURCE", "SEQUENCING_ALSO_NAMED_IN"])
-    assert.equal(doctrine[k], deployment[k], `${k} is ai-runs' own export, not a copy`);
-  assert.deepEqual(DEPLOYMENT_SEQUENCE.order, ["check", "investigate", "extract"]);
+    assert.equal(doctrine[k], deployment[k], `${k} is run-rules' own export, not a copy`);
+  assert.deepEqual(DEPLOYMENT_SEQUENCE.order, ["check", "investigate", "extract", "plan"]);
+  assert.equal(DEPLOYMENT_SEQUENCE.order.at(-1), "plan", "R29: the plan mode last (run-rules R14)");
   assert.equal(DEPLOYMENT_SEQUENCE.first_deployed_mode, DEPLOYMENT_SEQUENCE.order[0]);
   assert.equal(DEPLOYMENT_SEQUENCE.verification_recorded, null);
   assert.deepEqual(DEPLOYMENT_SEQUENCE.enforced_by, [AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check]);
   assert.deepEqual(DEPLOYMENT_SEQUENCE.enforced_by, ["C-109.1"]);
   const layer = judgementLayers().deployment_sequence.body;
-  assert.equal(layer.sequence, DEPLOYMENT_SEQUENCE, "the rendered layer carries ai-runs' object");
+  assert.equal(layer.sequence, DEPLOYMENT_SEQUENCE, "the rendered layer carries run-rules' object");
   assert.equal(layer.gate, GATE_ADDRESS);
+  /* No predicate anywhere, and no flag but run-rules' own for a mode that deploys apart (its R14), which the plane's
+     open reads there (DEPLOYED_MODES) and nothing reads from this module. */
+  const apartFlag = /^DEPLOYMENT_SEQUENCE\.deploys_apart\.([a-z]+)\.deployed$/;
   const walk = (v, path) => {
     assert.notEqual(typeof v, "function", `${path} is a function`);
-    assert.notEqual(typeof v, "boolean", `${path} is a flag`);
+    if (typeof v === "boolean") {
+      const m = apartFlag.exec(path);
+      assert.ok(m && DEPLOYMENT_SEQUENCE.order.includes(m[1]), `${path} is a flag`);
+    }
     if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, `${path}.${k}`);
   };
   walk(DEPLOYMENT_SEQUENCE, "DEPLOYMENT_SEQUENCE");

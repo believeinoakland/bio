@@ -7,7 +7,7 @@
  * the run records which skill version it ran under"), §14b.1 (progressive
  * disclosure); `ASSISTANT-PILOT.md` §1 (the five layers by drift rate).
  *
- * PURE, for `airun.mjs`'s and `queuestate.mjs`'s stated reason: no storage, no
+ * PURE, for `run-rules`' and `queuestate.mjs`'s stated reason: no storage, no
  * clock, no viewer, so a suite can hold the pack to the plane's own behaviour
  * directly rather than through a Durable Object.
  *
@@ -61,7 +61,7 @@
  *                against the design document it is quoted from, so the slowest-
  *                drifting layer still cannot drift SILENTLY.
  *   `imported` — read from the module that ENFORCES the words (`observation-log`,
- *                `airun.mjs`, `contradiction`). No copy exists here to go
+ *                `run-rules`, `contradiction`). No copy exists here to go
  *                stale.
  *   `driven`   — read from what the plane PUBLISHES on the wire
  *                (`op=affordances`), passed in by the caller as the plane's own
@@ -136,9 +136,9 @@
  * ========================================================================= */
 
 /* The levels and states are observation-log's (K78 (3), K81), read from its
-   public entry; the bounds, endings and run refusals are ai-runs'. */
+   public entry; the bounds, endings and run refusals are run-rules' (K617, K649 (1)). */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES } from "./observation-log/index.mjs";
-import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./airun.mjs";
+import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
 /* SK-2, LANDED 2026-08-10. The investigative skill's JUDGEMENT layers, authored
    in their own module and merged into the disclosed half below. They are a
    sibling rather than a section of this file for one reason worth stating: this
@@ -228,8 +228,8 @@ export const SOURCING = {
   levels:         "imported",   /* observation-log OBSERVATION_LEVELS */
   absence:        "imported",   /* observation-log OBSERVATION_STATES */
   fences:         "driven",     /* op=affordances .fences: machineFences over every module's families (K585 (1)) */
-  bounds:         "imported",   /* airun.mjs RUN_BOUNDS + RUN_ENDINGS */
-  refusals:       "imported",   /* airun.mjs AI_RUN_CHECKS (ai-runs) */
+  bounds:         "imported",   /* run-rules RUN_BOUNDS + RUN_ENDINGS */
+  refusals:       "imported",   /* run-rules AI_RUN_CHECKS */
   vocabularies:   "driven",     /* op=affordances .vocabularies */
   acts:           "driven",     /* op=affordances .catalog */
   member_only:    "driven",     /* op=affordances .catalog, the mode field */
@@ -547,12 +547,12 @@ export function packVersion(pack) {
 
 /* ------------------------------------------------------------------ refusal
 
-   ONE code, C-22.7, and its predicate is `ai-runs`' (its R8; K82 (4), K194):
-   `checkSkillVersion` is held there, where the run's open calls it, and
+   ONE code, C-22.7, and its predicate is `run-rules`' (its R8; K82 (4), K194,
+   K617): `checkSkillVersion` is held there, which the run's open calls, and
    re-exported here with `parseSkillVersion` (R12, R13; N156), so no copy of
    either is held in this module. The row is named here by key
    (`SKILL_CHECKS`, from `skilldoctrine.mjs`) and never copied (R25). What the
    predicate refuses and why is stated at its site: a blank version, or one
    that is not `<pack>@<edition>`, and never a well-formed version this module
    did not render, so a rerun under a newer pack can record it. */
-export { checkSkillVersion, parseSkillVersion } from "./airun.mjs";
+export { checkSkillVersion, parseSkillVersion } from "./run-rules/index.mjs";

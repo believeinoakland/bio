@@ -7,7 +7,7 @@ import { renderPack, machineFences, memberOnlyActs, packVersion, SKILL_PACK_ID, 
          ABSENCE_ANSWER_SHAPE } from "../../../src/skillpack.mjs";
 import { judgementLayers } from "../../../src/skilldoctrine.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../../src/observation-log/index.mjs";
-import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/airun.mjs";
+import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../../../src/contradiction.mjs";
 import { controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { createHash } from "node:crypto";

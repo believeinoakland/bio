@@ -87,17 +87,16 @@ import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_INERT_SOURCES } from "./stren
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
 import { MACHINE_FENCE_CHECKS, EARNED_GRADE_SOURCES, BASIS_ROLES,
          BASIS_VERSION_CHECKS } from "../checks/bio-checks.mjs";
-/* The run's rows and the one deployment order are ai-runs' (its R8, R35, R44;
-   N156): read from it, never copied. */
-import { AI_RUN_CHECKS } from "./airun.mjs";
-import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
-         SEQUENCING_ALSO_NAMED_IN } from "./ai-runs/deployment.mjs";
+/* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
+   N156, K617): read from it, never copied. */
+import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
+         SEQUENCING_ALSO_NAMED_IN } from "./run-rules/index.mjs";
 export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN };
 
-/* C-22.7 IS NAMED HERE BY KEY (R25; K194, K333), selected from `ai-runs`'
-   `AI_RUN_CHECKS` and never copied. `ai-runs`, earlier in the order, holds the
+/* C-22.7 IS NAMED HERE BY KEY (R25; K194, K333), selected from `run-rules`'
+   `AI_RUN_CHECKS` and never copied. `run-rules`, earlier in the order, holds the
    one predicate that mints it (`checkSkillVersion`, its R8) and so holds the
-   row with it (N289). Named in this file rather than beside the re-export of
+   row with it (its R11; N289). Named in this file rather than beside the re-export of
    `checkSkillVersion` because `skillpack.mjs` imports this one, and the clauses
    below cite the row at load; `skillpack.mjs` re-exports it. */
 export const SKILL_CHECK_KEYS = Object.freeze(["AI_RUN_SKILL_VERSION_UNNAMED"]);
@@ -725,16 +724,17 @@ export const PERMITTED_AUTO_COMPOSITION = {
 };
 
 /* =========================================================================
- * SK-4 — CHECK DEPLOYS FIRST. THE ORDER IS ai-runs', RE-EXPORTED HERE.
+ * SK-4 — CHECK DEPLOYS FIRST. THE ORDER IS run-rules', RE-EXPORTED HERE.
  *
  * `IS-BUILD-PLAN.md` SK-4; `INVESTIGATIVE-SESSION.md` §2 (the objective and the
  * first deployed mode) and §14b.4; DEC-24 (the CHECK role) and DEC-55's enacted
  * CHECK-first instruction.
  *
- * This file wrote the deployment order first. It is now held once, by `ai-runs`
- * (`ai-runs/deployment.mjs`, its R44; K182 (3), N156), because the plane's open
- * refuses a run in a mode that is not deployed (C-109.1, ai-runs R40) and must
- * read the order, and `ai-runs` is earlier in the order than this module. So
+ * This file wrote the deployment order first. It is now held once, by
+ * `run-rules` (`run-rules/deployment.mjs`, its R9; K182 (3), N156, K617),
+ * because the plane's open refuses a run in a mode that is not deployed
+ * (C-109.1, ai-runs R40) and must read the order, and `run-rules` is earlier in
+ * the order than this module. So
  * `DEPLOYMENT_SEQUENCE`, `GATE_ADDRESS`, `SEQUENCING_SOURCE` and
  * `SEQUENCING_ALSO_NAMED_IN` are imported above and re-exported unchanged
  * (R18), and the layer below carries them: an ADDRESS for the gate and a
@@ -1101,9 +1101,10 @@ export function judgementLayers() {
         gate: GATE_ADDRESS,
         ruled_in: SEQUENCING_SOURCE,
         restated_in: SEQUENCING_ALSO_NAMED_IN,
-        note: "this layer is INSTRUCTION and it holds no flag. The mode that is deployed is read "
-          + "from FL-3's landed table at the address above, which is CODE and is the first row "
-          + "every run takes; this text neither restates that flag nor could change it. What it "
+        note: "this layer is INSTRUCTION and it holds no flag of its own. The mode that is deployed is "
+          + "read from FL-3's landed table at the address above, which is CODE and is the first row "
+          + "every run takes, and by the plane's open from the run's rules, whose record this layer "
+          + "carries unchanged; this text neither restates those flags nor could change them. What it "
           + "adds is the REASON for the order and the enabling condition for the second mode, "
           + "both of which are facts a run should be able to state and neither of which any code "
           + "can be asked to hold.",
