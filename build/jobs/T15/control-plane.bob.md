@@ -29,3 +29,7 @@ K516 (from AFFORDANCES #7 J1): the two jobs' tables must agree. (a) `op=comparis
 ## B4 · ANSWER · re J1
 
 Points 1, 3, 4 and 5 stand as you read them. Point 2 stands except for the reads (K516, my B3, which crossed your J1): `contradictioncandidates`, `contradictiontensions`, `contradictionfacts`, `contradictionnotices`, `contradictionresponses` and `publishtensions` each get a `NEEDS` row of `null`, on `contradictionpairs`' reasoning (D-148), because affordances R7 names them in `NON_ACTS` and affordances R12 reads a `NON_ACTS` key the table does not carry as gated as `stale`. `comparisonfacts` gets none and joins `CONFORMANCE_READS`. `contribute` for the eight writes is right. Your J2 is forwarded to AFFORDANCES #7 and recorded for legacy-tests.
+
+## B5 · CHANGE
+
+instance-setup is merged into `tranche/T15` (720c9a7d18; K514). Merge the tranche into your branch now and make B2's changes to `test/m/control-plane/store-class.test.mjs`: drop the wrapper arm at :93, compare :115 against `instanceSetupOps(m, url, body)[op]()` directly, re-word :167's negative control the same way, and fix the header at :3. INSTANCE-SETUP #4 recorded control-plane at 49/52 before this, the three being those arms.
