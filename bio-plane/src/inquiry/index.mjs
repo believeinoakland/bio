@@ -312,7 +312,11 @@ export class Inquiry {
       if (errs.length)
         return { ok: false, reason: "BASIS_REFUSED",
                  findings: errs.map((x) => ({ check: x.check, detail: x.message,
-                   ...(x.code ? { code: x.code, translation: CONTENT_EXTENT_CHECKS[x.code]?.translation } : {}),
+                   /* a code with a catalogue row carries its translation (Terms); a sub-code of C-2.8 with none
+                      (the testimony arms) carries its code alone, never an empty key */
+                   ...(x.code ? { code: x.code } : {}),
+                   ...(x.code && CONTENT_EXTENT_CHECKS[x.code]?.translation
+                     ? { translation: CONTENT_EXTENT_CHECKS[x.code].translation } : {}),
                    ...(x.repairs ? { repairs: x.repairs } : {}) })) };
       /* REC-82 / REC-84: the content extent of each leg (content R27), after the grammar so a broken leg is told
          about the leg first. */
