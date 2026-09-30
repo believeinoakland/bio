@@ -57,3 +57,7 @@ Per K558 the store door does not dispatch `sourcesOps` (N379): the source ops ar
 - `format`: 0 failures. `architecture control-plane`: 15 files, 91 imports, 0 failures. `coverage control-plane`: 36 of 36. `ownership control-plane tranche/T16`: 7 files, legacy 0/0, 0 failures.
 
 Size (session_01Lo4UbhM2msU4EuN9zSJ4eS): test runs 31, module lines 6601
+
+## J3 · COMPLETE
+
+Job complete at job/T16/control-plane (record: Completion). Applied: R36's pull as K559 orders it (dry run, pullKnock, promotion; residue answered and refiled by a repeated pull), refused today by the dry run with nothing written (N381, K560; its filing a test.todo naming N381); inboxresolve 'pulled' routed as inboxpull; K558's table (routes, NEEDS rows, stamps) for capture's, sources', membership's own-key and case-authoring's new ops, knockerconsent public and pinned; the stale comment at index.mjs:605-615. Waiting: N363's M_TASKS on your CHANGE. Reports: legacy-tests machine-attest.test.mjs:187 (four new ops unaccounted); affordances.test.mjs:220 and rung-ladder.test.mjs:123/136/148 red until AFFORDANCES #8 merges; plane bundle stale. Module 68 pass 0 fail 1 todo; test/m 3079 pass 0 fail 22 todo; four checks 0 failures.
