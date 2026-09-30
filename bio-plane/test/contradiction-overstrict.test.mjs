@@ -172,10 +172,13 @@ const emptyVerdict = gate(empty);
 t("EMPTY RECORD: the gate REFUSES to state a rate and names NOTHING_COMPARED — a 0% false-conflict "
 + "rate over nothing would be the record claiming more than it can support",
   [emptyVerdict.pass, emptyVerdict.fails], [false, ["NOTHING_COMPARED"]]);
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 contradiction R5, R11: the op now runs FIVE keys, and K5's
+   first rung on an empty record is `inquiry`). KEPT: it holds this suite's gate harness (`measure`, test-only) to the
+   op's own empty levels, which no module test sees. */
 t("EMPTY RECORD: and the answer is §6 case (a), carrying the op's OWN per-key empty level rather "
 + "than a bare empty list",
   [empty.empty?.case ?? null, empty.empty?.levels ?? null],
-  ["a", { K1: "inquiry", K2: "inquiry", K3: "inquiry", K4: "content" }]);
+  ["a", { K1: "inquiry", K2: "inquiry", K3: "inquiry", K4: "content", K5: "inquiry" }]);
 
 /* ===== 1. THE CORPUS COVERS §7's SHAPES, AND IS NOT EMPTY ================ */
 console.log("\n--- 1. the corpus: §7's shapes, per key, floored ---");
@@ -439,11 +442,17 @@ t("AND A DIFFERENT LABEL OVER THE SAME REFERENTS IS NOT A NEW CANDIDATE — the 
     const list = /for \(const \w+ of \[([^\]]*)\]\)/.exec(line);
     return list ? `${h.f} literal [${list[1].replace(/\s+/g, "")}]` : `${h.f} UNNAMED generic delete`;
   }).sort();
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 contradiction R47): the declaration now names five tables and
+     spells both bundle columns once, as `const both = ["a_bundle_id", "b_bundle_id"]`, which the candidate table's
+     entry takes as `keys: both`; the last element reads that spelling. KEPT: a census over every bundled source,
+     which contradiction's own tests (measures.test.mjs R47, R22) do not walk. */
+  const declaredBoth = /const both = \["a_bundle_id", "b_bundle_id"\];/.test(storeSrc)
+    && /\{ name: "contradiction_candidates", keys: both \}/.test(storeSrc);
   t("APPEND-ONLY: nothing updates a candidate, and only purge's two arms delete one",
     [[...files, ...extFiles].includes("src/record-core/index.mjs"), hitsW(/\bUPDATE\s+contradiction_candidates\b/gi).length,
      hitsW(/\bDELETE\s+FROM\s+contradiction_candidates\b/gi).length,
      genericNamed,
-     /\{ name: "contradiction_candidates", keys: \["a_bundle_id", "b_bundle_id"\] \}/.test(storeSrc)],
+     declaredBoth],
     [true, 0, 0, ["record-core purge",
                   'src/capture/index.mjs literal ["site_chrome_refs","site_chrome","link_chrome"]'].sort(), true]);
 }

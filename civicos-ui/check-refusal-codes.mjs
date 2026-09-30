@@ -2900,7 +2900,25 @@ function armC(rows) {
     const aliases = [];
     for (const a of fnBody.text.matchAll(new RegExp(`(?<![\\w$])(?:const|let)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*\\(\\s*([A-Za-z_$][\\w$]*)[^)]*\\)\\s*=>\\s*(?:this\\.)?#?${HELPER}\\s*\\(([^;]{0,240})`, "g")))
       if (new RegExp(`(?<![\\w$.])${a[2].replace(/\$/g, "\\$")}(?![\\w$])`).test(a[3])) aliases.push(a[1].replace(/\$/g, "\\$"));
-    const CALL = `(?<![\\w$])#?(?:${HELPER.slice(3, -1)}${aliases.map(n => `|${n}`).join("")})\\s*\\(\\s*`;
+    /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; K490, CONTRADICTION #2 J2 (4)): (3) A LOCAL ROW HELPER THAT PUSHES A
+       FINDING. inquiry's `contradictionFindings` (R47, C-2.11–C-2.16, `src/inquiry/contradiction.mjs`) is a grammar arm: it
+       answers FINDINGS, each built by `const find = (code, detail, field) => { const row = ROWS[code]; out.push({ check:
+       row.check, code, detail, translation: row.translation, … }) }` and carried by R11 inside BASIS_REFUSED, so nothing in
+       its six regions is returned and none of the helper names above matches `find` — every region read as a drifted marker
+       around refusals plainly there. A helper DECLARED INSIDE the governed function whose body reads a row BY ITS FIRST
+       PARAMETER (`X[code]`) and carries that row's `translation` builds the same refusal `refusal(` does, so its literal
+       calls are judged as the helper's are: one refusal each, the code compared against the rows governing THIS span. The
+       tests are the row read by the parameter and the translation carried, never the helper's name, so a same-named function
+       elsewhere is not mistaken for one; an alias over it (`incomplete`, which calls `find("RESOLUTION_INCOMPLETE", …)`
+       with a field first) is not one, and its one literal call is judged where it stands. */
+    for (const a of fnBody.text.matchAll(/(?<![\w$])(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*\(\s*([A-Za-z_$][\w$]*)[^)]*\)\s*=>\s*\{/g)) {
+      const open = a.index + a[0].length - 1, close = matchBrace(fnBody.text, open);
+      if (close < 0) continue;
+      const helperBody = fnBody.text.slice(open, close + 1), p = a[2].replace(/\$/g, "\\$");
+      if (new RegExp(`[\\w$\\]]\\s*\\[\\s*${p}\\s*\\]`).test(helperBody) && /\.translation\b/.test(helperBody))
+        aliases.push(a[1].replace(/\$/g, "\\$"));
+    }
+    const CALL =`(?<![\\w$])#?(?:${HELPER.slice(3, -1)}${aliases.map(n => `|${n}`).join("")})\\s*\\(\\s*`;
     for (const m of body.text.matchAll(new RegExp(`${CALL}"([A-Z][A-Z0-9_]{2,})"`, "g"))) {
       refusalsJudged++; codesChecked++; checkedHere++;
       if (!site.codes.has(m[1])) {

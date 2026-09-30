@@ -188,7 +188,14 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      regenerated at layer 11's close: record-core's `src/record-core/checks.mjs` (C-59.6, R62's row) joined, imported by
      `record-core/index.mjs` for `mintExhausted` (K384's pattern: an input reached through a module the pack check
      imports). */
-  t("agent-worker's 149 inputs are all recorded — its five own modules, the plane's denylist, and R48's pack check with everything it imports",
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; K489): 149 -> 153 inputs, from the committed manifest this suite reads
+     (`agent-worker/dist/agent-worker.bundle.json`, last regenerated at K490/K492 and unchanged through layer 11's close,
+     K521; its staleness arm green). Four arrive and none leave, each by name: inquiry's `inquiry/checks.mjs` (its
+     contradiction row family) and `inquiry/contradiction.mjs`, which `inquiry/index.mjs` now imports (INQUIRY, merged
+     early at layer 6, 6aa71a8c37); and contradiction's `contradiction/derive.mjs` and `contradiction/text.mjs`, which
+     `contradiction/index.mjs` now imports (CONTRADICTION, merged early, K490). Kept, not retired: a cross-module census
+     of one fleet member's build inputs, which no module test covers. */
+  t("agent-worker's 153 inputs are all recorded — its five own modules, the plane's denylist, and R48's pack check with everything it imports",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../bio-plane/checks/bio-checks.mjs", "../bio-plane/src/ai-runs/checks.mjs", "../bio-plane/src/ai-runs/deployment.mjs",
@@ -203,7 +210,8 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/connections/index.mjs", "../bio-plane/src/connections/pair.mjs", "../bio-plane/src/connections/schema.mjs",
      "../bio-plane/src/connections/themes.mjs", "../bio-plane/src/content/extent.mjs", "../bio-plane/src/content/index.mjs",
      "../bio-plane/src/content/notice.mjs", "../bio-plane/src/content/schema.mjs", "../bio-plane/src/contradiction.mjs",
-     "../bio-plane/src/contradiction/checks.mjs", "../bio-plane/src/contradiction/index.mjs", "../bio-plane/src/contradiction/schema.mjs",
+     "../bio-plane/src/contradiction/checks.mjs", "../bio-plane/src/contradiction/derive.mjs", "../bio-plane/src/contradiction/index.mjs",
+     "../bio-plane/src/contradiction/schema.mjs", "../bio-plane/src/contradiction/text.mjs",
      "../bio-plane/src/cpu.mjs",
      "../bio-plane/src/csv.mjs", "../bio-plane/src/docx.mjs", "../bio-plane/src/drive.mjs",
      "../bio-plane/src/entities/checks.mjs", "../bio-plane/src/entities/index.mjs", "../bio-plane/src/entities/schema.mjs",
@@ -211,7 +219,8 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/extraction/index.mjs", "../bio-plane/src/extraction/pipeline.mjs", "../bio-plane/src/extraction/schema.mjs",
      "../bio-plane/src/extractrun.mjs", "../bio-plane/src/formats-xlsx.mjs", "../bio-plane/src/formats.mjs",
      "../bio-plane/src/gate.mjs", "../bio-plane/src/host-governor/index.mjs", "../bio-plane/src/host-governor/schema.mjs",
-     "../bio-plane/src/idspaces.mjs", "../bio-plane/src/inquiry/grammar.mjs", "../bio-plane/src/inquiry/index.mjs",
+     "../bio-plane/src/idspaces.mjs", "../bio-plane/src/inquiry/checks.mjs", "../bio-plane/src/inquiry/contradiction.mjs",
+     "../bio-plane/src/inquiry/grammar.mjs", "../bio-plane/src/inquiry/index.mjs",
      "../bio-plane/src/inquiry/schema.mjs", "../bio-plane/src/inquiry/text.mjs", "../bio-plane/src/membership/checks.mjs", "../bio-plane/src/membership/index.mjs",
      "../bio-plane/src/membership/schema.mjs", "../bio-plane/src/observation-log/checks.mjs", "../bio-plane/src/observation-log/index.mjs",
      "../bio-plane/src/observation-log/schema.mjs", "../bio-plane/src/observation-log/vocabulary.mjs", "../bio-plane/src/odf.mjs",

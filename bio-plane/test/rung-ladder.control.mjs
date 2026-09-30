@@ -28,6 +28,11 @@
  * classified there, so the carried-baseline branch did not have to fire) · arm 1 49/3 as declared, `frobnicate` named
  * in FORWARD · arm 2 42/10 as declared, corpus printing 0 declared mutating · arm 3 52/0 as declared · after all
  * restores 52/0; ops.mjs and dispatch-reader.mjs byte-identical by sha256 and cmp.
+ * RE-RUN 2026-09-30 BY LEGACY-TESTS #13 (T15; N345): BASELINE 52 pass / 0 fail, corpus 327 ops · 178 declared mutating
+ * (56 rungs + 122 stated absences; N345's contradiction and entities ops moved it from 170) · arm 1 49/3 as declared ·
+ * arm 2 42/10 as declared · arm 3 52/0 as declared · after all restores 52/0. The carried-baseline rule below (its
+ * `want 170 got 169` count) describes the `profilesset` reds, which are gone; over a green baseline it never fires, and
+ * the suite's own EXACT line is computed (RUNGS + RUNG_ABSENT against the read mutating set), so no count is pinned.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";

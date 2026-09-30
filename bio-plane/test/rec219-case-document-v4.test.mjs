@@ -66,8 +66,13 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
-import { parseFrontmatter, CASE_DOCUMENT_FAMILY, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED,
-         caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20, case-authoring R14: /5): op=publish authors
+   `bio-case-document/5`, and the LIVE case gate is ratification's `checkCaseDocument` (ratification R8, registered with
+   promotion for `runCaseGate`), not the catalogue's copy, which still knows only /4 and older (N361, T16). The family
+   is read from ratification, which holds it (R8); the /4 obligations C-41.14 and C-41.15 hold for /5 as for /4
+   (publication R20). */
+import { CASE_DOCUMENT_FAMILY, checkCaseDocument } from "../src/ratification/checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- rec219-case-document-v4 ---");
@@ -272,8 +277,11 @@ t("REACH: the adoption landed pinning the PROPOSED revision, and op=biasmanifest
 const pubA = await publishAndSign(await ground("pending"), "A");
 const docA = await readDoc(pubA);
 const FA = parseFrontmatter(docA.text).data;
-t("the case is SIGNED, and the document a stranger reads is `bio-case-document/4`",
-  [docA.ratified, typeof docA.sig_armored === "string", FA.format], [true, true, "bio-case-document/4"]);
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 case-authoring R14: /5): the format op=publish authors is /5,
+   which carries every /4 obligation this suite asks (publication R20). Kept: it drives op=publish and a REAL ssh
+   signature through op=caseratify, end to end across case-authoring and ratification. */
+t("the case is SIGNED, and the document a stranger reads is `bio-case-document/5`, carrying /4's disclosures",
+  [docA.ratified, typeof docA.sig_armored === "string", FA.format], [true, true, "bio-case-document/5"]);
 t("FIRST FACT, UNCHANGED: the frozen block still says no manifest was in force — true, and REC-210's "
 + "sentence verbatim — with no hash and no pair",
   [FA.bias_manifest?.in_force, FA.bias_manifest?.stated, FA.bias_manifest?.statements_sha, FA.bias_manifest_bundles],
@@ -304,7 +312,12 @@ t("and it does NOT name who adopted it — a member's name in a signed public do
    =========================================================================== */
 console.log("\n--- 2. C-41.14 refuses a /4 document silent about the adoption pending at signing, by name ---");
 const { runCaseGate } = await import("../src/gate.mjs");
-const gateOf = (fm, body = null) => runCaseGate({ caseId: fm.case_id, edition: fm.case_edition, fm, priorCase: null, body });
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20: /5): `runCaseGate` runs the catalogue promotion
+   holds, which is ratification's `checkCaseDocument` (ratification R8) — passed here as op=caseratify runs it. Kept:
+   every arm below mutates the /5 bytes op=publish really authored, and no module test drives C-41.13–C-41.15 over a
+   /5 document (ratification's `checks.test.mjs` mutates a synthetic /4). */
+const gateOf = (fm, body = null) => runCaseGate({ caseId: fm.case_id, edition: fm.case_edition, fm, priorCase: null, body },
+  checkCaseDocument);
 const idsOf = (g) => g.findings.map((x) => x.check);
 const clone = (fm) => JSON.parse(JSON.stringify(fm));
 t("BASELINE: the ratify gate accepts the /4 document op=publish authored — no finding of any kind",
@@ -351,13 +364,10 @@ t("/3-STILL-RATIFIES: the same document as a /3, carrying NONE of the three new 
 const v3noManifest = clone(asV3); delete v3noManifest.bias_manifest;
 t("and /3 KEEPS its own obligation: a /3 without the manifest is still refused by C-41.13, not by C-41.14",
   [...new Set(idsOf(gateOf(v3noManifest)))], ["C-41.13"]);
-t("the accepted set names every format, newest first, and op=publish authors only /4",
-  [CASE_DOCUMENT_FORMATS_ACCEPTED, CASE_DOCUMENT_FORMAT],
-  [["bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"], "bio-case-document/4"]);
-t("/4 states its members' blocks as /3 and /2 do, and is obliged to carry /3's disclosures",
-  [caseDocumentStatesMemberBlocks({ format: "bio-case-document/4" }), caseDocumentRequiresDisclosures({ format: "bio-case-document/4" }),
-   caseDocumentRequiresDisclosures({ format: "bio-case-document/3" }), caseDocumentRequiresDisclosures({ format: "bio-case-document/2" })],
-  [true, true, true, false]);
+/* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K457): "the accepted set names every format, newest first, and op=publish
+   authors only /4" and "/4 states its members' blocks as /3 and /2 do, and is obliged to carry /3's disclosures":
+   covered by publication R20, test/m/publication/casedoc.test.mjs ("R20 the case document's grammar: /5 is written,
+   /1–/5 accepted, and the four predicates read the token"). */
 
 /* ===========================================================================
    4. FROZEN — the adoption moving afterwards moves op=biasmanifest and never the signed bytes.
@@ -379,7 +389,7 @@ const FB = parseFrontmatter(docB.text).data;
 t("a case published NOW signs the lens in force, a ZERO count, an EMPTY list and the sentence saying so",
   [FB.format, FB.bias_manifest?.in_force, FB.bias_manifest?.pins_proposed, FB.bias_manifest_pins_proposed,
    FB.bias_manifest?.pins_proposed_stated, docB.text.includes("AN ADOPTION PINNED A PROPOSED REVISION")],
-  ["bio-case-document/4", true, 0, [],
+  ["bio-case-document/5", true, 0, [],
    "no adoption in this scope pinned a proposed revision when this case was signed", false]);
 t("and the gate accepts it — no finding of any kind", [gateOf(FB, docB.text).ok, idsOf(gateOf(FB, docB.text))], [true, []]);
 

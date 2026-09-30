@@ -59,7 +59,11 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R20, case-authoring R14: /5): op=publish authors
+   `bio-case-document/5`, and the case gate is ratification's `checkCaseDocument` (ratification R8, the catalogue
+   promotion's `runCaseGate` runs); the catalogue's own copy still knows only /4 and older (N361, T16). */
+import { checkCaseDocument } from "../src/ratification/checks.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { registerDoc, registerFile } from "./register-doc.mjs";
@@ -765,6 +769,9 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
      reader can test. */
   /* D-442: stripped from the CASE DOCUMENT, where the rows now live, and judged by the case gate with the
      member's basis at the pinned bytes — the fact the per-ground arm reads. */
+  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345: /5): the three case-gate arms below judge the /5 document
+     with the live gate. Kept: they drive a REAL structured (grounded) member through op=publish and the gate, which
+     no module test does (ratification's `checks.test.mjs` asks C-2.8's case arm of a synthetic /4 with no grounds). */
   const mfm = parseFrontmatter(md).data || {};
   const caseCtx = { caseId: pub.caseId, edition: pub.edition, memberBasis: { [CASE]: mfm.basis || [] } };
   t("the case document AUDITS CLEAN against the case gate, member rows included",
