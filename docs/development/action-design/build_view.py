@@ -1,9 +1,10 @@
 """Render a design note to the HTML page shown to Bob. Needs the `markdown` package:
-PYTHONPATH=<dir with markdown> python3 build_view.py [INVENTORY|ACTION-PLAN]"""
+PYTHONPATH=<dir with markdown> python3 build_view.py [INVENTORY|ACTION-PLAN|MATRIX]"""
 import pathlib, re, sys, markdown
 
 PAGES = {"INVENTORY": ("inventory.html", "Action Layer Inventory"),
-         "ACTION-PLAN": ("action-plan.html", "The Action Plan")}
+         "ACTION-PLAN": ("action-plan.html", "The Action Plan"),
+         "MATRIX": ("matrix.html", "Action Completeness Matrix")}
 here = pathlib.Path(__file__).parent
 name = sys.argv[1] if len(sys.argv) > 1 else "INVENTORY"
 out, title = PAGES[name]
@@ -12,10 +13,15 @@ body = markdown.markdown(src, extensions=["tables"])
 
 # The verdict column: a chip for each verdict's first bold phrase.
 body = re.sub(r"<strong>(Gap[^<]*)</strong>", r'<strong class="v gap">\1</strong>', body)
-body = re.sub(r"<strong>(Partly covered[^<]*)</strong>", r'<strong class="v part">\1</strong>', body)
+body = re.sub(r"<strong>(Partly[^<]*)</strong>", r'<strong class="v part">\1</strong>', body)
+body = re.sub(r"<strong>(Wiring)</strong>", r'<strong class="v wire">\1</strong>', body)
+body = re.sub(r"<strong>(Designed)</strong>", r'<strong class="v design">\1</strong>', body)
+body = re.sub(r"<strong>(Built)</strong>", r'<strong class="v ok">\1</strong>', body)
 body = re.sub(r"<strong>(Covered[^<]*)</strong>", r'<strong class="v ok">\1</strong>', body)
 # Every table scrolls in its own box on a narrow screen.
 body = body.replace("<table>", '<div class="tw"><table>').replace("</table>", "</table></div>")
+# A table of seven or more columns gets a wider measure.
+body = re.sub(r'<table>(\s*<thead>\s*<tr>(?:\s*<th[^>]*>(?:(?!</th>).)*</th>){7,}\s*</tr>)', r'<table class="wide">\1', body, flags=re.S)
 # The status paragraph becomes the lede.
 body = body.replace("<p><strong>Status</strong> · ", '<p class="lede"><span class="eyebrow">Status</span> ', 1)
 
@@ -59,6 +65,9 @@ td:first-child{min-width:150px}
 .v.gap{color:var(--gap);background:var(--gap-bg)}
 .v.part{color:var(--part);background:var(--part-bg)}
 .v.ok{color:var(--ok);background:var(--ok-bg)}
+.v.wire{color:var(--part);background:var(--part-bg);outline:1px dashed var(--part)}
+.v.design{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+table.wide{min-width:1180px}
 </style>
 <div class="wrap">
 """ + body + "\n</div>\n"
