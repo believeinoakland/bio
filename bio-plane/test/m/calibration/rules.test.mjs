@@ -27,6 +27,12 @@ test("R1 R14: checkCalibration accepts a whole measurement, and a null cap, and 
   assert.equal(checkCalibration(cal({ probe_inputs: "corpus c1", scores: "cer 0.02" })), null, "stated as text");
 });
 
+test("R1: checkCalibration accepts fields it does not know, and inputs and scores given as JSON text", () => {
+  assert.equal(checkCalibration(cal({ dpi: 300, operator_note: "ran twice", nested: { a: [1] } })), null);
+  assert.equal(checkCalibration(cal({ probe_inputs: '{"corpus":"x"}', scores: '{"cer":0.01}' })), null);
+  assert.equal(checkCalibration({ ...cal(), calibration_id: undefined, replaced_by: "CAL-9", drift: "worse" }), null);
+});
+
 test("R1 R14: checkCalibration refuses CAL_SHAPE (C-42.1) for a non-object or a cap off the scale", () => {
   for (const v of [null, undefined, 7, "CAL", [], [cal()]]) refused(checkCalibration(v), "CAL_SHAPE");
   for (const c of ["E", "a", "b", "", 1, "AA", {}]) refused(checkCalibration(cal({ cap: c })), "CAL_SHAPE");
@@ -100,6 +106,16 @@ test("R3: nextProbeDue is at once for a never-probed engine, else never later th
   assert.match(cadenceSentence(), /every 30 day/);
 });
 
+test("R3 R6: the cadence's sentence is composed from the constant it states", () => {
+  assert.equal(cadenceSentence(),
+    `one probe per calibratable engine every ${CALIBRATION_CADENCE_MS / DAY} day(s), on this instance's own account`);
+  assert.equal(cadenceSentence(CALIBRATION_CADENCE_MS), cadenceSentence());
+  assert.equal(cadenceSentence(7 * DAY), "one probe per calibratable engine every 7 day(s), on this instance's own account");
+  assert.equal(cadenceSentence(1.5 * DAY), "one probe per calibratable engine every 1.50 day(s), on this instance's own account");
+  assert.match(nextProbeDue({ lastAt: 0 }).why, new RegExp(cadenceSentence().replace(/[()]/g, "\\$&")));
+  assert.match(nextProbeDue({ lastAt: 0, cadenceMs: 7 * DAY }).why, /every 7 day\(s\)/);
+});
+
 test("R3: a signal can only bring the probe forward, never push it out", () => {
   const L = Date.UTC(2026, 8, 1), C = L + CALIBRATION_CADENCE_MS;
   assert.equal(nextProbeDue({ lastAt: L, signals: [{ probe_by: L + DAY }] }).at, L + DAY);
@@ -135,6 +151,8 @@ test("R14: the family's rows are C-42.1–C-42.10, one code one row, each with a
   for (const [k, v] of Object.entries(CALIBRATION_CHECKS)) {
     assert.ok(typeof v.translation === "string" && v.translation.length > 40, k);
     assert.ok(typeof v.where === "string" && v.where.length > 0, k);
+    assert.match(v.where, /^src\/calibration(\/index)?\.mjs [A-Za-z]+ > is-calibration-[a-z]+$/,
+                 `${k} names the smallest span, a region, never a whole file`);
   }
 });
 
