@@ -1,6 +1,6 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R1–R87; T14's N128 listener rows (R81), N327 `remedy` (R84), N329
+ * Requirements: build/requirements/membership.md (R1–R88; T15's N352 `hiddenBundles` (R88); T14's N128 listener rows (R81), N327 `remedy` (R84), N329
  * `activeAdmins` ordered (R86) and N335 `notAParticipant` (R87); T13's N324 `notAnAdmin` (R84) and N332's `visibilityOf` (R85); T9's N123 revocation notice `onRevoked`, N142's `inSight` and
  * N70's bounds, as MEMBERSHIP #3 proposed them, J2). Extracted from the legacy store (T3-2); the legacy
  * store keeps its public methods as one-line delegations to this class, so every op and every caller answers
@@ -50,6 +50,21 @@ export function viewerPredicate(viewer) {
     args: [memberId, memberId],
     viewer: v, scope: "participant",
   };
+}
+
+/* R88 (N352, K477). THE COMPLEMENT OF R43's RULE, spelled once: the bundles a viewer may NOT see, as a set to subtract
+   (D-464, D-486). `null` when R43 lets the viewer see every bundle (its machine and founder arms, scope `member`), so
+   there is nothing to subtract; otherwise `{sql, args}`, a parenthesised subquery over record-core's `bundles` (its R37
+   read contract) naming every bundle R43's compiled gate does not pass: every bundle, for a viewer R43 refuses. It is
+   the gate negated as a set, never a second rule, so a count taken through it and a read taken through
+   `viewerPredicate` cannot disagree about who is hidden. A caller subtracts with `<key> NOT IN ${sql}` and binds `args`.
+   What an absent viewer means stays the caller's: asked, it is R43's refusal and hides everything; the legacy store's
+   internal call reads whole by not asking. Writes nothing and never throws. */
+export function hiddenBundles(viewer) {
+  const gate = viewerPredicate(viewer);
+  if (gate.scope === "member") return null;
+  return { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`,
+           args: [...gate.args] };
 }
 
 /* R78 (N208, N146, K238, K275). THE ONE ANSWER TO ONE CONDITION: no project answers to `projectId`, or the caller's
