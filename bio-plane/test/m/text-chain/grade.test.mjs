@@ -6,7 +6,7 @@ import {
   checkConfidence, applyConfidenceFloor, checkAnchor, checkAttestation, extentCovers, gradeCeiling,
   captureBound, derivationCap, describeChain, convertedChain, layerChain, TEXT_CHAIN_CHECKS,
 } from "../../../src/textchain.mjs";
-import { BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
+import { BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 
 const isRefusal = (r, code) => {
   assert.equal(r && r.ok, false, `expected ${code}, got ${JSON.stringify(r)}`);

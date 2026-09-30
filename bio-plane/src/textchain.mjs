@@ -93,7 +93,7 @@
  * fidelity places on the capture axis and nothing else: DEC-4's doctrine is
  * that fidelity BOUNDS the capture axis as its weakest link, so there is no
  * third scale and no new machinery. The letters are `BASIS_GRADES` and the
- * ceiling is `EARNED_CAPTURE_CEILING` — both IMPORTED from the catalogue, both
+ * ceiling is `EARNED_CAPTURE_CEILING` — both IMPORTED from `record-grammar`, both
  * already the only spelling this project has, and neither re-typed here. If a
  * fifth grade letter is ever added, this module follows without an edit.
  *
@@ -107,7 +107,7 @@
  * measured letter and NAMES where it was measured.
  */
 
-import { BASIS_GRADES, EARNED_CAPTURE_CEILING, isMachineIdentity } from "../checks/bio-checks.mjs";
+import { BASIS_GRADES, EARNED_CAPTURE_CEILING, isMachineIdentity } from "./record-grammar/index.mjs";
 
 /* ------------------------------------------------------------------ *
  * The vocabulary
