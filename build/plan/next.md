@@ -77,3 +77,5 @@
 - N417 · 2026-09-30 · **ratification** (PROMOTION #19 J2; K647): the ratify gate calls `promotionOf(host).runGate`, so registered grammars (record-core R67) reach it. In T18's ratification job.
 - N418 · 2026-09-30 · **capture**, **ai-runs** (RECORD-CORE #10 J2; K650): writes outside `record.transact`, so `afterCommit` (R66) runs held calls at once; bring each write under R32's `transact` in their T18 jobs.
 - N420 · 2026-09-30 · **civicos-process `tools/mail.mjs`** (ACQUISITION #1 J1; K659): `state` (and every command that commits) commits only the file it writes, never other staged files. *(fixed: civicos-process 7e51d7c, K659)*
+
+- **N420** (K675 (4); AGENT-WORKER #5 J1) · A plane read carrying the active profile's `deadlines`, venues and `legal_organisations` (jurisdictions' `combine` view) for the plan mode's reads (agent-worker R51), declared by `op-declarations`; agent-worker's `PLAN_READS` then reads it and stops carrying those UNDETERMINED. Also, with control-plane's R41 in place, `MODES.plan` deployed (run-rules R14, agent-worker R53) when Bob's K660 conditions hold.

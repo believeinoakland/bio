@@ -68,7 +68,7 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 **The surfacing step, registered with `promotion`** (K31)
 - **R25** A promotion creating an inquiry under an assistant principal names a run: absent, invisible or unnamed is `SURFACE_NO_RUN` (C-66.1); then `run-rules` R5; not running, `SURFACE_RUN_NOT_RUNNING` (C-66.2); no `surfaces` bound, `SURFACE_NO_BOUND` (C-66.3); the bound reached, `SURFACE_BOUND_REACHED` (C-66.4). Each refuses the whole promotion.
 - **R26** Inside the promotion's transaction, a surfacing row `{bundle_id, run, principal, at}` is written and `surfaces` consumed by one; the answer's `surfaced_in` carries the run, instant and bound.
-- **R27** `surfacedIn(bundleId, viewer)`: a question with no surfacing row is "not recorded"; one whose run the viewer cannot read says so; otherwise the run, principal, instant, context, status and R20's block.
+- **R27** `surfacedIn(bundleId, viewer)`: a question with no surfacing row answers `inquiry`'s `migratedSurfacing(bundleId)` when that is not null (its R49; K674), else "not recorded"; one whose run the viewer cannot read says so; otherwise the run, principal, instant, context, status and R20's block.
 
 **For the modules that produce under a run: runFor(run, viewer), boundOf(run, bound), consumeBound(run, bound, n)** For `run-productions`, `capture-requests` and `contradiction`'s run gate (R37).
 - **R28** `runFor` answers `{run, status, mode, context_type, context_id, principal_plane, principal_claude}` for a held run the viewer can see, and null for a blank id, an absent run or an invisible one alike; it never throws and writes nothing. Whether the caller holds the run is `run-rules` R5 over `principal_plane`.
@@ -95,7 +95,7 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 - `bias`: `biasManifest` (R10, R20); the work-product registration (R30).
 - `observation-log`: the one writer (R12, R14, R16, R18), the run's rows (R14, R24), the condition check (C-22.4) and the vocabulary (N49).
 - `retrieval`: the hidden-run predicate and `surfaced_in` decoration it offers (R36).
-- `inquiry`: the migration-replay arm of `surfaced_in` (R27; map §5.8).
+- `inquiry`: `migratedSurfacing` (its R49), the migration-replay arm of `surfaced_in` (R27; map §5.8; K674).
 - `contradiction`: the run gate it offers (R37).
 
 ### Invariants
