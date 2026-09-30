@@ -90,7 +90,7 @@ test("R36 the leg count is registered with retrieval as the `legs` field's colum
   assert.deepEqual([again.ok, again.reason, again.declaredBy], [false, "FIELD_DECLARED", "inquiry"]);
 });
 
-test("R12 N405 the migrated arm of surfaced_in: a migration replay's creation said in words, null for any other; registered on retrieval's single-bundle answer (its R56)", async () => {
+test("R49 R12 N405 the migrated arm of surfaced_in: a migration replay's creation said in words, null for any other; registered on retrieval's single-bundle answer (its R56)", async () => {
   const w = world({ realRetrieval: true }); w.doc(A);
   const M = "INQ-2026-0007-m";
   assert.equal(w.promote(M, inquiryMd(M), null, { migrationReplay: { capture: "c".repeat(64), promotion: "P-1" } }).ok, true);
