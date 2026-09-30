@@ -1,16 +1,30 @@
 /* capture — the op handlers the control plane routes to (layers.md ruling 2, K3), moved from `legacy-index` in T4.
  * Routing, authentication and the response envelope stay the control plane's: `json`, `storeSilent`,
- * `storageAbsent`, `requiredArgument` and `doAnswer` (the one reader of a Durable Object's envelope, N247: a body
+ * `storageAbsent`, `requiredArgument`, `doAnswer` (the one reader of a Durable Object's envelope, N247: a body
  * that is not the store's `{ok: true, result}` is not an answer, and a silence is never read as an empty result,
- * REC-52) are passed in, with the stamps it decided (the caller class, the viewer, the member). `store` is the
- * Durable Object stub the op is scoped to. */
+ * REC-52) and `storeRefusal` (control-plane R23's relay of the store's own refusal) are passed in, with the stamps it
+ * decided (the caller class, the viewer, the member). `store` is the Durable Object stub the op is scoped to. */
 import { normalizeAddress } from "../subresources.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
+
+/** R64 (N339, K421): the one way this module's handlers answer what `doAnswer` read that was not an answer. The
+ *  store's own refusal (`refused`: `ok: false` below 500, control-plane R23) is relayed with the store's status, code
+ *  and sentence, through the caller's `storeRefusal` when it hands one, else as the same answer composed here
+ *  (`json(reply.body, reply.status)`, which is what `storeRefusal` answers); only a reply that is no answer is
+ *  `storeSilent(op)`, carrying the correlation id `doAnswer` read from the store's internal error, when it gave one
+ *  (control-plane R25; N349). A sub-read inside a longer act is relayed the same way (K444). Null when `out` is an
+ *  answer. */
+export function relayUnanswered(out, op, { json, storeSilent, storeRefusal }) {
+  if (out.refused && out.reply)
+    return typeof storeRefusal === "function" ? storeRefusal(out) : json(out.reply.body, out.reply.status);
+  if (!out.answered) return storeSilent(op, out.correlation);
+  return null;
+}
 
 /** R27, R29, D-701: op=links. `address=` what points at an address; `capture=` a document's outbound links with their
  *  verdicts; `host=` how a host's navigation changed between captures (R29's per-host read). Every row passes the
  *  caller's viewer before it is counted. */
-export async function linksOp(url, store, { json, storeSilent, doAnswer, viewer }) {
+export async function linksOp(url, store, { json, storeSilent, storeRefusal, doAnswer, viewer }) {
   /* N90: the caller's page, forwarded; the route bounds a read the caller did not. */
   const v = `viewer=${encodeURIComponent(viewer ?? "")}`
     + ["limit", "after"].map((k) => (url.searchParams.get(k) ? `&${k}=${encodeURIComponent(url.searchParams.get(k))}` : "")).join("");
@@ -24,7 +38,8 @@ export async function linksOp(url, store, { json, storeSilent, doAnswer, viewer 
   else return json({ ok: false, reason: "NEED_CAPTURE_OR_ADDRESS",
     detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, "
           + "or host=<host> for how that host's navigation changed between captures" }, 400);
-  if (!r.answered) return storeSilent("links");
+  const unanswered = relayUnanswered(r, "links", { json, storeSilent, storeRefusal });
+  if (unanswered) return unanswered;
   return json({ ok: true, ...r.result });
 }
 
@@ -33,8 +48,10 @@ const EVIDENCE_ABSENT_FIXED = new Set(["ok", "reason", "code", "check", "transla
 
 /** R63: THE one answer to one condition, no evidence object is held under a digest, so the code is minted at one site:
  *  this module's R21 get and extraction's R31 answer through it. Answers `{status: 404, body}`, the body
- *  `{ok: false, reason: "NOT_FOUND", code, check, translation, sha256, store}` and a caller's `extra` fields beside
- *  them; the control plane's envelope sends it. It writes nothing and never throws. */
+ *  `{ok: false, reason: "EVIDENCE_NOT_HELD", code, check, translation, sha256, store}` and a caller's `extra` fields
+ *  beside them; the control plane's envelope sends it. The code was `NOT_FOUND`, a word any module could mint, so the
+ *  door could not read this row without lending it to them (N347, K440); its row (C-118.1) and sentence are
+ *  unchanged. It writes nothing and never throws. */
 export function evidenceAbsent(sha, store, extra = null) {
   let own = [];
   try {
@@ -42,8 +59,8 @@ export function evidenceAbsent(sha, store, extra = null) {
       own = Object.entries(extra).filter(([k]) => !EVIDENCE_ABSENT_FIXED.has(k));
   } catch { own = []; }
   /* DEC-49 REGION is-evidence-held */
-  const row = CAPTURE_CHECKS.NOT_FOUND;
-  return { status: 404, body: { ok: false, reason: "NOT_FOUND", code: "NOT_FOUND", check: row.check,
+  const row = CAPTURE_CHECKS.EVIDENCE_NOT_HELD;
+  return { status: 404, body: { ok: false, reason: "EVIDENCE_NOT_HELD", code: "EVIDENCE_NOT_HELD", check: row.check,
                                 translation: row.translation, sha256: sha ?? null, store: store ?? null,
                                 ...Object.fromEntries(own) } };
   /* END DEC-49 REGION is-evidence-held */
@@ -98,12 +115,13 @@ export async function captureObjectOp(req, url, env, { json, storageAbsent, requ
  * push traffic to the breaking point; there is plenty of time.
  * (Moved from `legacy-index` beside the op's call, N247.) */
 /** R3: op=archivelookup, forwarded to the service. */
-export async function archiveLookupOp(req, url, store, { json, storeSilent, doAnswer }) {
+export async function archiveLookupOp(req, url, store, { json, storeSilent, storeRefusal, doAnswer }) {
   const body = req.method === "POST" ? await req.json().catch(() => null) : null;
   const address = body?.address || url.searchParams.get("address");
   const r = await doAnswer(store.fetch("http://x/archivelookup", { method: "POST", headers: { "content-type": "application/json" },
                                                                    body: JSON.stringify({ address }) }));
-  if (!r.answered) return storeSilent("archivelookup");
+  const unanswered = relayUnanswered(r, "archivelookup", { json, storeSilent, storeRefusal });
+  if (unanswered) return unanswered;
   return json(r.result.body, r.result.status);
 }
 
@@ -124,7 +142,8 @@ export async function archiveLookupOp(req, url, store, { json, storeSilent, doAn
 /** R1–R20, K72 (11): op=acquire, forwarded to the service with the control plane's stamps. Answers `{response}`
  *  (a refusal, a silence) or `{answer}`, the filed capture's answer, which `extraction` reads from the stored primary
  *  itself (R42, K49; N103: no second read of the primary here). */
-export async function acquireOp(req, env, store, { json, storeSilent, storageAbsent, doAnswer, cls, member, sessMember, storeName }) {
+export async function acquireOp(req, env, store, { json, storeSilent, storeRefusal, storageAbsent, doAnswer, cls, member, sessMember,
+                                                    storeName }) {
   if (req.method !== "POST") return { response: json({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
     return { response: storageAbsent("acquire", "this instance has no evidence storage configured") };
@@ -132,7 +151,8 @@ export async function acquireOp(req, env, store, { json, storeSilent, storageAbs
   const q = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
   const r = await doAnswer(store.fetch(`http://x/acquire?${q}`, { method: "POST", headers: { "content-type": "application/json" },
                                                                    body: JSON.stringify(body || {}) }));
-  if (!r.answered) return { response: storeSilent("acquire") };
+  const unanswered = relayUnanswered(r, "acquire", { json, storeSilent, storeRefusal });
+  if (unanswered) return { response: unanswered };
   const { status, body: answer } = r.result;
   if (!answer || answer.ok !== true || !answer.document) return { response: json(answer, status) };
   return { answer };

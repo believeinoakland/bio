@@ -19,7 +19,11 @@
    naming `departed with no record: C-59.6 MINT_EXHAUSTED`; (3) that row's translation changed -> it fails naming
    `changed with no record: C-59.6 MINT_EXHAUSTED`, and a declared `awaiting stamp` row the tree does not bear out is a
    failure, not an exemption; (4) a row `C-59.99 CONTROL_ROW` added to record-core's own `RECORD_CORE_CHECKS` on the real
-   tree -> 7 pass 1 fail, `CENSUS MOVED: arrived with no record: C-59.99 CONTROL_ROW`. */
+   tree -> 7 pass 1 fail, `CENSUS MOVED: arrived with no record: C-59.99 CONTROL_ROW`.
+   RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; PROMOTION #15, N318, N350): over 1.44.0, the stamp's own lines
+   (`fixtures/row-census-1.44.0.jsonl`, 827 lines) reproduced by this reader on the stamp commit 872f6d4bd8 (827 rows,
+   5eae043f…); the sort's tie broken by the line (N350); C-96.1's held-twice and open-tie assertions and 1.43.0's
+   declarations retired. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
@@ -36,13 +40,26 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  { after: "1.43.0", kind: "departed", by: "REVIEW #4 J1 (N322, K434)", record: "build/jobs/T13/review.md",
-    line: ["C-87.12", "MINT_EXHAUSTED", "src/review/index.mjs mintExhausted > is-review-mint-exhausted",
-           "The plane could not find a free identifier for this, so nothing was saved and nothing was issued. Identifiers "
-           + "are drawn at random so that none of them says how many others exist, and every one it tried was already "
-           + "taken. Trying again may succeed; if it keeps happening, tell whoever runs this instance."] },
-  { after: "1.43.0", kind: "arrived", by: "CONTROL-PLANE #4 J3 (N333, K442)", record: "build/jobs/T13/control-plane.md",
-    check: "C-69.4", code: "STORE_INTERNAL_ERROR" },
+  /* 1.43.0's two (review's C-87.12 departure, control-plane's C-69.4 arrival) are stamped in 1.44.0 (PROMOTION #15,
+     N318) and retired here (LEGACY-TESTS #12, T14). T14's rows changed after promotion's layer-2 stamp, each named
+     `awaiting stamp` by its layer-3-or-later job record, for T15's layer-2 stamp (N318): */
+  { after: "1.44.0", kind: "departed", by: "CAPTURE #7 (N347, the re-key's old key)", record: "build/jobs/T14/capture.md",
+    line: ["C-118.1", "NOT_FOUND", "src/capture/ops.mjs evidenceAbsent > is-evidence-held", "The record holds no stored copy of a document under this fingerprint."] },
+  { after: "1.44.0", kind: "arrived", by: "CAPTURE #7 (N347, C-118.1 re-keyed EVIDENCE_NOT_HELD)", record: "build/jobs/T14/capture.md",
+    check: "C-118.1", code: "EVIDENCE_NOT_HELD" },
+  { after: "1.44.0", kind: "departed", by: "BIAS #3 (N327, C-26.20 retired)", record: "build/jobs/T14/bias.md",
+    line: ["C-26.20", "BIAS_ADOPTION_NOT_AN_ADMINISTRATOR", "src/bias/index.mjs biasAdopt, reached from op=biasadopt", "Nothing was adopted. A lens over the whole instance is set by its administrators, and you are not one. A project's owners set a lens over that project's work: ask an administrator to adopt this set for the instance, or adopt it for a project you own."] },
+  { after: "1.44.0", kind: "departed", by: "INTENT #6 (N327, C-111.16 retired)", record: "build/jobs/T14/intent.md",
+    line: ["C-111.16", "GROUP_ASPIRATION_NOT_ADMIN", "src/intent/index.mjs #aspirationAuthority > is-group-aspiration-admin", "An aspiration the whole group holds is declared, revised and retired by an administrator, and the act carries their name and date. Ask an administrator. Nothing was written."] },
+  { after: "1.44.0", kind: "arrived", by: "QUEUE #4 (N325, C-19.2 new)", record: "build/jobs/T14/queue.md",
+    check: "C-19.2", code: "INBOX_REFUSED" },
+];
+/* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
+   declared here by name, verified against its record like a row, and listed (R50, K408, K464). `checkBundle`'s
+   layer-1 change (C-19.1 left it) is in 1.44.0 (K464); queue's registration of C-19.1 at the promote gate is T15's. */
+const COMPOSITIONS_AWAITING = [
+  { after: "1.44.0", what: "the promote gate gains queue's registered step (C-19.1 at the write, refusing C-19.2)",
+    by: "QUEUE #4 (N325)", record: "build/jobs/T14/queue.md", needle: "composition" },
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
 let pass = 0, fail = 0;
@@ -104,27 +121,25 @@ test("R50: the census is a census — its files, its tables read, no file holdin
 });
 
 test("R50: one row object in two tables, or one table under two exports, counts once; two row objects with one check count twice", () => {
-  const lines = now.lines.map((l) => JSON.parse(l));
-  /* C-96.1 is held twice by T13 (membership's own and the catalogue's copy, K408 (4)); PROMOTION #14 counted it twice. */
-  assert.equal(lines.filter(([check]) => check === "C-96.1").length, 2, "C-96.1, held twice, counts twice");
-  /* And nothing else is doubled by the reader: every repeated (check, code) is two DISTINCT row objects in two files. */
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K408 (4), K458): the assertion that C-96.1 is held twice. The catalogue's
+     copy left (LEGACY-CHECKS #8) and 1.44.0 counts membership's row once. What stays is the reader's own half: nothing
+     is doubled by the reader, every repeated (check, code) being two DISTINCT row objects in two tables. */
   const where = new Map();
   for (const r of tree.rows) where.set(keyOf(r.check, r.code), [...(where.get(keyOf(r.check, r.code)) || []), `${r.file}#${r.table}`]);
   for (const [k, homes] of where) if (homes.length > 1) assert.equal(new Set(homes).size, homes.length, `${k} read twice from one table: ${homes}`);
+  assert.equal(now.lines.filter((l) => l.startsWith('["C-96.1",')).length, 1, "C-96.1 is held once, membership's");
 });
 
-/* R50 sorts by check, then code, and says nothing of two DIFFERENT lines sharing both: C-96.1 held twice (membership's
-   `where` and the catalogue copy's) is the one such pair on this tree. The census keeps them in the order it reads its
-   files (sorted by path, exports by name), which is the order PROMOTION #14's pin was computed in (reproduced on its
-   stamp commit). REPORTED to BOB (a tie-break by the whole line would make the digest order-free outright). */
-test("R50: the digest does not depend on the order rows are read, save R50's open tie (two lines sharing check and code keep file order)", () => {
-  const ties = new Map();
-  for (const r of tree.rows) ties.set(keyOf(r.check, r.code), [...(ties.get(keyOf(r.check, r.code)) || []), r]);
-  const reordered = [...ties.values()].reverse().flat();   /* every key's rows moved, each tie's own order kept */
-  assert.equal(censusOf(reordered).digest, now.digest);
-  const openTies = [...ties].filter(([, rs]) => new Set(rs.map(lineOf)).size > 1).map(([k]) => k);
-  console.log(`  R50's open tie on this tree (different lines, one check and code): ${openTies.join(", ") || "none"}`);
-  assert.deepEqual(openTies, ["C-96.1 NOT_AN_ADMIN"], "a new open tie makes the digest depend on read order");
+/* R50 sorts by check, then code, then the line itself (N350, PROMOTION #15): no two lines tie, so the digest does not
+   depend on the order the rows are read in. RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14): the "open tie" this arm
+   pinned (C-96.1 held twice, T13) is gone with the catalogue's copy, and the sort's third key closes the class. */
+test("R50: the digest does not depend on the order rows are read — the sort's third key is the line itself", () => {
+  assert.equal(censusOf([...tree.rows].reverse()).digest, now.digest);
+  const shuffled = tree.rows.map((r, i) => [((i * 7919) % 104729), r]).sort((x, y) => x[0] - y[0]).map(([, r]) => r);
+  assert.equal(censusOf(shuffled).digest, now.digest);
+  /* The third key does work: two lines sharing check and code sort by the line in either read order. */
+  const a = { check: "C-1.1", code: "X", where: "a", translation: "t" }, b = { ...a, where: "b" };
+  assert.deepEqual(censusOf([b, a]).lines, censusOf([a, b]).lines);
   assert.equal(censusOf(tree.rows.map((r) => ({ ...r, where: r.where ?? undefined }))).digest, now.digest, "a missing where reads null");
 });
 
@@ -139,6 +154,14 @@ test("R50: every row awaiting stamp is named so by its job record", () => {
     assert.ok(text.split("\n").some((l) => l.includes(check) && /awaiting stamp/i.test(l)),
       `${a.record} has no line naming ${check} and "awaiting stamp" (${a.by})`);
   }
+  for (const c of COMPOSITIONS_AWAITING.filter((x) => x.after === ROW_CENSUS.version)) {
+    const text = readFileSync(join(REPO, c.record), "utf8");
+    assert.ok(text.split("\n").some((l) => l.includes(c.needle) && /awaiting stamp/i.test(l)),
+      `${c.record} has no line naming the ${c.needle} and "awaiting stamp" (${c.by})`);
+    console.log(`  awaiting stamp, composition: ${c.what} (${c.by})`);
+  }
+  for (const c of COMPOSITIONS_AWAITING.filter((x) => x.after !== ROW_CENSUS.version))
+    console.log(`  STAMPED SINCE, retire this declaration: composition ${c.what} (after ${c.after})`);
   for (const a of AWAITING_STAMP.filter((x) => x.after !== ROW_CENSUS.version))
     console.log(`  STAMPED SINCE, retire this declaration: ${a.kind} ${a.kind === "departed" ? keyOf(a.line[0], a.line[1]) : keyOf(a.check, a.code)} (after ${a.after})`);
 });

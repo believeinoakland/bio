@@ -67,6 +67,114 @@ test("R19: op=governorconfig refuses NEED_HOST and BAD_APPETITE, sets or clears,
     assert.deepEqual(await governorOp("governorconfig", url("op=governorconfig&host=h.example&appetite_per_min=3"), s), { silent: true });
 });
 
+/* R27: the relay the control plane hands (`control-plane` R23, R25, R30), as its `doAnswer`, `storeRefusal`, `storeSilent`
+   and `json` answer, so the caller below composes the reply the plane would send. */
+const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const doAnswer = async (res) => {
+  let r = null, out = null;
+  try { r = await res; out = await r.json(); } catch { out = null; }
+  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: undefined };
+  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
+  if (out.ok === true) return { answered: true, result: out.result, reply };
+  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: undefined, reply };
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && UUID.test(out.correlation)
+    ? out.correlation : undefined;
+  return correlation ? { answered: false, result: undefined, correlation } : { answered: false, result: undefined };
+};
+const storeRefusal = (out, extra = {}) => json({ ...out.reply.body, ...extra }, out.reply.status);
+const storeSilent = (op, correlation = undefined) =>
+  json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, detail: "this instance could not consult its own record", correlation }, 502);
+/* The caller as legacy-index is to call at layer 11: the relay handed, each answer composed into the reply. */
+const relayed = async (op, q, store, opened = []) => {
+  const spy = async (res) => { const out = await doAnswer(res); opened.push(out); return out; };
+  const g = await governorOp(op, url(q), store, { doAnswer: spy, storeRefusal });
+  const res = g.refused ? g.response : g.silent ? storeSilent(op, g.correlation) : json(g.body, g.status);
+  return { g, status: res.status, body: await res.json() };
+};
+const stubStore = (status, body) => ({ fetch: async () => (typeof body === "string" ? new Response(body, { status })
+                                                                                   : Response.json(body, { status })) });
+const RELAYS = [["governorstate", "op=governorstate"], ["governorstate", "op=governorstate&host=h.example"],
+                ["governorconfig", "op=governorconfig&host=h.example&appetite_per_min=4"],
+                ["governorconfig", "op=governorconfig&host=h.example"]];
+
+test("R27: behind each relay, the store's own refusal (ok: false below 500) is answered with its status, code and sentence", async () => {
+  for (const [op, q] of RELAYS) {
+    for (const [status, body] of [[400, { ok: false, reason: "BAD_JSON", detail: "the body is not JSON" }],
+                                  [404, { ok: false, error: "unknown op: governorstate" }],
+                                  [409, { ok: false, reason: "SOMETHING_ELSE", code: "SOMETHING_ELSE", translation: "words" }]]) {
+      const opened = [];
+      const r = await relayed(op, q, stubStore(status, body), opened);
+      assert.equal(r.g.refused, true, `${q} ${status}`);
+      assert.equal(r.status, status, q);
+      assert.deepEqual(r.body, body, q);                 // the store's envelope, nothing added and nothing lost
+      assert.equal(opened.length, 1, q);                  // read through the plane's doAnswer, once
+      assert.equal(opened[0].refused, true, q);
+    }
+  }
+});
+
+test("R27: a reply that is no answer is STORE_DID_NOT_ANSWER, with the store's correlation id when it gave one and never its stack", async () => {
+  const id = "0f8fad5b-d9cb-469f-a165-70867728950e";
+  for (const [op, q] of RELAYS) {
+    // the store's catch at 500: silence, the stack never relayed (control-plane R30), no correlation key
+    const stack = { ok: false, error: "Error: boom\n    at Store.fetch (store.mjs:1:1)" };
+    const s = await relayed(op, q, stubStore(500, stack));
+    assert.equal(s.status, 502, q);
+    assert.equal(s.body.reason, "STORE_DID_NOT_ANSWER", q);
+    assert.equal(s.body.op, op, q);
+    assert.doesNotMatch(JSON.stringify(s.body), /boom|store\.mjs|at Store/, q);
+    assert.equal("correlation" in s.body, false, q);
+    assert.deepEqual(s.g, { silent: true }, q);
+    // the store's internal error with a correlation id: carried on
+    const c = await relayed(op, q, stubStore(500, { ok: false, reason: "STORE_INTERNAL_ERROR", correlation: id }));
+    assert.deepEqual([c.status, c.body.reason, c.body.correlation], [502, "STORE_DID_NOT_ANSWER", id], q);
+    assert.deepEqual(c.g, { silent: true, correlation: id }, q);
+    // without one (or with one that is not an id): no correlation key
+    for (const body of [{ ok: false, reason: "STORE_INTERNAL_ERROR" }, { ok: false, reason: "STORE_INTERNAL_ERROR", correlation: "x" }]) {
+      const n = await relayed(op, q, stubStore(500, body));
+      assert.deepEqual([n.status, n.body.reason, "correlation" in n.body], [502, "STORE_DID_NOT_ANSWER", false], q);
+    }
+    // no reply at all, a reply that is not JSON, a JSON reply that is no envelope, a store call that throws at once
+    // (`{ok: false}` below 500 is the store's refusal, R23, relayed above, not a silence)
+    for (const st of [...silent.slice(0, 2), stubStore(200, "<html>"), stubStore(200, [1, 2]),
+                      { fetch: () => { throw new Error("thrown before any reply"); } }]) {
+      const x = await relayed(op, q, st);
+      assert.deepEqual([x.status, x.body.reason, "correlation" in x.body], [502, "STORE_DID_NOT_ANSWER", false], q);
+      assert.deepEqual(x.g, { silent: true }, q);
+    }
+  }
+});
+
+test("R27, R18, R19: with the relay handed, an answer is answered as before, and the governor's own R12 inside it at 400", async () => {
+  const w = world();
+  w.g.governorReport({ host: "b.example", status: 429 });
+  const opened = [];
+  const all = await relayed("governorstate", "op=governorstate", storeOver(w.g), opened);
+  assert.deepEqual([all.status, all.body], [200, { ok: true, hosts: w.g.governorState({}).hosts }]);
+  assert.deepEqual(await governorOp("governorstate", url("op=governorstate"), () => storeOver(w.g), { doAnswer, storeRefusal }),
+                   { status: 200, body: { ok: true, hosts: w.g.governorState({}).hosts } });
+  const set = await relayed("governorconfig", "op=governorconfig&host=h.example&appetite_per_min=9", storeOver(w.g), opened);
+  assert.deepEqual([set.status, set.body], [200, { ok: true, configured: true, host: "h.example", appetite_per_min: 9 }]);
+  assert.equal(w.row("h.example").appetite_per_min, 9);
+  assert.equal(opened.length, 2);
+  assert.ok(opened.every((o) => o.answered === true));
+  // an answer carrying the governor's own refusal is an answer: relayed at 400, never as the store's refusal or a silence
+  const inBand = { fetch: async () => Response.json({ ok: true, result: w.g.governorConfig({ host: "h.example", appetite_per_min: -1 }) }) };
+  const r = await relayed("governorconfig", "op=governorconfig&host=h.example&appetite_per_min=4", inBand);
+  assert.deepEqual([r.status, r.body.reason, r.body.check], [400, "BAD_APPETITE", "host-governor.R12"]);
+  // the refusals decided before the store is asked never reach it
+  const untouched = { fetch: async () => { throw new Error("asked the store"); } };
+  assert.equal((await relayed("governorconfig", "op=governorconfig&appetite_per_min=4", untouched)).body.reason, "NEED_HOST");
+  assert.equal((await relayed("governorconfig", "op=governorconfig&host=h.example&appetite_per_min=0", untouched)).body.reason, "BAD_APPETITE");
+  assert.equal(await governorOp("links", url("op=links"), untouched, { doAnswer, storeRefusal }), null);
+  // a relay missing either function is no relay: the call answers as a caller handing none (legacy-index's today)
+  for (const partial of [{ doAnswer }, { storeRefusal }, {}]) {
+    const g = await governorOp("governorstate", url("op=governorstate"), stubStore(400, { ok: false, reason: "BAD_JSON" }), partial);
+    assert.deepEqual(g, { silent: true });
+  }
+});
+
 /* ---- through the whole plane ---- */
 const SRC = fileURLToPath(new URL("../../../src/index.mjs", import.meta.url));
 let mf;

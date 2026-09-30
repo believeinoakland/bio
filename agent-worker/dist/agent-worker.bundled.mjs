@@ -466,7 +466,6 @@ __export(bio_checks_exports, {
   AI_RUN_CHECKS: () => AI_RUN_CHECKS,
   ANN_ID_RE: () => ANN_ID_RE,
   ATTEST_CHECKS: () => ATTEST_CHECKS,
-  ATTRIBUTION_CHECKS: () => ATTRIBUTION_CHECKS,
   BASIS_GRADES: () => BASIS_GRADES,
   BASIS_ROLES: () => BASIS_ROLES,
   BASIS_VERSION_CHECKS: () => BASIS_VERSION_CHECKS,
@@ -478,7 +477,6 @@ __export(bio_checks_exports, {
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
-  CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
@@ -3724,7 +3722,6 @@ async function checkBundle(input, opts = {}) {
     checkWriteCompleteness(ctx, findings);
     await checkInformationExtension(ctx, findings);
     await checkInfo2Contract(ctx, findings);
-    checkInboxGrammar(ctx, findings);
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
     checkInquiryExtension(ctx, findings);
@@ -5117,7 +5114,6 @@ var AI_CREDENTIAL_CHECKS = {
     translation: "A credential that acts for the whole group is created by one of its administrators, and the account asking is not an active administrator here. Nothing was created. You can create a credential that acts for you alone, or ask an administrator to create this one."
   }
 };
-var CASE_DERIVATION_CHECKS = {};
 var MACHINE_FENCE_CHECKS = {
   MACHINE_CANNOT_RELEASE: {
     check: "C-32.1",
@@ -6626,7 +6622,6 @@ var TRANSCRIBE_CHECKS = {
     translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
-var ATTRIBUTION_CHECKS = {};
 var TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: "C-53.1",
@@ -6723,11 +6718,6 @@ var SIGNER_ENROLMENT_CHECKS = {
   }
 };
 var CUSTODIAL_CHECKS = {
-  NOT_AN_ADMIN: {
-    check: "C-96.1",
-    where: "src/membership/index.mjs #custodialBar > is-custodial-admin",
-    translation: "Only an active administrator of this group can do that, and the account asking is not one of them here. The record reads who is asking from the signed-in session, never from the request. Nothing was changed."
-  },
   BAD_MEMBER_ID: {
     check: "C-96.2",
     where: "src/membership/index.mjs memberAdd > is-member-add-id",
@@ -8837,6 +8827,16 @@ var RECORD_CORE_CHECKS = Object.freeze({
     check: "C-59.6",
     where: at("mintExhausted", "is-mint-exhausted"),
     translation: "The plane could not find a free identifier for this, so nothing was saved and nothing was issued. Identifiers are drawn at random so that none of them says how many others exist, and every one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs this instance."
+  }),
+  COUNTS_DECLARED: Object.freeze({
+    check: "C-102.13",
+    where: at("registerCounts", "is-counts-registration"),
+    translation: "A part of this instance tried to report a figure another part already reports, or to register its figures twice, so the second registration was refused and the first still stands. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  }),
+  COUNTS_MALFORMED: Object.freeze({
+    check: "C-102.14",
+    where: at("registerCounts", "is-counts-registration"),
+    translation: "A part of this instance tried to register its figures without naming itself, the figures or a function to count them, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
   })
 });
 
@@ -8892,6 +8892,8 @@ var RecordCore = class _RecordCore {
   #firstBoot;
   #auditChecks = [];
   // R59: {module, check}, in registration order
+  #countsBy = [];
+  // R63: {module, keys, counts}, in registration order
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
@@ -9522,6 +9524,64 @@ var RecordCore = class _RecordCore {
       return { bundleSha: after.bundle_sha, rowVersion: after.row_version };
     });
   }
+  /* ---- the store's counts (R63) ---- */
+  /** R63 (N342, K435; the R59 pattern, with its keys named up front as `declarePurge` names its tables): a module that
+   *  owns tables registers once, at start, the figures it reports and `counts(hid)`, a synchronous function answering
+   *  them, so `op=stats` and purge's proof read every module's figures without calling a later module. Two modules
+   *  never report one key: a key already held, or named twice in one list, is `COUNTS_DECLARED` naming its holder, and
+   *  so is a module's second registration; no module name, no non-empty list of names, or no function is
+   *  `COUNTS_MALFORMED`. A refused registration registers nothing. It writes nothing. */
+  registerCounts(module, keys, counts) {
+    const refuse = (code, detail, more) => {
+      const row = RECORD_CORE_CHECKS[code];
+      return { ...more, ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+    };
+    if (typeof module !== "string" || !module.trim() || !Array.isArray(keys) || keys.length === 0 || !keys.every((k) => typeof k === "string" && k.trim() !== "") || typeof counts !== "function")
+      return refuse("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
+    let clash = this.#countsBy.some((r) => r.module === module) ? { heldBy: module } : null;
+    for (let i = 0; !clash && i < keys.length; i++) {
+      const held = keys.indexOf(keys[i]) < i ? module : this.#countsBy.find((r) => r.keys.includes(keys[i]))?.module;
+      if (held) clash = { key: keys[i], heldBy: held };
+    }
+    if (clash)
+      return refuse("COUNTS_DECLARED", clash.key === void 0 ? `${module} has already registered its figures; nothing more was registered.` : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+    this.#countsBy.push({ module, keys: [...keys], counts });
+    return { ok: true, module, keys: [...keys] };
+  }
+  /** R63: every registered figure, in registration order, each the number its module's function gave for it, or null
+   *  when that function threw or gave no finite number for it: a figure that could not be read is never zero. `hid`
+   *  (`{sql, args}`, the bundles the caller may not see, or null) is passed to each function as it was given, never
+   *  read here. Each function is asked once per answer. Writes nothing; never throws. */
+  counts(hid = null) {
+    const out = [];
+    for (const { keys, counts } of this.#countsBy) {
+      let got = null;
+      try {
+        got = counts(hid);
+      } catch {
+        got = null;
+      }
+      try {
+        if (got !== null && typeof got === "object" && typeof got.then === "function") {
+          got.then(null, () => {
+          });
+          got = null;
+        }
+      } catch {
+        got = null;
+      }
+      for (const key of keys) {
+        let v = null;
+        try {
+          v = got !== null && typeof got === "object" ? got[key] : null;
+        } catch {
+          v = null;
+        }
+        out.push([key, typeof v === "number" && Number.isFinite(v) ? v : null]);
+      }
+    }
+    return Object.fromEntries(out);
+  }
   /* ---- the audit sweep (R18–R20, R45, R59) ---- */
   /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
    *  runs over every bundle of a page beside the catalogue, called `check(image, context)`: `image` is what
@@ -10123,6 +10183,36 @@ var MEMBERSHIP_CHECKS = Object.freeze({
     where: at2("noSuchProject", "is-project-seen"),
     translation: "No project answers to that id here. A project you cannot see is answered exactly as one that does not exist, so this is not a hint either way."
   }),
+  NOT_PROPOSED: Object.freeze({
+    check: "C-96.14",
+    where: at2("adminEndorse", "is-endorse-proposed"),
+    translation: "Only a member proposed as an administrator is endorsed, and this member is not proposed now: they were never proposed, or every administrator has already endorsed them. Nothing was changed."
+  }),
+  NOT_A_PARTICIPANT: Object.freeze({
+    check: "C-56.3",
+    where: at2("notAParticipant", "is-not-a-participant"),
+    translation: "You hold no place in this project, and this is an act one of its participants takes. Nothing was changed. An owner of the project can invite you to it."
+  }),
+  TARGET_NOT_A_PARTICIPANT: Object.freeze({
+    check: "C-56.4",
+    where: at2("projectRemove", "is-remove-target-participant"),
+    translation: "The member you named holds no place in this project, so there is nobody to remove from it. Nothing was changed."
+  }),
+  TARGET_NOT_JOINED: Object.freeze({
+    check: "C-56.5",
+    where: at2("projectOwnerAdd", "is-owner-target-joined"),
+    translation: "An owner of a project is one of its participants who has joined it, and the member you named has not joined this project: they are invited and have not joined, have asked to leave, or hold no place in it. Nothing was changed. Once they have joined, they can be made an owner."
+  }),
+  LISTENER_MALFORMED: Object.freeze({
+    check: "C-102.11",
+    where: at2("listenerRefusal", "is-listener-registration"),
+    translation: "A part of this instance tried to register a listener without naming itself or without a function to call, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  }),
+  LISTENER_DECLARED: Object.freeze({
+    check: "C-102.12",
+    where: at2("listenerRefusal", "is-listener-registration"),
+    translation: "A part of this instance tried to register a listener it had already registered, or one that another part already holds, so the second registration was refused and the first still stands. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: "C-96.13",
     where: at2("expertiseDeclare", "is-expertise-labelled"),
@@ -10174,7 +10264,7 @@ function noSuchProject(projectId, extra = null) {
     detail: NO_SUCH_PROJECT_DETAIL
   };
 }
-var NOT_AN_ADMIN_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "by", "detail"]);
+var NOT_AN_ADMIN_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "by", "detail", "message"]);
 function notAnAdmin(by, act, extra = null) {
   let own2 = [];
   try {
@@ -10183,6 +10273,9 @@ function notAnAdmin(by, act, extra = null) {
   } catch {
     own2 = [];
   }
+  const given = own2.find(([k]) => k === "remedy");
+  const remedy = given && typeof given[1] === "string" && given[1].trim() ? given[1].trim().slice(0, 400) : null;
+  own2 = own2.filter(([k]) => k !== "remedy");
   const what = typeof act === "string" && act.trim() ? act.trim().slice(0, 120) : "this act";
   const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
   return {
@@ -10193,7 +10286,30 @@ function notAnAdmin(by, act, extra = null) {
     translation: row.translation,
     by: by ?? null,
     ...Object.fromEntries(own2),
+    ...remedy ? { remedy, message: `${row.translation} ${remedy}` } : {},
     detail: `${what} is an administrator's act (Membership Architecture v2 \xA74.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators. Nothing was changed.`
+  };
+}
+var NOT_A_PARTICIPANT_DETAIL = "the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 \xA77). Nothing was changed.";
+var NOT_A_PARTICIPANT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
+function notAParticipant(projectId, by, extra = null) {
+  let own2 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own2 = Object.entries(extra).filter(([k]) => !NOT_A_PARTICIPANT_FIXED.has(k));
+  } catch {
+    own2 = [];
+  }
+  const row = MEMBERSHIP_CHECKS.NOT_A_PARTICIPANT;
+  return {
+    ok: false,
+    reason: "NOT_A_PARTICIPANT",
+    code: "NOT_A_PARTICIPANT",
+    check: row.check,
+    translation: row.translation,
+    project: projectId ?? null,
+    ...Object.fromEntries(own2),
+    detail: NOT_A_PARTICIPANT_DETAIL
   };
 }
 var MODULE_ORDER = Object.freeze([
@@ -10282,47 +10398,32 @@ var isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var LISTENER_REFUSAL_FIELDS = /* @__PURE__ */ new Set(["ok", "reason", "code", "detail", "module", "check", "translation"]);
 function listenerRefusal(held, module, fn, extra) {
   const refuse = (code, detail, fields) => {
-    let row = null;
-    try {
-      row = Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code) ? REGISTRATION_CHECKS[code] : null;
-    } catch {
-      row = null;
-    }
+    const row = MEMBERSHIP_CHECKS[code];
     let own2 = {};
     try {
       if (isObj(extra)) own2 = Object.fromEntries(Object.entries(extra).filter(([k]) => !LISTENER_REFUSAL_FIELDS.has(k)));
     } catch {
       own2 = {};
     }
-    return {
-      ...own2,
-      ok: false,
-      reason: code,
-      code,
-      detail,
-      ...fields,
-      ...row ? { check: row.check, translation: row.translation } : {}
-    };
+    return { ...own2, ok: false, reason: code, code, detail, ...fields, check: row.check, translation: row.translation };
   };
+  const malformed = (detail) => refuse("LISTENER_MALFORMED", detail, {});
+  const declared = (detail, holder) => refuse("LISTENER_DECLARED", detail, { module: holder });
   try {
     if (typeof module !== "string" || !module || typeof fn !== "function")
-      return refuse("LISTENER_MALFORMED", "a listener names the module that registers it and its function", {});
+      return malformed("a listener names the module that registers it and its function");
     if (Array.isArray(held)) {
       if (held.some((h) => isObj(h) && h.module === module))
-        return refuse("LISTENER_DECLARED", `${module} has already registered its listener`, { module });
+        return declared(`${module} has already registered its listener`, module);
       return null;
     }
     if (isObj(held)) {
       const holder = typeof held.module === "string" ? held.module : null;
-      return refuse("LISTENER_DECLARED", `this listener is already registered${holder ? ` by ${holder}` : ""}, and it takes one registration`, { module: holder });
+      return declared(`this listener is already registered${holder ? ` by ${holder}` : ""}, and it takes one registration`, holder);
     }
     return null;
   } catch (e) {
-    return refuse(
-      "LISTENER_MALFORMED",
-      `the registration could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`,
-      {}
-    );
+    return malformed(`the registration could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`);
   }
 }
 var stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
@@ -11937,7 +12038,7 @@ var Membership = class _Membership {
       if (existence) return existence;
     }
     const p = this.participation(projectId, by);
-    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT" };
+    if (!p) return notAParticipant(projectId, by);
     if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state };
     if (p.owner) {
       const committed = this.#committedOwners(projectId).filter((o) => o !== by);
@@ -11985,7 +12086,18 @@ var Membership = class _Membership {
     const target = this.#memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     const p = this.participation(projectId, target.member_id);
-    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT", handle };
+    if (!p) {
+      const row = MEMBERSHIP_CHECKS.TARGET_NOT_A_PARTICIPANT;
+      return {
+        ok: false,
+        reason: "TARGET_NOT_A_PARTICIPANT",
+        code: "TARGET_NOT_A_PARTICIPANT",
+        check: row.check,
+        translation: row.translation,
+        handle,
+        detail: "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written."
+      };
+    }
     if (p.owner) return {
       ok: false,
       reason: "OWNER",
@@ -12028,13 +12140,19 @@ var Membership = class _Membership {
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     const p = this.participation(projectId, target.member_id);
-    if (!p || p.state !== "joined") return {
-      ok: false,
-      reason: "NOT_A_PARTICIPANT",
-      handle,
-      ...p ? { state: p.state } : {},
-      detail: "an owner is a joined participant with the owner flag, so the member joins the project first"
-    };
+    if (!p || p.state !== "joined") {
+      const row = MEMBERSHIP_CHECKS.TARGET_NOT_JOINED;
+      return {
+        ok: false,
+        reason: "TARGET_NOT_JOINED",
+        code: "TARGET_NOT_JOINED",
+        check: row.check,
+        translation: row.translation,
+        handle,
+        ...p ? { state: p.state } : {},
+        detail: "an owner is a joined participant with the owner flag, so the member joins the project first"
+      };
+    }
     if (p.owner) return { ok: false, reason: "ALREADY_AN_OWNER", handle };
     const owners = this.projectOwners(projectId);
     const now = (/* @__PURE__ */ new Date()).toISOString();
@@ -12083,11 +12201,11 @@ var Membership = class _Membership {
    *  null. What it leaves to the act is what turns on a PARAMETER (the reason, the handle). */
   rescueRefusal(projectId, by) {
     if (!this.isAdministrator(by))
-      return {
-        ok: false,
-        reason: "ADMIN_ONLY",
-        detail: "this is the single exception to administrators holding no authority over projects, and it is an administrator's to use"
-      };
+      return notAnAdmin(
+        by,
+        "adding an owner to a project whose owners are all inactive (7.13)",
+        { remedy: "An active administrator of this group can add the owner; while any owner of the project is active, its owners add one instead." }
+      );
     const owners = this.projectOwners(projectId);
     if (!owners.length)
       return {
@@ -12349,11 +12467,11 @@ var Membership = class _Membership {
   /** An administrator vouching, INCLUDING for another administrator (4.9). */
   expertiseConfirm({ memberId, label, by, withdraw = false } = {}) {
     if (!this.isAdministrator(by))
-      return {
-        ok: false,
-        reason: "ADMIN_ONLY",
-        detail: "an administrator confirms a declared license, and may do so for another administrator: vouching for someone is the same act whoever they are"
-      };
+      return notAnAdmin(
+        by,
+        "confirming or withdrawing a member's declared expertise",
+        { remedy: "An active administrator of this group can confirm it, for any member, another administrator included." }
+      );
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     const lab = _Membership.#normLabel(label);
@@ -12583,8 +12701,12 @@ var Membership = class _Membership {
    * Membership does not and cannot constrain them, and an interface that
    * implied otherwise would be lying. */
   static ROOT_ADMIN = "admin";
+  /* R86 (N329): the administrators in a stated order: the founder first once the instance is claimed, then every active
+     member with role `admin` in the order their member rows were created, ties broken by member id (queue R23's
+     "earliest active administrator" is the first after the founder). Writes nothing and never throws. */
   activeAdmins() {
-    const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'`).map((r) => r.member_id);
+    const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'
+                              ORDER BY created, member_id`).map((r) => r.member_id);
     const claimed = !!this.#one(`SELECT role FROM credentials WHERE role=?`, _Membership.ROOT_ADMIN);
     return claimed ? [_Membership.ROOT_ADMIN, ...rows] : rows;
   }
@@ -12680,7 +12802,18 @@ var Membership = class _Membership {
   async adminEndorse({ memberId, by } = {}) {
     const m = this.#one(`SELECT member_id, status, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.status !== "proposed") return { ok: false, reason: "NOT_PROPOSED", status: m.status };
+    if (m.status !== "proposed") {
+      const row = MEMBERSHIP_CHECKS.NOT_PROPOSED;
+      return {
+        ok: false,
+        reason: "NOT_PROPOSED",
+        code: "NOT_PROPOSED",
+        check: row.check,
+        translation: row.translation,
+        status: m.status,
+        detail: "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written."
+      };
+    }
     const admins = this.activeAdmins();
     if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");
     const now = (/* @__PURE__ */ new Date()).toISOString();
@@ -13226,10 +13359,10 @@ var Membership = class _Membership {
         { principalMember: String(principalMember).slice(0, 60) }
       );
     if (kind === "organisation" && !this.isAdministrator(minter))
-      return refusal5(
-        "AI_CREDENTIAL_ORG_NOT_ADMIN",
-        `an organisation-wide AI credential acts for the whole group, so it is minted by an administrator, and '${minter.slice(0, 60)}' is not an active one. A member-scoped credential is open to every member. Nothing was written.`,
-        { who: minter }
+      return notAnAdmin(
+        minter,
+        "minting an organisation-wide AI credential",
+        { remedy: "A member-scoped AI credential, which acts for you alone, is open to every member." }
       );
     const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai` : kind === "member" ? `member:${minter}` : null;
     if (!principal || principal === "member:")
@@ -13415,17 +13548,18 @@ var TSA_ENDPOINTS = Object.freeze([
 var te2 = new TextEncoder();
 
 // ../bio-plane/src/gate.mjs
-var CATALOG_VERSION = "1.43.0";
+var CATALOG_VERSION = "1.44.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 820,
-  digest: "f01ed42a484a4aa3d36f9f89a36d832603dd46cb36a10333303907421176371d"
+  rows: 827,
+  digest: "5eae043f703a68fcf9ef26dd02bb6e890fff8d7a553f9db31fc0220518bf45b0"
 });
 var te3 = new TextEncoder();
 
 // ../bio-plane/src/promotion/index.mjs
 var INLINE_MAX = 1024 * 1024;
+var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
 
 // ../bio-plane/src/provenance/register-checks.mjs
 var CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
@@ -23765,7 +23899,7 @@ var EXTRACTION_CHECKS = Object.freeze({
 var at3 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
-  NOT_FOUND: Object.freeze({
+  EVIDENCE_NOT_HELD: Object.freeze({
     check: "C-118.1",
     where: at3("evidenceAbsent", "is-evidence-held"),
     translation: "The record holds no stored copy of a document under this fingerprint."
@@ -25642,7 +25776,6 @@ var VIA = Object.freeze({ projection: PROJECTION_RELATION });
 
 // ../bio-plane/src/progressions/checks.mjs
 var at4 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
-var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
 var PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {
     check: "C-100.2",
@@ -26112,13 +26245,9 @@ var BIAS_CHECKS2 = {
     where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve",
     translation: "Nothing was added, because this one has already been settled \u2014 by the lens moving back, by a re-run under the lens now in force, or by a member who gave their reason. What settled it is on the record and is not overwritten. If the lens changes again, the obligation is raised again as a new one."
   },
-  /* K102 (R11): an instance-scope adoption is an administrator's act ("Admins define instance bias"); the adoption
-  stays signed by its author. */
-  BIAS_ADOPTION_NOT_AN_ADMINISTRATOR: {
-    check: "C-26.20",
-    where: "src/bias/index.mjs biasAdopt, reached from op=biasadopt",
-    translation: "Nothing was adopted. A lens over the whole instance is set by its administrators, and you are not one. A project's owners set a lens over that project's work: ask an administrator to adopt this set for the instance, or adopt it for a project you own."
-  },
+  /* C-26.20 (BIAS_ADOPTION_NOT_AN_ADMINISTRATOR) is RETIRED and its number is not reused (N327, DEC-83): an
+     instance-scope adoption by a non-administrator is membership's one condition, answered `NOT_AN_ADMIN` through
+     `membership.notAnAdmin` (its R84, C-96.1), this row's next step riding as its `remedy` (R11). */
   BIAS_ILLEGAL_TRANSITION: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION
 };
 
@@ -26130,6 +26259,7 @@ var BIAS_TABLES = Object.freeze([
   "bias_debt_sweeps",
   "bias_debt_settlements"
 ]);
+var BIAS_ADDITIVE_COLUMNS = Object.freeze([Object.freeze(["bias_debts", "settled_kind", "TEXT"])]);
 
 // ../bio-plane/src/bias/index.mjs
 var enc = new TextEncoder();

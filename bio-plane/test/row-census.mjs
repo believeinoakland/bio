@@ -10,11 +10,12 @@
              `translation` null;
      once    one table object reached by two exports, or one row object in two tables, counts once; two distinct row
              objects with one check id count twice;
-     digest  lines `JSON.stringify([check, code, where, translation])`, sorted by check then code in code-unit order,
-             joined by "\n" with no trailing newline, SHA-256 over UTF-8, lowercase hex.
+     digest  lines `JSON.stringify([check, code, where, translation])`, sorted by check, then code, then the line
+             itself, in code-unit order (the third key R50's wording since N350, PROMOTION #15, T14), joined by "\n"
+             with no trailing newline, SHA-256 over UTF-8, lowercase hex.
 
-   SCRIPTS THAT RUN WHEN IMPORTED, R50's own class, are more than the three it names: the fleet members' `scripts/`
-   (agent-worker's build writes its bundle when imported, measured) and `civicos-ui/deploy-ui.mjs` (it exits). They are
+   SCRIPTS THAT RUN WHEN IMPORTED: R50 names, since N350 (T14), every fleet member's `scripts/` (agent-worker's build
+   writes its bundle when imported, measured) and `civicos-ui/deploy-ui.mjs` (it exits) beside its first three. They are
    left out as R50 leaves out `bio-plane/scripts/`, returned in `scripts`, and the suite fails by name if any of them
    holds a `check:` key, so leaving them out cannot move the census. Every other file is imported.
    A file node cannot import (it reaches `cloudflare:` or a browser global) is NOT skipped silently: it is returned in
@@ -79,10 +80,13 @@ export async function censusRows(root) {
 }
 
 export const lineOf = (r) => JSON.stringify([r.check, r.code, r.where, r.translation]);
-const byCheckThenCode = (a, b) => (a.check < b.check ? -1 : a.check > b.check ? 1 : a.code < b.code ? -1 : a.code > b.code ? 1 : 0);
+/* R50 (N350): by check, then code, then the line itself, so no two rows ever tie and the digest never depends on the
+   order the rows were read in. */
+const byCheckCodeLine = (a, b) => (a.check < b.check ? -1 : a.check > b.check ? 1 : a.code < b.code ? -1 : a.code > b.code ? 1
+  : lineOf(a) < lineOf(b) ? -1 : lineOf(a) > lineOf(b) ? 1 : 0);
 
 /** R50's `{rows, digest}` over a list of rows (any objects carrying check, code, where, translation). */
 export function censusOf(rows) {
-  const lines = [...rows].sort(byCheckThenCode).map(lineOf);
+  const lines = [...rows].sort(byCheckCodeLine).map(lineOf);
   return { rows: lines.length, digest: createHash("sha256").update(lines.join("\n"), "utf8").digest("hex"), lines };
 }

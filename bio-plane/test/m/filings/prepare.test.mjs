@@ -3,7 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, PROFILE } from "./fixture.mjs";
-import { FILING_BLANKS, unfilledMarker } from "../../../src/filings/index.mjs";
+import { FILING_BLANKS, unfilledMarker, Filings } from "../../../src/filings/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
 
 const prep = (x, action, over = {}) => x.f.filingPrepare({ action, preparer: V("bo"), viewer: V("bo"), ...over });
@@ -114,7 +115,7 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   assert.deepEqual([by.clock.value, by.clock.source], ["2026-04-01: answer due (P.E.B.L. § 4)", B]);
   assert.deepEqual([by.venue.value, by.venue.source], ["the Borough Registry", "profile:test-filings-other/action_kinds/bylaw_complaint/venue"]);
   assert.equal(by.venue_how.value, "mail");
-  assert.deepEqual([by.group.value, by.group.source], ["test-group", "setting:producing_group"]);
+  assert.deepEqual([by.group.value, by.group.source], ["test-group", "fact:producingGroup"]);
   assert.deepEqual([by.date.value, by.date.source], ["2026-09-28", "clock:2026-09-28T01:00:00Z"]);
   for (const b of r.blanks) assert.ok(r.text.includes(`${b.name}=${b.value}`), b.name);
   assert.ok(r.text.includes(`law=${unfilledMarker("law")}`));
@@ -122,10 +123,10 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   const la = prep(x, A);
   assert.equal(la.unfilled.find((u) => u.name === "law"), undefined);
   /* No value, undetermined: a counterparty undetermined, no laws stated, no clock, no group, no act date. */
-  x.groupRef.value = null;
   const D2 = x.determine({ act: { ...x.act, at: undefined, period: { from: "2026-03-01", to: "2026-03-05" } } });
   const C = x.action({ counterparty: { state: "undetermined", basis: "not yet known" }, clock: [], laws: null,
                        legs: [{ target: D2, kind: "rests_on" }] });
+  x.groupRef.value = null;
   const u = prep(x, C);
   const why = Object.fromEntries(u.unfilled.map((b) => [b.name, b.why]));
   for (const n of ["counterparty_role", "counterparty_body", "governing_laws", "law", "clock", "group"]) {
@@ -148,6 +149,53 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   assert.deepEqual(t.unfilled, [{ name: "bylaw", why: "filings fills no blank by this name, so the record holds no value for it" }]);
   assert.equal(t.text, "To the Selectboard: the works order let on 2026-03-02 does not conform to [UNFILLED: bylaw].");
   assert.equal(prep(y, T, { preparer: MACHINE, viewer: MACHINE }).text, t.text);
+});
+
+test("R3 the producing group is read through promotion's fact producingGroup (N331): registered, the group blank is filled from it; with no provider (FACT_UNAVAILABLE) or a failing one (FACT_FAILED) it is left unfilled as undetermined, never as unrecorded; a handed-in reader still works", () => {
+  const other = otherProfile(world());   /* its template names the group blank */
+  const x = world({ profiles: [other] });
+  const A = x.action();
+  const group = (r) => ({ blank: r.blanks.find((b) => b.name === "group") || null, unfilled: r.unfilled.find((u) => u.name === "group") || null });
+  /* registered: filled from the fact, naming it as the source */
+  const reg = group(prep(x, A));
+  assert.deepEqual([reg.blank.value, reg.blank.source, reg.unfilled], ["test-group", "fact:producingGroup", null]);
+  assert.equal(x.promotion.fact("producingGroup").value, "test-group", "the value filings filled is the fact's");
+  /* the provider answers no group: unrecorded, said so */
+  x.groupRef.value = null;
+  const none = group(prep(x, A));
+  assert.equal(none.blank, null);
+  assert.match(none.unfilled.why, /no producing group is recorded/);
+  /* the provider fails (promotion answers FACT_FAILED): undetermined, never unrecorded */
+  Object.defineProperty(x.groupRef, "value", { get() { throw new Error("the group's store is unreadable"); }, configurable: true });
+  assert.equal(x.promotion.fact("producingGroup").reason, "FACT_FAILED");
+  const failed = prep(x, A);
+  const fg = group(failed);
+  assert.equal(fg.blank, null);
+  assert.match(fg.unfilled.why, /undetermined/);
+  assert.doesNotMatch(fg.unfilled.why, /is recorded/);
+  assert.ok(failed.text.includes(unfilledMarker("group")));
+  Object.defineProperty(x.groupRef, "value", { value: "test-group", writable: true, configurable: true });
+  /* no provider at all: a real promotion on which no module registered the fact (FACT_UNAVAILABLE) */
+  const bare = promotionOf({ storage: x.st }, { record: x.record, membership: x.membership });
+  assert.equal(bare.fact("producingGroup").reason, "FACT_UNAVAILABLE");
+  const f2 = new Filings({ storage: x.st, record: x.record, host: x.host, promotion: bare, publication: x.p,
+                           provenance: x.prov, content: x.content, profiles: () => [other], now: () => x.clock.now });
+  const un = f2.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
+  const ug = group(un);
+  assert.equal(un.ok, true);
+  assert.equal(ug.blank, null);
+  assert.match(ug.unfilled.why, /undetermined/);
+  assert.match(ug.unfilled.why, /no provider/);
+  assert.doesNotMatch(ug.unfilled.why, /is recorded/);
+  assert.ok(un.text.includes(unfilledMarker("group")));
+  /* a reader handed in (legacy-store's, until layer 10) still works: a value, or the fact's own answer */
+  const handed = (fn) => group(new Filings({ storage: x.st, record: x.record, host: x.host, producingGroup: fn,
+    publication: x.p, provenance: x.prov, content: x.content, profiles: () => [other], now: () => x.clock.now })
+    .filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") }));
+  assert.deepEqual([handed(() => "handed-group").blank.value, handed(() => "handed-group").blank.source], ["handed-group", "fact:producingGroup"]);
+  assert.match(handed(() => null).unfilled.why, /no producing group is recorded/);
+  assert.match(handed(() => bare.fact("producingGroup")).unfilled.why, /undetermined/);
+  assert.equal(handed(() => x.promotion.fact("producingGroup")).blank.value, "test-group");
 });
 
 test("R4 a Tier 2 draft carries the profile's advisory note first in the text and as advisory; Tier 1 carries none; with no note it is an unfilled blank", () => {

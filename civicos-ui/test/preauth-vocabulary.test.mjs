@@ -922,14 +922,18 @@ ok("both canned sentences are non-empty before any arm asserts a pane contains o
  * can be served today, and this surface must still refuse to read an absence
  * out of it. The plane's own guarantee and the surface's own defence are two
  * different assertions, and only the first one moved. */
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; LEGACY-INDEX #10, N339 with N349): the relay now answers the store's
+   own refusal through `storeRefusal` first and carries the store's correlation on a silence,
+   `if (!out.answered) return storeSilent("verify", out.correlation);`. The property is unchanged: the envelope is
+   opened before it is spread. KEPT under K457: `src/index.mjs` is legacy-index's, which has no tests. */
 const SEVENA_GUARDED =
-  /if \(op === "verify"\)[\s\S]{0,2400}?const out = await doAnswer\([\s\S]{0,200}?if \(!out\.answered\) return storeSilent\("verify"\);/
+  /if \(op === "verify"\)[\s\S]{0,2400}?const out = await doAnswer\([\s\S]{0,200}?if \(out\.refused\) return storeRefusal\(out\);\s*\n\s*if \(!out\.answered\) return storeSilent\("verify", out\.correlation\);/
     .test(INDEX_SRC);
 const SEVENA_RAW_SPREAD =
   /if \(op === "verify"\)[\s\S]{0,900}?const out = await r\.json\(\);\s*\n\s*return json\(\{ ok: true, \.\.\.out\.result \}, 200\);/
     .test(INDEX_SRC);
 ok("MEASURED IN THE PLANE'S SOURCE: op=verify now OPENS the Durable Object envelope before it spreads "
-   + "it — `doAnswer` then `if (!out.answered) return storeSilent(\"verify\")` — so a store failure "
+   + "it — `doAnswer`, the store's refusal relayed, then `if (!out.answered) return storeSilent(\"verify\", out.correlation)` — so a store failure "
    + "leaves the plane as a REFUSAL and no longer as {ok:true} at HTTP 200 with no `published`. This "
    + "arm is red for the defect and green for the fix, which is the direction UI-36's pin had backwards",
    SEVENA_GUARDED && !SEVENA_RAW_SPREAD);

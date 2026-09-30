@@ -1,4 +1,4 @@
-/* queue — the member's one feed and the obligation inbox it reads (requirements: `build/requirements/queue.md`, R1–R40).
+/* queue — the member's one feed and the obligation inbox it reads (requirements: `build/requirements/queue.md`, R1–R42).
  * Extracted from the legacy store, catalogue and control plane at T12 (K3, K49, K78 (2), P18; map
  * `build/extraction/queue.md`): the `op=queue` composition, its producers and its mint; the personal half (mute and
  * snooze); the dispose dispatch with its project arm and its class bridge; the tasks inbox and its drain.
@@ -9,14 +9,17 @@
  *                  (R19–R22, R26, R30, R31).
  *   proposeDispose op=proposedispose: the set, the class bridge, the project arm; the progression arm is
  *                  `progressions.disposeProposal` (R27–R29).
- *   taskDrain, taskList, taskForward, taskResolve   the obligation inbox (R23–R25).
+ *   taskDrain, taskList, taskForward, taskResolve   the obligation inbox (R23–R25); the task grammar C-19.1 at the
+ *                  write, in the audit and at the drain (R41); the four figures and the TASK ledger's seed (R42).
  *
  * REACHED as `queueOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call. At that
- * call it declares its tables to record-core's purge (R36), registers its two scheduler consumers (`task-drain`,
- * `queue-renotify`; R22, R23) and capture's task notice (capture R44), unless `deps` says a test is driving it bare.
+ * call it declares its tables to record-core's purge (R36), registers its four figures with record-core's counts and
+ * seeds its TASK ledger row (R42), registers the task grammar with promotion and with record-core's audit (R41), and
+ * registers its two scheduler consumers (`task-drain`, `queue-renotify`; R22, R23) and capture's task notice (capture
+ * R44), unless `deps` says a test is driving it bare.
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
- *   record, membership, governor, provenance, capture, captureRequests, connections, basisVersions, progressions,
- *   aiRuns, bias, publication, reevaluation, intent, monitoring, affordances, scheduler   the providers (Uses);
+ *   record, membership, promotion, governor, provenance, capture, captureRequests, connections, basisVersions,
+ *   progressions, aiRuns, bias, publication, reevaluation, intent, monitoring, affordances, scheduler   the providers;
  *   env       the instance bindings: `BIO_NOW_MS` (the clock) and `TASK_DRAIN_DELAY_MS` (R23);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the registrations (a test that drives the consumers itself).
@@ -27,9 +30,10 @@
  */
 
 import { normalizeType, STATES, vocabFor, isMachineIdentity, isMachineStamp, MACHINE_AUTHOR_PREFIX,
-         MACHINE_CLASS_PREFIX, isPublicHttpsLocator, checkInboxGrammar, parseFrontmatter } from "../../checks/bio-checks.mjs";
+         MACHINE_CLASS_PREFIX, isPublicHttpsLocator } from "../../checks/bio-checks.mjs";
 import { recordOf, stampInstant, perItem, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, noSuchProject } from "../membership/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -50,10 +54,12 @@ import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, catalogueIdOf, classOfKind,
          suppressedBy } from "../queuestate.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 import { QUEUE_SCHEMA, QUEUE_TABLES, queueOwns } from "./schema.mjs";
-import { QUEUE_MINT_CHECKS, QUEUE_MACHINE_CHECKS, QUEUE_ACT_CHECKS, TASK_ACTOR_CHECKS, queueRefusal } from "./checks.mjs";
+import { QUEUE_MINT_CHECKS, QUEUE_MACHINE_CHECKS, QUEUE_ACT_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, queueRefusal,
+         checkInboxGrammar } from "./checks.mjs";
 
 export { QUEUE_SCHEMA, QUEUE_TABLES, queueOwns } from "./schema.mjs";
-export { QUEUE_MINT_CHECKS, QUEUE_MACHINE_CHECKS, QUEUE_ACT_CHECKS, TASK_ACTOR_CHECKS } from "./checks.mjs";
+export { QUEUE_MINT_CHECKS, QUEUE_MACHINE_CHECKS, QUEUE_ACT_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS,
+         checkInboxGrammar } from "./checks.mjs";
 
 /* N301 (K356): how each class is shown to members. The codes are unchanged; the words are these. */
 export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "Obligation", FINDING: "Noticed", CONDITION: "Condition" });
@@ -1814,8 +1820,8 @@ export class Queue {
    * N172, N229 — THE PRODUCERS THE CATALOGUE NAMED WITHOUT ONE (R1, R9, R10).
    *
    * Each reads the fact its owning module already offers and restates none of it: reevaluation's open notices (its
-   * R14), intent's gaps (its R6), monitoring's plan (its R32) and flagged ticks (its R8), and capture's reachability
-   * (its R8) at monitoring's floor. Each is derived on read and writes nothing, like every producer above it, and each
+   * R14), intent's gaps (its R6), monitoring's plan (its R32), its flagged documents (its R48) and the addresses its
+   * next archive tick would find eligible (its R47; N330). Each is derived on read and writes nothing, like every producer above it, and each
    * is bounded, the bound stated where a member could otherwise read a short list as a complete one.
    * ====================================================================== */
 
@@ -1948,26 +1954,20 @@ export class Queue {
     return items;
   }
 
-  /** `source-modified` and `source-removed` (N229; monitoring R8, R31): one FINDING per monitored document whose
-   *  latest tick flagged `reeval_pending` from its `source_status`, read from the document's own front matter, the
-   *  tick's one write. At most QUEUE_MONITORED_MAX of the documents monitoring checks are read; a document this viewer
-   *  may not see is withheld whole. */
+  /** `source-modified` and `source-removed` (N229, N330; monitoring R48): one FINDING per monitored document this viewer
+   *  may see whose latest tick flagged `reeval_pending` from its `source_status`, read through `monitoring.flagged`,
+   *  which gates by sight inside its read (a hidden document is neither listed nor counted) and bounds it, the bound
+   *  and whether it cut published on each item. Homed under the document's ancestors. */
   #findingsSourceFlagged(viewer, now, identity = null) {
-    const rows = (this.#monitoring.subjects() || {}).rows || [];
-    const ids = [...new Set(rows.map((r) => r.bundle_id).filter((x) => typeof x === "string" && x))].sort();
-    const read = ids.slice(0, Queue.QUEUE_MONITORED_MAX);
-    const visible = this.#bundleRedactor(viewer);
+    const page = this.#monitoring.flagged({ viewer }) || {};
+    const list = page.ok !== false && Array.isArray(page.items) ? page.items : [];
     const out = [];
-    for (const id of read) {
-      if (visible(id) === null) continue;
-      const f = this.#record.readFile(id, "bundle.md");
-      if (!f || typeof f.text !== "string") continue;
-      const fm = parseFrontmatter(f.text).data || {};
-      const rp = fm.reeval_pending && typeof fm.reeval_pending === "object" ? fm.reeval_pending : null;
-      if (!rp || !(rp.flag === true || rp.flag === "true") || rp.source !== "source_status") continue;
-      const removed = fm.source_status === "removed";
+    for (const r of list) {
+      const id = r && typeof r.bundleId === "string" && r.bundleId ? r.bundleId : null;
+      if (!id) continue;
+      const removed = r.source_status === "removed";
       const kind = removed ? "source-removed" : "source-modified";
-      const sinceMs = Date.parse(rp.since ?? "");
+      const sinceMs = Date.parse(r.since ?? "");
       const title = this.#record.bundleInfo(id);
       const name = title && title.title ? title.title : id;
       out.push({
@@ -1980,13 +1980,13 @@ export class Queue {
         detail: `a monitoring check found the address this document was captured from ${removed
                 ? "answering that it is gone (404 or 410)" : "serving something other than what was captured"}, `
               + "and flagged it for a second look. What the change means is not decided here.",
-        basis: { source: "monitoring tick (reeval_pending)", bundle_id: id, source_status: fm.source_status ?? null,
-                 since: rp.since ?? null,
-                 bound: { limit: Queue.QUEUE_MONITORED_MAX, truncated: ids.length > read.length },
+        basis: { source: "monitoring.flagged", bundle_id: id, source_status: r.source_status ?? null,
+                 since: r.since ?? null,
+                 bound: { limit: page.limit ?? null, truncated: page.truncated === true },
                  detail: "monitoring's tick records what it saw and never decides what a change means (its R8): "
-                       + "this item is that flag, read from the document's own front matter." },
+                       + "this item is that flag, as monitoring reads it (its R48)." },
         age: Number.isFinite(sinceMs)
-          ? { state: "determined", since: rp.since, ms: Math.max(0, now - sinceMs) }
+          ? { state: "determined", since: r.since, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "unparseable_since",
               detail: "the flag carries no instant this producer can read" },
         assignee: null,
@@ -2009,36 +2009,36 @@ export class Queue {
     return { ids: ids.slice(0, cap), bounded: ids.length > cap };
   }
 
-  /** `archive-fallback-eligible` (N229; monitoring R20, R31; capture R8): one CONDITION per address the archive tick
-   *  would find eligible now, read as the tick reads it: the addresses at monitoring's floor of consecutive failures
-   *  (capture R59's read contract), oldest failing run first, at most the tick's own batch, each asked
-   *  `capture.sourceReachability`. The tick stores no list of what it found, so the fact is derived here, on read. */
+  /** `archive-fallback-eligible` (N229, N330; monitoring R47; capture R8): one CONDITION per address
+   *  `monitoring.archiveEligible` answers, what the next archive tick would find eligible (K406 Q2), asked as the tick
+   *  asks and writing nothing. Its bound, whether it cut, and the daemon's pause are published on each item: a pause
+   *  never empties the list, since eligibility is capture's fact about our attempts. */
   #conditionsArchiveEligible(viewer, now, identity = null) {
-    const nowIso = stampInstant("second", now);
-    const rows = this.#rows(
-      `SELECT address_norm, first_failure_since FROM source_reachability WHERE consecutive_failures >= ?
-        ORDER BY first_failure_since, address_norm LIMIT ?`, this.#monitoring.floor(), Queue.QUEUE_ARCHIVE_READ);
+    const page = this.#monitoring.archiveEligible(now) || {};
+    const list = page.ok !== false && Array.isArray(page.eligible) ? page.eligible : [];
     const out = [];
-    for (const r of rows) {
-      const reach = this.#capture.sourceReachability({ addressNorm: r.address_norm, now: nowIso });
-      if (!reach || reach.fallback_eligible !== true) continue;
-      const subj = this.#conditionBundlesForAddress(r.address_norm, viewer);
+    for (const r of list) {
+      const address = r && typeof r.address === "string" && r.address ? r.address : null;
+      if (!address) continue;
+      const subj = this.#conditionBundlesForAddress(address, viewer);
       const sinceMs = Date.parse(r.first_failure_since ?? "");
       out.push({
-        id: `CONDITION::archive-fallback-eligible::${r.address_norm}`,
+        id: `CONDITION::archive-fallback-eligible::${address}`,
         class: "CONDITION",
         kind: "archive-fallback-eligible",
         case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
-        subject: { kind: "address", id: null, address: r.address_norm,
+        subject: { kind: "address", id: null, address,
                    bundles: subj.ids.slice(0, Queue.QUEUE_OPTION_SUBJECTS_MAX) },
-        summary: `${r.address_norm} has stopped answering often enough that its archived copy may be fetched instead`,
+        summary: `${address} has stopped answering often enough that its archived copy may be fetched instead`,
         detail: "our own attempts at this address have failed enough times, for long enough, that the archive "
               + "fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about "
               + "the publisher.",
-        basis: { source: "capture.sourceReachability", address: r.address_norm, reachability: reach,
-                 bound: { limit: Queue.QUEUE_ARCHIVE_READ },
-                 detail: "eligibility is capture's rule (its R8), read here as the archive tick reads it; the tick "
-                       + "itself fires the fallback, and this item clears when the address answers again." },
+        basis: { source: "monitoring.archiveEligible", address, reachability: r.reachability ?? null,
+                 bound: { limit: page.limit ?? null, truncated: page.truncated === true },
+                 paused: page.paused ?? null,
+                 detail: "eligibility is capture's rule (its R8), read as the next archive tick would read it "
+                       + "(monitoring R47); the tick itself fires the fallback, and this item clears when the address "
+                       + "answers again." },
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: r.first_failure_since, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "no_first_failure",
@@ -2093,13 +2093,11 @@ export class Queue {
     return out;
   }
 
-  /** The bounds the new producers read under (R9, R10): reevaluation's largest page; R9's fifty projects; the
-   *  documents monitoring checks; the archive tick's own batch (monitoring R20). */
+  /** The bounds the new producers read under (R9): reevaluation's largest page; R9's fifty projects. The monitored
+   *  documents and the archive addresses are bounded by monitoring's reads (its R47, R48), which publish their bounds. */
   static QUEUE_NOTICES_MAX = 1000;
   static QUEUE_OBJECTIVE_GAP_PROJECTS = 50;
   static QUEUE_OBJECTIVE_GAP_PAGE = 200;
-  static QUEUE_MONITORED_MAX = 200;
-  static QUEUE_ARCHIVE_READ = 50;
 
   /* ======================================================================
    * PL-13 — **WHAT IDENTITY A QUEUE ITEM CAN BE DISPOSITIONED ON, ANSWERED BY
@@ -3080,10 +3078,11 @@ export class Queue {
     return out;
   }
 
-  /** R39: the tasks resolved within the last QUEUE_RESOLVED_WINDOW_DAYS on subjects this viewer sees, newest first,
-   *  at most QUEUE_RESOLVED_MAX, each with who resolved it (its history's `resolved` entry) and when. The settled bias
-   *  debts are the other half of R39, and `bias` offers no read of settlements to a later module yet (QUEUE #2, Q4):
-   *  that half is stated as not read, never as none. */
+  /** R39: the obligations resolved within the last QUEUE_RESOLVED_WINDOW_DAYS on subjects this viewer sees, each with
+   *  who resolved it and when. The tasks, newest first, at most QUEUE_RESOLVED_MAX, each resolved by its history's
+   *  `resolved` entry; and the settled bias debts, read through `bias.settled` (its R44; N326) with the viewer's gate in
+   *  the same window and bound, each resolved by the member who settled it, or null beside its `settled_kind` when no
+   *  member did (the lens moved back, or a re-run discharged it: K444). Null is never read as "nobody". */
   #resolvedLately(viewer, now) {
     const cap = Queue.QUEUE_RESOLVED_MAX;
     const since = stampInstant("second", now - Queue.QUEUE_RESOLVED_WINDOW_DAYS * 86400000);
@@ -3097,11 +3096,21 @@ export class Queue {
       return { id: t.id, class: "OBLIGATION", kind: t.kind, refers_to: t.refers_to, summary: t.subject.text,
                resolved_by: by ? by.actor : null, resolved_at: t.resolved_at ?? (by ? by.at : null) };
     });
+    const settled = this.#bias.settled({ gate: viewerPredicate(viewer), since, limit: cap }) || {};
+    const debts = (Array.isArray(settled.debts) ? settled.debts : []).map((d) => ({
+      id: `OBLIGATION::bias-debt::${d.run}`, class: "OBLIGATION", kind: "bias-debt", run: d.run,
+      context: { type: d.context_type ?? null, id: d.context_id ?? null },
+      resolved_by: d.actor ?? null, settled_kind: d.settled_kind ?? null, resolved_at: d.settled_at ?? null,
+      reason: d.reason ?? null }));
     return { personal: false, window_days: Queue.QUEUE_RESOLVED_WINDOW_DAYS, since, obligations: tasks,
              count: tasks.length, bound: cap, truncated: rows.length > cap,
-             bias_debts: { read: false,
-                           why: "the settled bias debts are bias's record, and bias offers no read of its settlements "
-                              + "to this feed yet; they are not listed here, which is not the same as there being none" },
+             bias_debts: { read: settled.undetermined !== true, debts, count: debts.length,
+                           bound: settled.limit ?? cap, truncated: settled.truncated === true,
+                           ...(settled.undetermined === true || settled.stated ? { stated: settled.stated ?? null } : {}),
+                           detail: "bias debts settled in the window on runs this viewer may read (bias R44), each with "
+                                 + "the member who settled it. `resolved_by` is null when no member settled it (the lens "
+                                 + "moved back, or a re-run under the lens now in force discharged it), and "
+                                 + "`settled_kind` says which; null never means nobody acted." },
              detail: "obligations that LEFT the list by being resolved, with who resolved each and when (DEC-16): one "
                    + "member's resolution clears the item for everyone, and this is where everyone else reads that "
                    + "it happened." };
@@ -3708,8 +3717,8 @@ export class Queue {
   }
 
   /** The C-19.1 grammar, run against a candidate task before it is stored.
-   *  The EXPORTED catalog function, never a copy: a second grammar pretending
-   *  to be the same one is the failure this reuse exists to avoid. */
+   *  R41: the ONE function `checks.mjs` holds, the same one the promotion check and the audit check below run, never a
+   *  copy: a second grammar pretending to be the same one is the failure this reuse exists to avoid. */
   #refuseUngrammatical(task) {
     const findings = [];
     checkInboxGrammar(
@@ -3719,6 +3728,75 @@ export class Queue {
     const errs = findings.filter((x) => x.severity === "error");
     return errs.length ? { ok: false, reason: "UNGRAMMATICAL", findings: errs.map((e) => ({ check: e.check, detail: e.message })) } : null;
   }
+
+  /** R41 (N325): C-19.1 at the WRITE, registered with promotion (its R39), as monitoring registers C-18.5 (its R27).
+   *  A task list is validated where it lands, not only by the audit: a malformed `data/inbox.json` never lands, so
+   *  nobody has to read it to find out it was junk. A replay is historical and not authorship, so it is exempt from
+   *  THIS check and nothing else, and the manifest marks it; a promotion carrying no `data/inbox.json` is not asked. */
+  inboxCheck(c) {
+    const files = Array.isArray(c && c.files) ? c.files : [];
+    const replay = !!(c && (c.replay || (c.pkg && c.pkg.replay)));
+    const inbox = replay ? null : files.find((f) => f && f.path === "data/inbox.json");
+    if (!inbox || typeof inbox.text !== "string") return null;
+    const found = [];
+    checkInboxGrammar({ files: new Map([["data/inbox.json", inbox.text]]) }, found);
+    const errs = found.filter((x) => x.severity === "error");
+    if (!errs.length) return null;
+    /* DEC-49 REGION is-inbox-refused — R41/C-19.2. */
+    return { ok: false, reason: "INBOX_REFUSED", code: "INBOX_REFUSED",
+             check: QUEUE_INBOX_CHECKS.INBOX_REFUSED.check, translation: QUEUE_INBOX_CHECKS.INBOX_REFUSED.translation,
+             findings: errs.map((x) => ({ check: x.check, detail: x.message })),
+             detail: `data/inbox.json does not meet the task grammar (C-19.1): ${errs.length} `
+                   + `error${errs.length === 1 ? "" : "s"}, each named in findings. Nothing was written.` };
+    /* END DEC-49 REGION is-inbox-refused */
+  }
+
+  /** R41 (N325): C-19.1 in the audit over one bundle image (record-core R59), as `checkBundle` ran it: each error is a
+   *  C-19.1 finding, a reference resolved against the whole store by the audit's own `resolveTarget`. */
+  audit(image) {
+    const files = image && image.files instanceof Map ? image.files : null;
+    if (!files) return [];
+    const findings = [];
+    checkInboxGrammar({ files, resolveTarget: typeof image.resolveTarget === "function" ? image.resolveTarget : undefined },
+      findings);
+    return findings;
+  }
+
+  /* ------------------------------------------------------------------ the store's counts and the id ledger (R42) */
+
+  /** R42 (N342; record-core R63): this module's four figures, each a row count with the rows naming a bundle in `hid`
+   *  (the caller's `{sql, args}`, or null) left out: `tasks` by `refers_to`, `findingDispositions` by `project_id`,
+   *  `queueState` by `case_id`; `queueItemMutes` names no bundle and is counted whole. A figure that cannot be read is
+   *  null, never zero. Synchronous; writes nothing; never throws. */
+  counts(hid = null) {
+    const h = hid && typeof hid === "object" && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
+    const c = (t, ...keys) => {
+      try {
+        const conds = h ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${h.sql}`) : [];
+        const args = h ? keys.flatMap(() => h.args) : [];
+        const n = Number(this.#one(`SELECT count(*) AS c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
+          ...args).c);
+        return Number.isFinite(n) ? n : null;
+      } catch { return null; }
+    };
+    return { tasks: c("tasks", "refers_to"), findingDispositions: c("finding_dispositions", "project_id"),
+             queueState: c("queue_state", "case_id"), queueItemMutes: c("queue_item_mutes") };
+  }
+  static COUNT_KEYS = Object.freeze(["tasks", "findingDispositions", "queueState", "queueItemMutes"]);
+
+  /** R42 (N342; record-core R40, review's `seedLedger` shape): the opaque minter's ledger learns every TASK id standing
+   *  in a live row, at start and again before this module's first mint, so an id a store minted before the ledger
+   *  existed is never drawn twice, even after a purge deletes the row it stood in. On a store whose ledger table (or
+   *  whose `tasks`) is not yet created it learns nothing and never throws: a throw at construction would take the
+   *  instance down, and the next call learns. */
+  seedLedger() {
+    if (this.#seeded) return;
+    try {
+      this.#record.seedMintLedger([["TASK", "tasks", "id"]]);
+      this.#seeded = true;
+    } catch { /* not yet: the next call learns */ }
+  }
+  #seeded = false;
 
   /** CONSUMER, and the SOLE writer of tasks.
    *
@@ -3766,6 +3844,7 @@ export class Queue {
          exhaustion the event is KEPT, as an unfiled capture's is, never dropped, and its `waiting` entry carries the
          one answer to that condition, record-core's `mintExhausted("TASK")` (its R62; R23, N322): its code, row and
          sentence, minted there and nowhere here. */
+      this.seedLedger();     // R42: the ledger has learned every live TASK id before the first mint draws one
       const taskId = this.#record.mintOpaqueId("TASK", year, `-${slug}`,
         (id) => !!this.#one(`SELECT 1 FROM tasks WHERE id=?`, id));
       if (!taskId) {
@@ -4103,8 +4182,9 @@ export class Queue {
 const OF = new WeakMap();
 
 /** K61: the one queue instance for this Durable Object's storage (`ctx`, or the storage itself). On first reaching it,
- *  its tables are declared to record-core's purge (R36) and, unless `deps.start` is false, its two scheduler consumers
- *  and capture's task notice are registered (R22, R23; capture R44). */
+ *  its tables are declared to record-core's purge (R36), its four figures registered with record-core's counts and its
+ *  TASK ledger seeded (R42), C-19.1 registered with promotion and with record-core's audit (R41), and, unless
+ *  `deps.start` is false, its two scheduler consumers and capture's task notice are registered (R22, R23; capture R44). */
 export function queueOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let q = OF.get(storage);
@@ -4118,6 +4198,14 @@ export function queueOf(ctx, deps = {}) {
       { name: "queue_item_mutes", keys: [] },
       { name: "finding_dispositions", keys: [] },
     ]);
+    /* R42 (N342): the four figures `op=stats` and purge's proof read (record-core R63), and the TASK ledger's seed. */
+    record.registerCounts("queue", [...Queue.COUNT_KEYS], (hid) => q.counts(hid));
+    q.seedLedger();
+    /* R41 (N325): C-19.1 at the write (promotion R39) and in the audit (record-core R59), one function at both. */
+    record.registerAuditCheck("queue", (image) => q.audit(image));
+    const promotion = (deps && deps.promotion)
+      || promotionOf(ctx, { record, ...(deps && deps.membership ? { membership: deps.membership } : {}) });
+    promotion.registerStep("queue", { check: (c) => q.inboxCheck(c) });
     if (!deps || deps.start !== false) {
       const scheduler = (deps && deps.scheduler) || schedulerOf(ctx, deps && deps.env);
       scheduler.register("queue", q.drainConsumer());

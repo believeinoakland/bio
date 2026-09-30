@@ -26,7 +26,7 @@
 
 import { isMachineIdentity, normalizeType } from "../../checks/bio-checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, noSuchProject } from "../membership/index.mjs";
+import { membershipOf, noSuchProject, notAnAdmin } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { entitiesOf, gradeRank, noSuchEntity } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
@@ -44,6 +44,11 @@ export { INTENT_CHECKS } from "./checks.mjs";
 export { INTENT_SCHEMA, INTENT_TABLES } from "./schema.mjs";
 export { ASPIRATION_SCOPES } from "./doc.mjs";
 
+/** R9 (N327, DEC-83): the group aspiration's fixed act, and its next step, for `membership.notAnAdmin` (its R84), which
+ *  answers `NOT_AN_ADMIN` in place of the retired `GROUP_ASPIRATION_NOT_ADMIN` (C-111.16, its number not reused). */
+export const GROUP_ASPIRATION_ACT = "declaring, revising or retiring an aspiration the whole group holds";
+export const GROUP_ASPIRATION_REMEDY = "Ask an active administrator: they declare, revise or retire an aspiration the "
+  + "whole group holds in their own name, and the act carries their name and date.";
 /** R16: the four acts on a proposal. */
 export const TRIAGE_ACTS = Object.freeze(["adopt", "question", "defer", "dismiss"]);
 /** R17 (Suggestions): the ageing interval's setting in record-core, and its default in days (C-10.1's staleness age). */
@@ -252,7 +257,8 @@ export class Intent {
     return this.#aspirationAuthority(heldFm.scope, heldFm.owner ?? null, author, c.pkg?.actorViewer ?? author);
   }
 
-  /* R9: a member's aspiration is that member's; a project's, a member joined in it; the group's, an administrator's. */
+  /* R9: a member's aspiration is that member's; a project's, a member joined in it; the group's, an active administrator's
+     (the founder included), anyone else answered through membership's `notAnAdmin` with the next step (N327). */
   #aspirationAuthority(scope, owner, author, viewer) {
     const who = this.#memberOf(author);
     if (!ASPIRATION_SCOPES.includes(scope) || (scope !== "group" && !str(owner)) || (scope === "group" && owner != null))
@@ -269,11 +275,9 @@ export class Intent {
       const denied = this.membership.projectAuthority(owner, author, "joined", "aspiration");
       if (denied) return denied;
     }
+    /* R9 through membership R84 (N327) */
     if (scope === "group" && !this.membership.isAdministrator(who))
-      /* DEC-49 REGION is-group-aspiration-admin */
-      return refusal("GROUP_ASPIRATION_NOT_ADMIN", "an aspiration the whole group holds is declared, revised and "
-                     + "retired by an active administrator. Nothing was written.");
-      /* END DEC-49 REGION is-group-aspiration-admin */
+      return notAnAdmin(str(author) || null, GROUP_ASPIRATION_ACT, { remedy: GROUP_ASPIRATION_REMEDY });
     return null;
   }
 

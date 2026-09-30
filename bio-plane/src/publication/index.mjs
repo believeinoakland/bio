@@ -82,6 +82,73 @@ export const WORK_PRODUCTS_MAX = 200;
 /** R45: State Rules §4.3's four stages, and the reasons an owner records a close with. */
 export const PROJECT_STAGES = Object.freeze(["forming", "investigating", "matured", "closed"]);
 export const CLOSED_REASONS = Object.freeze(["resolved", "superseded", "abandoned"]);
+/* R49: the three stages R45's rules 2–4 compute, in order. */
+const COMPUTED_STAGES = PROJECT_STAGES.slice(0, 3);
+/** R49: the longest unrecognised close reason `closed.recorded` repeats. */
+export const CLOSED_RECORDED_MAX = 40;
+/** R49: the conditions a computed stage not reached lists in `needs`, each an input R45 counts. */
+export const STAGE_NEEDS = Object.freeze({
+  investigating: Object.freeze(["held_question_with_leg"]),
+  matured: Object.freeze(["concluded_held_question", "ratified_case_edition"]),
+});
+/** R49: every `why` a stage states, fixed, filled with counts only (`{read}`, `{with_legs}`, `{concluded}`,
+ *  `{editions}`); never a member, a question's text or a place (R34). The undetermined answers' `detail` stands in for
+ *  a stage the read could not decide. */
+export const STAGE_SENTENCES = Object.freeze({
+  forming_reached: "every project starts forming; this stage needs nothing from the record",
+  investigating_reached: "{with_legs} of the {read} held questions read have at least one leg in their basis",
+  investigating_skipped: "reached because a later stage is reached; none of the {read} held questions read has a leg "
+                       + "in its basis",
+  investigating_none_held: "the project holds no question yet; a held question with a leg in its basis reaches this stage",
+  investigating_no_leg: "the project holds {read} questions and none has a leg in its basis; a leg on any one of them "
+                      + "reaches this stage",
+  matured_reached: "the project has concluded {concluded} of the {read} held questions read and owns {editions} "
+                 + "ratified case editions",
+  matured_not_reached: "the project has concluded none of the {read} held questions read and owns no ratified case "
+                     + "edition; concluding one of them, or a ratified case edition of a case it owns, reaches this stage",
+  closed_project: "the project is closed, so no further stage is needed; a reopening is the owner's act",
+  closed_reached: "the owner recorded the close with its reason; a reopening is the owner's act",
+  closed_not_recorded: "a close is the owner's recorded act with its reason (resolved, superseded or abandoned), not a "
+                     + "stage the record grows into",
+  closed_unrecognised: "the document records a close, but its reason is not resolved, superseded or abandoned, so the "
+                     + "close is not read",
+});
+const fillCounts = (sentence, n) => sentence.replace(/\{(read|with_legs|concluded|editions)\}/g, (_, k) => String(n[k]));
+/* R49: a stage's fixed sentence, by whether it is reached and what earned it. */
+function stageWhy(stage, reached, earned, n) {
+  const key = stage === "forming" ? "forming_reached"
+    : stage === "investigating"
+      ? (reached ? (earned ? "investigating_reached" : "investigating_skipped")
+                 : (n.read ? "investigating_no_leg" : "investigating_none_held"))
+    : reached ? "matured_reached" : "matured_not_reached";
+  return fillCounts(STAGE_SENTENCES[key], n);
+}
+/* R49: what a computed stage not reached needs, each condition with how much of it the record has now. */
+function stageNeeds(stage, n) {
+  const have = { held_question_with_leg: n.with_legs, concluded_held_question: n.concluded,
+                 ratified_case_edition: n.editions };
+  return { any_of: STAGE_NEEDS[stage].map((condition) => ({ condition, have: have[condition] })) };
+}
+/* R49: the earliest of some instants as held (ISO strings), or null when none is one. */
+function earliestInstant(list) {
+  let best = null;
+  for (const v of list) {
+    if (typeof v !== "string" || !Number.isFinite(Date.parse(v))) continue;
+    if (best === null || instantOrder(v, best) < 0) best = v;
+  }
+  return best;
+}
+/* R49 (K452): the instant the project's document recorded its close, as the store holds the document: the timestamp of
+   its newest `state_history` entry moving to `closed`; null when it carries none. */
+function closedSince(fm) {
+  const hist = Array.isArray(fm && fm.state_history) ? fm.state_history : [];
+  for (let i = hist.length - 1; i >= 0; i--) {
+    const e = hist[i];
+    if (e && typeof e === "object" && e.to_state === "closed")
+      return typeof e.timestamp === "string" && Number.isFinite(Date.parse(e.timestamp)) ? e.timestamp : null;
+  }
+  return null;
+}
 /** R46: State Rules §4.3's readiness ladder, lowest first. */
 export const READINESS_RUNGS = Object.freeze(["draft", "internally_checked", "externally_compliant", "distributed"]);
 /** R38: the pins one `ratifiedFindingsRestingOn` page reads, its default and its ceiling. */
@@ -1123,13 +1190,13 @@ export class Publication {
 
   /* ---------------------------------------------------------------- R44–R47: a project's stage */
 
-  /** R44–R47 (N300; K356, K362, K364, K379): a project's stage and its work products' readiness, derived afresh at every
-   *  read from the record and never stored (R47): the project's own document (rule 1's recorded close), the questions
-   *  it holds (basis-versions R41 `projectQuestions`, whose stance is R22's `conclusionOf` reading) and the cases it
-   *  owns and has published. Fenced by membership R44's sight: `NO_ID` for no project; absent, not a project and no
-   *  sight are one answer, membership's `noSuchProject` (R29); existence only is membership's C-70.1 through
-   *  `existenceAct`; only FULL sight is answered. Writes nothing; never throws (a part it cannot read is stated
-   *  undetermined, R28). */
+  /** R44–R47, R49 (N300, N346; K356, K362, K364, K379, K448, K452): a project's stage, what each stage has earned and
+   *  still needs (`stages`), and its work products' readiness, derived afresh at every read from the record and never
+   *  stored (R47): the project's own document (rule 1's recorded close), the questions it holds (basis-versions R41
+   *  `projectQuestions`, whose stance is R22's `conclusionOf` reading) and the cases it owns and has published. Fenced
+   *  by membership R44's sight: `NO_ID` for no project; absent, not a project and no sight are one answer, membership's
+   *  `noSuchProject` (R29); existence only is membership's C-70.1 through `existenceAct`; only FULL sight is answered.
+   *  Writes nothing; never throws (a part it cannot read is stated undetermined, R28). */
   projectStage({ project = null, viewer = null } = {}) {
     const pid = str(project);
     if (!pid) return { ok: false, reason: "NO_ID", detail: "projectStage names a project" };
@@ -1153,48 +1220,134 @@ export class Publication {
     /* Rule 1: the owner's recorded close, read from the project's own document and from nothing else. The document's
        `forming`, `investigating` or `matured` is never read (R45, R47). */
     const text = this.#fileText(pid, "bundle.md");
-    if (!text) return { ...out, stage: "undetermined",
-      detail: "the project's own document could not be read, so whether its owner closed it is undetermined" };
+    if (!text) {
+      const detail = "the project's own document could not be read, so whether its owner closed it is undetermined";
+      return { ...out, stage: "undetermined", detail, stages: this.#stages({ unread: detail }) };
+    }
     const fm = parseFrontmatter(text.content).data || {};
-    if (fm.current_state === "closed" && CLOSED_REASONS.includes(fm.closed_reason))
-      return { ...out, stage: "closed", closed_reason: fm.closed_reason,
-               basis: { rule: "closed", question: null, case: null, edition: null } };
-    /* Rules 2 and 3 over the held questions, in pages, stopping once rule 2 is met or at the cap. */
-    let after = null, concluded = null, legged = null, more = false;
+    const closeRecorded = fm.current_state === "closed";
+    const closed = closeRecorded && CLOSED_REASONS.includes(fm.closed_reason);
+    /* Rules 2 and 3, evaluated for a closed project too, so its answer states how far the work had come (R49). */
+    const read = this.#readHeld(pid, out.questions);
+    let computed;
+    if (read.concluded)
+      computed = { stage: "matured", basis: { rule: "matured", question: read.concluded, case: null, edition: null } };
+    else if (work.first_ratified)
+      /* Rule 2's second half is asked before any undetermined answer: a failed read or the cap leaves a project that
+         owns a ratified case edition matured (R45). */
+      computed = { stage: "matured", basis: { rule: "matured", question: null, ...work.first_ratified } };
+    else if (read.failed || read.more)
+      /* The cap reached, or the read failed, with rules 1–2 unmet: what was established, never filled in (R28). */
+      computed = { stage: "undetermined", at_least: read.legged ? "investigating" : "forming",
+                   detail: read.failed
+                     ? "the questions this project holds could not all be read, so its stage is undetermined"
+                     : `this project holds more than the ${STAGE_QUESTIONS_MAX} questions one read examines, none of `
+                       + "those read is concluded and it has published no case, so whether it has matured is "
+                       + "undetermined; it is at least as far as stated" };
+    else if (read.legged)
+      computed = { stage: "investigating", basis: { rule: "investigating", question: read.legged, case: null, edition: null } };
+    else computed = { stage: "forming", basis: { rule: "forming", question: null, case: null, edition: null } };
+    const questions = computed.stage === "undetermined" ? { ...out.questions, truncated: true } : out.questions;
+    const stages = this.#stages({ computed, read, work, questions, viewer, pid, fm, closeRecorded, closed });
+    if (closed)
+      return { ...out, questions, stage: "closed", closed_reason: fm.closed_reason,
+               basis: { rule: "closed", question: null, case: null, edition: null }, stages };
+    if (computed.stage === "undetermined")
+      return { ...out, questions, stage: "undetermined", at_least: computed.at_least, detail: computed.detail, stages };
+    return { ...out, questions, stage: computed.stage, basis: computed.basis, stages };
+  }
+
+  /* R45: the held questions read in pages of 500, at most 2,000, stopping once rule 2 is met. Counts into `questions`;
+     answers the first legged and first concluded question read, every one read with a leg (R49's `since`), whether
+     more follow the last page read, and whether a read failed (the counts then stand as read). */
+  #readHeld(pid, questions) {
+    const r = { concluded: null, legged: null, leggedIds: [], more: false, failed: false };
+    let after = null;
     try {
-      while (out.questions.read < STAGE_QUESTIONS_MAX) {
+      while (questions.read < STAGE_QUESTIONS_MAX) {
         const page = this.basisVersions.projectQuestions({ project: pid, after,
-          limit: Math.min(PROJECT_QUESTIONS_MAX, STAGE_QUESTIONS_MAX - out.questions.read) });
+          limit: Math.min(PROJECT_QUESTIONS_MAX, STAGE_QUESTIONS_MAX - questions.read) });
         const items = page && Array.isArray(page.items) ? page.items : [];
         for (const q of items) {
-          out.questions.read++;
-          if (q.legs) { out.questions.with_legs++; legged ??= q.inquiry; }
-          if (q.stance === "concluded") { out.questions.concluded++; concluded ??= q.inquiry; }
+          questions.read++;
+          if (q.legs) { questions.with_legs++; r.legged ??= q.inquiry; r.leggedIds.push(q.inquiry); }
+          if (q.stance === "concluded") { questions.concluded++; r.concluded ??= q.inquiry; }
         }
-        more = !!(page && page.cursor) && items.length > 0;
-        if (concluded || !more) break;
+        r.more = !!(page && page.cursor) && items.length > 0;
+        if (r.concluded || !r.more) break;
         after = page.cursor;
       }
-    } catch {
-      return { ...out, stage: "undetermined", at_least: legged ? "investigating" : "forming",
-               questions: { ...out.questions, truncated: true },
-               detail: "the questions this project holds could not all be read, so its stage is undetermined" };
+    } catch { r.failed = true; }
+    return r;
+  }
+
+  /* R49: the four stages, each `{stage, reached, earned, since, needs, why}`, from the one evaluation `projectStage`
+     made (`computed`, the rules-2–4 decision; rule 1's `closed`), never from a second reading of the record. `unread`
+     is the detail when the project's own document could not be read: every stage is then undetermined. */
+  #stages({ unread = null, computed = null, read = null, work = null, questions = null, viewer = null, pid = null,
+            fm = null, closeRecorded = false, closed = false }) {
+    if (unread !== null)
+      return PROJECT_STAGES.map((stage) => ({ stage, reached: null, earned: null, since: null, needs: null, why: unread }));
+    const n = { read: questions.read, with_legs: questions.with_legs, concluded: questions.concluded,
+                editions: work.published_editions };
+    const undetermined = computed.stage === "undetermined";
+    const top = COMPUTED_STAGES.indexOf(undetermined ? computed.at_least : computed.stage);
+    const earnedOf = {
+      forming: null,
+      investigating: read.legged ? { question: read.legged } : null,
+      matured: computed.stage === "matured"
+        ? (computed.basis.question ? { question: computed.basis.question }
+                                   : { case: computed.basis.case, edition: computed.basis.edition })
+        : null,
+    };
+    const sinceOf = {
+      forming: () => null,
+      investigating: () => this.#earliestLeg(read.leggedIds),
+      /* the instant of the evidence `earned` names, and only that (K469): its current conclusion, else its ratification */
+      matured: () => earnedOf.matured.question ? this.#conclusionInstant(pid, earnedOf.matured.question, viewer)
+                                               : earliestInstant([work.first_ratified_at]),
+    };
+    const computedStages = COMPUTED_STAGES.map((stage, i) => {
+      if (undetermined && i > top)
+        return { stage, reached: null, earned: null, since: null, needs: null, why: computed.detail };
+      const reached = i <= top;
+      const earned = reached ? earnedOf[stage] : null;
+      const since = earned ? sinceOf[stage]() : null;
+      if (reached) return { stage, reached, earned, since, needs: null, why: stageWhy(stage, true, earned, n) };
+      if (closed) return { stage, reached, earned: null, since: null, needs: null, why: STAGE_SENTENCES.closed_project };
+      return { stage, reached, earned: null, since: null, needs: stageNeeds(stage, n), why: stageWhy(stage, false, null, n) };
+    });
+    let closedStage;
+    if (closed)
+      closedStage = { stage: "closed", reached: true, earned: { closed_reason: fm.closed_reason },
+                      since: closedSince(fm), needs: null, why: STAGE_SENTENCES.closed_reached };
+    else if (undetermined)
+      closedStage = { stage: "closed", reached: null, earned: null, since: null, needs: null, why: computed.detail };
+    else
+      closedStage = { stage: "closed", reached: false, earned: null, since: null, needs: null,
+                      why: closeRecorded ? STAGE_SENTENCES.closed_unrecognised : STAGE_SENTENCES.closed_not_recorded };
+    if (closeRecorded && !closed)
+      closedStage.recorded = fm.closed_reason == null ? null : String(fm.closed_reason).slice(0, CLOSED_RECORDED_MAX);
+    return [...computedStages, closedStage];
+  }
+
+  /* R49: the earliest recorded instant among the legs of the held questions read with a leg (inquiry R16's `basisFor`,
+     each leg's `at`); null when none carries one or the legs cannot be read. */
+  #earliestLeg(ids) {
+    const at = [];
+    for (const id of ids) {
+      let b = null;
+      try { b = this.inquiry.basisFor(id); } catch { b = null; }
+      if (b && b.ok && Array.isArray(b.legs)) for (const l of b.legs) at.push(l && l.at);
     }
-    if (concluded)
-      return { ...out, stage: "matured", basis: { rule: "matured", question: concluded, case: null, edition: null } };
-    if (work.first_ratified)
-      return { ...out, stage: "matured", basis: { rule: "matured", question: null, ...work.first_ratified } };
-    if (more) {
-      /* The cap reached with rules 1–2 unmet: what was established, never filled in (R28). */
-      return { ...out, stage: "undetermined", at_least: legged ? "investigating" : "forming",
-               questions: { ...out.questions, truncated: true },
-               detail: `this project holds more than the ${STAGE_QUESTIONS_MAX} questions one read examines, none of `
-                     + "those read is concluded and it has published no case, so whether it has matured is "
-                     + "undetermined; it is at least as far as stated" };
-    }
-    if (legged)
-      return { ...out, stage: "investigating", basis: { rule: "investigating", question: legged, case: null, edition: null } };
-    return { ...out, stage: "forming", basis: { rule: "forming", question: null, case: null, edition: null } };
+    return earliestInstant(at);
+  }
+
+  /* R49: the instant of the project's current conclusion of one held question (basis-versions R22 `conclusionOf`). */
+  #conclusionInstant(pid, id, viewer) {
+    let c = null;
+    try { c = this.basisVersions.conclusionOf(pid, id, viewer); } catch { c = null; }
+    return c ? earliestInstant([c.at]) : null;
   }
 
   /* R46: the project's work products. A work product is a case the project owns: its `cases` row (written at the first
@@ -1241,9 +1394,13 @@ export class Publication {
                                JOIN cases k ON k.case_id=c.case_id
                               WHERE k.project_id=? AND c.ratified_at IS NOT NULL
                               GROUP BY c.case_id ORDER BY c.case_id LIMIT 1`, pid);
+    /* R49: when that edition was ratified, the instant `matured.since` states when it earns the stage */
+    const firstAt = first ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`,
+                                      first.case_id, first.edition) : null;
     return { items, truncated, published_editions: Number(all.n) || 0,
              readiness: !items.length ? "absent" : top < 0 ? "none" : READINESS_RUNGS[top],
-             first_ratified: first ? { case: first.case_id, edition: Number(first.edition) } : null };
+             first_ratified: first ? { case: first.case_id, edition: Number(first.edition) } : null,
+             first_ratified_at: firstAt ? firstAt.ratified_at ?? null : null };
   }
 
   /* ---------------------------------------------------------------- moved from the store */

@@ -10,7 +10,9 @@
  *                 adopted revision in the promotion's own transaction (R10). The state edge is promotion's (its R15).
  *   the bias debt: work products later modules register (R33), swept against the lens now in force, settled by one
  *                 of three recorded acts (R35, R37, R38), read (R36), and disclosed, never blocking (R28).
- *   counts, uncleared  what `queue` reads: the rows held (R42) and the open debts with their recipients (R43).
+ *   counts, uncleared, settled  what `queue` reads: the rows held (R42), the open debts with their recipients (R43)
+ *                 and the debts settled since an instant, with what settled each (R44).
+ *   migrate       this module's tables and columns, at every boot (R45).
  *
  * REACHED as `biasOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call with `deps`
  * and returned to every later caller. `deps`:
@@ -28,7 +30,8 @@
 import { normalizeType, parseFrontmatter, MACHINE_AUTHOR_PREFIX, isMachineStamp,
          createSha256 } from "../../checks/bio-checks.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER,
+         notAnAdmin } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING, checkBiasSet,
@@ -36,7 +39,13 @@ import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHR
 
 export { BIAS_CHECKS, BIAS_STATEMENT_KINDS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING,
          checkBiasSet, checkBiasImage, withBiasChecks } from "./checks.mjs";
-export { BIAS_SCHEMA, BIAS_TABLES } from "./schema.mjs";
+export { BIAS_SCHEMA, BIAS_TABLES, BIAS_ADDITIVE_COLUMNS } from "./schema.mjs";
+import { BIAS_SCHEMA, BIAS_ADDITIVE_COLUMNS } from "./schema.mjs";
+
+/* R11 (N327, DEC-83): the instance-scope adoption's fixed act, and its next step, for `membership.notAnAdmin`. */
+export const INSTANCE_ADOPTION_ACT = "adopting a bias set for the whole instance";
+export const INSTANCE_ADOPTION_REMEDY = "A project's owners set the lens over that project's work: adopt this set for "
+  + "a project you own, or ask an administrator to adopt it for the whole instance.";
 
 /* The manifest's bound (R18). 200 is the common read, "what lens is in force", which a group's whole declared bias
    fits inside many times over; 2,000 is for a regrade, two lenses re-run against each other, where a lens silently
@@ -60,6 +69,9 @@ export const BIAS_DEBT_SETTLEMENTS_MAX = 50;
 /* R43's bound: 200 by default, the queue's page; at most 1,000. */
 export const BIAS_DEBT_UNCLEARED_DEFAULT = 200;
 export const BIAS_DEBT_UNCLEARED_MAX = 1000;
+/* R44's bound, R43's: 200 by default, at most 1,000. */
+export const BIAS_DEBT_SETTLED_DEFAULT = 200;
+export const BIAS_DEBT_SETTLED_MAX = 1000;
 /* The operator-internal viewer the sweep reads a lens as (R33): the lens in force is a fact about the SCOPE. */
 export const BIAS_DEBT_VIEWER = "admin";
 
@@ -148,6 +160,28 @@ class Bias {
     if (gate.scope === "DENY") return { sql: `${GATE_MARK} 0=1`, args: [] };
     return { sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
              args: gate.args };
+  }
+
+  /* ---------------------------------------------------------------- R45: this module's tables, at every boot */
+
+  /** R45 (N343; membership's R57–R59 pattern): the host calls it in its boot, after the schema pass. The columns an
+   *  older store lacks are added first (`BIAS_ADDITIVE_COLUMNS`, where the table exists), then every table and index
+   *  of this module's own schema text is created where absent. A column added here is never filled for a row already
+   *  held: a debt settled before `settled_kind` was kept reads its kind as undetermined (R36). Idempotent: a second
+   *  call changes nothing. Answers the columns it added, `[table, column]`. */
+  migrate() {
+    const cols = (t) => this.#rows(`PRAGMA table_info(${t})`).map((r) => r.name);
+    const added = [];
+    for (const [table, column, decl] of BIAS_ADDITIVE_COLUMNS) {
+      const have = cols(table);
+      if (have.length && !have.includes(column)) {
+        this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+        added.push([table, column]);
+      }
+    }
+    const bare = BIAS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
+    return { ok: true, added };
   }
 
   /* ---------------------------------------------------------------- R8–R10: this module's share of a promotion */
@@ -282,10 +316,9 @@ class Bias {
       /* K102 (R11): the instance's lens is its administrators' act. An internal caller, who stamps neither, is not
          asked, as at every positional act. */
       const member = this.#membership.positionalMember(viewer, identity);
+      /* N327 (DEC-83): membership's one answer to this condition (its R84, C-96.1), with this act's next step. */
       if (!member || !this.#membership.isAdministrator(member))
-        return this.#refuse("BIAS_ADOPTION_NOT_AN_ADMINISTRATOR",
-          "an adoption over the whole instance is an administrator's act, and the member asking is not one. "
-          + "Nothing was adopted.", { scope: "instance" });
+        return notAnAdmin(member, INSTANCE_ADOPTION_ACT, { remedy: INSTANCE_ADOPTION_REMEDY, scope: "instance" });
     }
 
     /* DEC-54 (d)'s pin, read from the DOCUMENT rather than the request, so a caller cannot claim a provenance the
@@ -901,7 +934,7 @@ class Bias {
     };
   }
 
-  /* ---------------------------------------------------------------- R42, R43: the counts and the open debts (N171) */
+  /* ---------------------------------------------------------------- R42–R44: the counts, the open debts and the settled ones (N171, N326) */
 
   /** R42: the bias statements and the adoptions held. `hid` (`{sql, args}`, the bundles the caller may not see, as
    *  run-productions' `counts`) leaves out a row naming such a bundle: a statement by its bundle, an adoption by its
@@ -946,6 +979,53 @@ class Bias {
     }
   }
 
+  /** R44 (N326): the debts settled at or after `since` whose context `gate` admits (as R43), newest settled first,
+   *  ties by run, at most `limit` (1–1,000, default 200), `truncated` measured by reading one more. Each carries the
+   *  kind the debt records (null for one settled before the kind was kept), when, and the settling settlement's
+   *  `actor` (only a member's resolve has one) and `reason` (only a resolve's). The settling settlement is the run's
+   *  last, and it is read only when its kind is the one the debt records (R37: `#settle` writes both from one act).
+   *  `since` is an instant (ms since the epoch, or a readable instant string), compared as an instant: settlements are
+   *  stamped to the whole second, so it is read as the first whole second at or after it. Writes nothing; never
+   *  throws (a read that fails answers none, and says so). */
+  settled({ gate = null, since = null, limit = null } = {}) {
+    const n = Math.floor(Number(limit));
+    const cap = Number.isFinite(n) && n >= 1 ? Math.min(n, BIAS_DEBT_SETTLED_MAX) : BIAS_DEBT_SETTLED_DEFAULT;
+    const from = Bias.#wholeSecondFrom(since);
+    if (from === null)
+      return { debts: [], limit: cap, truncated: false, since: null,
+               stated: "since is not an instant, so no settled bias debt is listed" };
+    try {
+      const seen = Bias.#gateOver("bd.context_id", gate);
+      const rows = this.#rows(
+        `SELECT bd.run, bd.context_type, bd.context_id, bd.settled_kind, bd.cleared_at,
+                s.kind AS by_kind, s.actor, s.reason
+           FROM bias_debts bd
+           LEFT JOIN bias_debt_settlements s
+             ON s.seq = (SELECT max(x.seq) FROM bias_debt_settlements x WHERE x.run = bd.run)
+          WHERE bd.cleared_at IS NOT NULL AND bd.cleared_at >= ? AND (${seen.sql})
+          ORDER BY bd.cleared_at DESC, bd.run LIMIT ?`, from, ...seen.args, cap + 1);
+      const debts = rows.slice(0, cap).map((r) => {
+        const kind = r.settled_kind ?? null;
+        const resolved = kind === "resolved" && r.by_kind === kind;
+        return { run: r.run, context_type: r.context_type, context_id: r.context_id, settled_kind: kind,
+                 settled_at: r.cleared_at, actor: resolved ? r.actor ?? null : null,
+                 reason: resolved ? r.reason ?? null : null };
+      });
+      return { debts, limit: cap, truncated: rows.length > cap, since: from };
+    } catch {
+      return { debts: [], limit: cap, truncated: false, since: from, undetermined: true,
+               stated: "the settled bias debts could not be read, so none is listed" };
+    }
+  }
+
+  /* An instant (ms since the epoch, or a non-empty string `Date.parse` reads, record-core R48's "readable instant")
+     as the first whole second at or after it, in the record's `…:SSZ` spelling; else null. */
+  static #wholeSecondFrom(v) {
+    const ms = typeof v === "number" ? v : typeof v === "string" && v.trim() ? Date.parse(v) : NaN;
+    if (!Number.isFinite(ms)) return null;
+    try { return stampInstant("second", Math.ceil(ms / 1000) * 1000); } catch { return null; }
+  }
+
   /** R38 — told of a work product's close. When it re-made another (`rerunOf`), the debt of the one re-made is
    *  discharged only when the lens the new one ran under equals the lens now in force; two absences are not
    *  agreement. Answers null when there is no link to follow, else the outcome, which the caller carries. */
@@ -975,7 +1055,10 @@ class Bias {
                lens_ran_under: formed, lens_in_force: inForce,
                stated: "this work was made under a lens other than the one now in force, so it discharges "
                      + "nothing (BOB #32: a re-run under any other lens discharges nothing)" };
-    const when = at ? String(at) : stampInstant("second");
+    /* Stamped to the whole second, as every other settlement, so R44 compares them as instants; an `at` that is no
+       readable instant is the act's own time. */
+    const t = typeof at === "number" ? at : typeof at === "string" && at.trim() ? Date.parse(at) : NaN;
+    const when = Number.isFinite(t) ? stampInstant("second", Math.floor(t / 1000) * 1000) : stampInstant("second");
     const settled = this.#settle({ run: target, kind: "rerun", at: when, byRun: String(key),
                                    lensThen: debt.lens_then, lensNow: formed });
     return { re_ran: target, discharged: true, lens_ran_under: formed, lens_in_force: inForce, settled };

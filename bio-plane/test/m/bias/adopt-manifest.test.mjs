@@ -3,7 +3,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, FM, S, T0 } from "./world.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
-import { BIAS_MANIFEST_LIMIT_MAX, BIAS_MANIFEST_LIMIT_DEFAULT } from "../../../src/bias/index.mjs";
+import { BIAS_MANIFEST_LIMIT_MAX, BIAS_MANIFEST_LIMIT_DEFAULT, INSTANCE_ADOPTION_ACT,
+         INSTANCE_ADOPTION_REMEDY } from "../../../src/bias/index.mjs";
+import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 const A = "BIAS-2026-0001-a", B = "BIAS-2026-0002-b", P = "PROJ-2026-0001-p";
 const ADMIN = { author: "admin", identity: "member:admin", viewer: "admin" };
@@ -19,7 +21,7 @@ async function adoptWorld(state = "adopted", fm = {}) {
   return w;
 }
 
-test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), a project's existence refusal then owner authority, an instance scope's administrator authority (C-26.20)", async () => {
+test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), a project's existence refusal then owner authority, an instance scope's administrator authority (NOT_AN_ADMIN through membership R84, with its remedy)", async () => {
   const w = await adoptWorld("proposed");
   w.set(B, [S("t1")], "draft");
   const code = (a) => { const r = w.bias.biasAdopt(a); return r.ok ? "ok" : r.reason; };
@@ -29,14 +31,18 @@ test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), 
   assert.equal(code({ bundleId: A, author: "  " }), "BIAS_ADOPTION_NOT_AUTHORED");
   assert.equal(code({ bundleId: A, author: "token:admin", identity: "member:admin" }), "BIAS_ADOPTION_NOT_AUTHORED");
   assert.equal(code({ bundleId: null, author: "token:ai" }), "BIAS_ADOPTION_NOT_AUTHORED");
+  assert.equal(code({ bundleId: A, author: "token:ai", identity: "member:mo", viewer: "member:mo" }), "BIAS_ADOPTION_NOT_AUTHORED",
+    "not authored is asked before administrator authority");
   const r9 = w.bias.biasAdopt({ bundleId: A });
   assert.deepEqual([r9.check, typeof r9.translation], ["C-26.9", "string"]);
-  /* C-26.10: no bundle id; not a bias set; neither proposed nor adopted; a project scope with no project id */
+  /* C-26.10: no bundle id; not a bias set; neither proposed nor adopted; a project scope with no project id — each
+     asked before administrator authority, so a non-administrator meets it too */
   assert.equal(code({ ...ADMIN }), "BIAS_ADOPTION_NOT_PROPOSED");
   assert.equal(code({ ...ADMIN, bundleId: "BIAS-2026-0404-none" }), "BIAS_ADOPTION_NOT_PROPOSED");
   assert.equal(code({ ...ADMIN, bundleId: P }), "BIAS_ADOPTION_NOT_PROPOSED");
   assert.equal(code({ ...ADMIN, bundleId: B }), "BIAS_ADOPTION_NOT_PROPOSED");
   assert.equal(code({ ...ADMIN, bundleId: A, scope: "project", scopeId: " " }), "BIAS_ADOPTION_NOT_PROPOSED");
+  assert.equal(code({ bundleId: B, author: "mo", identity: "member:mo", viewer: "member:mo" }), "BIAS_ADOPTION_NOT_PROPOSED");
   assert.equal(w.bias.biasAdopt({ ...ADMIN }).check, "C-26.10");
   /* a project scope: the existence refusal (C-70.1), then owner authority */
   w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "owner" });
@@ -46,16 +52,30 @@ test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), 
     "PROJECT_ACT_NOT_THE_OWNER");
   assert.equal(code({ bundleId: A, scope: "project", scopeId: P, ...ADMIN }), "PROJECT_ACT_NOT_THE_OWNER",
     "an administrator directs no project");
-  /* an instance scope: administrator authority, not an ordinary member or a project owner */
-  const r20 = w.bias.biasAdopt({ bundleId: A, author: "mo", identity: "member:mo", viewer: "member:mo" });
-  assert.deepEqual([r20.reason, r20.check, typeof r20.translation], ["BIAS_ADOPTION_NOT_AN_ADMINISTRATOR", "C-26.20", "string"]);
-  assert.equal(code({ bundleId: A, author: "owner", identity: "member:owner", viewer: "member:owner" }), "BIAS_ADOPTION_NOT_AN_ADMINISTRATOR");
-  assert.equal(code({ bundleId: A, author: "x", identity: "class:member", viewer: "class:member" }), "BIAS_ADOPTION_NOT_AN_ADMINISTRATOR");
+  /* an instance scope: administrator authority, not an ordinary member or a project owner — membership's one answer
+     (R84, C-96.1): this act's fixed phrase in its detail, the remedy, and the message the standard sentence then it */
+  const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
+  for (const [who, by] of [["mo", "mo"], ["owner", "owner"], ["x", null]]) {
+    const ask = by ? { author: who, identity: `member:${by}`, viewer: `member:${by}` } : { author: who, identity: "class:member", viewer: "class:member" };
+    const r = w.bias.biasAdopt({ bundleId: A, ...ask });
+    assert.deepEqual(r, notAnAdmin(by, INSTANCE_ADOPTION_ACT, { remedy: INSTANCE_ADOPTION_REMEDY, scope: "instance" }), who);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.by, r.scope], [false, "NOT_AN_ADMIN", "NOT_AN_ADMIN", "C-96.1", row.translation, by, "instance"]);
+    assert.ok(r.detail.startsWith(`${INSTANCE_ADOPTION_ACT} is an administrator's act`), r.detail);
+    assert.equal(r.remedy, INSTANCE_ADOPTION_REMEDY);
+    assert.equal(r.message, `${row.translation} ${INSTANCE_ADOPTION_REMEDY}`);
+  }
+  assert.match(INSTANCE_ADOPTION_REMEDY, /project you own/);
+  assert.match(INSTANCE_ADOPTION_REMEDY, /ask an administrator/);
+  assert.equal(w.ops(`bundleId=${A}&author=mo&identity=member:mo&viewer=member:mo`).biasadopt instanceof Function, true);
+  assert.equal((await w.ops(`bundleId=${A}&author=mo&identity=member:mo&viewer=member:mo`).biasadopt()).code, "NOT_AN_ADMIN");
   assert.equal(w.dump(), before, "every refusal writes nothing");
-  /* who may: the owner for the project, an administrator (the founder or an active admin member) for the instance */
+  /* who may: the owner for the project, an administrator (the founder or an active admin member) for the instance,
+     and the adoption stays signed by its author (R12) */
   assert.equal(code({ bundleId: A, scope: "project", scopeId: P, author: "owner", identity: "member:owner", viewer: "member:owner" }), "ok");
   assert.equal(code({ bundleId: A, ...ADMIN }), "ok");
-  assert.equal(code({ bundleId: A, author: "second", identity: "member:second", viewer: "member:second" }), "ok");
+  const signed = w.bias.biasAdopt({ bundleId: A, author: "second", identity: "member:second", viewer: "member:second" });
+  assert.deepEqual([signed.ok, signed.author, w.row(`SELECT author FROM bias_adoptions WHERE scope_type = ?`, "instance").author],
+    [true, "second", "second"]);
 });
 
 test("R12: one adoption per (scope, project, bundle), replaced on re-adoption, pinning the head and the source fields; the answer's pin, in_force, pins_proposed and note", async () => {

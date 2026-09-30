@@ -3,8 +3,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, NOW, iso } from "./world.mjs";
-import { queueOps, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS } from "../../../src/queue/index.mjs";
+import { createHash } from "node:crypto";
+import { queueOps, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar } from "../../../src/queue/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
 
 const DOC = "INFO-2026-0001-doc", PRJ = "PROJ-2026-0001-team", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
 
@@ -57,6 +59,20 @@ test("R23: drain takes queued events in order; unfiled waits, a live task folds,
   assert.equal(w3.queue.length, 0); assert.equal(w3.all(`SELECT count(*) c FROM tasks`)[0].c, 0);
   // limit 1–500, default 50
   for (const [asked, got] of [[0, 1], [9999, 500], [null, 50]]) assert.equal(inbox().q.taskDrain({ limit: asked }).limit, got);
+});
+
+test("R23 (N329): with no project manager the task goes to the earliest active administrator, the first of activeAdmins after the founder (membership R86)", () => {
+  const w = inbox([ev("a3")]);
+  w.bundle(DOC2);
+  // created in the reverse of member-id order: the earliest row leads, whatever its id
+  w.member("zed", { role: "admin", created: iso(NOW - 3000) });
+  w.member("ada", { role: "admin", created: iso(NOW - 1000) });
+  w.member("bea", { role: "admin", created: iso(NOW - 3000) });     // a tie on created is broken by id: bea before zed
+  w.member("old", { role: "admin", status: "revoked", created: iso(NOW - 9000) });
+  w.run(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin', 's', 'h', 1, ?)`, iso(NOW));   // claimed: the founder leads
+  assert.deepEqual(w.membership.activeAdmins(), ["admin", "bea", "zed", "ada"]);
+  const r = w.q.taskDrain({ actor: "alarm" });
+  assert.deepEqual(r.created.map((c) => [c.assignee, c.assignee_role]), [["bea", "group-admin"]]);
 });
 
 test("R23 (N322): an exhausted task id space keeps the event, its waiting entry carrying record-core R62's code, check and detail", () => {
@@ -166,13 +182,16 @@ test("R25: taskForward's refusals in order, then forwarded with its history; tas
   assert.equal(w.q.taskForward({ items: [], actor: "bob" }).reason, "SET_NO_ITEMS");
 });
 
-test("R35: the moved checks carry their ids and words: C-31.1–.3, C-32.10, C-32.11, C-33.27, C-33.44, C-76.1 (C-19.1 is the catalogue's, Q1)", async () => {
+test("R35: the moved checks carry their ids and words: C-19.1 (the task grammar) and its C-19.2, C-31.1–.3, C-32.10, C-32.11, C-33.27, C-33.44, C-76.1", async () => {
   const { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS } = await import("../../../src/queue/index.mjs");
-  const rows = { ...QUEUE_MINT_CHECKS, ...QUEUE_MACHINE_CHECKS, ...QUEUE_ACT_CHECKS, ...TASK_ACTOR_CHECKS };
+  const rows = { ...QUEUE_MINT_CHECKS, ...QUEUE_MACHINE_CHECKS, ...QUEUE_ACT_CHECKS, ...TASK_ACTOR_CHECKS, ...QUEUE_INBOX_CHECKS };
   assert.deepEqual(Object.fromEntries(Object.entries(rows).map(([k, r]) => [k, r.check])), {
     NO_CLASS: "C-31.1", NO_SUCH_KIND: "C-31.2", KIND_MISCLASSED: "C-31.3", MACHINE_CANNOT_FORWARD: "C-32.10",
     MACHINE_CANNOT_RESOLVE: "C-32.11", KIND_NOT_PERSONAL: "C-33.27", CLASS_NOT_DISPOSED: "C-33.44", NO_PROJECT_SCOPE: "C-33.50",
-    NOT_YOURS: "C-76.1" });
+    NOT_YOURS: "C-76.1", INBOX_REFUSED: "C-19.2" });
+  // C-19.1 is this module's own function now (N325): its findings carry C-19.1
+  const f = []; checkInboxGrammar({ files: new Map([["data/inbox.json", "[]"]]) }, f);
+  assert.deepEqual(f, [{ check: "C-19.1", severity: "error", message: "data/inbox.json must be a JSON object" }]);
   for (const r of Object.values(rows)) { assert.ok(r.translation.length > 20); assert.match(r.where, /^src\/queue\/index\.mjs /); }
   const catalogue = await import("../../../checks/bio-checks.mjs");
   for (const fam of ["QUEUE_MINT_CHECKS", "TASK_ACTOR_CHECKS"]) assert.equal(catalogue[fam], undefined, `${fam} has left the catalogue`);
@@ -206,4 +225,87 @@ test("R37: member and viewer (and identity) come only from the control plane's s
   assert.deepEqual([m.member, m.viewer, s.member, s.viewer, d.viewer, d.identity, f.member, f.viewer],
     ["alice", "member:alice", "alice", "member:alice", "member:alice", "member:alice", "alice", "member:alice"]);
   assert.deepEqual(Object.keys(ops).sort(), ["proposedispose", "queue", "queuemute", "queuesnooze", "taskdrain", "taskforward", "taskresolve", "tasks"]);
+});
+
+/* ---- R41 (N325): the task grammar, one function at the write, in the audit and at the drain ---- */
+
+const sha = (t) => createHash("sha256").update(t).digest("hex");
+const at0 = iso(NOW);
+const TASK = { id: "TASK-2026-0001-subject", kind: "authority-undetermined", refers_to: DOC2, subject: { text: "who holds this?" },
+               assignee: "unassigned", assignee_role: "group-admin", status: "open", created: at0,
+               history: [{ at: at0, event: "created", actor: "alarm" }] };
+const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema: information@2", `title: "T ${id}"`,
+  "current_state: collected", "prior_state: null", `created: ${at0}`, `last_updated: ${at0}`, "produced_by:", "  mode: assisted",
+  "  capability_tier: session", "group: test-group", "references: []", "state_history: []", "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting",
+  "source_status: unchanged", "source:", "  locator: https://records.example.org/x", "  authority: Town Clerk",
+  `  retrieved: ${at0}`, "---", "", "## Summary", "", "x", "", "## Provenance Notes", "", "## Session Log", "", "### Session 1", "",
+  "Captured.", "", "## Review Notes", ""].join("\n");
+const file = (path, text) => ({ path, text, bytes: Buffer.byteLength(text), sha256: sha(text) });
+function promoting() {
+  const w = inbox();
+  const p = promotionOf(w.host);                 // the one promotion instance queue registered its check with
+  w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "member:admin");
+  p.registerFact("producingGroup", "legacy-store", () => "test-group");
+  let n = 0;
+  w.promote = (id, inboxText, { replay = false } = {}) => p.promote({ bundleId: id, base: null, replay,
+    snapKey: `20260920T000000Z_q${String(++n).padStart(4, "0")}`, author: "member:alice",
+    meta: { object_type: "information", group: "test-group", title: `T ${id}`, current_state: "collected", created: at0, last_updated: at0 },
+    files: [file("bundle.md", infoMd(id)), ...(inboxText === null ? [] : [file("data/inbox.json", inboxText)])] });
+  return w;
+}
+const grammar = (text) => { const f = []; checkInboxGrammar({ files: new Map([["data/inbox.json", text]]) }, f); return f; };
+
+test("R41: a non-replay promotion carrying a malformed data/inbox.json is refused INBOX_REFUSED with its C-19.1 findings; nothing is written", () => {
+  const w = promoting();
+  const bad = JSON.stringify({ tasks: [{ ...TASK, status: "done", history: [] }] });
+  const r = w.promote("INFO-2026-0700-bad", bad);
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
+    [false, "INBOX_REFUSED", "INBOX_REFUSED", "C-19.2", QUEUE_INBOX_CHECKS.INBOX_REFUSED.translation]);
+  assert.deepEqual(r.findings, grammar(bad).map((x) => ({ check: x.check, detail: x.message })), "the grammar's own findings, each C-19.1");
+  assert.deepEqual(r.findings.map((x) => x.check), ["C-19.1", "C-19.1"]);
+  assert.equal(w.record.head("INFO-2026-0700-bad"), null, "nothing was written");
+  // the negative control's other arm: the same promotion with a well-formed list lands
+  assert.equal(w.promote("INFO-2026-0700-bad", JSON.stringify({ tasks: [TASK] })).ok, true);
+  assert.deepEqual(grammar(JSON.stringify({ tasks: [TASK] })), []);
+});
+
+test("R41: a replay is admitted whatever its inbox; a bundle without data/inbox.json is not asked", () => {
+  const w = promoting();
+  const bad = JSON.stringify({ tasks: [{ ...TASK, id: "TASK-bad" }] });
+  const rr = w.promote("INFO-2026-0710-replay", bad, { replay: true });
+  assert.equal(rr.ok, true, JSON.stringify(rr).slice(0, 300));
+  assert.equal(w.promote("INFO-2026-0711-none", null).ok, true);
+  // the check itself: no file, or a replay, is not asked; an unparsable file is C-14.3's to report
+  assert.equal(w.q.inboxCheck({ files: [file("bundle.md", "x")] }), null);
+  assert.equal(w.q.inboxCheck({ replay: true, files: [file("data/inbox.json", bad)] }), null);
+  assert.equal(w.q.inboxCheck({ files: [file("data/inbox.json", "{not json")] }), null);
+});
+
+test("R41: the audit reports each C-19.1 error once, through record-core's registration, resolving references against the store", async () => {
+  const w = promoting();
+  w.bundle(DOC2);
+  const bad = JSON.stringify({ tasks: [{ ...TASK, refers_to: "INFO-2026-9999-gone", kind: "other" }] });
+  assert.equal(w.promote("INFO-2026-0720-audit", bad, { replay: true }).ok, true);
+  const good = JSON.stringify({ tasks: [TASK] });
+  assert.equal(w.promote("INFO-2026-0721-clean", good, { replay: true }).ok, true);
+  const a = await w.record.auditPass({ limit: 50 });
+  const off = a.offenders.find((o) => o.bundleId === "INFO-2026-0720-audit");
+  assert.deepEqual(off.errors.filter((e) => e.check === "C-19.1").map((e) => e.detail), [
+    "inbox.json tasks[0].kind 'other' must be one of: authority-undetermined",
+    "inbox.json tasks[0].refers_to 'INFO-2026-9999-gone' does not resolve in the store"]);
+  assert.equal(a.tally["C-19.1"], 2, "each error once: no second count");
+  assert.ok(!a.offenders.some((o) => o.bundleId === "INFO-2026-0721-clean" && o.errors.some((e) => e.check === "C-19.1")));
+  // the audit check at its interface: an image without files is not asked
+  assert.deepEqual(w.q.audit({}), []);
+});
+
+test("R41: the drain runs the same function over each candidate task: its refused findings are the grammar's", () => {
+  const long = "x".repeat(300);
+  const w = inbox([ev("a3", long)]); w.bundle(DOC2);
+  const r = w.q.taskDrain({ now: at0 });
+  const task = { id: "TASK-2026-0000-x", kind: "authority-undetermined", refers_to: DOC2, subject: { text: long },
+                 locators: ["https://x.example/d"], assignee: "unassigned", assignee_role: "group-admin", status: "open",
+                 created: at0, history: [{ at: at0, event: "created", actor: "consumer" }] };
+  assert.deepEqual(r.refused[0].findings, grammar(JSON.stringify({ tasks: [task] })).map((x) => ({ check: x.check, detail: x.message })));
 });

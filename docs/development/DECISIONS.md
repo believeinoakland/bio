@@ -1378,6 +1378,16 @@ answer: **All as recommended (Bob, 2026-09-29), with two revised in discussion.*
 decided: 2026-09-29 · Bob
 owed: N345's requirement changes drafted from the design and these answers, brought to Bob for approval; the design's §15 marked ruled.
 
+### DEC-85 · answered
+raised: 2026-09-29 · BOB #66 (N345's approval page, https://claude.ai/artifact/Akg15anRTeDGacDeec2VSQ; the design's §4 against §10)
+for: bob
+question: A conflict whose other side is in a project the member cannot see: how is it surfaced, resolved and published without breaking sight?
+why it is Bob's: doctrine (sight) and UX.
+answer: (Bob, 2026-09-29, replacing BOB's recommendation.) The members of each conflicting project are notified that there is a conflict, and where it is in THEIR project, without being shown the other project. Each notice carries a checkbox by which that project tells the other project(s) it would like to resolve the conflict. When the conflicting projects have both indicated that interest, their members can communicate to resolve it. If the conflict remains at publication, the ceremony says so and tells the publishing member that the conflict will be highlighted in the publication. N345's requirement changes are APPROVED with this.
+BOB's reading (P17, said to Bob): the notice names only the member's own side; the other project, its members and its side stay unseen until both projects opt in, and opting in reveals the two projects to each other's members only; the communication is as Bob clarified the same day: each project's members respond to the conflict notifications they receive, and parts of a response are included in the next notification the other project(s) receive; a response may include, at the responder's choice, their cover (Membership v2 §3) or even their email address; none of it is required, and nothing the responder did not choose is shared; there is no discussion thread and no general messaging; the publication's highlight states that the finding rests on a side in conflict with a record not shown, never naming the hidden project or its content.
+decided: 2026-09-29 · Bob
+owed: N345's draft amended (contradiction, queue, case-authoring, publication, affordances); the requirement files folded when a tranche carries N345.
+
 ### DEC-86 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 6)
 for: bob

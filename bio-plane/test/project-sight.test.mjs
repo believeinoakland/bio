@@ -92,7 +92,10 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 const must = (l, r) => { if (!r || r.ok === false) throw new Error(`${l}: ${JSON.stringify(r).slice(0, 700)}`); return r; };
 /* Every answer that is a statement about the caller's POSITION in a project. Said to a caller who
    cannot see the project, each one is the oracle this item closes. */
-const POSITIONAL = ["PROJECT_ACT_NOT_A_PARTICIPANT", "PROJECT_ACT_NOT_THE_OWNER", "NOT_THE_OWNER", "ADMIN_ONLY",
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; MEMBERSHIP #7, N327): ADMIN_ONLY -> NOT_AN_ADMIN, the code that took
+   its place at `projectownerrescue` (R41 through R84); nothing mints ADMIN_ONLY now. KEPT under K457: this list feeds
+   the NEVER-POSITIONAL arms over every op, a sight matrix across modules that no one module's tests hold. */
+const POSITIONAL = ["PROJECT_ACT_NOT_A_PARTICIPANT", "PROJECT_ACT_NOT_THE_OWNER", "NOT_THE_OWNER", "NOT_AN_ADMIN",
                     "NOT_A_PARTICIPANT", "NOT_JOINED", "AI_RUN_NOT_PROJECT_MEMBER"];
 
 try {
@@ -166,7 +169,12 @@ const shaOf = async (id) => (parse(await RAW(`op=list&token=${ADM}&limit=1000`))
 const LEDGER = "INFO-2026-9138-ledger", MINUTES = "INFO-2026-9138-minutes";
 for (const d of [LEDGER, MINUTES]) must(d, await promoteAs(ADM, d, infoMd(d), "information", "collected"));
 const INQ = "INQ-2026-9138-transfer";
-must("inquiry", await promoteAs(ADM, INQ, inquiryMd(INQ, LEDGER), "inquiry", "open"));
+/* CORRECTED 2026-09-30 (LEGACY-TESTS #12, T14; N353, D-447's finding (2)): the question is created through the
+   FOUNDER's session, not the ADMIN deploy token. A deploy token's creation must name a surfacing run (REC-171's
+   `withSurfacingRun` opens one), and that run is read by the stamped `actorViewer`, so the control's
+   `promote-stamp-dropped` arm threw SURFACE_NO_RUN here before any arm it declares. No arm below reads who surfaced
+   the question; the store restamps `surfaced_by` from the caller (D-78), which is all that changes. */
+must("inquiry", await promoteAs(FOUNDER, INQ, inquiryMd(INQ, LEDGER), "inquiry", "open"));
 must("iris accepts v1", await POST(`op=versionaccept&token=${IRIS}&target=${E(INQ)}&version=v1&reason=${E("borne out")}`, {}));
 const BIAS = "BIAS-2026-9138-lens";
 const biasMd = (state) => ["---", `id: "${BIAS}"`, 'object_type: "bias"', 'schema: "bias@1"', 'title: "Project lens"',
@@ -309,8 +317,11 @@ console.log("\n--- 3. a caller who CAN see the project and holds no role gets th
     codeOf(await POST(`op=projectowneradd&token=${OLGA}&projectId=${P}&handle=pam`)), "NOT_THE_OWNER");
   t("SEES, NO ROLE: olga — op=projectownerremove answers NOT_THE_OWNER",
     codeOf(await POST(`op=projectownerremove&token=${OLGA}&projectId=${P}&handle=iris&reason=${E("r")}`)), "NOT_THE_OWNER");
-  t("SEES, NO ROLE: olga — op=projectownerrescue answers ADMIN_ONLY (§7.13 is an administrator's)",
-    codeOf(await POST(`op=projectownerrescue&token=${OLGA}&projectId=${P}&handle=pam&reason=${E("r")}`)), "ADMIN_ONLY");
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "SEES, NO ROLE: olga — op=projectownerrescue answers ADMIN_ONLY".
+     The rescue is membership's; a caller who sees the project and is no administrator is answered NOT_AN_ADMIN with
+     its remedy, sight asked first: membership's R41 (and R75) with R84, tested at its interface in
+     `test/m/membership/t14-rows-remedy-order.test.mjs` ("R84 R22 R41 R75 R62: each site refuses a non-administrator
+     NOT_AN_ADMIN …"; "R84 R22 R41: the refusal order is unchanged: … R41 asks sight first (R61)"). The unsighted half stays below, over POSITIONAL. */
   t("SEES, NO ROLE: olga — op=projectfork answers NOT_JOINED",
     codeOf(await POST(`op=projectfork&token=${OLGA}&projectId=${P}&title=${E("olga fork")}`)), "NOT_JOINED");
   t("SEES, NO ROLE: olga — op=airunopen over the project answers AI_RUN_NOT_PROJECT_MEMBER",

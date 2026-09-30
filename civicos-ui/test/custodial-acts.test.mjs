@@ -47,6 +47,8 @@ import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { createRequire } from "module"; import { pathToFileURL } from "url";
 import { appScript } from "./extract.mjs";
 import { CUSTODIAL_CHECKS, MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+/* T14 (LEGACY-TESTS #12; K408 (4), K458): C-96.1's one row is membership's; the catalogue's copy left. */
+import { MEMBERSHIP_CHECKS } from "../../bio-plane/src/membership/checks.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } else console.log("  PASS", msg.split("\n")[0].slice(0, 160)); }
@@ -378,7 +380,7 @@ const renders = (r, code, row) => {
 {
   OLIVE = await login("olive");
   const f = await W.post("memberset", { memberId: "uma", status: "revoked" }, OLIVE);
-  const rw = CUSTODIAL_CHECKS.NOT_AN_ADMIN;
+  const rw = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;   /* RE-ANCHORED T14 (K458): membership's row, C-96.1 */
   ok(`REFUSAL NOT_AN_ADMIN (at the op): a member's session is refused with C-96.1's translation (${f && f.reason})`,
      f && f.reason === "NOT_AN_ADMIN" && f.code === "NOT_AN_ADMIN" && f.check === rw.check && f.translation === rw.translation
      && f.by === "olive");
@@ -397,7 +399,7 @@ const renders = (r, code, row) => {
   OLIVE = await login("olive");
   const g = await W.post("adminremove", { memberId: "ruth", reason: "no" }, OLIVE);
   ok(`SPLIT: a member's session voting on an administrator's removal still answers NOT_AN_ADMIN, C-96.1 (${g && g.reason})`,
-     g && g.reason === "NOT_AN_ADMIN" && g.check === CUSTODIAL_CHECKS.NOT_AN_ADMIN.check);
+     g && g.reason === "NOT_AN_ADMIN" && g.check === MEMBERSHIP_CHECKS.NOT_AN_ADMIN.check);   /* RE-ANCHORED T14 (K458) */
 }
 /* invited_by's three renderings: a name, `not recorded` for null, nothing for a plane that does not send it. */
 {
@@ -409,11 +411,13 @@ const renders = (r, code, row) => {
 }
 /* The rows are real and distinct: an arm that matched an empty or shared sentence would prove nothing.
    RE-PINNED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1, N44): 9 -> 12, membership's RESIGN_AT_TWO (C-96.10),
-   NO_HOLDERS (C-96.11) and PAIRING_NOT_YOURS (C-96.12) joined the family. */
+   NO_HOLDERS (C-96.11) and PAIRING_NOT_YOURS (C-96.12) joined the family.
+   RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; LEGACY-CHECKS #8, K458): 12 -> 11, C-96.1's catalogue copy left
+   (membership's `MEMBERSHIP_CHECKS.NOT_AN_ADMIN` is its one row, read above). */
 {
   const rows = Object.entries(CUSTODIAL_CHECKS);
   ok(`C-96 carries ${rows.length} rows, each with a check, a where and a distinct translation`,
-     rows.length === 12 && rows.every(([, r]) => /^C-96\.\d+$/.test(r.check) && r.where && r.translation.length > 40)
+     rows.length === 11 && rows.every(([, r]) => /^C-96\.\d+$/.test(r.check) && r.where && r.translation.length > 40)
      && new Set(rows.map(([, r]) => r.translation)).size === rows.length);
 }
 

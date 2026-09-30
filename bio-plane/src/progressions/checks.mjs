@@ -21,12 +21,13 @@
  * `notADisposition` below (R35), which `inquiry` and `legacy-store` call too. */
 
 import { ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";
+import { DISPOSITIONS } from "../promotion/index.mjs";
+
+/** The two decisions a member may record about a derived question (D-79): `promotion`'s one list (its R51), the same
+ *  frozen array, re-exported here (R35; N340). Adopting one authors a focus instead. */
+export { DISPOSITIONS };
 
 const at = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
-
-/** The two decisions a member may record about a derived question (D-79), the one list (R35). Adopting one authors a
- *  focus instead. */
-export const DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
 
 export const PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {

@@ -176,7 +176,11 @@ const t = (label, got, want) => {
    corpus appends instance-setup's class (`InstanceSetup`, its private methods spelled `#x$instanceSetup` so none
    shadows a store segment of the same name, the re-inliner's own convention) and its route map as dispatch entries
    (`m.x(` read as the `this.x(` it is), under one synthetic, uncapped segment. The roster is DIFFED BY NAME at the
-   pin below. */
+   pin below.
+   CORRECTED 2026-09-30 (LEGACY-TESTS #12, T14; N348): the `Store` that routes `instanceSetupOps` before the store's own
+   map is now control-plane's (`src/control-plane/dispatch.mjs`, exported unwrapped from `src/index.mjs`); instance-setup's
+   own wrapper is gone from the plane's export (its `instanceSetupStore` goes in T15). The appendix reads instance-setup's
+   class and route map, which did not move, so the roster is unmoved. */
 const SRC_SETUP = readFileSync(new URL("../src/setup.mjs", import.meta.url), "utf8");
 const setupAppendix = (() => {
   const L = SRC_SETUP.split("\n");
