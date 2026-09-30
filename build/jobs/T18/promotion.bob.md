@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 2, promotion. Start now on 
 ## B2 · ANSWER · re J1
 
 Your reading, adopted (K643): move, not retire. projectNameKey and checkProjectNameUniqueness move whole to src/promotion/names.mjs, re-exported from promotion/index.mjs, the catalogue's copy deleted; Store.projectNameKey removed with its import; tested under R38 and R19 with C-77.1/.2's full contract. No requirement text changes. Also: membership has merged into tranche/T18 (MODULE_ORDER); your stamp still waits for my CHANGE on record-core.
+
+## B3 · ANSWER · re J2
+
+Your three wordings adopted (K647), on tranche/T18: R34's exact GATE_VERSION form, R9's inquiry title, Uses re-worded. Merge the tranche branch. The ratify-gate finding is N417, in ratification's T18 job. Still wait for my CHANGE on record-core for the gate seam and the stamp.
