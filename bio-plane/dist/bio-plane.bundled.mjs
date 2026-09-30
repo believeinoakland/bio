@@ -15702,12 +15702,12 @@ function spliceReferences(text3, additions) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.44.0";
+var CATALOG_VERSION = "1.45.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 827,
-  digest: "5eae043f703a68fcf9ef26dd02bb6e890fff8d7a553f9db31fc0220518bf45b0"
+  rows: 825,
+  digest: "dacbe36f6e5dda03bfaf6b13d8e721ffcb5794a0dcda55026cffc64f018a5fac"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
