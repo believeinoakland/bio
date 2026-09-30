@@ -143,6 +143,15 @@ test("R7: checkContentExtent refuses what the context bounds, with the figure in
   assert.equal(checkContentExtent({ kind: "pdf-page", page: 99 }, CONTENT_EXTENT_DOCUMENT_ONLY), null);
 });
 
+test("R7 (K665): an embedded image part cited as text is C-45.2 even over a capture that has a chain; the same part cited as bytes is admitted", () => {
+  const c = ctxOf({ chain: [{ step: "layer", tier: 1 }], container: { office: true, images: [{ part: H }] } });
+  const r = checkContentExtent({ kind: "image", part: H, cited_as: "text" }, c);
+  assert.equal(code(r), "CONTENT_EXTENT_NO_CHAIN"); assert.equal(r.check, "C-45.2");
+  assert.ok(r.translation && r.detail);
+  assert.equal(checkContentExtent({ kind: "image", part: H, cited_as: "bytes" }, c), null, "the negative control: bytes");
+  assert.equal(checkContentExtent({ kind: "image", part: H }, c), null, "an image part is bytes by default (R4)");
+});
+
 test("R8: an extent admitted without its bound held answers exactly one undetermined {level, why}", () => {
   const u1 = mintUndetermined({ kind: "image", part: H, cited_as: "bytes" }, ctxOf({ container: { office: null, kind_why: "unknown kind" } }));
   assert.deepEqual(Object.keys(u1).sort(), ["level", "why"]); assert.equal(u1.level, "container_kind");
