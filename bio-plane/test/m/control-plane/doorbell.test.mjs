@@ -363,7 +363,7 @@ test("R36, R35 (N364): the pull is a route of the record store's door, beside ca
   assert.equal(da.json.result.reason, "KNOCK_DISCARDED");
   assert.equal(heldOf(r, d.knockId, d.sha256).receipt, false);
   /* the promotion's refusal, from its dry run before the pull: today the register rules refuse the pulled document
-     (provenance C-18.1, CONTROL-PLANE #7 J2), and the pull is not made */
+     (provenance C-18.1: N381, K560), and the pull is not made */
   const p = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k.knockId });
   assert.equal(p.json.result.ok, false);
   assert.equal(p.json.result.reason, "PROVENANCE_REGISTER_REFUSED");
@@ -465,7 +465,7 @@ test("R36 (N364, K559): a promotion that fails after the pull (a store fault, or
   }
 });
 
-test.todo("R36 (N364): a pull through the record store's door files its bundle with the real promotion — blocked: provenance's register rules (C-18.1, `src/provenance/register-checks.mjs`:206, :216) refuse capture R65's own document (a null grade with `grade_basis`, `origin.kind` `doorbell`), reported CONTROL-PLANE #7 J2");
+test.todo("R36 (N364): a pull through the record store's door files its bundle with the real promotion — blocked: provenance's register rules (C-18.1, `src/provenance/register-checks.mjs`:206, :216) refuse capture R65's own document (a null grade with `grade_basis`, `origin.kind` `doorbell`): N381 (K560), T17's layer 3");
 
 test("R35 (N364; membership R89, R90): the record store's door routes signerregister and signerrevoke to membership's own-key acts, `by` read from the query over the body's", async () => {
   const r = await record();

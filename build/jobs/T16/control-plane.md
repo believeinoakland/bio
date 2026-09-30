@@ -24,3 +24,36 @@ Readings I am building on now. Only (1) needs a ruling that may reach another mo
 So no pulled knock can be filed as a bundle by any caller; capture R65 says the control plane promotes it. The register rules need the doorbell arm: a null grade with R51's `grade_basis` (as the authored arm, :195–205, already admits a null grade), and `doorbell` among the origin kinds. That is provenance's code (or, if you rule the document wrong, capture's). A CHANGE to either is yours to open.
 
 My side is built (J1's reading): my route runs the promotion as a dry run first, so today the pull is refused with that finding and nothing is written: no knock pulled, no receipt, no bundle. I test R36's orchestration with capture real and the promotion's answer controlled, and R36's end-to-end filing as a `test.todo` naming this cause, until the fix merges; then I run it against the real modules.
+
+## Completion
+
+**Entries applied** (plan layer 11; START B1; K558 (B2), K559 (B3), K560 (B4)):
+1. **R36, the doorbell's pull** (`src/control-plane/pull.mjs`, new; routed in `dispatch.mjs`). `op=inboxpull` reaches the record store's own route `inboxpullfile` (beside capture's `inboxpull`, untouched), which runs K559's order: the knock read, and any knock that cannot be pulled answered by `pullKnock`'s own refusal; the promotion as a dry run over the same package in a rolled-back `transact`; `pullKnock({knockId, by, at})`; the promotion of the pulled document with its id in one `transact`. The bundle is capture-requests R38's shape: `INFO-<year>-NNNN-doorbell-knock`, `information@2` at `collected`, the puller its `author` (with op=promote's `actorMemberId`, `actorIdentity`, `actorViewer`), capture's document as `data/provenance.json`, the bytes as a blob at the document's `file`, one register row; no contact anywhere (capture R70). A promotion that fails after the pull (a fault or a refusal, caught) answers `PROMOTE_FAILED` at 502 with `pulled` and says a repeated pull files it; a repeated pull promotes when `provenance.homeOf` finds no bundle holding the capture, and answers the holding bundle when one does. The pull's refusals answer at their `status` hint. Today every pull is refused by the dry run with provenance's C-18.1 findings and nothing is written (N381, K560).
+2. **`inboxresolve` with `status: "pulled"`** (instance-setup's "Mark as taken up", `setup.mjs`:1328–1332) is routed as `op=inboxpull` before any gate, so it meets the pull's fence, stamps, route and answer; other statuses are unchanged.
+3. **Routes, `NEEDS` rows and stamps for the new ops**, exactly K558's table: capture's `inboxpull`, `knocksof`, `pulledknocks` (a session's alone: `machineClasses: []`), `reattest`, `lateattestations`, `captureaccount`, `captureaccounts`; sources' `sourcedisclose`, `sourcelink`, `sourceconsent`, `sourceconsentwithdraw`, `sourceof`, `sourcerung`, `sourcereadlog`, `sourcepublishable`, and the public `knockerconsent` (pinned to `bio`; `source` the connecting address and `now` the instant, stamped as the knock's; only its four fields passed; a rate refusal 429 as the knock's, any other failure 403; sources' rows now read by the door, `M_SOURCES`); membership's `signerregister`, `signerrevoke` (a session's alone, `by` from the session, routed in the store door to `signerRegisterOwn`/`signerRevokeOwn`, the query's `by` over the body's); case-authoring's `publishpreflight` (write-free, `mutating: false`, op=publish's classes, `viewer` and `author`, its `project` classified for R27). op=publish's body carries `selfAttested` whole. Writes: `contribute` (the capture and sources acts), null (the own-key acts); reads: null rows. The lists are `OWN_KEY_ACTIONS`, `CAPTURE_MEMBER_ACTIONS`, `SOURCE_ACTIONS`, `SOURCE_READS` in `ops.mjs`, in both session sets.
+4. **The stale comment** at `index.mjs`:605–615 corrected: since N357 both spellings carry the founder's sight; the viewer stays bare `admin`.
+5. **N363:** `M_TASKS` waits for your CHANGE (tasks not merged; B3 (4)).
+Per K558 the store door does not dispatch `sourcesOps` (N379): the source ops are routed and stamped at the Worker door and tested there.
+
+**`not yet met` marks:** none met in full. R36's orchestration is met and tested; its filing with the real promotion is a `test.todo` naming N381, so R36's "(not yet met: N364)" stays until N381, with its N380 mark.
+
+**Check rows:** none added, moved or retired.
+
+**Found in other modules:**
+1. provenance: its register rules refuse capture R65's document (`src/provenance/register-checks.mjs`:206, :216): N381 (J2, K560).
+2. legacy-tests: `test/machine-attest.test.mjs`:187 (its census) now finds `reattest`, `lateattestations`, `signerregister`, `signerrevoke` unaccounted; they need driving or naming there. `test/affordances.test.mjs`:220 and `test/rung-ladder.test.mjs`:123, :136, :148 fail until AFFORDANCES #8's K558 table merges (they read my new gated and mutating ops). All five were green on `tranche/T16`; the other 57 legacy files reading my tables fail identically with and without my change (9 files red on both).
+3. The DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`): the same 19 failing verdicts with and without my change.
+4. Generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` is stale (control-plane's source changed); not rebuilt.
+5. Greps: `civicos-ui/test/publication-entry.test.mjs`:624 (a vocabulary guard naming `publishpreflight`; unaffected); `bio-plane/src/affordances.mjs`:7, :2143 (the deferred `publishpreflight`, affordances' R7/R29); no other hit for any new op or name.
+6. For N379: the store door could carry `sourcesOps` as one spread in `controlPlaneRoutes` (`dispatch.mjs`), as it carries the own-key routes.
+
+**Deferred:** N363's `M_TASKS` (tasks' merge); strictly one act (N380, capture's seam).
+
+**Flaws fixed in my module:** the stale comment (entry 4).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/control-plane/`: 69 tests, 68 pass, 0 fail, 1 todo (R36's filing, N381). New `doorbell.test.mjs`, 12. Negative controls, each restored: no `by` on sources' acts, 1 fail; the pull admitting bearers, 3; no dry run, 3; no `inboxresolve` routing, 1; no viewer on sources' reads, 1; knockerconsent refusals as success, 1; the whole body passed, 1; no home check, 1.
+- `node --test bio-plane/test/m/` in two chunks: 3101 tests, 3079 pass, 0 fail, 22 todo.
+- `format`: 0 failures. `architecture control-plane`: 15 files, 91 imports, 0 failures. `coverage control-plane`: 36 of 36. `ownership control-plane tranche/T16`: 7 files, legacy 0/0, 0 failures.
+
+Size (session_01Lo4UbhM2msU4EuN9zSJ4eS): test runs 31, module lines 6601
