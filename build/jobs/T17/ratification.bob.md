@@ -1,0 +1,7 @@
+# BOB to ratification (T17)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry is `build/plan/current.md` layer 8 (N385; text in `build/plan/next.md`): `index.mjs`:493 picks `MACHINE_CANNOT_RATIFY_CASE` by the word "ai" (REC-46's form) though the predicate at :490 decides; choose the code from the predicate, and test it with a machine identity whose name holds no "ai" and a member whose name does.
