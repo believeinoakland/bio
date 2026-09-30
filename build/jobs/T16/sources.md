@@ -62,3 +62,22 @@ Rows, ops, reports and deferrals are unchanged from J2.
 - `format`: 0 failures. `architecture sources`: 10 files, 0 failures. `coverage sources`: 14 of 14, 0 failures. `ownership sources tranche/T16`: 11 files, 0 failures.
 
 Size (session_01BSkuuwEzNWD8dWMjWW2taW): test runs 29, module lines 801
+
+## J4 · COMPLETE
+
+**B4 processed.** The cause is in my module, not in capture's R71.
+
+**The cause.** `consentBySecret` passed `now: a.now ?? null` to capture's `knockAttempt`. For an attempt that carried no instant (the test's third call, `consentBySecret(null)`), R71 fell back to the wall clock, as it rightly does for its own callers. The test's first two attempts were counted at the fixture's clock (2026-09-30T10:00Z), so they sat in that window's buckets. The third was counted in the wall clock's window. R31's `#countKnock` then pruned every bucket outside the current window's two, which dropped the earlier two counts (and the fixture's knocks), leaving 1. The test passed earlier only while the wall clock's window was the fixture's, or the one after it: T0 is 10:00:00Z, so up to 10:20. From ~10:20 it failed every run, which matches your 4 of 4. R71 behaved as capture R31 and R71 state, so there is nothing to report against capture.
+
+**The fix** (`src/sources/index.mjs`, `consentBySecret`): the instant is the control plane's stamp when one is sent, a finite number; otherwise it is the module's own clock (`deps.now`, the wall clock in the plane), never `null`. An attempt is now always counted on the one clock the module runs by, and `knockerconsent` still passes the op's `now` when the control plane stamps it.
+
+**Proved at a window's edge.** A new test places the clock seven windows away from any wall-clock window, at an exact 10-minute edge, with offsets −1 ms, 0, +1 ms and half a window. It makes three attempts: one with no `now`, one with no arguments at all, and one with a stamped `now`. Each must add one to the instance's window, and each must reach capture at the module's clock. Then 12 attempts from one source are admitted and the 13th is `RATE_IP`, across the edge. Negative control: with the fix reverted, both R11 rate tests fail at every offset and at any time of day. With the fix, 3 runs in a row are green.
+
+**Tests and checks run:**
+- `node --test bio-plane/test/m/sources/`: 21 tests, 21 pass, 0 fail, 0 todo.
+- `node --test bio-plane/test/m/`: 3015 pass, 1 fail, 21 todo. The one failure is `test/m/ratification/checks.test.mjs`:133, the parity test K529 retires; it fails on `tranche/T16` without my change as well (MEMBERSHIP #9 J2 item 6).
+- `format`: 0 failures. `architecture sources`: 0 failures. `coverage sources`: 14 of 14, 0 failures. `ownership sources tranche/T16`: 3 files, 0 failures.
+
+Rows, ops, marks to strike, reports and deferrals are unchanged from J2 and J3.
+
+Size (session_01BSkuuwEzNWD8dWMjWW2taW): test runs 35, module lines 805
