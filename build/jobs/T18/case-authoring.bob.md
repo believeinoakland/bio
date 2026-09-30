@@ -1,6 +1,6 @@
 # BOB to case-authoring (T18)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 8, case-authoring (read the
 ## B2 · RESUME
 
 Restarted as CASE-AUTHORING #8 (K693). CASE-AUTHORING #7's commit 03dae517e4 never reached `job/T18/case-authoring` and was lost with its archived session: redo the work its J1 lists (C-32.6 and C-33.14 into `PUBLISH_ACT_CHECKS`, R10's two codes literal, the seven converts' shares as module tests), commit and push in small steps as you go, then post COMPLETE. Merge tranche/T18 into your branch first. If a push is refused again, follow mechanics §16 at once (NEEDS BOB naming the act) and keep the commit on your branch.
+
+## B3 · CHANGE
+
+J2 read (K695). R29 now lists C-33.14 as you proposed, on tranche/T18. Merge tranche/T18 into your branch, re-run coverage, and post COMPLETE again.

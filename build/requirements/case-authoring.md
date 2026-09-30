@@ -110,7 +110,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 - **R26** Undetermined is stated and never filled: a statement writer, an undeclared bar axis, a bias manifest not established, a citation's version.
 - **R27** Working material (an unsigned document, a draft, a hidden project) answers an outsider exactly as something that does not exist; R19's dead answer is byte-identical for every door refused.
 - **R28** `statement_acknowledgements` is declared whole to `record-core`'s purge, as today (K23).
-- **R29** Each check moves here as an invariant with its test (K6): C-44.1, C-44.3–C-44.5, C-82.2–C-82.7, C-32.6; and C-120.1–C-120.3 (N345) and C-120.4–C-120.7 (N364), a family, "a case's disclosures and its pre-flight", held in this module's own table (K343's pattern), with the translations below. A change to any moves `CATALOG_VERSION` (rule 17).
+- **R29** Each check moves here as an invariant with its test (K6): C-44.1, C-44.3–C-44.5, C-82.2–C-82.7, C-32.6 and C-33.14 (R3's `NO_STATEMENT`); and C-120.1–C-120.3 (N345) and C-120.4–C-120.7 (N364), a family, "a case's disclosures and its pre-flight", held in this module's own table (K343's pattern), with the translations below. A change to any moves `CATALOG_VERSION` (rule 17).
 - **R30** No place is named in this module's behaviour or outward text.
 - **R33** (DEC-85) No case document this module writes, and no answer it gives, names the project, members, content, kind or source of a side the publisher could not see at the act. A reveal (`contradiction` R52) never widens what a case names: sight at the act, by `membership` R43, governs.
 
