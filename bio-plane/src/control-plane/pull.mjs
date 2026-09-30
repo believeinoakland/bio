@@ -3,47 +3,24 @@
    `collected` (promotion's `promote`), the puller its author. Run in the record store's door (`dispatch.mjs`), where
    capture, promotion and record-core are in process.
 
-   ONE ACT, AND WHAT KEEPS IT ONE. `pullKnock` is async (it holds the bytes under their own digest and profiles them
-   before it writes), and record-core's `transact` is synchronous, so no transaction can span both writes. The order is
-   therefore chosen so that every refusal either can give lands before anything is written: (1) the knock is read and a
-   knock that cannot be pulled answers `pullKnock`'s own refusal; (2) the promotion is run over the same package with a
-   provisional document inside `transact` and rolled back, so its refusal (no recorded group, C-64.1; a mint exhausted;
-   a package refused) answers with nothing written; (3) the pull; (4) the promotion of the pulled document, in one
-   `transact` with its id. Only a store fault, or another act landing between (2) and (4), can leave a pulled knock
-   without its bundle; the answer then says so, and pulling the knock again files it, because a pulled knock whose
-   capture no bundle holds (`provenance.homeOf`) is promoted by the next pull. */
+   ONE ACT (N380, K559). `pullKnock` is async (it holds the bytes under their own digest and profiles them before it
+   writes), and record-core's `transact` is synchronous, so no caller can wrap both writes in one transaction. Capture
+   therefore offers a seam: `within(document)`, called inside the pull's own transaction after its receipt, the knock's
+   `pulled` update and the actor are written (capture R65). The promotion runs there, so a refusal of either (no recorded
+   group, C-64.1; a mint exhausted; a package refused; a store fault, answered `PULL_WITHIN_FAILED`) leaves neither
+   written. A knock already pulled does not call `within`: its bundle is the one holding its capture, and a pulled knock
+   whose capture no bundle holds (pulled through capture's own route) is promoted by this door's next pull. */
 import { createSha256 } from "../../checks/bio-checks.mjs";
+import { stampInstant } from "../record-core/index.mjs";
 
 /* The id's stem is record-core's `INFO-<year>-NNNN`; the slug says where the material came from. */
 export const PULL_BUNDLE_SLUG = "doorbell-knock";
 
-const DRY = Symbol("pull: the promotion's dry run");
 const hexOf = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
 const enc = (text) => {
   const b = new TextEncoder().encode(text);
   return { text, bytes: b.length, sha256: createSha256().update(b).hex() };
 };
-const instantOf = (d) => d.toISOString().replace(/\.\d+Z$/, "Z");
-
-/* What `pullKnock` will write as the document's `file`, so the provisional package names the same path. */
-const fileOf = (knockId) => `snapshots/${String(knockId).replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100)}`;
-
-/* The provisional document the dry run promotes: the pulled document's shape, minus what only the pull computes (the
-   profile and the receipt); every field a promotion's steps read is present. */
-function provisionalDocument(row, { by, at }) {
-  return {
-    file: fileOf(row.knock_id), locator: `knock:${row.knock_id}`, retrieved: at,
-    authority_state: "undetermined",
-    authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted`,
-    capture: { method: "doorbell knock, received, hashed at receipt", grade: null,
-               grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED", actor_class: "member", actor: by,
-               sha256: row.sha256, encoding: "binary", bytes: row.bytes },
-    source: { kind: "knocker", named: false, pseudonym: row.pseudonym ?? null,
-              receipt: { knock_id: row.knock_id, sha256: row.sha256, bytes: row.bytes, received: row.received } },
-    origin: { kind: "doorbell", knock_id: row.knock_id },
-    attestation_attempts: [],
-  };
-}
 
 /* The bundle, capture-requests R38's shape: the document as `bio/bundle.md`, capture's provenance document as
    `data/provenance.json`, the bytes as a blob at the document's own `file`, and one register row. No contact is in any
@@ -100,19 +77,12 @@ const promoteIn = ({ record, promotion }, doc, who) =>
     return p && p.ok === true ? { ...p, bundleId: p.bundleId ?? pkg.bundleId } : (p || { ok: false, reason: "PROMOTE_FAILED" });
   });
 
-/* The dry run: the same promotion, rolled back whatever it answers. Answers the refusal, or null when it would land. */
-function dryRun(deps, doc, who) {
-  try {
-    const r = deps.record.transact(() => {
-      const p = promoteIn(deps, doc, who);
-      if (!p || p.ok !== true) return p || { ok: false, reason: "PROMOTE_FAILED" };
-      throw DRY;
-    });
-    return r && r.ok === false ? r : null;
-  } catch (e) {
-    if (e === DRY) return null;
-    throw e;
-  }
+/* Inside the pull: a throw still rolls the pull back (capture answers `PULL_WITHIN_FAILED`), but it is thrown as a fault
+   with no message of the store's in it, since capture carries the message into its answer (R25's rule for a thrown
+   error: never its message). */
+function promoteOrFault(deps, doc, who) {
+  try { return promoteIn(deps, doc, who); }
+  catch { throw new Error("the promotion did not complete"); }
 }
 
 const bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null });
@@ -120,37 +90,27 @@ const bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null 
 /** R36: `op=inboxpull`. `deps` is `{capture, promotion, record, provenance}` of one record; `by`, `identity` and `viewer`
  *  are the control plane's stamps. Answers capture's pull answer with `bundle: {bundleId, bundleSha}` beside it, or the
  *  first refusal, with nothing written. */
-export async function pullAndFile(deps, { knockId, by, identity, viewer, now = () => new Date() } = {}) {
+export async function pullAndFile(deps, { knockId, by, identity, viewer, now = Date.now } = {}) {
   const { capture, provenance } = deps;
-  const at = instantOf(now());
+  /* N386: the pull's instant, to the second, through record-core's one stamping helper (its R47). */
+  const at = stampInstant("second", +now());
   const who = { knockId, by, identity, viewer, at };
-  /* (1) the knock as it stands; any knock that cannot be pulled answers capture's own refusal, which writes nothing */
-  const got = typeof knockId === "string" && knockId && typeof by === "string" && by.trim() ? capture.inboxGet(knockId) : null;
-  const row = got && got.ok ? got.item : null;
-  if (!row || row.status === "discarded") return capture.pullKnock({ knockId, by, at });
-  if (!row.capture_sha) {
-    /* (2) the promotion's refusal before anything is written */
-    const refused = dryRun(deps, provisionalDocument(row, { by, at }), who);
-    if (refused) return { ...refused, knockId };
-  }
-  /* (3) the pull (a refusal writes nothing: capture R65) */
-  const pulled = await capture.pullKnock({ knockId, by, at });
+  /* The pull and its promotion, one transaction (capture R65's `within`): a refusal of either writes nothing. */
+  const pulled = await capture.pullKnock({ knockId, by, at, within: (doc) => promoteOrFault(deps, doc, who) });
   if (!pulled || pulled.ok !== true) return pulled;
-  /* a knock already pulled: its bundle is the one holding its capture, or, when none does, it is filed now */
-  if (pulled.existed) {
-    const home = provenance.homeOf(pulled.capture && pulled.capture.sha256);
-    if (home) return { ...pulled, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
-    /* capture keeps the document in the same write that pulls the knock, so a pulled knock always has one */
-    if (!pulled.document) return { ...pulled, bundle: null };
-  }
-  /* (4) the promotion of the pulled document; a fault here is answered as the residue it leaves, never thrown past the
-     pull, so the answer says the knock was pulled */
-  let filed;
-  try { filed = promoteIn(deps, pulled.document, { ...who, at: pulled.pulled_at || at }); }
-  catch { filed = { ok: false, reason: "PROMOTE_FAILED", detail: "the promotion did not complete." }; }
-  if (filed && filed.ok === true) return { ...pulled, bundle: bundleOf(filed) };
-  return { ...(filed || { ok: false, reason: "PROMOTE_FAILED" }), ok: false, knockId, status: 502,
-           pulled: { capture: pulled.capture, pulled_by: pulled.pulled_by, pulled_at: pulled.pulled_at },
-           detail: "the knock was brought in and its bundle was not filed; pulling the knock again files it. "
-                 + String((filed && filed.detail) || "").slice(0, 300) };
+  const { within: filed, ...answer } = pulled;
+  if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
+  /* A knock already pulled: its bundle is the one holding its capture. */
+  const home = provenance.homeOf(pulled.capture && pulled.capture.sha256);
+  if (home) return { ...answer, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
+  /* A pulled knock no bundle holds (pulled through capture's own route, or before N380): its document is promoted now,
+     in a transaction of its own; the knock is already pulled, so a refusal leaves it as it was. */
+  if (!pulled.document) return { ...answer, bundle: null };
+  let again;
+  try { again = promoteIn(deps, pulled.document, { ...who, at: pulled.pulled_at || at }); }
+  catch { again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: "the promotion did not complete." }; }
+  if (again && again.ok === true) return { ...answer, bundle: bundleOf(again) };
+  return { ...(again || { ok: false, reason: "PROMOTE_FAILED" }), ok: false, knockId,
+           detail: `the knock was already brought in, and its bundle was not filed; nothing was written. `
+                 + String((again && again.detail) || "").slice(0, 300) };
 }
