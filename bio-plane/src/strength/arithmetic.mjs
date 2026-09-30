@@ -16,6 +16,10 @@ import { BASIS_GRADES } from "../../checks/bio-checks.mjs";
 export const STRENGTH_AXES = Object.freeze(["capture", "connection", "testimony"]);
 /** The axes that range over DOCUMENTS: a grade on either, authored on a leg to another inquiry, has no referent. */
 export const DOCUMENT_AXES = Object.freeze(["capture", "testimony"]);
+/** The three states an axis answer is in, and no fourth (R3, R4): `graded`, `unrated`, `undetermined`. Defined here, where
+ *  the arithmetic produces them; the catalogue's copy (`bio-checks.mjs`) stays until its last importer re-points
+ *  (ratification, layer 8) and goes at T19. */
+export const STRENGTH_STATES = Object.freeze(["graded", "unrated", "undetermined"]);
 /** R2: the depth bound of the walk. Equal to the queue's ancestor depth, and this module's own (Suggestions). */
 export const DEPTH_BOUND = 6;
 
