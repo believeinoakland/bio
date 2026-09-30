@@ -79,3 +79,33 @@ Canon places actor differences in three places: the **project** (its bar, DEC-17
 - **D4 · Actor kinds.** Recommended: a project may declare the kind of work it does (reporting, fixing, legal, oversight), which shapes what the assistant suggests and nothing else (DEC-27, DEC-54); no attribute on a person.
 - **D5 · Roles for outward acts.** Recommended: no new capability. A started option may name the member who is the group's contact for it, shown with the action; sending stays recorded and unsigned until a group needs more.
 - **D6 · Unions and special interests** (carried from the inventory, §6 item 4). Recommended: any group may use CivicOS; one with a stake in the matter discloses it (Requirement 6) and its lobbying is limited by ruling 6.
+
+## 7. After the rulings (re-run 2026-09-30)
+
+Every cell of §2–§4 re-checked against Bob's rulings of 2026-09-29 and 2026-09-30 and the drafts (`drafts/action-plans.md` as AP, `drafts/deltas.md`). **Drafted**: a requirement draft now covers it. **Resolved**: Bob ruled that nothing more is needed. **Deferred**: Bob deferred it, with a trigger.
+
+| purpose | Plan | Prepare | Decide | Send | Track | Close |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Seek evidence** | **Drafted** AP R1, R18 | **Drafted**: skill (deltas §5), communication drafts (`filings` R23), profile templates (§6) | **Built**, with a create op **Drafted** (`actions` R46) | **Built**; in-band stamp **Drafted** (`filings` R22) | **Drafted**: deadline recheck and queue kinds (§4) | **Built** |
+| **Mitigation** | **Drafted** AP R9, R14–R16 | **Drafted** (`filings` R23) | **Built** | **Built**; stamp **Drafted** | **Drafted** (§4) | **Built** |
+| **Legal, Tier 1–2** | **Drafted** AP R9 | **Drafted**: templates (§6), skill (§5) | **Built** | **Drafted**: stamp (R22); grades beside the venue's standard (`actions` R48, `jurisdictions` R39) | **Drafted** (§4) | **Built** |
+| **Legal, Tier 3** | **Drafted** | **Built**; grades **Drafted** (R48) | **Built** | **Drafted** (R22); override disclosure (`filings` R24) | **Resolved**: counsel files; a member records what returns | **Built** |
+| **Oversight, political accountability** | **Drafted**, lobbying AP R12 | **Drafted** (R23) | **Built** | **Built**; stamp **Drafted** | **Drafted** (§4) | **Built** |
+| **Awareness** | **Drafted** | **Drafted** (R23) | **Drafted**: audience addressee (`actions` R9) | **Drafted** (R9, R22, R23) | **Drafted**: replies recorded as correspondence with any addressee; reach is not measured, by design (no metrics) | **Drafted**: `completed` and the action's own outcome (`actions` R7, R26) |
+| **Journalistic** | **Drafted** | **Drafted** (R23) | **Drafted**: press addressee (R9) | **Drafted** | **Drafted** | **Drafted** (R7) |
+| **Grassroots** | **Drafted** | **Drafted** (R23) | **Drafted**: group, organisation or audience addressee (R9); joint action **Deferred** | **Drafted** | **Drafted** | **Drafted** (R7) |
+| **Recognition** | **Drafted**: a compliant subject (AP R1) | **Drafted** (R23) | **Built** | **Drafted** | **Drafted** | **Drafted** (R7) |
+| **The plan itself** | **Drafted** AP R1–R3 | **Drafted** AP R11, R21; skill (§5) | **Drafted** AP R13 | not applicable | **Drafted** AP R15–R17; queue (§4) | **Drafted** AP R20 |
+
+| actor or role | after the rulings |
+| --- | --- |
+| Journalists, lawyers, auditors, CPAs, administrators as users | **Drafted**: a project declares its kind of work (AP R21, D4); nothing on a person |
+| Journalists, outlets, organisations, other groups, residents as addressees | **Drafted** (`actions` R9, D1) |
+| Unions and special interests | **Resolved** (D6: any group, disclosing a stake; lobbying AP R12) |
+| Joint action with another group | **Deferred** (trigger: a coalition asks) |
+| Approve, send, speak for the group | **Resolved**: any contributing member; a started option may name the group's contact (`actions` R44, D5); sending stays unsigned |
+| Bring resources | **Resolved**: a note on a step, no budgets (ruling 3) |
+| Opposition: pressure against the group | **Drafted** (`actions` R47); a legal threat prompts a litigation-hold reminder (§4, DEC-61) |
+| Certification by a licensed professional | **Deferred** (trigger: a group needs a licensed name on an output) |
+
+**The result.** No cell is a gap. Everything is built, drafted, resolved by a ruling, or deferred by Bob with a trigger.

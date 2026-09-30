@@ -57,9 +57,16 @@
 | R24 | a draft and a packet prepared from an overridden action carry "Rests on an unestablished premise:" with reason, author and time, in every export | a draft from a determined breach action carries none |
 | R23 | a machine prepares a communication draft for an action addressed to press; it is labelled machine work; a member approves; sending records the bytes | a machine approving refuses (R6); sending before approval refuses `NOT_APPROVED` |
 
+## `jurisdictions` (deltas §6)
+
+| req | test | negative control |
+| --- | --- | --- |
+| R39 | a kind's `evidence` validates and reaches `combine`; two profiles that disagree on it withhold it and report the conflict | an unknown grade refuses `GRADE_UNKNOWN`; no `standard` refuses `EVIDENCE_NO_STANDARD` |
+
 ## Wiring (deltas §4)
 
 | change | test | negative control |
 | --- | --- | --- |
 | scheduler `deadline-recheck` | a pending clock entry past its date is marked overdue within one cadence, and escalation is asked | an entry dated today stays pending |
 | queue kinds | one item each for an overdue clock (CONDITION), a proposed stage (OBLIGATION), a due checkpoint (OBLIGATION); none repeats for the same occurrence | a checkpoint judged before its item is read removes the item |
+| litigation-hold reminder | a received entry marked `pressure` of kind `legal` yields one OBLIGATION for an administrator; the item changes nothing by itself | kind `retaliation` yields none |

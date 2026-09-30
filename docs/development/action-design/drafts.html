@@ -147,7 +147,7 @@ table.wide{min-width:1180px}
 <li><strong>R7, amended (Bob: D3).</strong> Resolutions gain <code>completed</code>, allowed on any kind: the action was carried out and no counterparty answer decides it. <code>resolved</code> still needs one of the five. The action's own outcome (R26, DEC-14) says what happened; an impact claim still needs a leg outside the group's own actions.</li>
 <li><strong>New R44 (Bob: D5).</strong> An action may state <code>contact</code>, a member id, the group's contact for it; set or changed only by a member (<code>MACHINE_CANNOT_SET_CONTACT</code>), refused <code>CONTACT_NOT_A_MEMBER</code>; shown in the read (R25). It grants nothing.</li>
 <li><strong>New R45 (ruling 1; A12).</strong> An action may state <code>plan</code> and <code>option</code>, set only when created by <code>action-plans</code> R18 and never changed (<code>PLAN_LINK_REWRITTEN</code>); shown in the read.</li>
-<li><strong>New R47 (Bob, 2026-09-30: prepared for opposition).</strong> A received correspondence entry may be marked <code>pressure: true</code> with a note of at most 500 characters: a threat, retaliation, discrediting or legal harassment directed at the group or its supporters (Operational Principle 8, Design Requirement 13). Only a member marks it; the read (R25) lists an action's pressure entries apart; <code>actionsFor</code> can filter by it. It is evidence like any capture, and may be cited by a new inquiry.</li>
+<li><strong>New R47 (Bob, 2026-09-30: prepared for opposition).</strong> A received correspondence entry may be marked <code>pressure: {kind: legal | retaliation | discrediting | other, note}</code> (note at most 500 characters): a threat, retaliation, discrediting or legal harassment directed at the group or its supporters (Operational Principle 8, Design Requirement 13). Only a member marks it; the read (R25) lists an action's pressure entries apart; <code>actionsFor</code> can filter by it. It is evidence like any capture, and may be cited by a new inquiry.</li>
 <li><strong>New R48 (Bob, 2026-09-30: the venue sets the standard).</strong> No action, filing or packet is refused for the capture grade of what it rests on. <code>filings</code>' drafts and counsel packets show each exhibit's grade and whether it is co-attested; a profile kind may state its venue's standard of evidence and the grades it accepts (<code>jurisdictions</code>), shown beside the grades; an exhibit below that standard, or at a grade the profile marks contestable, is flagged so counsel and members can prepare.</li>
 <li><strong>R8, amended (Bob, 2026-09-30: DEC-26 with Requirement 12, option (c)).</strong> An action stating <code>breach: true</code> without a live noncompliant determination is still refused <code>ACTION_NO_DETERMINATION</code>, unless it states <code>premise_override: {reason}</code> (at most 500 characters, R14's text rule), authored by a member (<code>MACHINE_CANNOT_OVERRIDE</code> for a machine). The override is stamped with who and when, never edited, shown in the read (R25), and carried as a disclosure on every filing, counsel packet and communication prepared from the action (<code>filings</code> R24). An overridden breach action is never attachable to an escalation (which exists only for a determined breach, <code>escalation</code> R9).</li>
 <li><strong>New R46 (BOB).</strong> <code>actionCreate({document, viewer, author})</code> (<code>op=actioncreate</code>): the same write as a promotion of an action document, answered with the action's id; and <code>op=action</code> (R29's <code>actionRead</code>) and <code>op=actions</code> (R30's <code>actionsFor</code>) routed.</li>
@@ -166,7 +166,7 @@ table.wide{min-width:1180px}
 <h2>4. <code>monitoring</code>, <code>scheduler</code>, <code>queue</code> (BOB)</h2>
 <ul>
 <li><code>scheduler</code> gains a <code>deadline-recheck</code> consumer calling <code>monitoring.deadlineRecheck</code> on its cadence, so <code>monitoring</code> R34–R35 reach members (today nothing calls it outside tests).</li>
-<li><code>queue</code> gains three kinds: an action's clock entry overdue (a CONDITION: the counterparty's deadline), an escalation stage proposed (from <code>escalation.escalationsDue</code>, an OBLIGATION), and a plan checkpoint due (from <code>action-plans</code> R17, an OBLIGATION of the group's own, never a FINDING). Each is one item per occurrence, never repeated for the same one (DEC-69).</li>
+<li><code>queue</code> gains three kinds: an action's clock entry overdue (a CONDITION: the counterparty's deadline), an escalation stage proposed (from <code>escalation.escalationsDue</code>, an OBLIGATION), and a plan checkpoint due (from <code>action-plans</code> R17, an OBLIGATION of the group's own, never a FINDING). Each is one item per occurrence, never repeated for the same one (DEC-69). A fourth: when a member marks a received entry as pressure of a legal kind (a threat of suit, a subpoena, a demand to preserve), an OBLIGATION for an administrator to consider a litigation hold, which suspends the routine purge of transcripts (DEC-61, Bob, on the <code>coord</code> ledger); the item decides nothing (Bob, 2026-09-30: prepared for opposition).</li>
 <li>Strike the stale "not yet met" marks on <code>monitoring</code> R34, R35 and <code>publication</code> R36, R37 once the wiring lands.</li>
 </ul>
 <h2>5. <code>skills</code> (BOB, with the pack's doctrine)</h2>
@@ -175,7 +175,12 @@ table.wide{min-width:1180px}
 </ul>
 <h2>6. <code>jurisdictions</code> (BOB: data)</h2>
 <ul>
-<li>The first profile's templates for its Tier 1–2 kinds, a complete holiday calendar, and measured offices and deadlines (all five offices and the one deadline are <code>UNMEASURED</code> today).</li>
+<li>
+<p><strong>New R39 (Bob, 2026-09-30: the venue sets the standard of evidence).</strong> An <code>action_kinds</code> entry (R25) may carry <code>evidence: {standard, accepts, contestable?, basis}</code>: <code>standard</code> in words (at most 200 characters, naming the rule or practice, e.g. a rule of evidence's number), <code>accepts</code> a non-empty list of <code>{grade, coattested?}</code> the venue admits, <code>grade</code> a letter of <code>provenance</code>'s <code>BASIS_GRADES</code> and <code>coattested: true</code> requiring the capture's co-attestation (its trusted timestamp and co-archive, <code>capture</code>'s co-attestation), <code>contestable</code> a list in the same form of what it admits but the opposition may contest. Refusals join R28: <code>GRADE_UNKNOWN</code>, <code>EVIDENCE_NO_STANDARD</code>. Combined as one value per kind (R15): profiles that disagree on a kind's <code>evidence</code> have it withheld and reported in <code>conflicts</code>. Absent, the venue's standard reads undetermined (R27) and <code>actions</code> R48 shows grades alone. The test profile supplies <code>evidence</code> on at least one kind with a <code>contestable</code> grade (R36).</p>
+</li>
+<li>
+<p>The first profile's templates for its Tier 1–2 kinds, a complete holiday calendar, and measured offices and deadlines (all five offices and the one deadline are <code>UNMEASURED</code> today).</p>
+</li>
 </ul>
 <h2>7. Deferred (Bob, 2026-09-30)</h2>
 <ul>
@@ -428,6 +433,23 @@ table.wide{min-width:1180px}
 </tr>
 </tbody>
 </table></div>
+<h2><code>jurisdictions</code> (deltas §6)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>req</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R39</td>
+<td>a kind's <code>evidence</code> validates and reaches <code>combine</code>; two profiles that disagree on it withhold it and report the conflict</td>
+<td>an unknown grade refuses <code>GRADE_UNKNOWN</code>; no <code>standard</code> refuses <code>EVIDENCE_NO_STANDARD</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2>Wiring (deltas §4)</h2>
 <div class="tw"><table>
 <thead>
@@ -447,6 +469,11 @@ table.wide{min-width:1180px}
 <td>queue kinds</td>
 <td>one item each for an overdue clock (CONDITION), a proposed stage (OBLIGATION), a due checkpoint (OBLIGATION); none repeats for the same occurrence</td>
 <td>a checkpoint judged before its item is read removes the item</td>
+</tr>
+<tr>
+<td>litigation-hold reminder</td>
+<td>a received entry marked <code>pressure</code> of kind <code>legal</code> yields one OBLIGATION for an administrator; the item changes nothing by itself</td>
+<td>kind <code>retaliation</code> yields none</td>
 </tr>
 </tbody>
 </table></div>
