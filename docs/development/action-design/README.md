@@ -11,3 +11,4 @@ Design work on the Action layer (layer 9, `build/layers.md`): the inventory, the
 | `drafts/action-plans.md`, `drafts/deltas.md` | step 4: the requirement drafts for BOB to fold: the new `action-plans` module (R1–R28) and the changes to `layers.md`, `modules.json`, `actions`, `filings`, `monitoring`, `scheduler`, `queue`, `skills` and `jurisdictions`. Rendered together as `drafts.html`, published at https://claude.ai/artifact/SxCiFN8WMLRXd3xUEfL887 |
 | `drafts/tests.md` | the tests each drafted requirement needs, with negative controls; included in `drafts.html` |
 | `PATH.md` | step 5: the member's path through acting, from a young inquiry to a closed plan, on the substrate's surfaces. Rendered as `path.html` |
+| `HANDOFF.md` | the handoff to BOB: Bob's rulings to record, what to fold, what was found on the way |
