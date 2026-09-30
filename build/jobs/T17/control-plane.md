@@ -1,3 +1,17 @@
 # control-plane (T17)
 
 **Status** · session_01U9c3F6p3iPjDpkKhwgCrCS · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+N398, N399 (K573): four requirements proposed in my wording, and two facts you asked to hear first. I carry on against these readings; nothing here stops the rest of B1.
+
+(1) `op=stats` still lives in legacy-store (you asked to hear this before anything moves). The route is `store.mjs`:3033 and the method `store.mjs`:2020 (`#counts`); the per-class disclosure (no `leads`, no `observations`, `observationsNonLead` for all, `dbBytes` only when `capacity`) is decided there. Control-plane holds only the two stamps (`index.mjs`:2142 `viewer`, :2277 `capacity`). I move nothing. I convert the stamp half at my interface and leave the disclosure (the suite's arms A, B1, C, E, F) to whichever module takes `op=stats` (legacy-store today, record-core's counts under it, N342). Selftest and livefire (arm D) are legacy-index's hooks and cannot be driven at my interface.
+Proposed **R40**: `op=stats` is stamped `capacity=1` exactly for the `admin` class (the ADMIN_TOKEN binding and the founder's session), else `capacity=0`, beside its `viewer` (R17); a caller's `capacity` never reaches the store, in either direction.
+
+(2) `op=purge`'s `confirm=<store>` gate is not in control-plane: it is legacy-index's `gatedOp` arm (`src/index.mjs`:524–538). It refuses through legacy-index's `requiredArgument` (C-61.1), a row my requirements' "Decided by BOB" says is not this module's (K78 (3)). Control-plane cannot import legacy-index (order), so I cannot move the gate here without C-61.1's row being readable from control-plane. Best reading: the gate stays in legacy-index this tranche; I convert its admission half at my interface (member binding CLASS_FORBIDDEN, no class NOT_AUTHENTICATED, a session MACHINE_CREDENTIAL_REQUIRED, probe naming `bio` SCOPE_REFUSED, nothing forwarded), which R6, R9, R10 and R11 already cover, and I record the three confirm arms as not carried (legacy-index's). If you would rather the gate move here, rule where C-61.1's row lives (options: legacy-index hands `requiredArgument` in `hooks`, as it hands it to capture, extraction and monitoring; or the row and helper move to control-plane and legacy-index imports them).
+Proposed **R39** (for whichever module holds the gate): `op=purge` is refused 400 `REQUIRED_ARGUMENT_MISSING` (C-61.1), naming `expected` (the namespace the request landed in, R6) and `got`, unless `confirm` equals that namespace, before the store is called; nothing is written.
+
+(3) Proposed **R37** (D-78, `surfaced-by.test.mjs`): on `op=promote`, a creation (`base: null`) of an inquiry (its document's `object_type`, a legacy spelling included, through `normalizeType`) that is not a verified replay (R16) has `surfaced_by` in its `bundle.md` front matter set by the control plane: `human` for a session, `agent` for any other caller; the caller's value never reaches the store. Its `sha256` and `bytes` are recomputed when the caller sent no digest or the digest of the text it sent, else left as sent so the store refuses the mismatch. A revision is not restamped.
+
+(4) Proposed **R38** (D-61, `unattended-lease.test.mjs`): `op=lease`'s `actor` is set by the control plane: a session's member, any other caller `token:<class>` (an `ai` credential `token:ai`); the caller's `actor` never reaches the store. Record-core R10 (ANONYMOUS_LEASE, the lease as a courtesy lock) and promotion's CAS stay theirs, already covered there.
