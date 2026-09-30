@@ -3,8 +3,9 @@
    test; no network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, receipt, register, H } from "./fixture.mjs";
-import { captureOf, REACHABILITY_DEFAULTS, REACHABILITY_SETTINGS, TASK_KINDS } from "../../../src/capture/index.mjs";
+import { fresh, receipt, register, H, bucket, newKey, sshsign, signer } from "./fixture.mjs";
+import { captureOf, captureAccountStatement, REACHABILITY_DEFAULTS, REACHABILITY_SETTINGS, TASK_KINDS } from "../../../src/capture/index.mjs";
+import { NS_RATIFY } from "../../../src/sshsig.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const A = H("a"), B = H("b"), C = H("c"), D = H("d");
@@ -410,11 +411,72 @@ test("R59 (N166): source_reachability is a read contract: one row per address_no
   }
 });
 
-/* N418 (K650): every write goes through record-core's `transact` (its R32), so a writer's own statements land or roll
-   back together, a write made inside a caller's transaction joins it, and `afterCommit` (its R66) called by a listener
-   inside a write is held until the outermost commit. Observed at the interface: a trigger that fails a writer's later
-   statement, a listener that asks `afterCommit`, and a caller's transaction that refuses. */
-test("R26 R44 (N418): a writer's statements land or roll back as one, a listener's afterCommit waits for the commit, and a write inside a caller's refused transaction leaves nothing and runs nothing", async () => {
+/* R74 (N418, K650, K655): every write goes through record-core's `transact` (its R32), so a writer's own statements land
+   or roll back together, a write made inside a caller's transaction joins it, and `afterCommit` (its R66) called by a
+   listener inside a write is held until the outermost commit. Observed at the interface: every writer, each statement
+   it runs against the store and record-core's `transact` around it; a trigger that fails a writer's later statement; a
+   listener that asks `afterCommit`; and a caller's transaction that refuses. */
+test("R74 (N418): every statement that changes the store, from every writer this module provides, runs inside record-core's transact", async () => {
+  const b = bucket();
+  const { c, core, s } = fresh({ evidence: b, env: { INSTANCE_NAME: "i" } });
+  receipt(s, { address: "https://h.example/p", capture: A, first: "2026-01-01T00:00:00Z" });
+  receipt(s, { address: "https://h.example/q", capture: B, first: "2026-01-02T00:00:00Z" });
+  const key = await newKey();
+  signer(s, "m1", key.keyB64);
+  let depth = 0;
+  const outside = [], inside = new Set();
+  const transact = core.transact.bind(core);
+  core.transact = (fn) => transact(() => { depth++; try { return fn(); } finally { depth--; } });
+  const exec = s.sql.exec;
+  let writer = null;
+  s.sql.exec = (q, ...a) => {
+    if (/^\s*(INSERT|UPDATE|DELETE|REPLACE)\b/i.test(q)) (depth > 0 ? inside.add(writer) : outside.push(`${writer}: ${q.trim().slice(0, 70)}`));
+    return exec.call(s.sql, q, ...a);
+  };
+  const as = async (name, fn) => { writer = name; await fn(); writer = null; };
+  const nav = (a) => ({ ref: a, address: a, address_norm: a, type: "deferred", chrome: true, chrome_basis: "<nav>" });
+  await as("knock", () => c.knock({ content: "k1", sourceAddress: "1.1.1.1", knockerSecret: "a knocker secret of twenty-plus" }));
+  await as("knockAttempt", () => c.knockAttempt({ sourceAddress: "1.1.1.2" }));
+  const kid = c.inboxList(null).inbox[0].knock_id;
+  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "discarded", by: "m1" }));
+  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "new", by: "m1" }));
+  await as("pullKnock", () => c.pullKnock({ knockId: kid, by: "m1" }));
+  await as("recordCaptureActor", () => c.recordCaptureActor({ captureSha: C, actor: "m1" }));
+  await as("recordCaptureAccount", async () => {
+    const r = await c.recordCaptureAccount({ captureSha: C, text: "mine", signature: await sshsign(key, captureAccountStatement(C, "mine"), NS_RATIFY), by: "m1" });
+    assert.equal(r.ok, true);
+  });
+  b.held.set(`bio/captures/${D}`, new Uint8Array([1]));
+  await as("reattest", () => c.reattest({ captureSha: D, by: "m1" }));
+  await as("renderAdmit", () => c.renderAdmit({ allowanceMs: 1000, reserveMs: 10, cap: 2 }));
+  await as("renderSpend", () => c.renderSpend({ ms: 5, releaseMs: 10 }));
+  await as("recordLinks", () => c.recordLinks({ sourceCapture: A, capturedAt: "2026-01-01T00:00:00Z", links: [nav("https://h.example/n")] }));
+  await as("recordLinks", () => c.recordLinks({ sourceCapture: B, capturedAt: "2026-01-02T00:00:00Z", links: [nav("https://h.example/n")] }));
+  await as("recordLinkVerdict", () => c.recordLinkVerdict({ sourceCapture: A, addressNorm: "https://h.example/n", verdict: "undetermined", basis: "b" }));
+  await as("deriveSiteChrome", () => c.deriveSiteChrome({ host: "h.example" }));
+  await as("saveCaptureSession", () => c.saveCaptureSession({ session: "s1", locator: "l", primarySha: A, primaryFile: "f", base: "b", state: {} }));
+  await as("loadCaptureSession", () => c.loadCaptureSession({ session: "s1" }));
+  await as("dropCaptureSession", () => c.dropCaptureSession({ session: "s1" }));
+  await as("recordSiteAssets", () => c.recordSiteAssets({ host: "h.example", primarySha: A, observations: [{ address_norm: "https://h.example/a.css", sha256: H("1") }] }));
+  await as("recordSiteAssets", () => c.recordSiteAssets({ host: "h.example", primarySha: B, observations: [{ address_norm: "https://h.example/a.css", sha256: H("2") }] }));
+  await as("recordReuseVerdicts", () => c.recordReuseVerdicts({ bundleId: "INFO-1", verdicts: [{ source_capture: A, address_norm: "https://h.example/a.css", verdict: "confirmed", reused_sha: H("1") }] }));
+  await as("recordCaptureLimit", () => c.recordCaptureLimit({ runtime: "subrequests", observed: 40 }));
+  await as("recordCaptureLimit", () => c.recordCaptureLimit({ runtime: "subrequests" }));
+  await as("taskEnqueue", () => c.taskEnqueue({ captureSha: A, subject: "s" }));
+  await as("taskEventAttempt", () => c.taskEventAttempt({ kind: "authority-undetermined", captureSha: A }));
+  await as("taskEventRemove", () => c.taskEventRemove({ kind: "authority-undetermined", captureSha: A }));
+  await as("recordValidators", () => c.recordValidators({ addressNorm: "https://h.example/p", captureSha: A, etag: "e" }));
+  await as("recordSourceOutcome", () => c.recordSourceOutcome({ addressNorm: "https://h.example/p", outcome: "fetch_failed" }));
+  s.sql.exec = exec;
+  assert.deepEqual(outside, [], "no statement changed the store outside a transaction");
+  for (const w of ["knock", "knockAttempt", "inboxResolve", "pullKnock", "recordCaptureActor", "recordCaptureAccount", "reattest", "renderAdmit",
+                   "renderSpend", "recordLinks", "recordLinkVerdict", "deriveSiteChrome", "saveCaptureSession", "loadCaptureSession",
+                   "dropCaptureSession", "recordSiteAssets", "recordReuseVerdicts", "recordCaptureLimit", "taskEnqueue", "taskEventAttempt",
+                   "taskEventRemove", "recordValidators", "recordSourceOutcome"])
+    assert.ok(inside.has(w), `${w} wrote, through transact`);
+});
+
+test("R74 (N418): a writer's statements land or roll back as one, a listener's afterCommit waits for the commit, and a write inside a caller's refused transaction leaves nothing and runs nothing", async () => {
   const { c, core, s, rows } = fresh();
   /* one act: the second statement of each writer fails, and the first is undone with it */
   s.db.exec(`CREATE TRIGGER fail_reach BEFORE UPDATE ON source_reachability BEGIN SELECT RAISE(ABORT, 'reach down'); END`);
