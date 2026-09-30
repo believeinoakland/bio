@@ -614,11 +614,12 @@ export class Reevaluation {
                   id, str(entry), before, rung_after, at);
     let dependents = [];
     try { dependents = this.#legsOnSource(id); } catch { dependents = []; }
-    const failed = this.#tell({ kind: "source", subject: id, source: "source", since: at,
+    const out = { ok: true, moved: true, at, dependents: dependents.length };
+    this.#tellAfterCommit({ kind: "source", subject: id, source: "source", since: at,
       detail: `the source ${id} moved from ${before ?? "an unstated rung"} to ${rung_after}; `
         + `${dependents.length ? "what rests on its captures is named" : "nothing here rests on its captures"}`,
-      rung_before: before, rung_after, dependents });
-    return { ok: true, moved: true, at, dependents: dependents.length, ...(failed.length ? { listeners_failed: failed } : {}) };
+      rung_before: before, rung_after, dependents }, out);
+    return out;
   }
 
   /* ---------------------------------------------------------------- R1–R6, R16, R17: the obligation */
@@ -817,9 +818,23 @@ export class Reevaluation {
     return failed;
   }
 
+  /* R8 (N406, K598): the listeners are told once what raised the event has committed, through record-core's
+     `afterCommit` (its R66): at once outside any transaction; inside one, just after the outermost commits and before
+     it returns; never when it, or the savepoint holding this call, rolls back. A listener that failed is named on
+     `out`, the answer already handed back, as `listeners_failed` (absent while none has). */
+  #tellAfterCommit(event, out) {
+    this.record.afterCommit(() => {
+      const failed = this.#tell(event);
+      if (!failed.length) return;
+      const named = out.listeners_failed || (out.listeners_failed = []);
+      for (const m of failed) if (!named.includes(m)) named.push(m);
+    });
+  }
+
   /** R7: the live legs resting on `target` (`inquiry.restsOnLive`), each `{bundle_id, ord, role, state}`, a dependent
-   *  the viewer may not see withheld and not counted, no titles. Called by the acts that move a target, after they
-   *  commit; the act puts the answer in its reply as `reevaluation`. R8's listeners are told. */
+   *  the viewer may not see withheld and not counted, no titles, answered at once. Called by the acts that move a
+   *  target; the act puts the answer in its reply as `reevaluation`, whole. R8's listeners are told after the act
+   *  commits, and any that failed are written onto this answer then (N406). */
   raise({ target = null, source = null, since = null, edition = null, viewer = null } = {}) {
     const t = str(target);
     const visible = this.#redactor(viewer);
@@ -829,10 +844,9 @@ export class Reevaluation {
       .filter((l) => visible(l.bundle_id) !== null)
       .map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role ?? null, state: l.state ?? null }));
     const out = { source, since, ...(edition != null ? { edition } : {}), raised };
-    const failed = t ? this.#tell({ kind: "finding", subject: t, source, since, ...(edition != null ? { edition } : {}),
-                                    detail: `${t} moved (${source}); ${raised.length ? "what rests on it is named" : "nothing visible here rests on it"}`,
-                                    dependents: raised }) : [];
-    if (failed.length) out.listeners_failed = failed;
+    if (t) this.#tellAfterCommit({ kind: "finding", subject: t, source, since, ...(edition != null ? { edition } : {}),
+                                   detail: `${t} moved (${source}); ${raised.length ? "what rests on it is named" : "nothing visible here rests on it"}`,
+                                   dependents: raised }, out);
     return out;
   }
 
@@ -1171,7 +1185,18 @@ export class Reevaluation {
       }
       return null;
     });
-    const failed = new Set();
+    const last = legs.length ? legs[legs.length - 1] : null;
+    let cursor = truncated && last ? `${last.holder}#${last.ord}` : null;
+    if (cases && cases.cursor !== null) { truncated = true; cursor = `${CASE_CURSOR}${cases.cursor}`; }
+    const out = { ok: true, examined, chain_unread: unread, raised, count: raised.length, limit: cap, truncated, cursor,
+                  ...(cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the "
+                    + "cited parts of a case edition, so no case's owners were told of a newer version of what it cites; "
+                    + "that is not the same as none" } : {}),
+                  says: "a notice is raised once per question, leg and newer capture, and once per case, cited part and "
+                      + "newer capture to that case's owners, only where the newer version affects the passage or whether "
+                      + "it does is undetermined; nothing was moved, and only a member's act moves a reference" };
+    /* R8 (N406): each notice raised is told once the sweep's writes have committed, and a caller's transaction around
+       it has too; a rolled-back sweep raised nothing and tells nothing. */
     for (const r of raised) {
       const told = r.kind === "case"
         ? { kind: "passage", subject: r.part, source: "newer_capture", since: when,
@@ -1185,19 +1210,9 @@ export class Reevaluation {
             dependents: [{ bundle_id: r.holder, ord: r.ord }],
             captures: { cited: r.capture_sha, newer: r.newer_capture },
             grade: r.grade, affects: r.affects, notice: r.notice };
-      for (const mod of this.#tell(told)) failed.add(mod);
+      this.#tellAfterCommit(told, out);
     }
-    const last = legs.length ? legs[legs.length - 1] : null;
-    let cursor = truncated && last ? `${last.holder}#${last.ord}` : null;
-    if (cases && cases.cursor !== null) { truncated = true; cursor = `${CASE_CURSOR}${cases.cursor}`; }
-    return { ok: true, examined, chain_unread: unread, raised, count: raised.length, limit: cap, truncated, cursor,
-             ...(failed.size ? { listeners_failed: [...failed] } : {}),
-             ...(cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the "
-               + "cited parts of a case edition, so no case's owners were told of a newer version of what it cites; "
-               + "that is not the same as none" } : {}),
-             says: "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer "
-                 + "capture to that case's owners, only where the newer version affects the passage or whether it does is "
-                 + "undetermined; nothing was moved, and only a member's act moves a reference" };
+    return out;
   }
 
   /* R26: R14's case half for one batch: the ratified cases after `afterCase`, one counting one toward `budget`, each

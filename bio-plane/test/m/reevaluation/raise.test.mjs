@@ -159,3 +159,92 @@ test("R8 (K231): onBasisChanged's refusals are membership's one site (listenerRe
   assert.equal(w.r.onBasisChanged("conformance", () => {}).ok, true);
   assert.deepEqual(w.r.onBasisChanged("conformance", () => {}), listenerRefusal([{ module: "conformance" }], "conformance", () => {}));
 });
+
+test("R7 R8 (N406): inside a committing transaction raise answers raised at once, and the listeners are told just after the outermost commit, listeners_failed written onto the answer it returned", () => {
+  const w = base();
+  const heard = [];
+  w.r.onBasisChanged("conformance", (e) => heard.push(e.subject));
+  w.r.onBasisChanged("consequences", () => { throw new Error("boom"); });
+  let a = null, inside = null;
+  const out = w.record.transact(() => {
+    w.record.transact(() => {
+      a = w.r.raise({ target: T, source: "edition", since: "2026-09-28T00:00:00Z", edition: 2, viewer: ADMIN });
+      return null;
+    });
+    inside = { raised: a.raised.map((l) => l.bundle_id), heard: heard.length, failed: a.listeners_failed };
+    return { ok: true };
+  });
+  assert.deepEqual(out, { ok: true }, "a failing listener changes nothing transact answers");
+  assert.deepEqual(inside, { raised: [DEP], heard: 0, failed: undefined },
+    "raised at once; nobody told while the outer transaction is open, not even after the savepoint commits");
+  assert.deepEqual(heard, [T], "told once, after the outermost commit, before transact returned");
+  assert.deepEqual(a.listeners_failed, ["consequences"], "written onto the answer raise returned");
+  /* outside any transaction it is at once, as before */
+  const b = w.r.raise({ target: T, source: "edition", since: "s", viewer: ADMIN });
+  assert.deepEqual([heard.length, b.listeners_failed], [2, ["consequences"]]);
+});
+
+test("R7 R8 (N406): a rolled-back caller, and a savepoint rolled back under a committing outer, tell no listener and name none", () => {
+  const w = base();
+  const heard = [];
+  w.r.onBasisChanged("conformance", (e) => heard.push([e.subject, e.source]));
+  w.r.onBasisChanged("consequences", () => { throw new Error("boom"); });
+  /* a caller that refuses, and one that throws */
+  let a = null;
+  const refused = w.record.transact(() => {
+    a = w.r.raise({ target: T, source: "deferred", since: "s1", viewer: ADMIN });
+    return { ok: false, reason: "SOMETHING_ELSE" };
+  });
+  assert.equal(refused.reason, "SOMETHING_ELSE");
+  assert.deepEqual([a.raised.map((l) => l.bundle_id), a.listeners_failed, heard], [[DEP], undefined, []]);
+  let b = null;
+  assert.throws(() => w.record.transact(() => {
+    b = w.r.raise({ target: T, source: "deferred", since: "s2", viewer: ADMIN });
+    throw new Error("the act failed");
+  }), /the act failed/);
+  assert.deepEqual([b.listeners_failed, heard], [undefined, []]);
+  /* a savepoint that rolls back under an outer that commits: only the outer's raise is told */
+  let inner = null, outer = null;
+  w.record.transact(() => {
+    w.record.transact(() => {
+      inner = w.r.raise({ target: T, source: "deferred", since: "inner", viewer: ADMIN });
+      return { ok: false, reason: "INNER_REFUSED" };
+    });
+    outer = w.r.raise({ target: T, source: "reopened", since: "outer", viewer: ADMIN });
+    return null;
+  });
+  assert.deepEqual(heard, [[T, "reopened"]]);
+  assert.deepEqual([inner.listeners_failed, outer.listeners_failed], [undefined, ["consequences"]]);
+});
+
+test("R8 R14 R28 (N406): a notice sweep and a source's move inside a rolled-back caller write nothing and tell nothing; committed, they are told after the commit", () => {
+  const w = world();
+  const a = w.cap("a", "old"), b = w.cap("b", "new");
+  w.doc(DOC, [a]); w.doc(DOC2, [b]);
+  w.read(a.sha, [U(0, "alpha"), U(1, "the budget was cut")]);
+  w.read(b.sha, [U(0, "alpha"), U(1, "something else entirely")]);
+  w.at(a.sha, "ex.org/doc", "2026-09-01T00:00:00Z"); w.at(b.sha, "ex.org/doc", "2026-09-20T00:00:00Z");
+  const cid = w.passage(DOC, a.sha);
+  w.inquiry(DEP, { legs: [{ target: DOC, content_id: cid }] });
+  const heard = [];
+  w.r.onBasisChanged("conformance", (e) => heard.push(e.kind));
+  w.r.onBasisChanged("consequences", () => { throw new Error("boom"); });
+  let sweep = null, moved = null;
+  w.record.transact(() => {
+    sweep = w.r.raiseNotices({});
+    moved = w.r.sourceMoved({ source: "SRC-1", rung_before: "unknown", rung_after: "partly_known" });
+    return { ok: false, reason: "ROLLED_BACK" };
+  });
+  assert.deepEqual([sweep.count, moved.moved], [1, true], "each answered at once");
+  assert.deepEqual([w.count("reevaluation_notices"), w.count("reevaluation_source_moves"), heard,
+                    sweep.listeners_failed, moved.listeners_failed], [0, 0, [], undefined, undefined]);
+  w.record.transact(() => {
+    sweep = w.r.raiseNotices({});
+    moved = w.r.sourceMoved({ source: "SRC-1", rung_before: "unknown", rung_after: "partly_known" });
+    assert.deepEqual(heard, [], "not before the commit");
+    return null;
+  });
+  assert.deepEqual([w.count("reevaluation_notices"), w.count("reevaluation_source_moves")], [1, 1]);
+  assert.deepEqual(heard, ["passage", "source"]);
+  assert.deepEqual([sweep.listeners_failed, moved.listeners_failed], [["consequences"], ["consequences"]]);
+});
