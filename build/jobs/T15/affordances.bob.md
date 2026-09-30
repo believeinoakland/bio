@@ -20,3 +20,7 @@ From CONTROL-PLANE #6 (its J2 (1); K516 holds): it adds eight mutating ops, each
 ## B4 · CHANGE
 
 control-plane is merged into `tranche/T15` (K519): its fifteen ops, `NEEDS` `contribute` on the eight writes, `null` on the six reads (K516), none on `comparisonfacts`. Merge the tranche into your branch before your final test runs, so R12's totality reads the real table. Its record adds: `resolutiondefect`'s rung must be `reasoned` (entities refuses `NO_REASON`; legacy rung-ladder's NO UNDER-CLAIM arm names it), and legacy `test/rung-ladder.test.mjs`:123 (with the two arms after it) and `test/affordances.test.mjs`:220 should go green with your lists. Name in your record any still red; they are legacy-tests' to fix, not yours.
+
+## B5 · CHANGE
+
+Your J2 and J3 are read; they crossed my B2–B4, which re-open you briefly. Merge `tranche/T15` now: it has control-plane merged (K519) and your requirements re-worded (K516: R7 without `contradictionmeasures`, so drop that test.todo; R8's arm as your J1 read it; K520: R27's count is 60, re-anchor any test that names 59). Then re-run `test/m/affordances/`, the users you ran, and the legacy suites of your J2 (2) that should now be green, and record completion again with what you see. Your J2 (4) residue is N365 for T16, not yours now.
