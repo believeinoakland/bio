@@ -1,6 +1,6 @@
 # contradiction — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #42, 2026-09-26 (P18), from a reading of the code; for Bob's approval (a product module, P17). Layer 6. Code today (measured on `tranche/T3` @ `35ea098`; `build/extraction/contradiction.md` has the table): `bio-plane/src/contradiction.mjs` 1–83 (the labels, the judgement prompt pinned by digest, the input rendering; already this module's path); `bio-plane/src/store.mjs` 14536–15304 (the pairing read `contradictionPairs` with its four keys, ladder and absence sentences; `#candidateSide`, `#appendContradictionCandidate`, `contradictionPropose`) and the dispatch entries `contradictionpropose`, `contradictionpairs` (49095–49105); `bio-plane/checks/bio-checks.mjs` 13829–13909 (C-60, C-93); `schema.mjs` 3906–3936 (`contradiction_candidates`). `from`: `legacy-store` and `legacy-checks` (K64's pattern); `index.mjs` holds only these ops' routing, classes, viewer gates and proposer stamps, which stay with `control-plane` (K3). Not yet met: R21 (the run gate by registration, K31). No old-plan row is carried here. N345 (PRESENT and RESOLVE; DEC-76, DEC-77, DEC-84, DEC-85) adds R24–R55 and amends R5, R8, R10, R11, R12, R14, R19, R20. N345's contradiction part folded for T15 by a worker for BOB #68, 2026-09-30 (K455, K456, K459).
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #42, 2026-09-26 (P18), from a reading of the code; for Bob's approval (a product module, P17). Layer 6. Code today (measured on `tranche/T3` @ `35ea098`; `build/extraction/contradiction.md` has the table): `bio-plane/src/contradiction.mjs` 1–83 (the labels, the judgement prompt pinned by digest, the input rendering; already this module's path); `bio-plane/src/store.mjs` 14536–15304 (the pairing read `contradictionPairs` with its four keys, ladder and absence sentences; `#candidateSide`, `#appendContradictionCandidate`, `contradictionPropose`) and the dispatch entries `contradictionpropose`, `contradictionpairs` (49095–49105); `bio-plane/checks/bio-checks.mjs` 13829–13909 (C-60, C-93); `schema.mjs` 3906–3936 (`contradiction_candidates`). `from`: `legacy-store` and `legacy-checks` (K64's pattern); `index.mjs` holds only these ops' routing, classes, viewer gates and proposer stamps, which stay with `control-plane` (K3). Not yet met: R21 (the run gate by registration, K31). No old-plan row is carried here. N345 (PRESENT and RESOLVE; DEC-76, DEC-77, DEC-84, DEC-85) adds R24–R55 and amends R5, R8, R10, R11, R12, R14, R19, R20. N345's contradiction part folded for T15 by a worker for BOB #68, 2026-09-30 (K455, K456, K459). Folded by a worker for BOB #71, 2026-09-30 (T16 opening): W3 (N359, K494) R27's `stale` bullet, clarifying, meaning unchanged; N365 (K520) R56, the read `affordances` R14 carries; not yet met.
 
 **Size (P6).** About 975 lines move (about 640 without comment-only lines): `store.mjs` 780, `contradiction.mjs` 83, `bio-checks.mjs` 81, `schema.mjs` 31. Well under 4,000; one session reads it with the public parts of its uses.
 
@@ -78,7 +78,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 - **R27** For each referent at its version (R14), this answers its marks from every candidate the viewer may see on it:
   - `in_tension`: a duty that is `open` or `taken_up`.
   - `softened`: `explained_not_shown`, with the explanation, the member and the coordinates, each qualifier marked hypothesis.
-  - `stale`: this side named wrong by a CORRECTED resolution, with the reason, the member, the instant and the act or inquiry.
+  - `stale`: this side named wrong by a CORRECTED resolution, with the reason, the member and the instant (for a resolution concluded by a contradiction inquiry, R36's concluding member and the conclusion's instant), and the act or inquiry. *(its contradiction-inquiry arm not yet met: N359)*
   - `qualified`: resolved `dissolved`, with the coordinates, the qualifier and the explanation, marked evidenced.
   - `held_irreconcilable`: resolved `irreconcilable`, with the inquiry.
   - `lead`: an open lead.
@@ -176,6 +176,9 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
   - `irreconcilable` keeps both sides, and no choice is made.
 
   A conclusion reached by `basis-versions`' own door carries its resolution the same way, since the state is read from the document (R26), and records no acceptance basis.
+
+**candidateSidesSeen({inquiry, viewer}) → boolean** (in-process; read as the viewer, for `affordances` R14; N365)
+- **R56** It answers `true` exactly when R36's `NOT_A_CONTRADICTION_INQUIRY` check (C-93.27) passes for this viewer: the inquiry is one the viewer may see, it is a contradiction inquiry (`inquiry` R48's `contradictionLink` names a candidate), this module holds that candidate, and the viewer may see both of its sides (R10: every bundle each side lives in). It answers `false` otherwise, an absent viewer included. It is the one predicate R36 applies, so the offer and the act cannot disagree. It writes nothing and never throws. *(not yet met: N365)*
 
 #### The recommendation (the machine's one act)
 

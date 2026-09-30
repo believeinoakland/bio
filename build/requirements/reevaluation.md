@@ -1,6 +1,6 @@
 # reevaluation — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 7. Code today (measured on `tranche/T3` @ `f324df9b0f`; `build/extraction/reevaluation.md` has the table): `bio-plane/src/store.mjs` 4792–4803 (`#reevalRaisedBy`), 31193–31557 (the REC-17 header, `reevaluations`, `#reevalLegsEarned`, `#reevalMoved`, `#frontmatterOf`, `#basisFrontmatter`), 36670–36768 (`changedFromAudit` and its bounds), 36770–36824 (the D-394 header, `VERSION_NOTICE_LEGS_MAX`), 37182–37254 (`versionNotice`), the `reevaluation` answer fields of four acts (4782–4789 dispose, 7894–7897 reopen, 8980–8986 a new edition, 12714–12721 divide), and the dispatch entries `changedfromaudit`, `reevaluations`, `versionnotice`. `bio-plane/checks/bio-checks.mjs` 1226–1274 (C-10.1: `REEVAL_SOURCES`, `checkReevalPending`, called at 1223) and 14039–14070 (the C-80 header, C-80.1, C-80.2). `schema.mjs`: no table. `from`: `legacy-store` as declared; the map proposes `legacy-store` and `legacy-checks`. Not yet met: R8, R9 (the registration layer 9 needs), R14 (REC-222), R15 (REC-223), R16 (K102), R17 (K102). N178 folded by BOB #54 (K228): `raiseNotices` stated (K199 (1), met); R25, the sweep's due, wake and tick, not yet met. N345's contradiction part folded for T15 by a worker for BOB #68, 2026-09-30 (K455, K456, K459).
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 7. Code today (measured on `tranche/T3` @ `f324df9b0f`; `build/extraction/reevaluation.md` has the table): `bio-plane/src/store.mjs` 4792–4803 (`#reevalRaisedBy`), 31193–31557 (the REC-17 header, `reevaluations`, `#reevalLegsEarned`, `#reevalMoved`, `#frontmatterOf`, `#basisFrontmatter`), 36670–36768 (`changedFromAudit` and its bounds), 36770–36824 (the D-394 header, `VERSION_NOTICE_LEGS_MAX`), 37182–37254 (`versionNotice`), the `reevaluation` answer fields of four acts (4782–4789 dispose, 7894–7897 reopen, 8980–8986 a new edition, 12714–12721 divide), and the dispatch entries `changedfromaudit`, `reevaluations`, `versionnotice`. `bio-plane/checks/bio-checks.mjs` 1226–1274 (C-10.1: `REEVAL_SOURCES`, `checkReevalPending`, called at 1223) and 14039–14070 (the C-80 header, C-80.1, C-80.2). `schema.mjs`: no table. `from`: `legacy-store` as declared; the map proposes `legacy-store` and `legacy-checks`. Not yet met: R8, R9 (the registration layer 9 needs), R14 (REC-222), R15 (REC-223), R16 (K102), R17 (K102). N178 folded by BOB #54 (K228): `raiseNotices` stated (K199 (1), met); R25, the sweep's due, wake and tick, not yet met. N345's contradiction part folded for T15 by a worker for BOB #68, 2026-09-30 (K455, K456, K459). N364 (DEC-78 item 5(e); `build/plan/draft-N345-dec78-80-81.md` §4, K497, K509) folded by a worker for BOB #71, 2026-09-30 (T16 opening): R28 and the terms' `source` arm; not yet met.
 
 **Size (P6).** About 700 lines move (about 330 without comment-only and blank lines): `store.mjs` 622, `bio-checks.mjs` 81. REC-222 and REC-223 add a notice table and two acts. Well under 4,000.
 
@@ -12,7 +12,7 @@ When something a finding rests on changes, this module says which findings are a
 
 ### Provides
 
-Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_basis`). A **cause** is `{source, since, detail, …}`, `source` one of `supersession`, `edition`, `deferred`, `reopened`, `dismissed`, `corrected` (R27; N345). An **obligation** is `{bundle_id, title, object_type, current_state, target, target_state, legs, reeval, causes, stored, strength, superseded_by?}`.
+Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_basis`). A **cause** is `{source, since, detail, …}`, `source` one of `supersession`, `edition`, `deferred`, `reopened`, `dismissed`, `corrected` (R27; N345), `source` (R28; N364). An **obligation** is `{bundle_id, title, object_type, current_state, target, target_state, legs, reeval, causes, stored, strength, superseded_by?}`.
 
 **reevaluations({target, viewer})** (`op=reevaluations`; admin, member, probe)
 - **R1** A target that is absent or that the viewer may not see is refused `NO_SUCH_BUNDLE`. With no target, every id any basis leg names is asked. It writes nothing.
@@ -64,6 +64,9 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 
   It writes nothing.
 
+**A source's rung moved** (N364; DEC-78 item 5(e))
+- **R28** R2 gains the cause arm `source`. A dependent carries it when a live leg rests on a capture whose source's rung (`sources.rungOf`, read as the plane) moved since the leg's basis version, with `detail` the rung before and after and the disclosure's instant. It is raised through R8's listeners from `sources.onDisclosure`, and it never regrades: the leg's grade is unchanged. *(not yet met: N364)*
+
 ## Private
 
 ### Uses
@@ -79,6 +82,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 - `basis-versions`: the new version R15 writes; the `inquiry_basis_versions` read contract (its R38) for R27's claim referents (K493).
 - `strength`: `strengthOf` (R4, R17).
 - `contradiction` (N345): `tensionsOn` (its R27), for R27.
+- `sources` (N364): `rungOf` (its R9) and `onDisclosure` (its R10), for R28.
 
 ### Invariants
 
@@ -98,6 +102,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 - `docs/development/NOTIFICATIONS.md` (the queue and mute kinds on D-534's model).
 - DEC-12 (editions), DEC-19, DEC-69, DEC-70, DEC-72; `build/layers.md` layer 7.
 - DEC-84 item 7 and `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §9 ("telling the holders"): R27 (N345).
+- DEC-78 item 5(e) (a source's firmer identity reaches the findings resting on it as a re-evaluation notice, never a silent regrade): R28 (N364).
 - State Rules §5.4 is amended to say the obligation is derived on read, not a stored flag a cascade sets, with its four cascade events as causes and a member's recorded re-evaluation closing one cause for one dependent until the target moves again (R16, R18; K102, a change to the canon's text).
 
 ### Suggestions

@@ -1,0 +1,84 @@
+# sources — requirements
+
+**Status** · APPROVED by Bob 2026-09-30 (K509 (1): a new product module, placed after `capture` in layer 3). DRAFT by a worker for BOB #69, 2026-09-30 (`build/plan/draft-N345-dec78-80-81.md` §2), reviewed by BOB (K497); Bob ruled its questions as recommended (K509: (1) this module; (4) a pseudonym is an identity detail, consent by the source's knocker secret or a member's evidenced record; (5) hand-carried material's rule recorded here, R12, its intake built with the upload redesign). Folded by a worker for BOB #71, 2026-09-30 (T16 opening). Layer 3. Code today: none; the module is written new by its first job. Not yet met: every id (N364).
+
+**Size (P6).** New. Expected well under 4,000 lines: a history table, a consent table, a read log and their reads.
+
+## Public
+
+### Purpose
+
+Holds each source, meaning the knocker, the person who handed material over, and later the person revealed behind them, as a dated, attributed history of disclosures, never as one overwritten field (DEC-78 item 5). It also answers what of a source may be published, and to whom.
+
+### Provides
+
+Terms. A **source** is the person behind a capture that was given to the group rather than fetched, held under its own id. A **disclosure** is one entry of its history: what was revealed about the source, how, to whom it is known, with its evidence. An **audience** is `member`, `group` or `public`, lowest to highest. `by` and `viewer` are the control plane's stamps, never a body's. Every refusal names its `reason` and `code`, and carries its row's `check` and `translation`.
+
+**sourceOf({captureSha, viewer})**
+- **R1** A source exists for each pulled knock (`capture` R65): one per pseudonym, and one per knock sent without a secret. `sourceOf({captureSha, viewer})` answers the source as it stood when the capture was received (the capture's own `source`, verbatim) and, beside it, the source's current history (R5 governs which values the viewer reads). A capture's stated source never changes. *(not yet met: N364)*
+
+**recordDisclosure({source, revealed: {kind, value?}, how, knownTo, evidence, recorded, sight?, by})** (`op=sourcedisclose`)
+- **R2** `kind` is one of `pseudonym_link`, `attribute` (occupation, employer, role), `name`. `how` is one of `self`, `filing`, `third_party`, `hostile`. `knownTo` is one of `member`, `group`, `public`. `evidence` is required. The entry is appended with `by` (a stamp) and the instant, and never edited; a later entry supersedes it on read. Refusals: `NO_SUCH_SOURCE` (C-121.1), `BAD_DISCLOSURE` (C-121.2, naming the field), `NO_EVIDENCE` (C-121.3). *(not yet met: N364)*
+- **R3** A `hostile` disclosure is stored as the exposer's claim, `{claimed_by, at}`, and read as "named by <claimed_by> on <date>; not confirmed by the group", with `confirmed: false` always. A confirmation is its own R2 entry, and R7 requires the source's consent for it (DEC-78 item 5(b)). *(not yet met: N364)*
+- **R4** `recorded: false` records that a detail is known to the group without storing its value ("known to the group, not recorded", item 5(c)). The entry holds no value, and no read answers one. *(not yet met: N364)*
+- **R5** A stored value (`recorded: true`) needs `sight: [member ids]`, a non-empty list (`NO_SIGHT_LIST`, C-121.4). Only those members read the value; any other viewer gets the entry with `value` withheld and `withheld: true`. Each read that answers a value appends `{source, entry, reader, at}` to the source's read log. `readLog({source})` answers that log to the listed members and to administrators. *(not yet met: N364)*
+
+**linkClaim({source, to, evidence, by})** (`op=sourcelink`)
+- **R6** It claims that two sources are one person. It is recorded as a `pseudonym_link` disclosure with its evidence. When the revealed person presents the same knocker secret (R11's arm), the claim's basis is `same_secret`, the strongest. The claim does not merge the sources: each keeps its own history. `NO_SUCH_SOURCE`. *(not yet met: N364)*
+
+**recordConsent({source, entry, audience, evidence, by})** (`op=sourceconsent`) **and withdrawConsent({source, entry, audience, by})** (`op=sourceconsentwithdraw`)
+- **R7** A consent covers one entry for one audience and is stated as permanent for anything published under it. A withdrawal binds only later publications: what is published stays published (item 5(d)). `CONSENT_NOT_STANDING` (C-121.5) when the entry does not exist, or when the audience is lower than what is already consented. *(not yet met: N364)*
+
+**publishableAt({source, audience, at?}), rungOf({source, viewer})**
+- **R8** `publishableAt` answers each entry that may be shown to `audience`, each with its basis: `consent` (R7, not withdrawn at `at`) or `public_elsewhere` (a `knownTo: public` entry whose evidence is a citation, and never a `hostile` one alone, which answers as R3's claim sentence). Every other entry is left out, and nothing is said about it. The group is never the first to make a detail more public (item 5(a)). It writes nothing and never throws. *(not yet met: N364)*
+- **R9** `rungOf` answers the ladder: `unknown`; `same_knocker` (proved by the secret); `partly_known`; `known_to_group`; `publicly_known`. Each rung comes with who knows and how, from the history, and a withheld value stays withheld (R5). *(not yet met: N364)*
+
+**onDisclosure(listener)** (a registration later modules fill once at start; K31's pattern)
+- **R10** Each registration goes through `membership.listenerRefusal`, and each listener is called after every R2, R6 or R7 commit with `{source, entry, rung_before, rung_after}`. A listener's failure never undoes the act. *(not yet met: N364)*
+
+**consentBySecret({knockerSecret, entry, audience, withdraw?})** (`op=knockerconsent`, no account)
+- **R11** A source proves who they are by presenting their knocker secret (its digest and pseudonym as `capture.knockerDigestOf` answers them), and consents to, or withdraws from, one entry for one audience, as R7 records a consent. `SECRET_NOT_RECOGNISED` (C-121.6) is answered identically for every failure, and the act is rate-bound as a knock is, in the same windows as knocks (`capture` R31): a consent attempt counts as a knock from its source (K530). *(not yet met: N364)*
+
+## Private
+
+### Uses
+
+- `legacy-checks`: the shared argument checks (`requiredArgument`, `isMachineIdentity`).
+- `record-core`: `transact`, `stampInstant`, `mintOpaqueId` (a source's id), `declarePurge` (R13's exemption).
+- `membership`: `listenerRefusal` (R10), the member session stamp, `activeAdmins` (R5's administrators).
+- `capture`: the inbox rows (`knocker_digest`, `pseudonym`, status; its R32, R66), `knocksOf` (its R67), `knockerDigestOf` (its R66; R11), the capture's `source` (its R16, R65), the knock's rate (its R31; R11).
+
+### Invariants
+
+- **R12** The capturing member is never recorded as the source of what someone else gave them (Membership v2 §1.2): no act here names a capture's `actor` as its source. *(not yet met: N364)*
+- **R13** Every table here is exempt from purge. A value is never written to a log, an error or a listener payload. *(not yet met: N364)*
+- **R14** No place is named in this module's behaviour or outward text; C-121.1–C-121.6 are held in its own table. *(not yet met: N364)*
+
+Rows C-121.1–C-121.6 (R14; N364), a new family, "a source's disclosures", with their translations:
+
+| row | code | translation |
+|---|---|---|
+| C-121.1 | `NO_SUCH_SOURCE` | "No source you can see answers to that id. Nothing was written." |
+| C-121.2 | `BAD_DISCLOSURE` | "A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing was written." |
+| C-121.3 | `NO_EVIDENCE` | "What is recorded about a source is recorded with its evidence. Name the evidence. Nothing was written." |
+| C-121.4 | `NO_SIGHT_LIST` | "A detail about a source that is stored can be read only by the members listed for it, and none is listed. List at least one member, or record that the detail is known without storing it. Nothing was written." |
+| C-121.5 | `CONSENT_NOT_STANDING` | "That consent cannot be recorded: the detail it names is not in this source's history, or consent to a wider audience already stands. Nothing was written." |
+| C-121.6 | `SECRET_NOT_RECOGNISED` | "That secret was not recognised, so nothing was recorded. Check it and try again." |
+
+### Satisfies
+
+- `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §2a (the doorbell): DEC-78 items 2, 3 and 5 (a source's history, its pseudonym, what may be published).
+- `docs/architecture/BIO_Membership_Architecture_v2.md` §1.2 (the capturing member is not the source): R12.
+- DEC-78; Bob's rulings K509 (1), (4) and (5).
+
+### Suggestions
+
+- **Factory.** `sourcesOf(ctx)` answers the one instance per Durable Object storage (K61); the op handlers live in this module's paths, and the control plane routes them and stamps `by` and `viewer`.
+- **Where a source comes from.** `capture` is earlier and cannot call this module, so R1's sources are derived from capture's pulled inbox rows at read (one per pseudonym, one per knock without a secret), or minted on first read and kept; either keeps R1 true.
+- **Hand-carried material** (K509 (5)) has no intake route yet: R12 is its rule, and its intake is built with the upload redesign.
+- **Callers.** `reevaluation` registers on R10 (its R28); `publication` (its R51, R52) and `case-authoring` (its R37) read R8; `affordances` grades the ops (its R2, R3).
+- **Tests.** Each C-121 refusal gets a negative control; R5's withheld value and read log; R3's hostile claim never reads confirmed; R7's withdrawal leaves an earlier publication's statement unchanged; R11's refusal byte-identical for a wrong secret, an unknown entry and a malformed call; R13's exemption declared.
+
+## Open for Bob
+
+None: ruled by Bob 2026-09-30 (K509).

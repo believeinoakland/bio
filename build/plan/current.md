@@ -42,7 +42,7 @@ Opened by BOB #71, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ f5554232cb, T
 ## Layer 11
 
 - **queue split** (N363, K507), first: the obligation inbox and the feed producers cut into two new modules before `queue`, their seams worded by BOB before the layer; then **queue** · N367 (a direct R41 grammar test over the 31 bounds); T15's moved entry: N345 R1 amended, R43–R47; N352's share (`#hiddenBundles`, `queue/index.mjs`:167, reads membership R88).
-- **affordances** · N364: R28–R29 (the rung backing, through sources and capture), R2, R3, R5 amended. `uses` gains sources, capture. N365's fact (R14, R8's arm; K527) from contradiction's read.
+- **affordances** · N364: R28–R29 (the rung backing, through sources and capture), R2, R3, R5 amended; the job words each new op's `NON_ACTS` reason (R12's totality) and places `sourceconsent` in `ACTS` for R5's prompt, asking BOB if a reason's meaning is unclear (K530). `uses` gains sources, capture. N365's fact (R14, R8's arm; K527) from contradiction's read.
 - **control-plane** · N364's share (W5): `op=inboxpull` routes to capture's `pullKnock` and promotes its document as a new information bundle at `collected` in the same act, the puller its author (DEC-78 item 1); routes, `NEEDS` rows and stamps for sources', membership's, case-authoring's and capture's new ops. `uses` gains sources.
 
 ## Outside a module

@@ -1,6 +1,6 @@
 # control-plane — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. It has no code of its own yet. It is extracted from `legacy-index` (`bio-plane/src/index.mjs`), and from `legacy-store` and `legacy-checks` where the map says so. Code today: re-measured 2026-09-28 on `tranche/T10` @ `6faa8084` by a worker for BOB #59; `build/extraction/control-plane.md` has the table (T3's ranges kept there in brackets). Not yet met: R24 (D-679), R19's last sentence (D-586). R25 met T13 (N333). R34 (the act gate) worded from the code by a worker for BOB #59, 2026-09-28. Carried old-plan rows: D-629, D-679, and D-586 (placed here by membership's file). folded by a worker for BOB #66, 2026-09-29 (T14 opening; `build/plan/draft-T14-wordings.md`, K444, K445): N339 and N349 R23 (every relay, with the correlation); N347 R22 reads `capture`'s rows; N348 R35 (the Durable Object class); uses gain `capture`; met in T14 (CONTROL-PLANE #5, K476).
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. It has no code of its own yet. It is extracted from `legacy-index` (`bio-plane/src/index.mjs`), and from `legacy-store` and `legacy-checks` where the map says so. Code today: re-measured 2026-09-28 on `tranche/T10` @ `6faa8084` by a worker for BOB #59; `build/extraction/control-plane.md` has the table (T3's ranges kept there in brackets). Not yet met: R24 (D-679), R19's last sentence (D-586). R25 met T13 (N333). R34 (the act gate) worded from the code by a worker for BOB #59, 2026-09-28. Carried old-plan rows: D-629, D-679, and D-586 (placed here by membership's file). folded by a worker for BOB #66, 2026-09-29 (T14 opening; `build/plan/draft-T14-wordings.md`, K444, K445): N339 and N349 R23 (every relay, with the correlation); N347 R22 reads `capture`'s rows; N348 R35 (the Durable Object class); uses gain `capture`; met in T14 (CONTROL-PLANE #5, K476). N364 (DEC-78 item 1; W5 of `build/plan/draft-T16.md`) folded by a worker for BOB #71, 2026-09-30 (T16 opening): R36; uses gain `promotion` and `sources`; not yet met.
 
 **Size (P6).** At most about 6,630 lines move (about 1,930 of code), counting the whole forward; without the forward's op-specific arms, which leave with their modules, about 4,880 (about 1,460) (`build/extraction/control-plane.md`, re-measured 2026-09-28). Past the 4,000-line mark by lines; accepted as fitting one reading (K93, and BOB 2026-09-28), since the op declarations are a table. The split to take if a job reports it cannot read the module whole is in Suggestions.
 
@@ -64,6 +64,9 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 **The Durable Object class** (K93; N348)
 - **R35** The Durable Object class the instance exports is this module's (`dispatch.mjs`'s `Store`). At construction it starts `instance-setup` once per object (`instanceSetupOf(ctx, env).start()`, the composition root's share), and `instance-setup`'s routes (`instanceSetupOps`) are part of R26's route map, beside `legacy-store`'s. So every store route passes the one frame: R26's body read and envelope, R27's existence read and R25's catch. No module answers a store route outside it.
 
+**The doorbell's pull** (N364; DEC-78 item 1)
+- **R36** `op=inboxpull` routes to capture's `pullKnock` (capture R65) stamping `by` from the session, and in the same act promotes the pulled document as a new information bundle at `collected`, the puller its author; a refusal of either leaves neither written. *(not yet met: N364)*
+
 **`dispatch(req)`, the record store's door**
 - **R26** An empty POST body is `null`, and a body that is not JSON is refused 400 `BAD_JSON`. A route no module serves is refused 400 `unknown op: <op>`. An answer is `{ok: true, result}`. The routes are the modules' own maps (the `membershipOps` pattern).
 - **R27** A read whose parameters name a project (the declared `PROJECT_NAMING_READS`), asked with a stamped `viewer` and naming a discoverable project, is answered by `membership.existenceAct` first (C-70.1), before its route runs. The reads declared to name no project are listed with the reason.
@@ -80,7 +83,9 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - `affordances`: `decorate` (its R11) for R34, and `ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`, `VOCABULARIES` for `op=affordances`' answer while its arm is here.
 - `legacy-checks`: the rows of R32 until they move; `CHECK_CATALOGUE` (R22); `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
 - `legacy-store`: its store routes and class until each module takes its own.
-- `capture`: `CAPTURE_CHECKS` (R22; N347).
+- `capture`: `CAPTURE_CHECKS` (R22; N347); `pullKnock` (its R65), for R36 (N364).
+- `promotion`: `promote`, for R36's promotion of the pulled document (N364).
+- `sources` (N364): its op handlers (`sourcedisclose`, `sourcelink`, `sourceconsent`, `sourceconsentwithdraw`) and the no-account door `knockerconsent` (its R11), which this module routes and stamps.
 - Every module whose op handlers or store routes it routes. These uses are declared as each module is extracted (K93).
 
 ### Invariants
