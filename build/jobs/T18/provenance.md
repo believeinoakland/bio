@@ -1,6 +1,6 @@
 # provenance (T18)
 
-**Status** · session_01Rbs8QkxyTpLKJbAeaFkrcp · depth 2 · WORKING · handled B1
+**Status** · session_01Rbs8QkxyTpLKJbAeaFkrcp · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
