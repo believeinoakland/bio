@@ -23,3 +23,7 @@ K676 (2), from SKILLS #6: renderPack(published) now takes one argument and throw
 ## B5 · CHANGE
 
 skills (renderPack(published), K674/K676) and run-rules' updated rows are merged into tranche/T18. Merge the tranche branch now and apply B4's fixture and argument fixes against it. run-productions' merge CHANGE follows when it completes.
+
+## B6 · CHANGE
+
+K679: run-productions keeps the catalogue's SUGGEST_LEVELS as a copy, so your suites stay green at its merge; still re-point wire-vocabulary.test.mjs and plane-suggest.mjs to run-productions' exports after its merge (T19 deletes the catalogue copy).
