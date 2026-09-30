@@ -375,7 +375,30 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    877 rows. Rows T16's layers 3+ change are T17's stamp (`awaiting stamp`). The d470 census, of the catalogue file
    only, is unmoved (356, sha256 968acdfb…; `bio-checks.mjs` did not change), so its 1.46.0 row, legacy-tests', names
    what changed to stand apart from 1.45.0's (A4). */
-export const CATALOG_VERSION = "1.46.0";
+/* 1.47.0 (PROMOTION #18, T17 layer 2, 2026-09-30; N318, K425, K575, K577): EVERY ROW CHANGE SINCE 1.46.0, counted
+   wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T17` after membership and record-core
+   merged (16eaac937e) against 1.46.0's own (`test/fixtures/row-census-1.46.0.jsonl`): seventeen arrivals, fifteen
+   departures, eleven changed. Each is one a job record names (T16's layers 3+ `awaiting stamp`; T17's layers 1 and 2).
+   ARRIVED: C-118.3 KNOCKER_SECRET_WEAK, C-118.4 KNOCK_DISCARDED, C-118.5 NOT_THE_CAPTURING_ACTOR, C-118.6 ACCOUNT_NO_TEXT
+   (capture, N364); C-121.1–C-121.6 in `SOURCES_CHECKS` (sources, N364); C-122.1 SOURCE_CONSENT_WITHDRAWN in a new family
+   `CASE_SOURCES_CHECKS` (publication, K554); C-120.4–C-120.7 in `CASE_DISCLOSURE_CHECKS`, now "a case's disclosures and
+   its pre-flight", C-120.7 giving UNCLEARED_HUNCH its first row (case-authoring); C-2.18 CONTRADICTION_ARM_FAILED
+   (inquiry, K543); C-96.17 MACHINE_CANNOT_REGISTER_KEY (membership, N387, K577).
+   DEPARTED: C-41.1–C-41.15, the catalogue's copy of `CASE_DOCUMENT_FAMILY` (legacy-checks, N372, K529); ratification's
+   copy, its lines identical, is now the only one, so each line is counted once where it was counted twice. With it
+   the catalogue's `checkCaseDocument` left, and its C-21.1 arm and the case-document arms of C-2.8 and C-3.1 with it;
+   the case gate has run only ratification's registered catalogue since 1.46.0, so what judges a case is unmoved.
+   CHANGED: C-2.15's translation (inquiry, K543); the `where` of C-19.2, C-32.10, C-32.11 and C-76.1, now in
+   `src/tasks/` with queue's copies retired (tasks, queue, K562); the `where` of C-32.13, C-32.15, C-53.12, C-65.1, C-92.10
+   and C-92.11, now `src/ratification/refusals.mjs`, the last two with their regions split and renamed
+   `is-attribution-unchosen` and `is-attribution-stale` (ratification, K555). Code and condition unmoved in each.
+   CHANGED IN WHAT THE GATES RUN, no row moving: the promote gate's registered step for the inbox grammar (C-19.1, a
+   failure refused C-19.2) is tasks' now, queue's retired; record-core's audit likewise runs tasks' registration (K531).
+   Record-core's N376 moved no row (K577). MINOR, rule 17 moving the stamp for arrivals, departures, changed checks and
+   a changed composition. ROW_CENSUS (R50) is re-pinned to this tree: 879 rows. Rows T17's layers 3+ change are T18's
+   stamp (`awaiting stamp`). The d470 census, of the catalogue file only, moved with N372 (356 -> 340, sha256
+   c56ccc26…, behaviour source 15465533…, its own print on this tree); its 1.47.0 row is legacy-tests' re-pin. */
+export const CATALOG_VERSION = "1.47.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -466,8 +489,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 /* R50 (N319, K431): the census of every refusal row as this stamp read it, pinned here and held against the tree by
    legacy-tests' census suite (this module cannot read a later module's table, P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 877,
-  digest: "1002f8718b347437100c7a9a10f32edf76b9b27cda351c97b2a53fcdc0040caa" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 879,
+  digest: "b8bbd059390f894eb419d10b40c4683bc0d5a85f022c3a354e9c67925cde3f11" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
