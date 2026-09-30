@@ -47,7 +47,7 @@ Terms. A **source** is the person behind a capture that was given to the group r
 - `legacy-checks`: the shared argument checks (`requiredArgument`, `isMachineIdentity`).
 - `record-core`: `transact`, `stampInstant`, `mintOpaqueId` (a source's id) and `mintExhausted` (its R62, when no source id can be drawn; N376), `declarePurge` (R13's exemption).
 - `membership`: `listenerRefusal` (R10), the member session stamp, `activeAdmins` (R5's administrators).
-- `capture`: the inbox rows (`knocker_digest`, `pseudonym`, status; its R32, R66), `knocksOf` (its R67), `knockerDigestOf` (its R66; R11), the capture's `source` (its R16, R65), the knock's rate (its R31; R11).
+- `capture`: the inbox rows (`knocker_digest`, `pseudonym`, status; its R32, R66), `knocksOf` (its R67), `knockerDigestOf` (its R66; R11), the capture's `source` (`acquisition` R16, its R65), the knock's rate (its R31; R11).
 
 ### Invariants
 

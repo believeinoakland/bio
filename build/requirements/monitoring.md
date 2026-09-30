@@ -81,14 +81,15 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
 ### Uses
 
-- `legacy-checks`: `MONITOR_FREQ`, `MECHANICAL_FIELD_SETS`, `isPublicHttpsLocator`, `parseFrontmatter`, the C-48 rows (read, as `capture` reads them, K72 (1)).
+- `legacy-checks`: `MONITOR_FREQ`, `MECHANICAL_FIELD_SETS`, `isPublicHttpsLocator`, `parseFrontmatter`, the C-48.8 and C-48.9 rows until this module's copies are its own (R42).
 - `record-core`: `recordOf(ctx)`, the image read, `stampInstant` (R47), `declarePurge` (R41).
 - `membership`: `viewerPredicate`, bundle sight (R1, R26, R32); `isAdministrator` (its R64) and `notAnAdmin` (its R84), for R30's pause (N314, N324).
 - `promotion`: `promote` (R8, R34), `registerStep` (R27). *(not declared)*
 - `provenance`: the `register` and `captured_locators` read contract, the captured-locator writer (R12, R15). *(not declared)*
 - `host-governor`: `governedFetch` (R2). *(not declared)*
 - `capture-sources`: `readDriveAddress`, `driveBaselineRow`, `classifyDriveBaseline`, `RENDERED_METHOD`, `RENDER_TICK_UNDETERMINED`. *(not declared)*
-- `capture`: `acquire`'s archive arm (R20), `sourceReachability`, `reachabilityThresholds` (R43), the outcome record (R8, for R25), `substanceDigests`, `profilesAsText`, the capture key; and `source_reachability` (the pending count and the failing addresses R20 reads), through the read contract `capture` states in its Provides (N166; capture R59, K235).
+- `capture`: `acquire`'s archive arm (R20), `sourceReachability`, `reachabilityThresholds` (R43), the outcome record (R8, for R25), the capture key; and `source_reachability` (the pending count and the failing addresses R20 reads), through the read contract `capture` states in its Provides (N166; capture R59, K235).
+- `acquisition`: `substanceDigests`, `profilesAsText`, `ODF_DIGEST_MAX` (its R17), `civicosUserAgent` (its R24); the acquisition act itself through `capture`'s `acquire` (capture R73). *(K649 (1): moved from `capture`; this module's T18 job re-points its imports)*
 - `docprofile`: `identify`, `doctypeFor`, `assess`, `CONTRACT`; `format-registry`: `detectFormat`. *(not declared)*
 - `observation-log`: its one append (R11). *(not declared)*
 - `retrieval`: the projection's monitoring columns and `source_locator` (K75 (3)). *(not declared)*
@@ -105,7 +106,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **R39** A governed refusal is a fact about the instance: its look is marked governed and it never counts as the source failing (D-104).
 - **R40** Bias never shapes what is monitored: no service here takes a lens, and a lens change moves no plan (Content Framework, "bias never shapes what is captured or monitored").
 - **R41** `monitor_fired`, `monitor_tick_epoch` and `monitor_address_type` are this module's, derived and declared to purge (K23): `monitor_fired` by subject; `monitor_address_type` only by a whole-store purge, an address outliving any one version.
-- **R42** Each check moves here as an invariant with its test (K6, K49): C-18.5 (every arm of `checkGatheringGrammar`), C-48.8, C-48.9.
+- **R42** Each check moves here as an invariant with its test (K6, K49): C-18.5 (every arm of `checkGatheringGrammar`), C-48.8, C-48.9. C-48.8 and C-48.9 (R4's `DRIVE_TICK_EXPORT_IS_THE_SHELL` and `DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL`) are held in this module's own table with their code, number, translation and reasons unchanged and their `where` naming this module's site, copied from the catalogue's `DRIVE_CAPTURE_CHECKS` (whose copy T19's layer 1 deletes, K529); they are no longer read in place. The rest of C-48 is `acquisition`'s (its R29). *(worded by BOB, K649 (6): the Uses below and `monitoring/checks.mjs` said the rows stay in the catalogue, read in place)*
 - **R43** No place is named in this module's behaviour or outward text.
 - **R49** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349).
 

@@ -546,3 +546,66 @@
 - N369 · 2026-09-30 · **inquiry** (LEGACY-TESTS #13 J2 (2)): `CONTRADICTION_LINK_MALFORMED` is spelled at a second site, the catch at `src/inquiry/contradiction.mjs`:208–211 ("could not judge this document"), where C-2.11's translation is false (the DEC-49 guard's two new failures); C-2.15's wording fits the scalar resolution case least well: BOB words it before the job. *(applied in T16; moved at T17's opening, K572)*
 - N370 · 2026-09-30 · **case-authoring** (LEGACY-TESTS #13 J2 (3)): `#authority` (three sites) and `#judgeMembers` (four) (`src/case-authoring/index.mjs`:758, :792) answer `{refusal: {ok: false}}`, the verdict nested (meaning-bounds D-240 (b)). *(applied in T16; moved at T17's opening, K572)*
 - N61 · 2026-09-26 · **jurisdictions**: `records_laws` levels are `state`, `county`, `city` (R7), with no `federal`, while D-149's `LAW_LEVELS` (`legacy-checks`, read by `actions`) is `federal`, `state`, `local`; and `standard_sources` (R23) carries no level. A profile then cannot hold a federal records law, nor say a standard's level. Reconcile the two vocabularies before `actions`' and `standards`' jobs. Found by the layer-9 drafting worker (K88); a change of meaning in an approved requirement, so it goes to Bob with a recommendation. *(met: jurisdictions R7, R23, R31, K232; closed K611; moved at T18's opening)*
+
+## Moved at T18 (K649 (9)), by a worker for BOB #75, 2026-09-30
+
+From `draft-T18-sweep.md` §2, adopted by K649: these entries were carried by T17 (`archive/T17.md` names each) and were still listed in `next.md`; the "Left from T6" line was stale (its entries were already here) and N4 was met (no `readingNamePlan` in `bio-plane/src`). Each line: the entry as filed, then `→ applied:` why it left.
+
+- N373 · 2026-09-30 · **queue** (the N363 seams worker, K531): the feed reads tasks capped at `cap×2` before dropping resolved ones (`queue/index.mjs`:2455), so many recently resolved tasks can hide open ones, short of R8.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N374 · 2026-09-30 · **tasks** (after N363; the seams worker, K531): R19's task-id existence check is ungated (`queue/index.mjs`:3213), against R33's parity; BOB words which it is before a job. **Worded (K565):** gated; `tasks` R6's `taskExists({id, viewer})`, `queue` R19. Entries for tasks and queue.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N375 · 2026-09-30 · **queue-producers** (MEMBERSHIP #9 J1; K535): membership R89's notice to every administrator of a member's self-registered key is a feed item: a producer reads membership's signer rows (`origin: "self"`, `registered_by`, the instant) and offers each administrator the key with R26's revoke. N364's DEC-80 item 4 is fully met only then. **Worded (K565):** `queue-producers` R14 (`queue` R8 names it).
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N376 · 2026-09-30 · **record-core** (SOURCES #1 J2 (3); K540): `MINTED_OBJECT` has no entry for `SRC`, so `mintExhausted` for sources says "a free id" without naming a source; reachable only past 10,000 sources in one year.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N377 · 2026-09-30 · **sources** (K547): pin R15's `source_knocks` read contract with a test at the module (its columns, one row per pulled knock a minted source stands behind, no value or contact), as inquiry R40's is pinned.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N378 · 2026-09-30 · **reevaluation** (R8): `raise` calls R8's listeners synchronously inside the caller's transaction, so a caller that rolls back (the review copy's dry run) has told them of an edition never made, against R8's "called after the act commits". Defer the listener calls to the commit (or have a rolled-back caller's raise tell no one), tested with a rolled-back caller. Reported by CASE-AUTHORING #5 J2 (4); confirmed against R8's text by BOB #72 (K556).
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N379 · 2026-09-30 · **legacy-store**: the durable object dispatches `captureOps` and `caseAuthoringOps` (`store.mjs`:2813, :2831) but not `sourcesOps`, so no source op reaches the plane; dispatch it as they are. Reported by AFFORDANCES #8 J1 (6) (K558). **Owner (K566):** control-plane's dispatch, not legacy-store.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N380 · 2026-09-30 · **capture**, **control-plane** (control-plane R36): `pullKnock` is async and writes in its own `transact`, so the pull and the promotion cannot share one transaction. Capture offers a seam, e.g. `pullKnock({knockId, by, at, within})` calling `within(document)` inside its `transact` (a refusal rolls the pull back), and control-plane's route uses it; R36's N380 mark goes. Reported by CONTROL-PLANE #7 J1 (1) (K559).
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N381 · 2026-09-30 · **provenance** (register rules; capture R65, provenance R51, K539): `src/provenance/register-checks.mjs` refuses capture R65's pulled-knock document, so no pulled knock can be filed (control-plane R36 refuses every pull): :206 wants `capture.grade` in A–C, where R51's doorbell route gives `null` with `grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED"`; :216 wants `origin.kind` in `named_request, sweep, member` (`ORIGIN_KINDS`, :36), where R65 gives `doorbell`. Add the doorbell arm (a null grade with R51's basis, as the authored arm admits one; `doorbell` among the kinds), tested with capture's real document; control-plane R36's end-to-end `test.todo` then runs. First in T17's layer 3. Reported by CONTROL-PLANE #7 J2 (K560).
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N382 · 2026-09-30 · **tasks** (or **intent**): the code `NOT_YOURS` has two rows, intent's C-111.15 and tasks' C-76.1 (moved from queue, K562); the control plane's door reads intent's first, so a task refusal shows intent's sentence (pre-existing under queue). Give tasks' refusal its own code (tasks' job, a row change for promotion's stamp), tested at the door. Reported by CONTROL-PLANE #7 J4.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N383 · 2026-09-30 · **case-authoring** (LEGACY-TESTS #14 J2 (1)): `src/case-authoring/checks.mjs`:114, :122 name `#publishCase` as the `where` of `is-tension-disclosed` and `is-disclosure-standing`, but R31 moved into `#tensionsJudged` (`index.mjs`:920–946); the regions sit outside the function they name (the DEC-49 guard's 2 failures).
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N384 · 2026-09-30 · **case-authoring** (J2 (2)): "Grade B" typed by hand (`document.mjs`:60, `index.mjs`:1069) and `f.grade === "B"` (:1062); read provenance's `EARNED_CAPTURE_CEILING` (its R24, capture R18), one definition.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N385 · 2026-09-30 · **ratification** (J2 (3)): `index.mjs`:493 picks `MACHINE_CANNOT_RATIFY_CASE` by the word "ai" (REC-46's form) though the predicate at :490 decides; choose it from the predicate.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N386 · 2026-09-30 · **control-plane** (J2 (4)): `pull.mjs`:26 spells a whole-second stamp by hand; use `record-core.stampInstant` (its R47).
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N387 · 2026-09-30 · **membership** (J2 (5); DEC-49): `MACHINE_CANNOT_REGISTER_KEY` (`index.mjs`:2897) is minted with no catalogue row, translation or region. Ruled (K571): it gets a row like every fence, in membership's machine-fence family, and promotion stamps it.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N388 · 2026-09-30 · **capture** (J2 (7); REC-30): `captureaccounts` and `lateattestations` take no viewer; check each against R9-style sight and gate it where it names a bundle the viewer may not see. Capture R68 names no machine fence for `op=reattest`; confirm a machine may not reattest, and fence it if so.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N389 · 2026-09-30 · **legacy-ui** (J2 (8); UX, Bob's with N371): `app.html` lacks the six T8 record types; its docprofile copy (:3514–6852) has drifted from `docprofile/`; `sourceconsent` and publication's captures, sources and `blocks_detail` have no surface.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9). Its remainder is Bob's (UX, with N371): named in `current.md`'s hard deferrals (e).
+- N390 · 2026-09-30 · **docprofile** (K573; `civicos-ui/test/staff-directory.test.mjs`): convert to module tests of R4–R6 over its real fixtures (negatives, address keys, events); drop its `app.html` source arm.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9). Its remainder (the docprofile module tests after docprofile's split) is named in `current.md`'s hard deferrals (d, b).
+- N391 · 2026-09-30 · **extraction** (K573; `staff-directory-e2e.test.mjs`): convert to a module test of R4 (tier 2 through pdf-worker) with docprofile's `staff_directory` type.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N392 · 2026-09-30 · **retrieval**, **basis-versions** (K573; `projection-noproject.test.mjs`): `op=projection`'s `no_project_conclusion` equals basis-versions R11's answer; retrieval R5's single-bundle decoration, still registered in legacy-store, moves with it.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N393 · 2026-09-30 · **inquiry** (K573; `content-capture-bound.test.mjs`): R13 and R6: the capture ceiling bounded by transcription fidelity (`CAPTURE_BOUNDED_BY_FIDELITY`) and a leg refused above it, which no module test reaches.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N394 · 2026-09-30 · **contradiction** (K573; `contradiction-overstrict.test.mjs`): the over-strictness gate (false-conflict rate over a labelled corpus) has no requirement; R2 pins only the prompt digest. The job proposes the requirement (a QUESTION) or shows it is a measurement for the release run.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N395 · 2026-09-30 · **strength** (K573; `analystvocab.test.mjs`): D-269, no analyst wording in the member-facing axis prose, has no requirement; the job proposes it (a QUESTION) and tests it at the interface, not the source.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N396 · 2026-09-30 · **actions** (K573; `action-loop.test.mjs`): DEC-13's `request_for_comment` names the inquiries it asks about and states its response window; only the catalogue (`bio-checks.mjs`) holds it; the job proposes actions' requirement (a QUESTION) and tests it.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N397 · 2026-09-30 · **instance-setup** (K573; `setup-signeradd`, `setup-honesty`): the page splits a pasted key line into `keyB64` and comment (D-605, near R23); its bundle writer emits `content_hash` for a captured document (D-62). Requirements proposed by the job; tests at the interface.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N398 · 2026-09-30 · **control-plane** (K573; `surfaced-by`, `unattended-lease`, `purge`): the stamp `surfaced_by` from the credential at `op=promote` (D-78); a machine lease's actor `token:<class>` (D-61); `op=purge`'s `confirm=<store>` gate and its member and public refusals. Requirements proposed by the job.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- N399 · 2026-09-30 · **control-plane** (K573; `stats-disclosure.test.mjs`; N342): `op=stats`' per-class disclosure (leads, `dbBytes`, capacity) over record-core's counts; requirement proposed by the job.
+  → applied: carried by T17 (`archive/T17.md`), K649 (9).
+- Left from T6's preparation (next.md's line): "N110, N113 (Bob's, K158: with observation-log's next job), N116 (with monitoring's extraction, layer 10), N118's progressions, observation-log and bias shares (layer 5), N96 (K158: with jurisdictions' next job), N71, N123."
+  → applied: stale; N110, N113, N116, N118, N96 and N123 are already in this file, and N71 stands as its own entry in `next.md` (Bob's). K649 (9).
+- N4 (next.md's reference, in "Local facts still in code"): `readingNamePlan`'s "oakland".
+  → applied: met; no `readingNamePlan` in `bio-plane/src` (the entry itself is above, archive/T5.md). K649 (9).
