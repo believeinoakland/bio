@@ -5545,34 +5545,6 @@ export const BIAS_CHECKS = {
  * BY DECISION needs an arm proving the absence is real.
  * ========================================================================= */
 
-/** The UA `purpose` component this door may name. A CLOSED set: an unknown
- *  purpose is not a harmless label, it is this instance telling a source
- *  something false about why it is asking. `investigate` is the token DEC-47
- *  said an investigation fetch *"introduces or reuses deliberately"*; `acquire`
- *  is the existing one and is admitted so a run re-fetching a source a member
- *  already named does not have to misdescribe that either. */
-export const CAPTURE_PURPOSES = ['investigate', 'acquire'];
-
-/** The two LEGIBLE user-agent forms, and there is no third. `civicos` is the
- *  honest product string with its contact URL (`userAgent()` in index.mjs);
- *  `member-browser` is BOB-3's delegation of the member's OWN browser UA, which
- *  is permitted for publicly available documents and is a member speaking as
- *  themselves through a tool they run. A fabricated string is neither, and this
- *  door cannot express one. */
-export const CAPTURE_UA_MODES = ['civicos', 'member-browser'];
-
-/** Is this user-agent LEGIBLE — does it name a contact a third party can reach?
- *  ONE predicate, used by the drain's conduct check and by the suite, so the
- *  rule and its test cannot disagree. It matches the `(+<url>)` component
- *  D-94's ladder measured, and it is deliberately a SHAPE test rather than a
- *  reachability test: whether the URL resolves is SOURCE-ACCESS.md's own open
- *  item, and a conduct check that fetches would be a conduct check that can fail
- *  for the network's reasons. */
-export function userAgentIsLegible(ua) {
-  if (typeof ua !== 'string' || ua.trim() === '') return false;
-  return /\(\+https?:\/\/[^\s)]+/.test(ua);
-}
-
 /** THE ONE COMPOSER FOR THE HONEST CIVICOS AGENT, and it is HERE rather than in
  *  `index.mjs` so that the Durable Object can read the string it is about to
  *  cause to be sent. `index.mjs`'s `userAgent(env, purpose)` now delegates to

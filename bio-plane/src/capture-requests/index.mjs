@@ -10,7 +10,7 @@
  *
  * THE FENCE IS IN PROCESS (K58). The drain fires `capture`'s trusted in-process arm with the row's own address,
  * purpose, agent and render flag, which is exactly what the conduct check judged; nothing outside this module's drain
- * can reach that arm, and `op=acquire` refuses `via: "capture-request"` from any caller (C-28.13, capture R1).
+ * can reach that arm, and `op=acquire` refuses `via: "capture-request"` from any caller (C-28.13, acquisition R1).
  *
  * DEC-47's CONDUCT IS ENFORCED ONCE, AT THE DRAIN. The authorisation question is CLOSED — the inquiry and the session
  * launch ARE the authorisation, and a member asked to approve forty URLs *"has not done the research and cannot judge
@@ -25,10 +25,8 @@
  *
  * Reached through `captureRequestsOf(ctx, deps)` (K61); every module it uses is reached through its own factory on
  * the same storage, and a test may pass its own. */
-import {
-  CAPTURE_REQUEST_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
-  civicosUserAgent, isPublicHttpsLocator, MACHINE_AUTHOR_PREFIX, normalizeType, createSha256,
-} from "../../checks/bio-checks.mjs";
+import { isPublicHttpsLocator, MACHINE_AUTHOR_PREFIX, normalizeType, createSha256 } from "../../checks/bio-checks.mjs";
+import { RENDER_CAPTURE_CHECKS, civicosUserAgent } from "../acquisition/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -37,11 +35,12 @@ import { captureOf } from "../capture/index.mjs";
 import { credentialsOf } from "../capture-sources/credentials.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
-import { runPrincipalGate } from "../airun.mjs";
+import { runPrincipalGate } from "../run-rules/index.mjs";
 import { migrateCaptureRequests } from "./schema.mjs";
-import { CAPTURE_SOURCE_CHECKS } from "./checks.mjs";
+import { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible }
+  from "./checks.mjs";
 
-export { CAPTURE_SOURCE_CHECKS };
+export { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible };
 
 export const CAPTURE_REQUESTS_MODULE = "capture-requests";
 
@@ -659,7 +658,7 @@ export class CaptureRequests {
                        + `member actually used; composing one would be inventing a client that does `
                        + `not exist, which is the fabricated-Mozilla case wearing the ruling's clothes.` };
     } else {
-      /* The honest product string, composed by the catalogue's ONE composer — the same function `capture` sends. */
+      /* The honest product string, composed by `acquisition`'s ONE composer (its R24) — the string it sends. */
       const env = this.#env();
       ua = civicosUserAgent(env.VERSION, env.INSTANCE_NAME, q.purpose);
       if (!userAgentIsLegible(ua))
@@ -709,7 +708,7 @@ export class CaptureRequests {
    *  plane principal, target and host); none is admitted, the fetch goes without, and the source's refusal stands.
    *
    *  WHAT COMES BACK OUT: a filed capture's digest, grade and whether the bytes were already held (R39); a render
-   *  `capture` refused, named by its C-83 code (read off the catalogue, never a spelling invented here) and its own
+   *  `capture` refused, named by its C-83 code (read off `acquisition`'s rows, never a spelling invented here) and its own
    *  word for the hold (D-520); otherwise the reason and, for a source's answer, its status. D-205: a thrown error's
    *  message is never carried, because it can carry a query string and a query string can carry a credential. */
   async #fire(q, verdict) {
