@@ -1039,14 +1039,14 @@ export const RATIFY_ATTRIBUTION_CHECKS = {
      recourse is an edition without the finding that rests on it. */
   ATTRIBUTION_UNCHOSEN: {
     check: 'C-92.10',
-    where: 'src/ratification/refusals.mjs attributionUnchosenRefusal > is-attribution-gate',
+    where: 'src/ratification/refusals.mjs attributionUnchosenRefusal > is-attribution-unchosen',
     translation: 'This case edition uses a member\'s firsthand observation whose author has not yet chosen how '
       + 'it is attributed, so it cannot be signed. Publishing it at any level would be choosing for them. Ask '
       + 'the author to choose, or prepare the edition without the finding that rests on it.',
   },
   ATTRIBUTION_STATEMENT_STALE: {
     check: 'C-92.11',
-    where: 'src/ratification/refusals.mjs attributionStaleRefusal > is-attribution-gate',
+    where: 'src/ratification/refusals.mjs attributionStaleRefusal > is-attribution-stale',
     translation: 'This case document states an attribution for an observation that its author\'s choices no '
       + 'longer give. Prepare the case document again so it states what the authors chose, then sign that.',
   },

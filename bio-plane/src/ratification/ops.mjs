@@ -1,8 +1,9 @@
 /* ratification — the Worker half of the two ceremonies (K3): `op=caseratify` (R2, the case document) and `op=ratify`
  * (R4–R6, a finding or its evidence), moved from `legacy-index` in T8. Each verifies everything at the control plane
  * (the fences, the signature, the gate), commits through this module's store half (`./index.mjs`, reached over the
- * Durable Object as `casedocfacts`, `casegate`, `caseratify`, `gatefacts`, `publish`, `reusedparts`,
- * `recordreuseverdicts`, `capturelimit`), and then copies the ratified bytes to the published store.
+ * Durable Object as `casedocfacts`, `casegate`, `caseratify`, `gatefacts`, `image`, `list`, `registerholds`, `publish`,
+ * `reusedparts`, `recordreuseverdicts`, `capturelimit`), and then copies the ratified bytes to the published store.
+ * `op=caseratify`'s refusals before a signature exists are `./refusals.mjs`'s, the ones R18's pre-flight answers.
  *
  * Routing, authentication and the response envelope stay the control plane's. What it decided is passed in (`ctx`):
  * the caller class (`cls`), the minted agent credential (`aiCred`), whether the caller arrived through a member's own
