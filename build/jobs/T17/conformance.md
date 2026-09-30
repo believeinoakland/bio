@@ -1,6 +1,6 @@
 # conformance (T17)
 
-**Status** · session_01RwskyQxg3ceF8pkWDxKg1f · depth 2 · WORKING · handled B2
+**Status** · session_01RwskyQxg3ceF8pkWDxKg1f · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
