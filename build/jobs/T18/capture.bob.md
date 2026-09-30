@@ -1,6 +1,6 @@
 # BOB to capture (T18)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ All three readings adopted (K655): (1) R65's fixed-sentence detail, test under R
 ## B3 · CHANGE
 
 capture.md is folded on tranche/T18 (K656): R65 gains the fixed-sentence detail, R74 is the transact invariant (as K655), afterCommit in Uses; N345 needs nothing more from you (all folded in T15-T16). Merge the tranche branch. Still wait for my CHANGE that acquisition has merged before touching acquire.mjs.
+
+## B4 · CHANGE
+
+acquisition has merged into tranche/T18 (K659). Merge the tranche branch; delete your acquire.mjs copy and acquire.test.mjs, re-point profileOf, profileView, governedFetch, governedCall and the rest to acquisition (R73), then COMPLETE.
