@@ -29,7 +29,7 @@ Method: I diffed R50's census lines of this tree (`tranche/T15` after layer 1 me
 - **legacy-tests: `test/d470-catalog-census.test.mjs`.** It needs its 1.45.0 row: `"1.45.0": { count: 356, digest: "968acdfb95e0ea07805a2727b1095090bf760ac6adac654a0c9f5ed80ab57510", source: "b7d4112b8a54b44118429e5ffaa63683c8959423c38cd6cc563529b594060181" }`, plus A1's floor (358 -> 356) and A5's literal (`plane-gate/1.0 (bio-checks 1.45.0)`). Today it runs 11 pass, 3 fail (A1, A3, A5). A9 passes once the version moves.
 - **legacy-tests: `civicos-ui/check-refusal-codes.mjs`.** Its ratchet re-pins are as legacy-checks' J1 and queue's T14 record list them. Nothing in them is from this job.
 - **Grep of `civicos-ui/` and affordances.** No code added or retired. No pin of `1.44.0` or of the old digest outside the two legacy-tests suites above.
-- **Generated artifacts made stale** by `gate.mjs`: `bio-plane/dist/bio-plane.bundled.mjs` (and `agent-worker/dist/agent-worker.bundled.mjs` if it inlines the gate). Reported, not rebuilt.
+- **Generated artifacts made stale** by `gate.mjs`: `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs` (both manifests list it). Reported, not rebuilt.
 
 **Deferred.** Nothing.
 
