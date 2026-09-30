@@ -49,3 +49,22 @@ Read whole: `bio-checks.mjs` (11,485 lines), `gate.mjs`, `test/m/ratification/ch
 Checks on this branch (no code change): format 1 failure (item 8); architecture 0 failures; coverage 0 of 0; ownership 0 failures (1 file, my record).
 
 Next step, on your answer to J1: with option (A), I wait for a CHANGE after promotion merges and then apply item 2 as pure removals. With the alternative, I apply item 2 now, keeping a throwing `checkCaseDocument` export.
+
+## J3 · COMPLETE
+
+**Entries applied:** none. `bio-checks.mjs` is unchanged in T16.
+
+**Deferred: N361, reason "importers first (K529)".** Promotion (T16 layer 2) still imports `checkCaseDocument` (`gate.mjs`:39, :498; `promotion/index.mjs`:22, :288), so removing it in layer 1 would break the plane's load (B2). T17's legacy-checks job (N372) applies the removal written in J2, items 2 and 3. The line numbers are against `bio-checks.mjs` as it stands on `tranche/T16` at this job's start, unchanged since:
+- delete the private `checkPublishedExtension` (:2428–2653), whose only caller is `checkCaseDocument`;
+- delete :8061–8669: the C-41 header comment, the exports `CASE_DOCUMENT_FORMAT`, `CASE_DOCUMENT_FORMAT_V3`, `_V2`, `_LEGACY`, `CASE_DOCUMENT_FORMATS_ACCEPTED`, `caseDocumentStatesMemberBlocks`, `caseDocumentRequiresDisclosures`, `caseDocumentRequiresV4Disclosures`, `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY`, `CASE_CITATION_VERSIONS`, the private `CITATION_NAMES_CAPTURE` and `C41`, and `checkCaseDocument` itself (12 exports, 835 lines in all). A dry run shows the module still loads, with 170 exports instead of 182;
+- keep `SUBJECT_POSITIONS`, `STRENGTH_STATES`, `CASE_MEMBER_ROLES`, `isCaseMemberBytes` and `caseEditionClaimed`, which other modules read;
+- re-point the comments that name the removed code to ratification (:240, :251, :257, :2516–2537, :2694–2709, :4652–4657);
+- census change: C-41.1–C-41.15's catalogue copies depart (ratification's `CASE_DOCUMENT_FAMILY` keeps the rows, so ROW_CENSUS loses the second copy), along with the catalogue's case-document arms of C-2.8, C-3.1 and C-21.1. The d470 census of the catalogue file drops the C-41 ids. Promotion stamps it in T17.
+
+No stale comment was worth changing now: every comment naming `checkCaseDocument` is still true while the copy stands.
+
+**Found in other modules:** J2, items 1 and 4–8 (promotion's lines, the parity test, the legacy suites, agent-worker's bundle, `layers.md` missing `sources`). No `not yet met` mark is met.
+
+**Tests and checks:** `node --test test/m/ratification/checks.test.mjs` fails only at :133 (C-41.1's message, `/4` vs `/5`; accepted red by K500). format.mjs 1 failure (`layers.md`, BOB's); architecture.mjs 0 failures; coverage.mjs 0 of 0 ids; ownership.mjs 0 failures (1 file).
+
+Size (session_014rKpxqH7kUf2B2Gnkpa86U): test runs 1, module lines 0
