@@ -187,3 +187,20 @@ test("R17: through the whole write path, an unreadable revision gets the readabi
   const nofm = await rev([{ path: "bundle.md", text: "no front matter here" }]);
   assert.deepEqual([nofm.reason, nofm.why], ["BUNDLE_MD_UNREADABLE", "front_matter"]);
 });
+
+test("R16 (rec-181): through the whole write path, an item a live edge cites is refused its retirement CITED, naming the citer and `to: retired`; with no edge it retires", async () => {
+  const verified = (id) => info(id).replace("current_state: collected", "current_state: verified");
+  const retired = (id) => info(id).replace("current_state: collected", "current_state: retired")
+    .replace("prior_state: null", "prior_state: verified");
+  const cited = "INFO-2026-0150-z", free = "INFO-2026-0151-z", citer = "INQ-2026-0152-z";
+  const c = await promote(cited, verified(cited), { replay: true });
+  const f = await promote(free, verified(free), { replay: true });
+  assert.deepEqual([c.ok, f.ok], [true, true], JSON.stringify([c, f]));
+  const q = await promote(citer, inquiry(citer, refs([cited])));
+  assert.equal(q.ok, true, JSON.stringify(q));
+  const r = await promote(cited, retired(cited), { base: c.bundleSha });
+  assert.deepEqual([r.ok, r.reason, r.to], [false, "CITED", "retired"], JSON.stringify(r));
+  assert.deepEqual(r.offenders, [{ id: cited, citedBy: [citer] }]);
+  const g = await promote(free, retired(free), { base: f.bundleSha });
+  assert.equal(g.ok, true, JSON.stringify(g));
+});
