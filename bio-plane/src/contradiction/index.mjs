@@ -73,6 +73,10 @@ export const PAGE_MAX = 50;
 export const CANDIDATES_SCAN_MAX = 2000;
 /** R27: referents in one request. */
 export const TENSIONS_REFERENTS_MAX = 200;
+/** R27 (N368, K544): the candidates one referent's marks are read from; past it the referent says `truncated`. */
+export const TENSIONS_CANDIDATES_MAX = 200;
+/** R28 (N368, K544): each side's resolved entities; past it that fact says `truncated`. */
+export const FACTS_ENTITIES_MAX = 500;
 /** R29: candidates per finding. */
 export const UNRESOLVED_MAX = 200;
 /** R30, R51, R53: the caps on a member's free text, by field. */
@@ -1078,23 +1082,31 @@ export class Contradiction {
   /** R24, R49: the projects reached through one side, and whether the list was cut. A claim, leg or stance side reaches
    *  the projects drawing on its inquiry (`basis-versions` R37); an extent side, those drawing on each inquiry with a leg
    *  on its content row (`inquiry` R40), at most `REACH_INQUIRIES_MAX` inquiries; a stance side of K5, its own project.
-   *  At most `REACH_PROJECTS_MAX` projects per inquiry. Read as the record holds it, whoever asks. */
-  #reachOf(side) {
+   *  At most `REACH_PROJECTS_MAX` projects per inquiry.
+   *
+   *  `viewer` is whose sight the list is read under (N366). R49's parties are about the record, never about who asks,
+   *  so the notice, the opt-in, the reveal and the marks read it as `INTERNAL`, the default. What a viewer is SHOWN as a
+   *  duty's reach is read under that viewer: only projects they see (membership R43, R80), through only the inquiries
+   *  they see, so neither a hidden project's id nor a bound it fills reaches them (R19, R55). */
+  #reachOf(side, viewer = INTERNAL) {
     const out = { projects: [], truncated: false };
     const add = (id) => { if (id && !out.projects.includes(id)) out.projects.push(id); };
     if (!side) return out;
-    if (side.kind === "stance") { add(side.project); return out; }
+    if (side.kind === "stance") { if (side.project && this.#sees(side.project, viewer)) add(side.project); return out; }
     let inquiries = [];
-    if (side.kind === "claim" || side.kind === "leg") inquiries = side.inquiry ? [side.inquiry] : [];
+    if (side.kind === "claim" || side.kind === "leg")
+      inquiries = side.inquiry && this.#sees(side.inquiry, viewer) ? [side.inquiry] : [];
     else if (side.content_id) {
-      const rows = this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis WHERE content_id=? ORDER BY bundle_id LIMIT ?`,
-                              String(side.content_id), REACH_INQUIRIES_MAX + 1);
+      const g = this.#gate("ib.bundle_id", viewer);
+      const rows = this.#rows(`SELECT DISTINCT ib.bundle_id AS bundle_id FROM inquiry_basis ib
+                                WHERE ib.content_id=? AND (${g.sql}) ORDER BY ib.bundle_id LIMIT ?`,
+                              String(side.content_id), ...g.args, REACH_INQUIRIES_MAX + 1);
       if (rows.length > REACH_INQUIRIES_MAX) out.truncated = true;
       inquiries = rows.slice(0, REACH_INQUIRIES_MAX).map((r) => r.bundle_id);
     }
     const bv = this.#b();
     for (const inq of inquiries) {
-      const list = bv && typeof bv.projectsDrawingOn === "function" ? bv.projectsDrawingOn(inq, INTERNAL) || [] : [];
+      const list = bv && typeof bv.projectsDrawingOn === "function" ? bv.projectsDrawingOn(inq, viewer) || [] : [];
       if (list.truncated) out.truncated = true;
       for (const p of list.slice(0, REACH_PROJECTS_MAX)) add(p.id);
     }
@@ -1103,9 +1115,9 @@ export class Contradiction {
   }
 
   /** R24: the reach of a candidate (the projects its duty is held for), and R49's parties, which are the same set read
-   *  side by side. */
-  #parties(row) {
-    const a = this.#reachOf(row.a), b = this.#reachOf(row.b);
+   *  side by side; under `viewer`'s sight when one is given (N366), else as the record holds it. */
+  #parties(row, viewer = INTERNAL) {
+    const a = this.#reachOf(row.a, viewer), b = this.#reachOf(row.b, viewer);
     const all = [...new Set([...a.projects, ...b.projects])].sort();
     return { a, b, all, truncated: a.truncated || b.truncated };
   }
@@ -1227,7 +1239,11 @@ export class Contradiction {
 
   /** A candidate as R25 answers it to a viewer who sees it whole. */
   #present(row, view, viewer) {
-    const parties = (view.weight === "duty" || view.weight === "plurality" || view.weight === "lead") ? this.#parties(row) : null;
+    const reaches = view.weight === "duty" || view.weight === "plurality" || view.weight === "lead";
+    /* R49's parties are read whole (a joined participant of any of them is answered its party's view), and the reach is
+       read under the viewer's own sight: a project hidden from them is neither named nor counted (N366; R19, R55). */
+    const parties = reaches ? this.#parties(row) : null;
+    const shownReach = reaches ? this.#parties(row, viewer) : null;
     const member = viewerPredicate(viewer).member;
     const m = this.#m();
     const between = parties && isProjectConflict(view.weight, view.state) && member
@@ -1240,7 +1256,7 @@ export class Contradiction {
       machine: this.#machine(row), weight: view.weight, state: view.state,
       resolution: this.#resolutionOf(view), inquiry: view.inquiry,
       recommendations: this.#standing(row, view),
-      reach: parties && view.weight !== "not_shown" ? { projects: parties.all, truncated: parties.truncated } : null,
+      reach: shownReach ? { projects: shownReach.all, truncated: shownReach.truncated } : null,
       default_question: this.#defaultQuestion(row),
       ...(between.length ? { between_projects: between } : {}),
     };
@@ -1318,7 +1334,10 @@ export class Contradiction {
       const n = Number(limit);
       const cap = limit === null || limit === undefined || limit === "" || !Number.isFinite(n) || n < 1
         ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
-      const ids = this.#candidatesNaming(subject);
+      /* N366 (R19; C-93.9's rule): `{project}` for a project the viewer may not see, at existence only or not at all
+         (membership R43, R44), answers exactly as an id that names nothing: its candidates are never matched. */
+      const fenced = subject.kind === "project" && !this.#sees(subject.id, viewer);
+      const ids = fenced ? [] : this.#candidatesNaming(subject);
       const scanCut = ids.length > CANDIDATES_SCAN_MAX;
       const notShown = { precision: 0, unrelated: 0 };
       let unmeasured = 0, visible = 0, shown = 0;
@@ -1427,10 +1446,18 @@ export class Contradiction {
     if (family === "CORRECTED") {
       const wrong = view.inquiry ? res.wrong_side : act.wrong_side;
       if (wrong !== which) return [];
-      return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind,
-                reason: view.inquiry ? res.reason ?? null : act.wrong_reason, member: view.inquiry ? null : act.author,
-                at: view.inquiry ? null : act.at, ...(view.inquiry ? { inquiry: view.inquiry } : { act: act.act_id }),
-                says: "this side was named wrong by a member's resolution; it still resolves, and says it was corrected" }];
+      const says = "this side was named wrong by a member's resolution; it still resolves, and says it was corrected";
+      if (!view.inquiry)
+        return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind, reason: act.wrong_reason,
+                  member: act.author, at: act.at, act: act.act_id, says }];
+      /* N359: concluded by its contradiction inquiry, the member and the instant are R36's concluding act's (the latest
+         `resolve` naming that inquiry). A conclusion reached only by basis-versions' own door has no act of this module,
+         and says so rather than guessing either. */
+      const concluding = [...view.acts].reverse().find((a) => a.act === "resolve" && a.inquiry === view.inquiry) || null;
+      return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind, reason: res.reason ?? null,
+                member: concluding ? concluding.author : null, at: concluding ? concluding.at : null,
+                inquiry: view.inquiry, ...(concluding ? { act: concluding.act_id }
+                  : { why: "concluded through basis-versions' own door; no concluding act of this module" }), says }];
     }
     if (view.kind === "dissolved")
       return [{ mark: "qualified", candidate: c,
@@ -1457,18 +1484,21 @@ export class Contradiction {
       const out = list.map((x) => {
         const ref = this.#referentOf(x);
         if (!ref) return { referent: x ?? null, marks: [], undetermined: true, why: "not a referent at a version" };
+        /* N368 (entities R39's class): bounded at the statement, over-fetching one so the cut is observed. */
         const ids = this.#rows(`SELECT candidate FROM contradiction_candidates
-                                 WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq`,
-                               ref.ref, ref.version, ref.ref, ref.version).map((r) => r.candidate);
+                                 WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq LIMIT ?`,
+                               ref.ref, ref.version, ref.ref, ref.version, TENSIONS_CANDIDATES_MAX + 1).map((r) => r.candidate);
+        const truncated = ids.length > TENSIONS_CANDIDATES_MAX;
         const marks = [];
-        for (const id of ids) {
+        for (const id of ids.slice(0, TENSIONS_CANDIDATES_MAX)) {
           const row = this.#candidate(id);
           const which = row ? Contradiction.#whichSide(row, ref) : null;
           if (which) marks.push(...this.#marksOn(row, which, viewer));
         }
-        return { referent: ref, marks };
+        return { referent: ref, marks, truncated };
       });
-      return { ok: true, wrote: false, referents: out };
+      return { ok: true, wrote: false, referents: out, limit: TENSIONS_CANDIDATES_MAX,
+               truncated: out.some((r) => r.truncated === true) };
     } catch (e) {
       return { ok: true, wrote: false, referents: [], undetermined: true, why: String(e && e.message || e).slice(0, 160) };
     }
@@ -1483,11 +1513,13 @@ export class Contradiction {
     /* END DEC-49 REGION is-no-such-candidate */
   }
 
-  /** The established resolutions of a capture (entities R35's read contract): the entities it is about. */
+  /** The established resolutions of a capture (entities R35's read contract): the entities it is about, at most
+   *  `FACTS_ENTITIES_MAX` in id order, with `truncated` observed by reading one past (R28, N368). */
   #entitiesOf(capture) {
-    if (!capture) return null;
-    return this.#rows(`SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=? AND established=1 ORDER BY entity_id`,
-                      capture).map((r) => r.entity_id);
+    if (!capture) return { ids: null, truncated: false };
+    const rows = this.#rows(`SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=? AND established=1
+                              ORDER BY entity_id LIMIT ?`, capture, FACTS_ENTITIES_MAX + 1).map((r) => r.entity_id);
+    return { ids: rows.slice(0, FACTS_ENTITIES_MAX), truncated: rows.length > FACTS_ENTITIES_MAX };
   }
 
   /** R28's facts for a candidate, computed from what its sides already carry. */
@@ -1508,16 +1540,21 @@ export class Contradiction {
     const subject = (s) => {
       if (isPart(s)) return this.#entitiesOf(s.capture_sha);
       const r = s && s.inquiry ? this.#one(`SELECT inquiry_subject_entity AS e FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
-      return r && r.e ? [r.e] : null;
+      return { ids: r && r.e ? [r.e] : null, truncated: false };
     };
+    const sa = subject(A), sb = subject(B);
+    const entities = fact("subject", "resolved_entities", sa.ids, sb.ids, "no established resolution or subject is held",
+                          "no established resolution or subject is held");
+    /* R28 (N368): a side's list cut at its bound says so, and is never answered as whole. */
+    if (sa.truncated || sb.truncated) Object.assign(entities, { truncated: true, limit: FACTS_ENTITIES_MAX,
+      ...(sa.truncated ? { a_truncated: true } : {}), ...(sb.truncated ? { b_truncated: true } : {}) });
     const facts = [
       fact("time_or_occasion", "stated_date", A.date, B.date, noDate(A), noDate(B)),
       fact("observer_or_method", "doctype", A.doctype, B.doctype, noType(A), noType(B)),
       fact("observer_or_method", "capture", A.capture_sha, B.capture_sha,
            isPart(A) ? "the passage is not held" : "a held claim rests on no one capture",
            isPart(B) ? "the passage is not held" : "a held claim rests on no one capture"),
-      fact("subject", "resolved_entities", subject(A), subject(B), "no established resolution or subject is held",
-           "no established resolution or subject is held"),
+      entities,
     ];
     if (row.key === "K5") facts.push(fact("scope", "project", A.project ?? null, B.project ?? null, "no project", "no project"));
     return facts;
@@ -1529,7 +1566,9 @@ export class Contradiction {
       const row = this.#candidate(candidate);
       if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer))
         return Contradiction.#noSuch("no contradiction you can see answers to that id");
-      return { ok: true, wrote: false, candidate: row.candidate, key: row.key, facts: this.#facts(row),
+      const facts = this.#facts(row);
+      return { ok: true, wrote: false, candidate: row.candidate, key: row.key, facts,
+               limit: FACTS_ENTITIES_MAX, truncated: facts.some((f) => f.truncated === true),
                says: "each fact is the record's, as its sides carry it, and none is machine work. A fact not stated is "
                    + "undetermined, with why, never guessed" };
     } catch (e) {
@@ -1993,6 +2032,27 @@ export class Contradiction {
     });
   }
 
+  /** R36's C-93.27 check and R56's one predicate: the candidate a contradiction inquiry names, when the inquiry is held
+   *  and one the viewer may see, it names a candidate this module holds (`inquiry` R48's `contradictionLink`), and the
+   *  viewer may see both of its sides (R10); else null. */
+  #linkedCandidate(id, viewer) {
+    const i = this.#i();
+    const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id)
+      && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
+    const row = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
+    return row && this.#sideSeen(row.a, viewer) && this.#sideSeen(row.b, viewer) ? row : null;
+  }
+
+  /** R56 (N365; in-process, read as the viewer, for `affordances` R14): whether R36's `NOT_A_CONTRADICTION_INQUIRY`
+   *  check passes for this viewer, answered by the very predicate `resolve` applies, so the offer and the act cannot
+   *  disagree. `false` for an absent viewer and for anything it cannot read. Writes nothing; never throws. */
+  candidateSidesSeen({ inquiry = null, viewer = null } = {}) {
+    try {
+      const id = typeof inquiry === "string" ? inquiry.trim() : "";
+      return !!this.#linkedCandidate(id, viewer);
+    } catch { return false; }
+  }
+
   /** op=contradictionresolve — R36: a contradiction inquiry's conclusion, with its resolution. */
   resolve({ inquiry = null, resolution = null, conclusion = null, version = null, falsifier = null, noFalsifier = false,
             accepted = null, viewer = null, author = null, at = null } = {}) {
@@ -2000,10 +2060,8 @@ export class Contradiction {
     if (machine) return machine;
     const id = typeof inquiry === "string" ? inquiry.trim() : "";
     const i = this.#i();
-    const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id)
-      && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
-    const row = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
-    if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer))
+    const row = this.#linkedCandidate(id, viewer);
+    if (!row)
       return Contradiction.#notContradictionInquiry("no question you can see answers to that id as one taken up from a contradiction");
     const res = resolution && typeof resolution === "object" && !Array.isArray(resolution) ? resolution : {};
     const family = this.#family(res.kind);

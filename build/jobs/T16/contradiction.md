@@ -1,0 +1,49 @@
+# contradiction (T16)
+
+**Status** · session_01ABCPCsNDwoT4nvrzvxni42 · depth 2 · COMPLETE · handled B2
+
+## J1 · QUESTION
+
+Four readings I am building on now; none blocks me. Correct any and I bring the work in line.
+
+1. **N366, `reach` (R24/R25).** `reach.projects` names only the projects the viewer sees at `FULL` (membership R80 `inSight`), read through `projectsDrawingOn(inq, viewer)`, and for an extent side only through inquiries citing the row that the viewer may see. The rest are **not counted and not flagged**: any count or "others exist" flag differs between zero, one and three hidden projects, which R55's parity forbids (its test is byte-identity across hidden-party counts), and membership R44 never widens a reverse edge. `reach.truncated` is measured on that visible list only. R49's parties, the notice, the opt-in and reveal, `unseen_conflict` and `{project}` matching stay read in full (`INTERNAL`) inside the module, never shown. `between_projects` is unchanged (a joined participant sees their project).
+2. **N366, `{project}` at EXISTENCE sight.** A project the viewer sees at `EXISTENCE` (discoverable, not a participant) answers exactly as an absent id (`none_judged`), like `NONE`. I am not using membership's C-70.1 there, because R25 names no refusal but C-60.2. Say if you want C-70.1 (membership's general rule) instead.
+3. **N368, the bounds (entities R39's class).** `tensionsOn`: at most 200 candidates read per referent (`TENSIONS_CANDIDATES_MAX`), with `truncated` per referent observed by reading one past. `contextFacts`: `resolved_entities` at most 500 per side (`FACTS_ENTITIES_MAX`), with `truncated` on that fact; the facts array itself is fixed at 4 or 5. `conflictNotices`' R50 `truncated` gets a test driving 51 notices. R27 and R28 don't state these numbers yet; the wording is yours.
+4. **N359.** The `stale` mark from an inquiry's CORRECTED conclusion reads `member` and `at` from the latest R36 `resolve` act on the candidate naming that inquiry, and adds `act: <act_id>` beside `inquiry`. A conclusion reached only through basis-versions' own door has no resolve act. There `member` and `at` stay null, with `why: "concluded through basis-versions' own door; no concluding act of this module"`. Say if you want them read from inquiry R19 `stateHistory` instead; I'd need to reach it through `inquiryServices`, a declared use.
+
+## J2 · REPORT
+
+N366 is applied and pushed on `job/T16/contradiction` at 0d3612eecc, if you want it merged ahead of the rest. `reach` is read under the viewer's sight, and `{project}` is fenced (J1's readings 1 and 2). It is tested over two hidden projects, with byte parity with and without them, in `present.test.mjs` "R24, R25, R19 (N366)". The module's tests are 85 pass, 0 fail, 7 todo. I'm now working on N368, N359 and N365; the checks run at completion.
+
+## J3 · COMPLETE
+
+**Entries applied** (branch `job/T16/contradiction` @ 512cd911dd, `tranche/T16` merged in after B2), in B1's order. J1's four readings stand as B2 ruled them (K544).
+1. **N366 (0d3612eecc; K523).** `reach` (R24/R25) is read under the viewer's own sight. It lists only projects the viewer sees (membership R43/R80), through `projectsDrawingOn(inq, viewer)`, and for an extent side only through inquiries citing the row that the viewer sees. Hidden projects are neither named, counted nor flagged, and `truncated` is measured on the visible list, so the answer's bytes are identical with zero, one or 34 hidden projects (R55's parity). R49's parties are still read in full (`INTERNAL`) for the notice, opt-in, reveal, `unseen_conflict`, `between_projects` and `{project}` matching; none of them is ever shown. `{project}` for a project the viewer sees only at `EXISTENCE`, or not at all, answers exactly as an absent id (`none_judged`). Tested in `present.test.mjs` "R24, R25, R19 (N366)" over two hidden projects, plus 33 hidden projects and 33 hidden citing questions on a seen side. The test fails on the tranche's code, naming the leaked reach.
+2. **N368 (12ecb5a198).** R27: each referent's marks are read from at most `TENSIONS_CANDIDATES_MAX` (200) candidates, bounded in the SQL, with `truncated` per referent observed one past. The answer adds `limit` and an any-referent `truncated`. R28: each side's resolved entities are at most `FACTS_ENTITIES_MAX` (500), and past it the fact carries `truncated`, `limit` and `a_truncated`/`b_truncated`, with `limit` and `truncated` also at the top. R50: a test drives 51 notices (50 K4 and 1 K1) at `PAGE_MAX`, every non-number and over-ask, `limit: 1`, and the cursor resuming (`projects.test.mjs` "R50 (N368)").
+3. **N359 (512cd911dd; W3).** R27's `stale` mark from an inquiry's CORRECTED conclusion now carries the latest R36 `resolve` act's `member` and `at`, and its `act` beside `inquiry`. A conclusion reached only by basis-versions' own door has no such act; there `member` and `at` are null with `why` (B2 (4)). No row changes. Tested in `present.test.mjs` "R27: a CORRECTED resolution through the inquiry … (N359)": a second member at a later instant, and the other door.
+4. **N365 (512cd911dd).** R56 `candidateSidesSeen({inquiry, viewer}) → boolean`. `resolve`'s C-93.27 check now calls the same private predicate (`#linkedCandidate`), so the offer and the act cannot disagree. Tested in `acts.test.mjs` "R56 (N365)": 14 cases, each checked against `resolve`'s own answer.
+
+**`not yet met` marks my work meets** (for BOB to strike, K460): R27's "(its bound not yet met: N368)" and "(its contradiction-inquiry arm not yet met: N359)"; R28's "(its bound not yet met: N368)"; R56's "(not yet met: N365)"; and the Status line's "N365 (K520) R56 …; not yet met".
+
+**Check rows (N318):** none added, moved or retired. Nothing is `awaiting stamp` from this job.
+
+**Greps (B1):** none of the names I added (`candidateSidesSeen`, `TENSIONS_CANDIDATES_MAX`, `FACTS_ENTITIES_MAX`, `#linkedCandidate`) appears in `civicos-ui/`, affordances' lists, `control-plane/` or anywhere outside `src/contradiction/`. Nothing was retired. affordances' R14 fact (N365's other half) should call `contradictionOf(ctx).candidateSidesSeen({inquiry, viewer})`.
+
+**Reported, not mine to change:**
+1. **legacy-tests, `test/bounds.test.mjs`:** 227 pass, 3 fail on both `tranche/T16` and this branch (WALK, PIN GUARD, PIN). The walk's roster goes 78 → 79 because `tensionsOn` is now a capped op. The undriven list goes `["knocksof","contradictionnotices"]` → `["knocksof","contradictiontensions","contradictionnotices"]`. Both contradiction ops are now driven at the bite in my tests: `contradictionnotices` in `projects.test.mjs` "R50 (N368)" (51 at 50, and `limit: 1`), and `contradictiontensions` in `present.test.mjs` "R27 (N368)" (201 cut at 200, 200 whole). The pin's hand list can add both, as it did `contradictioncandidates`.
+2. **legacy-tests, `test/meaning-bounds.test.mjs`:** 96 pass, 3 fail on both (D-240 (b), RATCHET ceiling, REACH residual). The BARE roster goes 43 → 41 with this change: `contradictiontensions` moves to BOUNDED (60 → 61), and `contradictionfacts` leaves BARE. `contradictionfacts` is now listed in none of the four printed buckets (190 → 189 placements). The walk should confirm it is still accounted for; its answer now carries `limit` and `truncated` beside the facts array. The ceiling (≤ 40) stays red at 41, and the floor (≥ 40) holds.
+3. **legacy-tests, `test/gate-reads.test.mjs`:** 178 pass, 1 fail on both ("EVERY read op is classified", got `["contradictioncandidates"]`). With N366, `contradictioncandidates` can be classified GATED as N366 planned: the reach is viewer-gated, `{project}` is fenced, and every candidate is shown only when both sides are seen.
+4. **reevaluation (N359's share, layer 7):** the stale mark's `at` is now the conclusion's instant and `member` the concluding member, for a conclusion made through R36. For one reached only by basis-versions' door both stay null, with `why`. So R16's null-matching close still has that one case. reevaluation's module tests pass unchanged (59 pass).
+5. **Generated artifacts (§14):** `bio-plane/dist/bio-plane.bundled.mjs` (owner `not_product`) bundles the plane's source, `src/contradiction/` included, so it is stale until your layer-close rebuild. No other listed artifact takes contradiction as input.
+6. **An observation, not a flaw here:** `takeUp` makes a leg or extent side a leg on its content row's home bundle. The test fixture files hidden passages directly in project bundles, and inquiry's grammar refuses a leg on a project (C-2.8). So `takeUp` can't be driven for a half-hidden candidate in the fixture; R56's test links its inquiry by document, as R38's test does. In the product, content is filed in information bundles, so this doesn't arise.
+
+**Deferred:** nothing.
+
+**Tests and checks run:**
+- `node --test test/m/contradiction/` (bio-plane): **89 pass, 0 fail, 7 todo** (baseline on entry 84 pass, 7 todo; the 7 todos are unchanged K5 and R41 arms, K488).
+- The tests of every module that uses contradiction, each 0 fail: ai-runs 49, skills 33, reevaluation 59, publication 100 (2 todo), case-authoring 53, conformance 46, affordances 90, queue 69, control-plane 57. queue-producers has no test directory.
+- Layer tests: none (`build/manifest.md`).
+- Legacy suites, compared against `tranche/T16`'s module code: bounds 227/3, meaning-bounds 96/3, gate-reads 178/1, the same failures on both sides (items 1–3 above).
+- `node checks/format.mjs`: 72 modules, 67 requirements files; 0 failures. `architecture.mjs … contradiction`: 17 product files, 47 relative imports; 0 failures. `coverage.mjs … contradiction`: 56 of 56 live requirement ids named by a test; 0 failures. `ownership.mjs … contradiction tranche/T16`: 5 files changed; legacy-store 0/0, legacy-checks 0/0; 0 failures.
+
+Size (session_01ABCPCsNDwoT4nvrzvxni42): test runs 32, module lines 3240

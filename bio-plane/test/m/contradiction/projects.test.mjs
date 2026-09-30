@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
 import { refusedWith } from "./seed.mjs";
-import { CONTRADICTION_CANDIDATE_CHECKS, NOTICE_SENTENCE, NOTICE_RESPONSES_MAX, EMAIL_MAX } from "../../../src/contradiction/index.mjs";
+import { CONTRADICTION_CANDIDATE_CHECKS, NOTICE_SENTENCE, NOTICE_RESPONSES_MAX, EMAIL_MAX, PAGE_MAX } from "../../../src/contradiction/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 const ROWS = CONTRADICTION_CANDIDATE_CHECKS;
@@ -85,6 +85,45 @@ test("R50, R55: a notice carries the seen side verbatim and the fixed sentence, 
   /* the page */
   assert.deepEqual([notices(w, PA, M2).limit, notices(w, PA, M2).truncated, notices(w, PA, M2).cursor], [50, false, w.id]);
   assert.deepEqual(w.c.conflictNotices({ project: PA, after: w.id, viewer: M2 }).notices, []);
+});
+
+test("R50 (N368): the page is at most 50 in candidate id order after `after`, a non-number 50, truncated observed one past at its cut, and the cursor resumes", () => {
+  /* 51 half-seen duties for alpha's members: 50 K4 pairs (the pairing's own bound) between alpha's 26 passages on one
+     capture and beta's two on another, and one K1 pair of a question alpha draws on, resting on one of each */
+  const w = world();
+  w.runs.set(RUN, { status: "running", principal: M1 });
+  w.project(PA, [{ id: "m2", owner: 1 }]);
+  w.project(PB, [{ id: "m3", owner: 1 }]);
+  w.inquiry(IX); w.inquiry(IY); w.inquiry("INQ-2026-0003-z");
+  const alpha = Array.from({ length: 26 }, (_, i) => w.content(sha(`alpha ${i}`), "c1-alpha", PA));
+  const beta = [0, 1].map((i) => w.content(sha(`beta ${i}`), "c0-beta", PB));
+  alpha.forEach((c, i) => w.leg(IX, i, "supports", { content: c, target: PA }));
+  beta.forEach((c, i) => w.leg(IY, i, "supports", { content: c, target: PB }));
+  w.leg("INQ-2026-0003-z", 0, "supports", { content: alpha[0], target: PA });
+  w.leg("INQ-2026-0003-z", 1, "cuts_against", { content: beta[0], target: PB });
+  w.resolution("c1-alpha", PA, "E1"); w.resolution("c0-beta", PB, "E1");
+  w.reading("c1-alpha", PA, { contentType: "minutes" }); w.reading("c0-beta", PB, { contentType: "report" });
+  w.draws(IX, PA); w.draws("INQ-2026-0003-z", PA); w.draws(IY, PB);
+  const pairs = w.c.pairs({ viewer: MACHINE }).pairs.filter((p) => p.key === "K4" || p.key === "K1");
+  assert.deepEqual([pairs.filter((p) => p.key === "K4").length, pairs.filter((p) => p.key === "K1").length], [50, 1]);
+  const r = w.c.propose({ run: RUN, proposedBy: "class:ai/t", viewer: MACHINE, caller: M1,
+                          proposals: pairs.map((p) => ({ key: p.key, a: p.a, b: p.b, label: "record", reason: "r" })) });
+  assert.equal(r.written, 51, JSON.stringify(r).slice(0, 300));
+  const ids = r.candidates.map((c) => c.candidate).sort();
+  assert.equal(PAGE_MAX, 50);
+  for (const limit of [null, "x", 0, 999]) {
+    const page = w.c.conflictNotices({ project: PA, limit, viewer: M2 });
+    assert.deepEqual([page.limit, page.notices.length, page.truncated, page.cursor], [50, 50, true, ids[49]], String(limit));
+    assert.deepEqual(page.notices.map((n) => n.candidate), ids.slice(0, 50));
+  }
+  const rest = w.c.conflictNotices({ project: PA, after: ids[49], viewer: M2 });
+  assert.deepEqual([rest.notices.map((n) => n.candidate), rest.truncated, rest.cursor], [[ids[50]], false, ids[50]]);
+  const one = w.c.conflictNotices({ project: PA, limit: 1, viewer: M2 });
+  assert.deepEqual([one.limit, one.notices.map((n) => n.candidate), one.truncated], [1, [ids[0]], true]);
+  const two = w.c.conflictNotices({ project: PA, limit: 1, after: one.cursor, viewer: M2 });
+  assert.deepEqual([two.notices.map((n) => n.candidate), two.truncated], [[ids[1]], true]);
+  const last = w.c.conflictNotices({ project: PA, limit: 2, after: ids[48], viewer: M2 });
+  assert.deepEqual([last.notices.map((n) => n.candidate), last.truncated], [[ids[49], ids[50]], false]);
 });
 
 test("R27, R19: the seen side reads unseen_conflict for a joined participant of a party reached through it, and nothing else of the other side; nobody else is told", () => {

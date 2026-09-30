@@ -283,6 +283,50 @@ test("R36: a conclusion reached by basis-versions' own door carries its resoluti
   assert.equal(w.count("contradiction_acts"), 1);               /* the take-up only: no acceptance basis recorded */
 });
 
+test("R56 (N365): candidateSidesSeen answers true exactly when R36's NOT_A_CONTRADICTION_INQUIRY check passes for the viewer — the one predicate, so the offer and the act cannot disagree", () => {
+  const w = seeded();
+  /* a candidate with one side in a project m1 takes no part in, taken up by m2, who sees both */
+  const hb = "PROJ-2026-0009-h"; w.project(hb, ["m2"]);
+  const hid = sha("hidden"); w.content(hid, "capH", hb);
+  w.leg(IQ.c, 2, "cuts_against", { content: hid, target: INFO.b });
+  const pair = w.c.pairs({ key: "K1", viewer: MACHINE }).pairs.find((p) => p.b.content_id === hid);
+  const half = w.c.propose({ run: RUN, proposedBy: "class:ai/t", viewer: MACHINE, caller: PRINCIPAL,
+                             proposals: [{ key: "K1", a: pair.a, b: pair.b, label: "record", reason: "r" }] }).candidates[0].candidate;
+  /* its contradiction inquiry, promoted by m2 (a leg cannot rest on the project the hidden side is filed in, so it is
+     linked by its document alone, as R38's test links one) */
+  const linkDoc = (id, candidate) => ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Q"`, "current_state: open",
+    "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`, "surfaced_by: human",
+    "contradiction:", `  candidate: "${candidate}"`, "references: []", "state_history: []", "---", "", "## Question", "", "Q?", ""].join("\n");
+  const upHalf = { inquiry: "INQ-2026-0600-half" };
+  const pr = w.promotion.promote({ bundleId: upHalf.inquiry, base: null, snapKey: "half", author: M2, actorViewer: M2,
+                                   files: [{ path: "bundle.md", text: linkDoc(upHalf.inquiry, half) }], meta: { object_type: "inquiry" } });
+  assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 400));
+  const whole = cand(w, "K2", "record");
+  const upWhole = w.c.takeUp({ candidate: whole, question: "Which?", frame: "a", viewer: M1, author: M1 });
+  const cases = [
+    [upWhole.inquiry, M1, true], [upWhole.inquiry, M2, true], [upWhole.inquiry, OUT, true],
+    [upHalf.inquiry, M2, true], [upHalf.inquiry, M1, false],               /* sees the question, not both sides */
+    [upWhole.inquiry, null, false], [upWhole.inquiry, "", false], [upWhole.inquiry, "somebody", false],
+    [IQ.a, M1, false],                                                     /* a plain inquiry */
+    ["INQ-2026-0404-none", M1, false], ["", M1, false], [null, M1, false], [7, M1, false], [{}, M1, false],
+  ];
+  for (const [inquiry, viewer, want] of cases) {
+    assert.equal(w.c.candidateSidesSeen({ inquiry, viewer }), want, JSON.stringify([inquiry, viewer]));
+    /* the act asks the same: an incomplete resolution is refused after C-93.27, never by it, where the read says true */
+    const r = w.c.resolve({ inquiry, resolution: { kind: "misquote" }, conclusion: "c", viewer, author: M1 });
+    assert.equal(r.ok, false);
+    assert.equal(r.code === "NOT_A_CONTRADICTION_INQUIRY", !want, JSON.stringify([inquiry, viewer, r.code]));
+  }
+  /* an inquiry the viewer may not see: the same false */
+  const hq = "PROJ-2026-0010-q"; w.project(hq, ["m2"]);
+  assert.equal(w.c.candidateSidesSeen({ inquiry: hq, viewer: M1 }), false);
+  /* it writes nothing and never throws */
+  const before = w.count("contradiction_acts");
+  assert.doesNotThrow(() => w.c.candidateSidesSeen());
+  assert.doesNotThrow(() => w.c.candidateSidesSeen({ inquiry: {}, viewer: [] }));
+  assert.equal(w.count("contradiction_acts"), before);
+});
+
 test("R37: recommend — R13's first four through the run gate, then coordinates, vocabulary, reason, a standing candidate; one per coordinate, a repeat writes nothing", () => {
   const w = seeded();
   w.runs.set("RUN-2026-0002", { status: "ended", principal: PRINCIPAL });
