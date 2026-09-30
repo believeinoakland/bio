@@ -65,7 +65,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
   It writes nothing.
 
 **A source's rung moved** (N364; DEC-78 item 5(e))
-- **R28** R2 gains the cause arm `source`. A dependent carries it when a live leg (R7) rests on a capture (its content row's capture, or each capture a whole-document target registers) whose source (`sources`' `source_knocks` read contract, its R15) moved rung after the dependent's last write (`bundles.last_updated`), with `detail` the rung before and after and the move's instant. The moves are those this module heard from `sources.onDisclosure` (R10) and kept, one row per move whose rung changed (K547); `rungOf` is never called on a read. It is told to R8's listeners as `kind: "source"` (`subject` the source id, `since` the move's instant), once per move, after the row is written, carrying no value, and it never regrades: the leg's grade is unchanged. *(not yet met: N364)*
+- **R28** R2 gains the cause arm `source`. A dependent carries it when a live leg (R7) rests on a capture (its content row's capture, or each capture a whole-document target registers) whose source (`sources`' `source_knocks` read contract, its R15) moved rung after the dependent's last write (`bundles.last_updated`), with `detail` the rung before and after and the move's instant. The moves are those this module heard from `sources.onDisclosure` (R10) and kept, one row per move whose rung changed (K547); `rungOf` is never called on a read. It is told to R8's listeners as `kind: "source"` (`subject` the source id, `since` the move's instant), once per move, after the row is written, carrying no value, and it never regrades: the leg's grade is unchanged.
 
 ## Private
 
