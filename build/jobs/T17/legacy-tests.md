@@ -1,6 +1,6 @@
 # legacy-tests (T17)
 
-**Status** · session_01SbVzzsbhZ7sfLECSnWAsmv · depth 2 · WORKING · handled B2
+**Status** · session_01SbVzzsbhZ7sfLECSnWAsmv · depth 2 · WORKING · handled B3
 
 ## Progress
 
