@@ -16,7 +16,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 
 **reevaluations({target, viewer})** (`op=reevaluations`; admin, member, probe)
 - **R1** A target that is absent or that the viewer may not see is refused `NO_SUCH_BUNDLE`. With no target, every id any basis leg names is asked. It writes nothing.
-- **R2** Causes are facts about the target's own row: `supersession` when something supersedes it (`since` the latest superseder's `last_updated`; a superseding id the viewer may not see is null in `superseded_by`, and the cause stands); `deferred` or `dismissed` from its state; `reopened` when it is `open` with a prior state that is a disposition or `concluded`; `corrected` by R27; `edition`, per leg, when the target's latest edition (the greater of the latest ratified and the document's authored edition, only above 1) exceeds the edition the leg names or the leg names none, carrying `cited_edition`, `latest_edition` and `latest_ratified_edition`. A dependent with no cause is not listed. *(not yet met: N345)*
+- **R2** Causes are facts about the target's own row: `supersession` when something supersedes it (`since` the latest superseder's `last_updated`; a superseding id the viewer may not see is null in `superseded_by`, and the cause stands); `deferred` or `dismissed` from its state; `reopened` when it is `open` with a prior state that is a disposition or `concluded`; `corrected` by R27; `edition`, per leg, when the target's latest edition (the greater of the latest ratified and the document's authored edition, only above 1) exceeds the edition the leg names or the leg names none, carrying `cited_edition`, `latest_edition` and `latest_ratified_edition`. A dependent with no cause is not listed.
 - **R3** A dependent the viewer may not see is withheld whole, with no count of what was withheld. A withdrawn leg is listed with `status: severed` and a sentence saying it supports nothing and is listed because the connection still informs a second look (DEC-70); every other leg is `confirmed` (`connections.edgeSevered`).
 - **R4** Each obligation carries `reeval: {flag: true, since, source}` from its first cause; `stored`, the dependent's own authored `reeval_pending` triple (null where unstated), beside it and never merged; and `strength`, the dependent's pair per axis with its depth bound (`strength.strengthOf`), unaltered.
 - **R5** Each leg is `{ord, role, grade, grade_axis, grade_source, target_edition, status, grade_authored, grade_why}`: a capture-axis letter on a leg whose target is not an inquiry is bounded by what the target earns (`inquiry.legCapped`), `grade_authored` the letter as written and `grade_why` null when not bounded. Both fields are always present.
@@ -62,7 +62,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
   - **The listing.** `correctedDependents({after, limit, viewer})` answers each (dependent, candidate) so caused, in dependent then candidate order after `after`, at most `limit` (1–200, default 200), with `cursor`. A dependent the viewer may not see is withheld and not counted (R20).
   - **The recovery read.** `changesOf` (R9) answers it too.
 
-  It writes nothing. *(not yet met: N345)*
+  It writes nothing.
 
 ## Private
 
