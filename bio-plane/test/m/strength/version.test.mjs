@@ -281,3 +281,32 @@ test("R27: candidateIndependence groups legs by ground into the declared parts, 
   assert.deepEqual(r, { checked: true, parts: 2, shared: [], complete: true, limit: ORIGIN_LIMIT });
   assert.equal(w.s.candidateIndependence({ legs: [{ target: A, ground: "x" }], parts: 1 }).checked, false);
 });
+
+/* Carries `bio-plane/test/content-capture-bound.test.mjs` §7 (REC-88, D-349): the earned capture entry for a document
+   whose every transcription is unmeasured, in the shape inquiry's registry answers it (its R13: a ceiling with no
+   letter, `undetermined_because: CAPTURE_FIDELITY_UNMEASURED`), reaches a version's capture leg. */
+test("R9: a version's capture leg on an unmeasured transcription is inert and says the fidelity is unmeasured, never that no bytes are held", () => {
+  const w = versioned();
+  const U = "INFO-2026-0008-a", NONE = "INFO-2026-0009-a";
+  w.ceilings.set(U, { grade: null, captures: 1, determined: false, undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
+    why: `The record holds 1 capture of ${U}, but every transcription of its text is UNMEASURED: no step in the `
+       + "provenance of this document's text carries a measured fidelity, so what a leg resting on that text may "
+       + "claim about how it was captured is undetermined." });
+  w.version(INQ, "unmeasured", "suggested", [
+    { target: U, axis: "capture", source: "capture", ground: "P1" },                /* §7's leg: no letter stated */
+    { target: U, grade: "B", axis: "capture", source: "capture", ground: "P1" },    /* and one claiming a letter */
+    { target: NONE, grade: "B", axis: "capture", source: "capture", ground: "P1" }, /* no bytes held, the contrast */
+  ]);
+  /* A suggested reading is measured as a what-if naming its state, as §7 asked it (C-30.6 otherwise). */
+  const r = vs(w, { version: "unmeasured", states: "suggested,accepted" });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.deepEqual(r.graded, [], "no leg on the unmeasured transcription is load-bearing");
+  const why = (ord) => r.ungraded.find((x) => x.ord === ord)?.why;
+  for (const ord of [0, 1]) {
+    assert.match(why(ord), /every transcription of its text is UNMEASURED/, `ord ${ord}`);
+    assert.doesNotMatch(why(ord), /holds no captured bytes/, `ord ${ord}`);
+  }
+  assert.match(why(2), /holds no captured bytes for INFO-2026-0009-a/, "the no-bytes sentence stays for a document with none");
+  assert.equal(r.pair.capture.state, "unrated");
+  assert.deepEqual(r.pair.capture.not_load_bearing.map((m) => m.ord).sort(), [0, 1, 2]);
+});
