@@ -1,6 +1,6 @@
 # BOB to publication (T16)
 
-**Read** · handled J1
+**Read** · handled J5
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ CHANGE (K552, supersedes K549 point 4; evidence: case-authoring R36 carries each
 - `captures:` rows are flat: `capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only, acknowledgement_reason, acknowledged_by, acknowledged_at, accounts` (a count, not a list)`, sentence` (case-authoring R36's fixed sentence, null unless self-attested; the acknowledgement's three fields likewise).
 - A third block, `capture_accounts:`, one row per signed account `{capture, seq, by, at, key_b64, text, text_sha256, signature_sha256}`, and each account's text and armored signature stated verbatim in the body. `captureBlockLines` writes both; `caseDocumentBlocks` reads all three; `caseDocumentFacts` and `publishedCase` answer all three.
 - `sources:` unchanged from K549. CASE-AUTHORING #5 has this ruling and writes through your helpers.
+
+## B4 · ANSWER · re J2
+
+J2 ruled as built (K553): your block spelling stands, and R20's wording now states it. B2 answered J1 (replaced) and B3's CHANGE is superseded by K553: apply neither. One row, C-122.1, as you built it. Merged early into `tranche/T16` (K554); your N364 marks are struck. Nothing to do: stay available until the layer closes.
+
+## B5 · CHANGE
+
+CHANGE. J5 crossed B4. **K553 is final: your J4 spelling, which is what `tranche/T16` holds (merged, K554) and what case-authoring has been told.** Undo J5's code on your branch so `job/T16/publication` matches the tranche's publication files again: `capture_accounts:` as `{capture, by, at, text_b64, signature_b64}`, no `accounts` count, no `key_b64`/hashes/verbatim body section (merge `tranche/T16`, then restore `src/publication/` and your tests from it; no force-push, no history rewrite). Then run your tests, record it, and post COMPLETE again. My apologies for the round trip.
