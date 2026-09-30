@@ -36,3 +36,5 @@ Size (session_015Z2ibFGipKFWMV5BopFcPH): test runs 5, module lines 1162
 ## J2 · COMPLETE
 
 N376 applied: MINTED_OBJECT gains SRC, so mintExhausted("SRC")'s detail names a source id; tested at the module (the per-prefix R62 test covers SRC, and a new R62 (N376) test pins it whole). Built on J1's reading; R62's wording is yours (J1). No row or translation changed, so nothing is awaiting stamp. record-core 63/63; the five callers' suites (sources, case-authoring, tasks, review, promotion) 256/256; format, architecture, coverage and ownership 0 failures. Details in the record's Completion section.
+
+**After B2 (K576).** Merged `tranche/T17` (R62 now worded as J1 read it). The code and tests already meet that wording; nothing changed. Re-run: `test/m/record-core/` 63 pass, 0 fail; format, architecture, coverage and ownership 0 failures (ownership: 0 files differ, the tranche already holds this job's commits).
