@@ -18,8 +18,11 @@ const R8 = {
   release: (f, t) => t === "information" && edgeTo(f, "verified"),
   retire: (f, t) => t === "information" && edgeTo(f, "retired") && !(n(f.cites_in?.confirmed) > 0),
   dispose: (f, t) => t === "inquiry" && f.case_member !== true && DISPOSITIONS.some((d) => edgeTo(f, d)),
-  conclude: (f, t) => t === "inquiry" && (edgeTo(f, "concluded")
+  /* N345: withheld on a contradiction inquiry, where contradictionresolve is offered on conclude's state-machine arm
+     (J1 item 2: resolve concludes without a project, so it has no project arm) */
+  conclude: (f, t) => t === "inquiry" && f.contradiction_inquiry !== true && (edgeTo(f, "concluded")
     || (f.current_state === "concluded" && f.concludes_for_project === true)),
+  contradictionresolve: (f, t) => t === "inquiry" && f.contradiction_inquiry === true && edgeTo(f, "concluded"),
   reopen: (f, t) => t === "inquiry" && edgeTo(f, "open")
     && (REOPENABLE_FROM.includes(f.current_state) || f.case_member === true),
   publish: (f, t) => t === "inquiry" && (f.current_state === "concluded" || f.concluded_for_project === true)
@@ -104,9 +107,12 @@ const DIMS = {
   basis_version_states: READINGS.map((v) => ({ basis_version_states: v })),
   basis_versions: COUNT.map((v) => ({ basis_versions: v })),
   actor_is_machine: B.map((v) => ({ actor_is_machine: v })),
+  contradiction_inquiry: B.map((v) => ({ contradiction_inquiry: v })),
 };
 const NAMES = {
-  release: [], retire: ["cites_in"], dispose: ["case_member"], conclude: ["concludes_for_project"],
+  release: [], retire: ["cites_in"], dispose: ["case_member"],
+  conclude: ["concludes_for_project", "contradiction_inquiry"],
+  contradictionresolve: ["contradiction_inquiry", "concludes_for_project"],
   reopen: ["case_member"],
   publish: ["case_member", "concluded_for_project", "edition_warranted_for_project", "project_owner"],
   inquirydivide: ["case_member", "basis_legs", "rested_on"], inquiryground: ["basis_legs", "case_member"],
@@ -127,14 +133,15 @@ const PERMISSIVE = { case_member: false, concludes_for_project: true, concluded_
   cited_by_case: { confirmed: 1, severed: 1 }, cites_out: { confirmed: 1, severed: 1, severed_reinstatable: 1 },
   project_participant: true, project_target_owner: true,
   roster: { owner: true, state: "joined", owner_floor_clear: true, other_owner_committed: true, rescue_open: true },
-  basis_version_states: ["suggested", "considering", "accepted", "rejected"], basis_versions: 4, actor_is_machine: false };
+  basis_version_states: ["suggested", "considering", "accepted", "rejected"], basis_versions: 4, actor_is_machine: false,
+  contradiction_inquiry: false };
 const RESTRICTIVE = { case_member: true, concludes_for_project: false, concluded_for_project: false,
   edition_warranted_for_project: false, project_owner: false, basis_legs: 0,
   rested_on: { working: 3, frozen: 1, severed: 0 }, cites_in: { confirmed: 2, severed: 0 },
   cited_by_case: { confirmed: 0, severed: 0 }, cites_out: { confirmed: 0, severed: 0, severed_reinstatable: 0 },
   project_participant: false, project_target_owner: false,
   roster: { owner: false, state: null, owner_floor_clear: false, other_owner_committed: false, rescue_open: false },
-  basis_version_states: [], basis_versions: 0, actor_is_machine: true };
+  basis_version_states: [], basis_versions: 0, actor_is_machine: true, contradiction_inquiry: true };
 const ABSENT = {};
 const BACKGROUNDS = [["permissive", PERMISSIVE], ["restrictive", RESTRICTIVE], ["absent", ABSENT]];
 
@@ -197,7 +204,7 @@ const NULL_AS = {
   project_owner: true, project_participant: true, cites_in: { confirmed: 0, severed: 0 },
   rested_on: { working: 0, frozen: 0, severed: 0 },
   concludes_for_project: false, concluded_for_project: false, edition_warranted_for_project: false,
-  project_target_owner: false, actor_is_machine: false,
+  project_target_owner: false, actor_is_machine: false, contradiction_inquiry: false,
 };
 test("R10: a null fact never narrows an act, and never widens one: null (or absent) answers exactly as the value "
    + "that neither narrows nor widens", () => {
@@ -260,4 +267,25 @@ test("R8 R9: deriveActs returns the catalogue's own act objects, in catalogue or
     for (const a of got) assert.ok(ACTS.includes(a));
     assert.deepEqual(got.map((a) => ACTS.indexOf(a)), [...got.map((a) => ACTS.indexOf(a))].sort((x, y) => x - y));
   }
+});
+
+/* N345 (R8): the contradiction inquiry. On every inquiry type and state, `conclude` and `contradictionresolve` are
+   never offered together, `conclude` is never offered on a stated contradiction inquiry, and `contradictionresolve` is
+   offered exactly where `conclude`'s state-machine arm would be on one. */
+test("R8: conclude is withheld on a contradiction inquiry, and contradictionresolve is offered exactly where conclude's "
+   + "state-machine arm would be on one — never both", () => {
+  const wrong = [];
+  let offeredSomewhere = false;
+  for (const ts of typestates) for (const [, bg] of BACKGROUNDS) for (const cfp of B) for (const ci of B) {
+    const f = make(ts, bg, { concludes_for_project: cfp, contradiction_inquiry: ci, actor_is_machine: false });
+    const got = deriveActs(f).map((a) => a.id);
+    const plain = deriveActs({ ...f, contradiction_inquiry: false, concludes_for_project: false }).map((a) => a.id);
+    if (got.includes("conclude") && got.includes("contradictionresolve")) wrong.push({ both: f });
+    if (ci === true && got.includes("conclude")) wrong.push({ concludeOnContradiction: f });
+    const want = ci === true && normalizeType(f.object_type) === "inquiry" && plain.includes("conclude");
+    if (got.includes("contradictionresolve") !== want) wrong.push({ resolve: f, got });
+    offeredSomewhere ||= want;
+  }
+  assert.deepEqual(wrong.slice(0, 5), []);
+  assert.ok(offeredSomewhere);
 });

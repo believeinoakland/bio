@@ -210,6 +210,10 @@ class AffordanceFacts {
                : this.#editionWarrantedForProject(id, viewer, who, b.current_state),
              /* REC-16: how many legs this question rests on, read from the document (inquiry_basis projects it). */
              basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
+             /* N345 (R14): a contradiction inquiry is one whose document carries `contradiction` (inquiry R47), read from
+                the front matter; null on a type that is not an inquiry. */
+             contradiction_inquiry: type !== "inquiry" ? null
+               : docFm.contradiction !== undefined && docFm.contradiction !== null,
              rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length, severed: rested.severed.length },
              /* PL-2 / IS-2: which states this question's readings are in, from the document. */
              basis_version_states: versions.filter((v) => v && typeof v === "object" && typeof v.state === "string")

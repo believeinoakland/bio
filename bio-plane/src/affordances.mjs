@@ -91,6 +91,11 @@ import { PRODUCT_KINDS, RISK_TIERS, LAW_LEVELS, ACTION_BASIS_KINDS, CORRESPONDEN
 import { SUBJECT_POSITIONS } from "./ratification/index.mjs";
 /* REC-37: a leg's roles are `inquiry'`s, whose `op=cite` refuses without one (NO_ROLE / BAD_ROLE). */
 import { BASIS_ROLES } from "./inquiry/index.mjs";
+/* N345 (R4): the contradiction inquiry's frozen vocabularies are `inquiry'`s (its R46), the one list of each that
+   `contradiction`'s acts and inquiry's grammar (R47) refuse against; the reasons a lead is dismissed for are
+   `contradiction'`s (its R31, DISMISSAL_REASON_UNKNOWN). */
+import { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, RESOLUTION_KINDS, NORM_CANONS } from "./inquiry/index.mjs";
+import { DISMISSAL_REASONS } from "./contradiction/index.mjs";
 /* PL-2 / IS-2. THE SIXTH STATE MACHINE, imported from where it is defined and
    enforced — `basis-versions` — the `op=dispose` hazard, not repeated. §6 rule 4
    requires it: *"the machine publishes the new machine through op=affordances,
@@ -470,6 +475,10 @@ export const JUSTIFICATION_REFUSALS = [
   /* N310 (K368): `op=actionmove` answers its absent reason with its own code (actions R13), the family's requirement
      in actions' word for it. */
   "ACTION_MOVE_NO_REASON",
+  /* N345 (K447): contradiction's member acts, each refusing without the member's account in its own word for it —
+     a lead's reason for being set aside (one of three, never blank), an explanation of how the sides differ, the
+     reason a side is wrong, and the question a taken-up conflict asks. */
+  "DISMISSAL_REASON_UNKNOWN", "CLARIFY_NO_EXPLANATION", "WRONG_SIDE_NO_REASON", "TAKE_UP_NO_QUESTION",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -659,6 +668,16 @@ export const VOCABULARIES = {
      the literal `minted_by` has rebuilt the predicate; every content-row
      projection already carries the plane's own answer in its `mint` block. */
   content_mint_states: CONTENT_MINT_STATES,
+  /* N345 (R4): what a member offers when a contradiction is clarified, resolved or dismissed — the respects in which
+     two sides may differ (K1–K4), the named differences between two projects' conclusions (K5), the kinds a
+     resolution records, the canons a conflict of norms is reconciled by, and the reasons a lead is set aside for. Each
+     is the array its enforcing module refuses against (CLARIFY_COORDINATE_UNKNOWN, RESOLUTION_KIND_UNKNOWN,
+     RESOLUTION_INCOMPLETE, DISMISSAL_REASON_UNKNOWN), so a surface offers a choice before a member is refused it. */
+  contradiction_coordinates: CONTRADICTION_COORDINATES,
+  plurality_differences: PLURALITY_DIFFERENCES,
+  resolution_kinds: RESOLUTION_KINDS,
+  norm_canons: NORM_CANONS,
+  dismissal_reasons: DISMISSAL_REASONS,
 };
 
 /* R26 (N65 (3)): the vocabularies an instance publishes, with `action_kind` the kinds its `actions` accepts at the
@@ -749,6 +768,13 @@ export const RUNGS = {
   /* N310 (with conformance's N233): superseding a determination asks its reason and refuses an absent one NO_REASON
      (conformance R7); a first determination replaces nothing and asks none, `inquiryground`'s shape (K212). */
   determine:          "reasoned",   // NO_REASON (conformance R7: a supersession says why)
+  /* N345 (K447), on R27's rule: each member act on a contradiction asks the member's account — a reason, an
+     explanation, a question or a conclusion — and is corrected forward by a further act, never by one moving back. */
+  contradictiondismiss: "reasoned", // DISMISSAL_REASON_UNKNOWN (contradiction R31: a lead is set aside for a stated reason)
+  contradictionclarify: "reasoned", // CLARIFY_NO_EXPLANATION, WRONG_SIDE_NO_REASON (contradiction R32, R33)
+  contradictiontakeup:  "reasoned", // TAKE_UP_NO_QUESTION (contradiction R35: the member's own question)
+  contradictionresolve: "reasoned", // NO_CONCLUSION (contradiction R36, through basis-versions' conclude)
+  resolutiondefect:     "reasoned", // NO_REASON (entities R38: a defect is reported with why)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -974,6 +1000,13 @@ export const RUNG_ABSENT = {
      things, not what was observed, so not `observational`. The ladder's own gap, stated: an act on the record,
      corrected forward (a candidate is never updated), labelled machine work and never signed. */
   contradictionpropose: { ground: "undetermined", is: "a run PROPOSES how two referents the pairing formed relate — one of §5's five labels and its reason, labelled machine work, state proposed, and never a finding until a member judges it (CONTRADICTION-IDENTIFY-DESIGN.md §8)" },
+  /* N345 (K481), on R27's rule. `contradictionrecommend` is `contradictionpropose`'s ground for its reason: a run
+     proposes, and it is machine work. The opt-in and the response (DEC-85) ask no authored reason (their words are
+     optional, a response's text is what is relayed, not an account of a decision), and no published act takes either
+     back: an opt-in is never withdrawn, and a response is relayed as written. */
+  contradictionrecommend: { ground: "undetermined", is: "a run RECOMMENDS in which respects the sides of a shown contradiction may differ — never which side is wrong or a kind — labelled machine work and standing only while the candidate is open (contradiction R37)" },
+  contradictionoptin:   { ground: "undetermined", is: "a project, through one of its joined participants, asks to resolve a conflict with a record its members cannot see; never withdrawn, and when every project holding a side has asked, the projects are named to each other (contradiction R51, R52)" },
+  contradictionrespond: { ground: "undetermined", is: "a member of an opted-in project responds to a conflict's notice, disclosing only what they choose; relayed as written to the other opted-in projects once they are named to each other (contradiction R53, R54)" },
   /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined`: none of its refusals (C-74) is in
      `JUSTIFICATION_REFUSALS`, and widening that class would be this item re-grading the ladder
      to suit itself. NOT `reversible`: nothing takes a choice back; a re-choice SUPERSEDES it and
@@ -1054,7 +1087,7 @@ export const RUNG_ABSENT = {
   standarddeclare:      { ground: "undetermined", is: "a member records a standard the record holds — citation, kind, issuer, its own words as captured and its period; never edited, corrected by a later standard that supersedes it (standards R1, R6)" },
   standardpropose:      { ground: "undetermined", is: "a member or a machine PROPOSES a standard with its why, stored apart and labelled; never a standard until a member adopts it (standards R9)" },
   standardadopt:        { ground: "undetermined", is: "a member adopts a proposal as a standard, the standard naming the proposal and the proposal its adoption, at most once (standards R10)" },
-  comparisonpropose:    { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled; never a determination (conformance R12)" },
+  comparisonpropose:    { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled, optionally started from a contradiction the proposer can see; never a determination (conformance R12, R21)" },
   consequencerecord:    { ground: "undetermined", is: "a member records what a breach did and to whom — a part computed from the record's figures, assessed with a rationale, or undetermined with why; never edited, revised by a successor (consequences R1–R6)" },
   filingprepare:        { ground: "undetermined", is: "a machine or a member prepares a filing draft from the record, every filled blank naming its source and every unfilled one marked; never sent until a member approves it (filings R1–R5)" },
   filingapprove:        { ground: "undetermined", is: "a member approves a filing draft's text, or their edit of it, at most once; the approved text is theirs (filings R6)" },
@@ -1224,7 +1257,8 @@ const anyVersionEdgeTo = (f, to) =>
  * {working, frozen, severed} (REC-17: how many live basis legs rest ON it, by
  * whether the dependent can still withdraw one — COUNTS and never ids, because
  * this answer is about the target and naming its dependents would be §7.9's
- * reverse walk by a new door). */
+ * reverse walk by a new door), and (N345) contradiction_inquiry (whether an
+ * inquiry's document carries `contradiction`: `conclude` or `contradictionresolve`). */
 export const ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
@@ -1309,9 +1343,22 @@ export const ACTS = [
      NO EDGE IS ADDED, AND THAT IS THE LIAR THIS REFUSES: a `concluded -> concluded` edge would
      publish the act to everybody and let the NO-PROJECT relationship conclude twice, re-opening a
      conclusion to itself. `conclude-project-arm.test.mjs` asserts both, through the op. */
+  /* N345 (R8): NOT ON A CONTRADICTION INQUIRY. Its conclusion must carry the kind the conflict turned out to be
+     (inquiry R47: RESOLUTION_MISSING at every door), which `conclude` does not ask, so it is withheld there and
+     `contradictionresolve` below is offered instead. `=== true`: a null (a hand-built facts object) narrows nothing. */
   { id: "conclude", label: "Conclude", weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && (edgesFrom(f).includes("concluded")
-                     || (f.current_state === "concluded" && f.concludes_for_project === true)) },
+    applies: (f, ty) => ty === "inquiry" && f.contradiction_inquiry !== true
+                     && (edgesFrom(f).includes("concluded")
+                         || (f.current_state === "concluded" && f.concludes_for_project === true)) },
+  /* N345 (R8; contradiction R36): RESOLVE a contradiction inquiry — its conclusion with the kind of resolution the
+     conflict turned out to be. Offered where `conclude` would be on such an inquiry, by its state machine's arm: the
+     act concludes the question itself through basis-versions' `conclude` WITHOUT a project (its R16), so it takes
+     the edge to `concluded` and has no project arm (a question already concluded is ILLEGAL_TRANSITION there). Only on
+     a STATED `true`: a null never widens. Which kind, the conclusion and the reading are the act's parameters, refused
+     by name — the release precedent. Weight `single`: one question is resolved at a time. RUNG `reasoned`. */
+  { id: "contradictionresolve", label: "Resolve this contradiction (conclude with what it turned out to be)",
+    weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && f.contradiction_inquiry === true && edgesFrom(f).includes("concluded") },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
      back to `open`. TWO conditions and no third: the FROM state is in the
      published DISPOSITIONS array — the one array that says what "set down"
@@ -1831,7 +1878,7 @@ export const ACTS = [
        projectownerremove NOT_THE_OWNER, LAST_OWNER, LAST_COMMITTED_OWNER (`projectOwnerRemove`) ->
                           owner, the one-owner floor clear and some owner committed (a one-owner
                           project, or one whose owners have all asked to leave, refuses EVERY parameter)
-       projectownerrescue ADMIN_ONLY, NO_OWNERS, OWNERS_ARE_ACTIVE (`#rescueRefusal`) -> open
+       projectownerrescue NOT_AN_ADMIN, NO_OWNERS, OWNERS_ARE_ACTIVE (membership `rescueRefusal`) -> open
      `projectremove` IS AN OWNER'S, NOT AN ADMINISTRATOR'S: Membership Architecture v2 §7.7
      REVERSED v1.4, and the store has refused a non-owner since. D-311's own row and D-310's
      argument both said "an ADMINISTRATOR's" — the v1.4 reading; each predicate here is derived
@@ -1918,6 +1965,8 @@ export const MACHINE_REFUSALS = {
   versionrevert:      "MACHINE_CANNOT_MOVE_VERSION",
   versioncurrent:     "MACHINE_CANNOT_MOVE_VERSION",
   versionhide:        "MACHINE_CANNOT_MOVE_VERSION",
+  /* N345: contradiction's member acts refuse an empty or machine author first (its R30, C-93.10). */
+  contradictionresolve: "MACHINE_CANNOT_ACT_ON_CANDIDATE",
 };
 
 /* Every op in NEEDS that is NOT an object-directed act, with the reason — so
@@ -1980,7 +2029,28 @@ export const NON_ACTS = {
      returns is not something to DO, it is something to LOOK AT, and nothing may act
      on a pair until a member has judged it. An affordance rendered beside a bundle
      would offer the act before the judgement that licenses it exists. */
-  contradictionpairs: "read: which of the record's own assertions are worth comparing, by the four named keys; forms candidate pairs, judges none of them and writes nothing",
+  contradictionpairs: "read: which of the record's own assertions are worth comparing, by the five named keys; forms candidate pairs, judges none of them and writes nothing",
+  /* N345 (R7). The member's acts on a contradiction are NOT object-directed: their subject is a CANDIDATE, keyed by
+     its id, and `affordanceFacts` carries none, so an applies() over the facts would offer them on every document. They
+     are reached where the candidate's sides are shown. The one act on a BUNDLE is `contradictionresolve`, which
+     concludes a contradiction inquiry and is an ACTS row. */
+  contradictiondismiss: "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
+  contradictionclarify: "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
+  contradictiontakeup: "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
+  contradictionrecommend: "run-directed: a run's recommendation of the respects in which a candidate's sides may differ, keyed by (run, candidate); the run is the subject and no bundle state offers it",
+  resolutiondefect: "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
+  contradictioncandidates: "read: the contradictions shown on an inquiry, a passage, an entity, a bundle, a project or one candidate, each with its sides, label, weight and state; writes nothing",
+  contradictiontensions: "read: the marks a contradiction leaves on each side the viewer can see — in tension, softened, stale, qualified, held irreconcilable; writes nothing",
+  contradictionfacts: "read: the facts the record holds that bear on each respect in which a candidate's sides may differ, each labelled the record's; writes nothing",
+  /* DEC-85: the conflict with a side the member cannot see. The opt-in and the response are the project's and the
+     member's acts on a CONFLICT, keyed by the candidate and the member's own project, and a notice is where they are
+     offered; no bundle state could say when to offer them. */
+  contradictionoptin: "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn",
+  contradictionrespond: "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other",
+  contradictionnotices: "read: the conflicts a project's members are told of on their own side — the side they may see, never the other side or who holds it; writes nothing",
+  contradictionresponses: "read: one conflict's responses for one project — its own as attributed, the other opted-in projects' as relayed; writes nothing",
+  /* case-authoring R32: the ceremony's read of what a publication must disclose, before the act. */
+  publishtensions: "read: the contradictions a case must disclose before it is published, each side the publisher cannot see highlighted and withheld; writes nothing",
   /* D-148. Not object-directed on `contradictionpairs`' reasoning: it reads ACROSS
      actions by counterparty, and what it returns is something to LOOK AT. */
   actionquotes: "read: the fee quotes the record holds, by counterparty or by request, side by side; judges none of them and writes nothing",
@@ -2385,7 +2455,7 @@ export const NON_ACTS = {
   standardpropose: "standard-directed: a member or a machine proposes a standard with its why, keyed by proposal id; writes a `standard_proposals` row, never a standard",
   standardadopt: "proposal-directed: a member adopts a standard proposal, keyed by proposal id; writes an STD- bundle naming it",
   determine: "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",
-  comparisonpropose: "project-directed: a machine or a member proposes a comparison, rows and questions and never an outcome, keyed by project; writes a `comparison_proposals` row",
+  comparisonpropose: "project-directed: a machine or a member proposes a comparison, rows and questions and never an outcome, keyed by project and optionally naming the contradiction it starts from; writes a `comparison_proposals` row",
   consequencerecord: "determination-directed: a member records one consequence part against one standard's noncompliant outcome, keyed by (determination, standard); writes a CONS- bundle",
   consequencerevise: "consequence-directed: a member revises a consequence part with its reason, keyed by part id; writes a successor CONS- bundle, the earlier one kept",
   addressedrecord: "consequence-directed: a member records a part addressed or not addressed, with a reason, keyed by part id; writes a `consequence_addressed` row",

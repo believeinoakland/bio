@@ -149,8 +149,8 @@ test("R13: no target is NO_TARGET; an absent bundle and one the viewer may not s
 
 const FACT_KEYS = ["ok", "target", "object_type", "declared_type", "current_state", "criticality", "case_member",
   "project_owner", "project_target_owner", "project_participant", "roster", "actor_is_machine", "concludes_for_project",
-  "concluded_for_project", "edition_warranted_for_project", "basis_legs", "rested_on", "basis_version_states",
-  "basis_versions", "cites_in", "cites_out", "cited_by_case"].sort();
+  "concluded_for_project", "edition_warranted_for_project", "basis_legs", "contradiction_inquiry", "rested_on",
+  "basis_version_states", "basis_versions", "cites_in", "cites_out", "cited_by_case"].sort();
 test("R14: the answer carries exactly R14's facts, with their sub-keys", async () => {
   for (const id of [W.INFO, W.INQ, W.ACTN, W.PA]) {
     const f = await facts(id, { identity: "member:iris", author: "member:iris", by: "iris" });
@@ -169,6 +169,10 @@ test("R14: declared_type, basis_legs and the reading states come from the docume
     ["inquiry", "inquiry", "open", 1, ["suggested"], 1]);
   const q2 = await facts(W.INQ2);
   assert.deepEqual([q2.basis_legs, q2.basis_version_states, q2.basis_versions], [1, [], 0]);
+  /* N345: neither document carries `contradiction`; a type that is not an inquiry reads null (the true arm is driven
+     over contradiction's fixture, contradiction.test.mjs) */
+  assert.deepEqual([q.contradiction_inquiry, q2.contradiction_inquiry], [false, false]);
+  for (const id of [W.INFO, W.ACTN, W.PA]) assert.equal((await facts(id)).contradiction_inquiry, null, id);
 });
 
 test("R14: the citation facts are the ones the acts refuse on — a live and a severed citation from a project, counted "
@@ -481,7 +485,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     "biasdebtresolve", "actionrisktier", "reevaluationrecord", "narrow", "triage" /* narrow, triage: backing.test.mjs */,
     /* layer 9's six (K264), at their own modules' interfaces: backing.test.mjs */
     "consequencerevise", "addressedrecord", "escalationevaluate", "escalationadvance", "escalationdecline", "escalationsuspend",
-    "determine" /* N310: conformance's interface, backing.test.mjs */];
+    "determine" /* N310: conformance's interface, backing.test.mjs */,
+    /* N345: at contradiction's and entities' interfaces over contradiction's fixture, contradiction.test.mjs */
+    "contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve", "resolutiondefect"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 
@@ -527,6 +533,10 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
     sever: async () => GET(`op=sever&token=${MEM}&project=${PA}&handle=${await sel([INFO])}&reason=r`),
     reinstate: async () => GET(`op=reinstate&token=${MEM}&project=${PA}&handle=${await sel([INFO])}&reason=r`),
     projectvisibilityset: () => POST(`op=projectvisibilityset&token=${MEM}&projectId=${PA}&setting=discoverable`),
+    /* N345: contradiction's route in the durable object (the control plane routes it at layer 11), with the author
+       stamp a machine credential's call carries */
+    contradictionresolve: () => DO(`contradictionresolve?viewer=admin&author=${E("token:member")}`,
+      { inquiry: INQ, resolution: { kind: "irreconcilable" }, conclusion: "c" }),
   };
   const ROSTER = ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
     "projectownerremove", "projectownerrescue"];
