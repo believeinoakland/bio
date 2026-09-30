@@ -27,3 +27,7 @@ skills (renderPack(published), K674/K676) and run-rules' updated rows are merged
 ## B6 · CHANGE
 
 K679: run-productions keeps the catalogue's SUGGEST_LEVELS as a copy, so your suites stay green at its merge; still re-point wire-vocabulary.test.mjs and plane-suggest.mjs to run-productions' exports after its merge (T19 deletes the catalogue copy).
+
+## B7 · CHANGE
+
+run-productions is merged into tranche/T18 (skills and run-rules already are): merge the tranche branch and finish. Your bundle agent-worker/dist is yours (manifest §14): regenerate it (npm run build in agent-worker/) after your changes so R45's static and freshness arms pass.
