@@ -30,6 +30,15 @@ var MODES = {
   extract: {
     deployed: false,
     does: "propose citable passages and readings over a SUBJECT a member named, under the run's `mints` bound, never attesting \u2014 \xA77.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; not yet deployed, and a standing EXTRACT run is provisionally NO (\xA77.3 point 7)"
+  },
+  /* R53 (K660): THE PLANNING SKILL, NOT DEPLOYED. It walks its own table (`PLAN_FLOW`, R50) and proposes options to one
+     action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is deployed as soon as
+     this member runs model turns (R40, R48) by the reviewed edit that also sets `run-rules`' `DEPLOYED_MODES` (its R14);
+     until then a plan-mode run closes `mode-not-deployed` at the gate, like every mode this table holds and has not
+     deployed. */
+  plan: {
+    deployed: false,
+    does: "propose options to one action plan, strongest first, through op=optionpropose; it decides, starts, prepares and sends nothing (BIO_Action_v0_1.md \xA74); not yet deployed"
   }
 };
 var BUDGET_BOUNDS = ["fetches", "subsessions", "wallclock"];
@@ -241,26 +250,28 @@ function stopBecause(state) {
   if (Number(s.pass) >= Number(s.maxPasses)) return "completed";
   return null;
 }
+function gateStep(state) {
+  const s = state || {};
+  const key = String(s.mode || "");
+  const mode = MODES[key];
+  if (!mode || !mode.deployed) {
+    const deployed = Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k);
+    const waiting = Object.entries(MODES).filter(([, m]) => !m.deployed).map(([k]) => k);
+    const which = !mode ? `mode '${key || "(none)"}' is not deployed \u2014 it is no mode this table knows at all (the table holds: ${Object.keys(MODES).join(", ")})` : `mode '${key}' is not deployed yet \u2014 it is a row in this table (${mode.does}), and enabling it is an EDIT to this file under review, never a request parameter`;
+    return {
+      step: "close",
+      bound: "mode-not-deployed",
+      why: `${which}. CHECK is the first deployed mode (\xA72); deployed now: ${deployed.join(", ")}; not yet: ${waiting.join(", ")}. investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence in the skill.`
+    };
+  }
+  return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
+}
 function nextStep(state) {
   const s = state || {};
   const at = String(s.step || FIRST_STEP);
   const row = CONTROL_FLOW[at];
   if (!row) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
-  if (at === "gate-mode") {
-    const key = String(s.mode || "");
-    const mode = MODES[key];
-    if (!mode || !mode.deployed) {
-      const deployed = Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k);
-      const waiting = Object.entries(MODES).filter(([, m]) => !m.deployed).map(([k]) => k);
-      const which = !mode ? `mode '${key || "(none)"}' is not deployed \u2014 it is no mode this table knows at all (the table holds: ${Object.keys(MODES).join(", ")})` : `mode '${key}' is not deployed yet \u2014 it is a row in this table (${mode.does}), and enabling it is an EDIT to this file under review, never a request parameter`;
-      return {
-        step: "close",
-        bound: "mode-not-deployed",
-        why: `${which}. CHECK is the first deployed mode (\xA72); deployed now: ${deployed.join(", ")}; not yet: ${waiting.join(", ")}. investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence in the skill.`
-      };
-    }
-    return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
-  }
+  if (at === "gate-mode") return gateStep(s);
   const stopped = stopBecause(s);
   if (stopped && at !== "close")
     return {
@@ -361,18 +372,19 @@ var STATE_RESTART_STEPS = ["next-pass", "close"];
 function stateBytes(state) {
   return new TextEncoder().encode(JSON.stringify(state ?? null)).length;
 }
-function publishableState(state, limit) {
+function publishableState(state, limit, flow = CONTROL_FLOW) {
   const full = resumableState(state);
   const bytes = stateBytes(full);
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
-  const at = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
+  const at = flow === PLAN_FLOW ? full.step === "close" ? "close" : "read" : STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
   const restart = resumableState({ step: at, pass: full.pass, adjusted: false });
   return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at } };
 }
 var list = (v) => Array.isArray(v) ? v : [];
 var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : null;
-function resumeFrom(published) {
+var resumeTargets = (flow = CONTROL_FLOW) => flow === PLAN_FLOW ? [...PLAN_FLOW.resume.to, "compose"] : CONTROL_FLOW.resume.to;
+function resumeFrom(published, flow = CONTROL_FLOW) {
   const p = record(published);
   if (!p || !Object.prototype.hasOwnProperty.call(p, "step") || p.step == null)
     return {
@@ -382,7 +394,7 @@ function resumeFrom(published) {
     };
   const at = String(p.step);
   const pass = Number(p.pass);
-  if (!CONTROL_FLOW.resume.to.includes(at) || !Number.isInteger(pass) || pass < 0)
+  if (!resumeTargets(flow).includes(at) || !Number.isInteger(pass) || pass < 0)
     return {
       at: null,
       state: null,
@@ -449,472 +461,238 @@ function applyJudgement(state, judgement) {
   for (const k of JUDGEABLE) if (Object.prototype.hasOwnProperty.call(j, k)) next[k] = j[k];
   return { ok: true, state: next };
 }
-
-// ../bio-plane/src/record-grammar/ids.mjs
-var ID_PREFIXES = Object.freeze([
-  "INFO",
-  "PROB",
-  "FOCUS",
-  "INQ",
-  "PROJ",
-  "ACTN",
-  "BIAS",
-  "STD",
-  "CONF",
-  "CONS",
-  "ESC",
-  "ASP",
-  "GOAL",
-  "PLN"
-]);
-var PREFIX = `(${ID_PREFIXES.join("|")})`;
-var SLUG = "[a-z0-9]+(-[a-z0-9]+)*";
-var BUNDLE = `${PREFIX}-\\d{4}-\\d{4}-${SLUG}`;
-var BUNDLE_ID_RE = new RegExp(`^${BUNDLE}$`);
-var ANN_ID_RE = new RegExp(`^${BUNDLE}\\.ann-\\d{8}T\\d{6}Z-${SLUG}$`);
-
-// ../bio-plane/src/record-grammar/grades.mjs
-var BASIS_GRADES = ["A", "B", "C", "D"];
-var EARNED_CAPTURE_CEILING = "B";
-var UNREACHABLE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
-
-// ../bio-plane/src/record-grammar/sha256.mjs
-var K = new Int32Array([
-  1116352408,
-  1899447441,
-  3049323471,
-  3921009573,
-  961987163,
-  1508970993,
-  2453635748,
-  2870763221,
-  3624381080,
-  310598401,
-  607225278,
-  1426881987,
-  1925078388,
-  2162078206,
-  2614888103,
-  3248222580,
-  3835390401,
-  4022224774,
-  264347078,
-  604807628,
-  770255983,
-  1249150122,
-  1555081692,
-  1996064986,
-  2554220882,
-  2821834349,
-  2952996808,
-  3210313671,
-  3336571891,
-  3584528711,
-  113926993,
-  338241895,
-  666307205,
-  773529912,
-  1294757372,
-  1396182291,
-  1695183700,
-  1986661051,
-  2177026350,
-  2456956037,
-  2730485921,
-  2820302411,
-  3259730800,
-  3345764771,
-  3516065817,
-  3600352804,
-  4094571909,
-  275423344,
-  430227734,
-  506948616,
-  659060556,
-  883997877,
-  958139571,
-  1322822218,
-  1537002063,
-  1747873779,
-  1955562222,
-  2024104815,
-  2227730452,
-  2361852424,
-  2428436474,
-  2756734187,
-  3204031479,
-  3329325298
-]);
-var utf8 = new TextEncoder();
-
-// ../bio-plane/checks/bio-checks.mjs
-var HEADINGS = {
-  information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
-  inquiry: ["## Question", "## What It Rests On", "## Conclusion", "## What Would Falsify This", "## Session Log", "## Review Notes"],
-  focus: ["## Statement", "## Why It Matters", "## Open Questions", "## Session Log", "## Review Notes"],
-  project: ["## Thesis Summary", "## Open Questions", "## Ruled Out", "## Session Log", "## Review Notes"],
-  action: ["## Plan", "## Status", "## Correspondence", "## Session Log", "## Review Notes"],
-  /* PL-12 / D-84 — THE BIAS BUNDLE'S HEADING SET, and the third heading is the
-     one that is not decoration.
-     `## Statements` is the prose the members read; the STATEMENTS THEMSELVES
-     live in frontmatter as `statements[]`, exactly as an inquiry's legs live in
-     `basis[]`, because D-21 forbids a second place to state a fact and the
-     projection below is a projection of the DOCUMENT.
-     `## Adoption` is where the group records the process by which it adopted
-     this set. The doctrine deliberately does not define that process — "defined
-     and documented by that group, in the group's own process document" — and
-     requires only that adoption is a recorded, member-authored transition. So
-     the heading is where the group's own account of it lands, and it is what
-     makes `op=biasadopt`'s row point at something a reader can check.
-     `## What This Does Not Enforce` IS DEC-54 (b) IN THE DOCUMENT'S OWN BYTES.
-     The ruling is that the unenforceable residue is "a first-class published
-     output, not a log line": a case saying "held to AP's standards" must also
-     say which of AP's standards this system does not check, because in four of
-     five documented verification failures the countable rules were formally
-     satisfied while the uncountable properties failed. A residue that lived
-     only in an op's answer would be exactly the log line the ruling refuses —
-     it would not travel with the bundle, and a stranger reading the bytes after
-     this instance is gone would meet the enforcement without the caveat. It is
-     REQUIRED IN EVERY STATE rather than only in `adopted`, and C-26.7 refuses
-     it EMPTY on an adopted bundle, because a heading nobody filled is the
-     checkbox C-21.1 exists to refuse arriving one layer down. */
-  bias: ["## Statements", "## Adoption", "## What This Does Not Enforce", "## Session Log", "## Review Notes"]
-};
-HEADINGS.problem = HEADINGS.focus;
-var HEADINGS_WHEN = {
-  inquiry: [{ heading: "## What This Excludes", whenCaseMember: true }]
-};
-HEADINGS_WHEN.problem = HEADINGS_WHEN.focus = [];
-var STATES = {
-  information: {
-    legal: ["collected", "verified", "retired"],
-    edges: { collected: ["verified"], verified: ["retired"], retired: [] }
+var PLAN_FLOW = {
+  "gate-mode": {
+    does: "the same gate: refuse a mode that is not deployed, before anything is spent",
+    judged: null,
+    logs: true,
+    to: ["resume", "close"]
   },
-  /* The INQUIRY machine (REC-10, extended by REC-13). `published` and
-       `divided` still wait for REC-14/16, and they arrive TOGETHER WITH their
-       entry requirements, so no state is ever legal before its gate exists —
-       which is why `concluded` lands here in the same turn as
-       checkInquiryExtension's concluded arm below and op=conclude in the store.
-       `surfaced` is a LEGAL ALIAS of `open` (DATA-MODEL §2.7's recommendation):
-       rewriting it would invent an authored fact and set current_state
-       disagreeing with the document's own state_history (C-4.2), so it stays
-       legal, appears wherever `open` appears — INCLUDING the new conclude edge,
-       because refusing to conclude an inquiry merely because it spells its open
-       state the old way would be the trap the alias exists to avoid — and the
-       drift stays visible. `open` is legal[0] deliberately — setup.mjs derives
-       FIRST_STATE from it.
-  
-       REC-13's edges, and only these: `open <-> concluded` both ways (a
-       conclusion is revisable — reopening is how a group says the answer did
-       not hold), and `concluded -> deferred|dismissed`, because a conclusion
-       nobody publishes STILL AGES (D-79: a finding that silently stops being
-       worked on is indistinguishable from one never made). Deliberately NOT
-       added: `deferred -> concluded` and `dismissed -> concluded`. Concluding
-       something the group set down means picking it back up first, and the
-       machine already carries deferred/dismissed -> open for exactly that.
-       `concluded -> surfaced` follows the table's own convention, where every
-       existing edge into `open` names the alias beside it. */
-  /* ============ CASE-4 / DEC-72, 2026-09-10: `published` LEAVES THIS MACHINE.
-       THE STATE GOES; THE PRECONDITION IT ENFORCED DOES NOT, AND THAT DISTINCTION
-       IS THE WHOLE ITEM.
-  
-       Bob's ruling (DEC-72) makes a case ITS OWN OBJECT — a set of
-       finding-versions plus the publishing project — rather than a phase of a
-       finding. `CASE-AS-PRODUCTION.md`: *"A finding's lifecycle ends at
-       `concluded`; publication is the case relation."* Its supersession table
-       rules on this table by name: *"`published` as an inquiry lifecycle state
-       (State Rules per-type machine; ILLEGAL_TRANSITION publishing-only-from-
-       concluded) — the precondition survives as 'only a CONCLUDED finding may be
-       a case member'; the state itself becomes the case relation."*
-  
-       WHAT `concluded: [... 'published' ...]` WAS ACTUALLY DOING, and it is why
-       deleting it alone would have been a defect rather than the change. That one
-       array entry was carrying TWO facts at once. The first is that publishing
-       moves the document to a new lifecycle state — that fact is what DEC-72
-       deletes. The second is that publishing is reachable from `concluded` AND
-       FROM NOWHERE ELSE — a material set cannot be asserted over a question with
-       no conclusion — and THAT fact survives the ruling untouched. Because both
-       rode on one array entry, removing the entry removes both: with no
-       `published` anywhere in `edges`, the old guard
-       `legalFrom.includes("published")` is false from EVERY state, which reads as
-       a gate that refuses everything and is in fact a gate that has stopped
-       asking. So `publishCase()` now carries the precondition EXPLICITLY, as its
-       own named refusal (`NOT_CONCLUDED`) over `concluded` alone. A rule that used
-       to be a side effect of a table is now a sentence, which is the only form in
-       which it can survive the table.
-  
-       `published` IS STILL IN `legacy` BELOW AND THAT IS NOT A HEDGE. Ratified
-       bytes are immutable and a store that has published anything holds documents
-       whose frontmatter says `current_state: published` — bytes whose hash a
-       stranger may already be verifying against. Rewriting them to say something
-       else would break every pin that names them and would be this record editing
-       what it already signed. The focus machine four rows down is kept whole for
-       exactly this reason and states it in those words: a legacy document
-       validates against the vocabulary it was authored under. So the word stays
-       VALID and stops being REACHABLE — nothing in `edges` names it as a
-       destination, which is what "removed from the state machine" means for a
-       machine that cannot rewrite its own history. `legal` is what this machine
-       produces; `legacy` is what it must still read.
-  
-       THE OUT-EDGES ARE KEPT for the same reason and only for it: a document
-       already sitting at `published` must still be pickable-up, or the removal
-       would strand every case ever published behind a state with no exit. Nothing
-       new ever arrives there to use them.
-  
-       WHAT REPLACED THE STATE EVERYWHERE ELSE: the CASE RELATION. Every guard
-       that read `current_state === 'published'` — cannot divide, cannot
-       restructure, cannot move a version, the frozen/confirmed basis split,
-       reopen's own gate — now asks whether the document's CURRENT VERSION is a
-       case member, which CASE-5 made answerable by the pin (`bundle_sha =
-       version_sha`). That is one question with one answer instead of a state word
-       and a roster that could disagree, and it is also why CASE-4 needed no second
-       mechanism to notice a revision: a revised member's head stops matching the
-       pin, and that same inequality IS the revision flag.
-  
-       ============ The REC-14 / DEC-12 reasoning that put `published` here, kept
-       because it is what the removal has to preserve. It was: reachable ONLY from
-       `concluded` — a material set cannot be asserted over a question with no
-       conclusion — and it leaves ONLY to `open` (and its `surfaced` alias), which
-       is DEC-12's reopening: *"A closed finding can be reopened, and a published
-       case can be revised, though when republished, the edition number must be
-       incremented and the case treated as a separate document."*
-  
-       REOPENING DOES NOT UNPUBLISH, and this table is where that survives. The
-       inquiry's STATE and its PUBLICATION HISTORY are two different records: the
-       edges here move the working document, and published_bundles keeps every
-       edition with its own signature, attestor, time and gate version forever.
-       A revision therefore costs the full ceremony — published -> open ->
-       concluded -> published at edition 2 — because each edition is a separate
-       document that carries its own conclusion, its own falsifier and its own
-       freshly authored completeness (C-21.1).
-  
-       DELIBERATELY NOT ADDED: `published -> deferred|dismissed`. Ageing is what
-       happens to a finding NOBODY published (D-79); a published case cannot
-       quietly stop being worked on, because it is already out in the world.
-       `published -> published` is not an edge either: a new edition is entered
-       through `open`, so the state_history a reader checks shows the reopening
-       that produced it rather than a case that mutated in place. */
-  /* REC-16 / DEC-28: `divided` joins, and it IS TERMINAL. It is a STATE and not
-       a disposition, and the line between the two families is not terminality —
-       `deferred` and `dismissed` are terminal-ish too — it is WHAT THE WORD
-       CLAIMS ABOUT THE QUESTION. A disposition is a member's judgment about a
-       well-formed question and the question survives it unchanged; `divided` says
-       the QUESTION ITSELF was malformed, it was two questions, and the parent is
-       corrected FORWARD into its children. That is DEC-19's shape and the
-       supersession family, not the declination family. Its reason belongs to the
-       ACT and `disposition_reason` is untouched.
-  
-       ENTERED FROM `open` (and its `surfaced` alias) AND FROM `concluded`, and
-       NOT FROM `published` — the store refuses that one BY NAME
-       (PUBLISHED_CANNOT_DIVIDE) rather than as a generic illegal move, because
-       the two are different statements: an EDITION says the case continues, a
-       DIVISION says the parent was malformed, and a signed edition cannot be
-       retroactively declared malformed without erasing what a reader relied on.
-       DEC-12 changed publishing; it did not change this.
-  
-       DELIBERATELY NOT ADDED: `deferred|dismissed -> divided`. A question the
-       group set DOWN is picked back up first (op=reopen), exactly as concluding
-       one is — the machine already carries those edges, and dividing something
-       nobody is working on would make the disposition a state nothing can be
-       reasoned about from.
-  
-       TERMINAL, and structurally so rather than by policy: the parent's legs are
-       OWNED by its children now, and un-dividing would be the record changing its
-       mind in silence. `divided: []` is that fact, and it is what makes the
-       children's `supersedes` edges the only forward path. */
-  inquiry: {
-    legal: ["open", "deferred", "dismissed", "surfaced", "concluded", "divided"],
-    /* CASE-4 / DEC-72: STATES THIS MACHINE NO LONGER PRODUCES AND MUST STILL
-       READ. Valid in bytes that already carry them; named by no edge as a
-       destination, so nothing can enter them again. See the block above. */
-    legacy: ["published"],
-    edges: {
-      open: ["deferred", "dismissed", "concluded", "divided"],
-      surfaced: ["deferred", "dismissed", "concluded", "divided"],
-      deferred: ["open", "surfaced", "dismissed"],
-      dismissed: ["open", "surfaced", "deferred"],
-      /* `published` REMOVED from this list by CASE-4 — it was the only edge INTO
-         the state, and with it gone the state is unreachable. The precondition
-         it also carried (publishing only from `concluded`) is now publishCase()'s
-         own NOT_CONCLUDED refusal. */
-      concluded: ["open", "surfaced", "deferred", "dismissed", "divided"],
-      /* KEPT so a document already at `published` is not stranded. No new
-         document ever arrives here to use these. */
-      published: ["open", "surfaced"],
-      divided: []
-    }
+  resume: {
+    does: "\xA714b.7 \u2014 continue where the last segment's published state stopped; the reads are made again",
+    judged: null,
+    logs: true,
+    to: ["read", "dedup", "submit", "adjust", "close"]
   },
-  /* The LEGACY focus machine, kept whole (elevated included) because a
-     legacy focus/problem document validates against the vocabulary it was
-     authored under — see the HEADINGS note. Nothing produces these states
-     anymore; op=dispose runs on the inquiry machine above. */
-  focus: {
-    legal: ["surfaced", "elevated", "deferred", "dismissed"],
-    edges: {
-      surfaced: ["elevated", "deferred", "dismissed"],
-      deferred: ["surfaced", "elevated", "dismissed"],
-      dismissed: ["surfaced", "elevated", "deferred"],
-      elevated: []
-    }
+  read: {
+    does: "read, under the run's credential only, the plan, the project's earlier plans and each subject's record (R51)",
+    judged: null,
+    logs: true,
+    to: ["compose", "close"]
   },
-  project: {
-    legal: ["forming", "investigating", "matured", "closed"],
-    edges: {
-      forming: ["investigating", "closed"],
-      investigating: ["matured", "closed"],
-      matured: ["closed"],
-      closed: ["investigating"]
-    }
+  compose: {
+    does: "form candidate proposals from what was read, strongest first, each with only optionPropose's fields (R52)",
+    judged: "which options to propose, in order of strength, and why",
+    logs: true,
+    /* NO EDGE TO `submit`, for `CONTROL_FLOW`'s reason: dedup is the table's shape. */
+    to: ["dedup", "close"]
   },
-  action: {
-    legal: ["planned", "active", "awaiting_response", "resolved", "abandoned"],
-    edges: {
-      planned: ["active", "abandoned"],
-      active: ["awaiting_response", "resolved", "abandoned"],
-      awaiting_response: ["active", "resolved", "abandoned"],
-      resolved: [],
-      abandoned: []
-    }
+  dedup: {
+    does: "drop a candidate the plan already holds as an option or a proposal, BEFORE any write (R52)",
+    judged: null,
+    logs: true,
+    to: ["submit", "close"]
   },
-  /* PL-12 / D-84 — THE BIAS MACHINE, and `proposed` is DEC-54 (c) made
-     structural rather than documented.
-     `draft` is where a set is written. The doctrine already puts one rule on
-     it — "a pattern statement without at least one citation cannot leave
-     draft" — and C-26.4 is that rule, which is why it fires on the way OUT of
-     draft rather than on the way in.
-     `proposed` is the ONLY state an INHALE could ever reach, and the reason it
-     exists as a state of its own. DEC-54 (c): "INHALE MEANS PROPOSE FOR
-     ADOPTION, NEVER INSTALL. Adoption is an authored, attributed act (DEC-46,
-     D-90, D-82). Otherwise adopting a policy becomes a way to LAUNDER a
-     standard — 'we follow BBC standards' with nobody in the group having
-     authored anything, which is the never-prefill violation wearing a
-     compliance badge." A machine that could write `adopted` directly would BE
-     that laundering, so the machine's ceiling is a state and not a convention.
-     `adopted` is entered ONLY from `proposed`, and entering it is what
-     `op=biasadopt` records with an author and a date.
-     NO EDGE OUT OF `adopted` EXCEPT `retired`, and that is deliberate. An
-     adopted set is PINNED (DEC-54 (d)) and a published case names the version
-     it was held to; a set that could slide back to draft in place would make
-     "the lens this case was produced under" unresolvable after the fact.
-     Amending an adopted set is a NEW REVISION of the same bundle under
-     append-only history — which re-pins — or a retirement and a successor.
-     DELIBERATELY NOT ADDED: `draft -> adopted`. It is the only edge that could
-     let a set become binding without ever having been proposed, and closing it
-     is what makes the proposed state load-bearing rather than ceremonial.
-     AND SINCE D-468 (2026-09-24) THIS TABLE IS ENFORCED AT THE WRITE PATH AND NOT
-     ONLY DESCRIBED HERE. Everything above was true of the table and false of the
-     plane: `op=promote` consulted no edge table, so `adopted -> proposed` landed
-     and moved the head — a constraint that existed as a comment, which is the
-     defect this repository meets most. `promote`'s `bias-state-edge` region now
-     reads this table through `vocabFor` and refuses any move it does not declare
-     (BIAS_ILLEGAL_TRANSITION, C-26.12). A revision that leaves a set where it
-     stands is not a move and is not asked: that is how an adopted set is amended
-     (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption"). This fence is
-     THIS machine's alone — `promote` still asks no edge table for any other
-     object_type. */
-  bias: {
-    legal: ["draft", "proposed", "adopted", "retired"],
-    edges: {
-      draft: ["proposed", "retired"],
-      proposed: ["draft", "adopted", "retired"],
-      adopted: ["retired"],
-      retired: []
-    }
+  submit: {
+    does: "propose ONE candidate through op=optionpropose, in the order composed \u2014 never a batch",
+    judged: null,
+    logs: true,
+    to: ["submit", "adjust", "close"]
   },
-  /* K171 (1) (T8, N129): THE ACTION LAYER'S RECORD OBJECTS. A standard, a determination and a consequence part
-     are each RECORDED once and never move: a correction is a new object that supersedes the old one (standards
-     R4 and R6, conformance R7, consequences R6), so each machine is one state and no edge, and a promotion that
-     names any other state is refused by `promote` (promotion R15). */
-  standard: {
-    legal: ["recorded"],
-    edges: { recorded: [] }
+  adjust: {
+    does: "F10, unchanged (R25): change the refused proposal or drop it; a resent one keeps its place",
+    judged: "how to answer the refusal",
+    logs: true,
+    to: ["submit", "close"]
   },
-  determination: {
-    legal: ["recorded"],
-    edges: { recorded: [] }
-  },
-  consequence: {
-    legal: ["recorded"],
-    edges: { recorded: [] }
-  },
-  /* An escalation (escalation R21) is `open` while its stages run and `suspended` while a member has set it
-     aside; `escalationResume` restores it at the same stage (R15). It is `ended` only by `escalationEnd`, once
-     compliance is restored and the consequences are addressed (R14), and nothing leaves `ended`. */
-  escalation: {
-    legal: ["open", "suspended", "ended"],
-    edges: {
-      open: ["suspended", "ended"],
-      suspended: ["open", "ended"],
-      ended: []
-    }
-  },
-  /* K198 (2) (T8, N159): intent's two pursuit documents (intent R26). An aspiration is held until it is retired;
-     a goal is open until it is closed. Neither returns: intent's step refuses any other move
-     (PURSUIT_STATE_MOVE_UNDECLARED), and this table states the same machine so the audit and the gate read the
-     states as legal. */
-  aspiration: {
-    legal: ["held", "retired"],
-    edges: { held: ["retired"], retired: [] }
-  },
-  goal: {
-    legal: ["open", "closed"],
-    edges: { open: ["closed"], closed: [] }
-  },
-  /* N-A1 (T18, K608): `action-plans`' plan (its R2, `PLN-`, `action_plan` in record-grammar's `OBJECT_TYPES`). A plan
-     is `open` while the group works it and `closed` when a member closes it with a reason; nothing reopens it. */
-  action_plan: {
-    legal: ["open", "closed"],
-    edges: { open: ["closed"], closed: [] }
+  close: {
+    does: "the one exit, naming the bound (C-22.5). Terminal",
+    judged: null,
+    logs: true,
+    to: []
   }
 };
-STATES.problem = STATES.focus;
-var LAW_PROPOSAL_STATES = {
-  machine_proposed: "a machine credential proposed these citations. That is machine work, labelled as machine work: it can set a list of laws beside the request and it can never state which laws govern it. Nothing here is this action's list of governing laws, and nothing becomes one until a member states it themselves",
-  member_proposed: "a member proposed these citations to whoever states this action's governing laws. It is a proposal and not the list: only the governing-laws act sets that, and the record holds who made it",
-  unstated: "the record does not say who proposed these citations"
-};
-var PROPOSAL_STATES = Object.freeze({
-  governing_laws: LAW_PROPOSAL_STATES,
-  standard: Object.freeze({
-    machine_proposed: "a machine credential proposed this standard. That is machine work, labelled as machine work: it can set a standard beside the record for members to consider and it can never enter one. Nothing here is a standard this record holds, and nothing becomes one until a member records it themselves",
-    member_proposed: "a member proposed this standard to whoever records the group's standards. It is a proposal and not a standard: only recording a standard enters one, and the record holds who made the proposal",
-    unstated: "the record does not say who proposed this standard"
-  }),
-  comparison: Object.freeze({
-    machine_proposed: "a machine credential prepared this comparison of a government act against standards. That is machine work, labelled as machine work: it can set out rows and questions for members and it can never determine whether the act complied. Nothing here is a determination, and nothing becomes one until a member records it themselves",
-    member_proposed: "a member suggested this comparison of a government act against standards. It is a comparison and not a determination: only a determination records whether the act complied, and the record holds who made the comparison",
-    unstated: "the record does not say who prepared this comparison"
-  }),
-  filing_draft: Object.freeze({
-    machine_proposed: "a machine credential prepared this draft. That is machine work, labelled as machine work: it can prepare the words of a filing and it can never approve or send one. Nobody has approved or sent this draft, and nothing is filed until members decide to file it and send it themselves",
-    member_proposed: "a member prepared this draft. It is a draft and not a filing: nobody has approved or sent it, and the record holds who prepared it",
-    unstated: "the record does not say who prepared this draft, and nobody has approved or sent it"
-  }),
-  theory: Object.freeze({
-    machine_proposed: "a machine credential proposed this candidate theory and remedy. That is machine work, labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it can never state the group's position. Nothing here is the group's position",
-    member_proposed: "a member proposed this candidate theory and remedy. It is a candidate for members and counsel to weigh and not the group's position, and the record holds who proposed it",
-    unstated: "the record does not say who proposed this candidate theory and remedy"
-  }),
-  /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
-     adopts it, and a prepared communication (filings R23) is a draft nobody has approved or sent, worded as
-     `filing_draft`'s sentences are. */
-  plan_option: Object.freeze({
-    machine_proposed: "a machine credential proposed this option. That is machine work, labelled as machine work: it can set an option beside the plan for members to weigh and it can never choose one. It is not an option until a member adopts it",
-    member_proposed: "a member proposed this option. It is a proposal and not an option: it is not an option until a member adopts it, and the record holds who proposed it",
-    unstated: "the record does not say who proposed this option, and it is not an option until a member adopts it"
-  }),
-  communication: Object.freeze({
-    machine_proposed: "a machine credential prepared this communication. That is machine work, labelled as machine work: it can prepare the words of a message and it can never approve or send one. Nobody has approved or sent it, and nothing is sent until members decide to send it themselves",
-    member_proposed: "a member prepared this communication. It is a draft and not a message sent: nobody has approved or sent it, and the record holds who prepared it",
-    unstated: "the record does not say who prepared this communication, and nobody has approved or sent it"
-  })
+var flowFor = (mode) => mode === "plan" ? PLAN_FLOW : CONTROL_FLOW;
+var PLAN_BUDGET_BOUNDS = ["proposals", "wallclock"];
+var PLAN_MAX_PASSES = 1;
+function planStopBecause(state) {
+  const s = state || {};
+  for (const bound of PLAN_BUDGET_BOUNDS) {
+    const row = allowance(s.budget, bound);
+    if (row && row.consumed >= row.allowed) return bound;
+  }
+  if (Number(s.pass) >= PLAN_MAX_PASSES) return "completed";
+  return null;
+}
+function nextPlanStep(state) {
+  const s = state || {};
+  const at = String(s.step || FIRST_STEP);
+  if (!PLAN_FLOW[at]) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
+  if (at === "gate-mode") return gateStep(s);
+  const stopped = planStopBecause(s);
+  if (stopped && at !== "close")
+    return {
+      step: "close",
+      bound: stopped,
+      why: stopped === "completed" ? "the plan's one pass is done; the loop's termination is the table's and not the model's" : `the '${stopped}' budget is spent. \xA714b.6: when a bound stops a run, the log says WHICH bound and where`
+    };
+  const done = (why) => ({ step: "close", bound: "completed", why, pass_done: true });
+  const queue = s.queue || [];
+  switch (at) {
+    case "resume":
+      if (typeof s.resumeAt === "string" && ["dedup", "submit", "adjust"].includes(s.resumeAt))
+        return {
+          step: s.resumeAt,
+          why: `this run's last tick published its state at '${s.resumeAt}'; continuing rather than restarting (\xA714b.7)`
+        };
+      return {
+        step: "read",
+        why: (s.resumeAt ? `this run's last tick published its state at '${s.resumeAt}', which works from reads a state does not carry, so the reads are made again` : "starting the plan's one pass: read what the record holds") + (s.resumeBasis ? `. ${s.resumeBasis}` : "")
+      };
+    case "read":
+      return { step: "compose", why: `${(s.reads || []).length} read(s) made, ${(s.undetermined || []).length} UNDETERMINED` };
+    case "compose":
+      return { step: "dedup", why: `${(s.candidates || []).length} candidate(s) composed, strongest first; nothing may be proposed before dedup` };
+    case "dedup":
+      if (!queue.length) return done("no candidate differs from what the plan already holds");
+      return { step: "submit", why: `${queue.length} candidate(s) survived dedup; they are proposed ONE AT A TIME, in order` };
+    case "submit":
+      if (s.refusal) return { step: "adjust", why: `the plane refused '${String(s.refusal.code || s.refusal.reason || "?")}'; F10 routes a refusal to an ADJUST step, never to a verbatim retry` };
+      if (queue.length) return { step: "submit", why: `${queue.length} candidate(s) still to propose, one at a time, in order` };
+      return done("every candidate this pass composed has been proposed or dropped");
+    case "adjust":
+      if (s.adjusted) return { step: "submit", why: "the proposal was ADJUSTED, differs from the refused one and keeps its place" };
+      if (queue.length)
+        return { step: "submit", why: `the refusal could not be answered by changing the proposal, so it is DROPPED and never resent; ${queue.length} candidate(s) behind it are still proposed, in order` };
+      return done("the refusal could not be answered by changing the proposal, so it is DROPPED; none remain");
+    case "close":
+      return { step: "close", why: "terminal", bound: s.bound || "completed" };
+  }
+  return { step: "close", why: `'${at}' has no transition`, bound: "completed" };
+}
+function planAdvance(state, decision) {
+  const next = advance(state, decision);
+  return decision && decision.pass_done ? { ...next, pass: (Number(next.pass) || 0) + 1 } : next;
+}
+var OPTION_KEYS = [
+  "summary",
+  "detail",
+  "category",
+  "subjects",
+  "addressee",
+  "dates",
+  "tier",
+  "enforces",
+  "lobbying",
+  "why",
+  "sources"
+];
+var PLAN_JUDGEABLE = { compose: ["candidates"], adjust: ["submission"] };
+function applyPlanJudgement(state, judgement) {
+  const j = judgement && typeof judgement === "object" && !Array.isArray(judgement) ? judgement : {};
+  const step = String((state || {}).step || "");
+  const allowed = PLAN_JUDGEABLE[step] || [];
+  const overreach = Object.keys(j).filter((k) => !allowed.includes(k));
+  const shapes = [];
+  if ("candidates" in j) {
+    if (!Array.isArray(j.candidates)) shapes.push("candidates");
+    else j.candidates.forEach((c, i) => {
+      if (!c || typeof c !== "object" || Array.isArray(c)) {
+        shapes.push(`candidates[${i}]`);
+        return;
+      }
+      for (const k of Object.keys(c)) if (!OPTION_KEYS.includes(k)) overreach.push(`candidates[${i}].${k}`);
+    });
+  }
+  if ("submission" in j && j.submission != null) {
+    if (typeof j.submission !== "object" || Array.isArray(j.submission)) shapes.push("submission");
+    else for (const k of Object.keys(j.submission)) if (!OPTION_KEYS.includes(k)) overreach.push(`submission.${k}`);
+  }
+  if (overreach.length || shapes.length)
+    return {
+      ok: false,
+      overreach: [...overreach, ...shapes],
+      detail: `a plan-mode judgement at '${step}' may carry only ${allowed.join(", ") || "nothing"}, and a proposal only ${OPTION_KEYS.join(", ")} (optionPropose's fields). ${[...overreach, ...shapes].join(", ")} may not be set: the order of the candidates is the only sign of their strength, so no candidate carries a score, a rank or a strength, and the step, the pass, the budget and the plan are the table's.`
+    };
+  const next = { ...state };
+  for (const k of allowed) if (Object.prototype.hasOwnProperty.call(j, k)) next[k] = j[k];
+  if ("candidates" in j) next.candidates = j.candidates.map((c) => ({ ...c }));
+  return { ok: true, state: next };
+}
+var proposalKey = (o) => canonical({
+  summary: o?.summary ?? null,
+  category: o?.category ?? null,
+  subjects: o?.subjects ?? null
 });
-var EXTENSION_ARMS = Object.freeze([
-  { name: "checkInformationExtension", ids: ["C-2.7"] },
-  { name: "checkInfo2Contract", ids: ["C-18.6", "C-18.7"] },
-  { name: "checkInquiryExtension", ids: ["C-2.8"] },
-  { name: "checkProjectExtension", ids: ["C-2.9", "C-9.1"] }
-].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
+function planDedup(candidates, plan) {
+  const p = plan && typeof plan === "object" ? plan : {};
+  const pages = Array.isArray(p.planning_runs) ? p.planning_runs.flatMap((r) => list(r?.proposals)) : [];
+  const held = new Set([...list(p.options), ...list(p.proposals), ...pages].filter((o) => o && typeof o === "object").map(proposalKey));
+  const queue = [], dropped = [];
+  for (const c of list(candidates)) {
+    const key = proposalKey(c);
+    if (held.has(key)) {
+      dropped.push(c);
+      continue;
+    }
+    held.add(key);
+    queue.push(c);
+  }
+  return { queue, dropped };
+}
+var PLAN_READS = {
+  plan: (planId) => ({ op: "plan", query: { id: planId } }),
+  plans: (project) => ({ op: "plans", query: { project } }),
+  profile: () => ({ op: "profiles", query: {} }),
+  subject: (subject) => {
+    const s = subject && typeof subject === "object" ? subject : {};
+    if (s.kind === "outcome")
+      return [
+        { op: "determination", query: { id: s.determination } },
+        { op: "standard", query: { id: s.standard } },
+        { op: "consequencesof", query: { determination: s.determination, standard: s.standard } },
+        { op: "availableactions", query: { determination: s.determination } }
+      ];
+    if (s.kind === "inquiry")
+      return [
+        { op: "publishededitions", query: { id: s.inquiry } },
+        ...list(s.standards).map((id) => ({ op: "standard", query: { id } }))
+      ];
+    return [];
+  }
+};
+var PROFILE_FACTS = ["deadlines", "venues", "legal_organisations"];
+function planSubjectReads(plan) {
+  const seen = /* @__PURE__ */ new Set(), out = [];
+  for (const subject of list(plan?.subjects)) {
+    const inner = subject && typeof subject === "object" && subject.subject && typeof subject.subject === "object" ? subject.subject : subject;
+    for (const r of PLAN_READS.subject(inner)) {
+      const key = canonical(r);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(r);
+    }
+  }
+  out.push(PLAN_READS.profile());
+  return out;
+}
+function earlierPlans(answer, project, planId) {
+  const items = list(answer?.plans ?? answer?.items);
+  return items.filter((p) => p && typeof p === "object" && (p.project ?? project) === project && String(p.id ?? p.plan ?? "") !== String(planId ?? ""));
+}
+var WHY_MAX = 500;
+function whyWithUndetermined(why, undetermined) {
+  const own = typeof why === "string" ? why.trim() : "";
+  const u = list(undetermined);
+  if (!u.length) return own.slice(0, WHY_MAX);
+  const note = " UNDETERMINED, not absent: " + u.map((x) => `${x.op}${x.id ? ` ${x.id}` : ""} (${x.code ?? "no answer"})`).join("; ") + ".";
+  const tail = note.length > WHY_MAX ? note.slice(0, WHY_MAX) : note;
+  const room = WHY_MAX - tail.length;
+  const head = own.length > room ? `${own.slice(0, Math.max(0, room - 1))}\u2026` : own;
+  return `${head}${tail}`.trim().slice(0, WHY_MAX);
+}
+
+// ../bio-plane/src/observation-log/checks.mjs
 var AI_RUN_CHECKS = {
   /* §11: "Absence uses D-129's vocabulary — NEVER_LOOKED / LOOKED_ABSENT /
      LOOKED_INDETERMINATE / PRESENT, plus `partial`. Which absence is a stated
@@ -1035,10 +813,9 @@ var AI_RUN_CHECKS = {
        satisfies this refusal and the design owes a ruling on what a terminal
        entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
        path, which composes no referent field while a model may judge `PRESENT`.
-       The full reasoning and the driven evidence are at the predicate in
-       `src/airun.mjs`; section L of `test/observation-log.test.mjs` drives it
-       (it was section I until D-500, 2026-09-24, which found two sections wearing
-       that letter and moved REC-100's — this citation named the ambiguous one).
+       The full reasoning is at the predicate, `checkObservation` in
+       `src/observation-log/vocabulary.mjs` (it was `src/airun.mjs`'s until this
+       module's extraction); `test/m/observation-log/append.test.mjs` drives it.
   
        **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
        (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
@@ -1047,7 +824,7 @@ var AI_RUN_CHECKS = {
        on EVERY authority, and it GAINED AN ARM rather than a new code: an
        `observation` referent that is not an EARLIER PRESENT row of the SAME
        authority is refused here too, with `referent_fault` naming which of four
-       ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/airun.mjs`). One code,
+       ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/observation-log/vocabulary.mjs`). One code,
        because every fault is this row's condition — a PRESENT whose referent does
        not back it — and a second code behind C-22.10 would be two conditions
        behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
@@ -1070,9 +847,9 @@ var AI_RUN_CHECKS = {
     translation: "That observation says nobody looked, and an observation is the record of a look. Never having looked is what the record says of a subject with no observation at all, so it is not written as one. A look that happened records what it found: nothing, something, part of it, or that it could not tell."
   }
 };
-var CONTENT_EXTENT_DOCUMENT_ONLY = Object.freeze({ known: false, chain: null, pageCount: null });
+var OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS));
 
-// ../bio-plane/src/ai-runs/checks.mjs
+// ../bio-plane/src/run-rules/checks.mjs
 var AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
      which bound and where it stopped". A close with no bound named is the
@@ -1082,7 +859,7 @@ var AI_RUN_OWN_CHECKS = {
      rather than an intention. */
   AI_RUN_BOUND_UNNAMED: {
     check: "C-22.5",
-    where: "src/airun.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
+    where: "src/run-rules/rules.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
     translation: "The run stopped without saying what stopped it. Not finding something and not finishing the search are different facts, and only one of them licenses a conclusion."
   },
   /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
@@ -1107,7 +884,7 @@ var AI_RUN_OWN_CHECKS = {
        this module holds (`skillpack.mjs`'s copy was deleted by N156). */
   AI_RUN_SKILL_VERSION_UNNAMED: {
     check: "C-22.7",
-    where: "src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open",
+    where: "src/run-rules/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open",
     translation: "This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards."
   },
   /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
@@ -1140,7 +917,7 @@ var AI_RUN_OWN_CHECKS = {
        question belongs to"*) stated the ruling Bob reversed — *a project does not own a line of inquiry*. */
   AI_RUN_NOT_PROJECT_MEMBER: {
     check: "C-22.8",
-    where: "src/airun.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close",
+    where: "src/run-rules/rules.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close",
     translation: "Asking the system to look into a project is work inside that project, and this account is not one of that project's participants. This is not about what the account is allowed to do in general \u2014 it is about which piece of work it is part of. Someone who owns that project can invite you to it."
   },
   /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
@@ -1168,7 +945,7 @@ var AI_RUN_OWN_CHECKS = {
        code carrying any bit. */
   AI_RUN_NO_SUCH_CONTEXT: {
     check: "C-22.11",
-    where: "src/airun.mjs checkRunContextKind, called from src/ai-runs/index.mjs open",
+    where: "src/run-rules/rules.mjs checkRunContextKind, called from src/ai-runs/index.mjs open",
     translation: "Nothing of the kind this run names answers to that id here. A run is over a question or a project, nothing else; a run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
   },
   /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
@@ -1187,7 +964,7 @@ var AI_RUN_OWN_CHECKS = {
   AI_RUN_NOT_PRINCIPAL: {
     check: "C-22.12",
     /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
-    where: "src/airun.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions",
+    where: "src/run-rules/rules.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions",
     translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
   },
   /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
@@ -1200,7 +977,7 @@ var AI_RUN_OWN_CHECKS = {
      number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
   AI_RUN_CONSUME_INVALID: {
     check: "C-22.13",
-    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
+    where: "src/run-rules/rules.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
     translation: "The investigation gave an amount for its budget that is not a whole number of zero or more. A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step."
   },
   /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
@@ -1212,7 +989,7 @@ var AI_RUN_OWN_CHECKS = {
      translation now names the lease beside the counts. */
   AI_RUN_BOUND_PLANE_COUNTED: {
     check: "C-22.14",
-    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
+    where: "src/run-rules/rules.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
     translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
   },
   /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
@@ -1223,7 +1000,7 @@ var AI_RUN_OWN_CHECKS = {
      names nothing the run has, and the remedy (spell the bound, send a map) differs. */
   AI_RUN_BOUND_UNKNOWN: {
     check: "C-22.15",
-    where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from src/ai-runs/index.mjs tick and open",
+    where: "src/run-rules/rules.mjs checkConsume (the tick's map, the open's list, and every key in either), called from src/ai-runs/index.mjs tick and open",
     translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
   },
   /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
@@ -1233,7 +1010,7 @@ var AI_RUN_OWN_CHECKS = {
      the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
   AI_RUN_BOUND_NO_ALLOWANCE: {
     check: "C-22.16",
-    where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
+    where: "src/run-rules/rules.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
     translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
   },
   /* N293 (AGENT-WORKER #2 J1; REC-169's rule, one figure over), R45 — THE RUN'S SCRATCH IS BOUNDED. `state` is the
@@ -1245,7 +1022,7 @@ var AI_RUN_OWN_CHECKS = {
      C-22.7's: `checkRunState` makes this one refusal and no other; the open and the tick relay it. */
   AI_RUN_STATE_TOO_LARGE: {
     check: "C-22.18",
-    where: "src/airun.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
+    where: "src/run-rules/rules.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
     translation: "The investigation tried to keep more working notes than one investigation may hold, so nothing it sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it has left to do, not everything it has read."
   }
 };
@@ -1435,170 +1212,52 @@ var AI_RUN_OPEN_CHECKS = {
     translation: "Nothing was run, because the kind of work this run asked for is not switched on for this instance yet. Kinds of work are switched on one at a time, each only after the one before it has been checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is."
   }
 };
+var AI_RUN_PLAN_CHECKS = {
+  /* R46: a run in mode `plan` names the plan it works on; it is stored on the run verbatim. */
+  AI_RUN_PLAN_REQUIRED: {
+    check: "C-109.2",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because a planning run was asked for without saying which plan it is for. A planning run works on one plan at a time, so it names that plan before it starts."
+  },
+  /* R46: only a planning run carries a plan, so no other run's record suggests it worked on one. */
+  AI_RUN_PLAN_UNEXPECTED: {
+    check: "C-109.3",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because this run named a plan but is not a planning run. Only a planning run works on a plan, so any other run is started without one and its record does not suggest otherwise."
+  },
+  /* R46: a plan belongs to the project that will act on it. */
+  AI_RUN_PLAN_NEEDS_PROJECT: {
+    check: "C-109.4",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because a planning run was asked for outside a project. A plan belongs to the project whose members will decide what to do, so a planning run is started from inside that project."
+  },
+  /* R46: only a member starts a planning run, for one plan at a time; nothing schedules, wakes or starts one. */
+  AI_RUN_PLAN_NEEDS_MEMBER: {
+    check: "C-109.5",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because a planning run is started only by a member of the group, for one plan at a time. Nothing starts one by itself, so a request that has no member behind it cannot start one."
+  },
+  /* R46: a planning run declares `fetches` 0 and `subsessions` 0; it works from the record and does not search. */
+  AI_RUN_PLAN_NO_SEARCH: {
+    check: "C-109.6",
+    where: "src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen",
+    translation: "Nothing was run, because this planning run was allowed to fetch new material or to start further searches. A planning run proposes options from what the record already holds and does not go looking, so those parts of its budget are left out."
+  },
+  /* R47: fail closed. The check a later module registers for the mode is what judges the plan; with none, no run. */
+  AI_RUN_MODE_UNCHECKED: {
+    check: "C-109.7",
+    where: "src/ai-runs/index.mjs open > is-airun-open-check, reached from op=airunopen",
+    translation: "Nothing was run, because this kind of work has nothing in place yet to check what it is asked to work on. Rather than start without that check, the run is refused until the part that provides it is running."
+  }
+};
 var AI_RUNS_CHECKS = Object.freeze({
   ...AI_RUN_OWN_CHECKS,
   ...AI_RUN_ACT_SHAPE_CHECKS,
   ...AI_RUNS_CONTEXT_CHECKS,
   ...SURFACE_RUN_CHECKS,
-  ...AI_RUN_OPEN_CHECKS
+  ...AI_RUN_OPEN_CHECKS,
+  ...AI_RUN_PLAN_CHECKS
 });
-
-// ../bio-plane/src/observation-log/checks.mjs
-var AI_RUN_CHECKS2 = {
-  /* §11: "Absence uses D-129's vocabulary — NEVER_LOOKED / LOOKED_ABSENT /
-     LOOKED_INDETERMINATE / PRESENT, plus `partial`. Which absence is a stated
-     fact, never a diagnostic detail." An entry outside the vocabulary is not a
-     weaker statement of absence; it is an ungoverned one. */
-  AI_LOG_STATE_UNKNOWN: {
-    check: "C-22.1",
-    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
-    translation: "That observation does not say which kind of absence it found. The record distinguishes never having looked, having looked and found nothing, having looked and being unable to tell, having found it, and having found part of it."
-  },
-  /* D-104, and CLAUDE.md states the general rule it instantiates: "our governor
-     refusing is not the source failing". An entry recording LOOKED_ABSENT when
-     it was OUR pacing that stopped the fetch MANUFACTURES a false absence —
-     §11's own word. The governed flag is the fact; a governed observation can
-     only be LOOKED_INDETERMINATE, and either definitive claim is refused. */
-  AI_LOG_GOVERNED_ABSENCE: {
-    check: "C-22.2",
-    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
-    translation: "That observation was stopped by our own pacing of the source, not by the source. It can only record that we could not tell \u2014 recording an absence there would be a claim about the world made from a fact about us."
-  },
-  /* §11's third rule, SWEEP §3's false-coverage hazard: "A client-rendered
-     shell capture is LOOKED_INDETERMINATE, never PRESENT". `client-rendered-shell`
-     is catalogued with no producer, and an evidentially empty capture that reads
-     as coverage is the defect the whole absence vocabulary exists to prevent. */
-  AI_LOG_SHELL_PRESENT: {
-    check: "C-22.3",
-    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
-    translation: "That capture is a page shell with nothing evidential in it, so it cannot be recorded as having found the material. It records that we could not tell."
-  },
-  /* DEC-8 as amended by DEC-49: a surface may render a translation keyed on a
-     code the plane SENT, which only holds if the plane never sends a condition
-     nobody has translated. The condition vocabulary is `queuestate.mjs`'s, read
-     LIVE rather than copied, and a run naming a kind outside it is a loud
-     refusal instead of a silent new vocabulary — queuestate.mjs's own words for
-     the same fence one surface over. */
-  AI_RUN_CONDITION_UNKNOWN: {
-    check: "C-22.4",
-    where: "src/observation-log/vocabulary.mjs checkCondition, called from src/ai-runs/index.mjs #aiRunTerminate",
-    translation: "The run tried to end on a condition the record has no name for. A condition nobody can read is not an explanation."
-  },
-  /* §11: "the observation log cannot live in bundle.md, which is written only on
-     success — the log's whole value is the failure path." The log is a different
-     object from the record, and a different object again from a TRANSCRIPT,
-     which DEC-61 puts device-local with a TTL and out of the record store
-     altogether. This refusal is the fence AT THE APPEND: an entry offered for a
-     bundle is refused, so the separation is enforced at the one write rather
-     than asserted about every reader. */
-  AI_LOG_NOT_A_BUNDLE: {
-    check: "C-22.6",
-    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
-    translation: "The observation log is not part of any published document and cannot be filed into one."
-  },
-  /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
-       `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
-       the record cannot say WHY it made is not recorded."* `STORE-AS-CACHE.md`
-       carries the rule it descends from, which is RFC 2308's: A NEGATIVE ANSWER
-       WITH NO AUTHORITY BEHIND IT IS NOT RECORDABLE. The whole value of this table
-       is that an absence becomes a stated fact instead of a retry, and an absence
-       nobody can attribute is not a fact anybody can weigh.
-  
-       IT IS ALSO WHERE §4.6'S PROVISIONAL IS ENFORCED RATHER THAN MERELY WRITTEN
-       DOWN, and that is the part worth reading before changing this row. *A
-       member's ad hoc search, view or read is not an observation* — because the
-       record is what a legal process can reach, and a store that holds what its
-       members looked for is a different object from one that holds what a group
-       published. What stops that from being written is not a missing writer, which
-       any later item could supply without noticing: it is that there is NO
-       `authority_kind` A MEMBER'S SEARCH COULD TAKE. The alternative §4.6 declines
-       (`authority_kind = member`) is absent from `OBSERVATION_AUTHORITY_KINDS` on
-       purpose, so reversing the provisional costs one line in a vocabulary and no
-       schema change — which is exactly what §4.6 says reversal should cost, in the
-       one direction that stays reversible. A member who wants a search ON the
-       record states it as a LEAD (D-194), which carries a name BY CHOICE.
-  
-       THE TEST IS MEMBERSHIP, NOT PRESENCE. A null check would pass the very value
-       the provisional exists to keep out. */
-  OBS_AUTHORITY_UNNAMED: {
-    check: "C-22.9",
-    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
-    translation: "That observation does not say why the look was made. The record keeps what it looked for only when something can be named as the reason \u2014 an investigation, a monitoring sweep, a link in a document, a ratification, or a lead somebody wrote down. A look with no reason behind it is not recorded."
-  },
-  /* REC-93, 2026-09-14 — THE WARC LESSON, AND THE FALSE-COVERAGE HAZARD FROM
-       THE OTHER DIRECTION. `OBSERVATION-LOG-DESIGN.md` §3: *"`PRESENT` with no
-       `result_ref` is refused — the WARC lesson: a revisit that omits what it
-       refers to silently loses which URL the bytes came from."*
-  
-       WHY IT IS ITS OWN CODE AND NOT C-22.3's. C-22.3 refuses a PRESENT that the
-       EVIDENCE contradicts (a client-rendered shell read as coverage). This refuses
-       a PRESENT WITH NO EVIDENCE ATTACHED AT ALL. They are different facts with
-       different remedies — one is answered by re-reading the capture honestly, the
-       other by naming what the look produced — and DEC-49's rule is that a single
-       refusal covering both tells a member nothing they can act on.
-  
-       IT DOES NOT FIRE ON `authority_kind = run`, AND THAT CARVE-OUT IS A MEASURED
-       CONFLICT BETWEEN TWO SECTIONS OF THE DESIGN rather than a convenience. §3
-       writes this refusal unconditionally; §4.4 requires every `ai_run_log` row to
-       fold into this table and read back through `op=airunlog` UNCHANGED. Both
-       cannot hold: `ai_run_log` HAS NO `result_ref` COLUMN, so no row ever written
-       to it can satisfy this, and `op=airuntick` accepts a caller-supplied
-       `PRESENT` today. Enforcing it over `run` would drop rows out of a coverage
-       record, or force the fold to invent a referent — and inventing one to get
-       past a gate is the failure CLAUDE.md names by name. The fold is therefore
-       admitted under the weaker rule it was written under, every other authority
-       carries the refusal, and the carve-out is a DEBT row rather than a shape.
-  
-       **THE CLOSING CONDITION NAMED HERE WAS FALSE AND IS CORRECTED BY
-       MEASUREMENT (REC-100, 2026-09-16).** This row said the carve-out *"closes
-       when the run's own writers carry referents (REC-95)"*. REC-95 landed and it
-       did NOT close: its three writers write under `authority_kind = derive`, not
-       `run` — REC-95 read the tree, found the sentence wrong and recorded that the
-       correction was owed to REC-100. Left standing, it would have invited the
-       next session to delete one condition and refuse three live writers.
-  
-       **AND THE REMAINING BLOCKER IS NOT A WRITER AT ALL, AT TWO OF THE THREE.**
-       `#aiRunTerminate` and `#aiRunReap` take their state from
-       `#aiRunSearchState`, a ROLLUP over the run's whole log — a summary PRESENT
-       has nothing single to point at BY CONSTRUCTION, so no writer-side work
-       satisfies this refusal and the design owes a ruling on what a terminal
-       entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
-       path, which composes no referent field while a model may judge `PRESENT`.
-       The full reasoning is at the predicate, `checkObservation` in
-       `src/observation-log/vocabulary.mjs` (it was `src/airun.mjs`'s until this
-       module's extraction); `test/m/observation-log/append.test.mjs` drives it.
-  
-       **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
-       (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
-       observation` pointing at the latest non-terminal PRESENT row of its own run,
-       computed by the plane. The carve-out is DELETED, so this refusal now fires
-       on EVERY authority, and it GAINED AN ARM rather than a new code: an
-       `observation` referent that is not an EARLIER PRESENT row of the SAME
-       authority is refused here too, with `referent_fault` naming which of four
-       ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/observation-log/vocabulary.mjs`). One code,
-       because every fault is this row's condition — a PRESENT whose referent does
-       not back it — and a second code behind C-22.10 would be two conditions
-       behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
-       Section K of `test/observation-log.test.mjs` drives all of it. */
-  OBS_PRESENT_NO_REFERENT: {
-    check: "C-22.10",
-    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
-    translation: "That observation says the thing is there without saying what was found. A record that something is present has to point at what it found \u2014 the captured document, the passage, the entity \u2014 or nobody can check it later, and a claim of coverage that cannot be checked is worse than no claim at all."
-  },
-  /* N118 (LEGACY-TESTS #3 REPORT 10; observation-log R3, K148; T6, legacy-checks) — C-22.1 WAS MINTED FOR A SECOND
-     CONDITION. observation-log's `checkObservation` refuses a look that states NEVER_LOOKED (R3: NEVER_LOOKED is the
-     absence of a row, never a row; its one exception is a run's terminal rollup, K148) under C-22.1's code, and
-     C-22.1's sentence ("does not say which kind of absence it found") is false for it: that look named a kind, the
-     one kind a look cannot be. DEC-49 is one code, one condition, so it takes a code of its own rather than C-22.1
-     reworded to cover both. Since T10 observation-log mints it: the region `is-never-looked-stored` is marked in
-     `checkObservation` (`src/observation-log/vocabulary.mjs`), and C-22.17 is what that site answers (N286). */
-  AI_LOG_NEVER_LOOKED_STORED: {
-    check: "C-22.17",
-    where: "src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored",
-    translation: "That observation says nobody looked, and an observation is the record of a look. Never having looked is what the record says of a subject with no observation at all, so it is not written as one. A look that happened records what it found: nothing, something, part of it, or that it could not tell."
-  }
-};
-var OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS2));
 
 // ../bio-plane/src/observation-log/vocabulary.mjs
 var OBSERVATION_STATES = {
@@ -1677,11 +1336,96 @@ var CONDITION_KINDS = Object.freeze({
   "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: store.mjs #conditionsRenderDeferred"
 });
 
-// ../bio-plane/src/airun.mjs
-var AI_RUN_CHECKS3 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
-var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
+// ../bio-plane/src/run-rules/rules.mjs
+var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUNS_CHECKS });
+var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposals"]);
 var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
 var AI_RUN_STATE_MAX_BYTES = 262144;
+
+// ../bio-plane/src/run-rules/deployment.mjs
+var GATE_ADDRESS = {
+  file: "agent-worker/src/harness.mjs",
+  owned_by: "FL-3 (IS-9, the run harness) \u2014 landed, and outside this area's paths",
+  modes_export: "MODES",
+  table_export: "CONTROL_FLOW",
+  row: "gate-mode",
+  first_step_export: "FIRST_STEP",
+  decision_function: "nextStep",
+  why_it_is_first: "a run in a mode that is not deployed terminates before it has spent anything, so the gate cannot be reached around by exhausting something else first"
+};
+var SEQUENCING_SOURCE = "docs/development/INVESTIGATIVE-SESSION.md";
+var SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
+var DEPLOYMENT_SEQUENCE = {
+  id: "check-deploys-first",
+  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
+     mode that deploys first, and every later index is a mode that enables only
+     after the one before it has been verified live. */
+  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
+     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
+     is ARM B3's whole demand (the two rosters are ONE set, held in both
+     directions) and ARM B4's (index 0 stays the only deployed mode; every later
+     index, `extract` included, is not). The pack's digest moves with this line
+     by construction and nothing needs bumping by hand. */
+  /* `plan` APPENDED (K660 (5), BIO_Action_v0_1.md §4 rule 1): the planning run, which proposes options for an
+     action plan from what the record already holds. It is last in the order and it does NOT wait on the chain above
+     it: it deploys as soon as `agent-worker` runs model turns (its R40 and R48 met), whether or not `investigate` or
+     `extract` is deployed, by the reviewed change that meets those Rs setting `deploys_apart.plan.deployed` here and
+     `agent-worker`'s `MODES.plan` together (its R42, R53). No separate act. */
+  order: ["check", "investigate", "extract", "plan"],
+  first_deployed_mode: "check",
+  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
+     because a session cannot verify its own copying by re-reading it. */
+  text: "CHECK IS THE FIRST DEPLOYED MODE",
+  role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
+  because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
+  satisfies: "Deploying that mode first satisfies the enacted instruction without a second architecture",
+  source: SEQUENCING_SOURCE,
+  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
+     standard: one pin proves the sentence was copied; two prove the RULING is
+     the one both surfaces carry, so a sequencing quietly reversed on either
+     fails here rather than in a review nobody re-runs. */
+  also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
+  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
+  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
+     half is this area's, and saying so is the point rather than a disclaimer. */
+  enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
+  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
+  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
+     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
+     cannot leave it stale by editing prose around it. `null` is not "unknown":
+     it is "no live run has been verified", and the suite holds it against the
+     landed flag, which is still `false`. */
+  verification_recorded: null,
+  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
+  enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
+  gate: GATE_ADDRESS,
+  /* R14: THE MODES THAT DEPLOY APART FROM THE CHAIN, each with its own flag and the condition that sets it. A mode here
+     takes no part in the chain's verification: `DEPLOYED_MODES` below reads the chain from `order` without it, and
+     adds it only when its flag is true. `false` until the change that meets its condition flips it under review. */
+  deploys_apart: {
+    plan: {
+      deployed: false,
+      when: "as soon as agent-worker runs model turns (its R40 and R48), whether or not investigate or extract is deployed; the reviewed change that meets those sets this flag and agent-worker's MODES.plan together"
+    }
+  },
+  /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
+     refused a mode, and this said so; `op=airunopen` now refuses a mode not in `DEPLOYED_MODES` below with C-109.1, so
+     no run, and no production under a run, exists in a mode not deployed. `enforced_by_row` stays: the fleet member's
+     first row still refuses first inside the harness (agent-worker R14), and the two are tallied apart. */
+  enforced_by: ["C-109.1"],
+  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
+  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
+     landed sources rather than believed. */
+  does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
+  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
+  holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
+};
+var CHAIN = DEPLOYMENT_SEQUENCE.order.filter((m) => !Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m));
+var DEPLOYED_MODES = Object.freeze([
+  ...CHAIN.slice(0, DEPLOYMENT_SEQUENCE.verification_recorded == null ? 1 : 2),
+  ...DEPLOYMENT_SEQUENCE.order.filter((m) => DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed === true)
+]);
+var DEFAULT_MODE = DEPLOYED_MODES[0];
 
 // src/subsession.mjs
 var REPORT_STATES = {
@@ -2194,6 +1938,34 @@ function judgeTools(levels) {
     )
   ];
 }
+function planJudgeTools(optionKeys) {
+  const option = {
+    type: "object",
+    properties: Object.fromEntries(optionKeys.map((k) => [k, {}])),
+    additionalProperties: false
+  };
+  const obj = (properties, description, name) => ({
+    name,
+    description,
+    input_schema: { type: "object", properties, additionalProperties: false }
+  });
+  return [
+    obj(
+      { candidates: {
+        type: "array",
+        items: option,
+        description: "the proposals, STRONGEST FIRST: their order is the only sign of strength; each carries only optionPropose's fields, with why (at most 500 characters) and sources"
+      } },
+      "compose: which options to propose to the plan, in order of strength, and why.",
+      "judge_compose"
+    ),
+    obj(
+      { submission: { ...option, description: "the changed proposal; the refused one unchanged drops it" } },
+      "adjust: how to answer the plane's refusal of a proposal.",
+      "judge_adjust"
+    )
+  ];
+}
 var LOAD_LAYER = (disclosable) => ({
   name: "load_layer",
   description: "load one of the skill pack's disclosed layers when the work needs it",
@@ -2211,6 +1983,21 @@ function rowPrompt(step, row, facts) {
   return `STEP ${step}: ${row.does}. You judge: ${row.judged}. Facts: ${JSON.stringify(facts)}. Answer by calling judge_${step}.`;
 }
 function rowFacts(s, levels) {
+  if (s.mode === "plan")
+    switch (s.step) {
+      case "compose":
+        return {
+          plan: s.planDoc ?? null,
+          earlier_plans: s.earlier || [],
+          reads: s.reads || [],
+          undetermined: s.undetermined || [],
+          candidates: s.candidates || []
+        };
+      case "adjust":
+        return { refusal: s.refusal ?? null, refused_submission: s.refusedSubmission ?? null };
+      default:
+        return {};
+    }
   switch (s.step) {
     case "plan":
       return {
@@ -2378,7 +2165,10 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     model.pack = held;
     model.messages = [];
     model.system = parentSystem(held);
-    model.tools = [LOAD_LAYER(Object.keys(held.disclosed || {})), ...judgeTools(LEVELS)];
+    model.tools = [
+      LOAD_LAYER(Object.keys(held.disclosed || {})),
+      ...session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS)
+    ];
   }
   const logRead = planeAnswer(await call("airunlog", { run: runId }), "airunlog");
   if (logRead.silent) return { refusal: planeSilent(logRead.silent) };
@@ -2410,7 +2200,10 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     target: seeded.target,
     targetBasis: seeded.basis,
     pass: 0,
-    maxPasses: Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES,
+    /* R50: mode `plan` walks one pass; R15's limit otherwise. */
+    maxPasses: session.mode === "plan" ? PLAN_MAX_PASSES : Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES,
+    /* R51: the plan a plan-mode run proposes to is the run's own (ai-runs R46, R19), never the caller's. */
+    planId: typeof session.plan === "string" && session.plan ? session.plan : null,
     resumedFrom,
     budget,
     targets: [],
@@ -2425,14 +2218,16 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     governed: false,
     condition: null
   };
-  const resumed = resumeFrom(session.state ?? null);
+  const FLOW = flowFor(session.mode);
+  const planMode = FLOW === PLAN_FLOW;
+  const resumed = resumeFrom(session.state ?? null, FLOW);
   state = resumed.at ? { ...state, ...resumed.state, resumeAt: resumed.at, resumeBasis: null } : { ...state, resumeAt: null, resumeBasis: resumed.basis };
   let jx = 0;
   let ended = null, steps = 0, segmentStopped = null;
   while (steps < maxSteps) {
     steps += 1;
     const callsAtStepStart = calls;
-    const row = CONTROL_FLOW[state.step];
+    const row = FLOW[state.step];
     let judgement;
     if (row && row.judged && model && state.step !== "collect") {
       model.messages.push({ role: "user", content: rowPrompt(state.step, row, rowFacts(state, LEVELS)) });
@@ -2464,7 +2259,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       jx += 1;
     }
     if (judgement !== void 0) {
-      const applied = applyJudgement(state, judgement);
+      const applied = planMode ? applyPlanJudgement(state, judgement) : applyJudgement(state, judgement);
       if (!applied.ok)
         return { refusal: refusal2(
           "JUDGEMENT_OVERREACH",
@@ -2474,7 +2269,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
         ) };
       state = applied.state;
     }
-    const work = await performStep(call, state, runId, model, logSeq);
+    const work = planMode ? await performPlanStep(call, state, runId) : await performStep(call, state, runId, model, logSeq);
     if (work.silent) return { refusal: planeSilent(work.silent) };
     if (work.model?.silent) return { refusal: modelSilent(work.model.silent, runId) };
     if (work.model?.refused) return { refusal: modelRefused(work.model.refused, runId) };
@@ -2498,9 +2293,14 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     if (work.refused) refusals.push(...Array.isArray(work.refused) ? work.refused : [work.refused]);
     state = work.state;
     if (work.submitted) submitted += 1;
+    if (work.proposed && state.budget.proposals)
+      state = { ...state, budget: {
+        ...state.budget,
+        proposals: { ...state.budget.proposals, consumed: state.budget.proposals.consumed + 1 }
+      } };
     if (work.verbatim) verbatimResubmits += 1;
     if (state.step === "adjust" && state.adjusted) adjusted += 1;
-    const decision = nextStep(state);
+    const decision = planMode ? nextPlanStep(state) : nextStep(state);
     trace.push({
       step: state.step,
       to: decision.step,
@@ -2511,10 +2311,10 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     const consume = { ...work.consume || {}, runtime: spentThisStep };
     const entry = stepLog(state, decision);
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
-    const after = advance(state, decision);
+    const after = planMode ? planAdvance(state, decision) : advance(state, decision);
     let published = null;
-    if (CONTROL_FLOW.resume.to.includes(after.step)) {
-      published = publishableState(after, AI_RUN_STATE_MAX_BYTES);
+    if (resumeTargets(FLOW).includes(after.step)) {
+      published = publishableState(after, AI_RUN_STATE_MAX_BYTES, FLOW);
       if (published.restarted) {
         const last = trace[trace.length - 1];
         last.note = (last.note ? `${last.note}; ` : "") + `the table's state is ${published.restarted.bytes} bytes, over the ${published.restarted.limit} a run's state may hold (ai-runs R45), so this tick publishes the pass restarted at '${published.restarted.at}' and a later segment re-does it rather than resume from a state the record refuses`;
@@ -2574,11 +2374,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       if (closed.silent) return { refusal: planeSilent(closed.silent) };
       if (closed.refused) {
         refusals.push(closed.refused);
-        state = { ...state, step: "close" };
+        state = { ...state, step: "close", pass: after.pass };
         break;
       }
       ended = { bound: decision.bound || "completed", by: "the table" };
-      state = { ...state, step: "close" };
+      state = { ...state, step: "close", pass: after.pass };
       break;
     }
     state = { ...after, budget: state.budget, ...look };
@@ -2826,6 +2626,115 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       const queue = [...state.queue || []];
       if (changed) queue.unshift(state.submission);
       out.note = changed ? "the submission was changed in answer to the refusal" : "the refusal could not be answered by changing the submission; the candidate is dropped";
+      out.state = { ...state, adjusted: changed, queue };
+      return out;
+    }
+    default:
+      return out;
+  }
+}
+async function performPlanStep(call, state, runId) {
+  const out = { state, consume: {}, note: null };
+  switch (state.step) {
+    case "read": {
+      const reads = [], undetermined = [];
+      const ask = async ({ op, query }) => {
+        const got = planeAnswer(await call(op, query), op);
+        const id = Object.values(query || {}).filter((v) => v != null && v !== "").join(" ") || null;
+        if (got.silent) {
+          undetermined.push({ op, id, code: null, why: "the plane did not answer" });
+          return null;
+        }
+        if (got.refused) {
+          undetermined.push({ op, id, code: got.refused.code ?? null, check: got.refused.check ?? null });
+          return null;
+        }
+        reads.push({ op, query, answer: got.result });
+        return got.result;
+      };
+      let planDoc = null, earlier = [];
+      if (!state.planId) undetermined.push({ op: "plan", id: null, code: null, why: "the run names no plan" });
+      else {
+        const answered = await ask(PLAN_READS.plan(state.planId));
+        planDoc = answered && typeof answered === "object" ? answered.plan ?? answered : null;
+      }
+      const project = planDoc && typeof planDoc.project === "string" && planDoc.project ? planDoc.project : null;
+      if (project) {
+        const plans = await ask(PLAN_READS.plans(project));
+        earlier = plans ? earlierPlans(plans, project, state.planId) : [];
+      } else if (planDoc) undetermined.push({ op: "plans", id: null, code: null, why: "the plan names no project" });
+      for (const r of planDoc ? planSubjectReads(planDoc) : [PLAN_READS.profile()]) {
+        const answered = await ask(r);
+        if (r.op !== "profiles" || !answered) continue;
+        const view = answered.view && typeof answered.view === "object" ? answered.view : answered;
+        for (const fact of PROFILE_FACTS)
+          if (!(fact in view)) undetermined.push({
+            op: "profiles",
+            id: fact,
+            code: null,
+            why: "the plane's profile answer does not publish it"
+          });
+      }
+      out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED (refused, silent or not published) and carried into every proposal's why, never as an absence; ${earlier.length} earlier plan(s) of the same project`;
+      out.state = { ...state, planDoc, earlier, reads, undetermined };
+      return out;
+    }
+    case "compose": {
+      out.note = `${(state.candidates || []).length} candidate proposal(s) composed, strongest first`;
+      return out;
+    }
+    case "dedup": {
+      const held = state.planId ? planeAnswer(await call("plan", { id: state.planId }), "plan") : null;
+      const candidates = state.candidates || [];
+      if (!held || held.silent || held.refused) {
+        if (held?.refused) out.refused = held.refused;
+        out.note = `the plan could NOT be read (${held?.refused ? `the plane refused '${String(held.refused.code ?? "?")}'` : held?.silent ? "the plane was silent" : "the run names no plan"}), so ${candidates.length} candidate(s) were compared against NOTHING and say so rather than being reported new`;
+        out.state = { ...state, queue: [...candidates] };
+        return out;
+      }
+      const doc = held.result && typeof held.result === "object" ? held.result.plan ?? held.result : {};
+      const { queue, dropped } = planDedup(candidates, doc);
+      out.note = `${candidates.length} candidate(s) compared against the plan's options and proposals; ${dropped.length} already held, dropped before any write; ${queue.length} to propose, in order`;
+      out.state = { ...state, queue };
+      return out;
+    }
+    case "submit": {
+      const queue = [...state.queue || []];
+      const candidate = queue.shift();
+      if (!candidate) return out;
+      const body = {
+        ...candidate,
+        why: whyWithUndetermined(candidate.why, state.undetermined),
+        plan: state.planId,
+        run: runId
+      };
+      const res = await call("optionpropose", null, body);
+      if (!res.reached) return { silent: res };
+      const answer = res.body?.result ?? res.body ?? {};
+      if (res.status === 200 && res.body?.ok === true && answer.ok !== false) {
+        out.submitted = true;
+        out.proposed = true;
+        out.note = `proposed '${String(candidate.summary ?? "").slice(0, 80)}'`;
+        out.state = { ...state, queue, refusal: null, submission: candidate };
+        return out;
+      }
+      if (answer.repeated === true) out.verbatim = true;
+      out.refused = {
+        at: "optionpropose",
+        code: answer.code ?? answer.reason ?? null,
+        check: answer.check ?? null,
+        repeated: answer.repeated === true,
+        plane: answer
+      };
+      out.note = `refused '${String(answer.code ?? answer.reason ?? "?")}' \u2014 routing to ADJUST, never to a retry`;
+      out.state = { ...state, queue, refusal: answer, submission: candidate };
+      return out;
+    }
+    case "adjust": {
+      const changed = adjustedFrom(state.refusedSubmission ?? null, state.submission ?? null);
+      const queue = [...state.queue || []];
+      if (changed) queue.unshift(state.submission);
+      out.note = changed ? "the proposal was changed in answer to the refusal, and keeps its place" : "the refusal could not be answered by changing the proposal; it is dropped";
       out.state = { ...state, adjusted: changed, queue };
       return out;
     }

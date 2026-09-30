@@ -71,7 +71,7 @@ import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
 import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
-import { OBSERVATION_STATES } from "../../bio-plane/src/airun.mjs";
+import { OBSERVATION_STATES } from "../../bio-plane/src/run-rules/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

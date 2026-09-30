@@ -127,9 +127,9 @@ import {
   PLAN_READS, PROFILE_FACTS, planSubjectReads, earlierPlans, whyWithUndetermined, resumeTargets,
 } from "./harness.mjs";
 
-/* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS ai-runs' (its R45), read from its own file and never copied.
- * `airun.mjs` is already in this bundle through `skills`' `skillpack.mjs`. */
-import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/airun.mjs";
+/* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS run-rules' (its R10), read from its own module and never
+ * copied. run-rules is pure (no storage, no clock), so this is the one plane module in the bundle beside `tokens.mjs`. */
+import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/run-rules/index.mjs";
 
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
  * PURE. What goes OUT to a sub-session and what may come BACK are shapes, not

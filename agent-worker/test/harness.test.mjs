@@ -109,7 +109,8 @@ import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
    drift again; arm A6c asserts the member can close on nothing the table lacks.
    Imported in the SUITE and not in the Worker: `harness.mjs`'s own header records
    why the member itself may not import the plane's module graph. */
-import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../bio-plane/src/airun.mjs";
+/* The run's vocabulary is run-rules' (the ai-runs split, K617, K649 (1)); the observation vocabulary it re-exports. */
+import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../bio-plane/src/run-rules/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -127,7 +128,6 @@ const HARNESS_SRC = readFileSync(fileURLToPath(new URL("../src/harness.mjs", imp
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
 const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
-const PLANE_AIRUN = readFileSync(fileURLToPath(new URL("../../bio-plane/src/airun.mjs", import.meta.url)), "utf8");
 
 /* The comment stripper FL-2 had to correct, reused rather than re-derived: a
    naive "two slashes to end of line" DELETES a `http://` literal AND the rest of
@@ -296,7 +296,7 @@ console.log("\n--- A4 · loop termination and the pass count are the TABLE's, ne
   t("`lease` is nobody's to spend here", Object.keys(NOT_OUR_BOUNDS), ["lease"]);
   t("every bound this harness names is a bound the PLANE declares",
     [...BUDGET_BOUNDS, ...Object.keys(SPENT_NOT_WATCHED), ...Object.keys(NOT_OUR_BOUNDS)]
-      .filter((b) => !new RegExp(`^\\s{2}${b}:`, "m").test(PLANE_AIRUN.slice(PLANE_AIRUN.indexOf("export const RUN_BOUNDS")))),
+      .filter((b) => !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)),
     []);
 
   console.log("\n  -- SK-2's review criterion, as CODE: a judgement may not touch control flow --");
@@ -400,10 +400,10 @@ console.log("\n--- A6b · THE HEADER AND THE PLANE'S CATALOGUE AGREE, ASSERTED I
      nothing — three items shipped exactly that defect on 2026-08-10. So the
      catalogue is PARSED out of `bio-plane/src/airun.mjs`, the header is READ as
      text out of `../src/harness.mjs`, and the two are compared to each other. */
-  const blk = PLANE_AIRUN.match(/export const RUN_ENDINGS = \{([\s\S]*?)\n\};/);
-  t("the plane's RUN_ENDINGS block was actually found — a silent no-match would pass everything",
-    blk != null, true);
-  const planeEndings = [...(blk?.[1] ?? "").matchAll(/^\s{2}"?([\w-]+)"?\s*:/gm)].map((m) => m[1]);
+  /* The catalogue is run-rules' EXPORT, read at the interface (P7), no longer parsed out of the plane's text. */
+  t("the plane's RUN_ENDINGS was actually read — an empty import would pass everything",
+    RUN_ENDINGS != null && typeof RUN_ENDINGS === "object", true);
+  const planeEndings = Object.keys(RUN_ENDINGS || {});
   t("REACH: the parse found a non-trivial catalogue (floor 3), so neither direction below is vacuous",
     planeEndings.length >= 3, true);
 

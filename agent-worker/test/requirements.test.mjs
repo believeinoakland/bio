@@ -36,9 +36,10 @@ import { suggestBranch } from "./plane-suggest.mjs";
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
 
 /* THE PLANE'S OWN VOCABULARIES AND THE SKILL PACK, from their modules (uses: ai-runs, skills, legacy-checks). */
-import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_ENDINGS, RUN_BOUNDS, runStatusFor } from "../../bio-plane/src/airun.mjs";
-import * as AI_RUNS from "../../bio-plane/src/airun.mjs";
-import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
+import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_ENDINGS, RUN_BOUNDS, runStatusFor } from "../../bio-plane/src/run-rules/index.mjs";
+import * as RUN_RULES from "../../bio-plane/src/run-rules/index.mjs";
+import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, DEPLOYED_MODES } from "../../bio-plane/src/run-rules/index.mjs";
+import { reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
 import * as HARNESS from "../src/harness.mjs";
 import { discoverMembers, verifyStatic, verifyFresh } from "../../bio-plane/scripts/fleet-bundle.mjs";
 
@@ -930,7 +931,7 @@ section("R49 · the state a tick publishes stays within ai-runs' AI_RUN_STATE_MA
     [undefined, 0, -1].map((l) => publishableState(over, l).restarted), [null, null, null]);
 
   /* THROUGH THE OP, at the plane's ceiling: a mock that refuses as ai-runs R45 does receives no state it refuses. */
-  const CEILING = AI_RUNS.AI_RUN_STATE_MAX_BYTES;
+  const CEILING = RUN_RULES.AI_RUN_STATE_MAX_BYTES;
   {
     t("R49: the ceiling the member applies is ai-runs' own, the figure its R45 provides", CEILING, LIMIT);
     await reset(mf, { target: "INQ-R49", stateMax: CEILING });
@@ -1291,8 +1292,13 @@ section("R44 · its copies equal their sources, both ways");
     [Object.keys(REPORTING_LEVEL), LEVELS.map((l) => REPORTING_LEVEL[l] === reportsAs(l))], [LEVELS, LEVELS.map(() => true)]);
   t("R44: NAMESPACES is the plane's (the member's refusal and the real plane's list the same set)",
     (await runOp(mf, { run_id: "r", store: "x", credential: AIK })).out.namespaces, planeNamespaces);
-  t("R44: MODES' keys are DEPLOYMENT_SEQUENCE.order, and only its first member is deployed",
-    [Object.keys(MODES), Object.keys(MODES).filter((k) => MODES[k].deployed)], [DEPLOYMENT_SEQUENCE.order, [DEPLOYMENT_SEQUENCE.order[0]]]);
+  /* R44 as R53 reads it: only the order's first member is deployed, and `plan` once R40 and R48 are met (it is not in
+     T18, run-rules R14): MODES' deployed set is run-rules' DEPLOYED_MODES, both ways. */
+  t("R44, R53: MODES' keys are DEPLOYMENT_SEQUENCE.order, and its deployed modes are run-rules' DEPLOYED_MODES: the first member only",
+    [Object.keys(MODES), Object.keys(MODES).filter((k) => MODES[k].deployed), [...DEPLOYED_MODES]],
+    [DEPLOYMENT_SEQUENCE.order, [DEPLOYMENT_SEQUENCE.order[0]], [DEPLOYMENT_SEQUENCE.order[0]]]);
+  t("R44, R53: plan is the order's last member and deploys apart, not deployed with MODES.plan",
+    [DEPLOYMENT_SEQUENCE.order.at(-1), DEPLOYMENT_SEQUENCE.deploys_apart?.plan?.deployed, MODES.plan.deployed], ["plan", false, false]);
   t("R44: the mode-not-deployed ending is one of the plane's RUN_ENDINGS", Object.keys(RUN_ENDINGS).includes("mode-not-deployed"), true);
 }
 
