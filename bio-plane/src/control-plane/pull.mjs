@@ -143,8 +143,11 @@ export async function pullAndFile(deps, { knockId, by, identity, viewer, now = (
     /* capture keeps the document in the same write that pulls the knock, so a pulled knock always has one */
     if (!pulled.document) return { ...pulled, bundle: null };
   }
-  /* (4) the promotion of the pulled document */
-  const filed = promoteIn(deps, pulled.document, { ...who, at: pulled.pulled_at || at });
+  /* (4) the promotion of the pulled document; a fault here is answered as the residue it leaves, never thrown past the
+     pull, so the answer says the knock was pulled */
+  let filed;
+  try { filed = promoteIn(deps, pulled.document, { ...who, at: pulled.pulled_at || at }); }
+  catch { filed = { ok: false, reason: "PROMOTE_FAILED", detail: "the promotion did not complete." }; }
   if (filed && filed.ok === true) return { ...pulled, bundle: bundleOf(filed) };
   return { ...(filed || { ok: false, reason: "PROMOTE_FAILED" }), ok: false, knockId, status: 502,
            pulled: { capture: pulled.capture, pulled_by: pulled.pulled_by, pulled_at: pulled.pulled_at },

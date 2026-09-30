@@ -7,7 +7,6 @@
 import { Store as LegacyStore } from "../store.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
-import { sourcesOf, sourcesOps } from "../sources/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
@@ -201,17 +200,14 @@ export class Store extends LegacyStore {
   }
 }
 
-/* N364: the routes this composition root adds to the one map, each passing R26's frame. `sources`' own map (its ops,
-   stamps read from the query after the body); membership's two own-key acts, which membership keeps out of its map
-   (`by` spread, then overridden, as `signeradd`); and R36's pull, a route of its own beside capture's `inboxpull`,
-   which the Worker's `op=inboxpull` addresses. */
+/* N364: the routes this composition root adds to the one map, each passing R26's frame: membership's two own-key acts,
+   which membership keeps out of its map (`by` spread, then overridden, as `signeradd`), and R36's pull, a route of its own
+   beside capture's `inboxpull`, which the Worker's `op=inboxpull` addresses. `sources`' map is not dispatched here: the
+   record store's dispatch of it is N379 (K558). */
 export function controlPlaneRoutes(ctx, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
-  /* `sources` is reached only when one of its routes runs: building the map constructs nothing. */
-  const sources = new Proxy({}, { get: (_, k) => { const s = sourcesOf(ctx); const v = s[k]; return typeof v === "function" ? v.bind(s) : v; } });
   return {
-    ...sourcesOps(sources, url, body),
     signerregister: () => membershipOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
     signerrevoke: () => membershipOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
