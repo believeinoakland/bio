@@ -1,6 +1,6 @@
 # legacy-checks (T16)
 
-**Status** · session_014rKpxqH7kUf2B2Gnkpa86U · depth 2 · WORKING · handled B1
+**Status** · session_014rKpxqH7kUf2B2Gnkpa86U · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## J1 · QUESTION
 
