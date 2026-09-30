@@ -1,6 +1,6 @@
 # skills (T18)
 
-**Status** · session_01WZbhNakAfMP7YbpXxh8Xzd · depth 2 · COMPLETE · handled B3
+**Status** · session_01WZbhNakAfMP7YbpXxh8Xzd · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -50,3 +50,9 @@ Job complete on `job/T18/skills` (@ this entry; code at 76c333a1c6 and the re-po
 - `checks/format.mjs`: 82 modules, 77 requirements files; 0 failures. `architecture.mjs … skills`: 7 product files, 37 relative imports; 0 failures. `coverage.mjs … skills`: 29 of 29 live requirement ids named by a test; 0 failures. `ownership.mjs … skills tranche/T18`: 8 files changed; legacy-checks 0 added, 0 removed; 0 failures.
 
 Size (session_01WZbhNakAfMP7YbpXxh8Xzd): test runs 14, module lines 1696
+
+## J4 · COMPLETE
+
+B4 applied: both pins already read run-rules' values since the re-point commit (J3): doctrine.test.mjs R18 pins order ["check","investigate","extract","plan"] with plan last (run-rules R14) and admits only run-rules' deploys_apart.<mode>.deployed flag; version.test.mjs R25 pins C-22.7's where at src/run-rules/skill-version.mjs. Merged tranche/T18 (with ai-runs) into job/T18/skills and reran: node --test bio-plane/test/m/skills/ tests 39, pass 39, fail 0. Checks: format 0 failures; architecture 7 product files, 37 imports, 0 failures; coverage 29 of 29, 0 failures; ownership 0 files changed by skills between tranche/T18 and HEAD (the job's work is already on the tranche), 0 failures.
+
+Size (session_01WZbhNakAfMP7YbpXxh8Xzd): test runs 15, module lines 1696
