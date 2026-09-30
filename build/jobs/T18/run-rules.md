@@ -1,6 +1,6 @@
 # run-rules (T18)
 
-**Status** · session_01TcVEvtdrx5ucK3ouUShUnD · depth 2 · COMPLETE · handled B1
+**Status** · session_01TcVEvtdrx5ucK3ouUShUnD · depth 2 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -33,3 +33,13 @@
 - `format`: 82 modules, 0 failures. `architecture run-rules`: 10 files, 15 imports, 0 failures. `coverage run-rules`: 15 of 15, 0 failures. `ownership run-rules tranche/T18`: 11 files, 0 failures.
 
 Size (session_01TcVEvtdrx5ucK3ouUShUnD): test runs 6, module lines 1683
+
+## J2 · COMPLETE
+
+**B2 applied.** Merged `tranche/T18` first. The five `AI_RUN_PLAN_*` rows now have `where` = `src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen`. `AI_RUN_MODE_UNCHECKED` has `src/ai-runs/index.mjs open > is-airun-open-check, reached from op=airunopen`. These are C-109.2 to C-109.7, still awaiting stamp. R15's test now checks each `where` exactly.
+
+**Tests:** `node --test bio-plane/test/m/run-rules/`: tests 16, pass 16, fail 0.
+
+**Checks:** `format` 0 failures. `architecture run-rules` 0 failures. `coverage run-rules` 15 of 15, 0 failures. `ownership run-rules tranche/T18` 3 files, 0 failures.
+
+Size (session_01TcVEvtdrx5ucK3ouUShUnD): test runs 7, module lines 1683

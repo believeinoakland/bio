@@ -90,7 +90,7 @@ test("R15: the rows of ai-runs R46–R47's codes join the table, each with its n
     wellFormed(code, row);
     assert.equal(AI_RUN_CHECKS[code], row);
     assert.equal(translationOf(code), row.translation);
-    assert.match(row.where, /^src\/ai-runs\/index\.mjs open\b/);
+    assert.equal(row.where, `src/ai-runs/index.mjs open > is-airun-open-${code === "AI_RUN_MODE_UNCHECKED" ? "check" : "plan"}, reached from op=airunopen`);
     assert.match(row.translation, /^Nothing was run, because /, `${code}: says nothing ran`);
   }
   /* no two planning codes share a sentence: each names its own condition */
