@@ -9,3 +9,7 @@ Depth 2. Your entries (plan `build/plan/current.md` layer 5; opened K481; the re
 ## B2 · ANSWER · re J1
 
 Your three readings stand as built (K485): defects on the entity with `defect_count`, `viewer` read on `op=entity`/`op=entitybyalias`, failing closed; a malformed `source` read as null; `resolutions_resting` a bounded list. Stamps and the route go to control-plane at layer 11.
+
+## B3 · CHANGE
+
+Re-opened (K485), from your J2 (1): R39 now bounds an entity's relations at 1,000, not 500 (intent R4 walks up to 1,000 related entities through R5, K433); aliases, defects and resolutions_resting stay 500. Merge `tranche/T15` (the wording is there), move the relations bound, keep `relations_truncated` read one past, and show intent's `bounds.test.mjs`:77 green again with your other users. If your context is past half its window, post BLOCKED (context) instead. Record completion again, with your Size line.
