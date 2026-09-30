@@ -18,8 +18,9 @@ test("R14 resolutionsFor refuses NO_SHA; the capture's resolutions by reference 
   const all = e.resolutionsFor({ captureSha: sha("many"), viewer: MACHINE });
   assert.deepEqual([all.count, all.limit, all.truncated], [7, 500, false]);
   assert.deepEqual(all.resolutions.map((r) => r.ref), [...all.resolutions.map((r) => r.ref)].sort());
-  assert.deepEqual(Object.keys(all.resolutions[0]).sort(), ["at", "basis", "bundle_id", "capture_sha", "entity_id", "established",
-    "grade", "method", "needs_confirmation", "raised_from", "ref", "resolved_by", "withdrawn_name"].sort());
+  assert.deepEqual(Object.keys(all.resolutions[0]).sort(), ["at", "basis", "bundle_id", "capture_sha", "defect_count", "defects",
+    "entity_id", "established", "grade", "method", "needs_confirmation", "raised_from", "ref", "resolved_by", "withdrawn_name"].sort());
+  assert.deepEqual([all.resolutions[0].defects, all.resolutions[0].defect_count], [[], 0], "with its reports (R38): none yet");
   assert.equal(all.resolutions[0].entity_id, ent);
   const cut = e.resolutionsFor({ captureSha: sha("many"), limit: 3, viewer: MACHINE });
   assert.deepEqual([cut.count, cut.limit, cut.truncated], [3, 3, true]);

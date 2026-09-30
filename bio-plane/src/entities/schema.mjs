@@ -81,7 +81,33 @@ CREATE INDEX IF NOT EXISTS resolutions_entity ON resolutions(entity_id);
 CREATE INDEX IF NOT EXISTS resolutions_grade ON resolutions(grade, bundle_id);
 CREATE INDEX IF NOT EXISTS resolutions_capture ON resolutions(capture_sha);
 CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
+-- R38 (N345, DEC-76 item 3): A REPORT THAT A RESOLUTION MATCHED THE WRONG SUBJECT. Appended, never edited: a report
+-- moves nothing (the grade, the resolution and every connection stay), it is read beside the resolution it names
+-- (capture_sha, ref, entity_id), so a member can re-resolve. source_module/source_id name what raised it (a
+-- contradiction candidate) or are both NULL for a member's own report; reported_by is the control plane's stamp (R4).
+-- One report per (resolution, reported_by, source): a repeat writes nothing. Keyed to its bundle (R30).
+CREATE TABLE IF NOT EXISTS resolution_defects (
+  defect_id     INTEGER PRIMARY KEY,
+  capture_sha   TEXT NOT NULL,
+  bundle_id     TEXT NOT NULL,
+  ref           TEXT NOT NULL,
+  entity_id     TEXT NOT NULL,
+  reason        TEXT NOT NULL,
+  source_module TEXT,
+  source_id     TEXT,
+  reported_by   TEXT,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS resolution_defects_key ON resolution_defects(capture_sha, ref, entity_id);
+CREATE INDEX IF NOT EXISTS resolution_defects_entity ON resolution_defects(entity_id, at);
+CREATE INDEX IF NOT EXISTS resolution_defects_bundle ON resolution_defects(bundle_id);
 `;
+
+/* R39 (N351): a machine resolution's matched string, folded (extraction's term fold), so the resolutions resting on
+   one withdrawn name are read by an index at a stated bound rather than folded row by row. Added by `migrate` after
+   the schema, with its index, and filled once for the rows a store held before it; NULL for testimony (R8). */
+export const BASIS_NORM_COLUMN = Object.freeze(["resolutions", "basis_norm"]);
+export const BASIS_NORM_INDEX = "CREATE INDEX IF NOT EXISTS resolutions_entity_basis ON resolutions(entity_id, basis_norm)";
 
 /* R8: the columns a store written before K106 lacks. */
 export const WITHDRAWAL_COLUMNS = Object.freeze([
