@@ -32,3 +32,11 @@
 - `format`: 82 modules, 77 requirements files; 0 failures. `architecture review`: 8 product files, 31 relative imports; 0 failures. `coverage review`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership review tranche/T18`: 5 files; legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_01Cdaup8sYNohibJss44W5C8): test runs 7, module lines 1010
+
+## J3 · COMPLETE · re J1
+
+B2 applied: `tranche/T18` @ c389ba0357 merged into `job/T18/review`. It carries R17's new sentence (K688), and my R17 test already names it. Nothing else changed since J2, whose record stands.
+
+Re-run after the merge: `node --test bio-plane/test/m/review/`: 33 pass, 0 fail. `format`: 82 modules, 77 requirements files; 0 failures. `architecture review`: 0 failures. `coverage review`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership review tranche/T18`: 5 files, legacy-store 0/0, legacy-checks 0/0; 0 failures.
+
+Size (session_01Cdaup8sYNohibJss44W5C8): test runs 8, module lines 1010
