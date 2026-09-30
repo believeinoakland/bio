@@ -39,3 +39,7 @@ Best readings, which I am building on now (none stops me):
 - Note: R50's tests use a stand-in for contradiction R29 answering exactly its shapes (minting a real duty candidate needs a measured AI run); R10's use the section written as case-authoring's J1 shape.
 
 Size (session_016tDen5uWKPk2idprPvDn7o): test runs 17, module lines 5945
+
+## J2 · REPORT
+
+Found in other modules (details in my record's Completion): (1) ratification test/m/ratification/checks.test.mjs:133 (R8, N211) is red: the catalogue's /4 copy of checkCaseDocument now differs from ratification's /5 in C-41.1's message; this is K498's N361 gap, nothing of publication's. (2) case-authoring R14 test asserts /4 and is red until CASE-AUTHORING #4 lands /5; meanwhile op=publish writes /5 without the section, which publication reads as undetermined, never as none. (3) bio-plane/dist/bio-plane.bundled.mjs is stale (not rebuilt). (4) legacy-tests: suites reading bio-case-document/4 as current are N345's planned re-anchors. (5) store.mjs:132 imports the catalogue's CASE_DOCUMENT_FORMAT unused (legacy-store).
