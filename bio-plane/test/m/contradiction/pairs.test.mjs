@@ -19,7 +19,7 @@ function k1World(opts) {
   return w;
 }
 
-test("R5: key is trimmed and upper-cased; absent or blank runs all four; any other key is C-60.1 naming the keys held", () => {
+test("R5: key is trimmed and upper-cased; absent or blank runs all five keys; any other key is C-60.1 naming the keys held", () => {
   const w = k1World();
   for (const key of [" k1 ", "K1", "k1"]) {
     const r = w.c.pairs({ key, viewer: MACHINE });
@@ -28,9 +28,10 @@ test("R5: key is trimmed and upper-cased; absent or blank runs all four; any oth
   }
   for (const key of [null, undefined, "", "   "]) {
     const r = w.c.pairs({ key, viewer: MACHINE });
-    assert.deepEqual(r.keys.filter((k) => k.ran).map((k) => k.key), ["K1", "K2", "K3", "K4"]);
+    assert.deepEqual(r.keys.filter((k) => k.ran).map((k) => k.key), ["K1", "K2", "K3", "K4", "K5"]);
   }
-  for (const key of ["K5", "k 1", "all", 1]) {
+  assert.deepEqual(w.c.pairs({ key: " k5 ", viewer: MACHINE }).keys.filter((k) => k.ran).map((k) => k.key), ["K5"]);
+  for (const key of ["K6", "k 1", "all", 1]) {
     const r = w.c.pairs({ key, viewer: MACHINE });
     const row = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
     assert.equal(r.ok, false);
@@ -39,8 +40,8 @@ test("R5: key is trimmed and upper-cased; absent or blank runs all four; any oth
     assert.equal(r.check, "C-60.1");
     assert.equal(r.check, row.check);
     assert.equal(r.translation, row.translation);
-    assert.deepEqual(r.keys, ["K1", "K2", "K3", "K4"]);
-    assert.match(r.detail, /K1, K2, K3, K4/);
+    assert.deepEqual(r.keys, ["K1", "K2", "K3", "K4", "K5"]);
+    assert.match(r.detail, /K1, K2, K3, K4, K5/);
   }
 });
 
@@ -77,7 +78,7 @@ test("R7: each key answers ran, formed, limit, truncated observed past the bound
   assert.deepEqual([at2.formed, at2.truncated], [2, true]);
   assert.equal(w.c.pairs({ key: "K1", limit: 2, viewer: MACHINE }).pairs.length, 2);
   /* the unnamed keys */
-  for (const k of ["K2", "K3", "K4"]) {
+  for (const k of ["K2", "K3", "K4", "K5"]) {
     const e = byKey(at3, k);
     assert.equal(e.ran, false);
     assert.equal(e.formed, 0);
@@ -282,7 +283,8 @@ test("R11: a key that formed nothing names the first empty rung of its ladder, e
   assert.deepEqual(ladder(w0, "K2"), ["viewer", "inquiry", "subject", "reading", "claim"]);
   assert.deepEqual(ladder(w0, "K3"), ["viewer", "inquiry", "reading", "claim", "referent"]);
   assert.deepEqual(ladder(w0, "K4"), ["viewer", "content", "cited", "resolution", "shared_entity"]);
-  for (const k of ["K1", "K2", "K3"]) assert.equal(level(w0, k), "inquiry");
+  assert.deepEqual(ladder(w0, "K5"), ["viewer", "inquiry", "drawing_projects", "concluded_stances", "differing_claim"]);
+  for (const k of ["K1", "K2", "K3", "K5"]) assert.equal(level(w0, k), "inquiry");
   assert.equal(level(w0, "K4"), "content");
 
   /* K1 */
@@ -338,6 +340,23 @@ test("R11: a key that formed nothing names the first empty rung of its ladder, e
   const e = k4World({ contentType: "rule", date: "2026-01-01" }, { contentType: "rule", date: "2026-01-01" });
   assert.equal(level(e, "K4"), "discriminator");
 
+  /* K5 */
+  const f = world(); f.inquiry("INQ-2026-0001");
+  assert.equal(level(f, "K5"), "drawing_projects");
+  f.project("PROJ-2026-0001", ["m1"]); f.project("PROJ-2026-0002", ["m1"]);
+  f.draws("INQ-2026-0001", "PROJ-2026-0001", "PROJ-2026-0002");
+  assert.equal(level(f, "K5"), "concluded_stances");
+  f.stance("PROJ-2026-0001", "INQ-2026-0001", "the fee rose");
+  assert.equal(level(f, "K5"), "differing_claim");
+  f.stance("PROJ-2026-0002", "INQ-2026-0001", "the fee rose");     /* the same words: agreement, not a pair */
+  assert.equal(level(f, "K5"), "differing_claim");
+  f.inquiry("INQ-2026-0002"); f.stance("PROJ-2026-0001", "INQ-2026-0002", "the fee fell");
+  assert.equal(level(f, "K5"), "shared_question");                  /* differing answers, never on one question */
+  f.stance("PROJ-2026-0002", "INQ-2026-0002", "the fee held");
+  assert.equal(level(f, "K5"), null);
+  /* the K5 rungs are under the gate: a project the outsider does not take part in is not a drawing project for them */
+  assert.equal(level(f, "K5", OUTSIDER), "drawing_projects");
+
   /* each rung under the gate: material the outsider may not see is absent at its level for the outsider */
   const g = world();
   g.inquiry("INQ-2026-0001");
@@ -364,7 +383,7 @@ test("R11: a key that formed nothing names the first empty rung of its ladder, e
   assert.equal(level(s, "K4", OUTSIDER), "shared_entity");
 
   /* every sentence from the one table, and no ran key answers a bare zero */
-  for (const w of [w0, a, a3, b, c, d, e, g]) for (const viewer of [MACHINE, OUTSIDER, null]) {
+  for (const w of [w0, a, a3, b, c, d, e, f, g]) for (const viewer of [MACHINE, OUTSIDER, null]) {
     for (const k of w.c.pairs({ viewer }).keys) {
       if (k.formed === 0) {
         assert.ok(k.absence && typeof k.absence.level === "string", `${k.key} bare zero`);
@@ -374,7 +393,7 @@ test("R11: a key that formed nothing names the first empty rung of its ladder, e
   }
 });
 
-test("R12: the answer states wrote false, pairs_formed, the flat pairs, judgement NOT_REACHED and says; it publishes no label vocabulary", () => {
+test("R12: the answer states wrote false, pairs_formed, the flat pairs, judgement HELD_APART read through candidatesFor, and says; it publishes no label vocabulary", () => {
   const w = k4World({ contentType: "rule" }, { contentType: "act" });
   w.inquiry("INQ-2026-0002"); w.leg("INQ-2026-0002", 0, "supports", { content: "ca" }); w.leg("INQ-2026-0002", 1, "cuts_against", { content: "cb" });
   const r = w.c.pairs({ viewer: MACHINE });
@@ -384,9 +403,11 @@ test("R12: the answer states wrote false, pairs_formed, the flat pairs, judgemen
   assert.equal(r.pairs.length, 2);
   assert.deepEqual(r.pairs.map((p) => p.key).sort(), ["K1", "K4"]);
   assert.equal(r.pairs_formed, r.keys.reduce((n, k) => n + k.formed, 0));
-  assert.equal(r.judgement.state, "NOT_REACHED");
-  for (const f of ["by", "item", "why"]) assert.equal(typeof r.judgement[f], "string");
-  assert.match(r.says, /^2 candidate pair\(s\) over K1, K2, K3, K4/);
+  assert.equal(r.judgement.state, "HELD_APART");
+  assert.equal(r.judgement.read, "candidatesFor");
+  for (const f of ["by", "why"]) assert.equal(typeof r.judgement[f], "string");
+  assert.match(r.says, /^2 candidate pair\(s\) over K1, K2, K3, K4, K5/);
+  assert.match(r.says, /The pairing answers pairs; a run's judgements over them are read through candidatesFor/);
   /* no label vocabulary: no list of labels and no field naming one, anywhere in the answer */
   const walk = (v, path = []) => {
     if (Array.isArray(v)) {
@@ -411,7 +432,7 @@ test("R18: the pairing is deterministic — the same record and viewer give the 
   w.leg("INQ-2026-0002", 0, "supports", { content: "ca" }); w.leg("INQ-2026-0002", 1, "cuts_against", { content: "cb" });
   for (const viewer of [MACHINE, MEMBER, OUTSIDER, null])
     assert.deepEqual(w.c.pairs({ viewer }), w.c.pairs({ viewer }));
-  assert.deepEqual(Object.keys(CONTRADICTION_KEYS), ["K1", "K2", "K3", "K4"]);
+  assert.deepEqual(Object.keys(CONTRADICTION_KEYS), ["K1", "K2", "K3", "K4", "K5"]);
   assert.ok(Object.isFrozen(CONTRADICTION_KEYS) && Object.values(CONTRADICTION_KEYS).every(Object.isFrozen));
 });
 

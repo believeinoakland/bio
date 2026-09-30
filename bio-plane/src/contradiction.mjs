@@ -69,7 +69,11 @@ export const JUDGEMENT_PROMPT_SHA256 = "79ea662afed716df7db276bac07c4c85db7b9adf
    record does not state is OMITTED, never filled (§4: an undetermined date is not invented). */
 export function judgementSide(side) {
   const out = {};
-  for (const k of ["text", "doctype", "date", "role"]) if (side && side[k] !== null && side[k] !== undefined) out[k] = side[k];
+  /* K5 (N345): a stance side is shown to the judgement as the claim its project adopted, the one text it has; a stance
+     that states no claim shows none. */
+  const src = side && side.kind === "stance" && (side.text === null || side.text === undefined)
+    ? { ...side, text: side.claim } : side;
+  for (const k of ["text", "doctype", "date", "role"]) if (src && src[k] !== null && src[k] !== undefined) out[k] = src[k];
   return out;
 }
 
@@ -81,3 +85,38 @@ export function renderJudgementInput(pairs) {
     + `\n  A: ${JSON.stringify(judgementSide(p.a))}\n  B: ${JSON.stringify(judgementSide(p.b))}`).join("\n\n");
   return `${JUDGEMENT_PROMPT}\nPAIRS:\n\n${body}\n`;
 }
+
+/* THE RECOMMENDER (N345, R37, R41; DEC-77 item 3(b), DEC-84 item 5). The machine's one act on a candidate is to name
+ * the RESPECTS in which its two sides may differ, each with a reason: never which side is wrong, and never what kind of
+ * conflict it is (double-speak is a civic verdict, DEC-24). op=contradictionrecommend refuses any coordinate outside
+ * the key's vocabulary, so a model that ignored every word here could still recommend only a respect.
+ *
+ * THE PROMPT IS PINNED BY ITS DIGEST ONCE MEASURED (R41): the blind fixture of dissolved pairs is run under it and the
+ * figures recorded in MEASUREMENTS.md, and RECOMMEND_PROMPT_SHA256 is set to its digest in the same change. Until that
+ * run is made the digest is null, which says the prompt has passed no measurement: this module writes it and never
+ * claims it measured. */
+export const RECOMMEND_PROMPT = `You are recommending, for CONTRADICTIONS a civic research record holds, the RESPECTS in which the two sides
+of each pair may differ, so that they need not conflict. A member of the group will see your recommendation and
+decide; you decide nothing.
+
+Each pair carries its KEY (why the two were paired) and the RESPECTS you may name for it:
+- For K1-K4 pairs: time_or_occasion, scope, meaning, observer_or_method, subject.
+- For K5 pairs (two projects' conclusions on one question): scope, time_or_occasion, standard, evidence_set,
+  weighing.
+
+RULES:
+- Name only respects from the pair's own list. Never say which side is wrong. Never name a kind of conflict
+  (misquote, error, double-speak, reversal, a conflict of norms). Never assign a cause.
+- Name a respect only when something SHOWN in the two sides suggests they differ in it (e.g. different dates or
+  occasions; one about a part and one about the whole; a word used in two senses; two methods or observers; two
+  different subjects under one name). Give one sentence saying what you saw.
+- If nothing shown suggests a respect, name none for that pair. An empty answer is honest; never force one.
+- Use only what is shown. Do not assume facts not in the two sides and their context.
+
+OUTPUT: a JSON array, one object per pair, in input order:
+{"n": <pair number>, "coordinates": [{"coordinate": "<respect>", "reason": "<one sentence>"}]}.
+Output the JSON only.
+`;
+
+/* sha256 of RECOMMEND_PROMPT as the blind fixture measured it: null until that measurement is made (R41). */
+export const RECOMMEND_PROMPT_SHA256 = null;
