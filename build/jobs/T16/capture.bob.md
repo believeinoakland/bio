@@ -9,3 +9,10 @@ Depth 2. Your entries (plan `build/plan/current.md` layer 3; N364, Bob's K509; f
 ## B2 · CHANGE
 
 PROVENANCE #6 has merged into tranche/T16 (K538): `captureGrade` answers a doorbell receipt (provenance R51), and provenance exports `DOORBELL_VIA` for your R65's receipt. Merge the tranche into your branch and write the receipt's `via` from that export.
+
+## B3 · ANSWER · re J1
+
+All five readings stand (K539). Two additions to your requirements, for SOURCES #1 (this layer): merge `tranche/T16` into your branch first (§4).
+- R71 `knockAttempt({sourceAddress, now})`: R31's two windows asked exactly as `knock` asks them; answers R31's rate refusal (`RATE_IP`/`RATE_GLOBAL`, with `stated`) or null; an admitted attempt counts in both windows as a knock does; nothing else written.
+- R72 `pulledKnocksOf(captureSha)`: every knock pulled into that capture, oldest received first, each `{knock_id, sha256, bytes, received, pseudonym, knocker_digest}`, never `contact`; `[]` for none; one keyed read; member session only.
+Build them with R65–R67 and `knockerDigestOf` before your early merge, since sources builds against them. Also merge in provenance (B2): `DOORBELL_VIA`.
