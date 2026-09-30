@@ -1,3 +1,21 @@
 # provenance (T17)
 
 **Status** · session_01YBB3FhBVLLqxoQXxXj1PVQ · depth 2 · WORKING · handled B1
+
+## Completion (PROVENANCE #7)
+
+**Entries applied.** N381 (K560), layer 3, first: `src/provenance/register-checks.mjs` refused capture R65's pulled-knock document at C-18.1 (`capture.grade` not a letter; `origin.kind` `doorbell` unknown), so no pull could be filed. C-18.1 now has a doorbell arm: a document whose `origin.kind` is `doorbell` carries no capture letter (`grade` null or absent) and states R51's basis (`grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED"`), as the authored arm admits none; a letter on it, or a missing or other basis, is an error naming why. `doorbell` joins the origin kinds. The basis has one spelling, `RECEIVED_NOT_FETCHED` (with `DOORBELL_ORIGIN`), exported and read by `captureGrade` (R51), so the document and the grade cannot state two bases. The basis excuses only a doorbell document: a fetched one stating it still owes a letter. No catalogue row changed (C-18.1 is a finding; C-103.1's row is untouched), so nothing is `awaiting stamp`.
+
+**Tests** (`test/m/provenance/register-checks.test.mjs`, both naming R42 and R51): the document field for field as `capture.pullKnock` writes it (its `#pulledDocument`; copied, since this module's tests cannot import the later `capture`, P4) passes every arm at information@1 and @2, collected and verified; negative controls for each finding; and at the write, a lettered one is refused `PROVENANCE_REGISTER_REFUSED` with nothing written, the real one is filed with its register row, and with the pull's receipt `captureGrade` answers the basis the document states. Both tests fail on the code before the change (7 pass, 2 fail), pass after.
+
+**End to end, measured** (a scratch copy of control-plane's `doorbell.test.mjs`, not committed): through the record store's door with the real capture, promotion and provenance, `inboxpullfile` now pulls and files the knock: bundle `INFO-2026-0001-doorbell-knock`, the register row homed there, the receipt written.
+
+**Reported (another module).** `control-plane`: `test/m/control-plane/doorbell.test.mjs`:365–371 asserts the refusal N381 removes (`PROVENANCE_REGISTER_REFUSED` from the dry run), so it now fails, the one failure in `test/m/`; the door now files the pull (above). Its layer-11 entry (N381's share: R36's end-to-end `test.todo` runs, its mark goes) replaces it. REPORT J2.
+
+**Deferred, each needs a requirement change (BOB's).**
+1. R42's text names no doorbell arm ("a `grade` in `CAPTURE_GRADES` (none for an authored observation)"; the kinds are not listed). Proposed: "(none for an authored observation; none for a document received through the doorbell, `origin.kind` `doorbell`, which states R51's `grade_basis`)" and `doorbell` among the kinds. Built on R51 and the entry's text.
+2. R19 (`chainFromEvidence`): a doorbell document with no chain would be reconstructed as a fetched hop, "these bytes were served for knock:… at …", `via: "direct"`, which R51 contradicts (received, not fetched), and R22 would count its route `derivable`. Not reachable today (the pull writes the document's chain, so R20 answers `already_recorded`), but R19 defines a fetched route by its fields alone. Proposed: a `doorbell` document is not a fetched route; its hop, when missing, comes from the knock's receipt (`source.receipt`) or it is `undetermined`. Left as it is, because R19's arms are stated.
+
+**Checks.** `node --test test/m/provenance/`: 66 pass, 0 fail. `test/m/` whole: 3193 tests, 3169 pass, 1 fail (control-plane, above), 23 todo. Old battery: no test names the old kind list. `format`: 0 failures. `architecture provenance`: 13 product files, 41 imports, 0 failures. `coverage provenance`: 51 of 51 live ids named, 0 failures. `ownership provenance tranche/T17`: 4 files changed, legacy modules 0 added, 0 removed, 0 failures.
+
+Size (session_01YBB3FhBVLLqxoQXxXj1PVQ): test runs 8, module lines 3269
