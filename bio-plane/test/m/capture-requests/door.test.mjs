@@ -31,7 +31,7 @@ test("R1 a run absent, unseen or not running is CAPTURE_REQUEST_NO_RUN (C-28.1),
   assert.equal(count(w), 0);
 });
 
-test("R1 a caller who is not the run's principal is ai-runs' runPrincipalGate refusal (AI_RUN_NOT_PRINCIPAL, C-22.12), relayed field by field; sight before position before status", () => {
+test("R1 a caller who is not the run's principal is run-rules' runPrincipalGate refusal (AI_RUN_NOT_PRINCIPAL, C-22.12), relayed field by field; sight before position before status", () => {
   const w = world().scene();
   const a = w.ask({}, { caller: "member:bob/tok9" });
   assert.equal(a.ok, false);
