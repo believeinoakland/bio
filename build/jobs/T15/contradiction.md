@@ -38,3 +38,13 @@ Six readings I am building on; I carry on with each unless you answer otherwise.
 4. **R28's facts per coordinate, and R32's `{fact: coordinate}` evidence.** Stated date → `time_or_occasion`; doctype and capture → `observer_or_method`; each side's established resolutions → `subject`; K5's projects → `scope`. `{fact: c}` is `EVIDENCE_NOT_SEEN` when every fact R28 answers for `c` is `undetermined`, or it answers none.
 5. **R29 at bytes.** The finding's accepted, unhidden, claimed versions and its legs "at those bytes" are read from its document at `sha` (record-core `textAtSha`, parsed by basis-versions' grammar); an inquiry leg's own versions are its current ones. A `sha` no text answers is `undetermined: true`.
 6. **R36's atomicity** is one outer `record-core.transact` around `promotion.promote` (the resolution lines) and `basis-versions.conclude` (no project), as the Suggestion says; I report if `conclude` cannot nest.
+
+## J2 · REPORT
+
+Found while building N345 (details in my record's Completion section).
+
+1. **affordances** (`src/affordances.mjs`:1983): `contradictionpairs`' description says "by the four named keys"; the pairing now runs five (K5). Its layer-11 entry can carry the wording.
+2. **Generated artifacts stale** (§14, not rebuilt): the bio-plane and agent-worker bundles (`test/fleetbundles.test.mjs`'s fresh-build arms fail on this branch).
+3. **legacy-tests** to re-anchor: `test/contradictionpairs.test.mjs` (six arms pin four keys and `NOT_REACHED`, both amended by R5 and R12); `test/contradiction-overstrict.test.mjs` (EMPTY RECORD reads four keys); `test/derivation-bounds.test.mjs` rosters (add `contradiction/index:candidatesFor:items`, cut-graded and compliant, and `unresolvedRecordOn`); `civicos-ui/check-refusal-codes.mjs` floors (rows +34, regions and governed sites +34 with them, and the counts that follow); the R50 census's `awaiting stamp` list (C-60.2, C-60.3, C-93.8–C-93.39 added; C-93.1–C-93.3's `where` moved to `#runRefusals`).
+4. **inquiry** (on the tranche already): `check-refusal-codes` arm C finds no refusal inside the six DEC-49 regions of `contradictionFindings` (`src/inquiry/contradiction.mjs`: findings are pushed, not returned), and arm G counts two literal sites for `CONTRADICTION_LINK_MALFORMED` and `RESOLUTION_INCOMPLETE`.
+5. **A question on the routes' count.** I provide twelve new ops (listed in my record with their stamps); the Suggestion counts thirteen ("the nine, and R50, R51, R53 and R54's four"). I find eight besides the four; R29 is in-process and R39/R40 name no op. If a ninth is meant (the measures?), name it and I add the route.
