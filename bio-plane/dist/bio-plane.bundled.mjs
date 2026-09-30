@@ -266,7 +266,6 @@ __export(bio_checks_exports, {
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
-  CONNECTION_CHOICE_CHECKS: () => CONNECTION_CHOICE_CHECKS,
   CONNECTION_PAIR_CHECKS: () => CONNECTION_PAIR_CHECKS,
   CONTENT_EXTENT_A1_RE: () => CONTENT_EXTENT_A1_RE,
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
@@ -6257,32 +6256,6 @@ var CONNECTION_PAIR_CHECKS = {
     check: "C-49.4",
     where: "src/connections/pair.mjs checkConnectionMentionUnchosen > is-mention-unchosen",
     translation: "This document mentions the same subject in more than one place, and the record linked the two documents through the strongest-graded mention without anyone choosing which mention is the one on point. Because another mention bears on the part you cited, whether this connection reaches your citation is undetermined rather than yes or no. A citation of the document as a whole is answered today; a member may also choose which mention is the on-point one for this connection, and the answer then follows that choice."
-  }
-};
-var CONNECTION_CHOICE_CHECKS = {
-  CONNECTION_CHOICE_NOT_A_MEMBER: {
-    check: "C-74.1",
-    where: "src/connections/index.mjs choose > is-connection-choice",
-    translation: "Choosing which mention of a subject is the one on point for a connection is a member's own act, done in their name. A machine may point out the mentions a document holds, but deciding which one a connection rests on is a judgment a person signs for."
-  },
-  CONNECTION_CHOICE_NO_CONNECTION: {
-    check: "C-74.2",
-    where: "src/connections/index.mjs choose > is-connection-choice",
-    translation: "That request does not name a connection this record holds and you can see. A connection is named by the two documents it joins and the subject that joins them, and it exists once the record has derived it \u2014 choose after it appears among the document's connections."
-  },
-  CONNECTION_CHOICE_NOT_A_MENTION: {
-    check: "C-74.3",
-    where: "src/connections/index.mjs choose > is-connection-choice",
-    translation: "The mention named is not one this document carries for that subject. The choice is among the places the record actually read the subject in this document, by the reference as the reading recorded it; a mention the record never read cannot be the one a connection rests on."
-  },
-  /* D-454: the reference named was read at MORE THAN ONE place in this document, so naming the
-     string is not yet a choice between its mentions. Refused rather than defaulted: a default
-     (the first read, say) would be REC-122's own liar — the machine's selection wearing a
-     member's name. The refusal lists the occurrences so the member can name one. */
-  CONNECTION_CHOICE_OCCURRENCE_UNNAMED: {
-    check: "C-74.4",
-    where: "src/connections/index.mjs choose > is-connection-choice",
-    translation: "That reference was read at more than one place in this document, and each place is its own mention. Say which one is on point \u2014 by the occurrence the record lists for it, or by the place as the record names it \u2014 and the choice will rest on that place alone."
   }
 };
 function contentIdFor(captureSha, extent, chain2) {
@@ -38092,21 +38065,169 @@ function extractionOps(x, url, body, env) {
 // src/observation-log/checks.mjs
 var checks_exports9 = {};
 __export(checks_exports9, {
+  AI_RUN_CHECKS: () => AI_RUN_CHECKS2,
   LEAD_CHECKS: () => LEAD_CHECKS2,
+  LEAD_ID_RE: () => LEAD_ID_RE2,
   OBSERVATION_CHECKS: () => OBSERVATION_CHECKS,
   OBSERVATION_CHECK_KEYS: () => OBSERVATION_CHECK_KEYS
 });
-var OBSERVATION_CHECK_KEYS = Object.freeze([
-  "AI_LOG_STATE_UNKNOWN",
-  "AI_LOG_GOVERNED_ABSENCE",
-  "AI_LOG_SHELL_PRESENT",
-  "AI_RUN_CONDITION_UNKNOWN",
-  "AI_LOG_NOT_A_BUNDLE",
-  "OBS_AUTHORITY_UNNAMED",
-  "OBS_PRESENT_NO_REFERENT",
-  "AI_LOG_NEVER_LOOKED_STORED"
-]);
-var OBSERVATION_CHECKS = Object.freeze(Object.fromEntries(OBSERVATION_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
+var AI_RUN_CHECKS2 = {
+  /* §11: "Absence uses D-129's vocabulary — NEVER_LOOKED / LOOKED_ABSENT /
+     LOOKED_INDETERMINATE / PRESENT, plus `partial`. Which absence is a stated
+     fact, never a diagnostic detail." An entry outside the vocabulary is not a
+     weaker statement of absence; it is an ungoverned one. */
+  AI_LOG_STATE_UNKNOWN: {
+    check: "C-22.1",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That observation does not say which kind of absence it found. The record distinguishes never having looked, having looked and found nothing, having looked and being unable to tell, having found it, and having found part of it."
+  },
+  /* D-104, and CLAUDE.md states the general rule it instantiates: "our governor
+     refusing is not the source failing". An entry recording LOOKED_ABSENT when
+     it was OUR pacing that stopped the fetch MANUFACTURES a false absence —
+     §11's own word. The governed flag is the fact; a governed observation can
+     only be LOOKED_INDETERMINATE, and either definitive claim is refused. */
+  AI_LOG_GOVERNED_ABSENCE: {
+    check: "C-22.2",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That observation was stopped by our own pacing of the source, not by the source. It can only record that we could not tell \u2014 recording an absence there would be a claim about the world made from a fact about us."
+  },
+  /* §11's third rule, SWEEP §3's false-coverage hazard: "A client-rendered
+     shell capture is LOOKED_INDETERMINATE, never PRESENT". `client-rendered-shell`
+     is catalogued with no producer, and an evidentially empty capture that reads
+     as coverage is the defect the whole absence vocabulary exists to prevent. */
+  AI_LOG_SHELL_PRESENT: {
+    check: "C-22.3",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That capture is a page shell with nothing evidential in it, so it cannot be recorded as having found the material. It records that we could not tell."
+  },
+  /* DEC-8 as amended by DEC-49: a surface may render a translation keyed on a
+     code the plane SENT, which only holds if the plane never sends a condition
+     nobody has translated. The condition vocabulary is `queuestate.mjs`'s, read
+     LIVE rather than copied, and a run naming a kind outside it is a loud
+     refusal instead of a silent new vocabulary — queuestate.mjs's own words for
+     the same fence one surface over. */
+  AI_RUN_CONDITION_UNKNOWN: {
+    check: "C-22.4",
+    where: "src/observation-log/vocabulary.mjs checkCondition, called from src/ai-runs/index.mjs #aiRunTerminate",
+    translation: "The run tried to end on a condition the record has no name for. A condition nobody can read is not an explanation."
+  },
+  /* §11: "the observation log cannot live in bundle.md, which is written only on
+     success — the log's whole value is the failure path." The log is a different
+     object from the record, and a different object again from a TRANSCRIPT,
+     which DEC-61 puts device-local with a TTL and out of the record store
+     altogether. This refusal is the fence AT THE APPEND: an entry offered for a
+     bundle is refused, so the separation is enforced at the one write rather
+     than asserted about every reader. */
+  AI_LOG_NOT_A_BUNDLE: {
+    check: "C-22.6",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "The observation log is not part of any published document and cannot be filed into one."
+  },
+  /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
+       `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
+       the record cannot say WHY it made is not recorded."* `STORE-AS-CACHE.md`
+       carries the rule it descends from, which is RFC 2308's: A NEGATIVE ANSWER
+       WITH NO AUTHORITY BEHIND IT IS NOT RECORDABLE. The whole value of this table
+       is that an absence becomes a stated fact instead of a retry, and an absence
+       nobody can attribute is not a fact anybody can weigh.
+  
+       IT IS ALSO WHERE §4.6'S PROVISIONAL IS ENFORCED RATHER THAN MERELY WRITTEN
+       DOWN, and that is the part worth reading before changing this row. *A
+       member's ad hoc search, view or read is not an observation* — because the
+       record is what a legal process can reach, and a store that holds what its
+       members looked for is a different object from one that holds what a group
+       published. What stops that from being written is not a missing writer, which
+       any later item could supply without noticing: it is that there is NO
+       `authority_kind` A MEMBER'S SEARCH COULD TAKE. The alternative §4.6 declines
+       (`authority_kind = member`) is absent from `OBSERVATION_AUTHORITY_KINDS` on
+       purpose, so reversing the provisional costs one line in a vocabulary and no
+       schema change — which is exactly what §4.6 says reversal should cost, in the
+       one direction that stays reversible. A member who wants a search ON the
+       record states it as a LEAD (D-194), which carries a name BY CHOICE.
+  
+       THE TEST IS MEMBERSHIP, NOT PRESENCE. A null check would pass the very value
+       the provisional exists to keep out. */
+  OBS_AUTHORITY_UNNAMED: {
+    check: "C-22.9",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That observation does not say why the look was made. The record keeps what it looked for only when something can be named as the reason \u2014 an investigation, a monitoring sweep, a link in a document, a ratification, or a lead somebody wrote down. A look with no reason behind it is not recorded."
+  },
+  /* REC-93, 2026-09-14 — THE WARC LESSON, AND THE FALSE-COVERAGE HAZARD FROM
+       THE OTHER DIRECTION. `OBSERVATION-LOG-DESIGN.md` §3: *"`PRESENT` with no
+       `result_ref` is refused — the WARC lesson: a revisit that omits what it
+       refers to silently loses which URL the bytes came from."*
+  
+       WHY IT IS ITS OWN CODE AND NOT C-22.3's. C-22.3 refuses a PRESENT that the
+       EVIDENCE contradicts (a client-rendered shell read as coverage). This refuses
+       a PRESENT WITH NO EVIDENCE ATTACHED AT ALL. They are different facts with
+       different remedies — one is answered by re-reading the capture honestly, the
+       other by naming what the look produced — and DEC-49's rule is that a single
+       refusal covering both tells a member nothing they can act on.
+  
+       IT DOES NOT FIRE ON `authority_kind = run`, AND THAT CARVE-OUT IS A MEASURED
+       CONFLICT BETWEEN TWO SECTIONS OF THE DESIGN rather than a convenience. §3
+       writes this refusal unconditionally; §4.4 requires every `ai_run_log` row to
+       fold into this table and read back through `op=airunlog` UNCHANGED. Both
+       cannot hold: `ai_run_log` HAS NO `result_ref` COLUMN, so no row ever written
+       to it can satisfy this, and `op=airuntick` accepts a caller-supplied
+       `PRESENT` today. Enforcing it over `run` would drop rows out of a coverage
+       record, or force the fold to invent a referent — and inventing one to get
+       past a gate is the failure CLAUDE.md names by name. The fold is therefore
+       admitted under the weaker rule it was written under, every other authority
+       carries the refusal, and the carve-out is a DEBT row rather than a shape.
+  
+       **THE CLOSING CONDITION NAMED HERE WAS FALSE AND IS CORRECTED BY
+       MEASUREMENT (REC-100, 2026-09-16).** This row said the carve-out *"closes
+       when the run's own writers carry referents (REC-95)"*. REC-95 landed and it
+       did NOT close: its three writers write under `authority_kind = derive`, not
+       `run` — REC-95 read the tree, found the sentence wrong and recorded that the
+       correction was owed to REC-100. Left standing, it would have invited the
+       next session to delete one condition and refuse three live writers.
+  
+       **AND THE REMAINING BLOCKER IS NOT A WRITER AT ALL, AT TWO OF THE THREE.**
+       `#aiRunTerminate` and `#aiRunReap` take their state from
+       `#aiRunSearchState`, a ROLLUP over the run's whole log — a summary PRESENT
+       has nothing single to point at BY CONSTRUCTION, so no writer-side work
+       satisfies this refusal and the design owes a ruling on what a terminal
+       entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
+       path, which composes no referent field while a model may judge `PRESENT`.
+       The full reasoning is at the predicate, `checkObservation` in
+       `src/observation-log/vocabulary.mjs` (it was `src/airun.mjs`'s until this
+       module's extraction); `test/m/observation-log/append.test.mjs` drives it.
+  
+       **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
+       (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
+       observation` pointing at the latest non-terminal PRESENT row of its own run,
+       computed by the plane. The carve-out is DELETED, so this refusal now fires
+       on EVERY authority, and it GAINED AN ARM rather than a new code: an
+       `observation` referent that is not an EARLIER PRESENT row of the SAME
+       authority is refused here too, with `referent_fault` naming which of four
+       ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/observation-log/vocabulary.mjs`). One code,
+       because every fault is this row's condition — a PRESENT whose referent does
+       not back it — and a second code behind C-22.10 would be two conditions
+       behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
+       Section K of `test/observation-log.test.mjs` drives all of it. */
+  OBS_PRESENT_NO_REFERENT: {
+    check: "C-22.10",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That observation says the thing is there without saying what was found. A record that something is present has to point at what it found \u2014 the captured document, the passage, the entity \u2014 or nobody can check it later, and a claim of coverage that cannot be checked is worse than no claim at all."
+  },
+  /* N118 (LEGACY-TESTS #3 REPORT 10; observation-log R3, K148; T6, legacy-checks) — C-22.1 WAS MINTED FOR A SECOND
+     CONDITION. observation-log's `checkObservation` refuses a look that states NEVER_LOOKED (R3: NEVER_LOOKED is the
+     absence of a row, never a row; its one exception is a run's terminal rollup, K148) under C-22.1's code, and
+     C-22.1's sentence ("does not say which kind of absence it found") is false for it: that look named a kind, the
+     one kind a look cannot be. DEC-49 is one code, one condition, so it takes a code of its own rather than C-22.1
+     reworded to cover both. Since T10 observation-log mints it: the region `is-never-looked-stored` is marked in
+     `checkObservation` (`src/observation-log/vocabulary.mjs`), and C-22.17 is what that site answers (N286). */
+  AI_LOG_NEVER_LOOKED_STORED: {
+    check: "C-22.17",
+    where: "src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored",
+    translation: "That observation says nobody looked, and an observation is the record of a look. Never having looked is what the record says of a subject with no observation at all, so it is not written as one. A look that happened records what it found: nothing, something, part of it, or that it could not tell."
+  }
+};
+var OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS2));
+var OBSERVATION_CHECKS = AI_RUN_CHECKS2;
+var LEAD_ID_RE2 = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
 var LEAD_CHECKS2 = {
   LEAD_NOT_A_MEMBER: {
     check: "C-54.2",
@@ -39325,14 +39446,20 @@ var ObservationLog = class _ObservationLog {
     });
     return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row2.state };
   }
-  /** Registers the meaning-level writers with `entities` and `connections` once those modules are extracted (R8): each
-   *  takes `(module, fn)` and refuses a second registration. Answers which were registered. */
+  /** Registers the meaning-level writers with `entities` (its R13) and `connections` (its R3) (R8), and this module's
+   *  derivation statement as connections' provider (its R5, R51), each under this module's own name: each takes
+   *  `(module, fn)` and refuses a second registration, whose refusal is answered. Answers which were registered. */
   attachMeaning({ entities = null, connections = null } = {}) {
     const out = {};
     if (entities && typeof entities.onResolveAttempt === "function")
       out.entities = entities.onResolveAttempt(OBSERVATION_LOG_MODULE, (e) => this.observeResolutionAttempt(e));
     if (connections && typeof connections.onDerived === "function")
       out.connections = connections.onDerived(OBSERVATION_LOG_MODULE, (e) => this.observeConnectionDerivation(e));
+    if (connections && typeof connections.registerDerivationProvider === "function")
+      out.derivationProvider = connections.registerDerivationProvider(
+        OBSERVATION_LOG_MODULE,
+        (id, o) => this.derivationStatementFor(id, o)
+      );
     return out;
   }
   /* ==================================================================== *
@@ -47659,6 +47786,28 @@ function relationOf(second3, warnings) {
   warnings.push("projection: not a table and a key; the projection is read from bundles");
   return null;
 }
+function fieldRelationsOf(second3, warnings) {
+  const fs = second3 && typeof second3 === "object" ? second3.fields : null;
+  const out = /* @__PURE__ */ new Map();
+  if (fs === null || fs === void 0) return out;
+  if (typeof fs !== "object" || Array.isArray(fs)) {
+    warnings.push("fields: not a map of fields to relations; every field is read as before");
+    return out;
+  }
+  for (const [name, r] of Object.entries(fs)) {
+    if (!Object.prototype.hasOwnProperty.call(FIELDS, name)) {
+      warnings.push(`fields: ${JSON.stringify(name)} is not a field; ignored`);
+      continue;
+    }
+    if (!r || typeof r !== "object" || ![r.table, r.key, r.col].every((x) => typeof x === "string" && IDENT2.test(x))) {
+      warnings.push(`fields: ${JSON.stringify(name)} is not a table, a key and a column; read as before`);
+      continue;
+    }
+    out.set(FIELDS[name].col, { table: r.table, key: r.key, col: r.col });
+  }
+  return out;
+}
+var fieldValue2 = (fr) => `(SELECT fr.${fr.col} FROM ${fr.table} fr WHERE fr.${fr.key} = b.bundle_id)`;
 var MAX_COMPOUND = 4;
 function chain(op, parts, rel) {
   if (!parts.length) return { sql: allOf(rel), args: [], compound: false };
@@ -47672,7 +47821,15 @@ function chain(op, parts, rel) {
     return { sql: c.compound ? `SELECT fid FROM (${c.sql})` : c.sql, args: c.args, compound: false };
   }), rel);
 }
-function metaSql(node, rel) {
+function metaSql(node, rel, frs) {
+  const fr = node.col && frs ? frs.get(node.col) : null;
+  if (fr) {
+    const inner = node.cmp === "present" ? { sql: `SELECT ${fr.key} FROM ${fr.table} WHERE ${fr.col} IS NOT NULL AND ${fr.col} <> ''`, args: [] } : { sql: `SELECT ${fr.key} FROM ${fr.table} WHERE ${fr.col} ${node.cmp} ?`, args: [node.value] };
+    return {
+      sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL AND ${rel.key} IN (${inner.sql})` : `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner.sql})`,
+      args: inner.args
+    };
+  }
   const fromProj = !!(node.json || PROJ_COLS.has(node.col));
   const lhs = node.json ? `json_extract(fm_json, ?)` : rel && !fromProj ? `b.${node.col}` : node.col;
   const args = node.json ? [node.json] : [];
@@ -47709,32 +47866,32 @@ function meaningSql(node, rel) {
     compound: false
   };
 }
-function setSql(node, rel = null) {
+function setSql(node, rel = null, frs = null) {
   if (!node) return { sql: allOf(rel), args: [], compound: false };
   const fe = ftsExpr(node);
   if (fe !== null)
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [fe], compound: false };
-  if (node.op === "meta") return { ...metaSql(node, rel), compound: false };
+  if (node.op === "meta") return { ...metaSql(node, rel, frs), compound: false };
   if (node.op === "meaning") return meaningSql(node, rel);
   if (node.op === "text")
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [ftsAtom(node)], compound: false };
   if (node.op === "not") {
-    const inner = operand(setSql(node.kid, rel));
+    const inner = operand(setSql(node.kid, rel, frs));
     return { sql: `${allOf(rel)} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
   }
   if (node.op === "or")
-    return chain("UNION", node.kids.map((k) => operand(setSql(k, rel))), rel);
+    return chain("UNION", node.kids.map((k) => operand(setSql(k, rel, frs))), rel);
   if (node.op === "and") {
     const pos = node.kids.filter((k) => k.op !== "not");
     const neg = node.kids.filter((k) => k.op === "not").map((k) => k.kid);
-    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k, rel))), rel);
+    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k, rel, frs))), rel);
     if (!neg.length) return posChain;
     const head = {
       sql: posChain.compound ? `SELECT fid FROM (${posChain.sql})` : posChain.sql,
       args: posChain.args,
       compound: false
     };
-    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n, rel)))], rel);
+    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n, rel, frs)))], rel);
   }
   return { sql: allOf(rel), args: [], compound: false };
 }
@@ -47790,6 +47947,8 @@ function compile3({
   const rel = relationOf(relation, ctx.warnings);
   const rowJoin = rel ? `JOIN ${rel.table} bp ON bp.fts_id = s.fid JOIN bundles b ON b.bundle_id = bp.${rel.key}` : `JOIN bundles b ON b.fts_id = s.fid`;
   const ref = (col) => rel && PROJ_COLS.has(col) ? `bp.${col}` : `b.${col}`;
+  const frs = fieldRelationsOf(relation, ctx.warnings);
+  const fieldRef = (col) => frs.has(col) ? fieldValue2(frs.get(col)) : ref(col);
   const ast = parseTokens(tokenize(q6), implicitOp === "or" ? "or" : "and", ctx);
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
   const gate = viewerPredicate(viewer);
@@ -47809,7 +47968,7 @@ function compile3({
     ctx.warnings.push(`relevance weighs these ${allTerms.length} terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`);
   const passageMatch = positive.passage.length ? [...new Set(positive.passage)].join(" OR ") : null;
   const passageOn = (armName) => !!(armName && MEANING[armName] && MEANING[armName].ftsTable && passageMatch);
-  const set = setSql(ast, rel);
+  const set = setSql(ast, rel, frs);
   const stripMeaningArm = (node, arm) => {
     if (!node) return null;
     if (node.op === "meaning") return node.arm === arm ? null : node;
@@ -47824,7 +47983,7 @@ function compile3({
     }
     return node;
   };
-  const armSet = (arm) => setSql(stripMeaningArm(ast, arm), rel);
+  const armSet = (arm) => setSql(stripMeaningArm(ast, arm), rel, frs);
   const widenable = implicitOp !== "or" && ast?.op === "and" && !ast.explicit && Array.isArray(ast.kids) && ast.kids.length > 1;
   const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
   const snipN = Number(snippetChars);
@@ -47857,7 +48016,7 @@ function compile3({
   if (sortField === "relevance" && rank6) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
   else if (sortField === "relevance") order = `b.last_updated DESC, b.bundle_id ASC`;
   else {
-    const col = ref(SORTABLE[sortField]);
+    const col = fieldRef(SORTABLE[sortField]);
     order = `(${col} IS NULL) ASC, ${col} ${sortDir}, b.bundle_id ASC`;
   }
   const cols = PROVENANCE_COLS.map(ref).join(", ");
@@ -47911,9 +48070,9 @@ ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
       const c = cte(false);
       const arms = group.map((name) => {
         const f11 = FIELDS[name];
-        return `SELECT '${name}' AS field, ${ref(f11.col)} AS value, count(*) AS n
+        return `SELECT '${name}' AS field, ${fieldRef(f11.col)} AS value, count(*) AS n
   FROM scope s ${rowJoin}
-  WHERE ${gate.sql} AND ${ref(f11.col)} IS NOT NULL GROUP BY ${ref(f11.col)}`;
+  WHERE ${gate.sql} AND ${fieldRef(f11.col)} IS NOT NULL GROUP BY ${fieldRef(f11.col)}`;
       });
       out.push({
         sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}
@@ -48007,7 +48166,7 @@ ORDER BY ${order2} LIMIT ? OFFSET ?`,
   const facetScan = () => {
     if (!facetList.length) return null;
     const c = cte(false);
-    const sel = facetList.map((n) => ref(FIELDS[n].col)).join(", ");
+    const sel = facetList.map((n) => frs.has(FIELDS[n].col) ? `${fieldRef(FIELDS[n].col)} AS ${FIELDS[n].col}` : ref(FIELDS[n].col)).join(", ");
     return {
       sql: `${c.sql}
 SELECT ${sel} FROM scope s ${rowJoin}
@@ -49039,7 +49198,7 @@ var CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
 var CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
 var CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
                   WHERE p.fts_id IS NOT NULL`;
-var VIA = Object.freeze({ projection: PROJECTION_RELATION });
+var SQL_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 var safeJson6 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
@@ -49080,6 +49239,11 @@ var Retrieval = class {
   // R39: {module, fn}
   #selectionListeners = [];
   // R52: {module, fn, seq}
+  #fields = [];
+  // R62: {module, field, table, key, col, seq}
+  /* R61, R62: the second argument of every `compile` this module runs: the projection through this module's own
+     relation (query-language R25), and each registered field through its owner's (its R26). */
+  #via = Object.freeze({ projection: PROJECTION_RELATION });
   #stepped = false;
   constructor({
     storage,
@@ -49246,6 +49410,39 @@ var Retrieval = class {
     }
     if (viewer !== void 0 && viewerPredicate(viewer).scope === "member") return { sql: "", args: [] };
     return { sql: ` AND authority_kind <> 'run'`, args: [] };
+  }
+  /** R62 (N136, N137; K75 (2)): a later module that holds the column of one of `query-language`'s fields in a table
+   *  of its own registers it once at start, `{table, key, col}`, `key` equalling `bundles.bundle_id`. Every compile
+   *  this module runs then names the relation to `query-language` (its R26), so the field reads it there. A field
+   *  outside `FIELDS`, a projection column (R2, read through this module's own relation, R61), or a name that is not an
+   *  SQL identifier is refused FIELD_MALFORMED; a field registered twice, FIELD_DECLARED. Registrations apply in the
+   *  modules' total order. */
+  registerField(module, field, relation) {
+    const bad = (detail) => ({ ok: false, reason: "FIELD_MALFORMED", module, field, detail });
+    if (typeof module !== "string" || !module) return bad("a registration names its module");
+    if (typeof field !== "string" || !Object.prototype.hasOwnProperty.call(FIELDS, field))
+      return bad("a registration names one of the query language's fields");
+    if (FIELDS[field].proj || PROJECTION_COLS.includes(FIELDS[field].col))
+      return bad(`${field} is a projection column, which this module holds itself`);
+    const { table: table2, key, col } = relation && typeof relation === "object" ? relation : {};
+    if (![table2, key, col].every((n) => typeof n === "string" && SQL_IDENT.test(n)))
+      return bad("a relation is a table, a key and a column, each an SQL identifier");
+    const held = this.#fields.find((f11) => f11.field === field);
+    if (held) return {
+      ok: false,
+      reason: "FIELD_DECLARED",
+      module,
+      field,
+      declaredBy: held.module,
+      detail: "a field is registered once"
+    };
+    this.#fields.push({ module, field, table: table2, key, col, seq: this.#fields.length });
+    this.#fields.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
+    this.#via = Object.freeze({
+      projection: PROJECTION_RELATION,
+      fields: Object.freeze(Object.fromEntries(this.#fields.map((f11) => [f11.field, Object.freeze({ table: f11.table, key: f11.key, col: f11.col })])))
+    });
+    return { ok: true, module, field };
   }
   /** R52 (N202): a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`, in
    *  the modules' total order. A malformed registration, or a second by the same module, is refused by membership's
@@ -49471,7 +49668,7 @@ var Retrieval = class {
   /** R6–R9: `op=search`. */
   search(input = {}) {
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
-    const plan = compile3(input, VIA);
+    const plan = compile3(input, this.#via);
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const out = {
@@ -49502,7 +49699,7 @@ var Retrieval = class {
     out.cached = cachedNotes(plan.cached, { facets: facetsRan, ordered: mode !== "count" });
     out.widen = null;
     if (total === 0 && plan.widenable && input.widen !== false) {
-      const or = compile3({ ...input, implicitOp: "or" }, VIA);
+      const or = compile3({ ...input, implicitOp: "or" }, this.#via);
       const n = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = {
         interpretation: "OR",
@@ -49572,7 +49769,7 @@ var Retrieval = class {
       rows: asked,
       rowLimit: input.limit,
       rowOffset: input.offset
-    }, VIA);
+    }, this.#via);
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
     const rows = this.#legEarnedCapture(plan.meaning.arm, this.runQuery(plan.statements.meaning(), tally));
@@ -49852,11 +50049,11 @@ var Retrieval = class {
           detail: "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead."
         };
       for (let i = 0; i < list2.length; i += SELECTION_ID_CHUNK) {
-        const plan = compile3({ q: q6, viewer, sort, dir, ids: list2.slice(i, i + SELECTION_ID_CHUNK) }, VIA);
+        const plan = compile3({ q: q6, viewer, sort, dir, ids: list2.slice(i, i + SELECTION_ID_CHUNK) }, this.#via);
         members.push(...this.runQuery(plan.statements.snapshot(), tally));
       }
     } else {
-      const plan = compile3({ q: q6, viewer, sort, dir }, VIA);
+      const plan = compile3({ q: q6, viewer, sort, dir }, this.#via);
       members = this.runQuery(plan.statements.snapshot(), tally);
     }
     const handle = "sel-" + rand3(12);
@@ -49962,7 +50159,7 @@ var Retrieval = class {
           sort: sel.sort_field,
           dir: sel.sort_dir,
           ids: idList.slice(i, i + SELECTION_ID_CHUNK)
-        }, VIA);
+        }, this.#via);
         for (const r of this.runQuery(plan.statements.snapshot(), tally)) visible.set(r.bundle_id, r.bundle_sha);
       }
       members = [];
@@ -49979,7 +50176,7 @@ var Retrieval = class {
       }
       drift.removed = drift.purged.length + drift.hidden.length;
     } else {
-      const plan = compile3({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir }, VIA);
+      const plan = compile3({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir }, this.#via);
       members = this.runQuery(plan.statements.snapshot(), tally);
       const digest = digestOf(members.map((m) => m.bundle_id));
       if (digest !== sel.digest) {
@@ -50304,6 +50501,34 @@ function retrievalRoutes(r, url, body) {
     reproject: () => r.reproject(body || {})
   };
 }
+
+// src/connections/checks.mjs
+var CONNECTION_CHOICE_CHECKS = {
+  CONNECTION_CHOICE_NOT_A_MEMBER: {
+    check: "C-74.1",
+    where: "src/connections/index.mjs choose > is-connection-choice",
+    translation: "Choosing which mention of a subject is the one on point for a connection is a member's own act, done in their name. A machine may point out the mentions a document holds, but deciding which one a connection rests on is a judgment a person signs for."
+  },
+  CONNECTION_CHOICE_NO_CONNECTION: {
+    check: "C-74.2",
+    where: "src/connections/index.mjs choose > is-connection-choice",
+    translation: "That request does not name a connection this record holds and you can see. A connection is named by the two documents it joins and the subject that joins them, and it exists once the record has derived it \u2014 choose after it appears among the document's connections."
+  },
+  CONNECTION_CHOICE_NOT_A_MENTION: {
+    check: "C-74.3",
+    where: "src/connections/index.mjs choose > is-connection-choice",
+    translation: "The mention named is not one this document carries for that subject. The choice is among the places the record actually read the subject in this document, by the reference as the reading recorded it; a mention the record never read cannot be the one a connection rests on."
+  },
+  /* D-454: the reference named was read at MORE THAN ONE place in this document, so naming the
+     string is not yet a choice between its mentions. Refused rather than defaulted: a default
+     (the first read, say) would be REC-122's own liar — the machine's selection wearing a
+     member's name. The refusal lists the occurrences so the member can name one. */
+  CONNECTION_CHOICE_OCCURRENCE_UNNAMED: {
+    check: "C-74.4",
+    where: "src/connections/index.mjs choose > is-connection-choice",
+    translation: "That reference was read at more than one place in this document, and each place is its own mention. Say which one is on point \u2014 by the occurrence the record lists for it, or by the place as the record names it \u2014 and the choice will rest on that place alone."
+  }
+};
 
 // src/capture/doorbell.mjs
 var KNOCK = {
@@ -53894,6 +54119,14 @@ var ENTITY_CHECKS = Object.freeze({
     where: "src/entities/index.mjs createEntity > is-entity-labelled",
     translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written."
   }),
+  /* R2 (REC-64; T18, ENTITIES #5): C-33.25 COPIED here from the catalogue's `ACT_SHAPE_CHECKS`, row and translation
+     unchanged. That table is split between modules and its copy leaves the catalogue when the last owner holds its
+     rows (T19, K529's lag); until then the code is held twice, the catalogue's copy unread by this module. */
+  NO_ALIAS: Object.freeze({
+    check: "C-33.25",
+    where: "src/entities/index.mjs addAlias > is-alias-named",
+    translation: "Another name for something needs to actually be a name. This one is empty once the spacing and punctuation are taken off, so there would be nothing for anybody to search on later."
+  }),
   /* R29, R38 (N345, DEC-76 item 3): a defect report names a resolution (capture, reference, subject) the record does
      not hold. The next of C-91. */
   NO_SUCH_RESOLUTION: Object.freeze({
@@ -54178,7 +54411,17 @@ var Entities = class _Entities {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an alias is attached to an entity by its id");
     const norm = normAlias(alias);
-    if (!norm) return actShapeRefusal("NO_ALIAS", "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written.");
+    if (!norm) {
+      const row2 = ENTITY_CHECKS.NO_ALIAS;
+      return {
+        ok: false,
+        reason: "NO_ALIAS",
+        code: "NO_ALIAS",
+        check: row2.check,
+        translation: row2.translation,
+        detail: "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written."
+      };
+    }
     if (!this.has(entityId)) return noSuchEntity(entityId);
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
     if (dup) return {
@@ -56051,6 +56294,7 @@ var PAIR_RULE = "strongest-graded/first-reference-by-sort";
 var ASSERTED_LIMIT_DEFAULT = 200;
 var ASSERTED_LIMIT_MAX = 2e3;
 var ASSERT_BASIS_MAX = 4e3;
+var LINK_VERDICTS = ["contemporaneous", "superseded", "undetermined"];
 var SYSTEM_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
 var rank3 = (g) => gradeRank[g] || 0;
 function weakerGrade(g1, g2) {
@@ -56626,8 +56870,8 @@ var Connections = class _Connections {
     return out;
   }
   /** R13 composed for an internal caller with no viewer (the earned-basis registry: the write path, the gate), which
-   *  names no bundle id: each row's portion connection axis in the registry's shape, through one subject. A `document`
-   *  row is not answered here (it earns what its document earns, the caller's own entry). */
+   *  names no bundle id: each held row's portion connection axis in the registry's shape, through one subject (R52); a
+   *  `document` row is answered too, reached by every connection of its capture (R7, R10). */
   portionAxes(contentIds, { entityId = null } = {}) {
     const out = {};
     const g = this.portionGrades(contentIds, `${MACHINE_CLASS_PREFIX}daemon`, { entityId });
@@ -57121,11 +57365,15 @@ var Connections = class _Connections {
     const add = edges.filter((e) => !held.has(e.to));
     if (!add.length) return { ok: true, promoted: false, added: 0 };
     const when = this.now();
+    const quoted4 = (v) => cut2(String(v || "").replace(/["\\\n\r]/g, ""), 400);
     let text4 = spliceReferences2(md.text, add.map((e) => ({
       rel: "links_to",
       target: e.to,
       status: "confirmed",
-      note: cut2(String(e.address || "").replace(/["\\\n\r]/g, ""), 400)
+      asserted_by: "source",
+      address: quoted4(e.address),
+      verdict: LINK_VERDICTS.includes(e.verdict) ? e.verdict : "undetermined",
+      note: quoted4(e.address)
     })));
     if (!text4) return {
       ok: false,
@@ -57614,7 +57862,10 @@ function spliceReferences2(text4, additions) {
   if (end2 === -1) return null;
   const block = additions.map((a) => `  - rel: ${a.rel}
     target: ${a.target}
-    status: ${a.status}
+    status: ${a.status}` + (a.asserted_by ? `
+    asserted_by: ${a.asserted_by}` : "") + (a.address != null ? `
+    address: "${a.address}"` : "") + (a.verdict ? `
+    verdict: ${a.verdict}` : "") + `
     note: "${a.note ?? ""}"`);
   let ref = -1;
   for (let i = 1; i < end2; i++) if (/^references:/.test(lines[i])) {
@@ -59860,10 +60111,11 @@ var BIAS_CHECKS2 = {
      translations sat one level down in a list the surface had no reason to
      open. So the container gets a translation of its own, and it says the one
      thing the per-finding translations cannot: that NOTHING LANDED.
-     ITS `where` NAMES `store.mjs` RATHER THAN THE CATALOGUE, unlike its ten
-     siblings, because that is where it FIRES — and naming the site is what puts
-     this code inside the guard's governed set. The ten above fire in
-     `checkBiasExtension` and say so.
+     ITS `where` NAMES THE PROMOTION STEP (`promotionCheck`) RATHER THAN THE
+     CHECKS, unlike the seven set rows, because that is where it FIRES — and
+     naming the site is what puts this code inside the guard's governed set
+     (N242: it named the store's private `#promotionCheck` until T10). The seven
+     above fire in `checkBiasExtension` and say so.
      NARROWED TO A REGION 2026-08-08 BY REC-71, AND PL-12'S REASONING ABOVE IS
      PRESERVED RATHER THAN OVERTURNED — only the GRAIN was wrong. This read
      `src/store.mjs promote`, and at whole-function granularity that claimed all
@@ -59871,10 +60123,8 @@ var BIAS_CHECKS2 = {
      were conscripted and the UI harness went red a second time within hours of
      the first, in the family next door.** BEING AN ENVELOPE IS A FACT ABOUT THE
      REFUSAL'S SHAPE — it wraps per-finding codes — AND SAYS NOTHING ABOUT ITS
-     SPAN. This one fires at a single statement inside a single `if`. The reasoning
-     in full, including what WOULD justify the wider spelling, is at the marker in
-     `store.mjs`; see also the "WHAT A `where` MEANS" block at the head of this
-     file. */
+     SPAN. This one fires at a single statement inside a single `if`: the region
+     `bias-set-refusal` in `src/bias/index.mjs` `promotionCheck`. */
   BIAS_REFUSED: {
     check: "C-26.11",
     where: "src/bias/index.mjs promotionCheck > bias-set-refusal, reached from op=promote",
@@ -70930,7 +71180,7 @@ function checkSkillVersion(version) {
 }
 
 // src/airun.mjs
-var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
+var AI_RUN_CHECKS3 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
 var RUN_BOUNDS = {
   fetches: "fetches requested of the capture path",
   subsessions: "evidence sub-sessions spawned",
@@ -70991,7 +71241,7 @@ var RUN_CONTEXTS = {
   project: "a body of work with its own members, its own bar and its own lens"
 };
 function refusal10(key, detail, extra = null) {
-  const row2 = AI_RUN_CHECKS2[key];
+  const row2 = AI_RUN_CHECKS3[key];
   return {
     ok: false,
     code: key,
@@ -115524,6 +115774,23 @@ async function acquireReadingOp(answer, store, { json: json5 = jsonAnswer, store
   return { body };
 }
 
+// src/connections/ops.mjs
+var CONNECTIONS_OPS = Object.freeze(["linkproject"]);
+async function linkProjectOp(url, store, { json: json5, doAnswer: doAnswer2, storeRefusal: storeRefusal2, storeSilent: storeSilent2, viewer, identity }) {
+  const capture = url.searchParams.get("capture");
+  if (!/^[0-9a-f]{64}$/.test(capture || ""))
+    return json5({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
+  const bundle = url.searchParams.get("bundle");
+  const p = await doAnswer2(store.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(viewer)}&identity=${encodeURIComponent(identity)}`));
+  if (p.refused) return storeRefusal2(p);
+  if (!p.answered) return storeSilent2("linkproject", p.correlation);
+  return json5({ ok: true, ...p.result });
+}
+async function connectionsOp(op, url, getStore, stamps) {
+  if (op === "linkproject") return linkProjectOp(url, getStore(), stamps);
+  return null;
+}
+
 // src/ratification/ops.mjs
 function storeRefused(out, { json: json5, storeRefusal: storeRefusal2 }) {
   return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json5(out.reply.body, out.reply.status);
@@ -118415,7 +118682,7 @@ __export(skilldoctrine_exports, {
 });
 var SKILL_CHECK_KEYS = Object.freeze(["AI_RUN_SKILL_VERSION_UNNAMED"]);
 var SKILL_CHECKS = Object.freeze(Object.fromEntries(
-  SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS2[k]])
+  SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS3[k]])
 ));
 var JUDGEMENT_ID = "investigative-judgement";
 var JUDGEMENT_EDITION = "1";
@@ -118958,8 +119225,7 @@ var Store = class _Store extends DurableObject {
       const migrated = type === "inquiry" ? this.#surfacedIn(row2.bundle_id) : null;
       return migrated ? { surfaced_in: migrated } : {};
     });
-    connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => observationLogOf(ctx).observeConnectionDerivation(e));
-    connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
+    observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     ratificationOf(ctx);
     strengthOf(ctx);
     biasOf(ctx, { env });
@@ -125736,19 +126002,14 @@ async function gatedOp({
     { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") },
     { json: json4, storeSilent, storeRefusal, doAnswer }
   );
-  if (op === "linkproject") {
-    const st = env.STORE.get(env.STORE.idFromName(storeName));
-    const capture = url.searchParams.get("capture");
-    if (!/^[0-9a-f]{64}$/.test(capture || ""))
-      return json4({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
-    const bundle = url.searchParams.get("bundle");
-    const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
-    const linkIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
-    const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}&identity=${encodeURIComponent(linkIdentity)}`));
-    if (p.refused) return storeRefusal(p);
-    if (!p.answered) return storeSilent("linkproject", p.correlation);
-    return json4({ ok: true, ...p.result });
-  }
+  if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), {
+    json: json4,
+    doAnswer,
+    storeRefusal,
+    storeSilent,
+    viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
+    identity: viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+  });
   if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { json: json4, doAnswer, storeRefusal, storeSilent });
   {
     const c = await captureOp(op, req, url, env, () => env.STORE.get(env.STORE.idFromName(storeName)), {

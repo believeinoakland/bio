@@ -477,7 +477,6 @@ __export(bio_checks_exports, {
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
-  CONNECTION_CHOICE_CHECKS: () => CONNECTION_CHOICE_CHECKS,
   CONNECTION_PAIR_CHECKS: () => CONNECTION_PAIR_CHECKS,
   CONTENT_EXTENT_A1_RE: () => CONTENT_EXTENT_A1_RE,
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
@@ -6470,32 +6469,6 @@ var CONNECTION_PAIR_CHECKS = {
     translation: "This document mentions the same subject in more than one place, and the record linked the two documents through the strongest-graded mention without anyone choosing which mention is the one on point. Because another mention bears on the part you cited, whether this connection reaches your citation is undetermined rather than yes or no. A citation of the document as a whole is answered today; a member may also choose which mention is the on-point one for this connection, and the answer then follows that choice."
   }
 };
-var CONNECTION_CHOICE_CHECKS = {
-  CONNECTION_CHOICE_NOT_A_MEMBER: {
-    check: "C-74.1",
-    where: "src/connections/index.mjs choose > is-connection-choice",
-    translation: "Choosing which mention of a subject is the one on point for a connection is a member's own act, done in their name. A machine may point out the mentions a document holds, but deciding which one a connection rests on is a judgment a person signs for."
-  },
-  CONNECTION_CHOICE_NO_CONNECTION: {
-    check: "C-74.2",
-    where: "src/connections/index.mjs choose > is-connection-choice",
-    translation: "That request does not name a connection this record holds and you can see. A connection is named by the two documents it joins and the subject that joins them, and it exists once the record has derived it \u2014 choose after it appears among the document's connections."
-  },
-  CONNECTION_CHOICE_NOT_A_MENTION: {
-    check: "C-74.3",
-    where: "src/connections/index.mjs choose > is-connection-choice",
-    translation: "The mention named is not one this document carries for that subject. The choice is among the places the record actually read the subject in this document, by the reference as the reading recorded it; a mention the record never read cannot be the one a connection rests on."
-  },
-  /* D-454: the reference named was read at MORE THAN ONE place in this document, so naming the
-     string is not yet a choice between its mentions. Refused rather than defaulted: a default
-     (the first read, say) would be REC-122's own liar — the machine's selection wearing a
-     member's name. The refusal lists the occurrences so the member can name one. */
-  CONNECTION_CHOICE_OCCURRENCE_UNNAMED: {
-    check: "C-74.4",
-    where: "src/connections/index.mjs choose > is-connection-choice",
-    translation: "That reference was read at more than one place in this document, and each place is its own mention. Say which one is on point \u2014 by the occurrence the record lists for it, or by the place as the record names it \u2014 and the choice will rest on that place alone."
-  }
-};
 function contentIdFor(captureSha, extent, chain) {
   return sha256HexSync(canonicalJson({
     v: 1,
@@ -6877,17 +6850,161 @@ var AI_RUNS_CHECKS = Object.freeze({
 });
 
 // ../bio-plane/src/observation-log/checks.mjs
-var OBSERVATION_CHECK_KEYS = Object.freeze([
-  "AI_LOG_STATE_UNKNOWN",
-  "AI_LOG_GOVERNED_ABSENCE",
-  "AI_LOG_SHELL_PRESENT",
-  "AI_RUN_CONDITION_UNKNOWN",
-  "AI_LOG_NOT_A_BUNDLE",
-  "OBS_AUTHORITY_UNNAMED",
-  "OBS_PRESENT_NO_REFERENT",
-  "AI_LOG_NEVER_LOOKED_STORED"
-]);
-var OBSERVATION_CHECKS = Object.freeze(Object.fromEntries(OBSERVATION_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
+var AI_RUN_CHECKS2 = {
+  /* §11: "Absence uses D-129's vocabulary — NEVER_LOOKED / LOOKED_ABSENT /
+     LOOKED_INDETERMINATE / PRESENT, plus `partial`. Which absence is a stated
+     fact, never a diagnostic detail." An entry outside the vocabulary is not a
+     weaker statement of absence; it is an ungoverned one. */
+  AI_LOG_STATE_UNKNOWN: {
+    check: "C-22.1",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That observation does not say which kind of absence it found. The record distinguishes never having looked, having looked and found nothing, having looked and being unable to tell, having found it, and having found part of it."
+  },
+  /* D-104, and CLAUDE.md states the general rule it instantiates: "our governor
+     refusing is not the source failing". An entry recording LOOKED_ABSENT when
+     it was OUR pacing that stopped the fetch MANUFACTURES a false absence —
+     §11's own word. The governed flag is the fact; a governed observation can
+     only be LOOKED_INDETERMINATE, and either definitive claim is refused. */
+  AI_LOG_GOVERNED_ABSENCE: {
+    check: "C-22.2",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That observation was stopped by our own pacing of the source, not by the source. It can only record that we could not tell \u2014 recording an absence there would be a claim about the world made from a fact about us."
+  },
+  /* §11's third rule, SWEEP §3's false-coverage hazard: "A client-rendered
+     shell capture is LOOKED_INDETERMINATE, never PRESENT". `client-rendered-shell`
+     is catalogued with no producer, and an evidentially empty capture that reads
+     as coverage is the defect the whole absence vocabulary exists to prevent. */
+  AI_LOG_SHELL_PRESENT: {
+    check: "C-22.3",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That capture is a page shell with nothing evidential in it, so it cannot be recorded as having found the material. It records that we could not tell."
+  },
+  /* DEC-8 as amended by DEC-49: a surface may render a translation keyed on a
+     code the plane SENT, which only holds if the plane never sends a condition
+     nobody has translated. The condition vocabulary is `queuestate.mjs`'s, read
+     LIVE rather than copied, and a run naming a kind outside it is a loud
+     refusal instead of a silent new vocabulary — queuestate.mjs's own words for
+     the same fence one surface over. */
+  AI_RUN_CONDITION_UNKNOWN: {
+    check: "C-22.4",
+    where: "src/observation-log/vocabulary.mjs checkCondition, called from src/ai-runs/index.mjs #aiRunTerminate",
+    translation: "The run tried to end on a condition the record has no name for. A condition nobody can read is not an explanation."
+  },
+  /* §11: "the observation log cannot live in bundle.md, which is written only on
+     success — the log's whole value is the failure path." The log is a different
+     object from the record, and a different object again from a TRANSCRIPT,
+     which DEC-61 puts device-local with a TTL and out of the record store
+     altogether. This refusal is the fence AT THE APPEND: an entry offered for a
+     bundle is refused, so the separation is enforced at the one write rather
+     than asserted about every reader. */
+  AI_LOG_NOT_A_BUNDLE: {
+    check: "C-22.6",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "The observation log is not part of any published document and cannot be filed into one."
+  },
+  /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
+       `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
+       the record cannot say WHY it made is not recorded."* `STORE-AS-CACHE.md`
+       carries the rule it descends from, which is RFC 2308's: A NEGATIVE ANSWER
+       WITH NO AUTHORITY BEHIND IT IS NOT RECORDABLE. The whole value of this table
+       is that an absence becomes a stated fact instead of a retry, and an absence
+       nobody can attribute is not a fact anybody can weigh.
+  
+       IT IS ALSO WHERE §4.6'S PROVISIONAL IS ENFORCED RATHER THAN MERELY WRITTEN
+       DOWN, and that is the part worth reading before changing this row. *A
+       member's ad hoc search, view or read is not an observation* — because the
+       record is what a legal process can reach, and a store that holds what its
+       members looked for is a different object from one that holds what a group
+       published. What stops that from being written is not a missing writer, which
+       any later item could supply without noticing: it is that there is NO
+       `authority_kind` A MEMBER'S SEARCH COULD TAKE. The alternative §4.6 declines
+       (`authority_kind = member`) is absent from `OBSERVATION_AUTHORITY_KINDS` on
+       purpose, so reversing the provisional costs one line in a vocabulary and no
+       schema change — which is exactly what §4.6 says reversal should cost, in the
+       one direction that stays reversible. A member who wants a search ON the
+       record states it as a LEAD (D-194), which carries a name BY CHOICE.
+  
+       THE TEST IS MEMBERSHIP, NOT PRESENCE. A null check would pass the very value
+       the provisional exists to keep out. */
+  OBS_AUTHORITY_UNNAMED: {
+    check: "C-22.9",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That observation does not say why the look was made. The record keeps what it looked for only when something can be named as the reason \u2014 an investigation, a monitoring sweep, a link in a document, a ratification, or a lead somebody wrote down. A look with no reason behind it is not recorded."
+  },
+  /* REC-93, 2026-09-14 — THE WARC LESSON, AND THE FALSE-COVERAGE HAZARD FROM
+       THE OTHER DIRECTION. `OBSERVATION-LOG-DESIGN.md` §3: *"`PRESENT` with no
+       `result_ref` is refused — the WARC lesson: a revisit that omits what it
+       refers to silently loses which URL the bytes came from."*
+  
+       WHY IT IS ITS OWN CODE AND NOT C-22.3's. C-22.3 refuses a PRESENT that the
+       EVIDENCE contradicts (a client-rendered shell read as coverage). This refuses
+       a PRESENT WITH NO EVIDENCE ATTACHED AT ALL. They are different facts with
+       different remedies — one is answered by re-reading the capture honestly, the
+       other by naming what the look produced — and DEC-49's rule is that a single
+       refusal covering both tells a member nothing they can act on.
+  
+       IT DOES NOT FIRE ON `authority_kind = run`, AND THAT CARVE-OUT IS A MEASURED
+       CONFLICT BETWEEN TWO SECTIONS OF THE DESIGN rather than a convenience. §3
+       writes this refusal unconditionally; §4.4 requires every `ai_run_log` row to
+       fold into this table and read back through `op=airunlog` UNCHANGED. Both
+       cannot hold: `ai_run_log` HAS NO `result_ref` COLUMN, so no row ever written
+       to it can satisfy this, and `op=airuntick` accepts a caller-supplied
+       `PRESENT` today. Enforcing it over `run` would drop rows out of a coverage
+       record, or force the fold to invent a referent — and inventing one to get
+       past a gate is the failure CLAUDE.md names by name. The fold is therefore
+       admitted under the weaker rule it was written under, every other authority
+       carries the refusal, and the carve-out is a DEBT row rather than a shape.
+  
+       **THE CLOSING CONDITION NAMED HERE WAS FALSE AND IS CORRECTED BY
+       MEASUREMENT (REC-100, 2026-09-16).** This row said the carve-out *"closes
+       when the run's own writers carry referents (REC-95)"*. REC-95 landed and it
+       did NOT close: its three writers write under `authority_kind = derive`, not
+       `run` — REC-95 read the tree, found the sentence wrong and recorded that the
+       correction was owed to REC-100. Left standing, it would have invited the
+       next session to delete one condition and refuse three live writers.
+  
+       **AND THE REMAINING BLOCKER IS NOT A WRITER AT ALL, AT TWO OF THE THREE.**
+       `#aiRunTerminate` and `#aiRunReap` take their state from
+       `#aiRunSearchState`, a ROLLUP over the run's whole log — a summary PRESENT
+       has nothing single to point at BY CONSTRUCTION, so no writer-side work
+       satisfies this refusal and the design owes a ruling on what a terminal
+       entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
+       path, which composes no referent field while a model may judge `PRESENT`.
+       The full reasoning is at the predicate, `checkObservation` in
+       `src/observation-log/vocabulary.mjs` (it was `src/airun.mjs`'s until this
+       module's extraction); `test/m/observation-log/append.test.mjs` drives it.
+  
+       **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
+       (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
+       observation` pointing at the latest non-terminal PRESENT row of its own run,
+       computed by the plane. The carve-out is DELETED, so this refusal now fires
+       on EVERY authority, and it GAINED AN ARM rather than a new code: an
+       `observation` referent that is not an EARLIER PRESENT row of the SAME
+       authority is refused here too, with `referent_fault` naming which of four
+       ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/observation-log/vocabulary.mjs`). One code,
+       because every fault is this row's condition — a PRESENT whose referent does
+       not back it — and a second code behind C-22.10 would be two conditions
+       behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
+       Section K of `test/observation-log.test.mjs` drives all of it. */
+  OBS_PRESENT_NO_REFERENT: {
+    check: "C-22.10",
+    where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
+    translation: "That observation says the thing is there without saying what was found. A record that something is present has to point at what it found \u2014 the captured document, the passage, the entity \u2014 or nobody can check it later, and a claim of coverage that cannot be checked is worse than no claim at all."
+  },
+  /* N118 (LEGACY-TESTS #3 REPORT 10; observation-log R3, K148; T6, legacy-checks) — C-22.1 WAS MINTED FOR A SECOND
+     CONDITION. observation-log's `checkObservation` refuses a look that states NEVER_LOOKED (R3: NEVER_LOOKED is the
+     absence of a row, never a row; its one exception is a run's terminal rollup, K148) under C-22.1's code, and
+     C-22.1's sentence ("does not say which kind of absence it found") is false for it: that look named a kind, the
+     one kind a look cannot be. DEC-49 is one code, one condition, so it takes a code of its own rather than C-22.1
+     reworded to cover both. Since T10 observation-log mints it: the region `is-never-looked-stored` is marked in
+     `checkObservation` (`src/observation-log/vocabulary.mjs`), and C-22.17 is what that site answers (N286). */
+  AI_LOG_NEVER_LOOKED_STORED: {
+    check: "C-22.17",
+    where: "src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored",
+    translation: "That observation says nobody looked, and an observation is the record of a look. Never having looked is what the record says of a subject with no observation at all, so it is not written as one. A look that happened records what it found: nothing, something, part of it, or that it could not tell."
+  }
+};
+var OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS2));
 
 // ../bio-plane/src/observation-log/vocabulary.mjs
 var OBSERVATION_LEVELS = {
@@ -6974,7 +7091,7 @@ var CONDITION_KINDS = Object.freeze({
 });
 
 // ../bio-plane/src/airun.mjs
-var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
+var AI_RUN_CHECKS3 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
 var RUN_BOUNDS = {
   fetches: "fetches requested of the capture path",
   subsessions: "evidence sub-sessions spawned",
@@ -24505,6 +24622,14 @@ var ENTITY_CHECKS = Object.freeze({
     where: "src/entities/index.mjs createEntity > is-entity-labelled",
     translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written."
   }),
+  /* R2 (REC-64; T18, ENTITIES #5): C-33.25 COPIED here from the catalogue's `ACT_SHAPE_CHECKS`, row and translation
+     unchanged. That table is split between modules and its copy leaves the catalogue when the last owner holds its
+     rows (T19, K529's lag); until then the code is held twice, the catalogue's copy unread by this module. */
+  NO_ALIAS: Object.freeze({
+    check: "C-33.25",
+    where: "src/entities/index.mjs addAlias > is-alias-named",
+    translation: "Another name for something needs to actually be a name. This one is empty once the spacing and punctuation are taken off, so there would be nothing for anybody to search on later."
+  }),
   /* R29, R38 (N345, DEC-76 item 3): a defect report names a resolution (capture, reference, subject) the record does
      not hold. The next of C-91. */
   NO_SUCH_RESOLUTION: Object.freeze({
@@ -25278,7 +25403,6 @@ var RETRIEVAL_TABLES = Object.freeze(RETRIEVAL_PURGE.map((t) => t.name));
 var CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
 var CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
                   WHERE p.fts_id IS NOT NULL`;
-var VIA = Object.freeze({ projection: PROJECTION_RELATION });
 
 // ../bio-plane/src/progressions/checks.mjs
 var at5 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
@@ -25695,10 +25819,11 @@ var BIAS_CHECKS2 = {
      translations sat one level down in a list the surface had no reason to
      open. So the container gets a translation of its own, and it says the one
      thing the per-finding translations cannot: that NOTHING LANDED.
-     ITS `where` NAMES `store.mjs` RATHER THAN THE CATALOGUE, unlike its ten
-     siblings, because that is where it FIRES — and naming the site is what puts
-     this code inside the guard's governed set. The ten above fire in
-     `checkBiasExtension` and say so.
+     ITS `where` NAMES THE PROMOTION STEP (`promotionCheck`) RATHER THAN THE
+     CHECKS, unlike the seven set rows, because that is where it FIRES — and
+     naming the site is what puts this code inside the guard's governed set
+     (N242: it named the store's private `#promotionCheck` until T10). The seven
+     above fire in `checkBiasExtension` and say so.
      NARROWED TO A REGION 2026-08-08 BY REC-71, AND PL-12'S REASONING ABOVE IS
      PRESERVED RATHER THAN OVERTURNED — only the GRAIN was wrong. This read
      `src/store.mjs promote`, and at whole-function granularity that claimed all
@@ -25706,10 +25831,8 @@ var BIAS_CHECKS2 = {
      were conscripted and the UI harness went red a second time within hours of
      the first, in the family next door.** BEING AN ENVELOPE IS A FACT ABOUT THE
      REFUSAL'S SHAPE — it wraps per-finding codes — AND SAYS NOTHING ABOUT ITS
-     SPAN. This one fires at a single statement inside a single `if`. The reasoning
-     in full, including what WOULD justify the wider spelling, is at the marker in
-     `store.mjs`; see also the "WHAT A `where` MEANS" block at the head of this
-     file. */
+     SPAN. This one fires at a single statement inside a single `if`: the region
+     `bias-set-refusal` in `src/bias/index.mjs` `promotionCheck`. */
   BIAS_REFUSED: {
     check: "C-26.11",
     where: "src/bias/index.mjs promotionCheck > bias-set-refusal, reached from op=promote",
@@ -26026,7 +26149,7 @@ var PAIR_AXES = Object.freeze([...STRENGTH_AXES]);
 // ../bio-plane/src/skilldoctrine.mjs
 var SKILL_CHECK_KEYS = Object.freeze(["AI_RUN_SKILL_VERSION_UNNAMED"]);
 var SKILL_CHECKS = Object.freeze(Object.fromEntries(
-  SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS2[k]])
+  SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS3[k]])
 ));
 var JUDGEMENT_ID = "investigative-judgement";
 var JUDGEMENT_EDITION = "1";
@@ -26635,7 +26758,7 @@ function disclosedLayers({ vocabularies, catalog, captureActs, recipes = null } 
     refusals: {
       load_when: "the run is refused, and must surface the record's own words rather than its own",
       sourcing: SOURCING.refusals,
-      body: Object.fromEntries(Object.entries(AI_RUN_CHECKS2).map(([code, row]) => [code, { check: row.check, says: row.translation }]))
+      body: Object.fromEntries(Object.entries(AI_RUN_CHECKS3).map(([code, row]) => [code, { check: row.check, says: row.translation }]))
     },
     /* N345, R27. The words a run recommends under on a contradiction candidate, contradiction's own and
        unchanged, with the digest they were measured under; carried, never reworded, so the pack's version
