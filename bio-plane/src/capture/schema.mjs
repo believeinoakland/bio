@@ -17,7 +17,19 @@ CREATE TABLE IF NOT EXISTS inbox (
   received    TEXT NOT NULL,
   status      TEXT NOT NULL DEFAULT 'new',
   resolved    TEXT,
-  resolved_by TEXT
+  resolved_by TEXT,
+  -- R66: the knocker's continuity, never the secret: a keyed digest of it and the pseudonym derived from that
+  -- digest, each NULL for a knock sent without a secret.
+  knocker_digest TEXT,
+  pseudonym   TEXT,
+  -- R65: the capture a pull filed, who pulled it and when. Set once, by the pull; NULL until then.
+  capture_sha TEXT,
+  pulled_by   TEXT,
+  pulled_at   TEXT,
+  pulled_document TEXT,
+  -- Inline knocks only (no evidence store): the bytes themselves, base64, so a pull holds exactly what was
+  -- received; content keeps the text a member reads. NULL with an evidence store, and on a row written before it.
+  content_b64 TEXT
 );
 CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
 
@@ -405,6 +417,46 @@ CREATE TABLE IF NOT EXISTS capture_validators (
   at            TEXT NOT NULL,
   PRIMARY KEY (address_norm, capture_sha)
 );
+-- R66: the key the knocker's secret is digested under when the operator binds none (KNOCKER_SECRET_KEY): R56's
+-- pattern, a separate key. One row, generated at first use, never answered by any op.
+CREATE TABLE IF NOT EXISTS knocker_key (
+  id      INTEGER PRIMARY KEY CHECK (id = 1),
+  key_hex TEXT NOT NULL,
+  created TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS inbox_pseudonym ON inbox(pseudonym, received);
+-- R16, R69: each member this module stamped as capturing a capture (a member session's acquire, a knock's pull).
+-- Several members who captured the same bytes are each its actor. Written once per pair, never removed but by purge.
+CREATE TABLE IF NOT EXISTS capture_actors (
+  capture_sha TEXT NOT NULL,
+  actor       TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, actor)
+);
+-- R69: a capturing member's signed account of when and how they captured it. Append-only.
+CREATE TABLE IF NOT EXISTS capture_accounts (
+  capture_sha TEXT NOT NULL,
+  seq         INTEGER NOT NULL,
+  by          TEXT NOT NULL,
+  text        TEXT NOT NULL,
+  signature   TEXT NOT NULL,
+  key_b64     TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, seq)
+);
+-- R68: late co-attestations, each outcome appended with its instant and what it proves (existence by then, not at
+-- capture). Append-only.
+CREATE TABLE IF NOT EXISTS late_attestations (
+  capture_sha TEXT NOT NULL,
+  seq         INTEGER NOT NULL,
+  kind        TEXT NOT NULL,
+  service     TEXT,
+  ok          INTEGER NOT NULL,
+  at          TEXT NOT NULL,
+  by          TEXT,
+  outcome     TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, seq)
+);
 -- R56: the key the doorbell's source fingerprint is computed under when the operator binds none
 -- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
 CREATE TABLE IF NOT EXISTS knock_key (
@@ -420,6 +472,13 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
   ["site_asset_refs", "reused_from", "TEXT"],        // CAP-14
   ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],   // D-492: 0 is the measured truth
   ["links", "chrome_basis", "TEXT"],                 // D-340: the region a contained link sat in
+  ["inbox", "knocker_digest", "TEXT"],               // R66: the knocker's keyed digest
+  ["inbox", "pseudonym", "TEXT"],                    // R66
+  ["inbox", "capture_sha", "TEXT"],                  // R65: the capture a pull filed
+  ["inbox", "pulled_by", "TEXT"],                    // R65
+  ["inbox", "pulled_at", "TEXT"],                    // R65
+  ["inbox", "pulled_document", "TEXT"],              // R65: the document a pull answered, answered again to a repeat
+  ["inbox", "content_b64", "TEXT"],                  // R65: an inline knock's bytes as received
 ];
 
 /* A derived table whose KEY changed shape is dropped and rebuilt rather than altered: `links` gained
@@ -428,7 +487,9 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
 export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
 
 /* record-core R21/R46: what purge clears (whole-store only: none is keyed to a bundle) and what it never clears.
-   The exempt five are operational facts about this instance, not corpus-derived (hygiene's census). */
+   The exempt tables are operational facts (the inbox, the doorbell's rate and its two keys among them) about this instance, not corpus-derived (hygiene's census). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
-  "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators"];
-export const CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_allowance", "render_slots", "knock_key"];
+  "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
+  "capture_actors", "capture_accounts", "late_attestations"];
+export const CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_allowance", "render_slots", "knock_key",
+  "knocker_key"];
