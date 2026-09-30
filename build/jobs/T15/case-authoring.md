@@ -58,3 +58,10 @@ Replaces J1 (items 1, 2, 4, 5, 6 unchanged; item 3 revised, item 7 added).
 
 3. **What counts as "a read that fails" (C-120.3):** `unresolvedRecordOn` answering `undetermined: true` or `truncated: true`, as R31 says, and nothing more. Its extra `undetermined_legs` (a document leg with no content row, so no passage-level referent to look for a conflict on) is NOT a refusal: treating it as one refused every case resting on a whole-document leg (my own R17 fixture). It is stated instead (R26): frontmatter `case_tensions_unread:` (`- target`, `legs`) and a body sentence per member, and the answers carry `tensions_legs_unread` / `legs_unread`.
 7. **Frontmatter additions for PUBLICATION #5** beyond J1 item 1: `case_tensions_unread:` as above, between `tensions_depth_stated` and `case_tensions`. The answer of `op=publish` gains `tensions`, `tensions_highlighted`, `tensions_legs_unread` (R15's list, a wording for BOB).
+
+## J3 · REPORT
+
+Two modules' behaviour meets C-120.1 once this merges (details in my record's Completion):
+- **review** (R13, the review copy's dry run of `op=publish`): drafts carry no `tensionsDisclosed`, so a dry run over a case with a standing duty answers C-120.1 in the missing-list. Its fixture stubs `publishCase`; its 30 tests pass.
+- **civicos-ui** `app.html`'s publish ceremony sends no `tensionsDisclosed` and never asks `op=publishtensions`: a publish over a case with a standing duty is refused C-120.1 until N345's DEC-80 step is built.
+No hit for the new codes, op or rows in `civicos-ui/` or `affordances.mjs`. No generated artifact made stale.
