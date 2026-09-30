@@ -320,10 +320,10 @@ export async function governedFetch(target, { userAgent = null, fetch: doFetch =
   return { res };
 }
 
-/* The Worker's side of a store call when the caller hands no relay (legacy-index's call today, `src/index.mjs`:671):
-   `{answered, result}`, a body that is not a JSON `ok: true` answer being no answer at all. It tells a store refusal
-   from a silence not at all, which is why R27 reads through the plane's `doAnswer` whenever the caller hands it; this
-   path goes when legacy-index hands the relay (layer 11). */
+/* The Worker's side of a store call when a caller of `governorOp` hands no relay: `{answered, result}`, a body that is
+   not a JSON `ok: true` answer being no answer at all. It tells a store refusal from a silence not at all, which is
+   why R27 reads through the plane's `doAnswer` whenever the caller hands it, as `governorOpResponse`, the Worker's
+   arm, always does. */
 async function answerOf(call) {
   try {
     const out = await (await call()).json();
@@ -347,6 +347,9 @@ async function storeCall(relay, call) {
   return { answered: true, result: out.result };
 }
 
+/** R18, R19: the two ops this module's handlers answer, the one list the Worker's dispatch asks. */
+export const GOVERNOR_OPS = Object.freeze(["governorstate", "governorconfig"]);
+
 /* R18, R19, R27: what a store call that did not answer with an answer comes back as. */
 const unanswered = (r) => (r.refused ? { refused: true, response: r.response }
                                      : { silent: true, ...(r.correlation ? { correlation: r.correlation } : {}) });
@@ -359,7 +362,7 @@ const unanswered = (r) => (r.refused ? { refused: true, response: r.response }
  *  the store gave no answer, which the control plane reports as `storeSilent(op, correlation)`, never as an empty
  *  `{ok: true}`, the correlation present only when the store named one; else `{status, body}`. */
 export async function governorOp(op, url, store, relay = null) {
-  if (op !== "governorstate" && op !== "governorconfig") return null;
+  if (!GOVERNOR_OPS.includes(op)) return null;
   const rel = relayOf(relay);
   const st = typeof store === "function" ? store() : store;
   const host = url.searchParams.get("host");
@@ -385,4 +388,15 @@ export async function governorOp(op, url, store, relay = null) {
   /* R12 inside the store's answer (`ok: true` carrying the governor's own `BAD_APPETITE`): an answer, relayed at 400. */
   if (r.result && r.result.ok === false) return { status: 400, body: r.result };
   return { status: 200, body: { ok: true, ...r.result } };
+}
+
+/** R18, R19, R27: the Worker's arm for this module's two ops (legacy-index's `governorOp` block, moved here by the
+ *  map's §4.4 plain move, K649 (7)). `plane` is what the control plane hands every arm: `json`, `doAnswer`,
+ *  `storeRefusal` and `storeSilent`. Answers the reply: the store's own refusal through `storeRefusal`, a store that
+ *  gave no answer through `storeSilent(op, correlation)` (never an empty `{ok: true}`), else `governorOp`'s body at its
+ *  status. `null` for any other op. */
+export async function governorOpResponse(op, url, store, { json, doAnswer, storeRefusal, storeSilent }) {
+  const g = await governorOp(op, url, store, { doAnswer, storeRefusal });
+  if (!g) return null;
+  return g.refused ? g.response : g.silent ? storeSilent(op, g.correlation) : json(g.body, g.status);
 }
