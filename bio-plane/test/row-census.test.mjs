@@ -192,16 +192,20 @@ test("R50 R34: the pin names the stamp it moves with — ROW_CENSUS.version is C
   assert.equal(ROW_CENSUS.version, CATALOG_VERSION);
 });
 
+/* LEGACY-TESTS #14 (T16, 2026-09-30), K567: a record may name its row with the exact phrase
+   "for promotion's stamp" (RATIFICATION #7's wording, build/jobs/T16/ratification.md:20) beside
+   `awaiting stamp`; nothing broader is accepted. */
+const AWAITING = /awaiting stamp|for promotion's stamp/i;
 test("R50: every row awaiting stamp is named so by its job record", () => {
   for (const a of AWAITING_STAMP.filter((x) => x.after === ROW_CENSUS.version)) {
     const check = a.named ?? (a.kind === "arrived" ? a.check : a.line[0]);
     const text = readFileSync(join(REPO, a.record), "utf8");
-    assert.ok(text.split("\n").some((l) => l.includes(check) && /awaiting stamp/i.test(l)),
+    assert.ok(text.split("\n").some((l) => l.includes(check) && AWAITING.test(l)),
       `${a.record} has no line naming ${check} and "awaiting stamp" (${a.by})`);
   }
   for (const c of COMPOSITIONS_AWAITING.filter((x) => x.after === ROW_CENSUS.version)) {
     const text = readFileSync(join(REPO, c.record), "utf8");
-    assert.ok(text.split("\n").some((l) => l.includes(c.needle) && /awaiting stamp/i.test(l)),
+    assert.ok(text.split("\n").some((l) => l.includes(c.needle) && AWAITING.test(l)),
       `${c.record} has no line naming the ${c.needle} and "awaiting stamp" (${c.by})`);
     console.log(`  awaiting stamp, composition: ${c.what} (${c.by})`);
   }
