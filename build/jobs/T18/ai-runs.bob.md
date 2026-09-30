@@ -10,3 +10,7 @@ Order (rule (7)): `run-rules` merges early for you; BOB's CHANGE tells you when 
 ## B2 · CHANGE
 
 K674 (2): your R27 now reads: a question with no surfacing row answers inquiry's migratedSurfacing(bundleId) (inquiry R49) when not null, else "not recorded"; Uses names it. Merge the tranche branch (@ 652ab1a3c9) and build it. INQUIRY #7 builds R49 in this layer; if you need it before inquiry merges, test against a stub at your interface and tell me, and I merge inquiry early.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branch and re-point to it now. Its table is AI_RUNS_CHECKS (with AI_RUN_PLAN_CHECKS for C-109.2–.7); delete the split's copies now (rule (9)). Your six where proposals are sent to RUN-RULES #1 as a CHANGE; read the rows by key meanwhile. K674 (2) (R27, inquiry's migratedSurfacing) stands from B2.
