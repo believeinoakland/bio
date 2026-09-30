@@ -27,3 +27,7 @@
 - `node checks/ownership.mjs … sources tranche/T17`: 3 files changed by sources; 0 failures.
 
 Size (session_01BuH77QM4Gg6KVGSfhNvcHf): test runs 7, module lines 837
+
+## J1 · COMPLETE
+
+N377 applied: R15's source_knocks read contract pinned at the module (contract.test.mjs: exact columns, one row per pulled knock a minted source stands behind, written once, no value/secret/contact); R15's 'not yet met' mark is yours to strike. mintExhausted: the mint already answered through it; now tested (ledger full, MINT_EXHAUSTED for SRC, nothing written). Two own-module fixes found while pinning R15: (1) every pulled knock of a pseudonym is now bound to its source at minting and before each rung-moving act, so reevaluation R28 no longer misses an unread capture of the same knocker; (2) a same_secret link now also notifies R10 listeners for the linked source whose rung it raises. sources 24/24; users' suites (reevaluation, publication, case-authoring, affordances, control-plane) 442 pass, 0 fail; format, architecture, coverage (15/15), ownership 0 failures. Details in the record's Completion section.
