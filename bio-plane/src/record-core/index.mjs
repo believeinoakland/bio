@@ -83,13 +83,14 @@ function manifestFiles(filesJson) {
 
 /* ---- no free opaque id (R62, C-59.6): module-level ---- */
 
-/* What each gated prefix's id is called in R62's detail; the prefixes are R3's set (`RecordCore.GATED_ID_PREFIXES`). */
-const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task" });
+/* What each opaque-minted prefix's id is called in R62's detail: R3's set (`RecordCore.GATED_ID_PREFIXES`), and `SRC`, a
+   source, which `sources` mints opaque through `mintOpaqueId` and never through the counter (N376, K540). */
+const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source" });
 
 /** R62 (N322, N250, K275, K392): THE ONE ANSWER TO ONE CONDITION, no free opaque id could be drawn (`mintOpaqueId`
  *  answered null, R9). Every act of any module that meets it answers through here, so `MINT_EXHAUSTED` is minted at
  *  one site under one row (C-59.6). `detail` is one fixed sentence per prefix, naming the id that could not be drawn
- *  and saying nothing was written, the same for every caller; a prefix outside R3's set is named by no object. `extra`
+ *  and saying nothing was written, the same for every caller; a prefix neither in R3's set nor `SRC` is named by no object. `extra`
  *  adds the caller's own fields and never replaces these. It writes nothing and never throws. */
 export function mintExhausted(prefix, extra) {
   const asked = typeof prefix === "string" ? prefix : "";        /* only a string names a prefix */

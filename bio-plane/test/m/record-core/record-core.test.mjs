@@ -1335,14 +1335,14 @@ const MINT_EXHAUSTED_TRANSLATION = 'The plane could not find a free identifier f
   + 'one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs '
   + 'this instance.';
 
-test("R62: mintExhausted is the one answer when mintOpaqueId answers null: MINT_EXHAUSTED under its row C-59.6, one fixed detail per gated prefix", () => {
+test("R62: mintExhausted is the one answer when mintOpaqueId answers null: MINT_EXHAUSTED under its row C-59.6, one fixed detail per opaque-minted prefix", () => {
   const row = RECORD_CORE_CHECKS.MINT_EXHAUSTED;
   assert.deepEqual({ ...row }, { check: "C-59.6", where: "src/record-core/index.mjs mintExhausted > is-mint-exhausted",
                                  translation: MINT_EXHAUSTED_TRANSLATION },
                    "its one row is this module's, its where naming this function, with review's C-87.12 translation");
   assert.ok(Object.isFrozen(RECORD_CORE_CHECKS) && Object.isFrozen(row));
-  const names = { PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task" };
-  assert.deepEqual(Object.keys(names), RecordCore.GATED_ID_PREFIXES, "every prefix of R3's set");
+  const names = { PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source" };
+  assert.deepEqual(Object.keys(names), [...RecordCore.GATED_ID_PREFIXES, "SRC"], "every prefix of R3's set, and a source's (N376)");
   const details = new Set();
   for (const [p, what] of Object.entries(names)) {
     const r = mintExhausted(p);
@@ -1353,10 +1353,10 @@ test("R62: mintExhausted is the one answer when mintOpaqueId answers null: MINT_
     assert.ok(!/\d/.test(r.detail), "the detail names no count and no id");
     details.add(r.detail);
   }
-  assert.equal(details.size, 5, "one sentence per prefix");
+  assert.equal(details.size, 6, "one sentence per prefix");
   // the condition: exactly when mintOpaqueId answers null (R9), and the store is left as the refused act left it
   const { s, rc } = fresh();
-  for (const p of RecordCore.GATED_ID_PREFIXES) {
+  for (const p of Object.keys(names)) {
     const before = dump(s);
     const r = rc.transact(() => {
       const id = rc.mintOpaqueId(p, "2026", p === "PROJ" || p === "TASK" ? "-slug" : "", () => true);
@@ -1395,9 +1395,27 @@ test("R62: mintExhausted's extra adds a caller's own fields and never replaces i
   assert.equal(mintExhausted(["CASE"]).prefix, "", "only a string names a prefix");
 });
 
+test("R62 (N376): mintExhausted(\"SRC\") names a source, as sources answers when no source id can be drawn; SRC stays outside R3's gated set", () => {
+  const r = mintExhausted("SRC");
+  assert.deepEqual(r, { ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: "C-59.6", translation: MINT_EXHAUSTED_TRANSLATION,
+                        prefix: "SRC", detail: "the plane could not find a free source id: every one it drew was already taken. Nothing was written." });
+  assert.notEqual(r.detail, mintExhausted("INFO").detail, "no longer the unnamed sentence of a prefix outside the set");
+  for (const near of ["SRCE", "src", "SRC-X", " SRC"]) assert.doesNotMatch(mintExhausted(near).detail, /source/, `${near} is not SRC`);
+  assert.deepEqual(mintExhausted("SRC", { op: "sourceadd", prefix: "X" }), { ...r, op: "sourceadd" }, "extra never replaces its own");
+  // as the sources act meets it: a transaction whose minter answers null leaves nothing written and answers through here
+  const { s, rc } = fresh();
+  const before = dump(s);
+  const got = rc.transact(() => rc.mintOpaqueId("SRC", "2026", "", () => true) ?? mintExhausted("SRC"));
+  assert.deepEqual(got, r);
+  assert.deepEqual(dump(s), before);
+  // naming a source changes no gate and no row: SRC is minted opaque, never refused by allocIdOp (R3), and the row is C-59.6's
+  assert.ok(!RecordCore.GATED_ID_PREFIXES.includes("SRC"));
+  assert.deepEqual(Object.keys(RECORD_CORE_CHECKS), ["MINT_EXHAUSTED", "COUNTS_DECLARED", "COUNTS_MALFORMED"]);
+});
+
 /* R62's other half, every act that answers no free opaque id answering through `mintExhausted`, is met since T13 (K441):
-   each caller tests it at its own interface (promotion R19, case-authoring R7, review R27, queue R23), so the todo that
-   stood here for it is retired (RECORD-CORE #8). */
+   each caller tests it at its own interface (promotion R19, case-authoring R7, review R27, tasks R1, which took queue's
+   R23; sources joins them for `SRC`, N376), so the todo that stood here for it is retired (RECORD-CORE #8). */
 
 /* ---- T14: R63 `registerCounts`, `counts`; its rows C-102.13, C-102.14 (N342) ---- */
 
