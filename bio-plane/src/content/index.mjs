@@ -20,11 +20,14 @@
  *   extraction   `extractionOf(host)` unless a test passes its own: `readingOf` (its R30), `unitsOf` (R36),
  *                `capturesReadFor` (R51) and `onReading` (R24), with which this module registers its stale mark.
  *                `noSha` (its R63), the one `NO_SHA` answer, is imported from the module itself, never from `deps`.
- *   now          the module's clock, an ISO instant (default: the wall clock); a mint or act with no `at` reads it. */
+ *   now          the module's clock, an ISO instant (default: the wall clock); a mint or act with no `at` reads it.
+ *
+ * Its refusal rows are `./checks.mjs`' (R38): C-52 moved there from the catalogue and C-80.3 copied (T18). */
 
 import { isMachineIdentity, normalizeType, OBJECT_TYPES, CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES,
-         contentMintState, TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS, sha256HexSync }
+         contentMintState, sha256HexSync }
   from "../../checks/bio-checks.mjs";
+import { TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS } from "./checks.mjs";
 import { checkChain, checkAttestation, derivationCap, gradeCeiling, extentCovers, describeChain }
   from "../textchain.mjs";
 import { getFormat } from "../formats.mjs";
@@ -47,6 +50,7 @@ export { CONTENT_SCHEMA, CONTENT_TABLES } from "./schema.mjs";
 export { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, VERSION_NOTICE_SIMILAR }
   from "./notice.mjs";
 export { CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES, contentMintState };
+export { TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS } from "./checks.mjs";
 
 /** The one bound on a typing (R23, C-52.7): the per-unit cap one passage of the text index is stored to
  *  (`CAPTURE_TEXT_UNIT_CAP`, M-20's 131,072 B). Refused over it, never truncated. */

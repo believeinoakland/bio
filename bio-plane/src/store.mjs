@@ -353,10 +353,6 @@ import { checkLegExtentGrammar } from "../checks/bio-checks.mjs";
    the version-name grammar its new reading must meet (C-25.2's own regex, so a
    name this act accepts is one op=promote accepts). */
 import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-checks.mjs";
-/* REC-87 / IC-128: TRANSCRIBE's refusals, and the digest the `typed` step
-   carries — the catalogue's own sync sha256, so the text digest and the content
-   address are computed by one implementation. */
-import { TRANSCRIBE_CHECKS, LEAD_CHECKS } from "../checks/bio-checks.mjs";
 /* D-536: a re-read of a capture is COMPARED with the reading before it, and the difference ATTRIBUTED
    to a tier and a member (`readingprov.mjs`, Part II §16 "Reading provenance"). */
 import { compareProvenance, PROVENANCE_SCHEME } from "./readingprov.mjs";
