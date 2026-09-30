@@ -14,3 +14,7 @@ What it removes, and why:
 **Kept, each a conversion that says it could not carry an assertion (for REPORT):** `analystvocab.test.mjs` (N395: its `app.html` arms), `purge.test.mjs` (N398: the three `confirm=<store>` arms, R39 held for N408), `stats-disclosure.test.mjs` (N399: A, B1, C, E, F for N408; D).
 
 Carrying on meanwhile with what does not depend on it: verifying the `?` classes against the module tests they name.
+
+## J1 · BLOCKED
+
+Cause: needs Bob. NEEDS BOB: commit and push the removal of 305 old test files (the covered and dead suites, ten converted suites and their helpers) on job/T17/legacy-tests, refused by this session's permission check; it is the conversion's first step (K572, K573). Prepared and held in a stash on my checkout; nothing pushed. Bob approves it in this session (LEGACY-TESTS #15, https://claude.ai/code/session_014pqvXagkpd4iXER4pYSR1z). The list and the reasons are in my record's Progress. I carry on with the ? verification meanwhile.
