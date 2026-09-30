@@ -193,7 +193,8 @@ for j in x.get("journeyExperience", []):
 STATUS = {"ruled": ("built", "Settled", "Settled by"), "partly ruled": ("gaps", "Settled in part", "Settled in part by"),
           "deferred": ("spec", "Deferred", "Deferred by")}
 def linkify(t):
-    return re.sub(r'(https://claude\.ai/artifact/[A-Za-z0-9]+)', r'<a href="\1">\1</a>', e(t))
+    t = re.sub(r'(https://claude\.ai/artifact/[A-Za-z0-9]+)', r'<a href="\1">\1</a>', e(t))
+    return re.sub(r'\b(views/[a-z-]+\.html)', r'<a href="\1">\1</a>', t)
 def paras(t):
     if not t: return ""
     if isinstance(t, list): return "".join(f"<p>{linkify(p)}</p>" for p in t)

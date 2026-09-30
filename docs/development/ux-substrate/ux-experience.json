@@ -9,8 +9,7 @@
    "Two words mean two things. RUNG is how heavy an act is (reversible, reasoned, terminal, attested, irreversible). WEIGHT is how an act applied to a set behaves (refuse = all or nothing, report = proceed and say what moved, per-item = each applied or kept with its reason, single = one object). Source: affordances R1-R2; Interaction Constructs, naming collision corrected 2026-08-01.",
    "'Finding' is overloaded: in case-making it is a concluded question; in the queue it is a class of item the record noticed and nobody has judged (inventory contradictions). This file says 'concluded finding' or 'queue finding' where it matters.",
    "Coverage (useCases) says whether approved module requirements (build/requirements/*.md) hold the use case, not whether it is built.",
-   "Bob ruled open questions 1-8 and 10 on 2026-09-29 (DEC-76 to DEC-82, DEC-86 to DEC-90); question 9 is ruled in part (BOB's action-plan rulings 1-10, docs/development/action-design/ACTION-PLAN.md) and is decided in the Actions session (DEC-93), staying open until the action-plans module is approved; question 12 is partly ruled (DEC-92, more to decide later) and question 11 deferred (DEC-91, with its trigger). Each keeps its original context and carries a 'ruled' entry naming its rulings, date, status and what was decided (and what is still open); the rulings win wherever they differ.",
-   "Questions 13-30 carry an 'update' entry where a ruling settles or changes part of them; nothing there is a ruling Bob did not make.",
+   "Open questions carry a Bob-facing brief; settled ones carry a 'ruled' entry stating the design as it stands.",
    "Where a line says 'decided' or 'decided, not built', Bob has ruled it but no approved requirement carries it yet; 'specified T14' means the requirement is written and T14 builds it."
   ],
   "sources": [
@@ -36,15 +35,19 @@
    "build/rulings.md K356-K452",
    "docs/development/CONTRADICTION-PRESENT-RESOLVE-DESIGN.md",
    "docs/development/GRADE-A-CAPTURE.md",
-   "build/plan/archive/T11.md-T13.md; build/plan/draft-T14.md"
+   "build/plan/archive/T11.md-T13.md; build/plan/draft-T14.md",
+   "build/plan/archive/T14.md-T17.md",
+   "tranche/T18 @ c40e7e09d6: build/requirements/*.md, build/rulings.md to K627",
+   "docs/development/DECISIONS.md DEC-85 to DEC-95",
+   "bio-plane/src/setup.mjs (tranche/T18)"
   ],
   "counts": {
    "audiences": 19,
-   "useCases": 158,
+   "useCases": 161,
    "useCaseCoverage": {
-    "yes": 113,
-    "partial": 23,
-    "no": 22
+    "yes": 132,
+    "partial": 15,
+    "no": 14
    },
    "journeys": 10,
    "journeySteps": 69,
@@ -464,7 +467,7 @@
    "name": "Member, experienced investigator",
    "whoTheyAre": [
     {
-     "text": "A member who works questions, cites, structures grounds, runs checks and prepares cases.",
+     "text": "A member who works questions, cites, groups support into sets of reasons, runs checks and prepares cases.",
      "basis": "fixed",
      "src": "UI-KICKOFF 'Who this is for' items 1-3; inventory roles (member with contribute)"
     }
@@ -536,9 +539,9 @@
      "src": "AI Roles section 3 rule 9; strength R18; case-authoring R24"
     },
     {
-     "text": "Never shown AND/OR vocabulary when structuring grounds.",
+     "text": "Never shown AND/OR, 'grounds', partition, branch or 'independently sufficient' when grouping support into sets of reasons.",
      "basis": "fixed",
-     "src": "affordances R5 (DEC-32 clause 1)"
+     "src": "affordances R5 (DEC-32 clause 1); strength R28"
     }
    ],
    "src": "Case Making; Interaction Constructs; strength",
@@ -1882,9 +1885,10 @@
    ],
    "outcome": "A receipt (knock id, digest, bytes, time); an inbox row; nothing in the record.",
    "coveredByRequirements": "yes",
-   "requirementIds": "capture R30-R32, R47-R56",
+   "requirementIds": "capture R30-R32, R47-R56, R66",
    "src": "Intake Doctrine section 2a; DEC-78 (a knock has a source: an unnamed knocker identified by its receipt)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Adds the optional knocker secret (at least 20 characters, or one the doorbell makes and shows once) and the pseudonym in the answer."
   },
   {
    "id": "UC-013",
@@ -1901,14 +1905,15 @@
     "document"
    ],
    "acts": [
-    "knock: List / read / resolve inbox"
+    "knock: List / read / resolve inbox",
+    "knock: Pull: admit the material as a capture"
    ],
    "outcome": "Pulled material admitted as a capture at 'collected' carrying the knock's receipt (decided); a discarded knock can be put back to new.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "capture R32 (NO_SUCH_KNOCK built T12, K383); Provides (inboxList, inboxGet, inboxResolve)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "capture R32, R65, R67, R70, R72; control-plane R36; provenance R19, R42, R51",
    "src": "Intake Doctrine section 2a; DEC-78 (pulling admits the knock's material as a capture carrying its receipt; vouching stays with release)",
    "basis": "fixed",
-   "coverageNote": "Pulling is ruled (DEC-78): it admits the material as a capture and commits the member to nothing more; the source is the unnamed knocker, the member the capturing actor. Capture's requirements are owed (N345); today 'pulled' is a status only (capture R32)."
+   "coverageNote": "Built at the plane; the setup page's 'Mark as taken up' performs the pull (not app.html)."
   },
   {
    "id": "UC-014",
@@ -2290,9 +2295,10 @@
    ],
    "outcome": "A logged export; every administrator told (queue finding export-performed).",
    "coveredByRequirements": "yes",
-   "requirementIds": "publication R18-R19, R32; queue R2, R9",
+   "requirementIds": "publication R18-R19, R32; queue R2; queue-producers R2 (export-performed)",
    "src": "Membership v2 section 8",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "The export-performed producer is queue-producers R2."
   },
   {
    "id": "UC-031",
@@ -2357,10 +2363,11 @@
    ],
    "acts": [],
    "outcome": "Queue findings source-modified / source-removed homed under what rests on the document.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "monitoring R31 (not yet met); queue R9 through monitoring R48 (specified T14, N330)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "monitoring R47-R48; queue-producers R2-R3",
    "src": "Functional Architecture Function 4",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built; monitoring R31's 'not yet met' mark is stale, since the producers are queue-producers'."
   },
   {
    "id": "UC-034",
@@ -2469,9 +2476,10 @@
    ],
    "outcome": "A new version of the reference, or a recorded keep.",
    "coveredByRequirements": "yes",
-   "requirementIds": "reevaluation R14-R15; content R29-R31; queue R1, R9, R12 (built T12, N172)",
+   "requirementIds": "reevaluation R14-R15; content R29-R31; queue R1, R12; queue-producers R2",
    "src": "Content Framework section 18.1",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "The producer is queue-producers R2."
   },
   {
    "id": "UC-039",
@@ -2512,7 +2520,7 @@
    "acts": [],
    "outcome": "One standing entry per case; each item's options pre-flighted for this caller.",
    "coveredByRequirements": "yes",
-   "requirementIds": "queue R6-R17",
+   "requirementIds": "queue R6-R17; queue-producers R1-R8; tasks R6",
    "src": "Interaction Constructs revision 0.2 (QUEUE; DEC-10, DEC-16, DEC-36)",
    "basis": "fixed"
   },
@@ -2535,9 +2543,10 @@
    ],
    "outcome": "Resolved for everyone, attributed; per-item answers for a set.",
    "coveredByRequirements": "yes",
-   "requirementIds": "queue R23-R25; record-core R50-R52",
+   "requirementIds": "tasks R1-R3, R6; record-core R50-R52",
    "src": "NOTIFICATIONS.md 'MARKED AS HANDLED'",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "The tasks module holds obligations; TASK_NOT_YOURS (C-76.1) refuses anyone but the task's actor."
   },
   {
    "id": "UC-042",
@@ -2599,10 +2608,11 @@
    ],
    "acts": [],
    "outcome": "'Resolved by X on this date'.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "queue R39 (its bias half specified T14: bias R44, N326)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "queue R39; bias R44; tasks R6",
    "src": "Interaction Constructs DEC-16",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built, bias debts included."
   },
   {
    "id": "UC-045",
@@ -2623,9 +2633,10 @@
    ],
    "outcome": "Cited into the question or set aside with a reason.",
    "coveredByRequirements": "yes",
-   "requirementIds": "queue R18 (built T12, REC-202)",
+   "requirementIds": "queue R18; queue-producers R9",
    "src": "queue Purpose",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Both halves are marked 'not yet met' (K533) although the queue offers the acts: unproven."
   },
   {
    "id": "UC-046",
@@ -2647,7 +2658,7 @@
    ],
    "outcome": "The act runs in its own surface; the task resolves.",
    "coveredByRequirements": "yes",
-   "requirementIds": "queue R1, R8, R12, R23-R25",
+   "requirementIds": "queue R1, R8, R12; tasks R1-R3",
    "src": "Interaction Constructs section T",
    "basis": "fixed"
   },
@@ -2758,7 +2769,7 @@
     "leg"
    ],
    "acts": [
-    "inquiry: Group the legs into grounds"
+    "inquiry: Group the legs into sets of reasons"
    ],
    "outcome": "Grounds recorded with who asserted them; strength before and after shown after structure is authored.",
    "coveredByRequirements": "yes",
@@ -2780,7 +2791,7 @@
     "strength"
    ],
    "acts": [
-    "strength: Check whether grounds share an origin"
+    "strength: Check whether sets of reasons share an origin"
    ],
    "outcome": "An independence answer per pair of parts.",
    "coveredByRequirements": "yes",
@@ -2988,11 +2999,11 @@
     "bias-debt: Clear a hunch before publishing"
    ],
    "outcome": "Hunch legs inert in strength; publication refused UNCLEARED_HUNCH.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "strength R5 (not yet met); case-authoring R12 (not yet met)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "case-authoring R12, R34 (C-120.7); strength R5",
    "src": "DEC-15; DEC-20; Declared Bias 'HUNCH DEBT'",
    "basis": "fixed",
-   "coverageNote": "The uncleared-hunch refusal lands with the ceremony's pre-flight (DEC-80 item 3); case-authoring R12 and strength R5 not yet met."
+   "coverageNote": "Publishing refuses an uncleared hunch; a hunch still counts at its stated grade in strength (R5 not yet met)."
   },
   {
    "id": "UC-062",
@@ -3054,14 +3065,15 @@
     "ai-run"
    ],
    "acts": [
-    "determination: Propose a comparison"
+    "determination: Propose a comparison",
+    "determination: Read the facts for a comparison from a contradiction"
    ],
    "outcome": "A labelled proposal for human evaluation, never a determination.",
    "coveredByRequirements": "partial",
-   "requirementIds": "conformance R12, R18",
+   "requirementIds": "conformance R12, R18, R21",
    "src": "Functional Architecture 'The eighth skill'; Roadmap section 9 skill 6",
    "basis": "fixed",
-   "coverageNote": "Storage of a comparison is required; the skill that prepares it is not a module."
+   "coverageNote": "A comparison may start from a contradiction inquiry, with both sides' texts; the skill that prepares one is not a module."
   },
   {
    "id": "UC-065",
@@ -3153,12 +3165,12 @@
     "contradiction: Pair assertions worth comparing",
     "contradiction: Propose a label"
    ],
-   "outcome": "Append-only candidates; nothing shown to a member.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "contradiction R1-R19",
+   "outcome": "Append-only candidates; K1-K4 reach members as leads or duties (no member surface yet); K5 not shown until a measured recommender run.",
+   "coveredByRequirements": "yes",
+   "requirementIds": "contradiction R1-R24, R57",
    "src": "Case Making 'CONTRADICTION'; CONTRADICTION-IDENTIFY-DESIGN; DEC-76, DEC-77 (conditional contradiction; WORLD candidates reach members as leads)",
    "basis": "fixed",
-   "coverageNote": "An undetermined candidate is a lead, never a duty (DEC-84 (1)); a precision or unrelated label is never shown as a tension."
+   "coverageNote": "K1-K4 built with the over-strictness gate; K5 is not shown until a measured recommender run (K488). A precision or unrelated label is never shown as a tension."
   },
   {
    "id": "UC-069",
@@ -3180,11 +3192,11 @@
     "contradiction: Conclude the contradiction inquiry, recording its kind"
    ],
    "outcome": "Resolved with its kind: dissolved (both stay, each qualified), corrected (the wrong side stale with its reason, never deleted) or genuine (double-speak promoted to a finding, obligation against act routed to a determination, a conflict of norms, or held irreconcilable).",
-   "coveredByRequirements": "no",
-   "requirementIds": "none",
+   "coveredByRequirements": "yes",
+   "requirementIds": "contradiction R24-R36, R56; queue R46; queue-producers R4",
    "src": "Case Making 'CONTRADICTION' (PRESENT, RESOLVE); DEC-76, DEC-77 (resolution kinds; inline tension mark and clarifier, the contradiction inquiry as escalation)",
    "basis": "fixed",
-   "coverageNote": "Decided (DEC-76, DEC-77, DEC-84) and designed (CONTRADICTION-PRESENT-RESOLVE-DESIGN.md, reviewed K447); the requirement changes are owed (N345), not in T14."
+   "coverageNote": "Built at the plane; no member surface yet."
   },
   {
    "id": "UC-070",
@@ -3202,11 +3214,11 @@
    ],
    "acts": [],
    "outcome": "A question whose conclusion is the discrepancy.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "inquiry R4-R8 (expressible as an ordinary question)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "contradiction R35-R36; inquiry R46-R48",
    "src": "Case Making 'CONTRADICTION' (first case expressible today); DEC-76 (double-speak or reversal promotes into a finding; obligation against act routes into conformance)",
    "basis": "fixed",
-   "coverageNote": "A world candidate is a lead, taken up or dismissed with one fixed reason; a double-speak or reversal promotes into a finding (DEC-76 item 3; DEC-84 (17))."
+   "coverageNote": "A double_speak_or_reversal resolution concludes the contradiction inquiry as a finding."
   },
   {
    "id": "UC-071",
@@ -3933,13 +3945,15 @@
    "constructs": [
     "case"
    ],
-   "acts": [],
+   "acts": [
+    "case: Prepare a case (the pre-flight)"
+   ],
    "outcome": "A considered act, not a button in a row.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "case-authoring R6, R12; ratification R2",
+   "coveredByRequirements": "yes",
+   "requirementIds": "case-authoring R12, R31-R37; ratification R18-R19; membership R89-R91; affordances R5, R28",
    "src": "DEC-80 (ceremony and pre-flight built in the redesign; DEC-33's placeholder retired); DEC-81 (pre-flight retries a failed co-attestation, else an attributed acknowledgement); Interaction Constructs RULED 2026-08-01",
    "basis": "fixed",
-   "coverageNote": "Undeferred (DEC-80): five steps re-derived for DEC-72, a pre-flight running the real refusals before the first screen, no placeholder. Requirements owed (N345)."
+   "coverageNote": "Built at the plane; the ceremony's screens are not built."
   },
   {
    "id": "UC-103",
@@ -3960,10 +3974,10 @@
    ],
    "outcome": "A ratified case edition; signer and deliverer recorded as two facts.",
    "coveredByRequirements": "yes",
-   "requirementIds": "ratification R2-R3, R10-R13; membership R56",
+   "requirementIds": "ratification R2-R3, R10-R13, R18-R19; membership R56, R89-R91",
    "src": "Membership v2 section 7; AI Roles rule 4; DEC-80 (the owner signs in the browser with a registered browser-held key); DEC-87 (an irreversible act only through the ceremony)",
    "basis": "fixed",
-   "coverageNote": "Decided: signing in the browser with a browser-held key producing the same sshsig signature; founder delivery a fallback (DEC-80 item 4). Requirements owed (N345)."
+   "coverageNote": "Any key origin verifies (ratification R19); a member registers their own browser-held key (membership R89-R91). Signing in the browser is the interface's and not built; founder delivery a fallback (DEC-80 item 4)."
   },
   {
    "id": "UC-104",
@@ -4052,10 +4066,10 @@
    "acts": [],
    "outcome": "A progressively disclosed story; print carries the full narrative.",
    "coveredByRequirements": "yes",
-   "requirementIds": "publication R9-R12, R26-R29",
+   "requirementIds": "publication R9-R12, R20, R26-R29",
    "src": "Publication; UI-KICKOFF refinements (print)",
    "basis": "fixed",
-   "coverageNote": "Decided: the case also discloses each document's grade and co-attestation (DEC-81) and any unresolved record contradiction (DEC-76 item 4); requirements owed (N345)."
+   "coverageNote": "The case carries each capture's grade and co-attestation, capture accounts, sources and disclosed or highlighted contradictions (publication R10, R20)."
   },
   {
    "id": "UC-108",
@@ -4790,7 +4804,7 @@
    "function": "Membership",
    "audience": [
     "administrator",
-    "project owner"
+    "member"
    ],
    "goal": "Give an enrolled active member a key that attests.",
    "trigger": "A member will sign.",
@@ -4798,13 +4812,15 @@
     "credentials"
    ],
    "acts": [
-    "credentials: Register a signing key"
+    "credentials: Register a signing key",
+    "credentials: Register a browser-held signing key"
    ],
    "outcome": "A key whose 'attests' is shown truthfully.",
    "coveredByRequirements": "yes",
-   "requirementIds": "membership R25-R27, R70",
+   "requirementIds": "membership R25-R27, R70, R89-R91",
    "src": "Membership v2 section 6 (D-158); DEC-80 (a browser-held key registered as the owner's attesting key)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Includes a member registering their own key."
   },
   {
    "id": "UC-141",
@@ -5005,13 +5021,15 @@
     "source"
    ],
    "acts": [
-    "knock: Knock (hand over material)"
+    "knock: Knock (hand over material)",
+    "knock: List a pseudonym's knocks"
    ],
    "outcome": "The record shows a pseudonym and states that the same knocker secret was presented, never an identity.",
-   "coveredByRequirements": "no",
-   "requirementIds": "none (decided; requirements owed, N345)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "capture R66-R67; sources R6, R9",
    "src": "DEC-78 item 3; Intake Doctrine §2a",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built at the plane; no member surface yet."
   },
   {
    "id": "UC-150",
@@ -5031,13 +5049,17 @@
    "acts": [
     "source: Record a disclosure of the source's identity",
     "source: Record a hostile exposure as the exposer's claim",
-    "source: Ask the source's consent to publish an identity detail"
+    "source: Ask the source's consent to publish an identity detail",
+    "source: Link two sources as one person",
+    "source: Consent by knocker secret (the source, with no account)",
+    "source: Withdraw a source's consent"
    ],
    "outcome": "A dated, attributed history of disclosures; an identity detail published only with consent to that audience or where already public, cited; a firmer identity reaches resting findings as a notice.",
-   "coveredByRequirements": "no",
-   "requirementIds": "none (decided; a home for the disclosure history is BOB's to place, N345)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "sources R1-R15; case-authoring R37; publication R51-R52; reevaluation R28",
    "src": "DEC-78 item 5",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built at the plane; no member surface yet."
   },
   {
    "id": "UC-151",
@@ -5060,10 +5082,10 @@
    ],
    "outcome": "Stage bars and readiness rungs computed from the record, each unreached step stating what it still needs; 'closed' with its reason.",
    "coveredByRequirements": "yes",
-   "requirementIds": "publication R44-R47 (built T12; routed T13, N321), R49 (specified T14, N346); basis-versions R41",
+   "requirementIds": "publication R44-R49; basis-versions R41",
    "src": "State Rules §4.3; K362; K364; DEC-79",
    "basis": "fixed",
-   "coverageNote": "The stacked bars are decided (DEC-79), not built in the interface."
+   "coverageNote": "Built at the plane; the stacked bars (DEC-79) are not built in the interface."
   },
   {
    "id": "UC-152",
@@ -5083,10 +5105,11 @@
     "case: Prepare a case"
    ],
    "outcome": "The case discloses each document's capture grade and whether it is co-attested.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "capture R20; provenance R32-R33 (co-attestation built); the disclosure is owed (N345)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "capture R20; provenance R32-R33, R49; case-authoring R35; publication R20",
    "src": "DEC-81 item 1; Intake Doctrine §3",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built at the plane."
   },
   {
    "id": "UC-153",
@@ -5103,14 +5126,16 @@
     "document"
    ],
    "acts": [
+    "case: Retry a failed co-attestation, late",
     "case: Acknowledge a missing co-attestation, with a reason",
     "case: Add a signed account of how a document was captured"
    ],
    "outcome": "The pre-flight retries first; if still missing, an attributed acknowledgement with a reason, and the document marked 'self-attested only'; never refused outright.",
-   "coveredByRequirements": "no",
-   "requirementIds": "none (decided; requirements owed, N345)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "case-authoring R35-R36; capture R68-R69; publication R20",
    "src": "DEC-81 item 3",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built at the plane, with the late retry and the signed capture account; no member surface yet."
   },
   {
    "id": "UC-154",
@@ -5154,10 +5179,11 @@
     "contradiction: Dismiss a lead"
    ],
    "outcome": "A stated explanation (resolved when evidenced, otherwise softened), or one side stale with a written reason, or a lead dismissed with a fixed reason.",
-   "coveredByRequirements": "no",
-   "requirementIds": "none (decided; requirements owed, N345)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "contradiction R27, R30, R32-R33",
    "src": "DEC-77 item 1; DEC-84 (16)-(17)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built at the plane; no member surface yet."
   },
   {
    "id": "UC-156",
@@ -5177,10 +5203,11 @@
     "contradiction: Accept the machine's recommendation"
    ],
    "outcome": "The record keeps that the member accepted it, and which one; the machine's reason stays the machine's; the acceptance rate is measured.",
-   "coveredByRequirements": "no",
-   "requirementIds": "none (decided; requirements owed, N345)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "contradiction R30, R37, R39, R41; skills R27",
    "src": "DEC-77 item 3(b); DEC-84 (14); K447 point 15",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "No recommendation is produced live until the recommender prompt is measured (R41; K491)."
   },
   {
    "id": "UC-157",
@@ -5201,10 +5228,11 @@
     "case: Sign the case"
    ],
    "outcome": "The same sshsig signature the plane verifies, confirmed by passphrase or device unlock; a lost key revoked and replaced.",
-   "coveredByRequirements": "no",
-   "requirementIds": "none (decided; requirements owed, N345)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "membership R89-R91; ratification R18-R19",
    "src": "DEC-80 item 4",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built at the plane; the browser key itself is the interface's."
   },
   {
    "id": "UC-158",
@@ -5224,10 +5252,85 @@
     "case: Disclose an unresolved record contradiction"
    ],
    "outcome": "An attributed disclosure on the case, both sides with their sources; undisclosed, the case is refused; disclosed, it is not.",
-   "coveredByRequirements": "no",
-   "requirementIds": "none (decided; requirements owed, N345)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "case-authoring R31-R33; publication R10, R20, R50; queue-producers R6",
    "src": "DEC-76 item 4; DEC-84 (11)-(13)",
-   "basis": "fixed"
+   "basis": "fixed",
+   "coverageNote": "Built at the plane; no member surface yet."
+  },
+  {
+   "id": "UC-159",
+   "name": "Be told of a conflict with a record I cannot see, ask to resolve it, and respond",
+   "layer": "2 Analysis",
+   "function": "Cross-reference multiple sources",
+   "audience": [
+    "project participant"
+   ],
+   "goal": "Learn that something my project rests on conflicts with a record I cannot see, without either side being exposed, and work toward resolving it.",
+   "trigger": "A duty or plurality conflict whose other side is in a project I cannot see.",
+   "constructs": [
+    "contradiction-notice",
+    "contradiction",
+    "queue-item"
+   ],
+   "acts": [
+    "contradiction-notice: Read the notices and responses",
+    "contradiction-notice: Ask to resolve the conflict (opt in)",
+    "contradiction-notice: Respond to the notice"
+   ],
+   "outcome": "A notice on my own side only; once every project holding a side has asked, the projects are named to each other; responses relayed with only what each responder chose; at publication the conflict is highlighted without naming the hidden record.",
+   "coveredByRequirements": "yes",
+   "requirementIds": "contradiction R49-R55; queue-producers R7; case-authoring R31-R33",
+   "src": "DEC-85; contradiction R49-R55",
+   "basis": "fixed",
+   "coverageNote": "Built at the plane; no member surface yet."
+  },
+  {
+   "id": "UC-160",
+   "name": "Report that a subject match was wrong",
+   "layer": "1 Information",
+   "function": "Retrieve and extract",
+   "audience": [
+    "member"
+   ],
+   "goal": "Say that the record paired a reference with the wrong subject, without moving anything.",
+   "trigger": "A member sees a document matched to the wrong person, office or thing.",
+   "constructs": [
+    "entity"
+   ],
+   "acts": [
+    "entity: Report a wrong subject match"
+   ],
+   "outcome": "A defect with its reason, shown beside the resolution with a count; nothing moves.",
+   "coveredByRequirements": "yes",
+   "requirementIds": "entities R38",
+   "src": "entities R14, R15, R38; K485",
+   "basis": "fixed",
+   "coverageNote": "Built at the plane; no member surface yet."
+  },
+  {
+   "id": "UC-161",
+   "name": "As an administrator, see a member's self-registered key and revoke it",
+   "layer": "Cross-cutting (membership, setup, assistant, attention)",
+   "function": "Membership",
+   "audience": [
+    "administrator"
+   ],
+   "goal": "Know when a member registers their own signing key, and revoke it if needed.",
+   "trigger": "A member registers their own browser-held key.",
+   "constructs": [
+    "credentials",
+    "queue-item"
+   ],
+   "acts": [
+    "credentials: Revoke or re-activate a signing key"
+   ],
+   "outcome": "Every administrator is named in the registration's notified list; a feed item offers the revoke (signerset).",
+   "coveredByRequirements": "yes",
+   "requirementIds": "membership R26, R89; queue R1, R12; queue-producers R14",
+   "src": "K509 (2); membership R26, R89; K535, K607",
+   "basis": "fixed",
+   "coverageNote": "The administrators' feed item is catalogued; its producer is not built (queue-producers R14, N375)."
   }
  ],
  "journeyExperience": [
@@ -5629,15 +5732,16 @@
       "OPERATOR_TOKEN_CANNOT_RATIFY_CASE.",
       "CASE_CONCLUSION_MOVED.",
       "An undisclosed open record tension refuses the case; a disclosed one does not (DEC-84 (13)).",
-      "A load-bearing document whose co-attestation failed: retried, then acknowledged with a reason and marked 'self-attested only' (DEC-81 item 3)."
+      "A load-bearing document whose co-attestation failed: retried, then acknowledged with a reason and marked 'self-attested only' (DEC-81 item 3).",
+      "A finding rests on a side in conflict with a record the owner cannot see: told in the ceremony, highlighted in the case, never naming that record (DEC-85)."
      ],
      "howLong": "Minutes, once the pre-flight is clear.",
      "handoffTo": "signer with case authority",
      "feelingRisk": "A member who thinks they certify authenticity has been misled (Interaction Constructs section A).",
-     "src": "ratification R2-R3; DEC-80; DEC-81; DEC-76 item 4; DEC-78 item 5",
+     "src": "ratification R2-R3; DEC-80; DEC-81; DEC-76 item 4; DEC-78 item 5; case-authoring R31-R37; ratification R18-R19",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "Decided, not built: the ceremony's requirements are owed (N345); the words of each step are the redesign's."
+      "Built at the plane (the pre-flight, the tensions read, the late retry, capture accounts, self-registered keys); the five screens and signing in the browser are not built; the words of each step are the redesign's."
      ]
     },
     {
@@ -5926,15 +6030,15 @@
      "whatTheyKnow": "The obligation and who it is with.",
      "decisionTheyMake": "Resolve, forward to whom.",
      "whatCanGoWrong": [
-      "NOT_YOURS (C-76.1).",
+      "TASK_NOT_YOURS (C-76.1).",
       "ALREADY_RESOLVED.",
       "MACHINE_CANNOT_RESOLVE / FORWARD.",
       "Per-item: some retained with their reasons."
      ],
      "howLong": "Minutes.",
      "handoffTo": "forwardee",
-     "feelingRisk": "Silent disappearance for the member who did not resolve it: 'resolved by X' is built (R39), except for bias debts (specified T14, N326).",
-     "src": "queue R25; record-core R50-R52",
+     "feelingRisk": "Silent disappearance for the member who did not resolve it: 'resolved by X' is shown (R39), bias debts included.",
+     "src": "queue R25; record-core R50-R52; tasks R3; bias R44",
      "basis": "fixed"
     },
     {
@@ -5993,10 +6097,10 @@
      "howLong": "Minutes; days if taken up.",
      "handoffTo": "the contradiction inquiry, for 'they really conflict' or 'not sure'",
      "feelingRisk": "Recommendations becoming decisions: the acceptance rate is measured and reviewed (DEC-77 item 3).",
-     "src": "DEC-76; DEC-77; DEC-84",
+     "src": "DEC-76; DEC-77; DEC-84; contradiction R24-R36; queue R46",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "Decided, not built: requirements owed (N345)."
+      "Built at the plane; no member surface yet. No machine recommendation is produced live until the recommender prompt is measured (R41; K491)."
      ]
     },
     {
@@ -6172,16 +6276,16 @@
      "whatTheyKnow": "The material, its digest, the knocker's note (their own words, never evidence of truth) and contact (it stays in the inbox); a knocker pseudonym if the same secret was presented (DEC-78).",
      "decisionTheyMake": "Pull (admits the material as a capture carrying the knock's receipt), discard, or leave new.",
      "whatCanGoWrong": [
-      "Two members resolving one knock at once is not specified.",
+      "A knock already pulled answers existed: true with the same capture; a discarded knock cannot be pulled until put back to new (KNOCK_DISCARDED).",
       "An unknown knock: NO_SUCH_KNOCK, nothing written (capture R32, built T12)."
      ],
      "howLong": "Days.",
      "handoffTo": "member",
      "feelingRisk": "Unvetted material entering as if vouched: pulling commits the member to nothing more; vouching stays with release (DEC-78 item 1).",
-     "src": "capture R32; DEC-78 items 1-4; Intake Doctrine §2a",
+     "src": "capture R32; DEC-78 items 1-4; Intake Doctrine §2a; capture R65; control-plane R36",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "Decided, not built: capture's requirements owed (N345)."
+      "Built at the plane; the setup page's inbox performs the pull ('Mark as taken up'); app.html has no inbox."
      ]
     },
     {
@@ -6196,10 +6300,10 @@
      "howLong": "Months or years.",
      "handoffTo": "project owner, at publishing (consent)",
      "feelingRisk": "The group making a source more public than they chose (DEC-78 item 5(a)).",
-     "src": "DEC-78 item 5",
+     "src": "DEC-78 item 5; sources R1-R15",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "Decided, not built: where the disclosure history lives is BOB's to place (N345)."
+      "Built at the plane (module sources); no member surface yet. Hand-carried material's intake waits on the upload redesign (K509 (5))."
      ]
     }
    ],
@@ -6463,6 +6567,16 @@
      "text": "A newer capture that affects a member's reference, with adopt and keep.",
      "basis": "fixed",
      "src": "queue R9, R12 (built T12, N172)"
+    },
+    {
+     "text": "Each obligation's 'instead' names its own door: signerset for a self-registered key, biasdebtresolve for a bias debt, taskresolve otherwise.",
+     "basis": "fixed",
+     "src": "queue R12; K607"
+    },
+    {
+     "text": "A conflict with a record the member cannot see, homed only from the member's own side (contradiction-duty-unseen, contradiction-plurality-unseen).",
+     "basis": "fixed",
+     "src": "queue-producers R7; DEC-85"
     }
    ],
    "mustNeverShowOrDo": [
@@ -6490,6 +6604,11 @@
      "text": "Never a severity ladder of warning / error colours in place of the three classes.",
      "basis": "fixed",
      "src": "NOTIFICATIONS.md 'three, not four severities'"
+    },
+    {
+     "text": "Never reveal a task on a subject the viewer may not see: it reads as no task.",
+     "basis": "fixed",
+     "src": "tasks R6; K565"
     }
    ],
    "statesToDesign": {
@@ -6993,9 +7112,9 @@
      "src": "DEC-77 item 2; K447 point 9"
     },
     {
-     "text": "The mark's state wherever a side appears: in tension, explained not yet shown (softened), stale with its reason, qualified.",
+     "text": "The mark's state wherever a side appears: in tension, explained not yet shown (softened), stale with its reason (naming the member, instant and act), qualified, held irreconcilable, lead, plurality, unseen conflict.",
      "basis": "fixed",
-     "src": "DEC-77 items 1-2; DEC-84 (7)"
+     "src": "DEC-77 items 1-2; DEC-84 (7); contradiction R27; K544"
     }
    ],
    "mustNeverShowOrDo": [
@@ -7018,6 +7137,16 @@
      "text": "Never show a precision or unrelated label as a tension, and never reveal a side the viewer may not see.",
      "basis": "fixed",
      "src": "CONTRADICTION-PRESENT-RESOLVE-DESIGN.md §4; contradiction R10"
+    },
+    {
+     "text": "Never name or count a project the viewer cannot see in a candidate's reach; a hidden project reads as absent.",
+     "basis": "fixed",
+     "src": "contradiction R55; K523, K544"
+    },
+    {
+     "text": "Never offer 'conclude' on a contradiction inquiry; offer 'Resolve this contradiction' only to a viewer who sees both sides.",
+     "basis": "fixed",
+     "src": "affordances R8, R14; K516"
     }
    ],
    "statesToDesign": {
@@ -7057,34 +7186,46 @@
    },
    "primaryActs": [
     {
-     "act": "clarify (how the two differ)",
-     "rung": "not yet assigned (BOB's wording, K447); treated as reasoned (DEC-87)",
+     "act": "clarify, how the two differ (contradictionclarify)",
+     "rung": "reasoned",
      "weight": "single",
-     "src": "DEC-77 item 1"
+     "src": "contradiction R32; affordances R2"
     },
     {
-     "act": "one of them is wrong",
-     "rung": "reasoned (DEC-84 (16))",
+     "act": "one of them is wrong (contradictionclarify, one_wrong)",
+     "rung": "reasoned",
      "weight": "single",
-     "src": "DEC-84 (16)"
+     "src": "contradiction R33; DEC-84 (16)"
     },
     {
-     "act": "take up as a contradiction inquiry",
-     "rung": "not yet assigned; treated as reasoned (DEC-87)",
+     "act": "take up as a contradiction inquiry (contradictiontakeup)",
+     "rung": "reasoned",
      "weight": "single",
-     "src": "DEC-76 item 2"
+     "src": "contradiction R35; affordances R2"
     },
     {
-     "act": "accept a recommendation",
-     "rung": "not yet assigned; treated as reasoned (DEC-87)",
+     "act": "accept a recommendation (the acceptance basis of clarify or resolve)",
+     "rung": "reasoned (the act it rides)",
      "weight": "single",
-     "src": "DEC-77 item 3(b)"
+     "src": "contradiction R30; DEC-77 item 3(b)"
     },
     {
-     "act": "dismiss a lead (one fixed reason)",
-     "rung": "not yet assigned; one act (DEC-77 item 1)",
+     "act": "dismiss a lead, one fixed reason (contradictiondismiss)",
+     "rung": "reasoned",
      "weight": "single",
-     "src": "DEC-84 (17)"
+     "src": "contradiction R31; DEC-84 (17)"
+    },
+    {
+     "act": "resolve the contradiction inquiry with its kind (contradictionresolve)",
+     "rung": "reasoned",
+     "weight": "single",
+     "src": "contradiction R36; affordances R2, R8"
+    },
+    {
+     "act": "ask to resolve a conflict with a record you cannot see (contradictionoptin) / respond (contradictionrespond)",
+     "rung": "not yet assigned (RUNG_ABSENT, ground undetermined); treated as reasoned (DEC-87)",
+     "weight": "single",
+     "src": "contradiction R51, R53; affordances R3"
     }
    ],
    "accessibilityAndLanguage": [
@@ -7094,7 +7235,7 @@
      "src": "DEC-79; DEC-82"
     }
    ],
-   "src": "DEC-76; DEC-77; DEC-84; K447; docs/development/CONTRADICTION-PRESENT-RESOLVE-DESIGN.md"
+   "src": "DEC-76; DEC-77; DEC-84; K447; docs/development/CONTRADICTION-PRESENT-RESOLVE-DESIGN.md; contradiction R24-R57; DEC-85"
   },
   {
    "surface": "Document page (capture and release)",
@@ -7150,6 +7291,16 @@
      "text": "For work from another group, the origin mark; a hover shows who produced it, which edition, who accepted it and why.",
      "basis": "fixed",
      "src": "DEC-92"
+    },
+    {
+     "text": "The attestation attempts made at capture, late attestations ('proves the bytes existed by <at>, not at capture'), and the capturing member's signed accounts to those who may see the capture's bundle.",
+     "basis": "fixed",
+     "src": "capture R20, R68, R69; K580"
+    },
+    {
+     "text": "For a doorbell document: 'received, not fetched', the member's authored letter stated as authored, and the knock's receipt as its chain.",
+     "basis": "fixed",
+     "src": "provenance R19, R42, R51; K538, K581"
     }
    ],
    "mustNeverShowOrDo": [
@@ -7295,6 +7446,11 @@
      "text": "Each question with its capture and connection badges (testimony beside), one phrase against the bar and 'Undetermined' with its reason; never one combined badge.",
      "basis": "fixed",
      "src": "DEC-82"
+    },
+    {
+     "text": "For owners, tension-after-publication items for their published cases.",
+     "basis": "fixed",
+     "src": "publication R50; queue-producers R6"
     }
    ],
    "mustNeverShowOrDo": [
@@ -7555,9 +7711,9 @@
      "src": "affordances R2 (IRREVERSIBLE_CORRECTION_PATH); DEC-19"
     },
     {
-     "text": "Before the first screen, the pre-flight's real refusals, writing nothing: below the bar, an uncleared hunch, no signers.",
+     "text": "Before the first screen, the pre-flight's real refusals, writing nothing: an uncleared hunch first, below the bar, no attesting key (with a remedy naming self-registration).",
      "basis": "fixed",
-     "src": "DEC-80 item 3"
+     "src": "DEC-80 item 3; case-authoring R12, R34; ratification R18"
     },
     {
      "text": "Step three: exclusions and their acknowledgements, what was searched, the bias acknowledged, any unresolved record contradiction for the owner to disclose, and consent for any source identity the case would reveal.",
@@ -7565,14 +7721,24 @@
      "src": "DEC-80 item 2; DEC-76 item 4; DEC-78 item 5"
     },
     {
-     "text": "Each document's capture grade and whether it is co-attested; a missing co-attestation retried first, then acknowledged with a reason and marked 'self-attested only'.",
+     "text": "Each document's capture grade and whether it is co-attested; a missing co-attestation retried late first (reattest), then acknowledged with a reason and marked 'self-attested only', with the capturing member's signed accounts.",
      "basis": "fixed",
-     "src": "DEC-81 items 1, 3"
+     "src": "DEC-81 items 1, 3; case-authoring R35-R36; capture R68-R69"
     },
     {
-     "text": "Signing in the browser with the owner's registered browser-held key, confirmed by passphrase or device unlock.",
+     "text": "Signing in the browser with a key the owner registered themself or an administrator registered, confirmed by passphrase or device unlock; any key origin verifies.",
      "basis": "fixed",
-     "src": "DEC-80 item 4"
+     "src": "DEC-80 item 4; ratification R19; membership R89-R91"
+    },
+    {
+     "text": "Each tension in one of four sentences ('In tension, not yet resolved', 'Explained, not yet shown', 'Held irreconcilable by the group', 'Rests on a side in conflict with a record not shown'); a conflict whose other side the owner cannot see is told as such, and the owner is told it will be highlighted in the case.",
+     "basis": "fixed",
+     "src": "case-authoring R31-R33; DEC-85"
+    },
+    {
+     "text": "The publish act carries the self-attested prompt; recording a source's consent carries the consent prompt.",
+     "basis": "fixed",
+     "src": "affordances R28, R29"
     }
    ],
    "mustNeverShowOrDo": [
@@ -7661,6 +7827,24 @@
      "rung": "irreversible",
      "weight": "single",
      "src": "affordances R1-R2"
+    },
+    {
+     "act": "reattest",
+     "rung": "attested",
+     "weight": "single",
+     "src": "capture R68; affordances R2"
+    },
+    {
+     "act": "captureaccount",
+     "rung": "attested",
+     "weight": "single",
+     "src": "capture R69; affordances R2"
+    },
+    {
+     "act": "sourceconsent",
+     "rung": "reasoned",
+     "weight": "single",
+     "src": "sources R7; affordances R1-R2"
     }
    ],
    "accessibilityAndLanguage": [
@@ -7688,7 +7872,7 @@
      "src": "Publication §5; DEC-80 item 2"
     }
    ],
-   "src": "Publication sections 1-5; ratification; DEC-80; DEC-81"
+   "src": "Publication sections 1-5; ratification; DEC-80; DEC-81; case-authoring R31-R37; ratification R18-R19"
   },
   {
    "surface": "Review copy",
@@ -7874,6 +8058,11 @@
      "text": "For an obligation-against-act finding: Criteria, Condition, Cause (only when evidenced, else 'cause not established'), Effect, Recommendation (a proposed action).",
      "basis": "fixed",
      "src": "DEC-77 item 2; DEC-84 (10)"
+    },
+    {
+     "text": "A comparison started from a contradiction inquiry: the member names which side states the standard (never defaulted); each side with its source, date and text, labelled the record's; outcomes_differ stated quietly when per-standard outcomes differ.",
+     "basis": "fixed",
+     "src": "conformance R9, R12, R21, R22; K503, K569"
     }
    ],
    "mustNeverShowOrDo": [
@@ -8257,6 +8446,11 @@
      "text": "The page a group first meets at its copy's root: claim, sign-in, enrolment; and the installer's install and update pages.",
      "basis": "fixed",
      "src": "instance-setup R20-R25; installer R1"
+    },
+    {
+     "text": "It also carries an inbox, a members-and-keys form and an intake form, apart from app.html.",
+     "basis": "fixed",
+     "src": "bio-plane/src/setup.mjs; instance-setup R44-R46"
     }
    ],
    "mustShow": [
@@ -8279,6 +8473,21 @@
      "text": "A refusal before install says nothing was created.",
      "basis": "fixed",
      "src": "installer R4"
+    },
+    {
+     "text": "A pasted 'ssh-ed25519 <key> <comment>' line split into key and comment.",
+     "basis": "fixed",
+     "src": "instance-setup R44"
+    },
+    {
+     "text": "The intake form writes content_hash for a captured document.",
+     "basis": "fixed",
+     "src": "instance-setup R45"
+    },
+    {
+     "text": "Each capture refusal (BAD_LOCATOR, SOURCE_REFUSED, FETCH_FAILED, EMPTY, TOO_LARGE) in its own sentence; none the plane no longer makes (no NO_AUTHORITY sentence).",
+     "basis": "fixed",
+     "src": "instance-setup R46; K605"
     }
    ],
    "mustNeverShowOrDo": [
@@ -8405,14 +8614,19 @@
      "src": "membership R18"
     },
     {
-     "text": "A browser-held attesting key and its status beside the others (decided, not built).",
+     "text": "Each key's origin (administrator or self) and who registered it; a self-registered browser-held key attests exactly as an administrator-registered one.",
      "basis": "fixed",
-     "src": "DEC-80 item 4"
+     "src": "membership R27, R89-R91; DEC-80 item 4"
     },
     {
      "text": "An administrator-only act refused to others reads the standard sentence, then what to do next or instead.",
      "basis": "fixed",
      "src": "DEC-83; membership R84"
+    },
+    {
+     "text": "Every administrator is told of a self-registered key and may revoke it (the feed item's producer is not built).",
+     "basis": "fixed",
+     "src": "membership R89; queue-producers R14; K535"
     }
    ],
    "mustNeverShowOrDo": [
@@ -8430,6 +8644,11 @@
      "text": "Never report a machine credential as holding capabilities.",
      "basis": "fixed",
      "src": "Membership v2 section 5"
+    },
+    {
+     "text": "Never let a member re-activate their own revoked key; only an administrator does.",
+     "basis": "fixed",
+     "src": "membership R26, R89 (C-96.16)"
     }
    ],
    "statesToDesign": {
@@ -8483,6 +8702,12 @@
      "rung": "none: a credential act, not a record act (RUNG_ABSENT ground credential; affordances R2-R3)",
      "weight": "single",
      "src": "membership R6-R12"
+    },
+    {
+     "act": "signerregister / signerrevoke (a member's own key) / signerset (administrator)",
+     "rung": "none: a credential act, not a record act (RUNG_ABSENT ground credential; affordances R2-R3)",
+     "weight": "single",
+     "src": "membership R26, R89-R90"
     }
    ],
    "accessibilityAndLanguage": [
@@ -8725,14 +8950,14 @@
      "src": "UI-KICKOFF refinements"
     },
     {
-     "text": "Each document's capture grade and whether it is co-attested, or 'self-attested only'.",
+     "text": "Each document's capture grade and whether it is co-attested, or 'self-attested only' with the acknowledgement and the capturing member's signed accounts, verifiable from the document alone.",
      "basis": "fixed",
-     "src": "DEC-81"
+     "src": "DEC-81; publication R20; K553"
     },
     {
-     "text": "Each unresolved record contradiction, disclosed and attributed, reaching one level and saying so.",
+     "text": "Each unresolved record contradiction, disclosed and attributed, reaching one level and saying so; one whose other side was not seen, highlighted without naming that record.",
      "basis": "fixed",
-     "src": "DEC-76 item 4; DEC-84 (12)"
+     "src": "DEC-76 item 4; DEC-84 (12); case-authoring R31; publication R10; DEC-85"
     },
     {
      "text": "For a finding against an office: Criteria, Condition, Cause or 'cause not established', Effect, Recommendation.",
@@ -8743,6 +8968,11 @@
      "text": "The origin mark on work from other groups.",
      "basis": "fixed",
      "src": "DEC-92"
+    },
+    {
+     "text": "A source only as the source consented or as already public; otherwise 'an unnamed source' with the receipt's fingerprint and time.",
+     "basis": "fixed",
+     "src": "case-authoring R37; publication R51-R52; K509 (4)"
     }
    ],
    "mustNeverShowOrDo": [
@@ -8864,9 +9094,9 @@
      "src": "capture Provides (inboxResolve)"
     },
     {
-     "text": "The receipt may carry a knocker secret the doorbell generated, shown once.",
+     "text": "The knock page takes an optional knocker secret of at least 20 characters, or makes one and shows it once on the receipt; the receipt carries the pseudonym.",
      "basis": "fixed",
-     "src": "DEC-78 item 3"
+     "src": "DEC-78 item 3; capture R54, R66"
     },
     {
      "text": "The inbox shows members the contact; it never enters the record or a publication.",
@@ -8874,9 +9104,14 @@
      "src": "DEC-78 item 4"
     },
     {
-     "text": "Pulling says what it does: admits the material as a capture naming the unnamed knocker as its source and the member as its capturing actor; vouching stays with release.",
+     "text": "Pulling says what it does: in one act it files the material as a capture naming the unnamed knocker as its source and the member as its capturing actor, and a new document waiting to be vouched for; vouching stays with release.",
      "basis": "fixed",
-     "src": "DEC-78 items 1-2"
+     "src": "DEC-78 items 1-2; capture R65; control-plane R36"
+    },
+    {
+     "text": "A pseudonym's knocks listed with 'the same knocker secret was presented', never an identity.",
+     "basis": "fixed",
+     "src": "capture R67"
     }
    ],
    "mustNeverShowOrDo": [
@@ -8930,8 +9165,9 @@
      "basis": "open"
     },
     "conflict": {
-     "text": "Two members resolving one knock at once is not specified.",
-     "basis": "open"
+     "text": "A knock already pulled answers existed: true with the same capture; a discarded knock cannot be pulled until put back to new (KNOCK_DISCARDED).",
+     "basis": "fixed",
+     "src": "capture R65"
     },
     "rate-limited": {
      "text": "RATE_IP / RATE_GLOBAL have no member-facing translation yet (D-508).",
@@ -8945,10 +9181,16 @@
    },
    "primaryActs": [
     {
-     "act": "inboxresolve (pulled / discarded / new)",
-     "rung": "reversible while it only sets a status; reasoned once pulling admits material (DEC-88)",
+     "act": "inboxpull (the pull)",
+     "rung": "not yet assigned (RUNG_ABSENT, ground undetermined; DEC-88 predates it); treated as reasoned (DEC-87)",
      "weight": "single",
-     "src": "capture Provides"
+     "src": "capture R65; affordances R3, R27"
+    },
+    {
+     "act": "inboxresolve (discarded / back to new)",
+     "rung": "reversible (DEC-88; the code still lists it as undetermined)",
+     "weight": "single",
+     "src": "capture R32; affordances R27"
     }
    ],
    "accessibilityAndLanguage": [
@@ -8971,7 +9213,7 @@
      "basis": "open"
     }
    ],
-   "src": "capture; Intake Doctrine section 2a"
+   "src": "capture; Intake Doctrine section 2a; capture R65-R67, R70"
   },
   {
    "surface": "Search and frontier",
