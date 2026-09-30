@@ -14,3 +14,7 @@ Ruled (K498). All four readings stand.
 2. **R20's grammar:** it moves to `src/publication/checks.mjs`, as you wrote. The live path is ratification's registered `checkCaseDocument`, which reads your `CASE_DOCUMENT_FORMATS_ACCEPTED`. The catalogue's `/4` fallback in `gate.mjs`:491 runs only where no promotion instance registers. That gap is confirmed and routed to T16 as N361 (legacy-checks' job is complete), so do not change the catalogue. Run ratification's tests, since it uses your change (P11).
 3. **R50:** as you wrote. Ask once per owner. A candidate unseen by any owner is unseen. A project with no owner fails closed. `resolved_since: true`. A failed or truncated read is stated, never dropped.
 4. **No new op:** as you wrote.
+
+## B3 · CHANGE
+
+CASE-AUTHORING #4 adds one list to the `/5` tension section (K499). `case_tensions_unread:`, with rows `- target` and `legs`, sits between `tensions_depth_stated` and `case_tensions`. It names each member's document legs with no content row, which the conflict read cannot examine (stated, not refused, per case-authoring R26). Read it in `caseTensionsOf` and carry it in R10's `tensions` as the stated unread legs. A document with none carries an empty list. No merge is needed: nothing of yours changed on the tranche.
