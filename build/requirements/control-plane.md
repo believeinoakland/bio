@@ -70,6 +70,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **R38** (D-61, N398, K607) `op=lease`'s `actor` is set by the control plane: a session's member, any other caller `token:<class>` (an `ai` credential `token:ai`); the caller's `actor` never reaches the store. The lease itself is record-core's (its R10).
 - **R39** (N408, K621) `op=purge` whose `confirm` is not exactly the namespace the request resolved to (`admission` R4) is refused 400 `REQUIRED_ARGUMENT_MISSING` (C-61.1), naming `argument` `confirm`, `expected` (that namespace) and `got` (the `confirm` sent, or null), with `tokenClass` and `store`, before the store is called: nothing is read or written. So a purge never lands in a namespace its caller did not name; a probe, confined to `scratch` (`admission` R4), can confirm only `scratch`. C-61.1's row moves to this module's own `checks.mjs` with the gate. *(not yet met: the gate is `legacy-index`'s, `src/index.mjs` about :524–538, through its `requiredArgument`, K621)*
 - **R40** (N399, K607) `op=stats` is stamped `capacity=1` exactly for the `admin` class (the ADMIN_TOKEN binding and the founder's session), else `capacity=0`, beside its `viewer` (R17); a caller's `capacity` never reaches the store, in either direction.
+- **R41** (K656; `agent-worker` R48, N157) The untargeted `op=affordances` answer is `affordances`' R17 answer with two keys added: `fences`, `skills`' `machineFences` over `CHECK_CATALOGUE` (the same list as the pack's `boundary.fences`, `skills` R3), and `pack`, `skills.renderPack(published, CHECK_CATALOGUE)` whole with its `version`, `published` being that same answer's `{catalog, vocabularies, capture_acts}` (and `surfaces`, `recipes` once published). A targeted answer carries neither key. If rendering throws, the answer carries `pack: null` and `pack_absent` (the error's message), never a partial pack, so a reader refuses it (`agent-worker` R48).
 
 **`dispatch(req)`, the record store's door**
 - **R26** An empty POST body is `null`, and a body that is not JSON is refused 400 `BAD_JSON`. A route no module serves is refused 400 `unknown op: <op>`. An answer is `{ok: true, result}`. The routes are the modules' own maps (the `membershipOps` pattern).
@@ -86,6 +87,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - `signatures`: the signing page (R1).
 - `public-read`: `inbandQuartet` (its R7, was `publication` R16; K651), for the review copy's answer (R20).
 - `instance-setup`: `setupPage`, its public group read (R1), the reports' handlers; `instanceSetupOf` and its `start`, `instanceSetupOps` (R35; N348).
+- `skills`: `renderPack`, `machineFences` (R41).
 - `affordances`: `ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`, `VOCABULARIES` for `op=affordances`' answer while its arm is here.
 - `legacy-checks`: the rows of R32 until they move, and C-61.1 (R39) until it moves here; `CHECK_CATALOGUE` (R22); `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
 - `legacy-store`: its store routes and class until each module takes its own.
