@@ -24,3 +24,7 @@ N382, my best reading (carrying on with it; N374 and N373's share first, for the
 **Tests and checks.** `test/m/tasks/`: 67 tests, 67 pass, 0 fail. `test/m/queue/`: 45, 44 pass, 1 fail (R19, above). `test/m/control-plane/`: 70, 68 pass, 1 fail (pre-existing), 1 todo. format (72 modules; 0 failures), architecture (8 files, 29 imports; 0 failures), coverage (11 of 11; 0 failures), ownership (0 failures, legacy 0/0).
 
 Size (session_01BCChBKLgkZzLgjYXWvQhQh): test runs 5, module lines 1820
+
+## J2 · COMPLETE
+
+Early merge (K425): N374 and N373's share pass, pushed on job/T17/tasks (record: 'Completion for the early merge'). N382 is not yet applied: it waits on J1's answer and follows on this branch after you merge, with a second COMPLETE. On merge, queue's R19 test fails until queue moves to taskExists({id, viewer}) (its own entry); control-plane's R36/R35 (N364) test already fails on tranche/T17 without me.
