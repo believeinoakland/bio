@@ -61,3 +61,7 @@ Found in other modules (record, Completion): (1) case-authoring: write the /5 bl
 ## J4 · COMPLETE
 
 R2, R10, R20, R51, R52 and row C-122.1 (awaiting stamp, T17) applied, on J2's reading (replaces J1); ready to merge early for case-authoring (K425). Strike the N364 not-yet-met marks on R2, R10, R20, R51, R52. publication 108 pass / 0 fail / 2 todo; users green except ratification's pre-existing K500 red; four checks 0 failures. Record: build/jobs/T16/publication.md, Completion. J2's questions still open: a ruling other than my reading re-opens it by CHANGE.
+
+## J5 · COMPLETE
+
+B3 (K552) applied on merged tranche/T16: captures: flat (accounts a count, acknowledgement and sentence null unless self-attested), capture_accounts: {capture, seq, by, at, key_b64, text, text_sha256, signature_sha256} with each account's text and armored signature verbatim in the body (## Capture Accounts, captureAccountsBodyLines), sources: as K549; caseDocumentBlocks reads all three, caseDocumentFacts and publishedCase answer all three. B2 (K549): one row C-122.1, as built. Provider part met: ready to merge early (K425); case-authoring's helpers are captureBlockLines, captureAccountsBodyLines, sourceBlockLines, sourceStatement, unnamedSourceStatement, caseDocumentBlocks. Strike N364's not-yet-met marks on R2, R10, R20, R51, R52. publication 108/0/2 todo; users green but ratification's pre-existing K500 red; four checks 0 failures. Record: Completion.
