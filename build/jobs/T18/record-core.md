@@ -32,3 +32,29 @@ The alternative is R63's `counts(hid)` with a sight registration (`registerSight
 Refused `GRAMMAR_DECLARED` (C-102.15), naming the holder: a module's second registration, or an id another registration holds. A refused registration registers nothing." R18 amended: "…runs the check catalogue, passed `grammars()` as `opts.grammars`, against a bounded page…"; an arm that throws in the audit counts as one `AUDIT_CHECK_FAILED` error on that bundle (R59's rule), never as clean and never as a throw out of `auditPass`.
 
 Rows: C-102.15 and .16 are new, in `record-core/checks.mjs`. By the entry, C-59.5 and C-102.1–.3 are copied there and C-75 is moved there whole (the catalogue's copy deleted). `registerAuditCheck`'s two refusals gain their `code`, `check` and `translation` (they carried none), and all of these rows are named `awaiting stamp` in my record.
+
+## J2 · REPORT
+
+What this job's change means for other modules:
+
+1. **Stale generated artifacts (§14).**
+   - The plane bundle, `bio-plane/dist/bio-plane.bundled.mjs`: `store.mjs`, `record-core/` and `bio-checks.mjs` changed.
+   - The agent-worker bundle: it takes `bio-checks.mjs` as an input (K189), and C-75 left it.
+
+   I rebuilt neither; both are yours at the layer close.
+2. **promotion (layer 2).** `record.grammars()` is live (R67): pass it to the gate's `checkBundle` as `opts.grammars`. Registrations are validated here against the catalogue's `EXTENSION_ARMS`, so a list from `grammars()` never makes `checkBundle` throw. At the gate the arm is passed as registered. Only the audit wraps it, so that a throwing arm is one `AUDIT_CHECK_FAILED` finding; the gate's handling of a throw is promotion's to decide.
+3. **promotion's stamp (layer 2): the rows changed, all `awaiting stamp`.**
+   - **C-75.1–.5 moved** to `record-core/checks.mjs` `PER_ITEM_CHECKS`, rows unchanged, and the catalogue's copy deleted.
+   - **C-59.5 copied** to `RECORD_CORE_CHECKS`. The catalogue's `PROJECT_ID_CHECKS` copy stays for T19.
+   - **C-102.1–.3 copied** to `RECORD_CORE_CHECKS`, translations unchanged. Each `where` now names a DEC-49 region: `registerAuditCheck > is-audit-check-registration` and `auditPass > is-audit-check-failed`. The catalogue's `REGISTRATION_CHECKS` copies stay for T19. `registerAuditCheck`'s refusals now carry `code`, `check` and `translation`; they carried none.
+   - **C-102.15 and .16 are new:** `GRAMMAR_DECLARED`, `GRAMMAR_MALFORMED` (R67).
+   - **C-102.17 and .18 are new:** `STATS_SOURCE_DECLARED`, `STATS_SOURCE_MALFORMED` (R65). R65 names the codes, not the row numbers, so this record names them.
+   - `ROW_CENSUS` moves by these.
+4. **legacy-checks (T19's layer 1).**
+   - Delete the copies of C-59.5 and C-102.1–.3 once promotion and ratification hold their split tables.
+   - The C-102 family's header comment still names `PER_ITEM_CHECKS` (about line 9595). It is text only; I left it, since a removal-only edit there would garble the sentence.
+5. **reevaluation (layer 7), for N406's share.** `afterCommit` defers only inside record-core's `transact`. Capture (`capture/index.mjs` :417, :466, :800) and ai-runs (:416, :905, :1067, :1369) call `ctx.storage.transactionSync` directly. A call made inside one of those would run at once, before that transaction commits.
+
+   This does not bear on `raise` as long as its callers write through `transact`. It is a flaw in those two modules against record-core R32 ("one transaction over the whole store"): I recommend they move to `record.transact` at their next jobs.
+6. **The DEC-49 guard** (`civicos-ui/check-refusal-codes.mjs`, run only at a release) harvests `*_CHECKS` from the catalogue only. C-75 now reads as unregistered there, as C-35 does (K641's note).
+7. **Size note, for the plan.** R64/R65 left `store.mjs` at 4 lines added and 25 removed, not ~150: the counting stays in the source (`#counts`), per K645.
