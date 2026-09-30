@@ -28,6 +28,7 @@
  *                                   `registerFact`, the fact `producingGroup`.
  *   inquiry        `exclusionsNaming` (R12).
  *   basisVersions  `testimonyReach` (R2, R17).
+ *   contradiction  `unresolvedRecordOn` (its R29), for R50 (N345).
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
  *
@@ -47,11 +48,16 @@ import { rowOf, ATTRIBUTION_ACT_CHECKS, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresV4Disclosures } from "./checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, migratePublication, registerCaseDocumentSha,
          caseDocumentPath } from "./schema.mjs";
+import { caseTensionsOf, disclosedCandidates } from "./tensions.mjs";
+import { contradictionOf } from "../contradiction/index.mjs";
 
 export { CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS, ATTRIBUTION_ACT_CHECKS,
-         CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY,
-         CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
-         caseDocumentRequiresV4Disclosures } from "./checks.mjs";
+         CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+         CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
+         caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
+         caseDocumentRequiresTensionSection } from "./checks.mjs";
+export { caseTensionsOf, TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE,
+         TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE } from "./tensions.mjs";
 export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, caseDocumentPath } from "./schema.mjs";
 
 /* CASE-4 / DEC-72 / REC-60: the page size for `op=caseflags` (R6). A CHOSEN CONSTANT and never a finding — the flag
@@ -69,6 +75,8 @@ export const EXPORT_NOTE_MAX = 280;
 export const EDITIONS_OF_MAX = 500;
 /** R41: the cited parts one `caseCitedParts` read answers. */
 export const CITED_PARTS_MAX = 1000;
+/** R50: the cases one `caseTensions` page answers, its default and its ceiling. */
+export const CASE_TENSIONS_MAX = 200;
 /** R42, R43: the page of `restingCapturesOf` and of `ratifiedCases`, its default and its ceiling. */
 export const RESTING_CAPTURES_MAX = 1000;
 export const RATIFIED_CASES_MAX = 1000;
@@ -309,18 +317,19 @@ export class Publication {
   #evidenceBlock = null; // R36: {module, name, fn}, filled once
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
-                now = null } = {}) {
+                contradiction = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, basisVersions };
+    this.#deps = { host, inquiry, basisVersions, contradiction };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
+  get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
 
   migrate() { migratePublication(this.sql); }
 
@@ -1114,6 +1123,92 @@ export class Publication {
     const more = rows.length > cap;
     const cases = rows.slice(0, cap).map((r) => r.case_id);
     return { ok: true, cases, limit: cap, cursor: more ? cases[cases.length - 1] : null };
+  }
+
+  /* ---------------------------------------------------------------- R50: tensions after publication */
+
+  /** R50 (N345; DEC-84 item 13, DEC-85): for each case whose LATEST ratified edition `project` owns (every such case
+   *  when absent), in case id order after `after`, at most `limit` cases (1–CASE_TENSIONS_MAX, that by default), with
+   *  `cursor` the last case answered when more follow: the candidates `contradiction.unresolvedRecordOn` answers over
+   *  each member at its pinned sha that the edition did not disclose, each with its case, edition, member, candidate
+   *  and state; and each candidate the edition disclosed that the read no longer answers, `resolved_since: true`. Sight
+   *  is the owning project's owners': a candidate with a side any owner may not see is answered as the read answers it
+   *  for that owner, `unseen_other_side: true` with nothing of that side (DEC-85); a case whose project has no owner is
+   *  read by nobody, every side withheld. A member whose read fails or is cut is stated `undetermined` or `truncated`,
+   *  never dropped. Read as the plane, for `queue`: it writes nothing, never throws and composes no strength (R26);
+   *  the signed edition never changes (R24). */
+  caseTensions({ project = null, after = null, limit = null } = {}) {
+    try {
+      const cap = pageOf(limit, CASE_TENSIONS_MAX);
+      const pid = str(project);
+      const latest = `SELECT c.case_id, MAX(c.edition) AS edition FROM published_cases c
+                       WHERE c.ratified_at IS NOT NULL GROUP BY c.case_id`;
+      const rows = this.#rows(
+        `SELECT l.case_id, l.edition, k.project_id FROM (${latest}) l LEFT JOIN cases k ON k.case_id=l.case_id
+          WHERE l.case_id > ? ${pid ? "AND k.project_id = ?" : ""} ORDER BY l.case_id LIMIT ?`,
+        typeof after === "string" ? after : "", ...(pid ? [pid] : []), cap + 1);
+      const more = rows.length > cap;
+      if (more) rows.length = cap;
+      const cases = rows.map((r) => this.#caseTensionsOne(r.case_id, Number(r.edition), r.project_id ?? null));
+      return { ok: true, wrote: false, project: pid || null, cases, limit: cap,
+               cursor: more ? rows[rows.length - 1].case_id : null,
+               says: "each is a contradiction found on what a published case's findings rest on, one level deep, that "
+                   + "its latest edition did not disclose, or one it disclosed that has since been resolved. The signed "
+                   + "edition does not change; a later edition discloses or resolves it. No strength is composed." };
+    } catch (e) {
+      return { ok: true, wrote: false, project: str(project) || null, cases: [], limit: pageOf(limit, CASE_TENSIONS_MAX),
+               cursor: null, undetermined: true, why: String(e && e.message || e).slice(0, 160) };
+    }
+  }
+
+  /* R50: one case edition's tensions since publication, read under its owners' sight. */
+  #caseTensionsOne(caseId, edition, projectId) {
+    const doc = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NOT NULL`,
+                          caseId, edition);
+    const disclosed = doc ? disclosedCandidates(doc.text) : new Set();
+    let owners = [];
+    try { owners = projectId ? this.membership.projectOwners(projectId) || [] : []; } catch { owners = []; }
+    /* No owner reads as nobody: a viewer that sees nothing, so every side is withheld (fail closed, DEC-85). */
+    const viewers = owners.length ? owners.map((m) => `member:${m}`) : [""];
+    const members = this.#rows(`SELECT bundle_id, version_sha FROM published_case_members
+                                 WHERE case_id=? AND edition=? ORDER BY ord`, caseId, edition);
+    const tensions = [], resolvedSince = [], unread = [];
+    const answered = new Set();
+    for (const m of members) {
+      if (!m.version_sha) { unread.push({ member: m.bundle_id, undetermined: true, why: "no version was pinned" }); continue; }
+      const byCandidate = new Map();
+      let undetermined = false, truncated = false;
+      for (const viewer of viewers) {
+        let r = null;
+        try { r = this.contradiction.unresolvedRecordOn({ finding: m.bundle_id, sha: m.version_sha, viewer }); }
+        catch { r = null; }
+        if (!r || r.undetermined || !Array.isArray(r.candidates)) { undetermined = true; continue; }
+        if (r.truncated) truncated = true;
+        if (r.undetermined_legs) undetermined = true;
+        for (const c of r.candidates) {
+          const had = byCandidate.get(c.candidate);
+          /* An owner who may not see a side decides: the unseen answer replaces a seen one, never the reverse. */
+          if (!had || (c.unseen_other_side && !had.unseen_other_side)) byCandidate.set(c.candidate, c);
+        }
+      }
+      if (undetermined || truncated)
+        unread.push({ member: m.bundle_id, ...(undetermined ? { undetermined: true } : {}),
+                      ...(truncated ? { truncated: true } : {}) });
+      for (const [id, c] of byCandidate) {
+        answered.add(id);
+        if (disclosed.has(id)) continue;
+        tensions.push({ case: caseId, edition, member: m.bundle_id, candidate: id, state: c.state ?? null,
+                        ...(c.unseen_other_side ? { unseen_other_side: true, ...(c.side ? { side: c.side } : {}) }
+                                                : { a: c.a ?? null, b: c.b ?? null, ...(c.kind ? { kind: c.kind } : {}),
+                                                    explanation: c.explanation ?? null }),
+                        depth: 1 });
+      }
+    }
+    /* A disclosed candidate the reads no longer answer has been resolved since, unless a read was not made whole. */
+    if (!unread.length)
+      for (const id of disclosed) if (!answered.has(id)) resolvedSince.push({ case: caseId, edition, candidate: id, resolved_since: true });
+    return { case: caseId, edition, project: projectId, tensions, resolved_since: resolvedSince,
+             ...(unread.length ? { unread } : {}) };
   }
 
   /* ---------------------------------------------------------------- R42: the captures published findings rest on */
@@ -3089,6 +3184,15 @@ export class Publication {
                } };
     });
 
+    /* R10 (N345): THE TENSIONS THE SIGNED DOCUMENT DISCLOSED, read from its bytes and never live; each member's own
+       sentences beside it. A document before /5 answers null with its sentence (R28); no signed document, or no case,
+       discloses nothing here and says so. */
+    const disclosed = state.document && typeof state.document.text === "string"
+      ? caseTensionsOf(state.document.text)
+      : { tensions: null, highlighted: null, members: {}, unread: null,
+          detail: theCase ? "no signed case document is held for this edition, so it states no disclosure here"
+                          : "this is not a case, so it discloses no contradiction" };
+    for (const f of findings) f.tensions = disclosed.tensions === null ? null : disclosed.members[f.bundle_id] || [];
     const cRow = theCase
       ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
@@ -3172,6 +3276,14 @@ export class Publication {
              complete: state.complete, awaiting: state.awaiting,
              ...(asked ? { asked } : {}),
              findings,
+             tensions: disclosed.tensions, highlighted: disclosed.highlighted,
+             /* K499: the member legs the conflict read could not examine, stated by the document; null where it states none. */
+             tensions_unread: disclosed.unread,
+             tensions_detail: disclosed.detail
+               ?? "each contradiction this edition's owner disclosed, read from the signed document: both sides as "
+                + "the publisher saw them, its state and who acknowledged it. One marked highlighted rests on a side in "
+                + "conflict with a record the publisher could not see, which is not named. A disclosure reaches one "
+                + "level. It composes no strength.",
              /* R36: the evidence package's block, computed at this read by the module that provides it. */
              evidence_package: this.#evidencePackage(theCase, ed, findings),
              manifest_sha: state.manifest_sha, manifest,
