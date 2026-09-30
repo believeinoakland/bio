@@ -21,6 +21,8 @@ import { userAgent } from "../capture/acquire.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, isPublicHttpsLocator,
          MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
 import { rowOf, isCaseMemberBytes, completenessFields, withCaseMemberChecks } from "./checks.mjs";
+import { machineCaseRefusal, operatorCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
+         attributionStaleRefusal } from "./refusals.mjs";
 
 /* R17 (N339, N349; control-plane R23, R25, R30; K421, K444): ONE RULE FOR EVERY RELAY, the sub-reads inside a longer
    act included. A reply `doAnswer` reads as the store's OWN REFUSAL (`refused`: `ok: false` below 500, such as
@@ -42,41 +44,20 @@ export async function caseRatifyOp(req, stub, ctx) {
   const { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession,
           sessViewer, sessRights } = ctx;
   const relay = { json, storeRefusal };
-  const op = "caseratify";
-    /* DEC-49 REGION is-machine-ratify-case — REC-123 / C-32.13. The fence alone,
-       FIRST and before the payload is read, so it is the FENCE that answers a
-       machine and never a payload complaint behind it (REC-73's lesson). Driven:
-       before this, an `ai` credential whose scope named this op, carrying a
-       registered member's valid signature, COMMITTED THE CASE and the record
-       named the member. The `ai` class only HERE; the operator's env-binding
-       classes are refused by the region directly below (REC-125, D-421).
-       THE GUARD'S SHAPE IS REC-46's AND NOT STYLE: `aiCred` is resolved only for a
-       minted agent credential (it is what makes the caller the `ai` class), and
-       WHETHER the identity it acts under is a machine is asked of the ONE
-       predicate over the stamp the plane writes for it — never decided here by a
-       string comparison (`hygiene.test.mjs` D1). */
+    /* REC-123 / C-32.13: the machine fence alone, FIRST and before the payload is read (`./refusals.mjs` holds the
+       refusal and its region; R18's pre-flight answers the same one). THE GUARD'S SHAPE IS REC-46's AND NOT STYLE:
+       `aiCred` is resolved only for a minted agent credential (it is what makes the caller the `ai` class), and
+       WHETHER the identity it acts under is a machine is asked of the ONE predicate over the stamp the plane writes
+       for it — never decided here by a string comparison (`hygiene.test.mjs` D1). The `ai` class only HERE; the
+       operator's env-binding classes are refused by the fence directly below (REC-125, D-421). */
     if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
-      return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY_CASE", ...rowOf("MACHINE_CANNOT_RATIFY_CASE"),
-        op, tokenClass: cls,
-        detail: "committing a case is a member's signed act. An assistant's credential may assemble the "
-              + "case document and may never commit it, whoever's signature it carries (DEC-24 rule 4)." }, 403);
-    /* END DEC-49 REGION is-machine-ratify-case */
-    /* DEC-49 REGION is-operator-ratify-case — REC-125 / C-32.15, D-421 DECIDED by
-       BOB #14. See `op=ratify`'s twin region for the whole reasoning: an attested
-       act is delivered ONLY by a signed-in member's own session, so every caller
-       that did not arrive through one — every env-binding bearer class `classify()`
-       resolves, today ADMIN / MEMBER / PROBE — is refused here, NAMING its class,
-       whoever's valid signature it carries. Keyed on HOW the caller arrived and
-       never on a list of token classes or token strings, so a fifth binding
-       admitted to this op later is refused without anybody remembering this line. */
+      return json(machineCaseRefusal(cls), 403);
+    /* REC-125 / C-32.15, D-421: see `op=ratify`'s twin region for the whole reasoning. Every caller that did not
+       arrive through a member's own signed-in session — every env-binding bearer class `classify()` resolves, today
+       ADMIN / MEMBER / PROBE — is refused, NAMING its class. Keyed on HOW the caller arrived and never on a list of
+       token classes, so a fifth binding admitted to this op later is refused without anybody remembering this line. */
     if (!viaSession)
-      return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",
-        ...rowOf("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"), op, tokenClass: cls,
-        detail: `committing a case is a member's own signed act, delivered through that member's own `
-              + `signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer `
-              + `token: the signature says who authorised the case, and the credential that delivers it `
-              + `decides when the record changes, so a bearer token may not carry it in (D-421).` }, 403);
-    /* END DEC-49 REGION is-operator-ratify-case */
+      return json(operatorCaseRefusal(cls), 403);
     const body = await req.json().catch(() => null);
     if (!body?.caseId || !Number.isInteger(body?.edition) || !body?.expectedSha
         || typeof body?.sig !== "string")
@@ -106,56 +87,15 @@ export async function caseRatifyOp(req, stub, ctx) {
     const facts = factsOut.result;
     if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
 
-    /* DEC-49 REGION is-testimony-publish-case — MK-1 (A) / C-53.12, NARROWED BY MK-7. A case whose
-       findings rest, at any depth, on an observation that still NAMES ITS AUTHOR in its own files (written
-       before MK-6) does not cross: MEMBER-KNOWLEDGE-DESIGN.md §4.1 keeps those fenced, because the level
-       lives outside the bundle and cannot hide a name the bundle itself prints. MEASURED before MK-1 built
-       it (`test/mk1-publish-probe.mjs`, path 3): such a case RATIFIED. Every other observation is judged by
-       the attribution gate below. Refused before the signature is weighed. */
+    /* MK-1 (A) / C-53.12, and MK-7's attribution gate, C-92.10 and C-92.11 (MEMBER-KNOWLEDGE-DESIGN.md §4.1, §4.4),
+       in that order, each refused before the signature is weighed, so the answer is the same whoever signed. The
+       refusals and their regions are `./refusals.mjs`'s, the ones R18's pre-flight answers. MEASURED before MK-1 built
+       C-53.12 (`test/mk1-publish-probe.mjs`, path 3): a case resting on an observation naming its author RATIFIED. */
     const attr = facts.attribution || { reached: [], legacy: [], stated: [], current: [] };
-    if (attr.legacy.length)
-      return json({ ok: false, reason: "TESTIMONY_CASE_UNPUBLISHABLE", ...rowOf("TESTIMONY_CASE_UNPUBLISHABLE"),
-        caseId: facts.doc.case_id, edition: facts.doc.edition, observations: attr.legacy.slice(0, 50),
-        detail: `a finding in ${facts.doc.case_id} rests on an observation whose own files name its author (written `
-              + `before §4.1) or cannot be read to show they do not (${attr.legacy.slice(0, 5).join(", ")}); `
-              + `publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
-        store: storeName, tokenClass: cls }, 409);
-    /* END DEC-49 REGION is-testimony-publish-case */
-    /* DEC-49 REGION is-attribution-gate — MK-7 / C-92.10, C-92.11 (MEMBER-KNOWLEDGE-DESIGN.md §4.4). THE
-       LIFT OF MK-1's C-53.12, as MK-7's own act: a case reaching a member's observation crosses once, and
-       only once, every observation it reaches carries its author's chosen level in the bytes being signed.
-       (1) UNCHOSEN, named per observation: publishing one at ANY level would be the default §4 forbids.
-           PROVISIONAL (§4.4's narrow veto, carried to Bob): a member stops the use of their own words and
-           nothing else; the owner's recourse is an edition without the finding resting on it.
-       (2) STALE: the document's statements are compared with what the authors' acts give NOW. The act
-           re-authors the unsigned document when it lands, so this refuses only bytes that drifted from the
-           acts by another route — never a level the author did not choose. Refused before the signature
-           is weighed, so the answer is the same whoever signed. */
-    const unchosen = attr.current.filter((r) => !r.level);
-    if (unchosen.length)
-      return json({ ok: false, reason: "ATTRIBUTION_UNCHOSEN", ...rowOf("ATTRIBUTION_UNCHOSEN"),
-        caseId: facts.doc.case_id, edition: facts.doc.edition,
-        unchosen: unchosen.slice(0, 50).map((r) => ({ observation: r.observation, why: r.why })),
-        detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} this edition reaches `
-              + `${unchosen.length === 1 ? "has" : "have"} no level chosen by ${unchosen.length === 1 ? "its" : "their"} `
-              + `author: ${unchosen.slice(0, 5).map((r) => r.observation).join(", ")} (MEMBER-KNOWLEDGE-DESIGN.md §4.4). `
-              + `Each author chooses with op=attribute; nothing is filled in for them`,
-        store: storeName, tokenClass: cls }, 409);
-    {
-      const statedOf = new Map(attr.stated.map((r) => [r.observation, r]));
-      const drift = attr.current.filter((r) => {
-        const st = statedOf.get(r.observation);
-        return !st || st.level !== r.level || (st.shown ?? null) !== (r.shown ?? null);
-      });
-      if (drift.length || attr.stated.length !== attr.current.length)
-        return json({ ok: false, reason: "ATTRIBUTION_STATEMENT_STALE", ...rowOf("ATTRIBUTION_STATEMENT_STALE"),
-          caseId: facts.doc.case_id, edition: facts.doc.edition,
-          observations: (drift.length ? drift : attr.current).slice(0, 50).map((r) => r.observation),
-          detail: `the case document's attribution statements do not match what the observations' authors chose `
-                + `for this edition; re-prepare it (op=publish) and sign the new bytes`,
-          store: storeName, tokenClass: cls }, 409);
-    }
-    /* END DEC-49 REGION is-attribution-gate */
+    for (const refusal of [testimonyCaseRefusal(facts.doc.case_id, facts.doc.edition, attr.legacy),
+                           attributionUnchosenRefusal(facts.doc.case_id, facts.doc.edition, attr),
+                           attributionStaleRefusal(facts.doc.case_id, facts.doc.edition, attr)])
+      if (refusal) return json({ ...refusal, store: storeName, tokenClass: cls }, 409);
 
     if (facts.doc.doc_sha !== body.expectedSha)
       return json({ ok: false, reason: "CASE_RATIFY_STALE",
@@ -472,56 +412,74 @@ export async function ratifyOp(req, stub, ctx) {
     /* D-556: the parts of each whole-hash row the gate admitted as HELD IN PARTS, as the record names them,
        keyed by the whole hash. Publication copies exactly these, part by part. */
     const partedRows = new Map();
+    /* R17 (N354, K477): the register probe below is a store read inside this act, so it follows R17's one rule. A
+       probe the store refused or did not answer is never a verdict about the bytes: the probe rejects (so `runGate`
+       rejects, promotion R28: an unanswered probe is never counted as present), and the act answers the store's
+       own refusal, or its silence with the correlation id, here, before any gate finding is composed. */
+    let probeUnanswered = null;
+    let registerGate;
+    try {
+      registerGate = await runGate({
+        bundleId: body.bundleId, image, knownIds: known,
+        registers: facts.registers,
+        /* REC-14: the two facts the catalog cannot read out of the bundle --
+           what THIS case asserted at its previous EDITION (C-21.1) and what the
+           cases beneath it FROZE when they were signed (C-21.2). They come from
+           the store with the rest of the gate facts, so the gate and the write
+           path judge against the same published record. Passing nothing here
+           does not soften the gate, it blinds it. */
+        publishedRegistry: facts.publishedRegistry,
+        /* REC-44: C-21.1's fact moved to CASE altitude and travels in its own
+           registry, from the same one place that has the rows. */
+        publishedCaseRegistry: facts.publishedCaseRegistry,
+        /* REC-18: and the third — what each basis target EARNS from the record
+           (resolutions against the question's subject entity; the capture
+           record for the capture axis). Same reasoning, same source: an earned
+           grade is computed by the record, so a gate that cannot see the record
+           cannot confirm one, and threading it here is what makes the gate and
+           op=promote's write path judge an earned leg identically. */
+        earnedRegistry: facts.earnedRegistry,
+        hasCapture: async (sha) => {
+          if (!r2) return { present: false, bytes: 0 };
+          const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
+          if (h) return { present: true, bytes: h.size };
+          /* D-530: a miss on the whole-hash key is not absence. A register row naming the
+             WHOLE hash of a document captured in parts misses here, and the gate called it
+             "absent from the working bucket". The plane's own acquisition receipt (the
+             same question op=attest asks) says the bytes are held in parts; the gate still
+             refuses the row, because the publish step copies a capture by its whole hash,
+             but with a finding that is true. The register is not asked: it is the row
+             being checked. */
+          /* D-556 (BOB #34, 2026-09-25 00:00Z): and the parts THIS bundle's record names for the hash. When it
+             names them, each is headed and its digest verified by D-533's `partsHeld`, and the gate admits the
+             row only when all are present and verify; the verdict is the gate's. */
+          const hOut = await doAnswer(stub.fetch(
+            `http://x/registerholds?sha256=${encodeURIComponent(sha)}&bundle=${encodeURIComponent(body.bundleId)}`));
+          if (hOut.refused || !hOut.answered) {
+            probeUnanswered = hOut;
+            throw new Error("ratify/registerholds: the store did not answer the register probe");
+          }
+          const named = hOut.result ? hOut.result.parts : null;
+          if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
+          if (named?.state === "named") {
+            const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
+            if (!v.missing.length && !v.disagree.length && !v.unverified.length) partedRows.set(sha, named.parts);
+            return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
+          }
+          const inParts = !!(hOut.result && hOut.result.acquired === true);
+          return { present: false, bytes: 0, ...(inParts ? { heldInParts: true } : {}) };
+        },
+      });
+    } catch (e) {
+      if (!probeUnanswered) throw e;
+    }
+    if (probeUnanswered?.refused) return storeRefused(probeUnanswered, relay);
+    if (probeUnanswered) return storeSilent("ratify/registerholds", probeUnanswered.correlation);
     /* The C-18 register arms run after the catalogue, over the same image (provenance R42–R46, K72 (4)), and
        bias's C-26.1–C-26.7 over it too (bias R9, K146): the catalogue no longer runs them. */
     /* R9: C-2.8's case-member arm, which the catalogue no longer runs, joins after it over the same image. */
-    const gate = withCaseMemberChecks(image, withBiasChecks(image, withRegisterChecks(image, await runGate({
-      bundleId: body.bundleId, image, knownIds: known,
-      registers: facts.registers,
-      /* REC-14: the two facts the catalog cannot read out of the bundle --
-         what THIS case asserted at its previous EDITION (C-21.1) and what the
-         cases beneath it FROZE when they were signed (C-21.2). They come from
-         the store with the rest of the gate facts, so the gate and the write
-         path judge against the same published record. Passing nothing here
-         does not soften the gate, it blinds it. */
-      publishedRegistry: facts.publishedRegistry,
-      /* REC-44: C-21.1's fact moved to CASE altitude and travels in its own
-         registry, from the same one place that has the rows. */
-      publishedCaseRegistry: facts.publishedCaseRegistry,
-      /* REC-18: and the third — what each basis target EARNS from the record
-         (resolutions against the question's subject entity; the capture
-         record for the capture axis). Same reasoning, same source: an earned
-         grade is computed by the record, so a gate that cannot see the record
-         cannot confirm one, and threading it here is what makes the gate and
-         op=promote's write path judge an earned leg identically. */
-      earnedRegistry: facts.earnedRegistry,
-      hasCapture: async (sha) => {
-        if (!r2) return { present: false, bytes: 0 };
-        const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
-        if (h) return { present: true, bytes: h.size };
-        /* D-530: a miss on the whole-hash key is not absence. A register row naming the
-           WHOLE hash of a document captured in parts misses here, and the gate called it
-           "absent from the working bucket". The plane's own acquisition receipt (the
-           same question op=attest asks) says the bytes are held in parts; the gate still
-           refuses the row, because the publish step copies a capture by its whole hash,
-           but with a finding that is true. The register is not asked: it is the row
-           being checked. */
-        /* D-556 (BOB #34, 2026-09-25 00:00Z): and the parts THIS bundle's record names for the hash. When it
-           names them, each is headed and its digest verified by D-533's `partsHeld`, and the gate admits the
-           row only when all are present and verify; the verdict is the gate's. */
-        const hOut = await doAnswer(stub.fetch(
-          `http://x/registerholds?sha256=${encodeURIComponent(sha)}&bundle=${encodeURIComponent(body.bundleId)}`));
-        const named = hOut.answered && hOut.result ? hOut.result.parts : null;
-        if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
-        if (named?.state === "named") {
-          const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
-          if (!v.missing.length && !v.disagree.length && !v.unverified.length) partedRows.set(sha, named.parts);
-          return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
-        }
-        const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
-        return { present: false, bytes: 0, ...(inParts ? { heldInParts: true } : {}) };
-      },
-    }))), parseFrontmatter);
+    const gate = withCaseMemberChecks(image, withBiasChecks(image, withRegisterChecks(image, registerGate)),
+                                      parseFrontmatter);
     if (!gate.ok)
       return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
                     findings: gate.findings, store: storeName, tokenClass: cls }, 409);
