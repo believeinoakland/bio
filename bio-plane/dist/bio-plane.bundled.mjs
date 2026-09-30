@@ -30295,6 +30295,26 @@ var CAPTURE_CHECKS = Object.freeze({
     check: "C-118.2",
     where: inIndex("#noSuchKnock", "is-knock-held"),
     translation: "No knock in the inbox answers to this id. Nothing was changed."
+  }),
+  KNOCKER_SECRET_WEAK: Object.freeze({
+    check: "C-118.3",
+    where: "src/capture/doorbell.mjs knockerSecretWeak > is-knocker-secret-strong",
+    translation: "A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a longer one, or ask the doorbell to make one. Nothing was received."
+  }),
+  KNOCK_DISCARDED: Object.freeze({
+    check: "C-118.4",
+    where: inIndex("pullKnock", "is-knock-pullable"),
+    translation: "This knock was set aside. Move it back to new before bringing it in. Nothing was written."
+  }),
+  NOT_THE_CAPTURING_ACTOR: Object.freeze({
+    check: "C-118.5",
+    where: inIndex("recordCaptureAccount", "is-capturing-actor"),
+    translation: "An account of how a document was captured is added only by the member who captured it, and that is not you, or no member captured it. Nothing was written."
+  }),
+  ACCOUNT_NO_TEXT: Object.freeze({
+    check: "C-118.6",
+    where: inIndex("recordCaptureAccount", "is-account-worded"),
+    translation: "An account of how you captured a document says what happened in your own words, and this one is empty. Write it. Nothing was written."
   })
 });
 
@@ -33990,6 +34010,7 @@ function bundleGate(col, viewer) {
 }
 var ARCHIVE_VIA = "archive.org";
 var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
+var DOORBELL_VIA = "doorbell";
 function chainFromEvidence(doc, { instanceName = "unnamed", at: at17 = null } = {}) {
   if (!doc || typeof doc !== "object")
     return { ok: false, missing: ["the document entry is not an object"] };
@@ -34952,7 +34973,7 @@ var Provenance = class _Provenance {
     };
   }
   /* ===================================================================== *
-   * R24–R27: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
+   * R24–R27, R51: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
    * ===================================================================== */
   /** `captureGrade(captureSha) → {grade, route, determined, basis, why}`. The route is the record's own fact about
    *  WHO SERVED the bytes, written by the fetch that received them (the receipts' `via`), never by a member; the
@@ -34986,6 +35007,23 @@ var Provenance = class _Provenance {
         basis: "measured",
         why: `this instance fetched these bytes only through an archive replay (${ARCHIVE_VIA}), never from their publisher: one more party stands between the record and the publisher, so their capture grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture`
       };
+    if (vias.includes(DOORBELL_VIA)) {
+      const r = this.#one(
+        `SELECT address, address_norm, first_retrieved FROM captured_locators
+                            WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
+        s,
+        DOORBELL_VIA
+      );
+      return {
+        grade: null,
+        route: "doorbell",
+        determined: false,
+        basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+        ceiling: EARNED_CAPTURE_CEILING,
+        received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
+        why: `these bytes were handed to the group through the doorbell and brought in by a member, never fetched from an address, so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} is proven by this plane's own receipt at ${r.address}`
+      };
+    }
     if (!vias.length)
       return {
         grade: null,
@@ -48248,6 +48286,22 @@ function knockEmpty() {
     throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
   return { ok: false, reason: "KNOCK_EMPTY", code: "KNOCK_EMPTY", check: row2.check, translation: row2.translation };
 }
+var KNOCKER_SECRET_MIN = 20;
+function isWeakKnockerSecret(secret) {
+  if (secret === void 0 || secret === null) return false;
+  return typeof secret !== "string" || [...secret].length < KNOCKER_SECRET_MIN;
+}
+function knockerSecretWeak() {
+  const row2 = CAPTURE_CHECKS.KNOCKER_SECRET_WEAK;
+  return {
+    ok: false,
+    reason: "KNOCKER_SECRET_WEAK",
+    code: "KNOCKER_SECRET_WEAK",
+    check: row2.check,
+    translation: row2.translation,
+    minChars: KNOCKER_SECRET_MIN
+  };
+}
 async function knockOp(req, env, store, { json: json5, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
   if (req.method !== "POST") return json5({ ok: false, error: "knock is a POST" }, 405);
   const raw = await req.arrayBuffer();
@@ -48275,6 +48329,7 @@ async function knockOp(req, env, store, { json: json5, requiredArgument: require
   const evidence = typeof env.CAPTURES?.put === "function";
   const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
   if (bytes2.length > cap) return json5(knockPayloadTooLarge(cap, evidence), 413);
+  if (isWeakKnockerSecret(body.knockerSecret)) return json5(knockerSecretWeak(), 400);
   const source = req.headers.get("cf-connecting-ip") || "unknown";
   const out = await doAnswer2(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source)}`, {
     method: "POST",
@@ -48285,6 +48340,8 @@ async function knockOp(req, env, store, { json: json5, requiredArgument: require
       note: body.note,
       contact: body.contact,
       windowMs: KNOCK.windowMs,
+      ...typeof body.knockerSecret === "string" ? { knockerSecret: body.knockerSecret } : {},
+      ...body.generateSecret === true ? { generateSecret: true } : {},
       perIpLimit: KNOCK.perIp,
       globalLimit: KNOCK.global,
       /* D-487: the window's instant is the control plane's, read once, as it always was. */
@@ -48304,7 +48361,9 @@ async function knockOp(req, env, store, { json: json5, requiredArgument: require
     knockId: rec.knockId,
     sha256: rec.sha256,
     bytes: rec.bytes,
-    received: "Your material is in the group's inbox awaiting member review."
+    received: "Your material is in the group's inbox awaiting member review.",
+    pseudonym: typeof rec.pseudonym === "string" ? rec.pseudonym : null,
+    ...typeof rec.secret === "string" ? { secret: rec.secret } : {}
   }, 200);
 }
 
@@ -50018,6 +50077,13 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     });
   } catch {
   }
+  const actor = member && typeof sessMember === "string" && sessMember ? sessMember : null;
+  if (actor) {
+    try {
+      cap.recordCaptureActor({ captureSha: sha, actor, at: retrieved });
+    } catch {
+    }
+  }
   if (via === "direct" && !renderRecorded) {
     try {
       cap.recordValidators({
@@ -50069,57 +50135,20 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     subsSkipped = w.skipped;
     sessionId = w.sessionId;
   }
-  let profileText = "", profileBytes = null;
-  if (profilesAsText(ct, total, multipart)) {
-    try {
-      const pobj = await ev.get(sha);
-      if (pobj) {
-        profileBytes = new Uint8Array(await pobj.arrayBuffer());
-        profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes);
-      }
-    } catch {
-    }
-  }
-  let formatBytes = profileBytes;
-  if (!formatBytes && !multipart && total > 0) {
-    try {
-      const fobj = await ev.get(sha);
-      if (fobj) formatBytes = new Uint8Array(await fobj.arrayBuffer()).subarray(0, 1024);
-    } catch {
-    }
-  }
   const profHeaders = {};
   for (const [hk, hv] of res.headers) profHeaders[hk.toLowerCase()] = hv;
-  const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
-  const stackId = identify(profCtx);
-  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...pv.view ? { view: pv.view } : {} });
-  const profile = {
-    ...profileRecord(stackId, { now: retrieved }),
-    content_type: docType.type.key,
-    content_type_label: docType.type.label,
-    content_type_version: docType.type.version,
-    content_type_confidence: docType.confidence,
-    content_type_signals: docType.signals,
-    contract: docType.type.contract || null,
-    normalised: (typeof stackId.handler.rules === "function" ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
-    boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
-    source_content_type: ct || null,
-    profiled_from_text: !!profileText,
-    /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
-    jurisdiction_view: pv.ids,
-    format: detectFormat(formatBytes, ct || null)
-  };
+  const profile = await profileOf({
+    ev,
+    sha,
+    ct,
+    total,
+    multipart,
+    headers: profHeaders,
+    locator: documentAddress,
+    view: pv,
+    retrieved
+  });
   if (driveCapture) driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: res.url || null, detected: profile.format });
-  let containerBytes = null;
-  const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
-  if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
-    try {
-      const cobj = await ev.get(sha);
-      if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer());
-    } catch {
-    }
-  }
-  profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
   const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev });
   const document = {
     file: `snapshots/${name}`,
@@ -50148,6 +50177,8 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
       grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
       ...via === "archive.org" ? { authority: "Internet Archive" } : {},
       actor_class: member ? "member" : cls === "probe" ? "session" : "daemon",
+      /* R16 (N364): which member captured it, the member stamp of a member session, else null (R69 reads it). */
+      actor,
       sha256: sha,
       encoding: "binary",
       bytes: total,
@@ -50199,6 +50230,58 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     tokenClass: cls,
     note: ACQUIRE_GRADE_NOTE
   });
+}
+async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved }) {
+  const pv = view || { view: void 0, ids: null };
+  let profileText = "", profileBytes = null;
+  if (profilesAsText(ct, total, multipart)) {
+    try {
+      const pobj = await ev.get(sha);
+      if (pobj) {
+        profileBytes = new Uint8Array(await pobj.arrayBuffer());
+        profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes);
+      }
+    } catch {
+    }
+  }
+  let formatBytes = profileBytes;
+  if (!formatBytes && !multipart && total > 0) {
+    try {
+      const fobj = await ev.get(sha);
+      if (fobj) formatBytes = new Uint8Array(await fobj.arrayBuffer()).subarray(0, 1024);
+    } catch {
+    }
+  }
+  const profCtx = { headers, locator, content_type: ct || null, text: profileText };
+  const stackId = identify(profCtx);
+  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...pv.view ? { view: pv.view } : {} });
+  const profile = {
+    ...profileRecord(stackId, { now: retrieved }),
+    content_type: docType.type.key,
+    content_type_label: docType.type.label,
+    content_type_version: docType.type.version,
+    content_type_confidence: docType.confidence,
+    content_type_signals: docType.signals,
+    contract: docType.type.contract || null,
+    normalised: (typeof stackId.handler.rules === "function" ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
+    boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
+    source_content_type: ct || null,
+    profiled_from_text: !!profileText,
+    /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
+    jurisdiction_view: pv.ids,
+    format: detectFormat(formatBytes, ct || null)
+  };
+  let containerBytes = null;
+  const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
+  if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
+    try {
+      const cobj = await ev.get(sha);
+      if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer());
+    } catch {
+    }
+  }
+  profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
+  return profile;
 }
 function snapshotOf(subs, sessionId, name, shellRecorded) {
   if (!subs) return shellRecorded ? { files: { [shellRecorded.file]: shellRecorded.sha256 } } : {};
@@ -50425,7 +50508,19 @@ CREATE TABLE IF NOT EXISTS inbox (
   received    TEXT NOT NULL,
   status      TEXT NOT NULL DEFAULT 'new',
   resolved    TEXT,
-  resolved_by TEXT
+  resolved_by TEXT,
+  -- R66: the knocker's continuity, never the secret: a keyed digest of it and the pseudonym derived from that
+  -- digest, each NULL for a knock sent without a secret.
+  knocker_digest TEXT,
+  pseudonym   TEXT,
+  -- R65: the capture a pull filed, who pulled it and when. Set once, by the pull; NULL until then.
+  capture_sha TEXT,
+  pulled_by   TEXT,
+  pulled_at   TEXT,
+  pulled_document TEXT,
+  -- Inline knocks only (no evidence store): the bytes themselves, base64, so a pull holds exactly what was
+  -- received; content keeps the text a member reads. NULL with an evidence store, and on a row written before it.
+  content_b64 TEXT
 );
 CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
 
@@ -50806,6 +50901,47 @@ CREATE TABLE IF NOT EXISTS capture_validators (
   at            TEXT NOT NULL,
   PRIMARY KEY (address_norm, capture_sha)
 );
+-- R66: the key the knocker's secret is digested under when the operator binds none (KNOCKER_SECRET_KEY): R56's
+-- pattern, a separate key. One row, generated at first use, never answered by any op.
+CREATE TABLE IF NOT EXISTS knocker_key (
+  id      INTEGER PRIMARY KEY CHECK (id = 1),
+  key_hex TEXT NOT NULL,
+  created TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS inbox_pseudonym ON inbox(pseudonym, received);
+CREATE INDEX IF NOT EXISTS inbox_capture ON inbox(capture_sha, received);
+-- R16, R69: each member this module stamped as capturing a capture (a member session's acquire, a knock's pull).
+-- Several members who captured the same bytes are each its actor. Written once per pair, never removed but by purge.
+CREATE TABLE IF NOT EXISTS capture_actors (
+  capture_sha TEXT NOT NULL,
+  actor       TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, actor)
+);
+-- R69: a capturing member's signed account of when and how they captured it. Append-only.
+CREATE TABLE IF NOT EXISTS capture_accounts (
+  capture_sha TEXT NOT NULL,
+  seq         INTEGER NOT NULL,
+  by          TEXT NOT NULL,
+  text        TEXT NOT NULL,
+  signature   TEXT NOT NULL,
+  key_b64     TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, seq)
+);
+-- R68: late co-attestations, each outcome appended with its instant and what it proves (existence by then, not at
+-- capture). Append-only.
+CREATE TABLE IF NOT EXISTS late_attestations (
+  capture_sha TEXT NOT NULL,
+  seq         INTEGER NOT NULL,
+  kind        TEXT NOT NULL,
+  service     TEXT,
+  ok          INTEGER NOT NULL,
+  at          TEXT NOT NULL,
+  by          TEXT,
+  outcome     TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, seq)
+);
 -- R56: the key the doorbell's source fingerprint is computed under when the operator binds none
 -- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
 CREATE TABLE IF NOT EXISTS knock_key (
@@ -50820,8 +50956,22 @@ var CAPTURE_ADDITIVE_COLUMNS = [
   // CAP-14
   ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
   // D-492: 0 is the measured truth
-  ["links", "chrome_basis", "TEXT"]
+  ["links", "chrome_basis", "TEXT"],
   // D-340: the region a contained link sat in
+  ["inbox", "knocker_digest", "TEXT"],
+  // R66: the knocker's keyed digest
+  ["inbox", "pseudonym", "TEXT"],
+  // R66
+  ["inbox", "capture_sha", "TEXT"],
+  // R65: the capture a pull filed
+  ["inbox", "pulled_by", "TEXT"],
+  // R65
+  ["inbox", "pulled_at", "TEXT"],
+  // R65
+  ["inbox", "pulled_document", "TEXT"],
+  // R65: the document a pull answered, answered again to a repeat
+  ["inbox", "content_b64", "TEXT"]
+  // R65: an inline knock's bytes as received
 ];
 var CAPTURE_RESHAPE = [["links", "citation_norm"]];
 var CAPTURE_PURGED_TABLES = [
@@ -50836,9 +50986,20 @@ var CAPTURE_PURGED_TABLES = [
   "site_chrome_refs",
   "site_chrome",
   "link_chrome",
-  "capture_validators"
+  "capture_validators",
+  "capture_actors",
+  "capture_accounts",
+  "late_attestations"
 ];
-var CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_allowance", "render_slots", "knock_key"];
+var CAPTURE_EXEMPT_TABLES = [
+  "inbox",
+  "knock_rate",
+  "capture_limits",
+  "render_allowance",
+  "render_slots",
+  "knock_key",
+  "knocker_key"
+];
 
 // src/capture/index.mjs
 var stampSecond3 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
@@ -50846,6 +51007,36 @@ var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var HEX643 = /^[0-9a-f]{64}$/;
 var te5 = new TextEncoder();
 var hexOf2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var b64Of = (bytes2) => {
+  let out = "";
+  for (let i = 0; i < bytes2.length; i += 32768) out += String.fromCharCode(...bytes2.subarray(i, i + 32768));
+  return btoa(out);
+};
+var B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+var base32Of = (bytes2) => {
+  let bits = 0, value = 0, out = "";
+  for (const b of bytes2) {
+    value = value << 8 | b;
+    bits += 8;
+    while (bits >= 5) {
+      out += B32[value >>> bits - 5 & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) out += B32[value << 5 - bits & 31];
+  return out;
+};
+var pseudonymOf = (digestHex) => `knocker-${base32Of(Uint8Array.from(String(digestHex).slice(0, 20).match(/../g).map((h) => parseInt(h, 16)))).match(/.{4}/g).join("-")}`;
+var memberIdOf = (who2) => typeof who2 === "string" ? who2.replace(/^member:/, "") : "";
+var CAPTURE_ACCOUNT_TOKEN = "bio-capture-account";
+var captureAccountStatement = (captureSha, text4) => te5.encode(`${CAPTURE_ACCOUNT_TOKEN} ${String(captureSha)}
+${String(text4)}`);
+var lateSentence = (at17) => `proves the bytes existed by ${at17}, not at capture`;
+var rawReplayOf = (archived) => {
+  const m = /^(https:\/\/web\.archive\.org\/web\/)(\d{14})(?:[a-z_]*)\/(.+)$/.exec(String(archived || ""));
+  return m ? `${m[1]}${m[2]}id_/${m[3]}` : null;
+};
+var REPLAY_MAX = 256 * 1024 * 1024;
 var TASK_KINDS = Object.freeze(["authority-undetermined"]);
 var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 var SOURCE_OUTCOMES = Object.freeze(["success", "source_refused", "fetch_failed", "governed"]);
@@ -50917,13 +51108,19 @@ var Capture = class _Capture {
   #storage;
   #listeners = /* @__PURE__ */ new Map();
   #declared = false;
-  constructor(storage, { record, env = {}, governor = null, provenance = null } = {}) {
+  constructor(storage, { record, env = {}, governor = null, provenance = null, membership = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
     this.env = env || {};
     this.governor = governor;
     this.provenance = provenance;
+    this.membership = membership;
+  }
+  /* membership's instance for this storage (R69's attesting keys), reached when first needed. */
+  #members() {
+    if (!this.membership) this.membership = membershipOf({ storage: this.#storage }, { record: this.core });
+    return this.membership;
   }
   #rows(q6, ...a) {
     return [...this.#sql.exec(q6, ...a)];
@@ -51060,6 +51257,47 @@ var Capture = class _Capture {
     const mac = await crypto.subtle.sign("HMAC", key, te5.encode(String(address || "unknown")));
     return hexOf2(mac).slice(0, 32);
   }
+  /** R66: the key the knocker's secret is digested under: the operator's secret binding `KNOCKER_SECRET_KEY` when set,
+   *  else the instance's own, generated once (256 random bits) and held in `knocker_key`, exempt from purge and
+   *  answered by no op: R56's pattern, a separate key. With `create: false` it answers null rather than make one. */
+  #knockerKey({ create = true } = {}) {
+    const bound = this.env && typeof this.env.KNOCKER_SECRET_KEY === "string" && this.env.KNOCKER_SECRET_KEY;
+    if (bound) return te5.encode(bound);
+    let r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
+    if (!r) {
+      if (!create) return null;
+      const k = new Uint8Array(32);
+      crypto.getRandomValues(k);
+      this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond3());
+      r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
+    }
+    return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
+  }
+  /* R66: the HMAC-SHA-256 of a secret under the knocker key, as 64 hex. */
+  static async #knockerDigest(key, secret) {
+    const k = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    return hexOf2(await crypto.subtle.sign("HMAC", k, te5.encode(secret)));
+  }
+  /** R66: `{knocker_digest, pseudonym}` for a secret presented at this instance (`sources`' consent by secret). It
+   *  writes nothing and never throws: with no knocker key yet (no knock has carried a secret here, and none is bound)
+   *  or a secret that is not a non-empty string, both are null, and `basis` says which; a secret this instance never
+   *  received answers its digest and pseudonym, which match no knock. */
+  async knockerDigestOf(secret) {
+    try {
+      if (typeof secret !== "string" || secret === "")
+        return { knocker_digest: null, pseudonym: null, basis: "no secret was presented" };
+      const key = this.#knockerKey({ create: false });
+      if (!key) return {
+        knocker_digest: null,
+        pseudonym: null,
+        basis: "no knock carrying a secret has been received at this instance, so no secret is recognised"
+      };
+      const knocker_digest = await _Capture.#knockerDigest(key, secret);
+      return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
+    } catch {
+      return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" };
+    }
+  }
   /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from the catalogue at
      the moment of the refusal, so this file holds no member-facing word, and THE CODE STAYS A STRING LITERAL AT ITS
      SITE. It THROWS on a missing row (R52): a throw is a 500 in a test, which is loud, where a missing sentence is
@@ -51084,6 +51322,47 @@ var Capture = class _Capture {
     if (est(globalBucket, globalPrevBucket) >= globalLimit) return _Capture.#rateRefusal("RATE_GLOBAL");
     return null;
   }
+  /* R31: the two windows one knock is asked against: the source's (a keyed fingerprint, R56) and the instance's, the
+     current bucket and the previous one, with how far into the current window `nowMs` is. */
+  async #rateWindows({ sourceAddress, nowMs, windowMs = KNOCK.windowMs, perIpLimit = KNOCK.perIp, globalLimit = KNOCK.global }) {
+    const win = Math.floor(nowMs / windowMs);
+    const fp = await this.sourceFingerprint(sourceAddress);
+    return {
+      ipBucket: `ip:${fp}:${win}`,
+      ipPrevBucket: `ip:${fp}:${win - 1}`,
+      globalBucket: `all:${win}`,
+      globalPrevBucket: `all:${win - 1}`,
+      elapsedFrac: (nowMs - win * windowMs) / windowMs,
+      perIpLimit,
+      globalLimit,
+      win
+    };
+  }
+  /* R31: ask the rate again and, when it admits, count one knock in both windows; in the caller's transaction, so a
+     race cannot slip past the caps. Answers the rate refusal, or null once counted. */
+  #countKnock(rate) {
+    const late = this.#knockRateRefusal(rate);
+    if (late) return late;
+    for (const b of [rate.ipBucket, rate.globalBucket])
+      this.#sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1) ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
+    this.#sql.exec(
+      `DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
+      String(rate.win),
+      String(rate.win - 1)
+    );
+    return null;
+  }
+  /** R71 (K539; for `sources` R11): an attempt that counts as a knock from its source. R31's two windows are asked
+   *  exactly as `knock` asks them: a refusal is R31's (`RATE_IP` or `RATE_GLOBAL`, with `stated`, the published bound)
+   *  and counts nothing; an admitted attempt is counted in both windows, in one transaction that asks again, and
+   *  answers null. Nothing else is written. */
+  async knockAttempt({ sourceAddress = null, now = null } = {}) {
+    const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const rate = await this.#rateWindows({ sourceAddress, nowMs });
+    const refusal19 = this.#knockRateRefusal(rate) || this.#storage.transactionSync(() => this.#countKnock(rate));
+    if (!refusal19) return null;
+    return { ...refusal19, stated: refusal19.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal };
+  }
   /** R31, R32, R53, R54: an accepted knock. `sourceAddress` is the connecting address, reduced here to a keyed
    *  fingerprint. The rate is asked first and changes nothing when it refuses; the bytes (with an evidence store)
    *  are stored BEFORE the row, so a row never stands without its bytes (R54: a failed store answers a failure
@@ -51099,28 +51378,20 @@ var Capture = class _Capture {
     windowMs = KNOCK.windowMs,
     perIpLimit = KNOCK.perIp,
     globalLimit = KNOCK.global,
-    now = null
+    now = null,
+    knockerSecret = null,
+    generateSecret = false
   } = {}) {
-    const nowMs = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     let bytes2;
     try {
       bytes2 = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te5.encode(String(content ?? ""));
     } catch {
       return { ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" };
     }
+    if (isWeakKnockerSecret(knockerSecret)) return knockerSecretWeak();
     const sha = hexOf2(await crypto.subtle.digest("SHA-256", bytes2));
-    const win = Math.floor(nowMs / windowMs);
-    const elapsedFrac = (nowMs - win * windowMs) / windowMs;
-    const fp = await this.sourceFingerprint(sourceAddress);
-    const rate = {
-      ipBucket: `ip:${fp}:${win}`,
-      ipPrevBucket: `ip:${fp}:${win - 1}`,
-      globalBucket: `all:${win}`,
-      globalPrevBucket: `all:${win - 1}`,
-      elapsedFrac,
-      perIpLimit,
-      globalLimit
-    };
+    const rate = await this.#rateWindows({ sourceAddress, nowMs, windowMs, perIpLimit, globalLimit });
     const early = this.#knockRateRefusal(rate);
     if (early) return early;
     const bucket = this.env && typeof this.env.CAPTURES?.put === "function" ? this.env.CAPTURES : null;
@@ -51142,20 +51413,22 @@ var Capture = class _Capture {
         };
       }
     }
+    let secret = typeof knockerSecret === "string" ? knockerSecret : null, generated = null;
+    if (!secret && generateSecret === true) {
+      const r = new Uint8Array(16);
+      crypto.getRandomValues(r);
+      secret = generated = base32Of(r);
+    }
+    const knockerDigest = secret ? await _Capture.#knockerDigest(this.#knockerKey(), secret) : null;
+    const pseudonym = knockerDigest ? pseudonymOf(knockerDigest) : null;
     const knockId = `KNOCK-${new Date(nowMs).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
     const received = new Date(nowMs).toISOString();
     const answer = this.#storage.transactionSync(() => {
-      const late = this.#knockRateRefusal(rate);
+      const late = this.#countKnock(rate);
       if (late) return late;
-      for (const b of [rate.ipBucket, rate.globalBucket])
-        this.#sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1) ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
       this.#sql.exec(
-        `DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
-        String(win),
-        String(win - 1)
-      );
-      this.#sql.exec(
-        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status) VALUES (?,?,?,?,?,?,?,?,'new')`,
+        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status,knocker_digest,pseudonym,content_b64)
+         VALUES (?,?,?,?,?,?,?,?,'new',?,?,?)`,
         knockId,
         sha,
         bytes2.length,
@@ -51163,9 +51436,12 @@ var Capture = class _Capture {
         bucket ? 1 : 0,
         String(note ?? "").slice(0, 2e3),
         String(contact ?? "").slice(0, 300),
-        received
+        received,
+        knockerDigest,
+        pseudonym,
+        bucket ? null : b64Of(bytes2)
       );
-      return { ok: true, knockId, sha256: sha, bytes: bytes2.length };
+      return { ok: true, knockId, sha256: sha, bytes: bytes2.length, pseudonym, ...generated ? { secret: generated } : {} };
     });
     if (!answer.ok && stored && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha)) {
       try {
@@ -51176,13 +51452,15 @@ var Capture = class _Capture {
     return answer;
   }
   /** R32: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, newest first, paged by
-   *  `after`: a doorbell anyone may ring must not answer a member with everything it was ever handed. */
+   *  `after`: a doorbell anyone may ring must not answer a member with everything it was ever handed. Each row names
+   *  its knocker's pseudonym and digest (R66, null without a secret) and, once pulled, its capture (R65). */
   inboxList(status, { limit = null, after = null } = {}) {
     const cap = limitOf(limit);
     const from = after ? keyOf(after, 2) : null;
     if (after && !from) return badCursor();
     const found = this.#rows(
-      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by FROM inbox
+      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by, knocker_digest,
+              pseudonym, capture_sha, pulled_by, pulled_at FROM inbox
         WHERE ${status ? "status = ?" : "1=1"} AND ${from ? "(received, knock_id) < (?, ?)" : "1=1"}
         ORDER BY received DESC, knock_id DESC LIMIT ?`,
       ...status ? [status] : [],
@@ -51207,13 +51485,17 @@ var Capture = class _Capture {
   }
   inboxGet(knockId) {
     if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
-    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status FROM inbox WHERE knock_id=?`, knockId);
+    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status, knocker_digest,
+                                pseudonym, capture_sha, pulled_by, pulled_at FROM inbox WHERE knock_id=?`, knockId);
     return r ? { ok: true, item: r } : this.#noSuchKnock(knockId);
   }
+  /** R32: a member moves a knock to `discarded` or back to `new`, recorded with who and when. `pulled` is R65's act for
+   *  that knock and answers as `pullKnock` does (a promise): a knock becomes `pulled` only by being brought in. */
   inboxResolve({ knockId, status, by } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
+    if (status === "pulled") return this.pullKnock({ knockId, by });
     this.#sql.exec(
       `UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
       status,
@@ -51222,6 +51504,458 @@ var Capture = class _Capture {
       knockId
     );
     return { ok: true, knockId, status };
+  }
+  /** R65 (N364; DEC-78 item 1): bring a knock into the record as a capture. The member-session fence is the op's; `by`
+   *  is its stamp. Refused in order: `NO_SUCH_KNOCK` (C-118.2), `KNOCK_DISCARDED` (C-118.4), R63's absence when the
+   *  knock's bytes are gone. A knock already pulled answers `existed: true` with the same document. Otherwise, in one
+   *  act: the bytes are held under their own digest in the evidence store, one acquisition receipt is written
+   *  (`via: "doorbell"`, address `knock:<knockId>`), the knock becomes `pulled` naming the capture, `by` and the
+   *  instant, and `by` is recorded as the capture's actor. The answer carries the provenance document (R16) the
+   *  control plane promotes at `collected`; it never carries `contact` (R70), and nothing here writes a bundle (R33). */
+  async pullKnock({ knockId, by, at: at17 = null } = {}) {
+    if (typeof by !== "string" || !by.trim())
+      return {
+        ok: false,
+        reason: "NO_PULLER",
+        status: 400,
+        detail: "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written"
+      };
+    if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
+    const row2 = this.#one(`SELECT * FROM inbox WHERE knock_id = ?`, knockId);
+    if (!row2) return this.#noSuchKnock(knockId);
+    if (row2.status === "discarded") {
+      const k = CAPTURE_CHECKS.KNOCK_DISCARDED;
+      return {
+        ok: false,
+        reason: "KNOCK_DISCARDED",
+        code: "KNOCK_DISCARDED",
+        check: k.check,
+        translation: k.translation,
+        knockId,
+        status: 409
+      };
+    }
+    if (row2.capture_sha) {
+      let document2 = null;
+      try {
+        document2 = row2.pulled_document ? JSON.parse(row2.pulled_document) : null;
+      } catch {
+        document2 = null;
+      }
+      return {
+        ok: true,
+        existed: true,
+        knockId,
+        capture: { sha256: row2.capture_sha, bytes: row2.bytes },
+        pulled_by: row2.pulled_by,
+        pulled_at: row2.pulled_at,
+        ...document2 ? { document: document2 } : {}
+      };
+    }
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev) return {
+      ok: false,
+      reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+      status: 503,
+      knockId,
+      detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written"
+    };
+    let bytes2 = null;
+    try {
+      if (row2.in_r2) {
+        const bucket = this.env && typeof this.env.CAPTURES?.get === "function" ? this.env.CAPTURES : null;
+        const obj = bucket ? await bucket.get(`bio/inbox/${row2.sha256}`) : null;
+        if (obj) bytes2 = new Uint8Array(await obj.arrayBuffer());
+      } else if (typeof row2.content_b64 === "string") {
+        bytes2 = Uint8Array.from(atob(row2.content_b64), (c) => c.charCodeAt(0));
+      } else if (typeof row2.content === "string") {
+        bytes2 = te5.encode(row2.content);
+      }
+    } catch {
+      bytes2 = null;
+    }
+    if (bytes2 && hexOf2(await crypto.subtle.digest("SHA-256", bytes2)) !== row2.sha256) bytes2 = null;
+    if (!bytes2) {
+      const a = evidenceAbsent(row2.sha256, "bio", {
+        knockId,
+        status: 404,
+        detail: "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written"
+      });
+      return a.body;
+    }
+    const sha = row2.sha256;
+    try {
+      if (!await ev.head(sha)) await ev.put(sha, bytes2);
+    } catch {
+      return {
+        ok: false,
+        reason: "PULL_NOT_STORED",
+        status: 502,
+        knockId,
+        detail: "the knock's bytes could not be held under their own digest, so nothing was written"
+      };
+    }
+    const when = typeof at17 === "string" && ISO_INSTANT.test(at17) ? at17 : stampSecond3();
+    const address = `knock:${knockId}`;
+    const profile = await profileOf({
+      ev,
+      sha,
+      ct: null,
+      total: bytes2.length,
+      multipart: false,
+      headers: {},
+      locator: address,
+      view: profileView(this.core),
+      retrieved: when
+    });
+    const document = this.#pulledDocument(row2, { by, at: when, profile });
+    const receiptOf = (fn) => {
+      try {
+        return fn();
+      } catch (e) {
+        return { recorded: false, error: String(e && e.message || e).slice(0, 200) };
+      }
+    };
+    const done = this.core.transact(() => {
+      const receipt = receiptOf(() => this.provenance?.recordReceipt?.({
+        address,
+        addressNorm: address,
+        captureSha: sha,
+        retrieved: when,
+        via: DOORBELL_VIA,
+        retrievalLocator: null
+      }));
+      if (!receipt || receipt.recorded !== true)
+        return {
+          ok: false,
+          reason: "RECEIPT_NOT_WRITTEN",
+          status: 502,
+          knockId,
+          detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed"
+        };
+      this.#sql.exec(`UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?, pulled_at = ?,
+                        pulled_document = ? WHERE knock_id = ?`, when, by, sha, by, when, JSON.stringify(document), knockId);
+      this.recordCaptureActor({ captureSha: sha, actor: by, at: when });
+      return { ok: true, receipt };
+    });
+    if (!done.ok) return done;
+    return {
+      ok: true,
+      existed: false,
+      knockId,
+      capture: { sha256: sha, bytes: bytes2.length },
+      pulled_by: by,
+      pulled_at: when,
+      receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null },
+      document
+    };
+  }
+  /* R65, R16: the provenance document of a pulled knock. Received, not fetched (provenance R51): no fetched letter, no
+     transport; the knocker is its source, unnamed, and the note travels as the knocker's words, never as evidence of
+     their truth. The contact is never in it (R70). */
+  #pulledDocument(row2, { by, at: at17, profile }) {
+    const locator = `knock:${row2.knock_id}`;
+    const name = String(row2.knock_id).replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100);
+    return {
+      file: `snapshots/${name}`,
+      locator,
+      retrieved: at17,
+      profile,
+      authority_state: "undetermined",
+      authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at17} for resolution through the task list`,
+      provenance_chain: [{
+        who: `instance ${this.env.INSTANCE_NAME || "unnamed"} (CivicOS/${this.env.VERSION || "0.0.0"})`,
+        asserts: `these bytes were received at this instance's doorbell as knock ${row2.knock_id} at ${row2.received}, and brought into the record by ${by} at ${at17}; they were received, not fetched from any address`,
+        evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
+        bound: false,
+        via: DOORBELL_VIA
+      }],
+      capture: {
+        method: "doorbell knock, received, hashed at receipt",
+        grade: null,
+        grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+        actor_class: "member",
+        actor: by,
+        sha256: row2.sha256,
+        encoding: "binary",
+        bytes: row2.bytes
+      },
+      source: {
+        kind: "knocker",
+        named: false,
+        pseudonym: row2.pseudonym ?? null,
+        receipt: { knock_id: row2.knock_id, sha256: row2.sha256, bytes: row2.bytes, received: row2.received }
+      },
+      knocker_note: { text: String(row2.note ?? ""), words_of: "the knocker", evidence_of_truth: false },
+      origin: { kind: "doorbell", knock_id: row2.knock_id },
+      attestation_attempts: []
+    };
+  }
+  /** R67: the knocks sharing a pseudonym, oldest first, to a member session (the op's fence), with the continuity
+   *  sentence and never an identity: no contact is answered (R70). At most `limit` (N90), paged by `after`. */
+  knocksOf({ pseudonym, limit = null, after = null } = {}) {
+    if (typeof pseudonym !== "string" || !pseudonym)
+      return { ok: false, reason: "NO_PSEUDONYM", detail: "knocksOf names the pseudonym whose knocks it lists" };
+    const cap = limitOf(limit);
+    const from = after ? keyOf(after, 2) : ["", ""];
+    if (!from) return badCursor();
+    const found = this.#rows(
+      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha FROM inbox
+        WHERE pseudonym = ? AND (received, knock_id) > (?, ?) ORDER BY received, knock_id LIMIT ?`,
+      pseudonym,
+      ...from,
+      cap + 1
+    );
+    const knocks = found.slice(0, cap), truncated3 = found.length > cap, last = knocks[knocks.length - 1];
+    return {
+      ok: true,
+      pseudonym,
+      continuity: "the same knocker secret was presented",
+      knocks,
+      count: knocks.length,
+      limit: cap,
+      truncated: truncated3,
+      next: truncated3 ? cursorOf([last.received, last.knock_id]) : null
+    };
+  }
+  /** R72 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
+   *  op's fence), never a contact (R70); `[]` for none. One keyed read (`inbox_capture`). Never throws. */
+  pulledKnocksOf(captureSha) {
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+      if (!HEX643.test(sha)) return [];
+      return this.#rows(`SELECT knock_id, sha256, bytes, received, pseudonym, knocker_digest FROM inbox
+                          WHERE capture_sha = ? ORDER BY received, knock_id`, sha).map((r) => ({ ...r }));
+    } catch {
+      return [];
+    }
+  }
+  /* ==================================================================== *
+   * The capturing member, and late co-attestation (R16, R68, R69)
+   * ==================================================================== */
+  /** R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, a knock's pull). Kept once
+   *  per pair, at the first instant. */
+  recordCaptureActor({ captureSha, actor, at: at17 = null } = {}) {
+    if (typeof captureSha !== "string" || !HEX643.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
+    this.#sql.exec(
+      `INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
+      captureSha,
+      actor,
+      at17 && ISO_INSTANT.test(at17) ? at17 : stampSecond3()
+    );
+    return { recorded: true };
+  }
+  /** R69 (DEC-81 item 3(c)): a capture's actor appends a signed account of when and how they captured it. Refused
+   *  `NOT_THE_CAPTURING_ACTOR` (C-118.5) for anyone this module did not record as capturing it (and for a capture it
+   *  recorded no actor for), `ACCOUNT_NO_TEXT` (C-118.6), and `SIG_<reason>` unless `signature` verifies
+   *  (`signatures.verifySshsig`, `NS_RATIFY`) over `captureAccountStatement(captureSha, text)` against one of `by`'s
+   *  attesting keys (`membership.attestingKeys`). Append-only. */
+  async recordCaptureAccount({ captureSha, text: text4, signature, by, at: at17 = null } = {}) {
+    const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+    const who2 = memberIdOf(by);
+    const actors = HEX643.test(sha) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha).map((r) => memberIdOf(r.actor)) : [];
+    if (!who2 || !actors.includes(who2)) {
+      const row2 = CAPTURE_CHECKS.NOT_THE_CAPTURING_ACTOR;
+      return {
+        ok: false,
+        reason: "NOT_THE_CAPTURING_ACTOR",
+        code: "NOT_THE_CAPTURING_ACTOR",
+        check: row2.check,
+        translation: row2.translation,
+        captureSha: sha || null,
+        status: 403
+      };
+    }
+    if (typeof text4 !== "string" || !text4.trim()) {
+      const row2 = CAPTURE_CHECKS.ACCOUNT_NO_TEXT;
+      return {
+        ok: false,
+        reason: "ACCOUNT_NO_TEXT",
+        code: "ACCOUNT_NO_TEXT",
+        check: row2.check,
+        translation: row2.translation,
+        captureSha: sha,
+        status: 400
+      };
+    }
+    let keys = [];
+    try {
+      keys = (this.#members().attestingKeys() || []).filter((k) => memberIdOf(k.member_id) === who2).map((k) => k.key_b64);
+    } catch {
+      keys = [];
+    }
+    const v = await verifySshsig(typeof signature === "string" ? signature : "", captureAccountStatement(sha, text4), NS_RATIFY, keys);
+    if (!v.ok) {
+      const { ok: _ok, reason, ...rest } = v;
+      return {
+        ok: false,
+        reason: `SIG_${reason}`,
+        ...rest,
+        captureSha: sha,
+        status: 400,
+        detail: "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written"
+      };
+    }
+    const when = at17 && ISO_INSTANT.test(at17) ? at17 : stampSecond3();
+    const seq = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM capture_accounts WHERE capture_sha = ?`, sha).n) + 1;
+    this.#sql.exec(
+      `INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      sha,
+      seq,
+      by,
+      text4,
+      signature,
+      v.keyB64,
+      when
+    );
+    return { ok: true, captureSha: sha, seq, by, at: when, key_b64: v.keyB64 };
+  }
+  /** R69: every account appended for a capture, in order, with the members recorded as capturing it. Never throws. */
+  captureAccountsOf(captureSha) {
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+      if (!HEX643.test(sha)) return { captureSha: sha || null, actors: [], accounts: [] };
+      return {
+        captureSha: sha,
+        actors: this.#rows(`SELECT actor, at FROM capture_actors WHERE capture_sha = ? ORDER BY at, actor`, sha),
+        accounts: this.#rows(`SELECT seq, by, text, signature, key_b64, at FROM capture_accounts WHERE capture_sha = ? ORDER BY seq`, sha)
+      };
+    } catch {
+      return { captureSha: null, actors: [], accounts: [] };
+    }
+  }
+  /** R68 (DEC-81 item 3(a)): a late co-attestation. It asks `provenance.attest` for a fresh timestamp over the digest
+   *  and, with a public `locator`, a fresh co-archive, then fetches the co-archive's raw replay through the host
+   *  governor and compares its digest (`matches` true, false or undetermined). Each attempt's outcome is appended,
+   *  dated, `late: true`, with the sentence "proves the bytes existed by <at>, not at capture". Refused `BAD_SHA`, and
+   *  R63's absence when no bytes are held (a capture held in parts counts when provenance holds its receipt). */
+  async reattest({ captureSha, locator = null, by = null } = {}) {
+    const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+    if (!HEX643.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    const p = this.provenance;
+    const holds = async (s) => p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null;
+    let held = false;
+    if (ev) {
+      try {
+        held = !!await ev.head(sha);
+      } catch {
+        held = false;
+      }
+      if (!held) {
+        try {
+          held = (await holds(sha))?.acquired === true;
+        } catch {
+          held = false;
+        }
+      }
+    }
+    if (!held) {
+      const a = evidenceAbsent(sha, "bio", { status: 404 });
+      return a.body;
+    }
+    const archive = typeof locator === "string" && isPublicHttpsLocator(locator);
+    const attestFn = p && typeof p.attest === "function" ? (a, io) => p.attest(a, io) : attest;
+    let out;
+    try {
+      out = await attestFn(
+        { sha256: sha, archive, locator: archive ? locator : null },
+        { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(this, "reattest"), holds }
+      );
+    } catch (e) {
+      out = { ok: false, attempts: [], reason: "ATTEST_FAILED", note: String(e && e.message || e).slice(0, 200) };
+    }
+    const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
+    if (!attempts.length && out && out.ok === false && out.reason !== "NO_ATTESTATION" && out.reason !== "ATTEST_FAILED")
+      return { ...out, status: 409 };
+    const now = stampSecond3();
+    const outcomes = [];
+    for (const a of attempts.length ? attempts : [{ service: "attest", ok: false, note: String(out && (out.note || out.reason) || "no attempt was reported") }]) {
+      const at17 = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : now;
+      const coArchive = a.service === ARCHIVE_SERVICE || a.kind === "co-archive";
+      const o = {
+        kind: coArchive ? "co_archive" : "timestamp",
+        service: String(a.service || "attest"),
+        ok: a.ok === true,
+        at: at17,
+        late: true,
+        proves: lateSentence(at17),
+        ...a.kind === "rfc3161" ? { token_sha256: a.token_sha256 ?? null, token_bytes: a.token_bytes ?? null } : {},
+        ...a.archived_locator ? { archived_locator: a.archived_locator } : {},
+        ...a.note ? { note: String(a.note).slice(0, 200) } : {}
+      };
+      if (coArchive) Object.assign(o, await this.#replayMatches(sha, o.ok ? a.archived_locator : null));
+      outcomes.push(o);
+    }
+    this.#storage.transactionSync(() => {
+      let seq = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM late_attestations WHERE capture_sha = ?`, sha).n);
+      for (const o of outcomes)
+        this.#sql.exec(
+          `INSERT INTO late_attestations (capture_sha, seq, kind, service, ok, at, by, outcome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          sha,
+          ++seq,
+          o.kind,
+          o.service,
+          o.ok ? 1 : 0,
+          o.at,
+          by ?? null,
+          JSON.stringify(o)
+        );
+    });
+    return {
+      ok: true,
+      captureSha: sha,
+      late_attestations: outcomes,
+      attested: out && out.ok === true,
+      ...out && out.attestation ? { attestation: out.attestation } : {},
+      note: "each attempt is recorded as late: it proves the bytes existed by its instant, never at capture"
+    };
+  }
+  /* R68: whether the co-archive's raw replay hashes to the capture digest. Undetermined, with the reason, when there
+     is no archived locator, the replay cannot be fetched (the governor holding its host included), or it is too large. */
+  async #replayMatches(sha, archived) {
+    const replay = rawReplayOf(archived);
+    if (!replay) return { matches: "undetermined", match_basis: archived ? "the archived locator is not a replay this instance can read raw" : "the co-archive gave no archived locator to compare" };
+    try {
+      const g = await governedFetch2(this, replay, "reattest");
+      if (g.refusedByGovernor) return { matches: "undetermined", replay, match_basis: `the governor is holding requests to the archive (${g.reason})` };
+      const res = g.res;
+      if (!res.ok || !res.body) return { matches: "undetermined", replay, match_basis: `the replay answered ${res.status}` };
+      const h = createSha256(), reader = res.body.getReader();
+      let total = 0;
+      for (; ; ) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > REPLAY_MAX) {
+          try {
+            await reader.cancel();
+          } catch {
+          }
+          return { matches: "undetermined", replay, match_basis: "the replay is larger than this instance compares" };
+        }
+        h.update(value);
+      }
+      const got = h.hex();
+      return {
+        matches: got === sha,
+        replay,
+        replay_sha256: got,
+        match_basis: got === sha ? "the co-archive's replay hashes to the capture digest" : "the co-archive's replay holds other bytes than the capture"
+      };
+    } catch (e) {
+      return { matches: "undetermined", replay, match_basis: `the replay could not be fetched (${String(e && e.message || e).slice(0, 120)})` };
+    }
+  }
+  /** R68: the late attestations recorded for a capture, in the order appended. Never throws. */
+  lateAttestationsOf(captureSha) {
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+      if (!HEX643.test(sha)) return { captureSha: sha || null, late_attestations: [] };
+      return { captureSha: sha, late_attestations: this.#rows(`SELECT seq, by, outcome FROM late_attestations WHERE capture_sha = ? ORDER BY seq`, sha).map((r) => ({ seq: r.seq, by: r.by, ...JSON.parse(r.outcome) })) };
+    } catch {
+      return { captureSha: null, late_attestations: [] };
+    }
   }
   /* ==================================================================== *
    * D-64: the daily render allowance (R39, R40)
@@ -52525,6 +53259,14 @@ function captureOps(c, url, body, env) {
     inboxlist: () => c.inboxList(q6("status") || null, page),
     inboxget: () => c.inboxGet(q6("id")),
     inboxresolve: () => c.inboxResolve(body || {}),
+    /* N364: the control plane stamps `by` (the member session); a stamp in the query wins over a body's copy. */
+    inboxpull: () => c.pullKnock({ knockId: body && body.knockId || q6("id"), by: q6("by") ?? (body && body.by) }),
+    knocksof: () => c.knocksOf({ pseudonym: q6("pseudonym") ?? (body && body.pseudonym), ...page }),
+    pulledknocks: () => c.pulledKnocksOf(q6("capture") ?? (body && body.captureSha)),
+    reattest: () => c.reattest({ ...body || {}, by: q6("by") ?? (body && body.by) ?? null }),
+    lateattestations: () => c.lateAttestationsOf(q6("capture") ?? (body && body.captureSha)),
+    captureaccount: () => c.recordCaptureAccount({ ...body || {}, by: q6("by") ?? (body && body.by) }),
+    captureaccounts: () => c.captureAccountsOf(q6("capture") ?? (body && body.captureSha)),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
     acquire: () => c.acquire(body || {}, {
       cls: q6("cls"),
