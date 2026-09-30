@@ -1,0 +1,90 @@
+# queue-producers — requirements
+
+**Status** · DRAFT by a worker for BOB, 2026-09-30, on `tranche/T16`, from `queue.md` under N363: Bob's approval of the queue split (K507), its seams ruled by BOB as drafted (K531, `build/plan/draft-N363-queue-split.md`). R1–R7, R9 and R10–R13 are `queue`'s requirements moved or copied with their meaning unchanged (the bias-debt sentence of `queue` R8; R9; R10; R43; R44; R45; R47; the take-up of R18; the basis half of R16; R33; half of R34; R38); only cross-references are re-pointed, and R2's and R4's bounds are returned for `queue` R6 to publish rather than published here. Layer 11, after `tasks`, before `queue`. No `from` (K531): this module writes its code in its own paths and `queue`'s job removes the moved code. Not yet met: R4–R7 (N345), R8 (N363), a new seam.
+
+**Size (P6).** About 1,800 lines of today's queue code move here (`queue/index.mjs` :586–2100, :2328–2431, :3590–3643; `proposals.mjs` whole), with about 410 lines of tests (`producers.test.mjs`, `proposals.test.mjs`). Well under one reading.
+
+## Public
+
+### Purpose
+
+The feed's producers: each derives, on read and writing nothing, the items one provider's facts earn for a viewer (bias debts, the record's findings, our machinery's conditions, the contradictions), naming each item's subjects and home subjects, for `queue` to home, offer, mint and publish.
+
+### Provides
+
+Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queue`'s mint gives it) and without `catalogue_id` (`queue` stamps it from its R2). A **home set**, the **depth bound** and a **case** are `queue`'s.
+
+**feedItems({member, viewer, now, identity, homesOf, optionsOf}) → {items, facts}** (`queue`'s one read of this module)
+- **R8** Answers every item R1–R7 and R9 derive for this member and viewer, each homed through `homesOf(subjectIds)` (`queue` R7's walk, passed in) and carrying `options` from `optionsOf(subjectIds)` (`queue` R12's options, passed in), and `facts`: `objective_gap` `{bound, truncated}` (R2), `unattributed`, `contradiction` `{bound, truncated}` (R4), and the proposals feed's `dispositions` (one `proposalsFeed` read, so R2 and `queue` R15 cannot disagree). Writes nothing. *(not yet met: N363)*
+
+**The producers**
+- **R1** Each uncleared bias debt (from `bias`) inside the viewer's gate whose recipients include the member or name nobody, at most 200, keyed `OBLIGATION::bias-debt::<run>`.
+- **R2** FINDINGs: one per open proposal of `progressions.proposalsFeed`, kind overdue_successor when overdue else missing_predecessor, keyed `FINDING::<progression>::<stage>`, its subject bundles those the viewer may see (at most 8 named), `age` undetermined (`derived_on_read`), `prior_disposition` as the feed gives it. Per (progression, stage) with an open `cardinality_exceeded` instance (progressions R31): when that stage has a proposal item, the finding joins it (the item keeps its kind, `basis.kinds` gains `cardinality_exceeded`, the detail names the count); otherwise it is an item of kind `cardinality_exceeded`, keyed the same `FINDING::<progression>::<stage>` so one decision governs one item (`queue` R32), its `prior_disposition` from the feed's `dispositions[]`, its grade the weakest instance's (`connections.weakerGrade`) (N107, K209); out-of-inquiry-lead per captured lead, homed under the inquiry the evidence bears on, never the run's; stance-changed-here-not-elsewhere; new-version-arrived-from-another-team; shared-inquiry-concluded-by-another-project; export-performed, one per export among the latest 200, to an administrator member or the `admin` machine credential and to nobody else; newer-capture-affects-reference, one per open notice of `reevaluation` (its R14, read through `reevaluation.notices({holder, state: "open", viewer})`) on a holder the viewer may see, keyed `FINDING::newer-capture-affects-reference::<notice>`, homed under the holder's ancestors (`queue` R7) (N172); objective-gap, one per gap `intent.gaps({project, viewer})` answers (intent R6) for each project the viewer sees in which the member participates (every visible project when there is no member), at most 50 projects in id order, the bound returned as `objective_gap_projects_bound` beside `objective_gap_projects_truncated` for `queue` R6 to publish, each homed under its project (N172); source-modified and source-removed, one per monitored document whose latest tick flagged `reeval_pending` (read through `monitoring.flagged`, its R48; its `source_status` says which), homed under that document's ancestors (N229).
+- **R3** CONDITIONs, derived on read and writing nothing: governor-holding-host per held host (its documents gathered at most 16, past which the home set states `subject_bound` and is undetermined); partial-capture-outstanding per live capture session; capture-completed-unattended per bundle a machine credential wrote and per completed capture request; render-deferred per render request held under a code or expired, its reason the code's own translation; archive-fallback-eligible per address `monitoring.archiveEligible` answers (its R47, what the next tick would find: K406 Q2); monitoring-recheck-due per monitored address `monitoring({viewer})` (monitoring R32) answers overdue by more than its interval or unscheduled (monitoring R16, R31) (N229).
+- **R9** An out-of-inquiry-lead offers, on the inquiry it bears on, the inquiry-grain act take it up (cite into that inquiry). *(not yet met: REC-202, as queue R18 was; K533)*
+- **R10** A FINDING's `basis` names its source and derivation (D-82).
+
+**Contradictions** (N345; DEC-76 item 3, DEC-84 items 2, 3, 7, 13; DEC-85)
+- **R4** For each project the member has joined, at most 50 in id order (every visible project when there is no member), with the bound returned beside `contradiction_projects_truncated` for `queue` R6 to publish: one item per candidate `contradiction.candidatesFor({on: {project}})` answers (its R25), keyed `<CLASS>::contradiction::<candidate>` and counted once whatever number of projects it reaches:
+  - `duty` → `contradiction-duty`, `open`, `taken_up` or `explained_not_shown`;
+  - `lead` → `contradiction-lead`, `open`;
+  - `plurality` → `contradiction-plurality`, `open`.
+
+  Each is homed under both sides' ancestors (`queue` R7). *(not yet met: N345)*
+- **R5** `side-corrected`: one per (dependent, candidate) that `reevaluation.correctedDependents` answers (its R27), keyed `FINDING::side-corrected::<dependent>::<candidate>` and homed under the dependent's ancestors. It leaves when the cause closes. *(not yet met: N345)*
+- **R6** `tension-after-publication`: one per (case, candidate) that `publication.caseTensions({project})` answers (its R50), for each project the member owns (`membership` R65), at most 50. It goes to those owners, and to nobody else, keyed `FINDING::tension-after-publication::<case>::<candidate>`. It leaves when a later edition discloses it or the candidate resolves. *(not yet met: N345)*
+- **R7** (DEC-85, K456) **The notice and the relay.**
+  - **The items.** For each project the member has joined (R4's projects and bound), one item per notice `contradiction.conflictNotices({project})` answers (its R50):
+    - weight `duty` → `contradiction-duty-unseen`;
+    - weight `plurality` → `contradiction-plurality-unseen`.
+
+    Each is keyed `<CLASS>::contradiction-unseen::<candidate>` and counted once, whatever number of the member's projects it reaches.
+  - **Its home.** The item's only subject is the side the member may see, so `queue` R7 walks its homes from that side alone and never reaches the other.
+  - **Its detail.** The notice's fixed sentence; `asked_by_another`; each of the member's party projects with its opt-in; once revealed, the parties' names; and the relay, `responses` (contradiction R54). The relay is the next notification this project's members receive. Each response carries only what its responder chose to share: the text, and the cover or email address when given, with the responder's project. Never a handle or member id.
+  - **What it withholds.** Everything `contradiction` R50 withholds. No count, bound or `truncated` flag in the feed reveals the other side or the number of parties (R11).
+  - **When it leaves.** When the notice leaves `contradiction` R50: the candidate is resolved or dismissed, or the member comes to see both sides (then R4's item answers it). *(not yet met: N345)*
+
+## Private
+
+### Uses
+
+- `legacy-checks`: `normalizeType`, `STATES`, `vocabFor`, `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
+- `record-core`: `bundleInfo`, `head`, `manifestByAuthor` (its R53; R3), `stampInstant`.
+- `membership`: `viewerPredicate` and `inSight` (the viewer gate), `isAdministrator` (its R64; R2's export-performed), `activeAdmins` (its R86), `participation` (R2's objective-gap, R4's joined projects), `hiddenBundles` (its R88; N352), `projectOwners` (its R65; R6).
+- `host-governor`: `governorHolding` (its R14; R3).
+- `provenance`: `homeOf`, `register` (capture to bundle) and `captured_locators` by host (R2, R3).
+- `capture`: `liveCaptureSessions` (its R46; R3).
+- `connections`: `weakerGrade` (R2), `edgeSevered`.
+- `progressions`: `proposalsFeed` and the instance rows (R2, R8's `dispositions`).
+- `bias`: `uncleared`, the debts and their recipients (R1).
+- `inquiry`: the basis-leg reads.
+- `basis-versions`: `projectsDrawingOn` (its R37), `conclusionOf`, `conclusionRecordOf` (R2).
+- `contradiction`: `candidatesFor` (its R25; R4) and `conflictNotices` (its R50; R7).
+- `ai-runs`: `runFor` (its R28; R2).
+- `capture-requests`: `completed`, `leads`, `rendersHeld` (its R26), `captureRequestAttribution` (its R10) (R2, R3).
+- `intent`: `gaps` (its R6; R2).
+- `reevaluation`: `notices` (its R14; R2), `correctedDependents` (its R27; R5).
+- `publication`: the export log (R2), `caseTensions` (its R50; R6).
+- `monitoring`: `archiveEligible` (its R47), `flagged` (its R48), `monitoring()` (its R32: the due and unscheduled rows), `escalationsSeen()` (its R35) (R2, R3).
+
+### Invariants
+
+- **R11** No answer names a bundle the viewer may not see, and no count reveals one (REC-30, DEC-36).
+- **R12** A CONDITION earns an item only where a member's act can change it (NOTIFICATIONS, the item contract).
+- **R13** No place is named in this module's behaviour or outward text.
+
+### Satisfies
+
+- `docs/architecture/BIO_Interaction_Constructs_v0_1.md`: Revision 0.2 (QUEUE; the three classes as domains); §P (a proposal looks derived); U (`undetermined` stated: `age`, the `subject_bound` home set).
+- `docs/development/NOTIFICATIONS.md`: the classes, the catalogue, the item contract.
+- DEC-36, D-82.
+- N345 (R4–R7): DEC-76 item 3; DEC-84 items 1–3, 7 and 13; DEC-85 with K456 (R7); `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §4.
+
+### Suggestions
+
+- **Code it takes** (N363 draft, lines of `bio-plane/src/queue/index.mjs` on `tranche/T16`): :586–2100 (`#conditionHomes` … `#conditionsRecheckDue`); :2328–2431 (`#queueConditions`, `#conditionsRenderDeferred`); :3590–3643 (`#obligationsBiasDebt`); `queue/proposals.mjs` whole. `#conditionHomes` (`subject_bound`) and `#homesAt` (a case at depth 0) are built over `homesOf`. N352: `#hiddenBundles` (:173–178, whose only caller is `#queueSharedInquiryCandidates`, an R2 producer) lands here, reading `membership.hiddenBundles` (its R88); `queue` keeps no copy.
+- **Factory and exports.** `queueProducersOf(ctx, deps)`; `queue-producers/index.mjs` exports `queueProducersOf`, `proposalFindingItems`, `CARDINALITY_EXCEEDED`. It registers nothing and holds no check row (it refuses nothing).
+- **R8's items**: today only export-performed carries a `catalogue_id` (:1784); `queue` stamps it at the mint from its R2, whose catalogue this earlier module cannot import. `proposalFindingItems` already takes `homesOf` and `optionsOf` (`proposals.mjs`:80).
+- **`escalationsSeen()`** (monitoring R35) is offered with N229's facts but names none of monitoring R31's four kinds; no item is minted from it until a kind is catalogued for it.
+- **Callers' obligations** (convention 2): `queue` passes `member`, `viewer` and `identity` from the control plane's stamps, and `homesOf` and `optionsOf`.
+- Tests: `producers.test.mjs` (R2, R3), `proposals.test.mjs` (drives `proposalFindingItems` directly: R2, R10, R11); R1 (from `feed.test.mjs`'s bias half) and R9 (its take-up) gain tests here. N345: a duty reaching two projects is one item (R4); a hidden side yields no item and no count (R11); an owner and a non-owner for `tension-after-publication`. DEC-85: two projects, each hidden from the other, on the two sides of one duty: each member gets one `contradiction-duty-unseen` item homed on their own side only; no item, home, count or `truncated` flag names the other side (R11); after one opts in, the other's item reads `asked_by_another`; after both opt in, the parties' names appear; a response's chosen parts appear in the other project's next item, and never the responder's handle.
