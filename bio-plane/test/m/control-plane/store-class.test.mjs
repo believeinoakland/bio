@@ -1,7 +1,7 @@
 /* control-plane: the Durable Object class (R35). Constructed for real over a Durable Object storage at the plane's shape
-   (node:sqlite behind `sql.exec` answering a cursor, as workerd's does), and driven through its `fetch`. The answers
-   "before" are instance-setup's own door (`instanceSetupRoute`), which answered its routes ahead of the frame until
-   N348. */
+   (node:sqlite behind `sql.exec` answering a cursor, as workerd's does), and driven through its `fetch`. Each route's
+   answer through the door is compared with instance-setup's own route called directly (`instanceSetupOps(m, url,
+   body)[op]()`) on a second object's storage; instance-setup's own door and wrapper are gone (N348, K514). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
@@ -88,18 +88,13 @@ test("R35: the class the instance exports is this module's Store: at constructio
   const s2 = started(await settle(o));
   assert.equal(s2.length, 1);
   assert.equal(s2[0].started, false);
-  /* legacy-index's wrapper around this class, while it still wraps it (K93's interim): one start, not two */
-  const w = object();
-  new (S.instanceSetupStore(D.Store))(w.ctx, w.env);
-  const s3 = started(await settle(w));
-  assert.deepEqual(s3.map((x) => x.started).sort(), [false, true]);
   /* negative control: a different object's storage starts on its own */
   const other = object();
   new D.Store(other.ctx, other.env);
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R35: instance-setup's fourteen routes are part of R26's route map beside legacy-store's, and each answers as it did through instance-setup's own door", async () => {
+test("R35: instance-setup's fourteen routes are part of R26's route map beside legacy-store's, and each answers through the door, in R26's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
   assert.equal(ops.length, 14);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
@@ -112,10 +107,11 @@ test("R35: instance-setup's fourteen routes are part of R26's route map beside l
   await m.start();
   for (const drive of DRIVES) {
     const a = await store.fetch(req(drive));
-    const b = await S.instanceSetupRoute(m, req(drive));
-    const [at, bt] = [await a.text(), await b.text()];
-    assert.equal(a.status, b.status, drive[0]);
-    assert.deepEqual(JSON.parse(mask(at)), JSON.parse(mask(bt)), drive[0]);
+    const url = new URL(`http://do/${drive[0]}`);
+    const direct = await S.instanceSetupOps(m, url, drive[2] === undefined ? null : drive[2])[url.pathname.slice(1)]();
+    const at = await a.text();
+    assert.equal(a.status, 200, drive[0]);
+    assert.deepEqual(JSON.parse(mask(at)), JSON.parse(mask(JSON.stringify({ ok: true, result: direct }))), drive[0]);
     assert.equal(JSON.parse(at).ok, true, `${drive[0]}: ${at.slice(0, 200)}`);
   }
   /* legacy-store's routes answer through the same door, and an unserved route is R26's refusal */
@@ -162,10 +158,9 @@ test("R35: a throwing instance-setup route answers R25's STORE_INTERNAL_ERROR (C
   assert.equal(/secret-value|setup\.mjs|SQLITE| at /.test(text), false, text);
   assert.equal(logged.length, 1);
   assert.deepEqual([JSON.parse(logged[0]).correlation, JSON.parse(logged[0]).op], [j.correlation, "instancegroup"]);
-  /* negative control: before N348, instance-setup's own door answered the stack */
+  /* negative control: the same route called directly, outside the frame, throws the storage's message */
   const m = S.instanceSetupOf(o.ctx, o.env);
-  const old = await (await S.instanceSetupRoute(m, new Request("http://do/instancegroup"))).text();
-  assert.match(old, /secret-value/);
+  await assert.rejects(async () => S.instanceSetupOps(m, new URL("http://do/instancegroup"), null).instancegroup(), /secret-value/);
 });
 
 test("R35: this class alone is the frame — constructed without any wrapper it starts instance-setup once, and instance-setup's routes pass R26's body read and R25's catch (the instance's export of it is legacy-index's, tested there: the order forbids importing it here)", async () => {
