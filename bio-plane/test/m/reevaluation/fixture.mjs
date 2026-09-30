@@ -1,8 +1,9 @@
 /* reevaluation over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   entities, connections, inquiry, basis-versions, strength), on a real SQLite database (node:sqlite) standing in for a
-   Durable Object's storage. What a later module registers (legacy-store's facts `caseMember` and `publishedRegistry`),
-   the readings content reads through extraction (its R30 `readingOf`, R36 `unitsOf`) and retrieval's selections are
-   stand-ins the test controls. Every test drives `reevaluation` at its interface. */
+   entities, connections, inquiry, basis-versions, strength, contradiction), on a real SQLite database (node:sqlite)
+   standing in for a Durable Object's storage. What a later module registers (legacy-store's facts `caseMember` and
+   `publishedRegistry`), the readings content reads through extraction (its R30 `readingOf`, R36 `unitsOf`), retrieval's
+   selections and ai-runs' run gate (contradiction R21) are stand-ins the test controls. Every test drives
+   `reevaluation` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -14,6 +15,7 @@ import { connectionsOf } from "../../../src/connections/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
+import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
@@ -130,15 +132,20 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
     inquiry: { basisFor: (id, o) => k.basisFor(id, o), earned: (e, t) => k.earned(e, t), legCapped,
                subjectEntityOf: (id) => k.subjectEntityOf(id) },
     versions: basisVersions, producingGroup: () => group, now: () => clock.now });
+  /* contradiction (R27), the real one; its run gate answers every run as running, the caller its principal. */
+  const c = contradictionOf(host, { record, extraction: ex.provider, membership, promotion, entities, basisVersions,
+                                    inquiry: inquiryServices(host), now: () => clock.now });
+  c.migrate();
+  c.registerRunGate("test", () => ({ found: true, running: true, refusal: null }));
   /* inquiry as this module reads it; a test may bound what the record earns (R5). */
   const inquiry = new Proxy(k, { get: (t, p) => (p === "earned" && earnedOverride
     ? earnedOverride : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
   const r = reevaluationOf(host, { record, membership, promotion, inquiry, content, provenance: prov, strength,
-                                   basisVersions, now: () => clock.now });
+                                   basisVersions, contradiction: c, now: () => clock.now });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, entities, connections, k, basisVersions, strength, r, clock,
-    ex, selections, caseMembers, published,
+    st, host, record, membership, promotion, prov, content, entities, connections, k, basisVersions, strength, c, r,
+    clock, ex, selections, caseMembers, published,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -207,6 +214,30 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
     member(id, { role = "member" } = {}) {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
+    },
+    /** contradiction's pairing and a run's proposal (its R8, R13): the first pair `key` forms, proposed with `label`;
+     *  answers the candidate id. */
+    candidate(key, label = "record", index = 0) {
+      const p = c.pairs({ key, viewer: "class:admin" }).pairs[index];
+      if (!p) throw new Error(`no ${key} pair formed`);
+      const res = c.propose({ run: "RUN-2026-0001", proposedBy: "class:ai/tok1", viewer: "class:admin", caller: "member:alice",
+                              proposals: [{ key, a: p.a, b: p.b, label, reason: "the machine's reason" }] });
+      if (!res.ok) throw new Error(`propose refused: ${JSON.stringify(res).slice(0, 300)}`);
+      return res.candidates[0].candidate;
+    },
+    /** A member names one side of a candidate wrong (contradiction R33): that side is marked stale (its R27). */
+    wrong(candidate, side = "a", reason = "misread the table", author = "member:alice") {
+      const res = c.clarify({ candidate, choice: "one_wrong", wrongSide: side, reason, viewer: "class:admin", author });
+      if (!res.ok) throw new Error(`one_wrong refused: ${JSON.stringify(res).slice(0, 300)}`);
+      return res;
+    },
+    /** An accepted version of an inquiry carrying a claim, laid down with the columns basis-versions' read contract
+     *  names (its R38), and the inquiry's subject entity (inquiry R40's column). */
+    claim(inquiryId, name, claim, subject = null) {
+      const ord = st.sql.exec(`SELECT COUNT(*) AS n FROM inquiry_basis_versions WHERE bundle_id=?`, inquiryId)[0].n;
+      st.sql.exec(`INSERT INTO inquiry_basis_versions (bundle_id, name, ord, description, relationship, state, hidden, claim, composition)
+                   VALUES (?, ?, ?, 'd', 'and', 'accepted', 0, ?, 'c')`, inquiryId, name, ord, claim);
+      if (subject) st.sql.exec(`UPDATE bundles SET inquiry_subject_entity=? WHERE bundle_id=?`, subject, inquiryId);
     },
     /** A published edition of `id` in the registry the store provides (promotion's fact). */
     publish(id, edition, { capture = null, connection = null, testimony = null, at = "2026-09-27T12:00:00Z" } = {}) {

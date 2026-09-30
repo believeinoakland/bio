@@ -1,8 +1,9 @@
 /* reevaluation — when something a finding rests on changes, which findings are affected and how (requirements:
  * `build/requirements/reevaluation.md`; Content Framework §18.1, State Rules §5.4). It changes nothing a finding rests
- * on: the obligation is DERIVED ON READ from the record's own facts about each target (R1–R6, R16, R17), the pushed
- * notice tells a member when a newer version of a document affects a passage they reference and the member chooses
- * (R14, R15), and later modules are told when a finding's basis changed (R8, R9).
+ * on: the obligation is DERIVED ON READ from the record's own facts about each target (R1–R6, R16, R17) and from the
+ * sides a member's resolution of a contradiction named wrong (R27, `contradiction.tensionsOn`), the pushed notice tells
+ * a member when a newer version of a document affects a passage they reference and the member chooses (R14, R15), and
+ * later modules are told when a finding's basis changed (R8, R9).
  *
  * Extracted from the legacy modules (T7, layer 7; K3, K102): `store.mjs` (`#reevalRaisedBy`, now `raise`; the REC-17
  * obligation, `reevaluations`, with `#reevalLegsEarned` and `#reevalMoved`; D-256's `changedFromAudit`; D-394's
@@ -30,13 +31,14 @@
  *   provenance     `versionChain` (its R17, R18), `onReceipt` (its R47, R25 here).
  *   strength       `strengthOf` (its R1–R5).
  *   basisVersions  `appendVersion` (its R28).
+ *   contradiction  `tensionsOn` (its R27): which sides a member's resolution named wrong (R27 here).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *   env            the instance bindings: `REEVAL_NOTICE_DELAY_MS` (R25).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`, `title`,
  * `last_updated`, its R37) and `files` (the D-256 audit's scan, below); inquiry's `inquiry_basis` (`bundle_id`, `ord`,
  * `target_id`, `content_id`, its R40); content's `content` (its R45); provenance's `register` and `captured_locators`
- * (its R48). */
+ * (its R48); basis-versions' `inquiry_basis_versions` (`bundle_id`, `name`, `claim`, its R38), R27's claim referents. */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -46,6 +48,7 @@ import { contentOf, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES } from "../cont
 import { inquiryOf, legCapped } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { strengthOf, GRADE_RANK } from "../strength/index.mjs";
+import { contradictionOf, TENSIONS_REFERENTS_MAX } from "../contradiction/index.mjs";
 import { normalizeType, parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX, sha256HexSync,
          VERSION_NAME_RE, GROUND_LABEL_RE, canonicalExtent } from "../../checks/bio-checks.mjs";
 import { checkReevalPending, REEVAL_SOURCES, VERSION_NOTICE_SUBJECT_CHECKS, REEVALUATION_ACT_CHECKS,
@@ -78,10 +81,17 @@ export const NOTICES_LIMIT_MAX = 1000;
 export const REEVAL_NOTICE_DELAY_MS = 1000;
 /** R15, R16: the longest why or note a member's act stores. */
 export const NOTE_MAX = 500;
-/** R2, R16: the sources a cause may carry. R2's five are facts about the target's own row; §5.4's four cascade events
- *  (the catalogue's `REEVAL_SOURCES`) are derived the same way; `weakened` is R17's. */
-export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred", "reopened", "dismissed",
+/** R2, R16: the sources a cause may carry. R2's five are facts about the target's own row; `corrected` is R27's, a fact
+ *  about a side the leg rests on; §5.4's four cascade events (the catalogue's `REEVAL_SOURCES`) are derived the same
+ *  way; `weakened` is R17's. */
+export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred", "reopened", "dismissed", "corrected",
   ...REEVAL_SOURCES, "weakened"]);
+/** R21, R27: what an answer says when a tensions read could not be made. */
+const CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on "
+  + "was named wrong was not read and no corrected cause could be derived; that is not the same as none";
+/** R27: the (dependent, candidate) entries one `correctedDependents` read lists (default and most). */
+export const CORRECTED_LIMIT_DEFAULT = 200;
+export const CORRECTED_LIMIT_MAX = 200;
 /** R14: the grades a notice is raised on (content R31's `affects`); A and B read `unaffected` and never raise one. */
 const RAISED_ON = Object.freeze(["affected", "undetermined"]);
 /** R26: the sweep cursor's mark once it stands in the case half (`case:<case id>`); `case:` alone is its start. */
@@ -117,13 +127,13 @@ export class Reevaluation {
   #caseParts = null;   // R26: {module, parts, cases}, publication's, one registration
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, content = null,
-                connections = null, provenance = null, strength = null, basisVersions = null, now = null,
-                env = null } = {}) {
+                connections = null, provenance = null, strength = null, basisVersions = null, contradiction = null,
+                now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions };
+    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions, contradiction };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     this.env = env && typeof env === "object" ? env : {};
   }
@@ -134,6 +144,7 @@ export class Reevaluation {
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
+  get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
 
   migrate() { migrateReevaluation(this.sql); }
 
@@ -369,6 +380,97 @@ export class Reevaluation {
     };
   }
 
+  /** R27: the `corrected` causes on `legs` (`inquiry_basis` rows: `bundle_id`, `ord`, `target_id`, `content_id`), for a
+   *  viewer. A live leg (R7's) carries one per stale mark `contradiction.tensionsOn` answers on a referent the leg rests
+   *  on: its content row at that row's capture (a leg or an extent side on the same row, the stale leg's own inquiry
+   *  included), and, when its target is an inquiry, each claimed version of that inquiry. A stance side is never marked
+   *  stale (contradiction R33, R36 refuse a CORRECTED kind on K5), so none is asked. Answers `{byPair, read}`: `byPair`
+   *  keyed `<dependent>\0<target>`, each cause list in (ord, candidate) order; `read` false when a tensions read could
+   *  not be made, so no answer reads "none corrected" that did not read it (R21). Reads only. */
+  #corrected(legs, viewer, visible) {
+    const byPair = new Map();
+    const rows = legs.filter((l) => l && l.bundle_id && l.target_id && visible(l.bundle_id) !== null);
+    if (!rows.length) return { byPair, read: true };
+    const cids = [...new Set(rows.map((l) => l.content_id).filter(Boolean))];
+    const caps = new Map((cids.length
+      ? this.#rows(`SELECT content_id, capture_sha FROM content WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+                   JSON.stringify(cids), cids.length)
+      : []).filter((r) => r.capture_sha).map((r) => [r.content_id, r.capture_sha]));
+    const tids = [...new Set(rows.map((l) => l.target_id))];
+    const claims = new Map();
+    for (const v of this.#rows(
+      `SELECT bundle_id, name, claim FROM inquiry_basis_versions
+        WHERE bundle_id IN (SELECT value FROM json_each(?)) AND claim IS NOT NULL AND claim <> ''
+        ORDER BY bundle_id, name`, JSON.stringify(tids))) {
+      if (!claims.has(v.bundle_id)) claims.set(v.bundle_id, []);
+      claims.get(v.bundle_id).push({ name: v.name, ref: `${v.bundle_id}|${v.name}`, version: sha256HexSync(String(v.claim)) });
+    }
+    /* Each referent asked once, in chunks of contradiction's own bound (its R27, C-60.3). */
+    const key = (ref, version) => `${ref}\u0000${version}`;
+    const asked = new Map();
+    for (const [cid, cap] of caps) asked.set(key(cid, cap), { ref: cid, version: cap });
+    for (const list of claims.values()) for (const c of list) asked.set(key(c.ref, c.version), { ref: c.ref, version: c.version });
+    const stale = new Map();
+    let read = true;
+    const all = [...asked.entries()];
+    for (let i = 0; i < all.length; i += TENSIONS_REFERENTS_MAX) {
+      const chunk = all.slice(i, i + TENSIONS_REFERENTS_MAX);
+      let t = null;
+      try { t = this.contradiction.tensionsOn({ referents: chunk.map(([, r]) => r), viewer }); } catch { t = null; }
+      if (!t || t.ok !== true || t.undetermined || !Array.isArray(t.referents) || t.referents.length !== chunk.length) {
+        read = false; continue;
+      }
+      chunk.forEach(([k], j) => {
+        const marks = (t.referents[j] && Array.isArray(t.referents[j].marks) ? t.referents[j].marks : [])
+          .filter((m) => m && m.mark === "stale" && m.candidate);
+        if (marks.length) stale.set(k, marks);
+      });
+    }
+    if (!stale.size) return { byPair, read };
+    /* Only a LIVE leg rests on anything (R7): a divided citer and a severed leg carry no cause. Asked only of the
+       targets a stale side was found under. */
+    const hitOn = (l) => {
+      const out = [];
+      const cap = l.content_id ? caps.get(l.content_id) : null;
+      if (cap) for (const m of stale.get(key(l.content_id, cap)) || [])
+        out.push({ m, side: { on: "content", content_id: l.content_id, capture_sha: cap } });
+      for (const c of claims.get(l.target_id) || [])
+        for (const m of stale.get(key(c.ref, c.version)) || [])
+          out.push({ m, side: { on: "claim", inquiry: l.target_id, version: c.name } });
+      return out;
+    };
+    const hits = rows.map((l) => ({ l, found: hitOn(l) })).filter((h) => h.found.length);
+    const live = new Map();
+    for (const t of new Set(hits.map((h) => h.l.target_id))) {
+      let r = null;
+      try { r = this.inquiry.restsOnLive(t); } catch { r = null; }
+      live.set(t, new Set((r && Array.isArray(r.all) ? r.all : []).map((x) => `${x.bundle_id}\u0000${x.ord}`)));
+    }
+    for (const { l, found } of hits) {
+      if (!live.get(l.target_id).has(`${l.bundle_id}\u0000${l.ord}`)) continue;
+      const pk = `${l.bundle_id}\u0000${l.target_id}`;
+      if (!byPair.has(pk)) byPair.set(pk, []);
+      for (const { m, side } of found) {
+        const what = side.on === "content"
+          ? `the passage ${side.content_id} this leg rests on (capture ${side.capture_sha.slice(0, 12)})`
+          : `the claim of ${side.inquiry} at version ${side.version}, which this leg names`;
+        byPair.get(pk).push({
+          source: "corrected", since: m.at ?? null, ord: l.ord, candidate: m.candidate, kind: m.kind ?? null,
+          reason: m.reason ?? null, member: m.member ?? null,
+          ...(m.inquiry ? { inquiry: m.inquiry } : {}), ...(m.act ? { act: m.act } : {}), side,
+          ...(m.at ? {} : { since_why: "the side was named wrong by a contradiction inquiry's conclusion, and the "
+                              + "tensions read states no instant for it; none is invented here" }),
+          detail: `${what} was named wrong by a member's resolution of contradiction ${m.candidate}`
+            + `${m.reason ? ` (${m.reason})` : ""}. It still resolves and says it was corrected; nothing resting on it `
+            + `was moved, and whether this finding still stands is the members' to decide.`,
+        });
+      }
+    }
+    for (const list of byPair.values())
+      list.sort((a, b) => (a.ord - b.ord) || (a.candidate < b.candidate ? -1 : a.candidate > b.candidate ? 1 : 0));
+    return { byPair, read };
+  }
+
   /* ---------------------------------------------------------------- R1–R6, R16, R17: the obligation */
 
   /** R1–R6: the re-evaluation obligation, derived on read. With `target`, the dependents of one moved thing (and, R17,
@@ -389,9 +491,19 @@ export class Reevaluation {
        once after the walk (R16), so that read is bounded by the answer. */
     const found = [];
     const place = (o, causes) => found.push({ o, causes });
+    /* R27: the corrected causes, over the legs resting on these targets, read once for the whole answer. */
+    const corr = this.#corrected(
+      this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
+                   WHERE target_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, ord`, JSON.stringify(targets)),
+      viewer, visible);
+    const correctedOn = new Set([...corr.byPair.keys()].map((k) => k.slice(k.indexOf("\u0000") + 1)));
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg);
-      if (!moved) continue;
+      if (!moved && !correctedOn.has(t)) continue;
+      /* A target whose only cause is R27's is read for its own state and type here, as `#moved` reads a moved one. */
+      const own = moved ? { state: moved.state, object_type: moved.object_type }
+        : this.#one(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=?`, t)
+          || { state: null, object_type: null };
       const rest = this.inquiry.restingOn(t);
       const legs = rest && rest.ok !== false && Array.isArray(rest.dependents) ? rest.dependents : [];
       const byBundle = new Map();
@@ -411,8 +523,8 @@ export class Reevaluation {
         /* REC-160 / DEC-70: SEVERANCE DISCHARGES SUPPORT, NEVER CONNECTION. A withdrawn leg still RECEIVES the
            obligation, and the read marks it (connections' one severance predicate, through inquiry's `restingOn`). */
         const legStatus = mine.some((l) => l.status === "severed") ? "severed" : "confirmed";
-        const causes = [...moved.causes];
-        if (moved.edition) {
+        const causes = moved ? [...moved.causes] : [];
+        if (moved && moved.edition) {
           for (const l of mine) {
             const cited = fmBasis[l.ord] && fmBasis[l.ord].target_edition != null
               ? Number(fmBasis[l.ord].target_edition) : null;
@@ -440,18 +552,19 @@ export class Reevaluation {
                                 + `forward on your behalf (DEC-12).` });
           }
         }
+        causes.push(...(corr.byPair.get(`${bundleId}\u0000${t}`) || []));
         if (!causes.length) continue;
         place({
           bundle_id: bundleId, title: dep?.title ?? null,
           object_type: dep?.object_type ?? null, current_state: dep?.current_state ?? null,
-          target: t, target_state: moved.state,
+          target: t, target_state: own.state,
           /* The RAW rows travel here and the PUBLISHED leg shape is composed once, in `#legsEarned`, after the whole
              answer is built, so the registry is asked ONCE for the page. */
-          legs: mine.map((l) => ({ ...l, target_id: t, target_type: moved.object_type,
+          legs: mine.map((l) => ({ ...l, target_id: t, target_type: own.object_type,
                                    target_edition: fmBasis[l.ord]?.target_edition ?? null, status: legStatus })),
           stored: this.#storedTriple(fm),
           strength: this.#strengthOf(bundleId),
-          ...(moved.superseded_by ? { superseded_by: moved.superseded_by } : {}),
+          ...(moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {}),
         }, causes);
       }
     }
@@ -482,7 +595,9 @@ export class Reevaluation {
              closed: closedOnly, closed_count: closedOnly.length,
              editions_read: reg !== null,
              ...(reg === null ? { editions_why: "no module provides the published registry, so no edition was read "
-                                  + "and no edition cause could be derived; that is not the same as none" } : {}) };
+                                  + "and no edition cause could be derived; that is not the same as none" } : {}),
+             corrections_read: corr.read,
+             ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }) };
   }
 
   /** R5 (REC-118 / D-410): an obligation's leg letters, resolved against what the record can earn, so the two halves of
@@ -573,15 +688,17 @@ export class Reevaluation {
 
   /* ---------------------------------------------------------------- R9: the recovery read */
 
-  /** R9: now, the causes standing on each named finding (R2's arms and §5.4's, the finding as target, and R17's) and
-   *  each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see answer as absent. Writes
-   *  nothing. */
+  /** R9: now, the causes standing on each named finding (R2's arms and §5.4's, the finding as target, R17's, and R27's
+   *  `corrected` causes the finding carries on its own legs, each naming its target, less those a recorded
+   *  re-evaluation closed) and each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see
+   *  answer as absent. Writes nothing. */
   changesOf({ findings = null, contents = null, viewer = null } = {}) {
     const F = asList(findings), C = asList(contents);
     const fl = F.slice(0, CHANGES_OF_MAX), cl = C.slice(0, CHANGES_OF_MAX);
     const visible = this.#redactor(viewer);
     const seen = fl.filter((id) => this.#visible(id, viewer));
     const reg = this.#registry(seen);
+    const corr = this.#standingCorrected(seen, viewer, visible);
     const outF = fl.map((id) => {
       if (!seen.includes(id)) return { id, absent: true };
       const moved = this.#moved(id, visible, reg);
@@ -593,6 +710,7 @@ export class Reevaluation {
                             + `none, rests on an edition that is no longer its latest.` });
       const w = this.#weakened(id, reg);
       if (w) causes.push(w);
+      causes.push(...(corr.byDependent.get(id) || []));
       const state = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, id);
       return { id, state: state ? state.current_state : null, causes,
                ...(moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {}) };
@@ -608,7 +726,79 @@ export class Reevaluation {
     return { ok: true, findings: outF, contents: outC,
              findings_truncated: F.length > fl.length, contents_truncated: C.length > cl.length,
              limit: CHANGES_OF_MAX, wrote: false,
-             ...(reg === null ? { editions_read: false } : { editions_read: true }) };
+             ...(reg === null ? { editions_read: false } : { editions_read: true }),
+             corrections_read: corr.read, ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }) };
+  }
+
+  /* R9, R27: the corrected causes the named dependents carry on their own legs, each with its `target`, less those a
+     recorded re-evaluation closed (R16). `byDependent` keyed by dependent, in (target, ord, candidate) order. */
+  #standingCorrected(dependents, viewer, visible) {
+    const byDependent = new Map();
+    if (!dependents.length) return { byDependent, read: true };
+    const corr = this.#corrected(
+      this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
+                   WHERE bundle_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, target_id, ord`,
+                 JSON.stringify(dependents)), viewer, visible);
+    const pairs = [...corr.byPair.keys()].sort().map((k) => k.split("\u0000"));
+    const records = this.#records(pairs);
+    for (const [d, t] of pairs) {
+      const { open } = this.#split(d, t, corr.byPair.get(`${d}\u0000${t}`), records);
+      if (!open.length) continue;
+      if (!byDependent.has(d)) byDependent.set(d, []);
+      byDependent.get(d).push(...open.map((c) => ({ ...c, target: t })));
+    }
+    return { byDependent, read: corr.read };
+  }
+
+  /* ---------------------------------------------------------------- R27: the corrected side, listed */
+
+  /** R27: each (dependent, candidate) a standing `corrected` cause names, in dependent then candidate order after
+   *  `after` (`<dependent>#<candidate>`), at most `limit` (1–200, default 200), with `truncated` and `cursor` (the last
+   *  entry's key when more follow). A cause a recorded re-evaluation closed is not listed (R16). A dependent the viewer
+   *  may not see is withheld and not counted (R20). For `queue`'s `side-corrected` item (its R44). Writes nothing. */
+  correctedDependents({ after = null, limit = null, viewer = null } = {}) {
+    const cap = clamp(limit, CORRECTED_LIMIT_DEFAULT, CORRECTED_LIMIT_MAX);
+    const aft = String(after ?? "");
+    const cut = aft.lastIndexOf("#");
+    const [aDep, aCand] = cut >= 0 ? [aft.slice(0, cut), aft.slice(cut + 1)] : [aft, ""];
+    const visible = this.#redactor(viewer);
+    /* Dependents are read a page at a time, in id order, until one entry past the limit is found or none are left, so
+       the read is bounded by the answer rather than by the corpus. */
+    const entries = [];
+    let read = true, from = aDep, first = true;
+    while (entries.length <= cap) {
+      const deps = this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis WHERE bundle_id ${first ? ">=" : ">"} ?
+                                ORDER BY bundle_id LIMIT ?`, from, CORRECTED_LIMIT_MAX).map((r) => r.bundle_id);
+      if (!deps.length) break;
+      first = false;
+      from = deps[deps.length - 1];
+      const corr = this.#standingCorrected(deps, viewer, visible);
+      if (!corr.read) read = false;
+      for (const d of [...corr.byDependent.keys()].sort()) {
+        const byCand = new Map();
+        for (const c of corr.byDependent.get(d)) {
+          if (!byCand.has(c.candidate)) byCand.set(c.candidate, []);
+          byCand.get(c.candidate).push(c);
+        }
+        for (const cand of [...byCand.keys()].sort()) {
+          if (d < aDep || (d === aDep && cand <= aCand)) continue;
+          const cs = byCand.get(cand), m = cs[0];
+          entries.push({ dependent: d, candidate: cand, kind: m.kind, reason: m.reason, member: m.member, since: m.since,
+                         ...(m.inquiry ? { inquiry: m.inquiry } : {}), ...(m.act ? { act: m.act } : {}),
+                         ...(m.since_why ? { since_why: m.since_why } : {}),
+                         legs: cs.map((c) => ({ target: c.target, ord: c.ord, side: c.side })),
+                         detail: m.detail });
+        }
+      }
+      if (deps.length < CORRECTED_LIMIT_MAX) break;
+    }
+    const listed = entries.slice(0, cap);
+    const truncated = entries.length > cap;
+    return { ok: true, entries: listed, count: listed.length, limit: cap, truncated,
+             cursor: truncated ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].candidate}` : null,
+             wrote: false, corrections_read: read, ...(read ? {} : { corrections_why: CORRECTIONS_UNREAD }),
+             says: "each finding listed rests on a side a member's resolution named wrong; that side still resolves and "
+                 + "says it was corrected, nothing resting on it was moved, and a recorded re-evaluation closes the cause" };
   }
 
   /* ---------------------------------------------------------------- R10, R11: the cross-version notice (D-394) */
