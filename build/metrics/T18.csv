@@ -1,0 +1,6 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01HTBPsBTM23s6x7zFpscC9X,job,record-grammar,14275449,187023,670,66435,,16,650
+session_01PCFYYPfs1fNHKtD4GxpnRR,job,legacy-checks,13806211,198323,6449,43410,,9,342
+session_01BzHjKddHo9h3xqxppmp72U,job,jurisdictions,8464324,177115,102,24171,,,
+session_01Si3ffbvMruZpr82kxNsAsb,job,ocr-worker,6438023,123521,6387,18620,,5,1673
+session_01N7QX5khED3EnvE1RYee7kL,job,text-chain,15805114,253770,12738,33520,,9,1845
