@@ -1,6 +1,6 @@
 # Plan: tranche T15
 
-**Status** · DRAFT · a worker for BOB #67, 2026-09-29, read on `tranche/T14` @ 7f0026f27f (layers 1–2 closed, K458, K460; layers 3–11 and legacy-tests still to run); reviewed by BOB #67 (its points below). Re-read against T14's close before opening (K424's and K451's practice).
+**Status** · CUT into `current.md` by BOB #68 at T15's opening, 2026-09-30 (K481); kept for its points. Was: DRAFT · a worker for BOB #67, 2026-09-29, read on `tranche/T14` @ 7f0026f27f (layers 1–2 closed, K458, K460; layers 3–11 and legacy-tests still to run); reviewed by BOB #67 (its points below). Re-read against T14's close before opening (K424's and K451's practice).
 
 Cut from T14's "Not in T14" (`current.md`, with K464's reading), `next.md`'s open entries (T13's waiting list, less what T14 carries), N345's contradiction part (`draft-N345-contradiction.md`, approved by Bob: K455, DEC-85, K456; amended K459), rulings K440–K464, the `not yet met` marks in `build/requirements/`, and the T14 job records. An `N` entry's text is in `build/plan/next.md`. N345's contradiction part folds at the opening; its ids were counted after T14's fold (K454), so they are **re-counted against T14's close** before the fold, with its six new `uses` edges (contradiction → promotion; reevaluation, publication, case-authoring, conformance and queue → contradiction). Bob's weekly meter at the opening: asked.
 
