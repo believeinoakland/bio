@@ -160,10 +160,35 @@ export class Sources {
       if (!id) return null;
       this.#sql.exec(`INSERT INTO sources (source_id, pseudonym, knocker_digest, first_knock, minted_at) VALUES (?, ?, ?, ?, ?)`,
                      id, k.pseudonym ?? null, k.pseudonym ? (k.knocker_digest ?? null) : null, k.knock_id, this.#instant());
+      this.#bindKnocks(this.#source(id));
     }
-    this.#sql.exec(`INSERT INTO source_knocks (knock_id, source_id, capture_sha, bytes, received) VALUES (?, ?, ?, ?, ?)`,
-                   k.knock_id, id, k.sha256, Number(k.bytes) || 0, String(k.received));
+    this.#bindKnock(k, id);
     return id;
+  }
+
+  /** R15: one `source_knocks` row per pulled knock a source stands behind, written once and never changed. */
+  #bindKnock(k, sourceId) {
+    this.#sql.exec(`INSERT OR IGNORE INTO source_knocks (knock_id, source_id, capture_sha, bytes, received) VALUES (?, ?, ?, ?, ?)`,
+                   k.knock_id, sourceId, k.sha256, Number(k.bytes) || 0, String(k.received));
+  }
+
+  /** R15: every pulled knock of a pseudonym's source bound to it, from capture's `knocksOf` (its R67), when the source
+   *  is minted and before each act that may move its rung (R10), so a capture the source stands behind has its row
+   *  whichever of its captures was read (reevaluation R28 reads them). A knock without a secret is its source's only
+   *  knock, bound when read. In the caller's transaction; a capture that does not answer binds nothing more. */
+  #bindKnocks(src) {
+    if (!src || !src.pseudonym) return;
+    let after = null;
+    for (;;) {
+      let page;
+      try { page = this.#capture.knocksOf({ pseudonym: src.pseudonym, limit: 1000, after }); } catch { return; }
+      if (!page || page.ok === false || !Array.isArray(page.knocks)) return;
+      for (const k of page.knocks)
+        if (k && k.status === "pulled" && typeof k.knock_id === "string" && HEX64.test(String(k.sha256)) && k.capture_sha === k.sha256)
+          this.#bindKnock(k, src.source_id);
+      if (!page.truncated || !page.next) return;
+      after = page.next;
+    }
   }
 
   /** R1: the source as it stood when the capture was received (the capture's own `source`, verbatim), and beside it the
@@ -391,12 +416,16 @@ export class Sources {
              linkTo, basis: linkTo ? "evidence" : null, sight };
   }
 
-  /** Appends one entry and notifies (R2, R6, R10). The answer carries no value (R13). */
+  /** Appends one entry and notifies (R2, R6, R10). A link (R6) that moves the linked source's rung (a `same_secret`
+   *  basis proves it too, R9) notifies for that source as well, with the same entry. The answer carries no value (R13). */
   #append(sourceId, w, by) {
     const before = this.#rung(sourceId).rung;
+    const linkedBefore = w.linkTo ? this.#rung(w.linkTo).rung : null;
     const at = this.#instant();
     const entryId = `SRCE-${hex(8)}`;
     this.#record.transact(() => {
+      this.#bindKnocks(this.#source(sourceId));
+      if (w.linkTo) this.#bindKnocks(this.#source(w.linkTo));
       this.#sql.exec(`INSERT INTO source_entries (entry_id, source_id, kind, attribute, value, recorded, how, known_to,
                         evidence_json, claimed_by, claimed_at, confirms, link_to, basis, by, at)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -408,6 +437,8 @@ export class Sources {
     });
     const after = this.#rung(sourceId).rung;
     const notified = this.#notify(sourceId, entryId, before, after);
+    const linkedAfter = w.linkTo ? this.#rung(w.linkTo).rung : null;
+    if (w.linkTo && linkedAfter !== linkedBefore) notified.push(...this.#notify(w.linkTo, entryId, linkedBefore, linkedAfter));
     return { ok: true, source: sourceId, entry: entryId, kind: w.kind, ...(w.attribute ? { attribute: w.attribute } : {}),
              how: w.how, knownTo: w.knownTo, recorded: w.recorded, by, at,
              ...(w.linkTo ? { to: w.linkTo, basis: w.basis } : {}),
@@ -482,6 +513,7 @@ export class Sources {
     const before = this.#rung(sourceId).rung;
     const at = this.#instant();
     this.#record.transact(() => {
+      this.#bindKnocks(this.#source(sourceId));
       this.#sql.exec(`INSERT INTO source_consents (source_id, entry_id, act, audience, evidence_json, via, by, at)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                      sourceId, plan.entry, plan.act, plan.audience, evidence ? JSON.stringify(evidence) : null, via, by, at);
