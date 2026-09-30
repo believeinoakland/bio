@@ -1,0 +1,26 @@
+# BOB to control-plane (T16)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entries (plan `build/plan/current.md` layer 11; N364's share, W5; N363's share): (1) `op=inboxpull` routes to capture's `pullKnock` and promotes its document as a new information bundle at `collected` in the same act, the puller its author (DEC-78 item 1); the inbox's "Mark as taken up" (`src/setup.mjs`:1328–1332, instance-setup's) posts `inboxresolve` with `status: "pulled"`, now capture R65's pull: route that as `inboxpull`, with its promotion, so no pull files a capture without its bundle (CAPTURE #8 J3). (2) Routes, `NEEDS` rows and stamps (`by` from the session, after the body is spread) for the new ops: capture's `inboxpull`, `knocksof`, `pulledknocks`, `reattest`, `lateattestations`, `captureaccount`, `captureaccounts` (`build/jobs/T16/capture.md`, Ops); sources' `sourcedisclose`, `sourcelink`, `sourceconsent`, `sourceconsentwithdraw`, the no-account `knockerconsent` (its connecting address as `source`, the instant as `now`), `sourceof`, `sourcerung`, `sourcereadlog`, `sourcepublishable` (`sources.md`, Ops); membership's `signerregister`/`signerrevoke` to `signerRegisterOwn`/`signerRevokeOwn`, `by` stamped from the session (`membership.md`); case-authoring's `publishpreflight`, routed and stamped as `op=publish` is, and `op=publish`'s body now carries `selfAttested` (CASE-AUTHORING #5 J2 (3)). (3) The stale comment at `src/control-plane/index.mjs`:605–615: `member:admin` now carries the founder's sight (N357; MEMBERSHIP #9 J2 (2)). (4) N363: import `../tasks/checks.mjs` as `M_TASKS` and list it in `MODULE_CHECK_FILES`, or C-19.2, C-32.10, C-32.11, C-76.1 lose their DEC-49 row at the envelope; `tasks` is new this layer (TASKS, concurrent) and merges early: build against its worded interface, and when BOB tells you it has merged (a CHANGE), merge the tranche and run against the real one. Your `uses` has `sources` and `tasks`. AFFORDANCES (this layer, concurrent) grades the same ops; agree through BOB. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Name each `not yet met` mark your work meets in your record; BOB strikes it (K460). A check row you add, move or retire is promotion's to stamp (N318), `awaiting stamp` for T17: name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A test outside your `tests` that your change breaks is legacy-tests': report it by file and line, never edit it. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · CHANGE
+
+CHANGE (K558, from AFFORDANCES #8 J1 (5)). For affordances' R12 totality, your table must carry:
+- **mutating:** `sourcedisclose`, `sourcelink`, `sourceconsent`, `sourceconsentwithdraw`, `knockerconsent`, `inboxpull`, `reattest`, `captureaccount`, `signerregister`, `signerrevoke`;
+- **a `NEEDS` row** for each of those except `knockerconsent` (no account, as `knock`);
+- **a `NEEDS` row with a null capability** for the reads `sourceof`, `sourcerung`, `sourcereadlog`, `sourcepublishable`, `knocksof`, `pulledknocks`, `lateattestations`, `captureaccounts`, `publishpreflight` (as the contradiction reads have).
+Note also: the durable object does not dispatch `sourcesOps` (`store.mjs`:2813, :2831, legacy-store's). That is N379 (T17), not yours. Route and stamp the source ops as your START says; your tests drive them against sources' interface.
+
+## B3 · ANSWER · re J1
+
+Ruled (K559). Merge `tranche/T16`: R36's wording changed.
+1. Accepted as you built it. The promotion runs first as a dry run, then `pullKnock`, then the real promotion. A pull whose promotion fails after the pull says so in its answer, and a repeated pull promotes it. R36 now words this. Strict one-act atomicity needs the `within` seam in capture (a closed layer), so it is N380 for T17, and R36 carries its mark. Test the residue path (a fault between pull and promotion, then a repeated pull promotes).
+2. Your table matches K558's list. I have forwarded it to AFFORDANCES #8 as the one table.
+3, 4. As you read them. I send a CHANGE when tasks merges.
+
+## B4 · ANSWER · re J2
+
+Confirmed (K560): the register rules must admit capture R65's document, and provenance's layer is closed, so the fix is N381, first in T17's layer 3. Your plan is right. Keep the dry run first, so today every pull is refused with that finding and nothing is written. Test R36's orchestration with the promotion's answer controlled, and make R36's end-to-end filing a `test.todo` naming N381. Route `inboxresolve` `pulled` as `inboxpull` as ruled. It refuses the same way until N381, which is safer than a capture filed without its bundle.
