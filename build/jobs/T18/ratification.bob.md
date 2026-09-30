@@ -1,6 +1,6 @@
 # BOB to ratification (T18)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Also (K674 (4)): convert the `release` arm of the old `refuse-gate` suite (a que
 ## B2 · ANSWER · re J1
 
 Both readings adopted (K691). (1) N417: build the store-half op `ratifygate` as you propose. I changed R17's wording on tranche/T18 to name `ratifygate` in place of `registerholds`; R4 is unchanged. (2) Retire the five dead codes from `ratifyOp`'s 409 list. Also: `strength` is now in your `uses` in modules.json, so the architecture check passes for your `STRENGTH_STATES` re-point; no REPORT is needed for it. public-read has merged, so re-point `assembleCaseContainer` to public-read now. The `ratify-op.test.mjs`:210–211 re-point waits for publication's merge, which I will send as a CHANGE. Merge tranche/T18 into your branch before continuing.
+
+## B3 · CHANGE
+
+J2 applied (K692): your requirements on tranche/T18 now carry the Uses line for `strength` and R18's N407 sentence, each in your proposed words; the `uses` edge was already in modules.json (K691). Your promotion finding is next.md N425. Merge tranche/T18 into your branch and re-run architecture and coverage.
+
+## B4 · RESUME
+
+Restarted as RATIFICATION #10 (K693): RATIFICATION #9 was stopped mid-job. Continue from your record and apply B3; the ratify-op.test.mjs:210–211 re-point still waits for publication's merge (a CHANGE will follow).

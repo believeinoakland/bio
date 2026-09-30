@@ -33,7 +33,7 @@ Terms are `publication`'s. A **ceremony** is `op=caseratify` (the case document)
 
 #### The case ceremony's pre-flight (N364; DEC-80 item 3)
 
-- **R18** **caseRatifyPreflight({text, signer, viewer})** answers, over an unsigned document's bytes, every refusal of R2 and R3 that holds before a signature exists, in their order: C-32.13, C-32.15, C-53.12, C-92.10, C-92.11; `NO_ATTESTING_KEY` when `signer` holds no key `membership.attestingKeys` answers (its remedy names `membership` R89, registering one's own key); `CASE_SIGNER_NOT_AN_OWNER`; C-65.1; and `promotion.runCaseGate`'s findings. Each is byte-identical to the act's own refusal. It writes nothing and never throws.
+- **R18** **caseRatifyPreflight({text, signer, viewer})** answers, over an unsigned document's bytes, every refusal of R2 and R3 that holds before a signature exists, in their order: C-32.13, C-32.15, C-53.12, C-92.10, C-92.11; `NO_ATTESTING_KEY` when `signer` holds no key `membership.attestingKeys` answers (its remedy names `membership` R89, registering one's own key); `CASE_SIGNER_NOT_AN_OWNER`; C-65.1; and `promotion.runCaseGate`'s findings. C-32.13 and C-32.15 hold for a viewer carrying a minted agent credential (`{stamp, aiCred}`, admission's stamp) whatever its stamp (N407). Each is byte-identical to the act's own refusal. It writes nothing and never throws.
 
 #### The case-document catalogue
 
@@ -66,6 +66,7 @@ The collected-to-verified transition of many Information documents at once, over
 - `capture`: `reusedParts`, `recordReuseVerdicts`, `captureLimit` (R6).
 - `inquiry`: `earned` and the subject entity (R7), the basis read.
 - `basis-versions`: `conclusionOf`, `conclusionRecordOf`, `noProjectConclusionOf`, `projectsDrawingOn` (R1), `testimonyReach` (R7).
+- `strength`: `STRENGTH_STATES` (R9, C-2.8's frozen-axis states).
 - `publication`: `caseDocumentFacts`, `caseRelation`, the registries and pinning reads, `attributionFacts`, `attributionStatedFor`, `observationsNamingAuthor`, `commitEdition`, `commitCaseEdition`, `dischargeCaseFlags`, `delivererOf`, `deliveringPrincipal`; and, through its re-export, `case-grammar`'s format grammar and `publishedGraphEdges` (`case-grammar` R1, R5; K651).
 - `public-read` (K651): `assembleCaseContainer` (its R6), and the public reads R6's tests read (`publishedManifest`, `publishedList`, `publishedEditions`: its R4, R2).
 
