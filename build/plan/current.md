@@ -27,7 +27,7 @@ Opened by BOB #71, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ f5554232cb, T
 ## Layer 6
 
 - **contradiction** · N366 first (K523): the candidate read's `reach` and `{project}` subject leak hidden projects; fix at the interface with the two-hidden-projects fixture. Then N368: bounds on `tensionsOn` and `contextFacts`; `contradictionnotices`' `truncated` driven at its cut. N359 (W3): R27's `stale` mark from a contradiction inquiry's CORRECTED conclusion reads the member and instant from R36's resolve act (`#appendAct`, :2038; the mark is built in `#marksOn`, :1430–1432); no row changes. N365's read: whether a viewer sees both sides of an inquiry's linked candidate (as worded, K527). Merged early for reevaluation (layer 7) and affordances (layer 11) only through the tranche.
-- **inquiry** · N369: the second `CONTRADICTION_LINK_MALFORMED` site (`src/inquiry/contradiction.mjs`:208–211), C-2.15 as re-worded (K527). N360 (K495): `divide` carries each apportioned leg's `content_id` to the child (R24's "verbatim"); a test that a child's leg names the parent leg's passage. N358 is settled by wording (W2): R36's older clause struck, no column move.
+- **inquiry** · N369: the second `CONTRADICTION_LINK_MALFORMED` site (`src/inquiry/contradiction.mjs`:208–211), C-2.15 as re-worded (K527). N360 (K495): `divide` carries each apportioned leg's `content_id` to the child (R24's "verbatim"); a test that a child's leg names the parent leg's passage. N358 is settled by wording (W2): R36's older clause struck, no column move. Provenance R51's doorbell basis read as the author's letter under the ceiling (K538; PROVENANCE #6 J1).
 
 ## Layer 7
 
