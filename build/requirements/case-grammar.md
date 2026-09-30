@@ -1,0 +1,54 @@
+# case-grammar — requirements
+
+**Status** · DRAFT by a worker for BOB #75, 2026-09-30, on `tranche/T18` before layer 8 starts, for BOB's review; split from `publication` by K617 and K651 (seam read `build/extraction/publication-split.md` §3.1: a module whose code, or whose job, would pass about 4,000 lines is split before its next job, along seams BOB names, with no change to any requirement's meaning). R1 is `publication` R20, moved whole with its meaning unchanged (`publication` retires it as moved). R2–R5 are new ids for spellings that `publication` holds today without an id of their own: R2 and R3 the grammar behind `publication` R17's `attributionStatements` and R21's `reauthorSection` (R17 and R21 stay `publication`'s, unchanged), R4 the signed citations `publication` R1 answers, R5 `publishedGraphEdges` (D-431; read by `ratification` R4, R5 and `publication` R38). R6 and R7 are copies of `publication` R28 and R34. Layer 8, first of `case-grammar`, `publication`, `public-read`, `project-stage`. No `from`. Its code is taken by copy (K624 (1)): the format block (`publication/checks.mjs` 14–48), `fmSafe`, `SECTIONS`, `REAUTHORABLE_SECTIONS`, `signedCitations`, the attribution renderers and `publishedGraphEdges` (`publication/index.mjs` 188–320), and `publication/blocks.mjs` and `publication/tensions.mjs`, copied into `bio-plane/src/case-grammar/` with their one import re-pointed to this module's predicate; `publication`'s job, after this one merges, deletes its copies and re-exports this module, so `ratification`, `case-authoring`, `control-plane` and the tests import what they import today.
+
+**Size (P6).** About 425 lines. Pure: it reads no table and holds no store.
+
+## Public
+
+### Purpose
+
+The case document's grammar, one spelling for every module: the formats and their predicates, the `/5` blocks and the tension section, the section locators and the attribution run's text, the signed citations, and the edge set a finding "rests on". Text in, values out.
+
+### Provides
+
+#### The formats and the `/5` blocks
+
+- **R1** (was `publication` R20) `CASE_DOCUMENT_FORMAT` is `bio-case-document/5`; `/4`, `/3`, `/2` and `/1` are accepted as written (`CASE_DOCUMENT_FORMATS_ACCEPTED`). `caseDocumentStatesMemberBlocks(fm)` is true for `/5`, `/4`, `/3`, `/2`; `caseDocumentRequiresDisclosures(fm)` for `/5`, `/4`, `/3`; `caseDocumentRequiresV4Disclosures(fm)` for `/5` and `/4` (the three predicates hold for `/5` as they hold for `/4`); `caseDocumentRequiresTensionSection(fm)` for `/5` only. Pure; never throw. They are the one reading of a document's shape for every module. `/5` also states two blocks (DEC-81 item 1, DEC-78 item 5): `captures:`, one row per capture a member rests on, `{capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only}`, an acknowledged capture adding `acknowledgement_reason, acknowledged_by, acknowledged_at, sentence` (`case-authoring` R36's fixed sentence), read back as `acknowledgement: {reason, acknowledged_by, at, sentence}`; `capture_accounts:`, one row per signed account `{capture, by, at, text_b64, signature_b64}` (the exact bytes, so the signature verifies), read back on each capture as `accounts: [{by, at, text, signature}]`; and `sources:`, `{capture, stated, basis}` (K549, K553: the grammar holds flat rows only). No `/5` document is stored anywhere yet, so the blocks join `/5` and no `/6` is needed.
+
+#### The sections a later act re-authors, and the attribution run
+
+- **R2** (K651: the spelling behind `publication` R17) `ATTRIBUTION_LEVELS` is `group`, `project`, `cover`, `name`, most protective first. `ATTRIBUTION_PROSE_HEAD` is `## Whose Words These Are`. `attributionFrontmatterLines(rows)` answers the run `observation_attributions:` with, per row, its `observation`, its `level` (`null` when none is chosen), `shown` (quoted, or `null`) and `chosen_at_edition`; `attributionBodyLines(rows)` answers the section under the head: the count of firsthand observations the case rests on, the sentence that what it shows of who said each one is that member's own choice for this edition, and one line per observation stating the level and what is shown, or, where no level is chosen, that none is and why, and that the edition cannot be signed until its author chooses one. A value written on one front-matter line has its line breaks folded to a space and its double quotes and backslashes made apostrophes (`fmSafe`). They are the one spelling of the attribution section: `publication` R17's `attributionStatements` answers it, and `case-authoring` R14 writes it. Pure; never throw.
+- **R3** (K651: the locators behind `publication` R21) `REAUTHORABLE_SECTIONS` is `attribution`, `acknowledgements`. Each is located in a document's lines as a front-matter run and a prose run: `attribution`, from `observation_attributions:` to the next top-level key, and from R2's head to the next `## ` heading; `acknowledgements`, from the line beginning `  statement_sha: ` to `completeness_excluded:`, and from the line beginning `**Who else read this statement.**` to the blank line before `## What Was Searched`. A document carrying no such run answers null for it, so `publication` R21's `reauthorSection` leaves that document as it is. Pure; never throw.
+
+#### What a signed document cites, and what a finding rests on
+
+- **R4** (K651: the citations `publication` R1 answers) `signedCitations(text)` answers, for a document of a format R1's `caseDocumentRequiresV4Disclosures` holds for and carrying a `case_citations` list, `{state: "signed", rows}` with that list as signed; for every other document, `{state: "undetermined", rows: null, stated}`, the sentence that it was signed before a case's citation edges were pinned to the capture they were made against and carries neither (R6). Pure; never throws.
+- **R5** (K651; D-431, `BIO_Publication_v0_1.md` §3 rule 2, the second note) `publishedGraphEdges(fm)` answers the edge set a finding rests on, from its front matter: one edge per `references[]` entry naming a string `target`, `{to: target, kind, disclosure: "serve"}` with `kind` the entry's `rel` (`cites` when it names none); then, name-only, `{to, kind: "division_parent", disclosure: "name"}` for a `division_parent` that is a string other than `"null"`, and `{to, kind: "division_sibling", disclosure: "name"}` for each non-empty string of `division_siblings`. A finding rests on exactly the targets of its `serve` edges. It is the one spelling of that set: `ratification` builds the published graph from it (its R4, R5) and `publication` R38's `ratifiedFindingsRestingOn` asks it of each pinned finding's bytes. Pure; never throws, answering `[]` for no front matter.
+
+## Private
+
+### Uses
+
+- `legacy-checks`: `parseFrontmatter` (R1's blocks and tension section, R4), re-exported from `record-grammar`.
+
+### Invariants
+
+- **R6** (copied from `publication` R28) Undetermined is stated and never filled: a citation's version in a document older than `/4` (R4), an acknowledgement a block is silent about.
+- **R7** (copied from `publication` R34) No place is named in this module's behaviour or outward text.
+
+### Satisfies
+
+- `docs/architecture/BIO_Publication_v0_1.md` §3 rule 2 (the second note: what "rests on" means, R5), rule 12 (what a case document states about each member, R1), rule 16 (what the case states about itself, R1's `/5`), §3 rule 7 and §7 (the attribution section's spelling, R2, R3).
+- `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §4 (MK-7 attribution levels, R2).
+- N345 and N364 (R1's `/5`, its tension section and its `captures:`, `capture_accounts:` and `sources:` blocks): DEC-76 item 4, DEC-78 item 5, DEC-81 items 1 and 3; `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §10.
+- D-431, D-442.
+
+### Suggestions
+
+- **The seam (K651).** Every name here is re-exported unchanged by `publication` (`index.mjs` and `checks.mjs`), so no importer changes in T18; a later job of an importer may import this module directly (`case-grammar` is earlier than each).
+- **Tests:** R1's arms from `test/m/publication/`' `casedoc`, `sources` and `tensions` suites (a `/5` document's blocks and tension section round-trip; a `/4` and older answer as R1 states); R2 and R3 by the attribution renderer and `REAUTHORABLE_SECTIONS` arms, with a document carrying no run answering null; R4 a `/4` and a `/3` document; R5 the D-431 arms `ratify-authority.test.mjs` §8 pins (a `relates_to` reference counts; a division disclosure is never a `serve` edge).
+
+## Open for Bob
+
+None: the split is BOB's (K617, K651).
