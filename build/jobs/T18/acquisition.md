@@ -1,6 +1,6 @@
 # acquisition (T18)
 
-**Status** · session_016FKEhQzcqEZnTrvcRTaFgY · depth 2 · COMPLETE · handled B1
+**Status** · session_016FKEhQzcqEZnTrvcRTaFgY · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
@@ -43,3 +43,17 @@ Other modules: (1) tools/mail.mjs: 'mail state' commits everything staged with t
 ## J2 · COMPLETE
 
 acquisition built by copy and merged-ready on job/T18/acquisition: src/acquisition/index.mjs (the act, from capture/acquire.mjs) and checks.mjs (C-83.1-.8, C-48.1-.7, C-28.13, civicosUserAgent, CIVICOS_CONTACT_URL; rows identical to the catalogue's, where re-pointed, awaiting stamp for T19). All nine converts done. Fixed in the job: R4 (a Drive export over 1 KiB was 'confirmed from the bytes' on its declared type), R28 fence on hand-followed redirects. R17's N3/N10 mark can be struck (met); R7 (N77) stays. Tests 55/55; format, architecture, coverage, ownership 0 failures. Record: build/jobs/T18/acquisition.md.
+
+## Completion of B2 (CHANGE, K659)
+
+**Applied:** R17 as re-worded: `profileOf` reads the stored bytes back whole up to `ODF_DIGEST_MAX` when not already read (was the first KiB), so an office file's format and an OpenDocument package's container digest are judged from its bytes; one read serves both (the second read-back for the container is gone). Over the bound, or multipart or unreadable, nothing is read and the declared type stands with the absence stated. Merged `tranche/T18` first (4c0d6f8cd6).
+
+**Tests:** `profile.test.mjs` now proves every office format (docx, xlsx, pptx, odt, ods, odp) is recognised from its bytes (a magic-byte signal) when served as `application/octet-stream`, the ODT and ODS keeping their container digest; over the bound no read and the declared type; at the bound one whole read. (An OOXML package detects `likely` from its bytes by office-readers' own rule, its main type being in a deflated part; the test asserts the byte signal, not the confidence.) `node --test bio-plane/test/m/acquisition/` → tests 55, pass 55, fail 0.
+
+**Checks:** format 82 modules, 77 requirements files, 0 failures; architecture 9 product files, 37 imports, 0 failures; coverage 30 of 30, 0 failures; ownership 3 files, legacy-checks 0/0, 0 failures.
+
+Size (session_016FKEhQzcqEZnTrvcRTaFgY): test runs 22, module lines 1246
+
+## J3 · COMPLETE · re B2
+
+B2 applied: R17 reads the stored bytes back whole up to ODF_DIGEST_MAX (one read serving format and container digest); office files served as octet-stream are now recognised from their bytes, ODT/ODS keep their container digest (tested). Tranche merged first. Tests 55/55; format, architecture, coverage, ownership 0 failures. Record updated.

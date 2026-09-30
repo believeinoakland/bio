@@ -250,9 +250,9 @@ test("R17: a certain-stack page's digests are determined, rendition and evidenti
   assert.notEqual(dA.evidentiary, dC.evidentiary);
 });
 
-/* The format is read from the first KiB read back (R17); an office container longer than that carries no central
-   directory in it, so these are recognised through the declared type where their bytes alone cannot say. */
-test("R17: office containers acquired (docx, xlsx, pptx, odt, ods, odp) are recognised on the format axis, and none is read as text", async () => {
+/* The format is judged from the stored bytes read back whole up to ODF_DIGEST_MAX (R17, K659): an office container's
+   central directory lies at its end, so its bytes, never its label, say what it is. */
+test("R17: office containers acquired (docx, xlsx, pptx, odt, ods, odp) are recognised on the format axis from their bytes, whatever the declared type, and none is read as text", async () => {
   const w = world();
   const cases = [["budget.xlsx", XLSX, XLSX_CT, "xlsx"], ["report.docx", DOCX, DOCX_CT, "docx"], ["deck.pptx", PPTX, PPTX_CT, "pptx"],
                  ["report.odt", odf("odt"), ODF_CT.odt, "odt"], ["budget.ods", odf("ods"), ODF_CT.ods, "ods"], ["deck.odp", odf("odp"), ODF_CT.odp, "odp"]];
@@ -261,10 +261,18 @@ test("R17: office containers acquired (docx, xlsx, pptx, odt, ods, odp) are reco
     assert.equal(r.status, 200, path);
     const p = r.body.document.profile;
     assert.equal(p.format.format, format, path);
+    const fromBytes = (f) => f.signals.some((x) => /^magic:/.test(x));
+    assert.ok(fromBytes(p.format), `${path}: from the bytes`);
     assert.equal(p.profiled_from_text, false, `${path}: a container, not read as text at intake`);
     assert.equal(p.source_content_type, ct, path);
     assert.equal(r.body.document.capture.sha256, sha(bytes), path);
+    /* served under a generic type, the same bytes are the same format; an OpenDocument one keeps its container digest */
+    const g = await run(w, { [`https://city.example/g-${path}`]: served(bytes, "application/octet-stream") }, { locator: `https://city.example/g-${path}` });
+    assert.equal(g.body.document.profile.format.format, format, `${path} as octet-stream`);
+    assert.ok(fromBytes(g.body.document.profile.format), `${path} as octet-stream: from the bytes`);
+    if (format === "odt" || format === "ods") assert.equal(g.body.document.profile.digests.determined, true, `${path}: container digest from the bytes`);
   }
+  assert.ok(cases.some(([, bytes]) => bytes.length > 1024), "a container past the first KiB is among them");
 });
 
 test("R17: an OpenDocument package's digests take the container arm: .ods and .odt determined over content.xml, folding across a restyle and not across a changed substance; .odp stated undetermined with its flavour; OOXML claims none", async () => {
@@ -309,15 +317,18 @@ test("R17: profileOf and substanceDigests trust a digest only over bytes that ha
   const liar = await profileOf({ ev: evOf(ods), sha: sha("something else"), ct: ODF_CT.ods, total: ods.length, view, retrieved: at, locator: "https://city.example/a.ods" });
   assert.deepEqual([liar.digests.determined, liar.digests.evidentiary], [false, null]);
   assert.match(liar.digests.basis, /did not hash/);
-  /* over the bound: only the first KiB is read for the format, the container is not read back whole */
+  /* over the bound (K659): nothing is read back; the format is the declared type with the absence stated, and no
+     container digest is claimed */
   const ev = evOf(ods);
   const big = await profileOf({ ev, sha: sha(ods), ct: ODF_CT.ods, total: ODF_DIGEST_MAX + 1, view, retrieved: at, locator: "https://city.example/a.ods" });
-  assert.equal(ev.gets.length, 1, "one read, for the format");
+  assert.equal(ev.gets.length, 0, "not read back over the bound");
+  assert.deepEqual([big.format.format, big.format.confidence], ["ods", "likely"], "the declared type");
   assert.deepEqual([big.digests.determined, big.digests.evidentiary, "container" in big.digests], [false, null, false]);
-  /* at the bound it is read back */
+  /* at the bound it is read back whole, once, and that one read serves the format and the container digest */
   const ev2 = evOf(ods);
-  await profileOf({ ev: ev2, sha: sha(ods), ct: ODF_CT.ods, total: ODF_DIGEST_MAX, view, retrieved: at, locator: "https://city.example/a.ods" });
-  assert.equal(ev2.gets.length, 2, "the first KiB, then the whole container");
+  const atBound = await profileOf({ ev: ev2, sha: sha(ods), ct: ODF_CT.ods, total: ODF_DIGEST_MAX, view, retrieved: at, locator: "https://city.example/a.ods" });
+  assert.equal(ev2.gets.length, 1, "one whole read");
+  assert.deepEqual([atBound.format.format, atBound.format.confidence, atBound.digests.determined], ["ods", "certain", true]);
   /* substanceDigests directly: the container arm's identity check, and no container bytes means nothing claimed */
   const sd = await substanceDigests(null, { handler: { key: "conservative", textual: false }, confidence: "none" }, {}, sha("x"), false, ods);
   assert.deepEqual([sd.determined, sd.evidentiary], [false, null]);
