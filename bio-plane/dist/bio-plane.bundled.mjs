@@ -15181,7 +15181,7 @@ function recordedMoves(files) {
     const b = r.value && Array.isArray(r.value.files) ? r.value.files.find((x) => x && x.name === "bundle.md") : null;
     return b && typeof b.sha256 === "string" && b.sha256 ? b.sha256.toLowerCase() : null;
   };
-  const stateOf = (raw) => {
+  const stateOf2 = (raw) => {
     if (typeof raw !== "string") return null;
     const fm = parseFrontmatter(raw).data;
     return fm && typeof fm === "object" && typeof fm.current_state === "string" ? fm.current_state : null;
@@ -15191,7 +15191,7 @@ function recordedMoves(files) {
   for (let j = 1; j < entries.length; j++) {
     const w = wrote(entries[j - 1]);
     if (w === null || w !== String(entries[j].base ?? "").toLowerCase()) continue;
-    const a = stateOf(after[j - 1]), z = stateOf(after[j]);
+    const a = stateOf2(after[j - 1]), z = stateOf2(after[j]);
     if (a && z && a !== z) moves.push({ from: a, to: z, date: entries[j].created ?? null, key: entries[j].key });
   }
   return moves;
@@ -60383,4451 +60383,6 @@ function biasOps(b, url, body) {
   };
 }
 
-// src/contradiction.mjs
-var CONTRADICTION_LABELS = Object.freeze(["world", "record", "precision", "unrelated", "undetermined"]);
-
-// src/contradiction/schema.mjs
-var CONTRADICTION_SCHEMA = `
--- REC-147 / IC-318 (CONTRADICTION-IDENTIFY-DESIGN.md section 8): THE CONTRADICTION CANDIDATE. One row per
--- PROPOSED conflict between two referents the pairing FORMED (op=contradictionpairs), written as labelled
--- MACHINE work through ONE append site (Contradiction #append) and never updated in place.
--- APPEND-ONLY AND KEYED BY WHAT WAS COMPARED: candidate is a digest of the key and both referents AT THEIR
--- VERSIONS, order-free, so a re-run over unchanged referents collides and writes nothing (section 8), while a
--- changed side is a new row and the old one stays with its versions. A claim side is the inquiry and the reading
--- it is held on, versioned by the sha256 of the claim text as compared. An extent side is its content row (or the
--- capture where none is named), versioned by the capture, whose bytes never change.
--- state is only 'proposed' until PRESENT and RESOLVE are designed (section 9 item 4). origin is always 'machine'
--- (DEC-24: a proposal, labelled). a_bundle_id and b_bundle_id are the bundles each side lives in, so a purge of
--- either end takes the row (D-113), as connections do. Nothing reads this table to a member yet.
-CREATE TABLE IF NOT EXISTS contradiction_candidates (
-  candidate    TEXT PRIMARY KEY,
-  key          TEXT NOT NULL,
-  a_kind       TEXT NOT NULL,
-  a_ref        TEXT NOT NULL,
-  a_version    TEXT NOT NULL,
-  a_bundle_id  TEXT,
-  b_kind       TEXT NOT NULL,
-  b_ref        TEXT NOT NULL,
-  b_version    TEXT NOT NULL,
-  b_bundle_id  TEXT,
-  run          TEXT NOT NULL,
-  proposed_by  TEXT NOT NULL,
-  label        TEXT NOT NULL,
-  reason       TEXT NOT NULL,
-  state        TEXT NOT NULL DEFAULT 'proposed',
-  origin       TEXT NOT NULL DEFAULT 'machine',
-  at           TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candidates(run);
-`;
-
-// src/contradiction/checks.mjs
-var checks_exports14 = {};
-__export(checks_exports14, {
-  CONTRADICTION_CANDIDATE_CHECKS: () => CONTRADICTION_CANDIDATE_CHECKS,
-  CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS
-});
-var CONTRADICTION_PAIR_CHECKS = {
-  CONTRADICTION_KEY_UNKNOWN: {
-    check: "C-60.1",
-    where: "src/contradiction/index.mjs pairs > is-contradiction-key-unknown",
-    translation: "The record pairs assertions by named keys, and that is not one of them. Rather than answer from a different key and let the answer look like a complete comparison, it says so and names the keys it holds. Ask again with one of them, or with none at all to run every key."
-  }
-};
-var CONTRADICTION_CANDIDATE_CHECKS = {
-  CANDIDATE_NO_PROPOSER: {
-    check: "C-93.1",
-    where: "src/contradiction/index.mjs propose > is-candidate-no-proposer",
-    translation: "A proposed contradiction records who proposed it, and this request arrived by a route that does not say. Rather than write a proposal nobody can be held to, nothing was written."
-  },
-  CANDIDATE_NO_RUN: {
-    check: "C-93.2",
-    where: "src/contradiction/index.mjs propose > is-candidate-no-run",
-    translation: "A proposed contradiction is machine work, and machine work happens inside a run a member opened. No open run by that name is visible here, so nothing was written. Open a run, then propose."
-  },
-  CANDIDATE_RUN_NOT_RUNNING: {
-    check: "C-93.3",
-    where: "src/contradiction/index.mjs propose > is-candidate-run-not-running",
-    translation: "That run has ended. Its work is read against the conditions it was formed under, and those stopped being current when it stopped, so nothing was written. Open a new run to go on working."
-  },
-  CANDIDATE_NO_PROPOSALS: {
-    check: "C-93.4",
-    where: "src/contradiction/index.mjs propose > is-candidate-no-proposals",
-    translation: "The request carried no proposals. An empty answer is not a judgement that found nothing; that belongs in the run log, which says which level was empty. Nothing was written."
-  },
-  CANDIDATE_LABEL_UNKNOWN: {
-    check: "C-93.5",
-    where: "src/contradiction/index.mjs propose > is-candidate-label-unknown",
-    translation: "A proposal carries exactly one of five labels: world, record, precision, unrelated or undetermined. One proposal in this batch carried something else, so none of the batch was written."
-  },
-  CANDIDATE_NO_REASON: {
-    check: "C-93.6",
-    where: "src/contradiction/index.mjs propose > is-candidate-no-reason",
-    translation: "Each proposal says in one sentence why it carries its label, so the member judging it can see what the machine saw. One proposal in this batch had no reason, so none of the batch was written."
-  },
-  CANDIDATE_PAIR_NOT_FORMED: {
-    check: "C-93.7",
-    where: "src/contradiction/index.mjs propose > is-candidate-pair-not-formed",
-    translation: "A proposal must name a pair the record itself put side by side for that key, as you can see it now. One proposal in this batch named two things the pairing does not pair, so none of the batch was written. Read the pairs again and propose over those."
-  }
-};
-
-// src/contradiction/index.mjs
-var CONTRADICTION_TABLES = Object.freeze(["contradiction_candidates"]);
-var CONTRADICTION_PAIRS_MAX = 50;
-var CANDIDATE_REASON_MAX = 2e3;
-var CONTRADICTION_KEYS = Object.freeze({
-  K1: Object.freeze({
-    key: "K1",
-    name: "one inquiry, opposite roles",
-    feeds: "world",
-    join: "a supports leg and a cuts_against leg of the SAME inquiry, each resting on a passage",
-    why: "the inquiry already holds both sides; what is missing is anyone proposing the discrepancy itself as the conclusion shape"
-  }),
-  K2: Object.freeze({
-    key: "K2",
-    name: "one subject, two held claims",
-    feeds: "record",
-    join: "two inquiries with the same subject entity, each with an ACCEPTED reading carrying a claim",
-    why: "two things the group HOLDS about one subject \u2014 the case that carries a duty"
-  }),
-  K3: Object.freeze({
-    key: "K3",
-    name: "one referent, two held claims",
-    feeds: "record",
-    join: "two accepted readings, of different inquiries, whose legs rest on the SAME passage (or, where no passage is named, the same captured document)",
-    why: "we read the same text two ways"
-  }),
-  K4: Object.freeze({
-    key: "K4",
-    name: "one entity, two sources of different kind or date",
-    feeds: "world",
-    join: "two cited passages whose documents RESOLVE (established) to the same entity, from different doctypes, or with different dates, AS THEIR READERS STATE THEM",
-    why: "a rule against the act it governs, or one body's statement at one date against its statement at another"
-  })
-});
-var LAST_LEVEL = Object.freeze({ K1: "shared_side", K2: "shared_subject", K3: "shared_referent", K4: "discriminator" });
-var CONTRADICTION_ABSENCE = Object.freeze({
-  viewer: "this read was made with NO VIEWER the record recognises, so it compared nothing and every key below is empty for want of a reader rather than for want of material. This is an outage, not a statement about the record: ask again with a member's session",
-  inquiry: "no question is in scope at all. Nothing has been asked here yet, so there is nothing for any key to pair \u2014 the record is EMPTY at the question level and says nothing whatever about whether the world contains contradictions",
-  leg: "questions exist and NONE of them rests on anything. Nothing has been cited, so there are no two sides to put beside each other",
-  role: "questions rest on material, but not ONE of them holds both a leg that supports it and a leg that cuts against it. That is a fact about how the questions are argued, not about whether the record contains a discrepancy",
-  referent: "both sides exist, but the legs name no PASSAGE \u2014 they rest on a whole document, on a sub-question, or on bytes this record does not hold. A pair whose sides cannot be quoted is not a pair a member could judge, so none was formed",
-  subject: "questions exist and NONE of them names a registered subject. K2 pairs by subject, so this is absence at the SUBJECT level: the claims may well disagree and nothing here can see it",
-  reading: "questions exist and none of them holds an ACCEPTED reading. A suggested, considering or rejected reading is not something the group HOLDS, so there is no held assertion to pair. Nothing is claimed about what the questions would say if they were read",
-  claim: "accepted readings exist and none of them carries a CLAIM. What the group holds is therefore unstated in the one field this key can read, which is absence in OUR record rather than agreement in it",
-  shared_entity: "cited passages and established resolutions exist, but no two documents resolve to the SAME subject. There is nothing about one entity to compare",
-  content: "no passage of any document has been cited or marked citable. Nothing has been extracted at the content level, which says nothing about what the documents say",
-  cited: "passages exist and none of them is cited by any reading. This key compares what the record RESTS ON, and it rests on none of them",
-  resolution: "cited passages exist and their documents carry no ESTABLISHED resolution to any subject. Nobody has confirmed what these documents are about, so there is no entity to pair them under \u2014 the next move is to resolve them, not to conclude they are unrelated",
-  shared_side: "questions hold both a supporting and a cutting leg, and each names a passage, but no ONE question holds both at once. The two sides of this key are the two sides of a SINGLE question, and none has them",
-  shared_subject: "held claims and registered subjects both exist, and no two accepted claims share a subject. Every subject is spoken to once, so there is nothing about one subject for the record to disagree with itself about",
-  shared_referent: "held claims rest on passages, and no two claims of DIFFERENT questions rest on the same one. Each passage is read by at most one held claim, so no text is read two ways here",
-  discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by kind or by date. Either the readers state the same kind and the same date on both, or they state neither \u2014 and where a value is missing the pair was left unformed rather than guessed. The counts beside this say which"
-});
-var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
-var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances12 = /* @__PURE__ */ new WeakMap();
-function contradictionOf(ctx, opts = {}) {
-  const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances12.get(storage);
-  if (!c) {
-    c = new Contradiction(storage, {
-      ...opts,
-      record: opts.record ?? recordOf(ctx),
-      extraction: opts.extraction ?? (() => extractionOf(ctx))
-    });
-    instances12.set(storage, c);
-  }
-  return c;
-}
-var Contradiction = class {
-  #sql;
-  #record;
-  #extraction;
-  #now;
-  #runGate = null;
-  #declared = false;
-  constructor(storage, { record, extraction = null, now = null } = {}) {
-    this.#sql = storage.sql;
-    this.#record = record;
-    this.#extraction = extraction;
-    this.#now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
-  }
-  #rows(q6, ...a) {
-    return [...this.#sql.exec(q6, ...a)];
-  }
-  #one(q6, ...a) {
-    const r = this.#rows(q6, ...a);
-    return r.length ? r[0] : null;
-  }
-  #x() {
-    return typeof this.#extraction === "function" ? this.#extraction = this.#extraction() : this.#extraction;
-  }
-  /* ---- boot (K4) ---- */
-  /** This module's table at every boot, idempotent, and the purge declaration (R22) once. */
-  migrate() {
-    const bare2 = CONTRADICTION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-    for (const st of bare2.split(";")) {
-      const t = st.trim();
-      if (t) this.#sql.exec(t);
-    }
-    this.declarePurge();
-  }
-  /** R17, R22 (K23, record-core R21/R46): a candidate is keyed to the bundles both its sides live in, so a purge of
-   *  either end takes the row (D-113), as connections do. Nothing else updates or deletes one. Once per instance. */
-  declarePurge() {
-    if (this.#declared) return { ok: true, already: true };
-    const r = this.#record.declarePurge(
-      "contradiction",
-      [{ name: "contradiction_candidates", keys: ["a_bundle_id", "b_bundle_id"] }]
-    );
-    if (r && r.ok !== false) this.#declared = true;
-    return r;
-  }
-  /* ---- the run gate (R21, K31) ---- */
-  /** R21 (K182): the slot `ai-runs` fills (its R37), `legacy-store` until then. `gate(run, viewer, caller)` answers
-   *  `{found, running, refusal}`: `found` false for a blank, absent or invisible run alike (§7.9); `running` whether
-   *  it is still running; `refusal` null, or ai-runs R5's `AI_RUN_NOT_PRINCIPAL` (C-22.12) for a caller who is not
-   *  the run's principal, which R13 relays. One gate: a second registration is refused. */
-  registerRunGate(module, gate) {
-    if (typeof module !== "string" || !module.trim() || typeof gate !== "function")
-      return { ok: false, reason: RUN_GATE_MALFORMED, detail: "a run gate is registered by a module name and a function" };
-    if (this.#runGate)
-      return {
-        ok: false,
-        reason: RUN_GATE_DECLARED,
-        module: this.#runGate.module,
-        detail: `the run gate is already registered by ${this.#runGate.module}`
-      };
-    this.#runGate = { module, gate };
-    return { ok: true, module };
-  }
-  /* ---- sight (membership R43; R10) ---- */
-  /** The viewer gate compiled into a statement over a QUALIFIED bundle column: a machine sees everything, an absent
-   *  or unrecognised viewer nothing, a member through membership's predicate over record-core's `bundles` (its R37).
-   *  A NULL column names no bundle and passes; one naming a bundle that is gone is withheld (fail closed).
-   *
-   *  THE COLUMN MUST BE QUALIFIED, and this refuses an unqualified one rather than trusting a caller to remember:
-   *  inside the EXISTS subquery a bare `bundle_id` resolves against `bundles` — the INNER table — so the gate would
-   *  pass every row while looking exactly like a gate. */
-  #gate(col, viewer) {
-    if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
-      throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}). An unqualified name binds to \`bundles\` inside the gate's own subquery and passes everything.`);
-    const g = viewerPredicate(viewer);
-    if (g.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
-    if (g.scope === "DENY") return { sql: g.sql, args: [] };
-    return {
-      sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${g.sql})))`,
-      args: g.args
-    };
-  }
-  /* ===================================================================== *
-   * THE PAIRING READ (REC-146 / IC-167; R5–R12). Section 9 item 1.
-   * ===================================================================== */
-  /** R9: the doctype and the document DATE for one capture, AS THE READER STATES THEM — never as this module infers
-   *  them. BOTH ARE THREE-VALUED AND THE THIRD VALUE IS THE POINT (section 4): *a document date or a doctype that its
-   *  reader does not state is UNDETERMINED, and a pair that needs one is not formed on a guess.* So `null` here is
-   *  returned and counted, and `read` keeps apart a capture nobody has read from a reading that states no value.
-   *
-   *  The doctype is the reading's `content_type` (extraction R58); the date is the reading's own top-level `date`
-   *  (extraction R30's `readingOf`), where every doctype that has one puts it. A doctype that states none simply has
-   *  none, which is a fact about the READER — exactly why it may not be filled in from the content row's or the
-   *  capture's time. Those are facts about US. */
-  #doc(captureSha, memo) {
-    if (memo.has(captureSha)) return memo.get(captureSha);
-    const row2 = this.#one(`SELECT content_type FROM readings WHERE capture_sha=? LIMIT 1`, captureSha);
-    const held = row2 ? this.#x().readingOf(captureSha) : null;
-    const reading = held && held.reading && typeof held.reading === "object" ? held.reading : null;
-    const s = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-    const out = { read: !!row2, doctype: row2 ? s(row2.content_type) : null, date: reading ? s(reading.date) : null };
-    memo.set(captureSha, out);
-    return out;
-  }
-  /** R8: one leg's side of a pair, with the passage it rests on RESOLVED — the ref a member reads and the capture it
-   *  is a part of (content R45). The leg alone names a content id, which is a hash and tells a reader nothing about
-   *  what was cited. Section 5 requires both sides to travel with their referents; null when the row is not held. */
-  #extent(kind, side) {
-    const row2 = side.content_id ? this.#one(`SELECT capture_sha, ref, extent_kind, stale FROM content WHERE content_id=? LIMIT 1`, side.content_id) : null;
-    return {
-      kind,
-      ...side,
-      capture_sha: row2 ? row2.capture_sha : null,
-      ref: row2 ? row2.ref : null,
-      extent_kind: row2 ? row2.extent_kind : null,
-      stale: row2 ? !!row2.stale : null
-    };
-  }
-  /** R8 K1 — one inquiry, opposite roles. A `supports` leg and a `cuts_against` leg of the SAME inquiry, each with a
-   *  content referent. BOUNDED AT THE SQL AND NOT IN JAVASCRIPT (D-365): a published `truncated` over a scan that
-   *  read everything is an envelope staying honest about a read that was not bounded at all. The statement
-   *  OVER-FETCHES BY ONE so truncation is OBSERVED rather than inferred from equality with the bound (R7). */
-  #k1(viewer, cap) {
-    const g = this.#gate("s.bundle_id", viewer);
-    const rows = this.#rows(
-      `SELECT s.bundle_id AS inquiry, s.ord AS a_ord, s.target_id AS a_target,
-              s.content_id AS a_content, s.note AS a_note,
-              c.ord AS b_ord, c.target_id AS b_target, c.content_id AS b_content, c.note AS b_note
-         FROM inquiry_basis s
-         JOIN inquiry_basis c ON c.bundle_id = s.bundle_id
-        WHERE s.role = 'supports' AND c.role = 'cuts_against'
-          AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
-          AND (${g.sql})
-        ORDER BY s.bundle_id, s.ord, c.ord
-        LIMIT ?`,
-      ...g.args,
-      cap + 1
-    );
-    const truncated3 = rows.length > cap;
-    const pairs = (truncated3 ? rows.slice(0, cap) : rows).map((r) => ({
-      key: "K1",
-      inquiry: r.inquiry,
-      a: this.#extent("leg", {
-        inquiry: r.inquiry,
-        ord: r.a_ord,
-        role: "supports",
-        target: r.a_target,
-        content_id: r.a_content,
-        note: r.a_note
-      }),
-      b: this.#extent("leg", {
-        inquiry: r.inquiry,
-        ord: r.b_ord,
-        role: "cuts_against",
-        target: r.b_target,
-        content_id: r.b_content,
-        note: r.b_note
-      }),
-      why: "one question already rests on both of these, one supporting it and one cutting against it. What they SAY about each other is not read here"
-    }));
-    return { pairs, truncated: truncated3, notes: [] };
-  }
-  /** R8 K2 — one subject, two held claims. Two inquiries with the same `bundles.inquiry_subject_entity`, each with an
-   *  ACCEPTED, unhidden reading carrying a `claim`. `hidden = 0` AND `state = 'accepted'` ARE BOTH REQUIRED AND THEY
-   *  ARE DIFFERENT RULES: a suggested, considering or rejected version is not held (section 3), and a HIDDEN accepted
-   *  version is one the group PRUNED. `bundle_id >` RATHER THAN `<>` IS WHAT MAKES A PAIR ONE PAIR: without it every
-   *  pair appears twice, once from each side (R8). */
-  #k2(viewer, cap) {
-    const ga = this.#gate("v1.bundle_id", viewer);
-    const gb = this.#gate("v2.bundle_id", viewer);
-    const rows = this.#rows(
-      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim,
-              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim,
-              d1.inquiry_subject_entity AS entity_id, d1.title AS a_title, d2.title AS b_title
-         FROM inquiry_basis_versions v1
-         JOIN bundles d1 ON d1.bundle_id = v1.bundle_id
-         JOIN bundles d2 ON d2.inquiry_subject_entity = d1.inquiry_subject_entity
-                        AND d2.bundle_id > d1.bundle_id
-         JOIN inquiry_basis_versions v2 ON v2.bundle_id = d2.bundle_id
-        WHERE v1.state = 'accepted' AND v2.state = 'accepted'
-          AND v1.hidden = 0 AND v2.hidden = 0
-          AND v1.claim IS NOT NULL AND v1.claim <> ''
-          AND v2.claim IS NOT NULL AND v2.claim <> ''
-          AND d1.inquiry_subject_entity IS NOT NULL AND d1.inquiry_subject_entity <> ''
-          AND (${ga.sql}) AND (${gb.sql})
-        ORDER BY d1.inquiry_subject_entity, v1.bundle_id, v1.name, v2.bundle_id, v2.name
-        LIMIT ?`,
-      ...ga.args,
-      ...gb.args,
-      cap + 1
-    );
-    const truncated3 = rows.length > cap;
-    const pairs = (truncated3 ? rows.slice(0, cap) : rows).map((r) => ({
-      key: "K2",
-      subject_entity: r.entity_id,
-      a: { kind: "claim", inquiry: r.a_inquiry, title: r.a_title ?? null, version: r.a_version, claim: r.a_claim },
-      b: { kind: "claim", inquiry: r.b_inquiry, title: r.b_title ?? null, version: r.b_version, claim: r.b_claim },
-      why: "two questions about the same registered subject, each with a reading the group ACCEPTED and a claim it therefore holds. Whether they can both be so is not read here"
-    }));
-    return { pairs, truncated: truncated3, notes: [] };
-  }
-  /** K3 arm (a) — two accepted readings, of DIFFERENT inquiries, whose version legs rest on the SAME content row. */
-  #k3Same(viewer, cap) {
-    const ga = this.#gate("v1.bundle_id", viewer);
-    const gb = this.#gate("v2.bundle_id", viewer);
-    const rows = this.#rows(
-      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim, l1.ord AS a_ord,
-              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim, l2.ord AS b_ord,
-              l1.content_id AS content_id
-         FROM inquiry_basis_version_legs l1
-         JOIN inquiry_basis_versions v1 ON v1.bundle_id = l1.bundle_id AND v1.name = l1.name
-         JOIN inquiry_basis_version_legs l2 ON l2.content_id = l1.content_id
-                                           AND l2.bundle_id > l1.bundle_id
-         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
-        WHERE l1.content_id IS NOT NULL
-          AND v1.state = 'accepted' AND v2.state = 'accepted'
-          AND v1.hidden = 0 AND v2.hidden = 0
-          AND v1.claim IS NOT NULL AND v1.claim <> ''
-          AND v2.claim IS NOT NULL AND v2.claim <> ''
-          AND (${ga.sql}) AND (${gb.sql})
-        ORDER BY l1.content_id, v1.bundle_id, v1.name, v2.bundle_id, v2.name
-        LIMIT ?`,
-      ...ga.args,
-      ...gb.args,
-      cap + 1
-    );
-    const truncated3 = rows.length > cap;
-    return { rows: truncated3 ? rows.slice(0, cap) : rows, truncated: truncated3 };
-  }
-  /** K3 arm (b) — THE SAME QUESTION WHERE NO PASSAGE IS NAMED, as a SECOND STATEMENT rather than a `UNION`: D-36's
-   *  workerd ceiling of five compound terms, and a union would publish ONE figure over two joins that mean different
-   *  things. A NULL `content_id` is one of three facts — the leg rests on an INQUIRY, the record holds no bytes of the
-   *  document, or the row is a replay — and only the last two name a DOCUMENT, so this arm requires `target_type =
-   *  'information'` on both sides: two claims resting on the same sub-QUESTION are not two readings of one text. */
-  #k3Doc(viewer, cap) {
-    const ga = this.#gate("v1.bundle_id", viewer);
-    const gb = this.#gate("v2.bundle_id", viewer);
-    const rows = this.#rows(
-      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim, l1.ord AS a_ord,
-              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim, l2.ord AS b_ord,
-              l1.target_id AS target_id
-         FROM inquiry_basis_version_legs l1
-         JOIN inquiry_basis_versions v1 ON v1.bundle_id = l1.bundle_id AND v1.name = l1.name
-         JOIN inquiry_basis_version_legs l2 ON l2.target_id = l1.target_id
-                                           AND l2.bundle_id > l1.bundle_id
-                                           AND l2.content_id IS NULL
-         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
-        WHERE l1.content_id IS NULL AND l1.target_type = 'information'
-          AND l2.target_type = 'information'
-          AND v1.state = 'accepted' AND v2.state = 'accepted'
-          AND v1.hidden = 0 AND v2.hidden = 0
-          AND v1.claim IS NOT NULL AND v1.claim <> ''
-          AND v2.claim IS NOT NULL AND v2.claim <> ''
-          AND (${ga.sql}) AND (${gb.sql})
-        ORDER BY l1.target_id, v1.bundle_id, v1.name, v2.bundle_id, v2.name
-        LIMIT ?`,
-      ...ga.args,
-      ...gb.args,
-      cap + 1
-    );
-    const truncated3 = rows.length > cap;
-    return { rows: truncated3 ? rows.slice(0, cap) : rows, truncated: truncated3 };
-  }
-  /** R7, R8 K3 — both arms, each bounded on its own and each SAID in `arms`. */
-  #k3(viewer, cap) {
-    const same = this.#k3Same(viewer, cap);
-    const doc = this.#k3Doc(viewer, cap);
-    const mk = (r, referent) => ({
-      key: "K3",
-      ...referent,
-      a: { kind: "claim", inquiry: r.a_inquiry, version: r.a_version, claim: r.a_claim, ord: r.a_ord },
-      b: { kind: "claim", inquiry: r.b_inquiry, version: r.b_version, claim: r.b_claim, ord: r.b_ord },
-      why: referent.content_id ? "two questions whose accepted readings rest on the SAME passage, each holding a claim. What that passage supports is the thing they may disagree about" : "two questions whose accepted readings rest on the same DOCUMENT with no passage named on either side, each holding a claim. The passage grain is absent on both, not chosen"
-    });
-    const pairs = [
-      ...same.rows.map((r) => mk(r, { content_id: r.content_id, referent_grain: "passage" })),
-      ...doc.rows.map((r) => mk(r, { content_id: null, document: r.target_id, referent_grain: "document" }))
-    ];
-    return {
-      pairs,
-      truncated: same.truncated || doc.truncated,
-      arms: {
-        passage: { formed: same.rows.length, truncated: same.truncated },
-        document: { formed: doc.rows.length, truncated: doc.truncated }
-      },
-      notes: []
-    };
-  }
-  /** A content row cited by a leg or a version leg of an inquiry this viewer may see (the gate on the CITING
-   *  inquiry: a passage cited only by a question the viewer cannot see is not cited as this viewer can see it, so
-   *  neither the pair nor the ladder discloses that the hidden question cites it). */
-  #citedBy(col, viewer) {
-    const gi = this.#gate("ib.bundle_id", viewer);
-    const gl = this.#gate("vl.bundle_id", viewer);
-    return {
-      sql: `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = ${col} AND (${gi.sql}))
-                    OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = ${col} AND (${gl.sql})))`,
-      args: [...gi.args, ...gl.args]
-    };
-  }
-  /** R8, R9 K4 — one entity, two sources of different kind or DATE.
-   *
-   *  THE SQL FINDS CANDIDATES AND THE JAVASCRIPT DECIDES, and the division is the item's honesty requirement: the
-   *  join can say *these two documents resolve, established, to one entity, and somebody has cited a passage of
-   *  each*; it CANNOT say whether their kinds or dates differ, because a reader's date lives inside the reading. So
-   *  the discriminator is applied here, where the third answer — UNDETERMINED — can be COUNTED and the pair left
-   *  unformed.
-   *
-   *  `established = 1` ON BOTH ENDS IS SECTION 4's WORD AND IT IS LOAD-BEARING: a C-tier correspondence is expressly
-   *  flagged for a member to confirm, and pairing on it would manufacture a world-contradiction candidate out of two
-   *  documents nobody has agreed are about one thing. `DISTINCT` IS NOT COSMETIC: `resolutions` holds one row per
-   *  (capture, reference, entity), so one document naming a subject five times would count one pair five times. */
-  #k4(viewer, cap) {
-    const ga = this.#gate("c1.bundle_id", viewer);
-    const gb = this.#gate("c2.bundle_id", viewer);
-    const ca = this.#citedBy("c1.content_id", viewer);
-    const cb = this.#citedBy("c2.content_id", viewer);
-    const rows = this.#rows(
-      `SELECT DISTINCT c1.content_id AS a_content, c1.capture_sha AS a_capture, c1.ref AS a_ref,
-              c1.extent_kind AS a_kind,
-              c2.content_id AS b_content, c2.capture_sha AS b_capture, c2.ref AS b_ref,
-              c2.extent_kind AS b_kind, r1.entity_id AS entity_id
-         FROM content c1
-         JOIN resolutions r1 ON r1.capture_sha = c1.capture_sha AND r1.established = 1
-         JOIN resolutions r2 ON r2.entity_id = r1.entity_id AND r2.established = 1
-                            AND r2.capture_sha > r1.capture_sha
-         JOIN content c2 ON c2.capture_sha = r2.capture_sha
-        WHERE ${ca.sql} AND ${cb.sql}
-          AND (${ga.sql}) AND (${gb.sql})
-        ORDER BY r1.entity_id, c1.content_id, c2.content_id
-        LIMIT ?`,
-      ...ca.args,
-      ...cb.args,
-      ...ga.args,
-      ...gb.args,
-      cap + 1
-    );
-    const truncated3 = rows.length > cap;
-    const memo = /* @__PURE__ */ new Map();
-    const pairs = [];
-    let undetermined = 0, indistinct = 0;
-    const missing = { never_read: 0, no_doctype: 0, no_date: 0 };
-    for (const r of truncated3 ? rows.slice(0, cap) : rows) {
-      const da = this.#doc(r.a_capture, memo);
-      const db = this.#doc(r.b_capture, memo);
-      const kindsKnown = !!da.doctype && !!db.doctype;
-      const datesKnown = !!da.date && !!db.date;
-      const discriminator = kindsKnown && da.doctype !== db.doctype ? "doctype" : datesKnown && da.date !== db.date ? "date" : null;
-      if (discriminator) {
-        pairs.push({
-          key: "K4",
-          entity_id: r.entity_id,
-          discriminator,
-          a: {
-            kind: "extent",
-            content_id: r.a_content,
-            capture_sha: r.a_capture,
-            ref: r.a_ref,
-            extent_kind: r.a_kind,
-            doctype: da.doctype,
-            date: da.date,
-            read: da.read
-          },
-          b: {
-            kind: "extent",
-            content_id: r.b_content,
-            capture_sha: r.b_capture,
-            ref: r.b_ref,
-            extent_kind: r.b_kind,
-            doctype: db.doctype,
-            date: db.date,
-            read: db.read
-          },
-          why: discriminator === "doctype" ? "two documents the record has established are about the same subject, of different kinds as their readers state them \u2014 the shape of a rule against the act it governs" : "two documents the record has established are about the same subject, dated differently as their readers state them \u2014 the shape of one body saying X then Y"
-        });
-        continue;
-      }
-      if (kindsKnown && datesKnown) {
-        indistinct += 1;
-        continue;
-      }
-      undetermined += 1;
-      if (!da.read || !db.read) missing.never_read += 1;
-      else if (!kindsKnown) missing.no_doctype += 1;
-      else missing.no_date += 1;
-    }
-    return {
-      pairs,
-      truncated: truncated3,
-      undetermined,
-      indistinct,
-      missing,
-      notes: undetermined ? [`${undetermined} candidate pair(s) were NOT formed because a doctype or a document date their readers never stated was needed to tell them apart (${missing.never_read} where a document has not been read at all, ${missing.no_doctype} where a reader stated no kind, ${missing.no_date} where a reader stated no date). That is not evidence the two agree`] : []
-    };
-  }
-  /** R11: WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED. A LADDER OF EXISTENCE PROBES, and existence is
-   *  deliberately not a count: a census would cost an unbounded scan per rung on the one surface whose subject is
-   *  that the record is sparse. Each probe is `LIMIT 1` and rides the same viewer gate as the key's own join, so a
-   *  rung never reports material this caller may not see.
-   *
-   *  THE FIRST RUNG THAT IS EMPTY IS THE ANSWER, because absence at one level is not evidence of absence at the next.
-   *  `viewer` IS A RUNG AND IT IS THE FIRST ONE: a read made with no viewer stamp, or one the gate does not recognise,
-   *  is empty for a reason that is not about the record at all (R10), and nothing below it can be believed when it
-   *  fires. */
-  #ladder(key, viewer, scope) {
-    const rung = (level, sql, ...args) => ({ level, present: !!this.#one(sql, ...args) });
-    if (scope === "DENY") return [{ level: "viewer", present: false }];
-    const gi = this.#gate("ib.bundle_id", viewer);
-    const gv = this.#gate("v.bundle_id", viewer);
-    const gs = this.#gate("s.bundle_id", viewer);
-    const vp = viewerPredicate(viewer);
-    const anyInquiry = () => rung(
-      "inquiry",
-      `SELECT 1 AS x FROM bundles b WHERE b.object_type='inquiry' AND (${vp.sql}) LIMIT 1`,
-      ...vp.args
-    );
-    const heldReading = (extra) => this.#one(
-      `SELECT 1 AS x FROM inquiry_basis_versions v
-        WHERE v.state='accepted' AND v.hidden=0 ${extra} AND (${gv.sql}) LIMIT 1`,
-      ...gv.args
-    );
-    if (key === "K1") return [
-      { level: "viewer", present: true },
-      anyInquiry(),
-      rung("leg", `SELECT 1 AS x FROM inquiry_basis ib WHERE (${gi.sql}) LIMIT 1`, ...gi.args),
-      rung("role", `SELECT 1 AS x FROM inquiry_basis s JOIN inquiry_basis c ON c.bundle_id=s.bundle_id
-                     WHERE s.role='supports' AND c.role='cuts_against' AND (${gs.sql}) LIMIT 1`, ...gs.args),
-      rung("referent", `SELECT 1 AS x FROM inquiry_basis s JOIN inquiry_basis c ON c.bundle_id=s.bundle_id
-                         WHERE s.role='supports' AND c.role='cuts_against'
-                           AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
-                           AND (${gs.sql}) LIMIT 1`, ...gs.args)
-    ];
-    if (key === "K2") return [
-      { level: "viewer", present: true },
-      anyInquiry(),
-      rung("subject", `SELECT 1 AS x FROM bundles b WHERE b.inquiry_subject_entity IS NOT NULL
-                        AND b.inquiry_subject_entity <> '' AND (${vp.sql}) LIMIT 1`, ...vp.args),
-      { level: "reading", present: !!heldReading("") },
-      { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") }
-    ];
-    if (key === "K3") return [
-      { level: "viewer", present: true },
-      anyInquiry(),
-      { level: "reading", present: !!heldReading("") },
-      { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") },
-      rung("referent", `SELECT 1 AS x FROM inquiry_basis_version_legs l
-                         JOIN inquiry_basis_versions v ON v.bundle_id=l.bundle_id AND v.name=l.name
-                        WHERE v.state='accepted' AND v.hidden=0
-                          AND v.claim IS NOT NULL AND v.claim <> ''
-                          AND (l.content_id IS NOT NULL OR l.target_type='information')
-                          AND (${gv.sql}) LIMIT 1`, ...gv.args)
-    ];
-    const gc = this.#gate("c.bundle_id", viewer);
-    const cited = this.#citedBy("c.content_id", viewer);
-    const g1 = this.#gate("c1.bundle_id", viewer);
-    const g2 = this.#gate("c2.bundle_id", viewer);
-    return [
-      { level: "viewer", present: true },
-      rung("content", `SELECT 1 AS x FROM content c WHERE (${gc.sql}) LIMIT 1`, ...gc.args),
-      rung("cited", `SELECT 1 AS x FROM content c WHERE ${cited.sql} AND (${gc.sql}) LIMIT 1`, ...cited.args, ...gc.args),
-      rung("resolution", `SELECT 1 AS x FROM content c
-                           JOIN resolutions r ON r.capture_sha=c.capture_sha AND r.established=1
-                          WHERE (${gc.sql}) LIMIT 1`, ...gc.args),
-      /* The same sight as every rung above: two established resolutions of different documents to one entity, each
-         document holding a passage this viewer may see (the key's own join is gated on its content rows). */
-      rung("shared_entity", `SELECT 1 AS x FROM resolutions r1
-                              JOIN resolutions r2 ON r2.entity_id=r1.entity_id AND r2.established=1
-                                                 AND r2.capture_sha > r1.capture_sha
-                             WHERE r1.established=1
-                               AND EXISTS (SELECT 1 FROM content c1 WHERE c1.capture_sha=r1.capture_sha AND (${g1.sql}))
-                               AND EXISTS (SELECT 1 FROM content c2 WHERE c2.capture_sha=r2.capture_sha AND (${g2.sql}))
-                             LIMIT 1`, ...g1.args, ...g2.args)
-    ];
-  }
-  /** op=contradictionpairs — THE PAIRING READ (R5–R12). A READ: it judges nothing and writes nothing, and both are
-   *  said in the answer: `judgement.state` is `NOT_REACHED` and `wrote` is false.
-   *
-   *  WHY `judgement` IS PUBLISHED AS A FIELD AT ALL: a list of pairs with no verdict beside it reads as a list of
-   *  CONTRADICTIONS. NO LABEL VOCABULARY IS PUBLISHED HERE (R12): the five labels are the JUDGEMENT's output, and
-   *  publishing them from a surface that assigns none would read as a detector that had declined to label.
-   *
-   *  EACH KEY IS RUN EXACTLY ONCE (R7) and its result feeds both the per-key envelope and the flat pair list: two runs
-   *  of one key over a store written between them would publish a `formed` figure that does not match the pairs. */
-  pairs({ key = null, limit = null, viewer = null } = {}) {
-    const names = Object.keys(CONTRADICTION_KEYS);
-    const asked = key == null || String(key).trim() === "" ? null : String(key).trim().toUpperCase();
-    if (asked !== null && !Object.prototype.hasOwnProperty.call(CONTRADICTION_KEYS, asked)) {
-      const row2 = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
-      return {
-        ok: false,
-        reason: "CONTRADICTION_KEY_UNKNOWN",
-        code: "CONTRADICTION_KEY_UNKNOWN",
-        check: row2.check,
-        translation: row2.translation,
-        keys: names,
-        detail: `the record pairs by ${names.join(", ")} and holds no key '${String(key).slice(0, 40)}'`
-      };
-    }
-    const max = CONTRADICTION_PAIRS_MAX;
-    const n = limit === null || limit === void 0 || limit === "" ? NaN : Number(limit);
-    const cap = Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), max) : max;
-    const scope = viewerPredicate(viewer).scope;
-    const denied = scope === "DENY";
-    const run = new Set(asked ? [asked] : names);
-    const pairs = [];
-    const keys = names.map((name) => {
-      const spec = CONTRADICTION_KEYS[name];
-      if (!run.has(name))
-        return {
-          ...spec,
-          ran: false,
-          formed: 0,
-          limit: cap,
-          truncated: false,
-          levels: null,
-          notes: [],
-          absence: {
-            level: "not_run",
-            says: `this key was not run: the request named ${asked}. Nothing here is a statement about what ${name} would have found`
-          }
-        };
-      const out = denied ? { pairs: [], truncated: false, notes: [] } : name === "K1" ? this.#k1(viewer, cap) : name === "K2" ? this.#k2(viewer, cap) : name === "K3" ? this.#k3(viewer, cap) : this.#k4(viewer, cap);
-      pairs.push(...out.pairs);
-      const ladder = this.#ladder(name, viewer, scope);
-      const empty = ladder.find((r) => !r.present);
-      const level = out.pairs.length ? null : empty ? empty.level : LAST_LEVEL[name];
-      return {
-        ...spec,
-        ran: true,
-        formed: out.pairs.length,
-        limit: cap,
-        truncated: out.truncated,
-        levels: ladder,
-        notes: out.notes,
-        absence: level === null ? null : { level, says: CONTRADICTION_ABSENCE[level] },
-        ...name === "K3" ? { arms: out.arms ?? {
-          passage: { formed: 0, truncated: false },
-          document: { formed: 0, truncated: false }
-        } } : {},
-        ...name === "K4" && !denied ? { undetermined: out.undetermined, indistinct: out.indistinct, undetermined_detail: out.missing } : {}
-      };
-    });
-    const formed = pairs.length;
-    const undetermined = keys.reduce((a, k) => a + (k.undetermined || 0), 0);
-    return {
-      ok: true,
-      wrote: false,
-      pairs_formed: formed,
-      limit: cap,
-      bound: max,
-      bounded: true,
-      viewer_scope: scope,
-      keys,
-      pairs,
-      judgement: {
-        state: "NOT_REACHED",
-        by: "the machine, inside an investigative run, as labelled machine work (DEC-24)",
-        item: "CONTRADICTION-IDENTIFY-DESIGN.md section 9 item 3",
-        why: "whether either side of a pair here CONTRADICTS the other \u2014 and whether that would be a contradiction in the WORLD, one in OUR RECORD, or merely the same fact stated at two precisions \u2014 is semantic work this plane cannot do and has not done. NOTHING here is a finding, and a pair is not a claim that its two sides disagree: it is a claim that they are WORTH COMPARING, by the named key, and nothing more"
-      },
-      says: denied ? "this read compared NOTHING, because no viewer the record recognises was stamped on it. That is an outage and not a statement about the record: every key below reads empty for want of a reader, and none of them looked" : `${formed} candidate pair(s) over ${[...run].join(", ")}, each carrying the KEY that brought its two sides together` + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a date or a doctype their readers never stated was needed to tell the two apart, and that is COUNTED rather than rounded to agreement` : "") + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is never evidence of absence at the next, and a key with nothing to join says the record is SPARSE there, not that it is consistent`
-    };
-  }
-  /* ===================================================================== *
-   * THE CANDIDATE DOOR (REC-147 / IC-318; R13–R17). Section 5, section 8, section 9 item 3.
-   * ===================================================================== */
-  /** R14: a side of a formed pair AS A REFERENT AT A VERSION (§8). A claim is the reading it is held on
-   *  (`inquiry|version`), versioned by the SHA-256 of the claim text compared; a leg or an extent is its content row
-   *  (or its capture where none is named), versioned by the capture, whose bytes never change. `bundle` is where the
-   *  side lives, for purge (R22, D-113). */
-  #side(s) {
-    if (s && s.kind === "claim")
-      return {
-        kind: "claim",
-        ref: `${String(s.inquiry ?? "")}|${String(s.version ?? "")}`,
-        version: sha256HexSync(String(s.claim ?? "")),
-        bundle: s.inquiry == null ? null : String(s.inquiry)
-      };
-    const cap = s?.capture_sha == null ? "" : String(s.capture_sha);
-    const cid = s?.content_id == null || s.content_id === "" ? null : String(s.content_id);
-    const home = cid ? this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, cid) : cap ? this.#one(`SELECT bundle_id FROM content WHERE capture_sha=? ORDER BY bundle_id LIMIT 1`, cap) : null;
-    return {
-      kind: s?.kind === "leg" ? "leg" : "extent",
-      ref: cid ?? cap,
-      version: cap,
-      bundle: home ? home.bundle_id : null
-    };
-  }
-  /** R15, R17: THE ONE APPEND SITE of `contradiction_candidates` (§8). INSERT OR IGNORE on the candidate digest: a row
-   *  over the same key and the same two referents at the same versions is already there, and is left exactly as it
-   *  was. Answers whether a row was written. Nothing updates or deletes a candidate but its bundles' purge. */
-  #append(row2) {
-    if (this.#one(`SELECT candidate FROM contradiction_candidates WHERE candidate=?`, row2.candidate)) return false;
-    this.#sql.exec(
-      `INSERT OR IGNORE INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id,
-         b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed','machine',?)`,
-      row2.candidate,
-      row2.key,
-      row2.a.kind,
-      row2.a.ref,
-      row2.a.version,
-      row2.a.bundle,
-      row2.b.kind,
-      row2.b.ref,
-      row2.b.version,
-      row2.b.bundle,
-      row2.run,
-      row2.proposed_by,
-      row2.label,
-      row2.reason,
-      row2.at
-    );
-    return true;
-  }
-  /** op=contradictionpropose — A RUN'S JUDGEMENT OVER FORMED PAIRS ENTERS THE RECORD AS PROPOSED CANDIDATES (R13–R16).
-   *
-   *  The plane cannot judge (§2); what it holds is WHAT WAS COMPARED and WHAT WAS PROPOSED about it. So every refusal
-   *  is asked of the whole batch before anything is written (a refused batch leaves nothing), and a proposal is
-   *  written only when it names a pair the plane ITSELF forms for this viewer now, with the referents and versions
-   *  the PLANE read — a pair a caller hands in is a provenance hop a caller can invent. A claim side must carry the
-   *  claim text it judged: a claim that changed since is a different referent (R14), so that proposal is about a
-   *  pair that is no longer formed and is refused rather than written against text the machine never saw.
-   *
-   *  THE LABEL IS A PROPOSAL (DEC-24): every row is `origin = 'machine'`, `state = 'proposed'`, and nothing here
-   *  grades, edits or closes either side (R19). §7's over-strictness gate is a property of the JUDGEMENT (M-162
-   *  measured the prompt `../contradiction.mjs` pins, R2). */
-  propose({ run, proposals, proposedBy, viewer = null, caller = null, at: at17 = null } = {}) {
-    const refusal19 = (code, detail, extra) => {
-      const row2 = CONTRADICTION_CANDIDATE_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row2.check,
-        translation: row2.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    if (typeof proposedBy !== "string" || !proposedBy.trim())
-      return refusal19(
-        "CANDIDATE_NO_PROPOSER",
-        "a proposed contradiction records who proposed it; the plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it"
-      );
-    const runId = typeof run === "string" ? run.trim() : "";
-    const r = runId && this.#runGate ? this.#runGate.gate(runId, viewer, caller) : null;
-    if (!r || r.found !== true)
-      return refusal19(
-        "CANDIDATE_NO_RUN",
-        runId ? `no run named '${runId.slice(0, 60)}' is open in this store` : "pass run=<the run whose judgement this is>: a candidate is machine work and names the run it came from",
-        { run: runId || null }
-      );
-    const np = r.refusal;
-    if (np)
-      return {
-        ok: false,
-        reason: np.code,
-        code: np.code,
-        check: np.check,
-        translation: np.translation,
-        detail: np.detail,
-        run: runId,
-        note: "a proposed contradiction names a run its caller holds. Nothing was written"
-      };
-    if (r.running !== true)
-      return refusal19(
-        "CANDIDATE_RUN_NOT_RUNNING",
-        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`,
-        { run: runId }
-      );
-    const list2 = Array.isArray(proposals) ? proposals : [];
-    if (list2.length === 0)
-      return refusal19(
-        "CANDIDATE_NO_PROPOSALS",
-        "an empty batch is not a judgement that found nothing; that is an observation for the run's log",
-        { run: runId }
-      );
-    const item = (i) => list2[i] && typeof list2[i] === "object" ? list2[i] : {};
-    for (let i = 0; i < list2.length; i++) {
-      const p = item(i);
-      if (!CONTRADICTION_LABELS.includes(p.label))
-        return refusal19(
-          "CANDIDATE_LABEL_UNKNOWN",
-          `proposal ${i} carries '${String(p.label).slice(0, 30)}', which is not one of ${CONTRADICTION_LABELS.join(", ")}`,
-          { run: runId, index: i, labels: [...CONTRADICTION_LABELS] }
-        );
-    }
-    for (let i = 0; i < list2.length; i++) {
-      const p = item(i);
-      if (typeof p.reason !== "string" || !p.reason.trim())
-        return refusal19("CANDIDATE_NO_REASON", `proposal ${i} carries no reason`, { run: runId, index: i });
-    }
-    const read2 = this.pairs({ viewer });
-    const handle = (x) => `${x.kind}|${x.ref}@${x.version}`;
-    const formed = /* @__PURE__ */ new Map();
-    for (const q6 of Array.isArray(read2.pairs) ? read2.pairs : []) {
-      const a = this.#side(q6.a), b = this.#side(q6.b);
-      formed.set(`${q6.key}:${[handle(a), handle(b)].sort().join(" <> ")}`, { key: q6.key, a, b });
-    }
-    const cutKeys = (read2.keys ?? []).filter((k) => k.truncated).map((k) => k.key);
-    const stamp2 = at17 || this.#now();
-    const rows = [];
-    for (let i = 0; i < list2.length; i++) {
-      const p = item(i);
-      const key = String(p.key ?? "").trim().toUpperCase();
-      const a = this.#side(p.a), b = this.#side(p.b);
-      const f9 = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
-      if (!f9)
-        return refusal19(
-          "CANDIDATE_PAIR_NOT_FORMED",
-          `proposal ${i} names a ${key || "(no key)"} pair the pairing does not form for this viewer now` + (cutKeys.length ? ` (the read was cut at its bound on ${cutKeys.join(", ")}, and a pair past the bound is not formed here)` : ""),
-          { run: runId, index: i, cut_keys: cutKeys }
-        );
-      const [x, y] = handle(f9.a) <= handle(f9.b) ? [f9.a, f9.b] : [f9.b, f9.a];
-      rows.push({
-        candidate: sha256HexSync(canonicalJson({ v: 1, key: f9.key, sides: [handle(x), handle(y)] })),
-        key: f9.key,
-        a: x,
-        b: y,
-        run: runId,
-        proposed_by: proposedBy.trim(),
-        label: p.label,
-        reason: p.reason.trim().slice(0, CANDIDATE_REASON_MAX),
-        at: stamp2
-      });
-    }
-    const written = this.#record.transact(() => rows.map((row2) => this.#append(row2)));
-    const candidates = rows.map((row2, i) => ({
-      new: written[i],
-      ...this.#one(`SELECT candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind, b_ref,
-        b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at
-        FROM contradiction_candidates WHERE candidate=?`, row2.candidate)
-    }));
-    const n = written.filter(Boolean).length;
-    return {
-      ok: true,
-      run: runId,
-      proposed: rows.length,
-      written: n,
-      unchanged: rows.length - n,
-      candidates,
-      says: `${n} candidate(s) written as PROPOSED machine work; ${rows.length - n} named two referents at versions already proposed over, and were left exactly as they were (\xA78). A candidate is a proposal about two things as they were, never a finding: no member has judged it.`
-    };
-  }
-};
-function contradictionOps(c, url, body) {
-  const q6 = (k) => url.searchParams.get(k);
-  const b = body && typeof body === "object" ? body : {};
-  return {
-    contradictionpropose: () => c.propose({
-      run: b.run,
-      proposals: b.proposals,
-      at: b.at || null,
-      proposedBy: q6("proposedBy"),
-      viewer: q6("viewer"),
-      caller: q6("principal")
-    }),
-    contradictionpairs: () => c.pairs({ key: q6("key"), limit: q6("limit"), viewer: q6("viewer") })
-  };
-}
-
-// src/ai-runs/checks.mjs
-var checks_exports15 = {};
-__export(checks_exports15, {
-  AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
-  AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
-  AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
-  AI_RUN_OPEN_CHECKS: () => AI_RUN_OPEN_CHECKS,
-  AI_RUN_OWN_CHECKS: () => AI_RUN_OWN_CHECKS,
-  SURFACE_RUN_CHECKS: () => SURFACE_RUN_CHECKS
-});
-var AI_RUN_OWN_CHECKS = {
-  /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
-     which bound and where it stopped". A close with no bound named is the
-     `heldMatch` defect exactly — not found and did not finish looking made
-     indistinguishable — so the terminate path REFUSES it rather than writing an
-     unattributed ending. This is what makes "names the bound" a mechanism
-     rather than an intention. */
-  AI_RUN_BOUND_UNNAMED: {
-    check: "C-22.5",
-    where: "src/airun.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
-    translation: "The run stopped without saying what stopped it. Not finding something and not finishing the search are different facts, and only one of them licenses a conclusion."
-  },
-  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
-       bias manifest in force, the launching project's standard pair, and THE
-       SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
-       a hat" and a version is only interpretable against them. SK-1's row makes
-       the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
-       disclosure standard), and a condition that may be omitted is not recorded:
-       it is recorded by the runs that felt like it.
-  
-       REFUSED AT THE OPEN, beside the two principals, for the same reason those
-       are: refusing later would mean a run had already searched under
-       instructions nobody can name. Two ways to fail and ONE code, because they
-       are one fact — the run object cannot say what it ran under. The worse of
-       the two is a version that names no pack: `3` reads as an answer and
-       identifies nothing, which is the blank-principal shape PL-4 measured one
-       field over, arriving on a condition instead of an identity.
-  
-       A WHOLE-FUNCTION `where`: `checkSkillVersion` is small, single-purpose, and
-       the only refusal it makes is this one. Moved from the catalogue with its
-       reasons and translation unchanged (N289, K333); its `where` names the site
-       this module holds (`skillpack.mjs`'s copy was deleted by N156). */
-  AI_RUN_SKILL_VERSION_UNNAMED: {
-    check: "C-22.7",
-    where: "src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open",
-    translation: "This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards."
-  },
-  /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
-       THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.
-       Bob ruled 2026-08-09 that an investigation can be started by ANY MEMBER OF
-       THE PROJECT: the gate is participation in the project the inquiry belongs
-       to, and the capability token stays `contribute` only as the FLOOR beneath
-       it. IS-6's provisional checked `contribute` alone.
-  
-       WHY IT IS ITS OWN CODE AND NOT THE CAPABILITY REFUSAL'S, which is the whole
-       content of the item rather than a nicety. *You are not a member of this
-       project* and *you lack contribute* are DIFFERENT FACTS ABOUT A MEMBER, and
-       they have different remedies: one is answered by an owner of that project
-       inviting you, the other by an administrator granting a capability. A single
-       refusal covering both would tell a member nothing they can act on, which is
-       DEC-49's rule and the ACT-AND-SAY principle in one place. The capability
-       half keeps its own existing, differently-shaped refusal at the control
-       plane (`NOT_CAPABLE`, carrying `needs`), so a caller can always tell which
-       of the two stopped them.
-  
-       THE TRANSLATION DELIBERATELY NAMES NO PROJECT. A member who is not in a
-       project may not be entitled to learn it exists — the skeleton-visibility
-       rule (7.12) — so the canned sentence a surface renders says what happened
-       and what to do, and the refusal's own `detail`, composed at the site, names
-       only what the caller already put in their own request.
-  
-       CORRECTED 2026-09-19 by REC-145 (DEC-63 as amended by Bob, 2026-09-18): this refusal is now said
-       ONLY over a run whose context is a PROJECT. A run over a question consults no project, so the old
-       first sentence (*"asking the system to look into a question is work inside the project that
-       question belongs to"*) stated the ruling Bob reversed — *a project does not own a line of inquiry*. */
-  AI_RUN_NOT_PROJECT_MEMBER: {
-    check: "C-22.8",
-    where: "src/airun.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close",
-    translation: "Asking the system to look into a project is work inside that project, and this account is not one of that project's participants. This is not about what the account is allowed to do in general \u2014 it is about which piece of work it is part of. Someone who owns that project can invite you to it."
-  },
-  /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
-       DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
-       the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
-       Once REC-145 made the run verdict turn on the KIND (a question consults no project), a run labelled
-       `inquiry` over a PROJECT's id opened for a member who had not joined that project — the joined gate
-       walked around by a word the caller chose.
-  
-       ONE CODE FOR THE MISMATCH, THE ABSENT ID AND THE HIDDEN ONE, and that is the §7.9 half of the ruling
-       rather than economy. A second code for *"that is a project, not a question"* would be said over a
-       project the caller can see and withheld over one they cannot, so the difference between the two codes
-       would be the bit. The refusal is built from what the caller SENT and nothing else, which makes the
-       three one object by construction (`#noSuchProject`'s discipline, one act over). It is one condition —
-       *nothing of the kind you named answers to that id for you* — not two behind one number.
-  
-       CORRECTED THE SAME DAY on BOB #16's ruling (`7d03e852`), which the first build did not have: (i) A MACHINE
-       SEES NO MORE THAN ITS PRINCIPAL — an `ai` credential's open over an id its member cannot see is that member's
-       own absent answer, and an operator credential's open over a never-minted id is refused as absent too (the
-       first build let a machine through for an id the store did not hold, on PL-18's word); (ii) THE KIND IS
-       `RUN_CONTEXTS`' CLOSED VOCABULARY — any other word is refused HERE before any bundle is looked at, rather
-       than matched against the bundle's type. Both are this row's one condition: the kind and id the caller named
-       do not resolve to a context they can run in. A new code for (ii) was weighed and declined: C-22.12 is
-       REC-152's, and the word refused is the caller's own, so the refusal can say which failed without a second
-       code carrying any bit. */
-  AI_RUN_NO_SUCH_CONTEXT: {
-    check: "C-22.11",
-    where: "src/airun.mjs checkRunContextKind, called from src/ai-runs/index.mjs open",
-    translation: "Nothing of the kind this run names answers to that id here. A run is over a question or a project, nothing else; a run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
-  },
-  /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
-       AND CLOSE A RUN", BOB #16). C-22.12 and not C-22.11: CONDUCT #6 assigned C-22.11 to REC-153, which is
-       on its own branch, so this number was taken with the gap left for it.
-  
-       WHY IT IS ITS OWN CODE AND NOT C-22.8's. *You are not in this project* and *this is not your run* are
-       DIFFERENT FACTS with different remedies: the first is answered by an owner inviting you, the second by
-       nobody — the run is its principal's, and one nobody drives ends on its own lease. A co-participant who
-       is fully joined meets this and never C-22.8, and a single refusal covering both would tell them to ask
-       for an invitation they already hold.
-  
-       SAID ONLY TO SOMEBODY WHO CAN SEE THE RUN'S CONTEXT. A caller who cannot is answered as for a run that
-       does not exist, before this is reached (§7.9), so the sentence names nobody — neither the principal
-       nor the caller — and the store's `detail` names only the rule. */
-  AI_RUN_NOT_PRINCIPAL: {
-    check: "C-22.12",
-    /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
-    where: "src/airun.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions",
-    translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
-  },
-  /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
-     wrote `consumed + Number(v)` for any figure, so the run's own principal could REFUND a bound its member set
-     (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
-     whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
-     is a CLOSE naming no bound, this is a figure no bound can hold. */
-  /* REC-172, 2026-09-23: ALSO the member's `allowed` at the open (it was written `Number(x) || 0`, so `-1`, `1.5` and
-     `"3"` became a declaration nobody made). One code for both halves of a bound's figure — the rule is the same whole
-     number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
-  AI_RUN_CONSUME_INVALID: {
-    check: "C-22.13",
-    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
-    translation: "The investigation gave an amount for its budget that is not a whole number of zero or more. A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step."
-  },
-  /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
-     counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
-     is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
-     number. A zero claims nothing and is not refused. */
-  /* REC-172, 2026-09-23: ALSO `lease` (`PLANE_DECIDED_BOUNDS`), at the tick and as a declaration at the open, and
-     for ANY figure including zero. Same rationale — the plane decides it, off the clock — so the same code; the
-     translation now names the lease beside the counts. */
-  AI_RUN_BOUND_PLANE_COUNTED: {
-    check: "C-22.14",
-    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
-    translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
-  },
-  /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
-     that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
-     spent nothing, so a caller believed it counted work the record never held (the live instrument vf4 sent an array
-     for its whole life). The open DROPPED an entry naming no bound, so a member who declared `fetchs: 3` got a run
-     with no fetch ceiling. Its own code and not C-22.13's: the figure may be perfectly good; what is wrong is that it
-     names nothing the run has, and the remedy (spell the bound, send a map) differs. */
-  AI_RUN_BOUND_UNKNOWN: {
-    check: "C-22.15",
-    where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from src/ai-runs/index.mjs tick and open",
-    translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
-  },
-  /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
-     ABSENT or ZERO `allowed` was opened at 0, and `finishedBound` reads 0 as NO CEILING — so the run recorded a bound
-     it did not have. Refused at the open, nothing written. Its own code and not C-22.13's: C-22.13 is a figure of the
-     wrong FORM (a string, a fraction, a negative), and 0 is a perfectly good whole number; what is wrong here is that
-     the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
-  AI_RUN_BOUND_NO_ALLOWANCE: {
-    check: "C-22.16",
-    where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
-    translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
-  },
-  /* N293 (AGENT-WORKER #2 J1; REC-169's rule, one figure over), R45 — THE RUN'S SCRATCH IS BOUNDED. `state` is the
-     run's resumable work list (R12, DEC-61: never a transcript), and it was stored with no bound on its size: the run's
-     principal could write any amount on every tick, into a row every read of the run publishes whole (R19). The
-     ceiling is `AI_RUN_STATE_MAX_BYTES`, measured as the UTF-8 length of the state's JSON, the bytes the row holds. Its
-     own code and not C-22.13's: the figure there is a budget's; here nothing is wrong with any figure, the work list is
-     simply too large to keep, and the remedy differs (keep less, or keep it elsewhere). A WHOLE-FUNCTION `where`, as
-     C-22.7's: `checkRunState` makes this one refusal and no other; the open and the tick relay it. */
-  AI_RUN_STATE_TOO_LARGE: {
-    check: "C-22.18",
-    where: "src/airun.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
-    translation: "The investigation tried to keep more working notes than one investigation may hold, so nothing it sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it has left to do, not everything it has read."
-  }
-};
-var AI_RUN_ACT_SHAPE_CHECKS = {
-  /* ---------------------------------------------------------------------------
-       UI-38's §14a RIDER, AND IT IS IN THIS FAMILY BECAUSE ANOTHER FAMILY'S SUITE
-       REFUSED IT — WHICH IS THE CORRECT OUTCOME AND IS RECORDED RATHER THAN
-       WORKED AROUND.
-  
-       REC-64 first put this row in `AI_RUN_CHECKS`, where the run's other three
-       open-time conditions live. `airun.test.mjs` ARM D3 failed it: **every C-22
-       allocation must name its enforcement site in a PURE CHECK MODULE**
-       (`src/airun.mjs` or `src/skillpack.mjs`), so the catalogue can be walked to a
-       pure function. This condition is enforced in `store.mjs` at the run-open
-       door, so it does not satisfy that invariant and does not belong in C-22. The
-       ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
-       invariant, and this one is load-bearing — it is what lets `op=audit` reach
-       every C-22 condition without opening the store.
-  
-       WHAT IT IS. §14a promises the running-session surface SAYS SO when the
-       capability is unavailable, and IS-BUILD-PLAN's FL-6 row names the failure it
-       guards: *"when no token resolves the capability is UNAVAILABLE and says so —
-       never a silent no-op"*. UI-38 correctly LEFT that sentence rather than
-       authoring it at the surface, because member-facing refusal wording is
-       DEC-49's. The site already refused this condition — with NO CODE, so a
-       surface could only render the operator's sentence verbatim or blank, the
-       exact state DEC-49 ended.
-  
-       THE TRANSLATION SAYS "NOTHING RAN" IN SO MANY WORDS, on purpose: an
-       unavailable capability must not be indistinguishable from a run that looked
-       and found nothing. The second is a claim about the world; the first is a fact
-       about us. That is `CLAUDE.md`'s "our governor refusing is not the source
-       failing", arriving at the run door.
-  
-       ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
-       REC-64's work — and the reason WAS a defect in the guard rather than a
-       judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
-       C's matcher was `ok: false`, so a REGION here would have judged zero refusals
-       and FAILED as a drifted marker. The whole-function form is honest at this site
-       (every refusal `aiRunOpen` makes is a condition of opening a run) and the
-       blindness was measured and delegated at the guard's own `codesChecked` floor.
-  
-       **REC-76 CLOSED THAT DELEGATION (D-236), AND THE WHOLE-FUNCTION `where` IS
-       WHAT MADE IT PAY.** Arm C now grades an outcome by whether it DECLARES ITSELF
-       A SUCCESS rather than by one literal, so this site went from `92L (0 judged,
-       0 code(s) checked)` to four refusals judged — and TWO of them were CODELESS,
-       at a governed site, for as long as the row has existed. They are the two rows
-       immediately below. Nothing about the span changed; the instrument started
-       seeing it.
-  
-       **D-589 (2026-09-25) NARROWED ALL THREE INTO REGIONS, AND THE PARAGRAPH TWO
-       ABOVE IS NOW HISTORY, NOT RULE.** The whole-function `where` stopped being
-       honest the moment a SECOND family's refusal was written inside `aiRunOpen`:
-       REC-207's first draft put its re-run refusals in a narrowed region there and
-       the guard failed them by name, because the region was judged once by its own
-       rows and again by this whole-function site, where their codes are not rows.
-       So each of these three rows now names the region around its one refusal
-       (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
-       judges a claimed region a second time from an enclosing whole-function
-       `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
-       the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
-       seed — each minted and governed at its own site) are not read at this
-       function while no whole-function row names it.
-       --------------------------------------------------------------------------- */
-  AI_RUN_CAPABILITY_UNAVAILABLE: {
-    check: "C-33.29",
-    where: "src/ai-runs/index.mjs open > is-airun-open-capability, reached from op=airunopen",
-    translation: "Nothing was run, because this instance could not find an account to run it under. That is a fact about our setup and not an answer about your question: no searching happened, so nothing here should be read as having looked and found nothing."
-  },
-  /* ---------------------------------------------------------------------------
-       REC-76 / D-236 — THE TWO CODELESS REFUSALS THE WIDENED CLASSIFIER FOUND.
-  
-       Both have been at this governed site since before the row above was written,
-       and neither was ever judged, because arm C could not see a refusal spelled
-       `started: false`. They are not new conditions and they are not new refusals:
-       they are two sentences a surface could only render verbatim or blank, which
-       is the state DEC-49 ended. **The item that fixes an instrument owes the
-       sites the instrument newly sees, and these are them.**
-       --------------------------------------------------------------------------- */
-  AI_RUN_NO_CONTEXT: {
-    check: "C-33.30",
-    where: "src/ai-runs/index.mjs open > is-airun-open-context, reached from op=airunopen",
-    translation: "Nothing was run, because the request did not say what the run is for or what it belongs to. A run has to sit inside a question or a project so that the people working on that question can see it happened; one belonging to nothing would be invisible to everybody."
-  },
-  AI_RUN_ALREADY_OPEN: {
-    check: "C-33.31",
-    where: "src/ai-runs/index.mjs open > is-airun-open-already, reached from op=airunopen",
-    translation: "Nothing was run, because a run with this name is already on record here. The record keeps what each run did under its own name, so starting a second one under a name already in use would write two different histories into one place. Give this one a name of its own."
-  },
-  /* ---------------------------------------------------------------------------
-       REC-207 — THE RE-RUN LINK'S THREE REFUSALS (BOB #32, 2026-09-23 23:42Z).
-  
-       They are ACT-SHAPE conditions — the answer to *may this open carry this
-       link* — so they belong here rather than in a family of their own (SK-1's
-       rule, and the same one that put the BIAS_DEBT rows in BIAS_CHECKS).
-  
-       WHY THEY ARE REFUSALS AT ALL, rather than a link stored and judged later.
-       `aiRunClose` settles a bias debt on the strength of `rerun_of`, so a link
-       the record cannot stand behind is a DISCHARGE resting on the caller's word.
-       The three conditions are the three ways that could happen: the run names
-       itself, it names something that is not there, or it names work in another
-       context whose lens is a different lens entirely.
-  
-       A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
-       narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
-       `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
-       rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
-       region's refusals twice, once at the region and once at the enclosing
-       function, where their codes were not rows. So these three were written at
-       the whole function. D-589 (2026-09-25) then narrowed those three neighbours
-       into governed regions (`is-airun-open-context`, `-capability`, `-already`,
-       the rows above) and made arm C judge a claimed region once, by its own rows
-       (`nestedRegionsIn`). These three are now the ONLY rows naming `aiRunOpen`
-       as a whole, and the three regions' lines inside it are governed by the
-       regions, not by this site. Narrowing these three into a region of their own
-       is now possible and has not been done.
-       --------------------------------------------------------------------------- */
-  AI_RUN_RERUN_SELF: {
-    check: "C-33.45",
-    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
-    translation: "Nothing was run, because this run was told it is a re-run of itself. A re-run says which EARLIER piece of work it repeats, and a run pointing at itself would be able to clear its own outstanding re-run. Name the earlier run, or leave the field out."
-  },
-  AI_RUN_RERUN_UNKNOWN: {
-    check: "C-33.46",
-    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
-    translation: "Nothing was run, because the earlier run it says it repeats is not one this record holds for you. It may never have existed, it may have been removed, or it may belong to work you have not been brought into. Check the name."
-  },
-  AI_RUN_RERUN_OTHER_CONTEXT: {
-    check: "C-33.47",
-    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
-    translation: "Nothing was run, because the earlier run it says it repeats belongs to a different question or project. Repeating work means asking the same question again under the lens that is in force for it \u2014 somewhere else the group's declared lens can be a different one, so the two runs would not be comparable and settling anything on that basis would be wrong."
-  }
-};
-var AI_RUNS_CONTEXT_CHECKS = {
-  /* No kind named at all. There is no honest default: `inquiry` and `project`
-     are different objects with different membership, and answering from one
-     when the caller meant the other is a confidently wrong answer about a
-     different context — MEANING_ROWS_NO_ARM's reasoning, one table over. */
-  AI_RUNS_NO_CONTEXT_TYPE: {
-    check: "C-36.1",
-    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
-    translation: "That request did not say what kind of thing to look in. Background work is attached either to a question or to a project, and those are different places \u2014 so the record asks which rather than choosing one for you."
-  },
-  /* A kind was named and the record has no such context. Refused rather than
-     answered empty: see the header — an empty answer here would be the record
-     saying nothing is running, on the strength of a word it did not recognise. */
-  AI_RUNS_UNKNOWN_CONTEXT_TYPE: {
-    check: "C-36.2",
-    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
-    translation: "Background work is not attached to anything of that kind. Rather than answer as though nothing were running there, the record says so and names the kinds of thing it does attach work to."
-  },
-  /* A kind but no id. The gate is compiled over the CONTEXT ID, so a blank one
-     would ask the record about every context at once — which is not a wider
-     answer, it is a different question nobody asked. */
-  AI_RUNS_NO_CONTEXT_ID: {
-    check: "C-36.3",
-    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
-    translation: "That request named a kind of thing but not which one. Background work belongs to a particular question or a particular project, and the record answers for the one you are looking at rather than for all of them."
-  }
-};
-var SURFACE_RUN_CHECKS = {
-  SURFACE_NO_RUN: {
-    check: "C-66.1",
-    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
-    translation: "An assistant opens a question only inside an investigation it is running, and this one named none that can be read here. The investigation is what records the lens and the purpose the question was opened under, so without one nothing could say why it exists. Nothing was created."
-  },
-  SURFACE_RUN_NOT_RUNNING: {
-    check: "C-66.2",
-    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
-    translation: "The investigation this question was to be opened inside has ended. A question is read against the conditions of the investigation that opened it, and those stopped being current when it stopped. Nothing was created; a member can start a new investigation."
-  },
-  SURFACE_NO_BOUND: {
-    check: "C-66.3",
-    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
-    translation: "This investigation was not given a limit on how many questions it may open, so it may open none: an assistant opening questions without a limit fills the record with questions nobody asked for. The limit is set by the member who starts the investigation. Nothing was created."
-  },
-  SURFACE_BOUND_REACHED: {
-    check: "C-66.4",
-    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
-    translation: "This investigation has already opened as many questions as the member who started it allowed. Nothing was created. The investigation ends at its next step and says which limit stopped it."
-  }
-};
-var AI_RUN_OPEN_CHECKS = {
-  AI_RUN_MODE_NOT_DEPLOYED: {
-    check: "C-109.1",
-    where: "src/ai-runs/index.mjs open > is-airun-open-mode, reached from op=airunopen",
-    translation: "Nothing was run, because the kind of work this run asked for is not switched on for this instance yet. Kinds of work are switched on one at a time, each only after the one before it has been checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is."
-  }
-};
-var AI_RUNS_CHECKS = Object.freeze({
-  ...AI_RUN_OWN_CHECKS,
-  ...AI_RUN_ACT_SHAPE_CHECKS,
-  ...AI_RUNS_CONTEXT_CHECKS,
-  ...SURFACE_RUN_CHECKS,
-  ...AI_RUN_OPEN_CHECKS
-});
-
-// src/ai-runs/skill-version.mjs
-function refusal9(key, detail) {
-  const row2 = AI_RUN_OWN_CHECKS[key];
-  return { ok: false, code: key, check: row2.check, translation: row2.translation, detail };
-}
-function checkSkillVersion(version) {
-  const v = typeof version === "string" ? version.trim() : "";
-  if (/^[^\s@]+@[^\s@]+$/.test(v)) return null;
-  return refusal9("AI_RUN_SKILL_VERSION_UNNAMED", !v ? "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them" : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`);
-}
-
-// src/airun.mjs
-var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
-var RUN_BOUNDS = {
-  fetches: "fetches requested of the capture path",
-  subsessions: "evidence sub-sessions spawned",
-  wallclock: "wall time across resumptions, in milliseconds",
-  runtime: "CPU or subrequest ceiling (D-54, D-56) \u2014 IS-9(d) builds its producer",
-  /* SK-8, AND IT IS A BOUND RATHER THAN A POLICY BECAUSE §7.3 (5) RULED IT ONE.
-       *"A machine that may mint citable rows without a bound produces a store of
-       proposals nobody cited — each correctly labelled, the whole unexamined"*,
-       which is exactly the failure `INVESTIGATIVE-SESSION.md` §15 named for
-       versions one layer up. So the EXTRACT role's productions are budgeted in the
-       table the run already has: **no schema, no new vocabulary**, which was the
-       answer's own test.
-  
-       IT IS A ROW HERE AND NOT A SECOND FENCE. `finishedBound` already terminates
-       a run whose consumed reaches its allowed, and `#aiRunTerminate` already
-       writes which bound stopped it and where — a run that ran out of mints ends
-       exactly as a run that ran out of fetches does, with no branch anywhere
-       asking which kind of bound it was.
-  
-       IT IS LAST IN DECLARATION ORDER BEFORE `lease`, WHICH IS A TIE-BREAK RULE
-       AND NOT AN OPINION: `finishedBound` sorts exhausted bounds by this object's
-       key order, so a run that exhausted both its fetches and its mints in one
-       tick reports FETCHES — the earlier, cheaper-to-explain cause. Putting mints
-       first would have renamed every such run's ending without changing anything
-       about it. */
-  mints: "passages a machine credential marked citable (\xA77.3 (5)) \u2014 the EXTRACT role's budget",
-  /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): AN ASSISTANT OPENS A QUESTION ONLY INSIDE A
-     RUN, AND THE RUN BOUNDS HOW MANY. Ruled on `mints`' rule, so it is `mints`' shape: a ROW in this table, no
-     schema and no second vocabulary; declared at `op=airunopen` by the member who opens the run; a creation
-     under a run that declares none is REFUSED rather than given an allowance invented in code (a number
-     chosen here would be a measurement with no measurement behind it); and a run whose surfaces reach the
-     allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
-     in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
-  surfaces: "questions an assistant opened inside this run (\xA711 item 5, rule 2) \u2014 the run's bound on what it may surface",
-  lease: "the run stopped heartbeating and its lease lapsed: it died rather than finished"
-};
-var RUN_ENDINGS = {
-  completed: "the run finished its work",
-  cancelled: "a member stopped it",
-  "mode-not-deployed": "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"
-};
-var RUN_NEVER_STARTED = { "mode-not-deployed": 1 };
-function runStatusFor(bound) {
-  const b = bound == null ? "" : String(bound);
-  if (Object.prototype.hasOwnProperty.call(RUN_NEVER_STARTED, b)) return "never-started";
-  if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return "stopped";
-  return "finished";
-}
-var STANDARD_BASIS = {
-  recorded: "this run was formed under a bar the launching project declared",
-  "none-recorded": "no bar was recorded when this run was formed, and the plane does not fill one in afterwards",
-  "context-has-no-project": "this run works on a question outside any project, and only a project declares a bar",
-  "names-no-axis": "something was recorded as the bar for this run and it names neither axis, so there is no bar here",
-  unreadable: "a bar was recorded for this run and cannot be read back"
-};
-var RUN_CONTEXTS = {
-  inquiry: "a question the group is working on, which any project may draw on",
-  project: "a body of work with its own members, its own bar and its own lens"
-};
-function refusal10(key, detail, extra = null) {
-  const row2 = AI_RUN_CHECKS2[key];
-  return {
-    ok: false,
-    code: key,
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra && typeof extra === "object" ? extra : {}
-  };
-}
-function checkBound(bound) {
-  const b = bound == null ? "" : String(bound);
-  if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return null;
-  if (Object.prototype.hasOwnProperty.call(RUN_ENDINGS, b)) return null;
-  return refusal10(
-    "AI_RUN_BOUND_UNNAMED",
-    `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; endings: ${Object.keys(RUN_ENDINGS).join(", ")} (\xA714b.6)`
-  );
-}
-var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
-var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
-function checkConsume(entries, { seed = false, allowance = false, map = false, list: list2 = false } = {}) {
-  if (list2) {
-    if (entries == null) return null;
-    if (!Array.isArray(entries))
-      return refusal10(
-        "AI_RUN_BOUND_UNKNOWN",
-        `\`bounds\` was ${typeof entries === "object" ? "a map" : `a ${typeof entries}`}: it is a list of { bound, allowed, unit }, one per bound the run is held to (\xA714b.6). Nothing was written`,
-        { bound: null }
-      );
-    const bad = entries.findIndex((e) => !e || typeof e !== "object" || Array.isArray(e));
-    if (bad >= 0)
-      return refusal10(
-        "AI_RUN_BOUND_UNKNOWN",
-        `\`bounds[${bad}]\` is ${(JSON.stringify(entries[bad]) ?? String(entries[bad])).slice(0, 60)}, not a { bound, allowed, unit } entry, so it names no bound (\xA714b.6). Nothing was written`,
-        { bound: null }
-      );
-    return checkConsume(
-      entries.map((e) => [e.bound == null ? "" : String(e.bound), e.allowed]),
-      { seed: true, allowance: true }
-    ) || checkConsume(entries.map((e) => [String(e.bound), e.consumed]), { seed: true });
-  }
-  if (map) {
-    if (entries == null) return null;
-    if (typeof entries !== "object" || Array.isArray(entries))
-      return refusal10(
-        "AI_RUN_BOUND_UNKNOWN",
-        `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} (${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (\xA714b.6). Nothing was written`,
-        { bound: null }
-      );
-    entries = Object.entries(entries);
-  }
-  for (const [k, v] of Array.isArray(entries) ? entries : []) {
-    const b = String(k);
-    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))
-      return refusal10(
-        "AI_RUN_BOUND_UNKNOWN",
-        `'${b === "" ? "(absent)" : b.slice(0, 60)}' names no bound of a run. The bounds a caller spends are ` + Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ") + ` (\xA714b.6); a figure for a bound that does not exist counts nothing. Nothing was written`,
-        { bound: b }
-      );
-    if (PLANE_DECIDED_BOUNDS.includes(b))
-      return refusal10(
-        "AI_RUN_BOUND_PLANE_COUNTED",
-        `'${b}' is decided by the plane \u2014 a run's lease lapses on the clock, read by the reaper, and nothing spends it (\xA714b.6) \u2014 so no figure for it, not even a zero, is the caller's to send or a member's to declare. Nothing was written`,
-        { bound: b }
-      );
-    if (allowance && (v == null || v === 0))
-      return refusal10(
-        "AI_RUN_BOUND_NO_ALLOWANCE",
-        `'${b}' was declared with ${v == null ? "no `allowed`" : "`allowed: 0`"}: a declared bound states how much the run may spend, a whole number of one or more, and a bound the run is not held to is left out of \`bounds\` (\xA714b item 6). A zero allowance would be read as no ceiling at all. Nothing was written`,
-        { bound: b }
-      );
-    if (seed && v == null) continue;
-    if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
-      return refusal10(
-        "AI_RUN_CONSUME_INVALID",
-        `'${b}' was ${allowance ? "declared an allowance of" : "given"} ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, ${allowance ? "allowed or spent" : "and a count never goes down"} (\xA714b.6). Nothing was written`,
-        { bound: b }
-      );
-    if (allowance) continue;
-    if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
-      return refusal10(
-        "AI_RUN_BOUND_PLANE_COUNTED",
-        `'${b}' is counted by the plane as the run's work lands, never by the caller (\xA711 item 5 rule 2, SK-8), so a figure sent for it could only disagree with the count. Nothing was written`,
-        { bound: b }
-      );
-  }
-  return null;
-}
-var AI_RUN_STATE_MAX_BYTES = 262144;
-function checkRunState(state) {
-  if (state == null) return null;
-  let json5;
-  try {
-    json5 = JSON.stringify(state);
-  } catch {
-    return null;
-  }
-  if (typeof json5 !== "string") return null;
-  const bytes2 = new TextEncoder().encode(json5).length;
-  if (bytes2 <= AI_RUN_STATE_MAX_BYTES) return null;
-  return refusal10(
-    "AI_RUN_STATE_TOO_LARGE",
-    `the run's state is ${bytes2} bytes as JSON, over the ${AI_RUN_STATE_MAX_BYTES} a run may keep: \`state\` is the run's resumable work list (\xA714b.7), not what it read. Nothing was written`,
-    { bytes: bytes2, limit: AI_RUN_STATE_MAX_BYTES }
-  );
-}
-var PROJECT_GATE_GROUNDS = {
-  /* No member is behind this caller at all — a machine credential. The gate is
-     NOT APPLIED, and the reason is that it CANNOT be: participation is a
-     relationship between a PERSON and a project, and a token class is not a
-     person. This keeps the gate's population identical to the capability
-     FLOOR's, which `index.mjs` already applies only `if (viaSession)` — a fence
-     wider than the floor beneath it would be an undeclared interface change
-     wearing the costume of caution, and it would refuse the daemon outright.
-     DEC-63 names the lever for this half explicitly and it is a different one:
-     *"any narrowing happens at the credential layer"* — IS-5's `ai` credential
-     scope, which can only narrow what a machine may reach. */
-  NO_MEMBER_BEHIND_CALLER: "the caller is a machine credential, so there is no participation to check",
-  /* REC-145 (2026-09-19) — DEC-63 AS AMENDED BY BOB, 2026-09-18: *"A project doesn't own an area of
-     enquiry to the exclusion of others."* A run whose context is a QUESTION consults no project for its
-     verdict (Membership v2 §7, the DEC-63 ruling bullet, "How it applies at the code", BOB #16). ONE
-     GROUND for every question, whoever cites it, and that is the §7.9 half of the ruling rather than
-     tidiness. The ground this REPLACES, `PROJECTLESS` (PL-18, from DEC-17: *"An inquiry outside any
-     project has no bar and inherits none"*), was said only when NO project cited the question, so its
-     ABSENCE told a member that some project — possibly one hidden from them — did; a second permitting
-     ground keyed on the citers would carry the same bit. DEC-17's case is not lost: a question in no
-     project is still a question, permitted and STATED on this ground. And it is not a silent allow: the
-     answer still says WHY the run was allowed, which is what PL-18's vocabulary exists for. */
-  INQUIRY: "this run is over a question, and a project does not own a line of inquiry: the verdict consults no project (DEC-63 as amended, 2026-09-18)",
-  PARTICIPANT: "the account has joined the project this run is over"
-};
-function runConsultsProjects(contextType) {
-  return String(contextType ?? "") === "project";
-}
-function projectGate({
-  actor = null,
-  contextType = null,
-  contextId = null,
-  projects = [],
-  projectsJoined = []
-} = {}) {
-  const who2 = actor == null ? "" : String(actor).trim();
-  const all = Array.isArray(projects) ? projects.map(String) : [];
-  const mine = Array.isArray(projectsJoined) ? projectsJoined.map(String) : [];
-  const label = `${contextType == null ? "" : String(contextType)} ${contextId == null ? "" : String(contextId)}`.trim() || "the named context";
-  if (!who2)
-    return {
-      permitted: true,
-      applied: false,
-      ground: "NO_MEMBER_BEHIND_CALLER",
-      why: PROJECT_GATE_GROUNDS.NO_MEMBER_BEHIND_CALLER,
-      projects: all.length
-    };
-  if (!runConsultsProjects(contextType))
-    return {
-      permitted: true,
-      applied: false,
-      ground: "INQUIRY",
-      why: PROJECT_GATE_GROUNDS.INQUIRY,
-      projects: all.length
-    };
-  if (mine.length > 0)
-    return {
-      permitted: true,
-      applied: true,
-      ground: "PARTICIPANT",
-      why: PROJECT_GATE_GROUNDS.PARTICIPANT,
-      projects: all.length
-    };
-  return refusal10(
-    "AI_RUN_NOT_PROJECT_MEMBER",
-    `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
-  );
-}
-function checkRunContextKind({ contextType = null, contextId = null, found = null } = {}) {
-  const said2 = String(contextType ?? "");
-  const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
-  if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said2))
-    return refusal10(
-      "AI_RUN_NO_SUCH_CONTEXT",
-      `${JSON.stringify(said2.slice(0, 60))} is not a kind of run context: a run is over a question ("inquiry") or a project ("project"), and nothing else, so no run over ${id} was opened`
-    );
-  if (found !== null && found !== void 0 && found === said2) return null;
-  return refusal10(
-    "AI_RUN_NO_SUCH_CONTEXT",
-    `no ${JSON.stringify(said2)} answers to ${id} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
-  );
-}
-function runPrincipalOf(principal) {
-  const s = principal == null ? "" : String(principal).trim();
-  if (!s.startsWith("member:")) return s;
-  const i = s.indexOf("/");
-  return i < 0 ? s : s.slice(0, i);
-}
-function runPrincipalGate({ caller = null, principal = null, act = null } = {}) {
-  const who2 = runPrincipalOf(caller), owner = runPrincipalOf(principal);
-  if (who2 && owner && who2 === owner) return null;
-  const doing = typeof act === "string" && act.trim() ? act.trim() : "ticking or closing a run";
-  return refusal10(
-    "AI_RUN_NOT_PRINCIPAL",
-    `${doing} is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds`
-  );
-}
-function finishedBound(bounds, { expired = false, offered = null } = {}) {
-  if (offered != null && offered !== "") return String(offered);
-  const rows = Array.isArray(bounds) ? bounds : [];
-  const order = Object.keys(RUN_BOUNDS);
-  const hit = rows.filter((r) => r && Number(r.allowed) > 0 && Number(r.consumed) >= Number(r.allowed)).sort((a, b) => order.indexOf(String(a.bound)) - order.indexOf(String(b.bound)))[0];
-  if (hit) return String(hit.bound);
-  if (expired) return "lease";
-  return "completed";
-}
-
-// src/ai-runs/schema.mjs
-var AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"]);
-var AI_RUNS_SCHEMA = `
-
--- IS-6 / INVESTIGATIVE-SESSION.md \xA711: THE RUN IS AN OBJECT, and it is built on
--- the capture_sessions shape above rather than on a new one \u2014 "SCRATCH, not
--- record\u2026 a work list with an expiry": ticks, an expiry, opaque state,
--- resumable across invocations. Every column beyond that shape is one \xA711 or
--- \xA714b.6 names, and each is here because a version is only interpretable
--- against the conditions it was formed under.
---
--- THE LEASE IS THE HEARTBEAT AND 'expires' IS IT. A run extends it on every
--- tick. A run that is KILLED extends nothing, so the lease lapses and the
--- ai-run-reap scheduler consumer terminates it \u2014 which is how the observation
--- log gets its terminal entry for a run that never ran its own exit path. That
--- is the whole of \xA714b.6's guarantee and the reason this column is not merely a
--- TTL for tidiness.
---
--- TWO PRINCIPALS, NEVER ONE (\xA714a, DEC-27(b), DEC-55.4). 'principal_plane' is
--- the plane credential ('token:<class>' or a member id); 'principal_claude' is
--- WHICH LEVEL of the Claude-account cascade paid \u2014 member, then project, then
--- instance. They are two different principals and an act must say both. NEITHER
--- IS EVER A TOKEN VALUE: 'principal_claude_ref' is a label the operator
--- configured, not a secret, and nothing in the plane writes a credential here.
---
--- NO TRANSCRIPT COLUMN, AND THAT IS DEC-61 (Bob, 2026-08-06). The model's
--- reasoning is DEVICE-LOCAL, TTL'd and deleted at publication, and never in the
--- record store. 'state' is the run's resumable SCRATCH \u2014 its work list \u2014 and
--- the observation log below is a structured account of where the search went.
--- Neither is a transcript, and there is no column here one could be put in.
-CREATE TABLE IF NOT EXISTS ai_runs (
-  run                   TEXT PRIMARY KEY,
-  status                TEXT NOT NULL DEFAULT 'running',
-  label                 TEXT,
-  mode                  TEXT,
-  context_type          TEXT NOT NULL,
-  context_id            TEXT NOT NULL,
-  principal_plane       TEXT NOT NULL,
-  principal_claude      TEXT NOT NULL,
-  principal_claude_ref  TEXT,
-  skill_version         TEXT,
-  bias_manifest         TEXT,
-  standard_pair         TEXT,
-  created               TEXT NOT NULL,
-  updated               TEXT NOT NULL,
-  expires               TEXT NOT NULL,
-  ticks                 INTEGER NOT NULL DEFAULT 1,
-  state                 TEXT NOT NULL,
-  stopped_bound         TEXT,
-  stopped_condition     TEXT,
-  stopped_at            TEXT,
-  lens_at_open          TEXT,
-  rerun_of              TEXT
-);
-CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
-CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
-
--- \xA714b.6's budget, ONE ROW PER BOUND, with its live consumption beside it.
--- Rows rather than columns because F11 (\xA719, carried by UI-38) requires the
--- surface to render the budget and its consumption while the run is live, and
--- its renderers are field-name-blind \u2014 they walk what the record published. A
--- bound added later is a row, and nothing on any surface moves.
---
--- BOTH NUMBERS ARE STORED. UI-38 derives nothing and its suite fails any
--- arithmetic in the rendered output, so the record must publish 'allowed' and
--- 'consumed' separately; a percentage or a remainder computed here would only
--- move the same defect one layer down.
-CREATE TABLE IF NOT EXISTS ai_run_bounds (
-  run       TEXT NOT NULL,
-  bound     TEXT NOT NULL,
-  allowed   INTEGER NOT NULL,
-  consumed  INTEGER NOT NULL DEFAULT 0,
-  unit      TEXT,
-  PRIMARY KEY (run, bound)
-);
-
--- D-85 (INVESTIGATIVE-SESSION.md section 11 item 5, rule 2, BOB #25, 2026-09-21): AN ASSISTANT OPENS A
--- QUESTION ONLY INSIDE A RUN. When an 'ai' credential creates an inquiry it names a RUNNING run whose
--- principal it is, and the plane records the link HERE, keyed by the new inquiry. It is an INSTANCE row and
--- never a line in the inquiry's signed bytes: the run is scratch and is never published, and a pointer in
--- published bytes that no reader can resolve is not provenance. One row per inquiry (an inquiry is created
--- once). Its principal is the control plane's stamp for the credential that created it, never a field it sent.
--- The column is named bundle_id so the row rides purge's TABLES list and clears in BOTH arms (D-113).
--- NO index beyond the key: every reader asks by the inquiry.
-CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
-  bundle_id  TEXT PRIMARY KEY,
-  run        TEXT NOT NULL,
-  principal  TEXT NOT NULL,
-  at         TEXT NOT NULL
-);
-`;
-
-// src/ai-runs/deployment.mjs
-var GATE_ADDRESS = {
-  file: "agent-worker/src/harness.mjs",
-  owned_by: "FL-3 (IS-9, the run harness) \u2014 landed, and outside this area's paths",
-  modes_export: "MODES",
-  table_export: "CONTROL_FLOW",
-  row: "gate-mode",
-  first_step_export: "FIRST_STEP",
-  decision_function: "nextStep",
-  why_it_is_first: "a run in a mode that is not deployed terminates before it has spent anything, so the gate cannot be reached around by exhausting something else first"
-};
-var SEQUENCING_SOURCE = "docs/development/INVESTIGATIVE-SESSION.md";
-var SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
-var DEPLOYMENT_SEQUENCE = {
-  id: "check-deploys-first",
-  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
-     mode that deploys first, and every later index is a mode that enables only
-     after the one before it has been verified live. */
-  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
-     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
-     is ARM B3's whole demand (the two rosters are ONE set, held in both
-     directions) and ARM B4's (index 0 stays the only deployed mode; every later
-     index, `extract` included, is not). The pack's digest moves with this line
-     by construction and nothing needs bumping by hand. */
-  order: ["check", "investigate", "extract"],
-  first_deployed_mode: "check",
-  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
-     because a session cannot verify its own copying by re-reading it. */
-  text: "CHECK IS THE FIRST DEPLOYED MODE",
-  role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
-  because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
-  satisfies: "Deploying that mode first satisfies the enacted instruction without a second architecture",
-  source: SEQUENCING_SOURCE,
-  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
-     standard: one pin proves the sentence was copied; two prove the RULING is
-     the one both surfaces carry, so a sequencing quietly reversed on either
-     fails here rather than in a review nobody re-runs. */
-  also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
-  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
-  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
-     half is this area's, and saying so is the point rather than a disclaimer. */
-  enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
-  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
-  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
-     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
-     cannot leave it stale by editing prose around it. `null` is not "unknown":
-     it is "no live run has been verified", and the suite holds it against the
-     landed flag, which is still `false`. */
-  verification_recorded: null,
-  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
-  enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
-  gate: GATE_ADDRESS,
-  /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
-     refused a mode, and this said so; `op=airunopen` now refuses a mode not in `DEPLOYED_MODES` below with C-109.1, so
-     no run, and no production under a run, exists in a mode not deployed. `enforced_by_row` stays: the fleet member's
-     first row still refuses first inside the harness (agent-worker R14), and the two are tallied apart. */
-  enforced_by: ["C-109.1"],
-  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
-  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
-     landed sources rather than believed. */
-  does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
-  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
-  holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
-};
-var DEPLOYED_MODES = Object.freeze(DEPLOYMENT_SEQUENCE.order.slice(
-  0,
-  DEPLOYMENT_SEQUENCE.verification_recorded == null ? 1 : 2
-));
-var DEFAULT_MODE = DEPLOYED_MODES[0];
-
-// src/ai-runs/index.mjs
-var safeJson9 = (s) => {
-  try {
-    return s == null ? null : JSON.parse(s);
-  } catch {
-    return null;
-  }
-};
-function runSight(col, viewer) {
-  if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
-    throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}).`);
-  const gate = viewerPredicate(viewer);
-  if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [], scope: gate.scope };
-  if (gate.scope === "DENY") return { sql: gate.sql, args: [], scope: gate.scope };
-  return {
-    sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
-            WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
-    args: gate.args,
-    scope: gate.scope
-  };
-}
-function hiddenRuns(viewer, column = void 0) {
-  const byColumn = column !== void 0;
-  const closed = byColumn ? { sql: " AND 0=1", args: [] } : { sql: " AND COALESCE(authority_kind, '') <> 'run'", args: [] };
-  try {
-    if (byColumn && !(typeof column === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(column))) return closed;
-    const seen = runSight("r.context_id", viewer);
-    if (seen.scope === "member") return { sql: "", args: [] };
-    const inSight = `(SELECT r.run FROM ai_runs r WHERE ${seen.sql})`;
-    return byColumn ? { sql: ` AND COALESCE(${column}, '') IN ${inSight}`, args: seen.args } : { sql: ` AND NOT (authority_kind = 'run' AND COALESCE(authority, '') NOT IN ${inSight})`, args: seen.args };
-  } catch {
-    return closed;
-  }
-}
-var AiRuns = class _AiRuns {
-  #waitSource = null;
-  #runListeners = [];
-  // R43: {module, fn, seq}, in the modules' total order
-  constructor(ctx, env = {}) {
-    this.ctx = ctx;
-    this.env = env || {};
-    this.sql = ctx.storage.sql;
-    recordOf(ctx).declarePurge("ai-runs", [
-      "inquiry_run_surfacings",
-      { name: "ai_run_bounds", keys: [] },
-      { name: "ai_runs", keys: [] }
-    ]);
-    observationLogOf(ctx).registerAuthority("run", (run, viewer) => !!this.runFor(run, viewer));
-    const retrieval = retrievalOf(ctx);
-    retrieval.registerHiddenRunTail("ai-runs", hiddenRuns);
-    retrieval.registerProjectionDecoration("ai-runs", (row2, { viewer }) => normalizeType(row2.object_type) === "inquiry" ? this.surfacedIn(row2.bundle_id, viewer).then((s) => ({ surfaced_in: s })) : { surfaced_in: null });
-    biasOf(ctx, { env: this.env }).registerWorkProducts("ai-run", this.workProducts());
-    contradictionOf(ctx).registerRunGate("ai-runs", (run, viewer, caller) => {
-      const g = this.runGate(run, viewer, caller, "proposing contradictions under a run");
-      return { found: g.found, running: g.running, refusal: g.refusal };
-    });
-    promotionOf(ctx).registerStep("ai-runs", { check: (c) => this.#surfacingCheck(c), project: (c) => this.#surfacingProject(c) });
-  }
-  /** R30: the runs as the bias debt's work products (bias R33): `list(after, limit)` the run ids after `after`,
-   *  ascending; `read(run)` the run's context, member principal, the lens recorded when it began (the lens in force
-   *  at its open where the open recorded one, else the manifest it was handed; null when neither can be read, R32),
-   *  the manifest it ran under when that was the lens in force, its `rerun_of`, and `registered` (N284): the run's
-   *  `created`, the open's instant, which bias offers the scheduler's rank as the product's `waitingSince` (null
-   *  when the stored instant cannot be read, never filled in); `visible(run, viewer)` R19's sight. Read as the
-   *  administrator viewer, as bias reads every work product. */
-  workProducts() {
-    const MEMBER = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/;
-    return {
-      list: (after, limit) => this.#rows(
-        `SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`,
-        String(after ?? ""),
-        Math.max(1, Math.floor(Number(limit) || 50))
-      ).map((r) => String(r.run)),
-      read: async (run) => {
-        const row2 = this.#one(`SELECT rerun_of, created FROM ai_runs WHERE run = ?`, String(run ?? ""));
-        if (!row2) return null;
-        const a = await this.read({ run, viewer: "admin" });
-        const s = a && a.found === true ? a.session : null;
-        if (!s) return null;
-        const bias = s.bias || {};
-        const sha = (m) => m && typeof m.statements_sha === "string" ? m.statements_sha : null;
-        const lens = bias.moved_basis === "at_open" ? { basis: "at_open", statements_sha: sha(bias.at_open) } : bias.moved_basis === "handed" ? { basis: "handed", statements_sha: sha(bias.manifest) } : null;
-        const pm = MEMBER.exec(String(s.principal && s.principal.plane || ""));
-        return {
-          context: s.context ? { type: s.context.type, id: s.context.id } : null,
-          principal: pm ? pm[1] : null,
-          lens,
-          ranUnder: bias.in_force === true ? sha(bias.manifest) : null,
-          rerunOf: row2.rerun_of != null && String(row2.rerun_of).trim() ? String(row2.rerun_of).trim() : null,
-          registered: typeof row2.created === "string" && Number.isFinite(Date.parse(row2.created)) ? row2.created : null
-        };
-      },
-      visible: async (run, viewer) => !!this.runFor(run, viewer)
-    };
-  }
-  #rows(q6, ...a) {
-    return [...this.sql.exec(q6, ...a)];
-  }
-  #one(q6, ...a) {
-    const r = this.#rows(q6, ...a);
-    return r.length ? r[0] : null;
-  }
-  #membership() {
-    return membershipOf(this.ctx);
-  }
-  #connections() {
-    return connectionsOf(this.ctx);
-  }
-  #bias() {
-    return biasOf(this.ctx);
-  }
-  #observations() {
-    return observationLogOf(this.ctx);
-  }
-  /** D-15's bundle gate over a run's context column: `runSight`, the one spelling. */
-  #bundleGate(col, viewer) {
-    const { sql, args } = runSight(col, viewer);
-    return { sql, args };
-  }
-  /* ---- R16, R17: THE WAIT SOURCE `capture-requests` registers (K71, N39) ---------------------------------------
-   * The wake reads the requests a run waits on through this, never `capture_requests` by name. `source` is
-   * `{ tickMs(), holds(iso, limit), woken(limit), completions(run, limit), markWoken(requests, iso) }`, all
-   * synchronous; `configured()` may be added, and answers whether anything drains at all (the hold is inert where
-   * nothing will ever complete). With none registered the wake holds and wakes nothing (R17). */
-  registerWaitSource(module, source) {
-    const fns = ["tickMs", "holds", "woken", "completions", "markWoken"];
-    if (typeof module !== "string" || !module || !source || fns.some((f9) => typeof source[f9] !== "function"))
-      return { ok: false, reason: "WAIT_SOURCE_MALFORMED", detail: `a wait source names its module and ${fns.join(", ")}` };
-    if (this.#waitSource) return { ok: false, reason: "WAIT_SOURCE_DECLARED", module, declaredBy: this.#waitSource.module };
-    this.#waitSource = { module, source };
-    return { ok: true, module };
-  }
-  #wait() {
-    return this.#waitSource ? this.#waitSource.source : null;
-  }
-  /** R43 (N223, K259): a later module's post-write notice (`scheduler`'s R9), called after each successful `open`
-   *  commits with `{run, contextType, contextId, expires}`, once per listener, in the modules' total order
-   *  (membership's `MODULE_ORDER`, R83). A malformed registration, or a second by the same module, is refused by
-   *  membership's `listenerRefusal` (its R81), the one site of LISTENER_MALFORMED and LISTENER_DECLARED. */
-  onRunOpened(module, fn) {
-    const refused = listenerRefusal(this.#runListeners, module, fn);
-    if (refused) return refused;
-    const rank5 = (m) => {
-      const i = MODULE_ORDER.indexOf(m);
-      return i === -1 ? Infinity : i;
-    };
-    this.#runListeners.push({ module, fn, seq: this.#runListeners.length });
-    this.#runListeners.sort((a, b) => rank5(a.module) - rank5(b.module) || a.seq - b.seq);
-    return { ok: true, module };
-  }
-  #captureRequestConfigured() {
-    const w = this.#wait();
-    return !!w && (typeof w.configured !== "function" || w.configured() === true);
-  }
-  #captureRequestTickMs() {
-    const w = this.#wait();
-    return w ? Number(w.tickMs()) || 0 : 0;
-  }
-  /* An hour, matching capture_sessions' own TTL, and it is a LEASE rather than
-     a lifetime: every tick pushes it out. A run that heartbeats lives; a run
-     that stops heartbeating is dead within the lease and is reaped. */
-  static AI_RUN_LEASE_MS = 36e5;
-  /* REC-70 — THE OBSERVATION LOG'S BOUND. NEITHER FIGURE IS NEW, and the PAIR
-       is deliberately not copied whole from either sibling, because this log has
-       TWO READERS WITH OPPOSITE NEEDS and no single existing pair serves both.
-  
-       200 is `op=exportlog`'s default (`EXPORT_LOG_LIMIT_DEFAULT`, REC-57), and
-       it is the plane's ONLY other append-only, `seq`-ordered log read. The
-       default belongs to the reader who is CHECKING a run — §11's "the log is
-       what lets anyone else CHECK" — and a checker wants a page, not a replay.
-  
-       5000 is the plane's shared READ CEILING: `op=list`'s, which `op=projection`
-       reused at REC-59 and the meaning layer reused at REC-60 rather than minting
-       a second. The ceiling belongs to the OTHER reader — §14b.7's RESUMED run,
-       which reads its own log to continue rather than restart, and for which a
-       cut answer is a run that redoes work it already did. `op=exportlog`'s 1000
-       was sized for an administrator scrolling exports; it is the wrong ceiling
-       for a machine replaying its own history, and the meaning layer's 500
-       default is sized for a member exploring a subject graph that grows on
-       D-224's quadratic curve, which a run log does not.
-  
-       WHAT THIS DOES NOT GIVE, said plainly rather than left to be discovered
-       (REC-60's own sentence, and it applies unchanged): a caller cut at the
-       CEILING has no way past it. A run that emits more than 5000 observations
-       cannot replay its log whole through this op. No cursor is minted here —
-       REC-55's declined-second-copy rule — and the honest bound is published
-       instead of the complete answer being promised. */
-  static AI_RUN_LOG_LIMIT_DEFAULT = 200;
-  static AI_RUN_LOG_LIMIT_MAX = 5e3;
-  /* REC-69 — THE CONTEXT-KEYED RUN LIST'S PAIR, AND NEITHER FIGURE IS NEW.
-   *
-   * 200/1000 is `op=versionchain`'s pair, which `op=basisversions` reused
-   * rather than minting a second, and this read is the SAME KIND as both: a
-   * KEYED lookup — one context, not a query a caller pages through a corpus
-   * with — whose answer is a list of the objects hanging off that key. The log
-   * pair above is deliberately NOT reused: it bounds ONE RUN'S OBSERVATIONS,
-   * which grow one row per tick with nothing capping the tick count, and this
-   * bounds THE RUNS IN A CONTEXT, which grow one row per investigation a member
-   * launched. Different populations at different rates, so borrowing the log's
-   * 5000 ceiling here would be a figure carried across on the strength of the
-   * table name alone.
-   *
-   * WHAT THIS DOES NOT GIVE, on REC-60's sentence and `aiRunLog`'s above: a
-   * caller cut at the CEILING has no way past it. No cursor is minted (REC-55's
-   * declined-second-copy rule); the honest bound is published instead of the
-   * complete answer being promised. */
-  static AI_RUNS_LIMIT_DEFAULT = 200;
-  static AI_RUNS_LIMIT_MAX = 1e3;
-  static #aiIso(ms) {
-    return stampInstant("second", ms);
-  }
-  /** Append ONE run-log observation. **THE FOLD** (`OBSERVATION-LOG-DESIGN.md`
-   *  §4.4): `ai_run_log`'s rows ARE rows of `observations` with
-   *  `authority_kind = run`, `authority = <run>`, `actor_class = machine`. This
-   *  method is no longer a writer — it is the run's DOOR onto the one writer, and
-   *  that is what §4.4 means by *"two writers is not [the landing's call]"*.
-   *
-   *  ITS BEHAVIOUR DID NOT CHANGE AND THAT IS ASSERTED RATHER THAN CLAIMED:
-   *  every entry that was accepted before this landing is accepted now, the
-   *  refusal object comes back in the same shape, and `op=airunlog` answers
-   *  byte-identically over rows written before the fold. C-22.10 did not fire
-   *  on `run` for exactly this reason UNTIL REC-100 (2026-09-18, IC-130): the
-   *  rollup ruling gave the run's two rollup writers a referent, and a bare
-   *  `run` PRESENT is now refused here like any other — see its catalogue row. */
-  #aiRunAppend(run, entry, at17, terminal = 0, actor = null) {
-    return this.#observations().observe({
-      actorClass: "machine",
-      /* WHO the machine was, PASSED IN BY THE CALLER RATHER THAN LOOKED UP
-         HERE, and the change of shape is a finding rather than a preference.
-         §4.4 says `actor` is *"the run's credential"*; `ai_runs` HAS NO SUCH
-         COLUMN — measured, not assumed — and the column that actually carries
-         the machine identity is `principal_claude`, IS-6's Claude principal.
-         Reported as a DESIGN GAP against §4.4.
-         THE FIRST DRAFT READ IT HERE, with `SELECT principal_claude FROM
-         ai_runs`, and `run-conditions.test.mjs` ARM W3 caught it BY NAME: that
-         made this method a THIRTEENTH reader of `ai_runs`, and ARM W9 then
-         refused the only role that could have fitted, because an ATTRIBUTES
-         reader must project nothing but the key. The arms were right twice over.
-         The honest fix was not a role but to stop reading: every caller already
-         holds the run row it is appending under, so the lookup was also one
-         EXTRA SELECT PER APPENDED ENTRY — `op=airuntick` appends N and was
-         paying N of them for a value it had in hand.
-         A CALLER THAT DOES NOT SAY WRITES NULL, and that is correct rather than
-         lossy: attributing a machine's look to the plane's own scheduler would
-         be a false attribution in the one field that says who looked. */
-      actor: actor || null,
-      authorityKind: "run",
-      authority: run == null ? null : String(run),
-      level: entry && entry.level ? entry.level : "document",
-      /* `unstated`, and it is the honest word rather than a derived one.
-         `ai_run_log` never recorded what KIND of subject a row was about, so
-         deriving one from the level would be the record claiming more than it
-         can support — see `OBSERVATION_SUBJECT_KINDS` in airun.mjs. */
-      subjectKind: "unstated",
-      subject: entry ? entry.subject : null,
-      state: entry ? entry.state : void 0,
-      governed: entry ? entry.governed === true : false,
-      condition: entry ? entry.condition : null,
-      bound: entry ? entry.bound : null,
-      resultKind: entry ? entry.result_kind ?? null : null,
-      resultRef: entry ? entry.result_ref ?? null : null,
-      detail: entry ? entry.detail : null,
-      /* C-22.6 travels through UNCHANGED: the bundle key is what the refusal
-         reads, and it is passed rather than dropped here. */
-      bundle: entry ? entry.bundle : null
-    }, at17, terminal);
-  }
-  /** What the run's SEARCH established overall, reduced from the log the run
-   *  actually wrote rather than declared by the run about itself.
-   *
-   *  The order is a strength order over D-129's vocabulary and it is stated
-   *  here because it is a judgement: a run that found something says PRESENT
-   *  (that is a positive finding, not a coverage claim); otherwise the weakest
-   *  honest word wins, and a run with no observations at all says NEVER_LOOKED.
-   *
-   *  THE OVERRIDE IS THE POINT. When a BOUND stopped the run, a definitive
-   *  absence is unavailable to it — not finding something and not finishing the
-   *  search are different facts, and only one licenses a conclusion
-   *  (`heldMatch`'s lesson, §14b.6's own citation). So LOOKED_ABSENT and
-   *  NEVER_LOOKED both become LOOKED_INDETERMINATE on a bounded stop. PRESENT
-   *  survives, because a document the run did hold does not stop existing
-   *  because the run ran out of time afterwards. */
-  /*  REC-100 / IC-130 — AND THE ROLLUP'S REFERENT COMES OUT OF THE SAME READ.
-   *  `OBSERVATION-LOG-DESIGN.md` §3, RULED 2026-09-18 by BOB #14: a rollup's
-   *  PRESENT carries `result_kind = observation` and `result_ref` = the `seq` of
-   *  the LATEST non-terminal PRESENT row of this run, computed HERE and never
-   *  supplied by a caller. So this returns `{ state, result_kind, result_ref }`
-   *  and both rollup writers (`#aiRunTerminate`, `#aiRunWake`) spread it, rather
-   *  than each deriving the pointer beside a state derived elsewhere.
-   *
-   *  THE INVARIANT THE RULING RESTS ON, and it is structural rather than
-   *  checked: `state` is PRESENT exactly when the grouped read returned a PRESENT
-   *  group, and that group's `MAX(seq)` IS the referent — one row of one query,
-   *  so there is no second read for the two to disagree across. The bound
-   *  override below only ever turns LOOKED_ABSENT / NEVER_LOOKED into
-   *  LOOKED_INDETERMINATE and never produces or removes PRESENT. A rollup that
-   *  is not PRESENT owes no referent and carries none. */
-  /** A non-terminal restatement of the rollup (the wake's entry, a dispatch that did not complete): `NEVER_LOOKED` is
-   *  never stored as a look (observation-log R3; only a run's terminal rollup may say it, K148), so a run whose own log
-   *  holds no look yet restates LOOKED_INDETERMINATE — what its search established is not yet known from its log. */
-  #aiRunRestatedState(run) {
-    const s = this.#aiRunSearchState(run, false);
-    return s.state === "NEVER_LOOKED" ? { ...s, state: "LOOKED_INDETERMINATE" } : s;
-  }
-  #aiRunSearchState(run, stoppedByBound) {
-    const latest = new Map(this.#rows(
-      `SELECT state, MAX(seq) seq FROM observation_log
-        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
-        GROUP BY state`,
-      run
-    ).map((r) => [r.state, r.seq]));
-    let s = latest.has("PRESENT") ? "PRESENT" : latest.has("partial") ? "partial" : latest.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE" : latest.has("LOOKED_ABSENT") ? "LOOKED_ABSENT" : "NEVER_LOOKED";
-    if (stoppedByBound && (s === "LOOKED_ABSENT" || s === "NEVER_LOOKED")) s = "LOOKED_INDETERMINATE";
-    return s === "PRESENT" ? { state: s, result_kind: "observation", result_ref: String(latest.get("PRESENT")) } : { state: s, result_kind: null, result_ref: null };
-  }
-  /** THE ONE EXIT. Every ending goes through here, and the terminal log entry
-   *  is written in the same transaction as the status change.
-   *
-   *  `offered` is what the caller SAYS stopped the run; it is honoured when
-   *  given and otherwise derived from the budget rows. Either way the answer
-   *  comes out of `finishedBound`, so the reaper holds no arithmetic of its
-   *  own. */
-  /*  `derive` is the difference between the two kinds of caller, and it is the
-   *  thing that makes C-22.5 REACHABLE rather than dead code. Found by this
-   *  item's own suite on its first run: with derivation on every path, a close
-   *  offering NO bound fell through `finishedBound` to "completed" — a legal
-   *  answer — so the refusal that IS §14b.6 could never fire, and an ending
-   *  nobody named would have been recorded as a run that finished. So:
-   *
-   *    - `aiRunClose` derives NOTHING. It is a caller SAYING why the run ended,
-   *      and a caller who does not say is refused by name. Inferring "completed"
-   *      from silence is exactly the manufactured fact this design refuses
-   *      everywhere else.
-   *    - `aiRunTick` and `#aiRunReap` DO derive, because there is no caller to
-   *      ask: the budget rows and the clock are the only evidence there is, and
-   *      `finishedBound` is the one function that reads them.
-   */
-  #aiRunTerminate({ run, offered = null, condition = null, at: at17, expired = false, derive = true }) {
-    const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
-    if (!row2) return {
-      run,
-      found: false,
-      note: "no such run: it either never existed or was purged"
-    };
-    if (row2.status !== "running")
-      return {
-        run,
-        found: true,
-        terminated: false,
-        status: row2.status,
-        bound: row2.stopped_bound,
-        condition: row2.stopped_condition,
-        note: "this run already ended; a second ending would overwrite the first, and the log is append-only for the same reason state history is"
-      };
-    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
-    const bound = derive ? finishedBound(bounds, { expired, offered }) : offered == null ? "" : String(offered);
-    const badBound = checkBound(bound);
-    if (badBound) return { run, found: true, terminated: false, ...badBound };
-    const badCondition = checkCondition(condition, CONDITION_KINDS);
-    if (badCondition) return { run, found: true, terminated: false, ...badCondition };
-    const stoppedByBound = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, bound);
-    const rollup = this.#aiRunSearchState(run, stoppedByBound);
-    const state = rollup.state;
-    const last = this.#one(
-      `SELECT level FROM observation_log
-        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
-        ORDER BY seq DESC LIMIT 1`,
-      run
-    );
-    return this.ctx.storage.transactionSync(() => {
-      const bad = this.#aiRunAppend(run, {
-        level: last ? last.level : "document",
-        subject: row2.context_id,
-        /* `state`, `result_kind`, `result_ref` — the rollup and its referent
-           from ONE read (REC-100; see `#aiRunSearchState`). */
-        ...rollup,
-        governed: false,
-        condition,
-        bound,
-        detail: stoppedByBound ? `the run stopped because the '${bound}' bound was reached (${RUN_BOUNDS[bound]})` : `the run ended: ${RUN_ENDINGS[bound]}`
-      }, at17, 1);
-      if (bad) return { run, found: true, terminated: false, ...bad };
-      const status = runStatusFor(bound);
-      this.sql.exec(
-        `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?
-         WHERE run = ?`,
-        status,
-        at17,
-        bound,
-        condition,
-        at17,
-        run
-      );
-      return {
-        run,
-        found: true,
-        terminated: true,
-        status,
-        bound,
-        condition,
-        state,
-        at: at17
-      };
-    });
-  }
-  /* ---- DEC-63 / PL-18: THE RUN VERBS' GATE IS PROJECT MEMBERSHIP ----------
-   *
-   * Bob, 2026-08-09: *"AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A
-   * PROJECT… the gate is PROJECT MEMBERSHIP, not a capability tier."* IS-6's
-   * provisional gated the three run verbs on `contribute` alone. That token
-   * stays, as the FLOOR beneath this — it is still checked, in `index.mjs`'s
-   * `NEEDS`, and it still refuses in its own words.
-   *
-   * THE DECISION IS NOT HERE. It is in `airun.mjs projectGate`, pure and shared
-   * by all three verbs. What lives here is the two DATABASE questions the pure
-   * function cannot ask: which projects hold this context, and which of those
-   * the account has joined.
-   */
-  /** WHICH PROJECTS HOLD THIS CONTEXT — the run's context resolved to the
-   *  projects whose participants may work on it.
-   *
-   *  [REC-145, 2026-09-19: for a QUESTION this set no longer licenses anything. DEC-63 as amended by
-   *  Bob (*"a project doesn't own an area of enquiry"*) means the verdict over an inquiry consults no
-   *  project; the set is read only for the report's SIGHTED count (REC-139). The inquiry paragraph
-   *  below is kept as the record of PL-18's reading, and its "licenses" sentence is superseded.]
-   *
-   *  A `project` context is its own project, and nothing else: a run opened
-   *  over a project is work in that project by definition.
-   *
-   *  An `inquiry` context is EVERY PROJECT THAT DRAWS ON IT, and it is a set
-   *  rather than a single id because `#moveVersionState` already states the
-   *  rule — *"an inquiry can sit beneath several projects and one team's
-   *  decision must never silently move another team's stance"*. Participation
-   *  in ANY ONE of them licenses asking the system to look at the question;
-   *  demanding participation in ALL of them would be a fence tighter than
-   *  DEC-63's rule, which says *a member of the project*, not *of every project*.
-   *
-   *  THE CITATION PREDICATE IS `#citesInto` AND NOT A SECOND QUERY. That helper
-   *  is the record's ONE answer to "who cites this, and is the citation live",
-   *  extracted precisely so retire's refusal and op=affordances' pre-flight
-   *  could not disagree. A raw `SELECT … FROM refs` here would have been a
-   *  third answer to the same question and would have counted SEVERED edges,
-   *  because the projection does not carry status: a project that WITHDREW from
-   *  a question would still have been licensing runs over it.
-   *
-   *  A context that is not a bundle at all yields an EMPTY set, which the gate
-   *  treats as projectless. That is the honest direction and it is not a hole:
-   *  a run's context is not required to be a bundle this store holds, and
-   *  refusing on a lookup that came back empty would be refusing on what cannot
-   *  be verified — a claim about the record made from a fact about our index.
-   *  [SUPERSEDED FOR THE OPEN 2026-09-19 by REC-153 (BOB #16, `7d03e852`): a run's context must now be a
-   *  bundle this record holds, of the kind named, that the caller can SEE — refused at the open by
-   *  `checkRunContextKind` before this is asked, for every caller including a machine. This reading of an
-   *  empty set survives only for runs stored before REC-153, which tick and close still read.]
-   *
-   *  REC-138 / D-426 — EXCEPT A CONTEXT THAT SAYS IT IS A PROJECT, which is now that project
-   *  whether or not this store holds it. As built, a PROJECT context the store did not hold read
-   *  as projectless and was PERMITTED, while one it held and the caller had not joined was refused
-   *  — so a member naming `contextType=project` learned from the verdict whether the id existed,
-   *  including for a project they cannot see (§7.9). The answer the paragraph above guards against
-   *  does not arise here: the gate asks the CALLER's participation, and a participation row exists
-   *  only for a project the record holds, so "you have joined no project by that id" is verified
-   *  for an absent id exactly as for a hidden one. A member is now refused both, byte for byte (the
-   *  refusal names only what the caller sent); a machine credential is not asked and is unchanged;
-   *  a question context keeps its projectless reading, because it names no project. */
-  #runContextProjects(contextType, contextId) {
-    const id = contextId == null ? "" : String(contextId);
-    if (!id) return [];
-    if (String(contextType) === "project") return [id];
-    return this.#connections().citesInto(id).confirmed.filter((from) => {
-      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, from);
-      return !!b && normalizeType(b.object_type) === "project";
-    }).sort();
-  }
-  /** D-451 (INVESTIGATIVE-SESSION.md §11 item 5, RULE 1'S TARGET, BOB #28) — THE QUESTIONS A PROJECT RUN'S
-   *  READINGS MAY LAND ON, published by `aiRunRead` so a member (FL-11's `runContextTarget`) can NAME one.
-   *
-   *  `#runContextProjects` read the other way round: every question `#citesInto` says this project
-   *  CONFIRMED-cites (the one live-cites predicate, and the very expression `op=suggest`'s context check (d)
-   *  asks, so a SEVERED edge is not a question the run may land on). Not `#refEdgeSevered` directly: the
-   *  severance rule has one definition and a PINNED caller set (`severedhomes.test.mjs`), and a seventh reader
-   *  is the drift D-267 removed. Kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
-   *  `SUGGEST_NOT_AN_INQUIRY` shape test) that THIS viewer can see (`#inSight`, the predicate its viewer gate
-   *  asks). A question the viewer cannot see is omitted and not counted (§7.9: a count would say it exists).
-   *  So the set published is exactly the set `suggestVersion`'s context check (d) admits for this caller, and
-   *  never a second answer to it. Sorted, so the read is stable. */
-  #runContextQuestions(projectId, viewer) {
-    const id = projectId == null ? "" : String(projectId);
-    if (!id) return [];
-    const out = [];
-    for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id=? AND kind='cites'`, id)) {
-      const q6 = String(r.target_id);
-      if (normalizeType(OBJECT_TYPES[q6.split("-")[0]]) !== "inquiry") continue;
-      if (!this.#connections().citesInto(q6).confirmed.includes(id)) continue;
-      if (!this.#membership().inSight(q6, viewer)) continue;
-      out.push(q6);
-    }
-    return out.sort();
-  }
-  /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
-   *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
-   *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
-   *  `#inSight`, the one predicate, and it FAILS CLOSED on an absent viewer — the run verbs' posture
-   *  (`RUN_VERB_ACTIONS` in `index.mjs`: "fails closed on an absent stamp"). The first draft did not ask a
-   *  viewer that was never sent, on `#rosterInSight`'s precedent; REC-145's `run-stamp-dropped` control
-   *  showed that with the control plane's stamp removed the check then SAW every project — sight failing
-   *  open. No caller reaches the open without the stamp (measured: no suite drives the store directly).
-   *  The type is normalised (`problem`/`focus` read `inquiry`). */
-  #runContextKind(contextId, viewer) {
-    const id = contextId == null ? "" : String(contextId);
-    const b = id ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id) : null;
-    if (!b) return null;
-    if (!this.#membership().inSight(id, viewer)) return null;
-    return normalizeType(b.object_type);
-  }
-  /** The gate, as the three run verbs call it. Returns `projectGate`'s verdict
-   *  object — `refusal` null or built, and a `ground` that is stated either way.
-   *
-   *  `#participation` is the record's existing membership predicate and is
-   *  CALLED rather than reimplemented, for the reason its own header gives: the
-   *  admin bypass came to sit on invite and remove with different shapes
-   *  because the test had two copies. */
-  #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
-    const projects = this.#runContextProjects(contextType, contextId);
-    const who2 = actor == null ? "" : String(actor).trim();
-    const joined = who2 && runConsultsProjects(contextType) ? projects.filter((p) => {
-      const part = this.#membership().participation(p, who2);
-      return !!part && part.state === "joined";
-    }) : [];
-    const g = projectGate({ actor: who2, contextType, contextId, projects, projectsJoined: joined });
-    if (!g.permitted) return g;
-    return { ...g, projects: projects.filter((p) => this.#membership().inSight(p, viewer)).length };
-  }
-  /** The gate's outcome as it travels on a SUCCESS answer. The refusal is
-   *  dropped (there is none) and the ground is kept, because DEC-17's
-   *  projectless permission is a fact about how the run was allowed to start
-   *  and a consumer that cannot see it cannot tell a permitted run from an
-   *  ungated one. Shaped in one place so all three verbs publish it alike. */
-  static #aiRunGateStated(g) {
-    return { projectGate: { applied: g.applied, ground: g.ground, why: g.why, projects: g.projects } };
-  }
-  /** op=airunopen. Open a run over an inquiry or a project.
-   *
-   *  Every `conditions it was formed under` field §11 names is taken as given
-   *  and stored verbatim — the bias manifest in force, the launching project's
-   *  declared standard pair, the skill version. NONE of them is derived here,
-   *  and where one is absent it is stored as absent rather than defaulted: §11
-   *  says "until D-84 lands, 'no manifest was in force,' STATED", and a default
-   *  would be this plane inventing a condition a version is later interpreted
-   *  against.
-   *
-   *  BOTH PRINCIPALS ARE REQUIRED and neither is ever a token value (§14a,
-   *  DEC-27(b), DEC-55.4). `principalClaude` is WHICH LEVEL of the cascade paid
-   *  — member, then project, then instance — and the plane refuses to open a
-   *  run that cannot say.
-   *
-   *  AND SINCE SK-1, SO IS THE SKILL VERSION. The paragraph above still holds
-   *  for the bias manifest and the standard pair — absent is stored as absent
-   *  and never defaulted — but the skill version is now REQUIRED rather than
-   *  merely stored, because "every run records the skill version it ran under"
-   *  is a requirement and a condition that may be omitted is not recorded. It
-   *  is still never derived: the plane refuses, it does not fill in. The
-   *  refusal is C-22.7, built in `./skill-version.mjs checkSkillVersion`. */
-  async open({
-    run,
-    contextType,
-    contextId,
-    label = null,
-    mode = null,
-    principalPlane = null,
-    principalClaude = null,
-    principalClaudeRef = null,
-    skillVersion = null,
-    biasManifest = null,
-    standardPair = null,
-    bounds = null,
-    state = null,
-    leaseMs = null,
-    at: at17 = null,
-    /* REC-207 (BOB #32, 2026-09-23 23:42Z): WHICH RUN THIS ONE RE-RUNS, the opener's own word
-       and nothing derived. It is what makes discharge (2) addressable at all — without it there
-       is no link in the record between a re-run and the debt it settles, and a plane inferring
-       one from a context and a clock would be guessing at a judgement. Optional and additive: a
-       run that names none is exactly the run this op opened before. */
-    rerunOf = null,
-    /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
-       `index.mjs` and empty for a machine credential. Never a
-       caller's word — a principal a caller can name is not one, which
-       is the rule the two `principal*` fields above already follow. */
-    actor = null,
-    /* REC-139: WHOSE SIGHT the report's project count is taken in, stamped server-side
-       beside `actor` and read only by `#aiRunProjectGate`'s stated count. */
-    viewer = null
-  } = {}) {
-    const nowMs = at17 ? Date.parse(at17) : Date.now();
-    const now = _AiRuns.#aiIso(nowMs);
-    if (!run || !contextType || !contextId)
-      return {
-        run: run || null,
-        started: false,
-        code: "AI_RUN_NO_CONTEXT",
-        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.check,
-        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
-        note: "a run needs an id and the context it runs in (an inquiry or a project): a run nothing is in the context of has nowhere to be visible"
-      };
-    if (Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, String(contextType ?? ""))) {
-      const existence = this.#membership().existenceAct(String(contextId ?? ""), viewer ?? "");
-      if (existence)
-        return {
-          run,
-          started: false,
-          code: existence.code,
-          check: existence.check,
-          translation: existence.translation,
-          detail: existence.detail,
-          project: existence.project,
-          name: existence.name
-        };
-    }
-    const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer) });
-    if (kind)
-      return {
-        run,
-        started: false,
-        code: kind.code,
-        check: kind.check,
-        translation: kind.translation,
-        detail: kind.detail,
-        note: "a run's context kind is checked against the thing it names, and a thing the caller cannot see answers as one that does not exist (Membership Architecture v2 \xA77, BOB #16, 2026-09-19): the project gate turns on the kind, so the kind cannot be the caller's word"
-      };
-    const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
-    if (!gate.permitted)
-      return {
-        run,
-        started: false,
-        code: gate.code,
-        check: gate.check,
-        translation: gate.translation,
-        detail: gate.detail,
-        note: "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as amended 2026-09-18), and the contribute capability is only the floor beneath that. These are two different facts about an account and they are refused separately so each names its own remedy"
-      };
-    if (!principalPlane || !principalClaude)
-      return {
-        run,
-        started: false,
-        code: "AI_RUN_CAPABILITY_UNAVAILABLE",
-        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.check,
-        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.translation,
-        note: "a run names TWO principals \u2014 the plane credential acting and WHICH LEVEL of the Claude-account cascade pays (member, then project, then instance). They are different principals and an act must say both (DEC-27(b), DEC-55.4)"
-      };
-    const badSkill = checkSkillVersion(skillVersion);
-    if (badSkill)
-      return {
-        run,
-        started: false,
-        code: badSkill.code,
-        check: badSkill.check,
-        translation: badSkill.translation,
-        note: badSkill.detail
-      };
-    const runMode = mode === void 0 || mode === null ? DEFAULT_MODE : String(mode).trim();
-    if (!DEPLOYED_MODES.includes(runMode))
-      return {
-        run,
-        started: false,
-        code: "AI_RUN_MODE_NOT_DEPLOYED",
-        check: AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check,
-        translation: AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.translation,
-        mode: String(mode).slice(0, 60),
-        deployed: [...DEPLOYED_MODES],
-        note: `the mode '${String(mode).slice(0, 60)}' is not deployed on this instance: the modes deploy in one order, each only after the one before it is verified live, and today ${DEPLOYED_MODES.join(", ")} ${DEPLOYED_MODES.length === 1 ? "is" : "are"} deployed. Nothing was written`
-      };
-    const badSeed = checkConsume(bounds, { list: true });
-    if (badSeed)
-      return {
-        run,
-        started: false,
-        code: badSeed.code,
-        check: badSeed.check,
-        translation: badSeed.translation,
-        note: badSeed.detail
-      };
-    const badState = checkRunState(state);
-    if (badState)
-      return {
-        run,
-        started: false,
-        code: badState.code,
-        check: badState.check,
-        translation: badState.translation,
-        note: badState.detail,
-        bytes: badState.bytes,
-        limit: badState.limit
-      };
-    const lensNow = await this.#bias().biasManifest({
-      scope: String(contextType) === "project" ? "project" : "instance",
-      scopeId: String(contextType) === "project" ? String(contextId) : "",
-      viewer,
-      limit: 1
-    });
-    const lensAtOpen = JSON.stringify({
-      in_force: lensNow.in_force === true,
-      statements_sha: lensNow.in_force === true ? lensNow.statements_sha ?? null : null,
-      scope: lensNow.scope ?? null,
-      scope_id: lensNow.scope_id ?? null,
-      bundles: (Array.isArray(lensNow.bundles) ? lensNow.bundles : []).map((b) => ({ bundle_id: b.bundle_id, revision: b.revision ?? null })),
-      at: now
-    });
-    if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
-      return {
-        run,
-        started: false,
-        code: "AI_RUN_ALREADY_OPEN",
-        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.check,
-        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
-        note: "a run with this id already exists"
-      };
-    const reRuns = String(rerunOf ?? "").trim();
-    if (reRuns) {
-      if (reRuns === String(run))
-        return {
-          run,
-          started: false,
-          code: "AI_RUN_RERUN_SELF",
-          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.check,
-          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.translation,
-          note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's work this one repeats, and a self-reference would let one run discharge its own bias debt"
-        };
-      const target = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, reRuns);
-      if (!target || !this.#aiRunInSight(reRuns, viewer))
-        return {
-          run,
-          started: false,
-          code: "AI_RUN_RERUN_UNKNOWN",
-          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.check,
-          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.translation,
-          note: "no such run: it either never existed, was purged, or is not one this caller can open"
-        };
-      if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
-        return {
-          run,
-          started: false,
-          code: "AI_RUN_RERUN_OTHER_CONTEXT",
-          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.check,
-          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.translation,
-          note: "a re-run runs the same question or project again. The lens a bias debt is owed against is the one in force for the INDEBTED run's context, so a re-run somewhere else would be measured against a different lens entirely"
-        };
-    }
-    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
-    this.ctx.storage.transactionSync(() => {
-      this.sql.exec(
-        `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
-           principal_plane, principal_claude, principal_claude_ref, skill_version,
-           bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
-           rerun_of)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
-        run,
-        label,
-        runMode,
-        String(contextType),
-        String(contextId),
-        /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
-           a value that survives a falsiness guard while naming nothing reads as
-           present and travels. `checkSkillVersion` judged the trimmed value, so
-           storing the untrimmed one would store something the guard never saw. */
-        String(principalPlane),
-        String(principalClaude),
-        principalClaudeRef,
-        String(skillVersion).trim(),
-        biasManifest,
-        standardPair,
-        now,
-        now,
-        _AiRuns.#aiIso(nowMs + lease),
-        JSON.stringify(state == null ? {} : state),
-        lensAtOpen,
-        /* REC-207: judged above, and stored as every empty case on this open is stored — absent rather
-           than defaulted. A run that names no re-run reads `rerun_of` NULL, which is what it is. */
-        reRuns || null
-      );
-      for (const b of Array.isArray(bounds) ? bounds : []) {
-        if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
-        this.sql.exec(
-          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT(run, bound) DO NOTHING`,
-          run,
-          String(b.bound),
-          b.allowed,
-          /* REC-177: judged above, a whole number of one or more (C-22.16); the old `absent is 0` default was the no-ceiling path */
-          b.consumed == null ? 0 : b.consumed,
-          /* REC-169: judged above */
-          b.unit == null ? null : String(b.unit)
-        );
-      }
-    });
-    const expires = _AiRuns.#aiIso(nowMs + lease);
-    for (const l of this.#runListeners) {
-      try {
-        await l.fn({ run, contextType: String(contextType), contextId: String(contextId), expires });
-      } catch {
-      }
-    }
-    return {
-      run,
-      started: true,
-      status: "running",
-      ticks: 1,
-      created: now,
-      expires,
-      /* REC-207: the link, echoed, and ONLY when there is one. A caller that named a re-run should
-         be able to see that the record took it, because the discharge at this run's close rests on
-         it — and an echo that appeared as `null` on every other open would be a new key on an
-         answer every existing reader parses, for no fact. */
-      ...reRuns ? { rerun_of: reRuns } : {},
-      ..._AiRuns.#aiRunGateStated(gate)
-    };
-  }
-  /** REC-152 — CAN THIS VIEWER SEE THIS RUN? `aiRunRead`'s own predicate (D-15's `#bundleGate` over the
-   *  run's context), asked of one run id, so the tick and the close hide exactly what `op=airun` hides. An
-   *  absent stamp fails closed, as it does there. */
-  #aiRunInSight(run, viewer) {
-    const seen = this.#bundleGate("r.context_id", viewer);
-    return !!this.#one(`SELECT 1 AS x FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
-  }
-  /** op=airuntick. The heartbeat, the work list, and the log — one call.
-   *
-   *  A tick does four things and the order matters: it appends what the run
-   *  OBSERVED (so partial results survive a death that happens next), it spends
-   *  the budget, it extends the lease, and only then does it ask whether a
-   *  bound is now exhausted. A tick that spent the last of a budget ENDS the
-   *  run through the one exit — a run cannot overspend and then decline to say
-   *  so.
-   *
-   *  A tick for a run that has already ended is a STATED no-op rather than a
-   *  refusal, following `saveCaptureSession`'s `{ saved: false }` precedent: it
-   *  is a fact about the run's state, and a late tick from a straggling
-   *  sub-session must not resurrect a run whose log is already closed. */
-  tick({
-    run,
-    state = null,
-    consume = null,
-    log = null,
-    leaseMs = null,
-    at: at17 = null,
-    actor = null,
-    viewer = null,
-    /* REC-152: the caller's PRINCIPAL, stamped server-side by `index.mjs` in the form the open
-       stamps `principal_plane` in — never a caller's word. */
-    caller = null
-  } = {}) {
-    const nowMs = at17 ? Date.parse(at17) : Date.now();
-    const now = _AiRuns.#aiIso(nowMs);
-    const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
-    if (!row2) return {
-      run: run || null,
-      found: false,
-      note: "no such run: it either never existed or was purged"
-    };
-    if (!this.#aiRunInSight(run, viewer)) return {
-      run: run || null,
-      found: false,
-      note: "no such run: it either never existed or was purged"
-    };
-    const notPrincipal = runPrincipalGate({ caller, principal: row2.principal_plane });
-    if (notPrincipal)
-      return {
-        run,
-        ticked: false,
-        found: true,
-        status: row2.status,
-        code: notPrincipal.code,
-        check: notPrincipal.check,
-        translation: notPrincipal.translation,
-        detail: notPrincipal.detail,
-        note: "a run is driven by its principal alone. Nothing was appended and no budget was spent"
-      };
-    const gate = this.#aiRunProjectGate({ actor, contextType: row2.context_type, contextId: row2.context_id, viewer });
-    if (!gate.permitted)
-      return {
-        run,
-        ticked: false,
-        found: true,
-        status: row2.status,
-        code: gate.code,
-        check: gate.check,
-        translation: gate.translation,
-        detail: gate.detail,
-        note: "continuing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. Nothing was appended and no budget was spent"
-      };
-    if (row2.status !== "running")
-      return {
-        run,
-        found: true,
-        ticked: false,
-        status: row2.status,
-        bound: row2.stopped_bound,
-        note: "this run has ended; its log is closed and a later tick does not reopen it"
-      };
-    const badConsume = checkConsume(consume, { map: true });
-    if (badConsume)
-      return {
-        run,
-        ticked: false,
-        found: true,
-        status: row2.status,
-        code: badConsume.code,
-        check: badConsume.check,
-        translation: badConsume.translation,
-        detail: badConsume.detail,
-        bound: badConsume.bound,
-        note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. Nothing was appended and no budget was spent"
-      };
-    const badState = checkRunState(state);
-    if (badState)
-      return {
-        run,
-        ticked: false,
-        found: true,
-        status: row2.status,
-        code: badState.code,
-        check: badState.check,
-        translation: badState.translation,
-        detail: badState.detail,
-        bytes: badState.bytes,
-        limit: badState.limit,
-        note: "a run's state is its resumable work list, and it is bounded. Nothing was appended and no budget was spent"
-      };
-    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
-    const refused = [];
-    let appended = 0;
-    this.ctx.storage.transactionSync(() => {
-      for (const e of Array.isArray(log) ? log : []) {
-        const bad = this.#aiRunAppend(run, e, now, 0, row2.principal_claude || null);
-        if (bad) refused.push(bad);
-        else appended += 1;
-      }
-      for (const [k, v] of Object.entries(consume && typeof consume === "object" ? consume : {})) {
-        if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, k)) continue;
-        this.sql.exec(
-          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
-           ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
-          run,
-          k,
-          v,
-          v
-        );
-      }
-      this.sql.exec(
-        `UPDATE ai_runs SET updated = ?, expires = ?, ticks = ticks + 1${state == null ? "" : ", state = ?"}
-         WHERE run = ?`,
-        ...state == null ? [now, _AiRuns.#aiIso(nowMs + lease), run] : [now, _AiRuns.#aiIso(nowMs + lease), JSON.stringify(state), run]
-      );
-    });
-    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
-    const hit = finishedBound(bounds, { expired: false, offered: null });
-    const ended = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, hit) ? this.#aiRunTerminate({
-      run,
-      offered: hit,
-      condition: hit === "runtime" ? "runtime-ceiling-reached" : null,
-      at: now
-    }) : null;
-    const after = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run);
-    return {
-      run,
-      found: true,
-      ticked: true,
-      ticks: after.ticks,
-      status: after.status,
-      expires: after.expires,
-      appended,
-      refused,
-      ..._AiRuns.#aiRunGateStated(gate),
-      ...ended ? { ended } : {}
-    };
-  }
-  /** op=airunclose. The ordinary exit — the run is done, or a member stopped
-   *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
-   *  to the one exit, and a caller who names no bound is refused by C-22.5
-   *  rather than having "completed" inferred from its silence. */
-  /* REC-207 — ASYNC, and the change is one `await` at the foot. A re-run's own close is where discharge
-     (2) is taken (see `#biasDebtDischargeByRerun` for why the close and not the open), and reading what
-     lens this run was formed under goes through `#biasForRun`, which is async because `biasManifest` is.
-     ADDITIVE ON THE WIRE: the DO's dispatch already `await`s every op, `#aiRunTerminate` is untouched and
-     still synchronous, and the REAPER still calls it directly — so a lapsed run is closed by the clock on
-     exactly the path it was before, with no member and no discharge. */
-  async close({
-    run,
-    bound = null,
-    condition = null,
-    at: at17 = null,
-    actor = null,
-    viewer = null,
-    /* REC-152: the caller's PRINCIPAL, stamped server-side — see `aiRunTick`. */
-    caller = null
-  } = {}) {
-    const now = at17 ? _AiRuns.#aiIso(Date.parse(at17)) : _AiRuns.#aiIso(Date.now());
-    const row2 = this.#one(`SELECT context_type, context_id, principal_plane FROM ai_runs WHERE run = ?`, run);
-    if (row2) {
-      if (!this.#aiRunInSight(run, viewer)) return {
-        run,
-        found: false,
-        note: "no such run: it either never existed or was purged"
-      };
-      const notPrincipal = runPrincipalGate({ caller, principal: row2.principal_plane });
-      if (notPrincipal)
-        return {
-          run,
-          terminated: false,
-          found: true,
-          ok: false,
-          code: notPrincipal.code,
-          check: notPrincipal.check,
-          translation: notPrincipal.translation,
-          detail: notPrincipal.detail,
-          note: "a run is ended by its principal, or by its own lease and bounds. The run is untouched and is still running"
-        };
-      const gate = this.#aiRunProjectGate({ actor, contextType: row2.context_type, contextId: row2.context_id, viewer });
-      if (!gate.permitted)
-        return {
-          run,
-          terminated: false,
-          found: true,
-          ok: false,
-          code: gate.code,
-          check: gate.check,
-          translation: gate.translation,
-          detail: gate.detail,
-          note: "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. The run is untouched and is still running"
-        };
-    }
-    const ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
-    if (ended && ended.terminated === true) {
-      const discharge = await this.#bias().biasDebtRerun({ kind: "ai-run", key: run, at: now });
-      if (discharge) return { ...ended, bias_debt: discharge };
-    }
-    return ended;
-  }
-  /* ---- the reaper's three parts, and none of them decides anything ----
-  
-       Each is a QUESTION about the clock; the answer to "which bound" comes from
-       `finishedBound` inside `#aiRunTerminate`, the same function the ordinary
-       close uses. That is the structural half of "the real path and the mutated
-       path go through ONE function". */
-  reapDue(now) {
-    return this.#one(
-      `SELECT count(*) c FROM ai_runs WHERE status = 'running' AND expires < ?`,
-      _AiRuns.#aiIso(now)
-    ).c;
-  }
-  reapWake(now) {
-    const r = this.#one(`SELECT MIN(expires) e FROM ai_runs WHERE status = 'running'`);
-    if (!r || !r.e) return null;
-    const at17 = Date.parse(r.e);
-    return Number.isFinite(at17) ? Math.max(at17, now) : null;
-  }
-  /** THE NEGATIVE CONTROL THE DESIGN NAMES, as a mechanism: a run KILLED
-   *  mid-flight never calls anything, so this is what writes its log. It closes
-   *  every lapsed run through the one exit; `expired: true` is the only thing it
-   *  contributes, and `finishedBound` turns that into `lease` — or into whatever
-   *  budget was ALREADY exhausted, because a run that overspent and then died
-   *  was stopped by the budget, and reporting the lease there would name the
-   *  symptom and hide the cause. */
-  reap(now) {
-    const iso3 = _AiRuns.#aiIso(now);
-    const lapsed = this.#rows(
-      `SELECT run FROM ai_runs WHERE status = 'running' AND expires < ? ORDER BY run`,
-      iso3
-    );
-    const reaped = [];
-    for (const r of lapsed) {
-      const t = this.#aiRunTerminate({ run: r.run, offered: null, condition: null, at: iso3, expired: true });
-      reaped.push({ run: r.run, terminated: t.terminated === true, bound: t.bound || null });
-    }
-    return { at: iso3, lapsed: lapsed.length, reaped };
-  }
-  /* ---- FL-4's three parts, and none of them decides anything either ----
-  
-       The reaper's three above answer *is this run over*. These three answer *is
-       this run waiting on us, and has the daemon answered* — and they are
-       deliberately built in the reaper's shape, next to it, because they are the
-       other half of one question about a run that is not heartbeating. A run that
-       stopped because it died and a run that stopped because it is waiting on our
-       own daemon look identical from outside, and telling them apart is the whole
-       of this item: before it, the reaper took both and recorded `lease` over
-       both.
-  
-       THE WAKE'S LOG ENTRY DERIVES ITS STATE THROUGH `#aiRunSearchState`, the
-       SAME reducer the one exit uses. So a resumed run and a reaped one describe
-       what the search established through ONE function rather than two that
-       agree — the parallel-path failure this repository has measured repeatedly,
-       avoided here the way `finishedBound` avoids it one method up. */
-  /* THE PRODUCER'S OWN CADENCE, CAPPED BY THE THING THE HOLD PROTECTS.
-  
-       Following `#captureRequestTickMs` rather than minting a second constant is
-       the point: this consumer exists to notice what THAT one produced, and a
-       wake slower than the producer it follows leaves a completed capture sitting
-       undelivered for the difference. There is no second number to drift.
-  
-       THE CAP IS A CORRECTNESS REQUIREMENT AND NOT TIDINESS. The hold has to
-       reach a suspended run BEFORE its lease lapses, so an instance that slows
-       the drain past the lease (the env override admits any value) must not slow
-       the hold with it — a quarter of the lease leaves three ticks of margin.
-       THE FLOOR IS THE OTHER DIRECTION and it is not shared with the drain: the
-       drain's queue empties, so a zero cadence there is a burst that ends, while
-       a hold persists as long as the daemon owes an answer and a zero wake would
-       spin an idle-looking instance for as long as that lasts. */
-  #aiRunWakeTickMs() {
-    return Math.max(1e3, Math.min(
-      this.#captureRequestTickMs(),
-      Math.floor(_AiRuns.AI_RUN_LEASE_MS / 4)
-    ));
-  }
-  /* HOW MANY RUNS ONE TICK HOLDS OR WAKES, AND THE FIGURE WAS NOT CHOSEN — IT
-       WAS FORCED BY AN INSTRUMENT. The first shape of this consumer scanned
-       `ai_runs` unbounded and looped over what came back, which is precisely the
-       class `derivation-bounds.test.mjs` ratchets (31 methods measured
-       2026-08-08, 11 of them dispatched): a method that AMPLIFIES work over an
-       unbounded scan. The suite failed on the new member and named it, so the
-       scan is bounded rather than the ceiling moved — a ceiling is not a ratchet.
-  
-       SIZED ON THE PRODUCER IT FOLLOWS. The drain lands at most
-       `CAPTURE_REQUEST_TICK_BATCH` completions per tick, so a wake batch smaller
-       than that would fall permanently behind the thing it exists to notice.
-       Larger, because a hold is two integers and an UPDATE while a capture is a
-       fetch, and because an instance that was unconfigured for a while can have a
-       backlog of runs to hold on its first configured tick.
-  
-       A BATCH IS NOT A LOSS. While more remain the pending count stays above zero,
-       so the wake re-arms and the next tick takes the next batch — the
-       connection-derive sweep's progressive drain, and the reason that consumer
-       can be bounded without dropping anything. */
-  static AI_RUN_WAKE_TICK_BATCH = 25;
-  /** THE SUSPENDED RUNS TO HOLD: still running, and the daemon still owes them
-   *  an answer.
-   *
-   *  GATED ON THE DRAIN BEING CONFIGURED, exactly as `#captureRequestPending`
-   *  is and for the same reason one layer up: where nothing drains, no request
-   *  will ever complete, so a hold would keep a run alive for something that is
-   *  not coming — an instance that has not wired this behaves byte-for-byte as
-   *  it did before.
-   *
-   *  BOUNDED BY THE REQUEST'S OWN EXPIRY. `cr.expires > ?` is what stops this
-   *  from being an immortality clause: a request nothing can satisfy stops
-   *  holding its run at its own TTL, and the reaper then takes the run with an
-   *  honest bound. Removing that predicate is declared control arm (4). */
-  #aiRunWakeHolds(iso3) {
-    if (!this.#captureRequestConfigured()) return [];
-    const held = this.#wait().holds(iso3, _AiRuns.AI_RUN_WAKE_TICK_BATCH);
-    return (Array.isArray(held) ? held : []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH).filter((h) => h && this.#one(`SELECT 1 x FROM ai_runs WHERE run = ? AND status = 'running'`, String(h.run))).map((h) => ({ run: String(h.run), outstanding: Number(h.outstanding) || 0 }));
-  }
-  /** THE RUNS TO WAKE: a completion the daemon has landed and this run has not
-   *  been told about. `captured` and `refused` are BOTH completions — a refusal
-   *  is an answer, and a run left waiting on a request that will never be tried
-   *  again is a run waiting on nothing. */
-  #aiRunWakeRuns() {
-    const w = this.#wait();
-    if (!w) return [];
-    const ids = w.woken(_AiRuns.AI_RUN_WAKE_TICK_BATCH);
-    return (Array.isArray(ids) ? ids : []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH).map((run) => this.#one(`SELECT run, context_id, principal_plane FROM ai_runs WHERE run = ? AND status = 'running'`, String(run))).filter(Boolean);
-  }
-  wakeDue(now) {
-    const iso3 = _AiRuns.#aiIso(now);
-    return this.#aiRunWakeHolds(iso3).length + this.#aiRunWakeRuns().length;
-  }
-  wakeWake(now) {
-    if (this.wakeDue(now) <= 0) return null;
-    return now + this.#aiRunWakeTickMs();
-  }
-  /** THE TICK. The hold keeps a legitimately-waiting run alive; the wake
-   *  delivers the daemon's answer exactly once.
-   *
-   *  THE HOLD MOVES `expires` AND DELIBERATELY NOT `updated`. `updated` is when
-   *  the RUN last acted, and the plane declining to kill a run is not the run
-   *  acting — a reader must still be able to see how long it has been silent.
-   *  Moving both would have made a held run indistinguishable from a
-   *  heartbeating one, which is the fact this consumer exists to preserve.
-   *
-   *  IT GRANTS THE STANDARD LEASE AND NOT THE RUN'S OWN, stated because it is
-   *  visible from outside: `leaseMs` is an argument to `aiRunOpen` and
-   *  `aiRunTick`, it is never stored, and the record therefore has no memory of
-   *  what a particular caller chose. `AI_RUN_LEASE_MS` is the only figure the
-   *  store holds, so a run opened on a shorter lease is held on the standard
-   *  one while the daemon owes it an answer. That is a widening and it is
-   *  bounded twice over — by the request's own expiry, and by the fact that
-   *  nothing renews it once the request is answered. */
-  async wake(now) {
-    const iso3 = _AiRuns.#aiIso(now);
-    const until = _AiRuns.#aiIso(now + _AiRuns.AI_RUN_LEASE_MS);
-    const holds = [], wakes = [], dispatches = [];
-    const resumer = this.#aiRunWakeRuns().length ? await this.#aiRunResumer() : null;
-    for (const r of this.#aiRunWakeHolds(iso3)) {
-      this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
-      holds.push({ run: r.run, outstanding: r.outstanding, expires: until });
-    }
-    for (const r of this.#aiRunWakeRuns()) {
-      const done = (this.#wait().completions(r.run, _AiRuns.AI_RUN_WAKE_TICK_BATCH) || []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH);
-      if (!done.length) continue;
-      const captured = done.filter((q6) => q6.state === "captured").length;
-      const expired = done.filter((q6) => q6.state === "expired").length;
-      const refused = done.length - captured - expired;
-      const decision = this.#aiRunResumeDecision(r, resumer);
-      const bad = this.ctx.storage.transactionSync(() => {
-        const refusal19 = this.#aiRunAppend(r.run, {
-          level: "internet",
-          subject: r.context_id,
-          /* The rollup AND its `observation` referent (REC-100, IC-130): a wake
-             entry is a rollup like the terminal one, so it points at the latest
-             PRESENT look it restates, computed in the same read. */
-          ...this.#aiRunRestatedState(r.run),
-          governed: false,
-          detail: `the daemon answered ${done.length} capture request(s) this run was waiting on (${captured} captured, ${refused} refused, ${expired} expired). The run is resumable: its own log carries what each request established, and \xA714b.7's resumed run reads it and continues rather than restarting. ${decision.says}`
-        }, iso3, 0);
-        if (refusal19) return refusal19;
-        this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
-        this.#wait().markWoken(done.map((q6) => q6.request), iso3);
-        return null;
-      });
-      wakes.push({
-        run: r.run,
-        completions: done.length,
-        captured,
-        refused,
-        expired,
-        woken: !bad,
-        ...bad ? { unwritable: bad } : { expires: until },
-        resume: decision.dispatch ? "DISPATCH" : decision.withheld
-      });
-      if (!bad && decision.dispatch) dispatches.push({ run: r.run, context_id: r.context_id });
-    }
-    for (const d of dispatches) {
-      const outcome = await this.#aiRunDispatch(d, resumer, iso3);
-      const w = wakes.find((x) => x.run === d.run);
-      if (w) w.dispatch = outcome;
-    }
-    return {
-      at: iso3,
-      held: holds.length,
-      holds,
-      woken: wakes.length,
-      wakes,
-      dispatched: wakes.filter((w) => w.dispatch && (w.dispatch.state === "DISPATCHED" || w.dispatch.state === "RUNNING")).length
-    };
-  }
-  /* =====================================================================
-   * D-260 — THE WOKEN RUN'S CALLER (BOB #22, 2026-09-21; `BIO_Assistant_and_AI_Roles_v0_1.md` §6).
-   *
-   * FL-4 made a woken run a fact in the record and nothing re-entered it. This is the caller: the wake hands a
-   * woken run to `agent-worker` (I8), under the instance's ONE organisation-principal `ai` credential, and ONLY
-   * when that credential is the run's own principal. The ruling's reason is DEC-55 (4): the two principals carry
-   * different accountability, so continuing a member's attributable run under the group's key would re-attribute
-   * its later acts. A member's run therefore keeps FL-4's behaviour — woken, told, waiting for its own principal —
-   * and the wake entry SAYS it was not dispatched and why. That is a stated LIMITATION, never a silent skip.
-   *
-   * THE GATE IS ONE COMPARISON, of two stamps the PLANE made: the run's `principal_plane` (stamped at open, D-199
-   * (4), `<principal>/<tokenId>`) against the same composite built from the instance credential's own RECORD row.
-   * Nothing a caller sent is compared. REC-152 (C-22.12) would ALSO refuse the resumed run's first tick under a
-   * key that is not its principal — and that is exactly why it is not relied on here: a dispatch that leans on
-   * the refusal downstream has already handed a member's run to the group's key, and the refusal proves only
-   * that the tick failed. The arm in `test/d260-resume.test.mjs` counts calls AT THE BINDING for that reason.
-   *
-   * THE SECRET NEVER REACHES THE RECORD. The token is read from the Worker secret, used as the dispatch body's
-   * `credential`, and dropped; what the tick answers, and what the wake entry says, name the credential by its
-   * record identity (`tokenId`) and never by value. `agent-worker` retains nothing (fleet law, I8).
-   * ================================================================== */
-  /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `index.mjs`'s
-   *  `scopeFor` routes every call to `idFromName("bio")` or `idFromName("scratch")`, and a DO's id equals the one
-   *  it was named by. Null for any other object (a suite's private instance) — the dispatch then says it could
-   *  not name the namespace, rather than guessing one: a default here would let a resumed run touch the real
-   *  record while the run lived in scratch. */
-  #ownNamespace() {
-    const ns = this.env && this.env.STORE;
-    if (!ns || typeof ns.idFromName !== "function" || !this.ctx.id || typeof this.ctx.id.equals !== "function")
-      return null;
-    for (const name of ["bio", "scratch"]) if (this.ctx.id.equals(ns.idFromName(name))) return name;
-    return null;
-  }
-  static AI_RUN_DISPATCH_WAIT_MS = 3e4;
-  #aiRunDispatchWaitMs() {
-    const v = Number(this.env && this.env.AI_RUN_DISPATCH_WAIT_MS);
-    return Number.isFinite(v) && v > 0 ? v : _AiRuns.AI_RUN_DISPATCH_WAIT_MS;
-  }
-  /** WHO MAY RESUME, resolved once per tick: `{ ready: true, stamp, tokenId, token, store, account }` or
-   *  `{ ready: false, withheld }`. `withheld` is a stated reason, never a secret. The credential is resolved the
-   *  way the control plane resolves one (`index.mjs`, `aicredentiallook` against the `bio` object, which alone
-   *  holds `ai_credentials`), so a key revoked by a member stops resuming anything the moment the row says so. */
-  async #aiRunResumer() {
-    const env = this.env || {};
-    if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function")
-      return { ready: false, withheld: "AGENT_WORKER_UNBOUND" };
-    const cred = await instanceAiCredential(env);
-    if (!cred.token) return { ready: false, withheld: cred.reason };
-    const store = this.#ownNamespace();
-    if (!store) return { ready: false, withheld: "NAMESPACE_UNDETERMINED" };
-    const sha = await sha256hex(cred.token);
-    let look = null;
-    if (store === "bio") look = this.#membership().aiCredentialLook({ secretSha: sha });
-    else {
-      try {
-        const res = await env.STORE.get(env.STORE.idFromName("bio")).fetch(`http://do/aicredentiallook?sha=${sha}`);
-        const out = await res.json().catch(() => null);
-        look = out && out.ok === true ? out.result : null;
-      } catch {
-        look = null;
-      }
-      if (!look) return { ready: false, withheld: "CREDENTIAL_RECORD_SILENT" };
-    }
-    const c = look && look.found ? look.credential : null;
-    if (!c) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD" };
-    if (c.revoked) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_REVOKED", tokenId: c.tokenId };
-    if (c.principalKind !== "organisation")
-      return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION", tokenId: c.tokenId };
-    return {
-      ready: true,
-      stamp: `${c.principal}/${c.tokenId}`,
-      tokenId: c.tokenId,
-      token: cred.token,
-      store,
-      account: await instanceClaudeToken(env)
-    };
-  }
-  /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. */
-  #aiRunResumeDecision(run, resumer) {
-    const principal = String(run && run.principal_plane || "");
-    if (resumer && resumer.ready && principal === resumer.stamp)
-      return {
-        dispatch: true,
-        withheld: null,
-        says: `Resumption: handed to agent-worker under the instance's organisation credential '${resumer.tokenId}', which opened this run.`
-      };
-    const member = principal.startsWith("member:");
-    const withheld = member ? "MEMBER_PRINCIPAL_RUN" : resumer && !resumer.ready ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
-    const why = member ? "a member's credential opened it, and the instance resumes only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the group's key would re-attribute its acts). It waits for its own principal" : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN" ? "another principal opened it, and the instance's organisation credential resumes only the runs it opened" : `the instance cannot resume anything here (${withheld})`;
-    return { dispatch: false, withheld, says: `Resumption: NOT dispatched \u2014 ${why}.` };
-  }
-  /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
-   *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
-  async #aiRunDispatch(d, resumer, iso3) {
-    const body = {
-      run_id: d.run,
-      store: resumer.store,
-      credential: resumer.token,
-      claude_accounts: { instance: resumer.account ? { token: resumer.account, ref: "instance" } : {} }
-    };
-    let outcome, timer;
-    try {
-      const res = await Promise.race([
-        this.env.AGENT_WORKER.fetch("https://agent-worker/run", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(body)
-        }),
-        new Promise((_, no2) => {
-          timer = setTimeout(() => no2(new Error("dispatch-wait-elapsed")), this.#aiRunDispatchWaitMs());
-        })
-      ]);
-      const out = await res.json().catch(() => null);
-      outcome = res.ok && out && out.ok === true ? { state: "DISPATCHED", status: res.status } : {
-        state: "REFUSED",
-        status: res.status,
-        reason: String(out && (out.reason || out.code) || `http ${res.status}`).slice(0, 80)
-      };
-    } catch (e) {
-      const elapsed = String(e && e.message) === "dispatch-wait-elapsed";
-      outcome = elapsed ? { state: "RUNNING", status: null, reason: "no answer within the bound: the segment is still running" } : { state: "SILENT", status: null, reason: "the call did not complete" };
-    } finally {
-      clearTimeout(timer);
-    }
-    if (outcome.state !== "DISPATCHED" && outcome.state !== "RUNNING") {
-      const refusal19 = this.#aiRunAppend(d.run, {
-        level: "internet",
-        subject: d.context_id,
-        ...this.#aiRunRestatedState(d.run),
-        governed: false,
-        detail: `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). The run was woken and is still resumable by its own principal; nothing it established is lost`
-      }, iso3, 0);
-      if (refusal19) outcome.unwritable = refusal19;
-    }
-    return outcome;
-  }
-  /** op=airun — THE RUNNING-SESSION SURFACE'S READ (UI-38's rider).
-   *
-   *  The shape is chosen to be what UI-38's renderers already walk, because
-   *  they are FIELD-NAME-BLIND: they print published name/value pairs verbatim
-   *  in publication order and know no field names, so they cannot invent one
-   *  and cannot go stale. `budget` is an ARRAY of scalar rows, `principal` and
-   *  `condition` are flat objects, and nothing here is derived — `allowed` and
-   *  `consumed` travel separately because a percentage computed anywhere fails
-   *  that surface's own pin.
-   *
-   *  WHERE NO RUN EXISTS THIS ANSWERS `session: null`, which is a supported
-   *  state and not a gap: §14a's surface shows NO INDICATOR rather than an
-   *  invented "nothing is running".
-   *
-   *  NO TRANSCRIPT IS PUBLISHED HERE OR ANYWHERE (DEC-61). The plane holds
-   *  none; the surface reads the device's own.
-   *
-   *  GATED. The run names an inquiry or a project bundle, and a run over a
-   *  project the viewer may not see would disclose that the project exists —
-   *  REC-25/REC-30's leak exactly. The gate is `#bundleGate` on `context_id`,
-   *  through query.mjs's one compilation point (D-15). */
-  /*  PL-12 / D-84 — AND THIS IS WHERE THE RUN STOPS CARRYING AN ABSENCE.
-   *
-   *  §3, RULED: *"the run carries the bias manifest in force when it ran … an
-   *  assistant-surfaced focus must carry the bias manifest in force when it was
-   *  surfaced… unlike a member it will not remember. Without the manifest… bias
-   *  debt cannot be computed against it."* §3 also recorded the reason it could
-   *  not be done: *"UNBUILDABLE TODAY: object_type: bias is absent from the
-   *  check catalogue (D-84) … until D-84 lands, the manifest-carrying obligation
-   *  is dischargeable only as 'no manifest was in force,' stated."*
-   *
-   *  MEASURED BEFORE THIS CHANGE, AND IT WAS WORSE THAN THE DESIGN SAID: this
-   *  method published NO bias field of any kind. `ai_runs.bias_manifest` was
-   *  written by `aiRunOpen` and read by nothing, so the honest absence §3
-   *  settled for was not stated ANYWHERE a reader could see it — the run held a
-   *  column and the answer was silent. An unstated limit reads as completeness,
-   *  which is DEC-56/57/58's ruling exactly.
-   *
-   *  WHAT "IN FORCE" MEANS HERE, AND WHY IT IS NOT AN ECHO. The recorded
-   *  manifest is what the run was FORMED under and is never recomputed —
-   *  `aiRunOpen` stores it verbatim and derives nothing, deliberately. This read
-   *  puts the record's CURRENT effective set beside it and says whether the lens
-   *  has MOVED since. That comparison is the whole payoff: it is what makes bias
-   *  debt computable against a run's output, which is the sentence §3 quotes
-   *  from `Content_Framework` and the reason the obligation exists at all.
-   *  Three distinguishable answers, never two:
-   *    - `in_force: false` with `stated` — no manifest was in force. Honest
-   *      absence, still supported, still the answer for a run opened without one.
-   *    - `in_force: true, moved: false` — the lens the run carried is the lens
-   *      the record holds now.
-   *    - `in_force: true, moved: true` — the lens has changed since; the run's
-   *      output owes a re-run under the current set. Ordinary BIAS DEBT, which
-   *      is DISCLOSED and travels and blocks NOTHING (DEC-20, D-188) — it is
-   *      HUNCH debt that disqualifies, and no hunch is named here.
-   *
-   *  ASYNC now, because the effective set is HASHED and `crypto.subtle` is. The
-   *  dispatch already awaits every handler. */
-  async read({ run, viewer = null } = {}) {
-    const seen = this.#bundleGate("r.context_id", viewer);
-    const row2 = this.#one(
-      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
-      run,
-      ...seen.args
-    );
-    if (!row2) return { run: run || null, found: false, session: null };
-    const bounds = this.#rows(
-      `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound`,
-      run
-    );
-    const cond = row2.stopped_bound ? {
-      kind: row2.stopped_condition || "",
-      detail: `${row2.stopped_bound}: ${RUN_BOUNDS[row2.stopped_bound] || RUN_ENDINGS[row2.stopped_bound] || "a bound or ending this vocabulary no longer holds"}`,
-      bound: row2.stopped_bound,
-      at: row2.stopped_at
-    } : null;
-    const bias = await this.#biasForRun(row2, viewer);
-    return { run, found: true, session: {
-      id: row2.run,
-      label: row2.label,
-      mode: row2.mode,
-      status: row2.status,
-      ticks: row2.ticks,
-      created: row2.created,
-      updated: row2.updated,
-      expires: row2.expires,
-      /* D-451: a run over a PROJECT also publishes `questions` — the questions it confirmed-cites that this
-         viewer can see (`#runContextQuestions`), the set `op=suggest` admits as its target. A run over a
-         question publishes none: its context id IS its one question. */
-      context: row2.context_type === "project" ? {
-        type: row2.context_type,
-        id: row2.context_id,
-        questions: this.#runContextQuestions(row2.context_id, viewer)
-      } : { type: row2.context_type, id: row2.context_id },
-      /* §14a: the record names WHICH LEVEL of the cascade was used, BESIDE the
-         plane-credential principal — two principals, never one, and never a
-         token value. `ref` is the operator's own label for the account. */
-      principal: {
-        plane: row2.principal_plane,
-        claude: row2.principal_claude,
-        ref: row2.principal_claude_ref,
-        skill: row2.skill_version
-      },
-      budget: bounds.map((b) => ({
-        bound: b.bound,
-        allowed: b.allowed,
-        consumed: b.consumed,
-        unit: b.unit
-      })),
-      condition: cond,
-      /* PL-12 / D-84: the conditions the run was formed under gain their third
-         member. It sits BESIDE `principal` and `budget` rather than inside
-         them, because it is neither an identity nor an allowance — it is the
-         LENS, and §11's whole reason for recording the conditions is that a
-         version is only interpretable against them. */
-      bias,
-      /* REC-74: AND THE THIRD CONDITION, WHICH WAS SILENT HERE UNTIL NOW.
-               §11's three are the manifest, the SKILL VERSION and the launching
-               project's declared STANDARD PAIR. Two of them were published — the
-               skill inside `principal`, the manifest as `bias` — and this one was
-               written by `aiRunOpen`, published by `aiRunSpawnPayload`, and read by
-               nobody here, so a member reading the run object could not see the bar
-               the run was working to. It sits beside `bias` for the same reason
-               `bias` sits beside `principal`: a bar is not an identity and not an
-               allowance, it is the standard the work was held to.
-      
-               THE KEY IS ALWAYS PRESENT ON A FOUND RUN, and that is the whole
-               design. An absent key means the READER does not publish this fact;
-               `standard.in_force: false` with its `basis` and its `stated` sentence
-               means we looked and there was no bar. A consumer can tell those apart;
-               a null could not, which is why no null is published here. */
-      standard: this.#standardForRun(row2),
-      /* B6 (AGENT-WORKER #1 REPORT 3): the run's resumable scratch as its last tick wrote it (R12), so a resumed
-         segment continues its work list rather than restarting it; null when it cannot be read back. Never a
-         transcript (DEC-61): it is the work list the run itself sent. */
-      state: safeJson9(row2.state),
-      /* R19 (N190): the run this run re-runs (REC-207's `rerun_of`, judged at the open), published only when this
-         viewer can see that run too, through the same sight; else null — a run that re-runs nothing and one whose
-         earlier run is out of view answer alike, so the field never says a hidden run exists. */
-      rerun_of: row2.rerun_of != null && String(row2.rerun_of).trim() !== "" && this.#aiRunInSight(String(row2.rerun_of), viewer) ? String(row2.rerun_of) : null
-    } };
-  }
-  /** REC-74: the run's BAR, computed ONCE, for the same reason `#biasForRun`
-   *  is — `aiRunSpawnPayload` publishes the same block, and "what bar was this
-   *  run formed under" is a question with one answer.
-   *
-   *  NEVER RECOMPUTED AND NEVER LOOKED UP. `aiRunOpen` stores what the launch
-   *  handed it and derives nothing; this reads that back and JUDGES it, which
-   *  is a different act from deriving one. In particular it does NOT go and ask
-   *  the project what its declared strength is today: DEC-17 puts the bar on
-   *  the project axis, and a read that substituted the project's CURRENT
-   *  declaration for the one the run was formed under would answer a different
-   *  question and look identical. (`bias` publishes both sides precisely
-   *  because it can COMPARE them; there is no comparison to make here until an
-   *  op publishes a project's declared pair, which none does today — stated as
-   *  a limit rather than papered over, and delegated.)
-   *
-   *  THE PAIR IS NEVER COMPOSED. DEC-21/DEC-44 refuse the composition four
-   *  ways: capture and connection range over two different populations and
-   *  nothing here averages, mixes or reduces them to one value. An axis the
-   *  recorded bar does not name is published as `null` BESIDE the one it does,
-   *  never filled in from its sibling.
-   *
-   *  Synchronous, deliberately: unlike the manifest there is no hash and no
-   *  second read, so making this async would buy a promise nobody awaits for. */
-  #standardForRun(row2) {
-    const raw = row2.standard_pair;
-    let parsed = null, unreadable = false;
-    if (raw != null && String(raw).trim() !== "") {
-      try {
-        parsed = JSON.parse(String(raw));
-      } catch {
-        unreadable = true;
-      }
-      if (parsed !== null && (typeof parsed !== "object" || Array.isArray(parsed))) {
-        parsed = null;
-        unreadable = true;
-      }
-    }
-    const axis = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
-    const capture = parsed ? axis(parsed.capture) : null;
-    const connection = parsed ? axis(parsed.connection) : null;
-    const basis = unreadable ? "unreadable" : parsed !== null ? capture === null && connection === null ? "names-no-axis" : "recorded" : row2.context_type === "project" ? "none-recorded" : "context-has-no-project";
-    return {
-      in_force: basis === "recorded",
-      basis,
-      /* The sentence travels WITH the answer, from the plane's own vocabulary,
-         so a surface renders what it RECEIVED rather than holding a copy of the
-         map (DEC-8, and `op=airunlog`'s own precedent one method down). */
-      stated: STANDARD_BASIS[basis],
-      pair: basis === "recorded" ? { capture, connection } : null
-    };
-  }
-  /** op=airuns — WHICH RUNS ARE IN THIS CONTEXT. REC-69, UI-49's delegation.
-   *
-   *  ===========================================================
-   *  THE QUESTION NO OP COULD ANSWER, AND WHY THAT MATTERED.
-   *  ===========================================================
-   *
-   *  §14a promises that *"any window focused on an inquiry or a project shows
-   *  an animated indicator that a job is running"*. UI-47 found the indicator
-   *  had no call site at all; UI-49 built one — and MEASURED, while building
-   *  it, that the plane could not be asked the question. `op=airun`,
-   *  `op=airunlog` and `op=airunspawn` are all keyed by RUN ID, `ai_runs` is
-   *  queried by `run` at all 14 sites, and `op=airunopen` has no UI consumer,
-   *  **so the browser never learns a run id by opening one.** UI-49 therefore
-   *  fed its seam from the only source that existed — the run addresses THIS
-   *  DEVICE had already opened — which is honest, is pinned, and reaches only
-   *  the member who already held the address. §14a's promise is about the
-   *  TEAMMATE WHO DID NOT, and this method is the half that reaches them.
-   *
-   *  ===========================================================
-   *  THE GATE, AND WHY THIS SHAPE IS THE ONE THAT LEAKS IF IT IS WRONG.
-   *  ===========================================================
-   *
-   *  A run-id read is a poor leak: a caller must already hold the id. A
-   *  CONTEXT-KEYED LIST is the opposite — it takes an id a member can see on
-   *  their own screen and answers with everything hanging off it. So the gate
-   *  is not incidental here, it is the feature's whole security posture.
-   *
-   *  IT IS `#bundleGate` ON `context_id`, THE SAME PREDICATE AND THE SAME
-   *  COMPILATION POINT (D-15) that `aiRunRead`, `aiRunLog` and
-   *  `aiRunSpawnPayload` already compile. **NO SECOND PREDICATE IS WRITTEN
-   *  HERE**, and that is deliberate rather than economical: PL-11 measured that
-   *  `viewerPredicate`'s MACHINE alternation returns an unfiltered `1=1`, so a
-   *  hand-rolled gate that forgot the carve-out — or remembered it wrongly —
-   *  would hand an agent the whole store, and a hand-rolled one that forgot the
-   *  FAIL-CLOSED deny would turn a missing control-plane stamp from an outage
-   *  into a leak. Both arms are `viewerPredicate`'s and neither is restated.
-   *
-   *  THE POSTURE IS WITHHOLD, NEVER REDACT (REC-36). A run over a project the
-   *  viewer was never invited to is absent from this list BYTE-IDENTICALLY to a
-   *  run that does not exist, and **no count of what was withheld is reported**
-   *  — that count is exactly the disclosure that somebody is investigating
-   *  something you cannot see (op=backlinks' rule, and `gate-reads.test.mjs`
-   *  carries the classification). It follows that a well-formed context with no
-   *  visible runs answers an ordinary EMPTY LIST: "no runs here" and "no runs
-   *  you may see" are ONE answer BY CONSTRUCTION rather than by care.
-   *
-   *  ===========================================================
-   *  BOUNDED, AND THE BOUND IS PUBLISHED — IC-25/IC-26's rule.
-   *  ===========================================================
-   *
-   *  `limit` is the cap AFTER clamping, never the number the caller asked for;
-   *  `truncated` is the completeness signal, in the spelling its three siblings
-   *  already use (`op=airunlog`, `op=versionchain`, `op=basisversions`) rather
-   *  than a fifth word beside the plane's four (REC-55). Both are published on
-   *  the EMPTY answer too, so a reader who sees nothing does not have to guess
-   *  which bound they would have been answered at. `cap + 1` is asked for and
-   *  `cap` delivered — `op=exportlog`'s mechanism — because the extra row is
-   *  the whole difference between "this context has 200 runs" and "here are its
-   *  first 200".
-   *
-   *  ORDER IS NEWEST FIRST, and the cut therefore falls on the OLDEST. This is
-   *  NOT `op=airunlog`, which is replayed FROM THE START by a resuming run
-   *  (§14b.7) and must keep ascending order; the question here is "what is
-   *  happening in this context", and a surface cut off from the newest run
-   *  would be a surface that cannot see the job that is running now.
-   *
-   *  NO STATUS FILTER, deliberately. A `status='running'` filter here would put
-   *  the judgement in the plane and leave a surface unable to render the run
-   *  that ENDED — which is the overclaim UI-49 removed one layer up when it
-   *  made the indicator carry the record's own status word instead of pulsing
-   *  unconditionally. The record answers what is there; the surface decides
-   *  what to draw. */
-  async listInContext({
-    contextType = null,
-    contextId = null,
-    viewer = null,
-    limit = null
-  } = {}) {
-    const refusal19 = (code, detail) => {
-      const row2 = AI_RUNS_CONTEXT_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row2.check,
-        translation: row2.translation,
-        detail
-      };
-    };
-    const kinds = Object.keys(RUN_CONTEXTS);
-    const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
-    const id = contextId == null ? "" : String(contextId).trim();
-    if (!type)
-      return refusal19(
-        "AI_RUNS_NO_CONTEXT_TYPE",
-        `op=airuns answers for ONE context and must be told which kind: contextType=${kinds.join("|")}. An inquiry and a project are different objects with different membership, so there is no default here that would not be answering about something you did not ask about.`
-      );
-    if (!kinds.includes(type))
-      return refusal19(
-        "AI_RUNS_UNKNOWN_CONTEXT_TYPE",
-        `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. The kinds it is attached to: ${kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. Answered as a refusal rather than as an empty list, because an empty list here would say nothing is running in a place the record does not recognise.`
-      );
-    if (!id)
-      return refusal19(
-        "AI_RUNS_NO_CONTEXT_ID",
-        `op=airuns named the kind ${JSON.stringify(type)} but not which one. The gate is compiled over the context's own id, so a blank id would ask about every context at once \u2014 a different question, not a wider answer.`
-      );
-    const seen = this.#bundleGate("r.context_id", viewer);
-    const cap = Math.max(1, Math.min(
-      Math.floor(Number(limit) || _AiRuns.AI_RUNS_LIMIT_DEFAULT),
-      _AiRuns.AI_RUNS_LIMIT_MAX
-    ));
-    const page = this.#rows(
-      `SELECT r.run FROM ai_runs r
-       WHERE lower(r.context_type) = ? AND r.context_id = ? AND ${seen.sql}
-       ORDER BY r.created DESC, r.run LIMIT ?`,
-      type,
-      id,
-      ...seen.args,
-      cap + 1
-    );
-    const runs = (await Promise.all(page.slice(0, cap).map((r) => this.read({ run: r.run, viewer })))).filter((a) => a && a.found).map((a) => a.session);
-    return {
-      ok: true,
-      /* The context is echoed NORMALISED, so a caller sees what was actually
-         asked rather than what they typed — the same reason op=meaningrows
-         publishes the arm it resolved. */
-      context: { type, id },
-      runs,
-      count: runs.length,
-      limit: cap,
-      truncated: page.length > cap
-    };
-  }
-  /** PL-12: the run's bias block, computed ONCE. Read `aiRunRead`'s header for
-   *  what the three answers mean. */
-  async #biasForRun(row2, viewer) {
-    const recordedRaw = row2.bias_manifest;
-    let recorded = null, unreadable = false;
-    if (recordedRaw != null && String(recordedRaw).trim() !== "") {
-      try {
-        recorded = JSON.parse(String(recordedRaw));
-      } catch {
-        unreadable = true;
-      }
-    }
-    const nowManifest = await this.#bias().biasManifest({
-      scope: row2.context_type === "project" ? "project" : "instance",
-      scopeId: row2.context_type === "project" ? row2.context_id : "",
-      viewer,
-      /* The bound is irrelevant to the hash — `statements_sha` covers the whole
-         set before any bound is applied — so the smallest legal page is asked
-         for deliberately: this read needs the FACT, not the statements. */
-      limit: 1
-    });
-    const recordedSha = recorded && typeof recorded.statements_sha === "string" ? recorded.statements_sha : null;
-    const atOpenHeld = row2.lens_at_open != null && String(row2.lens_at_open).trim() !== "";
-    const atOpenParsed = atOpenHeld ? safeJson9(String(row2.lens_at_open)) : null;
-    const atOpen = atOpenParsed && typeof atOpenParsed === "object" && !Array.isArray(atOpenParsed) ? atOpenParsed : null;
-    const atOpenUnreadable = atOpenHeld && !atOpen;
-    const shaOf2 = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
-    const openSha = atOpen ? shaOf2(atOpen) : null;
-    const nowSha = shaOf2(nowManifest);
-    const nowBlock = {
-      in_force: nowManifest.in_force === true,
-      statements_sha: nowManifest.statements_sha ?? null,
-      bundles: nowManifest.bundles ?? []
-    };
-    const atOpenBlock = atOpen ? {
-      recorded: true,
-      in_force: atOpen.in_force === true,
-      statements_sha: openSha,
-      scope: atOpen.scope ?? null,
-      scope_id: atOpen.scope_id ?? null,
-      bundles: Array.isArray(atOpen.bundles) ? atOpen.bundles : [],
-      at: atOpen.at ?? null
-    } : atOpenUnreadable ? {
-      recorded: true,
-      unreadable: true,
-      stated: "the lens in force at this run's open was recorded and cannot be read back"
-    } : { recorded: false, stated: "not recorded" };
-    const handOf = (handedSha) => !atOpen ? null : handedSha === openSha ? "in_force" : "stale";
-    const basis = atOpen ? "at_open" : atOpenUnreadable ? null : "handed";
-    if (recorded === null && !unreadable) {
-      const staleEmpty = !!atOpen && atOpen.in_force === true;
-      return {
-        in_force: false,
-        stated: staleEmpty ? "no manifest was handed to this run, and one was in force when it opened" : "no manifest was in force",
-        manifest: null,
-        now: atOpen ? nowBlock : null,
-        moved: atOpen ? openSha !== nowSha : null,
-        moved_basis: atOpen ? basis : null,
-        at_open: atOpenBlock,
-        hand: handOf(null)
-      };
-    }
-    if (unreadable)
-      return {
-        in_force: false,
-        stated: "a manifest was recorded for this run and cannot be read back",
-        manifest: null,
-        now: atOpen ? nowBlock : null,
-        moved: atOpen ? openSha !== nowSha : null,
-        moved_basis: atOpen ? basis : null,
-        at_open: atOpenBlock,
-        hand: null
-      };
-    return {
-      in_force: true,
-      stated: null,
-      /* AS RECORDED — what the run was formed under, never recomputed. */
-      manifest: {
-        scope: recorded.scope ?? null,
-        scope_id: recorded.scope_id ?? null,
-        statements_sha: recordedSha,
-        bundles: Array.isArray(recorded.bundles) ? recorded.bundles : []
-      },
-      /* AS THE RECORD STANDS NOW. */
-      now: nowBlock,
-      /* THE COMPARISON, which is what makes bias debt computable. For a run with no recorded open, `null`
-         where one side has no hash to compare — an unknown is stated and never rendered as `false`, which
-         would assert the lens had held. */
-      moved: atOpen ? openSha !== nowSha : atOpenUnreadable ? null : recordedSha == null || nowManifest.statements_sha == null ? null : recordedSha !== nowManifest.statements_sha,
-      moved_basis: basis,
-      at_open: atOpenBlock,
-      hand: handOf(recordedSha)
-    };
-  }
-  /** op=airunspawn — THE FENCE, AS CODE.
-   *
-   *  `INVESTIGATIVE-SESSION.md` §14, and the sweep's own correction of v2:
-   *  *"The lens rule is STRUCTURAL, and v2 demoting it to a skill requirement
-   *  was the defect §14b.4 itself names (SWEEP C7): a skill is instructions; a
-   *  fence is code."*
-   *
-   *    - *"The search half of the run never receives the bias. The spawn
-   *      contract for search sub-sessions and search passes omits the manifest
-   *      BY CONSTRUCTION — there is no field to read."*
-   *    - *"Bias never shapes what is captured or monitored, only how conclusions
-   *      are weighed"* (`Content_Framework:1283`) — the coupling is FORBIDDEN,
-   *      not discouraged.
-   *    - *"The composing half CARRIES the manifest (§3, ruled) for disclosure
-   *      and for the weighing it discloses — never as a search input."*
-   *
-   *  WHY THIS IS AN OP AND NOT A COMMENT. A fence nothing can be pointed at is
-   *  not a fence: before this, the search half's payload existed only as a
-   *  sentence in a design document, so there was nothing an assertion could read
-   *  and nothing a negative control could break. The payload is BUILT here, by
-   *  one function, and `test/bias.test.mjs` asserts over the object this method
-   *  returns — not over a promise about it.
-   *
-   *  AND THE ASSERTION IS ABSENCE, NEVER EMPTINESS. The search payload is
-   *  written as an explicit literal that never touches `row.bias_manifest`, so
-   *  there is no field to be filled in later by a default, a spread, or a
-   *  well-meaning caller. `bias: null` would have been the weaker fence: a null
-   *  field is a field, and a field acquires a value the first time somebody
-   *  thinks they are being helpful.
-   *
-   *  GATED on the run's context, exactly as `aiRunRead` and `aiRunLog` are. */
-  async spawnPayload({ run, half = "search", viewer = null } = {}) {
-    const seen = this.#bundleGate("r.context_id", viewer);
-    const row2 = this.#one(
-      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
-      run,
-      ...seen.args
-    );
-    if (!row2) return { run: run || null, found: false, half: null, payload: null };
-    const composing = String(half) === "compose";
-    const budgetCap = Object.keys(RUN_BOUNDS).length;
-    const budgetRows = this.#rows(
-      `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound LIMIT ?`,
-      run,
-      budgetCap + 1
-    );
-    const bounds = budgetRows.slice(0, budgetCap);
-    const payload = {
-      run: row2.run,
-      context: { type: row2.context_type, id: row2.context_id },
-      mode: row2.mode,
-      skill: row2.skill_version,
-      /* The launching project's declared standard pair travels to BOTH halves.
-         It is a BAR and not a lens (DEC-54 a), and §3 reads it as one of the
-         run's conditions — a bar tells the search what strength the work must
-         reach, which is not the coupling §14 forbids. This is exactly why the
-         two constructs had to be split before this fence could be drawn. */
-      standard_pair: row2.standard_pair,
-      /* REC-74: THE SAME BAR, JUDGED, FROM THE SAME FUNCTION `op=airun` USES.
-         `standard_pair` above is the column verbatim and is KEPT — `agent-worker`
-         builds against it and removing it is an interface change this item has
-         no mandate for — but verbatim is exactly what could not tell the two
-         absences apart: a caller receiving `standard_pair: null` cannot say
-         whether no bar was in force, whether the run has no project and could
-         not have one, or whether this reader simply does not publish the fact.
-         Two readers of one row must not disagree about which of its facts
-         exist, so both now answer from `#standardForRun` and neither computes
-         its own. */
-      standard: this.#standardForRun(row2),
-      budget: bounds.map((b) => ({
-        bound: b.bound,
-        allowed: b.allowed,
-        consumed: b.consumed,
-        unit: b.unit
-      }))
-    };
-    return {
-      run,
-      found: true,
-      half: composing ? "compose" : "search",
-      payload,
-      /* REC-57's two questions, settled on the one collection this answer
-         carries: the bound APPLIED, and whether it cut anything. */
-      limit: budgetCap,
-      truncated: budgetRows.length > budgetCap,
-      /* THE ONLY DIFFERENCE BETWEEN THE TWO HALVES, and it is one key. The
-         composing half's block is the SAME block `op=airun` publishes, computed
-         by the same function, because "what lens was this run formed under" has
-         one answer. The search half gets no such key at all. */
-      ...composing ? { bias: await this.#biasForRun(row2, viewer) } : {},
-      /* Stated, because a caller holding the search payload should be able to
-         read WHY it is thinner rather than conclude something failed. */
-      fence: composing ? "the composing half carries the lens, for disclosure and for the weighing it discloses" : "the search half never receives the lens: bias never shapes what is captured or searched, only how conclusions are weighed. There is no field here to read."
-    };
-  }
-  /** op=airunlog — THE OBSERVATION LOG. A different read from the one above and
-   *  deliberately a different op: the surface renders the run, and this is what
-   *  lets anyone else CHECK it (§11 — "search completeness is trained into the
-   *  skill, which is COMPETENCE; the log is what lets anyone else CHECK").
-   *
-   *  It is also what a RESUMED run reads to continue rather than restart
-   *  (§14b.7), which is why the entries come back in `seq` order with their
-   *  levels and states intact rather than summarised.
-   *
-   *  Gated on the same column for the same reason as the read above.
-   *
-   *  ===========================================================   *  REC-70 — BOUNDED, AND WHY THE RATCHET BUILT TO CATCH THIS DID NOT.
-   *  ===========================================================   *
-   *  THE DEFECT: this read was `... FROM ai_run_log WHERE run = ? ORDER BY seq`
-   *  with no `LIMIT`, no `limit` and no `truncated` — D-225's class exactly,
-   *  arriving in an op IS-6 added AFTER REC-60 measured its roster. A run's log
-   *  grows one row per tick and NOTHING caps the tick count: `RUN_BOUNDS` bounds
-   *  fetches, sub-sessions and wall time, never observations.
-   *
-   *  THE PART THAT MATTERS MORE, AND IT IS RECORDED HERE BECAUSE THE NEXT
-   *  UNBOUNDED READ WILL LAND BESIDE THIS ONE: `test/meaning-bounds.test.mjs`
-   *  exists to fail the build when a new read publishes a collection off an
-   *  unbounded row source, and it did not fail — `op=airunlog` appeared in NONE
-   *  of its three buckets, so the walk never reached this method at all.
-   *
-   *  THE CAUSE, NAMED: **the walk graded only return objects containing the
-   *  literal `ok: true`, and this method's success answer says `found: true`.**
-   *  One success spelling was hard-coded as if it were the only one, four lines
-   *  after that same file wrote its bound and completeness keys as SETS
-   *  precisely because "the plane answers the second in five spellings on
-   *  purpose". The instrument avoided the one-vocabulary mistake in its leaves
-   *  and committed it at its root — and it was not one op: **the gate hid 27 of
-   *  the 156 dispatched ops**, `op=signerlist`, `op=publishedlist`,
-   *  `op=inbox` (M0-12: `inboxlist` is the DO PATH it is aliased to, not an op
-   *  name a caller may send), `op=memberlist` and `op=verify` among them, every one of
-   *  them a real unbounded collection read. Measured 2026-08-07, REC-70.
-   *
-   *  SO THE FIX IS NOT `ok: true` HERE. Adding the marker this method does not
-   *  use would buy a green walk and leave the blindness in place for the next
-   *  op that spells success a third way. The WALK was corrected instead — it now
-   *  grades every return that does not DECLARE itself a refusal — and this
-   *  method keeps `found: true`, which is what makes the corrected walk's
-   *  verdict on it evidence rather than a coincidence.
-   *
-   *  D-227 IS OPEN AND APPLIES HERE. That walk grades what a method PUBLISHES,
-   *  so an envelope left honest over a scan whose `LIMIT` was removed still
-   *  reads as bounded. This op's SQL bound is therefore pinned DIRECTLY, off
-   *  this segment's own source, in `meaning-bounds.test.mjs` — not inferred
-   *  from the envelope. */
-  log({ run, viewer = null, limit = null } = {}) {
-    const seen = this.#bundleGate("r.context_id", viewer);
-    const row2 = this.#one(
-      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
-      run,
-      ...seen.args
-    );
-    const cap = Math.max(1, Math.min(
-      Math.floor(Number(limit) || _AiRuns.AI_RUN_LOG_LIMIT_DEFAULT),
-      _AiRuns.AI_RUN_LOG_LIMIT_MAX
-    ));
-    if (!row2) return {
-      run: run || null,
-      found: false,
-      entries: [],
-      stopped: null,
-      limit: cap,
-      truncated: false
-    };
-    const page = this.#rows(
-      `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail,
-              result_kind, result_ref
-       FROM observation_log WHERE authority_kind = 'run' AND authority = ?
-       ORDER BY seq LIMIT ?`,
-      run,
-      cap + 1
-    );
-    const ordinal = new Map(page.slice(0, cap).map((e, i) => [String(e.seq), i + 1]));
-    const entries = page.slice(0, cap).map((e, i) => ({
-      ...e,
-      seq: i + 1,
-      governed: e.governed === 1,
-      terminal: e.terminal === 1,
-      /* NULL IS NORMALISED TO `null` RATHER THAN LEFT AS `undefined`:
-         a key that serialises away is the absence-with-two-causes this
-         whole item is about, one layer down. */
-      result_kind: e.result_kind ?? null,
-      result_ref: e.result_kind === "observation" && ordinal.has(String(e.result_ref)) ? String(ordinal.get(String(e.result_ref))) : e.result_ref ?? null,
-      coverage: observationCoverage({ state: e.state, resultRef: e.result_ref })
-    }));
-    return {
-      run,
-      found: true,
-      status: row2.status,
-      entries,
-      limit: cap,
-      truncated: page.length > cap,
-      stopped: row2.stopped_bound ? { bound: row2.stopped_bound, condition: row2.stopped_condition, at: row2.stopped_at } : null,
-      /* The vocabularies travel WITH the answer rather than being looked
-         up by a reader who would then hold a copy of them — the same
-         reason op=affordances publishes the act set instead of naming it
-         (DEC-8: a surface renders what it received). */
-      vocabulary: {
-        states: OBSERVATION_STATES,
-        levels: OBSERVATION_LEVELS,
-        bounds: RUN_BOUNDS,
-        endings: RUN_ENDINGS,
-        /* REC-113 / IC-116, APPENDED for the same reason the four
-           above travel at all (PL-17, DEC-8): a surface that must
-           render `undetermined` should read the word off the answer
-           rather than hold a literal it learned somewhere else and
-           will not re-learn. `coverage_undetermined` is published
-           SEPARATELY because it is deliberately not a member of
-           `coverage` — `op=contentaxis`'s `undetermined_value` is the
-           same shape one construct over. */
-        coverage: OBSERVATION_COVERAGE,
-        coverage_undetermined: OBSERVATION_COVERAGE_UNDETERMINED
-      }
-    };
-  }
-  /* ---- R28, R29: FOR THE MODULES THAT PRODUCE UNDER A RUN ------------------------------------------------------ */
-  /** R28: the run's facts a producer gates on, for a held run the viewer can see; null for a blank id, an absent
-   *  run and an invisible one alike. Never throws, writes nothing. Whether the caller holds it is R5 over
-   *  `principal_plane`; `principal_claude` is the level that pays, which a production under the run records
-   *  (capture-requests' request row). */
-  runFor(run, viewer) {
-    try {
-      const id = run == null ? "" : String(run).trim();
-      if (!id) return null;
-      const seen = this.#bundleGate("r.context_id", viewer);
-      const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude
-                             FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
-      return r ? {
-        run: r.run,
-        status: r.status,
-        mode: r.mode,
-        context_type: r.context_type,
-        context_id: r.context_id,
-        principal_plane: r.principal_plane,
-        principal_claude: r.principal_claude
-      } : null;
-    } catch {
-      return null;
-    }
-  }
-  /** R29: one bound's `{allowed, consumed}`, or null when the run declared none. */
-  boundOf(run, bound) {
-    const r = this.#one(
-      `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = ?`,
-      String(run ?? ""),
-      String(bound ?? "")
-    );
-    return r ? { allowed: Number(r.allowed), consumed: Number(r.consumed) } : null;
-  }
-  /** R29: add `n` to a bound's consumption, inside the caller's transaction (the row made at allowed 0 when none
-   *  was declared). `n` 0 writes nothing; a figure that is not a non-negative safe integer is C-22.13 and nothing
-   *  is written. It never ends a run: an exhausted bound ends it at the next tick (R12). */
-  consumeBound(run, bound, n) {
-    const b = String(bound ?? "");
-    const figure2 = typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
-    const bad = checkConsume([[b, figure2 ? 0 : n]], { seed: false });
-    if (bad) return bad;
-    if (n === 0) return null;
-    this.sql.exec(
-      `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
-       ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
-      String(run),
-      String(bound),
-      n,
-      n
-    );
-    return null;
-  }
-  /** R37: the run gate `contradiction` offers (its R21), from R28 and R5: `found` false for blank, absent and
-   *  invisible alike; `refusal` null or R5's `AI_RUN_NOT_PRINCIPAL` naming `act`. */
-  runGate(run, viewer, caller, act = null) {
-    const r = this.runFor(run, viewer);
-    if (!r) return { found: false, running: false, refusal: null, run: null };
-    return {
-      found: true,
-      running: r.status === "running",
-      run: r,
-      refusal: runPrincipalGate({ caller, principal: r.principal_plane, ...act ? { act } : {} })
-    };
-  }
-  /* ---- R25, R26: THE SURFACING STEP, registered with promotion (K31) --------------------------------------------- */
-  /** Whether this promotion is an assistant's creation of a question: a creation of an inquiry carrying the control
-   *  plane's `assistantPrincipal` stamp, which `index.mjs` sets for an `ai` credential only, deleting any caller's copy
-   *  first. A member's creation, and every store-internal one, carries no stamp and is not asked. */
-  static #surfacing(c) {
-    const pkg = c && c.pkg || {};
-    return !!c && !c.head && c.promotedType === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim() !== "";
-  }
-  /** D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25) — MAY THIS ASSISTANT OPEN A QUESTION, AND
-   *  INSIDE WHICH RUN? Null when the creation may land, else the refusal (R25).
-   *
-   *  REC-165's ORDER, the tick's (REC-152): SIGHT first — a run whose context the caller cannot see answers the
-   *  SAME SURFACE_NO_RUN a run never minted gets, and so does a creation naming no run, since both say the same
-   *  thing to the caller: there is no run of yours here; then POSITION — `runPrincipalGate`, the member who
-   *  opened the run or a credential she minted, relayed FIELD BY FIELD (a spread would hide the verdict from the
-   *  DEC-49 guard); then STATUS; then the BOUND, on `mints`' rule — a run that declares no `surfaces` bound may
-   *  surface nothing, because a default allowance chosen here would be a measurement with no measurement behind
-   *  it. The bound is asked here AND consumed inside the promotion's transaction (R26), so a refused creation spends
-   *  none. The caller is the STAMP, never a field the body carries; the run is the body's word, which is why every
-   *  question above is asked of it. */
-  #surfacingGate(pkg) {
-    const caller = String(pkg.assistantPrincipal ?? "").trim();
-    const run = String(pkg.run ?? "").trim();
-    const refusal19 = (code, detail, extra) => {
-      const row2 = SURFACE_RUN_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row2.check,
-        translation: row2.translation,
-        detail,
-        run: run || null,
-        ...extra || {}
-      };
-    };
-    const runRow = this.runFor(run, pkg.actorViewer ?? null);
-    if (!runRow)
-      return refusal19(
-        "SURFACE_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is open here. An assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2): the run carries the lens in force and the objective the question was surfaced under. Nothing was created.` : "an assistant opens a question only inside a run it holds: pass run=<the run this question is surfaced under> in the promotion. The run carries the lens in force and the objective it pursued (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2). Nothing was created."
-      );
-    const notPrincipal = runPrincipalGate({
-      caller,
-      principal: runRow.principal_plane,
-      act: "opening a question under a run"
-    });
-    if (notPrincipal)
-      return {
-        ok: false,
-        reason: notPrincipal.code,
-        code: notPrincipal.code,
-        check: notPrincipal.check,
-        translation: notPrincipal.translation,
-        detail: notPrincipal.detail,
-        run,
-        note: "an assistant opens a question only inside a run it holds. Nothing was created"
-      };
-    if (runRow.status !== "running")
-      return refusal19(
-        "SURFACE_RUN_NOT_RUNNING",
-        `the run '${run.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read against the conditions of the run that surfaced it, which stopped being current when it stopped. Nothing was created.`,
-        { status: runRow.status }
-      );
-    const bound = this.boundOf(run, "surfaces");
-    if (!bound || !(bound.allowed > 0))
-      return refusal19(
-        "SURFACE_NO_BOUND",
-        `the run '${run.slice(0, 60)}' declares no 'surfaces' bound, so the questions it may open would be unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.`
-      );
-    if (bound.consumed >= bound.allowed)
-      return refusal19(
-        "SURFACE_BOUND_REACHED",
-        `the run '${run.slice(0, 60)}' has reached its 'surfaces' bound (${bound.consumed} of ${bound.allowed}). Nothing was created; the next tick ends the run, and the log says which bound stopped it.`,
-        { allowed: bound.allowed, consumed: bound.consumed }
-      );
-    return null;
-  }
-  /** R25: the step's check, before the promotion writes anything. */
-  #surfacingCheck(c) {
-    if (!_AiRuns.#surfacing(c)) return null;
-    return this.#surfacingGate(c.pkg);
-  }
-  /** R26: THE LINK AND THE BOUND, in the creation's own transaction, so a question an assistant opened cannot exist
-   *  without the row naming its run, and a refused creation spends nothing. An INSTANCE row keyed by the new inquiry
-   *  and never a line in its bytes (the run is scratch). The answer's `surfaced_in` names the run, the instant and the
-   *  bound after this spend. */
-  #surfacingProject(c) {
-    if (!_AiRuns.#surfacing(c)) return null;
-    const run = String(c.pkg.run).trim(), principal = c.pkg.assistantPrincipal.trim();
-    const at17 = (/* @__PURE__ */ new Date()).toISOString();
-    this.sql.exec(
-      `INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
-      c.bundleId,
-      run,
-      principal,
-      at17
-    );
-    this.consumeBound(run, "surfaces", 1);
-    const left2 = this.boundOf(run, "surfaces");
-    return { surfaced_in: { run, at: at17, bound: { bound: "surfaces", allowed: left2.allowed, consumed: left2.consumed } } };
-  }
-  /* ---- R36: HIDDEN RUNS — `hiddenRuns` (R42, module level) is what retrieval holds; observation-log's resolver is
-     `runFor` (R28), the same sight. ------------------------------------------------------------------------------ */
-  /** R27: which run a question was opened inside, and under what lens. The run's facts are `read`'s answer, taken
-   *  whole under the same viewer. The migration-replay arm is inquiry's (map §5.8): a question with no surfacing
-   *  row answers `not recorded` here. */
-  async surfacedIn(bundleId, viewer) {
-    const link = this.#one(`SELECT run, principal, at FROM inquiry_run_surfacings WHERE bundle_id=?`, bundleId);
-    if (!link) return { recorded: false, stated: "not recorded", run: null, lens: null };
-    const read2 = await this.read({ run: link.run, viewer });
-    if (!read2 || read2.found !== true || !read2.session)
-      return {
-        recorded: true,
-        run: null,
-        by: null,
-        at: link.at,
-        lens: null,
-        stated: "this question was opened inside a run this reader cannot read"
-      };
-    return {
-      recorded: true,
-      run: link.run,
-      by: link.principal,
-      at: link.at,
-      context: read2.session.context,
-      status: read2.session.status,
-      lens: read2.session.bias
-    };
-  }
-  /** The tables and their two additive columns (R38), and D-85's `ai_run_log` fold: the pre-fold run log's rows are
-   *  copied into the observation log under `authority_kind = run` and the old table dropped, once. Idempotent;
-   *  called by the store's migration after observation-log's. */
-  migrate() {
-    const bare2 = AI_RUNS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-    for (const st of bare2.split(";")) if (st.trim()) this.sql.exec(st);
-    const cols = new Set(this.#rows(`PRAGMA table_info(ai_runs)`).map((c) => c.name));
-    for (const col of ["lens_at_open", "rerun_of"])
-      if (!cols.has(col)) this.sql.exec(`ALTER TABLE ai_runs ADD COLUMN ${col} TEXT`);
-    if (this.#rows(`PRAGMA table_info(ai_run_log)`).length) {
-      this.sql.exec(
-        `INSERT INTO observation_log
-           (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
-            state, governed, condition, bound, terminal, result_kind, result_ref, detail)
-         SELECT l.at, 'machine', r.principal_claude, 'run', l.run, l.level, 'unstated', l.subject,
-                l.state, l.governed, l.condition, l.bound, l.terminal, NULL, NULL, l.detail
-           FROM ai_run_log l LEFT JOIN ai_runs r ON r.run = l.run
-          ORDER BY l.run, l.seq`
-      );
-      this.sql.exec(`DROP TABLE ai_run_log`);
-    }
-  }
-};
-var INSTANCES = /* @__PURE__ */ new WeakMap();
-function aiRunsOf(ctx, env = null) {
-  const key = ctx.storage;
-  let m = INSTANCES.get(key);
-  if (!m) {
-    m = new AiRuns(ctx, env || {});
-    INSTANCES.set(key, m);
-  } else if (env && (!m.env || !Object.keys(m.env).length)) m.env = env;
-  return m;
-}
-function aiRunsOps(runs, url, body) {
-  const q6 = (k) => url.searchParams.get(k);
-  return {
-    airunopen: () => runs.open({ ...body || {}, principalPlane: q6("principal"), actor: q6("actor"), viewer: q6("viewer") }),
-    airuntick: () => runs.tick({ ...body || {}, actor: q6("actor"), viewer: q6("viewer"), caller: q6("principal") }),
-    airunclose: () => runs.close({ ...body || {}, actor: q6("actor"), viewer: q6("viewer"), caller: q6("principal") }),
-    airun: () => runs.read({ run: q6("run"), viewer: q6("viewer") }),
-    airunlog: () => runs.log({ run: q6("run"), viewer: q6("viewer"), limit: q6("limit") }),
-    /* REC-69: the CONTEXT-keyed read, beside the run-id-keyed ones; a caller that could name the viewer could read the
-       runs of a project it was never invited to. */
-    airuns: () => runs.listInContext({
-      contextType: q6("contextType"),
-      contextId: q6("contextId"),
-      viewer: q6("viewer"),
-      limit: q6("limit")
-    }),
-    airunspawn: () => runs.spawnPayload({ run: q6("run"), half: q6("half"), viewer: q6("viewer") })
-  };
-}
-
-// src/capture-sources/credentials.mjs
-var credentials_exports = {};
-__export(credentials_exports, {
-  CAPTURE_CREDENTIALS_SCHEMA: () => CAPTURE_CREDENTIALS_SCHEMA,
-  CAPTURE_CREDENTIAL_CHECKS: () => CAPTURE_CREDENTIAL_CHECKS,
-  CREDENTIALS_TABLE: () => CREDENTIALS_TABLE,
-  CREDENTIAL_KINDS: () => CREDENTIAL_KINDS2,
-  CREDENTIAL_LIST_LIMIT: () => CREDENTIAL_LIST_LIMIT,
-  CREDENTIAL_SCOPES: () => CREDENTIAL_SCOPES,
-  CaptureCredentials: () => CaptureCredentials,
-  REVOCATION: () => REVOCATION,
-  credentialsOf: () => credentialsOf,
-  hostNameOf: () => hostNameOf,
-  principalMember: () => principalMember
-});
-var CREDENTIAL_KINDS2 = Object.freeze(["login", "user-agent", "other"]);
-var CREDENTIAL_SCOPES = Object.freeze(["member", "project", "group"]);
-var REVOCATION = "(revocation)";
-var CREDENTIALS_TABLE = "capture_credentials";
-var at5 = (fn, region) => `src/capture-sources/credentials.mjs ${fn} > ${region}`;
-var CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
-  CAPTURE_CREDENTIAL_NOT_A_MEMBER: {
-    check: "C-105.1",
-    where: at5("credentialSupply", "is-credential-supplier-member"),
-    translation: "Only an active member may supply a credential."
-  },
-  CAPTURE_CREDENTIAL_BAD_KIND: {
-    check: "C-105.2",
-    where: at5("credentialSupply", "is-credential-kind"),
-    translation: "A credential's kind is one of login, user-agent or other."
-  },
-  CAPTURE_CREDENTIAL_BAD_HOST: {
-    check: "C-105.3",
-    where: at5("credentialSupply", "is-credential-host"),
-    translation: "A credential is for one host, named as a bare host name: no scheme, path, port or user part."
-  },
-  CAPTURE_CREDENTIAL_BAD_SCOPE: {
-    check: "C-105.4",
-    where: at5("credentialSupply", "is-credential-scope"),
-    translation: "A credential's scope is member, project or group, and only a project-scoped credential names a project."
-  },
-  CAPTURE_CREDENTIAL_NO_PROJECT: {
-    check: "C-105.5",
-    where: at5("credentialSupply", "is-credential-project"),
-    translation: "A project-scoped credential names a project the record holds."
-  },
-  CAPTURE_CREDENTIAL_NO_SECRET: {
-    check: "C-105.6",
-    where: at5("credentialSupply", "is-credential-secret"),
-    translation: "A credential carries a non-empty secret: the login, setting or other value the site asked for."
-  },
-  CAPTURE_CREDENTIAL_NOT_PERMITTED: {
-    check: "C-105.7",
-    where: at5("#r63Refusal", "is-credential-permitted"),
-    translation: "This member may not supply or withdraw a credential at that scope."
-  },
-  CAPTURE_CREDENTIAL_NO_KEY: {
-    check: "C-105.8",
-    where: at5("credentialSupply", "is-credential-key-bound"),
-    translation: "No encryption key is bound to this instance, so no credential is stored or used."
-  },
-  CAPTURE_CREDENTIAL_NO_SUCH: {
-    check: "C-105.9",
-    where: at5("credentialWithdraw", "is-credential-seen"),
-    translation: "No credential by that id is visible to you here. One that does not exist and one you may not see are answered alike, so this is not a hint either way."
-  },
-  CAPTURE_CREDENTIAL_SUPPLY_FAILED: {
-    check: "C-105.10",
-    where: at5("credentialSupply", "is-credential-stored"),
-    translation: "The credential could not be encrypted and stored, so nothing was written. Nothing you entered is repeated here; try again, and if it keeps failing tell an administrator."
-  },
-  CAPTURE_CREDENTIAL_WITHDRAW_FAILED: {
-    check: "C-105.11",
-    where: at5("credentialWithdraw", "is-credential-withdrawn"),
-    translation: "The credential could not be read or withdrawn just now, so nothing was changed. Try again, and if it keeps failing tell an administrator."
-  }
-});
-var CREDENTIAL_LIST_LIMIT = 200;
-var CAPTURE_CREDENTIALS_SCHEMA = `CREATE TABLE IF NOT EXISTS ${CREDENTIALS_TABLE} (
-  credential_id TEXT PRIMARY KEY,
-  kind TEXT NOT NULL,
-  host TEXT NOT NULL,
-  scope TEXT NOT NULL,
-  project TEXT,
-  supplied_by TEXT NOT NULL,
-  supplied_at TEXT NOT NULL,
-  iv TEXT,
-  ciphertext TEXT,
-  withdrawn_at TEXT,
-  withdrawn_by TEXT
-)`;
-function refusal11(code, detail) {
-  const row2 = CAPTURE_CREDENTIAL_CHECKS[code];
-  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail };
-}
-var HOST_NAME = /^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/;
-function hostNameOf(host) {
-  if (typeof host !== "string") return null;
-  const h = host.toLowerCase();
-  return HOST_NAME.test(h) ? h : null;
-}
-function principalMember(principal) {
-  if (typeof principal !== "string" || principal === "") return null;
-  const m = /^(?:member:)?([a-z0-9][a-z0-9-]{1,40})(?:\/.+)?$/.exec(principal);
-  if (!m || !principal.startsWith("member:") && principal.includes("/")) return null;
-  return m[1];
-}
-var viewerMember = (viewer) => viewer === "admin" ? "admin" : typeof viewer === "string" && /^member:[a-z0-9][a-z0-9-]{1,40}$/.test(viewer) ? viewer.slice(7) : null;
-var viewerOf = (memberId) => memberId === "admin" ? "admin" : `member:${memberId}`;
-var b642 = (bytes2) => {
-  let s = "";
-  for (const b of bytes2) s += String.fromCharCode(b);
-  return btoa(s);
-};
-var unb642 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-var utf8 = (s) => new TextEncoder().encode(s);
-var stamp = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
-var OF5 = /* @__PURE__ */ new WeakMap();
-function credentialsOf(ctx, { key = null, record = null, membership = null, now = null } = {}) {
-  const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = OF5.get(storage);
-  if (!c) {
-    c = new CaptureCredentials({
-      sql: storage.sql,
-      core: record ?? recordOf(ctx),
-      members: membership ?? membershipOf(ctx),
-      key,
-      now
-    });
-    OF5.set(storage, c);
-  }
-  return c;
-}
-var CaptureCredentials = class _CaptureCredentials {
-  #sql;
-  #core;
-  #members;
-  #secret;
-  #key = null;
-  #now;
-  constructor({ sql, core, members, key = null, now = null }) {
-    this.#sql = sql;
-    this.#core = core;
-    this.#members = members;
-    this.#secret = typeof key === "string" && key !== "" ? key : null;
-    this.#now = typeof now === "function" ? now : () => Date.now();
-    this.migrate();
-    this.#core.declarePurge("capture-sources", [{ name: CREDENTIALS_TABLE, keys: ["project"], whole: "scope='project'" }]);
-    if (typeof this.#members.onRevoked === "function")
-      this.#members.onRevoked("capture-sources", ({ memberId } = {}) => this.#withdrawRevoked(memberId));
-  }
-  /** The table, created when absent; idempotent. */
-  migrate() {
-    this.#sql.exec(CAPTURE_CREDENTIALS_SCHEMA);
-    this.#sql.exec(`CREATE INDEX IF NOT EXISTS ${CREDENTIALS_TABLE}_host ON ${CREDENTIALS_TABLE}(host, withdrawn_at)`);
-  }
-  #rows(q6, ...a) {
-    return [...this.#sql.exec(q6, ...a)];
-  }
-  #one(q6, ...a) {
-    const r = this.#rows(q6, ...a);
-    return r.length ? r[0] : null;
-  }
-  /* ---- the key ---- */
-  async #aesKey() {
-    if (!this.#secret) return null;
-    if (!this.#key) {
-      const base = await crypto.subtle.importKey("raw", utf8(this.#secret), "HKDF", false, ["deriveKey"]);
-      this.#key = await crypto.subtle.deriveKey(
-        { name: "HKDF", hash: "SHA-256", salt: utf8("civicos capture-sources"), info: utf8("capture credentials v1") },
-        base,
-        { name: "AES-GCM", length: 256 },
-        false,
-        ["encrypt", "decrypt"]
-      );
-    }
-    return this.#key;
-  }
-  static #aad(id, scope, project) {
-    return utf8(JSON.stringify([id, scope, project ?? null]));
-  }
-  /* ---- who is who (membership) ---- */
-  #active(memberId) {
-    const f9 = typeof memberId === "string" && memberId !== "" ? this.#members.memberFacts(memberId) : null;
-    return !!f9 && f9.status === "active";
-  }
-  /* R58: may this member (by id) see this row? The listing asks the same rule in its SQL (`#visibleClause`). */
-  #sees(memberId, row2) {
-    if (typeof memberId !== "string" || memberId === "") return false;
-    if (this.#members.isAdministrator(memberId)) return true;
-    if (!this.#active(memberId)) return false;
-    if (row2.scope === "member") return row2.supplied_by === memberId;
-    if (row2.scope === "project") return this.#members.sight(row2.project, viewerOf(memberId)) === "full";
-    return row2.scope === "group";
-  }
-  /* R63: who may supply at a scope (`row` null) or withdraw a row, decided here alone, so that
-     `CAPTURE_CREDENTIAL_NOT_PERMITTED` is minted at one site (K231). Answers the refusal, or null. */
-  #r63Refusal(by, { scope, project, row: row2 = null }) {
-    if (row2 === null) {
-      if (scope === "project" && !this.#members.isProjectEditor(project, by))
-        return refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only an editor of the project may supply a credential for it");
-      return null;
-    }
-    if (row2.supplied_by === by) return null;
-    if (row2.scope === "project")
-      return this.#members.isProjectOwner(row2.project, by) ? null : refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only its supplier or an owner of its project may withdraw a project credential");
-    return this.#members.isAdministrator(by) ? null : refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", `only its supplier or an administrator may withdraw a ${row2.scope} credential`);
-  }
-  /* ---- the listing entry (R58): never the secret, any part of it, its length or a digest ---- */
-  static #entry(r) {
-    return {
-      credential: r.credential_id,
-      kind: r.kind,
-      host: r.host,
-      scope: r.scope,
-      project: r.project ?? null,
-      supplied_by: r.supplied_by,
-      supplied_at: r.supplied_at,
-      withdrawn_at: r.withdrawn_at ?? null,
-      withdrawn_by: r.withdrawn_by ?? null
-    };
-  }
-  /* R57's destruction: the ciphertext and its IV go; the secretless entry stays. */
-  #destroy(id, by) {
-    const at17 = stamp(this.#now());
-    this.#sql.exec(`UPDATE ${CREDENTIALS_TABLE} SET ciphertext=NULL, iv=NULL, withdrawn_at=?, withdrawn_by=?
-                    WHERE credential_id=? AND withdrawn_at IS NULL`, at17, by, id);
-    return at17;
-  }
-  /* R63, N123: a revoked member's own credentials, withdrawn by the revocation, their ciphertext destroyed: the notice's
-     listener (inside the revoking act), and a read meeting a supplier revoked before the registration. One UPDATE
-     over one supplier's rows; `project` and `group` credentials stay. */
-  #withdrawRevoked(memberId) {
-    if (typeof memberId !== "string" || memberId === "") return;
-    this.#sql.exec(`UPDATE ${CREDENTIALS_TABLE} SET ciphertext=NULL, iv=NULL, withdrawn_at=?, withdrawn_by=?
-                    WHERE scope='member' AND supplied_by=? AND withdrawn_at IS NULL`, stamp(this.#now()), REVOCATION, memberId);
-  }
-  /* R63, K159: every read meets the rows it reads here first. A `member` credential whose supplier is no longer
-     an active member is withdrawn by the revocation now, its ciphertext destroyed. Answers the rows as they now
-     stand. */
-  #sweep(rows) {
-    const out = [];
-    for (const r of rows) {
-      if (r.scope === "member" && r.withdrawn_at == null && !this.#active(r.supplied_by)) {
-        const at17 = this.#destroy(r.credential_id, REVOCATION);
-        out.push({ ...r, ciphertext: null, iv: null, withdrawn_at: at17, withdrawn_by: REVOCATION });
-      } else out.push(r);
-    }
-    return out;
-  }
-  /* ================= R55: supply ================= */
-  /** Stores a credential under its declared scope and answers its listing entry, never the secret. */
-  async credentialSupply(args) {
-    const { kind, host, secret, scope, project, by } = args && typeof args === "object" ? args : {};
-    try {
-      if (!this.#active(by))
-        return refusal11("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of this instance");
-      if (!CREDENTIAL_KINDS2.includes(kind))
-        return refusal11("CAPTURE_CREDENTIAL_BAD_KIND", `the kind given is not one of ${CREDENTIAL_KINDS2.join(", ")}`);
-      const h = hostNameOf(host);
-      if (!h)
-        return refusal11(
-          "CAPTURE_CREDENTIAL_BAD_HOST",
-          "the host given is not a bare host name (a credential is for the one host the source that refused is served from)"
-        );
-      const given = project !== void 0 && project !== null;
-      if (!CREDENTIAL_SCOPES.includes(scope) || given && scope !== "project")
-        return refusal11("CAPTURE_CREDENTIAL_BAD_SCOPE", given && CREDENTIAL_SCOPES.includes(scope) ? `a ${scope} credential names no project` : `the scope given is not one of ${CREDENTIAL_SCOPES.join(", ")}`);
-      if (scope === "project") {
-        const b = typeof project === "string" && project !== "" ? this.#core.bundleInfo(project) : null;
-        if (!b || b.type !== "project")
-          return refusal11("CAPTURE_CREDENTIAL_NO_PROJECT", "the project named is not a project this record holds");
-      }
-      if (typeof secret !== "string" || secret === "")
-        return refusal11("CAPTURE_CREDENTIAL_NO_SECRET", "no secret was given");
-      const denied = this.#r63Refusal(by, { scope, project });
-      if (denied) return denied;
-      const key = await this.#aesKey();
-      if (!key)
-        return refusal11("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
-      return await this.#store({ kind, h, secret, scope, project, by, key });
-    } catch {
-      return refusal11(
-        "CAPTURE_CREDENTIAL_SUPPLY_FAILED",
-        "the credential could not be encrypted and stored, so nothing was written"
-      );
-    }
-  }
-  /* R55: the encryption and the write, once every check has passed. Any failure here is `SUPPLY_FAILED`'s one
-     condition, minted in `credentialSupply`'s catch, and the transaction leaves nothing written. */
-  async #store({ kind, h, secret, scope, project, by, key }) {
-    const id = `CRED-${b642(crypto.getRandomValues(new Uint8Array(12))).replace(/[+/=]/g, "").slice(0, 16)}`;
-    const proj = scope === "project" ? project : null;
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const ct = new Uint8Array(await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv, additionalData: _CaptureCredentials.#aad(id, scope, proj) },
-      key,
-      utf8(secret)
-    ));
-    const at17 = stamp(this.#now());
-    this.#core.transact(() => {
-      this.#sql.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
-                      VALUES (?,?,?,?,?,?,?,?,?)`, id, kind, h, scope, proj, by, at17, b642(iv), b642(ct));
-    });
-    return { ok: true, credential: _CaptureCredentials.#entry({
-      credential_id: id,
-      kind,
-      host: h,
-      scope,
-      project: proj,
-      supplied_by: by,
-      supplied_at: at17
-    }) };
-  }
-  /* ================= R56: the one read for a fetch ================= */
-  /** At most one unwithdrawn credential for a fetch to `host`, for a request with plane principal
-   *  `principalPlane` and target inquiry `target`: the narrowest admitted scope, then the newest. In process
-   *  only; never an op. */
-  async credentialsForFetch(args) {
-    const { host, principalPlane, target } = args && typeof args === "object" ? args : {};
-    const none = (reason) => ({ credentials: [], reason });
-    try {
-      const h = hostNameOf(host);
-      if (!h) return none("the fetch names no host a credential can be for, so it goes without credentials");
-      let who2 = principalMember(principalPlane);
-      if (who2 !== null && !this.#active(who2)) {
-        this.#withdrawRevoked(who2);
-        who2 = null;
-      }
-      const info = typeof target === "string" && target !== "" ? this.#core.bundleInfo(target) : null;
-      const targetProject = info && typeof info.project === "string" && info.project !== "" ? info.project : null;
-      const r = this.#one(`SELECT * FROM ${CREDENTIALS_TABLE}
-                            WHERE host=? AND withdrawn_at IS NULL
-                              AND ((scope='member' AND supplied_by=?) OR (scope='project' AND project=?) OR scope='group')
-                            ORDER BY CASE scope WHEN 'member' THEN 0 WHEN 'project' THEN 1 ELSE 2 END,
-                                     supplied_at DESC, rowid DESC
-                            LIMIT 1`, h, who2, targetProject);
-      if (!r)
-        return none(`no credential supplied for ${h} is admitted for this request's scope, so the fetch goes without credentials and the source's refusal stands`);
-      const key = await this.#aesKey();
-      if (!key)
-        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is bound to this instance, so no credential is used and the source's refusal stands");
-      let secret;
-      try {
-        const pt = await crypto.subtle.decrypt(
-          { name: "AES-GCM", iv: unb642(r.iv), additionalData: _CaptureCredentials.#aad(r.credential_id, r.scope, r.project) },
-          key,
-          unb642(r.ciphertext)
-        );
-        secret = new TextDecoder("utf-8", { fatal: true }).decode(pt);
-      } catch {
-        return none(`credential ${r.credential_id} will not decrypt under this instance's key, so the fetch goes without credentials and the source's refusal stands`);
-      }
-      return { credentials: [{
-        credential: r.credential_id,
-        kind: r.kind,
-        secret,
-        supplied_by: r.supplied_by,
-        scope: r.scope,
-        project: r.project ?? null
-      }], reason: null };
-    } catch {
-      return none("the credentials could not be read, so the fetch goes without credentials and the source's refusal stands");
-    }
-  }
-  /* ================= R57: withdrawal ================= */
-  /** Withdraws a credential: R56 never answers it again, its ciphertext is destroyed now, and its secretless
-   *  entry stays with `withdrawn_at` and `withdrawn_by`. */
-  async credentialWithdraw(args) {
-    const { credential, by } = args && typeof args === "object" ? args : {};
-    try {
-      const found = typeof credential === "string" && credential !== "" ? this.#one(`SELECT * FROM ${CREDENTIALS_TABLE} WHERE credential_id=?`, credential) : null;
-      if (!found || !this.#sees(by, found))
-        return refusal11("CAPTURE_CREDENTIAL_NO_SUCH", "no credential by that id is visible to this member");
-      const [row2] = this.#sweep([found]);
-      const denied = this.#r63Refusal(by, { row: row2 });
-      if (denied) return denied;
-      if (row2.withdrawn_at != null) return { ok: true, already: true, withdrawn: _CaptureCredentials.#entry(row2) };
-      const at17 = this.#core.transact(() => this.#destroy(row2.credential_id, by));
-      return { ok: true, already: false, withdrawn: _CaptureCredentials.#entry({ ...row2, withdrawn_at: at17, withdrawn_by: by }) };
-    } catch {
-      return refusal11(
-        "CAPTURE_CREDENTIAL_WITHDRAW_FAILED",
-        "the credential could not be read or withdrawn, so nothing was changed"
-      );
-    }
-  }
-  /* ================= R58: the listing ================= */
-  /* R58's visibility as SQL over the alias `c`, so the listing's cut falls on what the viewer sees: an administrator
-     every row; an active member their own `member` rows, the `group` rows, and a `project` row whose project
-     membership's one rule of sight (its R43, `viewerPredicate`, R44's FULL for a project) admits them to, joined on
-     record-core's `bundles` by its read contract (R37: `bundle_id`, `object_type`). Null: the viewer sees nothing. */
-  #visibleClause(who2) {
-    if (this.#members.isAdministrator(who2)) return { sql: "1=1", args: [] };
-    if (who2 === "admin" || !this.#active(who2)) return null;
-    const g = viewerPredicate(viewerOf(who2));
-    if (g.scope === "DENY") return null;
-    return {
-      sql: `((c.scope='member' AND c.supplied_by=?) OR c.scope='group'
-                    OR (c.scope='project' AND EXISTS (SELECT 1 FROM bundles b
-                         WHERE b.bundle_id = c.project AND b.object_type = 'project' AND ${g.sql})))`,
-      args: [who2, ...g.args]
-    };
-  }
-  /** The credentials `viewer` may see, filtered by `scope` and `project` when given: the first `limit` in the order
-   *  supplied (`CREDENTIAL_LIST_LIMIT`, the caller's to lower, never raise), `truncated` measured by reading one row
-   *  past it. Never the secret. */
-  credentialList(args) {
-    const { viewer, scope, project, limit } = args && typeof args === "object" ? args : {};
-    const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || CREDENTIAL_LIST_LIMIT, CREDENTIAL_LIST_LIMIT));
-    const empty = { entries: [], limit: cap, truncated: false };
-    try {
-      const who2 = viewerMember(viewer);
-      if (!who2) return empty;
-      const vis = this.#visibleClause(who2);
-      if (!vis) return empty;
-      const where = [vis.sql];
-      const params = [...vis.args];
-      if (scope !== void 0 && scope !== null) {
-        where.push("c.scope=?");
-        params.push(scope);
-      }
-      if (project !== void 0 && project !== null) {
-        where.push("c.project=?");
-        params.push(project);
-      }
-      const found = this.#sweep(this.#rows(`SELECT c.* FROM ${CREDENTIALS_TABLE} c WHERE ${where.join(" AND ")}
-                                            ORDER BY c.supplied_at, c.rowid LIMIT ?`, ...params, cap + 1));
-      const truncated3 = found.length > cap;
-      return { entries: (truncated3 ? found.slice(0, cap) : found).map((r) => _CaptureCredentials.#entry(r)), limit: cap, truncated: truncated3 };
-    } catch {
-      return empty;
-    }
-  }
-};
-
 // src/inquiry/index.mjs
 var inquiry_exports = {};
 __export(inquiry_exports, {
@@ -65509,7 +61064,7 @@ var INQUIRY_DISPOSE_CHECKS = {
   }
 };
 var GRADE_RANK = gradeRank;
-var safeJson10 = (s) => {
+var safeJson9 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -66090,7 +61645,7 @@ var Inquiry = class _Inquiry {
       if (!id || typeof id !== "string") return null;
       const r = this.#one(`SELECT candidate, resolution, explores FROM inquiry_contradiction_links WHERE bundle_id=?`, id);
       if (!r) return null;
-      return { candidate: r.candidate ?? null, resolution: safeJson10(r.resolution), explores: safeJson10(r.explores) };
+      return { candidate: r.candidate ?? null, resolution: safeJson9(r.resolution), explores: safeJson9(r.explores) };
     } catch {
       return null;
     }
@@ -67605,7 +63160,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
         continue;
       }
       e.n++;
-      const chain2 = safeJson10(r.chain);
+      const chain2 = safeJson9(r.chain);
       const cg = this.provenance.captureGrade(r.capture_sha) || {};
       const byteGrade = cg.determined && cg.grade ? cg.grade : cg.basis === "CAPTURE_ROUTE_UNRECORDED" ? EARNED_CAPTURE_CEILING : null;
       if (byteGrade == null) {
@@ -67920,9 +63475,9 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     };
   }
 };
-var instances13 = /* @__PURE__ */ new WeakMap();
+var instances12 = /* @__PURE__ */ new WeakMap();
 function inquiryOf(host, deps) {
-  let k = instances13.get(host);
+  let k = instances12.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -67930,7 +63485,7 @@ function inquiryOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances13.set(host, k);
+    instances12.set(host, k);
     record.declarePurge("inquiry", INQUIRY_TABLES);
     promotion.registerStep("inquiry", { check: (c) => k.check(c), project: (c) => k.project(c) });
     if (typeof content.onStale === "function") content.onStale("inquiry", (notice) => k.staled(notice));
@@ -67960,3578 +63515,6 @@ function inquiryOps(k, url, body) {
     inquirydivide: () => k.divide({ ...b, target: q6("target") || b.target, viewer: q6("viewer"), author: q6("author") }),
     inquiryground: () => k.ground({ ...b, target: q6("target") || b.target, viewer: q6("viewer"), author: q6("author") })
   };
-}
-
-// src/capture-requests/schema.mjs
-var CAPTURE_REQUESTS_SCHEMA = `
--- PL-4 / IS-4 / SWEEP section 4b.1: THE CAPTURE-REQUEST DOOR.
---
--- THE AI DOES NOT CAPTURE. IT REQUESTS, AND THE DAEMON CAPTURES. That is the
--- structural gate DEC-47 kept when it withdrew the authorisation gate, and this
--- table IS the gate: a row here is an ASK, it carries no bytes, no sha and no
--- provenance, and nothing that writes it can fetch anything. The daemon drains
--- it, and DEC-47's conduct rules are enforced at that drain and nowhere else.
---
--- WHY A TABLE RATHER THAN A CONTROL-PLANE ENQUEUE. index.mjs deliberately omits
--- taskenqueue from the OPS table, with the reasoning written into the table
--- itself: no control-plane route may put an event in the queue on its own
--- account. A scoped enqueue op would have crossed that. The table keeps the door
--- the OPS comment closed still closed, keeps the daemon the sole fetcher, and
--- gives DEC-47's conduct ONE enforcement point.
---
--- SCRATCH-CLASS, in capture_sessions' and ai_runs' family and NOT record. It
--- holds no member act, nothing derived from one, and nothing a case is built on:
--- it is a work list with an expiry. The CAPTURE it produces is record and lands
--- exactly where the daemon's captures always have, at collected and never
--- higher.
---
--- BOTH PRINCIPALS ARE COLUMNS AND NEITHER IS NULLABLE (DEC-27(b), DEC-55.4).
--- They are RECORDED AT THE REQUEST rather than resolved at the drain (the plane
--- principal is the caller's stamp, REC-168; the Claude principal is the run's),
--- because a run is scratch with an expiry and the attribution must survive it:
--- an act attributable only while the run that asked is still alive is an act
--- nobody can account for afterwards. A record naming ONE of the two is the
--- defect DEC-27(b) names, so the drain refuses to compose an attribution that
--- cannot state both.
---
--- host IS DERIVED AT THE WRITE and stored, so the drain's rate rule reads one
--- column instead of re-parsing a locator inside the enforcement point. A URL
--- this plane cannot parse never becomes a row at all.
---
--- state IS THE FENCE AS WELL AS THE LIFECYCLE. requested -> draining -> captured
--- is the only route to bytes, and draining is set by the drain alone, inside the
--- tick that then fetches through capture's in-process arm (K58), which nothing
--- outside the drain can reach: op=acquire refuses via capture-request from any
--- caller, so the AI capturing directly rather than requesting is refused by
--- construction and not by a class list.
-CREATE TABLE IF NOT EXISTS capture_requests (
-  request           TEXT PRIMARY KEY,
-  run               TEXT NOT NULL,    -- the run that asked. NO FOREIGN KEY, section 14b.7's rule for versions applied one level down
-  target            TEXT NOT NULL,    -- the inquiry the run is working under: a bundle id, which is what purge's per-bundle arm can find
-  address           TEXT NOT NULL,    -- the public https locator asked for
-  host              TEXT NOT NULL,    -- derived at the write from address
-  purpose           TEXT NOT NULL,    -- the user-agent purpose token this fetch will carry
-  ua_mode           TEXT NOT NULL,    -- civicos, or member-browser (BOB-3, permitted for public documents)
-  principal_plane   TEXT NOT NULL,    -- the caller's stamp (REC-168): whose scope the writes ran under
-  principal_claude  TEXT NOT NULL,    -- the run's: WHICH LEVEL of the cascade paid
-  state             TEXT NOT NULL,    -- requested | draining | captured | refused | expired (D-523, a C-83 render hold released UNDETERMINED at expires)
-  code              TEXT,             -- the DEC-49 wire code, when the drain refused or held this row
-  detail            TEXT,             -- what the drain said, so a held row explains itself without a second call
-  capture_sha       TEXT,             -- what the daemon captured. WRITTEN BY THE DRAIN ONLY
-  attempts          INTEGER NOT NULL DEFAULT 0,
-  requested_at      TEXT NOT NULL,
-  updated           TEXT NOT NULL,
-  expires           TEXT NOT NULL,
-  captured_at       TEXT,
-  -- PL-15 / D-213: THE OTHER QUESTION. NULL on every ordinary request, and NULL
-  -- is the honest answer there rather than a default -- a capture asked for
-  -- under the question the run is working bears on that question and on nothing
-  -- else until somebody says otherwise.
-  --
-  -- WHEN IT IS SET it names a DIFFERENT inquiry from 'target': the run met
-  -- evidence for question B while working question A, and this column is the
-  -- observation. 'target' stays A, because the request is still accountable to
-  -- the question it was made under, while THIS column names what the evidence
-  -- is ABOUT. The two may never be equal, and the door refuses that rather than
-  -- storing a lead that leads back where it started.
-  --
-  -- IT IS A SECOND BUNDLE ID ON THIS ROW, which is why purge's PER-BUNDLE arm
-  -- gained a predicate for it in the same turn. The whole-store arm already
-  -- clears the table, while the per-bundle arm matched 'target' only, so purging
-  -- inquiry B would have left a lead standing that points at a question no
-  -- longer in the store -- D-113's class arriving through a column instead of
-  -- through a table, and invisible to hygiene's structural check for exactly
-  -- that reason.
-  lead_inquiry      TEXT,
-  -- FL-4 / IS-9 / section 14b.3: WHEN THE RUN WAS WOKEN FOR THIS COMPLETION,
-  -- and NULL means the daemon has answered and the run has not been told yet.
-  --
-  -- IT IS ON THE REQUEST AND NOT ON THE RUN, because the thing that completes is
-  -- a request and a run may be waiting on several. A flag on the run would make
-  -- "this run has been woken" true while a second request was still owed an
-  -- answer, and the wake would be consumed by the first completion to land.
-  --
-  -- AN INSTANT RATHER THAN A FLAG, on the same reasoning captured_at carries:
-  -- the record can then say WHEN the run was told, which is what makes a lease
-  -- extension accountable to something rather than an unexplained clock move.
-  --
-  -- NULL IS THE HONEST DEFAULT AND IT INVENTS NOTHING. A row written before this
-  -- column existed was never woken -- nothing existed to wake it -- and the
-  -- consumer's own predicate requires the run to still be running, so a request
-  -- belonging to a run that has already ended is never woken retroactively.
-  run_woken_at      TEXT,
-  -- D-491 / IC-276 / CLIENT-RENDERED.md, BOB #32 item 3: DOES THIS REQUEST ASK
-  -- FOR THE PAGE AS A VISITOR SAW IT. 0 is the served document, captured exactly
-  -- as every request before this column was. 1 asks the drain for the rendered
-  -- pair, and BOB #32 item 3 is what makes that askable at all -- an unattended
-  -- sweep MAY render, within the allowance and through the host governor.
-  --
-  -- NOT NULL DEFAULT 0, AND THAT IS THE HONEST DEFAULT HERE WHERE IT WOULD NOT
-  -- BE ON THE TWO COLUMNS ABOVE. lead_inquiry and run_woken_at are nullable
-  -- because a legacy row had an unstated value that a default would invent. This
-  -- column has no unstated value to invent: a request written before it existed
-  -- could not ask for a render, because no door read the flag and no drain could
-  -- have honoured one, so 0 states what was true of it rather than guessing.
-  --
-  -- IT IS THE ROW AND NOT THE CALL THAT CARRIES IT, for the reason address,
-  -- purpose and ua_mode are on the row: capture's in-process arm is handed it by
-  -- the drain from the row it judged, so what this instance renders is what
-  -- the drain judged.
-  --
-  -- WHEN THE RENDER CANNOT HAPPEN THE ROW IS HELD, never captured: capture's arm
-  -- answers a named C-83 refusal before anything is fetched, the drain records
-  -- that code and leaves the row in requested, and the served shell is NEVER
-  -- filed as though it were the content. That sentence is the whole of C-83 and
-  -- the reason this column cannot be read as advisory.
-  render            INTEGER NOT NULL DEFAULT 0,
-  -- K103 (3), capture-requests R40: WHY THE SOURCE TURNED THIS REQUEST AWAY, when
-  -- it did: login, paywall, user-agent or other. NULL when nothing the source
-  -- said decided the row (conduct, pacing, a render this instance could not do),
-  -- so a reason is never invented for a refusal that was ours.
-  source_reason     TEXT
-);
-CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
-CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
-CREATE INDEX IF NOT EXISTS capture_requests_run ON capture_requests(run);
--- D-581, R26-R27: the queue's producers read captured rows by completion and
--- held renders by their last update, each bounded; these let a bounded read
--- stop at its limit instead of sorting every terminal row the table holds.
-CREATE INDEX IF NOT EXISTS capture_requests_completed ON capture_requests(state, captured_at, request);
-CREATE INDEX IF NOT EXISTS capture_requests_renders ON capture_requests(render, state, updated, request);
--- R39 (N262): the drain finds the capture this table holds of an address (and
--- render flag) to fetch conditionally on, by one indexed read per fired row.
-CREATE INDEX IF NOT EXISTS capture_requests_address ON capture_requests(address, render, state, captured_at);
-`;
-var CAPTURE_REQUESTS_ADDITIVE = Object.freeze([
-  ["lead_inquiry", "TEXT"],
-  ["run_woken_at", "TEXT"],
-  ["render", "INTEGER NOT NULL DEFAULT 0"],
-  ["source_reason", "TEXT"]
-]);
-function migrateCaptureRequests(sql) {
-  const have = [...sql.exec(`PRAGMA table_info(capture_requests)`)].map((r) => r.name);
-  if (have.length) {
-    for (const [column, decl] of CAPTURE_REQUESTS_ADDITIVE)
-      if (!have.includes(column)) sql.exec(`ALTER TABLE capture_requests ADD COLUMN ${column} ${decl}`);
-  }
-  const bare2 = CAPTURE_REQUESTS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  for (const stmt of bare2.split(";")) if (stmt.trim()) sql.exec(stmt);
-}
-
-// src/capture-requests/checks.mjs
-var checks_exports16 = {};
-__export(checks_exports16, {
-  CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS
-});
-var CAPTURE_SOURCE_CHECKS = Object.freeze({
-  /* R40, R42: THE SOURCE TURNED THE REQUEST AWAY and said why (401/407 a login, 402 a payment, 403/406 an agent it will
-     not admit, 451 another reason). Terminal, and the one refusal a member can answer: supply what the source asked
-     for (capture-sources R55) and ask again (op=capturerequestretry). */
-  CAPTURE_SOURCE_REFUSED: {
-    check: "C-108.1",
-    where: "src/capture-requests/index.mjs drain > is-capture-source-refused",
-    translation: "The site turned this request away: it asked for a login, a payment or a different browser, or refused for another reason it gave. Nothing was captured. A member who can see the question may supply what the site asked for and ask again."
-  }
-});
-
-// src/capture-requests/index.mjs
-var CAPTURE_REQUESTS_MODULE = "capture-requests";
-var CAPTURE_REQUEST_TICK_BATCH = 10;
-var CAPTURE_REQUEST_PER_HOST_PER_TICK = 1;
-var CAPTURE_REQUEST_TTL_MS = 864e5;
-var CAPTURE_REQUEST_TICK_MS = 6e4;
-var CAPTURE_REQUEST_READ_LIMIT = 200;
-var CAPTURE_REQUEST_READ_MAX = 1e3;
-var CAPTURE_REQUEST_WAIT_BATCH = 25;
-var CAPTURE_REQUEST_RANK_READ = 10;
-var CAPTURE_REQUEST_BUNDLE_SLUG = "requested";
-var CAPTURE_REQUEST_STATES = Object.freeze(["requested", "draining", "captured", "refused", "expired"]);
-var CAPTURE_REQUEST_TERMINAL = Object.freeze(["captured", "refused", "expired"]);
-var SOURCE_REASONS = Object.freeze(["login", "paywall", "user-agent", "other"]);
-var RENDER_NOT_A_PAGE_CHECK = "C-83.6";
-var RENDER_FAILED_CHECK = "C-83.7";
-var CAPTURE_FIELDS = Object.freeze(["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]);
-function sourceReasonOf(status) {
-  const s = Number(status);
-  if (s === 401 || s === 407) return { reason: "login", terminal: true };
-  if (s === 402) return { reason: "paywall", terminal: true };
-  if (s === 403 || s === 406) return { reason: "user-agent", terminal: true };
-  if (s === 451) return { reason: "other", terminal: true };
-  return { reason: "other", terminal: false };
-}
-function renderHoldReason(code) {
-  const own2 = (fam) => code && Object.prototype.hasOwnProperty.call(fam, code) ? fam[code] : null;
-  const family = own2(RENDER_CAPTURE_CHECKS) ? "C-83" : own2(CAPTURE_REQUEST_CHECKS) ? "C-28" : own2(CAPTURE_SOURCE_CHECKS) ? "C-108" : null;
-  const row2 = own2(RENDER_CAPTURE_CHECKS) || own2(CAPTURE_REQUEST_CHECKS) || own2(CAPTURE_SOURCE_CHECKS);
-  return { code: code ?? null, family, check: row2 ? row2.check : null, translation: row2 ? row2.translation : null };
-}
-function captureRequestAttribution(row2) {
-  const actor = `${MACHINE_AUTHOR_PREFIX}daemon`;
-  const plane2 = String(row2 && row2.principal_plane || "").trim();
-  const claude = String(row2 && row2.principal_claude || "").trim();
-  if (!row2 || !plane2 || !claude)
-    return { ok: false, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", plane: plane2 || null, claude: claude || null };
-  return {
-    ok: true,
-    actor,
-    machine_attributed: true,
-    at_the_request_of: { run: row2.run, inquiry: row2.target },
-    principals: { plane: plane2, claude },
-    /* The sentence a surface renders, composed from the fields above so it cannot say something they do not. */
-    statement: `the daemon captured this, at the investigative session's request (run ${row2.run}), under ${plane2}, paid by ${claude}`
-  };
-}
-function unattendedBound(env) {
-  return !!(env && (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN !== "" || typeof env.ADMIN_TOKEN === "string" && env.ADMIN_TOKEN !== ""));
-}
-var text2 = (v) => typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : "";
-var shown = (v) => {
-  try {
-    return String(JSON.stringify(v) ?? typeof v).slice(0, 40);
-  } catch {
-    return typeof v;
-  }
-};
-var clamp2 = (limit, dflt, max) => {
-  const n = Math.floor(Number(limit));
-  return Math.max(1, Math.min(Number.isFinite(n) && n > 0 ? n : dflt, max));
-};
-var instantMs = (v) => {
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  if (typeof v === "string" && v.trim()) {
-    const t = Date.parse(v);
-    return Number.isFinite(t) ? t : null;
-  }
-  return null;
-};
-var randomHex = (bytes2) => [...crypto.getRandomValues(new Uint8Array(bytes2))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var CaptureRequests = class _CaptureRequests {
-  #sql;
-  #deps;
-  #draining = false;
-  #filed = [];
-  // R44: {module, fn, seq}
-  /** `deps`: `record`, `observations`, `governor`, `capture`, `credentials` (each module's instance on this storage),
-   *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
-   *  `principal_plane` and `principal_claude`, or null), `env`, `now()` (milliseconds; a test may inject its clock),
-   *  `storeName`, `configured()` (R11; `unattendedBound(env)` by default), `promotion` (R38), `order` (R44: the
-   *  modules' total order, membership's `MODULE_ORDER` unless a test passes its own), `inquiry` (R14: its R44
-   *  `memberUserAgent(id)`). */
-  constructor(storage, deps = {}) {
-    this.#sql = storage.sql;
-    this.#deps = deps;
-  }
-  migrate() {
-    migrateCaptureRequests(this.#sql);
-  }
-  #rows(q6, ...a) {
-    return [...this.#sql.exec(q6, ...a)];
-  }
-  #one(q6, ...a) {
-    const r = this.#rows(q6, ...a);
-    return r.length ? r[0] : null;
-  }
-  #nowMs() {
-    const n = this.#deps.now ? Number(this.#deps.now()) : Date.now();
-    return Number.isFinite(n) ? n : Date.now();
-  }
-  #env() {
-    return this.#deps.env || {};
-  }
-  #storeName() {
-    const n = typeof this.#deps.storeName === "function" ? this.#deps.storeName() : this.#deps.storeName;
-    return typeof n === "string" && n ? n : "bio";
-  }
-  #observe(entry, at17) {
-    return this.#deps.observations.observe(entry, at17, 0);
-  }
-  #rank(m) {
-    const o = Array.isArray(this.#deps.order) ? this.#deps.order : MODULE_ORDER;
-    const i = o.indexOf(m);
-    return i === -1 ? Infinity : i;
-  }
-  /* ==================================================================== *
-   * R1–R9 — THE DOOR. It writes a row. It fetches NOTHING.
-   *
-   * Read this function looking for an outbound call and there is none, which is the module's whole claim expressed as
-   * an absence: R9's test drives the door with a capture, a governor and credentials that fail the test when touched.
-   * ==================================================================== */
-  captureRequest(a = {}, { viewer = null, caller = null, at: at17 = null } = {}) {
-    const args = a && typeof a === "object" ? a : {};
-    const refusal19 = (code, detail, extra) => {
-      const row2 = CAPTURE_REQUEST_CHECKS[code];
-      return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
-    };
-    const run = text2(args.run).trim();
-    const runRow = run ? this.#deps.runs.runFor(run, viewer) : null;
-    if (!runRow)
-      return refusal19(
-        "CAPTURE_REQUEST_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
-        { run: run || null }
-      );
-    const notPrincipal = runPrincipalGate({
-      caller,
-      principal: runRow.principal_plane,
-      act: "requesting a capture under a run"
-    });
-    if (notPrincipal)
-      return {
-        ok: false,
-        reason: notPrincipal.code,
-        code: notPrincipal.code,
-        check: notPrincipal.check,
-        translation: notPrincipal.translation,
-        detail: notPrincipal.detail,
-        run,
-        note: "a capture request names a run its caller holds. Nothing was requested or written"
-      };
-    if (runRow.status !== "running")
-      return refusal19(
-        "CAPTURE_REQUEST_NO_RUN",
-        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
-        { run }
-      );
-    const address = text2(args.address).trim();
-    if (!isPublicHttpsLocator(address))
-      return refusal19(
-        "CAPTURE_REQUEST_NOT_PUBLIC",
-        `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a session may reach to "areas that anybody can go through", and this address is not one on its face.`,
-        { address: address || null }
-      );
-    let host = null;
-    try {
-      host = new URL(address).host.toLowerCase();
-    } catch {
-      host = null;
-    }
-    if (!host)
-      return refusal19(
-        "CAPTURE_REQUEST_NOT_PUBLIC",
-        "this address has no host this plane can read, and the per-host pacing DEC-47 requires is computed from one.",
-        { address }
-      );
-    const target = text2(args.target).trim();
-    if (!this.#inquiryInSight(target, viewer))
-      return refusal19(
-        "CAPTURE_REQUEST_NOT_AN_INQUIRY",
-        `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is accountable to the question it was asked under, and a fetch belonging to nothing is a fetch nobody can account for afterwards.`,
-        { target: target || null }
-      );
-    const lead = text2(args.lead_inquiry ?? args.lead).trim();
-    if (lead) {
-      if (!this.#inquiryInSight(lead, viewer))
-        return refusal19(
-          "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
-          `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this evidence bears on, so it names a question or it names nothing \u2014 a document, a project or a bundle id nothing answers to would give the notification a home that cannot hold it.`,
-          { lead_inquiry: lead }
-        );
-      if (lead === target)
-        return refusal19(
-          "CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
-          `this request names ${lead.slice(0, 60)} as both the question it was made under and the question the evidence bears on. That is ordinary evidence for this question, which needs no lead: a lead exists to give evidence for ANOTHER question a home (D-213), and one pointing back here would file a notification about this question saying evidence for a different one was found.`,
-          { lead_inquiry: lead, target }
-        );
-    }
-    const brought = CAPTURE_FIELDS.filter((k) => args[k] !== void 0 && args[k] !== null && args[k] !== "");
-    if (brought.length)
-      return refusal19(
-        "CAPTURE_REQUEST_CARRIES_A_CAPTURE",
-        `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60).`,
-        { fields: brought }
-      );
-    const renderRaw = args.render ?? null;
-    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)
-      return refusal19(
-        "CAPTURE_REQUEST_RENDER_MALFORMED",
-        `render=${shown(renderRaw)} is not a value this door reads. Send render: true for the page as a visitor saw it, or nothing for the document as the site serves it.`,
-        { render: null }
-      );
-    const render = renderRaw === true ? 1 : 0;
-    const purpose = text2(args.purpose).trim();
-    const uaMode = text2(args.ua_mode ?? args.uaMode ?? "civicos").trim();
-    const callerPlane = text2(caller).trim();
-    const standing = this.#one(
-      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
-      run,
-      address,
-      render
-    );
-    if (standing)
-      return {
-        ok: true,
-        request: standing.request,
-        run,
-        target: standing.target,
-        address,
-        host: standing.host,
-        purpose: standing.purpose,
-        ua_mode: standing.ua_mode,
-        lead_inquiry: standing.lead_inquiry ?? null,
-        render: standing.render === 1,
-        state: standing.state,
-        requested: false,
-        already: true,
-        principals: { plane: standing.principal_plane, claude: standing.principal_claude }
-      };
-    const nowMs = instantMs(at17) ?? this.#nowMs();
-    const now = stampInstant("second", nowMs);
-    const expires = stampInstant("second", nowMs + CAPTURE_REQUEST_TTL_MS);
-    let request = null;
-    for (let i = 0; i < 8 && !request; i++) {
-      const id = `CR-${now.replace(/[-:TZ]/g, "")}-${randomHex(6)}`;
-      if (!this.#one(`SELECT 1 AS x FROM capture_requests WHERE request=?`, id)) request = id;
-    }
-    this.#sql.exec(
-      `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
-      request,
-      run,
-      target,
-      address,
-      host,
-      purpose,
-      uaMode,
-      callerPlane,
-      String(runRow.principal_claude ?? ""),
-      now,
-      now,
-      expires,
-      lead || null,
-      render
-    );
-    const written = this.#one(`SELECT * FROM capture_requests WHERE request=?`, request);
-    for (const l of this.#filed) {
-      try {
-        const r = l.fn({ request, run: written.run, expires: written.expires });
-        if (r && typeof r.then === "function") r.then(null, () => {
-        });
-      } catch {
-      }
-    }
-    return {
-      ok: true,
-      request,
-      run: written.run,
-      target: written.target,
-      address: written.address,
-      host: written.host,
-      purpose: written.purpose,
-      ua_mode: written.ua_mode,
-      lead_inquiry: written.lead_inquiry ?? null,
-      render: written.render === 1,
-      state: written.state,
-      requested: true,
-      already: false,
-      requested_at: written.requested_at,
-      expires: written.expires,
-      principals: { plane: written.principal_plane, claude: written.principal_claude },
-      detail: "requested. This instance does not fetch on a caller's timing: the daemon drains this queue, and DEC-47's conduct rules are applied there."
-    };
-  }
-  /** Is `id` an inquiry this viewer can see (membership's predicate over record-core's `bundles` read contract)? A
-   *  legacy `focus` or `problem` spelling reads as an inquiry (`normalizeType`). An unseen and an absent id alike. */
-  #inquiryInSight(id, viewer) {
-    if (!id) return false;
-    const gate = viewerPredicate(viewer);
-    const b = this.#one(
-      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-      id,
-      ...gate.args
-    );
-    return !!b && normalizeType(b.object_type) === "inquiry";
-  }
-  /** R10's composer, as a method for the reads' callers. */
-  attribution(row2) {
-    return captureRequestAttribution(row2);
-  }
-  /** R44 (N223, K259): a later module registers once at start for the notice after each request written (R6). Its
-   *  refusals are membership's `listenerRefusal` (R81); listeners run in the modules' total order (R83). */
-  onRequestFiled(module, fn) {
-    const refused = listenerRefusal(this.#filed, module, fn);
-    if (refused) return refused;
-    this.#filed.push({ module, fn, seq: this.#filed.length });
-    this.#filed.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
-    return { ok: true, module };
-  }
-  /* ==================================================================== *
-   * R11–R22, R37–R41 — THE DRAIN: THE ONLY THING IN THIS PLANE THAT TURNS A REQUEST INTO A FETCH.
-   * ==================================================================== */
-  /** R11, R37: whether unattended capture is configured here. Never throws. */
-  configured() {
-    try {
-      return this.#deps.configured ? !!this.#deps.configured() : unattendedBound(this.#env());
-    } catch {
-      return false;
-    }
-  }
-  /** R37: the number of `requested` rows, and 0 whenever unattended capture is not configured, so an idle or
-   *  unconfigured instance holds no alarm. Synchronous; writes nothing; never throws. */
-  drainPending() {
-    try {
-      if (!this.configured()) return 0;
-      return Number(this.#one(`SELECT count(*) AS c FROM capture_requests WHERE state='requested'`).c) || 0;
-    } catch {
-      return 0;
-    }
-  }
-  /** R37: the cadence between drain ticks while work waits: the binding `CAPTURE_REQUEST_TICK_MS` when it reads as a
-   *  number ≥ 0, else 60,000. An absent or empty binding is not a number. Synchronous; never throws. */
-  drainIntervalMs() {
-    try {
-      const raw = this.#env().CAPTURE_REQUEST_TICK_MS;
-      if (raw === void 0 || raw === null || typeof raw === "string" && raw.trim() === "") return CAPTURE_REQUEST_TICK_MS;
-      const v = Number(raw);
-      return Number.isFinite(v) && v >= 0 ? v : CAPTURE_REQUEST_TICK_MS;
-    } catch {
-      return CAPTURE_REQUEST_TICK_MS;
-    }
-  }
-  #remaining() {
-    return Number(this.#one(`SELECT count(*) AS c FROM capture_requests WHERE state='requested'`).c) || 0;
-  }
-  /** op=capturerequestdrain, and the scheduler's `capture-request-drain` consumer, which passes its rank (R12, N224:
-   *  scheduler R10, `rank(items, now)` answering the items reordered). */
-  async drain({ limit = null, actor = "consumer", now = null, rank: rank5 = null } = {}) {
-    const nowMs = Number.isFinite(now) ? now : this.#nowMs();
-    const at17 = stampInstant("second", nowMs);
-    if (!this.configured())
-      return {
-        configured: false,
-        actor,
-        at: at17,
-        drained: 0,
-        captured: [],
-        refused: [],
-        held: [],
-        expired: [],
-        remaining: 0,
-        detail: "no daemon credential is bound: this instance drains nothing and holds no alarm for it"
-      };
-    if (this.#draining)
-      return {
-        configured: true,
-        busy: true,
-        actor,
-        at: at17,
-        drained: 0,
-        captured: [],
-        refused: [],
-        held: [],
-        expired: [],
-        remaining: this.#remaining()
-      };
-    this.#draining = true;
-    try {
-      const cap = Math.max(1, Math.min(Number(limit) || CAPTURE_REQUEST_TICK_BATCH, CAPTURE_REQUEST_TICK_BATCH));
-      this.#sql.exec(`UPDATE capture_requests SET state='requested', updated=? WHERE state='draining'`, at17);
-      const expired = [];
-      for (const q6 of this.#rows(
-        `SELECT * FROM capture_requests WHERE state='requested' AND expires <= ? ORDER BY expires, request LIMIT ?`,
-        at17,
-        cap
-      )) {
-        const renderRow2 = q6.render === 1;
-        const reason = renderHoldReason(q6.code);
-        const why = String(q6.detail || "").slice(0, 400);
-        const said2 = `held under ${reason.check || "no catalogued check"} ${q6.code || "(no code: never attempted)"} until this request expired at ${q6.expires}. ` + (renderRow2 ? "The render was never performed and nothing was filed for it, so what the page showed is UNDETERMINED" : "Nothing was fetched or filed for it after that, so what the address holds is UNDETERMINED") + (why ? ` \u2014 the reason last given: ${why}` : " \u2014 no further detail was carried");
-        this.#sql.exec(
-          `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
-          said2.slice(0, 600),
-          at17,
-          q6.request
-        );
-        this.#observe({
-          ...lookAuthority(q6),
-          level: "document",
-          subjectKind: "address",
-          subject: q6.address,
-          state: "LOOKED_INDETERMINATE",
-          governed: renderRow2,
-          condition: renderRow2 ? "render-deferred" : null,
-          detail: `${reason.check || "no catalogued check"} ${q6.code || "(no code)"}: the request expired UNDETERMINED at ${q6.expires} and is released \u2014 ${why || "no detail was carried"}`
-        }, at17);
-        expired.push({
-          request: q6.request,
-          address: q6.address,
-          host: q6.host,
-          code: q6.code ?? null,
-          check: reason.check,
-          translation: reason.translation,
-          source_reason: q6.source_reason ?? null,
-          render: renderRow2 ? { state: "expired", content: "undetermined" } : null,
-          expires: q6.expires,
-          detail: said2
-        });
-      }
-      const ranking = typeof rank5 === "function";
-      const read2 = this.#rows(
-        `SELECT * FROM capture_requests WHERE state='requested' AND expires > ? ORDER BY requested_at, request LIMIT ?`,
-        at17,
-        ranking ? cap * CAPTURE_REQUEST_RANK_READ : cap
-      );
-      const queued = ranking ? this.#ranked(read2, rank5, nowMs).slice(0, cap) : read2;
-      const captured = [], refused = [], held = [];
-      const hostsThisTick = /* @__PURE__ */ new Map();
-      const settle = (q6, {
-        terminal,
-        code,
-        check,
-        translation,
-        detail,
-        governed,
-        condition,
-        sourceReason = null,
-        render = null,
-        countAttempt = true,
-        into
-      }) => {
-        this.#sql.exec(
-          `UPDATE capture_requests SET state=?, code=?, detail=?, source_reason=?, attempts=attempts+?, updated=? WHERE request=?`,
-          terminal ? "refused" : "requested",
-          code,
-          String(detail || "").slice(0, 600),
-          sourceReason,
-          countAttempt ? 1 : 0,
-          at17,
-          q6.request
-        );
-        this.#observe({
-          ...lookAuthority(q6),
-          level: "document",
-          subjectKind: "address",
-          subject: q6.address,
-          state: "LOOKED_INDETERMINATE",
-          governed: governed === true,
-          condition: condition || null,
-          detail: `${check || "no catalogued check"} ${code}: ${String(detail || "").slice(0, 400)}`
-        }, at17);
-        (into || (terminal ? refused : held)).push({
-          request: q6.request,
-          address: q6.address,
-          host: q6.host,
-          code,
-          check: check ?? null,
-          translation: translation ?? null,
-          source_reason: sourceReason,
-          detail: String(detail || ""),
-          ...render ? { render } : {}
-        });
-      };
-      const sourceRefused = (q6, r) => {
-        const why = sourceReasonOf(r.status);
-        const row2 = CAPTURE_SOURCE_CHECKS.CAPTURE_SOURCE_REFUSED;
-        return {
-          ok: false,
-          terminal: true,
-          code: "CAPTURE_SOURCE_REFUSED",
-          check: row2.check,
-          translation: row2.translation,
-          sourceReason: why.reason,
-          detail: `the source answered HTTP ${r.status} for ${q6.address} (${why.reason}); nothing was captured`
-        };
-      };
-      const fetchFailed = (q6, r) => {
-        const row2 = CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED;
-        const fromSource = r.reason === "SOURCE_REFUSED";
-        return {
-          ok: false,
-          terminal: false,
-          code: "CAPTURE_FETCH_FAILED",
-          check: row2.check,
-          translation: row2.translation,
-          sourceReason: fromSource ? "other" : null,
-          detail: fromSource ? `the source answered HTTP ${r.status} for ${q6.address}; nothing was captured` : `the fetch did not land: ${String(r.reason || "").slice(0, 200)}`
-        };
-      };
-      for (const q6 of queued) {
-        const verdict = this.#conduct(q6, nowMs, hostsThisTick);
-        if (!verdict.ok) {
-          const row2 = CAPTURE_REQUEST_CHECKS[verdict.code];
-          settle(q6, {
-            terminal: verdict.terminal,
-            code: verdict.code,
-            check: row2.check,
-            translation: row2.translation,
-            detail: verdict.detail,
-            governed: verdict.governed,
-            condition: verdict.condition
-          });
-          continue;
-        }
-        this.#sql.exec(
-          `UPDATE capture_requests SET state='draining', attempts=attempts+1, updated=? WHERE request=?`,
-          at17,
-          q6.request
-        );
-        hostsThisTick.set(q6.host, (hostsThisTick.get(q6.host) || 0) + 1);
-        const r = await this.#fire(q6, verdict);
-        if (r.ok) {
-          this.#sql.exec(
-            `UPDATE capture_requests SET state='captured', code=NULL, detail=?, source_reason=NULL, capture_sha=?, captured_at=?, updated=? WHERE request=?`,
-            verdict.attribution.statement,
-            r.sha || null,
-            at17,
-            at17,
-            q6.request
-          );
-          this.#observe({
-            ...lookAuthority(q6),
-            level: "document",
-            subjectKind: "address",
-            subject: q6.address,
-            state: "PRESENT",
-            governed: false,
-            resultKind: "capture",
-            resultRef: r.sha || null,
-            detail: verdict.attribution.statement
-          }, at17);
-          const promoted = r.existed === true || !r.document ? null : this.#promoteCapture(q6, r.document, verdict.attribution, at17);
-          captured.push({
-            request: q6.request,
-            address: q6.address,
-            sha: r.sha || null,
-            grade: r.grade ?? null,
-            attribution: verdict.attribution,
-            already_held: r.existed === true,
-            ...promoted ? { promoted } : {}
-          });
-        } else if (r.renderCode) {
-          const renderRow2 = RENDER_CAPTURE_CHECKS[r.renderCode];
-          const why = String(r.detail || r.reason || "").slice(0, 400);
-          if (renderRow2.check === RENDER_NOT_A_PAGE_CHECK) {
-            settle(q6, {
-              terminal: true,
-              code: r.renderCode,
-              check: renderRow2.check,
-              translation: renderRow2.translation,
-              detail: why || "the address served something that is not a single HTML page",
-              governed: false,
-              condition: null,
-              countAttempt: false
-            });
-          } else if (renderRow2.check === RENDER_FAILED_CHECK) {
-            settle(q6, {
-              terminal: false,
-              code: r.renderCode,
-              check: renderRow2.check,
-              translation: renderRow2.translation,
-              detail: why,
-              governed: true,
-              condition: "render-deferred",
-              countAttempt: false,
-              render: { state: "deferred", content: "undetermined" }
-            });
-          } else {
-            hostsThisTick.set(q6.host, Math.max(0, (hostsThisTick.get(q6.host) || 1) - 1));
-            settle(q6, {
-              terminal: false,
-              code: r.renderCode,
-              check: renderRow2.check,
-              translation: renderRow2.translation,
-              detail: why,
-              governed: true,
-              condition: "render-deferred",
-              countAttempt: false,
-              render: { state: r.renderState || "deferred", content: "undetermined" }
-            });
-          }
-        } else if (r.reason === "SOURCE_REFUSED" && sourceReasonOf(r.status).terminal) {
-          settle(q6, { ...sourceRefused(q6, r), governed: false, condition: null, countAttempt: false });
-        } else {
-          const ours = r.reason === "HOST_COOLING_OFF";
-          settle(q6, {
-            ...fetchFailed(q6, r),
-            governed: ours,
-            condition: ours ? "governor-holding-host" : null,
-            countAttempt: false
-          });
-        }
-      }
-      return {
-        configured: true,
-        actor,
-        at: at17,
-        drained: captured.length + refused.length + held.length,
-        captured,
-        refused,
-        held,
-        expired,
-        remaining: this.#remaining()
-      };
-    } finally {
-      this.#draining = false;
-    }
-  }
-  /** R12 (N224): the rows in the rank's order. Each is offered as `{kind: "request", id, waitingSince, cadenceMs}`
-   *  (`waitingSince` its `requested_at` in milliseconds; `cadenceMs` R37's, by which the rank puts work waiting longer
-   *  than one cadence first) and carries its place under a symbol the rank's copies keep; a row the rank drops or
-   *  cannot place follows in oldest-first order. A rank that throws or answers no list leaves the order as read. */
-  #ranked(read2, rank5, now) {
-    if (read2.length < 2) return read2;
-    const PLACE = Symbol("place");
-    const cadenceMs = this.drainIntervalMs();
-    const items = read2.map((r, i) => ({
-      kind: "request",
-      id: r.request,
-      waitingSince: instantMs(r.requested_at),
-      cadenceMs,
-      [PLACE]: i
-    }));
-    let answer;
-    try {
-      answer = rank5(items, now);
-    } catch {
-      return read2;
-    }
-    if (!Array.isArray(answer)) return read2;
-    const order = [], taken = /* @__PURE__ */ new Set();
-    for (const x of answer) {
-      const i = x && typeof x === "object" ? x[PLACE] : void 0;
-      if (Number.isInteger(i) && !taken.has(i)) {
-        taken.add(i);
-        order.push(read2[i]);
-      }
-    }
-    for (let i = 0; i < read2.length; i++) if (!taken.has(i)) order.push(read2[i]);
-    return order;
-  }
-  /** R14: DEC-47's CONDUCT, and this is the ONE place it is applied. */
-  #conduct(q6, nowMs, hostsThisTick) {
-    const attribution = captureRequestAttribution(q6);
-    if (!attribution.ok)
-      return {
-        ok: false,
-        terminal: true,
-        code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
-        detail: `this request names ${attribution.plane && !attribution.claude ? "only the plane principal" : ""}${!attribution.plane && attribution.claude ? "only the Claude-account principal" : ""}${!attribution.plane && !attribution.claude ? "neither principal" : ""}, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made for an act the record could not attribute.`
-      };
-    if (!CAPTURE_PURPOSES.includes(q6.purpose))
-      return {
-        ok: false,
-        terminal: true,
-        code: "CAPTURE_CONDUCT_NO_PURPOSE",
-        detail: `'${String(q6.purpose || "").slice(0, 40) || "(none)"}' is not one of the purposes this instance can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.`
-      };
-    if (!CAPTURE_UA_MODES.includes(q6.ua_mode))
-      return {
-        ok: false,
-        terminal: true,
-        code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
-        detail: `'${String(q6.ua_mode || "").slice(0, 40) || "(none)"}' is not one of the legible agent forms: ${CAPTURE_UA_MODES.join(", ")}. BIO does not disguise its requests, and a mode this door cannot express is a string nobody could account for.`
-      };
-    let ua;
-    if (q6.ua_mode === "member-browser") {
-      ua = this.#memberAgent(q6.target);
-      if (!ua)
-        return {
-          ok: false,
-          terminal: true,
-          code: "CAPTURE_CONDUCT_UA_UNRECORDED",
-          detail: `this request asked to fetch as the member's own browser and ${q6.target} records no member agent. BOB-3 permits DELEGATING an agent a member actually used; composing one would be inventing a client that does not exist, which is the fabricated-Mozilla case wearing the ruling's clothes.`
-        };
-    } else {
-      const env = this.#env();
-      ua = civicosUserAgent(env.VERSION, env.INSTANCE_NAME, q6.purpose);
-      if (!userAgentIsLegible(ua))
-        return {
-          ok: false,
-          terminal: true,
-          code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
-          detail: `the agent this fetch would carry names no contact anybody could reach. D-94's ladder MEASURED that removing the contact component flips admission 200 to 403 uniformly, so this is the component that decides whether the fetch happens at all \u2014 and being blocked honestly is a fact we can record.`
-        };
-    }
-    if (this.#hostHeld(q6.host, nowMs))
-      return {
-        ok: false,
-        terminal: false,
-        governed: true,
-        condition: "governor-holding-host",
-        code: "CAPTURE_CONDUCT_HOST_HELD",
-        detail: `${q6.host} is in cool-off: it refused us or asked us to slow down, and the per-host governor is holding the interval it named. DEC-47 bounds discovery more tightly than re-fetch because a stranger's server has no relationship with this instance.`
-      };
-    if ((hostsThisTick.get(q6.host) || 0) >= CAPTURE_REQUEST_PER_HOST_PER_TICK)
-      return {
-        ok: false,
-        terminal: false,
-        governed: true,
-        condition: "governor-holding-host",
-        code: "CAPTURE_CONDUCT_TICK_SPENT",
-        detail: `this tick has already fetched from ${q6.host} once. A person opens a few tabs and then reads; a loop opens forty, so the drain spreads requests across ticks rather than emptying the queue at one host's expense.`
-      };
-    return { ok: true, ua, attribution };
-  }
-  #hostHeld(host, nowMs) {
-    try {
-      return !!this.#deps.governor.isHeld(host, nowMs);
-    } catch {
-      return false;
-    }
-  }
-  /** R14 (N295, K342): the member agent RECORDED on the inquiry, as inquiry answers it (its R44 `memberUserAgent`: the
-   *  control plane's stamp at the inquiry's creation, else its document's `member_user_agent`), or null: answered
-   *  honestly rather than defaulted, because a default here is the invented client BOB-3 does not license. Inquiry
-   *  is the one reader of that record (K231); this module never reads the document's line itself. */
-  #memberAgent(target) {
-    try {
-      const ua = this.#deps.inquiry.memberUserAgent(target);
-      return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
-    } catch {
-      return null;
-    }
-  }
-  /** R15, R16, K58: THE FETCH, through `capture`'s trusted in-process arm, handed the draining row's own address,
-   *  purpose, agent and render flag — what the conduct check judged. R41 (K103): the one credential a member supplied
-   *  for this request's scope, when one is admitted, rides beside them (capture-sources R56, read with the row's
-   *  plane principal, target and host); none is admitted, the fetch goes without, and the source's refusal stands.
-   *
-   *  WHAT COMES BACK OUT: a filed capture's digest, grade and whether the bytes were already held (R39); a render
-   *  `capture` refused, named by its C-83 code (read off the catalogue, never a spelling invented here) and its own
-   *  word for the hold (D-520); otherwise the reason and, for a source's answer, its status. D-205: a thrown error's
-   *  message is never carried, because it can carry a query string and a query string can carry a credential. */
-  async #fire(q6, verdict) {
-    try {
-      let credential = null;
-      if (this.#deps.credentials && typeof this.#deps.credentials.credentialsForFetch === "function") {
-        const c = await this.#deps.credentials.credentialsForFetch({
-          host: q6.host,
-          principalPlane: q6.principal_plane,
-          target: q6.target
-        });
-        credential = c && Array.isArray(c.credentials) && c.credentials.length ? c.credentials[0] : null;
-      }
-      const held = this.#one(
-        `SELECT capture_sha FROM capture_requests WHERE address=? AND render=? AND state='captured' AND capture_sha IS NOT NULL
-          AND request<>? ORDER BY captured_at DESC, request DESC LIMIT 1`,
-        q6.address,
-        q6.render,
-        q6.request
-      );
-      const res = await this.#deps.capture.acquire({}, {
-        cls: "daemon",
-        member: false,
-        storeName: this.#storeName(),
-        captureRequest: {
-          locator: q6.address,
-          purpose: q6.purpose,
-          agent: q6.ua_mode === "member-browser" ? verdict.ua : null,
-          render: q6.render === 1,
-          ...credential ? { credential } : {},
-          ...held ? { heldSha: held.capture_sha } : {},
-          origin: { matched_sweep: q6.target, deeming_actor: deemingActor(verdict.attribution) }
-        }
-      });
-      const out = res && res.body;
-      const doc = out && out.ok && out.document;
-      if (doc) return {
-        ok: true,
-        sha: doc.capture && doc.capture.sha256,
-        grade: doc.capture && doc.capture.grade,
-        existed: out.existed === true || out.held === true,
-        document: doc
-      };
-      if (out && out.ok && out.unchanged === true && out.capture && out.capture.sha256)
-        return { ok: true, sha: out.capture.sha256, grade: null, existed: true, document: null };
-      const reason = out && (out.reason || out.error) || `http ${res && res.status}`;
-      const renderCode = q6.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
-      return {
-        ok: false,
-        reason,
-        status: out && Number.isFinite(Number(out.status)) ? Number(out.status) : null,
-        renderCode,
-        renderState: renderCode && out && out.render && (out.render.state === "waiting" || out.render.state === "deferred") ? out.render.state : null,
-        detail: renderCode ? String(out && out.detail || "").slice(0, 400) : null
-      };
-    } catch {
-      return { ok: false, reason: "the fetch did not complete and this plane did not record why", status: null };
-    }
-  }
-  /** R38 (N141, K102, K181): THE CAPTURE PROMOTED AT `collected`, NEVER HIGHER, as a plane-composed `information`
-   *  bundle through `promotion.promote` under the daemon's machine-shaped actor (R10). DEC-47 makes the inquiry the
-   *  authorisation, so the capture's origin (filed by `capture` from the drain's own values, R15) is `sweep`, the target
-   *  inquiry its matched scope and the run with both principals its deeming actor. The bundle holds the capture's
-   *  register document as `capture` answered it, the primary (and a render's shell, a streamed capture's parts) as
-   *  blobs, and one register row. No `group`: `promote` writes the instance's recorded one or refuses (C-64.1). Answers
-   *  `{ok: true, bundle_id}`, or `{ok: false, reason?, detail}` (the promotion's own refusal relayed); never throws. */
-  #promoteCapture(q6, doc, attribution, at17) {
-    try {
-      const promotion = this.#deps.promotion;
-      if (!promotion || typeof promotion.promote !== "function")
-        return { ok: false, detail: "no promotion is reachable here, so the capture was filed and not promoted" };
-      const cap = doc.capture || {};
-      if (typeof doc.file !== "string" || !/^[0-9a-f]{64}$/.test(String(cap.sha256 || "")) || !Number.isSafeInteger(cap.bytes))
-        return { ok: false, detail: "capture's answer named no primary file, digest and size to promote" };
-      const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at17;
-      const enc3 = (t) => {
-        const b = new TextEncoder().encode(t);
-        return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
-      };
-      return this.#deps.record.transact(() => {
-        const id = `${this.#deps.record.allocId("INFO", at17.slice(0, 4)).id}-${CAPTURE_REQUEST_BUNDLE_SLUG}`;
-        const title = `Requested capture of ${q6.address}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
-        const md = [
-          "---",
-          `id: ${id}`,
-          "object_type: information",
-          "schema: information@2",
-          `title: ${JSON.stringify(title)}`,
-          "current_state: collected",
-          "prior_state: null",
-          `created: "${at17}"`,
-          `last_updated: "${at17}"`,
-          "produced_by:",
-          "  mode: agent",
-          "  capability_tier: session",
-          "references: []",
-          "state_history: []",
-          "annotations_open: 0",
-          "reeval_pending:",
-          "  flag: false",
-          "  since: null",
-          "  source: null",
-          "visuals: []",
-          "criticality: supporting",
-          "source_status: unchanged",
-          "source:",
-          `  locator: ${JSON.stringify(q6.address)}`,
-          `  retrieved: ${retrieved}`,
-          "monitoring:",
-          "  enabled: false",
-          "  frequency: none",
-          "---",
-          "",
-          "## Summary",
-          "",
-          `The document served at ${q6.address}, captured by the daemon at an investigative session's request under ${q6.target}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
-          "",
-          "## Provenance Notes",
-          "",
-          `${attribution.statement}. Requested ${q6.requested_at} as ${q6.request}; collected ${at17}. Filed at collected and never higher: releasing it is a named member's decision.`,
-          "",
-          "## Session Log",
-          "",
-          `### Session ${at17} | Collected | ${attribution.actor}`,
-          `Trigger: capture request ${q6.request} (run ${q6.run})`,
-          "Changes: created from the daemon's capture of the requested address.",
-          "",
-          "## Review Notes",
-          ""
-        ].join("\n");
-        const blob = (f9) => f9 && typeof f9.file === "string" && /^[0-9a-f]{64}$/.test(String(f9.sha256 || "")) && Number.isSafeInteger(f9.bytes) ? { path: f9.file, blobSha: f9.sha256, sha256: f9.sha256, bytes: f9.bytes } : null;
-        const blobs = [
-          blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }),
-          blob(doc.shell),
-          ...Array.isArray(doc.parts) ? doc.parts.map(blob) : []
-        ].filter(Boolean);
-        const seen = /* @__PURE__ */ new Set();
-        const files = [
-          { path: "bundle.md", ...enc3(md) },
-          { path: "data/provenance.json", ...enc3(JSON.stringify({ documents: [doc] }, null, 2)) },
-          ...blobs.filter((f9) => seen.has(f9.path) ? false : seen.add(f9.path))
-        ];
-        const p = promotion.promote({
-          bundleId: id,
-          base: null,
-          snapKey: `${at17.replace(/[-:]/g, "")}_${randomHex(4)}`,
-          author: attribution.actor,
-          files,
-          meta: {
-            object_type: "information",
-            title,
-            current_state: "collected",
-            prior_state: null,
-            created: at17,
-            last_updated: at17,
-            criticality: "supporting"
-          },
-          register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }]
-        });
-        return p && p.ok ? { ok: true, bundle_id: id } : {
-          ok: false,
-          reason: p && (p.reason || p.code) || null,
-          detail: String(p && p.detail || "the promotion was refused").slice(0, 300)
-        };
-      });
-    } catch {
-      return { ok: false, detail: "the promotion did not complete and this plane did not record why" };
-    }
-  }
-  /* ==================================================================== *
-   * R23–R29 — THE READS.
-   * ==================================================================== */
-  /** One row as every read answers it (R24, R25, R40): the request's fields less the principals, `render` a boolean,
-   *  the render deferral, the source's reason and the attribution composed by R10. */
-  static project(r) {
-    return {
-      request: r.request,
-      run: r.run,
-      target: r.target,
-      address: r.address,
-      host: r.host,
-      purpose: r.purpose,
-      ua_mode: r.ua_mode,
-      state: r.state,
-      code: r.code,
-      detail: r.detail,
-      capture_sha: r.capture_sha,
-      attempts: r.attempts,
-      requested_at: r.requested_at,
-      updated: r.updated,
-      expires: r.expires,
-      captured_at: r.captured_at,
-      lead_inquiry: r.lead_inquiry ?? null,
-      run_woken_at: r.run_woken_at ?? null,
-      render: r.render === 1,
-      source_reason: r.source_reason ?? null,
-      /* R25, D-523: what became of a render this instance could not do, in the drain's and op=queue's words. */
-      render_deferral: r.render === 1 && (r.state === "expired" || r.state === "requested" && r.code) ? (({ code, check, translation }) => ({
-        state: r.state === "expired" ? "expired" : "deferred",
-        content: "undetermined",
-        code,
-        check,
-        translation
-      }))(renderHoldReason(r.code)) : null,
-      attribution: captureRequestAttribution(r)
-    };
-  }
-  /** The gate over a bundle-id column: membership's predicate (R43) over record-core's `bundles` read contract. A row
-   *  whose bundle the viewer cannot see, or which no longer exists, is withheld; an absent or unrecognised stamp sees
-   *  none; a machine credential sees every row. */
-  static #gate(col, viewer) {
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "member") return { sql: "1=1", args: [] };
-    if (gate.scope === "DENY") return { sql: "0=1", args: [] };
-    return { sql: `EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${gate.sql}))`, args: gate.args };
-  }
-  #bounded(where, args, order, limit, gateCol, viewer) {
-    const cap = clamp2(limit, CAPTURE_REQUEST_READ_LIMIT, CAPTURE_REQUEST_READ_MAX);
-    const seen = _CaptureRequests.#gate(gateCol, viewer);
-    const found = this.#rows(
-      `SELECT cr.* FROM capture_requests cr WHERE ${[...where, `(${seen.sql})`].join(" AND ")} ORDER BY ${order} LIMIT ?`,
-      ...args,
-      ...seen.args,
-      cap + 1
-    );
-    const rows = found.slice(0, cap);
-    return { count: rows.length, limit: cap, truncated: found.length > cap, requests: rows.map(_CaptureRequests.project) };
-  }
-  /** R23–R25, op=capturerequests: rows whose target the viewer can see, filtered by run, target and state, oldest
-   *  first. */
-  captureRequests({ run = null, target = null, state = null, limit = null, viewer = null } = {}) {
-    const where = [], args = [];
-    if (run) {
-      where.push("cr.run=?");
-      args.push(String(run));
-    }
-    if (target) {
-      where.push("cr.target=?");
-      args.push(String(target));
-    }
-    if (state) {
-      where.push("cr.state=?");
-      args.push(String(state));
-    }
-    return this.#bounded(where, args, "cr.requested_at, cr.request", limit, "cr.target", viewer);
-  }
-  /** R26, R27: the queue's producers' reads, each bounded in SQL on an index (D-581: no walk over every terminal row).
-   *  `completed`: captured rows by target; `leads`: captured rows with a lead, by the lead; `rendersHeld`: render rows
-   *  expired, or requested with a code, by target. */
-  completed({ viewer = null, limit = null } = {}) {
-    return this.#bounded(["cr.state='captured'"], [], "cr.captured_at, cr.request", limit, "cr.target", viewer);
-  }
-  leads({ viewer = null, limit = null } = {}) {
-    return this.#bounded(
-      ["cr.state='captured'", "cr.lead_inquiry IS NOT NULL", "cr.lead_inquiry <> ''"],
-      [],
-      "cr.captured_at, cr.request",
-      limit,
-      "cr.lead_inquiry",
-      viewer
-    );
-  }
-  rendersHeld({ viewer = null, limit = null } = {}) {
-    return this.#bounded(
-      ["cr.render = 1", "(cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))"],
-      [],
-      "cr.updated, cr.request",
-      limit,
-      "cr.target",
-      viewer
-    );
-  }
-  /** R43 (N169): one request by id, as R24 answers a row (with R25's `render_deferral`), when its target is one the
-   *  viewer can see; null for a blank id, an unknown one or an unseen one alike. One read by key; writes nothing; never
-   *  throws. */
-  requestById(a = {}) {
-    try {
-      const { request = null, viewer = null } = a && typeof a === "object" ? a : {};
-      const id = text2(request).trim();
-      if (!id) return null;
-      const seen = _CaptureRequests.#gate("cr.target", viewer);
-      const r = this.#one(
-        `SELECT cr.* FROM capture_requests cr WHERE cr.request = ? AND (${seen.sql}) LIMIT 1`,
-        id,
-        ...seen.args
-      );
-      return r ? _CaptureRequests.project(r) : null;
-    } catch {
-      return null;
-    }
-  }
-  /** R28: a request's target and lead inquiry, either absent when not set, or null for an unknown id
-   *  (observation-log's `sweep` authority resolution, R13 of observation-log). */
-  bundlesOf(request) {
-    const r = request ? this.#one(`SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, String(request)) : null;
-    if (!r) return null;
-    return { ...r.target ? { target: r.target } : {}, ...r.lead_inquiry ? { lead_inquiry: r.lead_inquiry } : {} };
-  }
-  /** R29, D-583: a run's outstanding requests (`requested` or `draining`, not past `expires`) and its completions not
-   *  yet told to it (`captured`, `refused` and `expired` with `run_woken_at` null), each bounded by 25 and saying when
-   *  it was cut. A run's wait is bounded by its requests' own expiry. */
-  waits({ run, now = null } = {}) {
-    const iso3 = stampInstant("second", Number.isFinite(now) ? now : this.#nowMs());
-    const n = CAPTURE_REQUEST_WAIT_BATCH;
-    const out = this.#rows(
-      `SELECT * FROM capture_requests WHERE run = ? AND state IN ('requested','draining') AND expires > ?
-        ORDER BY requested_at, request LIMIT ?`,
-      String(run ?? ""),
-      iso3,
-      n + 1
-    );
-    const done = this.#rows(
-      `SELECT * FROM capture_requests WHERE run = ? AND state IN ('captured','refused','expired') AND run_woken_at IS NULL
-        ORDER BY updated, request LIMIT ?`,
-      String(run ?? ""),
-      n + 1
-    );
-    return {
-      run: run ?? null,
-      outstanding: out.slice(0, n).map(_CaptureRequests.project),
-      outstanding_truncated: out.length > n,
-      completions: done.slice(0, n).map(_CaptureRequests.project),
-      completions_truncated: done.length > n
-    };
-  }
-  /** R29: stamps `run_woken_at` on each named completion not yet woken; answers how many were stamped. */
-  markWoken({ requests = [], at: at17 = null } = {}) {
-    const iso3 = at17 || stampInstant("second", this.#nowMs());
-    let marked = 0;
-    for (const id of Array.isArray(requests) ? requests : []) {
-      const r = this.#one(`SELECT request FROM capture_requests WHERE request = ? AND run_woken_at IS NULL
-                             AND state IN ('captured','refused','expired')`, String(id));
-      if (!r) continue;
-      this.#sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso3, r.request);
-      marked++;
-    }
-    return { marked, at: iso3 };
-  }
-  /** ai-runs R41 (K182): the wait source this module registers with ai-runs, over R29's rows. All synchronous.
-   *  `holds` answers running runs with outstanding, unexpired requests and how many; `woken` running runs with
-   *  completions (`captured`, `refused`, `expired`: D-583) not yet told to them; `completions` one run's; `markWoken`
-   *  stamps them. Nothing is held while unattended capture is not configured, because nothing will complete. Whether a
-   *  run is running is ai-runs' own answer (`runFor`, read with a machine viewer). */
-  waitSource() {
-    const walk = (q6, args, keyOf2, take) => {
-      let after = "", scanned = 0;
-      for (; ; ) {
-        const page = this.#rows(q6, ...args, after, CAPTURE_REQUEST_WAIT_BATCH);
-        for (const r of page) {
-          if (take(r) === false) return;
-        }
-        scanned += page.length;
-        if (page.length < CAPTURE_REQUEST_WAIT_BATCH || scanned >= CAPTURE_REQUEST_READ_MAX) return;
-        after = keyOf2(page[page.length - 1]);
-      }
-    };
-    const running = (run) => {
-      try {
-        const r = this.#deps.runs.runFor(run, "class:daemon");
-        return !!r && r.status === "running";
-      } catch {
-        return false;
-      }
-    };
-    const bound = (limit) => clamp2(limit, CAPTURE_REQUEST_WAIT_BATCH, CAPTURE_REQUEST_READ_MAX);
-    return {
-      tickMs: () => this.drainIntervalMs(),
-      holds: (iso3, limit) => {
-        if (!this.configured()) return [];
-        const out = [], n = bound(limit);
-        walk(
-          `SELECT run, count(*) AS outstanding FROM capture_requests
-               WHERE state IN ('requested','draining') AND expires > ? AND run > ? GROUP BY run ORDER BY run LIMIT ?`,
-          [String(iso3)],
-          (r) => r.run,
-          (r) => {
-            if (running(r.run)) out.push({ run: r.run, outstanding: Number(r.outstanding) });
-            return out.length < n;
-          }
-        );
-        return out;
-      },
-      woken: (limit) => {
-        const out = [], n = bound(limit);
-        walk(
-          `SELECT DISTINCT run FROM capture_requests
-               WHERE state IN ('captured','refused','expired') AND run_woken_at IS NULL AND run > ? ORDER BY run LIMIT ?`,
-          [],
-          (r) => r.run,
-          (r) => {
-            if (running(r.run)) out.push(r.run);
-            return out.length < n;
-          }
-        );
-        return out;
-      },
-      completions: (run, limit) => this.#rows(
-        `SELECT request, state FROM capture_requests
-          WHERE run = ? AND state IN ('captured','refused','expired') AND run_woken_at IS NULL
-          ORDER BY updated, request LIMIT ?`,
-        String(run ?? ""),
-        bound(limit)
-      ).map((r) => ({ request: r.request, state: r.state })),
-      markWoken: (requests, iso3) => this.markWoken({ requests, at: iso3 }).marked
-    };
-  }
-  /** R35: a bundle's purge clears `lead_inquiry` where it names the bundle (record-core's keyed form deletes rows by
-   *  `target`; a lead is a pointer on a row that stays). */
-  clearLead(bundleId) {
-    if (bundleId) this.#sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, String(bundleId));
-  }
-  /* ==================================================================== *
-   * R41–R42 — RETRY WITH WHAT A MEMBER SUPPLIED.
-   * ==================================================================== */
-  /** R42 (op=capturerequestretry): a `refused` request whose reason is the source's (R40), under a target the viewer
-   *  can see, returns to `requested` with `attempts`, its last code and reason kept and `expires` now + 24 h; the drain
-   *  judges it again under R14, fetching with what R41 holds for its scope. Any other request is refused
-   *  C-28.18 and nothing is written. Never throws. */
-  captureRequestRetry(a = {}, { viewer = null } = {}) {
-    const args = a && typeof a === "object" ? a : {};
-    const request = text2(args.request).trim();
-    const row2 = request ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request) : null;
-    if (!row2 || row2.state !== "refused" || !SOURCE_REASONS.includes(row2.source_reason) || !this.#inquiryInSight(row2.target, viewer)) {
-      const c = CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_RETRYABLE;
-      return {
-        ok: false,
-        reason: "CAPTURE_REQUEST_NOT_RETRYABLE",
-        code: "CAPTURE_REQUEST_NOT_RETRYABLE",
-        check: c.check,
-        translation: c.translation,
-        request: request || null,
-        detail: "only a request the source itself turned away, under a question you can see, goes back into the queue. Nothing was changed."
-      };
-    }
-    const nowMs = this.#nowMs();
-    const now = stampInstant("second", nowMs);
-    const expires = stampInstant("second", nowMs + CAPTURE_REQUEST_TTL_MS);
-    this.#sql.exec(
-      `UPDATE capture_requests SET state='requested', expires=?, updated=? WHERE request=? AND state='refused'`,
-      expires,
-      now,
-      request
-    );
-    return {
-      ok: true,
-      request,
-      state: "requested",
-      attempts: row2.attempts,
-      code: row2.code,
-      source_reason: row2.source_reason,
-      expires,
-      detail: "back in the queue. The drain judges it again and fetches with what a member supplied for this request's scope, if anything."
-    };
-  }
-};
-function deemingActor(attribution) {
-  const a = attribution && attribution.ok ? attribution : null;
-  return a ? `run ${a.at_the_request_of.run} under ${a.principals.plane}, paid by ${a.principals.claude}` : null;
-}
-function lookAuthority(q6) {
-  return q6 && q6.run ? { authorityKind: "run", authority: String(q6.run), actorClass: "machine" } : { authorityKind: "sweep", authority: q6 && q6.request ? String(q6.request) : null, actorClass: "plane" };
-}
-var instances14 = /* @__PURE__ */ new WeakMap();
-function captureRequestsOf(host, deps = {}) {
-  const storage = host && host.storage ? host.storage : host;
-  let c = instances14.get(storage);
-  if (!c) {
-    const env = deps.env || {};
-    const record = deps.record || recordOf(host);
-    const withEnv = deps.env ? { env } : {};
-    const d = {
-      ...deps,
-      env,
-      record,
-      observations: deps.observations || observationLogOf(host),
-      governor: deps.governor || governorOf(host, withEnv),
-      capture: deps.capture || captureOf(host, withEnv),
-      /* CAPTURE-SOURCES #2's note: the key rides the first `credentialsOf` call. */
-      credentials: deps.credentials === void 0 ? credentialsOf(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null }) : deps.credentials,
-      /* R38 (N141): the one promotion on this storage, through which a requested capture enters the record. */
-      promotion: deps.promotion || promotionOf(host, { record }),
-      /* R14 (N295): the member-browser agent is inquiry's R44 answer. Reached when the drain asks, not at creation, so
-         the one inquiry on this host is the one the plane built with its own deps. */
-      inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) }
-    };
-    c = new CaptureRequests(storage, d);
-    instances14.set(storage, c);
-    record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"] }]);
-    d.observations.registerAuthority("sweep", (request) => {
-      const b = c.bundlesOf(request);
-      return b ? [b.target, b.lead_inquiry].filter(Boolean) : null;
-    });
-    if (d.aiRuns && typeof d.aiRuns.registerWaitSource === "function")
-      d.aiRuns.registerWaitSource(CAPTURE_REQUESTS_MODULE, c.waitSource());
-  }
-  return c;
-}
-function captureRequestsOps(c, url, body) {
-  const q6 = (k) => url.searchParams.get(k);
-  const b = body && typeof body === "object" ? body : {};
-  return {
-    capturerequest: () => c.captureRequest(b, { viewer: q6("viewer"), caller: q6("principal") }),
-    capturerequestdrain: () => c.drain({
-      limit: b.limit ?? null,
-      actor: b.actor || "consumer",
-      now: Number.isFinite(b.now) ? b.now : null
-    }),
-    capturerequests: () => c.captureRequests({
-      run: q6("run"),
-      target: q6("target"),
-      state: q6("state"),
-      limit: q6("limit"),
-      viewer: q6("viewer")
-    }),
-    capturerequestretry: () => c.captureRequestRetry(
-      { request: b.request ?? q6("request") },
-      { viewer: q6("viewer"), caller: q6("principal") }
-    )
-  };
-}
-
-// src/intent/checks.mjs
-var checks_exports17 = {};
-__export(checks_exports17, {
-  INTENT_CHECKS: () => INTENT_CHECKS,
-  refusal: () => refusal12
-});
-var at6 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
-var INTENT_CHECKS = Object.freeze({
-  NO_OBJECTIVE: {
-    check: "C-2.9",
-    where: at6("#checkProject", "is-objective-stated"),
-    translation: "A project states what it is trying to achieve, and this one states nothing. Write its objective and send it again. Nothing was written."
-  },
-  MACHINE_CANNOT_SET_OBJECTIVE: {
-    check: "C-111.1",
-    where: at6("setCondition", "is-condition-member"),
-    translation: "What a project is aiming at is a member's decision. An assistant may point out gaps; it may not set or change the measure. Sign in as a member. Nothing was written."
-  },
-  CONDITION_UNREADABLE: {
-    check: "C-111.3",
-    where: at6("#conditionRefusal", "is-condition-shaped"),
-    translation: "The measure sent for this objective is not in the shape the record reads: a progression, an entity, what each matching instance must reach, and the share of them that must reach it. Nothing was written."
-  },
-  NO_SUCH_PROGRESSION: {
-    check: "C-111.4",
-    where: at6("refuseNoSuchProgression", "is-named-progression"),
-    translation: "The measure names a declared flow the record does not hold. Declare the flow first, or name one that exists. Nothing was written."
-  },
-  BAD_STAGE: {
-    check: "C-111.6",
-    where: at6("#conditionRefusal", "is-condition-stage"),
-    translation: "The measure requires a step the declared flow does not have. Name steps the flow declares. Nothing was written."
-  },
-  CONDITION_BAD_GRADE: {
-    check: "C-111.7",
-    where: at6("#conditionRefusal", "is-condition-grade"),
-    translation: "The grade the measure requires is not one of the four the record uses, A (strongest) to D. Nothing was written."
-  },
-  BAD_SHARE: {
-    check: "C-111.8",
-    where: at6("#conditionRefusal", "is-condition-share"),
-    translation: "The share of instances that must meet the measure is a whole number from 1 to 100. Nothing was written."
-  },
-  MACHINE_CANNOT_DECLARE_GOAL: {
-    check: "C-111.9",
-    where: at6("goalMachineRefusal", "is-goal-member"),
-    translation: "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the group pursues. Sign in as a member. Nothing was written."
-  },
-  PURSUIT_UNSTATED: {
-    check: "C-111.10",
-    where: at6("refusePursuitUnstated", "is-pursuit-stated"),
-    translation: "A goal says what it pursues and what bounds it, and an aspiration says what it holds to. Something here is empty. Write it and send it again. Nothing was written."
-  },
-  NO_SUCH_GOAL: {
-    check: "C-111.11",
-    where: at6("refuseNoSuchGoal", "is-goal-held"),
-    translation: "No goal answers to that id here. Nothing was written."
-  },
-  NO_SUCH_ASPIRATION: {
-    check: "C-111.12",
-    where: at6("refuseNoSuchAspiration", "is-aspiration-held"),
-    translation: "No aspiration answers to that id here. Nothing was written."
-  },
-  NO_REASON: {
-    check: "C-111.13",
-    where: at6("refuseNoReason", "is-reason-stated"),
-    translation: "This act is recorded with a reason in your own words, and none was given. The record keeps why, so the next reader is not left guessing. Nothing was written."
-  },
-  MACHINE_CANNOT_DECLARE_ASPIRATION: {
-    check: "C-111.14",
-    where: at6("aspirationMachineRefusal", "is-aspiration-member"),
-    translation: "What the group holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written."
-  },
-  NOT_YOURS: {
-    check: "C-111.15",
-    where: at6("#aspirationAuthority", "is-aspiration-yours"),
-    translation: "A member's own aspiration is declared, revised and retired by that member alone. Nothing was written."
-  },
-  NO_LESSON: {
-    check: "C-111.17",
-    where: at6("refuseNoLesson", "is-retirement-taught"),
-    translation: "Retiring an aspiration records what pursuing it taught the group, and nothing was written there. Say what was learned. Nothing was retired."
-  },
-  MACHINE_CANNOT_TRIAGE: {
-    check: "C-111.18",
-    where: at6("triage", "is-triage-member"),
-    translation: "An assistant may turn a finding into an open question, and nothing more. Adopting it, deferring it or dismissing it is a member's decision. Sign in as a member. Nothing was written."
-  },
-  MACHINE_CANNOT_CHOOSE_THE_QUESTION: {
-    check: "C-111.19",
-    where: at6("workObjective", "is-objective-member"),
-    translation: "Setting an assistant to work on a project's objective is a member's act: the objective is the group's, and so is the choice to pursue it. Sign in as a member. No run was opened."
-  },
-  PURSUIT_STATE_MOVE_UNDECLARED: {
-    check: "C-111.20",
-    where: at6("#checkPursuit", "is-pursuit-state-move"),
-    translation: "An aspiration is held until it is retired, and a goal is open until it is closed. No other move is accepted, and neither comes back. Nothing was written."
-  },
-  BAD_SCOPE: {
-    check: "C-111.21",
-    where: at6("refuseBadScope", "is-aspiration-scoped"),
-    translation: "An aspiration belongs to the group, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written."
-  },
-  NO_SUCH_PROPOSAL: {
-    check: "C-111.22",
-    where: at6("triage", "is-proposal-open"),
-    translation: "No open proposal answers to that key. It may already have been decided; the decision stays readable with its reason. Nothing was written."
-  },
-  TRIAGE_ACT_UNKNOWN: {
-    check: "C-111.23",
-    where: at6("triage", "is-triage-act"),
-    translation: "A proposal is adopted into a project's objective, turned into an open question, deferred or dismissed. This act is none of those. Nothing was written."
-  },
-  SOURCE_DECLARED: {
-    check: "C-111.24",
-    where: at6("registerSource", "is-source-once"),
-    translation: "This source of proposals is already registered. A source registers once, when the plane starts."
-  },
-  SOURCE_MALFORMED: {
-    check: "C-111.25",
-    where: at6("registerSource", "is-source-shaped"),
-    translation: "A source of proposals names its kind and gives a reader. This registration does not."
-  },
-  PURSUIT_ENDED: {
-    check: "C-111.26",
-    where: at6("refusePursuitEnded", "is-pursuit-live"),
-    translation: "This goal is closed, or this aspiration is retired. It stays readable with everything recorded under it, and it does not reopen. Nothing was written."
-  },
-  ADOPTIONS_UNSPLICEABLE: {
-    check: "C-111.28",
-    where: at6("triage", "is-adoptions-spliceable"),
-    translation: "The project's record of adopted proposals is not in a shape the record can add to, so this adoption could not be written into it. Nothing was written."
-  },
-  NO_NOTE: {
-    check: "C-111.27",
-    where: at6("recordDeadEnd", "is-dead-end-noted"),
-    translation: "A dead end is recorded with what was tried and why it went nowhere, and nothing was written. Nothing was recorded."
-  }
-});
-function refusal12(code, detail, extra) {
-  const row2 = INTENT_CHECKS[code];
-  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
-}
-
-// src/intent/schema.mjs
-var INTENT_SCHEMA = `
--- R10: a project's departure from a held group aspiration, with its reason. Appended, never updated: the latest row
--- for a (project, aspiration) is the one in force.
-CREATE TABLE IF NOT EXISTS intent_departures (
-  project_id     TEXT NOT NULL,
-  aspiration_id  TEXT NOT NULL,
-  reason         TEXT NOT NULL,
-  author         TEXT NOT NULL,
-  at             TEXT NOT NULL,
-  seq            INTEGER PRIMARY KEY AUTOINCREMENT
-);
-CREATE INDEX IF NOT EXISTS intent_departures_project ON intent_departures(project_id, aspiration_id);
--- R16: each act on a proposal (adopt, question, defer, dismiss) with who took it, when and why. project_id is the
--- project it was triaged for (an adoption's, or the one named with it; R14 reads a goal's objectives through it);
--- inquiry_id the question a 'question' opened. Any row for a proposal key takes it off the open list.
-CREATE TABLE IF NOT EXISTS intent_triage (
-  proposal_key   TEXT NOT NULL,
-  source         TEXT NOT NULL,
-  kind           TEXT,
-  act            TEXT NOT NULL,
-  project_id     TEXT,
-  inquiry_id     TEXT,
-  reason         TEXT,
-  grade          TEXT,
-  basis_json     TEXT,
-  author         TEXT NOT NULL,
-  at             TEXT NOT NULL,
-  seq            INTEGER PRIMARY KEY AUTOINCREMENT
-);
-CREATE INDEX IF NOT EXISTS intent_triage_key ON intent_triage(proposal_key);
-`;
-var INTENT_TABLES = Object.freeze([
-  { name: "intent_departures", keys: ["project_id", "aspiration_id"] },
-  { name: "intent_triage", keys: ["project_id", "inquiry_id"] }
-]);
-function migrateIntent(sql) {
-  const bare2 = INTENT_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
-}
-
-// src/intent/doc.mjs
-var ASPIRATION = "aspiration";
-var GOAL = "goal";
-var ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
-var GRADES = BASIS_GRADES;
-var TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
-var q = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
-var parseFm = (text4) => {
-  if (typeof text4 !== "string") return null;
-  const d = parseFrontmatter(text4).data;
-  return d && typeof d === "object" && !Array.isArray(d) ? d : null;
-};
-function fence(lines) {
-  if (lines[0] !== "---") return null;
-  const end2 = lines.indexOf("---", 1);
-  return end2 === -1 ? null : end2;
-}
-function setField(text4, key, value) {
-  const lines = text4.split("\n");
-  const end2 = fence(lines);
-  if (end2 === null) return text4;
-  for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
-    lines[i] = `${key}: ${value}`;
-    return lines.join("\n");
-  }
-  return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
-}
-function removeBlock2(text4, key) {
-  const lines = text4.split("\n");
-  const end2 = fence(lines);
-  if (end2 === null) return text4;
-  const at17 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
-  if (at17 === -1) return text4;
-  let last = at17;
-  for (let i = at17 + 1; i < end2 && (/^\s/.test(lines[i]) || lines[i].trim() === ""); i++) last = i;
-  return [...lines.slice(0, at17), ...lines.slice(last + 1)].join("\n");
-}
-function setBlock(text4, key, childLines) {
-  const lines = removeBlock2(text4, key).split("\n");
-  const end2 = fence(lines);
-  if (end2 === null) return text4;
-  return [...lines.slice(0, end2), `${key}:`, ...childLines, ...lines.slice(end2)].join("\n");
-}
-function appendItem(text4, key, fields) {
-  const lines = text4.split("\n");
-  const end2 = fence(lines);
-  if (end2 === null) return null;
-  const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
-  const at17 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
-  if (at17 === -1) return [...lines.slice(0, end2), `${key}:`, ...item, ...lines.slice(end2)].join("\n");
-  const rest = lines[at17].slice(key.length + 1).trim();
-  if (rest === "[]") return [...lines.slice(0, at17), `${key}:`, ...item, ...lines.slice(at17 + 1)].join("\n");
-  if (rest !== "") return null;
-  let last = at17;
-  for (let i = at17 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
-  return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
-}
-function appendHistory(text4, { at: at17, from, to, blurb, author }) {
-  return appendItem(
-    text4,
-    "state_history",
-    { timestamp: q(at17), from_state: from, to_state: to, blurb: q(blurb), author: TOKEN.test(author) ? author : q(author) }
-  );
-}
-function sectionSpan(text4, heading) {
-  const marker = `
-## ${heading}
-`;
-  const at17 = text4.indexOf(marker);
-  if (at17 === -1) return null;
-  const start = at17 + marker.length;
-  const nxt = text4.indexOf("\n## ", start - 1);
-  return { at: at17, start, end: nxt === -1 ? text4.length : nxt };
-}
-function readSection(text4, heading) {
-  if (typeof text4 !== "string") return null;
-  const s = sectionSpan(text4, heading);
-  return s ? text4.slice(s.start, s.end).trim() : null;
-}
-function setSection2(text4, heading, body) {
-  const s = sectionSpan(text4, heading);
-  const content = `
-${String(body).trim()}
-`;
-  if (!s) return `${text4.replace(/\n*$/, "\n")}
-## ${heading}
-${content}`;
-  return text4.slice(0, s.start) + content + text4.slice(s.end);
-}
-function appendSection(text4, heading, entry) {
-  const s = sectionSpan(text4, heading);
-  if (!s) return `${text4.replace(/\n*$/, "\n")}
-## ${heading}
-
-${entry.trim()}
-`;
-  const head = text4.slice(0, s.end).replace(/\n*$/, "\n");
-  return `${head}
-${entry.trim()}
-${text4.slice(s.end)}`;
-}
-var logEntry = (text4, at17, what, author, changes) => appendSection(text4, "Session Log", `### Session ${at17} | ${what} | ${author}
-Changes: ${changes}`);
-function deadEndsOf(text4) {
-  const body = readSection(text4, "Dead Ends");
-  if (!body) return [];
-  const out = [];
-  for (const part of body.split(/\n(?=### )/)) {
-    const m = /^### (\S+) \| (.+)\n?([\s\S]*)$/.exec(part.trim());
-    if (m) out.push({ at: m[1], author: m[2].trim(), note: m[3].trim() });
-  }
-  return out;
-}
-var titleOf = (statement) => (deriveInquiryTitle(statement) || "untitled").replace(/["\\]/g, "'");
-var pursuitId = (allocated, type) => `${allocated}-${type}`;
-var CORE_TAIL = Object.freeze([
-  "produced_by:",
-  "  mode: human",
-  "  capability_tier: session",
-  "references: []",
-  "state_history: []",
-  "annotations_open: 0",
-  "reeval_pending:",
-  "  flag: false",
-  "  since: null",
-  "  source: null",
-  "visuals: []"
-]);
-function aspirationDoc({ id, scope, owner, statement, entities, progressions, author, at: at17 }) {
-  return [
-    "---",
-    `id: ${id}`,
-    `object_type: ${ASPIRATION}`,
-    `schema: ${ASPIRATION}@1`,
-    `title: ${q(titleOf(statement))}`,
-    "current_state: held",
-    "prior_state: null",
-    `created: ${q(at17)}`,
-    `last_updated: ${q(at17)}`,
-    `scope: ${scope}`,
-    `owner: ${owner ?? "null"}`,
-    `entities: [${entities.join(", ")}]`,
-    `progressions: [${progressions.join(", ")}]`,
-    `author: ${TOKEN.test(author) ? author : q(author)}`,
-    ...CORE_TAIL,
-    "---",
-    "",
-    "## Statement",
-    "",
-    statement.trim(),
-    "",
-    "## Dead Ends",
-    "",
-    "## Session Log",
-    "",
-    `### Session ${at17} | Declared | ${author}`,
-    `Changes: ${scope} aspiration declared.`,
-    ""
-  ].join("\n");
-}
-function goalDoc({ id, statement, bounds, aspiration, author, at: at17 }) {
-  return [
-    "---",
-    `id: ${id}`,
-    `object_type: ${GOAL}`,
-    `schema: ${GOAL}@1`,
-    `title: ${q(titleOf(statement))}`,
-    "current_state: open",
-    "prior_state: null",
-    `created: ${q(at17)}`,
-    `last_updated: ${q(at17)}`,
-    `aspiration: ${aspiration ?? "null"}`,
-    `author: ${TOKEN.test(author) ? author : q(author)}`,
-    "objectives: []",
-    ...CORE_TAIL,
-    "---",
-    "",
-    "## Statement",
-    "",
-    statement.trim(),
-    "",
-    "## Bounds",
-    "",
-    bounds.trim(),
-    "",
-    "## Session Log",
-    "",
-    `### Session ${at17} | Declared | ${author}`,
-    "Changes: goal declared.",
-    ""
-  ].join("\n");
-}
-var CONDITION_KEY = "objective_condition";
-function conditionLines(c, by, at17) {
-  const lines = [`  progression: ${c.progression}`, `  entity: ${c.entity}`, `  relation: ${c.relation ?? "null"}`];
-  for (const [k, v] of Object.entries(c.filter || {})) lines.push(`  filter_${k}: ${v}`);
-  lines.push(
-    `  required_grade: ${c.required.grade ?? "null"}`,
-    `  required_stages: [${c.required.stages.join(", ")}]`,
-    `  share: ${c.satisfied.share}`,
-    `  set_by: ${TOKEN.test(by) ? by : q(by)}`,
-    `  set_at: ${q(at17)}`
-  );
-  return lines;
-}
-function conditionOf(fm) {
-  const b = fm && fm[CONDITION_KEY];
-  if (!b || typeof b !== "object" || Array.isArray(b)) return null;
-  const filter = {};
-  for (const [k, v] of Object.entries(b)) if (k.startsWith("filter_")) filter[k.slice(7)] = v;
-  const stages = Array.isArray(b.required_stages) ? b.required_stages.map(String).filter((s) => s !== "") : [];
-  return {
-    condition: {
-      progression: b.progression ?? null,
-      entity: b.entity ?? null,
-      relation: b.relation ?? null,
-      filter: Object.keys(filter).length ? filter : null,
-      required: { grade: b.required_grade ?? null, stages },
-      satisfied: { share: b.share ?? null }
-    },
-    set_by: b.set_by ?? null,
-    set_at: b.set_at ?? null
-  };
-}
-
-// src/intent/index.mjs
-var GROUP_ASPIRATION_ACT = "declaring, revising or retiring an aspiration the whole group holds";
-var GROUP_ASPIRATION_REMEDY = "Ask an active administrator: they declare, revise or retire an aspiration the whole group holds in their own name, and the act carries their name and date.";
-var TRIAGE_ACTS = Object.freeze(["adopt", "question", "defer", "dismiss"]);
-var AGEING_SETTING = "intent_ageing_days";
-var AGEING_DEFAULT_DAYS = 30;
-var PLANE_ACTOR = "plane:intent";
-var PLANE_VIEWER = "class:daemon";
-var GAP_KIND = "objective-gap";
-var MEASURE_MAX = 1e3;
-var WATCH_LIMIT_MAX = 1e3;
-var DEPARTURES_MAX = 1e3;
-var GOALS_MAX = 200;
-var TRIAGED_MAX = 1e3;
-var SET_ASIDE_MAX = 200;
-var SERVES_MAX = 1e3;
-var ASPIRATIONS_MAX = 1e3;
-var CONTACTS_MAX = 1e3;
-var CONTEXT_MAX = 1e3;
-var PROJECTS_MAX = 1e3;
-var REQUESTS_MAX = 1e3;
-var GOALS_READ_MAX = 1e3;
-var AGEING_READ_MAX = 1e3;
-var AUTHORS_PAGE = 64;
-var str4 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj9 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var rand5 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var machine = (who2) => !str4(who2) || isMachineIdentity(str4(who2));
-var second = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
-var bodyText = (s) => String(s).trim().replace(/^#/gm, " #");
-var Intent = class {
-  #sources = /* @__PURE__ */ new Map();
-  // kind -> reader (R15)
-  constructor({
-    storage,
-    record,
-    membership,
-    promotion,
-    entities,
-    progressions,
-    inquiry = null,
-    aiRuns = null,
-    retrieval = null,
-    captureRequests = null,
-    now = null
-  } = {}) {
-    this.storage = storage;
-    this.sql = storage.sql;
-    this.record = record;
-    this.membership = membership;
-    this.promotion = promotion;
-    this.entities = entities;
-    this.progressionsRef = progressions;
-    this.inquiryRef = inquiry;
-    this.aiRunsRef = aiRuns;
-    this.retrievalRef = retrieval;
-    this.captureRequests = captureRequests;
-    this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
-  }
-  #rows(qs, ...a) {
-    return [...this.sql.exec(qs, ...a)];
-  }
-  #one(qs, ...a) {
-    const r = this.#rows(qs, ...a);
-    return r.length ? r[0] : null;
-  }
-  #lazy(ref) {
-    return typeof ref === "function" ? ref() : ref;
-  }
-  /* N179: progressions as the host holds it, reached on first use, so the instance the plane builds with its `env`
-     (progressions R16's configured clock) is the one read here, whichever module reached the host first. */
-  get progressions() {
-    return this.#lazy(this.progressionsRef);
-  }
-  #when() {
-    return second(this.now());
-  }
-  /** The module's tables (R24). */
-  migrate() {
-    migrateIntent(this.sql);
-  }
-  /* ===================================================================== *
-   * READING THE RECORD
-   * ===================================================================== */
-  /* A held document: its head, text and front matter; null when the bundle is not held. */
-  #doc(id) {
-    if (typeof id !== "string" || !id) return null;
-    const head = this.record.head(id);
-    if (!head) return null;
-    const f9 = this.record.readFile(id, "bundle.md");
-    const text4 = f9 && typeof f9.text === "string" ? f9.text : null;
-    return { id, head, text: text4, fm: parseFm(text4) || {}, type: normalizeType(head.type) };
-  }
-  /* R23: a project the viewer may see, or the one answer an absent project gets. A viewer who sees the project at
-     existence only is told so (membership R77, C-70.1), before the absent answer. */
-  #project(projectId, viewer) {
-    const d = this.#doc(projectId);
-    if (d && d.type === "project" && viewer !== null && viewer !== void 0) {
-      const seen = this.membership.existenceAct(projectId, viewer);
-      if (seen) return { refused: seen };
-    }
-    if (!d || d.type !== "project" || viewer !== null && viewer !== void 0 && !this.membership.inSight(projectId, viewer))
-      return { refused: noSuchProject(typeof projectId === "string" ? projectId : null) };
-    return { doc: d };
-  }
-  /* An aspiration or goal the viewer may see (R8: absent and unseen are one answer). A project's aspiration is that
-     project's material: it is seen only by a viewer who sees the project it names (R23, N199), whatever the
-     aspiration's own bundle answers; the group's and a member's are seen by every member (R9). */
-  #pursuit(id, type, viewer) {
-    const d = this.#doc(id);
-    const who2 = viewer ?? null;
-    if (!d || d.type !== type || who2 !== null && !this.membership.inSight(id, who2)) return null;
-    if (who2 !== null && type === ASPIRATION && d.fm.scope === "project" && this.#project(d.fm.owner, who2).refused)
-      return null;
-    return d;
-  }
-  /* The member id behind an author (membership R76), null for a machine; the founder's session is `admin` (R9: an
-     administrator's act, the founder included). */
-  #memberOf(author) {
-    if (str4(author) === "admin") return "admin";
-    return this.membership.positionalMember(str4(author), str4(author));
-  }
-  /* ===================================================================== *
-   * THE WRITE (R2, R8–R11, R16, R26): every document intent writes goes through `promotion`, whose check runs this
-   * module's own (below), so an act and a raw promotion meet one rule.
-   * ===================================================================== */
-  #create(id, type, text4, author, extra = {}) {
-    const fm = parseFm(text4) || {};
-    return this.promotion.promote({
-      bundleId: id,
-      base: null,
-      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand5(4)}`,
-      author,
-      files: [{ path: "bundle.md", text: text4 }],
-      meta: {
-        object_type: type,
-        title: fm.title,
-        current_state: fm.current_state,
-        created: fm.created,
-        last_updated: fm.last_updated
-      },
-      ...extra
-    });
-  }
-  #revise(d, text4, author, viewer, extra = {}) {
-    const fm = parseFm(text4) || {};
-    const carried = this.record.livePaths(d.id).filter((p) => p !== "bundle.md").map((path) => {
-      const f9 = this.record.readFile(d.id, path);
-      return typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes };
-    });
-    const member = this.#memberOf(author);
-    return this.promotion.promote({
-      bundleId: d.id,
-      base: d.head.bundleSha,
-      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand5(4)}`,
-      author,
-      files: [{ path: "bundle.md", text: text4 }, ...carried],
-      meta: {
-        object_type: d.type,
-        title: fm.title,
-        current_state: fm.current_state,
-        prior_state: fm.prior_state ?? null,
-        created: fm.created,
-        last_updated: fm.last_updated
-      },
-      actorIdentity: author,
-      actorViewer: viewer ?? author,
-      actorMemberId: member,
-      ...extra
-    });
-  }
-  /* ===================================================================== *
-   * THE REGISTERED CHECK (promotion R39): R1, R2's grammar, R9's authority and R26's state machines, at the write.
-   * ===================================================================== */
-  check(c) {
-    const type = c.promotedType;
-    if (type === "project" && !c.replay) return this.#checkProject(c);
-    if (type === ASPIRATION || type === GOAL) return this.#checkPursuit(c, type);
-    return null;
-  }
-  #checkProject(c) {
-    const fm = c.docFm || {};
-    if (typeof fm.objective !== "string" || fm.objective.trim() === "")
-      return refusal12("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
-    const now = conditionOf(fm);
-    const held = c.head ? conditionOf(parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {}) : null;
-    if (now && JSON.stringify(now.condition) !== JSON.stringify(held ? held.condition : null))
-      return this.#conditionRefusal(now.condition);
-    return null;
-  }
-  #checkPursuit(c, type) {
-    const fm = c.docFm || {};
-    const author = c.author;
-    const who2 = this.#memberOf(author);
-    const notMember = type === GOAL ? goalMachineRefusal(author, !!who2) : aspirationMachineRefusal(author, !!who2);
-    if (notMember) return notMember;
-    const [first, last] = type === GOAL ? ["open", "closed"] : ["held", "retired"];
-    const from = c.head ? c.head.currentState : null, to = c.promotedState;
-    const legal = c.head ? to === from || from === first && to === last : to === first;
-    if (!legal)
-      return refusal12(
-        "PURSUIT_STATE_MOVE_UNDECLARED",
-        `a ${type} ${c.head ? `at '${from}' moves only to '${last}', once` : `is created '${first}'`}, and this promotion names '${String(to).slice(0, 40)}'. Nothing was written.`,
-        { object_type: type, from, to: to ?? null }
-      );
-    const text4 = typeof c.bundleMd?.text === "string" ? c.bundleMd.text : "";
-    if (!readSection(text4, "Statement") || type === GOAL && !readSection(text4, "Bounds"))
-      return refusePursuitUnstated(`a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, in its Statement section. Nothing was written.`);
-    if (type === GOAL) {
-      if (to === "closed" && from !== "closed" && !readSection(text4, "Why It Closed"))
-        return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
-      return null;
-    }
-    if (to === "retired" && from !== "retired" && !readSection(text4, "Taught"))
-      return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
-    const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : fm;
-    if (c.head && (fm.scope !== heldFm.scope || String(fm.owner ?? null) !== String(heldFm.owner ?? null)))
-      return refuseBadScope("an aspiration keeps the scope and owner it was declared with. Nothing was written.");
-    return this.#aspirationAuthority(heldFm.scope, heldFm.owner ?? null, author, c.pkg?.actorViewer ?? author);
-  }
-  /* R9: a member's aspiration is that member's; a project's, a member joined in it; the group's, an active administrator's
-     (the founder included), anyone else answered through membership's `notAnAdmin` with the next step (N327). */
-  #aspirationAuthority(scope, owner, author, viewer) {
-    const who2 = this.#memberOf(author);
-    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str4(owner) || scope === "group" && owner != null)
-      return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-    if (scope === "member" && str4(owner) !== who2)
-      return refusal12("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
-    if (scope === "project") {
-      const p = this.#project(owner, viewer);
-      if (p.refused) return p.refused;
-      const denied = this.membership.projectAuthority(owner, author, "joined", "aspiration");
-      if (denied) return denied;
-    }
-    if (scope === "group" && !this.membership.isAdministrator(who2))
-      return notAnAdmin(str4(author) || null, GROUP_ASPIRATION_ACT, { remedy: GROUP_ASPIRATION_REMEDY });
-    return null;
-  }
-  /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
-  #conditionRefusal(c) {
-    const shaped = isObj9(c) && TOKEN.test(str4(c.progression)) && TOKEN.test(str4(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj9(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN.test(String(v)))) && isObj9(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN.test(String(s)))) && isObj9(c.satisfied);
-    if (!shaped)
-      return refusal12("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
-    const def = this.progressions.readProgression({ progressionKey: str4(c.progression) });
-    if (!def || def.ok === false || !def.found)
-      return refuseNoSuchProgression(
-        "the condition names a flow the record has not declared. Nothing was written.",
-        { progression: str4(c.progression) }
-      );
-    if (!this.entities.has(str4(c.entity))) return noSuchEntity(str4(c.entity));
-    const declared = new Set(def.stages.map((s) => s.stage_key));
-    const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
-    if (bad.length)
-      return refusal12(
-        "BAD_STAGE",
-        `the flow '${str4(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
-        { stages: bad, declared: [...declared] }
-      );
-    if (c.required.grade != null && !GRADES.includes(c.required.grade))
-      return refusal12("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
-    const share = c.satisfied.share;
-    if (!Number.isInteger(share) || share < 1 || share > 100)
-      return refusal12("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
-    return null;
-  }
-  /** record-core R59: C-2.9's objective arm in the audit, beside the catalogue, over the same image (R22). */
-  auditCheck(image) {
-    const md = image && image.files ? image.files.get("bundle.md") : null;
-    const fm = parseFm(typeof md === "string" ? md : null);
-    if (!fm || fm.object_type !== "project") return [];
-    if (typeof fm.objective !== "string" || fm.objective.trim() === "")
-      return [{
-        check: INTENT_CHECKS.NO_OBJECTIVE.check,
-        code: "NO_OBJECTIVE",
-        severity: "error",
-        message: "objective is missing or empty"
-      }];
-    return [];
-  }
-  /* ===================================================================== *
-   * THE OBJECTIVE (R2–R7)
-   * ===================================================================== */
-  /** R2: set, replace or (with a null condition) remove a project's satisfaction condition, as a new revision of the
-   *  project's document through `promotion`; the earlier revision stays in history. */
-  setCondition({ project, condition, author, viewer = null } = {}) {
-    if (machine(author))
-      return refusal12("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
-    const p = this.#project(project, viewer);
-    if (p.refused) return p.refused;
-    const denied = this.membership.projectAuthority(project, author, "joined", "setCondition");
-    if (denied) return denied;
-    const c = condition == null ? null : {
-      ...condition,
-      required: isObj9(condition.required) ? {
-        grade: condition.required.grade ?? null,
-        stages: condition.required.stages ?? []
-      } : condition.required,
-      relation: condition.relation ?? null,
-      filter: condition.filter ?? null
-    };
-    if (c) {
-      const bad = this.#conditionRefusal(c);
-      if (bad) return bad;
-    }
-    const at17 = this.#when();
-    let text4 = removeBlock2(p.doc.text, CONDITION_KEY);
-    if (c) text4 = setBlock(text4, CONDITION_KEY, conditionLines(c, str4(author), at17));
-    text4 = setField(text4, "last_updated", q(at17));
-    text4 = logEntry(
-      text4,
-      at17,
-      c ? "Objective condition set" : "Objective condition removed",
-      str4(author),
-      c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."
-    );
-    const r = this.#revise(p.doc, text4, str4(author), viewer);
-    if (!r.ok) return r;
-    return { ok: true, project, condition: c, set_by: str4(author), at: at17, bundleSha: r.bundleSha };
-  }
-  /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
-  #measure(cond, viewer) {
-    const key = str4(cond.progression), anchor = str4(cond.entity);
-    const related = /* @__PURE__ */ new Set([anchor]);
-    if (cond.relation) {
-      const e = this.entities.readEntity({ entityId: anchor });
-      for (const r of e && e.found && e.entity && e.entity.relations || []) {
-        if (r.relation !== cond.relation || r.withdrawn) continue;
-        if (r.to_entity === anchor && r.from_entity) related.add(r.from_entity);
-        else if (cond.relation === "overlaps" && r.from_entity === anchor && r.to_entity) related.add(r.to_entity);
-      }
-    }
-    const rows = this.#rows(
-      `SELECT DISTINCT entity_id FROM progression_instances WHERE progression_key=?
-                               AND entity_id IN (SELECT value FROM json_each(?)) ORDER BY entity_id LIMIT ?`,
-      key,
-      JSON.stringify([...related]),
-      MEASURE_MAX + 1
-    );
-    const truncated3 = rows.length > MEASURE_MAX;
-    const threaded = rows.slice(0, MEASURE_MAX).map((r) => r.entity_id);
-    const need = cond.required || {};
-    const stages = (need.stages || []).map(String);
-    const matched = [], meeting = [], short = [], undetermined = [];
-    for (const eid of threaded) {
-      const inst = this.progressions.readInstance({ progressionKey: key, entityId: eid, viewer });
-      if (!inst || inst.ok === false || !inst.found) continue;
-      let unevaluable = null, passes = true;
-      for (const [k, v] of Object.entries(cond.filter || {})) {
-        if (k === "entity_kind") {
-          if (!inst.entity || inst.entity.kind !== String(v)) passes = false;
-        } else unevaluable = k;
-      }
-      if (!passes) continue;
-      const row2 = {
-        entity_id: eid,
-        entity_label: inst.entity ? inst.entity.label : null,
-        grade: inst.grade ?? null,
-        grade_determined: inst.grade_determined === true,
-        definition_version: inst.definition_version
-      };
-      matched.push(row2);
-      if (unevaluable) {
-        undetermined.push({ ...row2, why: `the record cannot evaluate the filter '${unevaluable}' on this instance` });
-        continue;
-      }
-      const placed = new Set((inst.stages || []).filter((s) => s.present).map((s) => s.stage_key));
-      const missing = stages.filter((s) => !placed.has(s));
-      if (missing.length) {
-        short.push({ ...row2, why: { stages_missing: missing }, documents: this.#documents(inst) });
-        continue;
-      }
-      if (need.grade == null) {
-        meeting.push(row2);
-        continue;
-      }
-      if (!row2.grade_determined || gradeRank[row2.grade] === void 0) {
-        undetermined.push({ ...row2, why: "the instance's grade is undetermined (fewer than two stages placed, or a stage's grade unknown), so whether it reaches the required grade is not known" });
-        continue;
-      }
-      if (gradeRank[row2.grade] >= gradeRank[need.grade]) {
-        meeting.push(row2);
-        continue;
-      }
-      const weakest = (inst.chain || []).find((l) => l.grade === inst.grade) || null;
-      short.push({
-        ...row2,
-        why: { grade_reached: inst.grade, grade_required: need.grade, weakest_link: weakest },
-        documents: this.#documents(inst)
-      });
-    }
-    return { key, related: [...related].sort(), matched, meeting, short, undetermined, truncated: truncated3 };
-  }
-  /* R5: the documents placed at each stage, with bundle ids the viewer may not see withheld (progressions R13). */
-  #documents(inst) {
-    return (inst.stages || []).filter((s) => s.present).map((s) => ({ stage_key: s.stage_key, documents: (s.documents || []).map((d) => ({
-      capture_sha: d.capture_sha,
-      bundle_id: d.bundle_id ?? null,
-      grade: d.grade ?? null
-    })) }));
-  }
-  /** R3–R5: progress on a project's objective, derived on read against its condition and never stored. */
-  progress({ project, viewer = null } = {}) {
-    const p = this.#project(project, viewer);
-    if (p.refused) return p.refused;
-    const objective = typeof p.doc.fm.objective === "string" ? p.doc.fm.objective : null;
-    const held = conditionOf(p.doc.fm);
-    const computed_at = this.#when();
-    if (!held)
-      return {
-        ok: true,
-        project,
-        objective,
-        condition: null,
-        computable: false,
-        why: "progress cannot be computed: the objective states no condition the record can be measured against",
-        matched: null,
-        meeting: null,
-        short: null,
-        undetermined: null,
-        satisfied: null,
-        computed_at
-      };
-    const bad = this.#conditionRefusal(held.condition);
-    if (bad)
-      return {
-        ok: true,
-        project,
-        objective,
-        condition: held.condition,
-        computable: false,
-        why: `progress cannot be computed: the condition no longer reads against the record (${bad.reason})`,
-        matched: null,
-        meeting: null,
-        short: null,
-        undetermined: null,
-        satisfied: null,
-        computed_at
-      };
-    const m = this.#measure(held.condition, viewer);
-    const n = m.matched.length, k = m.meeting.length, u = m.undetermined.length, share = held.condition.satisfied.share;
-    const satisfied = n === 0 || m.truncated ? null : k * 100 >= share * n ? true : (k + u) * 100 < share * n ? false : null;
-    const why = n === 0 ? "no instance matches the condition, so no share of them can be taken" : m.truncated ? `more than ${MEASURE_MAX} instances match the condition and one read measures that many, so no share of them is taken` : null;
-    return {
-      ok: true,
-      project,
-      objective,
-      condition: held.condition,
-      set_by: held.set_by,
-      set_at: held.set_at,
-      computable: true,
-      matched: n,
-      meeting: k,
-      short: m.short,
-      undetermined: m.undetermined,
-      satisfied,
-      ...why ? { satisfied_why: why } : {},
-      limit: MEASURE_MAX,
-      truncated: m.truncated,
-      instances: { meeting: m.meeting },
-      computed_at
-    };
-  }
-  /** R6: one gap per short instance, each a proposal of kind `objective-gap`. */
-  gaps({ project, viewer = null } = {}) {
-    const pr = this.progress({ project, viewer });
-    if (pr.ok === false) return pr;
-    if (!pr.computable) return { ok: true, project, condition: pr.condition, gaps: [], why: pr.why };
-    return {
-      ok: true,
-      project,
-      condition: pr.condition,
-      gaps: pr.short.map((s) => this.#gap(project, pr.condition, s)),
-      limit: pr.limit,
-      truncated: pr.truncated
-    };
-  }
-  #gap(project, cond, s) {
-    const key = `${project}::${cond.progression}::${s.entity_id}`;
-    const basis = s.why.stages_missing ? {
-      project,
-      progression: cond.progression,
-      entity: s.entity_id,
-      stages_missing: s.why.stages_missing,
-      says: `the records the stages ${s.why.stages_missing.join(", ")} would hold are to be requested`
-    } : {
-      project,
-      progression: cond.progression,
-      entity: s.entity_id,
-      grade_reached: s.why.grade_reached,
-      grade_required: s.why.grade_required,
-      link: s.why.weakest_link,
-      says: "the weakest link of this instance is to be strengthened"
-    };
-    return {
-      key: `intent::${key}`,
-      source: "intent",
-      kind: GAP_KIND,
-      grade: s.grade_determined ? s.grade : null,
-      basis,
-      instances: [{ entity_id: s.entity_id, entity_label: s.entity_label, documents: s.documents }],
-      surfaced_by: "machine"
-    };
-  }
-  /** R7: what the condition reads, so `monitoring` watches exactly those. The captures come a page at a time (N181):
-   *  at most `limit` (default and ceiling WATCH_LIMIT_MAX), those after `after` in capture order, with `cursor` the
-   *  last one answered and `truncated` whether more follow, so a watcher follows the whole set with the cursor. */
-  watchSet({ project, after = null, limit = null } = {}) {
-    const cap = Number.isInteger(limit) && limit >= 1 && limit <= WATCH_LIMIT_MAX ? limit : WATCH_LIMIT_MAX;
-    const none = { entities: [], progressions: [], captures: [], limit: cap, truncated: false, cursor: null };
-    const d = this.#doc(project);
-    const held = d && d.type === "project" ? conditionOf(d.fm) : null;
-    if (!held || this.#conditionRefusal(held.condition)) return none;
-    const m = this.#measure(held.condition, null);
-    const rows = this.#rows(
-      `SELECT DISTINCT capture_sha FROM progression_instances WHERE progression_key=?
-                               AND entity_id IN (SELECT value FROM json_each(?)) AND capture_sha > ?
-                             ORDER BY capture_sha LIMIT ?`,
-      m.key,
-      JSON.stringify(m.matched.map((r) => r.entity_id)),
-      typeof after === "string" ? after : "",
-      cap + 1
-    );
-    const truncated3 = rows.length > cap;
-    const captures = rows.slice(0, cap).map((r) => r.capture_sha);
-    return {
-      entities: m.related,
-      progressions: [m.key],
-      captures,
-      limit: cap,
-      truncated: truncated3,
-      cursor: truncated3 ? captures[captures.length - 1] : null,
-      measure_truncated: m.truncated
-    };
-  }
-  /* ===================================================================== *
-   * WHAT A SUBJECT SERVES (R28), for `scheduler`'s rank (its R10): read as the plane, orders work only, never shown.
-   * ===================================================================== */
-  /** R28: for each named address, bundle and request (at most SERVES_MAX in all, the first in the order given, with
-   *  `truncated`), the open gaps it serves in any project and the held aspirations in force for its project that it
-   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. What it
-   *  measures against is bounded (N305, K391): `context_truncated` says the held aspirations or the projects walked
-   *  for conditions were cut at CONTEXT_MAX. Writes nothing; never throws. */
-  servesOf({ addresses = [], bundles = [], requests = [] } = {}) {
-    const named = [];
-    for (const [kind, list2] of [["address", addresses], ["bundle", bundles], ["request", requests]])
-      for (const id of Array.isArray(list2) ? list2 : []) named.push({ kind, id: typeof id === "string" ? id : null });
-    const truncated3 = named.length > SERVES_MAX;
-    const subjects = named.slice(0, SERVES_MAX);
-    const empty = (x) => ({ kind: x.kind, id: x.id, gaps: [], aspirations: [] });
-    let ctx;
-    try {
-      ctx = this.#servesContext();
-    } catch {
-      return { ok: true, serves: subjects.map(empty), truncated: truncated3, context_truncated: false };
-    }
-    const serves = subjects.map((x) => {
-      try {
-        if (!x.id) return empty(x);
-        const held = x.kind === "bundle" ? [x.id] : x.kind === "address" ? this.#bundlesAt(x.id) : ctx.requestBundles(x.id);
-        const gaps = /* @__PURE__ */ new Set(), aspirations = /* @__PURE__ */ new Set();
-        for (const b of held) {
-          for (const g of ctx.gapsOf(b)) gaps.add(g);
-          for (const a of ctx.aspirationsOf(b)) aspirations.add(a);
-        }
-        return { kind: x.kind, id: x.id, gaps: [...gaps].sort(), aspirations: [...aspirations].sort() };
-      } catch {
-        return empty(x);
-      }
-    });
-    return { ok: true, serves, truncated: truncated3, context_truncated: ctx.cut };
-  }
-  /* R28: what every subject in one call is measured against, gathered once under the plane's sight: the open gaps by
-     the bundles documenting their short instances, and each held group or project aspiration with what it names.
-     N305 (K391): of the first CONTEXT_MAX projects in id order, those with a condition; and of the first CONTEXT_MAX
-     aspirations in id order, held or retired and of any scope (N323), the held ones of group or project scope; `cut`
-     says either walk was cut. */
-  #servesContext() {
-    const gapsByBundle = /* @__PURE__ */ new Map();
-    const all = [];
-    const walked = this.#projectsInOrder(PLANE_VIEWER, CONTEXT_MAX);
-    for (const pid of walked.ids) {
-      const d = this.#doc(pid);
-      if (!d || !conditionOf(d.fm)) continue;
-      const g = this.gaps({ project: pid, viewer: PLANE_VIEWER });
-      if (g.ok) all.push(...g.gaps);
-    }
-    const decided = this.#decidedAmong(all.map((g) => g.key));
-    for (const g of all) {
-      if (decided.has(g.key)) continue;
-      for (const inst of g.instances || [])
-        for (const stage of inst.documents || [])
-          for (const d of stage.documents || [])
-            if (d.bundle_id) {
-              if (!gapsByBundle.has(d.bundle_id)) gapsByBundle.set(d.bundle_id, /* @__PURE__ */ new Set());
-              gapsByBundle.get(d.bundle_id).add(g.key);
-            }
-    }
-    const inForce = this.#heldAspirations(PLANE_VIEWER, CONTEXT_MAX);
-    const held = inForce.held.filter((a) => a.scope === "group" || a.scope === "project");
-    const departures = /* @__PURE__ */ new Map(), concerned = /* @__PURE__ */ new Map(), requestsRead = { rows: null };
-    const departed = (project) => {
-      if (!departures.has(project)) departures.set(project, this.#departures(project).latest);
-      return departures.get(project);
-    };
-    const concerns = (entityId) => {
-      if (!concerned.has(entityId)) {
-        const r = this.entities.concerns({ entityId, limit: 5e3, viewer: PLANE_VIEWER });
-        concerned.set(entityId, new Set((r && r.documents || []).map((d) => d.bundle_id).filter(Boolean)));
-      }
-      return concerned.get(entityId);
-    };
-    const placedIn = (bundleId, keys) => keys.length > 0 && !!this.#one(
-      `SELECT 1 AS x FROM progression_instances WHERE bundle_id=? AND progression_key IN (SELECT value FROM json_each(?))
-       LIMIT 1`,
-      bundleId,
-      JSON.stringify(keys)
-    );
-    return {
-      cut: walked.truncated || inForce.truncated,
-      gapsOf: (bundleId) => gapsByBundle.get(bundleId) || [],
-      /* R12's in force for the bundle's project (the group's less its departures, and the project's own); a bundle in
-         no project is under the group's alone */
-      aspirationsOf: (bundleId) => {
-        const project = this.record.bundleInfo(bundleId)?.project ?? null;
-        const gone = project ? departed(project) : /* @__PURE__ */ new Map();
-        return held.filter((a) => a.scope === "group" ? !gone.has(a.id) : project !== null && a.owner === project).filter((a) => placedIn(bundleId, a.progressions) || a.entities.some((e) => concerns(e).has(bundleId))).map((a) => a.id);
-      },
-      /* a request serves what its address and its target question serve (capture-requests R23, R28) */
-      requestBundles: (request) => {
-        if (requestsRead.rows === null) {
-          const read2 = this.#lazy(this.captureRequests).captureRequests({
-            viewer: PLANE_VIEWER,
-            state: "requested",
-            limit: 1e3
-          });
-          requestsRead.rows = new Map((read2 && read2.requests || []).map((r) => [r.request, r]));
-        }
-        const row2 = requestsRead.rows.get(request);
-        const b = this.#lazy(this.captureRequests).bundlesOf?.(request) ?? null;
-        const target = b && b.target || row2 && row2.target || null;
-        return [...row2 && row2.address ? this.#bundlesAt(row2.address) : [], ...target ? [target] : []];
-      }
-    };
-  }
-  /* R28: the bundles the captures taken from an address are filed in (provenance R48's read contract), at most
-     SERVES_MAX of them. */
-  #bundlesAt(address) {
-    return this.#rows(
-      `SELECT DISTINCT r.bundle_id FROM captured_locators c JOIN register r ON r.capture_sha = c.capture_sha
-                        WHERE c.address_norm = ? OR c.address = ? ORDER BY r.bundle_id LIMIT ?`,
-      address,
-      address,
-      SERVES_MAX
-    ).map((r) => r.bundle_id).filter(Boolean);
-  }
-  /* ===================================================================== *
-   * GOALS (R8, R26)
-   * ===================================================================== */
-  /** R8: declare a goal, bounded, optionally under an aspiration. */
-  declareGoal({ statement, bounds, aspiration = null, author, viewer = null } = {}) {
-    const byMachine = goalMachineRefusal(author);
-    if (byMachine) return byMachine;
-    if (!str4(statement) || !str4(bounds))
-      return refusePursuitUnstated("a goal states what it pursues and what bounds it. Nothing was written.");
-    if (aspiration != null && aspiration !== "") {
-      const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-      if (!a) return refuseNoSuchAspiration(
-        "no aspiration answers to that id here. Nothing was written.",
-        { aspiration }
-      );
-      if (a.head.currentState === "retired")
-        return refusePursuitEnded("a goal is not opened under a retired aspiration. Nothing was written.", { aspiration });
-    }
-    const at17 = this.#when();
-    const id = pursuitId(this.record.allocId("GOAL", at17.slice(0, 4)).id, GOAL);
-    const r = this.#create(
-      id,
-      GOAL,
-      goalDoc({ id, statement, bounds, aspiration: aspiration || null, author: str4(author), at: at17 }),
-      str4(author)
-    );
-    if (!r.ok) return r;
-    return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str4(author), at: at17 };
-  }
-  /** R8: record that a project's objective serves a goal, as the author's dated claim; the author has joined it. */
-  linkObjective({ goal, project, author, viewer = null } = {}) {
-    const byMachine = goalMachineRefusal(author);
-    if (byMachine) return byMachine;
-    const g = this.#pursuit(goal, GOAL, viewer ?? author);
-    if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
-    if (g.head.currentState === "closed")
-      return refusePursuitEnded("a closed goal takes no new objective. Nothing was written.", { goal });
-    const p = this.#project(project, viewer ?? author);
-    if (p.refused) return p.refused;
-    const denied = this.membership.projectAuthority(project, author, "joined", "linkObjective");
-    if (denied) return denied;
-    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj9(o) && o.project === project))
-      return { ok: true, goal, project, already: true };
-    const at17 = this.#when();
-    let text4 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str4(author)) ? str4(author) : q(author), at: q(at17) });
-    text4 = setField(text4, "last_updated", q(at17));
-    text4 = logEntry(text4, at17, "Objective linked", str4(author), `${project}'s objective serves this goal.`);
-    const r = this.#revise(g, text4, str4(author), viewer);
-    if (!r.ok) return r;
-    return { ok: true, goal, project, by: str4(author), at: at17 };
-  }
-  /** R8: close a goal with its reason; it stays readable with its objectives and reason. */
-  closeGoal({ goal, reason, author, viewer = null } = {}) {
-    const byMachine = goalMachineRefusal(author);
-    if (byMachine) return byMachine;
-    const g = this.#pursuit(goal, GOAL, viewer ?? author);
-    if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
-    if (!str4(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
-    if (g.head.currentState === "closed")
-      return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
-    const at17 = this.#when();
-    let text4 = appendHistory(g.text, {
-      at: at17,
-      from: "open",
-      to: "closed",
-      blurb: "closed; the reason is in its document",
-      author: str4(author)
-    });
-    text4 = setField(setField(setField(text4, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at17));
-    text4 = setSection2(text4, "Why It Closed", bodyText(reason));
-    text4 = logEntry(text4, at17, "Closed", str4(author), "open to closed.");
-    const r = this.#revise(g, text4, str4(author), viewer);
-    if (!r.ok) return r;
-    return { ok: true, goal, state: "closed", reason: str4(reason), author: str4(author), at: at17 };
-  }
-  /** R8: a goal as the record holds it: its statement, bounds, aspiration, the objectives linked (each a project the
-   *  viewer may see), its state and, once closed, its reason. No progress figure: its objectives carry theirs. */
-  readGoal({ goal, viewer = null } = {}) {
-    const g = this.#pursuit(goal, GOAL, viewer);
-    if (!g) return refuseNoSuchGoal("no goal answers to that id here.", { goal: goal ?? null });
-    return { ok: true, goal: this.#goalView(g, viewer) };
-  }
-  #goalView(g, viewer) {
-    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj9).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
-    const asp = typeof g.fm.aspiration === "string" && g.fm.aspiration ? g.fm.aspiration : null;
-    const aspiration = asp && (viewer == null || this.#pursuit(asp, ASPIRATION, viewer)) ? asp : null;
-    return {
-      id: g.id,
-      statement: readSection(g.text, "Statement"),
-      bounds: readSection(g.text, "Bounds"),
-      aspiration,
-      objectives,
-      state: g.head.currentState,
-      closed_reason: g.head.currentState === "closed" ? readSection(g.text, "Why It Closed") : null,
-      author: g.fm.author ?? null,
-      at: g.fm.created ?? null
-    };
-  }
-  /* ===================================================================== *
-   * ASPIRATIONS (R9–R14, R26)
-   * ===================================================================== */
-  /** R9: declare an aspiration of the group, a project or a member. */
-  declareAspiration({ scope, owner = null, statement, entities = [], progressions = [], author, viewer = null } = {}) {
-    const byMachine = aspirationMachineRefusal(author);
-    if (byMachine) return byMachine;
-    const own2 = scope === "group" ? null : str4(owner) || null;
-    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !own2 || scope === "group" && str4(owner))
-      return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-    if (!str4(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
-    const denied = this.#aspirationAuthority(scope, own2, author, viewer ?? author);
-    if (denied) return denied;
-    const ents = (Array.isArray(entities) ? entities : []).map(str4).filter(Boolean);
-    const progs = (Array.isArray(progressions) ? progressions : []).map(str4).filter(Boolean);
-    const badEnt = ents.find((e) => !TOKEN.test(e) || !this.entities.has(e));
-    if (badEnt) return noSuchEntity(badEnt);
-    const badProg = progs.find((k) => {
-      const d = TOKEN.test(k) && this.progressions.readProgression({ progressionKey: k });
-      return !d || d.ok === false || !d.found;
-    });
-    if (badProg) return refuseNoSuchProgression("the aspiration names a flow the record has not declared. Nothing was written.", { progression: badProg });
-    const at17 = this.#when();
-    const id = pursuitId(this.record.allocId("ASP", at17.slice(0, 4)).id, ASPIRATION);
-    const r = this.#create(
-      id,
-      ASPIRATION,
-      aspirationDoc({
-        id,
-        scope,
-        owner: own2,
-        statement,
-        entities: ents,
-        progressions: progs,
-        author: str4(author),
-        at: at17
-      }),
-      str4(author),
-      { actorViewer: viewer ?? str4(author) }
-    );
-    if (!r.ok) return r;
-    return { ok: true, aspiration: id, scope, owner: own2, state: "held", author: str4(author), at: at17 };
-  }
-  /** R10: a project records its departure from a held group aspiration, with a reason. */
-  departFrom({ project, aspiration, reason, author, viewer = null } = {}) {
-    const byMachine = aspirationMachineRefusal(author);
-    if (byMachine) return byMachine;
-    const p = this.#project(project, viewer ?? author);
-    if (p.refused) return p.refused;
-    const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return refuseNoSuchAspiration(
-      "no aspiration answers to that id here. Nothing was written.",
-      { aspiration: aspiration ?? null }
-    );
-    if (a.fm.scope !== "group")
-      return refuseBadScope("a project departs only from an aspiration the whole group holds; a project's or a member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
-    if (a.head.currentState === "retired")
-      return refusePursuitEnded("a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written.", { aspiration });
-    if (!str4(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
-    const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
-    if (denied) return denied;
-    const at17 = this.#when();
-    this.record.transact(() => this.sql.exec(
-      `INSERT INTO intent_departures (project_id, aspiration_id, reason, author, at) VALUES (?,?,?,?,?)`,
-      project,
-      aspiration,
-      str4(reason).slice(0, 4e3),
-      str4(author),
-      at17
-    ));
-    return { ok: true, project, aspiration, reason: str4(reason), author: str4(author), at: at17, notable: true };
-  }
-  /** R11: a dead end, appended to the aspiration's pursuit record, dated and authored, never removed. */
-  recordDeadEnd({ aspiration, note, author, viewer = null } = {}) {
-    const byMachine = aspirationMachineRefusal(author);
-    if (byMachine) return byMachine;
-    const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return refuseNoSuchAspiration(
-      "no aspiration answers to that id here. Nothing was written.",
-      { aspiration: aspiration ?? null }
-    );
-    if (!str4(note))
-      return refusal12("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
-    const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
-    if (denied) return denied;
-    const at17 = this.#when();
-    let text4 = appendSection(
-      a.text,
-      "Dead Ends",
-      `### ${at17} | ${str4(author)}
-${bodyText(note)}`
-    );
-    text4 = setField(text4, "last_updated", q(at17));
-    text4 = logEntry(text4, at17, "Dead end recorded", str4(author), "a dead end was appended to the pursuit record.");
-    const r = this.#revise(a, text4, str4(author), viewer);
-    if (!r.ok) return r;
-    return { ok: true, aspiration, note: str4(note), author: str4(author), at: at17 };
-  }
-  /** R11: retire an aspiration with what pursuing it taught; it and its pursuit record stay readable. */
-  retireAspiration({ aspiration, taught, author, viewer = null } = {}) {
-    const byMachine = aspirationMachineRefusal(author);
-    if (byMachine) return byMachine;
-    const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return refuseNoSuchAspiration(
-      "no aspiration answers to that id here. Nothing was written.",
-      { aspiration: aspiration ?? null }
-    );
-    if (a.head.currentState === "retired")
-      return refusePursuitEnded("this aspiration is already retired. Nothing was written.", { aspiration });
-    if (!str4(taught))
-      return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
-    const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
-    if (denied) return denied;
-    const at17 = this.#when();
-    let text4 = appendHistory(a.text, {
-      at: at17,
-      from: "held",
-      to: "retired",
-      blurb: "retired; what it taught is in its document",
-      author: str4(author)
-    });
-    text4 = setField(setField(setField(text4, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at17));
-    text4 = setSection2(text4, "Taught", bodyText(taught));
-    text4 = logEntry(text4, at17, "Retired", str4(author), "held to retired.");
-    const r = this.#revise(a, text4, str4(author), viewer);
-    if (!r.ok) return r;
-    return { ok: true, aspiration, state: "retired", taught: str4(taught), author: str4(author), at: at17 };
-  }
-  /* R12, R13, R28 (N209, K338, N323): the first `max` aspirations the viewer may see, in id order, held or retired and
-     of any scope, walked a page at a time and read one past so a cut says so; answers the held ones among them. An
-     aspiration the viewer may not see (a project's, of a project hidden from the viewer) is skipped and never counted,
-     so a cut says nothing of it (DEC-36, K391). */
-  #heldAspirations(viewer, max = ASPIRATIONS_MAX) {
-    const out = [];
-    let after = "", read2 = 0, truncated3 = false;
-    for (; ; ) {
-      const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
-      for (const id of page.ids) {
-        const a = this.#pursuit(id, ASPIRATION, viewer);
-        if (!a) continue;
-        if (read2 === max) {
-          truncated3 = true;
-          break;
-        }
-        read2 += 1;
-        if (a.head.currentState === "held") out.push(this.#aspirationView(a));
-      }
-      if (truncated3 || page.ids.length < 200 || !page.cursor) break;
-      after = page.cursor;
-    }
-    return { held: out, truncated: truncated3 };
-  }
-  #aspirationView(a) {
-    const list2 = (v) => Array.isArray(v) ? v.map(String).filter((x) => x !== "") : [];
-    return {
-      id: a.id,
-      scope: a.fm.scope ?? null,
-      owner: a.fm.owner ?? null,
-      statement: readSection(a.text, "Statement"),
-      entities: list2(a.fm.entities),
-      progressions: list2(a.fm.progressions),
-      state: a.head.currentState,
-      author: a.fm.author ?? null,
-      at: a.fm.created ?? null
-    };
-  }
-  /* R10: the departure in force for each (project, aspiration): the latest recorded, at most DEPARTURES_MAX of them
-     (N181), read one past so a cut says so. */
-  #departures(project) {
-    const rows = this.#rows(`SELECT d.aspiration_id, d.reason, d.author, d.at FROM intent_departures d
-                              WHERE d.project_id=? AND d.seq = (SELECT MAX(x.seq) FROM intent_departures x
-                                                                  WHERE x.project_id=d.project_id
-                                                                    AND x.aspiration_id=d.aspiration_id)
-                              ORDER BY d.seq LIMIT ?`, project, DEPARTURES_MAX + 1);
-    const latest = /* @__PURE__ */ new Map();
-    for (const r of rows.slice(0, DEPARTURES_MAX))
-      latest.set(r.aspiration_id, { aspiration: r.aspiration_id, reason: r.reason, author: r.author, at: r.at, notable: true });
-    return { latest, truncated: rows.length > DEPARTURES_MAX };
-  }
-  /** R12: the aspirations in force for a project, a member, or (neither named) the group, each with its scope. The
-   *  group's less any departure, each departure listed with its reason; no precedence is stated or implied. Those in
-   *  force are taken among the first ASPIRATIONS_MAX aspirations the viewer may see, held or retired (N323). */
-  aspirationsFor({ project = null, member = null, viewer = null } = {}) {
-    if (project != null && project !== "") {
-      const p = this.#project(project, viewer);
-      if (p.refused) return p.refused;
-    }
-    const { held, truncated: truncated3 } = this.#heldAspirations(viewer);
-    const dep = project ? this.#departures(project) : { latest: /* @__PURE__ */ new Map(), truncated: false };
-    const departed = dep.latest;
-    const group = held.filter((a) => a.scope === "group" && !departed.has(a.id));
-    const own2 = project ? held.filter((a) => a.scope === "project" && a.owner === project) : [];
-    const mine = member ? held.filter((a) => a.scope === "member" && a.owner === str4(member)) : [];
-    const departures = [...departed.values()].filter((d) => held.some((a) => a.id === d.aspiration));
-    return {
-      ok: true,
-      project: project || null,
-      member: member || null,
-      aspirations: [...group, ...own2, ...mine],
-      limit: ASPIRATIONS_MAX,
-      truncated: truncated3,
-      departures,
-      departures_limit: DEPARTURES_MAX,
-      departures_truncated: dep.truncated,
-      precedence: null,
-      says: "these are held side by side; the record states no order among them and resolves nothing between them"
-    };
-  }
-  /** R13: each pair of held aspirations naming a common entity or progression, with what they share. The held ones
-   *  among R12's read (the first ASPIRATIONS_MAX the viewer may see, in id order, held or retired; N323) are paired, and
-   *  at most CONTACTS_MAX pairs are listed, in the order of their first and then second aspiration's id; `truncated`
-   *  says either was cut (N209, K338). */
-  contacts({ viewer = null } = {}) {
-    const { held, truncated: cut3 } = this.#heldAspirations(viewer);
-    const pairs = [];
-    let truncated3 = cut3;
-    outer: for (let i = 0; i < held.length; i++)
-      for (let j = i + 1; j < held.length; j++) {
-        const a = held[i], b = held[j];
-        const entities = a.entities.filter((e) => b.entities.includes(e));
-        const progressions = a.progressions.filter((k) => b.progressions.includes(k));
-        if (!entities.length && !progressions.length) continue;
-        if (pairs.length === CONTACTS_MAX) {
-          truncated3 = true;
-          break outer;
-        }
-        pairs.push({
-          a: a.id,
-          b: b.id,
-          shared: { entities, progressions },
-          says: "both name what is listed; the record does not say whether they agree"
-        });
-      }
-    return { ok: true, contacts: pairs, limit: CONTACTS_MAX, truncated: truncated3 };
-  }
-  /** R14: an aspiration's pursuit record: the goals opened under it and their objectives, the proposals triaged under
-   *  them with each act and reason, the capture requests named in them with their outcome, and the dead ends. */
-  pursuitOf({ aspiration, viewer = null } = {}) {
-    const a = this.#pursuit(aspiration, ASPIRATION, viewer);
-    if (!a) return refuseNoSuchAspiration("no aspiration answers to that id here.", { aspiration: aspiration ?? null });
-    const goals = [];
-    let after = "", read2 = 0, goalsSeen = 0, goals_read_truncated = false;
-    for (; ; ) {
-      const page = this.record.listByType({ type: GOAL, after, limit: 200 });
-      for (const id of page.ids) {
-        if (read2 === GOALS_READ_MAX) {
-          goals_read_truncated = true;
-          break;
-        }
-        read2 += 1;
-        const g = this.#pursuit(id, GOAL, viewer);
-        if (g && g.fm.aspiration === aspiration) {
-          goalsSeen += 1;
-          if (goals.length < GOALS_MAX) goals.push(this.#goalView(g, viewer));
-        }
-        if (goalsSeen > GOALS_MAX) break;
-      }
-      if (goals_read_truncated || goalsSeen > GOALS_MAX || page.ids.length < 200 || !page.cursor) break;
-      after = page.cursor;
-    }
-    const goals_truncated = goalsSeen > GOALS_MAX;
-    const projects = [...new Set(goals.flatMap((g) => g.objectives.map((o) => o.project)))];
-    const acts = projects.length ? this.#rows(
-      `SELECT proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at
-                      FROM intent_triage WHERE project_id IN (SELECT value FROM json_each(?)) ORDER BY seq LIMIT ?`,
-      JSON.stringify(projects),
-      TRIAGED_MAX + 1
-    ) : [];
-    const triaged_truncated = acts.length > TRIAGED_MAX;
-    const triaged = acts.slice(0, TRIAGED_MAX).map((r) => ({
-      proposal: r.proposal_key,
-      source: r.source,
-      kind: r.kind,
-      act: r.act,
-      project: r.project_id,
-      inquiry: r.inquiry_id,
-      reason: r.reason,
-      grade: r.grade,
-      basis: safeJson11(r.basis_json),
-      author: r.author,
-      at: r.at
-    }));
-    const named = [];
-    for (const t of triaged) {
-      for (const id of captureRequestsNamed(t.basis)) if (!named.includes(id)) named.push(id);
-      if (named.length > REQUESTS_MAX) break;
-    }
-    const requests_truncated = named.length > REQUESTS_MAX;
-    named.length = Math.min(named.length, REQUESTS_MAX);
-    const byId = named.length ? this.#lazy(this.captureRequests) : null;
-    const capture_requests = named.map((id) => {
-      let r = null;
-      try {
-        r = byId.requestById({ request: id, viewer });
-      } catch {
-        r = null;
-      }
-      if (!r) return { request: id, outcome: null, why: "no such request is held, or it is one you may not see" };
-      return { request: id, outcome: {
-        state: r.state,
-        code: r.code ?? null,
-        capture_sha: r.capture_sha ?? null,
-        captured_at: r.captured_at ?? null
-      } };
-    });
-    return {
-      ok: true,
-      aspiration: this.#aspirationView(a),
-      goals,
-      goals_limit: GOALS_MAX,
-      goals_truncated,
-      goals_read_limit: GOALS_READ_MAX,
-      goals_read_truncated,
-      triaged,
-      triaged_limit: TRIAGED_MAX,
-      triaged_truncated,
-      capture_requests,
-      requests_limit: REQUESTS_MAX,
-      requests_truncated,
-      dead_ends: deadEndsOf(a.text),
-      taught: a.head.currentState === "retired" ? readSection(a.text, "Taught") : null
-    };
-  }
-  /* ===================================================================== *
-   * THE DISCOVERY LOOP (R15–R17)
-   * ===================================================================== */
-  /** R15: a later module registers a proposal source once, at start (K31's pattern). `reader({project, viewer})`
-   *  answers its proposals, `{key, kind, grade, basis, instances, surfaced_by}`. */
-  registerSource(kind, reader) {
-    if (typeof kind !== "string" || !TOKEN.test(kind) || typeof reader !== "function" || kind === "progressions" || kind === "intent")
-      return refusal12("SOURCE_MALFORMED", "a source names its kind (a key, not 'progressions' or 'intent', which are read directly) and gives a reader function.", { kind: typeof kind === "string" ? kind : null });
-    if (this.#sources.has(kind))
-      return refusal12("SOURCE_DECLARED", `the source '${kind}' is already registered.`, { kind });
-    this.#sources.set(kind, reader);
-    return { ok: true, kind };
-  }
-  /* Every proposal from every source, open or not, keyed `<source>::<its key>`; with no project named, the gaps of the
-     first PROJECTS_MAX projects the viewer may see, in id order (N305), `projects_truncated` saying they were cut. */
-  #allProposals(project, viewer) {
-    const out = [];
-    const feed = this.progressions.proposalsFeed(null);
-    for (const g of feed && feed.proposals || [])
-      out.push({
-        key: `progressions::${g.key}`,
-        source: "progressions",
-        source_key: g.key,
-        kind: "missing_predecessor",
-        grade: g.grade ?? null,
-        grade_determined: g.grade_determined === true,
-        basis: {
-          progression_key: g.progression_key,
-          stage_key: g.stage_key,
-          required: g.required,
-          definition_version: g.definition_version,
-          overdue: !!g.overdue
-        },
-        instances: g.instances || [],
-        surfaced_by: g.surfaced_by || "machine"
-      });
-    for (const [kind, reader] of this.#sources) {
-      let got = [];
-      try {
-        got = reader({ project, viewer }) || [];
-      } catch {
-        got = [];
-      }
-      for (const p of Array.isArray(got) ? got : [])
-        if (isObj9(p) && typeof p.key === "string" && p.key)
-          out.push({
-            key: `${kind}::${p.key}`,
-            source: kind,
-            source_key: p.key,
-            kind: p.kind ?? kind,
-            grade: p.grade ?? null,
-            basis: p.basis ?? null,
-            instances: Array.isArray(p.instances) ? p.instances : [],
-            surfaced_by: p.surfaced_by ?? "machine"
-          });
-    }
-    const projects = project ? { ids: [project], truncated: false } : this.#projectsInOrder(viewer, PROJECTS_MAX);
-    for (const pid of projects.ids) {
-      const g = this.gaps({ project: pid, viewer });
-      if (g.ok) for (const gap of g.gaps) out.push({ ...gap, source_key: gap.key.slice("intent::".length) });
-    }
-    return { list: out, projects_truncated: projects.truncated };
-  }
-  /* N305 (K391): the first `max` projects the viewer may see (every project for a null viewer), in id order, walked a
-     page at a time and read one past, so `truncated` says a cut was made. A project the viewer may not see is not
-     counted, so a cut says nothing of it (R23, DEC-36). */
-  #projectsInOrder(viewer, max) {
-    const ids = [];
-    let after = "", truncated3 = false;
-    for (; ; ) {
-      const page = this.record.listByType({ type: "project", after, limit: 200 });
-      for (const id of page.ids) {
-        if (viewer != null && !this.membership.inSight(id, viewer)) continue;
-        if (ids.length === max) {
-          truncated3 = true;
-          break;
-        }
-        ids.push(id);
-      }
-      if (truncated3 || page.ids.length < 200 || !page.cursor) break;
-      after = page.cursor;
-    }
-    return { ids, truncated: truncated3 };
-  }
-  /* R16: whether a proposal key has a triage act recorded (any act takes it off the open list); one row, read through
-     the key's index (N181 (4)). */
-  #isDecided(key) {
-    return !!this.#one(`SELECT 1 AS x FROM intent_triage WHERE proposal_key=? LIMIT 1`, typeof key === "string" ? key : "");
-  }
-  /* R15: which of these keys have a triage act recorded, read through the key's index, as many rows as keys. */
-  #decidedAmong(keys) {
-    if (!keys.length) return /* @__PURE__ */ new Set();
-    return new Set(this.#rows(
-      `SELECT DISTINCT proposal_key FROM intent_triage
-                                WHERE proposal_key IN (SELECT value FROM json_each(?)) LIMIT ?`,
-      JSON.stringify(keys),
-      keys.length
-    ).map((r) => r.proposal_key));
-  }
-  /* R16, R23 (N199): the project a triage act concerns: the one named with it, else the project a gap's key names
-     (`intent::<project>::…`), so a gap set aside without naming its project is still that project's material. */
-  #projectOfAct(r) {
-    if (r.project) return r.project;
-    const m = /^intent::([^:]+)::/.exec(r.key || "");
-    return m ? m[1] : null;
-  }
-  /* R16: the proposals set aside (deferred or dismissed), newest first, at most SET_ASIDE_MAX, read one past so a cut
-     says so (N181); an act concerning a project the viewer may not see is not listed to them (R23, N199). */
-  #setAside(viewer) {
-    const rows = this.#rows(`SELECT proposal_key, act, project_id, inquiry_id, reason, author, at FROM intent_triage
-                              WHERE act IN ('defer', 'dismiss') ORDER BY seq DESC LIMIT ?`, SET_ASIDE_MAX + 1);
-    const truncated3 = rows.length > SET_ASIDE_MAX;
-    const list2 = rows.slice(0, SET_ASIDE_MAX).map((r) => ({
-      key: r.proposal_key,
-      act: r.act,
-      project: r.project_id,
-      inquiry: r.inquiry_id,
-      reason: r.reason,
-      author: r.author,
-      at: r.at
-    })).filter((d) => {
-      const pid = this.#projectOfAct(d);
-      return !pid || viewer == null || !this.#project(pid, viewer).refused;
-    });
-    return { list: list2, truncated: truncated3 };
-  }
-  /** R15, R16: every open proposal from every source, each with its grade and basis; beside them, every proposal set
-   *  aside (deferred or dismissed) with its reason, so a decision ages a proposal without hiding it. */
-  proposals({ project = null, viewer = null } = {}) {
-    if (project != null && project !== "") {
-      const p = this.#project(project, viewer);
-      if (p.refused) return p.refused;
-    }
-    const all = this.#allProposals(project || null, viewer);
-    const decided = this.#decidedAmong(all.list.map((p) => p.key));
-    const open = all.list.filter((p) => !decided.has(p.key));
-    const aside = this.#setAside(viewer);
-    return {
-      ok: true,
-      project: project || null,
-      proposals: open,
-      count: open.length,
-      set_aside: aside.list,
-      set_aside_limit: SET_ASIDE_MAX,
-      set_aside_truncated: aside.truncated,
-      projects_limit: PROJECTS_MAX,
-      projects_truncated: all.projects_truncated
-    };
-  }
-  /** R16: a member's act on a proposal: adopt it into a project's objective, open a question from it (a machine may
-   *  do only this), or defer or dismiss it with a reason. */
-  triage({
-    proposal,
-    act,
-    project = null,
-    reason = null,
-    author = null,
-    viewer = null,
-    run = null,
-    assistantPrincipal = null
-  } = {}) {
-    if (!TRIAGE_ACTS.includes(act))
-      return refusal12(
-        "TRIAGE_ACT_UNKNOWN",
-        `a proposal is triaged by one of ${TRIAGE_ACTS.join(", ")}. Nothing was written.`,
-        { acts: TRIAGE_ACTS }
-      );
-    const isMachine2 = machine(author);
-    if (isMachine2 && act !== "question")
-      return refusal12("MACHINE_CANNOT_TRIAGE", "an assistant may open a question from a proposal and take no other act on it. Nothing was written.");
-    let proj = null;
-    if (project != null && project !== "") {
-      const p = this.#project(project, viewer ?? (isMachine2 ? null : author));
-      if (p.refused) return p.refused;
-      proj = p.doc;
-    }
-    const found = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).list.find((p) => p.key === proposal);
-    if (!found)
-      return refusal12("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
-    const why = str4(reason);
-    if ((act === "defer" || act === "dismiss") && !why)
-      return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
-    if (act === "adopt" && !proj)
-      return noSuchProject(null);
-    if (proj && !isMachine2) {
-      const denied = this.membership.projectAuthority(proj.id, author, "joined", `triage:${act}`);
-      if (denied) return denied;
-    }
-    const at17 = this.#when();
-    let inquiry = null, extra = {};
-    if (act === "adopt") {
-      let text4 = appendItem(
-        proj.text,
-        "objective_adoptions",
-        {
-          proposal: q(found.key),
-          source: found.source,
-          by: TOKEN.test(str4(author)) ? str4(author) : q(author),
-          at: q(at17)
-        }
-      );
-      if (text4 === null) return refusal12("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
-      text4 = setField(text4, "last_updated", q(at17));
-      text4 = logEntry(text4, at17, "Proposal adopted", str4(author), `the proposal ${found.key} is adopted into the objective.`);
-      const r = this.#revise(proj, text4, str4(author), viewer);
-      if (!r.ok) return r;
-    } else if (act === "question") {
-      const opened = this.#openQuestion(found, author, viewer, run, assistantPrincipal, at17);
-      if (!opened.ok) return opened;
-      inquiry = opened.bundleId;
-      extra = { inquiry, surfaced_by: isMachine2 ? "agent" : "human" };
-    } else if (found.source === "progressions") {
-      const d = this.progressions.disposeProposal({
-        key: found.source_key,
-        to: act === "defer" ? "deferred" : "dismissed",
-        reason: why,
-        definitionVersion: found.basis.definition_version,
-        decidedBy: str4(author)
-      });
-      if (!d || d.ok !== true) return d;
-      extra = { progressions: { key: d.key, state: d.state, definition_version: d.definition_version } };
-    }
-    this.record.transact(() => this.sql.exec(
-      `INSERT INTO intent_triage (proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      found.key,
-      found.source,
-      found.kind ?? null,
-      act,
-      proj ? proj.id : this.#projectOfAct({ key: found.key }),
-      inquiry,
-      why || null,
-      found.grade ?? null,
-      JSON.stringify(found.basis ?? null),
-      str4(author) || PLANE_ACTOR,
-      at17
-    ));
-    return {
-      ok: true,
-      proposal: found.key,
-      act,
-      project: proj ? proj.id : null,
-      reason: why || null,
-      author: str4(author) || null,
-      at: at17,
-      ...extra
-    };
-  }
-  /* R16's `question`: a new inquiry at `surfaced`, through promotion (so inquiry's check and ai-runs' surfacing step,
-     its R25, run inside it), the proposal as its basis. */
-  #openQuestion(found, author, viewer, run, assistantPrincipal, at17) {
-    const id = `${this.record.allocId("INQ", at17.slice(0, 4)).id}-question`;
-    const question = questionOf(found);
-    const who2 = str4(author) || PLANE_ACTOR;
-    const text4 = [
-      "---",
-      `id: ${id}`,
-      "object_type: inquiry",
-      "schema: inquiry@1",
-      `title: ${q(question.slice(0, 120))}`,
-      "current_state: surfaced",
-      "prior_state: null",
-      `created: ${q(at17)}`,
-      `last_updated: ${q(at17)}`,
-      "produced_by:",
-      `  mode: ${machine(author) ? "agent" : "human"}`,
-      "  capability_tier: session",
-      "references: []",
-      "state_history: []",
-      "annotations_open: 0",
-      "reeval_pending:",
-      "  flag: false",
-      "  since: null",
-      "  source: null",
-      "visuals: []",
-      `surfaced_by: ${machine(author) ? "agent" : "human"}`,
-      'disposition_reason: ""',
-      `surfaced_from: ${q(found.key)}`,
-      "---",
-      "",
-      "## Question",
-      "",
-      question,
-      "",
-      "## What It Rests On",
-      "",
-      `Surfaced from the proposal ${found.key} (${found.source}, ${found.kind ?? "finding"}): ${JSON.stringify(found.basis ?? null)}`,
-      "",
-      "## Conclusion",
-      "",
-      "## What Would Falsify This",
-      "",
-      "## Session Log",
-      "",
-      `### Session ${at17} | Surfaced | ${who2}`,
-      `Changes: opened from the proposal ${found.key}.`,
-      "",
-      "## Review Notes",
-      ""
-    ].join("\n");
-    return this.promotion.promote({
-      bundleId: id,
-      base: null,
-      snapKey: `${at17.replace(/[-:]/g, "")}_${rand5(4)}`,
-      author: who2,
-      files: [{ path: "bundle.md", text: text4 }],
-      meta: { object_type: "inquiry", current_state: "surfaced", created: at17, last_updated: at17 },
-      ...run ? { run } : {},
-      ...str4(assistantPrincipal) ? { assistantPrincipal: str4(assistantPrincipal) } : {},
-      actorViewer: viewer ?? null
-    });
-  }
-  /** R17 (called by `scheduler`): a question an assistant surfaced that no member has acted on within the instance's
-   *  ageing interval moves to `deferred`, with its reason, through inquiry's dispose act under the plane's actor.
-   *  Nothing is deleted. It judges the questions R27's bounded read takes, answering `limit` and `truncated` (N323). */
-  async ageSurfaced(now) {
-    const nowMs = this.#instantMs(now);
-    const days = this.ageingDays();
-    const reason = `surfaced by an assistant; no member acted within ${days} days`;
-    const aged = [], refused = [];
-    const read2 = this.#ageable();
-    const due = read2.list.filter((x) => x.at <= nowMs).map((x) => x.id);
-    const inquiry = this.#lazy(this.inquiryRef), retrieval = this.#lazy(this.retrievalRef);
-    for (const id of due) {
-      const sel = await retrieval.selectionCreate({ ids: [id], kind: "enumerated", owner: PLANE_ACTOR, viewer: PLANE_VIEWER });
-      if (!sel || !sel.handle) {
-        refused.push({ id, reason: sel && sel.reason ? sel.reason : "NO_SELECTION" });
-        continue;
-      }
-      const r = inquiry.dispose({
-        handle: sel.handle,
-        to: "deferred",
-        reason,
-        viewer: PLANE_VIEWER,
-        owner: PLANE_ACTOR,
-        author: PLANE_ACTOR
-      });
-      if (r && r.ok) aged.push(id);
-      else refused.push({ id, reason: r ? r.reason : "DISPOSE_FAILED" });
-    }
-    return { ok: true, aged, refused, interval_days: days, reason, limit: AGEING_READ_MAX, truncated: read2.truncated };
-  }
-  /* R17, R27: an instant given as milliseconds or ISO text; none given is the module's clock. */
-  #instantMs(now) {
-    return now == null || now === "" ? Date.parse(this.now()) : Number.isFinite(Number(now)) ? Number(now) : Date.parse(now);
-  }
-  /* R27 (N323, K408): the first AGEING_READ_MAX questions at `surfaced`, those whose last entry is oldest first (then
-     by id), read one past so `truncated` says more follow; among them alone, each ageable one (R17 would move it:
-     surfaced by a machine, no member's entry) with its ageing instant, its last entry's time plus the ageing interval,
-     in milliseconds. One statement over record-core's `bundles` and `manifest` (its R37 read contract; the manifest's
-     rowid ranks a bundle's entries, R16), so the walk itself is bounded; a question past the read is reached once
-     earlier ones leave `surfaced` or take a newer entry. */
-  #ageable() {
-    const span = this.ageingDays() * 864e5;
-    const rows = this.#rows(`SELECT id, last FROM (
-                               SELECT b.bundle_id AS id, (SELECT m.created FROM manifest m WHERE m.bundle_id = b.bundle_id
-                                                           ORDER BY m.rowid DESC LIMIT 1) AS last
-                                 FROM bundles b WHERE b.object_type = 'inquiry' AND b.current_state = 'surfaced')
-                             ORDER BY julianday(last), last, id LIMIT ?`, AGEING_READ_MAX + 1);
-    const truncated3 = rows.length > AGEING_READ_MAX;
-    const out = [];
-    for (const { id, last } of rows.slice(0, AGEING_READ_MAX)) {
-      const d = this.#doc(id);
-      if (!d || d.head.currentState !== "surfaced" || d.fm.surfaced_by !== "agent") continue;
-      if (!this.#machineOnly(id)) continue;
-      const since = Date.parse(last ?? d.fm.created);
-      if (Number.isFinite(since)) out.push({ id, at: since + span });
-    }
-    return { list: out, truncated: truncated3 };
-  }
-  /* R17, R27: whether a question has entries and every one of them is a machine's (no member acted on it). Its distinct
-     authors are read a page at a time in author order, each statement bounded, stopping at the first member's. */
-  #machineOnly(id) {
-    let after = null, any = false;
-    for (; ; ) {
-      const page = this.#rows(`SELECT DISTINCT author FROM manifest WHERE bundle_id = ? AND (? IS NULL OR author > ?)
-                               ORDER BY author LIMIT ?`, id, after, after, AUTHORS_PAGE).map((r) => r.author);
-      if (page.some((who2) => !machine(who2))) return false;
-      any = any || page.length > 0;
-      if (page.length < AUTHORS_PAGE) return any;
-      after = page[page.length - 1];
-    }
-  }
-  /** R27 (for `scheduler`, beside R17 as its tick): the earliest ageing instant of any ageable question among the
-   *  bounded read (N323), past or not, in milliseconds; null when there is none. A question R17 tried and could not move is still ageable, so it stays
-   *  due and is tried again at a later firing. Writes nothing; never throws. */
-  ageDue(now) {
-    try {
-      let best = null;
-      for (const x of this.#ageable().list) if (best === null || x.at < best) best = x.at;
-      return best;
-    } catch {
-      return null;
-    }
-  }
-  /** R27: the earliest ageing instant later than `now` (milliseconds or ISO; none given is the module's clock), in
-   *  milliseconds; null when there is none. One already due is never woken for. Writes nothing; never throws. */
-  ageWake(now) {
-    try {
-      const nowMs = this.#instantMs(now);
-      if (!Number.isFinite(nowMs)) return null;
-      let best = null;
-      for (const x of this.#ageable().list) if (x.at > nowMs && (best === null || x.at < best)) best = x.at;
-      return best;
-    } catch {
-      return null;
-    }
-  }
-  /** R17: the instance's ageing interval in days, a record-core setting (default 30). */
-  ageingDays() {
-    const v = Number(this.record.getSetting(AGEING_SETTING));
-    return Number.isInteger(v) && v > 0 ? v : AGEING_DEFAULT_DAYS;
-  }
-  /* ===================================================================== *
-   * WORKING AN OBJECTIVE (R18)
-   * ===================================================================== */
-  /** R18: a member sets an assistant to work a project's objective: a run through `ai-runs` with the project as its
-   *  context, the objective and its current gaps as its instructions, its looks named under authority kind
-   *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). */
-  async workObjective({ project, author, viewer = null, run = {} } = {}) {
-    if (machine(author))
-      return refusal12("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
-    const p = this.#project(project, viewer ?? author);
-    if (p.refused) return p.refused;
-    const g = this.gaps({ project, viewer: viewer ?? author });
-    const instructions = {
-      objective: p.doc.fm.objective ?? null,
-      condition: g.condition ?? null,
-      gaps: g.gaps || [],
-      authority: { kind: "objective", ref: project }
-    };
-    const opened = await this.#lazy(this.aiRunsRef).open({
-      ...isObj9(run) ? run : {},
-      contextType: "project",
-      contextId: project,
-      state: { instructions },
-      actor: this.#memberOf(author),
-      viewer: viewer ?? author
-    });
-    return { ...isObj9(opened) ? opened : {}, project, instructions };
-  }
-};
-function refuseNoSuchGoal(detail, extra) {
-  const row2 = INTENT_CHECKS.NO_SUCH_GOAL;
-  return {
-    ok: false,
-    reason: "NO_SUCH_GOAL",
-    code: "NO_SUCH_GOAL",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function refuseNoSuchAspiration(detail, extra) {
-  const row2 = INTENT_CHECKS.NO_SUCH_ASPIRATION;
-  return {
-    ok: false,
-    reason: "NO_SUCH_ASPIRATION",
-    code: "NO_SUCH_ASPIRATION",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function refuseNoSuchProgression(detail, extra) {
-  const row2 = INTENT_CHECKS.NO_SUCH_PROGRESSION;
-  return {
-    ok: false,
-    reason: "NO_SUCH_PROGRESSION",
-    code: "NO_SUCH_PROGRESSION",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function refuseNoReason(detail, extra) {
-  const row2 = INTENT_CHECKS.NO_REASON;
-  return {
-    ok: false,
-    reason: "NO_REASON",
-    code: "NO_REASON",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function refusePursuitUnstated(detail, extra) {
-  const row2 = INTENT_CHECKS.PURSUIT_UNSTATED;
-  return {
-    ok: false,
-    reason: "PURSUIT_UNSTATED",
-    code: "PURSUIT_UNSTATED",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function refuseNoLesson(detail, extra) {
-  const row2 = INTENT_CHECKS.NO_LESSON;
-  return {
-    ok: false,
-    reason: "NO_LESSON",
-    code: "NO_LESSON",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function refuseBadScope(detail, extra) {
-  const row2 = INTENT_CHECKS.BAD_SCOPE;
-  return {
-    ok: false,
-    reason: "BAD_SCOPE",
-    code: "BAD_SCOPE",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function refusePursuitEnded(detail, extra) {
-  const row2 = INTENT_CHECKS.PURSUIT_ENDED;
-  return {
-    ok: false,
-    reason: "PURSUIT_ENDED",
-    code: "PURSUIT_ENDED",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function goalMachineRefusal(author, member = true) {
-  if (str4(author) && !isMachineIdentity(str4(author)) && member) return null;
-  const row2 = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_GOAL;
-  return {
-    ok: false,
-    reason: "MACHINE_CANNOT_DECLARE_GOAL",
-    code: "MACHINE_CANNOT_DECLARE_GOAL",
-    check: row2.check,
-    translation: row2.translation,
-    detail: "declaring, linking and closing a goal are a named member's acts. Nothing was written."
-  };
-}
-function aspirationMachineRefusal(author, member = true) {
-  if (str4(author) && !isMachineIdentity(str4(author)) && member) return null;
-  const row2 = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_ASPIRATION;
-  return {
-    ok: false,
-    reason: "MACHINE_CANNOT_DECLARE_ASPIRATION",
-    code: "MACHINE_CANNOT_DECLARE_ASPIRATION",
-    check: row2.check,
-    translation: row2.translation,
-    detail: "declaring, departing from, revising and retiring an aspiration are a named member's acts. Nothing was written."
-  };
-}
-function captureRequestsNamed(basis) {
-  if (!isObj9(basis)) return [];
-  const out = [];
-  for (const k of ["capture_request", "capture_requests", "requests"]) {
-    const v = basis[k];
-    for (const x of Array.isArray(v) ? v : v == null ? [] : [v]) if (typeof x === "string" && x) out.push(x);
-  }
-  return out;
-}
-var safeJson11 = (s) => {
-  try {
-    return s == null ? null : JSON.parse(s);
-  } catch {
-    return null;
-  }
-};
-function questionOf(p) {
-  const b = isObj9(p.basis) ? p.basis : {};
-  if (p.source === "progressions")
-    return `Why is the '${b.stage_key}' stage of '${b.progression_key}' missing where the flow requires it?`;
-  if (p.kind === GAP_KIND)
-    return b.stages_missing ? `What would fill the stages ${b.stages_missing.join(", ")} of '${b.progression}' for ${b.entity}?` : `What would strengthen the weakest link of '${b.progression}' for ${b.entity}?`;
-  return `What does the finding ${p.key} show?`;
-}
-function intentOps(i, url, body) {
-  const qp = (k) => url.searchParams.get(k);
-  const b = body || {};
-  return {
-    objectivecondition: () => i.setCondition({ ...b, viewer: qp("viewer") }),
-    objectiveprogress: () => i.progress({ project: qp("project"), viewer: qp("viewer") }),
-    objectivegaps: () => i.gaps({ project: qp("project"), viewer: qp("viewer") }),
-    goaldeclare: () => i.declareGoal({ ...b, viewer: qp("viewer") }),
-    goallink: () => i.linkObjective({ ...b, viewer: qp("viewer") }),
-    goalclose: () => i.closeGoal({ ...b, viewer: qp("viewer") }),
-    goal: () => i.readGoal({ goal: qp("id"), viewer: qp("viewer") }),
-    aspirationdeclare: () => i.declareAspiration({ ...b, viewer: qp("viewer") }),
-    aspirationdepart: () => i.departFrom({ ...b, viewer: qp("viewer") }),
-    aspirationdeadend: () => i.recordDeadEnd({ ...b, viewer: qp("viewer") }),
-    aspirationretire: () => i.retireAspiration({ ...b, viewer: qp("viewer") }),
-    aspirations: () => i.aspirationsFor({ project: qp("project"), member: qp("member"), viewer: qp("viewer") }),
-    aspirationcontacts: () => i.contacts({ viewer: qp("viewer") }),
-    pursuit: () => i.pursuitOf({ aspiration: qp("id"), viewer: qp("viewer") }),
-    intentproposals: () => i.proposals({ project: qp("project"), viewer: qp("viewer") }),
-    triage: () => i.triage({ ...b, viewer: qp("viewer") }),
-    workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
-  };
-}
-var instances15 = /* @__PURE__ */ new WeakMap();
-function intentOf(host, deps) {
-  let i = instances15.get(host);
-  if (!i) {
-    const d = deps || {};
-    const storage = d.storage || host.storage;
-    const record = d.record || recordOf(host);
-    const membership = d.membership || membershipOf(host, { record });
-    const promotion = d.promotion || promotionOf(host, { record, membership });
-    i = new Intent({
-      ...d,
-      storage,
-      record,
-      membership,
-      promotion,
-      entities: d.entities || entitiesOf(host, { record, membership }),
-      progressions: d.progressions || (() => progressionsOf(host, { record })),
-      inquiry: d.inquiry || (() => inquiryOf(host)),
-      aiRuns: d.aiRuns || (() => aiRunsOf(host)),
-      retrieval: d.retrieval || (() => retrievalOf(host)),
-      captureRequests: d.captureRequests || (() => captureRequestsOf(host))
-    });
-    instances15.set(host, i);
-    record.declarePurge("intent", INTENT_TABLES);
-    promotion.registerStep("intent", { check: (c) => i.check(c) });
-    record.registerAuditCheck("intent", (image) => i.auditCheck(image));
-  }
-  return i;
 }
 
 // src/basis-versions/text.mjs
@@ -71946,7 +63929,7 @@ function extentLegFields(extent) {
   for (const [f9, k] of Object.entries(FIELD_OF)) if (e[f9] !== void 0 && e[f9] !== null) out[k] = e[f9];
   return out;
 }
-var safeJson12 = (s) => {
+var safeJson10 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -73506,7 +65489,7 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
       push({
         source: "marked",
         ref: r.ref,
-        extent: { kind: r.extent_kind, ...safeJson12(r.extent) || {} },
+        extent: { kind: r.extent_kind, ...safeJson10(r.extent) || {} },
         reference: null,
         label: null,
         mentions_subject: null,
@@ -73790,9 +65773,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     };
   }
 };
-var instances16 = /* @__PURE__ */ new WeakMap();
+var instances13 = /* @__PURE__ */ new WeakMap();
 function basisVersionsOf(host, deps) {
-  let bv = instances16.get(host);
+  let bv = instances13.get(host);
   if (!bv) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -73808,7 +65791,7 @@ function basisVersionsOf(host, deps) {
       basisFor: typeof given.basisFor === "function" ? given.basisFor : (id, o) => (own2 ||= inquiryOf(host, { record, membership, promotion, content })).basisFor(id, o)
     };
     bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances16.set(host, bv);
+    instances13.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
   }
@@ -73885,6 +65868,10625 @@ function basisVersionsOps(bv, url, body) {
       identity: q6("identity")
     })
   };
+}
+
+// src/contradiction.mjs
+var CONTRADICTION_LABELS = Object.freeze(["world", "record", "precision", "unrelated", "undetermined"]);
+
+// src/contradiction/schema.mjs
+var CONTRADICTION_SCHEMA = `
+-- REC-147 / IC-318 (CONTRADICTION-IDENTIFY-DESIGN.md section 8): THE CONTRADICTION CANDIDATE. One row per
+-- PROPOSED conflict between two referents the pairing FORMED (op=contradictionpairs), written as labelled
+-- MACHINE work through ONE append site (Contradiction #append) and never updated in place.
+-- APPEND-ONLY AND KEYED BY WHAT WAS COMPARED: candidate is a digest of the key and both referents AT THEIR
+-- VERSIONS, order-free, so a re-run over unchanged referents collides and writes nothing (section 8), while a
+-- changed side is a new row and the old one stays with its versions. A claim side is the inquiry and the reading
+-- it is held on, versioned by the sha256 of the claim text as compared. An extent side is its content row (or the
+-- capture where none is named), versioned by the capture, whose bytes never change.
+-- state is only 'proposed' until PRESENT and RESOLVE are designed (section 9 item 4). origin is always 'machine'
+-- (DEC-24: a proposal, labelled). a_bundle_id and b_bundle_id are the bundles each side lives in, so a purge of
+-- either end takes the row (D-113), as connections do. Nothing reads this table to a member yet.
+CREATE TABLE IF NOT EXISTS contradiction_candidates (
+  candidate    TEXT PRIMARY KEY,
+  key          TEXT NOT NULL,
+  a_kind       TEXT NOT NULL,
+  a_ref        TEXT NOT NULL,
+  a_version    TEXT NOT NULL,
+  a_bundle_id  TEXT,
+  b_kind       TEXT NOT NULL,
+  b_ref        TEXT NOT NULL,
+  b_version    TEXT NOT NULL,
+  b_bundle_id  TEXT,
+  run          TEXT NOT NULL,
+  proposed_by  TEXT NOT NULL,
+  label        TEXT NOT NULL,
+  reason       TEXT NOT NULL,
+  state        TEXT NOT NULL DEFAULT 'proposed',
+  origin       TEXT NOT NULL DEFAULT 'machine',
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candidates(run);
+
+-- N345 (R42, R47): WHAT MEMBERS AND THE MACHINE DID ABOUT A CANDIDATE, append-only, each row keyed to both sides'
+-- bundles so a purge of either end takes it (K23). A candidate's state, weight and marks are DERIVED at the read from
+-- the candidate, these rows and its inquiry's document (R24, R26, R27): nothing here is a copy that could disagree.
+-- contradiction_acts: one row per member's act (R30): dismiss, clarify (its choice), take_up, resolve. JSON columns
+-- hold lists as the act named them.
+CREATE TABLE IF NOT EXISTS contradiction_acts (
+  act_id       TEXT PRIMARY KEY,
+  candidate    TEXT NOT NULL,
+  act          TEXT NOT NULL,
+  choice       TEXT,
+  author       TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  reason       TEXT,
+  words        TEXT,
+  coordinates  TEXT,
+  explanation  TEXT,
+  evidence     TEXT,
+  wrong_side   TEXT,
+  wrong_reason TEXT,
+  qualifiers   TEXT,
+  acceptance   TEXT,
+  standing     TEXT,
+  inquiry      TEXT,
+  kind         TEXT,
+  a_bundle_id  TEXT,
+  b_bundle_id  TEXT
+);
+CREATE INDEX IF NOT EXISTS contradiction_acts_candidate ON contradiction_acts(candidate, seq);
+-- contradiction_recommendations: the machine's one act (R37), one row per (run, candidate, coordinate).
+CREATE TABLE IF NOT EXISTS contradiction_recommendations (
+  recommendation TEXT PRIMARY KEY,
+  candidate      TEXT NOT NULL,
+  run            TEXT NOT NULL,
+  coordinate     TEXT NOT NULL,
+  proposed_by    TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  origin         TEXT NOT NULL DEFAULT 'machine',
+  at             TEXT NOT NULL,
+  seq            INTEGER NOT NULL,
+  a_bundle_id    TEXT,
+  b_bundle_id    TEXT
+);
+CREATE INDEX IF NOT EXISTS contradiction_recommendations_candidate ON contradiction_recommendations(candidate, seq);
+-- contradiction_optins: a project's opt-in (R51) and, in the same table, the one revealed row the last opt-in appends
+-- (R52), which names the parties at that instant.
+CREATE TABLE IF NOT EXISTS contradiction_optins (
+  optin        TEXT PRIMARY KEY,
+  candidate    TEXT NOT NULL,
+  kind         TEXT NOT NULL,
+  project_id   TEXT,
+  author       TEXT,
+  at           TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  words        TEXT,
+  parties      TEXT,
+  a_bundle_id  TEXT,
+  b_bundle_id  TEXT
+);
+CREATE INDEX IF NOT EXISTS contradiction_optins_candidate ON contradiction_optins(candidate, seq);
+-- contradiction_responses: a member's response to a notice (R53), with only the disclosures they chose.
+CREATE TABLE IF NOT EXISTS contradiction_responses (
+  response     TEXT PRIMARY KEY,
+  candidate    TEXT NOT NULL,
+  project_id   TEXT NOT NULL,
+  author       TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  text         TEXT NOT NULL,
+  cover        TEXT,
+  email        TEXT,
+  a_bundle_id  TEXT,
+  b_bundle_id  TEXT
+);
+CREATE INDEX IF NOT EXISTS contradiction_responses_candidate ON contradiction_responses(candidate, seq);
+`;
+var CONTRADICTION_COLUMNS = Object.freeze([
+  ["contradiction_candidates", "a_side", "TEXT"],
+  ["contradiction_candidates", "b_side", "TEXT"],
+  ["contradiction_candidates", "seq", "INTEGER"]
+]);
+
+// src/contradiction/checks.mjs
+var checks_exports14 = {};
+__export(checks_exports14, {
+  CONTRADICTION_CANDIDATE_CHECKS: () => CONTRADICTION_CANDIDATE_CHECKS,
+  CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS
+});
+var CONTRADICTION_PAIR_CHECKS = {
+  CONTRADICTION_KEY_UNKNOWN: {
+    check: "C-60.1",
+    where: "src/contradiction/index.mjs pairs > is-contradiction-key-unknown",
+    translation: "The record pairs assertions by named keys, and that is not one of them. Rather than answer from a different key and let the answer look like a complete comparison, it says so and names the keys it holds. Ask again with one of them, or with none at all to run every key."
+  },
+  /* N345 (DEC-76, DEC-77, DEC-84): the reads that show a candidate (R25) and the marks on a side (R27). */
+  CANDIDATES_NO_SUBJECT: {
+    check: "C-60.2",
+    where: "src/contradiction/index.mjs candidatesFor > is-candidates-no-subject",
+    translation: "Candidates are read for one thing at a time: a question, a document part, a subject, a record, a project or one candidate. Name exactly one. Nothing was read."
+  },
+  TENSIONS_TOO_MANY: {
+    check: "C-60.3",
+    where: "src/contradiction/index.mjs tensionsOn > is-tensions-too-many",
+    translation: "At most 200 items can be asked about in one request. Ask about fewer at a time. Nothing was read."
+  }
+};
+var CONTRADICTION_CANDIDATE_CHECKS = {
+  CANDIDATE_NO_PROPOSER: {
+    check: "C-93.1",
+    where: "src/contradiction/index.mjs #runRefusals > is-candidate-no-proposer",
+    translation: "A proposed contradiction records who proposed it, and this request arrived by a route that does not say. Rather than write a proposal nobody can be held to, nothing was written."
+  },
+  CANDIDATE_NO_RUN: {
+    check: "C-93.2",
+    where: "src/contradiction/index.mjs #runRefusals > is-candidate-no-run",
+    translation: "A proposed contradiction is machine work, and machine work happens inside a run a member opened. No open run by that name is visible here, so nothing was written. Open a run, then propose."
+  },
+  CANDIDATE_RUN_NOT_RUNNING: {
+    check: "C-93.3",
+    where: "src/contradiction/index.mjs #runRefusals > is-candidate-run-not-running",
+    translation: "That run has ended. Its work is read against the conditions it was formed under, and those stopped being current when it stopped, so nothing was written. Open a new run to go on working."
+  },
+  CANDIDATE_NO_PROPOSALS: {
+    check: "C-93.4",
+    where: "src/contradiction/index.mjs propose > is-candidate-no-proposals",
+    translation: "The request carried no proposals. An empty answer is not a judgement that found nothing; that belongs in the run log, which says which level was empty. Nothing was written."
+  },
+  CANDIDATE_LABEL_UNKNOWN: {
+    check: "C-93.5",
+    where: "src/contradiction/index.mjs propose > is-candidate-label-unknown",
+    translation: "A proposal carries exactly one of five labels: world, record, precision, unrelated or undetermined. One proposal in this batch carried something else, so none of the batch was written."
+  },
+  CANDIDATE_NO_REASON: {
+    check: "C-93.6",
+    where: "src/contradiction/index.mjs propose > is-candidate-no-reason",
+    translation: "Each proposal says in one sentence why it carries its label, so the member judging it can see what the machine saw. One proposal in this batch had no reason, so none of the batch was written."
+  },
+  CANDIDATE_PAIR_NOT_FORMED: {
+    check: "C-93.7",
+    where: "src/contradiction/index.mjs propose > is-candidate-pair-not-formed",
+    translation: "A proposal must name a pair the record itself put side by side for that key, as you can see it now. One proposal in this batch named two things the pairing does not pair, so none of the batch was written. Read the pairs again and propose over those."
+  },
+  /* N345 (DEC-76, DEC-77, DEC-84, DEC-85 as K456 clarified it): a member's acts on a candidate (R30–R36), the
+     machine's one act (R37), the promotion check (R38), and the conflict between projects (R49–R54). `act` names the
+     refusals common to every act (R30). */
+  NO_CANDIDATE: {
+    check: "C-93.8",
+    where: "src/contradiction/index.mjs #noCandidate > is-no-candidate",
+    translation: "This act is about one contradiction candidate, named by its id, and it names none. Nothing was written."
+  },
+  NO_SUCH_CANDIDATE: {
+    check: "C-93.9",
+    where: "src/contradiction/index.mjs #noSuch > is-no-such-candidate",
+    translation: "No contradiction you can see answers to that id. One whose side you may not see is answered here exactly as one that does not exist. If it touches your project, it reaches you as a notice about your own side. Nothing was written."
+  },
+  MACHINE_CANNOT_ACT_ON_CANDIDATE: {
+    check: "C-93.10",
+    where: "src/contradiction/index.mjs #machineRefusal > is-machine-cannot-act-on-candidate",
+    translation: "Saying what a contradiction turned out to be is a member's act, and a machine credential cannot take it. A machine may recommend in which respects the two sides may differ. Nothing was written."
+  },
+  CANDIDATE_CLOSED: {
+    check: "C-93.11",
+    where: "src/contradiction/index.mjs #closed > is-candidate-closed",
+    translation: "That contradiction has already been dismissed or resolved, by the member named, and it stays as they left it. If something new bears on it, take it up as a question. Nothing was written."
+  },
+  CANDIDATE_TAKEN_UP: {
+    check: "C-93.12",
+    where: "src/contradiction/index.mjs #closed > is-candidate-taken-up",
+    translation: "That contradiction has been taken up as a question, which is named, and it is resolved there by the question's conclusion. Nothing was written."
+  },
+  RECORD_CANNOT_BE_DISMISSED: {
+    check: "C-93.13",
+    where: "src/contradiction/index.mjs dismiss > is-record-cannot-be-dismissed",
+    translation: "This conflict is between two things the record itself holds, so it cannot be dismissed. It closes only when a member says how the two differ, which one is wrong, or that they really conflict. Nothing was written."
+  },
+  DISMISSAL_REASON_UNKNOWN: {
+    check: "C-93.14",
+    where: "src/contradiction/index.mjs dismiss > is-dismissal-reason-unknown",
+    translation: "Dismissing a lead gives one of three reasons: the same fact at different precision, not about the same matter, or a real conflict not pursued now. Choose one. Nothing was written."
+  },
+  CLARIFY_NOT_A_TENSION: {
+    check: "C-93.15",
+    where: "src/contradiction/index.mjs clarify > is-clarify-not-a-tension",
+    translation: "This is a lead the record noticed about the world, not a conflict in the record, so there is nothing to clarify. Take it up as a question, or dismiss it with a reason. Nothing was written."
+  },
+  CLARIFY_CHOICE_UNKNOWN: {
+    check: "C-93.16",
+    where: "src/contradiction/index.mjs clarify > is-clarify-choice-unknown",
+    translation: "That is not one of the answers to 'how do these differ?' for this conflict. The answers are listed with it. Nothing was written."
+  },
+  CLARIFY_COORDINATE_UNKNOWN: {
+    check: "C-93.17",
+    where: "src/contradiction/index.mjs clarify > is-clarify-coordinate-unknown",
+    translation: "Saying the two differ names at least one respect in which they differ, from the ones listed for this conflict. Nothing was written."
+  },
+  CLARIFY_NO_EXPLANATION: {
+    check: "C-93.18",
+    where: "src/contradiction/index.mjs clarify > is-clarify-no-explanation",
+    translation: "Saying how the two differ is explained in your own words, unless you are accepting the recommendation shown. Add a sentence. Nothing was written."
+  },
+  EVIDENCE_NOT_SEEN: {
+    check: "C-93.19",
+    where: "src/contradiction/index.mjs #evidenceRefusal > is-evidence-not-seen",
+    translation: "Something named as evidence is not one you can see, or is a fact the record does not state. Name only what is shown to you. Nothing was written."
+  },
+  WRONG_SIDE_UNNAMED: {
+    check: "C-93.20",
+    where: "src/contradiction/index.mjs clarify > is-wrong-side-unnamed",
+    translation: "Saying one of them is wrong names which one. Nothing was written."
+  },
+  WRONG_SIDE_NO_REASON: {
+    check: "C-93.21",
+    where: "src/contradiction/index.mjs clarify > is-wrong-side-no-reason",
+    translation: "Saying one side is wrong is a kept decision, and a kept decision says why. Give the reason. Nothing was written."
+  },
+  PLURALITY_HAS_NO_WRONG_SIDE: {
+    check: "C-93.22",
+    where: "src/contradiction/index.mjs #noWrongSide > is-plurality-has-no-wrong-side",
+    translation: "These are two projects' own conclusions, and neither is made to adopt the other's answer. Say how they differ, that they really conflict, or take the question up. Nothing was written."
+  },
+  TAKE_UP_NO_QUESTION: {
+    check: "C-93.23",
+    where: "src/contradiction/index.mjs takeUp > is-take-up-no-question",
+    translation: "Taking a contradiction up starts a question, and the question is yours to word. Accept the suggested wording or write your own. Nothing was written."
+  },
+  TAKE_UP_NO_FRAME: {
+    check: "C-93.24",
+    where: "src/contradiction/index.mjs takeUp > is-take-up-no-frame",
+    translation: "The question is asked around one of the two sides. Choose which one. Nothing was written."
+  },
+  ACCEPTANCE_NOT_STANDING: {
+    check: "C-93.25",
+    where: "src/contradiction/index.mjs #acceptanceRefusal > is-acceptance-not-standing",
+    translation: "The recommendation you accepted is no longer standing for this contradiction, or was never made for it. Read it again, and choose. Nothing was written."
+  },
+  ACCEPTANCE_VALUE_DIFFERS: {
+    check: "C-93.26",
+    where: "src/contradiction/index.mjs #acceptanceRefusal > is-acceptance-value-differs",
+    translation: "You accepted a recommendation for something this act does not record. Accept only what you are recording, or record it unaided. Nothing was written."
+  },
+  NOT_A_CONTRADICTION_INQUIRY: {
+    check: "C-93.27",
+    where: "src/contradiction/index.mjs #notContradictionInquiry > is-not-a-contradiction-inquiry",
+    translation: "No question you can see answers to that id as one taken up from a contradiction. Nothing was written."
+  },
+  RECOMMEND_NO_COORDINATES: {
+    check: "C-93.28",
+    where: "src/contradiction/index.mjs recommend > is-recommend-no-coordinates",
+    translation: "A recommendation names at least one respect in which the two sides may differ. None was named, so nothing was written."
+  },
+  RECOMMEND_COORDINATE_UNKNOWN: {
+    check: "C-93.29",
+    where: "src/contradiction/index.mjs recommend > is-recommend-coordinate-unknown",
+    translation: "A recommendation may name only the respects listed for this conflict, never which side is wrong or what kind of conflict it is. Nothing was written."
+  },
+  RECOMMEND_NO_REASON: {
+    check: "C-93.30",
+    where: "src/contradiction/index.mjs recommend > is-recommend-no-reason",
+    translation: "Each recommendation says in one sentence why, so the member can see what the machine saw. One had no reason, so nothing was written."
+  },
+  RECOMMEND_CANDIDATE_NOT_STANDING: {
+    check: "C-93.31",
+    where: "src/contradiction/index.mjs recommend > is-recommend-candidate-not-standing",
+    translation: "That contradiction is not open to recommendation: it has been resolved, dismissed or taken up, or it is not shown. Nothing was written."
+  },
+  CANDIDATE_NOT_HELD: {
+    check: "C-93.32",
+    where: "src/contradiction/index.mjs #notHeld > is-candidate-not-held",
+    translation: "This question names a contradiction the record does not hold, or one you cannot see both sides of. Take a contradiction up from where it is shown. Nothing was written."
+  },
+  WORDS_MALFORMED: {
+    check: "C-93.33",
+    where: "src/contradiction/index.mjs #overCap > is-words-malformed",
+    translation: "A piece of text in this act is longer than it may be. The field and its limit are named. Nothing was written."
+  },
+  NOT_A_PARTY: {
+    check: "C-93.34",
+    where: "src/contradiction/index.mjs #partyRefusal > is-not-a-party",
+    translation: "The project named does not rest on the side of this conflict that you can see, so it cannot ask to resolve it or respond to it. Name the project the notice came to. Nothing was written."
+  },
+  NOT_A_PROJECT_CONFLICT: {
+    check: "C-93.35",
+    where: "src/contradiction/index.mjs #partyRefusal > is-not-a-project-conflict",
+    translation: "This is a lead the record noticed about the world, not a conflict the record holds between projects, so there is nothing to resolve between projects. Take it up as a question, or dismiss it with a reason. Nothing was written."
+  },
+  RESPONSE_BEFORE_OPT_IN: {
+    check: "C-93.36",
+    where: "src/contradiction/index.mjs respond > is-response-before-opt-in",
+    translation: "A project responds to a conflict after it has asked to resolve it. Ask first, on the notice; your response reaches the other projects only once every project holding a side has asked. Nothing was written."
+  },
+  RESPONSE_NO_TEXT: {
+    check: "C-93.37",
+    where: "src/contradiction/index.mjs respond > is-response-no-text",
+    translation: "A response says something in your own words. Write it, and choose separately whether to share your cover or an email address. Nothing was written."
+  },
+  DISCLOSURE_MALFORMED: {
+    check: "C-93.38",
+    where: "src/contradiction/index.mjs #disclosureRefusal > is-disclosure-malformed",
+    translation: "What a response shares about you is your cover, an email address, or neither, and nothing else. The address must be one address. The part that is not one of these is named. Nothing was written."
+  },
+  DISCLOSURE_NOT_YOURS: {
+    check: "C-93.39",
+    where: "src/contradiction/index.mjs #disclosureRefusal > is-disclosure-not-yours",
+    translation: "A response may share only your own cover or your own email address. What was given is someone else's, so it was not shared. Share your own, or nothing. Nothing was written."
+  }
+};
+
+// src/contradiction/derive.mjs
+var WEIGHTS = Object.freeze(["lead", "duty", "plurality", "not_shown"]);
+var STATES2 = Object.freeze(["open", "dismissed", "explained_not_shown", "taken_up", "resolved"]);
+var K5_GATE_MEASURED = false;
+var K5_UNSHOWN_WHY = "k5_gate_unmeasured";
+function weightOf(label, key, noDifference = false) {
+  if (label === "precision" || label === "unrelated") return { weight: "not_shown", why: null };
+  if (key === "K5") {
+    if (!K5_GATE_MEASURED) return { weight: "not_shown", why: K5_UNSHOWN_WHY };
+    return { weight: noDifference ? "duty" : "plurality", why: null };
+  }
+  if (label === "world" || label === "undetermined") return { weight: "lead", why: null };
+  if (label === "record") return { weight: "duty", why: null };
+  return { weight: "not_shown", why: null };
+}
+function stateOf(acts, link, inquiryId = null) {
+  if (inquiryId) {
+    const res = link && link.resolution && typeof link.resolution === "object" ? link.resolution : null;
+    if (res && typeof res.kind === "string")
+      return { state: "resolved", kind: res.kind, by: null, at: null, act: null, inquiry: inquiryId, resolution: res };
+    return { state: "taken_up", kind: null, by: null, at: null, act: null, inquiry: inquiryId, resolution: null };
+  }
+  let out = { state: "open", kind: null, by: null, at: null, act: null, inquiry: null, resolution: null };
+  for (const a of acts || []) {
+    if (a.act === "dismiss") out = { ...out, state: "dismissed", kind: null, by: a.author, at: a.at, act: a };
+    else if (a.act === "clarify" && a.choice === "one_wrong")
+      out = { ...out, state: "resolved", kind: "corrected", by: a.author, at: a.at, act: a };
+    else if (a.act === "clarify" && a.choice === "differs")
+      out = a.evidence && a.evidence.length ? { ...out, state: "resolved", kind: "dissolved", by: a.author, at: a.at, act: a } : { ...out, state: "explained_not_shown", kind: null, by: a.author, at: a.at, act: a };
+  }
+  return out;
+}
+var isClosed = (state) => state === "dismissed" || state === "resolved";
+var isProjectConflict = (weight, state) => (weight === "duty" || weight === "plurality") && (state === "open" || state === "explained_not_shown" || state === "taken_up");
+var isStanding = (state) => state === "open" || state === "explained_not_shown";
+
+// src/contradiction/text.mjs
+function fmSafe3(s) {
+  return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
+}
+function removeBlock2(text4, key) {
+  const lines = text4.split("\n");
+  if (lines[0] !== "---") return text4;
+  const end2 = lines.indexOf("---", 1);
+  if (end2 === -1) return text4;
+  let at17 = -1;
+  for (let i = 1; i < end2; i++) if (lines[i] === `${key}:` || lines[i].startsWith(`${key}: `)) {
+    at17 = i;
+    break;
+  }
+  if (at17 === -1) return text4;
+  let last = at17;
+  for (let i = at17 + 1; i < end2; i++) {
+    if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
+    else break;
+  }
+  return [...lines.slice(0, at17), ...lines.slice(last + 1)].join("\n");
+}
+function setFrontmatterLines(text4, key, lines) {
+  const t = removeBlock2(text4, key);
+  const all = t.split("\n");
+  if (all[0] !== "---") return t;
+  const end2 = all.indexOf("---", 1);
+  if (end2 === -1) return t;
+  return [...all.slice(0, end2), ...lines, ...all.slice(end2)].join("\n");
+}
+function appendSessionLog3(text4, entry) {
+  const at17 = text4.indexOf("## Session Log");
+  if (at17 < 0) return text4.replace(/\s*$/, "\n") + "\n## Session Log\n\n" + entry + "\n";
+  const nxt = text4.indexOf("\n## ", at17 + 1);
+  const cut3 = nxt === -1 ? text4.length : nxt + 1;
+  const head = text4.slice(0, cut3);
+  return head + (head.endsWith("\n") ? "" : "\n") + entry + "\n" + text4.slice(cut3);
+}
+function setOrAddScalar3(text4, key, value) {
+  const lines = text4.split("\n");
+  if (lines[0] !== "---") return text4;
+  const end2 = lines.indexOf("---", 1);
+  if (end2 === -1) return text4;
+  for (let i = 1; i < end2; i++)
+    if (lines[i].startsWith(key + ":")) {
+      lines[i] = `${key}: ${value}`;
+      return lines.join("\n");
+    }
+  return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
+}
+function rand5(n = 4) {
+  return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// src/contradiction/index.mjs
+var CONTRADICTION_TABLES = Object.freeze([
+  "contradiction_candidates",
+  "contradiction_acts",
+  "contradiction_recommendations",
+  "contradiction_optins",
+  "contradiction_responses"
+]);
+var CONTRADICTION_PAIRS_MAX = 50;
+var CANDIDATE_REASON_MAX = 2e3;
+var K5_INQUIRIES_EXAMINED = 1e3;
+var REACH_PROJECTS_MAX = 32;
+var REACH_INQUIRIES_MAX = 32;
+var PAGE_MAX = 50;
+var CANDIDATES_SCAN_MAX = 2e3;
+var TENSIONS_REFERENTS_MAX = 200;
+var UNRESOLVED_MAX = 200;
+var TEXT_CAPS = Object.freeze({
+  explanation: 1e3,
+  reason: 500,
+  words: 500,
+  qualifier: 200,
+  question: 500,
+  text: 2e3
+});
+var EMAIL_MAX = 254;
+var NOTICE_RESPONSES_MAX = 20;
+var DISMISSAL_REASONS = Object.freeze([
+  "same_fact_different_precision",
+  "not_same_matter",
+  "real_conflict_not_pursued"
+]);
+var FALSE_CONFLICT_REASONS = Object.freeze(["same_fact_different_precision", "not_same_matter"]);
+var CLARIFY_CHOICES = Object.freeze(["differs", "one_wrong", "no_difference"]);
+var ACCEPTANCE_REVIEW = Object.freeze({ rate: 0.95, min_offered: 30, status: "PROVISIONAL" });
+var NOTICE_SENTENCE = "Something this project rests on is in conflict with a record you cannot see. Neither that record nor who holds it is shown. Your project can ask to resolve it. If every project holding a side asks, the projects are named to each other's members, and you can respond.";
+var INTERNAL = "class:daemon";
+var CONTRADICTION_KEYS = Object.freeze({
+  K1: Object.freeze({
+    key: "K1",
+    name: "one inquiry, opposite roles",
+    feeds: "world",
+    join: "a supports leg and a cuts_against leg of the SAME inquiry, each resting on a passage",
+    why: "the inquiry already holds both sides; what is missing is anyone proposing the discrepancy itself as the conclusion shape"
+  }),
+  K2: Object.freeze({
+    key: "K2",
+    name: "one subject, two held claims",
+    feeds: "record",
+    join: "two inquiries with the same subject entity, each with an ACCEPTED reading carrying a claim",
+    why: "two things the group HOLDS about one subject \u2014 the case that carries a duty"
+  }),
+  K3: Object.freeze({
+    key: "K3",
+    name: "one referent, two held claims",
+    feeds: "record",
+    join: "two accepted readings, of different inquiries, whose legs rest on the SAME passage (or, where no passage is named, the same captured document)",
+    why: "we read the same text two ways"
+  }),
+  K4: Object.freeze({
+    key: "K4",
+    name: "one entity, two sources of different kind or date",
+    feeds: "world",
+    join: "two cited passages whose documents RESOLVE (established) to the same entity, from different doctypes, or with different dates, AS THEIR READERS STATE THEM",
+    why: "a rule against the act it governs, or one body's statement at one date against its statement at another"
+  }),
+  /* N345, DEC-84 item 3: added, not tuned (R18). Two projects' conclusions are plurality, not a defect, until a member
+     finds no named difference between them (R24, R34). */
+  K5: Object.freeze({
+    key: "K5",
+    name: "one question, two projects' conclusions",
+    feeds: "record",
+    join: "two projects whose stances on the SAME inquiry are both concluded, adopting claims whose text differs",
+    why: "two projects answered one question differently"
+  })
+});
+var LAST_LEVEL = Object.freeze({
+  K1: "shared_side",
+  K2: "shared_subject",
+  K3: "shared_referent",
+  K4: "discriminator",
+  K5: "shared_question"
+});
+var CONTRADICTION_ABSENCE = Object.freeze({
+  viewer: "this read was made with NO VIEWER the record recognises, so it compared nothing and every key below is empty for want of a reader rather than for want of material. This is an outage, not a statement about the record: ask again with a member's session",
+  inquiry: "no question is in scope at all. Nothing has been asked here yet, so there is nothing for any key to pair \u2014 the record is EMPTY at the question level and says nothing whatever about whether the world contains contradictions",
+  leg: "questions exist and NONE of them rests on anything. Nothing has been cited, so there are no two sides to put beside each other",
+  role: "questions rest on material, but not ONE of them holds both a leg that supports it and a leg that cuts against it. That is a fact about how the questions are argued, not about whether the record contains a discrepancy",
+  referent: "both sides exist, but the legs name no PASSAGE \u2014 they rest on a whole document, on a sub-question, or on bytes this record does not hold. A pair whose sides cannot be quoted is not a pair a member could judge, so none was formed",
+  subject: "questions exist and NONE of them names a registered subject. K2 pairs by subject, so this is absence at the SUBJECT level: the claims may well disagree and nothing here can see it",
+  reading: "questions exist and none of them holds an ACCEPTED reading. A suggested, considering or rejected reading is not something the group HOLDS, so there is no held assertion to pair. Nothing is claimed about what the questions would say if they were read",
+  claim: "accepted readings exist and none of them carries a CLAIM. What the group holds is therefore unstated in the one field this key can read, which is absence in OUR record rather than agreement in it",
+  shared_entity: "cited passages and established resolutions exist, but no two documents resolve to the SAME subject. There is nothing about one entity to compare",
+  content: "no passage of any document has been cited or marked citable. Nothing has been extracted at the content level, which says nothing about what the documents say",
+  cited: "passages exist and none of them is cited by any reading. This key compares what the record RESTS ON, and it rests on none of them",
+  resolution: "cited passages exist and their documents carry no ESTABLISHED resolution to any subject. Nobody has confirmed what these documents are about, so there is no entity to pair them under \u2014 the next move is to resolve them, not to conclude they are unrelated",
+  shared_side: "questions hold both a supporting and a cutting leg, and each names a passage, but no ONE question holds both at once. The two sides of this key are the two sides of a SINGLE question, and none has them",
+  shared_subject: "held claims and registered subjects both exist, and no two accepted claims share a subject. Every subject is spoken to once, so there is nothing about one subject for the record to disagree with itself about",
+  shared_referent: "held claims rest on passages, and no two claims of DIFFERENT questions rest on the same one. Each passage is read by at most one held claim, so no text is read two ways here",
+  drawing_projects: "questions exist and no project you can see draws on any of them. K5 compares two projects' answers to one question, so there is nothing to compare until projects rest on the questions",
+  concluded_stances: "projects draw on questions and none of them has concluded one. A project that has not concluded holds no answer, so there is no answer to set beside another",
+  differing_claim: "projects have concluded, and no two concluded answers differ in their words. That is agreement in the claims adopted, as far as their text goes, not a finding that they agree",
+  shared_question: "projects have concluded with differing answers, but never on the SAME question. Each question has at most one concluded answer, so no question is answered two ways here",
+  discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by kind or by date. Either the readers state the same kind and the same date on both, or they state neither \u2014 and where a value is missing the pair was left unformed rather than guessed. The counts beside this say which"
+});
+var STORED_ROW = `candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind, b_ref, b_version, b_bundle_id, run,
+  proposed_by, label, reason, state, origin, at, a_side, b_side`;
+var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
+var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
+var instances14 = /* @__PURE__ */ new WeakMap();
+function contradictionOf(ctx, opts = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let c = instances14.get(storage);
+  if (!c) {
+    const record = opts.record ?? recordOf(ctx);
+    const lazy = (given, make) => given ?? make;
+    c = new Contradiction(storage, {
+      ...opts,
+      record,
+      extraction: lazy(opts.extraction, () => extractionOf(ctx)),
+      membership: lazy(opts.membership, () => membershipOf(ctx, { record })),
+      promotion: lazy(opts.promotion, () => promotionOf(ctx, { record })),
+      entities: lazy(opts.entities, () => entitiesOf(ctx, { record })),
+      basisVersions: lazy(opts.basisVersions, () => basisVersionsOf(ctx, { record })),
+      inquiry: lazy(opts.inquiry, () => inquiryServices(ctx))
+    });
+    instances14.set(storage, c);
+    const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
+    if (promotion && typeof promotion.registerStep === "function")
+      promotion.registerStep("contradiction", { check: (step) => c.promotionCheck(step) });
+  }
+  return c;
+}
+function inquiryServices(ctx) {
+  const m = inquiry_exports;
+  let k = null;
+  const inst = () => k ||= m.inquiryOf(ctx);
+  return {
+    CONTRADICTION_COORDINATES: m.CONTRADICTION_COORDINATES,
+    PLURALITY_DIFFERENCES: m.PLURALITY_DIFFERENCES,
+    DISSOLVED_BY: m.DISSOLVED_BY,
+    RESOLUTION_KINDS: m.RESOLUTION_KINDS,
+    NORM_CANONS: m.NORM_CANONS,
+    resolutionFamily: m.resolutionFamily,
+    resolutionLines: m.resolutionLines,
+    deriveInquiryTitle: m.deriveInquiryTitle,
+    contradictionLink: (id) => {
+      const i = inst();
+      return typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
+    },
+    inquiryOfCandidate: (cand) => {
+      const i = inst();
+      return typeof i.inquiryOfCandidate === "function" ? i.inquiryOfCandidate(cand) : null;
+    }
+  };
+}
+var Contradiction = class _Contradiction {
+  #sql;
+  #record;
+  #extraction;
+  #now;
+  #runGate = null;
+  #declared = false;
+  #membership;
+  #promotion;
+  #entities;
+  #bv;
+  #inquiry;
+  constructor(storage, {
+    record,
+    extraction = null,
+    now = null,
+    membership = null,
+    promotion = null,
+    entities = null,
+    basisVersions = null,
+    inquiry = null
+  } = {}) {
+    this.#sql = storage.sql;
+    this.#record = record;
+    this.#extraction = extraction;
+    this.#membership = membership;
+    this.#promotion = promotion;
+    this.#entities = entities;
+    this.#bv = basisVersions;
+    this.#inquiry = inquiry;
+    this.#now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
+  }
+  #rows(q6, ...a) {
+    return [...this.#sql.exec(q6, ...a)];
+  }
+  #one(q6, ...a) {
+    const r = this.#rows(q6, ...a);
+    return r.length ? r[0] : null;
+  }
+  #x() {
+    return typeof this.#extraction === "function" ? this.#extraction = this.#extraction() : this.#extraction;
+  }
+  /* Each service reached on first use: a function given is called once and its answer kept. */
+  #m() {
+    return typeof this.#membership === "function" ? this.#membership = this.#membership() : this.#membership;
+  }
+  #p() {
+    return typeof this.#promotion === "function" ? this.#promotion = this.#promotion() : this.#promotion;
+  }
+  #e() {
+    return typeof this.#entities === "function" ? this.#entities = this.#entities() : this.#entities;
+  }
+  #b() {
+    return typeof this.#bv === "function" ? this.#bv = this.#bv() : this.#bv;
+  }
+  #i() {
+    return typeof this.#inquiry === "function" ? this.#inquiry = this.#inquiry() : this.#inquiry || {};
+  }
+  /* ---- boot (K4) ---- */
+  /** This module's tables at every boot, idempotent (the columns added since a table was first created included),
+   *  and the purge declaration (R22, R47) once. */
+  migrate() {
+    const bare2 = CONTRADICTION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const st of bare2.split(";")) {
+      const t = st.trim();
+      if (t) this.#sql.exec(t);
+    }
+    for (const [table2, col, type] of CONTRADICTION_COLUMNS) {
+      const held = this.#rows(`SELECT name FROM pragma_table_info(?)`, table2).some((r) => r.name === col);
+      if (!held) this.#sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${col} ${type}`);
+    }
+    this.declarePurge();
+  }
+  /** R17, R22, R47 (K23, record-core R21/R46): every row is keyed to the bundles both sides of its candidate live in,
+   *  so a purge of either end takes it (D-113), as connections do; an opt-in and a response also by their project.
+   *  Nothing else updates or deletes one. Once per instance. */
+  declarePurge() {
+    if (this.#declared) return { ok: true, already: true };
+    const both = ["a_bundle_id", "b_bundle_id"];
+    const r = this.#record.declarePurge("contradiction", [
+      { name: "contradiction_candidates", keys: both },
+      { name: "contradiction_acts", keys: both },
+      { name: "contradiction_recommendations", keys: both },
+      { name: "contradiction_optins", keys: [...both, "project_id"] },
+      { name: "contradiction_responses", keys: [...both, "project_id"] }
+    ]);
+    if (r && r.ok !== false) this.#declared = true;
+    return r;
+  }
+  /* ---- the run gate (R21, K31) ---- */
+  /** R21 (K182): the slot `ai-runs` fills (its R37), `legacy-store` until then. `gate(run, viewer, caller)` answers
+   *  `{found, running, refusal}`: `found` false for a blank, absent or invisible run alike (§7.9); `running` whether
+   *  it is still running; `refusal` null, or ai-runs R5's `AI_RUN_NOT_PRINCIPAL` (C-22.12) for a caller who is not
+   *  the run's principal, which R13 relays. One gate: a second registration is refused. */
+  registerRunGate(module, gate) {
+    if (typeof module !== "string" || !module.trim() || typeof gate !== "function")
+      return { ok: false, reason: RUN_GATE_MALFORMED, detail: "a run gate is registered by a module name and a function" };
+    if (this.#runGate)
+      return {
+        ok: false,
+        reason: RUN_GATE_DECLARED,
+        module: this.#runGate.module,
+        detail: `the run gate is already registered by ${this.#runGate.module}`
+      };
+    this.#runGate = { module, gate };
+    return { ok: true, module };
+  }
+  /* ---- sight (membership R43; R10) ---- */
+  /** The viewer gate compiled into a statement over a QUALIFIED bundle column: a machine sees everything, an absent
+   *  or unrecognised viewer nothing, a member through membership's predicate over record-core's `bundles` (its R37).
+   *  A NULL column names no bundle and passes; one naming a bundle that is gone is withheld (fail closed).
+   *
+   *  THE COLUMN MUST BE QUALIFIED, and this refuses an unqualified one rather than trusting a caller to remember:
+   *  inside the EXISTS subquery a bare `bundle_id` resolves against `bundles` — the INNER table — so the gate would
+   *  pass every row while looking exactly like a gate. */
+  #gate(col, viewer) {
+    if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
+      throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}). An unqualified name binds to \`bundles\` inside the gate's own subquery and passes everything.`);
+    const g = viewerPredicate(viewer);
+    if (g.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
+    if (g.scope === "DENY") return { sql: g.sql, args: [] };
+    return {
+      sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${g.sql})))`,
+      args: g.args
+    };
+  }
+  /* ===================================================================== *
+   * THE PAIRING READ (REC-146 / IC-167; R5–R12). Section 9 item 1.
+   * ===================================================================== */
+  /** R48 (DEC-77 item 1): aspirations are in contact, never in contradiction, so no key pairs a side that lives in
+   *  one. A condition on a qualified bundle column, as the gate is. */
+  static #notAspiration(col) {
+    return `NOT EXISTS (SELECT 1 FROM bundles asp WHERE asp.bundle_id = ${col} AND asp.object_type = 'aspiration')`;
+  }
+  /** R9: the doctype and the document DATE for one capture, AS THE READER STATES THEM — never as this module infers
+   *  them. BOTH ARE THREE-VALUED AND THE THIRD VALUE IS THE POINT (section 4): *a document date or a doctype that its
+   *  reader does not state is UNDETERMINED, and a pair that needs one is not formed on a guess.* So `null` here is
+   *  returned and counted, and `read` keeps apart a capture nobody has read from a reading that states no value.
+   *
+   *  The doctype is the reading's `content_type` (extraction R58); the date is the reading's own top-level `date`
+   *  (extraction R30's `readingOf`), where every doctype that has one puts it. A doctype that states none simply has
+   *  none, which is a fact about the READER — exactly why it may not be filled in from the content row's or the
+   *  capture's time. Those are facts about US. */
+  #doc(captureSha, memo) {
+    if (memo.has(captureSha)) return memo.get(captureSha);
+    const row2 = this.#one(`SELECT content_type FROM readings WHERE capture_sha=? LIMIT 1`, captureSha);
+    const held = row2 ? this.#x().readingOf(captureSha) : null;
+    const reading = held && held.reading && typeof held.reading === "object" ? held.reading : null;
+    const s = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+    const out = { read: !!row2, doctype: row2 ? s(row2.content_type) : null, date: reading ? s(reading.date) : null };
+    memo.set(captureSha, out);
+    return out;
+  }
+  /** R8: one leg's side of a pair, with the passage it rests on RESOLVED — the ref a member reads and the capture it
+   *  is a part of (content R45). The leg alone names a content id, which is a hash and tells a reader nothing about
+   *  what was cited. Section 5 requires both sides to travel with their referents; null when the row is not held. */
+  #extent(kind, side) {
+    const row2 = side.content_id ? this.#one(`SELECT capture_sha, ref, extent_kind, stale FROM content WHERE content_id=? LIMIT 1`, side.content_id) : null;
+    return {
+      kind,
+      ...side,
+      capture_sha: row2 ? row2.capture_sha : null,
+      ref: row2 ? row2.ref : null,
+      extent_kind: row2 ? row2.extent_kind : null,
+      stale: row2 ? !!row2.stale : null
+    };
+  }
+  /** R8 K1 — one inquiry, opposite roles. A `supports` leg and a `cuts_against` leg of the SAME inquiry, each with a
+   *  content referent. BOUNDED AT THE SQL AND NOT IN JAVASCRIPT (D-365): a published `truncated` over a scan that
+   *  read everything is an envelope staying honest about a read that was not bounded at all. The statement
+   *  OVER-FETCHES BY ONE so truncation is OBSERVED rather than inferred from equality with the bound (R7). */
+  #k1(viewer, cap) {
+    const g = this.#gate("s.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT s.bundle_id AS inquiry, s.ord AS a_ord, s.target_id AS a_target,
+              s.content_id AS a_content, s.note AS a_note,
+              c.ord AS b_ord, c.target_id AS b_target, c.content_id AS b_content, c.note AS b_note
+         FROM inquiry_basis s
+         JOIN inquiry_basis c ON c.bundle_id = s.bundle_id
+        WHERE s.role = 'supports' AND c.role = 'cuts_against'
+          AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
+          AND ${_Contradiction.#notAspiration("s.bundle_id")}
+          AND (${g.sql})
+        ORDER BY s.bundle_id, s.ord, c.ord
+        LIMIT ?`,
+      ...g.args,
+      cap + 1
+    );
+    const truncated3 = rows.length > cap;
+    const pairs = (truncated3 ? rows.slice(0, cap) : rows).map((r) => ({
+      key: "K1",
+      inquiry: r.inquiry,
+      a: this.#extent("leg", {
+        inquiry: r.inquiry,
+        ord: r.a_ord,
+        role: "supports",
+        target: r.a_target,
+        content_id: r.a_content,
+        note: r.a_note
+      }),
+      b: this.#extent("leg", {
+        inquiry: r.inquiry,
+        ord: r.b_ord,
+        role: "cuts_against",
+        target: r.b_target,
+        content_id: r.b_content,
+        note: r.b_note
+      }),
+      why: "one question already rests on both of these, one supporting it and one cutting against it. What they SAY about each other is not read here"
+    }));
+    return { pairs, truncated: truncated3, notes: [] };
+  }
+  /** R8 K2 — one subject, two held claims. Two inquiries with the same `bundles.inquiry_subject_entity`, each with an
+   *  ACCEPTED, unhidden reading carrying a `claim`. `hidden = 0` AND `state = 'accepted'` ARE BOTH REQUIRED AND THEY
+   *  ARE DIFFERENT RULES: a suggested, considering or rejected version is not held (section 3), and a HIDDEN accepted
+   *  version is one the group PRUNED. `bundle_id >` RATHER THAN `<>` IS WHAT MAKES A PAIR ONE PAIR: without it every
+   *  pair appears twice, once from each side (R8). */
+  #k2(viewer, cap) {
+    const ga = this.#gate("v1.bundle_id", viewer);
+    const gb = this.#gate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim,
+              d1.inquiry_subject_entity AS entity_id, d1.title AS a_title, d2.title AS b_title
+         FROM inquiry_basis_versions v1
+         JOIN bundles d1 ON d1.bundle_id = v1.bundle_id
+         JOIN bundles d2 ON d2.inquiry_subject_entity = d1.inquiry_subject_entity
+                        AND d2.bundle_id > d1.bundle_id
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = d2.bundle_id
+        WHERE v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND d1.inquiry_subject_entity IS NOT NULL AND d1.inquiry_subject_entity <> ''
+          AND d1.object_type <> 'aspiration' AND d2.object_type <> 'aspiration'
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY d1.inquiry_subject_entity, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const truncated3 = rows.length > cap;
+    const pairs = (truncated3 ? rows.slice(0, cap) : rows).map((r) => ({
+      key: "K2",
+      subject_entity: r.entity_id,
+      a: { kind: "claim", inquiry: r.a_inquiry, title: r.a_title ?? null, version: r.a_version, claim: r.a_claim },
+      b: { kind: "claim", inquiry: r.b_inquiry, title: r.b_title ?? null, version: r.b_version, claim: r.b_claim },
+      why: "two questions about the same registered subject, each with a reading the group ACCEPTED and a claim it therefore holds. Whether they can both be so is not read here"
+    }));
+    return { pairs, truncated: truncated3, notes: [] };
+  }
+  /** K3 arm (a) — two accepted readings, of DIFFERENT inquiries, whose version legs rest on the SAME content row. */
+  #k3Same(viewer, cap) {
+    const ga = this.#gate("v1.bundle_id", viewer);
+    const gb = this.#gate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim, l1.ord AS a_ord,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim, l2.ord AS b_ord,
+              l1.content_id AS content_id
+         FROM inquiry_basis_version_legs l1
+         JOIN inquiry_basis_versions v1 ON v1.bundle_id = l1.bundle_id AND v1.name = l1.name
+         JOIN inquiry_basis_version_legs l2 ON l2.content_id = l1.content_id
+                                           AND l2.bundle_id > l1.bundle_id
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
+        WHERE l1.content_id IS NOT NULL
+          AND ${_Contradiction.#notAspiration("v1.bundle_id")} AND ${_Contradiction.#notAspiration("v2.bundle_id")}
+          AND v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY l1.content_id, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const truncated3 = rows.length > cap;
+    return { rows: truncated3 ? rows.slice(0, cap) : rows, truncated: truncated3 };
+  }
+  /** K3 arm (b) — THE SAME QUESTION WHERE NO PASSAGE IS NAMED, as a SECOND STATEMENT rather than a `UNION`: D-36's
+   *  workerd ceiling of five compound terms, and a union would publish ONE figure over two joins that mean different
+   *  things. A NULL `content_id` is one of three facts — the leg rests on an INQUIRY, the record holds no bytes of the
+   *  document, or the row is a replay — and only the last two name a DOCUMENT, so this arm requires `target_type =
+   *  'information'` on both sides: two claims resting on the same sub-QUESTION are not two readings of one text. */
+  #k3Doc(viewer, cap) {
+    const ga = this.#gate("v1.bundle_id", viewer);
+    const gb = this.#gate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim, l1.ord AS a_ord,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim, l2.ord AS b_ord,
+              l1.target_id AS target_id
+         FROM inquiry_basis_version_legs l1
+         JOIN inquiry_basis_versions v1 ON v1.bundle_id = l1.bundle_id AND v1.name = l1.name
+         JOIN inquiry_basis_version_legs l2 ON l2.target_id = l1.target_id
+                                           AND l2.bundle_id > l1.bundle_id
+                                           AND l2.content_id IS NULL
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
+        WHERE l1.content_id IS NULL AND l1.target_type = 'information'
+          AND l2.target_type = 'information'
+          AND ${_Contradiction.#notAspiration("v1.bundle_id")} AND ${_Contradiction.#notAspiration("v2.bundle_id")}
+          AND v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY l1.target_id, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const truncated3 = rows.length > cap;
+    return { rows: truncated3 ? rows.slice(0, cap) : rows, truncated: truncated3 };
+  }
+  /** R7, R8 K3 — both arms, each bounded on its own and each SAID in `arms`. */
+  #k3(viewer, cap) {
+    const same = this.#k3Same(viewer, cap);
+    const doc = this.#k3Doc(viewer, cap);
+    const mk = (r, referent) => ({
+      key: "K3",
+      ...referent,
+      a: { kind: "claim", inquiry: r.a_inquiry, version: r.a_version, claim: r.a_claim, ord: r.a_ord },
+      b: { kind: "claim", inquiry: r.b_inquiry, version: r.b_version, claim: r.b_claim, ord: r.b_ord },
+      why: referent.content_id ? "two questions whose accepted readings rest on the SAME passage, each holding a claim. What that passage supports is the thing they may disagree about" : "two questions whose accepted readings rest on the same DOCUMENT with no passage named on either side, each holding a claim. The passage grain is absent on both, not chosen"
+    });
+    const pairs = [
+      ...same.rows.map((r) => mk(r, { content_id: r.content_id, referent_grain: "passage" })),
+      ...doc.rows.map((r) => mk(r, { content_id: null, document: r.target_id, referent_grain: "document" }))
+    ];
+    return {
+      pairs,
+      truncated: same.truncated || doc.truncated,
+      arms: {
+        passage: { formed: same.rows.length, truncated: same.truncated },
+        document: { formed: doc.rows.length, truncated: doc.truncated }
+      },
+      notes: []
+    };
+  }
+  /** A content row cited by a leg or a version leg of an inquiry this viewer may see (the gate on the CITING
+   *  inquiry: a passage cited only by a question the viewer cannot see is not cited as this viewer can see it, so
+   *  neither the pair nor the ladder discloses that the hidden question cites it). */
+  #citedBy(col, viewer) {
+    const gi = this.#gate("ib.bundle_id", viewer);
+    const gl = this.#gate("vl.bundle_id", viewer);
+    return {
+      sql: `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = ${col} AND (${gi.sql}))
+                    OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = ${col} AND (${gl.sql})))`,
+      args: [...gi.args, ...gl.args]
+    };
+  }
+  /** R8, R9 K4 — one entity, two sources of different kind or DATE.
+   *
+   *  THE SQL FINDS CANDIDATES AND THE JAVASCRIPT DECIDES, and the division is the item's honesty requirement: the
+   *  join can say *these two documents resolve, established, to one entity, and somebody has cited a passage of
+   *  each*; it CANNOT say whether their kinds or dates differ, because a reader's date lives inside the reading. So
+   *  the discriminator is applied here, where the third answer — UNDETERMINED — can be COUNTED and the pair left
+   *  unformed.
+   *
+   *  `established = 1` ON BOTH ENDS IS SECTION 4's WORD AND IT IS LOAD-BEARING: a C-tier correspondence is expressly
+   *  flagged for a member to confirm, and pairing on it would manufacture a world-contradiction candidate out of two
+   *  documents nobody has agreed are about one thing. `DISTINCT` IS NOT COSMETIC: `resolutions` holds one row per
+   *  (capture, reference, entity), so one document naming a subject five times would count one pair five times. */
+  #k4(viewer, cap) {
+    const ga = this.#gate("c1.bundle_id", viewer);
+    const gb = this.#gate("c2.bundle_id", viewer);
+    const ca = this.#citedBy("c1.content_id", viewer);
+    const cb = this.#citedBy("c2.content_id", viewer);
+    const rows = this.#rows(
+      `SELECT DISTINCT c1.content_id AS a_content, c1.capture_sha AS a_capture, c1.ref AS a_ref,
+              c1.extent_kind AS a_kind,
+              c2.content_id AS b_content, c2.capture_sha AS b_capture, c2.ref AS b_ref,
+              c2.extent_kind AS b_kind, r1.entity_id AS entity_id
+         FROM content c1
+         JOIN resolutions r1 ON r1.capture_sha = c1.capture_sha AND r1.established = 1
+         JOIN resolutions r2 ON r2.entity_id = r1.entity_id AND r2.established = 1
+                            AND r2.capture_sha > r1.capture_sha
+         JOIN content c2 ON c2.capture_sha = r2.capture_sha
+        WHERE ${ca.sql} AND ${cb.sql}
+          AND ${_Contradiction.#notAspiration("c1.bundle_id")} AND ${_Contradiction.#notAspiration("c2.bundle_id")}
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY r1.entity_id, c1.content_id, c2.content_id
+        LIMIT ?`,
+      ...ca.args,
+      ...cb.args,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const truncated3 = rows.length > cap;
+    const memo = /* @__PURE__ */ new Map();
+    const pairs = [];
+    let undetermined = 0, indistinct = 0;
+    const missing = { never_read: 0, no_doctype: 0, no_date: 0 };
+    for (const r of truncated3 ? rows.slice(0, cap) : rows) {
+      const da = this.#doc(r.a_capture, memo);
+      const db = this.#doc(r.b_capture, memo);
+      const kindsKnown = !!da.doctype && !!db.doctype;
+      const datesKnown = !!da.date && !!db.date;
+      const discriminator = kindsKnown && da.doctype !== db.doctype ? "doctype" : datesKnown && da.date !== db.date ? "date" : null;
+      if (discriminator) {
+        pairs.push({
+          key: "K4",
+          entity_id: r.entity_id,
+          discriminator,
+          a: {
+            kind: "extent",
+            content_id: r.a_content,
+            capture_sha: r.a_capture,
+            ref: r.a_ref,
+            extent_kind: r.a_kind,
+            doctype: da.doctype,
+            date: da.date,
+            read: da.read
+          },
+          b: {
+            kind: "extent",
+            content_id: r.b_content,
+            capture_sha: r.b_capture,
+            ref: r.b_ref,
+            extent_kind: r.b_kind,
+            doctype: db.doctype,
+            date: db.date,
+            read: db.read
+          },
+          why: discriminator === "doctype" ? "two documents the record has established are about the same subject, of different kinds as their readers state them \u2014 the shape of a rule against the act it governs" : "two documents the record has established are about the same subject, dated differently as their readers state them \u2014 the shape of one body saying X then Y"
+        });
+        continue;
+      }
+      if (kindsKnown && datesKnown) {
+        indistinct += 1;
+        continue;
+      }
+      undetermined += 1;
+      if (!da.read || !db.read) missing.never_read += 1;
+      else if (!kindsKnown) missing.no_doctype += 1;
+      else missing.no_date += 1;
+    }
+    return {
+      pairs,
+      truncated: truncated3,
+      undetermined,
+      indistinct,
+      missing,
+      notes: undetermined ? [`${undetermined} candidate pair(s) were NOT formed because a doctype or a document date their readers never stated was needed to tell them apart (${missing.never_read} where a document has not been read at all, ${missing.no_doctype} where a reader stated no kind, ${missing.no_date} where a reader stated no date). That is not evidence the two agree`] : []
+    };
+  }
+  /** K5 (N345, DEC-84 item 3) — one question, two projects' conclusions. For each inquiry this viewer may see, in id
+   *  order, the projects the viewer may see that draw on it (`basis-versions` R37, at `FULL`, membership R44) and each
+   *  one's stance read through `conclusionOf` (its R22): two stances both `concluded`, adopting claims whose text
+   *  differs, are a pair, counted once (the lower project id is side A). The same scan answers K5's ladder (R11), so a
+   *  rung and the join cannot disagree. At most `K5_INQUIRIES_EXAMINED` inquiries are examined; reaching it with more
+   *  left is truncation, and a note says so. */
+  #k5(viewer, cap) {
+    const bv = this.#b();
+    const found = { inquiry: false, drawing_projects: false, concluded_stances: false, differing_claim: false };
+    const pairs = [];
+    let truncated3 = false, examinedCut = false;
+    const claims = /* @__PURE__ */ new Set();
+    if (!bv || typeof bv.projectsDrawingOn !== "function" || typeof bv.conclusionOf !== "function")
+      return { pairs, truncated: truncated3, found, notes: ["basis-versions' reads are not reachable here, so K5 compared nothing"] };
+    const vp = viewerPredicate(viewer);
+    let after = "", examined = 0;
+    outer: for (; ; ) {
+      const page = this.#rows(
+        `SELECT b.bundle_id AS id FROM bundles b WHERE b.object_type='inquiry' AND b.bundle_id > ? AND (${vp.sql})
+          ORDER BY b.bundle_id LIMIT 100`,
+        after,
+        ...vp.args
+      );
+      if (!page.length) break;
+      for (const r of page) {
+        after = r.id;
+        if (examined >= K5_INQUIRIES_EXAMINED) {
+          truncated3 = true;
+          examinedCut = true;
+          break outer;
+        }
+        examined += 1;
+        found.inquiry = true;
+        const projects = bv.projectsDrawingOn(r.id, viewer) || [];
+        if (projects.length) found.drawing_projects = true;
+        const stances = [];
+        for (const pr of projects) {
+          const st = bv.conclusionOf(pr.id, r.id, viewer);
+          const text4 = st ? typeof st.claim === "string" ? st.claim : st.claim && typeof st.claim.text === "string" ? st.claim.text : null : null;
+          if (!st || text4 === null || !text4.trim()) continue;
+          found.concluded_stances = true;
+          stances.push({ project: pr.id, version: st.version ?? null, claim: text4 });
+          claims.add(text4.trim());
+        }
+        if (claims.size > 1) found.differing_claim = true;
+        stances.sort((x, y) => x.project < y.project ? -1 : x.project > y.project ? 1 : 0);
+        for (let i = 0; i < stances.length; i++) for (let j = i + 1; j < stances.length; j++) {
+          const a = stances[i], b = stances[j];
+          if (a.claim.trim() === b.claim.trim()) continue;
+          if (pairs.length === cap) {
+            truncated3 = true;
+            break outer;
+          }
+          pairs.push({
+            key: "K5",
+            inquiry: r.id,
+            a: { kind: "stance", inquiry: r.id, project: a.project, version: a.version, claim: a.claim },
+            b: { kind: "stance", inquiry: r.id, project: b.project, version: b.version, claim: b.claim },
+            why: "two projects concluded the same question, each adopting a claim, and the claims' words differ. Two projects' answers are plurality, not a defect, until a member finds no named difference"
+          });
+        }
+      }
+      if (page.length < 100) break;
+    }
+    return {
+      pairs,
+      truncated: truncated3,
+      found,
+      notes: examinedCut ? [`K5 examined the first ${K5_INQUIRIES_EXAMINED} questions this viewer may see and stopped: the questions after them were not compared`] : []
+    };
+  }
+  /** R11: WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED. A LADDER OF EXISTENCE PROBES, and existence is
+   *  deliberately not a count: a census would cost an unbounded scan per rung on the one surface whose subject is
+   *  that the record is sparse. Each probe is `LIMIT 1` and rides the same viewer gate as the key's own join, so a
+   *  rung never reports material this caller may not see.
+   *
+   *  THE FIRST RUNG THAT IS EMPTY IS THE ANSWER, because absence at one level is not evidence of absence at the next.
+   *  `viewer` IS A RUNG AND IT IS THE FIRST ONE: a read made with no viewer stamp, or one the gate does not recognise,
+   *  is empty for a reason that is not about the record at all (R10), and nothing below it can be believed when it
+   *  fires. */
+  #ladder(key, viewer, scope, out = null) {
+    const rung = (level, sql, ...args) => ({ level, present: !!this.#one(sql, ...args) });
+    if (scope === "DENY") return [{ level: "viewer", present: false }];
+    if (key === "K5") {
+      const f9 = out && out.found || {};
+      return [
+        { level: "viewer", present: true },
+        { level: "inquiry", present: !!f9.inquiry },
+        { level: "drawing_projects", present: !!f9.drawing_projects },
+        { level: "concluded_stances", present: !!f9.concluded_stances },
+        { level: "differing_claim", present: !!f9.differing_claim }
+      ];
+    }
+    const gi = this.#gate("ib.bundle_id", viewer);
+    const gv = this.#gate("v.bundle_id", viewer);
+    const gs = this.#gate("s.bundle_id", viewer);
+    const vp = viewerPredicate(viewer);
+    const anyInquiry = () => rung(
+      "inquiry",
+      `SELECT 1 AS x FROM bundles b WHERE b.object_type='inquiry' AND (${vp.sql}) LIMIT 1`,
+      ...vp.args
+    );
+    const heldReading = (extra) => this.#one(
+      `SELECT 1 AS x FROM inquiry_basis_versions v
+        WHERE v.state='accepted' AND v.hidden=0 ${extra} AND (${gv.sql}) LIMIT 1`,
+      ...gv.args
+    );
+    if (key === "K1") return [
+      { level: "viewer", present: true },
+      anyInquiry(),
+      rung("leg", `SELECT 1 AS x FROM inquiry_basis ib WHERE (${gi.sql}) LIMIT 1`, ...gi.args),
+      rung("role", `SELECT 1 AS x FROM inquiry_basis s JOIN inquiry_basis c ON c.bundle_id=s.bundle_id
+                     WHERE s.role='supports' AND c.role='cuts_against' AND (${gs.sql}) LIMIT 1`, ...gs.args),
+      rung("referent", `SELECT 1 AS x FROM inquiry_basis s JOIN inquiry_basis c ON c.bundle_id=s.bundle_id
+                         WHERE s.role='supports' AND c.role='cuts_against'
+                           AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
+                           AND (${gs.sql}) LIMIT 1`, ...gs.args)
+    ];
+    if (key === "K2") return [
+      { level: "viewer", present: true },
+      anyInquiry(),
+      rung("subject", `SELECT 1 AS x FROM bundles b WHERE b.inquiry_subject_entity IS NOT NULL
+                        AND b.inquiry_subject_entity <> '' AND (${vp.sql}) LIMIT 1`, ...vp.args),
+      { level: "reading", present: !!heldReading("") },
+      { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") }
+    ];
+    if (key === "K3") return [
+      { level: "viewer", present: true },
+      anyInquiry(),
+      { level: "reading", present: !!heldReading("") },
+      { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") },
+      rung("referent", `SELECT 1 AS x FROM inquiry_basis_version_legs l
+                         JOIN inquiry_basis_versions v ON v.bundle_id=l.bundle_id AND v.name=l.name
+                        WHERE v.state='accepted' AND v.hidden=0
+                          AND v.claim IS NOT NULL AND v.claim <> ''
+                          AND (l.content_id IS NOT NULL OR l.target_type='information')
+                          AND (${gv.sql}) LIMIT 1`, ...gv.args)
+    ];
+    const gc = this.#gate("c.bundle_id", viewer);
+    const cited = this.#citedBy("c.content_id", viewer);
+    const g1 = this.#gate("c1.bundle_id", viewer);
+    const g2 = this.#gate("c2.bundle_id", viewer);
+    return [
+      { level: "viewer", present: true },
+      rung("content", `SELECT 1 AS x FROM content c WHERE (${gc.sql}) LIMIT 1`, ...gc.args),
+      rung("cited", `SELECT 1 AS x FROM content c WHERE ${cited.sql} AND (${gc.sql}) LIMIT 1`, ...cited.args, ...gc.args),
+      rung("resolution", `SELECT 1 AS x FROM content c
+                           JOIN resolutions r ON r.capture_sha=c.capture_sha AND r.established=1
+                          WHERE (${gc.sql}) LIMIT 1`, ...gc.args),
+      /* The same sight as every rung above: two established resolutions of different documents to one entity, each
+         document holding a passage this viewer may see (the key's own join is gated on its content rows). */
+      rung("shared_entity", `SELECT 1 AS x FROM resolutions r1
+                              JOIN resolutions r2 ON r2.entity_id=r1.entity_id AND r2.established=1
+                                                 AND r2.capture_sha > r1.capture_sha
+                             WHERE r1.established=1
+                               AND EXISTS (SELECT 1 FROM content c1 WHERE c1.capture_sha=r1.capture_sha AND (${g1.sql}))
+                               AND EXISTS (SELECT 1 FROM content c2 WHERE c2.capture_sha=r2.capture_sha AND (${g2.sql}))
+                             LIMIT 1`, ...g1.args, ...g2.args)
+    ];
+  }
+  /** op=contradictionpairs — THE PAIRING READ (R5–R12). A READ: it judges nothing and writes nothing, and both are
+   *  said in the answer: `judgement.state` is `NOT_REACHED` and `wrote` is false.
+   *
+   *  WHY `judgement` IS PUBLISHED AS A FIELD AT ALL: a list of pairs with no verdict beside it reads as a list of
+   *  CONTRADICTIONS. NO LABEL VOCABULARY IS PUBLISHED HERE (R12): the five labels are the JUDGEMENT's output, and
+   *  publishing them from a surface that assigns none would read as a detector that had declined to label.
+   *
+   *  EACH KEY IS RUN EXACTLY ONCE (R7) and its result feeds both the per-key envelope and the flat pair list: two runs
+   *  of one key over a store written between them would publish a `formed` figure that does not match the pairs. */
+  pairs({ key = null, limit = null, viewer = null } = {}) {
+    const names = Object.keys(CONTRADICTION_KEYS);
+    const asked = key == null || String(key).trim() === "" ? null : String(key).trim().toUpperCase();
+    if (asked !== null && !Object.prototype.hasOwnProperty.call(CONTRADICTION_KEYS, asked)) {
+      const row2 = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
+      return {
+        ok: false,
+        reason: "CONTRADICTION_KEY_UNKNOWN",
+        code: "CONTRADICTION_KEY_UNKNOWN",
+        check: row2.check,
+        translation: row2.translation,
+        keys: names,
+        detail: `the record pairs by ${names.join(", ")} and holds no key '${String(key).slice(0, 40)}'`
+      };
+    }
+    const max = CONTRADICTION_PAIRS_MAX;
+    const n = limit === null || limit === void 0 || limit === "" ? NaN : Number(limit);
+    const cap = Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), max) : max;
+    const scope = viewerPredicate(viewer).scope;
+    const denied = scope === "DENY";
+    const run = new Set(asked ? [asked] : names);
+    const pairs = [];
+    const keys = names.map((name) => {
+      const spec = CONTRADICTION_KEYS[name];
+      if (!run.has(name))
+        return {
+          ...spec,
+          ran: false,
+          formed: 0,
+          limit: cap,
+          truncated: false,
+          levels: null,
+          notes: [],
+          absence: {
+            level: "not_run",
+            says: `this key was not run: the request named ${asked}. Nothing here is a statement about what ${name} would have found`
+          }
+        };
+      const out = denied ? { pairs: [], truncated: false, notes: [] } : name === "K1" ? this.#k1(viewer, cap) : name === "K2" ? this.#k2(viewer, cap) : name === "K3" ? this.#k3(viewer, cap) : name === "K4" ? this.#k4(viewer, cap) : this.#k5(viewer, cap);
+      pairs.push(...out.pairs);
+      const ladder = this.#ladder(name, viewer, scope, out);
+      const empty = ladder.find((r) => !r.present);
+      const level = out.pairs.length ? null : empty ? empty.level : LAST_LEVEL[name];
+      return {
+        ...spec,
+        ran: true,
+        formed: out.pairs.length,
+        limit: cap,
+        truncated: out.truncated,
+        levels: ladder,
+        notes: out.notes,
+        absence: level === null ? null : { level, says: CONTRADICTION_ABSENCE[level] },
+        ...name === "K3" ? { arms: out.arms ?? {
+          passage: { formed: 0, truncated: false },
+          document: { formed: 0, truncated: false }
+        } } : {},
+        ...name === "K4" && !denied ? { undetermined: out.undetermined, indistinct: out.indistinct, undetermined_detail: out.missing } : {}
+      };
+    });
+    const formed = pairs.length;
+    const undetermined = keys.reduce((a, k) => a + (k.undetermined || 0), 0);
+    return {
+      ok: true,
+      wrote: false,
+      pairs_formed: formed,
+      limit: cap,
+      bound: max,
+      bounded: true,
+      viewer_scope: scope,
+      keys,
+      pairs,
+      /* R12 (N345): a run's judgements over these pairs are held APART from the pairing, and read through
+         `candidatesFor` (R25), which shows each only at the weight its label and key give it. */
+      judgement: {
+        state: "HELD_APART",
+        read: "candidatesFor",
+        by: "the machine, inside an investigative run, as labelled machine work (DEC-24)",
+        why: "whether either side of a pair here CONTRADICTS the other is semantic work this read does not do. A run's judgement over a pair enters only as a labelled proposal, and is read through candidatesFor, never here. A pair is not a claim that its two sides disagree: it is a claim that they are WORTH COMPARING, by the named key, and nothing more"
+      },
+      says: denied ? "this read compared NOTHING, because no viewer the record recognises was stamped on it. That is an outage and not a statement about the record: every key below reads empty for want of a reader, and none of them looked" : `${formed} candidate pair(s) over ${[...run].join(", ")}, each carrying the KEY that brought its two sides together` + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a date or a doctype their readers never stated was needed to tell the two apart, and that is COUNTED rather than rounded to agreement` : "") + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is never evidence of absence at the next, and a key with nothing to join says the record is SPARSE there, not that it is consistent. The pairing answers pairs; a run's judgements over them are read through candidatesFor`
+    };
+  }
+  /* ===================================================================== *
+   * THE CANDIDATE DOOR (REC-147 / IC-318; R13–R17). Section 5, section 8, section 9 item 3.
+   * ===================================================================== */
+  /** R14: a side of a formed pair AS A REFERENT AT A VERSION (§8). A claim is the reading it is held on
+   *  (`inquiry|version`), versioned by the SHA-256 of the claim text compared; a leg or an extent is its content row
+   *  (or its capture where none is named), versioned by the capture, whose bytes never change. `bundle` is where the
+   *  side lives, for purge (R22, D-113). */
+  #side(s) {
+    if (s && s.kind === "claim")
+      return {
+        kind: "claim",
+        ref: `${String(s.inquiry ?? "")}|${String(s.version ?? "")}`,
+        version: sha256HexSync(String(s.claim ?? "")),
+        bundle: s.inquiry == null ? null : String(s.inquiry)
+      };
+    if (s && s.kind === "stance")
+      return {
+        kind: "stance",
+        ref: `${String(s.inquiry ?? "")}|${String(s.project ?? "")}|${String(s.version ?? "")}`,
+        version: sha256HexSync(String(s.claim ?? "")),
+        bundle: s.project == null ? null : String(s.project)
+      };
+    const cap = s?.capture_sha == null ? "" : String(s.capture_sha);
+    const cid = s?.content_id == null || s.content_id === "" ? null : String(s.content_id);
+    const home = cid ? this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, cid) : cap ? this.#one(`SELECT bundle_id FROM content WHERE capture_sha=? ORDER BY bundle_id LIMIT 1`, cap) : null;
+    return {
+      kind: s?.kind === "leg" ? "leg" : "extent",
+      ref: cid ?? cap,
+      version: cap,
+      bundle: home ? home.bundle_id : null
+    };
+  }
+  /** R15, R17: THE ONE APPEND SITE of `contradiction_candidates` (§8). INSERT OR IGNORE on the candidate digest: a row
+   *  over the same key and the same two referents at the same versions is already there, and is left exactly as it
+   *  was. Answers whether a row was written. Nothing updates or deletes a candidate but its bundles' purge. */
+  #append(row2) {
+    if (this.#one(`SELECT candidate FROM contradiction_candidates WHERE candidate=?`, row2.candidate)) return false;
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_candidates`)?.n ?? 0) + 1;
+    this.#sql.exec(
+      `INSERT OR IGNORE INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id,
+         b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at, a_side, b_side, seq)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed','machine',?,?,?,?)`,
+      row2.candidate,
+      row2.key,
+      row2.a.kind,
+      row2.a.ref,
+      row2.a.version,
+      row2.a.bundle,
+      row2.b.kind,
+      row2.b.ref,
+      row2.b.version,
+      row2.b.bundle,
+      row2.run,
+      row2.proposed_by,
+      row2.label,
+      row2.reason,
+      row2.at,
+      JSON.stringify(row2.a_side),
+      JSON.stringify(row2.b_side),
+      seq
+    );
+    return true;
+  }
+  /** op=contradictionpropose — A RUN'S JUDGEMENT OVER FORMED PAIRS ENTERS THE RECORD AS PROPOSED CANDIDATES (R13–R16).
+   *
+   *  The plane cannot judge (§2); what it holds is WHAT WAS COMPARED and WHAT WAS PROPOSED about it. So every refusal
+   *  is asked of the whole batch before anything is written (a refused batch leaves nothing), and a proposal is
+   *  written only when it names a pair the plane ITSELF forms for this viewer now, with the referents and versions
+   *  the PLANE read — a pair a caller hands in is a provenance hop a caller can invent. A claim side must carry the
+   *  claim text it judged: a claim that changed since is a different referent (R14), so that proposal is about a
+   *  pair that is no longer formed and is refused rather than written against text the machine never saw.
+   *
+   *  THE LABEL IS A PROPOSAL (DEC-24): every row is `origin = 'machine'`, `state = 'proposed'`, and nothing here
+   *  grades, edits or closes either side (R19). §7's over-strictness gate is a property of the JUDGEMENT (M-162
+   *  measured the prompt `../contradiction.mjs` pins, R2). */
+  propose({ run, proposals, proposedBy, viewer = null, caller = null, at: at17 = null } = {}) {
+    const refusal19 = (code, detail, extra) => {
+      const row2 = CONTRADICTION_CANDIDATE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row2.check,
+        translation: row2.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const gate = this.#runRefusals({ run, proposedBy, viewer, caller });
+    if (gate) return gate;
+    const runId = _Contradiction.#runId(run);
+    const list2 = Array.isArray(proposals) ? proposals : [];
+    if (list2.length === 0)
+      return refusal19(
+        "CANDIDATE_NO_PROPOSALS",
+        "an empty batch is not a judgement that found nothing; that is an observation for the run's log",
+        { run: runId }
+      );
+    const item = (i) => list2[i] && typeof list2[i] === "object" ? list2[i] : {};
+    for (let i = 0; i < list2.length; i++) {
+      const p = item(i);
+      if (!CONTRADICTION_LABELS.includes(p.label))
+        return refusal19(
+          "CANDIDATE_LABEL_UNKNOWN",
+          `proposal ${i} carries '${String(p.label).slice(0, 30)}', which is not one of ${CONTRADICTION_LABELS.join(", ")}`,
+          { run: runId, index: i, labels: [...CONTRADICTION_LABELS] }
+        );
+    }
+    for (let i = 0; i < list2.length; i++) {
+      const p = item(i);
+      if (typeof p.reason !== "string" || !p.reason.trim())
+        return refusal19("CANDIDATE_NO_REASON", `proposal ${i} carries no reason`, { run: runId, index: i });
+    }
+    const read2 = this.pairs({ viewer });
+    const handle = (x) => `${x.kind}|${x.ref}@${x.version}`;
+    const formed = /* @__PURE__ */ new Map();
+    for (const q6 of Array.isArray(read2.pairs) ? read2.pairs : []) {
+      const a = this.#side(q6.a), b = this.#side(q6.b);
+      formed.set(`${q6.key}:${[handle(a), handle(b)].sort().join(" <> ")}`, { key: q6.key, a, b, pair: q6 });
+    }
+    const cutKeys = (read2.keys ?? []).filter((k) => k.truncated).map((k) => k.key);
+    const stamp2 = at17 || this.#now();
+    const rows = [];
+    for (let i = 0; i < list2.length; i++) {
+      const p = item(i);
+      const key = String(p.key ?? "").trim().toUpperCase();
+      const a = this.#side(p.a), b = this.#side(p.b);
+      const f9 = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
+      if (!f9)
+        return refusal19(
+          "CANDIDATE_PAIR_NOT_FORMED",
+          `proposal ${i} names a ${key || "(no key)"} pair the pairing does not form for this viewer now` + (cutKeys.length ? ` (the read was cut at its bound on ${cutKeys.join(", ")}, and a pair past the bound is not formed here)` : ""),
+          { run: runId, index: i, cut_keys: cutKeys }
+        );
+      const inOrder = handle(f9.a) <= handle(f9.b);
+      const [x, y] = inOrder ? [f9.a, f9.b] : [f9.b, f9.a];
+      const { a: pa, b: pb, key: _k, ...context } = f9.pair;
+      const [sx, sy] = inOrder ? [pa, pb] : [pb, pa];
+      rows.push({
+        candidate: sha256HexSync(canonicalJson({ v: 1, key: f9.key, sides: [handle(x), handle(y)] })),
+        key: f9.key,
+        a: x,
+        b: y,
+        run: runId,
+        proposed_by: proposedBy.trim(),
+        a_side: { ...sx, context },
+        b_side: { ...sy, context },
+        label: p.label,
+        reason: p.reason.trim().slice(0, CANDIDATE_REASON_MAX),
+        at: stamp2
+      });
+    }
+    const written = this.#record.transact(() => rows.map((row2) => this.#append(row2)));
+    const candidates = rows.map((row2, i) => ({
+      new: written[i],
+      ...this.#one(`SELECT ${STORED_ROW} FROM contradiction_candidates WHERE candidate=?`, row2.candidate)
+    }));
+    const n = written.filter(Boolean).length;
+    return {
+      ok: true,
+      run: runId,
+      proposed: rows.length,
+      written: n,
+      unchanged: rows.length - n,
+      candidates,
+      says: `${n} candidate(s) written as PROPOSED machine work; ${rows.length - n} named two referents at versions already proposed over, and were left exactly as they were (\xA78). A candidate is a proposal about two things as they were, never a finding: no member has judged it.`
+    };
+  }
+  /* ===================================================================== *
+   * PRESENT (N345; R24–R29). What a candidate IS at a read is derived from the candidate, its acts and its inquiry's
+   * document (`./derive.mjs`), never stored (R42).
+   * ===================================================================== */
+  /** A viewer's sight of one bundle (membership R43): a machine sees every bundle; a member through the gate; an
+   *  absent or unrecognised viewer nothing. A null bundle names nothing to withhold and passes; one that is gone is
+   *  withheld from a member (fail closed). */
+  #sees(bundleId, viewer) {
+    const g = viewerPredicate(viewer);
+    if (g.scope === "DENY") return false;
+    if (g.scope === "member") return true;
+    if (bundleId === null || bundleId === void 0 || bundleId === "") return true;
+    return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${g.sql})`, String(bundleId), ...g.args);
+  }
+  /** The bundle a content row is filed in, or null when the row is not held. */
+  #contentHome(contentId) {
+    if (!contentId) return null;
+    const r = this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, String(contentId));
+    return r ? r.bundle_id : null;
+  }
+  /** Where a side lives (R10): a claim in its inquiry; a leg in its inquiry and its content row's bundle; an extent in
+   *  its content row's bundle; a stance in its inquiry and its project. */
+  #homes(side) {
+    if (!side) return [];
+    if (side.kind === "claim") return [side.inquiry];
+    if (side.kind === "stance") return [side.inquiry, side.project];
+    if (side.kind === "leg") return [side.inquiry, this.#contentHome(side.content_id)];
+    return [this.#contentHome(side.content_id)];
+  }
+  /** R10: a viewer may see a side when they may see every bundle it lives in. */
+  #sideSeen(side, viewer) {
+    return this.#homes(side).every((b) => this.#sees(b, viewer));
+  }
+  /** A candidate row read back: its sides as the plane formed them. A row written before the sides were kept is read
+   *  from its referents (a claim's inquiry and version, a part's content id), which is all it holds. */
+  #candidate(id) {
+    if (typeof id !== "string" || !id.trim()) return null;
+    const r = this.#one(`SELECT ${STORED_ROW}, seq FROM contradiction_candidates WHERE candidate=?`, id.trim());
+    if (!r) return null;
+    const side = (json5, kind, ref) => {
+      try {
+        if (json5) return JSON.parse(json5);
+      } catch {
+      }
+      if (kind === "claim") {
+        const [inquiry, version] = String(ref).split("|");
+        return { kind, inquiry, version };
+      }
+      if (kind === "stance") {
+        const [inquiry, project, version] = String(ref).split("|");
+        return { kind, inquiry, project, version };
+      }
+      return { kind, content_id: ref };
+    };
+    return { ...r, a: side(r.a_side, r.a_kind, r.a_ref), b: side(r.b_side, r.b_kind, r.b_ref) };
+  }
+  /** A candidate's acts, oldest first, with their JSON columns read. */
+  #acts(candidate) {
+    const j = (v) => {
+      try {
+        return v === null || v === void 0 ? null : JSON.parse(v);
+      } catch {
+        return null;
+      }
+    };
+    return this.#rows(`SELECT * FROM contradiction_acts WHERE candidate=? ORDER BY seq`, candidate).map((a) => ({
+      ...a,
+      coordinates: j(a.coordinates),
+      evidence: j(a.evidence),
+      qualifiers: j(a.qualifiers),
+      acceptance: j(a.acceptance),
+      standing: j(a.standing)
+    }));
+  }
+  /** The candidate's contradiction inquiry (`inquiry` R48): its id and its link, or nulls. A read that fails answers
+   *  none, never a guess. */
+  #linkOf(candidate) {
+    const i = this.#i();
+    try {
+      const id = typeof i.inquiryOfCandidate === "function" ? i.inquiryOfCandidate(candidate) : null;
+      if (!id) return { inquiry: null, link: null };
+      const link = typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
+      return { inquiry: id, link };
+    } catch {
+      return { inquiry: null, link: null };
+    }
+  }
+  /** R24, R26: what a candidate is now. */
+  #view(row2) {
+    const acts = this.#acts(row2.candidate);
+    const noDifference = acts.some((a) => a.act === "clarify" && a.choice === "no_difference");
+    const { weight, why } = weightOf(row2.label, row2.key, noDifference);
+    const { inquiry, link } = this.#linkOf(row2.candidate);
+    const st = stateOf(acts, link, inquiry);
+    return { weight, unshown_why: why, ...st, acts, no_difference: noDifference };
+  }
+  /** The family of a resolution kind, through `inquiry` R46; null when it is not a kind or cannot be read. */
+  #family(kind) {
+    const f9 = this.#i().resolutionFamily;
+    if (typeof f9 === "function") {
+      try {
+        return f9(kind);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+  /** R24, R49: the projects reached through one side, and whether the list was cut. A claim, leg or stance side reaches
+   *  the projects drawing on its inquiry (`basis-versions` R37); an extent side, those drawing on each inquiry with a leg
+   *  on its content row (`inquiry` R40), at most `REACH_INQUIRIES_MAX` inquiries; a stance side of K5, its own project.
+   *  At most `REACH_PROJECTS_MAX` projects per inquiry. Read as the record holds it, whoever asks. */
+  #reachOf(side) {
+    const out = { projects: [], truncated: false };
+    const add = (id) => {
+      if (id && !out.projects.includes(id)) out.projects.push(id);
+    };
+    if (!side) return out;
+    if (side.kind === "stance") {
+      add(side.project);
+      return out;
+    }
+    let inquiries = [];
+    if (side.kind === "claim" || side.kind === "leg") inquiries = side.inquiry ? [side.inquiry] : [];
+    else if (side.content_id) {
+      const rows = this.#rows(
+        `SELECT DISTINCT bundle_id FROM inquiry_basis WHERE content_id=? ORDER BY bundle_id LIMIT ?`,
+        String(side.content_id),
+        REACH_INQUIRIES_MAX + 1
+      );
+      if (rows.length > REACH_INQUIRIES_MAX) out.truncated = true;
+      inquiries = rows.slice(0, REACH_INQUIRIES_MAX).map((r) => r.bundle_id);
+    }
+    const bv = this.#b();
+    for (const inq of inquiries) {
+      const list2 = bv && typeof bv.projectsDrawingOn === "function" ? bv.projectsDrawingOn(inq, INTERNAL) || [] : [];
+      if (list2.truncated) out.truncated = true;
+      for (const p of list2.slice(0, REACH_PROJECTS_MAX)) add(p.id);
+    }
+    out.projects.sort();
+    return out;
+  }
+  /** R24: the reach of a candidate (the projects its duty is held for), and R49's parties, which are the same set read
+   *  side by side. */
+  #parties(row2) {
+    const a = this.#reachOf(row2.a), b = this.#reachOf(row2.b);
+    const all = [.../* @__PURE__ */ new Set([...a.projects, ...b.projects])].sort();
+    return { a, b, all, truncated: a.truncated || b.truncated };
+  }
+  /** The stated doctype and date of a capture (R9), as the pairing reads them. */
+  #docOf(capture) {
+    if (!capture) return { read: false, doctype: null, date: null };
+    try {
+      return this.#doc(capture, /* @__PURE__ */ new Map());
+    } catch {
+      return { read: false, doctype: null, date: null };
+    }
+  }
+  /** A side as a member reads it (R25, R50): verbatim, with its source, stated date, doctype and capture, from what
+   *  the record holds now. */
+  #shown(side) {
+    if (!side) return null;
+    const { context: _c, ...s } = side;
+    if (s.kind === "claim" || s.kind === "stance") {
+      const t = s.inquiry ? this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
+      return {
+        ...s,
+        text: s.claim ?? null,
+        source: {
+          inquiry: s.inquiry ?? null,
+          title: t ? t.title : null,
+          ...s.kind === "stance" ? { project: s.project ?? null } : {}
+        },
+        date: null,
+        doctype: null,
+        capture_sha: null
+      };
+    }
+    const row2 = s.content_id ? this.#one(`SELECT capture_sha, bundle_id, ref, extent_kind, stale FROM content WHERE content_id=?`, s.content_id) : null;
+    const capture = row2 ? row2.capture_sha : s.capture_sha ?? null;
+    const d = this.#docOf(capture);
+    return {
+      ...s,
+      capture_sha: capture,
+      ref: row2 ? row2.ref : s.ref ?? null,
+      source: { bundle: row2 ? row2.bundle_id : null, ref: row2 ? row2.ref : s.ref ?? null },
+      date: d.date,
+      doctype: d.doctype,
+      stale: row2 ? !!row2.stale : s.stale ?? null
+    };
+  }
+  /** R37: the recommendations standing for a candidate now (its state open or explained), each labelled machine work. */
+  #standing(row2, view) {
+    if (!isStanding(view.state)) return [];
+    return this.#rows(`SELECT recommendation, run, coordinate, proposed_by, reason, origin, at
+                         FROM contradiction_recommendations WHERE candidate=? ORDER BY seq`, row2.candidate).map((r) => ({
+      ...r,
+      machine_work: true,
+      says: "a machine's recommendation of a respect in which the two may differ: not a member's choice"
+    }));
+  }
+  /** R25's `default_question`: the plane's stated default wording, which a member accepts or rewrites (R35). It is
+   *  shown, never sent for them. */
+  #defaultQuestion(row2) {
+    const t = (s) => {
+      const v = this.#shown(s);
+      return String(v?.text ?? v?.ref ?? v?.content_id ?? "").replace(/\s+/g, " ").trim();
+    };
+    const q6 = `Can both of these hold, and if not, which is so: "${t(row2.a).slice(0, 180)}" and "${t(row2.b).slice(0, 180)}"?`;
+    return q6.slice(0, TEXT_CAPS.question);
+  }
+  /** The machine's label and reason, labelled as the machine's (DEC-24). */
+  #machine(row2) {
+    return {
+      label: row2.label,
+      reason: row2.reason,
+      run: row2.run,
+      proposed_by: row2.proposed_by,
+      at: row2.at,
+      origin: "machine",
+      machine_work: true,
+      says: "proposed machine work, no finding: a member decides"
+    };
+  }
+  /** R26's resolution as a member reads it: the kind, who made it and how. */
+  #resolutionOf(view) {
+    if (view.state !== "resolved") return null;
+    if (view.inquiry) return {
+      kind: view.kind,
+      family: this.#family(view.kind),
+      by: "inquiry",
+      inquiry: view.inquiry,
+      resolution: view.resolution
+    };
+    const a = view.act;
+    return {
+      kind: view.kind,
+      family: view.kind === "corrected" ? "CORRECTED" : "DISSOLVED",
+      by: "act",
+      member: a.author,
+      at: a.at,
+      choice: a.choice,
+      coordinates: a.coordinates,
+      explanation: a.explanation,
+      evidence: a.evidence,
+      wrong_side: a.wrong_side,
+      reason: a.wrong_reason,
+      qualifiers: a.qualifiers
+    };
+  }
+  /** A project's name, for a revealed party (R52): the bundle's title. */
+  #projectName(id) {
+    const r = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, id);
+    return r ? r.title : null;
+  }
+  /** R51, R52: a candidate's opt-ins and whether a reveal is recorded. */
+  #optins(candidate) {
+    const rows = this.#rows(`SELECT * FROM contradiction_optins WHERE candidate=? ORDER BY seq`, candidate);
+    const optins = rows.filter((r) => r.kind === "optin");
+    const revealed = rows.find((r) => r.kind === "revealed") || null;
+    return { optins, revealed, opted: [...new Set(optins.map((r) => r.project_id))] };
+  }
+  /** R50–R54's per-party view of a conflict between projects, for `project`. Nothing here names the other side or
+   *  counts the parties; before a reveal, no other party is named. */
+  #partyView(row2, project) {
+    const { optins, revealed, opted } = this.#optins(row2.candidate);
+    const own2 = optins.find((r) => r.project_id === project) || null;
+    const isRevealed = !!revealed && opted.includes(project);
+    const parties = isRevealed ? opted.filter((p) => p !== project).map((p) => ({ id: p, name: this.#projectName(p) })) : null;
+    return {
+      opted_in: own2 ? { member: own2.author, at: own2.at, words: own2.words ?? null } : null,
+      asked_by_another: opted.some((p) => p !== project),
+      revealed: isRevealed,
+      ...isRevealed ? { parties } : {},
+      ...this.#relayed(row2, project, isRevealed, opted)
+    };
+  }
+  /** R54: the responses relayed to `project` in its notice: the other opted-in parties' responses made after this
+   *  project's own latest one (all of them when it has none), newest first, at most `NOTICE_RESPONSES_MAX`. Nothing is
+   *  relayed before the reveal. A relayed response carries its text, its chosen disclosures, its project and its
+   *  instant, and never its author. */
+  #relayed(row2, project, isRevealed, opted) {
+    if (!isRevealed) return { responses: [], responses_truncated: false };
+    const ownLast = this.#one(
+      `SELECT MAX(seq) AS s FROM contradiction_responses WHERE candidate=? AND project_id=?`,
+      row2.candidate,
+      project
+    )?.s ?? 0;
+    const others = opted.filter((p) => p !== project);
+    if (!others.length) return { responses: [], responses_truncated: false };
+    const rs = this.#rows(
+      `SELECT * FROM contradiction_responses WHERE candidate=? AND seq > ?
+                             AND project_id IN (SELECT value FROM json_each(?)) ORDER BY seq DESC LIMIT ?`,
+      row2.candidate,
+      ownLast,
+      JSON.stringify(others),
+      NOTICE_RESPONSES_MAX + 1
+    );
+    return {
+      responses: rs.slice(0, NOTICE_RESPONSES_MAX).map((r) => this.#relay(r)),
+      responses_truncated: rs.length > NOTICE_RESPONSES_MAX
+    };
+  }
+  /** One response as relayed (R54): what its responder chose to share, and nothing else. */
+  #relay(r) {
+    return {
+      response: r.response,
+      text: r.text,
+      ...r.cover !== null && r.cover !== void 0 ? { cover: r.cover } : {},
+      ...r.email ? { email: r.email, email_says: "stated, not verified" } : {},
+      project: { id: r.project_id, name: this.#projectName(r.project_id) },
+      at: r.at
+    };
+  }
+  /** A candidate as R25 answers it to a viewer who sees it whole. */
+  #present(row2, view, viewer) {
+    const parties = view.weight === "duty" || view.weight === "plurality" || view.weight === "lead" ? this.#parties(row2) : null;
+    const member = viewerPredicate(viewer).member;
+    const m = this.#m();
+    const between = parties && isProjectConflict(view.weight, view.state) && member ? parties.all.filter((p) => m && typeof m.isJoinedParticipant === "function" && m.isJoinedParticipant(p, member)).map((p) => ({ project: p, ...this.#partyView(row2, p) })) : [];
+    return {
+      candidate: row2.candidate,
+      key: row2.key,
+      why: row2.a?.context?.why ?? CONTRADICTION_KEYS[row2.key]?.why ?? null,
+      a: this.#shown(row2.a),
+      b: this.#shown(row2.b),
+      machine: this.#machine(row2),
+      weight: view.weight,
+      state: view.state,
+      resolution: this.#resolutionOf(view),
+      inquiry: view.inquiry,
+      recommendations: this.#standing(row2, view),
+      reach: parties && view.weight !== "not_shown" ? { projects: parties.all, truncated: parties.truncated } : null,
+      default_question: this.#defaultQuestion(row2),
+      ...between.length ? { between_projects: between } : {}
+    };
+  }
+  /** R25's subject: exactly one of the six. */
+  #subjectOf(on) {
+    const o = on && typeof on === "object" && !Array.isArray(on) ? on : {};
+    const named = ["inquiry", "content", "entity", "bundle", "project", "candidate"].filter((k) => typeof o[k] === "string" && o[k].trim());
+    return named.length === 1 ? { kind: named[0], id: o[named[0]].trim() } : null;
+  }
+  /** The candidates a subject names, newest first, at most `CANDIDATES_SCAN_MAX` (+1, to observe truncation). */
+  #candidatesNaming(subject) {
+    const cap = CANDIDATES_SCAN_MAX + 1;
+    const side = (col) => `json_extract(${col}, '$.inquiry')`;
+    const q6 = (where, ...args) => this.#rows(
+      `SELECT candidate FROM contradiction_candidates WHERE ${where} ORDER BY seq DESC, candidate LIMIT ?`,
+      ...args,
+      cap
+    ).map((r) => r.candidate);
+    switch (subject.kind) {
+      case "candidate":
+        return q6(`candidate = ?`, subject.id);
+      case "inquiry":
+        return q6(`(${side("a_side")} = ? OR ${side("b_side")} = ?)`, subject.id, subject.id);
+      case "content":
+        return q6(
+          `(json_extract(a_side, '$.content_id') = ? OR json_extract(b_side, '$.content_id') = ?
+                                  OR (a_kind IN ('leg','extent') AND a_ref = ?) OR (b_kind IN ('leg','extent') AND b_ref = ?))`,
+          subject.id,
+          subject.id,
+          subject.id,
+          subject.id
+        );
+      case "entity":
+        return q6(
+          `(json_extract(a_side, '$.context.subject_entity') = ? OR json_extract(a_side, '$.context.entity_id') = ?)`,
+          subject.id,
+          subject.id
+        );
+      case "bundle":
+        return q6(
+          `(a_bundle_id = ? OR b_bundle_id = ? OR ${side("a_side")} = ? OR ${side("b_side")} = ?)`,
+          subject.id,
+          subject.id,
+          subject.id,
+          subject.id
+        );
+      case "project": {
+        const ids = this.#projectInquiries(subject.id);
+        const j = JSON.stringify(ids);
+        return q6(
+          `(${side("a_side")} IN (SELECT value FROM json_each(?)) OR ${side("b_side")} IN (SELECT value FROM json_each(?))
+                   OR json_extract(a_side, '$.project') = ? OR json_extract(b_side, '$.project') = ?
+                   OR json_extract(a_side, '$.content_id') IN (SELECT content_id FROM inquiry_basis
+                        WHERE content_id IS NOT NULL AND bundle_id IN (SELECT value FROM json_each(?)))
+                   OR json_extract(b_side, '$.content_id') IN (SELECT content_id FROM inquiry_basis
+                        WHERE content_id IS NOT NULL AND bundle_id IN (SELECT value FROM json_each(?))))`,
+          j,
+          j,
+          subject.id,
+          subject.id,
+          j,
+          j
+        );
+      }
+      default:
+        return [];
+    }
+  }
+  /** Every inquiry a project draws on (`basis-versions` R41, page by page). */
+  #projectInquiries(project) {
+    const bv = this.#b();
+    if (!bv || typeof bv.projectQuestions !== "function") return [];
+    const out = [];
+    let after = null;
+    for (let i = 0; i < 64; i++) {
+      const page = bv.projectQuestions({ project, after, limit: 500 }) || { items: [] };
+      for (const it of page.items || []) out.push(it.inquiry);
+      if (!page.cursor) break;
+      after = page.cursor;
+    }
+    return out;
+  }
+  /** op=contradictioncandidates — R25: the candidates shown to a viewer about one thing. */
+  candidatesFor({ on = null, label = null, weight = null, state = null, after = null, limit = null, viewer = null } = {}) {
+    try {
+      const subject = this.#subjectOf(on);
+      if (!subject) {
+        const row2 = CONTRADICTION_PAIR_CHECKS.CANDIDATES_NO_SUBJECT;
+        return {
+          ok: false,
+          reason: "CANDIDATES_NO_SUBJECT",
+          code: "CANDIDATES_NO_SUBJECT",
+          check: row2.check,
+          translation: row2.translation,
+          detail: "name exactly one of inquiry, content, entity, bundle, project or candidate"
+        };
+      }
+      const n = Number(limit);
+      const cap = limit === null || limit === void 0 || limit === "" || !Number.isFinite(n) || n < 1 ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
+      const ids = this.#candidatesNaming(subject);
+      const scanCut = ids.length > CANDIDATES_SCAN_MAX;
+      const notShown = { precision: 0, unrelated: 0 };
+      let unmeasured = 0, visible = 0, shown2 = 0;
+      let items = [];
+      for (const id of ids.slice(0, CANDIDATES_SCAN_MAX)) {
+        const row2 = this.#candidate(id);
+        if (!row2 || !this.#sideSeen(row2.a, viewer) || !this.#sideSeen(row2.b, viewer)) continue;
+        visible += 1;
+        const view = this.#view(row2);
+        if (view.weight === "not_shown") {
+          if (view.unshown_why === K5_UNSHOWN_WHY) unmeasured += 1;
+          else if (notShown[row2.label] !== void 0) notShown[row2.label] += 1;
+          continue;
+        }
+        shown2 += 1;
+        if (subject.kind === "project") {
+          const reach2 = this.#parties(row2);
+          if (!reach2.all.includes(subject.id)) continue;
+        }
+        if (label !== null && label !== void 0 && label !== "" && row2.label !== label) continue;
+        if (weight !== null && weight !== void 0 && weight !== "" && view.weight !== weight) continue;
+        if (state !== null && state !== void 0 && state !== "" && view.state !== state) continue;
+        items.push({ row: row2, view });
+      }
+      let undated = 0;
+      if (subject.kind === "entity") {
+        const dateOf = (x) => {
+          const ds = [this.#shown(x.row.a)?.date, this.#shown(x.row.b)?.date].filter(Boolean).sort();
+          return ds[0] ?? null;
+        };
+        const dated = [], none = [];
+        for (const x of items) {
+          const d = dateOf(x);
+          if (d) dated.push({ ...x, d });
+          else none.push(x);
+        }
+        dated.sort((p, q6) => p.d < q6.d ? -1 : p.d > q6.d ? 1 : 0);
+        undated = none.length;
+        items = [...dated, ...none];
+      }
+      if (typeof after === "string" && after) {
+        const at17 = items.findIndex((x) => x.row.candidate === after);
+        items = at17 === -1 ? [] : items.slice(at17 + 1);
+      }
+      const page = items.slice(0, cap);
+      const truncated3 = items.length > cap || scanCut;
+      const candidates = page.map((x) => this.#present(x.row, x.view, viewer));
+      const empty = candidates.length ? null : visible === 0 ? { level: "none_judged", says: "no candidate this viewer may see names it: no run's judgement is held here. Whether the pairing forms pairs here is the pairing read's answer" } : shown2 === 0 ? {
+        level: "none_shown",
+        says: "candidates are held here, and each is one the record does not show as a tension",
+        not_shown: notShown,
+        ...unmeasured ? { unmeasured } : {}
+      } : { level: "none_matching", says: "candidates are shown here, and none matches the filters or follows the cursor asked" };
+      return {
+        ok: true,
+        wrote: false,
+        on: { [subject.kind]: subject.id },
+        limit: cap,
+        truncated: truncated3,
+        cursor: candidates.length ? candidates[candidates.length - 1].candidate : null,
+        candidates,
+        not_shown: notShown,
+        ...unmeasured ? { unmeasured, unmeasured_why: K5_UNSHOWN_WHY } : {},
+        ...subject.kind === "entity" ? { undated } : {},
+        empty
+      };
+    } catch (e) {
+      return {
+        ok: true,
+        wrote: false,
+        candidates: [],
+        truncated: false,
+        undetermined: true,
+        empty: { level: "undetermined", says: `the read failed and nothing is claimed about it (${String(e && e.message || e).slice(0, 120)})` }
+      };
+    }
+  }
+  /** A referent as asked (R27): `{ref, version}`, or a side as the pairing forms it, read as R14 reads it. */
+  #referentOf(x) {
+    if (!x || typeof x !== "object") return null;
+    if (typeof x.ref === "string" && x.ref && typeof x.version === "string" && x.version)
+      return { ref: x.ref, version: x.version };
+    if (typeof x.kind === "string") {
+      const s = this.#side(x);
+      return s.ref ? { ref: s.ref, version: s.version } : null;
+    }
+    return null;
+  }
+  /** Which side of a candidate a referent is: `a`, `b` or null. */
+  static #whichSide(row2, ref) {
+    if (row2.a_ref === ref.ref && row2.a_version === ref.version) return "a";
+    if (row2.b_ref === ref.ref && row2.b_version === ref.version) return "b";
+    return null;
+  }
+  /** R27's marks one candidate puts on one of its sides, for a viewer. */
+  #marksOn(row2, which, viewer) {
+    const other = which === "a" ? "b" : "a";
+    if (!this.#sideSeen(row2[which], viewer)) return [];
+    const view = this.#view(row2);
+    const c = row2.candidate;
+    if (!this.#sideSeen(row2[other], viewer)) {
+      if (!isProjectConflict(view.weight, view.state)) return [];
+      const member = viewerPredicate(viewer).member;
+      const m = this.#m();
+      if (!member || !m || typeof m.isJoinedParticipant !== "function") return [];
+      return this.#reachOf(row2[which]).projects.filter((p) => m.isJoinedParticipant(p, member)).map((p) => ({ mark: "unseen_conflict", candidate: c, weight: view.weight, project: p }));
+    }
+    if (view.weight === "not_shown") return [];
+    const res = view.inquiry ? view.resolution || {} : null;
+    const act = view.act;
+    if (view.state === "open" && view.weight === "lead") return [{ mark: "lead", candidate: c }];
+    if (view.state === "open" && view.weight === "plurality") return [{ mark: "plurality", candidate: c }];
+    if ((view.state === "open" || view.state === "taken_up") && view.weight === "duty")
+      return [{ mark: "in_tension", candidate: c, ...view.inquiry ? { inquiry: view.inquiry } : {} }];
+    if (view.state === "taken_up") return [];
+    if (view.state === "explained_not_shown")
+      return [{
+        mark: "softened",
+        candidate: c,
+        explanation: act.explanation ?? null,
+        member: act.author,
+        coordinates: act.coordinates ?? [],
+        qualifier: act.qualifiers ? act.qualifiers[which] ?? null : null,
+        qualifier_standing: "hypothesis"
+      }];
+    if (view.state !== "resolved") return [];
+    const family = view.inquiry ? this.#family(view.kind) : view.kind === "corrected" ? "CORRECTED" : "DISSOLVED";
+    if (family === "CORRECTED") {
+      const wrong = view.inquiry ? res.wrong_side : act.wrong_side;
+      if (wrong !== which) return [];
+      return [{
+        mark: "stale",
+        candidate: c,
+        corrected: true,
+        kind: view.kind,
+        reason: view.inquiry ? res.reason ?? null : act.wrong_reason,
+        member: view.inquiry ? null : act.author,
+        at: view.inquiry ? null : act.at,
+        ...view.inquiry ? { inquiry: view.inquiry } : { act: act.act_id },
+        says: "this side was named wrong by a member's resolution; it still resolves, and says it was corrected"
+      }];
+    }
+    if (view.kind === "dissolved")
+      return [{
+        mark: "qualified",
+        candidate: c,
+        coordinates: (view.inquiry ? res.coordinates : act.coordinates) ?? [],
+        qualifier: (view.inquiry ? res.qualifiers : act.qualifiers)?.[which] ?? null,
+        explanation: view.inquiry ? null : act.explanation ?? null,
+        qualifier_standing: "evidenced"
+      }];
+    if (view.kind === "irreconcilable") return [{ mark: "held_irreconcilable", candidate: c, inquiry: view.inquiry }];
+    return [];
+  }
+  /** op=contradictiontensions — R27: each referent's marks, at its version, from every candidate the viewer may see on
+   *  it. Every surface that shows a side reads this, so none holds a copy of the rule. */
+  tensionsOn({ referents = null, viewer = null } = {}) {
+    try {
+      const list2 = Array.isArray(referents) ? referents : [];
+      if (list2.length > TENSIONS_REFERENTS_MAX) {
+        const row2 = CONTRADICTION_PAIR_CHECKS.TENSIONS_TOO_MANY;
+        return {
+          ok: false,
+          reason: "TENSIONS_TOO_MANY",
+          code: "TENSIONS_TOO_MANY",
+          check: row2.check,
+          translation: row2.translation,
+          max: TENSIONS_REFERENTS_MAX,
+          detail: `${list2.length} referents were asked about; at most ${TENSIONS_REFERENTS_MAX} are read at once`
+        };
+      }
+      const out = list2.map((x) => {
+        const ref = this.#referentOf(x);
+        if (!ref) return { referent: x ?? null, marks: [], undetermined: true, why: "not a referent at a version" };
+        const ids = this.#rows(
+          `SELECT candidate FROM contradiction_candidates
+                                 WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq`,
+          ref.ref,
+          ref.version,
+          ref.ref,
+          ref.version
+        ).map((r) => r.candidate);
+        const marks = [];
+        for (const id of ids) {
+          const row2 = this.#candidate(id);
+          const which = row2 ? _Contradiction.#whichSide(row2, ref) : null;
+          if (which) marks.push(...this.#marksOn(row2, which, viewer));
+        }
+        return { referent: ref, marks };
+      });
+      return { ok: true, wrote: false, referents: out };
+    } catch (e) {
+      return { ok: true, wrote: false, referents: [], undetermined: true, why: String(e && e.message || e).slice(0, 160) };
+    }
+  }
+  /** The refusal every act and read answers for an absent candidate, or one the viewer may not see. */
+  static #noSuch(detail, extra = {}) {
+    const row2 = CONTRADICTION_CANDIDATE_CHECKS.NO_SUCH_CANDIDATE;
+    return {
+      ok: false,
+      reason: "NO_SUCH_CANDIDATE",
+      code: "NO_SUCH_CANDIDATE",
+      check: row2.check,
+      translation: row2.translation,
+      detail,
+      ...extra
+    };
+  }
+  /** The established resolutions of a capture (entities R35's read contract): the entities it is about. */
+  #entitiesOf(capture) {
+    if (!capture) return null;
+    return this.#rows(
+      `SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=? AND established=1 ORDER BY entity_id`,
+      capture
+    ).map((r) => r.entity_id);
+  }
+  /** R28's facts for a candidate, computed from what its sides already carry. */
+  #facts(row2) {
+    const A = this.#shown(row2.a), B = this.#shown(row2.b);
+    const isPart = (s) => s && (s.kind === "leg" || s.kind === "extent");
+    const fact = (coordinate, name, a, b, whyA, whyB) => {
+      const miss = [];
+      if (a === null || a === void 0 || Array.isArray(a) && !a.length) miss.push(`side A: ${whyA}`);
+      if (b === null || b === void 0 || Array.isArray(b) && !b.length) miss.push(`side B: ${whyB}`);
+      return {
+        coordinate,
+        fact: name,
+        a: a ?? null,
+        b: b ?? null,
+        source: "record",
+        machine_work: false,
+        ...miss.length ? { undetermined: true, why: miss.join("; ") } : {}
+      };
+    };
+    const noDate = (s) => isPart(s) ? s.capture_sha ? "its reader states no date" : "the passage is not held" : "a held claim states no document date";
+    const noType = (s) => isPart(s) ? s.capture_sha ? "its reader states no kind" : "the passage is not held" : "a held claim is not a document";
+    const subject = (s) => {
+      if (isPart(s)) return this.#entitiesOf(s.capture_sha);
+      const r = s && s.inquiry ? this.#one(`SELECT inquiry_subject_entity AS e FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
+      return r && r.e ? [r.e] : null;
+    };
+    const facts = [
+      fact("time_or_occasion", "stated_date", A.date, B.date, noDate(A), noDate(B)),
+      fact("observer_or_method", "doctype", A.doctype, B.doctype, noType(A), noType(B)),
+      fact(
+        "observer_or_method",
+        "capture",
+        A.capture_sha,
+        B.capture_sha,
+        isPart(A) ? "the passage is not held" : "a held claim rests on no one capture",
+        isPart(B) ? "the passage is not held" : "a held claim rests on no one capture"
+      ),
+      fact(
+        "subject",
+        "resolved_entities",
+        subject(A),
+        subject(B),
+        "no established resolution or subject is held",
+        "no established resolution or subject is held"
+      )
+    ];
+    if (row2.key === "K5") facts.push(fact("scope", "project", A.project ?? null, B.project ?? null, "no project", "no project"));
+    return facts;
+  }
+  /** op=contradictionfacts — R28: the facts the record holds that bear on each coordinate, each labelled the record's. */
+  contextFacts({ candidate = null, viewer = null } = {}) {
+    try {
+      const row2 = this.#candidate(candidate);
+      if (!row2 || !this.#sideSeen(row2.a, viewer) || !this.#sideSeen(row2.b, viewer))
+        return _Contradiction.#noSuch("no contradiction you can see answers to that id");
+      return {
+        ok: true,
+        wrote: false,
+        candidate: row2.candidate,
+        key: row2.key,
+        facts: this.#facts(row2),
+        says: "each fact is the record's, as its sides carry it, and none is machine work. A fact not stated is undetermined, with why, never guessed"
+      };
+    } catch (e) {
+      return _Contradiction.#noSuch(`the candidate could not be read (${String(e && e.message || e).slice(0, 80)})`);
+    }
+  }
+  /** R29's referents of a finding pinned at `sha`, held one level deep. `null` when no text answers to the bytes. */
+  #heldAt(finding3, sha) {
+    const text4 = this.#record.textAtSha(finding3, sha);
+    if (typeof text4 !== "string") return null;
+    const fm = parseFrontmatter(text4).data || {};
+    const refs = /* @__PURE__ */ new Set();
+    const held = (v) => v && v.state === "accepted" && !v.hidden && typeof v.claim === "string" && v.claim.trim();
+    for (const v of versionsIn(fm)) if (held(v)) refs.add(`${finding3}|${v.name}@${sha256HexSync(String(v.claim))}`);
+    const current = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, finding3);
+    const atHead = !!current && current.bundle_sha === sha;
+    const legs = Array.isArray(fm.basis) ? fm.basis : [];
+    let undetermined = 0;
+    legs.forEach((leg, ord) => {
+      if (!leg || typeof leg !== "object") return;
+      const target = String(leg.target ?? "");
+      const t = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, target);
+      if (t && t.object_type === "inquiry") {
+        for (const v of this.#rows(`SELECT name, claim FROM inquiry_basis_versions WHERE bundle_id=? AND state='accepted'
+                                      AND hidden=0 AND claim IS NOT NULL AND claim <> ''`, target))
+          refs.add(`${target}|${v.name}@${sha256HexSync(String(v.claim))}`);
+        return;
+      }
+      let cid = typeof leg.content_id === "string" && /^[0-9a-f]{64}$/.test(leg.content_id) ? leg.content_id : null;
+      if (!cid && atHead) cid = this.#one(`SELECT content_id FROM inquiry_basis WHERE bundle_id=? AND ord=?`, finding3, ord)?.content_id ?? null;
+      if (!cid) {
+        undetermined += 1;
+        return;
+      }
+      const c = this.#one(`SELECT capture_sha FROM content WHERE content_id=?`, cid);
+      if (c) refs.add(`${cid}@${c.capture_sha}`);
+    });
+    return { refs, undetermined_legs: undetermined };
+  }
+  /** R29 (in-process; read as the plane): the candidates a case pinning `finding` at `sha` must disclose. */
+  unresolvedRecordOn({ finding: finding3 = null, sha = null, viewer = void 0 } = {}) {
+    try {
+      const f9 = typeof finding3 === "string" ? finding3.trim() : "";
+      const h = typeof sha === "string" ? sha.trim() : "";
+      const held = f9 && h ? this.#heldAt(f9, h) : null;
+      if (!held) return {
+        ok: true,
+        wrote: false,
+        finding: f9 || null,
+        sha: h || null,
+        candidates: [],
+        truncated: false,
+        undetermined: true,
+        why: "no text of that finding answers to those bytes"
+      };
+      const refs = JSON.stringify([...held.refs]);
+      const ids = this.#rows(`SELECT candidate FROM contradiction_candidates
+                               WHERE (a_ref || '@' || a_version) IN (SELECT value FROM json_each(?))
+                                  OR (b_ref || '@' || b_version) IN (SELECT value FROM json_each(?))
+                               ORDER BY seq`, refs, refs).map((r) => r.candidate);
+      const out = [];
+      let truncated3 = false;
+      for (const id of ids) {
+        const row2 = this.#candidate(id);
+        const view = this.#view(row2);
+        if (view.weight !== "duty") continue;
+        const standing = view.state === "open" || view.state === "explained_not_shown" || view.state === "taken_up" || view.state === "resolved" && view.kind === "irreconcilable";
+        if (!standing) continue;
+        if (out.length === UNRESOLVED_MAX) {
+          truncated3 = true;
+          break;
+        }
+        const asked = viewer !== void 0 && viewer !== null;
+        const seenA = !asked || this.#sideSeen(row2.a, viewer), seenB = !asked || this.#sideSeen(row2.b, viewer);
+        const explanation = view.state === "explained_not_shown" ? view.act?.explanation ?? null : null;
+        if (seenA && seenB)
+          out.push({
+            candidate: row2.candidate,
+            key: row2.key,
+            a: this.#shown(row2.a),
+            b: this.#shown(row2.b),
+            state: view.state,
+            ...view.kind ? { kind: view.kind } : {},
+            explanation,
+            inquiry: view.inquiry,
+            depth: 1
+          });
+        else {
+          const seen = seenA ? "a" : seenB ? "b" : null;
+          out.push({
+            candidate: row2.candidate,
+            unseen_other_side: true,
+            state: view.state,
+            depth: 1,
+            ...seen ? { side: this.#shown(row2[seen]) } : {}
+          });
+        }
+      }
+      return {
+        ok: true,
+        wrote: false,
+        finding: f9,
+        sha: h,
+        candidates: out,
+        truncated: truncated3,
+        bound: UNRESOLVED_MAX,
+        ...held.undetermined_legs ? { undetermined_legs: held.undetermined_legs } : {},
+        says: "each is a tension on something this finding rests on, one level deep; deeper findings disclose their own when published"
+      };
+    } catch (e) {
+      return {
+        ok: true,
+        wrote: false,
+        candidates: [],
+        truncated: false,
+        undetermined: true,
+        why: String(e && e.message || e).slice(0, 160)
+      };
+    }
+  }
+  /* ===================================================================== *
+   * RESOLVE (N345; R30–R38). A member's attributed act says what a candidate turned out to be; the machine may only
+   * recommend in which respects the sides may differ. Nothing here edits a side (R19).
+   * ===================================================================== */
+  /** A refusal from this module's rows (R20), with its catalogue fields. */
+  static #refuse(code, detail, extra = {}) {
+    const row2 = CONTRADICTION_CANDIDATE_CHECKS[code];
+    return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra };
+  }
+  /** The coordinate vocabulary for a key (R32): `inquiry` R46's, or null while it cannot be read. */
+  #vocab(key) {
+    const i = this.#i();
+    const v = key === "K5" ? i.PLURALITY_DIFFERENCES : i.CONTRADICTION_COORDINATES;
+    return Array.isArray(v) ? v : null;
+  }
+  /** R30's refusals common to every act, first and in order: a machine or empty author; no candidate; one absent, one
+   *  with a side the viewer may not see, or one `not_shown` (the same answer); free text over its cap. Answers
+   *  `{refusal}` or `{row, view}`. */
+  #actRefusals({ candidate, author, viewer, texts = {} }) {
+    const machine3 = this.#machineRefusal(author);
+    if (machine3) return { refusal: machine3 };
+    const none = _Contradiction.#noCandidate(candidate);
+    if (none) return { refusal: none };
+    const row2 = this.#candidate(candidate);
+    const view = row2 && this.#sideSeen(row2.a, viewer) && this.#sideSeen(row2.b, viewer) ? this.#view(row2) : null;
+    if (!view || view.weight === "not_shown")
+      return { refusal: _Contradiction.#noSuch("no contradiction you can see answers to that id") };
+    const over = this.#overCap(texts);
+    if (over) return { refusal: over };
+    return { row: row2, view };
+  }
+  /** R30's first refusal (and R36's, R51's): an empty or machine author. */
+  #machineRefusal(author) {
+    if (typeof author !== "string" || !author.trim() || isMachineIdentity(author))
+      return _Contradiction.#refuse(
+        "MACHINE_CANNOT_ACT_ON_CANDIDATE",
+        "saying what a contradiction turned out to be is a member's act; this one names no member"
+      );
+    return null;
+  }
+  /** R30's second refusal (and R51's, R54's): no candidate named. */
+  static #noCandidate(candidate) {
+    if (typeof candidate !== "string" || !candidate.trim())
+      return _Contradiction.#refuse("NO_CANDIDATE", "name the candidate this act is about by its id");
+    return null;
+  }
+  /** R30's caps (and R51's, R53's): the first free-text field over its cap, as `WORDS_MALFORMED` naming it. */
+  #overCap(texts) {
+    for (const [field, value] of Object.entries(texts)) {
+      const cap = TEXT_CAPS[field.startsWith("qualifier") ? "qualifier" : field];
+      if (typeof value === "string" && cap && value.length > cap)
+        return _Contradiction.#refuse(
+          "WORDS_MALFORMED",
+          `${field} is ${value.length} characters; at most ${cap}`,
+          { field, limit: cap }
+        );
+    }
+    return null;
+  }
+  /** R31's closed-state refusals, asked after R30's by every act but R37. `takeUp` asks only the first. */
+  static #closed(view, { takenUp = true } = {}) {
+    if (isClosed(view.state))
+      return _Contradiction.#refuse(
+        "CANDIDATE_CLOSED",
+        `this contradiction was ${view.state}${view.act ? ` by ${view.act.author}` : ""}, and it stays as they left it`,
+        { state: view.state, by: view.act ? view.act.author : null, ...view.inquiry ? { inquiry: view.inquiry } : {} }
+      );
+    if (takenUp && view.state === "taken_up")
+      return _Contradiction.#refuse(
+        "CANDIDATE_TAKEN_UP",
+        `this contradiction was taken up as ${view.inquiry}`,
+        { inquiry: view.inquiry }
+      );
+    return null;
+  }
+  /** R30's acceptance basis for the coordinates an act records: each `accepted`, naming the standing recommendation it
+   *  accepts, else `unaided`. Refuses an acceptance naming a recommendation not standing for this candidate
+   *  (C-93.25), or one whose coordinate the act does not record (C-93.26). Answers `{refusal}` or `{basis, standing}`,
+   *  `standing` the recommendations standing at the act's instant. */
+  #acceptance(row2, view, accepted, recorded) {
+    const standing = this.#standing(row2, view);
+    const named = _Contradiction.#named(accepted);
+    const refusal19 = _Contradiction.#acceptanceRefusal(standing, named, recorded);
+    if (refusal19) return { refusal: refusal19 };
+    const basis = {};
+    for (const id of named) {
+      const rec = standing.find((r) => r.recommendation === id);
+      basis[rec.coordinate] = { basis: "accepted", recommendation: rec.recommendation };
+    }
+    for (const c of recorded) if (!basis[c]) basis[c] = { basis: "unaided" };
+    return { basis, standing: standing.map((r) => ({ recommendation: r.recommendation, coordinate: r.coordinate })) };
+  }
+  /** The recommendation ids an act names as accepted. */
+  static #named(accepted) {
+    return accepted === null || accepted === void 0 || accepted === "" ? [] : (Array.isArray(accepted) ? accepted : [accepted]).map((x) => String(x ?? "").trim());
+  }
+  /** R30's two acceptance refusals over the recommendations standing and the coordinates the act records, or null. */
+  static #acceptanceRefusal(standing, named, recorded) {
+    for (const id of named) {
+      const rec = standing.find((r) => r.recommendation === id);
+      if (!rec) return _Contradiction.#refuse(
+        "ACCEPTANCE_NOT_STANDING",
+        `recommendation '${id.slice(0, 64)}' is not standing for this contradiction`,
+        { recommendation: id || null }
+      );
+      if (!recorded.includes(rec.coordinate)) return _Contradiction.#refuse(
+        "ACCEPTANCE_VALUE_DIFFERS",
+        `the recommendation accepted names ${rec.coordinate}, which this act does not record`,
+        { recommendation: id, coordinate: rec.coordinate }
+      );
+    }
+    return null;
+  }
+  /** The one append site of `contradiction_acts` (R30, R42). Answers the row as written. */
+  #appendAct(row2, view, fields) {
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_acts`)?.n ?? 0) + 1;
+    const at17 = fields.at || this.#now();
+    const id = sha256HexSync(canonicalJson({ v: 1, candidate: row2.candidate, seq, at: at17, author: fields.author }));
+    const j = (v) => v === void 0 || v === null ? null : JSON.stringify(v);
+    this.#sql.exec(
+      `INSERT INTO contradiction_acts (act_id, candidate, act, choice, author, at, seq, reason, words, coordinates,
+         explanation, evidence, wrong_side, wrong_reason, qualifiers, acceptance, standing, inquiry, kind,
+         a_bundle_id, b_bundle_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      id,
+      row2.candidate,
+      fields.act,
+      fields.choice ?? null,
+      fields.author,
+      at17,
+      seq,
+      fields.reason ?? null,
+      fields.words ?? null,
+      j(fields.coordinates),
+      fields.explanation ?? null,
+      j(fields.evidence),
+      fields.wrong_side ?? null,
+      fields.wrong_reason ?? null,
+      j(fields.qualifiers),
+      j(fields.acceptance),
+      j(fields.standing),
+      fields.inquiry ?? null,
+      fields.kind ?? null,
+      row2.a_bundle_id,
+      row2.b_bundle_id
+    );
+    return this.#acts(row2.candidate).find((a) => a.act_id === id);
+  }
+  /** op=contradictiondismiss — R31: a lead is dismissed, with one of three reasons. */
+  dismiss({ candidate = null, reason = null, words = null, viewer = null, author = null, at: at17 = null } = {}) {
+    const g = this.#actRefusals({ candidate, author, viewer, texts: { reason, words } });
+    if (g.refusal) return g.refusal;
+    const { row: row2, view } = g;
+    const closed = _Contradiction.#closed(view);
+    if (closed) return closed;
+    if (view.weight === "duty" || view.weight === "plurality")
+      return _Contradiction.#refuse(
+        "RECORD_CANNOT_BE_DISMISSED",
+        "this is a conflict the record holds; it closes only by a resolution",
+        { weight: view.weight }
+      );
+    if (!DISMISSAL_REASONS.includes(reason))
+      return _Contradiction.#refuse(
+        "DISMISSAL_REASON_UNKNOWN",
+        `a lead is dismissed for one of ${DISMISSAL_REASONS.join(", ")}`,
+        { reasons: [...DISMISSAL_REASONS] }
+      );
+    const act = this.#record.transact(() => this.#appendAct(row2, view, {
+      act: "dismiss",
+      author: author.trim(),
+      reason,
+      words: typeof words === "string" && words.trim() ? words.trim() : null,
+      at: at17
+    }));
+    return {
+      ok: true,
+      candidate: row2.candidate,
+      state: "dismissed",
+      act,
+      says: "the lead was dismissed by the member named, with the reason given; nothing either side says was changed"
+    };
+  }
+  /** R32's evidence items, each one the viewer may see: `{content}`, `{inquiry, ord}` or `{fact: coordinate}` (a fact R28
+   *  states for that coordinate). Answers the first item that fails, or null. */
+  #evidenceRefusal(row2, evidence, viewer) {
+    const facts = this.#facts(row2);
+    for (let i = 0; i < evidence.length; i++) {
+      const e = evidence[i];
+      let ok = false;
+      if (e && typeof e === "object" && !Array.isArray(e)) {
+        if (typeof e.content === "string" && e.content) {
+          const home = this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, e.content);
+          ok = !!home && this.#sees(home.bundle_id, viewer);
+        } else if (typeof e.inquiry === "string" && e.inquiry && e.ord !== void 0 && e.ord !== null) {
+          const leg = this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE bundle_id=? AND ord=?`, e.inquiry, Number(e.ord));
+          ok = !!leg && this.#sees(e.inquiry, viewer);
+        } else if (typeof e.fact === "string" && e.fact) {
+          ok = facts.some((f9) => f9.coordinate === e.fact && !f9.undetermined);
+        }
+      }
+      if (!ok) return _Contradiction.#refuse(
+        "EVIDENCE_NOT_SEEN",
+        `evidence item ${i} is not one you can see, or is a fact the record does not state`,
+        { index: i }
+      );
+    }
+    return null;
+  }
+  /** op=contradictionclarify — R32–R34: a member says how the two differ, that one is wrong, or (K5) that they found no
+   *  named difference. */
+  clarify({
+    candidate = null,
+    choice = null,
+    coordinates = null,
+    explanation = null,
+    evidence = null,
+    qualifiers = null,
+    wrongSide = null,
+    reason = null,
+    accepted = null,
+    viewer = null,
+    author = null,
+    at: at17 = null
+  } = {}) {
+    const q6 = qualifiers && typeof qualifiers === "object" && !Array.isArray(qualifiers) ? qualifiers : {};
+    const g = this.#actRefusals({
+      candidate,
+      author,
+      viewer,
+      texts: { explanation, reason, qualifier_a: q6.a, qualifier_b: q6.b }
+    });
+    if (g.refusal) return g.refusal;
+    const { row: row2, view } = g;
+    const closed = _Contradiction.#closed(view);
+    if (closed) return closed;
+    if (view.weight === "lead")
+      return _Contradiction.#refuse("CLARIFY_NOT_A_TENSION", "a lead is dismissed or taken up, never clarified");
+    if (!CLARIFY_CHOICES.includes(choice) || choice === "no_difference" && row2.key !== "K5")
+      return _Contradiction.#refuse(
+        "CLARIFY_CHOICE_UNKNOWN",
+        `the answers here are ${(row2.key === "K5" ? CLARIFY_CHOICES : CLARIFY_CHOICES.filter((c) => c !== "no_difference")).join(", ")}`,
+        { choices: row2.key === "K5" ? [...CLARIFY_CHOICES] : CLARIFY_CHOICES.filter((c) => c !== "no_difference") }
+      );
+    const who2 = author.trim();
+    if (choice === "differs") {
+      const vocab = this.#vocab(row2.key) || [];
+      const coords = Array.isArray(coordinates) ? [...new Set(coordinates)] : [];
+      if (!coords.length || coords.some((c) => !vocab.includes(c)))
+        return _Contradiction.#refuse(
+          "CLARIFY_COORDINATE_UNKNOWN",
+          `name at least one of ${vocab.join(", ") || "(the vocabulary is not held here)"}`,
+          { coordinates: [...vocab] }
+        );
+      const acc2 = this.#acceptance(row2, view, accepted, coords);
+      if (acc2.refusal) return acc2.refusal;
+      const allAccepted = coords.every((c) => acc2.basis[c].basis === "accepted");
+      const words = typeof explanation === "string" && explanation.trim() ? explanation.trim() : null;
+      if (!words && !allAccepted)
+        return _Contradiction.#refuse("CLARIFY_NO_EXPLANATION", "explain in your own words how the two differ");
+      const items = Array.isArray(evidence) ? evidence : [];
+      const bad = this.#evidenceRefusal(row2, items, viewer);
+      if (bad) return bad;
+      const quals = {};
+      for (const k of ["a", "b"]) if (typeof q6[k] === "string" && q6[k].trim()) quals[k] = q6[k].trim();
+      const evidenced = items.length > 0;
+      return this.#record.transact(() => {
+        const act2 = this.#appendAct(row2, view, {
+          act: "clarify",
+          choice,
+          author: who2,
+          coordinates: coords,
+          explanation: words,
+          evidence: items,
+          qualifiers: Object.keys(quals).length ? quals : null,
+          acceptance: acc2.basis,
+          standing: acc2.standing,
+          at: at17
+        });
+        const defects = row2.key === "K4" && coords.includes("subject") ? this.#reportDefects(row2, words, who2) : null;
+        if (defects && defects.refusal) return defects.refusal;
+        return {
+          ok: true,
+          candidate: row2.candidate,
+          choice,
+          state: evidenced ? "resolved" : "explained_not_shown",
+          ...evidenced ? { kind: "dissolved" } : {},
+          qualifier_standing: evidenced ? "evidenced" : "hypothesis",
+          act: act2,
+          ...words ? {} : { own_words: false, says_words: "no words of the member's own were given: each respect recorded was the accepted recommendation" },
+          ...defects ? { defects: defects.reports } : {},
+          says: evidenced ? "the member found the two differ in the respects named, on the evidence named: the contradiction is resolved as dissolved, and neither side was changed" : "the member explained how the two differ without evidence: the mark softens and does not clear, and any duty stays"
+        };
+      });
+    }
+    if (choice === "one_wrong") {
+      if (wrongSide !== "a" && wrongSide !== "b")
+        return _Contradiction.#refuse("WRONG_SIDE_UNNAMED", "name the side that is wrong: a or b");
+      if (typeof reason !== "string" || !reason.trim())
+        return _Contradiction.#refuse("WRONG_SIDE_NO_REASON", "say why that side is wrong");
+      if (row2.key === "K5") return _Contradiction.#noWrongSide("two projects' conclusions have no wrong side");
+      const acc2 = this.#acceptance(row2, view, accepted, []);
+      if (acc2.refusal) return acc2.refusal;
+      const act2 = this.#record.transact(() => this.#appendAct(row2, view, {
+        act: "clarify",
+        choice,
+        author: who2,
+        wrong_side: wrongSide,
+        wrong_reason: reason.trim(),
+        acceptance: acc2.basis,
+        standing: acc2.standing,
+        at: at17
+      }));
+      return {
+        ok: true,
+        candidate: row2.candidate,
+        choice,
+        state: "resolved",
+        kind: "corrected",
+        wrong_side: wrongSide,
+        act: act2,
+        says: "the member named one side wrong, with the reason: it is marked stale and still resolves; nothing is deleted, and nothing resting on it moves"
+      };
+    }
+    const acc = this.#acceptance(row2, view, accepted, []);
+    if (acc.refusal) return acc.refusal;
+    const act = this.#record.transact(() => this.#appendAct(row2, view, {
+      act: "clarify",
+      choice,
+      author: who2,
+      explanation: typeof explanation === "string" && explanation.trim() ? explanation.trim() : null,
+      acceptance: acc.basis,
+      standing: acc.standing,
+      at: at17
+    }));
+    return {
+      ok: true,
+      candidate: row2.candidate,
+      choice,
+      state: "open",
+      weight: "duty",
+      act,
+      says: "the member found no named difference between the two projects' conclusions: it is now a duty for both"
+    };
+  }
+  /** K4 `subject` (R32): report a defect on each established resolution that paired the two sides. */
+  #reportDefects(row2, words, who2) {
+    const e = this.#e();
+    const entity2 = row2.a?.context?.entity_id ?? null;
+    if (!e || typeof e.reportResolutionDefect !== "function" || !entity2) return { reports: [] };
+    const reason = words || `a member found these two sides differ in subject (contradiction ${row2.candidate}); no words of their own were given`;
+    const reports = [];
+    for (const side of [row2.a, row2.b]) {
+      const cap = side.capture_sha ?? this.#one(`SELECT capture_sha FROM content WHERE content_id=?`, side.content_id)?.capture_sha;
+      if (!cap) continue;
+      for (const r of this.#rows(`SELECT ref FROM resolutions WHERE capture_sha=? AND entity_id=? AND established=1 ORDER BY ref`, cap, entity2)) {
+        const out = e.reportResolutionDefect({
+          captureSha: cap,
+          ref: r.ref,
+          entityId: entity2,
+          reason,
+          source: { module: "contradiction", id: row2.candidate },
+          by: who2
+        });
+        if (out && out.ok === false) return { refusal: out };
+        reports.push({ capture_sha: cap, ref: r.ref, entity_id: entity2, already: !!(out && out.already) });
+      }
+    }
+    return { reports };
+  }
+  /** The frontmatter of a new contradiction inquiry (R35): open, surfaced by a member, titled from the question,
+   *  linked to the candidate, both sides as legs (the framed side supporting), with no grade. */
+  #takeUpDocument(id, row2, question, frame, who2, at17) {
+    const i = this.#i();
+    const title = typeof i.deriveInquiryTitle === "function" ? i.deriveInquiryTitle(question) : null;
+    const leg = (side, name) => {
+      const target = side.kind === "claim" || side.kind === "stance" ? side.inquiry : this.#contentHome(side.content_id);
+      return {
+        target,
+        content_id: side.kind === "leg" || side.kind === "extent" ? side.content_id : null,
+        note: `side ${name} of contradiction ${row2.candidate}`
+      };
+    };
+    const framed = frame === "a" ? leg(row2.a, "a") : leg(row2.b, "b");
+    const other = frame === "a" ? leg(row2.b, "b") : leg(row2.a, "a");
+    if (!framed.target || !other.target) return null;
+    const targets = [.../* @__PURE__ */ new Set([framed.target, other.target])];
+    const legLines = (l, role) => [
+      `  - target: ${l.target}`,
+      `    role: ${role}`,
+      ...l.content_id ? [`    content_id: ${l.content_id}`] : [],
+      `    note: "${fmSafe3(l.note)}"`
+    ];
+    const text4 = [
+      "---",
+      `id: ${id}`,
+      "object_type: inquiry",
+      "schema: inquiry@1",
+      `title: "${fmSafe3(title ?? question)}"`,
+      "current_state: open",
+      "prior_state: null",
+      `created: "${at17}"`,
+      `last_updated: "${at17}"`,
+      "surfaced_by: human",
+      "contradiction:",
+      `  candidate: "${row2.candidate}"`,
+      "references:",
+      ...targets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
+      "basis:",
+      ...legLines(framed, "supports"),
+      ...legLines(other, "cuts_against"),
+      "state_history: []",
+      "---",
+      "",
+      "## Question",
+      "",
+      fmSafe3(question),
+      "",
+      "## Session Log",
+      "",
+      `- ${at17} \xB7 ${who2} \xB7 taken up from contradiction ${row2.candidate}, framed around side ${frame}`,
+      ""
+    ].join("\n");
+    return { text: text4, title: title ?? question };
+  }
+  /** op=contradictiontakeup — R35: take a candidate up as a contradiction inquiry, in one act through
+   *  `promotion.promote`. */
+  takeUp({ candidate = null, question = null, frame = null, viewer = null, author = null, at: at17 = null } = {}) {
+    const g = this.#actRefusals({ candidate, author, viewer, texts: { question } });
+    if (g.refusal) return g.refusal;
+    const { row: row2, view } = g;
+    const closed = _Contradiction.#closed(view, { takenUp: false });
+    if (closed) return closed;
+    if (view.state === "taken_up")
+      return {
+        ok: true,
+        existed: true,
+        candidate: row2.candidate,
+        inquiry: view.inquiry,
+        wrote: false,
+        says: "this contradiction is already taken up as the question named; nothing was written"
+      };
+    if (typeof question !== "string" || !question.trim())
+      return _Contradiction.#refuse(
+        "TAKE_UP_NO_QUESTION",
+        "word the question, or accept the default shown with the candidate",
+        { default_question: this.#defaultQuestion(row2) }
+      );
+    if (frame !== "a" && frame !== "b")
+      return _Contradiction.#refuse("TAKE_UP_NO_FRAME", "choose the side the question is asked around: a or b");
+    const who2 = author.trim();
+    const when = at17 || this.#now();
+    const p = this.#p();
+    return this.#record.transact(() => {
+      const id = `${this.#record.allocId("INQ", String(when).slice(0, 4)).id}-contradiction`;
+      const doc = this.#takeUpDocument(id, row2, question.trim(), frame, who2, when);
+      if (!doc) return _Contradiction.#noSuch("a side of this contradiction is no longer held");
+      const promoted = p.promote({
+        bundleId: id,
+        base: null,
+        snapKey: `takeup_${String(when).replace(/[-:.]/g, "")}_${rand5(4)}`,
+        author: who2,
+        actorIdentity: who2,
+        actorViewer: viewer,
+        files: [{ path: "bundle.md", text: doc.text }],
+        meta: {
+          object_type: "inquiry",
+          title: doc.title,
+          current_state: "open",
+          prior_state: null,
+          created: when,
+          last_updated: when
+        }
+      });
+      if (promoted.ok === false) return promoted;
+      const act = this.#appendAct(row2, view, {
+        act: "take_up",
+        author: who2,
+        inquiry: id,
+        at: when,
+        words: question.trim()
+      });
+      return {
+        ok: true,
+        candidate: row2.candidate,
+        inquiry: id,
+        state: "taken_up",
+        frame,
+        act,
+        promoted: { bundleId: promoted.bundleId, bundleSha: promoted.bundleSha },
+        says: "the contradiction was taken up as a new question, framed around the side named; it is resolved by that question's conclusion"
+      };
+    });
+  }
+  /** The live files of a bundle, carried whole into a revision (promotion R7: a revision drops no path unnamed). */
+  #liveFiles(id) {
+    const paths = this.#record.livePaths(id) || [];
+    return paths.map((path) => {
+      const f9 = this.#record.readFile(id, path);
+      return f9 && typeof f9.text === "string" ? { path, text: f9.text } : { path, blobSha: f9.blobSha, bytes: f9.bytes };
+    });
+  }
+  /** op=contradictionresolve — R36: a contradiction inquiry's conclusion, with its resolution. */
+  resolve({
+    inquiry = null,
+    resolution = null,
+    conclusion = null,
+    version = null,
+    falsifier = null,
+    noFalsifier = false,
+    accepted = null,
+    viewer = null,
+    author = null,
+    at: at17 = null
+  } = {}) {
+    const machine3 = this.#machineRefusal(author);
+    if (machine3) return machine3;
+    const id = typeof inquiry === "string" ? inquiry.trim() : "";
+    const i = this.#i();
+    const link = id && this.#sees(id, viewer) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id) && typeof i.contradictionLink === "function" ? i.contradictionLink(id) : null;
+    const row2 = link && typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
+    if (!row2 || !this.#sideSeen(row2.a, viewer) || !this.#sideSeen(row2.b, viewer))
+      return _Contradiction.#notContradictionInquiry("no question you can see answers to that id as one taken up from a contradiction");
+    const res = resolution && typeof resolution === "object" && !Array.isArray(resolution) ? resolution : {};
+    const family = this.#family(res.kind);
+    if (row2.key === "K5" && (family === "CORRECTED" || res.kind === "double_speak_or_reversal"))
+      return _Contradiction.#noWrongSide("two projects' conclusions have no wrong side and no double-speak");
+    const view = this.#view(row2);
+    const coords = Array.isArray(res.coordinates) ? res.coordinates.filter((c) => typeof c === "string") : [];
+    const acc = this.#acceptance(row2, view, accepted, coords);
+    if (acc.refusal) return acc.refusal;
+    const who2 = author.trim();
+    const when = at17 || this.#now();
+    return this.#record.transact(() => {
+      const head = this.#record.head(id);
+      const files = this.#liveFiles(id);
+      const md = files.find((f9) => f9.path === "bundle.md");
+      if (!head || !md || typeof md.text !== "string")
+        return _Contradiction.#notContradictionInquiry("the question's document is not held as text");
+      let lines = i.resolutionLines(res);
+      lines = Array.isArray(lines) ? lines : String(lines ?? "").split("\n").filter(Boolean);
+      if (!lines.length || !/^resolution:/.test(lines[0])) lines = ["resolution:", ...lines.map((l) => `  ${l.replace(/^\s*/, "")}`)];
+      let text4 = setFrontmatterLines(md.text, "resolution", lines);
+      text4 = setOrAddScalar3(text4, "last_updated", `"${when}"`);
+      text4 = appendSessionLog3(text4, `- ${when} \xB7 ${who2} \xB7 resolution recorded as ${fmSafe3(res.kind)} (contradiction ${row2.candidate})`);
+      const written = this.#p().promote({
+        bundleId: id,
+        base: head.bundleSha,
+        snapKey: `resolve_${String(when).replace(/[-:.]/g, "")}_${rand5(4)}`,
+        author: who2,
+        actorIdentity: who2,
+        actorViewer: viewer,
+        files: files.map((f9) => f9.path === "bundle.md" ? { path: "bundle.md", text: text4 } : f9),
+        meta: { object_type: "inquiry", last_updated: when }
+      });
+      if (written.ok === false) return written;
+      const concluded = this.#b().conclude({
+        target: id,
+        conclusion: conclusion ?? "",
+        version: version ?? "",
+        falsifier: falsifier ?? "",
+        noFalsifier: !!noFalsifier,
+        viewer,
+        author: who2,
+        identity: who2
+      });
+      if (concluded.ok === false) return concluded;
+      const act = this.#appendAct(row2, view, {
+        act: "resolve",
+        author: who2,
+        inquiry: id,
+        kind: res.kind ?? null,
+        coordinates: coords.length ? coords : null,
+        wrong_side: res.wrong_side ?? null,
+        wrong_reason: res.reason ?? null,
+        qualifiers: res.qualifiers ?? null,
+        acceptance: acc.basis,
+        standing: acc.standing,
+        at: when
+      });
+      return {
+        ok: true,
+        inquiry: id,
+        candidate: row2.candidate,
+        state: "resolved",
+        kind: res.kind,
+        family,
+        act,
+        conclusion: concluded,
+        says: "the question was concluded with its resolution: the question's own conclusion, never a project's stance"
+      };
+    });
+  }
+  /** op=contradictionrecommend — R37: the machine's one act. */
+  recommend({ run = null, candidate = null, coordinates = null, proposedBy = null, viewer = null, caller = null, at: at17 = null } = {}) {
+    const gate = this.#runRefusals({ run, proposedBy, viewer, caller });
+    if (gate) return gate;
+    const runId = _Contradiction.#runId(run);
+    const list2 = Array.isArray(coordinates) ? coordinates : [];
+    if (!list2.length)
+      return _Contradiction.#refuse("RECOMMEND_NO_COORDINATES", "name at least one respect in which the sides may differ", { run: runId });
+    const row2 = typeof candidate === "string" ? this.#candidate(candidate) : null;
+    const vocab = row2 ? this.#vocab(row2.key) || [] : [.../* @__PURE__ */ new Set([...this.#vocab("K1") || [], ...this.#vocab("K5") || []])];
+    for (let n2 = 0; n2 < list2.length; n2++) {
+      const c = list2[n2] && typeof list2[n2] === "object" ? list2[n2].coordinate : null;
+      if (!vocab.includes(c))
+        return _Contradiction.#refuse(
+          "RECOMMEND_COORDINATE_UNKNOWN",
+          `recommendation ${n2} names '${String(c).slice(0, 40)}'`,
+          { run: runId, index: n2, coordinates: [...vocab] }
+        );
+    }
+    for (let n2 = 0; n2 < list2.length; n2++) {
+      if (typeof list2[n2].reason !== "string" || !list2[n2].reason.trim())
+        return _Contradiction.#refuse("RECOMMEND_NO_REASON", `recommendation ${n2} carries no reason`, { run: runId, index: n2 });
+    }
+    const seen = row2 && this.#sideSeen(row2.a, viewer) && this.#sideSeen(row2.b, viewer);
+    const view = seen ? this.#view(row2) : null;
+    if (!view || view.weight === "not_shown" || !isStanding(view.state))
+      return _Contradiction.#refuse(
+        "RECOMMEND_CANDIDATE_NOT_STANDING",
+        "that contradiction is not open to recommendation",
+        { run: runId }
+      );
+    const when = at17 || this.#now();
+    const written = this.#record.transact(() => list2.map((x) => {
+      const id = sha256HexSync(canonicalJson({ v: 1, run: runId, candidate: row2.candidate, coordinate: x.coordinate }));
+      if (this.#one(`SELECT 1 AS x FROM contradiction_recommendations WHERE recommendation=?`, id)) return { id, new: false };
+      const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_recommendations`)?.n ?? 0) + 1;
+      this.#sql.exec(
+        `INSERT INTO contradiction_recommendations (recommendation, candidate, run, coordinate, proposed_by,
+          reason, origin, at, seq, a_bundle_id, b_bundle_id) VALUES (?,?,?,?,?,?,'machine',?,?,?,?)`,
+        id,
+        row2.candidate,
+        runId,
+        x.coordinate,
+        proposedBy.trim(),
+        x.reason.trim().slice(0, CANDIDATE_REASON_MAX),
+        when,
+        seq,
+        row2.a_bundle_id,
+        row2.b_bundle_id
+      );
+      return { id, new: true };
+    }));
+    const recs = written.map((w) => ({ new: w.new, ...this.#one(`SELECT recommendation, candidate, run, coordinate, proposed_by,
+      reason, origin, at FROM contradiction_recommendations WHERE recommendation=?`, w.id), machine_work: true }));
+    const n = written.filter((w) => w.new).length;
+    return {
+      ok: true,
+      run: runId,
+      candidate: row2.candidate,
+      written: n,
+      unchanged: written.length - n,
+      recommendations: recs,
+      says: "each is a machine's recommendation of a respect in which the two may differ: machine work, not a member's choice"
+    };
+  }
+  /** R13's first four refusals, shared by `propose` and `recommend` (R37): proposer, run, principal, running. Answers
+   *  the refusal, or null. */
+  #runRefusals({ run, proposedBy, viewer, caller }) {
+    if (typeof proposedBy !== "string" || !proposedBy.trim())
+      return _Contradiction.#refuse(
+        "CANDIDATE_NO_PROPOSER",
+        "machine work records who proposed it; the plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it"
+      );
+    const runId = _Contradiction.#runId(run);
+    const r = runId && this.#runGate ? this.#runGate.gate(runId, viewer, caller) : null;
+    if (!r || r.found !== true)
+      return _Contradiction.#refuse(
+        "CANDIDATE_NO_RUN",
+        runId ? `no run named '${runId.slice(0, 60)}' is open in this store` : "pass run=<the run whose work this is>: machine work names the run it came from",
+        { run: runId || null }
+      );
+    const np = r.refusal;
+    if (np)
+      return {
+        ok: false,
+        reason: np.code,
+        code: np.code,
+        check: np.check,
+        translation: np.translation,
+        detail: np.detail,
+        run: runId,
+        note: "machine work names a run its caller holds. Nothing was written"
+      };
+    if (r.running !== true)
+      return _Contradiction.#refuse(
+        "CANDIDATE_RUN_NOT_RUNNING",
+        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`,
+        { run: runId }
+      );
+    return null;
+  }
+  /** A run named by a request, trimmed; empty when none. */
+  static #runId(run) {
+    return typeof run === "string" ? run.trim() : "";
+  }
+  /** R38: the promotion check registered with `promotion` (its R39). A non-replay promotion whose document names a
+   *  candidate this module does not hold, or one with a side its author may not see, is refused `CANDIDATE_NOT_HELD`
+   *  (C-93.32): `inquiry` R47's link is enforced at the record's one door. */
+  promotionCheck(c) {
+    try {
+      if (!c || c.replay || c.pkg && c.pkg.replay) return null;
+      const fm = c.docFm && typeof c.docFm === "object" ? c.docFm : null;
+      const link = fm && fm.contradiction && typeof fm.contradiction === "object" ? fm.contradiction : null;
+      if (!link || link.candidate === void 0 || link.candidate === null) return null;
+      const who2 = c.pkg && (c.pkg.actorViewer || c.pkg.actorIdentity) || c.author || null;
+      const row2 = typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
+      if (!row2 || !this.#sideSeen(row2.a, who2) || !this.#sideSeen(row2.b, who2))
+        return _Contradiction.#notHeld(
+          typeof link.candidate === "string" ? link.candidate : null,
+          "this question names a contradiction the record does not hold, or one whose side its author may not see"
+        );
+      return null;
+    } catch (e) {
+      return _Contradiction.#notHeld(null, `the candidate could not be read (${String(e && e.message || e).slice(0, 80)})`);
+    }
+  }
+  /** R38's one refusal (C-93.32). */
+  static #notHeld(candidate, detail) {
+    const row2 = CONTRADICTION_CANDIDATE_CHECKS.CANDIDATE_NOT_HELD;
+    return {
+      ok: false,
+      reason: "CANDIDATE_NOT_HELD",
+      code: "CANDIDATE_NOT_HELD",
+      check: row2.check,
+      translation: row2.translation,
+      detail,
+      candidate
+    };
+  }
+  /** R36's first refusal after the author's (C-93.27): absent, invisible and plain answer alike. */
+  static #notContradictionInquiry(detail) {
+    const row2 = CONTRADICTION_CANDIDATE_CHECKS.NOT_A_CONTRADICTION_INQUIRY;
+    return {
+      ok: false,
+      reason: "NOT_A_CONTRADICTION_INQUIRY",
+      code: "NOT_A_CONTRADICTION_INQUIRY",
+      check: row2.check,
+      translation: row2.translation,
+      detail
+    };
+  }
+  /** R33, R36 (C-93.22): two projects' conclusions have no wrong side. */
+  static #noWrongSide(detail) {
+    const row2 = CONTRADICTION_CANDIDATE_CHECKS.PLURALITY_HAS_NO_WRONG_SIDE;
+    return {
+      ok: false,
+      reason: "PLURALITY_HAS_NO_WRONG_SIDE",
+      code: "PLURALITY_HAS_NO_WRONG_SIDE",
+      check: row2.check,
+      translation: row2.translation,
+      detail
+    };
+  }
+  /* ===================================================================== *
+   * THE MEASURES (N345; R39–R41).
+   * ===================================================================== */
+  /** R39: acceptance per coordinate, counted over the acts that record a coordinate (clarify, resolve). Counts only,
+   *  never a bare percentage; `review_due` by `ACCEPTANCE_REVIEW`, PROVISIONAL. Never throws. */
+  acceptanceRates({ coordinate = null, since = null } = {}) {
+    const per = {};
+    const slot = (c) => per[c] ||= { coordinate: c, offered: 0, accepted: 0, chosen_unaided: 0, chose_otherwise: 0 };
+    try {
+      const acts = this.#rows(`SELECT act, at, coordinates, acceptance, standing FROM contradiction_acts
+                                WHERE act IN ('clarify', 'resolve') ORDER BY seq`);
+      for (const a of acts) {
+        if (typeof since === "string" && since && !(a.at >= since)) continue;
+        const j = (v) => {
+          try {
+            return v ? JSON.parse(v) : null;
+          } catch {
+            return null;
+          }
+        };
+        const recorded = j(a.coordinates) || [];
+        const basis = j(a.acceptance) || {};
+        const standing = [...new Set((j(a.standing) || []).map((r) => r.coordinate))];
+        for (const c of standing) {
+          const s = slot(c);
+          s.offered += 1;
+          if (!recorded.includes(c)) s.chose_otherwise += 1;
+        }
+        for (const c of recorded) {
+          const s = slot(c);
+          if (basis[c] && basis[c].basis === "accepted") s.accepted += 1;
+          else s.chosen_unaided += 1;
+        }
+      }
+    } catch {
+    }
+    const rows = Object.values(per).filter((r) => !coordinate || r.coordinate === coordinate).sort((x, y) => x.coordinate < y.coordinate ? -1 : 1).map((r) => ({ ...r, review_due: r.offered >= ACCEPTANCE_REVIEW.min_offered && r.accepted / r.offered >= ACCEPTANCE_REVIEW.rate }));
+    return {
+      ok: true,
+      wrote: false,
+      coordinates: rows,
+      threshold: { ...ACCEPTANCE_REVIEW },
+      says: "counts, never a bare percentage: a recommendation accepted nearly every time has become a decision, and is reviewed. The threshold is PROVISIONAL"
+    };
+  }
+  /** R40: dismissed leads, counted by reason, by key and by label; `false_conflicts` counts only the first two reasons.
+   *  Never throws. */
+  dismissalMeasure({ since = null } = {}) {
+    const byReason = Object.fromEntries(DISMISSAL_REASONS.map((r) => [r, 0]));
+    const byKey = {}, byLabel = {};
+    let total = 0;
+    try {
+      for (const a of this.#rows(`SELECT a.reason, a.at, c.key, c.label FROM contradiction_acts a
+                                    JOIN contradiction_candidates c ON c.candidate = a.candidate
+                                   WHERE a.act = 'dismiss' ORDER BY a.seq`)) {
+        if (typeof since === "string" && since && !(a.at >= since)) continue;
+        total += 1;
+        byReason[a.reason] = (byReason[a.reason] || 0) + 1;
+        byKey[a.key] = (byKey[a.key] || 0) + 1;
+        byLabel[a.label] = (byLabel[a.label] || 0) + 1;
+      }
+    } catch {
+    }
+    return {
+      ok: true,
+      wrote: false,
+      dismissed: total,
+      by_reason: byReason,
+      by_key: byKey,
+      by_label: byLabel,
+      false_conflicts: FALSE_CONFLICT_REASONS.reduce((n, r) => n + (byReason[r] || 0), 0),
+      says: "a real conflict not pursued now is never counted as a false conflict"
+    };
+  }
+  /* ===================================================================== *
+   * A CONFLICT WITH A SIDE THE MEMBER CANNOT SEE (DEC-85 as K456 clarified it; R49–R55). A member who sees a conflict
+   * between projects half is told on their own side only: never the other side, its kind, bundle, source, project or
+   * members, the key or the machine's words, or how many parties there are.
+   * ===================================================================== */
+  /** R50's three refusals for `project`, in order: the existence answer (membership R77), no such project (R78), a
+   *  viewer who is not a joined participant (R87). Answers a refusal or `{member}`. */
+  #projectRefusals(project, viewer) {
+    const m = this.#m();
+    const pid = typeof project === "string" ? project.trim() : "";
+    const ex = pid && m && typeof m.existenceAct === "function" ? m.existenceAct(pid, viewer) : null;
+    if (ex) return { refusal: ex };
+    const held = pid ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid) : null;
+    if (!held || held.object_type !== "project" || !this.#sees(pid, viewer)) return { refusal: noSuchProject(pid || null) };
+    const member = viewerPredicate(viewer).member;
+    if (!member || !m || !m.isJoinedParticipant(pid, member)) return { refusal: notAParticipant(pid, member) };
+    return { project: pid, member };
+  }
+  /** The candidates `project` is a party of (R49), in id order: those whose side's inquiry the project draws on, whose
+   *  side's content row one of its inquiries cites, or whose stance is its own. */
+  #partyCandidates(project) {
+    return this.#candidatesNaming({ kind: "project", id: project }).sort();
+  }
+  /** R49, R50: whether `project` is a party through a side the viewer may see, and which side that is. */
+  #seenPartySide(row2, project, viewer) {
+    for (const which of ["a", "b"]) {
+      if (!this.#sideSeen(row2[which], viewer)) continue;
+      if (this.#reachOf(row2[which]).projects.includes(project)) return which;
+    }
+    return null;
+  }
+  /** op=contradictionnotices — R50: the notices to a project's members, on their own side. */
+  conflictNotices({ project = null, after = null, limit = null, viewer = null } = {}) {
+    try {
+      const g = this.#projectRefusals(project, viewer);
+      if (g.refusal) return g.refusal;
+      const n = Number(limit);
+      const cap = limit === null || limit === void 0 || limit === "" || !Number.isFinite(n) || n < 1 ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
+      const notices = [];
+      let truncated3 = false;
+      for (const id of this.#partyCandidates(g.project)) {
+        if (typeof after === "string" && after && !(id > after)) continue;
+        const row2 = this.#candidate(id);
+        const seenA = this.#sideSeen(row2.a, viewer), seenB = this.#sideSeen(row2.b, viewer);
+        if (seenA === seenB) continue;
+        const which = seenA ? "a" : "b";
+        if (!this.#reachOf(row2[which]).projects.includes(g.project)) continue;
+        const view = this.#view(row2);
+        if (!isProjectConflict(view.weight, view.state)) continue;
+        if (notices.length === cap) {
+          truncated3 = true;
+          break;
+        }
+        const parties = this.#parties(row2);
+        notices.push({
+          candidate: row2.candidate,
+          project: g.project,
+          weight: view.weight,
+          state: view.state,
+          side: this.#shown(row2[which]),
+          says: NOTICE_SENTENCE,
+          ...this.#partyView(row2, g.project),
+          ...parties.truncated ? {
+            reveal_undetermined: true,
+            reveal_why: "the projects holding a side could not all be read, so whether every one has asked is undetermined and no reveal is recorded"
+          } : {}
+        });
+      }
+      return {
+        ok: true,
+        wrote: false,
+        project: g.project,
+        limit: cap,
+        truncated: truncated3,
+        cursor: notices.length ? notices[notices.length - 1].candidate : null,
+        notices
+      };
+    } catch (e) {
+      return {
+        ok: true,
+        wrote: false,
+        notices: [],
+        truncated: false,
+        undetermined: true,
+        why: String(e && e.message || e).slice(0, 160)
+      };
+    }
+  }
+  /** R51's refusals shared with R53 (its first seven), in order. Answers `{refusal}` or `{row, view, project, member}`. */
+  #partyRefusals({ candidate, project, viewer, author }) {
+    const machine3 = this.#machineRefusal(author);
+    if (machine3) return { refusal: machine3 };
+    const none = _Contradiction.#noCandidate(candidate);
+    if (none) return { refusal: none };
+    const g = this.#projectRefusals(project, viewer);
+    if (g.refusal) return { refusal: g.refusal };
+    const row2 = this.#candidate(candidate);
+    if (!row2 || !this.#sideSeen(row2.a, viewer) && !this.#sideSeen(row2.b, viewer))
+      return { refusal: _Contradiction.#noSuch("no contradiction you can see answers to that id") };
+    const view = this.#view(row2);
+    const party = _Contradiction.#partyRefusal(!!this.#seenPartySide(row2, g.project, viewer), view.weight, g.project);
+    if (party) return { refusal: party };
+    const closed = _Contradiction.#closed(view, { takenUp: false });
+    if (closed) return { refusal: closed };
+    return { row: row2, view, project: g.project, member: g.member };
+  }
+  /** R51's party refusals, in order: not a party through a side the viewer may see; not a conflict between projects. */
+  static #partyRefusal(isParty, weight, project) {
+    if (!isParty)
+      return _Contradiction.#refuse(
+        "NOT_A_PARTY",
+        "the project named does not rest on the side of this conflict you can see",
+        { project }
+      );
+    if (weight !== "duty" && weight !== "plurality")
+      return _Contradiction.#refuse("NOT_A_PROJECT_CONFLICT", "a lead is not a conflict the record holds between projects");
+    return null;
+  }
+  /** op=contradictionoptin — R51, R52: a project asks to resolve the conflict; the opt-in that leaves every party opted
+   *  in records the reveal in the same act. */
+  optIn({ candidate = null, project = null, words = null, viewer = null, author = null, at: at17 = null } = {}) {
+    const g = this.#partyRefusals({ candidate, project, viewer, author });
+    if (g.refusal) return g.refusal;
+    const over = this.#overCap({ words });
+    if (over) return over;
+    const { row: row2 } = g;
+    const who2 = author.trim();
+    const when = at17 || this.#now();
+    return this.#record.transact(() => {
+      const held = this.#optins(row2.candidate);
+      const first = held.optins.find((r) => r.project_id === g.project);
+      if (first)
+        return {
+          ok: true,
+          already: true,
+          wrote: false,
+          candidate: row2.candidate,
+          project: g.project,
+          opted_in: { member: first.author, at: first.at, words: first.words ?? null },
+          says: "this project had already asked to resolve it; nothing was written"
+        };
+      const seq = () => (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_optins`)?.n ?? 0) + 1;
+      const put = (kind, fields) => {
+        const s = seq();
+        const id = sha256HexSync(canonicalJson({ v: 1, candidate: row2.candidate, kind, seq: s, at: when }));
+        this.#sql.exec(
+          `INSERT INTO contradiction_optins (optin, candidate, kind, project_id, author, at, seq, words,
+            parties, a_bundle_id, b_bundle_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+          id,
+          row2.candidate,
+          kind,
+          fields.project ?? null,
+          fields.author ?? null,
+          when,
+          s,
+          fields.words ?? null,
+          fields.parties ? JSON.stringify(fields.parties) : null,
+          row2.a_bundle_id,
+          row2.b_bundle_id
+        );
+      };
+      put("optin", { project: g.project, author: who2, words: typeof words === "string" && words.trim() ? words.trim() : null });
+      const parties = this.#parties(row2);
+      const now = this.#optins(row2.candidate);
+      let revealed = !!now.revealed;
+      if (!now.revealed && !parties.truncated && parties.all.length > 0 && parties.all.every((p) => now.opted.includes(p))) {
+        put("revealed", { parties: parties.all });
+        revealed = true;
+      }
+      return {
+        ok: true,
+        candidate: row2.candidate,
+        project: g.project,
+        wrote: true,
+        revealed: revealed && this.#optins(row2.candidate).opted.includes(g.project),
+        ...parties.truncated ? { reveal_undetermined: true } : {},
+        says: revealed ? "this project asked to resolve it, and every project holding a side has asked: the projects are named to each other's members" : "this project asked to resolve it; the other projects are told only that another project has asked"
+      };
+    });
+  }
+  /** R53's disclosure refusals, in order: malformed, then someone else's. Answers the refusal, or null. */
+  #disclosureRefusal(disclose, member, who2) {
+    if (disclose === void 0 || disclose === null) return null;
+    const part = _Contradiction.#malformedPart(disclose);
+    if (part) return _Contradiction.#refuse(
+      "DISCLOSURE_MALFORMED",
+      `the part of the disclosure that is not one of cover or email: ${part}`,
+      { part }
+    );
+    const own2 = this.#ownCover(member);
+    const e = typeof disclose.email === "string" ? disclose.email.trim() : null;
+    const taken = e ? this.#one(
+      `SELECT 1 AS x FROM contradiction_responses WHERE lower(email) = lower(?) AND author <> ?`,
+      e,
+      who2
+    ) : null;
+    if (typeof disclose.cover === "string" && disclose.cover !== own2 || taken)
+      return _Contradiction.#refuse(
+        "DISCLOSURE_NOT_YOURS",
+        "a response may share only your own cover or your own email address",
+        { part: taken ? "email" : "cover" }
+      );
+    return null;
+  }
+  /** The part of a disclosure that is not a cover or one email address, or null when it is well formed. */
+  static #malformedPart(disclose) {
+    if (typeof disclose !== "object" || Array.isArray(disclose)) return "the disclosure itself";
+    const extra = Object.keys(disclose).find((k) => k !== "cover" && k !== "email");
+    if (extra) return extra;
+    const cover = disclose.cover, email = disclose.email;
+    if (cover !== void 0 && cover !== true && typeof cover !== "string") return "cover";
+    if (email !== void 0 && (typeof email !== "string" || email.length > EMAIL_MAX || !/^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(email.trim()))) return "email";
+    return null;
+  }
+  /** The author's own cover, as membership holds it (its R68), or null. */
+  #ownCover(member) {
+    const m = this.#m();
+    const facts = m && typeof m.memberFacts === "function" ? m.memberFacts(member) : null;
+    return facts && typeof facts.cover === "string" ? facts.cover : null;
+  }
+  /** What a well-formed disclosure shares: the author's own cover (filled from membership for `cover: true`, never
+   *  taken otherwise) and the email as stated. */
+  #disclosed(disclose, member) {
+    if (!disclose || typeof disclose !== "object") return { cover: null, email: null };
+    const cover = disclose.cover === true ? this.#ownCover(member) : typeof disclose.cover === "string" ? disclose.cover : null;
+    return { cover, email: typeof disclose.email === "string" ? disclose.email.trim() : null };
+  }
+  /** op=contradictionrespond — R53: a member responds to the notice, sharing only what they choose. */
+  respond({ candidate = null, project = null, text: text4 = null, disclose = void 0, viewer = null, author = null, at: at17 = null } = {}) {
+    const g = this.#partyRefusals({ candidate, project, viewer, author });
+    if (g.refusal) return g.refusal;
+    const { row: row2 } = g;
+    if (!this.#optins(row2.candidate).opted.includes(g.project))
+      return _Contradiction.#refuse("RESPONSE_BEFORE_OPT_IN", "this project has not asked to resolve it yet", { project: g.project });
+    if (typeof text4 !== "string" || !text4.trim())
+      return _Contradiction.#refuse("RESPONSE_NO_TEXT", "a response says something in the responder's own words");
+    const over = this.#overCap({ text: text4 });
+    if (over) return over;
+    const bad = this.#disclosureRefusal(disclose, g.member, author.trim());
+    if (bad) return bad;
+    const d = this.#disclosed(disclose, g.member);
+    const who2 = author.trim();
+    const when = at17 || this.#now();
+    return this.#record.transact(() => {
+      const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_responses`)?.n ?? 0) + 1;
+      const id = sha256HexSync(canonicalJson({ v: 1, candidate: row2.candidate, project: g.project, seq, at: when }));
+      this.#sql.exec(
+        `INSERT INTO contradiction_responses (response, candidate, project_id, author, at, seq, text, cover,
+          email, a_bundle_id, b_bundle_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        id,
+        row2.candidate,
+        g.project,
+        who2,
+        when,
+        seq,
+        text4.trim(),
+        d.cover,
+        d.email,
+        row2.a_bundle_id,
+        row2.b_bundle_id
+      );
+      return {
+        ok: true,
+        candidate: row2.candidate,
+        project: g.project,
+        response: id,
+        at: when,
+        shared: { cover: d.cover !== null, email: d.email !== null },
+        ...d.email ? { email_says: "stated, not verified" } : {},
+        says: "the response is held; it reaches the other projects' members, with only what you chose to share, once every project holding a side has asked"
+      };
+    });
+  }
+  /** op=contradictionresponses — R54's read: this project's own responses, attributed, and once revealed the other
+   *  parties' as relayed, in the order written. */
+  conflictResponses({ candidate = null, project = null, after = null, limit = null, viewer = null } = {}) {
+    try {
+      const g = this.#projectRefusals(project, viewer);
+      if (g.refusal) return g.refusal;
+      const none = _Contradiction.#noCandidate(candidate);
+      if (none) return none;
+      const row2 = this.#candidate(candidate);
+      if (!row2 || !this.#sideSeen(row2.a, viewer) && !this.#sideSeen(row2.b, viewer) || !this.#seenPartySide(row2, g.project, viewer))
+        return _Contradiction.#noSuch("no contradiction you can see answers to that id for this project");
+      const n = Number(limit);
+      const cap = limit === null || limit === void 0 || limit === "" || !Number.isFinite(n) || n < 1 ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
+      const { revealed, opted } = this.#optins(row2.candidate);
+      const isRevealed = !!revealed && opted.includes(g.project);
+      const others = isRevealed ? opted.filter((p) => p !== g.project) : [];
+      const afterSeq = typeof after === "string" && after ? this.#one(`SELECT seq FROM contradiction_responses WHERE response=?`, after)?.seq ?? Infinity : 0;
+      const rows = this.#rows(`SELECT * FROM contradiction_responses WHERE candidate=? AND seq > ?
+                                  AND (project_id = ? OR project_id IN (SELECT value FROM json_each(?)))
+                                ORDER BY seq LIMIT ?`, row2.candidate, afterSeq, g.project, JSON.stringify(others), cap + 1);
+      const items = rows.slice(0, cap).map((r) => r.project_id === g.project ? {
+        response: r.response,
+        own: true,
+        author: r.author,
+        text: r.text,
+        cover: r.cover,
+        email: r.email,
+        ...r.email ? { email_says: "stated, not verified" } : {},
+        project: g.project,
+        at: r.at
+      } : { own: false, ...this.#relay(r) });
+      return {
+        ok: true,
+        wrote: false,
+        candidate: row2.candidate,
+        project: g.project,
+        revealed: isRevealed,
+        limit: cap,
+        truncated: rows.length > cap,
+        cursor: items.length ? items[items.length - 1].response : null,
+        responses: items
+      };
+    } catch (e) {
+      return {
+        ok: true,
+        wrote: false,
+        responses: [],
+        truncated: false,
+        undetermined: true,
+        why: String(e && e.message || e).slice(0, 160)
+      };
+    }
+  }
+};
+function contradictionOps(c, url, body) {
+  const q6 = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" ? body : {};
+  const v = (k) => b[k] !== void 0 ? b[k] : q6(k);
+  const stamps = () => ({ viewer: q6("viewer"), author: q6("author") });
+  return {
+    contradictionpropose: () => c.propose({
+      run: b.run,
+      proposals: b.proposals,
+      at: b.at || null,
+      proposedBy: q6("proposedBy"),
+      viewer: q6("viewer"),
+      caller: q6("principal")
+    }),
+    contradictionpairs: () => c.pairs({ key: q6("key"), limit: q6("limit"), viewer: q6("viewer") }),
+    contradictioncandidates: () => c.candidatesFor({
+      on: b.on && typeof b.on === "object" ? b.on : Object.fromEntries(["inquiry", "content", "entity", "bundle", "project", "candidate"].filter((k) => q6(k)).map((k) => [k, q6(k)])),
+      label: v("label"),
+      weight: v("weight"),
+      state: v("state"),
+      after: v("after"),
+      limit: v("limit"),
+      viewer: q6("viewer")
+    }),
+    contradictiontensions: () => c.tensionsOn({ referents: b.referents, viewer: q6("viewer") }),
+    contradictionfacts: () => c.contextFacts({ candidate: v("candidate"), viewer: q6("viewer") }),
+    contradictiondismiss: () => c.dismiss({ candidate: v("candidate"), reason: v("reason"), words: v("words"), ...stamps() }),
+    contradictionclarify: () => c.clarify({
+      candidate: v("candidate"),
+      choice: v("choice"),
+      coordinates: b.coordinates,
+      explanation: v("explanation"),
+      evidence: b.evidence,
+      qualifiers: b.qualifiers,
+      wrongSide: v("wrongSide"),
+      reason: v("reason"),
+      accepted: b.accepted,
+      ...stamps()
+    }),
+    contradictiontakeup: () => c.takeUp({ candidate: v("candidate"), question: v("question"), frame: v("frame"), ...stamps() }),
+    contradictionresolve: () => c.resolve({
+      inquiry: v("inquiry"),
+      resolution: b.resolution,
+      conclusion: v("conclusion"),
+      version: v("version"),
+      falsifier: v("falsifier"),
+      noFalsifier: v("noFalsifier"),
+      accepted: b.accepted,
+      ...stamps()
+    }),
+    contradictionrecommend: () => c.recommend({
+      run: b.run,
+      candidate: b.candidate,
+      coordinates: b.coordinates,
+      at: b.at || null,
+      proposedBy: q6("proposedBy"),
+      viewer: q6("viewer"),
+      caller: q6("principal")
+    }),
+    contradictionnotices: () => c.conflictNotices({ project: v("project"), after: v("after"), limit: v("limit"), viewer: q6("viewer") }),
+    contradictionoptin: () => c.optIn({ candidate: v("candidate"), project: v("project"), words: v("words"), ...stamps() }),
+    contradictionrespond: () => c.respond({
+      candidate: v("candidate"),
+      project: v("project"),
+      text: v("text"),
+      disclose: b.disclose,
+      ...stamps()
+    }),
+    contradictionresponses: () => c.conflictResponses({
+      candidate: v("candidate"),
+      project: v("project"),
+      after: v("after"),
+      limit: v("limit"),
+      viewer: q6("viewer")
+    })
+  };
+}
+
+// src/ai-runs/checks.mjs
+var checks_exports15 = {};
+__export(checks_exports15, {
+  AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
+  AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
+  AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
+  AI_RUN_OPEN_CHECKS: () => AI_RUN_OPEN_CHECKS,
+  AI_RUN_OWN_CHECKS: () => AI_RUN_OWN_CHECKS,
+  SURFACE_RUN_CHECKS: () => SURFACE_RUN_CHECKS
+});
+var AI_RUN_OWN_CHECKS = {
+  /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
+     which bound and where it stopped". A close with no bound named is the
+     `heldMatch` defect exactly — not found and did not finish looking made
+     indistinguishable — so the terminate path REFUSES it rather than writing an
+     unattributed ending. This is what makes "names the bound" a mechanism
+     rather than an intention. */
+  AI_RUN_BOUND_UNNAMED: {
+    check: "C-22.5",
+    where: "src/airun.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
+    translation: "The run stopped without saying what stopped it. Not finding something and not finishing the search are different facts, and only one of them licenses a conclusion."
+  },
+  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
+       bias manifest in force, the launching project's standard pair, and THE
+       SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
+       a hat" and a version is only interpretable against them. SK-1's row makes
+       the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
+       disclosure standard), and a condition that may be omitted is not recorded:
+       it is recorded by the runs that felt like it.
+  
+       REFUSED AT THE OPEN, beside the two principals, for the same reason those
+       are: refusing later would mean a run had already searched under
+       instructions nobody can name. Two ways to fail and ONE code, because they
+       are one fact — the run object cannot say what it ran under. The worse of
+       the two is a version that names no pack: `3` reads as an answer and
+       identifies nothing, which is the blank-principal shape PL-4 measured one
+       field over, arriving on a condition instead of an identity.
+  
+       A WHOLE-FUNCTION `where`: `checkSkillVersion` is small, single-purpose, and
+       the only refusal it makes is this one. Moved from the catalogue with its
+       reasons and translation unchanged (N289, K333); its `where` names the site
+       this module holds (`skillpack.mjs`'s copy was deleted by N156). */
+  AI_RUN_SKILL_VERSION_UNNAMED: {
+    check: "C-22.7",
+    where: "src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open",
+    translation: "This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards."
+  },
+  /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
+       THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.
+       Bob ruled 2026-08-09 that an investigation can be started by ANY MEMBER OF
+       THE PROJECT: the gate is participation in the project the inquiry belongs
+       to, and the capability token stays `contribute` only as the FLOOR beneath
+       it. IS-6's provisional checked `contribute` alone.
+  
+       WHY IT IS ITS OWN CODE AND NOT THE CAPABILITY REFUSAL'S, which is the whole
+       content of the item rather than a nicety. *You are not a member of this
+       project* and *you lack contribute* are DIFFERENT FACTS ABOUT A MEMBER, and
+       they have different remedies: one is answered by an owner of that project
+       inviting you, the other by an administrator granting a capability. A single
+       refusal covering both would tell a member nothing they can act on, which is
+       DEC-49's rule and the ACT-AND-SAY principle in one place. The capability
+       half keeps its own existing, differently-shaped refusal at the control
+       plane (`NOT_CAPABLE`, carrying `needs`), so a caller can always tell which
+       of the two stopped them.
+  
+       THE TRANSLATION DELIBERATELY NAMES NO PROJECT. A member who is not in a
+       project may not be entitled to learn it exists — the skeleton-visibility
+       rule (7.12) — so the canned sentence a surface renders says what happened
+       and what to do, and the refusal's own `detail`, composed at the site, names
+       only what the caller already put in their own request.
+  
+       CORRECTED 2026-09-19 by REC-145 (DEC-63 as amended by Bob, 2026-09-18): this refusal is now said
+       ONLY over a run whose context is a PROJECT. A run over a question consults no project, so the old
+       first sentence (*"asking the system to look into a question is work inside the project that
+       question belongs to"*) stated the ruling Bob reversed — *a project does not own a line of inquiry*. */
+  AI_RUN_NOT_PROJECT_MEMBER: {
+    check: "C-22.8",
+    where: "src/airun.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close",
+    translation: "Asking the system to look into a project is work inside that project, and this account is not one of that project's participants. This is not about what the account is allowed to do in general \u2014 it is about which piece of work it is part of. Someone who owns that project can invite you to it."
+  },
+  /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
+       DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
+       the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
+       Once REC-145 made the run verdict turn on the KIND (a question consults no project), a run labelled
+       `inquiry` over a PROJECT's id opened for a member who had not joined that project — the joined gate
+       walked around by a word the caller chose.
+  
+       ONE CODE FOR THE MISMATCH, THE ABSENT ID AND THE HIDDEN ONE, and that is the §7.9 half of the ruling
+       rather than economy. A second code for *"that is a project, not a question"* would be said over a
+       project the caller can see and withheld over one they cannot, so the difference between the two codes
+       would be the bit. The refusal is built from what the caller SENT and nothing else, which makes the
+       three one object by construction (`#noSuchProject`'s discipline, one act over). It is one condition —
+       *nothing of the kind you named answers to that id for you* — not two behind one number.
+  
+       CORRECTED THE SAME DAY on BOB #16's ruling (`7d03e852`), which the first build did not have: (i) A MACHINE
+       SEES NO MORE THAN ITS PRINCIPAL — an `ai` credential's open over an id its member cannot see is that member's
+       own absent answer, and an operator credential's open over a never-minted id is refused as absent too (the
+       first build let a machine through for an id the store did not hold, on PL-18's word); (ii) THE KIND IS
+       `RUN_CONTEXTS`' CLOSED VOCABULARY — any other word is refused HERE before any bundle is looked at, rather
+       than matched against the bundle's type. Both are this row's one condition: the kind and id the caller named
+       do not resolve to a context they can run in. A new code for (ii) was weighed and declined: C-22.12 is
+       REC-152's, and the word refused is the caller's own, so the refusal can say which failed without a second
+       code carrying any bit. */
+  AI_RUN_NO_SUCH_CONTEXT: {
+    check: "C-22.11",
+    where: "src/airun.mjs checkRunContextKind, called from src/ai-runs/index.mjs open",
+    translation: "Nothing of the kind this run names answers to that id here. A run is over a question or a project, nothing else; a run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
+  },
+  /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
+       AND CLOSE A RUN", BOB #16). C-22.12 and not C-22.11: CONDUCT #6 assigned C-22.11 to REC-153, which is
+       on its own branch, so this number was taken with the gap left for it.
+  
+       WHY IT IS ITS OWN CODE AND NOT C-22.8's. *You are not in this project* and *this is not your run* are
+       DIFFERENT FACTS with different remedies: the first is answered by an owner inviting you, the second by
+       nobody — the run is its principal's, and one nobody drives ends on its own lease. A co-participant who
+       is fully joined meets this and never C-22.8, and a single refusal covering both would tell them to ask
+       for an invitation they already hold.
+  
+       SAID ONLY TO SOMEBODY WHO CAN SEE THE RUN'S CONTEXT. A caller who cannot is answered as for a run that
+       does not exist, before this is reached (§7.9), so the sentence names nobody — neither the principal
+       nor the caller — and the store's `detail` names only the rule. */
+  AI_RUN_NOT_PRINCIPAL: {
+    check: "C-22.12",
+    /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
+    where: "src/airun.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions",
+    translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
+  },
+  /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
+     wrote `consumed + Number(v)` for any figure, so the run's own principal could REFUND a bound its member set
+     (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
+     whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
+     is a CLOSE naming no bound, this is a figure no bound can hold. */
+  /* REC-172, 2026-09-23: ALSO the member's `allowed` at the open (it was written `Number(x) || 0`, so `-1`, `1.5` and
+     `"3"` became a declaration nobody made). One code for both halves of a bound's figure — the rule is the same whole
+     number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
+  AI_RUN_CONSUME_INVALID: {
+    check: "C-22.13",
+    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
+    translation: "The investigation gave an amount for its budget that is not a whole number of zero or more. A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step."
+  },
+  /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
+     counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
+     is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
+     number. A zero claims nothing and is not refused. */
+  /* REC-172, 2026-09-23: ALSO `lease` (`PLANE_DECIDED_BOUNDS`), at the tick and as a declaration at the open, and
+     for ANY figure including zero. Same rationale — the plane decides it, off the clock — so the same code; the
+     translation now names the lease beside the counts. */
+  AI_RUN_BOUND_PLANE_COUNTED: {
+    check: "C-22.14",
+    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
+    translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
+  },
+  /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
+     that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
+     spent nothing, so a caller believed it counted work the record never held (the live instrument vf4 sent an array
+     for its whole life). The open DROPPED an entry naming no bound, so a member who declared `fetchs: 3` got a run
+     with no fetch ceiling. Its own code and not C-22.13's: the figure may be perfectly good; what is wrong is that it
+     names nothing the run has, and the remedy (spell the bound, send a map) differs. */
+  AI_RUN_BOUND_UNKNOWN: {
+    check: "C-22.15",
+    where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from src/ai-runs/index.mjs tick and open",
+    translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
+  },
+  /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
+     ABSENT or ZERO `allowed` was opened at 0, and `finishedBound` reads 0 as NO CEILING — so the run recorded a bound
+     it did not have. Refused at the open, nothing written. Its own code and not C-22.13's: C-22.13 is a figure of the
+     wrong FORM (a string, a fraction, a negative), and 0 is a perfectly good whole number; what is wrong here is that
+     the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
+  AI_RUN_BOUND_NO_ALLOWANCE: {
+    check: "C-22.16",
+    where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
+    translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
+  },
+  /* N293 (AGENT-WORKER #2 J1; REC-169's rule, one figure over), R45 — THE RUN'S SCRATCH IS BOUNDED. `state` is the
+     run's resumable work list (R12, DEC-61: never a transcript), and it was stored with no bound on its size: the run's
+     principal could write any amount on every tick, into a row every read of the run publishes whole (R19). The
+     ceiling is `AI_RUN_STATE_MAX_BYTES`, measured as the UTF-8 length of the state's JSON, the bytes the row holds. Its
+     own code and not C-22.13's: the figure there is a budget's; here nothing is wrong with any figure, the work list is
+     simply too large to keep, and the remedy differs (keep less, or keep it elsewhere). A WHOLE-FUNCTION `where`, as
+     C-22.7's: `checkRunState` makes this one refusal and no other; the open and the tick relay it. */
+  AI_RUN_STATE_TOO_LARGE: {
+    check: "C-22.18",
+    where: "src/airun.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
+    translation: "The investigation tried to keep more working notes than one investigation may hold, so nothing it sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it has left to do, not everything it has read."
+  }
+};
+var AI_RUN_ACT_SHAPE_CHECKS = {
+  /* ---------------------------------------------------------------------------
+       UI-38's §14a RIDER, AND IT IS IN THIS FAMILY BECAUSE ANOTHER FAMILY'S SUITE
+       REFUSED IT — WHICH IS THE CORRECT OUTCOME AND IS RECORDED RATHER THAN
+       WORKED AROUND.
+  
+       REC-64 first put this row in `AI_RUN_CHECKS`, where the run's other three
+       open-time conditions live. `airun.test.mjs` ARM D3 failed it: **every C-22
+       allocation must name its enforcement site in a PURE CHECK MODULE**
+       (`src/airun.mjs` or `src/skillpack.mjs`), so the catalogue can be walked to a
+       pure function. This condition is enforced in `store.mjs` at the run-open
+       door, so it does not satisfy that invariant and does not belong in C-22. The
+       ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
+       invariant, and this one is load-bearing — it is what lets `op=audit` reach
+       every C-22 condition without opening the store.
+  
+       WHAT IT IS. §14a promises the running-session surface SAYS SO when the
+       capability is unavailable, and IS-BUILD-PLAN's FL-6 row names the failure it
+       guards: *"when no token resolves the capability is UNAVAILABLE and says so —
+       never a silent no-op"*. UI-38 correctly LEFT that sentence rather than
+       authoring it at the surface, because member-facing refusal wording is
+       DEC-49's. The site already refused this condition — with NO CODE, so a
+       surface could only render the operator's sentence verbatim or blank, the
+       exact state DEC-49 ended.
+  
+       THE TRANSLATION SAYS "NOTHING RAN" IN SO MANY WORDS, on purpose: an
+       unavailable capability must not be indistinguishable from a run that looked
+       and found nothing. The second is a claim about the world; the first is a fact
+       about us. That is `CLAUDE.md`'s "our governor refusing is not the source
+       failing", arriving at the run door.
+  
+       ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
+       REC-64's work — and the reason WAS a defect in the guard rather than a
+       judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
+       C's matcher was `ok: false`, so a REGION here would have judged zero refusals
+       and FAILED as a drifted marker. The whole-function form is honest at this site
+       (every refusal `aiRunOpen` makes is a condition of opening a run) and the
+       blindness was measured and delegated at the guard's own `codesChecked` floor.
+  
+       **REC-76 CLOSED THAT DELEGATION (D-236), AND THE WHOLE-FUNCTION `where` IS
+       WHAT MADE IT PAY.** Arm C now grades an outcome by whether it DECLARES ITSELF
+       A SUCCESS rather than by one literal, so this site went from `92L (0 judged,
+       0 code(s) checked)` to four refusals judged — and TWO of them were CODELESS,
+       at a governed site, for as long as the row has existed. They are the two rows
+       immediately below. Nothing about the span changed; the instrument started
+       seeing it.
+  
+       **D-589 (2026-09-25) NARROWED ALL THREE INTO REGIONS, AND THE PARAGRAPH TWO
+       ABOVE IS NOW HISTORY, NOT RULE.** The whole-function `where` stopped being
+       honest the moment a SECOND family's refusal was written inside `aiRunOpen`:
+       REC-207's first draft put its re-run refusals in a narrowed region there and
+       the guard failed them by name, because the region was judged once by its own
+       rows and again by this whole-function site, where their codes are not rows.
+       So each of these three rows now names the region around its one refusal
+       (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
+       judges a claimed region a second time from an enclosing whole-function
+       `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
+       the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
+       seed — each minted and governed at its own site) are not read at this
+       function while no whole-function row names it.
+       --------------------------------------------------------------------------- */
+  AI_RUN_CAPABILITY_UNAVAILABLE: {
+    check: "C-33.29",
+    where: "src/ai-runs/index.mjs open > is-airun-open-capability, reached from op=airunopen",
+    translation: "Nothing was run, because this instance could not find an account to run it under. That is a fact about our setup and not an answer about your question: no searching happened, so nothing here should be read as having looked and found nothing."
+  },
+  /* ---------------------------------------------------------------------------
+       REC-76 / D-236 — THE TWO CODELESS REFUSALS THE WIDENED CLASSIFIER FOUND.
+  
+       Both have been at this governed site since before the row above was written,
+       and neither was ever judged, because arm C could not see a refusal spelled
+       `started: false`. They are not new conditions and they are not new refusals:
+       they are two sentences a surface could only render verbatim or blank, which
+       is the state DEC-49 ended. **The item that fixes an instrument owes the
+       sites the instrument newly sees, and these are them.**
+       --------------------------------------------------------------------------- */
+  AI_RUN_NO_CONTEXT: {
+    check: "C-33.30",
+    where: "src/ai-runs/index.mjs open > is-airun-open-context, reached from op=airunopen",
+    translation: "Nothing was run, because the request did not say what the run is for or what it belongs to. A run has to sit inside a question or a project so that the people working on that question can see it happened; one belonging to nothing would be invisible to everybody."
+  },
+  AI_RUN_ALREADY_OPEN: {
+    check: "C-33.31",
+    where: "src/ai-runs/index.mjs open > is-airun-open-already, reached from op=airunopen",
+    translation: "Nothing was run, because a run with this name is already on record here. The record keeps what each run did under its own name, so starting a second one under a name already in use would write two different histories into one place. Give this one a name of its own."
+  },
+  /* ---------------------------------------------------------------------------
+       REC-207 — THE RE-RUN LINK'S THREE REFUSALS (BOB #32, 2026-09-23 23:42Z).
+  
+       They are ACT-SHAPE conditions — the answer to *may this open carry this
+       link* — so they belong here rather than in a family of their own (SK-1's
+       rule, and the same one that put the BIAS_DEBT rows in BIAS_CHECKS).
+  
+       WHY THEY ARE REFUSALS AT ALL, rather than a link stored and judged later.
+       `aiRunClose` settles a bias debt on the strength of `rerun_of`, so a link
+       the record cannot stand behind is a DISCHARGE resting on the caller's word.
+       The three conditions are the three ways that could happen: the run names
+       itself, it names something that is not there, or it names work in another
+       context whose lens is a different lens entirely.
+  
+       A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
+       narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
+       `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
+       rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
+       region's refusals twice, once at the region and once at the enclosing
+       function, where their codes were not rows. So these three were written at
+       the whole function. D-589 (2026-09-25) then narrowed those three neighbours
+       into governed regions (`is-airun-open-context`, `-capability`, `-already`,
+       the rows above) and made arm C judge a claimed region once, by its own rows
+       (`nestedRegionsIn`). These three are now the ONLY rows naming `aiRunOpen`
+       as a whole, and the three regions' lines inside it are governed by the
+       regions, not by this site. Narrowing these three into a region of their own
+       is now possible and has not been done.
+       --------------------------------------------------------------------------- */
+  AI_RUN_RERUN_SELF: {
+    check: "C-33.45",
+    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
+    translation: "Nothing was run, because this run was told it is a re-run of itself. A re-run says which EARLIER piece of work it repeats, and a run pointing at itself would be able to clear its own outstanding re-run. Name the earlier run, or leave the field out."
+  },
+  AI_RUN_RERUN_UNKNOWN: {
+    check: "C-33.46",
+    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
+    translation: "Nothing was run, because the earlier run it says it repeats is not one this record holds for you. It may never have existed, it may have been removed, or it may belong to work you have not been brought into. Check the name."
+  },
+  AI_RUN_RERUN_OTHER_CONTEXT: {
+    check: "C-33.47",
+    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
+    translation: "Nothing was run, because the earlier run it says it repeats belongs to a different question or project. Repeating work means asking the same question again under the lens that is in force for it \u2014 somewhere else the group's declared lens can be a different one, so the two runs would not be comparable and settling anything on that basis would be wrong."
+  }
+};
+var AI_RUNS_CONTEXT_CHECKS = {
+  /* No kind named at all. There is no honest default: `inquiry` and `project`
+     are different objects with different membership, and answering from one
+     when the caller meant the other is a confidently wrong answer about a
+     different context — MEANING_ROWS_NO_ARM's reasoning, one table over. */
+  AI_RUNS_NO_CONTEXT_TYPE: {
+    check: "C-36.1",
+    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
+    translation: "That request did not say what kind of thing to look in. Background work is attached either to a question or to a project, and those are different places \u2014 so the record asks which rather than choosing one for you."
+  },
+  /* A kind was named and the record has no such context. Refused rather than
+     answered empty: see the header — an empty answer here would be the record
+     saying nothing is running, on the strength of a word it did not recognise. */
+  AI_RUNS_UNKNOWN_CONTEXT_TYPE: {
+    check: "C-36.2",
+    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
+    translation: "Background work is not attached to anything of that kind. Rather than answer as though nothing were running there, the record says so and names the kinds of thing it does attach work to."
+  },
+  /* A kind but no id. The gate is compiled over the CONTEXT ID, so a blank one
+     would ask the record about every context at once — which is not a wider
+     answer, it is a different question nobody asked. */
+  AI_RUNS_NO_CONTEXT_ID: {
+    check: "C-36.3",
+    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
+    translation: "That request named a kind of thing but not which one. Background work belongs to a particular question or a particular project, and the record answers for the one you are looking at rather than for all of them."
+  }
+};
+var SURFACE_RUN_CHECKS = {
+  SURFACE_NO_RUN: {
+    check: "C-66.1",
+    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
+    translation: "An assistant opens a question only inside an investigation it is running, and this one named none that can be read here. The investigation is what records the lens and the purpose the question was opened under, so without one nothing could say why it exists. Nothing was created."
+  },
+  SURFACE_RUN_NOT_RUNNING: {
+    check: "C-66.2",
+    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
+    translation: "The investigation this question was to be opened inside has ended. A question is read against the conditions of the investigation that opened it, and those stopped being current when it stopped. Nothing was created; a member can start a new investigation."
+  },
+  SURFACE_NO_BOUND: {
+    check: "C-66.3",
+    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
+    translation: "This investigation was not given a limit on how many questions it may open, so it may open none: an assistant opening questions without a limit fills the record with questions nobody asked for. The limit is set by the member who starts the investigation. Nothing was created."
+  },
+  SURFACE_BOUND_REACHED: {
+    check: "C-66.4",
+    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
+    translation: "This investigation has already opened as many questions as the member who started it allowed. Nothing was created. The investigation ends at its next step and says which limit stopped it."
+  }
+};
+var AI_RUN_OPEN_CHECKS = {
+  AI_RUN_MODE_NOT_DEPLOYED: {
+    check: "C-109.1",
+    where: "src/ai-runs/index.mjs open > is-airun-open-mode, reached from op=airunopen",
+    translation: "Nothing was run, because the kind of work this run asked for is not switched on for this instance yet. Kinds of work are switched on one at a time, each only after the one before it has been checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is."
+  }
+};
+var AI_RUNS_CHECKS = Object.freeze({
+  ...AI_RUN_OWN_CHECKS,
+  ...AI_RUN_ACT_SHAPE_CHECKS,
+  ...AI_RUNS_CONTEXT_CHECKS,
+  ...SURFACE_RUN_CHECKS,
+  ...AI_RUN_OPEN_CHECKS
+});
+
+// src/ai-runs/skill-version.mjs
+function refusal9(key, detail) {
+  const row2 = AI_RUN_OWN_CHECKS[key];
+  return { ok: false, code: key, check: row2.check, translation: row2.translation, detail };
+}
+function checkSkillVersion(version) {
+  const v = typeof version === "string" ? version.trim() : "";
+  if (/^[^\s@]+@[^\s@]+$/.test(v)) return null;
+  return refusal9("AI_RUN_SKILL_VERSION_UNNAMED", !v ? "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them" : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`);
+}
+
+// src/airun.mjs
+var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
+var RUN_BOUNDS = {
+  fetches: "fetches requested of the capture path",
+  subsessions: "evidence sub-sessions spawned",
+  wallclock: "wall time across resumptions, in milliseconds",
+  runtime: "CPU or subrequest ceiling (D-54, D-56) \u2014 IS-9(d) builds its producer",
+  /* SK-8, AND IT IS A BOUND RATHER THAN A POLICY BECAUSE §7.3 (5) RULED IT ONE.
+       *"A machine that may mint citable rows without a bound produces a store of
+       proposals nobody cited — each correctly labelled, the whole unexamined"*,
+       which is exactly the failure `INVESTIGATIVE-SESSION.md` §15 named for
+       versions one layer up. So the EXTRACT role's productions are budgeted in the
+       table the run already has: **no schema, no new vocabulary**, which was the
+       answer's own test.
+  
+       IT IS A ROW HERE AND NOT A SECOND FENCE. `finishedBound` already terminates
+       a run whose consumed reaches its allowed, and `#aiRunTerminate` already
+       writes which bound stopped it and where — a run that ran out of mints ends
+       exactly as a run that ran out of fetches does, with no branch anywhere
+       asking which kind of bound it was.
+  
+       IT IS LAST IN DECLARATION ORDER BEFORE `lease`, WHICH IS A TIE-BREAK RULE
+       AND NOT AN OPINION: `finishedBound` sorts exhausted bounds by this object's
+       key order, so a run that exhausted both its fetches and its mints in one
+       tick reports FETCHES — the earlier, cheaper-to-explain cause. Putting mints
+       first would have renamed every such run's ending without changing anything
+       about it. */
+  mints: "passages a machine credential marked citable (\xA77.3 (5)) \u2014 the EXTRACT role's budget",
+  /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): AN ASSISTANT OPENS A QUESTION ONLY INSIDE A
+     RUN, AND THE RUN BOUNDS HOW MANY. Ruled on `mints`' rule, so it is `mints`' shape: a ROW in this table, no
+     schema and no second vocabulary; declared at `op=airunopen` by the member who opens the run; a creation
+     under a run that declares none is REFUSED rather than given an allowance invented in code (a number
+     chosen here would be a measurement with no measurement behind it); and a run whose surfaces reach the
+     allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
+     in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
+  surfaces: "questions an assistant opened inside this run (\xA711 item 5, rule 2) \u2014 the run's bound on what it may surface",
+  lease: "the run stopped heartbeating and its lease lapsed: it died rather than finished"
+};
+var RUN_ENDINGS = {
+  completed: "the run finished its work",
+  cancelled: "a member stopped it",
+  "mode-not-deployed": "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"
+};
+var RUN_NEVER_STARTED = { "mode-not-deployed": 1 };
+function runStatusFor(bound) {
+  const b = bound == null ? "" : String(bound);
+  if (Object.prototype.hasOwnProperty.call(RUN_NEVER_STARTED, b)) return "never-started";
+  if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return "stopped";
+  return "finished";
+}
+var STANDARD_BASIS = {
+  recorded: "this run was formed under a bar the launching project declared",
+  "none-recorded": "no bar was recorded when this run was formed, and the plane does not fill one in afterwards",
+  "context-has-no-project": "this run works on a question outside any project, and only a project declares a bar",
+  "names-no-axis": "something was recorded as the bar for this run and it names neither axis, so there is no bar here",
+  unreadable: "a bar was recorded for this run and cannot be read back"
+};
+var RUN_CONTEXTS = {
+  inquiry: "a question the group is working on, which any project may draw on",
+  project: "a body of work with its own members, its own bar and its own lens"
+};
+function refusal10(key, detail, extra = null) {
+  const row2 = AI_RUN_CHECKS2[key];
+  return {
+    ok: false,
+    code: key,
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra && typeof extra === "object" ? extra : {}
+  };
+}
+function checkBound(bound) {
+  const b = bound == null ? "" : String(bound);
+  if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return null;
+  if (Object.prototype.hasOwnProperty.call(RUN_ENDINGS, b)) return null;
+  return refusal10(
+    "AI_RUN_BOUND_UNNAMED",
+    `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; endings: ${Object.keys(RUN_ENDINGS).join(", ")} (\xA714b.6)`
+  );
+}
+var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
+var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
+function checkConsume(entries, { seed = false, allowance = false, map = false, list: list2 = false } = {}) {
+  if (list2) {
+    if (entries == null) return null;
+    if (!Array.isArray(entries))
+      return refusal10(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`bounds\` was ${typeof entries === "object" ? "a map" : `a ${typeof entries}`}: it is a list of { bound, allowed, unit }, one per bound the run is held to (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    const bad = entries.findIndex((e) => !e || typeof e !== "object" || Array.isArray(e));
+    if (bad >= 0)
+      return refusal10(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`bounds[${bad}]\` is ${(JSON.stringify(entries[bad]) ?? String(entries[bad])).slice(0, 60)}, not a { bound, allowed, unit } entry, so it names no bound (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    return checkConsume(
+      entries.map((e) => [e.bound == null ? "" : String(e.bound), e.allowed]),
+      { seed: true, allowance: true }
+    ) || checkConsume(entries.map((e) => [String(e.bound), e.consumed]), { seed: true });
+  }
+  if (map) {
+    if (entries == null) return null;
+    if (typeof entries !== "object" || Array.isArray(entries))
+      return refusal10(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} (${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    entries = Object.entries(entries);
+  }
+  for (const [k, v] of Array.isArray(entries) ? entries : []) {
+    const b = String(k);
+    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))
+      return refusal10(
+        "AI_RUN_BOUND_UNKNOWN",
+        `'${b === "" ? "(absent)" : b.slice(0, 60)}' names no bound of a run. The bounds a caller spends are ` + Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ") + ` (\xA714b.6); a figure for a bound that does not exist counts nothing. Nothing was written`,
+        { bound: b }
+      );
+    if (PLANE_DECIDED_BOUNDS.includes(b))
+      return refusal10(
+        "AI_RUN_BOUND_PLANE_COUNTED",
+        `'${b}' is decided by the plane \u2014 a run's lease lapses on the clock, read by the reaper, and nothing spends it (\xA714b.6) \u2014 so no figure for it, not even a zero, is the caller's to send or a member's to declare. Nothing was written`,
+        { bound: b }
+      );
+    if (allowance && (v == null || v === 0))
+      return refusal10(
+        "AI_RUN_BOUND_NO_ALLOWANCE",
+        `'${b}' was declared with ${v == null ? "no `allowed`" : "`allowed: 0`"}: a declared bound states how much the run may spend, a whole number of one or more, and a bound the run is not held to is left out of \`bounds\` (\xA714b item 6). A zero allowance would be read as no ceiling at all. Nothing was written`,
+        { bound: b }
+      );
+    if (seed && v == null) continue;
+    if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
+      return refusal10(
+        "AI_RUN_CONSUME_INVALID",
+        `'${b}' was ${allowance ? "declared an allowance of" : "given"} ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, ${allowance ? "allowed or spent" : "and a count never goes down"} (\xA714b.6). Nothing was written`,
+        { bound: b }
+      );
+    if (allowance) continue;
+    if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
+      return refusal10(
+        "AI_RUN_BOUND_PLANE_COUNTED",
+        `'${b}' is counted by the plane as the run's work lands, never by the caller (\xA711 item 5 rule 2, SK-8), so a figure sent for it could only disagree with the count. Nothing was written`,
+        { bound: b }
+      );
+  }
+  return null;
+}
+var AI_RUN_STATE_MAX_BYTES = 262144;
+function checkRunState(state) {
+  if (state == null) return null;
+  let json5;
+  try {
+    json5 = JSON.stringify(state);
+  } catch {
+    return null;
+  }
+  if (typeof json5 !== "string") return null;
+  const bytes2 = new TextEncoder().encode(json5).length;
+  if (bytes2 <= AI_RUN_STATE_MAX_BYTES) return null;
+  return refusal10(
+    "AI_RUN_STATE_TOO_LARGE",
+    `the run's state is ${bytes2} bytes as JSON, over the ${AI_RUN_STATE_MAX_BYTES} a run may keep: \`state\` is the run's resumable work list (\xA714b.7), not what it read. Nothing was written`,
+    { bytes: bytes2, limit: AI_RUN_STATE_MAX_BYTES }
+  );
+}
+var PROJECT_GATE_GROUNDS = {
+  /* No member is behind this caller at all — a machine credential. The gate is
+     NOT APPLIED, and the reason is that it CANNOT be: participation is a
+     relationship between a PERSON and a project, and a token class is not a
+     person. This keeps the gate's population identical to the capability
+     FLOOR's, which `index.mjs` already applies only `if (viaSession)` — a fence
+     wider than the floor beneath it would be an undeclared interface change
+     wearing the costume of caution, and it would refuse the daemon outright.
+     DEC-63 names the lever for this half explicitly and it is a different one:
+     *"any narrowing happens at the credential layer"* — IS-5's `ai` credential
+     scope, which can only narrow what a machine may reach. */
+  NO_MEMBER_BEHIND_CALLER: "the caller is a machine credential, so there is no participation to check",
+  /* REC-145 (2026-09-19) — DEC-63 AS AMENDED BY BOB, 2026-09-18: *"A project doesn't own an area of
+     enquiry to the exclusion of others."* A run whose context is a QUESTION consults no project for its
+     verdict (Membership v2 §7, the DEC-63 ruling bullet, "How it applies at the code", BOB #16). ONE
+     GROUND for every question, whoever cites it, and that is the §7.9 half of the ruling rather than
+     tidiness. The ground this REPLACES, `PROJECTLESS` (PL-18, from DEC-17: *"An inquiry outside any
+     project has no bar and inherits none"*), was said only when NO project cited the question, so its
+     ABSENCE told a member that some project — possibly one hidden from them — did; a second permitting
+     ground keyed on the citers would carry the same bit. DEC-17's case is not lost: a question in no
+     project is still a question, permitted and STATED on this ground. And it is not a silent allow: the
+     answer still says WHY the run was allowed, which is what PL-18's vocabulary exists for. */
+  INQUIRY: "this run is over a question, and a project does not own a line of inquiry: the verdict consults no project (DEC-63 as amended, 2026-09-18)",
+  PARTICIPANT: "the account has joined the project this run is over"
+};
+function runConsultsProjects(contextType) {
+  return String(contextType ?? "") === "project";
+}
+function projectGate({
+  actor = null,
+  contextType = null,
+  contextId = null,
+  projects = [],
+  projectsJoined = []
+} = {}) {
+  const who2 = actor == null ? "" : String(actor).trim();
+  const all = Array.isArray(projects) ? projects.map(String) : [];
+  const mine = Array.isArray(projectsJoined) ? projectsJoined.map(String) : [];
+  const label = `${contextType == null ? "" : String(contextType)} ${contextId == null ? "" : String(contextId)}`.trim() || "the named context";
+  if (!who2)
+    return {
+      permitted: true,
+      applied: false,
+      ground: "NO_MEMBER_BEHIND_CALLER",
+      why: PROJECT_GATE_GROUNDS.NO_MEMBER_BEHIND_CALLER,
+      projects: all.length
+    };
+  if (!runConsultsProjects(contextType))
+    return {
+      permitted: true,
+      applied: false,
+      ground: "INQUIRY",
+      why: PROJECT_GATE_GROUNDS.INQUIRY,
+      projects: all.length
+    };
+  if (mine.length > 0)
+    return {
+      permitted: true,
+      applied: true,
+      ground: "PARTICIPANT",
+      why: PROJECT_GATE_GROUNDS.PARTICIPANT,
+      projects: all.length
+    };
+  return refusal10(
+    "AI_RUN_NOT_PROJECT_MEMBER",
+    `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
+  );
+}
+function checkRunContextKind({ contextType = null, contextId = null, found = null } = {}) {
+  const said2 = String(contextType ?? "");
+  const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
+  if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said2))
+    return refusal10(
+      "AI_RUN_NO_SUCH_CONTEXT",
+      `${JSON.stringify(said2.slice(0, 60))} is not a kind of run context: a run is over a question ("inquiry") or a project ("project"), and nothing else, so no run over ${id} was opened`
+    );
+  if (found !== null && found !== void 0 && found === said2) return null;
+  return refusal10(
+    "AI_RUN_NO_SUCH_CONTEXT",
+    `no ${JSON.stringify(said2)} answers to ${id} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
+  );
+}
+function runPrincipalOf(principal) {
+  const s = principal == null ? "" : String(principal).trim();
+  if (!s.startsWith("member:")) return s;
+  const i = s.indexOf("/");
+  return i < 0 ? s : s.slice(0, i);
+}
+function runPrincipalGate({ caller = null, principal = null, act = null } = {}) {
+  const who2 = runPrincipalOf(caller), owner = runPrincipalOf(principal);
+  if (who2 && owner && who2 === owner) return null;
+  const doing = typeof act === "string" && act.trim() ? act.trim() : "ticking or closing a run";
+  return refusal10(
+    "AI_RUN_NOT_PRINCIPAL",
+    `${doing} is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds`
+  );
+}
+function finishedBound(bounds, { expired = false, offered = null } = {}) {
+  if (offered != null && offered !== "") return String(offered);
+  const rows = Array.isArray(bounds) ? bounds : [];
+  const order = Object.keys(RUN_BOUNDS);
+  const hit = rows.filter((r) => r && Number(r.allowed) > 0 && Number(r.consumed) >= Number(r.allowed)).sort((a, b) => order.indexOf(String(a.bound)) - order.indexOf(String(b.bound)))[0];
+  if (hit) return String(hit.bound);
+  if (expired) return "lease";
+  return "completed";
+}
+
+// src/ai-runs/schema.mjs
+var AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"]);
+var AI_RUNS_SCHEMA = `
+
+-- IS-6 / INVESTIGATIVE-SESSION.md \xA711: THE RUN IS AN OBJECT, and it is built on
+-- the capture_sessions shape above rather than on a new one \u2014 "SCRATCH, not
+-- record\u2026 a work list with an expiry": ticks, an expiry, opaque state,
+-- resumable across invocations. Every column beyond that shape is one \xA711 or
+-- \xA714b.6 names, and each is here because a version is only interpretable
+-- against the conditions it was formed under.
+--
+-- THE LEASE IS THE HEARTBEAT AND 'expires' IS IT. A run extends it on every
+-- tick. A run that is KILLED extends nothing, so the lease lapses and the
+-- ai-run-reap scheduler consumer terminates it \u2014 which is how the observation
+-- log gets its terminal entry for a run that never ran its own exit path. That
+-- is the whole of \xA714b.6's guarantee and the reason this column is not merely a
+-- TTL for tidiness.
+--
+-- TWO PRINCIPALS, NEVER ONE (\xA714a, DEC-27(b), DEC-55.4). 'principal_plane' is
+-- the plane credential ('token:<class>' or a member id); 'principal_claude' is
+-- WHICH LEVEL of the Claude-account cascade paid \u2014 member, then project, then
+-- instance. They are two different principals and an act must say both. NEITHER
+-- IS EVER A TOKEN VALUE: 'principal_claude_ref' is a label the operator
+-- configured, not a secret, and nothing in the plane writes a credential here.
+--
+-- NO TRANSCRIPT COLUMN, AND THAT IS DEC-61 (Bob, 2026-08-06). The model's
+-- reasoning is DEVICE-LOCAL, TTL'd and deleted at publication, and never in the
+-- record store. 'state' is the run's resumable SCRATCH \u2014 its work list \u2014 and
+-- the observation log below is a structured account of where the search went.
+-- Neither is a transcript, and there is no column here one could be put in.
+CREATE TABLE IF NOT EXISTS ai_runs (
+  run                   TEXT PRIMARY KEY,
+  status                TEXT NOT NULL DEFAULT 'running',
+  label                 TEXT,
+  mode                  TEXT,
+  context_type          TEXT NOT NULL,
+  context_id            TEXT NOT NULL,
+  principal_plane       TEXT NOT NULL,
+  principal_claude      TEXT NOT NULL,
+  principal_claude_ref  TEXT,
+  skill_version         TEXT,
+  bias_manifest         TEXT,
+  standard_pair         TEXT,
+  created               TEXT NOT NULL,
+  updated               TEXT NOT NULL,
+  expires               TEXT NOT NULL,
+  ticks                 INTEGER NOT NULL DEFAULT 1,
+  state                 TEXT NOT NULL,
+  stopped_bound         TEXT,
+  stopped_condition     TEXT,
+  stopped_at            TEXT,
+  lens_at_open          TEXT,
+  rerun_of              TEXT
+);
+CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
+CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
+
+-- \xA714b.6's budget, ONE ROW PER BOUND, with its live consumption beside it.
+-- Rows rather than columns because F11 (\xA719, carried by UI-38) requires the
+-- surface to render the budget and its consumption while the run is live, and
+-- its renderers are field-name-blind \u2014 they walk what the record published. A
+-- bound added later is a row, and nothing on any surface moves.
+--
+-- BOTH NUMBERS ARE STORED. UI-38 derives nothing and its suite fails any
+-- arithmetic in the rendered output, so the record must publish 'allowed' and
+-- 'consumed' separately; a percentage or a remainder computed here would only
+-- move the same defect one layer down.
+CREATE TABLE IF NOT EXISTS ai_run_bounds (
+  run       TEXT NOT NULL,
+  bound     TEXT NOT NULL,
+  allowed   INTEGER NOT NULL,
+  consumed  INTEGER NOT NULL DEFAULT 0,
+  unit      TEXT,
+  PRIMARY KEY (run, bound)
+);
+
+-- D-85 (INVESTIGATIVE-SESSION.md section 11 item 5, rule 2, BOB #25, 2026-09-21): AN ASSISTANT OPENS A
+-- QUESTION ONLY INSIDE A RUN. When an 'ai' credential creates an inquiry it names a RUNNING run whose
+-- principal it is, and the plane records the link HERE, keyed by the new inquiry. It is an INSTANCE row and
+-- never a line in the inquiry's signed bytes: the run is scratch and is never published, and a pointer in
+-- published bytes that no reader can resolve is not provenance. One row per inquiry (an inquiry is created
+-- once). Its principal is the control plane's stamp for the credential that created it, never a field it sent.
+-- The column is named bundle_id so the row rides purge's TABLES list and clears in BOTH arms (D-113).
+-- NO index beyond the key: every reader asks by the inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
+  bundle_id  TEXT PRIMARY KEY,
+  run        TEXT NOT NULL,
+  principal  TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+`;
+
+// src/ai-runs/deployment.mjs
+var GATE_ADDRESS = {
+  file: "agent-worker/src/harness.mjs",
+  owned_by: "FL-3 (IS-9, the run harness) \u2014 landed, and outside this area's paths",
+  modes_export: "MODES",
+  table_export: "CONTROL_FLOW",
+  row: "gate-mode",
+  first_step_export: "FIRST_STEP",
+  decision_function: "nextStep",
+  why_it_is_first: "a run in a mode that is not deployed terminates before it has spent anything, so the gate cannot be reached around by exhausting something else first"
+};
+var SEQUENCING_SOURCE = "docs/development/INVESTIGATIVE-SESSION.md";
+var SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
+var DEPLOYMENT_SEQUENCE = {
+  id: "check-deploys-first",
+  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
+     mode that deploys first, and every later index is a mode that enables only
+     after the one before it has been verified live. */
+  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
+     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
+     is ARM B3's whole demand (the two rosters are ONE set, held in both
+     directions) and ARM B4's (index 0 stays the only deployed mode; every later
+     index, `extract` included, is not). The pack's digest moves with this line
+     by construction and nothing needs bumping by hand. */
+  order: ["check", "investigate", "extract"],
+  first_deployed_mode: "check",
+  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
+     because a session cannot verify its own copying by re-reading it. */
+  text: "CHECK IS THE FIRST DEPLOYED MODE",
+  role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
+  because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
+  satisfies: "Deploying that mode first satisfies the enacted instruction without a second architecture",
+  source: SEQUENCING_SOURCE,
+  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
+     standard: one pin proves the sentence was copied; two prove the RULING is
+     the one both surfaces carry, so a sequencing quietly reversed on either
+     fails here rather than in a review nobody re-runs. */
+  also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
+  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
+  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
+     half is this area's, and saying so is the point rather than a disclaimer. */
+  enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
+  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
+  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
+     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
+     cannot leave it stale by editing prose around it. `null` is not "unknown":
+     it is "no live run has been verified", and the suite holds it against the
+     landed flag, which is still `false`. */
+  verification_recorded: null,
+  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
+  enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
+  gate: GATE_ADDRESS,
+  /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
+     refused a mode, and this said so; `op=airunopen` now refuses a mode not in `DEPLOYED_MODES` below with C-109.1, so
+     no run, and no production under a run, exists in a mode not deployed. `enforced_by_row` stays: the fleet member's
+     first row still refuses first inside the harness (agent-worker R14), and the two are tallied apart. */
+  enforced_by: ["C-109.1"],
+  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
+  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
+     landed sources rather than believed. */
+  does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
+  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
+  holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
+};
+var DEPLOYED_MODES = Object.freeze(DEPLOYMENT_SEQUENCE.order.slice(
+  0,
+  DEPLOYMENT_SEQUENCE.verification_recorded == null ? 1 : 2
+));
+var DEFAULT_MODE = DEPLOYED_MODES[0];
+
+// src/ai-runs/index.mjs
+var safeJson11 = (s) => {
+  try {
+    return s == null ? null : JSON.parse(s);
+  } catch {
+    return null;
+  }
+};
+function runSight(col, viewer) {
+  if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
+    throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}).`);
+  const gate = viewerPredicate(viewer);
+  if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [], scope: gate.scope };
+  if (gate.scope === "DENY") return { sql: gate.sql, args: [], scope: gate.scope };
+  return {
+    sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
+            WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
+    args: gate.args,
+    scope: gate.scope
+  };
+}
+function hiddenRuns(viewer, column = void 0) {
+  const byColumn = column !== void 0;
+  const closed = byColumn ? { sql: " AND 0=1", args: [] } : { sql: " AND COALESCE(authority_kind, '') <> 'run'", args: [] };
+  try {
+    if (byColumn && !(typeof column === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(column))) return closed;
+    const seen = runSight("r.context_id", viewer);
+    if (seen.scope === "member") return { sql: "", args: [] };
+    const inSight = `(SELECT r.run FROM ai_runs r WHERE ${seen.sql})`;
+    return byColumn ? { sql: ` AND COALESCE(${column}, '') IN ${inSight}`, args: seen.args } : { sql: ` AND NOT (authority_kind = 'run' AND COALESCE(authority, '') NOT IN ${inSight})`, args: seen.args };
+  } catch {
+    return closed;
+  }
+}
+var AiRuns = class _AiRuns {
+  #waitSource = null;
+  #runListeners = [];
+  // R43: {module, fn, seq}, in the modules' total order
+  constructor(ctx, env = {}) {
+    this.ctx = ctx;
+    this.env = env || {};
+    this.sql = ctx.storage.sql;
+    recordOf(ctx).declarePurge("ai-runs", [
+      "inquiry_run_surfacings",
+      { name: "ai_run_bounds", keys: [] },
+      { name: "ai_runs", keys: [] }
+    ]);
+    observationLogOf(ctx).registerAuthority("run", (run, viewer) => !!this.runFor(run, viewer));
+    const retrieval = retrievalOf(ctx);
+    retrieval.registerHiddenRunTail("ai-runs", hiddenRuns);
+    retrieval.registerProjectionDecoration("ai-runs", (row2, { viewer }) => normalizeType(row2.object_type) === "inquiry" ? this.surfacedIn(row2.bundle_id, viewer).then((s) => ({ surfaced_in: s })) : { surfaced_in: null });
+    biasOf(ctx, { env: this.env }).registerWorkProducts("ai-run", this.workProducts());
+    contradictionOf(ctx).registerRunGate("ai-runs", (run, viewer, caller) => {
+      const g = this.runGate(run, viewer, caller, "proposing contradictions under a run");
+      return { found: g.found, running: g.running, refusal: g.refusal };
+    });
+    promotionOf(ctx).registerStep("ai-runs", { check: (c) => this.#surfacingCheck(c), project: (c) => this.#surfacingProject(c) });
+  }
+  /** R30: the runs as the bias debt's work products (bias R33): `list(after, limit)` the run ids after `after`,
+   *  ascending; `read(run)` the run's context, member principal, the lens recorded when it began (the lens in force
+   *  at its open where the open recorded one, else the manifest it was handed; null when neither can be read, R32),
+   *  the manifest it ran under when that was the lens in force, its `rerun_of`, and `registered` (N284): the run's
+   *  `created`, the open's instant, which bias offers the scheduler's rank as the product's `waitingSince` (null
+   *  when the stored instant cannot be read, never filled in); `visible(run, viewer)` R19's sight. Read as the
+   *  administrator viewer, as bias reads every work product. */
+  workProducts() {
+    const MEMBER = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/;
+    return {
+      list: (after, limit) => this.#rows(
+        `SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`,
+        String(after ?? ""),
+        Math.max(1, Math.floor(Number(limit) || 50))
+      ).map((r) => String(r.run)),
+      read: async (run) => {
+        const row2 = this.#one(`SELECT rerun_of, created FROM ai_runs WHERE run = ?`, String(run ?? ""));
+        if (!row2) return null;
+        const a = await this.read({ run, viewer: "admin" });
+        const s = a && a.found === true ? a.session : null;
+        if (!s) return null;
+        const bias = s.bias || {};
+        const sha = (m) => m && typeof m.statements_sha === "string" ? m.statements_sha : null;
+        const lens = bias.moved_basis === "at_open" ? { basis: "at_open", statements_sha: sha(bias.at_open) } : bias.moved_basis === "handed" ? { basis: "handed", statements_sha: sha(bias.manifest) } : null;
+        const pm = MEMBER.exec(String(s.principal && s.principal.plane || ""));
+        return {
+          context: s.context ? { type: s.context.type, id: s.context.id } : null,
+          principal: pm ? pm[1] : null,
+          lens,
+          ranUnder: bias.in_force === true ? sha(bias.manifest) : null,
+          rerunOf: row2.rerun_of != null && String(row2.rerun_of).trim() ? String(row2.rerun_of).trim() : null,
+          registered: typeof row2.created === "string" && Number.isFinite(Date.parse(row2.created)) ? row2.created : null
+        };
+      },
+      visible: async (run, viewer) => !!this.runFor(run, viewer)
+    };
+  }
+  #rows(q6, ...a) {
+    return [...this.sql.exec(q6, ...a)];
+  }
+  #one(q6, ...a) {
+    const r = this.#rows(q6, ...a);
+    return r.length ? r[0] : null;
+  }
+  #membership() {
+    return membershipOf(this.ctx);
+  }
+  #connections() {
+    return connectionsOf(this.ctx);
+  }
+  #bias() {
+    return biasOf(this.ctx);
+  }
+  #observations() {
+    return observationLogOf(this.ctx);
+  }
+  /** D-15's bundle gate over a run's context column: `runSight`, the one spelling. */
+  #bundleGate(col, viewer) {
+    const { sql, args } = runSight(col, viewer);
+    return { sql, args };
+  }
+  /* ---- R16, R17: THE WAIT SOURCE `capture-requests` registers (K71, N39) ---------------------------------------
+   * The wake reads the requests a run waits on through this, never `capture_requests` by name. `source` is
+   * `{ tickMs(), holds(iso, limit), woken(limit), completions(run, limit), markWoken(requests, iso) }`, all
+   * synchronous; `configured()` may be added, and answers whether anything drains at all (the hold is inert where
+   * nothing will ever complete). With none registered the wake holds and wakes nothing (R17). */
+  registerWaitSource(module, source) {
+    const fns = ["tickMs", "holds", "woken", "completions", "markWoken"];
+    if (typeof module !== "string" || !module || !source || fns.some((f9) => typeof source[f9] !== "function"))
+      return { ok: false, reason: "WAIT_SOURCE_MALFORMED", detail: `a wait source names its module and ${fns.join(", ")}` };
+    if (this.#waitSource) return { ok: false, reason: "WAIT_SOURCE_DECLARED", module, declaredBy: this.#waitSource.module };
+    this.#waitSource = { module, source };
+    return { ok: true, module };
+  }
+  #wait() {
+    return this.#waitSource ? this.#waitSource.source : null;
+  }
+  /** R43 (N223, K259): a later module's post-write notice (`scheduler`'s R9), called after each successful `open`
+   *  commits with `{run, contextType, contextId, expires}`, once per listener, in the modules' total order
+   *  (membership's `MODULE_ORDER`, R83). A malformed registration, or a second by the same module, is refused by
+   *  membership's `listenerRefusal` (its R81), the one site of LISTENER_MALFORMED and LISTENER_DECLARED. */
+  onRunOpened(module, fn) {
+    const refused = listenerRefusal(this.#runListeners, module, fn);
+    if (refused) return refused;
+    const rank5 = (m) => {
+      const i = MODULE_ORDER.indexOf(m);
+      return i === -1 ? Infinity : i;
+    };
+    this.#runListeners.push({ module, fn, seq: this.#runListeners.length });
+    this.#runListeners.sort((a, b) => rank5(a.module) - rank5(b.module) || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  #captureRequestConfigured() {
+    const w = this.#wait();
+    return !!w && (typeof w.configured !== "function" || w.configured() === true);
+  }
+  #captureRequestTickMs() {
+    const w = this.#wait();
+    return w ? Number(w.tickMs()) || 0 : 0;
+  }
+  /* An hour, matching capture_sessions' own TTL, and it is a LEASE rather than
+     a lifetime: every tick pushes it out. A run that heartbeats lives; a run
+     that stops heartbeating is dead within the lease and is reaped. */
+  static AI_RUN_LEASE_MS = 36e5;
+  /* REC-70 — THE OBSERVATION LOG'S BOUND. NEITHER FIGURE IS NEW, and the PAIR
+       is deliberately not copied whole from either sibling, because this log has
+       TWO READERS WITH OPPOSITE NEEDS and no single existing pair serves both.
+  
+       200 is `op=exportlog`'s default (`EXPORT_LOG_LIMIT_DEFAULT`, REC-57), and
+       it is the plane's ONLY other append-only, `seq`-ordered log read. The
+       default belongs to the reader who is CHECKING a run — §11's "the log is
+       what lets anyone else CHECK" — and a checker wants a page, not a replay.
+  
+       5000 is the plane's shared READ CEILING: `op=list`'s, which `op=projection`
+       reused at REC-59 and the meaning layer reused at REC-60 rather than minting
+       a second. The ceiling belongs to the OTHER reader — §14b.7's RESUMED run,
+       which reads its own log to continue rather than restart, and for which a
+       cut answer is a run that redoes work it already did. `op=exportlog`'s 1000
+       was sized for an administrator scrolling exports; it is the wrong ceiling
+       for a machine replaying its own history, and the meaning layer's 500
+       default is sized for a member exploring a subject graph that grows on
+       D-224's quadratic curve, which a run log does not.
+  
+       WHAT THIS DOES NOT GIVE, said plainly rather than left to be discovered
+       (REC-60's own sentence, and it applies unchanged): a caller cut at the
+       CEILING has no way past it. A run that emits more than 5000 observations
+       cannot replay its log whole through this op. No cursor is minted here —
+       REC-55's declined-second-copy rule — and the honest bound is published
+       instead of the complete answer being promised. */
+  static AI_RUN_LOG_LIMIT_DEFAULT = 200;
+  static AI_RUN_LOG_LIMIT_MAX = 5e3;
+  /* REC-69 — THE CONTEXT-KEYED RUN LIST'S PAIR, AND NEITHER FIGURE IS NEW.
+   *
+   * 200/1000 is `op=versionchain`'s pair, which `op=basisversions` reused
+   * rather than minting a second, and this read is the SAME KIND as both: a
+   * KEYED lookup — one context, not a query a caller pages through a corpus
+   * with — whose answer is a list of the objects hanging off that key. The log
+   * pair above is deliberately NOT reused: it bounds ONE RUN'S OBSERVATIONS,
+   * which grow one row per tick with nothing capping the tick count, and this
+   * bounds THE RUNS IN A CONTEXT, which grow one row per investigation a member
+   * launched. Different populations at different rates, so borrowing the log's
+   * 5000 ceiling here would be a figure carried across on the strength of the
+   * table name alone.
+   *
+   * WHAT THIS DOES NOT GIVE, on REC-60's sentence and `aiRunLog`'s above: a
+   * caller cut at the CEILING has no way past it. No cursor is minted (REC-55's
+   * declined-second-copy rule); the honest bound is published instead of the
+   * complete answer being promised. */
+  static AI_RUNS_LIMIT_DEFAULT = 200;
+  static AI_RUNS_LIMIT_MAX = 1e3;
+  static #aiIso(ms) {
+    return stampInstant("second", ms);
+  }
+  /** Append ONE run-log observation. **THE FOLD** (`OBSERVATION-LOG-DESIGN.md`
+   *  §4.4): `ai_run_log`'s rows ARE rows of `observations` with
+   *  `authority_kind = run`, `authority = <run>`, `actor_class = machine`. This
+   *  method is no longer a writer — it is the run's DOOR onto the one writer, and
+   *  that is what §4.4 means by *"two writers is not [the landing's call]"*.
+   *
+   *  ITS BEHAVIOUR DID NOT CHANGE AND THAT IS ASSERTED RATHER THAN CLAIMED:
+   *  every entry that was accepted before this landing is accepted now, the
+   *  refusal object comes back in the same shape, and `op=airunlog` answers
+   *  byte-identically over rows written before the fold. C-22.10 did not fire
+   *  on `run` for exactly this reason UNTIL REC-100 (2026-09-18, IC-130): the
+   *  rollup ruling gave the run's two rollup writers a referent, and a bare
+   *  `run` PRESENT is now refused here like any other — see its catalogue row. */
+  #aiRunAppend(run, entry, at17, terminal = 0, actor = null) {
+    return this.#observations().observe({
+      actorClass: "machine",
+      /* WHO the machine was, PASSED IN BY THE CALLER RATHER THAN LOOKED UP
+         HERE, and the change of shape is a finding rather than a preference.
+         §4.4 says `actor` is *"the run's credential"*; `ai_runs` HAS NO SUCH
+         COLUMN — measured, not assumed — and the column that actually carries
+         the machine identity is `principal_claude`, IS-6's Claude principal.
+         Reported as a DESIGN GAP against §4.4.
+         THE FIRST DRAFT READ IT HERE, with `SELECT principal_claude FROM
+         ai_runs`, and `run-conditions.test.mjs` ARM W3 caught it BY NAME: that
+         made this method a THIRTEENTH reader of `ai_runs`, and ARM W9 then
+         refused the only role that could have fitted, because an ATTRIBUTES
+         reader must project nothing but the key. The arms were right twice over.
+         The honest fix was not a role but to stop reading: every caller already
+         holds the run row it is appending under, so the lookup was also one
+         EXTRA SELECT PER APPENDED ENTRY — `op=airuntick` appends N and was
+         paying N of them for a value it had in hand.
+         A CALLER THAT DOES NOT SAY WRITES NULL, and that is correct rather than
+         lossy: attributing a machine's look to the plane's own scheduler would
+         be a false attribution in the one field that says who looked. */
+      actor: actor || null,
+      authorityKind: "run",
+      authority: run == null ? null : String(run),
+      level: entry && entry.level ? entry.level : "document",
+      /* `unstated`, and it is the honest word rather than a derived one.
+         `ai_run_log` never recorded what KIND of subject a row was about, so
+         deriving one from the level would be the record claiming more than it
+         can support — see `OBSERVATION_SUBJECT_KINDS` in airun.mjs. */
+      subjectKind: "unstated",
+      subject: entry ? entry.subject : null,
+      state: entry ? entry.state : void 0,
+      governed: entry ? entry.governed === true : false,
+      condition: entry ? entry.condition : null,
+      bound: entry ? entry.bound : null,
+      resultKind: entry ? entry.result_kind ?? null : null,
+      resultRef: entry ? entry.result_ref ?? null : null,
+      detail: entry ? entry.detail : null,
+      /* C-22.6 travels through UNCHANGED: the bundle key is what the refusal
+         reads, and it is passed rather than dropped here. */
+      bundle: entry ? entry.bundle : null
+    }, at17, terminal);
+  }
+  /** What the run's SEARCH established overall, reduced from the log the run
+   *  actually wrote rather than declared by the run about itself.
+   *
+   *  The order is a strength order over D-129's vocabulary and it is stated
+   *  here because it is a judgement: a run that found something says PRESENT
+   *  (that is a positive finding, not a coverage claim); otherwise the weakest
+   *  honest word wins, and a run with no observations at all says NEVER_LOOKED.
+   *
+   *  THE OVERRIDE IS THE POINT. When a BOUND stopped the run, a definitive
+   *  absence is unavailable to it — not finding something and not finishing the
+   *  search are different facts, and only one licenses a conclusion
+   *  (`heldMatch`'s lesson, §14b.6's own citation). So LOOKED_ABSENT and
+   *  NEVER_LOOKED both become LOOKED_INDETERMINATE on a bounded stop. PRESENT
+   *  survives, because a document the run did hold does not stop existing
+   *  because the run ran out of time afterwards. */
+  /*  REC-100 / IC-130 — AND THE ROLLUP'S REFERENT COMES OUT OF THE SAME READ.
+   *  `OBSERVATION-LOG-DESIGN.md` §3, RULED 2026-09-18 by BOB #14: a rollup's
+   *  PRESENT carries `result_kind = observation` and `result_ref` = the `seq` of
+   *  the LATEST non-terminal PRESENT row of this run, computed HERE and never
+   *  supplied by a caller. So this returns `{ state, result_kind, result_ref }`
+   *  and both rollup writers (`#aiRunTerminate`, `#aiRunWake`) spread it, rather
+   *  than each deriving the pointer beside a state derived elsewhere.
+   *
+   *  THE INVARIANT THE RULING RESTS ON, and it is structural rather than
+   *  checked: `state` is PRESENT exactly when the grouped read returned a PRESENT
+   *  group, and that group's `MAX(seq)` IS the referent — one row of one query,
+   *  so there is no second read for the two to disagree across. The bound
+   *  override below only ever turns LOOKED_ABSENT / NEVER_LOOKED into
+   *  LOOKED_INDETERMINATE and never produces or removes PRESENT. A rollup that
+   *  is not PRESENT owes no referent and carries none. */
+  /** A non-terminal restatement of the rollup (the wake's entry, a dispatch that did not complete): `NEVER_LOOKED` is
+   *  never stored as a look (observation-log R3; only a run's terminal rollup may say it, K148), so a run whose own log
+   *  holds no look yet restates LOOKED_INDETERMINATE — what its search established is not yet known from its log. */
+  #aiRunRestatedState(run) {
+    const s = this.#aiRunSearchState(run, false);
+    return s.state === "NEVER_LOOKED" ? { ...s, state: "LOOKED_INDETERMINATE" } : s;
+  }
+  #aiRunSearchState(run, stoppedByBound) {
+    const latest = new Map(this.#rows(
+      `SELECT state, MAX(seq) seq FROM observation_log
+        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
+        GROUP BY state`,
+      run
+    ).map((r) => [r.state, r.seq]));
+    let s = latest.has("PRESENT") ? "PRESENT" : latest.has("partial") ? "partial" : latest.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE" : latest.has("LOOKED_ABSENT") ? "LOOKED_ABSENT" : "NEVER_LOOKED";
+    if (stoppedByBound && (s === "LOOKED_ABSENT" || s === "NEVER_LOOKED")) s = "LOOKED_INDETERMINATE";
+    return s === "PRESENT" ? { state: s, result_kind: "observation", result_ref: String(latest.get("PRESENT")) } : { state: s, result_kind: null, result_ref: null };
+  }
+  /** THE ONE EXIT. Every ending goes through here, and the terminal log entry
+   *  is written in the same transaction as the status change.
+   *
+   *  `offered` is what the caller SAYS stopped the run; it is honoured when
+   *  given and otherwise derived from the budget rows. Either way the answer
+   *  comes out of `finishedBound`, so the reaper holds no arithmetic of its
+   *  own. */
+  /*  `derive` is the difference between the two kinds of caller, and it is the
+   *  thing that makes C-22.5 REACHABLE rather than dead code. Found by this
+   *  item's own suite on its first run: with derivation on every path, a close
+   *  offering NO bound fell through `finishedBound` to "completed" — a legal
+   *  answer — so the refusal that IS §14b.6 could never fire, and an ending
+   *  nobody named would have been recorded as a run that finished. So:
+   *
+   *    - `aiRunClose` derives NOTHING. It is a caller SAYING why the run ended,
+   *      and a caller who does not say is refused by name. Inferring "completed"
+   *      from silence is exactly the manufactured fact this design refuses
+   *      everywhere else.
+   *    - `aiRunTick` and `#aiRunReap` DO derive, because there is no caller to
+   *      ask: the budget rows and the clock are the only evidence there is, and
+   *      `finishedBound` is the one function that reads them.
+   */
+  #aiRunTerminate({ run, offered = null, condition = null, at: at17, expired = false, derive = true }) {
+    const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
+    if (!row2) return {
+      run,
+      found: false,
+      note: "no such run: it either never existed or was purged"
+    };
+    if (row2.status !== "running")
+      return {
+        run,
+        found: true,
+        terminated: false,
+        status: row2.status,
+        bound: row2.stopped_bound,
+        condition: row2.stopped_condition,
+        note: "this run already ended; a second ending would overwrite the first, and the log is append-only for the same reason state history is"
+      };
+    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
+    const bound = derive ? finishedBound(bounds, { expired, offered }) : offered == null ? "" : String(offered);
+    const badBound = checkBound(bound);
+    if (badBound) return { run, found: true, terminated: false, ...badBound };
+    const badCondition = checkCondition(condition, CONDITION_KINDS);
+    if (badCondition) return { run, found: true, terminated: false, ...badCondition };
+    const stoppedByBound = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, bound);
+    const rollup = this.#aiRunSearchState(run, stoppedByBound);
+    const state = rollup.state;
+    const last = this.#one(
+      `SELECT level FROM observation_log
+        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
+        ORDER BY seq DESC LIMIT 1`,
+      run
+    );
+    return this.ctx.storage.transactionSync(() => {
+      const bad = this.#aiRunAppend(run, {
+        level: last ? last.level : "document",
+        subject: row2.context_id,
+        /* `state`, `result_kind`, `result_ref` — the rollup and its referent
+           from ONE read (REC-100; see `#aiRunSearchState`). */
+        ...rollup,
+        governed: false,
+        condition,
+        bound,
+        detail: stoppedByBound ? `the run stopped because the '${bound}' bound was reached (${RUN_BOUNDS[bound]})` : `the run ended: ${RUN_ENDINGS[bound]}`
+      }, at17, 1);
+      if (bad) return { run, found: true, terminated: false, ...bad };
+      const status = runStatusFor(bound);
+      this.sql.exec(
+        `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?
+         WHERE run = ?`,
+        status,
+        at17,
+        bound,
+        condition,
+        at17,
+        run
+      );
+      return {
+        run,
+        found: true,
+        terminated: true,
+        status,
+        bound,
+        condition,
+        state,
+        at: at17
+      };
+    });
+  }
+  /* ---- DEC-63 / PL-18: THE RUN VERBS' GATE IS PROJECT MEMBERSHIP ----------
+   *
+   * Bob, 2026-08-09: *"AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A
+   * PROJECT… the gate is PROJECT MEMBERSHIP, not a capability tier."* IS-6's
+   * provisional gated the three run verbs on `contribute` alone. That token
+   * stays, as the FLOOR beneath this — it is still checked, in `index.mjs`'s
+   * `NEEDS`, and it still refuses in its own words.
+   *
+   * THE DECISION IS NOT HERE. It is in `airun.mjs projectGate`, pure and shared
+   * by all three verbs. What lives here is the two DATABASE questions the pure
+   * function cannot ask: which projects hold this context, and which of those
+   * the account has joined.
+   */
+  /** WHICH PROJECTS HOLD THIS CONTEXT — the run's context resolved to the
+   *  projects whose participants may work on it.
+   *
+   *  [REC-145, 2026-09-19: for a QUESTION this set no longer licenses anything. DEC-63 as amended by
+   *  Bob (*"a project doesn't own an area of enquiry"*) means the verdict over an inquiry consults no
+   *  project; the set is read only for the report's SIGHTED count (REC-139). The inquiry paragraph
+   *  below is kept as the record of PL-18's reading, and its "licenses" sentence is superseded.]
+   *
+   *  A `project` context is its own project, and nothing else: a run opened
+   *  over a project is work in that project by definition.
+   *
+   *  An `inquiry` context is EVERY PROJECT THAT DRAWS ON IT, and it is a set
+   *  rather than a single id because `#moveVersionState` already states the
+   *  rule — *"an inquiry can sit beneath several projects and one team's
+   *  decision must never silently move another team's stance"*. Participation
+   *  in ANY ONE of them licenses asking the system to look at the question;
+   *  demanding participation in ALL of them would be a fence tighter than
+   *  DEC-63's rule, which says *a member of the project*, not *of every project*.
+   *
+   *  THE CITATION PREDICATE IS `#citesInto` AND NOT A SECOND QUERY. That helper
+   *  is the record's ONE answer to "who cites this, and is the citation live",
+   *  extracted precisely so retire's refusal and op=affordances' pre-flight
+   *  could not disagree. A raw `SELECT … FROM refs` here would have been a
+   *  third answer to the same question and would have counted SEVERED edges,
+   *  because the projection does not carry status: a project that WITHDREW from
+   *  a question would still have been licensing runs over it.
+   *
+   *  A context that is not a bundle at all yields an EMPTY set, which the gate
+   *  treats as projectless. That is the honest direction and it is not a hole:
+   *  a run's context is not required to be a bundle this store holds, and
+   *  refusing on a lookup that came back empty would be refusing on what cannot
+   *  be verified — a claim about the record made from a fact about our index.
+   *  [SUPERSEDED FOR THE OPEN 2026-09-19 by REC-153 (BOB #16, `7d03e852`): a run's context must now be a
+   *  bundle this record holds, of the kind named, that the caller can SEE — refused at the open by
+   *  `checkRunContextKind` before this is asked, for every caller including a machine. This reading of an
+   *  empty set survives only for runs stored before REC-153, which tick and close still read.]
+   *
+   *  REC-138 / D-426 — EXCEPT A CONTEXT THAT SAYS IT IS A PROJECT, which is now that project
+   *  whether or not this store holds it. As built, a PROJECT context the store did not hold read
+   *  as projectless and was PERMITTED, while one it held and the caller had not joined was refused
+   *  — so a member naming `contextType=project` learned from the verdict whether the id existed,
+   *  including for a project they cannot see (§7.9). The answer the paragraph above guards against
+   *  does not arise here: the gate asks the CALLER's participation, and a participation row exists
+   *  only for a project the record holds, so "you have joined no project by that id" is verified
+   *  for an absent id exactly as for a hidden one. A member is now refused both, byte for byte (the
+   *  refusal names only what the caller sent); a machine credential is not asked and is unchanged;
+   *  a question context keeps its projectless reading, because it names no project. */
+  #runContextProjects(contextType, contextId) {
+    const id = contextId == null ? "" : String(contextId);
+    if (!id) return [];
+    if (String(contextType) === "project") return [id];
+    return this.#connections().citesInto(id).confirmed.filter((from) => {
+      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, from);
+      return !!b && normalizeType(b.object_type) === "project";
+    }).sort();
+  }
+  /** D-451 (INVESTIGATIVE-SESSION.md §11 item 5, RULE 1'S TARGET, BOB #28) — THE QUESTIONS A PROJECT RUN'S
+   *  READINGS MAY LAND ON, published by `aiRunRead` so a member (FL-11's `runContextTarget`) can NAME one.
+   *
+   *  `#runContextProjects` read the other way round: every question `#citesInto` says this project
+   *  CONFIRMED-cites (the one live-cites predicate, and the very expression `op=suggest`'s context check (d)
+   *  asks, so a SEVERED edge is not a question the run may land on). Not `#refEdgeSevered` directly: the
+   *  severance rule has one definition and a PINNED caller set (`severedhomes.test.mjs`), and a seventh reader
+   *  is the drift D-267 removed. Kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
+   *  `SUGGEST_NOT_AN_INQUIRY` shape test) that THIS viewer can see (`#inSight`, the predicate its viewer gate
+   *  asks). A question the viewer cannot see is omitted and not counted (§7.9: a count would say it exists).
+   *  So the set published is exactly the set `suggestVersion`'s context check (d) admits for this caller, and
+   *  never a second answer to it. Sorted, so the read is stable. */
+  #runContextQuestions(projectId, viewer) {
+    const id = projectId == null ? "" : String(projectId);
+    if (!id) return [];
+    const out = [];
+    for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id=? AND kind='cites'`, id)) {
+      const q6 = String(r.target_id);
+      if (normalizeType(OBJECT_TYPES[q6.split("-")[0]]) !== "inquiry") continue;
+      if (!this.#connections().citesInto(q6).confirmed.includes(id)) continue;
+      if (!this.#membership().inSight(q6, viewer)) continue;
+      out.push(q6);
+    }
+    return out.sort();
+  }
+  /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
+   *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
+   *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
+   *  `#inSight`, the one predicate, and it FAILS CLOSED on an absent viewer — the run verbs' posture
+   *  (`RUN_VERB_ACTIONS` in `index.mjs`: "fails closed on an absent stamp"). The first draft did not ask a
+   *  viewer that was never sent, on `#rosterInSight`'s precedent; REC-145's `run-stamp-dropped` control
+   *  showed that with the control plane's stamp removed the check then SAW every project — sight failing
+   *  open. No caller reaches the open without the stamp (measured: no suite drives the store directly).
+   *  The type is normalised (`problem`/`focus` read `inquiry`). */
+  #runContextKind(contextId, viewer) {
+    const id = contextId == null ? "" : String(contextId);
+    const b = id ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id) : null;
+    if (!b) return null;
+    if (!this.#membership().inSight(id, viewer)) return null;
+    return normalizeType(b.object_type);
+  }
+  /** The gate, as the three run verbs call it. Returns `projectGate`'s verdict
+   *  object — `refusal` null or built, and a `ground` that is stated either way.
+   *
+   *  `#participation` is the record's existing membership predicate and is
+   *  CALLED rather than reimplemented, for the reason its own header gives: the
+   *  admin bypass came to sit on invite and remove with different shapes
+   *  because the test had two copies. */
+  #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
+    const projects = this.#runContextProjects(contextType, contextId);
+    const who2 = actor == null ? "" : String(actor).trim();
+    const joined = who2 && runConsultsProjects(contextType) ? projects.filter((p) => {
+      const part = this.#membership().participation(p, who2);
+      return !!part && part.state === "joined";
+    }) : [];
+    const g = projectGate({ actor: who2, contextType, contextId, projects, projectsJoined: joined });
+    if (!g.permitted) return g;
+    return { ...g, projects: projects.filter((p) => this.#membership().inSight(p, viewer)).length };
+  }
+  /** The gate's outcome as it travels on a SUCCESS answer. The refusal is
+   *  dropped (there is none) and the ground is kept, because DEC-17's
+   *  projectless permission is a fact about how the run was allowed to start
+   *  and a consumer that cannot see it cannot tell a permitted run from an
+   *  ungated one. Shaped in one place so all three verbs publish it alike. */
+  static #aiRunGateStated(g) {
+    return { projectGate: { applied: g.applied, ground: g.ground, why: g.why, projects: g.projects } };
+  }
+  /** op=airunopen. Open a run over an inquiry or a project.
+   *
+   *  Every `conditions it was formed under` field §11 names is taken as given
+   *  and stored verbatim — the bias manifest in force, the launching project's
+   *  declared standard pair, the skill version. NONE of them is derived here,
+   *  and where one is absent it is stored as absent rather than defaulted: §11
+   *  says "until D-84 lands, 'no manifest was in force,' STATED", and a default
+   *  would be this plane inventing a condition a version is later interpreted
+   *  against.
+   *
+   *  BOTH PRINCIPALS ARE REQUIRED and neither is ever a token value (§14a,
+   *  DEC-27(b), DEC-55.4). `principalClaude` is WHICH LEVEL of the cascade paid
+   *  — member, then project, then instance — and the plane refuses to open a
+   *  run that cannot say.
+   *
+   *  AND SINCE SK-1, SO IS THE SKILL VERSION. The paragraph above still holds
+   *  for the bias manifest and the standard pair — absent is stored as absent
+   *  and never defaulted — but the skill version is now REQUIRED rather than
+   *  merely stored, because "every run records the skill version it ran under"
+   *  is a requirement and a condition that may be omitted is not recorded. It
+   *  is still never derived: the plane refuses, it does not fill in. The
+   *  refusal is C-22.7, built in `./skill-version.mjs checkSkillVersion`. */
+  async open({
+    run,
+    contextType,
+    contextId,
+    label = null,
+    mode = null,
+    principalPlane = null,
+    principalClaude = null,
+    principalClaudeRef = null,
+    skillVersion = null,
+    biasManifest = null,
+    standardPair = null,
+    bounds = null,
+    state = null,
+    leaseMs = null,
+    at: at17 = null,
+    /* REC-207 (BOB #32, 2026-09-23 23:42Z): WHICH RUN THIS ONE RE-RUNS, the opener's own word
+       and nothing derived. It is what makes discharge (2) addressable at all — without it there
+       is no link in the record between a re-run and the debt it settles, and a plane inferring
+       one from a context and a clock would be guessing at a judgement. Optional and additive: a
+       run that names none is exactly the run this op opened before. */
+    rerunOf = null,
+    /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
+       `index.mjs` and empty for a machine credential. Never a
+       caller's word — a principal a caller can name is not one, which
+       is the rule the two `principal*` fields above already follow. */
+    actor = null,
+    /* REC-139: WHOSE SIGHT the report's project count is taken in, stamped server-side
+       beside `actor` and read only by `#aiRunProjectGate`'s stated count. */
+    viewer = null
+  } = {}) {
+    const nowMs = at17 ? Date.parse(at17) : Date.now();
+    const now = _AiRuns.#aiIso(nowMs);
+    if (!run || !contextType || !contextId)
+      return {
+        run: run || null,
+        started: false,
+        code: "AI_RUN_NO_CONTEXT",
+        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.check,
+        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
+        note: "a run needs an id and the context it runs in (an inquiry or a project): a run nothing is in the context of has nowhere to be visible"
+      };
+    if (Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, String(contextType ?? ""))) {
+      const existence = this.#membership().existenceAct(String(contextId ?? ""), viewer ?? "");
+      if (existence)
+        return {
+          run,
+          started: false,
+          code: existence.code,
+          check: existence.check,
+          translation: existence.translation,
+          detail: existence.detail,
+          project: existence.project,
+          name: existence.name
+        };
+    }
+    const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer) });
+    if (kind)
+      return {
+        run,
+        started: false,
+        code: kind.code,
+        check: kind.check,
+        translation: kind.translation,
+        detail: kind.detail,
+        note: "a run's context kind is checked against the thing it names, and a thing the caller cannot see answers as one that does not exist (Membership Architecture v2 \xA77, BOB #16, 2026-09-19): the project gate turns on the kind, so the kind cannot be the caller's word"
+      };
+    const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
+    if (!gate.permitted)
+      return {
+        run,
+        started: false,
+        code: gate.code,
+        check: gate.check,
+        translation: gate.translation,
+        detail: gate.detail,
+        note: "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as amended 2026-09-18), and the contribute capability is only the floor beneath that. These are two different facts about an account and they are refused separately so each names its own remedy"
+      };
+    if (!principalPlane || !principalClaude)
+      return {
+        run,
+        started: false,
+        code: "AI_RUN_CAPABILITY_UNAVAILABLE",
+        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.check,
+        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.translation,
+        note: "a run names TWO principals \u2014 the plane credential acting and WHICH LEVEL of the Claude-account cascade pays (member, then project, then instance). They are different principals and an act must say both (DEC-27(b), DEC-55.4)"
+      };
+    const badSkill = checkSkillVersion(skillVersion);
+    if (badSkill)
+      return {
+        run,
+        started: false,
+        code: badSkill.code,
+        check: badSkill.check,
+        translation: badSkill.translation,
+        note: badSkill.detail
+      };
+    const runMode = mode === void 0 || mode === null ? DEFAULT_MODE : String(mode).trim();
+    if (!DEPLOYED_MODES.includes(runMode))
+      return {
+        run,
+        started: false,
+        code: "AI_RUN_MODE_NOT_DEPLOYED",
+        check: AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check,
+        translation: AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.translation,
+        mode: String(mode).slice(0, 60),
+        deployed: [...DEPLOYED_MODES],
+        note: `the mode '${String(mode).slice(0, 60)}' is not deployed on this instance: the modes deploy in one order, each only after the one before it is verified live, and today ${DEPLOYED_MODES.join(", ")} ${DEPLOYED_MODES.length === 1 ? "is" : "are"} deployed. Nothing was written`
+      };
+    const badSeed = checkConsume(bounds, { list: true });
+    if (badSeed)
+      return {
+        run,
+        started: false,
+        code: badSeed.code,
+        check: badSeed.check,
+        translation: badSeed.translation,
+        note: badSeed.detail
+      };
+    const badState = checkRunState(state);
+    if (badState)
+      return {
+        run,
+        started: false,
+        code: badState.code,
+        check: badState.check,
+        translation: badState.translation,
+        note: badState.detail,
+        bytes: badState.bytes,
+        limit: badState.limit
+      };
+    const lensNow = await this.#bias().biasManifest({
+      scope: String(contextType) === "project" ? "project" : "instance",
+      scopeId: String(contextType) === "project" ? String(contextId) : "",
+      viewer,
+      limit: 1
+    });
+    const lensAtOpen = JSON.stringify({
+      in_force: lensNow.in_force === true,
+      statements_sha: lensNow.in_force === true ? lensNow.statements_sha ?? null : null,
+      scope: lensNow.scope ?? null,
+      scope_id: lensNow.scope_id ?? null,
+      bundles: (Array.isArray(lensNow.bundles) ? lensNow.bundles : []).map((b) => ({ bundle_id: b.bundle_id, revision: b.revision ?? null })),
+      at: now
+    });
+    if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
+      return {
+        run,
+        started: false,
+        code: "AI_RUN_ALREADY_OPEN",
+        check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.check,
+        translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
+        note: "a run with this id already exists"
+      };
+    const reRuns = String(rerunOf ?? "").trim();
+    if (reRuns) {
+      if (reRuns === String(run))
+        return {
+          run,
+          started: false,
+          code: "AI_RUN_RERUN_SELF",
+          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.check,
+          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.translation,
+          note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's work this one repeats, and a self-reference would let one run discharge its own bias debt"
+        };
+      const target = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, reRuns);
+      if (!target || !this.#aiRunInSight(reRuns, viewer))
+        return {
+          run,
+          started: false,
+          code: "AI_RUN_RERUN_UNKNOWN",
+          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.check,
+          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.translation,
+          note: "no such run: it either never existed, was purged, or is not one this caller can open"
+        };
+      if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
+        return {
+          run,
+          started: false,
+          code: "AI_RUN_RERUN_OTHER_CONTEXT",
+          check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.check,
+          translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.translation,
+          note: "a re-run runs the same question or project again. The lens a bias debt is owed against is the one in force for the INDEBTED run's context, so a re-run somewhere else would be measured against a different lens entirely"
+        };
+    }
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec(
+        `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
+           principal_plane, principal_claude, principal_claude_ref, skill_version,
+           bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
+           rerun_of)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
+        run,
+        label,
+        runMode,
+        String(contextType),
+        String(contextId),
+        /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
+           a value that survives a falsiness guard while naming nothing reads as
+           present and travels. `checkSkillVersion` judged the trimmed value, so
+           storing the untrimmed one would store something the guard never saw. */
+        String(principalPlane),
+        String(principalClaude),
+        principalClaudeRef,
+        String(skillVersion).trim(),
+        biasManifest,
+        standardPair,
+        now,
+        now,
+        _AiRuns.#aiIso(nowMs + lease),
+        JSON.stringify(state == null ? {} : state),
+        lensAtOpen,
+        /* REC-207: judged above, and stored as every empty case on this open is stored — absent rather
+           than defaulted. A run that names no re-run reads `rerun_of` NULL, which is what it is. */
+        reRuns || null
+      );
+      for (const b of Array.isArray(bounds) ? bounds : []) {
+        if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
+        this.sql.exec(
+          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(run, bound) DO NOTHING`,
+          run,
+          String(b.bound),
+          b.allowed,
+          /* REC-177: judged above, a whole number of one or more (C-22.16); the old `absent is 0` default was the no-ceiling path */
+          b.consumed == null ? 0 : b.consumed,
+          /* REC-169: judged above */
+          b.unit == null ? null : String(b.unit)
+        );
+      }
+    });
+    const expires = _AiRuns.#aiIso(nowMs + lease);
+    for (const l of this.#runListeners) {
+      try {
+        await l.fn({ run, contextType: String(contextType), contextId: String(contextId), expires });
+      } catch {
+      }
+    }
+    return {
+      run,
+      started: true,
+      status: "running",
+      ticks: 1,
+      created: now,
+      expires,
+      /* REC-207: the link, echoed, and ONLY when there is one. A caller that named a re-run should
+         be able to see that the record took it, because the discharge at this run's close rests on
+         it — and an echo that appeared as `null` on every other open would be a new key on an
+         answer every existing reader parses, for no fact. */
+      ...reRuns ? { rerun_of: reRuns } : {},
+      ..._AiRuns.#aiRunGateStated(gate)
+    };
+  }
+  /** REC-152 — CAN THIS VIEWER SEE THIS RUN? `aiRunRead`'s own predicate (D-15's `#bundleGate` over the
+   *  run's context), asked of one run id, so the tick and the close hide exactly what `op=airun` hides. An
+   *  absent stamp fails closed, as it does there. */
+  #aiRunInSight(run, viewer) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    return !!this.#one(`SELECT 1 AS x FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
+  }
+  /** op=airuntick. The heartbeat, the work list, and the log — one call.
+   *
+   *  A tick does four things and the order matters: it appends what the run
+   *  OBSERVED (so partial results survive a death that happens next), it spends
+   *  the budget, it extends the lease, and only then does it ask whether a
+   *  bound is now exhausted. A tick that spent the last of a budget ENDS the
+   *  run through the one exit — a run cannot overspend and then decline to say
+   *  so.
+   *
+   *  A tick for a run that has already ended is a STATED no-op rather than a
+   *  refusal, following `saveCaptureSession`'s `{ saved: false }` precedent: it
+   *  is a fact about the run's state, and a late tick from a straggling
+   *  sub-session must not resurrect a run whose log is already closed. */
+  tick({
+    run,
+    state = null,
+    consume = null,
+    log = null,
+    leaseMs = null,
+    at: at17 = null,
+    actor = null,
+    viewer = null,
+    /* REC-152: the caller's PRINCIPAL, stamped server-side by `index.mjs` in the form the open
+       stamps `principal_plane` in — never a caller's word. */
+    caller = null
+  } = {}) {
+    const nowMs = at17 ? Date.parse(at17) : Date.now();
+    const now = _AiRuns.#aiIso(nowMs);
+    const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
+    if (!row2) return {
+      run: run || null,
+      found: false,
+      note: "no such run: it either never existed or was purged"
+    };
+    if (!this.#aiRunInSight(run, viewer)) return {
+      run: run || null,
+      found: false,
+      note: "no such run: it either never existed or was purged"
+    };
+    const notPrincipal = runPrincipalGate({ caller, principal: row2.principal_plane });
+    if (notPrincipal)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row2.status,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        note: "a run is driven by its principal alone. Nothing was appended and no budget was spent"
+      };
+    const gate = this.#aiRunProjectGate({ actor, contextType: row2.context_type, contextId: row2.context_id, viewer });
+    if (!gate.permitted)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row2.status,
+        code: gate.code,
+        check: gate.check,
+        translation: gate.translation,
+        detail: gate.detail,
+        note: "continuing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. Nothing was appended and no budget was spent"
+      };
+    if (row2.status !== "running")
+      return {
+        run,
+        found: true,
+        ticked: false,
+        status: row2.status,
+        bound: row2.stopped_bound,
+        note: "this run has ended; its log is closed and a later tick does not reopen it"
+      };
+    const badConsume = checkConsume(consume, { map: true });
+    if (badConsume)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row2.status,
+        code: badConsume.code,
+        check: badConsume.check,
+        translation: badConsume.translation,
+        detail: badConsume.detail,
+        bound: badConsume.bound,
+        note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. Nothing was appended and no budget was spent"
+      };
+    const badState = checkRunState(state);
+    if (badState)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row2.status,
+        code: badState.code,
+        check: badState.check,
+        translation: badState.translation,
+        detail: badState.detail,
+        bytes: badState.bytes,
+        limit: badState.limit,
+        note: "a run's state is its resumable work list, and it is bounded. Nothing was appended and no budget was spent"
+      };
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
+    const refused = [];
+    let appended = 0;
+    this.ctx.storage.transactionSync(() => {
+      for (const e of Array.isArray(log) ? log : []) {
+        const bad = this.#aiRunAppend(run, e, now, 0, row2.principal_claude || null);
+        if (bad) refused.push(bad);
+        else appended += 1;
+      }
+      for (const [k, v] of Object.entries(consume && typeof consume === "object" ? consume : {})) {
+        if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, k)) continue;
+        this.sql.exec(
+          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
+           ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
+          run,
+          k,
+          v,
+          v
+        );
+      }
+      this.sql.exec(
+        `UPDATE ai_runs SET updated = ?, expires = ?, ticks = ticks + 1${state == null ? "" : ", state = ?"}
+         WHERE run = ?`,
+        ...state == null ? [now, _AiRuns.#aiIso(nowMs + lease), run] : [now, _AiRuns.#aiIso(nowMs + lease), JSON.stringify(state), run]
+      );
+    });
+    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
+    const hit = finishedBound(bounds, { expired: false, offered: null });
+    const ended = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, hit) ? this.#aiRunTerminate({
+      run,
+      offered: hit,
+      condition: hit === "runtime" ? "runtime-ceiling-reached" : null,
+      at: now
+    }) : null;
+    const after = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run);
+    return {
+      run,
+      found: true,
+      ticked: true,
+      ticks: after.ticks,
+      status: after.status,
+      expires: after.expires,
+      appended,
+      refused,
+      ..._AiRuns.#aiRunGateStated(gate),
+      ...ended ? { ended } : {}
+    };
+  }
+  /** op=airunclose. The ordinary exit — the run is done, or a member stopped
+   *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
+   *  to the one exit, and a caller who names no bound is refused by C-22.5
+   *  rather than having "completed" inferred from its silence. */
+  /* REC-207 — ASYNC, and the change is one `await` at the foot. A re-run's own close is where discharge
+     (2) is taken (see `#biasDebtDischargeByRerun` for why the close and not the open), and reading what
+     lens this run was formed under goes through `#biasForRun`, which is async because `biasManifest` is.
+     ADDITIVE ON THE WIRE: the DO's dispatch already `await`s every op, `#aiRunTerminate` is untouched and
+     still synchronous, and the REAPER still calls it directly — so a lapsed run is closed by the clock on
+     exactly the path it was before, with no member and no discharge. */
+  async close({
+    run,
+    bound = null,
+    condition = null,
+    at: at17 = null,
+    actor = null,
+    viewer = null,
+    /* REC-152: the caller's PRINCIPAL, stamped server-side — see `aiRunTick`. */
+    caller = null
+  } = {}) {
+    const now = at17 ? _AiRuns.#aiIso(Date.parse(at17)) : _AiRuns.#aiIso(Date.now());
+    const row2 = this.#one(`SELECT context_type, context_id, principal_plane FROM ai_runs WHERE run = ?`, run);
+    if (row2) {
+      if (!this.#aiRunInSight(run, viewer)) return {
+        run,
+        found: false,
+        note: "no such run: it either never existed or was purged"
+      };
+      const notPrincipal = runPrincipalGate({ caller, principal: row2.principal_plane });
+      if (notPrincipal)
+        return {
+          run,
+          terminated: false,
+          found: true,
+          ok: false,
+          code: notPrincipal.code,
+          check: notPrincipal.check,
+          translation: notPrincipal.translation,
+          detail: notPrincipal.detail,
+          note: "a run is ended by its principal, or by its own lease and bounds. The run is untouched and is still running"
+        };
+      const gate = this.#aiRunProjectGate({ actor, contextType: row2.context_type, contextId: row2.context_id, viewer });
+      if (!gate.permitted)
+        return {
+          run,
+          terminated: false,
+          found: true,
+          ok: false,
+          code: gate.code,
+          check: gate.check,
+          translation: gate.translation,
+          detail: gate.detail,
+          note: "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. The run is untouched and is still running"
+        };
+    }
+    const ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
+    if (ended && ended.terminated === true) {
+      const discharge = await this.#bias().biasDebtRerun({ kind: "ai-run", key: run, at: now });
+      if (discharge) return { ...ended, bias_debt: discharge };
+    }
+    return ended;
+  }
+  /* ---- the reaper's three parts, and none of them decides anything ----
+  
+       Each is a QUESTION about the clock; the answer to "which bound" comes from
+       `finishedBound` inside `#aiRunTerminate`, the same function the ordinary
+       close uses. That is the structural half of "the real path and the mutated
+       path go through ONE function". */
+  reapDue(now) {
+    return this.#one(
+      `SELECT count(*) c FROM ai_runs WHERE status = 'running' AND expires < ?`,
+      _AiRuns.#aiIso(now)
+    ).c;
+  }
+  reapWake(now) {
+    const r = this.#one(`SELECT MIN(expires) e FROM ai_runs WHERE status = 'running'`);
+    if (!r || !r.e) return null;
+    const at17 = Date.parse(r.e);
+    return Number.isFinite(at17) ? Math.max(at17, now) : null;
+  }
+  /** THE NEGATIVE CONTROL THE DESIGN NAMES, as a mechanism: a run KILLED
+   *  mid-flight never calls anything, so this is what writes its log. It closes
+   *  every lapsed run through the one exit; `expired: true` is the only thing it
+   *  contributes, and `finishedBound` turns that into `lease` — or into whatever
+   *  budget was ALREADY exhausted, because a run that overspent and then died
+   *  was stopped by the budget, and reporting the lease there would name the
+   *  symptom and hide the cause. */
+  reap(now) {
+    const iso3 = _AiRuns.#aiIso(now);
+    const lapsed = this.#rows(
+      `SELECT run FROM ai_runs WHERE status = 'running' AND expires < ? ORDER BY run`,
+      iso3
+    );
+    const reaped = [];
+    for (const r of lapsed) {
+      const t = this.#aiRunTerminate({ run: r.run, offered: null, condition: null, at: iso3, expired: true });
+      reaped.push({ run: r.run, terminated: t.terminated === true, bound: t.bound || null });
+    }
+    return { at: iso3, lapsed: lapsed.length, reaped };
+  }
+  /* ---- FL-4's three parts, and none of them decides anything either ----
+  
+       The reaper's three above answer *is this run over*. These three answer *is
+       this run waiting on us, and has the daemon answered* — and they are
+       deliberately built in the reaper's shape, next to it, because they are the
+       other half of one question about a run that is not heartbeating. A run that
+       stopped because it died and a run that stopped because it is waiting on our
+       own daemon look identical from outside, and telling them apart is the whole
+       of this item: before it, the reaper took both and recorded `lease` over
+       both.
+  
+       THE WAKE'S LOG ENTRY DERIVES ITS STATE THROUGH `#aiRunSearchState`, the
+       SAME reducer the one exit uses. So a resumed run and a reaped one describe
+       what the search established through ONE function rather than two that
+       agree — the parallel-path failure this repository has measured repeatedly,
+       avoided here the way `finishedBound` avoids it one method up. */
+  /* THE PRODUCER'S OWN CADENCE, CAPPED BY THE THING THE HOLD PROTECTS.
+  
+       Following `#captureRequestTickMs` rather than minting a second constant is
+       the point: this consumer exists to notice what THAT one produced, and a
+       wake slower than the producer it follows leaves a completed capture sitting
+       undelivered for the difference. There is no second number to drift.
+  
+       THE CAP IS A CORRECTNESS REQUIREMENT AND NOT TIDINESS. The hold has to
+       reach a suspended run BEFORE its lease lapses, so an instance that slows
+       the drain past the lease (the env override admits any value) must not slow
+       the hold with it — a quarter of the lease leaves three ticks of margin.
+       THE FLOOR IS THE OTHER DIRECTION and it is not shared with the drain: the
+       drain's queue empties, so a zero cadence there is a burst that ends, while
+       a hold persists as long as the daemon owes an answer and a zero wake would
+       spin an idle-looking instance for as long as that lasts. */
+  #aiRunWakeTickMs() {
+    return Math.max(1e3, Math.min(
+      this.#captureRequestTickMs(),
+      Math.floor(_AiRuns.AI_RUN_LEASE_MS / 4)
+    ));
+  }
+  /* HOW MANY RUNS ONE TICK HOLDS OR WAKES, AND THE FIGURE WAS NOT CHOSEN — IT
+       WAS FORCED BY AN INSTRUMENT. The first shape of this consumer scanned
+       `ai_runs` unbounded and looped over what came back, which is precisely the
+       class `derivation-bounds.test.mjs` ratchets (31 methods measured
+       2026-08-08, 11 of them dispatched): a method that AMPLIFIES work over an
+       unbounded scan. The suite failed on the new member and named it, so the
+       scan is bounded rather than the ceiling moved — a ceiling is not a ratchet.
+  
+       SIZED ON THE PRODUCER IT FOLLOWS. The drain lands at most
+       `CAPTURE_REQUEST_TICK_BATCH` completions per tick, so a wake batch smaller
+       than that would fall permanently behind the thing it exists to notice.
+       Larger, because a hold is two integers and an UPDATE while a capture is a
+       fetch, and because an instance that was unconfigured for a while can have a
+       backlog of runs to hold on its first configured tick.
+  
+       A BATCH IS NOT A LOSS. While more remain the pending count stays above zero,
+       so the wake re-arms and the next tick takes the next batch — the
+       connection-derive sweep's progressive drain, and the reason that consumer
+       can be bounded without dropping anything. */
+  static AI_RUN_WAKE_TICK_BATCH = 25;
+  /** THE SUSPENDED RUNS TO HOLD: still running, and the daemon still owes them
+   *  an answer.
+   *
+   *  GATED ON THE DRAIN BEING CONFIGURED, exactly as `#captureRequestPending`
+   *  is and for the same reason one layer up: where nothing drains, no request
+   *  will ever complete, so a hold would keep a run alive for something that is
+   *  not coming — an instance that has not wired this behaves byte-for-byte as
+   *  it did before.
+   *
+   *  BOUNDED BY THE REQUEST'S OWN EXPIRY. `cr.expires > ?` is what stops this
+   *  from being an immortality clause: a request nothing can satisfy stops
+   *  holding its run at its own TTL, and the reaper then takes the run with an
+   *  honest bound. Removing that predicate is declared control arm (4). */
+  #aiRunWakeHolds(iso3) {
+    if (!this.#captureRequestConfigured()) return [];
+    const held = this.#wait().holds(iso3, _AiRuns.AI_RUN_WAKE_TICK_BATCH);
+    return (Array.isArray(held) ? held : []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH).filter((h) => h && this.#one(`SELECT 1 x FROM ai_runs WHERE run = ? AND status = 'running'`, String(h.run))).map((h) => ({ run: String(h.run), outstanding: Number(h.outstanding) || 0 }));
+  }
+  /** THE RUNS TO WAKE: a completion the daemon has landed and this run has not
+   *  been told about. `captured` and `refused` are BOTH completions — a refusal
+   *  is an answer, and a run left waiting on a request that will never be tried
+   *  again is a run waiting on nothing. */
+  #aiRunWakeRuns() {
+    const w = this.#wait();
+    if (!w) return [];
+    const ids = w.woken(_AiRuns.AI_RUN_WAKE_TICK_BATCH);
+    return (Array.isArray(ids) ? ids : []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH).map((run) => this.#one(`SELECT run, context_id, principal_plane FROM ai_runs WHERE run = ? AND status = 'running'`, String(run))).filter(Boolean);
+  }
+  wakeDue(now) {
+    const iso3 = _AiRuns.#aiIso(now);
+    return this.#aiRunWakeHolds(iso3).length + this.#aiRunWakeRuns().length;
+  }
+  wakeWake(now) {
+    if (this.wakeDue(now) <= 0) return null;
+    return now + this.#aiRunWakeTickMs();
+  }
+  /** THE TICK. The hold keeps a legitimately-waiting run alive; the wake
+   *  delivers the daemon's answer exactly once.
+   *
+   *  THE HOLD MOVES `expires` AND DELIBERATELY NOT `updated`. `updated` is when
+   *  the RUN last acted, and the plane declining to kill a run is not the run
+   *  acting — a reader must still be able to see how long it has been silent.
+   *  Moving both would have made a held run indistinguishable from a
+   *  heartbeating one, which is the fact this consumer exists to preserve.
+   *
+   *  IT GRANTS THE STANDARD LEASE AND NOT THE RUN'S OWN, stated because it is
+   *  visible from outside: `leaseMs` is an argument to `aiRunOpen` and
+   *  `aiRunTick`, it is never stored, and the record therefore has no memory of
+   *  what a particular caller chose. `AI_RUN_LEASE_MS` is the only figure the
+   *  store holds, so a run opened on a shorter lease is held on the standard
+   *  one while the daemon owes it an answer. That is a widening and it is
+   *  bounded twice over — by the request's own expiry, and by the fact that
+   *  nothing renews it once the request is answered. */
+  async wake(now) {
+    const iso3 = _AiRuns.#aiIso(now);
+    const until = _AiRuns.#aiIso(now + _AiRuns.AI_RUN_LEASE_MS);
+    const holds = [], wakes = [], dispatches = [];
+    const resumer = this.#aiRunWakeRuns().length ? await this.#aiRunResumer() : null;
+    for (const r of this.#aiRunWakeHolds(iso3)) {
+      this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
+      holds.push({ run: r.run, outstanding: r.outstanding, expires: until });
+    }
+    for (const r of this.#aiRunWakeRuns()) {
+      const done = (this.#wait().completions(r.run, _AiRuns.AI_RUN_WAKE_TICK_BATCH) || []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH);
+      if (!done.length) continue;
+      const captured = done.filter((q6) => q6.state === "captured").length;
+      const expired = done.filter((q6) => q6.state === "expired").length;
+      const refused = done.length - captured - expired;
+      const decision = this.#aiRunResumeDecision(r, resumer);
+      const bad = this.ctx.storage.transactionSync(() => {
+        const refusal19 = this.#aiRunAppend(r.run, {
+          level: "internet",
+          subject: r.context_id,
+          /* The rollup AND its `observation` referent (REC-100, IC-130): a wake
+             entry is a rollup like the terminal one, so it points at the latest
+             PRESENT look it restates, computed in the same read. */
+          ...this.#aiRunRestatedState(r.run),
+          governed: false,
+          detail: `the daemon answered ${done.length} capture request(s) this run was waiting on (${captured} captured, ${refused} refused, ${expired} expired). The run is resumable: its own log carries what each request established, and \xA714b.7's resumed run reads it and continues rather than restarting. ${decision.says}`
+        }, iso3, 0);
+        if (refusal19) return refusal19;
+        this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
+        this.#wait().markWoken(done.map((q6) => q6.request), iso3);
+        return null;
+      });
+      wakes.push({
+        run: r.run,
+        completions: done.length,
+        captured,
+        refused,
+        expired,
+        woken: !bad,
+        ...bad ? { unwritable: bad } : { expires: until },
+        resume: decision.dispatch ? "DISPATCH" : decision.withheld
+      });
+      if (!bad && decision.dispatch) dispatches.push({ run: r.run, context_id: r.context_id });
+    }
+    for (const d of dispatches) {
+      const outcome = await this.#aiRunDispatch(d, resumer, iso3);
+      const w = wakes.find((x) => x.run === d.run);
+      if (w) w.dispatch = outcome;
+    }
+    return {
+      at: iso3,
+      held: holds.length,
+      holds,
+      woken: wakes.length,
+      wakes,
+      dispatched: wakes.filter((w) => w.dispatch && (w.dispatch.state === "DISPATCHED" || w.dispatch.state === "RUNNING")).length
+    };
+  }
+  /* =====================================================================
+   * D-260 — THE WOKEN RUN'S CALLER (BOB #22, 2026-09-21; `BIO_Assistant_and_AI_Roles_v0_1.md` §6).
+   *
+   * FL-4 made a woken run a fact in the record and nothing re-entered it. This is the caller: the wake hands a
+   * woken run to `agent-worker` (I8), under the instance's ONE organisation-principal `ai` credential, and ONLY
+   * when that credential is the run's own principal. The ruling's reason is DEC-55 (4): the two principals carry
+   * different accountability, so continuing a member's attributable run under the group's key would re-attribute
+   * its later acts. A member's run therefore keeps FL-4's behaviour — woken, told, waiting for its own principal —
+   * and the wake entry SAYS it was not dispatched and why. That is a stated LIMITATION, never a silent skip.
+   *
+   * THE GATE IS ONE COMPARISON, of two stamps the PLANE made: the run's `principal_plane` (stamped at open, D-199
+   * (4), `<principal>/<tokenId>`) against the same composite built from the instance credential's own RECORD row.
+   * Nothing a caller sent is compared. REC-152 (C-22.12) would ALSO refuse the resumed run's first tick under a
+   * key that is not its principal — and that is exactly why it is not relied on here: a dispatch that leans on
+   * the refusal downstream has already handed a member's run to the group's key, and the refusal proves only
+   * that the tick failed. The arm in `test/d260-resume.test.mjs` counts calls AT THE BINDING for that reason.
+   *
+   * THE SECRET NEVER REACHES THE RECORD. The token is read from the Worker secret, used as the dispatch body's
+   * `credential`, and dropped; what the tick answers, and what the wake entry says, name the credential by its
+   * record identity (`tokenId`) and never by value. `agent-worker` retains nothing (fleet law, I8).
+   * ================================================================== */
+  /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `index.mjs`'s
+   *  `scopeFor` routes every call to `idFromName("bio")` or `idFromName("scratch")`, and a DO's id equals the one
+   *  it was named by. Null for any other object (a suite's private instance) — the dispatch then says it could
+   *  not name the namespace, rather than guessing one: a default here would let a resumed run touch the real
+   *  record while the run lived in scratch. */
+  #ownNamespace() {
+    const ns = this.env && this.env.STORE;
+    if (!ns || typeof ns.idFromName !== "function" || !this.ctx.id || typeof this.ctx.id.equals !== "function")
+      return null;
+    for (const name of ["bio", "scratch"]) if (this.ctx.id.equals(ns.idFromName(name))) return name;
+    return null;
+  }
+  static AI_RUN_DISPATCH_WAIT_MS = 3e4;
+  #aiRunDispatchWaitMs() {
+    const v = Number(this.env && this.env.AI_RUN_DISPATCH_WAIT_MS);
+    return Number.isFinite(v) && v > 0 ? v : _AiRuns.AI_RUN_DISPATCH_WAIT_MS;
+  }
+  /** WHO MAY RESUME, resolved once per tick: `{ ready: true, stamp, tokenId, token, store, account }` or
+   *  `{ ready: false, withheld }`. `withheld` is a stated reason, never a secret. The credential is resolved the
+   *  way the control plane resolves one (`index.mjs`, `aicredentiallook` against the `bio` object, which alone
+   *  holds `ai_credentials`), so a key revoked by a member stops resuming anything the moment the row says so. */
+  async #aiRunResumer() {
+    const env = this.env || {};
+    if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function")
+      return { ready: false, withheld: "AGENT_WORKER_UNBOUND" };
+    const cred = await instanceAiCredential(env);
+    if (!cred.token) return { ready: false, withheld: cred.reason };
+    const store = this.#ownNamespace();
+    if (!store) return { ready: false, withheld: "NAMESPACE_UNDETERMINED" };
+    const sha = await sha256hex(cred.token);
+    let look = null;
+    if (store === "bio") look = this.#membership().aiCredentialLook({ secretSha: sha });
+    else {
+      try {
+        const res = await env.STORE.get(env.STORE.idFromName("bio")).fetch(`http://do/aicredentiallook?sha=${sha}`);
+        const out = await res.json().catch(() => null);
+        look = out && out.ok === true ? out.result : null;
+      } catch {
+        look = null;
+      }
+      if (!look) return { ready: false, withheld: "CREDENTIAL_RECORD_SILENT" };
+    }
+    const c = look && look.found ? look.credential : null;
+    if (!c) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD" };
+    if (c.revoked) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_REVOKED", tokenId: c.tokenId };
+    if (c.principalKind !== "organisation")
+      return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION", tokenId: c.tokenId };
+    return {
+      ready: true,
+      stamp: `${c.principal}/${c.tokenId}`,
+      tokenId: c.tokenId,
+      token: cred.token,
+      store,
+      account: await instanceClaudeToken(env)
+    };
+  }
+  /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. */
+  #aiRunResumeDecision(run, resumer) {
+    const principal = String(run && run.principal_plane || "");
+    if (resumer && resumer.ready && principal === resumer.stamp)
+      return {
+        dispatch: true,
+        withheld: null,
+        says: `Resumption: handed to agent-worker under the instance's organisation credential '${resumer.tokenId}', which opened this run.`
+      };
+    const member = principal.startsWith("member:");
+    const withheld = member ? "MEMBER_PRINCIPAL_RUN" : resumer && !resumer.ready ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
+    const why = member ? "a member's credential opened it, and the instance resumes only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the group's key would re-attribute its acts). It waits for its own principal" : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN" ? "another principal opened it, and the instance's organisation credential resumes only the runs it opened" : `the instance cannot resume anything here (${withheld})`;
+    return { dispatch: false, withheld, says: `Resumption: NOT dispatched \u2014 ${why}.` };
+  }
+  /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
+   *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
+  async #aiRunDispatch(d, resumer, iso3) {
+    const body = {
+      run_id: d.run,
+      store: resumer.store,
+      credential: resumer.token,
+      claude_accounts: { instance: resumer.account ? { token: resumer.account, ref: "instance" } : {} }
+    };
+    let outcome, timer;
+    try {
+      const res = await Promise.race([
+        this.env.AGENT_WORKER.fetch("https://agent-worker/run", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body)
+        }),
+        new Promise((_, no2) => {
+          timer = setTimeout(() => no2(new Error("dispatch-wait-elapsed")), this.#aiRunDispatchWaitMs());
+        })
+      ]);
+      const out = await res.json().catch(() => null);
+      outcome = res.ok && out && out.ok === true ? { state: "DISPATCHED", status: res.status } : {
+        state: "REFUSED",
+        status: res.status,
+        reason: String(out && (out.reason || out.code) || `http ${res.status}`).slice(0, 80)
+      };
+    } catch (e) {
+      const elapsed = String(e && e.message) === "dispatch-wait-elapsed";
+      outcome = elapsed ? { state: "RUNNING", status: null, reason: "no answer within the bound: the segment is still running" } : { state: "SILENT", status: null, reason: "the call did not complete" };
+    } finally {
+      clearTimeout(timer);
+    }
+    if (outcome.state !== "DISPATCHED" && outcome.state !== "RUNNING") {
+      const refusal19 = this.#aiRunAppend(d.run, {
+        level: "internet",
+        subject: d.context_id,
+        ...this.#aiRunRestatedState(d.run),
+        governed: false,
+        detail: `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). The run was woken and is still resumable by its own principal; nothing it established is lost`
+      }, iso3, 0);
+      if (refusal19) outcome.unwritable = refusal19;
+    }
+    return outcome;
+  }
+  /** op=airun — THE RUNNING-SESSION SURFACE'S READ (UI-38's rider).
+   *
+   *  The shape is chosen to be what UI-38's renderers already walk, because
+   *  they are FIELD-NAME-BLIND: they print published name/value pairs verbatim
+   *  in publication order and know no field names, so they cannot invent one
+   *  and cannot go stale. `budget` is an ARRAY of scalar rows, `principal` and
+   *  `condition` are flat objects, and nothing here is derived — `allowed` and
+   *  `consumed` travel separately because a percentage computed anywhere fails
+   *  that surface's own pin.
+   *
+   *  WHERE NO RUN EXISTS THIS ANSWERS `session: null`, which is a supported
+   *  state and not a gap: §14a's surface shows NO INDICATOR rather than an
+   *  invented "nothing is running".
+   *
+   *  NO TRANSCRIPT IS PUBLISHED HERE OR ANYWHERE (DEC-61). The plane holds
+   *  none; the surface reads the device's own.
+   *
+   *  GATED. The run names an inquiry or a project bundle, and a run over a
+   *  project the viewer may not see would disclose that the project exists —
+   *  REC-25/REC-30's leak exactly. The gate is `#bundleGate` on `context_id`,
+   *  through query.mjs's one compilation point (D-15). */
+  /*  PL-12 / D-84 — AND THIS IS WHERE THE RUN STOPS CARRYING AN ABSENCE.
+   *
+   *  §3, RULED: *"the run carries the bias manifest in force when it ran … an
+   *  assistant-surfaced focus must carry the bias manifest in force when it was
+   *  surfaced… unlike a member it will not remember. Without the manifest… bias
+   *  debt cannot be computed against it."* §3 also recorded the reason it could
+   *  not be done: *"UNBUILDABLE TODAY: object_type: bias is absent from the
+   *  check catalogue (D-84) … until D-84 lands, the manifest-carrying obligation
+   *  is dischargeable only as 'no manifest was in force,' stated."*
+   *
+   *  MEASURED BEFORE THIS CHANGE, AND IT WAS WORSE THAN THE DESIGN SAID: this
+   *  method published NO bias field of any kind. `ai_runs.bias_manifest` was
+   *  written by `aiRunOpen` and read by nothing, so the honest absence §3
+   *  settled for was not stated ANYWHERE a reader could see it — the run held a
+   *  column and the answer was silent. An unstated limit reads as completeness,
+   *  which is DEC-56/57/58's ruling exactly.
+   *
+   *  WHAT "IN FORCE" MEANS HERE, AND WHY IT IS NOT AN ECHO. The recorded
+   *  manifest is what the run was FORMED under and is never recomputed —
+   *  `aiRunOpen` stores it verbatim and derives nothing, deliberately. This read
+   *  puts the record's CURRENT effective set beside it and says whether the lens
+   *  has MOVED since. That comparison is the whole payoff: it is what makes bias
+   *  debt computable against a run's output, which is the sentence §3 quotes
+   *  from `Content_Framework` and the reason the obligation exists at all.
+   *  Three distinguishable answers, never two:
+   *    - `in_force: false` with `stated` — no manifest was in force. Honest
+   *      absence, still supported, still the answer for a run opened without one.
+   *    - `in_force: true, moved: false` — the lens the run carried is the lens
+   *      the record holds now.
+   *    - `in_force: true, moved: true` — the lens has changed since; the run's
+   *      output owes a re-run under the current set. Ordinary BIAS DEBT, which
+   *      is DISCLOSED and travels and blocks NOTHING (DEC-20, D-188) — it is
+   *      HUNCH debt that disqualifies, and no hunch is named here.
+   *
+   *  ASYNC now, because the effective set is HASHED and `crypto.subtle` is. The
+   *  dispatch already awaits every handler. */
+  async read({ run, viewer = null } = {}) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const row2 = this.#one(
+      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
+      run,
+      ...seen.args
+    );
+    if (!row2) return { run: run || null, found: false, session: null };
+    const bounds = this.#rows(
+      `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound`,
+      run
+    );
+    const cond = row2.stopped_bound ? {
+      kind: row2.stopped_condition || "",
+      detail: `${row2.stopped_bound}: ${RUN_BOUNDS[row2.stopped_bound] || RUN_ENDINGS[row2.stopped_bound] || "a bound or ending this vocabulary no longer holds"}`,
+      bound: row2.stopped_bound,
+      at: row2.stopped_at
+    } : null;
+    const bias = await this.#biasForRun(row2, viewer);
+    return { run, found: true, session: {
+      id: row2.run,
+      label: row2.label,
+      mode: row2.mode,
+      status: row2.status,
+      ticks: row2.ticks,
+      created: row2.created,
+      updated: row2.updated,
+      expires: row2.expires,
+      /* D-451: a run over a PROJECT also publishes `questions` — the questions it confirmed-cites that this
+         viewer can see (`#runContextQuestions`), the set `op=suggest` admits as its target. A run over a
+         question publishes none: its context id IS its one question. */
+      context: row2.context_type === "project" ? {
+        type: row2.context_type,
+        id: row2.context_id,
+        questions: this.#runContextQuestions(row2.context_id, viewer)
+      } : { type: row2.context_type, id: row2.context_id },
+      /* §14a: the record names WHICH LEVEL of the cascade was used, BESIDE the
+         plane-credential principal — two principals, never one, and never a
+         token value. `ref` is the operator's own label for the account. */
+      principal: {
+        plane: row2.principal_plane,
+        claude: row2.principal_claude,
+        ref: row2.principal_claude_ref,
+        skill: row2.skill_version
+      },
+      budget: bounds.map((b) => ({
+        bound: b.bound,
+        allowed: b.allowed,
+        consumed: b.consumed,
+        unit: b.unit
+      })),
+      condition: cond,
+      /* PL-12 / D-84: the conditions the run was formed under gain their third
+         member. It sits BESIDE `principal` and `budget` rather than inside
+         them, because it is neither an identity nor an allowance — it is the
+         LENS, and §11's whole reason for recording the conditions is that a
+         version is only interpretable against them. */
+      bias,
+      /* REC-74: AND THE THIRD CONDITION, WHICH WAS SILENT HERE UNTIL NOW.
+               §11's three are the manifest, the SKILL VERSION and the launching
+               project's declared STANDARD PAIR. Two of them were published — the
+               skill inside `principal`, the manifest as `bias` — and this one was
+               written by `aiRunOpen`, published by `aiRunSpawnPayload`, and read by
+               nobody here, so a member reading the run object could not see the bar
+               the run was working to. It sits beside `bias` for the same reason
+               `bias` sits beside `principal`: a bar is not an identity and not an
+               allowance, it is the standard the work was held to.
+      
+               THE KEY IS ALWAYS PRESENT ON A FOUND RUN, and that is the whole
+               design. An absent key means the READER does not publish this fact;
+               `standard.in_force: false` with its `basis` and its `stated` sentence
+               means we looked and there was no bar. A consumer can tell those apart;
+               a null could not, which is why no null is published here. */
+      standard: this.#standardForRun(row2),
+      /* B6 (AGENT-WORKER #1 REPORT 3): the run's resumable scratch as its last tick wrote it (R12), so a resumed
+         segment continues its work list rather than restarting it; null when it cannot be read back. Never a
+         transcript (DEC-61): it is the work list the run itself sent. */
+      state: safeJson11(row2.state),
+      /* R19 (N190): the run this run re-runs (REC-207's `rerun_of`, judged at the open), published only when this
+         viewer can see that run too, through the same sight; else null — a run that re-runs nothing and one whose
+         earlier run is out of view answer alike, so the field never says a hidden run exists. */
+      rerun_of: row2.rerun_of != null && String(row2.rerun_of).trim() !== "" && this.#aiRunInSight(String(row2.rerun_of), viewer) ? String(row2.rerun_of) : null
+    } };
+  }
+  /** REC-74: the run's BAR, computed ONCE, for the same reason `#biasForRun`
+   *  is — `aiRunSpawnPayload` publishes the same block, and "what bar was this
+   *  run formed under" is a question with one answer.
+   *
+   *  NEVER RECOMPUTED AND NEVER LOOKED UP. `aiRunOpen` stores what the launch
+   *  handed it and derives nothing; this reads that back and JUDGES it, which
+   *  is a different act from deriving one. In particular it does NOT go and ask
+   *  the project what its declared strength is today: DEC-17 puts the bar on
+   *  the project axis, and a read that substituted the project's CURRENT
+   *  declaration for the one the run was formed under would answer a different
+   *  question and look identical. (`bias` publishes both sides precisely
+   *  because it can COMPARE them; there is no comparison to make here until an
+   *  op publishes a project's declared pair, which none does today — stated as
+   *  a limit rather than papered over, and delegated.)
+   *
+   *  THE PAIR IS NEVER COMPOSED. DEC-21/DEC-44 refuse the composition four
+   *  ways: capture and connection range over two different populations and
+   *  nothing here averages, mixes or reduces them to one value. An axis the
+   *  recorded bar does not name is published as `null` BESIDE the one it does,
+   *  never filled in from its sibling.
+   *
+   *  Synchronous, deliberately: unlike the manifest there is no hash and no
+   *  second read, so making this async would buy a promise nobody awaits for. */
+  #standardForRun(row2) {
+    const raw = row2.standard_pair;
+    let parsed = null, unreadable = false;
+    if (raw != null && String(raw).trim() !== "") {
+      try {
+        parsed = JSON.parse(String(raw));
+      } catch {
+        unreadable = true;
+      }
+      if (parsed !== null && (typeof parsed !== "object" || Array.isArray(parsed))) {
+        parsed = null;
+        unreadable = true;
+      }
+    }
+    const axis = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
+    const capture = parsed ? axis(parsed.capture) : null;
+    const connection = parsed ? axis(parsed.connection) : null;
+    const basis = unreadable ? "unreadable" : parsed !== null ? capture === null && connection === null ? "names-no-axis" : "recorded" : row2.context_type === "project" ? "none-recorded" : "context-has-no-project";
+    return {
+      in_force: basis === "recorded",
+      basis,
+      /* The sentence travels WITH the answer, from the plane's own vocabulary,
+         so a surface renders what it RECEIVED rather than holding a copy of the
+         map (DEC-8, and `op=airunlog`'s own precedent one method down). */
+      stated: STANDARD_BASIS[basis],
+      pair: basis === "recorded" ? { capture, connection } : null
+    };
+  }
+  /** op=airuns — WHICH RUNS ARE IN THIS CONTEXT. REC-69, UI-49's delegation.
+   *
+   *  ===========================================================
+   *  THE QUESTION NO OP COULD ANSWER, AND WHY THAT MATTERED.
+   *  ===========================================================
+   *
+   *  §14a promises that *"any window focused on an inquiry or a project shows
+   *  an animated indicator that a job is running"*. UI-47 found the indicator
+   *  had no call site at all; UI-49 built one — and MEASURED, while building
+   *  it, that the plane could not be asked the question. `op=airun`,
+   *  `op=airunlog` and `op=airunspawn` are all keyed by RUN ID, `ai_runs` is
+   *  queried by `run` at all 14 sites, and `op=airunopen` has no UI consumer,
+   *  **so the browser never learns a run id by opening one.** UI-49 therefore
+   *  fed its seam from the only source that existed — the run addresses THIS
+   *  DEVICE had already opened — which is honest, is pinned, and reaches only
+   *  the member who already held the address. §14a's promise is about the
+   *  TEAMMATE WHO DID NOT, and this method is the half that reaches them.
+   *
+   *  ===========================================================
+   *  THE GATE, AND WHY THIS SHAPE IS THE ONE THAT LEAKS IF IT IS WRONG.
+   *  ===========================================================
+   *
+   *  A run-id read is a poor leak: a caller must already hold the id. A
+   *  CONTEXT-KEYED LIST is the opposite — it takes an id a member can see on
+   *  their own screen and answers with everything hanging off it. So the gate
+   *  is not incidental here, it is the feature's whole security posture.
+   *
+   *  IT IS `#bundleGate` ON `context_id`, THE SAME PREDICATE AND THE SAME
+   *  COMPILATION POINT (D-15) that `aiRunRead`, `aiRunLog` and
+   *  `aiRunSpawnPayload` already compile. **NO SECOND PREDICATE IS WRITTEN
+   *  HERE**, and that is deliberate rather than economical: PL-11 measured that
+   *  `viewerPredicate`'s MACHINE alternation returns an unfiltered `1=1`, so a
+   *  hand-rolled gate that forgot the carve-out — or remembered it wrongly —
+   *  would hand an agent the whole store, and a hand-rolled one that forgot the
+   *  FAIL-CLOSED deny would turn a missing control-plane stamp from an outage
+   *  into a leak. Both arms are `viewerPredicate`'s and neither is restated.
+   *
+   *  THE POSTURE IS WITHHOLD, NEVER REDACT (REC-36). A run over a project the
+   *  viewer was never invited to is absent from this list BYTE-IDENTICALLY to a
+   *  run that does not exist, and **no count of what was withheld is reported**
+   *  — that count is exactly the disclosure that somebody is investigating
+   *  something you cannot see (op=backlinks' rule, and `gate-reads.test.mjs`
+   *  carries the classification). It follows that a well-formed context with no
+   *  visible runs answers an ordinary EMPTY LIST: "no runs here" and "no runs
+   *  you may see" are ONE answer BY CONSTRUCTION rather than by care.
+   *
+   *  ===========================================================
+   *  BOUNDED, AND THE BOUND IS PUBLISHED — IC-25/IC-26's rule.
+   *  ===========================================================
+   *
+   *  `limit` is the cap AFTER clamping, never the number the caller asked for;
+   *  `truncated` is the completeness signal, in the spelling its three siblings
+   *  already use (`op=airunlog`, `op=versionchain`, `op=basisversions`) rather
+   *  than a fifth word beside the plane's four (REC-55). Both are published on
+   *  the EMPTY answer too, so a reader who sees nothing does not have to guess
+   *  which bound they would have been answered at. `cap + 1` is asked for and
+   *  `cap` delivered — `op=exportlog`'s mechanism — because the extra row is
+   *  the whole difference between "this context has 200 runs" and "here are its
+   *  first 200".
+   *
+   *  ORDER IS NEWEST FIRST, and the cut therefore falls on the OLDEST. This is
+   *  NOT `op=airunlog`, which is replayed FROM THE START by a resuming run
+   *  (§14b.7) and must keep ascending order; the question here is "what is
+   *  happening in this context", and a surface cut off from the newest run
+   *  would be a surface that cannot see the job that is running now.
+   *
+   *  NO STATUS FILTER, deliberately. A `status='running'` filter here would put
+   *  the judgement in the plane and leave a surface unable to render the run
+   *  that ENDED — which is the overclaim UI-49 removed one layer up when it
+   *  made the indicator carry the record's own status word instead of pulsing
+   *  unconditionally. The record answers what is there; the surface decides
+   *  what to draw. */
+  async listInContext({
+    contextType = null,
+    contextId = null,
+    viewer = null,
+    limit = null
+  } = {}) {
+    const refusal19 = (code, detail) => {
+      const row2 = AI_RUNS_CONTEXT_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row2.check,
+        translation: row2.translation,
+        detail
+      };
+    };
+    const kinds = Object.keys(RUN_CONTEXTS);
+    const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
+    const id = contextId == null ? "" : String(contextId).trim();
+    if (!type)
+      return refusal19(
+        "AI_RUNS_NO_CONTEXT_TYPE",
+        `op=airuns answers for ONE context and must be told which kind: contextType=${kinds.join("|")}. An inquiry and a project are different objects with different membership, so there is no default here that would not be answering about something you did not ask about.`
+      );
+    if (!kinds.includes(type))
+      return refusal19(
+        "AI_RUNS_UNKNOWN_CONTEXT_TYPE",
+        `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. The kinds it is attached to: ${kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. Answered as a refusal rather than as an empty list, because an empty list here would say nothing is running in a place the record does not recognise.`
+      );
+    if (!id)
+      return refusal19(
+        "AI_RUNS_NO_CONTEXT_ID",
+        `op=airuns named the kind ${JSON.stringify(type)} but not which one. The gate is compiled over the context's own id, so a blank id would ask about every context at once \u2014 a different question, not a wider answer.`
+      );
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const cap = Math.max(1, Math.min(
+      Math.floor(Number(limit) || _AiRuns.AI_RUNS_LIMIT_DEFAULT),
+      _AiRuns.AI_RUNS_LIMIT_MAX
+    ));
+    const page = this.#rows(
+      `SELECT r.run FROM ai_runs r
+       WHERE lower(r.context_type) = ? AND r.context_id = ? AND ${seen.sql}
+       ORDER BY r.created DESC, r.run LIMIT ?`,
+      type,
+      id,
+      ...seen.args,
+      cap + 1
+    );
+    const runs = (await Promise.all(page.slice(0, cap).map((r) => this.read({ run: r.run, viewer })))).filter((a) => a && a.found).map((a) => a.session);
+    return {
+      ok: true,
+      /* The context is echoed NORMALISED, so a caller sees what was actually
+         asked rather than what they typed — the same reason op=meaningrows
+         publishes the arm it resolved. */
+      context: { type, id },
+      runs,
+      count: runs.length,
+      limit: cap,
+      truncated: page.length > cap
+    };
+  }
+  /** PL-12: the run's bias block, computed ONCE. Read `aiRunRead`'s header for
+   *  what the three answers mean. */
+  async #biasForRun(row2, viewer) {
+    const recordedRaw = row2.bias_manifest;
+    let recorded = null, unreadable = false;
+    if (recordedRaw != null && String(recordedRaw).trim() !== "") {
+      try {
+        recorded = JSON.parse(String(recordedRaw));
+      } catch {
+        unreadable = true;
+      }
+    }
+    const nowManifest = await this.#bias().biasManifest({
+      scope: row2.context_type === "project" ? "project" : "instance",
+      scopeId: row2.context_type === "project" ? row2.context_id : "",
+      viewer,
+      /* The bound is irrelevant to the hash — `statements_sha` covers the whole
+         set before any bound is applied — so the smallest legal page is asked
+         for deliberately: this read needs the FACT, not the statements. */
+      limit: 1
+    });
+    const recordedSha = recorded && typeof recorded.statements_sha === "string" ? recorded.statements_sha : null;
+    const atOpenHeld = row2.lens_at_open != null && String(row2.lens_at_open).trim() !== "";
+    const atOpenParsed = atOpenHeld ? safeJson11(String(row2.lens_at_open)) : null;
+    const atOpen = atOpenParsed && typeof atOpenParsed === "object" && !Array.isArray(atOpenParsed) ? atOpenParsed : null;
+    const atOpenUnreadable = atOpenHeld && !atOpen;
+    const shaOf2 = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
+    const openSha = atOpen ? shaOf2(atOpen) : null;
+    const nowSha = shaOf2(nowManifest);
+    const nowBlock = {
+      in_force: nowManifest.in_force === true,
+      statements_sha: nowManifest.statements_sha ?? null,
+      bundles: nowManifest.bundles ?? []
+    };
+    const atOpenBlock = atOpen ? {
+      recorded: true,
+      in_force: atOpen.in_force === true,
+      statements_sha: openSha,
+      scope: atOpen.scope ?? null,
+      scope_id: atOpen.scope_id ?? null,
+      bundles: Array.isArray(atOpen.bundles) ? atOpen.bundles : [],
+      at: atOpen.at ?? null
+    } : atOpenUnreadable ? {
+      recorded: true,
+      unreadable: true,
+      stated: "the lens in force at this run's open was recorded and cannot be read back"
+    } : { recorded: false, stated: "not recorded" };
+    const handOf = (handedSha) => !atOpen ? null : handedSha === openSha ? "in_force" : "stale";
+    const basis = atOpen ? "at_open" : atOpenUnreadable ? null : "handed";
+    if (recorded === null && !unreadable) {
+      const staleEmpty = !!atOpen && atOpen.in_force === true;
+      return {
+        in_force: false,
+        stated: staleEmpty ? "no manifest was handed to this run, and one was in force when it opened" : "no manifest was in force",
+        manifest: null,
+        now: atOpen ? nowBlock : null,
+        moved: atOpen ? openSha !== nowSha : null,
+        moved_basis: atOpen ? basis : null,
+        at_open: atOpenBlock,
+        hand: handOf(null)
+      };
+    }
+    if (unreadable)
+      return {
+        in_force: false,
+        stated: "a manifest was recorded for this run and cannot be read back",
+        manifest: null,
+        now: atOpen ? nowBlock : null,
+        moved: atOpen ? openSha !== nowSha : null,
+        moved_basis: atOpen ? basis : null,
+        at_open: atOpenBlock,
+        hand: null
+      };
+    return {
+      in_force: true,
+      stated: null,
+      /* AS RECORDED — what the run was formed under, never recomputed. */
+      manifest: {
+        scope: recorded.scope ?? null,
+        scope_id: recorded.scope_id ?? null,
+        statements_sha: recordedSha,
+        bundles: Array.isArray(recorded.bundles) ? recorded.bundles : []
+      },
+      /* AS THE RECORD STANDS NOW. */
+      now: nowBlock,
+      /* THE COMPARISON, which is what makes bias debt computable. For a run with no recorded open, `null`
+         where one side has no hash to compare — an unknown is stated and never rendered as `false`, which
+         would assert the lens had held. */
+      moved: atOpen ? openSha !== nowSha : atOpenUnreadable ? null : recordedSha == null || nowManifest.statements_sha == null ? null : recordedSha !== nowManifest.statements_sha,
+      moved_basis: basis,
+      at_open: atOpenBlock,
+      hand: handOf(recordedSha)
+    };
+  }
+  /** op=airunspawn — THE FENCE, AS CODE.
+   *
+   *  `INVESTIGATIVE-SESSION.md` §14, and the sweep's own correction of v2:
+   *  *"The lens rule is STRUCTURAL, and v2 demoting it to a skill requirement
+   *  was the defect §14b.4 itself names (SWEEP C7): a skill is instructions; a
+   *  fence is code."*
+   *
+   *    - *"The search half of the run never receives the bias. The spawn
+   *      contract for search sub-sessions and search passes omits the manifest
+   *      BY CONSTRUCTION — there is no field to read."*
+   *    - *"Bias never shapes what is captured or monitored, only how conclusions
+   *      are weighed"* (`Content_Framework:1283`) — the coupling is FORBIDDEN,
+   *      not discouraged.
+   *    - *"The composing half CARRIES the manifest (§3, ruled) for disclosure
+   *      and for the weighing it discloses — never as a search input."*
+   *
+   *  WHY THIS IS AN OP AND NOT A COMMENT. A fence nothing can be pointed at is
+   *  not a fence: before this, the search half's payload existed only as a
+   *  sentence in a design document, so there was nothing an assertion could read
+   *  and nothing a negative control could break. The payload is BUILT here, by
+   *  one function, and `test/bias.test.mjs` asserts over the object this method
+   *  returns — not over a promise about it.
+   *
+   *  AND THE ASSERTION IS ABSENCE, NEVER EMPTINESS. The search payload is
+   *  written as an explicit literal that never touches `row.bias_manifest`, so
+   *  there is no field to be filled in later by a default, a spread, or a
+   *  well-meaning caller. `bias: null` would have been the weaker fence: a null
+   *  field is a field, and a field acquires a value the first time somebody
+   *  thinks they are being helpful.
+   *
+   *  GATED on the run's context, exactly as `aiRunRead` and `aiRunLog` are. */
+  async spawnPayload({ run, half = "search", viewer = null } = {}) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const row2 = this.#one(
+      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
+      run,
+      ...seen.args
+    );
+    if (!row2) return { run: run || null, found: false, half: null, payload: null };
+    const composing = String(half) === "compose";
+    const budgetCap = Object.keys(RUN_BOUNDS).length;
+    const budgetRows = this.#rows(
+      `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound LIMIT ?`,
+      run,
+      budgetCap + 1
+    );
+    const bounds = budgetRows.slice(0, budgetCap);
+    const payload = {
+      run: row2.run,
+      context: { type: row2.context_type, id: row2.context_id },
+      mode: row2.mode,
+      skill: row2.skill_version,
+      /* The launching project's declared standard pair travels to BOTH halves.
+         It is a BAR and not a lens (DEC-54 a), and §3 reads it as one of the
+         run's conditions — a bar tells the search what strength the work must
+         reach, which is not the coupling §14 forbids. This is exactly why the
+         two constructs had to be split before this fence could be drawn. */
+      standard_pair: row2.standard_pair,
+      /* REC-74: THE SAME BAR, JUDGED, FROM THE SAME FUNCTION `op=airun` USES.
+         `standard_pair` above is the column verbatim and is KEPT — `agent-worker`
+         builds against it and removing it is an interface change this item has
+         no mandate for — but verbatim is exactly what could not tell the two
+         absences apart: a caller receiving `standard_pair: null` cannot say
+         whether no bar was in force, whether the run has no project and could
+         not have one, or whether this reader simply does not publish the fact.
+         Two readers of one row must not disagree about which of its facts
+         exist, so both now answer from `#standardForRun` and neither computes
+         its own. */
+      standard: this.#standardForRun(row2),
+      budget: bounds.map((b) => ({
+        bound: b.bound,
+        allowed: b.allowed,
+        consumed: b.consumed,
+        unit: b.unit
+      }))
+    };
+    return {
+      run,
+      found: true,
+      half: composing ? "compose" : "search",
+      payload,
+      /* REC-57's two questions, settled on the one collection this answer
+         carries: the bound APPLIED, and whether it cut anything. */
+      limit: budgetCap,
+      truncated: budgetRows.length > budgetCap,
+      /* THE ONLY DIFFERENCE BETWEEN THE TWO HALVES, and it is one key. The
+         composing half's block is the SAME block `op=airun` publishes, computed
+         by the same function, because "what lens was this run formed under" has
+         one answer. The search half gets no such key at all. */
+      ...composing ? { bias: await this.#biasForRun(row2, viewer) } : {},
+      /* Stated, because a caller holding the search payload should be able to
+         read WHY it is thinner rather than conclude something failed. */
+      fence: composing ? "the composing half carries the lens, for disclosure and for the weighing it discloses" : "the search half never receives the lens: bias never shapes what is captured or searched, only how conclusions are weighed. There is no field here to read."
+    };
+  }
+  /** op=airunlog — THE OBSERVATION LOG. A different read from the one above and
+   *  deliberately a different op: the surface renders the run, and this is what
+   *  lets anyone else CHECK it (§11 — "search completeness is trained into the
+   *  skill, which is COMPETENCE; the log is what lets anyone else CHECK").
+   *
+   *  It is also what a RESUMED run reads to continue rather than restart
+   *  (§14b.7), which is why the entries come back in `seq` order with their
+   *  levels and states intact rather than summarised.
+   *
+   *  Gated on the same column for the same reason as the read above.
+   *
+   *  ===========================================================   *  REC-70 — BOUNDED, AND WHY THE RATCHET BUILT TO CATCH THIS DID NOT.
+   *  ===========================================================   *
+   *  THE DEFECT: this read was `... FROM ai_run_log WHERE run = ? ORDER BY seq`
+   *  with no `LIMIT`, no `limit` and no `truncated` — D-225's class exactly,
+   *  arriving in an op IS-6 added AFTER REC-60 measured its roster. A run's log
+   *  grows one row per tick and NOTHING caps the tick count: `RUN_BOUNDS` bounds
+   *  fetches, sub-sessions and wall time, never observations.
+   *
+   *  THE PART THAT MATTERS MORE, AND IT IS RECORDED HERE BECAUSE THE NEXT
+   *  UNBOUNDED READ WILL LAND BESIDE THIS ONE: `test/meaning-bounds.test.mjs`
+   *  exists to fail the build when a new read publishes a collection off an
+   *  unbounded row source, and it did not fail — `op=airunlog` appeared in NONE
+   *  of its three buckets, so the walk never reached this method at all.
+   *
+   *  THE CAUSE, NAMED: **the walk graded only return objects containing the
+   *  literal `ok: true`, and this method's success answer says `found: true`.**
+   *  One success spelling was hard-coded as if it were the only one, four lines
+   *  after that same file wrote its bound and completeness keys as SETS
+   *  precisely because "the plane answers the second in five spellings on
+   *  purpose". The instrument avoided the one-vocabulary mistake in its leaves
+   *  and committed it at its root — and it was not one op: **the gate hid 27 of
+   *  the 156 dispatched ops**, `op=signerlist`, `op=publishedlist`,
+   *  `op=inbox` (M0-12: `inboxlist` is the DO PATH it is aliased to, not an op
+   *  name a caller may send), `op=memberlist` and `op=verify` among them, every one of
+   *  them a real unbounded collection read. Measured 2026-08-07, REC-70.
+   *
+   *  SO THE FIX IS NOT `ok: true` HERE. Adding the marker this method does not
+   *  use would buy a green walk and leave the blindness in place for the next
+   *  op that spells success a third way. The WALK was corrected instead — it now
+   *  grades every return that does not DECLARE itself a refusal — and this
+   *  method keeps `found: true`, which is what makes the corrected walk's
+   *  verdict on it evidence rather than a coincidence.
+   *
+   *  D-227 IS OPEN AND APPLIES HERE. That walk grades what a method PUBLISHES,
+   *  so an envelope left honest over a scan whose `LIMIT` was removed still
+   *  reads as bounded. This op's SQL bound is therefore pinned DIRECTLY, off
+   *  this segment's own source, in `meaning-bounds.test.mjs` — not inferred
+   *  from the envelope. */
+  log({ run, viewer = null, limit = null } = {}) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const row2 = this.#one(
+      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
+      run,
+      ...seen.args
+    );
+    const cap = Math.max(1, Math.min(
+      Math.floor(Number(limit) || _AiRuns.AI_RUN_LOG_LIMIT_DEFAULT),
+      _AiRuns.AI_RUN_LOG_LIMIT_MAX
+    ));
+    if (!row2) return {
+      run: run || null,
+      found: false,
+      entries: [],
+      stopped: null,
+      limit: cap,
+      truncated: false
+    };
+    const page = this.#rows(
+      `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail,
+              result_kind, result_ref
+       FROM observation_log WHERE authority_kind = 'run' AND authority = ?
+       ORDER BY seq LIMIT ?`,
+      run,
+      cap + 1
+    );
+    const ordinal = new Map(page.slice(0, cap).map((e, i) => [String(e.seq), i + 1]));
+    const entries = page.slice(0, cap).map((e, i) => ({
+      ...e,
+      seq: i + 1,
+      governed: e.governed === 1,
+      terminal: e.terminal === 1,
+      /* NULL IS NORMALISED TO `null` RATHER THAN LEFT AS `undefined`:
+         a key that serialises away is the absence-with-two-causes this
+         whole item is about, one layer down. */
+      result_kind: e.result_kind ?? null,
+      result_ref: e.result_kind === "observation" && ordinal.has(String(e.result_ref)) ? String(ordinal.get(String(e.result_ref))) : e.result_ref ?? null,
+      coverage: observationCoverage({ state: e.state, resultRef: e.result_ref })
+    }));
+    return {
+      run,
+      found: true,
+      status: row2.status,
+      entries,
+      limit: cap,
+      truncated: page.length > cap,
+      stopped: row2.stopped_bound ? { bound: row2.stopped_bound, condition: row2.stopped_condition, at: row2.stopped_at } : null,
+      /* The vocabularies travel WITH the answer rather than being looked
+         up by a reader who would then hold a copy of them — the same
+         reason op=affordances publishes the act set instead of naming it
+         (DEC-8: a surface renders what it received). */
+      vocabulary: {
+        states: OBSERVATION_STATES,
+        levels: OBSERVATION_LEVELS,
+        bounds: RUN_BOUNDS,
+        endings: RUN_ENDINGS,
+        /* REC-113 / IC-116, APPENDED for the same reason the four
+           above travel at all (PL-17, DEC-8): a surface that must
+           render `undetermined` should read the word off the answer
+           rather than hold a literal it learned somewhere else and
+           will not re-learn. `coverage_undetermined` is published
+           SEPARATELY because it is deliberately not a member of
+           `coverage` — `op=contentaxis`'s `undetermined_value` is the
+           same shape one construct over. */
+        coverage: OBSERVATION_COVERAGE,
+        coverage_undetermined: OBSERVATION_COVERAGE_UNDETERMINED
+      }
+    };
+  }
+  /* ---- R28, R29: FOR THE MODULES THAT PRODUCE UNDER A RUN ------------------------------------------------------ */
+  /** R28: the run's facts a producer gates on, for a held run the viewer can see; null for a blank id, an absent
+   *  run and an invisible one alike. Never throws, writes nothing. Whether the caller holds it is R5 over
+   *  `principal_plane`; `principal_claude` is the level that pays, which a production under the run records
+   *  (capture-requests' request row). */
+  runFor(run, viewer) {
+    try {
+      const id = run == null ? "" : String(run).trim();
+      if (!id) return null;
+      const seen = this.#bundleGate("r.context_id", viewer);
+      const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude
+                             FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
+      return r ? {
+        run: r.run,
+        status: r.status,
+        mode: r.mode,
+        context_type: r.context_type,
+        context_id: r.context_id,
+        principal_plane: r.principal_plane,
+        principal_claude: r.principal_claude
+      } : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R29: one bound's `{allowed, consumed}`, or null when the run declared none. */
+  boundOf(run, bound) {
+    const r = this.#one(
+      `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = ?`,
+      String(run ?? ""),
+      String(bound ?? "")
+    );
+    return r ? { allowed: Number(r.allowed), consumed: Number(r.consumed) } : null;
+  }
+  /** R29: add `n` to a bound's consumption, inside the caller's transaction (the row made at allowed 0 when none
+   *  was declared). `n` 0 writes nothing; a figure that is not a non-negative safe integer is C-22.13 and nothing
+   *  is written. It never ends a run: an exhausted bound ends it at the next tick (R12). */
+  consumeBound(run, bound, n) {
+    const b = String(bound ?? "");
+    const figure2 = typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
+    const bad = checkConsume([[b, figure2 ? 0 : n]], { seed: false });
+    if (bad) return bad;
+    if (n === 0) return null;
+    this.sql.exec(
+      `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
+       ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
+      String(run),
+      String(bound),
+      n,
+      n
+    );
+    return null;
+  }
+  /** R37: the run gate `contradiction` offers (its R21), from R28 and R5: `found` false for blank, absent and
+   *  invisible alike; `refusal` null or R5's `AI_RUN_NOT_PRINCIPAL` naming `act`. */
+  runGate(run, viewer, caller, act = null) {
+    const r = this.runFor(run, viewer);
+    if (!r) return { found: false, running: false, refusal: null, run: null };
+    return {
+      found: true,
+      running: r.status === "running",
+      run: r,
+      refusal: runPrincipalGate({ caller, principal: r.principal_plane, ...act ? { act } : {} })
+    };
+  }
+  /* ---- R25, R26: THE SURFACING STEP, registered with promotion (K31) --------------------------------------------- */
+  /** Whether this promotion is an assistant's creation of a question: a creation of an inquiry carrying the control
+   *  plane's `assistantPrincipal` stamp, which `index.mjs` sets for an `ai` credential only, deleting any caller's copy
+   *  first. A member's creation, and every store-internal one, carries no stamp and is not asked. */
+  static #surfacing(c) {
+    const pkg = c && c.pkg || {};
+    return !!c && !c.head && c.promotedType === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim() !== "";
+  }
+  /** D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25) — MAY THIS ASSISTANT OPEN A QUESTION, AND
+   *  INSIDE WHICH RUN? Null when the creation may land, else the refusal (R25).
+   *
+   *  REC-165's ORDER, the tick's (REC-152): SIGHT first — a run whose context the caller cannot see answers the
+   *  SAME SURFACE_NO_RUN a run never minted gets, and so does a creation naming no run, since both say the same
+   *  thing to the caller: there is no run of yours here; then POSITION — `runPrincipalGate`, the member who
+   *  opened the run or a credential she minted, relayed FIELD BY FIELD (a spread would hide the verdict from the
+   *  DEC-49 guard); then STATUS; then the BOUND, on `mints`' rule — a run that declares no `surfaces` bound may
+   *  surface nothing, because a default allowance chosen here would be a measurement with no measurement behind
+   *  it. The bound is asked here AND consumed inside the promotion's transaction (R26), so a refused creation spends
+   *  none. The caller is the STAMP, never a field the body carries; the run is the body's word, which is why every
+   *  question above is asked of it. */
+  #surfacingGate(pkg) {
+    const caller = String(pkg.assistantPrincipal ?? "").trim();
+    const run = String(pkg.run ?? "").trim();
+    const refusal19 = (code, detail, extra) => {
+      const row2 = SURFACE_RUN_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row2.check,
+        translation: row2.translation,
+        detail,
+        run: run || null,
+        ...extra || {}
+      };
+    };
+    const runRow = this.runFor(run, pkg.actorViewer ?? null);
+    if (!runRow)
+      return refusal19(
+        "SURFACE_NO_RUN",
+        run ? `no run named '${run.slice(0, 60)}' is open here. An assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2): the run carries the lens in force and the objective the question was surfaced under. Nothing was created.` : "an assistant opens a question only inside a run it holds: pass run=<the run this question is surfaced under> in the promotion. The run carries the lens in force and the objective it pursued (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2). Nothing was created."
+      );
+    const notPrincipal = runPrincipalGate({
+      caller,
+      principal: runRow.principal_plane,
+      act: "opening a question under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        run,
+        note: "an assistant opens a question only inside a run it holds. Nothing was created"
+      };
+    if (runRow.status !== "running")
+      return refusal19(
+        "SURFACE_RUN_NOT_RUNNING",
+        `the run '${run.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read against the conditions of the run that surfaced it, which stopped being current when it stopped. Nothing was created.`,
+        { status: runRow.status }
+      );
+    const bound = this.boundOf(run, "surfaces");
+    if (!bound || !(bound.allowed > 0))
+      return refusal19(
+        "SURFACE_NO_BOUND",
+        `the run '${run.slice(0, 60)}' declares no 'surfaces' bound, so the questions it may open would be unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.`
+      );
+    if (bound.consumed >= bound.allowed)
+      return refusal19(
+        "SURFACE_BOUND_REACHED",
+        `the run '${run.slice(0, 60)}' has reached its 'surfaces' bound (${bound.consumed} of ${bound.allowed}). Nothing was created; the next tick ends the run, and the log says which bound stopped it.`,
+        { allowed: bound.allowed, consumed: bound.consumed }
+      );
+    return null;
+  }
+  /** R25: the step's check, before the promotion writes anything. */
+  #surfacingCheck(c) {
+    if (!_AiRuns.#surfacing(c)) return null;
+    return this.#surfacingGate(c.pkg);
+  }
+  /** R26: THE LINK AND THE BOUND, in the creation's own transaction, so a question an assistant opened cannot exist
+   *  without the row naming its run, and a refused creation spends nothing. An INSTANCE row keyed by the new inquiry
+   *  and never a line in its bytes (the run is scratch). The answer's `surfaced_in` names the run, the instant and the
+   *  bound after this spend. */
+  #surfacingProject(c) {
+    if (!_AiRuns.#surfacing(c)) return null;
+    const run = String(c.pkg.run).trim(), principal = c.pkg.assistantPrincipal.trim();
+    const at17 = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(
+      `INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
+      c.bundleId,
+      run,
+      principal,
+      at17
+    );
+    this.consumeBound(run, "surfaces", 1);
+    const left2 = this.boundOf(run, "surfaces");
+    return { surfaced_in: { run, at: at17, bound: { bound: "surfaces", allowed: left2.allowed, consumed: left2.consumed } } };
+  }
+  /* ---- R36: HIDDEN RUNS — `hiddenRuns` (R42, module level) is what retrieval holds; observation-log's resolver is
+     `runFor` (R28), the same sight. ------------------------------------------------------------------------------ */
+  /** R27: which run a question was opened inside, and under what lens. The run's facts are `read`'s answer, taken
+   *  whole under the same viewer. The migration-replay arm is inquiry's (map §5.8): a question with no surfacing
+   *  row answers `not recorded` here. */
+  async surfacedIn(bundleId, viewer) {
+    const link = this.#one(`SELECT run, principal, at FROM inquiry_run_surfacings WHERE bundle_id=?`, bundleId);
+    if (!link) return { recorded: false, stated: "not recorded", run: null, lens: null };
+    const read2 = await this.read({ run: link.run, viewer });
+    if (!read2 || read2.found !== true || !read2.session)
+      return {
+        recorded: true,
+        run: null,
+        by: null,
+        at: link.at,
+        lens: null,
+        stated: "this question was opened inside a run this reader cannot read"
+      };
+    return {
+      recorded: true,
+      run: link.run,
+      by: link.principal,
+      at: link.at,
+      context: read2.session.context,
+      status: read2.session.status,
+      lens: read2.session.bias
+    };
+  }
+  /** The tables and their two additive columns (R38), and D-85's `ai_run_log` fold: the pre-fold run log's rows are
+   *  copied into the observation log under `authority_kind = run` and the old table dropped, once. Idempotent;
+   *  called by the store's migration after observation-log's. */
+  migrate() {
+    const bare2 = AI_RUNS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const st of bare2.split(";")) if (st.trim()) this.sql.exec(st);
+    const cols = new Set(this.#rows(`PRAGMA table_info(ai_runs)`).map((c) => c.name));
+    for (const col of ["lens_at_open", "rerun_of"])
+      if (!cols.has(col)) this.sql.exec(`ALTER TABLE ai_runs ADD COLUMN ${col} TEXT`);
+    if (this.#rows(`PRAGMA table_info(ai_run_log)`).length) {
+      this.sql.exec(
+        `INSERT INTO observation_log
+           (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
+            state, governed, condition, bound, terminal, result_kind, result_ref, detail)
+         SELECT l.at, 'machine', r.principal_claude, 'run', l.run, l.level, 'unstated', l.subject,
+                l.state, l.governed, l.condition, l.bound, l.terminal, NULL, NULL, l.detail
+           FROM ai_run_log l LEFT JOIN ai_runs r ON r.run = l.run
+          ORDER BY l.run, l.seq`
+      );
+      this.sql.exec(`DROP TABLE ai_run_log`);
+    }
+  }
+};
+var INSTANCES = /* @__PURE__ */ new WeakMap();
+function aiRunsOf(ctx, env = null) {
+  const key = ctx.storage;
+  let m = INSTANCES.get(key);
+  if (!m) {
+    m = new AiRuns(ctx, env || {});
+    INSTANCES.set(key, m);
+  } else if (env && (!m.env || !Object.keys(m.env).length)) m.env = env;
+  return m;
+}
+function aiRunsOps(runs, url, body) {
+  const q6 = (k) => url.searchParams.get(k);
+  return {
+    airunopen: () => runs.open({ ...body || {}, principalPlane: q6("principal"), actor: q6("actor"), viewer: q6("viewer") }),
+    airuntick: () => runs.tick({ ...body || {}, actor: q6("actor"), viewer: q6("viewer"), caller: q6("principal") }),
+    airunclose: () => runs.close({ ...body || {}, actor: q6("actor"), viewer: q6("viewer"), caller: q6("principal") }),
+    airun: () => runs.read({ run: q6("run"), viewer: q6("viewer") }),
+    airunlog: () => runs.log({ run: q6("run"), viewer: q6("viewer"), limit: q6("limit") }),
+    /* REC-69: the CONTEXT-keyed read, beside the run-id-keyed ones; a caller that could name the viewer could read the
+       runs of a project it was never invited to. */
+    airuns: () => runs.listInContext({
+      contextType: q6("contextType"),
+      contextId: q6("contextId"),
+      viewer: q6("viewer"),
+      limit: q6("limit")
+    }),
+    airunspawn: () => runs.spawnPayload({ run: q6("run"), half: q6("half"), viewer: q6("viewer") })
+  };
+}
+
+// src/capture-sources/credentials.mjs
+var credentials_exports = {};
+__export(credentials_exports, {
+  CAPTURE_CREDENTIALS_SCHEMA: () => CAPTURE_CREDENTIALS_SCHEMA,
+  CAPTURE_CREDENTIAL_CHECKS: () => CAPTURE_CREDENTIAL_CHECKS,
+  CREDENTIALS_TABLE: () => CREDENTIALS_TABLE,
+  CREDENTIAL_KINDS: () => CREDENTIAL_KINDS2,
+  CREDENTIAL_LIST_LIMIT: () => CREDENTIAL_LIST_LIMIT,
+  CREDENTIAL_SCOPES: () => CREDENTIAL_SCOPES,
+  CaptureCredentials: () => CaptureCredentials,
+  REVOCATION: () => REVOCATION,
+  credentialsOf: () => credentialsOf,
+  hostNameOf: () => hostNameOf,
+  principalMember: () => principalMember
+});
+var CREDENTIAL_KINDS2 = Object.freeze(["login", "user-agent", "other"]);
+var CREDENTIAL_SCOPES = Object.freeze(["member", "project", "group"]);
+var REVOCATION = "(revocation)";
+var CREDENTIALS_TABLE = "capture_credentials";
+var at5 = (fn, region) => `src/capture-sources/credentials.mjs ${fn} > ${region}`;
+var CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
+  CAPTURE_CREDENTIAL_NOT_A_MEMBER: {
+    check: "C-105.1",
+    where: at5("credentialSupply", "is-credential-supplier-member"),
+    translation: "Only an active member may supply a credential."
+  },
+  CAPTURE_CREDENTIAL_BAD_KIND: {
+    check: "C-105.2",
+    where: at5("credentialSupply", "is-credential-kind"),
+    translation: "A credential's kind is one of login, user-agent or other."
+  },
+  CAPTURE_CREDENTIAL_BAD_HOST: {
+    check: "C-105.3",
+    where: at5("credentialSupply", "is-credential-host"),
+    translation: "A credential is for one host, named as a bare host name: no scheme, path, port or user part."
+  },
+  CAPTURE_CREDENTIAL_BAD_SCOPE: {
+    check: "C-105.4",
+    where: at5("credentialSupply", "is-credential-scope"),
+    translation: "A credential's scope is member, project or group, and only a project-scoped credential names a project."
+  },
+  CAPTURE_CREDENTIAL_NO_PROJECT: {
+    check: "C-105.5",
+    where: at5("credentialSupply", "is-credential-project"),
+    translation: "A project-scoped credential names a project the record holds."
+  },
+  CAPTURE_CREDENTIAL_NO_SECRET: {
+    check: "C-105.6",
+    where: at5("credentialSupply", "is-credential-secret"),
+    translation: "A credential carries a non-empty secret: the login, setting or other value the site asked for."
+  },
+  CAPTURE_CREDENTIAL_NOT_PERMITTED: {
+    check: "C-105.7",
+    where: at5("#r63Refusal", "is-credential-permitted"),
+    translation: "This member may not supply or withdraw a credential at that scope."
+  },
+  CAPTURE_CREDENTIAL_NO_KEY: {
+    check: "C-105.8",
+    where: at5("credentialSupply", "is-credential-key-bound"),
+    translation: "No encryption key is bound to this instance, so no credential is stored or used."
+  },
+  CAPTURE_CREDENTIAL_NO_SUCH: {
+    check: "C-105.9",
+    where: at5("credentialWithdraw", "is-credential-seen"),
+    translation: "No credential by that id is visible to you here. One that does not exist and one you may not see are answered alike, so this is not a hint either way."
+  },
+  CAPTURE_CREDENTIAL_SUPPLY_FAILED: {
+    check: "C-105.10",
+    where: at5("credentialSupply", "is-credential-stored"),
+    translation: "The credential could not be encrypted and stored, so nothing was written. Nothing you entered is repeated here; try again, and if it keeps failing tell an administrator."
+  },
+  CAPTURE_CREDENTIAL_WITHDRAW_FAILED: {
+    check: "C-105.11",
+    where: at5("credentialWithdraw", "is-credential-withdrawn"),
+    translation: "The credential could not be read or withdrawn just now, so nothing was changed. Try again, and if it keeps failing tell an administrator."
+  }
+});
+var CREDENTIAL_LIST_LIMIT = 200;
+var CAPTURE_CREDENTIALS_SCHEMA = `CREATE TABLE IF NOT EXISTS ${CREDENTIALS_TABLE} (
+  credential_id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,
+  host TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  project TEXT,
+  supplied_by TEXT NOT NULL,
+  supplied_at TEXT NOT NULL,
+  iv TEXT,
+  ciphertext TEXT,
+  withdrawn_at TEXT,
+  withdrawn_by TEXT
+)`;
+function refusal11(code, detail) {
+  const row2 = CAPTURE_CREDENTIAL_CHECKS[code];
+  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail };
+}
+var HOST_NAME = /^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/;
+function hostNameOf(host) {
+  if (typeof host !== "string") return null;
+  const h = host.toLowerCase();
+  return HOST_NAME.test(h) ? h : null;
+}
+function principalMember(principal) {
+  if (typeof principal !== "string" || principal === "") return null;
+  const m = /^(?:member:)?([a-z0-9][a-z0-9-]{1,40})(?:\/.+)?$/.exec(principal);
+  if (!m || !principal.startsWith("member:") && principal.includes("/")) return null;
+  return m[1];
+}
+var viewerMember = (viewer) => viewer === "admin" ? "admin" : typeof viewer === "string" && /^member:[a-z0-9][a-z0-9-]{1,40}$/.test(viewer) ? viewer.slice(7) : null;
+var viewerOf = (memberId) => memberId === "admin" ? "admin" : `member:${memberId}`;
+var b642 = (bytes2) => {
+  let s = "";
+  for (const b of bytes2) s += String.fromCharCode(b);
+  return btoa(s);
+};
+var unb642 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+var utf8 = (s) => new TextEncoder().encode(s);
+var stamp = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
+var OF5 = /* @__PURE__ */ new WeakMap();
+function credentialsOf(ctx, { key = null, record = null, membership = null, now = null } = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let c = OF5.get(storage);
+  if (!c) {
+    c = new CaptureCredentials({
+      sql: storage.sql,
+      core: record ?? recordOf(ctx),
+      members: membership ?? membershipOf(ctx),
+      key,
+      now
+    });
+    OF5.set(storage, c);
+  }
+  return c;
+}
+var CaptureCredentials = class _CaptureCredentials {
+  #sql;
+  #core;
+  #members;
+  #secret;
+  #key = null;
+  #now;
+  constructor({ sql, core, members, key = null, now = null }) {
+    this.#sql = sql;
+    this.#core = core;
+    this.#members = members;
+    this.#secret = typeof key === "string" && key !== "" ? key : null;
+    this.#now = typeof now === "function" ? now : () => Date.now();
+    this.migrate();
+    this.#core.declarePurge("capture-sources", [{ name: CREDENTIALS_TABLE, keys: ["project"], whole: "scope='project'" }]);
+    if (typeof this.#members.onRevoked === "function")
+      this.#members.onRevoked("capture-sources", ({ memberId } = {}) => this.#withdrawRevoked(memberId));
+  }
+  /** The table, created when absent; idempotent. */
+  migrate() {
+    this.#sql.exec(CAPTURE_CREDENTIALS_SCHEMA);
+    this.#sql.exec(`CREATE INDEX IF NOT EXISTS ${CREDENTIALS_TABLE}_host ON ${CREDENTIALS_TABLE}(host, withdrawn_at)`);
+  }
+  #rows(q6, ...a) {
+    return [...this.#sql.exec(q6, ...a)];
+  }
+  #one(q6, ...a) {
+    const r = this.#rows(q6, ...a);
+    return r.length ? r[0] : null;
+  }
+  /* ---- the key ---- */
+  async #aesKey() {
+    if (!this.#secret) return null;
+    if (!this.#key) {
+      const base = await crypto.subtle.importKey("raw", utf8(this.#secret), "HKDF", false, ["deriveKey"]);
+      this.#key = await crypto.subtle.deriveKey(
+        { name: "HKDF", hash: "SHA-256", salt: utf8("civicos capture-sources"), info: utf8("capture credentials v1") },
+        base,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    }
+    return this.#key;
+  }
+  static #aad(id, scope, project) {
+    return utf8(JSON.stringify([id, scope, project ?? null]));
+  }
+  /* ---- who is who (membership) ---- */
+  #active(memberId) {
+    const f9 = typeof memberId === "string" && memberId !== "" ? this.#members.memberFacts(memberId) : null;
+    return !!f9 && f9.status === "active";
+  }
+  /* R58: may this member (by id) see this row? The listing asks the same rule in its SQL (`#visibleClause`). */
+  #sees(memberId, row2) {
+    if (typeof memberId !== "string" || memberId === "") return false;
+    if (this.#members.isAdministrator(memberId)) return true;
+    if (!this.#active(memberId)) return false;
+    if (row2.scope === "member") return row2.supplied_by === memberId;
+    if (row2.scope === "project") return this.#members.sight(row2.project, viewerOf(memberId)) === "full";
+    return row2.scope === "group";
+  }
+  /* R63: who may supply at a scope (`row` null) or withdraw a row, decided here alone, so that
+     `CAPTURE_CREDENTIAL_NOT_PERMITTED` is minted at one site (K231). Answers the refusal, or null. */
+  #r63Refusal(by, { scope, project, row: row2 = null }) {
+    if (row2 === null) {
+      if (scope === "project" && !this.#members.isProjectEditor(project, by))
+        return refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only an editor of the project may supply a credential for it");
+      return null;
+    }
+    if (row2.supplied_by === by) return null;
+    if (row2.scope === "project")
+      return this.#members.isProjectOwner(row2.project, by) ? null : refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only its supplier or an owner of its project may withdraw a project credential");
+    return this.#members.isAdministrator(by) ? null : refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", `only its supplier or an administrator may withdraw a ${row2.scope} credential`);
+  }
+  /* ---- the listing entry (R58): never the secret, any part of it, its length or a digest ---- */
+  static #entry(r) {
+    return {
+      credential: r.credential_id,
+      kind: r.kind,
+      host: r.host,
+      scope: r.scope,
+      project: r.project ?? null,
+      supplied_by: r.supplied_by,
+      supplied_at: r.supplied_at,
+      withdrawn_at: r.withdrawn_at ?? null,
+      withdrawn_by: r.withdrawn_by ?? null
+    };
+  }
+  /* R57's destruction: the ciphertext and its IV go; the secretless entry stays. */
+  #destroy(id, by) {
+    const at17 = stamp(this.#now());
+    this.#sql.exec(`UPDATE ${CREDENTIALS_TABLE} SET ciphertext=NULL, iv=NULL, withdrawn_at=?, withdrawn_by=?
+                    WHERE credential_id=? AND withdrawn_at IS NULL`, at17, by, id);
+    return at17;
+  }
+  /* R63, N123: a revoked member's own credentials, withdrawn by the revocation, their ciphertext destroyed: the notice's
+     listener (inside the revoking act), and a read meeting a supplier revoked before the registration. One UPDATE
+     over one supplier's rows; `project` and `group` credentials stay. */
+  #withdrawRevoked(memberId) {
+    if (typeof memberId !== "string" || memberId === "") return;
+    this.#sql.exec(`UPDATE ${CREDENTIALS_TABLE} SET ciphertext=NULL, iv=NULL, withdrawn_at=?, withdrawn_by=?
+                    WHERE scope='member' AND supplied_by=? AND withdrawn_at IS NULL`, stamp(this.#now()), REVOCATION, memberId);
+  }
+  /* R63, K159: every read meets the rows it reads here first. A `member` credential whose supplier is no longer
+     an active member is withdrawn by the revocation now, its ciphertext destroyed. Answers the rows as they now
+     stand. */
+  #sweep(rows) {
+    const out = [];
+    for (const r of rows) {
+      if (r.scope === "member" && r.withdrawn_at == null && !this.#active(r.supplied_by)) {
+        const at17 = this.#destroy(r.credential_id, REVOCATION);
+        out.push({ ...r, ciphertext: null, iv: null, withdrawn_at: at17, withdrawn_by: REVOCATION });
+      } else out.push(r);
+    }
+    return out;
+  }
+  /* ================= R55: supply ================= */
+  /** Stores a credential under its declared scope and answers its listing entry, never the secret. */
+  async credentialSupply(args) {
+    const { kind, host, secret, scope, project, by } = args && typeof args === "object" ? args : {};
+    try {
+      if (!this.#active(by))
+        return refusal11("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of this instance");
+      if (!CREDENTIAL_KINDS2.includes(kind))
+        return refusal11("CAPTURE_CREDENTIAL_BAD_KIND", `the kind given is not one of ${CREDENTIAL_KINDS2.join(", ")}`);
+      const h = hostNameOf(host);
+      if (!h)
+        return refusal11(
+          "CAPTURE_CREDENTIAL_BAD_HOST",
+          "the host given is not a bare host name (a credential is for the one host the source that refused is served from)"
+        );
+      const given = project !== void 0 && project !== null;
+      if (!CREDENTIAL_SCOPES.includes(scope) || given && scope !== "project")
+        return refusal11("CAPTURE_CREDENTIAL_BAD_SCOPE", given && CREDENTIAL_SCOPES.includes(scope) ? `a ${scope} credential names no project` : `the scope given is not one of ${CREDENTIAL_SCOPES.join(", ")}`);
+      if (scope === "project") {
+        const b = typeof project === "string" && project !== "" ? this.#core.bundleInfo(project) : null;
+        if (!b || b.type !== "project")
+          return refusal11("CAPTURE_CREDENTIAL_NO_PROJECT", "the project named is not a project this record holds");
+      }
+      if (typeof secret !== "string" || secret === "")
+        return refusal11("CAPTURE_CREDENTIAL_NO_SECRET", "no secret was given");
+      const denied = this.#r63Refusal(by, { scope, project });
+      if (denied) return denied;
+      const key = await this.#aesKey();
+      if (!key)
+        return refusal11("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
+      return await this.#store({ kind, h, secret, scope, project, by, key });
+    } catch {
+      return refusal11(
+        "CAPTURE_CREDENTIAL_SUPPLY_FAILED",
+        "the credential could not be encrypted and stored, so nothing was written"
+      );
+    }
+  }
+  /* R55: the encryption and the write, once every check has passed. Any failure here is `SUPPLY_FAILED`'s one
+     condition, minted in `credentialSupply`'s catch, and the transaction leaves nothing written. */
+  async #store({ kind, h, secret, scope, project, by, key }) {
+    const id = `CRED-${b642(crypto.getRandomValues(new Uint8Array(12))).replace(/[+/=]/g, "").slice(0, 16)}`;
+    const proj = scope === "project" ? project : null;
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv, additionalData: _CaptureCredentials.#aad(id, scope, proj) },
+      key,
+      utf8(secret)
+    ));
+    const at17 = stamp(this.#now());
+    this.#core.transact(() => {
+      this.#sql.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
+                      VALUES (?,?,?,?,?,?,?,?,?)`, id, kind, h, scope, proj, by, at17, b642(iv), b642(ct));
+    });
+    return { ok: true, credential: _CaptureCredentials.#entry({
+      credential_id: id,
+      kind,
+      host: h,
+      scope,
+      project: proj,
+      supplied_by: by,
+      supplied_at: at17
+    }) };
+  }
+  /* ================= R56: the one read for a fetch ================= */
+  /** At most one unwithdrawn credential for a fetch to `host`, for a request with plane principal
+   *  `principalPlane` and target inquiry `target`: the narrowest admitted scope, then the newest. In process
+   *  only; never an op. */
+  async credentialsForFetch(args) {
+    const { host, principalPlane, target } = args && typeof args === "object" ? args : {};
+    const none = (reason) => ({ credentials: [], reason });
+    try {
+      const h = hostNameOf(host);
+      if (!h) return none("the fetch names no host a credential can be for, so it goes without credentials");
+      let who2 = principalMember(principalPlane);
+      if (who2 !== null && !this.#active(who2)) {
+        this.#withdrawRevoked(who2);
+        who2 = null;
+      }
+      const info = typeof target === "string" && target !== "" ? this.#core.bundleInfo(target) : null;
+      const targetProject = info && typeof info.project === "string" && info.project !== "" ? info.project : null;
+      const r = this.#one(`SELECT * FROM ${CREDENTIALS_TABLE}
+                            WHERE host=? AND withdrawn_at IS NULL
+                              AND ((scope='member' AND supplied_by=?) OR (scope='project' AND project=?) OR scope='group')
+                            ORDER BY CASE scope WHEN 'member' THEN 0 WHEN 'project' THEN 1 ELSE 2 END,
+                                     supplied_at DESC, rowid DESC
+                            LIMIT 1`, h, who2, targetProject);
+      if (!r)
+        return none(`no credential supplied for ${h} is admitted for this request's scope, so the fetch goes without credentials and the source's refusal stands`);
+      const key = await this.#aesKey();
+      if (!key)
+        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is bound to this instance, so no credential is used and the source's refusal stands");
+      let secret;
+      try {
+        const pt = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: unb642(r.iv), additionalData: _CaptureCredentials.#aad(r.credential_id, r.scope, r.project) },
+          key,
+          unb642(r.ciphertext)
+        );
+        secret = new TextDecoder("utf-8", { fatal: true }).decode(pt);
+      } catch {
+        return none(`credential ${r.credential_id} will not decrypt under this instance's key, so the fetch goes without credentials and the source's refusal stands`);
+      }
+      return { credentials: [{
+        credential: r.credential_id,
+        kind: r.kind,
+        secret,
+        supplied_by: r.supplied_by,
+        scope: r.scope,
+        project: r.project ?? null
+      }], reason: null };
+    } catch {
+      return none("the credentials could not be read, so the fetch goes without credentials and the source's refusal stands");
+    }
+  }
+  /* ================= R57: withdrawal ================= */
+  /** Withdraws a credential: R56 never answers it again, its ciphertext is destroyed now, and its secretless
+   *  entry stays with `withdrawn_at` and `withdrawn_by`. */
+  async credentialWithdraw(args) {
+    const { credential, by } = args && typeof args === "object" ? args : {};
+    try {
+      const found = typeof credential === "string" && credential !== "" ? this.#one(`SELECT * FROM ${CREDENTIALS_TABLE} WHERE credential_id=?`, credential) : null;
+      if (!found || !this.#sees(by, found))
+        return refusal11("CAPTURE_CREDENTIAL_NO_SUCH", "no credential by that id is visible to this member");
+      const [row2] = this.#sweep([found]);
+      const denied = this.#r63Refusal(by, { row: row2 });
+      if (denied) return denied;
+      if (row2.withdrawn_at != null) return { ok: true, already: true, withdrawn: _CaptureCredentials.#entry(row2) };
+      const at17 = this.#core.transact(() => this.#destroy(row2.credential_id, by));
+      return { ok: true, already: false, withdrawn: _CaptureCredentials.#entry({ ...row2, withdrawn_at: at17, withdrawn_by: by }) };
+    } catch {
+      return refusal11(
+        "CAPTURE_CREDENTIAL_WITHDRAW_FAILED",
+        "the credential could not be read or withdrawn, so nothing was changed"
+      );
+    }
+  }
+  /* ================= R58: the listing ================= */
+  /* R58's visibility as SQL over the alias `c`, so the listing's cut falls on what the viewer sees: an administrator
+     every row; an active member their own `member` rows, the `group` rows, and a `project` row whose project
+     membership's one rule of sight (its R43, `viewerPredicate`, R44's FULL for a project) admits them to, joined on
+     record-core's `bundles` by its read contract (R37: `bundle_id`, `object_type`). Null: the viewer sees nothing. */
+  #visibleClause(who2) {
+    if (this.#members.isAdministrator(who2)) return { sql: "1=1", args: [] };
+    if (who2 === "admin" || !this.#active(who2)) return null;
+    const g = viewerPredicate(viewerOf(who2));
+    if (g.scope === "DENY") return null;
+    return {
+      sql: `((c.scope='member' AND c.supplied_by=?) OR c.scope='group'
+                    OR (c.scope='project' AND EXISTS (SELECT 1 FROM bundles b
+                         WHERE b.bundle_id = c.project AND b.object_type = 'project' AND ${g.sql})))`,
+      args: [who2, ...g.args]
+    };
+  }
+  /** The credentials `viewer` may see, filtered by `scope` and `project` when given: the first `limit` in the order
+   *  supplied (`CREDENTIAL_LIST_LIMIT`, the caller's to lower, never raise), `truncated` measured by reading one row
+   *  past it. Never the secret. */
+  credentialList(args) {
+    const { viewer, scope, project, limit } = args && typeof args === "object" ? args : {};
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || CREDENTIAL_LIST_LIMIT, CREDENTIAL_LIST_LIMIT));
+    const empty = { entries: [], limit: cap, truncated: false };
+    try {
+      const who2 = viewerMember(viewer);
+      if (!who2) return empty;
+      const vis = this.#visibleClause(who2);
+      if (!vis) return empty;
+      const where = [vis.sql];
+      const params = [...vis.args];
+      if (scope !== void 0 && scope !== null) {
+        where.push("c.scope=?");
+        params.push(scope);
+      }
+      if (project !== void 0 && project !== null) {
+        where.push("c.project=?");
+        params.push(project);
+      }
+      const found = this.#sweep(this.#rows(`SELECT c.* FROM ${CREDENTIALS_TABLE} c WHERE ${where.join(" AND ")}
+                                            ORDER BY c.supplied_at, c.rowid LIMIT ?`, ...params, cap + 1));
+      const truncated3 = found.length > cap;
+      return { entries: (truncated3 ? found.slice(0, cap) : found).map((r) => _CaptureCredentials.#entry(r)), limit: cap, truncated: truncated3 };
+    } catch {
+      return empty;
+    }
+  }
+};
+
+// src/capture-requests/schema.mjs
+var CAPTURE_REQUESTS_SCHEMA = `
+-- PL-4 / IS-4 / SWEEP section 4b.1: THE CAPTURE-REQUEST DOOR.
+--
+-- THE AI DOES NOT CAPTURE. IT REQUESTS, AND THE DAEMON CAPTURES. That is the
+-- structural gate DEC-47 kept when it withdrew the authorisation gate, and this
+-- table IS the gate: a row here is an ASK, it carries no bytes, no sha and no
+-- provenance, and nothing that writes it can fetch anything. The daemon drains
+-- it, and DEC-47's conduct rules are enforced at that drain and nowhere else.
+--
+-- WHY A TABLE RATHER THAN A CONTROL-PLANE ENQUEUE. index.mjs deliberately omits
+-- taskenqueue from the OPS table, with the reasoning written into the table
+-- itself: no control-plane route may put an event in the queue on its own
+-- account. A scoped enqueue op would have crossed that. The table keeps the door
+-- the OPS comment closed still closed, keeps the daemon the sole fetcher, and
+-- gives DEC-47's conduct ONE enforcement point.
+--
+-- SCRATCH-CLASS, in capture_sessions' and ai_runs' family and NOT record. It
+-- holds no member act, nothing derived from one, and nothing a case is built on:
+-- it is a work list with an expiry. The CAPTURE it produces is record and lands
+-- exactly where the daemon's captures always have, at collected and never
+-- higher.
+--
+-- BOTH PRINCIPALS ARE COLUMNS AND NEITHER IS NULLABLE (DEC-27(b), DEC-55.4).
+-- They are RECORDED AT THE REQUEST rather than resolved at the drain (the plane
+-- principal is the caller's stamp, REC-168; the Claude principal is the run's),
+-- because a run is scratch with an expiry and the attribution must survive it:
+-- an act attributable only while the run that asked is still alive is an act
+-- nobody can account for afterwards. A record naming ONE of the two is the
+-- defect DEC-27(b) names, so the drain refuses to compose an attribution that
+-- cannot state both.
+--
+-- host IS DERIVED AT THE WRITE and stored, so the drain's rate rule reads one
+-- column instead of re-parsing a locator inside the enforcement point. A URL
+-- this plane cannot parse never becomes a row at all.
+--
+-- state IS THE FENCE AS WELL AS THE LIFECYCLE. requested -> draining -> captured
+-- is the only route to bytes, and draining is set by the drain alone, inside the
+-- tick that then fetches through capture's in-process arm (K58), which nothing
+-- outside the drain can reach: op=acquire refuses via capture-request from any
+-- caller, so the AI capturing directly rather than requesting is refused by
+-- construction and not by a class list.
+CREATE TABLE IF NOT EXISTS capture_requests (
+  request           TEXT PRIMARY KEY,
+  run               TEXT NOT NULL,    -- the run that asked. NO FOREIGN KEY, section 14b.7's rule for versions applied one level down
+  target            TEXT NOT NULL,    -- the inquiry the run is working under: a bundle id, which is what purge's per-bundle arm can find
+  address           TEXT NOT NULL,    -- the public https locator asked for
+  host              TEXT NOT NULL,    -- derived at the write from address
+  purpose           TEXT NOT NULL,    -- the user-agent purpose token this fetch will carry
+  ua_mode           TEXT NOT NULL,    -- civicos, or member-browser (BOB-3, permitted for public documents)
+  principal_plane   TEXT NOT NULL,    -- the caller's stamp (REC-168): whose scope the writes ran under
+  principal_claude  TEXT NOT NULL,    -- the run's: WHICH LEVEL of the cascade paid
+  state             TEXT NOT NULL,    -- requested | draining | captured | refused | expired (D-523, a C-83 render hold released UNDETERMINED at expires)
+  code              TEXT,             -- the DEC-49 wire code, when the drain refused or held this row
+  detail            TEXT,             -- what the drain said, so a held row explains itself without a second call
+  capture_sha       TEXT,             -- what the daemon captured. WRITTEN BY THE DRAIN ONLY
+  attempts          INTEGER NOT NULL DEFAULT 0,
+  requested_at      TEXT NOT NULL,
+  updated           TEXT NOT NULL,
+  expires           TEXT NOT NULL,
+  captured_at       TEXT,
+  -- PL-15 / D-213: THE OTHER QUESTION. NULL on every ordinary request, and NULL
+  -- is the honest answer there rather than a default -- a capture asked for
+  -- under the question the run is working bears on that question and on nothing
+  -- else until somebody says otherwise.
+  --
+  -- WHEN IT IS SET it names a DIFFERENT inquiry from 'target': the run met
+  -- evidence for question B while working question A, and this column is the
+  -- observation. 'target' stays A, because the request is still accountable to
+  -- the question it was made under, while THIS column names what the evidence
+  -- is ABOUT. The two may never be equal, and the door refuses that rather than
+  -- storing a lead that leads back where it started.
+  --
+  -- IT IS A SECOND BUNDLE ID ON THIS ROW, which is why purge's PER-BUNDLE arm
+  -- gained a predicate for it in the same turn. The whole-store arm already
+  -- clears the table, while the per-bundle arm matched 'target' only, so purging
+  -- inquiry B would have left a lead standing that points at a question no
+  -- longer in the store -- D-113's class arriving through a column instead of
+  -- through a table, and invisible to hygiene's structural check for exactly
+  -- that reason.
+  lead_inquiry      TEXT,
+  -- FL-4 / IS-9 / section 14b.3: WHEN THE RUN WAS WOKEN FOR THIS COMPLETION,
+  -- and NULL means the daemon has answered and the run has not been told yet.
+  --
+  -- IT IS ON THE REQUEST AND NOT ON THE RUN, because the thing that completes is
+  -- a request and a run may be waiting on several. A flag on the run would make
+  -- "this run has been woken" true while a second request was still owed an
+  -- answer, and the wake would be consumed by the first completion to land.
+  --
+  -- AN INSTANT RATHER THAN A FLAG, on the same reasoning captured_at carries:
+  -- the record can then say WHEN the run was told, which is what makes a lease
+  -- extension accountable to something rather than an unexplained clock move.
+  --
+  -- NULL IS THE HONEST DEFAULT AND IT INVENTS NOTHING. A row written before this
+  -- column existed was never woken -- nothing existed to wake it -- and the
+  -- consumer's own predicate requires the run to still be running, so a request
+  -- belonging to a run that has already ended is never woken retroactively.
+  run_woken_at      TEXT,
+  -- D-491 / IC-276 / CLIENT-RENDERED.md, BOB #32 item 3: DOES THIS REQUEST ASK
+  -- FOR THE PAGE AS A VISITOR SAW IT. 0 is the served document, captured exactly
+  -- as every request before this column was. 1 asks the drain for the rendered
+  -- pair, and BOB #32 item 3 is what makes that askable at all -- an unattended
+  -- sweep MAY render, within the allowance and through the host governor.
+  --
+  -- NOT NULL DEFAULT 0, AND THAT IS THE HONEST DEFAULT HERE WHERE IT WOULD NOT
+  -- BE ON THE TWO COLUMNS ABOVE. lead_inquiry and run_woken_at are nullable
+  -- because a legacy row had an unstated value that a default would invent. This
+  -- column has no unstated value to invent: a request written before it existed
+  -- could not ask for a render, because no door read the flag and no drain could
+  -- have honoured one, so 0 states what was true of it rather than guessing.
+  --
+  -- IT IS THE ROW AND NOT THE CALL THAT CARRIES IT, for the reason address,
+  -- purpose and ua_mode are on the row: capture's in-process arm is handed it by
+  -- the drain from the row it judged, so what this instance renders is what
+  -- the drain judged.
+  --
+  -- WHEN THE RENDER CANNOT HAPPEN THE ROW IS HELD, never captured: capture's arm
+  -- answers a named C-83 refusal before anything is fetched, the drain records
+  -- that code and leaves the row in requested, and the served shell is NEVER
+  -- filed as though it were the content. That sentence is the whole of C-83 and
+  -- the reason this column cannot be read as advisory.
+  render            INTEGER NOT NULL DEFAULT 0,
+  -- K103 (3), capture-requests R40: WHY THE SOURCE TURNED THIS REQUEST AWAY, when
+  -- it did: login, paywall, user-agent or other. NULL when nothing the source
+  -- said decided the row (conduct, pacing, a render this instance could not do),
+  -- so a reason is never invented for a refusal that was ours.
+  source_reason     TEXT
+);
+CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
+CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
+CREATE INDEX IF NOT EXISTS capture_requests_run ON capture_requests(run);
+-- D-581, R26-R27: the queue's producers read captured rows by completion and
+-- held renders by their last update, each bounded; these let a bounded read
+-- stop at its limit instead of sorting every terminal row the table holds.
+CREATE INDEX IF NOT EXISTS capture_requests_completed ON capture_requests(state, captured_at, request);
+CREATE INDEX IF NOT EXISTS capture_requests_renders ON capture_requests(render, state, updated, request);
+-- R39 (N262): the drain finds the capture this table holds of an address (and
+-- render flag) to fetch conditionally on, by one indexed read per fired row.
+CREATE INDEX IF NOT EXISTS capture_requests_address ON capture_requests(address, render, state, captured_at);
+`;
+var CAPTURE_REQUESTS_ADDITIVE = Object.freeze([
+  ["lead_inquiry", "TEXT"],
+  ["run_woken_at", "TEXT"],
+  ["render", "INTEGER NOT NULL DEFAULT 0"],
+  ["source_reason", "TEXT"]
+]);
+function migrateCaptureRequests(sql) {
+  const have = [...sql.exec(`PRAGMA table_info(capture_requests)`)].map((r) => r.name);
+  if (have.length) {
+    for (const [column, decl] of CAPTURE_REQUESTS_ADDITIVE)
+      if (!have.includes(column)) sql.exec(`ALTER TABLE capture_requests ADD COLUMN ${column} ${decl}`);
+  }
+  const bare2 = CAPTURE_REQUESTS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const stmt of bare2.split(";")) if (stmt.trim()) sql.exec(stmt);
+}
+
+// src/capture-requests/checks.mjs
+var checks_exports16 = {};
+__export(checks_exports16, {
+  CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS
+});
+var CAPTURE_SOURCE_CHECKS = Object.freeze({
+  /* R40, R42: THE SOURCE TURNED THE REQUEST AWAY and said why (401/407 a login, 402 a payment, 403/406 an agent it will
+     not admit, 451 another reason). Terminal, and the one refusal a member can answer: supply what the source asked
+     for (capture-sources R55) and ask again (op=capturerequestretry). */
+  CAPTURE_SOURCE_REFUSED: {
+    check: "C-108.1",
+    where: "src/capture-requests/index.mjs drain > is-capture-source-refused",
+    translation: "The site turned this request away: it asked for a login, a payment or a different browser, or refused for another reason it gave. Nothing was captured. A member who can see the question may supply what the site asked for and ask again."
+  }
+});
+
+// src/capture-requests/index.mjs
+var CAPTURE_REQUESTS_MODULE = "capture-requests";
+var CAPTURE_REQUEST_TICK_BATCH = 10;
+var CAPTURE_REQUEST_PER_HOST_PER_TICK = 1;
+var CAPTURE_REQUEST_TTL_MS = 864e5;
+var CAPTURE_REQUEST_TICK_MS = 6e4;
+var CAPTURE_REQUEST_READ_LIMIT = 200;
+var CAPTURE_REQUEST_READ_MAX = 1e3;
+var CAPTURE_REQUEST_WAIT_BATCH = 25;
+var CAPTURE_REQUEST_RANK_READ = 10;
+var CAPTURE_REQUEST_BUNDLE_SLUG = "requested";
+var CAPTURE_REQUEST_STATES = Object.freeze(["requested", "draining", "captured", "refused", "expired"]);
+var CAPTURE_REQUEST_TERMINAL = Object.freeze(["captured", "refused", "expired"]);
+var SOURCE_REASONS = Object.freeze(["login", "paywall", "user-agent", "other"]);
+var RENDER_NOT_A_PAGE_CHECK = "C-83.6";
+var RENDER_FAILED_CHECK = "C-83.7";
+var CAPTURE_FIELDS = Object.freeze(["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]);
+function sourceReasonOf(status) {
+  const s = Number(status);
+  if (s === 401 || s === 407) return { reason: "login", terminal: true };
+  if (s === 402) return { reason: "paywall", terminal: true };
+  if (s === 403 || s === 406) return { reason: "user-agent", terminal: true };
+  if (s === 451) return { reason: "other", terminal: true };
+  return { reason: "other", terminal: false };
+}
+function renderHoldReason(code) {
+  const own2 = (fam) => code && Object.prototype.hasOwnProperty.call(fam, code) ? fam[code] : null;
+  const family = own2(RENDER_CAPTURE_CHECKS) ? "C-83" : own2(CAPTURE_REQUEST_CHECKS) ? "C-28" : own2(CAPTURE_SOURCE_CHECKS) ? "C-108" : null;
+  const row2 = own2(RENDER_CAPTURE_CHECKS) || own2(CAPTURE_REQUEST_CHECKS) || own2(CAPTURE_SOURCE_CHECKS);
+  return { code: code ?? null, family, check: row2 ? row2.check : null, translation: row2 ? row2.translation : null };
+}
+function captureRequestAttribution(row2) {
+  const actor = `${MACHINE_AUTHOR_PREFIX}daemon`;
+  const plane2 = String(row2 && row2.principal_plane || "").trim();
+  const claude = String(row2 && row2.principal_claude || "").trim();
+  if (!row2 || !plane2 || !claude)
+    return { ok: false, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", plane: plane2 || null, claude: claude || null };
+  return {
+    ok: true,
+    actor,
+    machine_attributed: true,
+    at_the_request_of: { run: row2.run, inquiry: row2.target },
+    principals: { plane: plane2, claude },
+    /* The sentence a surface renders, composed from the fields above so it cannot say something they do not. */
+    statement: `the daemon captured this, at the investigative session's request (run ${row2.run}), under ${plane2}, paid by ${claude}`
+  };
+}
+function unattendedBound(env) {
+  return !!(env && (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN !== "" || typeof env.ADMIN_TOKEN === "string" && env.ADMIN_TOKEN !== ""));
+}
+var text2 = (v) => typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : "";
+var shown = (v) => {
+  try {
+    return String(JSON.stringify(v) ?? typeof v).slice(0, 40);
+  } catch {
+    return typeof v;
+  }
+};
+var clamp2 = (limit, dflt, max) => {
+  const n = Math.floor(Number(limit));
+  return Math.max(1, Math.min(Number.isFinite(n) && n > 0 ? n : dflt, max));
+};
+var instantMs = (v) => {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string" && v.trim()) {
+    const t = Date.parse(v);
+    return Number.isFinite(t) ? t : null;
+  }
+  return null;
+};
+var randomHex = (bytes2) => [...crypto.getRandomValues(new Uint8Array(bytes2))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var CaptureRequests = class _CaptureRequests {
+  #sql;
+  #deps;
+  #draining = false;
+  #filed = [];
+  // R44: {module, fn, seq}
+  /** `deps`: `record`, `observations`, `governor`, `capture`, `credentials` (each module's instance on this storage),
+   *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
+   *  `principal_plane` and `principal_claude`, or null), `env`, `now()` (milliseconds; a test may inject its clock),
+   *  `storeName`, `configured()` (R11; `unattendedBound(env)` by default), `promotion` (R38), `order` (R44: the
+   *  modules' total order, membership's `MODULE_ORDER` unless a test passes its own), `inquiry` (R14: its R44
+   *  `memberUserAgent(id)`). */
+  constructor(storage, deps = {}) {
+    this.#sql = storage.sql;
+    this.#deps = deps;
+  }
+  migrate() {
+    migrateCaptureRequests(this.#sql);
+  }
+  #rows(q6, ...a) {
+    return [...this.#sql.exec(q6, ...a)];
+  }
+  #one(q6, ...a) {
+    const r = this.#rows(q6, ...a);
+    return r.length ? r[0] : null;
+  }
+  #nowMs() {
+    const n = this.#deps.now ? Number(this.#deps.now()) : Date.now();
+    return Number.isFinite(n) ? n : Date.now();
+  }
+  #env() {
+    return this.#deps.env || {};
+  }
+  #storeName() {
+    const n = typeof this.#deps.storeName === "function" ? this.#deps.storeName() : this.#deps.storeName;
+    return typeof n === "string" && n ? n : "bio";
+  }
+  #observe(entry, at17) {
+    return this.#deps.observations.observe(entry, at17, 0);
+  }
+  #rank(m) {
+    const o = Array.isArray(this.#deps.order) ? this.#deps.order : MODULE_ORDER;
+    const i = o.indexOf(m);
+    return i === -1 ? Infinity : i;
+  }
+  /* ==================================================================== *
+   * R1–R9 — THE DOOR. It writes a row. It fetches NOTHING.
+   *
+   * Read this function looking for an outbound call and there is none, which is the module's whole claim expressed as
+   * an absence: R9's test drives the door with a capture, a governor and credentials that fail the test when touched.
+   * ==================================================================== */
+  captureRequest(a = {}, { viewer = null, caller = null, at: at17 = null } = {}) {
+    const args = a && typeof a === "object" ? a : {};
+    const refusal19 = (code, detail, extra) => {
+      const row2 = CAPTURE_REQUEST_CHECKS[code];
+      return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
+    };
+    const run = text2(args.run).trim();
+    const runRow = run ? this.#deps.runs.runFor(run, viewer) : null;
+    if (!runRow)
+      return refusal19(
+        "CAPTURE_REQUEST_NO_RUN",
+        run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
+        { run: run || null }
+      );
+    const notPrincipal = runPrincipalGate({
+      caller,
+      principal: runRow.principal_plane,
+      act: "requesting a capture under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        run,
+        note: "a capture request names a run its caller holds. Nothing was requested or written"
+      };
+    if (runRow.status !== "running")
+      return refusal19(
+        "CAPTURE_REQUEST_NO_RUN",
+        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
+        { run }
+      );
+    const address = text2(args.address).trim();
+    if (!isPublicHttpsLocator(address))
+      return refusal19(
+        "CAPTURE_REQUEST_NOT_PUBLIC",
+        `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a session may reach to "areas that anybody can go through", and this address is not one on its face.`,
+        { address: address || null }
+      );
+    let host = null;
+    try {
+      host = new URL(address).host.toLowerCase();
+    } catch {
+      host = null;
+    }
+    if (!host)
+      return refusal19(
+        "CAPTURE_REQUEST_NOT_PUBLIC",
+        "this address has no host this plane can read, and the per-host pacing DEC-47 requires is computed from one.",
+        { address }
+      );
+    const target = text2(args.target).trim();
+    if (!this.#inquiryInSight(target, viewer))
+      return refusal19(
+        "CAPTURE_REQUEST_NOT_AN_INQUIRY",
+        `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is accountable to the question it was asked under, and a fetch belonging to nothing is a fetch nobody can account for afterwards.`,
+        { target: target || null }
+      );
+    const lead = text2(args.lead_inquiry ?? args.lead).trim();
+    if (lead) {
+      if (!this.#inquiryInSight(lead, viewer))
+        return refusal19(
+          "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
+          `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this evidence bears on, so it names a question or it names nothing \u2014 a document, a project or a bundle id nothing answers to would give the notification a home that cannot hold it.`,
+          { lead_inquiry: lead }
+        );
+      if (lead === target)
+        return refusal19(
+          "CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
+          `this request names ${lead.slice(0, 60)} as both the question it was made under and the question the evidence bears on. That is ordinary evidence for this question, which needs no lead: a lead exists to give evidence for ANOTHER question a home (D-213), and one pointing back here would file a notification about this question saying evidence for a different one was found.`,
+          { lead_inquiry: lead, target }
+        );
+    }
+    const brought = CAPTURE_FIELDS.filter((k) => args[k] !== void 0 && args[k] !== null && args[k] !== "");
+    if (brought.length)
+      return refusal19(
+        "CAPTURE_REQUEST_CARRIES_A_CAPTURE",
+        `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60).`,
+        { fields: brought }
+      );
+    const renderRaw = args.render ?? null;
+    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)
+      return refusal19(
+        "CAPTURE_REQUEST_RENDER_MALFORMED",
+        `render=${shown(renderRaw)} is not a value this door reads. Send render: true for the page as a visitor saw it, or nothing for the document as the site serves it.`,
+        { render: null }
+      );
+    const render = renderRaw === true ? 1 : 0;
+    const purpose = text2(args.purpose).trim();
+    const uaMode = text2(args.ua_mode ?? args.uaMode ?? "civicos").trim();
+    const callerPlane = text2(caller).trim();
+    const standing = this.#one(
+      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
+      run,
+      address,
+      render
+    );
+    if (standing)
+      return {
+        ok: true,
+        request: standing.request,
+        run,
+        target: standing.target,
+        address,
+        host: standing.host,
+        purpose: standing.purpose,
+        ua_mode: standing.ua_mode,
+        lead_inquiry: standing.lead_inquiry ?? null,
+        render: standing.render === 1,
+        state: standing.state,
+        requested: false,
+        already: true,
+        principals: { plane: standing.principal_plane, claude: standing.principal_claude }
+      };
+    const nowMs = instantMs(at17) ?? this.#nowMs();
+    const now = stampInstant("second", nowMs);
+    const expires = stampInstant("second", nowMs + CAPTURE_REQUEST_TTL_MS);
+    let request = null;
+    for (let i = 0; i < 8 && !request; i++) {
+      const id = `CR-${now.replace(/[-:TZ]/g, "")}-${randomHex(6)}`;
+      if (!this.#one(`SELECT 1 AS x FROM capture_requests WHERE request=?`, id)) request = id;
+    }
+    this.#sql.exec(
+      `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
+      request,
+      run,
+      target,
+      address,
+      host,
+      purpose,
+      uaMode,
+      callerPlane,
+      String(runRow.principal_claude ?? ""),
+      now,
+      now,
+      expires,
+      lead || null,
+      render
+    );
+    const written = this.#one(`SELECT * FROM capture_requests WHERE request=?`, request);
+    for (const l of this.#filed) {
+      try {
+        const r = l.fn({ request, run: written.run, expires: written.expires });
+        if (r && typeof r.then === "function") r.then(null, () => {
+        });
+      } catch {
+      }
+    }
+    return {
+      ok: true,
+      request,
+      run: written.run,
+      target: written.target,
+      address: written.address,
+      host: written.host,
+      purpose: written.purpose,
+      ua_mode: written.ua_mode,
+      lead_inquiry: written.lead_inquiry ?? null,
+      render: written.render === 1,
+      state: written.state,
+      requested: true,
+      already: false,
+      requested_at: written.requested_at,
+      expires: written.expires,
+      principals: { plane: written.principal_plane, claude: written.principal_claude },
+      detail: "requested. This instance does not fetch on a caller's timing: the daemon drains this queue, and DEC-47's conduct rules are applied there."
+    };
+  }
+  /** Is `id` an inquiry this viewer can see (membership's predicate over record-core's `bundles` read contract)? A
+   *  legacy `focus` or `problem` spelling reads as an inquiry (`normalizeType`). An unseen and an absent id alike. */
+  #inquiryInSight(id, viewer) {
+    if (!id) return false;
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      id,
+      ...gate.args
+    );
+    return !!b && normalizeType(b.object_type) === "inquiry";
+  }
+  /** R10's composer, as a method for the reads' callers. */
+  attribution(row2) {
+    return captureRequestAttribution(row2);
+  }
+  /** R44 (N223, K259): a later module registers once at start for the notice after each request written (R6). Its
+   *  refusals are membership's `listenerRefusal` (R81); listeners run in the modules' total order (R83). */
+  onRequestFiled(module, fn) {
+    const refused = listenerRefusal(this.#filed, module, fn);
+    if (refused) return refused;
+    this.#filed.push({ module, fn, seq: this.#filed.length });
+    this.#filed.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  /* ==================================================================== *
+   * R11–R22, R37–R41 — THE DRAIN: THE ONLY THING IN THIS PLANE THAT TURNS A REQUEST INTO A FETCH.
+   * ==================================================================== */
+  /** R11, R37: whether unattended capture is configured here. Never throws. */
+  configured() {
+    try {
+      return this.#deps.configured ? !!this.#deps.configured() : unattendedBound(this.#env());
+    } catch {
+      return false;
+    }
+  }
+  /** R37: the number of `requested` rows, and 0 whenever unattended capture is not configured, so an idle or
+   *  unconfigured instance holds no alarm. Synchronous; writes nothing; never throws. */
+  drainPending() {
+    try {
+      if (!this.configured()) return 0;
+      return Number(this.#one(`SELECT count(*) AS c FROM capture_requests WHERE state='requested'`).c) || 0;
+    } catch {
+      return 0;
+    }
+  }
+  /** R37: the cadence between drain ticks while work waits: the binding `CAPTURE_REQUEST_TICK_MS` when it reads as a
+   *  number ≥ 0, else 60,000. An absent or empty binding is not a number. Synchronous; never throws. */
+  drainIntervalMs() {
+    try {
+      const raw = this.#env().CAPTURE_REQUEST_TICK_MS;
+      if (raw === void 0 || raw === null || typeof raw === "string" && raw.trim() === "") return CAPTURE_REQUEST_TICK_MS;
+      const v = Number(raw);
+      return Number.isFinite(v) && v >= 0 ? v : CAPTURE_REQUEST_TICK_MS;
+    } catch {
+      return CAPTURE_REQUEST_TICK_MS;
+    }
+  }
+  #remaining() {
+    return Number(this.#one(`SELECT count(*) AS c FROM capture_requests WHERE state='requested'`).c) || 0;
+  }
+  /** op=capturerequestdrain, and the scheduler's `capture-request-drain` consumer, which passes its rank (R12, N224:
+   *  scheduler R10, `rank(items, now)` answering the items reordered). */
+  async drain({ limit = null, actor = "consumer", now = null, rank: rank5 = null } = {}) {
+    const nowMs = Number.isFinite(now) ? now : this.#nowMs();
+    const at17 = stampInstant("second", nowMs);
+    if (!this.configured())
+      return {
+        configured: false,
+        actor,
+        at: at17,
+        drained: 0,
+        captured: [],
+        refused: [],
+        held: [],
+        expired: [],
+        remaining: 0,
+        detail: "no daemon credential is bound: this instance drains nothing and holds no alarm for it"
+      };
+    if (this.#draining)
+      return {
+        configured: true,
+        busy: true,
+        actor,
+        at: at17,
+        drained: 0,
+        captured: [],
+        refused: [],
+        held: [],
+        expired: [],
+        remaining: this.#remaining()
+      };
+    this.#draining = true;
+    try {
+      const cap = Math.max(1, Math.min(Number(limit) || CAPTURE_REQUEST_TICK_BATCH, CAPTURE_REQUEST_TICK_BATCH));
+      this.#sql.exec(`UPDATE capture_requests SET state='requested', updated=? WHERE state='draining'`, at17);
+      const expired = [];
+      for (const q6 of this.#rows(
+        `SELECT * FROM capture_requests WHERE state='requested' AND expires <= ? ORDER BY expires, request LIMIT ?`,
+        at17,
+        cap
+      )) {
+        const renderRow2 = q6.render === 1;
+        const reason = renderHoldReason(q6.code);
+        const why = String(q6.detail || "").slice(0, 400);
+        const said2 = `held under ${reason.check || "no catalogued check"} ${q6.code || "(no code: never attempted)"} until this request expired at ${q6.expires}. ` + (renderRow2 ? "The render was never performed and nothing was filed for it, so what the page showed is UNDETERMINED" : "Nothing was fetched or filed for it after that, so what the address holds is UNDETERMINED") + (why ? ` \u2014 the reason last given: ${why}` : " \u2014 no further detail was carried");
+        this.#sql.exec(
+          `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
+          said2.slice(0, 600),
+          at17,
+          q6.request
+        );
+        this.#observe({
+          ...lookAuthority(q6),
+          level: "document",
+          subjectKind: "address",
+          subject: q6.address,
+          state: "LOOKED_INDETERMINATE",
+          governed: renderRow2,
+          condition: renderRow2 ? "render-deferred" : null,
+          detail: `${reason.check || "no catalogued check"} ${q6.code || "(no code)"}: the request expired UNDETERMINED at ${q6.expires} and is released \u2014 ${why || "no detail was carried"}`
+        }, at17);
+        expired.push({
+          request: q6.request,
+          address: q6.address,
+          host: q6.host,
+          code: q6.code ?? null,
+          check: reason.check,
+          translation: reason.translation,
+          source_reason: q6.source_reason ?? null,
+          render: renderRow2 ? { state: "expired", content: "undetermined" } : null,
+          expires: q6.expires,
+          detail: said2
+        });
+      }
+      const ranking = typeof rank5 === "function";
+      const read2 = this.#rows(
+        `SELECT * FROM capture_requests WHERE state='requested' AND expires > ? ORDER BY requested_at, request LIMIT ?`,
+        at17,
+        ranking ? cap * CAPTURE_REQUEST_RANK_READ : cap
+      );
+      const queued = ranking ? this.#ranked(read2, rank5, nowMs).slice(0, cap) : read2;
+      const captured = [], refused = [], held = [];
+      const hostsThisTick = /* @__PURE__ */ new Map();
+      const settle = (q6, {
+        terminal,
+        code,
+        check,
+        translation,
+        detail,
+        governed,
+        condition,
+        sourceReason = null,
+        render = null,
+        countAttempt = true,
+        into
+      }) => {
+        this.#sql.exec(
+          `UPDATE capture_requests SET state=?, code=?, detail=?, source_reason=?, attempts=attempts+?, updated=? WHERE request=?`,
+          terminal ? "refused" : "requested",
+          code,
+          String(detail || "").slice(0, 600),
+          sourceReason,
+          countAttempt ? 1 : 0,
+          at17,
+          q6.request
+        );
+        this.#observe({
+          ...lookAuthority(q6),
+          level: "document",
+          subjectKind: "address",
+          subject: q6.address,
+          state: "LOOKED_INDETERMINATE",
+          governed: governed === true,
+          condition: condition || null,
+          detail: `${check || "no catalogued check"} ${code}: ${String(detail || "").slice(0, 400)}`
+        }, at17);
+        (into || (terminal ? refused : held)).push({
+          request: q6.request,
+          address: q6.address,
+          host: q6.host,
+          code,
+          check: check ?? null,
+          translation: translation ?? null,
+          source_reason: sourceReason,
+          detail: String(detail || ""),
+          ...render ? { render } : {}
+        });
+      };
+      const sourceRefused = (q6, r) => {
+        const why = sourceReasonOf(r.status);
+        const row2 = CAPTURE_SOURCE_CHECKS.CAPTURE_SOURCE_REFUSED;
+        return {
+          ok: false,
+          terminal: true,
+          code: "CAPTURE_SOURCE_REFUSED",
+          check: row2.check,
+          translation: row2.translation,
+          sourceReason: why.reason,
+          detail: `the source answered HTTP ${r.status} for ${q6.address} (${why.reason}); nothing was captured`
+        };
+      };
+      const fetchFailed = (q6, r) => {
+        const row2 = CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED;
+        const fromSource = r.reason === "SOURCE_REFUSED";
+        return {
+          ok: false,
+          terminal: false,
+          code: "CAPTURE_FETCH_FAILED",
+          check: row2.check,
+          translation: row2.translation,
+          sourceReason: fromSource ? "other" : null,
+          detail: fromSource ? `the source answered HTTP ${r.status} for ${q6.address}; nothing was captured` : `the fetch did not land: ${String(r.reason || "").slice(0, 200)}`
+        };
+      };
+      for (const q6 of queued) {
+        const verdict = this.#conduct(q6, nowMs, hostsThisTick);
+        if (!verdict.ok) {
+          const row2 = CAPTURE_REQUEST_CHECKS[verdict.code];
+          settle(q6, {
+            terminal: verdict.terminal,
+            code: verdict.code,
+            check: row2.check,
+            translation: row2.translation,
+            detail: verdict.detail,
+            governed: verdict.governed,
+            condition: verdict.condition
+          });
+          continue;
+        }
+        this.#sql.exec(
+          `UPDATE capture_requests SET state='draining', attempts=attempts+1, updated=? WHERE request=?`,
+          at17,
+          q6.request
+        );
+        hostsThisTick.set(q6.host, (hostsThisTick.get(q6.host) || 0) + 1);
+        const r = await this.#fire(q6, verdict);
+        if (r.ok) {
+          this.#sql.exec(
+            `UPDATE capture_requests SET state='captured', code=NULL, detail=?, source_reason=NULL, capture_sha=?, captured_at=?, updated=? WHERE request=?`,
+            verdict.attribution.statement,
+            r.sha || null,
+            at17,
+            at17,
+            q6.request
+          );
+          this.#observe({
+            ...lookAuthority(q6),
+            level: "document",
+            subjectKind: "address",
+            subject: q6.address,
+            state: "PRESENT",
+            governed: false,
+            resultKind: "capture",
+            resultRef: r.sha || null,
+            detail: verdict.attribution.statement
+          }, at17);
+          const promoted = r.existed === true || !r.document ? null : this.#promoteCapture(q6, r.document, verdict.attribution, at17);
+          captured.push({
+            request: q6.request,
+            address: q6.address,
+            sha: r.sha || null,
+            grade: r.grade ?? null,
+            attribution: verdict.attribution,
+            already_held: r.existed === true,
+            ...promoted ? { promoted } : {}
+          });
+        } else if (r.renderCode) {
+          const renderRow2 = RENDER_CAPTURE_CHECKS[r.renderCode];
+          const why = String(r.detail || r.reason || "").slice(0, 400);
+          if (renderRow2.check === RENDER_NOT_A_PAGE_CHECK) {
+            settle(q6, {
+              terminal: true,
+              code: r.renderCode,
+              check: renderRow2.check,
+              translation: renderRow2.translation,
+              detail: why || "the address served something that is not a single HTML page",
+              governed: false,
+              condition: null,
+              countAttempt: false
+            });
+          } else if (renderRow2.check === RENDER_FAILED_CHECK) {
+            settle(q6, {
+              terminal: false,
+              code: r.renderCode,
+              check: renderRow2.check,
+              translation: renderRow2.translation,
+              detail: why,
+              governed: true,
+              condition: "render-deferred",
+              countAttempt: false,
+              render: { state: "deferred", content: "undetermined" }
+            });
+          } else {
+            hostsThisTick.set(q6.host, Math.max(0, (hostsThisTick.get(q6.host) || 1) - 1));
+            settle(q6, {
+              terminal: false,
+              code: r.renderCode,
+              check: renderRow2.check,
+              translation: renderRow2.translation,
+              detail: why,
+              governed: true,
+              condition: "render-deferred",
+              countAttempt: false,
+              render: { state: r.renderState || "deferred", content: "undetermined" }
+            });
+          }
+        } else if (r.reason === "SOURCE_REFUSED" && sourceReasonOf(r.status).terminal) {
+          settle(q6, { ...sourceRefused(q6, r), governed: false, condition: null, countAttempt: false });
+        } else {
+          const ours = r.reason === "HOST_COOLING_OFF";
+          settle(q6, {
+            ...fetchFailed(q6, r),
+            governed: ours,
+            condition: ours ? "governor-holding-host" : null,
+            countAttempt: false
+          });
+        }
+      }
+      return {
+        configured: true,
+        actor,
+        at: at17,
+        drained: captured.length + refused.length + held.length,
+        captured,
+        refused,
+        held,
+        expired,
+        remaining: this.#remaining()
+      };
+    } finally {
+      this.#draining = false;
+    }
+  }
+  /** R12 (N224): the rows in the rank's order. Each is offered as `{kind: "request", id, waitingSince, cadenceMs}`
+   *  (`waitingSince` its `requested_at` in milliseconds; `cadenceMs` R37's, by which the rank puts work waiting longer
+   *  than one cadence first) and carries its place under a symbol the rank's copies keep; a row the rank drops or
+   *  cannot place follows in oldest-first order. A rank that throws or answers no list leaves the order as read. */
+  #ranked(read2, rank5, now) {
+    if (read2.length < 2) return read2;
+    const PLACE = Symbol("place");
+    const cadenceMs = this.drainIntervalMs();
+    const items = read2.map((r, i) => ({
+      kind: "request",
+      id: r.request,
+      waitingSince: instantMs(r.requested_at),
+      cadenceMs,
+      [PLACE]: i
+    }));
+    let answer;
+    try {
+      answer = rank5(items, now);
+    } catch {
+      return read2;
+    }
+    if (!Array.isArray(answer)) return read2;
+    const order = [], taken = /* @__PURE__ */ new Set();
+    for (const x of answer) {
+      const i = x && typeof x === "object" ? x[PLACE] : void 0;
+      if (Number.isInteger(i) && !taken.has(i)) {
+        taken.add(i);
+        order.push(read2[i]);
+      }
+    }
+    for (let i = 0; i < read2.length; i++) if (!taken.has(i)) order.push(read2[i]);
+    return order;
+  }
+  /** R14: DEC-47's CONDUCT, and this is the ONE place it is applied. */
+  #conduct(q6, nowMs, hostsThisTick) {
+    const attribution = captureRequestAttribution(q6);
+    if (!attribution.ok)
+      return {
+        ok: false,
+        terminal: true,
+        code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
+        detail: `this request names ${attribution.plane && !attribution.claude ? "only the plane principal" : ""}${!attribution.plane && attribution.claude ? "only the Claude-account principal" : ""}${!attribution.plane && !attribution.claude ? "neither principal" : ""}, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made for an act the record could not attribute.`
+      };
+    if (!CAPTURE_PURPOSES.includes(q6.purpose))
+      return {
+        ok: false,
+        terminal: true,
+        code: "CAPTURE_CONDUCT_NO_PURPOSE",
+        detail: `'${String(q6.purpose || "").slice(0, 40) || "(none)"}' is not one of the purposes this instance can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.`
+      };
+    if (!CAPTURE_UA_MODES.includes(q6.ua_mode))
+      return {
+        ok: false,
+        terminal: true,
+        code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
+        detail: `'${String(q6.ua_mode || "").slice(0, 40) || "(none)"}' is not one of the legible agent forms: ${CAPTURE_UA_MODES.join(", ")}. BIO does not disguise its requests, and a mode this door cannot express is a string nobody could account for.`
+      };
+    let ua;
+    if (q6.ua_mode === "member-browser") {
+      ua = this.#memberAgent(q6.target);
+      if (!ua)
+        return {
+          ok: false,
+          terminal: true,
+          code: "CAPTURE_CONDUCT_UA_UNRECORDED",
+          detail: `this request asked to fetch as the member's own browser and ${q6.target} records no member agent. BOB-3 permits DELEGATING an agent a member actually used; composing one would be inventing a client that does not exist, which is the fabricated-Mozilla case wearing the ruling's clothes.`
+        };
+    } else {
+      const env = this.#env();
+      ua = civicosUserAgent(env.VERSION, env.INSTANCE_NAME, q6.purpose);
+      if (!userAgentIsLegible(ua))
+        return {
+          ok: false,
+          terminal: true,
+          code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
+          detail: `the agent this fetch would carry names no contact anybody could reach. D-94's ladder MEASURED that removing the contact component flips admission 200 to 403 uniformly, so this is the component that decides whether the fetch happens at all \u2014 and being blocked honestly is a fact we can record.`
+        };
+    }
+    if (this.#hostHeld(q6.host, nowMs))
+      return {
+        ok: false,
+        terminal: false,
+        governed: true,
+        condition: "governor-holding-host",
+        code: "CAPTURE_CONDUCT_HOST_HELD",
+        detail: `${q6.host} is in cool-off: it refused us or asked us to slow down, and the per-host governor is holding the interval it named. DEC-47 bounds discovery more tightly than re-fetch because a stranger's server has no relationship with this instance.`
+      };
+    if ((hostsThisTick.get(q6.host) || 0) >= CAPTURE_REQUEST_PER_HOST_PER_TICK)
+      return {
+        ok: false,
+        terminal: false,
+        governed: true,
+        condition: "governor-holding-host",
+        code: "CAPTURE_CONDUCT_TICK_SPENT",
+        detail: `this tick has already fetched from ${q6.host} once. A person opens a few tabs and then reads; a loop opens forty, so the drain spreads requests across ticks rather than emptying the queue at one host's expense.`
+      };
+    return { ok: true, ua, attribution };
+  }
+  #hostHeld(host, nowMs) {
+    try {
+      return !!this.#deps.governor.isHeld(host, nowMs);
+    } catch {
+      return false;
+    }
+  }
+  /** R14 (N295, K342): the member agent RECORDED on the inquiry, as inquiry answers it (its R44 `memberUserAgent`: the
+   *  control plane's stamp at the inquiry's creation, else its document's `member_user_agent`), or null: answered
+   *  honestly rather than defaulted, because a default here is the invented client BOB-3 does not license. Inquiry
+   *  is the one reader of that record (K231); this module never reads the document's line itself. */
+  #memberAgent(target) {
+    try {
+      const ua = this.#deps.inquiry.memberUserAgent(target);
+      return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R15, R16, K58: THE FETCH, through `capture`'s trusted in-process arm, handed the draining row's own address,
+   *  purpose, agent and render flag — what the conduct check judged. R41 (K103): the one credential a member supplied
+   *  for this request's scope, when one is admitted, rides beside them (capture-sources R56, read with the row's
+   *  plane principal, target and host); none is admitted, the fetch goes without, and the source's refusal stands.
+   *
+   *  WHAT COMES BACK OUT: a filed capture's digest, grade and whether the bytes were already held (R39); a render
+   *  `capture` refused, named by its C-83 code (read off the catalogue, never a spelling invented here) and its own
+   *  word for the hold (D-520); otherwise the reason and, for a source's answer, its status. D-205: a thrown error's
+   *  message is never carried, because it can carry a query string and a query string can carry a credential. */
+  async #fire(q6, verdict) {
+    try {
+      let credential = null;
+      if (this.#deps.credentials && typeof this.#deps.credentials.credentialsForFetch === "function") {
+        const c = await this.#deps.credentials.credentialsForFetch({
+          host: q6.host,
+          principalPlane: q6.principal_plane,
+          target: q6.target
+        });
+        credential = c && Array.isArray(c.credentials) && c.credentials.length ? c.credentials[0] : null;
+      }
+      const held = this.#one(
+        `SELECT capture_sha FROM capture_requests WHERE address=? AND render=? AND state='captured' AND capture_sha IS NOT NULL
+          AND request<>? ORDER BY captured_at DESC, request DESC LIMIT 1`,
+        q6.address,
+        q6.render,
+        q6.request
+      );
+      const res = await this.#deps.capture.acquire({}, {
+        cls: "daemon",
+        member: false,
+        storeName: this.#storeName(),
+        captureRequest: {
+          locator: q6.address,
+          purpose: q6.purpose,
+          agent: q6.ua_mode === "member-browser" ? verdict.ua : null,
+          render: q6.render === 1,
+          ...credential ? { credential } : {},
+          ...held ? { heldSha: held.capture_sha } : {},
+          origin: { matched_sweep: q6.target, deeming_actor: deemingActor(verdict.attribution) }
+        }
+      });
+      const out = res && res.body;
+      const doc = out && out.ok && out.document;
+      if (doc) return {
+        ok: true,
+        sha: doc.capture && doc.capture.sha256,
+        grade: doc.capture && doc.capture.grade,
+        existed: out.existed === true || out.held === true,
+        document: doc
+      };
+      if (out && out.ok && out.unchanged === true && out.capture && out.capture.sha256)
+        return { ok: true, sha: out.capture.sha256, grade: null, existed: true, document: null };
+      const reason = out && (out.reason || out.error) || `http ${res && res.status}`;
+      const renderCode = q6.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
+      return {
+        ok: false,
+        reason,
+        status: out && Number.isFinite(Number(out.status)) ? Number(out.status) : null,
+        renderCode,
+        renderState: renderCode && out && out.render && (out.render.state === "waiting" || out.render.state === "deferred") ? out.render.state : null,
+        detail: renderCode ? String(out && out.detail || "").slice(0, 400) : null
+      };
+    } catch {
+      return { ok: false, reason: "the fetch did not complete and this plane did not record why", status: null };
+    }
+  }
+  /** R38 (N141, K102, K181): THE CAPTURE PROMOTED AT `collected`, NEVER HIGHER, as a plane-composed `information`
+   *  bundle through `promotion.promote` under the daemon's machine-shaped actor (R10). DEC-47 makes the inquiry the
+   *  authorisation, so the capture's origin (filed by `capture` from the drain's own values, R15) is `sweep`, the target
+   *  inquiry its matched scope and the run with both principals its deeming actor. The bundle holds the capture's
+   *  register document as `capture` answered it, the primary (and a render's shell, a streamed capture's parts) as
+   *  blobs, and one register row. No `group`: `promote` writes the instance's recorded one or refuses (C-64.1). Answers
+   *  `{ok: true, bundle_id}`, or `{ok: false, reason?, detail}` (the promotion's own refusal relayed); never throws. */
+  #promoteCapture(q6, doc, attribution, at17) {
+    try {
+      const promotion = this.#deps.promotion;
+      if (!promotion || typeof promotion.promote !== "function")
+        return { ok: false, detail: "no promotion is reachable here, so the capture was filed and not promoted" };
+      const cap = doc.capture || {};
+      if (typeof doc.file !== "string" || !/^[0-9a-f]{64}$/.test(String(cap.sha256 || "")) || !Number.isSafeInteger(cap.bytes))
+        return { ok: false, detail: "capture's answer named no primary file, digest and size to promote" };
+      const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at17;
+      const enc3 = (t) => {
+        const b = new TextEncoder().encode(t);
+        return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
+      };
+      return this.#deps.record.transact(() => {
+        const id = `${this.#deps.record.allocId("INFO", at17.slice(0, 4)).id}-${CAPTURE_REQUEST_BUNDLE_SLUG}`;
+        const title = `Requested capture of ${q6.address}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const md = [
+          "---",
+          `id: ${id}`,
+          "object_type: information",
+          "schema: information@2",
+          `title: ${JSON.stringify(title)}`,
+          "current_state: collected",
+          "prior_state: null",
+          `created: "${at17}"`,
+          `last_updated: "${at17}"`,
+          "produced_by:",
+          "  mode: agent",
+          "  capability_tier: session",
+          "references: []",
+          "state_history: []",
+          "annotations_open: 0",
+          "reeval_pending:",
+          "  flag: false",
+          "  since: null",
+          "  source: null",
+          "visuals: []",
+          "criticality: supporting",
+          "source_status: unchanged",
+          "source:",
+          `  locator: ${JSON.stringify(q6.address)}`,
+          `  retrieved: ${retrieved}`,
+          "monitoring:",
+          "  enabled: false",
+          "  frequency: none",
+          "---",
+          "",
+          "## Summary",
+          "",
+          `The document served at ${q6.address}, captured by the daemon at an investigative session's request under ${q6.target}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
+          "",
+          "## Provenance Notes",
+          "",
+          `${attribution.statement}. Requested ${q6.requested_at} as ${q6.request}; collected ${at17}. Filed at collected and never higher: releasing it is a named member's decision.`,
+          "",
+          "## Session Log",
+          "",
+          `### Session ${at17} | Collected | ${attribution.actor}`,
+          `Trigger: capture request ${q6.request} (run ${q6.run})`,
+          "Changes: created from the daemon's capture of the requested address.",
+          "",
+          "## Review Notes",
+          ""
+        ].join("\n");
+        const blob = (f9) => f9 && typeof f9.file === "string" && /^[0-9a-f]{64}$/.test(String(f9.sha256 || "")) && Number.isSafeInteger(f9.bytes) ? { path: f9.file, blobSha: f9.sha256, sha256: f9.sha256, bytes: f9.bytes } : null;
+        const blobs = [
+          blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }),
+          blob(doc.shell),
+          ...Array.isArray(doc.parts) ? doc.parts.map(blob) : []
+        ].filter(Boolean);
+        const seen = /* @__PURE__ */ new Set();
+        const files = [
+          { path: "bundle.md", ...enc3(md) },
+          { path: "data/provenance.json", ...enc3(JSON.stringify({ documents: [doc] }, null, 2)) },
+          ...blobs.filter((f9) => seen.has(f9.path) ? false : seen.add(f9.path))
+        ];
+        const p = promotion.promote({
+          bundleId: id,
+          base: null,
+          snapKey: `${at17.replace(/[-:]/g, "")}_${randomHex(4)}`,
+          author: attribution.actor,
+          files,
+          meta: {
+            object_type: "information",
+            title,
+            current_state: "collected",
+            prior_state: null,
+            created: at17,
+            last_updated: at17,
+            criticality: "supporting"
+          },
+          register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }]
+        });
+        return p && p.ok ? { ok: true, bundle_id: id } : {
+          ok: false,
+          reason: p && (p.reason || p.code) || null,
+          detail: String(p && p.detail || "the promotion was refused").slice(0, 300)
+        };
+      });
+    } catch {
+      return { ok: false, detail: "the promotion did not complete and this plane did not record why" };
+    }
+  }
+  /* ==================================================================== *
+   * R23–R29 — THE READS.
+   * ==================================================================== */
+  /** One row as every read answers it (R24, R25, R40): the request's fields less the principals, `render` a boolean,
+   *  the render deferral, the source's reason and the attribution composed by R10. */
+  static project(r) {
+    return {
+      request: r.request,
+      run: r.run,
+      target: r.target,
+      address: r.address,
+      host: r.host,
+      purpose: r.purpose,
+      ua_mode: r.ua_mode,
+      state: r.state,
+      code: r.code,
+      detail: r.detail,
+      capture_sha: r.capture_sha,
+      attempts: r.attempts,
+      requested_at: r.requested_at,
+      updated: r.updated,
+      expires: r.expires,
+      captured_at: r.captured_at,
+      lead_inquiry: r.lead_inquiry ?? null,
+      run_woken_at: r.run_woken_at ?? null,
+      render: r.render === 1,
+      source_reason: r.source_reason ?? null,
+      /* R25, D-523: what became of a render this instance could not do, in the drain's and op=queue's words. */
+      render_deferral: r.render === 1 && (r.state === "expired" || r.state === "requested" && r.code) ? (({ code, check, translation }) => ({
+        state: r.state === "expired" ? "expired" : "deferred",
+        content: "undetermined",
+        code,
+        check,
+        translation
+      }))(renderHoldReason(r.code)) : null,
+      attribution: captureRequestAttribution(r)
+    };
+  }
+  /** The gate over a bundle-id column: membership's predicate (R43) over record-core's `bundles` read contract. A row
+   *  whose bundle the viewer cannot see, or which no longer exists, is withheld; an absent or unrecognised stamp sees
+   *  none; a machine credential sees every row. */
+  static #gate(col, viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return { sql: "1=1", args: [] };
+    if (gate.scope === "DENY") return { sql: "0=1", args: [] };
+    return { sql: `EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${gate.sql}))`, args: gate.args };
+  }
+  #bounded(where, args, order, limit, gateCol, viewer) {
+    const cap = clamp2(limit, CAPTURE_REQUEST_READ_LIMIT, CAPTURE_REQUEST_READ_MAX);
+    const seen = _CaptureRequests.#gate(gateCol, viewer);
+    const found = this.#rows(
+      `SELECT cr.* FROM capture_requests cr WHERE ${[...where, `(${seen.sql})`].join(" AND ")} ORDER BY ${order} LIMIT ?`,
+      ...args,
+      ...seen.args,
+      cap + 1
+    );
+    const rows = found.slice(0, cap);
+    return { count: rows.length, limit: cap, truncated: found.length > cap, requests: rows.map(_CaptureRequests.project) };
+  }
+  /** R23–R25, op=capturerequests: rows whose target the viewer can see, filtered by run, target and state, oldest
+   *  first. */
+  captureRequests({ run = null, target = null, state = null, limit = null, viewer = null } = {}) {
+    const where = [], args = [];
+    if (run) {
+      where.push("cr.run=?");
+      args.push(String(run));
+    }
+    if (target) {
+      where.push("cr.target=?");
+      args.push(String(target));
+    }
+    if (state) {
+      where.push("cr.state=?");
+      args.push(String(state));
+    }
+    return this.#bounded(where, args, "cr.requested_at, cr.request", limit, "cr.target", viewer);
+  }
+  /** R26, R27: the queue's producers' reads, each bounded in SQL on an index (D-581: no walk over every terminal row).
+   *  `completed`: captured rows by target; `leads`: captured rows with a lead, by the lead; `rendersHeld`: render rows
+   *  expired, or requested with a code, by target. */
+  completed({ viewer = null, limit = null } = {}) {
+    return this.#bounded(["cr.state='captured'"], [], "cr.captured_at, cr.request", limit, "cr.target", viewer);
+  }
+  leads({ viewer = null, limit = null } = {}) {
+    return this.#bounded(
+      ["cr.state='captured'", "cr.lead_inquiry IS NOT NULL", "cr.lead_inquiry <> ''"],
+      [],
+      "cr.captured_at, cr.request",
+      limit,
+      "cr.lead_inquiry",
+      viewer
+    );
+  }
+  rendersHeld({ viewer = null, limit = null } = {}) {
+    return this.#bounded(
+      ["cr.render = 1", "(cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))"],
+      [],
+      "cr.updated, cr.request",
+      limit,
+      "cr.target",
+      viewer
+    );
+  }
+  /** R43 (N169): one request by id, as R24 answers a row (with R25's `render_deferral`), when its target is one the
+   *  viewer can see; null for a blank id, an unknown one or an unseen one alike. One read by key; writes nothing; never
+   *  throws. */
+  requestById(a = {}) {
+    try {
+      const { request = null, viewer = null } = a && typeof a === "object" ? a : {};
+      const id = text2(request).trim();
+      if (!id) return null;
+      const seen = _CaptureRequests.#gate("cr.target", viewer);
+      const r = this.#one(
+        `SELECT cr.* FROM capture_requests cr WHERE cr.request = ? AND (${seen.sql}) LIMIT 1`,
+        id,
+        ...seen.args
+      );
+      return r ? _CaptureRequests.project(r) : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R28: a request's target and lead inquiry, either absent when not set, or null for an unknown id
+   *  (observation-log's `sweep` authority resolution, R13 of observation-log). */
+  bundlesOf(request) {
+    const r = request ? this.#one(`SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, String(request)) : null;
+    if (!r) return null;
+    return { ...r.target ? { target: r.target } : {}, ...r.lead_inquiry ? { lead_inquiry: r.lead_inquiry } : {} };
+  }
+  /** R29, D-583: a run's outstanding requests (`requested` or `draining`, not past `expires`) and its completions not
+   *  yet told to it (`captured`, `refused` and `expired` with `run_woken_at` null), each bounded by 25 and saying when
+   *  it was cut. A run's wait is bounded by its requests' own expiry. */
+  waits({ run, now = null } = {}) {
+    const iso3 = stampInstant("second", Number.isFinite(now) ? now : this.#nowMs());
+    const n = CAPTURE_REQUEST_WAIT_BATCH;
+    const out = this.#rows(
+      `SELECT * FROM capture_requests WHERE run = ? AND state IN ('requested','draining') AND expires > ?
+        ORDER BY requested_at, request LIMIT ?`,
+      String(run ?? ""),
+      iso3,
+      n + 1
+    );
+    const done = this.#rows(
+      `SELECT * FROM capture_requests WHERE run = ? AND state IN ('captured','refused','expired') AND run_woken_at IS NULL
+        ORDER BY updated, request LIMIT ?`,
+      String(run ?? ""),
+      n + 1
+    );
+    return {
+      run: run ?? null,
+      outstanding: out.slice(0, n).map(_CaptureRequests.project),
+      outstanding_truncated: out.length > n,
+      completions: done.slice(0, n).map(_CaptureRequests.project),
+      completions_truncated: done.length > n
+    };
+  }
+  /** R29: stamps `run_woken_at` on each named completion not yet woken; answers how many were stamped. */
+  markWoken({ requests = [], at: at17 = null } = {}) {
+    const iso3 = at17 || stampInstant("second", this.#nowMs());
+    let marked = 0;
+    for (const id of Array.isArray(requests) ? requests : []) {
+      const r = this.#one(`SELECT request FROM capture_requests WHERE request = ? AND run_woken_at IS NULL
+                             AND state IN ('captured','refused','expired')`, String(id));
+      if (!r) continue;
+      this.#sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso3, r.request);
+      marked++;
+    }
+    return { marked, at: iso3 };
+  }
+  /** ai-runs R41 (K182): the wait source this module registers with ai-runs, over R29's rows. All synchronous.
+   *  `holds` answers running runs with outstanding, unexpired requests and how many; `woken` running runs with
+   *  completions (`captured`, `refused`, `expired`: D-583) not yet told to them; `completions` one run's; `markWoken`
+   *  stamps them. Nothing is held while unattended capture is not configured, because nothing will complete. Whether a
+   *  run is running is ai-runs' own answer (`runFor`, read with a machine viewer). */
+  waitSource() {
+    const walk = (q6, args, keyOf2, take) => {
+      let after = "", scanned = 0;
+      for (; ; ) {
+        const page = this.#rows(q6, ...args, after, CAPTURE_REQUEST_WAIT_BATCH);
+        for (const r of page) {
+          if (take(r) === false) return;
+        }
+        scanned += page.length;
+        if (page.length < CAPTURE_REQUEST_WAIT_BATCH || scanned >= CAPTURE_REQUEST_READ_MAX) return;
+        after = keyOf2(page[page.length - 1]);
+      }
+    };
+    const running = (run) => {
+      try {
+        const r = this.#deps.runs.runFor(run, "class:daemon");
+        return !!r && r.status === "running";
+      } catch {
+        return false;
+      }
+    };
+    const bound = (limit) => clamp2(limit, CAPTURE_REQUEST_WAIT_BATCH, CAPTURE_REQUEST_READ_MAX);
+    return {
+      tickMs: () => this.drainIntervalMs(),
+      holds: (iso3, limit) => {
+        if (!this.configured()) return [];
+        const out = [], n = bound(limit);
+        walk(
+          `SELECT run, count(*) AS outstanding FROM capture_requests
+               WHERE state IN ('requested','draining') AND expires > ? AND run > ? GROUP BY run ORDER BY run LIMIT ?`,
+          [String(iso3)],
+          (r) => r.run,
+          (r) => {
+            if (running(r.run)) out.push({ run: r.run, outstanding: Number(r.outstanding) });
+            return out.length < n;
+          }
+        );
+        return out;
+      },
+      woken: (limit) => {
+        const out = [], n = bound(limit);
+        walk(
+          `SELECT DISTINCT run FROM capture_requests
+               WHERE state IN ('captured','refused','expired') AND run_woken_at IS NULL AND run > ? ORDER BY run LIMIT ?`,
+          [],
+          (r) => r.run,
+          (r) => {
+            if (running(r.run)) out.push(r.run);
+            return out.length < n;
+          }
+        );
+        return out;
+      },
+      completions: (run, limit) => this.#rows(
+        `SELECT request, state FROM capture_requests
+          WHERE run = ? AND state IN ('captured','refused','expired') AND run_woken_at IS NULL
+          ORDER BY updated, request LIMIT ?`,
+        String(run ?? ""),
+        bound(limit)
+      ).map((r) => ({ request: r.request, state: r.state })),
+      markWoken: (requests, iso3) => this.markWoken({ requests, at: iso3 }).marked
+    };
+  }
+  /** R35: a bundle's purge clears `lead_inquiry` where it names the bundle (record-core's keyed form deletes rows by
+   *  `target`; a lead is a pointer on a row that stays). */
+  clearLead(bundleId) {
+    if (bundleId) this.#sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, String(bundleId));
+  }
+  /* ==================================================================== *
+   * R41–R42 — RETRY WITH WHAT A MEMBER SUPPLIED.
+   * ==================================================================== */
+  /** R42 (op=capturerequestretry): a `refused` request whose reason is the source's (R40), under a target the viewer
+   *  can see, returns to `requested` with `attempts`, its last code and reason kept and `expires` now + 24 h; the drain
+   *  judges it again under R14, fetching with what R41 holds for its scope. Any other request is refused
+   *  C-28.18 and nothing is written. Never throws. */
+  captureRequestRetry(a = {}, { viewer = null } = {}) {
+    const args = a && typeof a === "object" ? a : {};
+    const request = text2(args.request).trim();
+    const row2 = request ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request) : null;
+    if (!row2 || row2.state !== "refused" || !SOURCE_REASONS.includes(row2.source_reason) || !this.#inquiryInSight(row2.target, viewer)) {
+      const c = CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_RETRYABLE;
+      return {
+        ok: false,
+        reason: "CAPTURE_REQUEST_NOT_RETRYABLE",
+        code: "CAPTURE_REQUEST_NOT_RETRYABLE",
+        check: c.check,
+        translation: c.translation,
+        request: request || null,
+        detail: "only a request the source itself turned away, under a question you can see, goes back into the queue. Nothing was changed."
+      };
+    }
+    const nowMs = this.#nowMs();
+    const now = stampInstant("second", nowMs);
+    const expires = stampInstant("second", nowMs + CAPTURE_REQUEST_TTL_MS);
+    this.#sql.exec(
+      `UPDATE capture_requests SET state='requested', expires=?, updated=? WHERE request=? AND state='refused'`,
+      expires,
+      now,
+      request
+    );
+    return {
+      ok: true,
+      request,
+      state: "requested",
+      attempts: row2.attempts,
+      code: row2.code,
+      source_reason: row2.source_reason,
+      expires,
+      detail: "back in the queue. The drain judges it again and fetches with what a member supplied for this request's scope, if anything."
+    };
+  }
+};
+function deemingActor(attribution) {
+  const a = attribution && attribution.ok ? attribution : null;
+  return a ? `run ${a.at_the_request_of.run} under ${a.principals.plane}, paid by ${a.principals.claude}` : null;
+}
+function lookAuthority(q6) {
+  return q6 && q6.run ? { authorityKind: "run", authority: String(q6.run), actorClass: "machine" } : { authorityKind: "sweep", authority: q6 && q6.request ? String(q6.request) : null, actorClass: "plane" };
+}
+var instances15 = /* @__PURE__ */ new WeakMap();
+function captureRequestsOf(host, deps = {}) {
+  const storage = host && host.storage ? host.storage : host;
+  let c = instances15.get(storage);
+  if (!c) {
+    const env = deps.env || {};
+    const record = deps.record || recordOf(host);
+    const withEnv = deps.env ? { env } : {};
+    const d = {
+      ...deps,
+      env,
+      record,
+      observations: deps.observations || observationLogOf(host),
+      governor: deps.governor || governorOf(host, withEnv),
+      capture: deps.capture || captureOf(host, withEnv),
+      /* CAPTURE-SOURCES #2's note: the key rides the first `credentialsOf` call. */
+      credentials: deps.credentials === void 0 ? credentialsOf(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null }) : deps.credentials,
+      /* R38 (N141): the one promotion on this storage, through which a requested capture enters the record. */
+      promotion: deps.promotion || promotionOf(host, { record }),
+      /* R14 (N295): the member-browser agent is inquiry's R44 answer. Reached when the drain asks, not at creation, so
+         the one inquiry on this host is the one the plane built with its own deps. */
+      inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) }
+    };
+    c = new CaptureRequests(storage, d);
+    instances15.set(storage, c);
+    record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"] }]);
+    d.observations.registerAuthority("sweep", (request) => {
+      const b = c.bundlesOf(request);
+      return b ? [b.target, b.lead_inquiry].filter(Boolean) : null;
+    });
+    if (d.aiRuns && typeof d.aiRuns.registerWaitSource === "function")
+      d.aiRuns.registerWaitSource(CAPTURE_REQUESTS_MODULE, c.waitSource());
+  }
+  return c;
+}
+function captureRequestsOps(c, url, body) {
+  const q6 = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" ? body : {};
+  return {
+    capturerequest: () => c.captureRequest(b, { viewer: q6("viewer"), caller: q6("principal") }),
+    capturerequestdrain: () => c.drain({
+      limit: b.limit ?? null,
+      actor: b.actor || "consumer",
+      now: Number.isFinite(b.now) ? b.now : null
+    }),
+    capturerequests: () => c.captureRequests({
+      run: q6("run"),
+      target: q6("target"),
+      state: q6("state"),
+      limit: q6("limit"),
+      viewer: q6("viewer")
+    }),
+    capturerequestretry: () => c.captureRequestRetry(
+      { request: b.request ?? q6("request") },
+      { viewer: q6("viewer"), caller: q6("principal") }
+    )
+  };
+}
+
+// src/intent/checks.mjs
+var checks_exports17 = {};
+__export(checks_exports17, {
+  INTENT_CHECKS: () => INTENT_CHECKS,
+  refusal: () => refusal12
+});
+var at6 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
+var INTENT_CHECKS = Object.freeze({
+  NO_OBJECTIVE: {
+    check: "C-2.9",
+    where: at6("#checkProject", "is-objective-stated"),
+    translation: "A project states what it is trying to achieve, and this one states nothing. Write its objective and send it again. Nothing was written."
+  },
+  MACHINE_CANNOT_SET_OBJECTIVE: {
+    check: "C-111.1",
+    where: at6("setCondition", "is-condition-member"),
+    translation: "What a project is aiming at is a member's decision. An assistant may point out gaps; it may not set or change the measure. Sign in as a member. Nothing was written."
+  },
+  CONDITION_UNREADABLE: {
+    check: "C-111.3",
+    where: at6("#conditionRefusal", "is-condition-shaped"),
+    translation: "The measure sent for this objective is not in the shape the record reads: a progression, an entity, what each matching instance must reach, and the share of them that must reach it. Nothing was written."
+  },
+  NO_SUCH_PROGRESSION: {
+    check: "C-111.4",
+    where: at6("refuseNoSuchProgression", "is-named-progression"),
+    translation: "The measure names a declared flow the record does not hold. Declare the flow first, or name one that exists. Nothing was written."
+  },
+  BAD_STAGE: {
+    check: "C-111.6",
+    where: at6("#conditionRefusal", "is-condition-stage"),
+    translation: "The measure requires a step the declared flow does not have. Name steps the flow declares. Nothing was written."
+  },
+  CONDITION_BAD_GRADE: {
+    check: "C-111.7",
+    where: at6("#conditionRefusal", "is-condition-grade"),
+    translation: "The grade the measure requires is not one of the four the record uses, A (strongest) to D. Nothing was written."
+  },
+  BAD_SHARE: {
+    check: "C-111.8",
+    where: at6("#conditionRefusal", "is-condition-share"),
+    translation: "The share of instances that must meet the measure is a whole number from 1 to 100. Nothing was written."
+  },
+  MACHINE_CANNOT_DECLARE_GOAL: {
+    check: "C-111.9",
+    where: at6("goalMachineRefusal", "is-goal-member"),
+    translation: "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the group pursues. Sign in as a member. Nothing was written."
+  },
+  PURSUIT_UNSTATED: {
+    check: "C-111.10",
+    where: at6("refusePursuitUnstated", "is-pursuit-stated"),
+    translation: "A goal says what it pursues and what bounds it, and an aspiration says what it holds to. Something here is empty. Write it and send it again. Nothing was written."
+  },
+  NO_SUCH_GOAL: {
+    check: "C-111.11",
+    where: at6("refuseNoSuchGoal", "is-goal-held"),
+    translation: "No goal answers to that id here. Nothing was written."
+  },
+  NO_SUCH_ASPIRATION: {
+    check: "C-111.12",
+    where: at6("refuseNoSuchAspiration", "is-aspiration-held"),
+    translation: "No aspiration answers to that id here. Nothing was written."
+  },
+  NO_REASON: {
+    check: "C-111.13",
+    where: at6("refuseNoReason", "is-reason-stated"),
+    translation: "This act is recorded with a reason in your own words, and none was given. The record keeps why, so the next reader is not left guessing. Nothing was written."
+  },
+  MACHINE_CANNOT_DECLARE_ASPIRATION: {
+    check: "C-111.14",
+    where: at6("aspirationMachineRefusal", "is-aspiration-member"),
+    translation: "What the group holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written."
+  },
+  NOT_YOURS: {
+    check: "C-111.15",
+    where: at6("#aspirationAuthority", "is-aspiration-yours"),
+    translation: "A member's own aspiration is declared, revised and retired by that member alone. Nothing was written."
+  },
+  NO_LESSON: {
+    check: "C-111.17",
+    where: at6("refuseNoLesson", "is-retirement-taught"),
+    translation: "Retiring an aspiration records what pursuing it taught the group, and nothing was written there. Say what was learned. Nothing was retired."
+  },
+  MACHINE_CANNOT_TRIAGE: {
+    check: "C-111.18",
+    where: at6("triage", "is-triage-member"),
+    translation: "An assistant may turn a finding into an open question, and nothing more. Adopting it, deferring it or dismissing it is a member's decision. Sign in as a member. Nothing was written."
+  },
+  MACHINE_CANNOT_CHOOSE_THE_QUESTION: {
+    check: "C-111.19",
+    where: at6("workObjective", "is-objective-member"),
+    translation: "Setting an assistant to work on a project's objective is a member's act: the objective is the group's, and so is the choice to pursue it. Sign in as a member. No run was opened."
+  },
+  PURSUIT_STATE_MOVE_UNDECLARED: {
+    check: "C-111.20",
+    where: at6("#checkPursuit", "is-pursuit-state-move"),
+    translation: "An aspiration is held until it is retired, and a goal is open until it is closed. No other move is accepted, and neither comes back. Nothing was written."
+  },
+  BAD_SCOPE: {
+    check: "C-111.21",
+    where: at6("refuseBadScope", "is-aspiration-scoped"),
+    translation: "An aspiration belongs to the group, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written."
+  },
+  NO_SUCH_PROPOSAL: {
+    check: "C-111.22",
+    where: at6("triage", "is-proposal-open"),
+    translation: "No open proposal answers to that key. It may already have been decided; the decision stays readable with its reason. Nothing was written."
+  },
+  TRIAGE_ACT_UNKNOWN: {
+    check: "C-111.23",
+    where: at6("triage", "is-triage-act"),
+    translation: "A proposal is adopted into a project's objective, turned into an open question, deferred or dismissed. This act is none of those. Nothing was written."
+  },
+  SOURCE_DECLARED: {
+    check: "C-111.24",
+    where: at6("registerSource", "is-source-once"),
+    translation: "This source of proposals is already registered. A source registers once, when the plane starts."
+  },
+  SOURCE_MALFORMED: {
+    check: "C-111.25",
+    where: at6("registerSource", "is-source-shaped"),
+    translation: "A source of proposals names its kind and gives a reader. This registration does not."
+  },
+  PURSUIT_ENDED: {
+    check: "C-111.26",
+    where: at6("refusePursuitEnded", "is-pursuit-live"),
+    translation: "This goal is closed, or this aspiration is retired. It stays readable with everything recorded under it, and it does not reopen. Nothing was written."
+  },
+  ADOPTIONS_UNSPLICEABLE: {
+    check: "C-111.28",
+    where: at6("triage", "is-adoptions-spliceable"),
+    translation: "The project's record of adopted proposals is not in a shape the record can add to, so this adoption could not be written into it. Nothing was written."
+  },
+  NO_NOTE: {
+    check: "C-111.27",
+    where: at6("recordDeadEnd", "is-dead-end-noted"),
+    translation: "A dead end is recorded with what was tried and why it went nowhere, and nothing was written. Nothing was recorded."
+  }
+});
+function refusal12(code, detail, extra) {
+  const row2 = INTENT_CHECKS[code];
+  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
+}
+
+// src/intent/schema.mjs
+var INTENT_SCHEMA = `
+-- R10: a project's departure from a held group aspiration, with its reason. Appended, never updated: the latest row
+-- for a (project, aspiration) is the one in force.
+CREATE TABLE IF NOT EXISTS intent_departures (
+  project_id     TEXT NOT NULL,
+  aspiration_id  TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT
+);
+CREATE INDEX IF NOT EXISTS intent_departures_project ON intent_departures(project_id, aspiration_id);
+-- R16: each act on a proposal (adopt, question, defer, dismiss) with who took it, when and why. project_id is the
+-- project it was triaged for (an adoption's, or the one named with it; R14 reads a goal's objectives through it);
+-- inquiry_id the question a 'question' opened. Any row for a proposal key takes it off the open list.
+CREATE TABLE IF NOT EXISTS intent_triage (
+  proposal_key   TEXT NOT NULL,
+  source         TEXT NOT NULL,
+  kind           TEXT,
+  act            TEXT NOT NULL,
+  project_id     TEXT,
+  inquiry_id     TEXT,
+  reason         TEXT,
+  grade          TEXT,
+  basis_json     TEXT,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT
+);
+CREATE INDEX IF NOT EXISTS intent_triage_key ON intent_triage(proposal_key);
+`;
+var INTENT_TABLES = Object.freeze([
+  { name: "intent_departures", keys: ["project_id", "aspiration_id"] },
+  { name: "intent_triage", keys: ["project_id", "inquiry_id"] }
+]);
+function migrateIntent(sql) {
+  const bare2 = INTENT_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+}
+
+// src/intent/doc.mjs
+var ASPIRATION = "aspiration";
+var GOAL = "goal";
+var ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
+var GRADES = BASIS_GRADES;
+var TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
+var q = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
+var parseFm = (text4) => {
+  if (typeof text4 !== "string") return null;
+  const d = parseFrontmatter(text4).data;
+  return d && typeof d === "object" && !Array.isArray(d) ? d : null;
+};
+function fence(lines) {
+  if (lines[0] !== "---") return null;
+  const end2 = lines.indexOf("---", 1);
+  return end2 === -1 ? null : end2;
+}
+function setField(text4, key, value) {
+  const lines = text4.split("\n");
+  const end2 = fence(lines);
+  if (end2 === null) return text4;
+  for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
+    lines[i] = `${key}: ${value}`;
+    return lines.join("\n");
+  }
+  return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
+}
+function removeBlock3(text4, key) {
+  const lines = text4.split("\n");
+  const end2 = fence(lines);
+  if (end2 === null) return text4;
+  const at17 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
+  if (at17 === -1) return text4;
+  let last = at17;
+  for (let i = at17 + 1; i < end2 && (/^\s/.test(lines[i]) || lines[i].trim() === ""); i++) last = i;
+  return [...lines.slice(0, at17), ...lines.slice(last + 1)].join("\n");
+}
+function setBlock(text4, key, childLines) {
+  const lines = removeBlock3(text4, key).split("\n");
+  const end2 = fence(lines);
+  if (end2 === null) return text4;
+  return [...lines.slice(0, end2), `${key}:`, ...childLines, ...lines.slice(end2)].join("\n");
+}
+function appendItem(text4, key, fields) {
+  const lines = text4.split("\n");
+  const end2 = fence(lines);
+  if (end2 === null) return null;
+  const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
+  const at17 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
+  if (at17 === -1) return [...lines.slice(0, end2), `${key}:`, ...item, ...lines.slice(end2)].join("\n");
+  const rest = lines[at17].slice(key.length + 1).trim();
+  if (rest === "[]") return [...lines.slice(0, at17), `${key}:`, ...item, ...lines.slice(at17 + 1)].join("\n");
+  if (rest !== "") return null;
+  let last = at17;
+  for (let i = at17 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
+  return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
+}
+function appendHistory(text4, { at: at17, from, to, blurb, author }) {
+  return appendItem(
+    text4,
+    "state_history",
+    { timestamp: q(at17), from_state: from, to_state: to, blurb: q(blurb), author: TOKEN.test(author) ? author : q(author) }
+  );
+}
+function sectionSpan(text4, heading) {
+  const marker = `
+## ${heading}
+`;
+  const at17 = text4.indexOf(marker);
+  if (at17 === -1) return null;
+  const start = at17 + marker.length;
+  const nxt = text4.indexOf("\n## ", start - 1);
+  return { at: at17, start, end: nxt === -1 ? text4.length : nxt };
+}
+function readSection(text4, heading) {
+  if (typeof text4 !== "string") return null;
+  const s = sectionSpan(text4, heading);
+  return s ? text4.slice(s.start, s.end).trim() : null;
+}
+function setSection2(text4, heading, body) {
+  const s = sectionSpan(text4, heading);
+  const content = `
+${String(body).trim()}
+`;
+  if (!s) return `${text4.replace(/\n*$/, "\n")}
+## ${heading}
+${content}`;
+  return text4.slice(0, s.start) + content + text4.slice(s.end);
+}
+function appendSection(text4, heading, entry) {
+  const s = sectionSpan(text4, heading);
+  if (!s) return `${text4.replace(/\n*$/, "\n")}
+## ${heading}
+
+${entry.trim()}
+`;
+  const head = text4.slice(0, s.end).replace(/\n*$/, "\n");
+  return `${head}
+${entry.trim()}
+${text4.slice(s.end)}`;
+}
+var logEntry = (text4, at17, what, author, changes) => appendSection(text4, "Session Log", `### Session ${at17} | ${what} | ${author}
+Changes: ${changes}`);
+function deadEndsOf(text4) {
+  const body = readSection(text4, "Dead Ends");
+  if (!body) return [];
+  const out = [];
+  for (const part of body.split(/\n(?=### )/)) {
+    const m = /^### (\S+) \| (.+)\n?([\s\S]*)$/.exec(part.trim());
+    if (m) out.push({ at: m[1], author: m[2].trim(), note: m[3].trim() });
+  }
+  return out;
+}
+var titleOf = (statement) => (deriveInquiryTitle(statement) || "untitled").replace(/["\\]/g, "'");
+var pursuitId = (allocated, type) => `${allocated}-${type}`;
+var CORE_TAIL = Object.freeze([
+  "produced_by:",
+  "  mode: human",
+  "  capability_tier: session",
+  "references: []",
+  "state_history: []",
+  "annotations_open: 0",
+  "reeval_pending:",
+  "  flag: false",
+  "  since: null",
+  "  source: null",
+  "visuals: []"
+]);
+function aspirationDoc({ id, scope, owner, statement, entities, progressions, author, at: at17 }) {
+  return [
+    "---",
+    `id: ${id}`,
+    `object_type: ${ASPIRATION}`,
+    `schema: ${ASPIRATION}@1`,
+    `title: ${q(titleOf(statement))}`,
+    "current_state: held",
+    "prior_state: null",
+    `created: ${q(at17)}`,
+    `last_updated: ${q(at17)}`,
+    `scope: ${scope}`,
+    `owner: ${owner ?? "null"}`,
+    `entities: [${entities.join(", ")}]`,
+    `progressions: [${progressions.join(", ")}]`,
+    `author: ${TOKEN.test(author) ? author : q(author)}`,
+    ...CORE_TAIL,
+    "---",
+    "",
+    "## Statement",
+    "",
+    statement.trim(),
+    "",
+    "## Dead Ends",
+    "",
+    "## Session Log",
+    "",
+    `### Session ${at17} | Declared | ${author}`,
+    `Changes: ${scope} aspiration declared.`,
+    ""
+  ].join("\n");
+}
+function goalDoc({ id, statement, bounds, aspiration, author, at: at17 }) {
+  return [
+    "---",
+    `id: ${id}`,
+    `object_type: ${GOAL}`,
+    `schema: ${GOAL}@1`,
+    `title: ${q(titleOf(statement))}`,
+    "current_state: open",
+    "prior_state: null",
+    `created: ${q(at17)}`,
+    `last_updated: ${q(at17)}`,
+    `aspiration: ${aspiration ?? "null"}`,
+    `author: ${TOKEN.test(author) ? author : q(author)}`,
+    "objectives: []",
+    ...CORE_TAIL,
+    "---",
+    "",
+    "## Statement",
+    "",
+    statement.trim(),
+    "",
+    "## Bounds",
+    "",
+    bounds.trim(),
+    "",
+    "## Session Log",
+    "",
+    `### Session ${at17} | Declared | ${author}`,
+    "Changes: goal declared.",
+    ""
+  ].join("\n");
+}
+var CONDITION_KEY = "objective_condition";
+function conditionLines(c, by, at17) {
+  const lines = [`  progression: ${c.progression}`, `  entity: ${c.entity}`, `  relation: ${c.relation ?? "null"}`];
+  for (const [k, v] of Object.entries(c.filter || {})) lines.push(`  filter_${k}: ${v}`);
+  lines.push(
+    `  required_grade: ${c.required.grade ?? "null"}`,
+    `  required_stages: [${c.required.stages.join(", ")}]`,
+    `  share: ${c.satisfied.share}`,
+    `  set_by: ${TOKEN.test(by) ? by : q(by)}`,
+    `  set_at: ${q(at17)}`
+  );
+  return lines;
+}
+function conditionOf(fm) {
+  const b = fm && fm[CONDITION_KEY];
+  if (!b || typeof b !== "object" || Array.isArray(b)) return null;
+  const filter = {};
+  for (const [k, v] of Object.entries(b)) if (k.startsWith("filter_")) filter[k.slice(7)] = v;
+  const stages = Array.isArray(b.required_stages) ? b.required_stages.map(String).filter((s) => s !== "") : [];
+  return {
+    condition: {
+      progression: b.progression ?? null,
+      entity: b.entity ?? null,
+      relation: b.relation ?? null,
+      filter: Object.keys(filter).length ? filter : null,
+      required: { grade: b.required_grade ?? null, stages },
+      satisfied: { share: b.share ?? null }
+    },
+    set_by: b.set_by ?? null,
+    set_at: b.set_at ?? null
+  };
+}
+
+// src/intent/index.mjs
+var GROUP_ASPIRATION_ACT = "declaring, revising or retiring an aspiration the whole group holds";
+var GROUP_ASPIRATION_REMEDY = "Ask an active administrator: they declare, revise or retire an aspiration the whole group holds in their own name, and the act carries their name and date.";
+var TRIAGE_ACTS = Object.freeze(["adopt", "question", "defer", "dismiss"]);
+var AGEING_SETTING = "intent_ageing_days";
+var AGEING_DEFAULT_DAYS = 30;
+var PLANE_ACTOR = "plane:intent";
+var PLANE_VIEWER = "class:daemon";
+var GAP_KIND = "objective-gap";
+var MEASURE_MAX = 1e3;
+var WATCH_LIMIT_MAX = 1e3;
+var DEPARTURES_MAX = 1e3;
+var GOALS_MAX = 200;
+var TRIAGED_MAX = 1e3;
+var SET_ASIDE_MAX = 200;
+var SERVES_MAX = 1e3;
+var ASPIRATIONS_MAX = 1e3;
+var CONTACTS_MAX = 1e3;
+var CONTEXT_MAX = 1e3;
+var PROJECTS_MAX = 1e3;
+var REQUESTS_MAX = 1e3;
+var GOALS_READ_MAX = 1e3;
+var AGEING_READ_MAX = 1e3;
+var AUTHORS_PAGE = 64;
+var str4 = (v) => typeof v === "string" ? v.trim() : "";
+var isObj9 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var rand6 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var machine = (who2) => !str4(who2) || isMachineIdentity(str4(who2));
+var second = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
+var bodyText = (s) => String(s).trim().replace(/^#/gm, " #");
+var Intent = class {
+  #sources = /* @__PURE__ */ new Map();
+  // kind -> reader (R15)
+  constructor({
+    storage,
+    record,
+    membership,
+    promotion,
+    entities,
+    progressions,
+    inquiry = null,
+    aiRuns = null,
+    retrieval = null,
+    captureRequests = null,
+    now = null
+  } = {}) {
+    this.storage = storage;
+    this.sql = storage.sql;
+    this.record = record;
+    this.membership = membership;
+    this.promotion = promotion;
+    this.entities = entities;
+    this.progressionsRef = progressions;
+    this.inquiryRef = inquiry;
+    this.aiRunsRef = aiRuns;
+    this.retrievalRef = retrieval;
+    this.captureRequests = captureRequests;
+    this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
+  }
+  #rows(qs, ...a) {
+    return [...this.sql.exec(qs, ...a)];
+  }
+  #one(qs, ...a) {
+    const r = this.#rows(qs, ...a);
+    return r.length ? r[0] : null;
+  }
+  #lazy(ref) {
+    return typeof ref === "function" ? ref() : ref;
+  }
+  /* N179: progressions as the host holds it, reached on first use, so the instance the plane builds with its `env`
+     (progressions R16's configured clock) is the one read here, whichever module reached the host first. */
+  get progressions() {
+    return this.#lazy(this.progressionsRef);
+  }
+  #when() {
+    return second(this.now());
+  }
+  /** The module's tables (R24). */
+  migrate() {
+    migrateIntent(this.sql);
+  }
+  /* ===================================================================== *
+   * READING THE RECORD
+   * ===================================================================== */
+  /* A held document: its head, text and front matter; null when the bundle is not held. */
+  #doc(id) {
+    if (typeof id !== "string" || !id) return null;
+    const head = this.record.head(id);
+    if (!head) return null;
+    const f9 = this.record.readFile(id, "bundle.md");
+    const text4 = f9 && typeof f9.text === "string" ? f9.text : null;
+    return { id, head, text: text4, fm: parseFm(text4) || {}, type: normalizeType(head.type) };
+  }
+  /* R23: a project the viewer may see, or the one answer an absent project gets. A viewer who sees the project at
+     existence only is told so (membership R77, C-70.1), before the absent answer. */
+  #project(projectId, viewer) {
+    const d = this.#doc(projectId);
+    if (d && d.type === "project" && viewer !== null && viewer !== void 0) {
+      const seen = this.membership.existenceAct(projectId, viewer);
+      if (seen) return { refused: seen };
+    }
+    if (!d || d.type !== "project" || viewer !== null && viewer !== void 0 && !this.membership.inSight(projectId, viewer))
+      return { refused: noSuchProject(typeof projectId === "string" ? projectId : null) };
+    return { doc: d };
+  }
+  /* An aspiration or goal the viewer may see (R8: absent and unseen are one answer). A project's aspiration is that
+     project's material: it is seen only by a viewer who sees the project it names (R23, N199), whatever the
+     aspiration's own bundle answers; the group's and a member's are seen by every member (R9). */
+  #pursuit(id, type, viewer) {
+    const d = this.#doc(id);
+    const who2 = viewer ?? null;
+    if (!d || d.type !== type || who2 !== null && !this.membership.inSight(id, who2)) return null;
+    if (who2 !== null && type === ASPIRATION && d.fm.scope === "project" && this.#project(d.fm.owner, who2).refused)
+      return null;
+    return d;
+  }
+  /* The member id behind an author (membership R76), null for a machine; the founder's session is `admin` (R9: an
+     administrator's act, the founder included). */
+  #memberOf(author) {
+    if (str4(author) === "admin") return "admin";
+    return this.membership.positionalMember(str4(author), str4(author));
+  }
+  /* ===================================================================== *
+   * THE WRITE (R2, R8–R11, R16, R26): every document intent writes goes through `promotion`, whose check runs this
+   * module's own (below), so an act and a raw promotion meet one rule.
+   * ===================================================================== */
+  #create(id, type, text4, author, extra = {}) {
+    const fm = parseFm(text4) || {};
+    return this.promotion.promote({
+      bundleId: id,
+      base: null,
+      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand6(4)}`,
+      author,
+      files: [{ path: "bundle.md", text: text4 }],
+      meta: {
+        object_type: type,
+        title: fm.title,
+        current_state: fm.current_state,
+        created: fm.created,
+        last_updated: fm.last_updated
+      },
+      ...extra
+    });
+  }
+  #revise(d, text4, author, viewer, extra = {}) {
+    const fm = parseFm(text4) || {};
+    const carried = this.record.livePaths(d.id).filter((p) => p !== "bundle.md").map((path) => {
+      const f9 = this.record.readFile(d.id, path);
+      return typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes };
+    });
+    const member = this.#memberOf(author);
+    return this.promotion.promote({
+      bundleId: d.id,
+      base: d.head.bundleSha,
+      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand6(4)}`,
+      author,
+      files: [{ path: "bundle.md", text: text4 }, ...carried],
+      meta: {
+        object_type: d.type,
+        title: fm.title,
+        current_state: fm.current_state,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: fm.last_updated
+      },
+      actorIdentity: author,
+      actorViewer: viewer ?? author,
+      actorMemberId: member,
+      ...extra
+    });
+  }
+  /* ===================================================================== *
+   * THE REGISTERED CHECK (promotion R39): R1, R2's grammar, R9's authority and R26's state machines, at the write.
+   * ===================================================================== */
+  check(c) {
+    const type = c.promotedType;
+    if (type === "project" && !c.replay) return this.#checkProject(c);
+    if (type === ASPIRATION || type === GOAL) return this.#checkPursuit(c, type);
+    return null;
+  }
+  #checkProject(c) {
+    const fm = c.docFm || {};
+    if (typeof fm.objective !== "string" || fm.objective.trim() === "")
+      return refusal12("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
+    const now = conditionOf(fm);
+    const held = c.head ? conditionOf(parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {}) : null;
+    if (now && JSON.stringify(now.condition) !== JSON.stringify(held ? held.condition : null))
+      return this.#conditionRefusal(now.condition);
+    return null;
+  }
+  #checkPursuit(c, type) {
+    const fm = c.docFm || {};
+    const author = c.author;
+    const who2 = this.#memberOf(author);
+    const notMember = type === GOAL ? goalMachineRefusal(author, !!who2) : aspirationMachineRefusal(author, !!who2);
+    if (notMember) return notMember;
+    const [first, last] = type === GOAL ? ["open", "closed"] : ["held", "retired"];
+    const from = c.head ? c.head.currentState : null, to = c.promotedState;
+    const legal = c.head ? to === from || from === first && to === last : to === first;
+    if (!legal)
+      return refusal12(
+        "PURSUIT_STATE_MOVE_UNDECLARED",
+        `a ${type} ${c.head ? `at '${from}' moves only to '${last}', once` : `is created '${first}'`}, and this promotion names '${String(to).slice(0, 40)}'. Nothing was written.`,
+        { object_type: type, from, to: to ?? null }
+      );
+    const text4 = typeof c.bundleMd?.text === "string" ? c.bundleMd.text : "";
+    if (!readSection(text4, "Statement") || type === GOAL && !readSection(text4, "Bounds"))
+      return refusePursuitUnstated(`a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, in its Statement section. Nothing was written.`);
+    if (type === GOAL) {
+      if (to === "closed" && from !== "closed" && !readSection(text4, "Why It Closed"))
+        return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
+      return null;
+    }
+    if (to === "retired" && from !== "retired" && !readSection(text4, "Taught"))
+      return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
+    const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : fm;
+    if (c.head && (fm.scope !== heldFm.scope || String(fm.owner ?? null) !== String(heldFm.owner ?? null)))
+      return refuseBadScope("an aspiration keeps the scope and owner it was declared with. Nothing was written.");
+    return this.#aspirationAuthority(heldFm.scope, heldFm.owner ?? null, author, c.pkg?.actorViewer ?? author);
+  }
+  /* R9: a member's aspiration is that member's; a project's, a member joined in it; the group's, an active administrator's
+     (the founder included), anyone else answered through membership's `notAnAdmin` with the next step (N327). */
+  #aspirationAuthority(scope, owner, author, viewer) {
+    const who2 = this.#memberOf(author);
+    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str4(owner) || scope === "group" && owner != null)
+      return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
+    if (scope === "member" && str4(owner) !== who2)
+      return refusal12("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
+    if (scope === "project") {
+      const p = this.#project(owner, viewer);
+      if (p.refused) return p.refused;
+      const denied = this.membership.projectAuthority(owner, author, "joined", "aspiration");
+      if (denied) return denied;
+    }
+    if (scope === "group" && !this.membership.isAdministrator(who2))
+      return notAnAdmin(str4(author) || null, GROUP_ASPIRATION_ACT, { remedy: GROUP_ASPIRATION_REMEDY });
+    return null;
+  }
+  /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
+  #conditionRefusal(c) {
+    const shaped = isObj9(c) && TOKEN.test(str4(c.progression)) && TOKEN.test(str4(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj9(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN.test(String(v)))) && isObj9(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN.test(String(s)))) && isObj9(c.satisfied);
+    if (!shaped)
+      return refusal12("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
+    const def = this.progressions.readProgression({ progressionKey: str4(c.progression) });
+    if (!def || def.ok === false || !def.found)
+      return refuseNoSuchProgression(
+        "the condition names a flow the record has not declared. Nothing was written.",
+        { progression: str4(c.progression) }
+      );
+    if (!this.entities.has(str4(c.entity))) return noSuchEntity(str4(c.entity));
+    const declared = new Set(def.stages.map((s) => s.stage_key));
+    const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
+    if (bad.length)
+      return refusal12(
+        "BAD_STAGE",
+        `the flow '${str4(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
+        { stages: bad, declared: [...declared] }
+      );
+    if (c.required.grade != null && !GRADES.includes(c.required.grade))
+      return refusal12("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
+    const share = c.satisfied.share;
+    if (!Number.isInteger(share) || share < 1 || share > 100)
+      return refusal12("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
+    return null;
+  }
+  /** record-core R59: C-2.9's objective arm in the audit, beside the catalogue, over the same image (R22). */
+  auditCheck(image) {
+    const md = image && image.files ? image.files.get("bundle.md") : null;
+    const fm = parseFm(typeof md === "string" ? md : null);
+    if (!fm || fm.object_type !== "project") return [];
+    if (typeof fm.objective !== "string" || fm.objective.trim() === "")
+      return [{
+        check: INTENT_CHECKS.NO_OBJECTIVE.check,
+        code: "NO_OBJECTIVE",
+        severity: "error",
+        message: "objective is missing or empty"
+      }];
+    return [];
+  }
+  /* ===================================================================== *
+   * THE OBJECTIVE (R2–R7)
+   * ===================================================================== */
+  /** R2: set, replace or (with a null condition) remove a project's satisfaction condition, as a new revision of the
+   *  project's document through `promotion`; the earlier revision stays in history. */
+  setCondition({ project, condition, author, viewer = null } = {}) {
+    if (machine(author))
+      return refusal12("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
+    const p = this.#project(project, viewer);
+    if (p.refused) return p.refused;
+    const denied = this.membership.projectAuthority(project, author, "joined", "setCondition");
+    if (denied) return denied;
+    const c = condition == null ? null : {
+      ...condition,
+      required: isObj9(condition.required) ? {
+        grade: condition.required.grade ?? null,
+        stages: condition.required.stages ?? []
+      } : condition.required,
+      relation: condition.relation ?? null,
+      filter: condition.filter ?? null
+    };
+    if (c) {
+      const bad = this.#conditionRefusal(c);
+      if (bad) return bad;
+    }
+    const at17 = this.#when();
+    let text4 = removeBlock3(p.doc.text, CONDITION_KEY);
+    if (c) text4 = setBlock(text4, CONDITION_KEY, conditionLines(c, str4(author), at17));
+    text4 = setField(text4, "last_updated", q(at17));
+    text4 = logEntry(
+      text4,
+      at17,
+      c ? "Objective condition set" : "Objective condition removed",
+      str4(author),
+      c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."
+    );
+    const r = this.#revise(p.doc, text4, str4(author), viewer);
+    if (!r.ok) return r;
+    return { ok: true, project, condition: c, set_by: str4(author), at: at17, bundleSha: r.bundleSha };
+  }
+  /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
+  #measure(cond, viewer) {
+    const key = str4(cond.progression), anchor = str4(cond.entity);
+    const related = /* @__PURE__ */ new Set([anchor]);
+    if (cond.relation) {
+      const e = this.entities.readEntity({ entityId: anchor });
+      for (const r of e && e.found && e.entity && e.entity.relations || []) {
+        if (r.relation !== cond.relation || r.withdrawn) continue;
+        if (r.to_entity === anchor && r.from_entity) related.add(r.from_entity);
+        else if (cond.relation === "overlaps" && r.from_entity === anchor && r.to_entity) related.add(r.to_entity);
+      }
+    }
+    const rows = this.#rows(
+      `SELECT DISTINCT entity_id FROM progression_instances WHERE progression_key=?
+                               AND entity_id IN (SELECT value FROM json_each(?)) ORDER BY entity_id LIMIT ?`,
+      key,
+      JSON.stringify([...related]),
+      MEASURE_MAX + 1
+    );
+    const truncated3 = rows.length > MEASURE_MAX;
+    const threaded = rows.slice(0, MEASURE_MAX).map((r) => r.entity_id);
+    const need = cond.required || {};
+    const stages = (need.stages || []).map(String);
+    const matched = [], meeting = [], short = [], undetermined = [];
+    for (const eid of threaded) {
+      const inst = this.progressions.readInstance({ progressionKey: key, entityId: eid, viewer });
+      if (!inst || inst.ok === false || !inst.found) continue;
+      let unevaluable = null, passes = true;
+      for (const [k, v] of Object.entries(cond.filter || {})) {
+        if (k === "entity_kind") {
+          if (!inst.entity || inst.entity.kind !== String(v)) passes = false;
+        } else unevaluable = k;
+      }
+      if (!passes) continue;
+      const row2 = {
+        entity_id: eid,
+        entity_label: inst.entity ? inst.entity.label : null,
+        grade: inst.grade ?? null,
+        grade_determined: inst.grade_determined === true,
+        definition_version: inst.definition_version
+      };
+      matched.push(row2);
+      if (unevaluable) {
+        undetermined.push({ ...row2, why: `the record cannot evaluate the filter '${unevaluable}' on this instance` });
+        continue;
+      }
+      const placed = new Set((inst.stages || []).filter((s) => s.present).map((s) => s.stage_key));
+      const missing = stages.filter((s) => !placed.has(s));
+      if (missing.length) {
+        short.push({ ...row2, why: { stages_missing: missing }, documents: this.#documents(inst) });
+        continue;
+      }
+      if (need.grade == null) {
+        meeting.push(row2);
+        continue;
+      }
+      if (!row2.grade_determined || gradeRank[row2.grade] === void 0) {
+        undetermined.push({ ...row2, why: "the instance's grade is undetermined (fewer than two stages placed, or a stage's grade unknown), so whether it reaches the required grade is not known" });
+        continue;
+      }
+      if (gradeRank[row2.grade] >= gradeRank[need.grade]) {
+        meeting.push(row2);
+        continue;
+      }
+      const weakest = (inst.chain || []).find((l) => l.grade === inst.grade) || null;
+      short.push({
+        ...row2,
+        why: { grade_reached: inst.grade, grade_required: need.grade, weakest_link: weakest },
+        documents: this.#documents(inst)
+      });
+    }
+    return { key, related: [...related].sort(), matched, meeting, short, undetermined, truncated: truncated3 };
+  }
+  /* R5: the documents placed at each stage, with bundle ids the viewer may not see withheld (progressions R13). */
+  #documents(inst) {
+    return (inst.stages || []).filter((s) => s.present).map((s) => ({ stage_key: s.stage_key, documents: (s.documents || []).map((d) => ({
+      capture_sha: d.capture_sha,
+      bundle_id: d.bundle_id ?? null,
+      grade: d.grade ?? null
+    })) }));
+  }
+  /** R3–R5: progress on a project's objective, derived on read against its condition and never stored. */
+  progress({ project, viewer = null } = {}) {
+    const p = this.#project(project, viewer);
+    if (p.refused) return p.refused;
+    const objective = typeof p.doc.fm.objective === "string" ? p.doc.fm.objective : null;
+    const held = conditionOf(p.doc.fm);
+    const computed_at = this.#when();
+    if (!held)
+      return {
+        ok: true,
+        project,
+        objective,
+        condition: null,
+        computable: false,
+        why: "progress cannot be computed: the objective states no condition the record can be measured against",
+        matched: null,
+        meeting: null,
+        short: null,
+        undetermined: null,
+        satisfied: null,
+        computed_at
+      };
+    const bad = this.#conditionRefusal(held.condition);
+    if (bad)
+      return {
+        ok: true,
+        project,
+        objective,
+        condition: held.condition,
+        computable: false,
+        why: `progress cannot be computed: the condition no longer reads against the record (${bad.reason})`,
+        matched: null,
+        meeting: null,
+        short: null,
+        undetermined: null,
+        satisfied: null,
+        computed_at
+      };
+    const m = this.#measure(held.condition, viewer);
+    const n = m.matched.length, k = m.meeting.length, u = m.undetermined.length, share = held.condition.satisfied.share;
+    const satisfied = n === 0 || m.truncated ? null : k * 100 >= share * n ? true : (k + u) * 100 < share * n ? false : null;
+    const why = n === 0 ? "no instance matches the condition, so no share of them can be taken" : m.truncated ? `more than ${MEASURE_MAX} instances match the condition and one read measures that many, so no share of them is taken` : null;
+    return {
+      ok: true,
+      project,
+      objective,
+      condition: held.condition,
+      set_by: held.set_by,
+      set_at: held.set_at,
+      computable: true,
+      matched: n,
+      meeting: k,
+      short: m.short,
+      undetermined: m.undetermined,
+      satisfied,
+      ...why ? { satisfied_why: why } : {},
+      limit: MEASURE_MAX,
+      truncated: m.truncated,
+      instances: { meeting: m.meeting },
+      computed_at
+    };
+  }
+  /** R6: one gap per short instance, each a proposal of kind `objective-gap`. */
+  gaps({ project, viewer = null } = {}) {
+    const pr = this.progress({ project, viewer });
+    if (pr.ok === false) return pr;
+    if (!pr.computable) return { ok: true, project, condition: pr.condition, gaps: [], why: pr.why };
+    return {
+      ok: true,
+      project,
+      condition: pr.condition,
+      gaps: pr.short.map((s) => this.#gap(project, pr.condition, s)),
+      limit: pr.limit,
+      truncated: pr.truncated
+    };
+  }
+  #gap(project, cond, s) {
+    const key = `${project}::${cond.progression}::${s.entity_id}`;
+    const basis = s.why.stages_missing ? {
+      project,
+      progression: cond.progression,
+      entity: s.entity_id,
+      stages_missing: s.why.stages_missing,
+      says: `the records the stages ${s.why.stages_missing.join(", ")} would hold are to be requested`
+    } : {
+      project,
+      progression: cond.progression,
+      entity: s.entity_id,
+      grade_reached: s.why.grade_reached,
+      grade_required: s.why.grade_required,
+      link: s.why.weakest_link,
+      says: "the weakest link of this instance is to be strengthened"
+    };
+    return {
+      key: `intent::${key}`,
+      source: "intent",
+      kind: GAP_KIND,
+      grade: s.grade_determined ? s.grade : null,
+      basis,
+      instances: [{ entity_id: s.entity_id, entity_label: s.entity_label, documents: s.documents }],
+      surfaced_by: "machine"
+    };
+  }
+  /** R7: what the condition reads, so `monitoring` watches exactly those. The captures come a page at a time (N181):
+   *  at most `limit` (default and ceiling WATCH_LIMIT_MAX), those after `after` in capture order, with `cursor` the
+   *  last one answered and `truncated` whether more follow, so a watcher follows the whole set with the cursor. */
+  watchSet({ project, after = null, limit = null } = {}) {
+    const cap = Number.isInteger(limit) && limit >= 1 && limit <= WATCH_LIMIT_MAX ? limit : WATCH_LIMIT_MAX;
+    const none = { entities: [], progressions: [], captures: [], limit: cap, truncated: false, cursor: null };
+    const d = this.#doc(project);
+    const held = d && d.type === "project" ? conditionOf(d.fm) : null;
+    if (!held || this.#conditionRefusal(held.condition)) return none;
+    const m = this.#measure(held.condition, null);
+    const rows = this.#rows(
+      `SELECT DISTINCT capture_sha FROM progression_instances WHERE progression_key=?
+                               AND entity_id IN (SELECT value FROM json_each(?)) AND capture_sha > ?
+                             ORDER BY capture_sha LIMIT ?`,
+      m.key,
+      JSON.stringify(m.matched.map((r) => r.entity_id)),
+      typeof after === "string" ? after : "",
+      cap + 1
+    );
+    const truncated3 = rows.length > cap;
+    const captures = rows.slice(0, cap).map((r) => r.capture_sha);
+    return {
+      entities: m.related,
+      progressions: [m.key],
+      captures,
+      limit: cap,
+      truncated: truncated3,
+      cursor: truncated3 ? captures[captures.length - 1] : null,
+      measure_truncated: m.truncated
+    };
+  }
+  /* ===================================================================== *
+   * WHAT A SUBJECT SERVES (R28), for `scheduler`'s rank (its R10): read as the plane, orders work only, never shown.
+   * ===================================================================== */
+  /** R28: for each named address, bundle and request (at most SERVES_MAX in all, the first in the order given, with
+   *  `truncated`), the open gaps it serves in any project and the held aspirations in force for its project that it
+   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. What it
+   *  measures against is bounded (N305, K391): `context_truncated` says the held aspirations or the projects walked
+   *  for conditions were cut at CONTEXT_MAX. Writes nothing; never throws. */
+  servesOf({ addresses = [], bundles = [], requests = [] } = {}) {
+    const named = [];
+    for (const [kind, list2] of [["address", addresses], ["bundle", bundles], ["request", requests]])
+      for (const id of Array.isArray(list2) ? list2 : []) named.push({ kind, id: typeof id === "string" ? id : null });
+    const truncated3 = named.length > SERVES_MAX;
+    const subjects = named.slice(0, SERVES_MAX);
+    const empty = (x) => ({ kind: x.kind, id: x.id, gaps: [], aspirations: [] });
+    let ctx;
+    try {
+      ctx = this.#servesContext();
+    } catch {
+      return { ok: true, serves: subjects.map(empty), truncated: truncated3, context_truncated: false };
+    }
+    const serves = subjects.map((x) => {
+      try {
+        if (!x.id) return empty(x);
+        const held = x.kind === "bundle" ? [x.id] : x.kind === "address" ? this.#bundlesAt(x.id) : ctx.requestBundles(x.id);
+        const gaps = /* @__PURE__ */ new Set(), aspirations = /* @__PURE__ */ new Set();
+        for (const b of held) {
+          for (const g of ctx.gapsOf(b)) gaps.add(g);
+          for (const a of ctx.aspirationsOf(b)) aspirations.add(a);
+        }
+        return { kind: x.kind, id: x.id, gaps: [...gaps].sort(), aspirations: [...aspirations].sort() };
+      } catch {
+        return empty(x);
+      }
+    });
+    return { ok: true, serves, truncated: truncated3, context_truncated: ctx.cut };
+  }
+  /* R28: what every subject in one call is measured against, gathered once under the plane's sight: the open gaps by
+     the bundles documenting their short instances, and each held group or project aspiration with what it names.
+     N305 (K391): of the first CONTEXT_MAX projects in id order, those with a condition; and of the first CONTEXT_MAX
+     aspirations in id order, held or retired and of any scope (N323), the held ones of group or project scope; `cut`
+     says either walk was cut. */
+  #servesContext() {
+    const gapsByBundle = /* @__PURE__ */ new Map();
+    const all = [];
+    const walked = this.#projectsInOrder(PLANE_VIEWER, CONTEXT_MAX);
+    for (const pid of walked.ids) {
+      const d = this.#doc(pid);
+      if (!d || !conditionOf(d.fm)) continue;
+      const g = this.gaps({ project: pid, viewer: PLANE_VIEWER });
+      if (g.ok) all.push(...g.gaps);
+    }
+    const decided = this.#decidedAmong(all.map((g) => g.key));
+    for (const g of all) {
+      if (decided.has(g.key)) continue;
+      for (const inst of g.instances || [])
+        for (const stage of inst.documents || [])
+          for (const d of stage.documents || [])
+            if (d.bundle_id) {
+              if (!gapsByBundle.has(d.bundle_id)) gapsByBundle.set(d.bundle_id, /* @__PURE__ */ new Set());
+              gapsByBundle.get(d.bundle_id).add(g.key);
+            }
+    }
+    const inForce = this.#heldAspirations(PLANE_VIEWER, CONTEXT_MAX);
+    const held = inForce.held.filter((a) => a.scope === "group" || a.scope === "project");
+    const departures = /* @__PURE__ */ new Map(), concerned = /* @__PURE__ */ new Map(), requestsRead = { rows: null };
+    const departed = (project) => {
+      if (!departures.has(project)) departures.set(project, this.#departures(project).latest);
+      return departures.get(project);
+    };
+    const concerns = (entityId) => {
+      if (!concerned.has(entityId)) {
+        const r = this.entities.concerns({ entityId, limit: 5e3, viewer: PLANE_VIEWER });
+        concerned.set(entityId, new Set((r && r.documents || []).map((d) => d.bundle_id).filter(Boolean)));
+      }
+      return concerned.get(entityId);
+    };
+    const placedIn = (bundleId, keys) => keys.length > 0 && !!this.#one(
+      `SELECT 1 AS x FROM progression_instances WHERE bundle_id=? AND progression_key IN (SELECT value FROM json_each(?))
+       LIMIT 1`,
+      bundleId,
+      JSON.stringify(keys)
+    );
+    return {
+      cut: walked.truncated || inForce.truncated,
+      gapsOf: (bundleId) => gapsByBundle.get(bundleId) || [],
+      /* R12's in force for the bundle's project (the group's less its departures, and the project's own); a bundle in
+         no project is under the group's alone */
+      aspirationsOf: (bundleId) => {
+        const project = this.record.bundleInfo(bundleId)?.project ?? null;
+        const gone = project ? departed(project) : /* @__PURE__ */ new Map();
+        return held.filter((a) => a.scope === "group" ? !gone.has(a.id) : project !== null && a.owner === project).filter((a) => placedIn(bundleId, a.progressions) || a.entities.some((e) => concerns(e).has(bundleId))).map((a) => a.id);
+      },
+      /* a request serves what its address and its target question serve (capture-requests R23, R28) */
+      requestBundles: (request) => {
+        if (requestsRead.rows === null) {
+          const read2 = this.#lazy(this.captureRequests).captureRequests({
+            viewer: PLANE_VIEWER,
+            state: "requested",
+            limit: 1e3
+          });
+          requestsRead.rows = new Map((read2 && read2.requests || []).map((r) => [r.request, r]));
+        }
+        const row2 = requestsRead.rows.get(request);
+        const b = this.#lazy(this.captureRequests).bundlesOf?.(request) ?? null;
+        const target = b && b.target || row2 && row2.target || null;
+        return [...row2 && row2.address ? this.#bundlesAt(row2.address) : [], ...target ? [target] : []];
+      }
+    };
+  }
+  /* R28: the bundles the captures taken from an address are filed in (provenance R48's read contract), at most
+     SERVES_MAX of them. */
+  #bundlesAt(address) {
+    return this.#rows(
+      `SELECT DISTINCT r.bundle_id FROM captured_locators c JOIN register r ON r.capture_sha = c.capture_sha
+                        WHERE c.address_norm = ? OR c.address = ? ORDER BY r.bundle_id LIMIT ?`,
+      address,
+      address,
+      SERVES_MAX
+    ).map((r) => r.bundle_id).filter(Boolean);
+  }
+  /* ===================================================================== *
+   * GOALS (R8, R26)
+   * ===================================================================== */
+  /** R8: declare a goal, bounded, optionally under an aspiration. */
+  declareGoal({ statement, bounds, aspiration = null, author, viewer = null } = {}) {
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
+    if (!str4(statement) || !str4(bounds))
+      return refusePursuitUnstated("a goal states what it pursues and what bounds it. Nothing was written.");
+    if (aspiration != null && aspiration !== "") {
+      const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
+      if (!a) return refuseNoSuchAspiration(
+        "no aspiration answers to that id here. Nothing was written.",
+        { aspiration }
+      );
+      if (a.head.currentState === "retired")
+        return refusePursuitEnded("a goal is not opened under a retired aspiration. Nothing was written.", { aspiration });
+    }
+    const at17 = this.#when();
+    const id = pursuitId(this.record.allocId("GOAL", at17.slice(0, 4)).id, GOAL);
+    const r = this.#create(
+      id,
+      GOAL,
+      goalDoc({ id, statement, bounds, aspiration: aspiration || null, author: str4(author), at: at17 }),
+      str4(author)
+    );
+    if (!r.ok) return r;
+    return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str4(author), at: at17 };
+  }
+  /** R8: record that a project's objective serves a goal, as the author's dated claim; the author has joined it. */
+  linkObjective({ goal, project, author, viewer = null } = {}) {
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
+    const g = this.#pursuit(goal, GOAL, viewer ?? author);
+    if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
+    if (g.head.currentState === "closed")
+      return refusePursuitEnded("a closed goal takes no new objective. Nothing was written.", { goal });
+    const p = this.#project(project, viewer ?? author);
+    if (p.refused) return p.refused;
+    const denied = this.membership.projectAuthority(project, author, "joined", "linkObjective");
+    if (denied) return denied;
+    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj9(o) && o.project === project))
+      return { ok: true, goal, project, already: true };
+    const at17 = this.#when();
+    let text4 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str4(author)) ? str4(author) : q(author), at: q(at17) });
+    text4 = setField(text4, "last_updated", q(at17));
+    text4 = logEntry(text4, at17, "Objective linked", str4(author), `${project}'s objective serves this goal.`);
+    const r = this.#revise(g, text4, str4(author), viewer);
+    if (!r.ok) return r;
+    return { ok: true, goal, project, by: str4(author), at: at17 };
+  }
+  /** R8: close a goal with its reason; it stays readable with its objectives and reason. */
+  closeGoal({ goal, reason, author, viewer = null } = {}) {
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
+    const g = this.#pursuit(goal, GOAL, viewer ?? author);
+    if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
+    if (!str4(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
+    if (g.head.currentState === "closed")
+      return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
+    const at17 = this.#when();
+    let text4 = appendHistory(g.text, {
+      at: at17,
+      from: "open",
+      to: "closed",
+      blurb: "closed; the reason is in its document",
+      author: str4(author)
+    });
+    text4 = setField(setField(setField(text4, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at17));
+    text4 = setSection2(text4, "Why It Closed", bodyText(reason));
+    text4 = logEntry(text4, at17, "Closed", str4(author), "open to closed.");
+    const r = this.#revise(g, text4, str4(author), viewer);
+    if (!r.ok) return r;
+    return { ok: true, goal, state: "closed", reason: str4(reason), author: str4(author), at: at17 };
+  }
+  /** R8: a goal as the record holds it: its statement, bounds, aspiration, the objectives linked (each a project the
+   *  viewer may see), its state and, once closed, its reason. No progress figure: its objectives carry theirs. */
+  readGoal({ goal, viewer = null } = {}) {
+    const g = this.#pursuit(goal, GOAL, viewer);
+    if (!g) return refuseNoSuchGoal("no goal answers to that id here.", { goal: goal ?? null });
+    return { ok: true, goal: this.#goalView(g, viewer) };
+  }
+  #goalView(g, viewer) {
+    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj9).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
+    const asp = typeof g.fm.aspiration === "string" && g.fm.aspiration ? g.fm.aspiration : null;
+    const aspiration = asp && (viewer == null || this.#pursuit(asp, ASPIRATION, viewer)) ? asp : null;
+    return {
+      id: g.id,
+      statement: readSection(g.text, "Statement"),
+      bounds: readSection(g.text, "Bounds"),
+      aspiration,
+      objectives,
+      state: g.head.currentState,
+      closed_reason: g.head.currentState === "closed" ? readSection(g.text, "Why It Closed") : null,
+      author: g.fm.author ?? null,
+      at: g.fm.created ?? null
+    };
+  }
+  /* ===================================================================== *
+   * ASPIRATIONS (R9–R14, R26)
+   * ===================================================================== */
+  /** R9: declare an aspiration of the group, a project or a member. */
+  declareAspiration({ scope, owner = null, statement, entities = [], progressions = [], author, viewer = null } = {}) {
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
+    const own2 = scope === "group" ? null : str4(owner) || null;
+    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !own2 || scope === "group" && str4(owner))
+      return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
+    if (!str4(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
+    const denied = this.#aspirationAuthority(scope, own2, author, viewer ?? author);
+    if (denied) return denied;
+    const ents = (Array.isArray(entities) ? entities : []).map(str4).filter(Boolean);
+    const progs = (Array.isArray(progressions) ? progressions : []).map(str4).filter(Boolean);
+    const badEnt = ents.find((e) => !TOKEN.test(e) || !this.entities.has(e));
+    if (badEnt) return noSuchEntity(badEnt);
+    const badProg = progs.find((k) => {
+      const d = TOKEN.test(k) && this.progressions.readProgression({ progressionKey: k });
+      return !d || d.ok === false || !d.found;
+    });
+    if (badProg) return refuseNoSuchProgression("the aspiration names a flow the record has not declared. Nothing was written.", { progression: badProg });
+    const at17 = this.#when();
+    const id = pursuitId(this.record.allocId("ASP", at17.slice(0, 4)).id, ASPIRATION);
+    const r = this.#create(
+      id,
+      ASPIRATION,
+      aspirationDoc({
+        id,
+        scope,
+        owner: own2,
+        statement,
+        entities: ents,
+        progressions: progs,
+        author: str4(author),
+        at: at17
+      }),
+      str4(author),
+      { actorViewer: viewer ?? str4(author) }
+    );
+    if (!r.ok) return r;
+    return { ok: true, aspiration: id, scope, owner: own2, state: "held", author: str4(author), at: at17 };
+  }
+  /** R10: a project records its departure from a held group aspiration, with a reason. */
+  departFrom({ project, aspiration, reason, author, viewer = null } = {}) {
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
+    const p = this.#project(project, viewer ?? author);
+    if (p.refused) return p.refused;
+    const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
+    if (!a) return refuseNoSuchAspiration(
+      "no aspiration answers to that id here. Nothing was written.",
+      { aspiration: aspiration ?? null }
+    );
+    if (a.fm.scope !== "group")
+      return refuseBadScope("a project departs only from an aspiration the whole group holds; a project's or a member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
+    if (a.head.currentState === "retired")
+      return refusePursuitEnded("a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written.", { aspiration });
+    if (!str4(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
+    const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
+    if (denied) return denied;
+    const at17 = this.#when();
+    this.record.transact(() => this.sql.exec(
+      `INSERT INTO intent_departures (project_id, aspiration_id, reason, author, at) VALUES (?,?,?,?,?)`,
+      project,
+      aspiration,
+      str4(reason).slice(0, 4e3),
+      str4(author),
+      at17
+    ));
+    return { ok: true, project, aspiration, reason: str4(reason), author: str4(author), at: at17, notable: true };
+  }
+  /** R11: a dead end, appended to the aspiration's pursuit record, dated and authored, never removed. */
+  recordDeadEnd({ aspiration, note, author, viewer = null } = {}) {
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
+    const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
+    if (!a) return refuseNoSuchAspiration(
+      "no aspiration answers to that id here. Nothing was written.",
+      { aspiration: aspiration ?? null }
+    );
+    if (!str4(note))
+      return refusal12("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
+    const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
+    if (denied) return denied;
+    const at17 = this.#when();
+    let text4 = appendSection(
+      a.text,
+      "Dead Ends",
+      `### ${at17} | ${str4(author)}
+${bodyText(note)}`
+    );
+    text4 = setField(text4, "last_updated", q(at17));
+    text4 = logEntry(text4, at17, "Dead end recorded", str4(author), "a dead end was appended to the pursuit record.");
+    const r = this.#revise(a, text4, str4(author), viewer);
+    if (!r.ok) return r;
+    return { ok: true, aspiration, note: str4(note), author: str4(author), at: at17 };
+  }
+  /** R11: retire an aspiration with what pursuing it taught; it and its pursuit record stay readable. */
+  retireAspiration({ aspiration, taught, author, viewer = null } = {}) {
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
+    const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
+    if (!a) return refuseNoSuchAspiration(
+      "no aspiration answers to that id here. Nothing was written.",
+      { aspiration: aspiration ?? null }
+    );
+    if (a.head.currentState === "retired")
+      return refusePursuitEnded("this aspiration is already retired. Nothing was written.", { aspiration });
+    if (!str4(taught))
+      return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
+    const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
+    if (denied) return denied;
+    const at17 = this.#when();
+    let text4 = appendHistory(a.text, {
+      at: at17,
+      from: "held",
+      to: "retired",
+      blurb: "retired; what it taught is in its document",
+      author: str4(author)
+    });
+    text4 = setField(setField(setField(text4, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at17));
+    text4 = setSection2(text4, "Taught", bodyText(taught));
+    text4 = logEntry(text4, at17, "Retired", str4(author), "held to retired.");
+    const r = this.#revise(a, text4, str4(author), viewer);
+    if (!r.ok) return r;
+    return { ok: true, aspiration, state: "retired", taught: str4(taught), author: str4(author), at: at17 };
+  }
+  /* R12, R13, R28 (N209, K338, N323): the first `max` aspirations the viewer may see, in id order, held or retired and
+     of any scope, walked a page at a time and read one past so a cut says so; answers the held ones among them. An
+     aspiration the viewer may not see (a project's, of a project hidden from the viewer) is skipped and never counted,
+     so a cut says nothing of it (DEC-36, K391). */
+  #heldAspirations(viewer, max = ASPIRATIONS_MAX) {
+    const out = [];
+    let after = "", read2 = 0, truncated3 = false;
+    for (; ; ) {
+      const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
+      for (const id of page.ids) {
+        const a = this.#pursuit(id, ASPIRATION, viewer);
+        if (!a) continue;
+        if (read2 === max) {
+          truncated3 = true;
+          break;
+        }
+        read2 += 1;
+        if (a.head.currentState === "held") out.push(this.#aspirationView(a));
+      }
+      if (truncated3 || page.ids.length < 200 || !page.cursor) break;
+      after = page.cursor;
+    }
+    return { held: out, truncated: truncated3 };
+  }
+  #aspirationView(a) {
+    const list2 = (v) => Array.isArray(v) ? v.map(String).filter((x) => x !== "") : [];
+    return {
+      id: a.id,
+      scope: a.fm.scope ?? null,
+      owner: a.fm.owner ?? null,
+      statement: readSection(a.text, "Statement"),
+      entities: list2(a.fm.entities),
+      progressions: list2(a.fm.progressions),
+      state: a.head.currentState,
+      author: a.fm.author ?? null,
+      at: a.fm.created ?? null
+    };
+  }
+  /* R10: the departure in force for each (project, aspiration): the latest recorded, at most DEPARTURES_MAX of them
+     (N181), read one past so a cut says so. */
+  #departures(project) {
+    const rows = this.#rows(`SELECT d.aspiration_id, d.reason, d.author, d.at FROM intent_departures d
+                              WHERE d.project_id=? AND d.seq = (SELECT MAX(x.seq) FROM intent_departures x
+                                                                  WHERE x.project_id=d.project_id
+                                                                    AND x.aspiration_id=d.aspiration_id)
+                              ORDER BY d.seq LIMIT ?`, project, DEPARTURES_MAX + 1);
+    const latest = /* @__PURE__ */ new Map();
+    for (const r of rows.slice(0, DEPARTURES_MAX))
+      latest.set(r.aspiration_id, { aspiration: r.aspiration_id, reason: r.reason, author: r.author, at: r.at, notable: true });
+    return { latest, truncated: rows.length > DEPARTURES_MAX };
+  }
+  /** R12: the aspirations in force for a project, a member, or (neither named) the group, each with its scope. The
+   *  group's less any departure, each departure listed with its reason; no precedence is stated or implied. Those in
+   *  force are taken among the first ASPIRATIONS_MAX aspirations the viewer may see, held or retired (N323). */
+  aspirationsFor({ project = null, member = null, viewer = null } = {}) {
+    if (project != null && project !== "") {
+      const p = this.#project(project, viewer);
+      if (p.refused) return p.refused;
+    }
+    const { held, truncated: truncated3 } = this.#heldAspirations(viewer);
+    const dep = project ? this.#departures(project) : { latest: /* @__PURE__ */ new Map(), truncated: false };
+    const departed = dep.latest;
+    const group = held.filter((a) => a.scope === "group" && !departed.has(a.id));
+    const own2 = project ? held.filter((a) => a.scope === "project" && a.owner === project) : [];
+    const mine = member ? held.filter((a) => a.scope === "member" && a.owner === str4(member)) : [];
+    const departures = [...departed.values()].filter((d) => held.some((a) => a.id === d.aspiration));
+    return {
+      ok: true,
+      project: project || null,
+      member: member || null,
+      aspirations: [...group, ...own2, ...mine],
+      limit: ASPIRATIONS_MAX,
+      truncated: truncated3,
+      departures,
+      departures_limit: DEPARTURES_MAX,
+      departures_truncated: dep.truncated,
+      precedence: null,
+      says: "these are held side by side; the record states no order among them and resolves nothing between them"
+    };
+  }
+  /** R13: each pair of held aspirations naming a common entity or progression, with what they share. The held ones
+   *  among R12's read (the first ASPIRATIONS_MAX the viewer may see, in id order, held or retired; N323) are paired, and
+   *  at most CONTACTS_MAX pairs are listed, in the order of their first and then second aspiration's id; `truncated`
+   *  says either was cut (N209, K338). */
+  contacts({ viewer = null } = {}) {
+    const { held, truncated: cut3 } = this.#heldAspirations(viewer);
+    const pairs = [];
+    let truncated3 = cut3;
+    outer: for (let i = 0; i < held.length; i++)
+      for (let j = i + 1; j < held.length; j++) {
+        const a = held[i], b = held[j];
+        const entities = a.entities.filter((e) => b.entities.includes(e));
+        const progressions = a.progressions.filter((k) => b.progressions.includes(k));
+        if (!entities.length && !progressions.length) continue;
+        if (pairs.length === CONTACTS_MAX) {
+          truncated3 = true;
+          break outer;
+        }
+        pairs.push({
+          a: a.id,
+          b: b.id,
+          shared: { entities, progressions },
+          says: "both name what is listed; the record does not say whether they agree"
+        });
+      }
+    return { ok: true, contacts: pairs, limit: CONTACTS_MAX, truncated: truncated3 };
+  }
+  /** R14: an aspiration's pursuit record: the goals opened under it and their objectives, the proposals triaged under
+   *  them with each act and reason, the capture requests named in them with their outcome, and the dead ends. */
+  pursuitOf({ aspiration, viewer = null } = {}) {
+    const a = this.#pursuit(aspiration, ASPIRATION, viewer);
+    if (!a) return refuseNoSuchAspiration("no aspiration answers to that id here.", { aspiration: aspiration ?? null });
+    const goals = [];
+    let after = "", read2 = 0, goalsSeen = 0, goals_read_truncated = false;
+    for (; ; ) {
+      const page = this.record.listByType({ type: GOAL, after, limit: 200 });
+      for (const id of page.ids) {
+        if (read2 === GOALS_READ_MAX) {
+          goals_read_truncated = true;
+          break;
+        }
+        read2 += 1;
+        const g = this.#pursuit(id, GOAL, viewer);
+        if (g && g.fm.aspiration === aspiration) {
+          goalsSeen += 1;
+          if (goals.length < GOALS_MAX) goals.push(this.#goalView(g, viewer));
+        }
+        if (goalsSeen > GOALS_MAX) break;
+      }
+      if (goals_read_truncated || goalsSeen > GOALS_MAX || page.ids.length < 200 || !page.cursor) break;
+      after = page.cursor;
+    }
+    const goals_truncated = goalsSeen > GOALS_MAX;
+    const projects = [...new Set(goals.flatMap((g) => g.objectives.map((o) => o.project)))];
+    const acts = projects.length ? this.#rows(
+      `SELECT proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at
+                      FROM intent_triage WHERE project_id IN (SELECT value FROM json_each(?)) ORDER BY seq LIMIT ?`,
+      JSON.stringify(projects),
+      TRIAGED_MAX + 1
+    ) : [];
+    const triaged_truncated = acts.length > TRIAGED_MAX;
+    const triaged = acts.slice(0, TRIAGED_MAX).map((r) => ({
+      proposal: r.proposal_key,
+      source: r.source,
+      kind: r.kind,
+      act: r.act,
+      project: r.project_id,
+      inquiry: r.inquiry_id,
+      reason: r.reason,
+      grade: r.grade,
+      basis: safeJson12(r.basis_json),
+      author: r.author,
+      at: r.at
+    }));
+    const named = [];
+    for (const t of triaged) {
+      for (const id of captureRequestsNamed(t.basis)) if (!named.includes(id)) named.push(id);
+      if (named.length > REQUESTS_MAX) break;
+    }
+    const requests_truncated = named.length > REQUESTS_MAX;
+    named.length = Math.min(named.length, REQUESTS_MAX);
+    const byId = named.length ? this.#lazy(this.captureRequests) : null;
+    const capture_requests = named.map((id) => {
+      let r = null;
+      try {
+        r = byId.requestById({ request: id, viewer });
+      } catch {
+        r = null;
+      }
+      if (!r) return { request: id, outcome: null, why: "no such request is held, or it is one you may not see" };
+      return { request: id, outcome: {
+        state: r.state,
+        code: r.code ?? null,
+        capture_sha: r.capture_sha ?? null,
+        captured_at: r.captured_at ?? null
+      } };
+    });
+    return {
+      ok: true,
+      aspiration: this.#aspirationView(a),
+      goals,
+      goals_limit: GOALS_MAX,
+      goals_truncated,
+      goals_read_limit: GOALS_READ_MAX,
+      goals_read_truncated,
+      triaged,
+      triaged_limit: TRIAGED_MAX,
+      triaged_truncated,
+      capture_requests,
+      requests_limit: REQUESTS_MAX,
+      requests_truncated,
+      dead_ends: deadEndsOf(a.text),
+      taught: a.head.currentState === "retired" ? readSection(a.text, "Taught") : null
+    };
+  }
+  /* ===================================================================== *
+   * THE DISCOVERY LOOP (R15–R17)
+   * ===================================================================== */
+  /** R15: a later module registers a proposal source once, at start (K31's pattern). `reader({project, viewer})`
+   *  answers its proposals, `{key, kind, grade, basis, instances, surfaced_by}`. */
+  registerSource(kind, reader) {
+    if (typeof kind !== "string" || !TOKEN.test(kind) || typeof reader !== "function" || kind === "progressions" || kind === "intent")
+      return refusal12("SOURCE_MALFORMED", "a source names its kind (a key, not 'progressions' or 'intent', which are read directly) and gives a reader function.", { kind: typeof kind === "string" ? kind : null });
+    if (this.#sources.has(kind))
+      return refusal12("SOURCE_DECLARED", `the source '${kind}' is already registered.`, { kind });
+    this.#sources.set(kind, reader);
+    return { ok: true, kind };
+  }
+  /* Every proposal from every source, open or not, keyed `<source>::<its key>`; with no project named, the gaps of the
+     first PROJECTS_MAX projects the viewer may see, in id order (N305), `projects_truncated` saying they were cut. */
+  #allProposals(project, viewer) {
+    const out = [];
+    const feed = this.progressions.proposalsFeed(null);
+    for (const g of feed && feed.proposals || [])
+      out.push({
+        key: `progressions::${g.key}`,
+        source: "progressions",
+        source_key: g.key,
+        kind: "missing_predecessor",
+        grade: g.grade ?? null,
+        grade_determined: g.grade_determined === true,
+        basis: {
+          progression_key: g.progression_key,
+          stage_key: g.stage_key,
+          required: g.required,
+          definition_version: g.definition_version,
+          overdue: !!g.overdue
+        },
+        instances: g.instances || [],
+        surfaced_by: g.surfaced_by || "machine"
+      });
+    for (const [kind, reader] of this.#sources) {
+      let got = [];
+      try {
+        got = reader({ project, viewer }) || [];
+      } catch {
+        got = [];
+      }
+      for (const p of Array.isArray(got) ? got : [])
+        if (isObj9(p) && typeof p.key === "string" && p.key)
+          out.push({
+            key: `${kind}::${p.key}`,
+            source: kind,
+            source_key: p.key,
+            kind: p.kind ?? kind,
+            grade: p.grade ?? null,
+            basis: p.basis ?? null,
+            instances: Array.isArray(p.instances) ? p.instances : [],
+            surfaced_by: p.surfaced_by ?? "machine"
+          });
+    }
+    const projects = project ? { ids: [project], truncated: false } : this.#projectsInOrder(viewer, PROJECTS_MAX);
+    for (const pid of projects.ids) {
+      const g = this.gaps({ project: pid, viewer });
+      if (g.ok) for (const gap of g.gaps) out.push({ ...gap, source_key: gap.key.slice("intent::".length) });
+    }
+    return { list: out, projects_truncated: projects.truncated };
+  }
+  /* N305 (K391): the first `max` projects the viewer may see (every project for a null viewer), in id order, walked a
+     page at a time and read one past, so `truncated` says a cut was made. A project the viewer may not see is not
+     counted, so a cut says nothing of it (R23, DEC-36). */
+  #projectsInOrder(viewer, max) {
+    const ids = [];
+    let after = "", truncated3 = false;
+    for (; ; ) {
+      const page = this.record.listByType({ type: "project", after, limit: 200 });
+      for (const id of page.ids) {
+        if (viewer != null && !this.membership.inSight(id, viewer)) continue;
+        if (ids.length === max) {
+          truncated3 = true;
+          break;
+        }
+        ids.push(id);
+      }
+      if (truncated3 || page.ids.length < 200 || !page.cursor) break;
+      after = page.cursor;
+    }
+    return { ids, truncated: truncated3 };
+  }
+  /* R16: whether a proposal key has a triage act recorded (any act takes it off the open list); one row, read through
+     the key's index (N181 (4)). */
+  #isDecided(key) {
+    return !!this.#one(`SELECT 1 AS x FROM intent_triage WHERE proposal_key=? LIMIT 1`, typeof key === "string" ? key : "");
+  }
+  /* R15: which of these keys have a triage act recorded, read through the key's index, as many rows as keys. */
+  #decidedAmong(keys) {
+    if (!keys.length) return /* @__PURE__ */ new Set();
+    return new Set(this.#rows(
+      `SELECT DISTINCT proposal_key FROM intent_triage
+                                WHERE proposal_key IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      JSON.stringify(keys),
+      keys.length
+    ).map((r) => r.proposal_key));
+  }
+  /* R16, R23 (N199): the project a triage act concerns: the one named with it, else the project a gap's key names
+     (`intent::<project>::…`), so a gap set aside without naming its project is still that project's material. */
+  #projectOfAct(r) {
+    if (r.project) return r.project;
+    const m = /^intent::([^:]+)::/.exec(r.key || "");
+    return m ? m[1] : null;
+  }
+  /* R16: the proposals set aside (deferred or dismissed), newest first, at most SET_ASIDE_MAX, read one past so a cut
+     says so (N181); an act concerning a project the viewer may not see is not listed to them (R23, N199). */
+  #setAside(viewer) {
+    const rows = this.#rows(`SELECT proposal_key, act, project_id, inquiry_id, reason, author, at FROM intent_triage
+                              WHERE act IN ('defer', 'dismiss') ORDER BY seq DESC LIMIT ?`, SET_ASIDE_MAX + 1);
+    const truncated3 = rows.length > SET_ASIDE_MAX;
+    const list2 = rows.slice(0, SET_ASIDE_MAX).map((r) => ({
+      key: r.proposal_key,
+      act: r.act,
+      project: r.project_id,
+      inquiry: r.inquiry_id,
+      reason: r.reason,
+      author: r.author,
+      at: r.at
+    })).filter((d) => {
+      const pid = this.#projectOfAct(d);
+      return !pid || viewer == null || !this.#project(pid, viewer).refused;
+    });
+    return { list: list2, truncated: truncated3 };
+  }
+  /** R15, R16: every open proposal from every source, each with its grade and basis; beside them, every proposal set
+   *  aside (deferred or dismissed) with its reason, so a decision ages a proposal without hiding it. */
+  proposals({ project = null, viewer = null } = {}) {
+    if (project != null && project !== "") {
+      const p = this.#project(project, viewer);
+      if (p.refused) return p.refused;
+    }
+    const all = this.#allProposals(project || null, viewer);
+    const decided = this.#decidedAmong(all.list.map((p) => p.key));
+    const open = all.list.filter((p) => !decided.has(p.key));
+    const aside = this.#setAside(viewer);
+    return {
+      ok: true,
+      project: project || null,
+      proposals: open,
+      count: open.length,
+      set_aside: aside.list,
+      set_aside_limit: SET_ASIDE_MAX,
+      set_aside_truncated: aside.truncated,
+      projects_limit: PROJECTS_MAX,
+      projects_truncated: all.projects_truncated
+    };
+  }
+  /** R16: a member's act on a proposal: adopt it into a project's objective, open a question from it (a machine may
+   *  do only this), or defer or dismiss it with a reason. */
+  triage({
+    proposal,
+    act,
+    project = null,
+    reason = null,
+    author = null,
+    viewer = null,
+    run = null,
+    assistantPrincipal = null
+  } = {}) {
+    if (!TRIAGE_ACTS.includes(act))
+      return refusal12(
+        "TRIAGE_ACT_UNKNOWN",
+        `a proposal is triaged by one of ${TRIAGE_ACTS.join(", ")}. Nothing was written.`,
+        { acts: TRIAGE_ACTS }
+      );
+    const isMachine2 = machine(author);
+    if (isMachine2 && act !== "question")
+      return refusal12("MACHINE_CANNOT_TRIAGE", "an assistant may open a question from a proposal and take no other act on it. Nothing was written.");
+    let proj = null;
+    if (project != null && project !== "") {
+      const p = this.#project(project, viewer ?? (isMachine2 ? null : author));
+      if (p.refused) return p.refused;
+      proj = p.doc;
+    }
+    const found = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).list.find((p) => p.key === proposal);
+    if (!found)
+      return refusal12("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
+    const why = str4(reason);
+    if ((act === "defer" || act === "dismiss") && !why)
+      return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
+    if (act === "adopt" && !proj)
+      return noSuchProject(null);
+    if (proj && !isMachine2) {
+      const denied = this.membership.projectAuthority(proj.id, author, "joined", `triage:${act}`);
+      if (denied) return denied;
+    }
+    const at17 = this.#when();
+    let inquiry = null, extra = {};
+    if (act === "adopt") {
+      let text4 = appendItem(
+        proj.text,
+        "objective_adoptions",
+        {
+          proposal: q(found.key),
+          source: found.source,
+          by: TOKEN.test(str4(author)) ? str4(author) : q(author),
+          at: q(at17)
+        }
+      );
+      if (text4 === null) return refusal12("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
+      text4 = setField(text4, "last_updated", q(at17));
+      text4 = logEntry(text4, at17, "Proposal adopted", str4(author), `the proposal ${found.key} is adopted into the objective.`);
+      const r = this.#revise(proj, text4, str4(author), viewer);
+      if (!r.ok) return r;
+    } else if (act === "question") {
+      const opened = this.#openQuestion(found, author, viewer, run, assistantPrincipal, at17);
+      if (!opened.ok) return opened;
+      inquiry = opened.bundleId;
+      extra = { inquiry, surfaced_by: isMachine2 ? "agent" : "human" };
+    } else if (found.source === "progressions") {
+      const d = this.progressions.disposeProposal({
+        key: found.source_key,
+        to: act === "defer" ? "deferred" : "dismissed",
+        reason: why,
+        definitionVersion: found.basis.definition_version,
+        decidedBy: str4(author)
+      });
+      if (!d || d.ok !== true) return d;
+      extra = { progressions: { key: d.key, state: d.state, definition_version: d.definition_version } };
+    }
+    this.record.transact(() => this.sql.exec(
+      `INSERT INTO intent_triage (proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      found.key,
+      found.source,
+      found.kind ?? null,
+      act,
+      proj ? proj.id : this.#projectOfAct({ key: found.key }),
+      inquiry,
+      why || null,
+      found.grade ?? null,
+      JSON.stringify(found.basis ?? null),
+      str4(author) || PLANE_ACTOR,
+      at17
+    ));
+    return {
+      ok: true,
+      proposal: found.key,
+      act,
+      project: proj ? proj.id : null,
+      reason: why || null,
+      author: str4(author) || null,
+      at: at17,
+      ...extra
+    };
+  }
+  /* R16's `question`: a new inquiry at `surfaced`, through promotion (so inquiry's check and ai-runs' surfacing step,
+     its R25, run inside it), the proposal as its basis. */
+  #openQuestion(found, author, viewer, run, assistantPrincipal, at17) {
+    const id = `${this.record.allocId("INQ", at17.slice(0, 4)).id}-question`;
+    const question = questionOf(found);
+    const who2 = str4(author) || PLANE_ACTOR;
+    const text4 = [
+      "---",
+      `id: ${id}`,
+      "object_type: inquiry",
+      "schema: inquiry@1",
+      `title: ${q(question.slice(0, 120))}`,
+      "current_state: surfaced",
+      "prior_state: null",
+      `created: ${q(at17)}`,
+      `last_updated: ${q(at17)}`,
+      "produced_by:",
+      `  mode: ${machine(author) ? "agent" : "human"}`,
+      "  capability_tier: session",
+      "references: []",
+      "state_history: []",
+      "annotations_open: 0",
+      "reeval_pending:",
+      "  flag: false",
+      "  since: null",
+      "  source: null",
+      "visuals: []",
+      `surfaced_by: ${machine(author) ? "agent" : "human"}`,
+      'disposition_reason: ""',
+      `surfaced_from: ${q(found.key)}`,
+      "---",
+      "",
+      "## Question",
+      "",
+      question,
+      "",
+      "## What It Rests On",
+      "",
+      `Surfaced from the proposal ${found.key} (${found.source}, ${found.kind ?? "finding"}): ${JSON.stringify(found.basis ?? null)}`,
+      "",
+      "## Conclusion",
+      "",
+      "## What Would Falsify This",
+      "",
+      "## Session Log",
+      "",
+      `### Session ${at17} | Surfaced | ${who2}`,
+      `Changes: opened from the proposal ${found.key}.`,
+      "",
+      "## Review Notes",
+      ""
+    ].join("\n");
+    return this.promotion.promote({
+      bundleId: id,
+      base: null,
+      snapKey: `${at17.replace(/[-:]/g, "")}_${rand6(4)}`,
+      author: who2,
+      files: [{ path: "bundle.md", text: text4 }],
+      meta: { object_type: "inquiry", current_state: "surfaced", created: at17, last_updated: at17 },
+      ...run ? { run } : {},
+      ...str4(assistantPrincipal) ? { assistantPrincipal: str4(assistantPrincipal) } : {},
+      actorViewer: viewer ?? null
+    });
+  }
+  /** R17 (called by `scheduler`): a question an assistant surfaced that no member has acted on within the instance's
+   *  ageing interval moves to `deferred`, with its reason, through inquiry's dispose act under the plane's actor.
+   *  Nothing is deleted. It judges the questions R27's bounded read takes, answering `limit` and `truncated` (N323). */
+  async ageSurfaced(now) {
+    const nowMs = this.#instantMs(now);
+    const days = this.ageingDays();
+    const reason = `surfaced by an assistant; no member acted within ${days} days`;
+    const aged = [], refused = [];
+    const read2 = this.#ageable();
+    const due = read2.list.filter((x) => x.at <= nowMs).map((x) => x.id);
+    const inquiry = this.#lazy(this.inquiryRef), retrieval = this.#lazy(this.retrievalRef);
+    for (const id of due) {
+      const sel = await retrieval.selectionCreate({ ids: [id], kind: "enumerated", owner: PLANE_ACTOR, viewer: PLANE_VIEWER });
+      if (!sel || !sel.handle) {
+        refused.push({ id, reason: sel && sel.reason ? sel.reason : "NO_SELECTION" });
+        continue;
+      }
+      const r = inquiry.dispose({
+        handle: sel.handle,
+        to: "deferred",
+        reason,
+        viewer: PLANE_VIEWER,
+        owner: PLANE_ACTOR,
+        author: PLANE_ACTOR
+      });
+      if (r && r.ok) aged.push(id);
+      else refused.push({ id, reason: r ? r.reason : "DISPOSE_FAILED" });
+    }
+    return { ok: true, aged, refused, interval_days: days, reason, limit: AGEING_READ_MAX, truncated: read2.truncated };
+  }
+  /* R17, R27: an instant given as milliseconds or ISO text; none given is the module's clock. */
+  #instantMs(now) {
+    return now == null || now === "" ? Date.parse(this.now()) : Number.isFinite(Number(now)) ? Number(now) : Date.parse(now);
+  }
+  /* R27 (N323, K408): the first AGEING_READ_MAX questions at `surfaced`, those whose last entry is oldest first (then
+     by id), read one past so `truncated` says more follow; among them alone, each ageable one (R17 would move it:
+     surfaced by a machine, no member's entry) with its ageing instant, its last entry's time plus the ageing interval,
+     in milliseconds. One statement over record-core's `bundles` and `manifest` (its R37 read contract; the manifest's
+     rowid ranks a bundle's entries, R16), so the walk itself is bounded; a question past the read is reached once
+     earlier ones leave `surfaced` or take a newer entry. */
+  #ageable() {
+    const span = this.ageingDays() * 864e5;
+    const rows = this.#rows(`SELECT id, last FROM (
+                               SELECT b.bundle_id AS id, (SELECT m.created FROM manifest m WHERE m.bundle_id = b.bundle_id
+                                                           ORDER BY m.rowid DESC LIMIT 1) AS last
+                                 FROM bundles b WHERE b.object_type = 'inquiry' AND b.current_state = 'surfaced')
+                             ORDER BY julianday(last), last, id LIMIT ?`, AGEING_READ_MAX + 1);
+    const truncated3 = rows.length > AGEING_READ_MAX;
+    const out = [];
+    for (const { id, last } of rows.slice(0, AGEING_READ_MAX)) {
+      const d = this.#doc(id);
+      if (!d || d.head.currentState !== "surfaced" || d.fm.surfaced_by !== "agent") continue;
+      if (!this.#machineOnly(id)) continue;
+      const since = Date.parse(last ?? d.fm.created);
+      if (Number.isFinite(since)) out.push({ id, at: since + span });
+    }
+    return { list: out, truncated: truncated3 };
+  }
+  /* R17, R27: whether a question has entries and every one of them is a machine's (no member acted on it). Its distinct
+     authors are read a page at a time in author order, each statement bounded, stopping at the first member's. */
+  #machineOnly(id) {
+    let after = null, any = false;
+    for (; ; ) {
+      const page = this.#rows(`SELECT DISTINCT author FROM manifest WHERE bundle_id = ? AND (? IS NULL OR author > ?)
+                               ORDER BY author LIMIT ?`, id, after, after, AUTHORS_PAGE).map((r) => r.author);
+      if (page.some((who2) => !machine(who2))) return false;
+      any = any || page.length > 0;
+      if (page.length < AUTHORS_PAGE) return any;
+      after = page[page.length - 1];
+    }
+  }
+  /** R27 (for `scheduler`, beside R17 as its tick): the earliest ageing instant of any ageable question among the
+   *  bounded read (N323), past or not, in milliseconds; null when there is none. A question R17 tried and could not move is still ageable, so it stays
+   *  due and is tried again at a later firing. Writes nothing; never throws. */
+  ageDue(now) {
+    try {
+      let best = null;
+      for (const x of this.#ageable().list) if (best === null || x.at < best) best = x.at;
+      return best;
+    } catch {
+      return null;
+    }
+  }
+  /** R27: the earliest ageing instant later than `now` (milliseconds or ISO; none given is the module's clock), in
+   *  milliseconds; null when there is none. One already due is never woken for. Writes nothing; never throws. */
+  ageWake(now) {
+    try {
+      const nowMs = this.#instantMs(now);
+      if (!Number.isFinite(nowMs)) return null;
+      let best = null;
+      for (const x of this.#ageable().list) if (x.at > nowMs && (best === null || x.at < best)) best = x.at;
+      return best;
+    } catch {
+      return null;
+    }
+  }
+  /** R17: the instance's ageing interval in days, a record-core setting (default 30). */
+  ageingDays() {
+    const v = Number(this.record.getSetting(AGEING_SETTING));
+    return Number.isInteger(v) && v > 0 ? v : AGEING_DEFAULT_DAYS;
+  }
+  /* ===================================================================== *
+   * WORKING AN OBJECTIVE (R18)
+   * ===================================================================== */
+  /** R18: a member sets an assistant to work a project's objective: a run through `ai-runs` with the project as its
+   *  context, the objective and its current gaps as its instructions, its looks named under authority kind
+   *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). */
+  async workObjective({ project, author, viewer = null, run = {} } = {}) {
+    if (machine(author))
+      return refusal12("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
+    const p = this.#project(project, viewer ?? author);
+    if (p.refused) return p.refused;
+    const g = this.gaps({ project, viewer: viewer ?? author });
+    const instructions = {
+      objective: p.doc.fm.objective ?? null,
+      condition: g.condition ?? null,
+      gaps: g.gaps || [],
+      authority: { kind: "objective", ref: project }
+    };
+    const opened = await this.#lazy(this.aiRunsRef).open({
+      ...isObj9(run) ? run : {},
+      contextType: "project",
+      contextId: project,
+      state: { instructions },
+      actor: this.#memberOf(author),
+      viewer: viewer ?? author
+    });
+    return { ...isObj9(opened) ? opened : {}, project, instructions };
+  }
+};
+function refuseNoSuchGoal(detail, extra) {
+  const row2 = INTENT_CHECKS.NO_SUCH_GOAL;
+  return {
+    ok: false,
+    reason: "NO_SUCH_GOAL",
+    code: "NO_SUCH_GOAL",
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoSuchAspiration(detail, extra) {
+  const row2 = INTENT_CHECKS.NO_SUCH_ASPIRATION;
+  return {
+    ok: false,
+    reason: "NO_SUCH_ASPIRATION",
+    code: "NO_SUCH_ASPIRATION",
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoSuchProgression(detail, extra) {
+  const row2 = INTENT_CHECKS.NO_SUCH_PROGRESSION;
+  return {
+    ok: false,
+    reason: "NO_SUCH_PROGRESSION",
+    code: "NO_SUCH_PROGRESSION",
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoReason(detail, extra) {
+  const row2 = INTENT_CHECKS.NO_REASON;
+  return {
+    ok: false,
+    reason: "NO_REASON",
+    code: "NO_REASON",
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refusePursuitUnstated(detail, extra) {
+  const row2 = INTENT_CHECKS.PURSUIT_UNSTATED;
+  return {
+    ok: false,
+    reason: "PURSUIT_UNSTATED",
+    code: "PURSUIT_UNSTATED",
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoLesson(detail, extra) {
+  const row2 = INTENT_CHECKS.NO_LESSON;
+  return {
+    ok: false,
+    reason: "NO_LESSON",
+    code: "NO_LESSON",
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseBadScope(detail, extra) {
+  const row2 = INTENT_CHECKS.BAD_SCOPE;
+  return {
+    ok: false,
+    reason: "BAD_SCOPE",
+    code: "BAD_SCOPE",
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refusePursuitEnded(detail, extra) {
+  const row2 = INTENT_CHECKS.PURSUIT_ENDED;
+  return {
+    ok: false,
+    reason: "PURSUIT_ENDED",
+    code: "PURSUIT_ENDED",
+    check: row2.check,
+    translation: row2.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function goalMachineRefusal(author, member = true) {
+  if (str4(author) && !isMachineIdentity(str4(author)) && member) return null;
+  const row2 = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_GOAL;
+  return {
+    ok: false,
+    reason: "MACHINE_CANNOT_DECLARE_GOAL",
+    code: "MACHINE_CANNOT_DECLARE_GOAL",
+    check: row2.check,
+    translation: row2.translation,
+    detail: "declaring, linking and closing a goal are a named member's acts. Nothing was written."
+  };
+}
+function aspirationMachineRefusal(author, member = true) {
+  if (str4(author) && !isMachineIdentity(str4(author)) && member) return null;
+  const row2 = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_ASPIRATION;
+  return {
+    ok: false,
+    reason: "MACHINE_CANNOT_DECLARE_ASPIRATION",
+    code: "MACHINE_CANNOT_DECLARE_ASPIRATION",
+    check: row2.check,
+    translation: row2.translation,
+    detail: "declaring, departing from, revising and retiring an aspiration are a named member's acts. Nothing was written."
+  };
+}
+function captureRequestsNamed(basis) {
+  if (!isObj9(basis)) return [];
+  const out = [];
+  for (const k of ["capture_request", "capture_requests", "requests"]) {
+    const v = basis[k];
+    for (const x of Array.isArray(v) ? v : v == null ? [] : [v]) if (typeof x === "string" && x) out.push(x);
+  }
+  return out;
+}
+var safeJson12 = (s) => {
+  try {
+    return s == null ? null : JSON.parse(s);
+  } catch {
+    return null;
+  }
+};
+function questionOf(p) {
+  const b = isObj9(p.basis) ? p.basis : {};
+  if (p.source === "progressions")
+    return `Why is the '${b.stage_key}' stage of '${b.progression_key}' missing where the flow requires it?`;
+  if (p.kind === GAP_KIND)
+    return b.stages_missing ? `What would fill the stages ${b.stages_missing.join(", ")} of '${b.progression}' for ${b.entity}?` : `What would strengthen the weakest link of '${b.progression}' for ${b.entity}?`;
+  return `What does the finding ${p.key} show?`;
+}
+function intentOps(i, url, body) {
+  const qp = (k) => url.searchParams.get(k);
+  const b = body || {};
+  return {
+    objectivecondition: () => i.setCondition({ ...b, viewer: qp("viewer") }),
+    objectiveprogress: () => i.progress({ project: qp("project"), viewer: qp("viewer") }),
+    objectivegaps: () => i.gaps({ project: qp("project"), viewer: qp("viewer") }),
+    goaldeclare: () => i.declareGoal({ ...b, viewer: qp("viewer") }),
+    goallink: () => i.linkObjective({ ...b, viewer: qp("viewer") }),
+    goalclose: () => i.closeGoal({ ...b, viewer: qp("viewer") }),
+    goal: () => i.readGoal({ goal: qp("id"), viewer: qp("viewer") }),
+    aspirationdeclare: () => i.declareAspiration({ ...b, viewer: qp("viewer") }),
+    aspirationdepart: () => i.departFrom({ ...b, viewer: qp("viewer") }),
+    aspirationdeadend: () => i.recordDeadEnd({ ...b, viewer: qp("viewer") }),
+    aspirationretire: () => i.retireAspiration({ ...b, viewer: qp("viewer") }),
+    aspirations: () => i.aspirationsFor({ project: qp("project"), member: qp("member"), viewer: qp("viewer") }),
+    aspirationcontacts: () => i.contacts({ viewer: qp("viewer") }),
+    pursuit: () => i.pursuitOf({ aspiration: qp("id"), viewer: qp("viewer") }),
+    intentproposals: () => i.proposals({ project: qp("project"), viewer: qp("viewer") }),
+    triage: () => i.triage({ ...b, viewer: qp("viewer") }),
+    workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
+  };
+}
+var instances16 = /* @__PURE__ */ new WeakMap();
+function intentOf(host, deps) {
+  let i = instances16.get(host);
+  if (!i) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host, { record, membership });
+    i = new Intent({
+      ...d,
+      storage,
+      record,
+      membership,
+      promotion,
+      entities: d.entities || entitiesOf(host, { record, membership }),
+      progressions: d.progressions || (() => progressionsOf(host, { record })),
+      inquiry: d.inquiry || (() => inquiryOf(host)),
+      aiRuns: d.aiRuns || (() => aiRunsOf(host)),
+      retrieval: d.retrieval || (() => retrievalOf(host)),
+      captureRequests: d.captureRequests || (() => captureRequestsOf(host))
+    });
+    instances16.set(host, i);
+    record.declarePurge("intent", INTENT_TABLES);
+    promotion.registerStep("intent", { check: (c) => i.check(c) });
+    record.registerAuditCheck("intent", (image) => i.auditCheck(image));
+  }
+  return i;
 }
 
 // src/strength/arithmetic.mjs
@@ -77921,7 +80523,7 @@ var safeJson13 = (s) => {
     return null;
   }
 };
-var fmSafe3 = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
+var fmSafe4 = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 var str7 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var shaOf = (text4) => createSha256().update(new TextEncoder().encode(String(text4))).hex();
 var REVIEW_DOORS = Object.freeze([
@@ -77994,7 +80596,7 @@ function attributionFrontmatterLines(rows) {
     ...rows.flatMap((r) => [
       `  - observation: ${r.observation}`,
       `    level: ${r.level ?? "null"}`,
-      `    shown: ${r.shown == null ? "null" : `"${fmSafe3(r.shown)}"`}`,
+      `    shown: ${r.shown == null ? "null" : `"${fmSafe4(r.shown)}"`}`,
       `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`
     ])
   ];
@@ -81531,7 +84133,7 @@ var STANDARD_KINDS = SOURCE_KINDS;
 var IN_FORCE_STATES = Object.freeze(["in_force", "not_in_force", "undetermined"]);
 var CITE_MAX = 200;
 var WHY_MAX = 240;
-var PAGE_MAX = 200;
+var PAGE_MAX2 = 200;
 var TEXTS_MAX = 50;
 var ACT_MAX = 200;
 var DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "period", "supersedes", "author", "viewer"]);
@@ -81539,7 +84141,7 @@ var PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act"
 var ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
 var str8 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj10 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var rand6 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand7 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var safeJson14 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
@@ -81756,7 +84358,7 @@ var Standards = class {
         r = this.promotion.promote({
           bundleId: id,
           base: null,
-          snapKey: `${at17.replace(/[-:]/g, "")}_${rand6(4)}`,
+          snapKey: `${at17.replace(/[-:]/g, "")}_${rand7(4)}`,
           author,
           files: [{ path: "bundle.md", text: text4 }],
           meta: { object_type: STANDARD, title: titleOf2(f9.cite), current_state: "recorded", created: at17, last_updated: at17 },
@@ -81866,7 +84468,7 @@ var Standards = class {
     const date = at17 == null || at17 === "" ? null : at17;
     if (date !== null && !isDate2(date)) return refuseDateInvalid(date);
     if (kind != null && kind !== "" && !STANDARD_KINDS.includes(kind)) return refuseKindUnknown(kind);
-    const n = Number.isInteger(Number(limit)) && limit !== null && limit !== "" ? Math.min(PAGE_MAX, Math.max(1, Number(limit))) : PAGE_MAX;
+    const n = Number.isInteger(Number(limit)) && limit !== null && limit !== "" ? Math.min(PAGE_MAX2, Math.max(1, Number(limit))) : PAGE_MAX2;
     const gate = viewerPredicate(viewer);
     const where = [`(${gate.sql})`], args = [...gate.args];
     if (kind) {
@@ -82488,7 +85090,7 @@ var safeJson15 = (s, dflt = null) => {
     return dflt;
   }
 };
-var rand7 = (n) => Math.random().toString(36).slice(2, 2 + n).padEnd(n, "0");
+var rand8 = (n) => Math.random().toString(36).slice(2, 2 + n).padEnd(n, "0");
 function significanceKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
   if (depth > 12 || found.size > 20) return found;
   if (Array.isArray(v)) {
@@ -82964,7 +85566,7 @@ var Conformance = class _Conformance {
         p = this.promotion.promote({
           bundleId: id,
           base: null,
-          snapKey: `${at17.replace(/[-:]/g, "")}_${rand7(4)}`,
+          snapKey: `${at17.replace(/[-:]/g, "")}_${rand8(4)}`,
           author,
           files: [{ path: "bundle.md", text: determinationDoc({
             id,
@@ -83117,7 +85719,7 @@ var Conformance = class _Conformance {
     return this.promotion.promote({
       bundleId: id,
       base: null,
-      snapKey: `${at17.replace(/[-:]/g, "")}_${rand7(4)}`,
+      snapKey: `${at17.replace(/[-:]/g, "")}_${rand8(4)}`,
       author,
       files: [{ path: "bundle.md", text: md }],
       meta: { object_type: "inquiry", current_state: "open", created: at17, last_updated: at17 },
@@ -86659,7 +89261,7 @@ var PERSON_KINDS = /* @__PURE__ */ new Set([
 ]);
 var PERSON_KEYS = ["name", "person", "individual", "personal_name", "full_name"];
 var CONCLUDED = /* @__PURE__ */ new Set(["concluded", "published"]);
-var INTERNAL = `${MACHINE_CLASS_PREFIX}admin`;
+var INTERNAL2 = `${MACHINE_CLASS_PREFIX}admin`;
 var str10 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj12 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var q4 = (v) => JSON.stringify(v ?? null);
@@ -86674,7 +89276,7 @@ var parse = (s) => {
 };
 var machine2 = (who2) => !str10(who2) || isMachineIdentity(str10(who2));
 var second2 = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
-var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var HEX644 = /^[0-9a-f]{64}$/;
 var DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
 function refuse4(code, detail, extra = {}) {
@@ -86853,7 +89455,7 @@ var Consequences = class {
     if (!str10(id) || !c || typeof c.determinationRead !== "function") return null;
     let d;
     try {
-      d = c.determinationRead({ id, viewer: viewer ?? INTERNAL });
+      d = c.determinationRead({ id, viewer: viewer ?? INTERNAL2 });
     } catch {
       return null;
     }
@@ -86895,7 +89497,7 @@ var Consequences = class {
         inquiry: null,
         why: "no inquiry is named whose finding is that the harm follows from the act; sequence alone does not establish it (DEC-14), so the causation is unproven until one concludes"
       };
-    const who2 = viewer ?? INTERNAL;
+    const who2 = viewer ?? INTERNAL2;
     const info = this.record.bundleInfo(inquiryId);
     if (!info || !this.membership.inSight(inquiryId, who2) || normalizeType(info.type) !== "inquiry")
       return {
@@ -87049,8 +89651,8 @@ var Consequences = class {
       const done = this.promotion.promote({
         bundleId: id,
         base: null,
-        snapKey: `${at17.replace(/[-:]/g, "")}_${rand8(4)}`,
-        author: str10(author) ?? INTERNAL,
+        snapKey: `${at17.replace(/[-:]/g, "")}_${rand9(4)}`,
+        author: str10(author) ?? INTERNAL2,
         files: [{ path: "bundle.md", text: partDoc(id, part) }],
         meta: { object_type: "consequence", title: titleOf3(part), current_state: "recorded", created: at17, last_updated: at17 }
       });
@@ -87151,7 +89753,7 @@ var Consequences = class {
     for (const [i, raw] of basis.operands.entries()) {
       const o = { content: raw.content.trim(), figure: typeof raw.figure === "string" ? raw.figure : raw.figure == null ? null : String(raw.figure) };
       const row2 = this.content.contentRow(o.content);
-      if (!row2 || !this.membership.inSight(row2.bundle_id, who2 ?? INTERNAL)) {
+      if (!row2 || !this.membership.inSight(row2.bundle_id, who2 ?? INTERNAL2)) {
         lacking ||= { code: "not_in_record", why: `operand ${i} names content this record does not hold, or that you may not see` };
         operands.push(o);
         continue;
@@ -87230,7 +89832,7 @@ var Consequences = class {
    * THE ANSWER FOR ONE PART (R2–R5, R7, R8, R12)
    * ===================================================================== */
   #answer(r, viewer) {
-    const who2 = viewer ?? INTERNAL;
+    const who2 = viewer ?? INTERNAL2;
     const out = {
       id: r.bundle_id,
       determination: r.determination,
@@ -97589,7 +100191,7 @@ function withCaseMemberChecks(image, gate, parse3) {
 }
 
 // src/ratification/index.mjs
-function fmSafe4(s) {
+function fmSafe5(s) {
   return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 }
 function caseConclusionRowLines(m, c) {
@@ -97599,13 +100201,13 @@ function caseConclusionRowLines(m, c) {
     `    project: ${c && c.project ? c.project : "null"}`,
     `    version: ${c && c.version ? c.version : "null"}`,
     `    claim_state: ${c && c.claim ? c.claim.state : "null"}`,
-    `    claim: "${fmSafe4(c && c.claim && c.claim.text ? c.claim.text : "")}"`,
-    `    claim_detail: "${fmSafe4(c && c.claim && c.claim.detail ? c.claim.detail : "")}"`,
-    `    falsifier: "${fmSafe4(c && c.falsifier ? c.falsifier : "")}"`,
+    `    claim: "${fmSafe5(c && c.claim && c.claim.text ? c.claim.text : "")}"`,
+    `    claim_detail: "${fmSafe5(c && c.claim && c.claim.detail ? c.claim.detail : "")}"`,
+    `    falsifier: "${fmSafe5(c && c.falsifier ? c.falsifier : "")}"`,
     `    falsifier_override_by: ${c && c.falsifier_override ? c.falsifier_override.by : "null"}`,
-    `    falsifier_override_at: "${fmSafe4(c && c.falsifier_override ? c.falsifier_override.at : "")}"`,
+    `    falsifier_override_at: "${fmSafe5(c && c.falsifier_override ? c.falsifier_override.at : "")}"`,
     `    concluded_by: ${c && c.by ? c.by : "null"}`,
-    `    concluded_at: "${fmSafe4(c && c.at ? c.at : "")}"`
+    `    concluded_at: "${fmSafe5(c && c.at ? c.at : "")}"`
   ];
 }
 var Ratification = class _Ratification {
@@ -98666,7 +101268,7 @@ function setScalar4(text4, key, value) {
   }
   return text4;
 }
-function appendSessionLog3(text4, entry) {
+function appendSessionLog4(text4, entry) {
   const at17 = text4.indexOf("## Session Log");
   if (at17 < 0) return text4 + "\n## Session Log\n\n" + entry;
   const nxt = text4.indexOf("\n## ", at17 + 1);
@@ -98700,7 +101302,7 @@ var EXTENT_PARAMS = Object.freeze({
   content_id: "text"
 });
 var rowOf6 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
-var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand10 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var Citation = class {
   constructor({ record, membership, promotion, content, retrieval, inquiry = null, now } = {}) {
     this.record = record;
@@ -98768,7 +101370,7 @@ var Citation = class {
     return this.promotion.promote({
       bundleId: project,
       base: head.bundleSha,
-      snapKey: `${when.replace(/[-:]/g, "")}_${rand9(4)}`,
+      snapKey: `${when.replace(/[-:]/g, "")}_${rand10(4)}`,
       author: author || "member",
       files: [{ path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
       meta: {
@@ -98897,7 +101499,7 @@ var Citation = class {
     const ids = [...sel.members].sort();
     const shown2 = ids.slice(0, CITE_LOG_SAMPLE);
     const listed = shown2.join(", ") + (ids.length > shown2.length ? `, and ${ids.length - shown2.length} more` : "");
-    text4 = appendSessionLog3(
+    text4 = appendSessionLog4(
       text4,
       `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}
@@ -99307,7 +101909,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
     const ungraded = filled.filter((l) => !l.grade).length;
     const graded = filled.length - ungraded;
     const setMovedNote = answerChanged(sel.drift, sel.moved) ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
-    text4 = appendSessionLog3(text4, ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
+    text4 = appendSessionLog4(text4, ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
 Trigger: selection ${handle}${setMovedNote}
 Changes: basis legs added for ${listed}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
 ` : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"} | ${author || "member"}
@@ -99377,7 +101979,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
   }
 };
 var instances29 = /* @__PURE__ */ new WeakMap();
-function inquiryServices(k) {
+function inquiryServices2(k) {
   return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
 }
 function citationOf(host, deps) {
@@ -99389,7 +101991,7 @@ function citationOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
-    const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
+    const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
     instances29.set(host, c);
   }
@@ -107945,11 +110547,11 @@ function searchedSection({ at: at17 = null, subjectSource = null, levels = null 
 }
 
 // src/case-authoring/document.mjs
-function fmSafe5(s) {
+function fmSafe6(s) {
   return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 }
 function statementSha(s) {
-  return createSha256().update(new TextEncoder().encode(fmSafe5(s))).hex();
+  return createSha256().update(new TextEncoder().encode(fmSafe6(s))).hex();
 }
 var CASE_CITATION_WORDS = Object.freeze({
   pinned: "cited at capture",
@@ -107967,7 +110569,7 @@ function ackFrontmatterLines(acks) {
     ...acks.rows.flatMap((a) => [
       `  - kind: ${a.kind}`,
       `    by: ${a.by}`,
-      `    recipient: ${a.recipient == null ? "null" : `"${fmSafe5(a.recipient)}"`}`,
+      `    recipient: ${a.recipient == null ? "null" : `"${fmSafe6(a.recipient)}"`}`,
       `    at: "${a.at}"`,
       /* REC-217: a reading this case holds BY THE PUBLISHER'S LINK carries the draft it was given on. */
       ...a.draft ? [`    draft: ${a.draft}`] : []
@@ -108000,7 +110602,7 @@ function ackBodyHeadLines(acks, project) {
   return acks.rows.length ? [
     `${ACK_PROSE_HEAD} Acknowledged, as a second reader of what this case leaves out, by:`,
     "",
-    ...acks.rows.map((a) => (a.kind === "recipient" ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${fmSafe5(a.recipient)}', on ${a.at}` : `- ${a.by}, a participant of ${project}, on ${a.at}`) + (a.draft ? ` \u2014 given on draft ${a.draft}` : "")),
+    ...acks.rows.map((a) => (a.kind === "recipient" ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${fmSafe6(a.recipient)}', on ${a.at}` : `- ${a.by}, a participant of ${project}, on ${a.at}`) + (a.draft ? ` \u2014 given on draft ${a.draft}` : "")),
     ...acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this document lists)"] : []
   ] : acks.unbound || acks.unboundWriterUndetermined ? [`${ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`] : [`${ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
 }
@@ -108061,8 +110663,8 @@ function caseDocumentText({
     `case_id: ${caseId}`,
     `case_edition: ${edition}`,
     `case_project: ${project}`,
-    `case_scope: "${fmSafe5(scope)}"`,
-    `bias_acknowledgement: "${fmSafe5(bias)}"`,
+    `case_scope: "${fmSafe6(scope)}"`,
+    `bias_acknowledgement: "${fmSafe6(bias)}"`,
     /* D-84 — THE BIAS MANIFEST, BESIDE THE ACKNOWLEDGEMENT AND NOT INSIDE IT (DEC-46). `in_force: false` carries "no
        manifest was in force" and an empty pair list: different facts from a lens with nothing in it. */
     "bias_manifest:",
@@ -108071,10 +110673,10 @@ function caseDocumentText({
     `  scope_id: ${lens.scope_id}`,
     `  statements_sha: ${lens.statements_sha ?? "null"}`,
     `  lock_violations: ${lens.lock_violations}`,
-    `  stated: "${fmSafe5(lens.stated)}"`,
+    `  stated: "${fmSafe6(lens.stated)}"`,
     /* REC-219 / §3 rule 18: the count beside the list below, and its sentence (C-41.14). */
     `  pins_proposed: ${pending.length}`,
-    `  pins_proposed_stated: "${fmSafe5(pendingStated)}"`,
+    `  pins_proposed_stated: "${fmSafe6(pendingStated)}"`,
     "bias_manifest_bundles:",
     ...lens.bundles.flatMap((x) => [
       `  - bundle_id: ${x.bundle_id}`,
@@ -108112,9 +110714,9 @@ function caseDocumentText({
     "case_conclusions:",
     ...roster.flatMap((m) => caseConclusionRowLines(m, concOf.get(m) || null)),
     "completeness:",
-    `  statement: "${fmSafe5(statement)}"`,
+    `  statement: "${fmSafe6(statement)}"`,
     `  subject_position: ${position}`,
-    `  subject_justification: "${fmSafe5(justification)}"`,
+    `  subject_justification: "${fmSafe6(justification)}"`,
     `  author: ${author}`,
     /* R21 (REC-212 / §3 rule 13) — TWO ACTS, TWO NAMES, IN THE SIGNED BLOCK: `author` prepared and published the case;
        this is who wrote the sentence `statement` prints. It sits ABOVE `statement_sha` because the acknowledgement
@@ -108131,12 +110733,12 @@ function caseDocumentText({
     ...ackFrontmatterLines(acks),
     "completeness_excluded:",
     ...(excluded || []).flatMap((r) => [
-      ...r.target ? [`  - target: ${r.target}`, `    description: "${fmSafe5(r.description || "")}"`] : [`  - description: "${fmSafe5(r.description || "")}"`],
-      `    reason: "${fmSafe5(r.reason || "")}"`
+      ...r.target ? [`  - target: ${r.target}`, `    description: "${fmSafe6(r.description || "")}"`] : [`  - description: "${fmSafe6(r.description || "")}"`],
+      `    reason: "${fmSafe6(r.reason || "")}"`
     ]),
     /* R17 (REC-96 / D-196) — THE `searched` SECTION, IN THE SIGNED BYTES, as two top-level keys (the grammar). */
     "searched:",
-    `  computed_at: "${fmSafe5(searched.summary.computed_at)}"`,
+    `  computed_at: "${fmSafe6(searched.summary.computed_at)}"`,
     `  subject_source: ${searched.summary.subject_source}`,
     `  subjects: ${searched.summary.subjects}`,
     `  looked: ${searched.summary.looked}`,
@@ -108153,7 +110755,7 @@ function caseDocumentText({
       `    undetermined: ${l.undetermined}`,
       `    unidentified: ${l.unidentified}`,
       `    evidence_one_sided: ${l.evidence_one_sided}`,
-      `    detail: "${fmSafe5(l.detail)}"`
+      `    detail: "${fmSafe6(l.detail)}"`
     ]),
     /* D-442 / rule 12 (b) — THE FROZEN STRENGTH PAIR, PER MEMBER AND PER AXIS, STATED ONCE HERE (R24: never composed;
        there is no case-level row). */
@@ -108170,7 +110772,7 @@ function caseDocumentText({
           `    weakest: ${a.weakest ? a.weakest.target_id : "null"}`,
           `    load_bearing: ${a.load_bearing}`,
           `    population: ${a.population}`,
-          `    detail: "${fmSafe5(a.detail)}"`
+          `    detail: "${fmSafe6(a.detail)}"`
         ];
       });
     }),
@@ -108181,7 +110783,7 @@ function caseDocumentText({
       return !z ? [] : z.grounds.flatMap(([axis, g]) => [
         `  - target: ${m}`,
         `    axis: ${axis}`,
-        `    ground: ${g.ground === null ? "null" : `"${fmSafe5(String(g.ground))}"`}`,
+        `    ground: ${g.ground === null ? "null" : `"${fmSafe6(String(g.ground))}"`}`,
         `    state: ${g.state}`,
         `    grade: ${g.grade ?? "null"}`,
         `    weakest: ${g.weakest ? g.weakest.target_id : "null"}`,
@@ -108197,7 +110799,7 @@ function caseDocumentText({
     `  project: ${project}`,
     `  capture: ${bar.capture ?? "null"}`,
     `  connection: ${bar.connection ?? "null"}`,
-    `  detail: "${fmSafe5(bar.detail)}"`,
+    `  detail: "${fmSafe6(bar.detail)}"`,
     "---",
     ""
   ];
@@ -109315,7 +111917,7 @@ var CaseAuthoring = class {
       kind = "participant";
       by = who2;
     }
-    const text4 = fmSafe5(statement);
+    const text4 = fmSafe6(statement);
     if (!text4)
       return ack(
         "STATEMENT_ACK_NO_STATEMENT",
@@ -109586,7 +112188,7 @@ case_project: ${project}
    *  A draft at this identity whose arguments will not parse is UNDETERMINED, asked before (2) so it can never be
    *  absorbed by it. The document prints where the name came from beside the name. */
   #statementWriter(project, caseId, edition, statement, publisher, namedDraft = null) {
-    const want = fmSafe5(statement);
+    const want = fmSafe6(statement);
     const notFromAuthor = `It is NOT read off ${publisher}, who prepared and published this case: preparing a case is not writing its statement (BIO_Publication \xA73 rule 13).`;
     if (!want) return {
       by: null,
@@ -109600,7 +112202,7 @@ case_project: ${project}
       } catch {
         p = null;
       }
-      if (p && fmSafe5(p.statement) === want) {
+      if (p && fmSafe6(p.statement) === want) {
         const stamp2 = typeof namedDraft.statement_by === "string" && namedDraft.statement_by.trim() ? namedDraft.statement_by.trim() : null;
         if (!stamp2)
           return {
@@ -109635,7 +112237,7 @@ case_project: ${project}
         unreadable.push(d.draft_id);
         return false;
       }
-      return fmSafe5(p && p.statement) === want;
+      return fmSafe6(p && p.statement) === want;
     });
     if (unreadable.length)
       return {

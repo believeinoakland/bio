@@ -26186,8 +26186,41 @@ var BIAS_ROW_BY_CHECK = new Map(Object.entries(BIAS_CHECKS2).map(([code, row]) =
 // ../bio-plane/src/contradiction.mjs
 var CONTRADICTION_LABELS = Object.freeze(["world", "record", "precision", "unrelated", "undetermined"]);
 
+// ../bio-plane/src/contradiction/schema.mjs
+var CONTRADICTION_COLUMNS = Object.freeze([
+  ["contradiction_candidates", "a_side", "TEXT"],
+  ["contradiction_candidates", "b_side", "TEXT"],
+  ["contradiction_candidates", "seq", "INTEGER"]
+]);
+
+// ../bio-plane/src/contradiction/derive.mjs
+var WEIGHTS = Object.freeze(["lead", "duty", "plurality", "not_shown"]);
+var STATES2 = Object.freeze(["open", "dismissed", "explained_not_shown", "taken_up", "resolved"]);
+
 // ../bio-plane/src/contradiction/index.mjs
-var CONTRADICTION_TABLES = Object.freeze(["contradiction_candidates"]);
+var CONTRADICTION_TABLES = Object.freeze([
+  "contradiction_candidates",
+  "contradiction_acts",
+  "contradiction_recommendations",
+  "contradiction_optins",
+  "contradiction_responses"
+]);
+var TEXT_CAPS = Object.freeze({
+  explanation: 1e3,
+  reason: 500,
+  words: 500,
+  qualifier: 200,
+  question: 500,
+  text: 2e3
+});
+var DISMISSAL_REASONS = Object.freeze([
+  "same_fact_different_precision",
+  "not_same_matter",
+  "real_conflict_not_pursued"
+]);
+var FALSE_CONFLICT_REASONS = Object.freeze(["same_fact_different_precision", "not_same_matter"]);
+var CLARIFY_CHOICES = Object.freeze(["differs", "one_wrong", "no_difference"]);
+var ACCEPTANCE_REVIEW = Object.freeze({ rate: 0.95, min_offered: 30, status: "PROVISIONAL" });
 var CONTRADICTION_KEYS = Object.freeze({
   K1: Object.freeze({
     key: "K1",
@@ -26216,9 +26249,24 @@ var CONTRADICTION_KEYS = Object.freeze({
     feeds: "world",
     join: "two cited passages whose documents RESOLVE (established) to the same entity, from different doctypes, or with different dates, AS THEIR READERS STATE THEM",
     why: "a rule against the act it governs, or one body's statement at one date against its statement at another"
+  }),
+  /* N345, DEC-84 item 3: added, not tuned (R18). Two projects' conclusions are plurality, not a defect, until a member
+     finds no named difference between them (R24, R34). */
+  K5: Object.freeze({
+    key: "K5",
+    name: "one question, two projects' conclusions",
+    feeds: "record",
+    join: "two projects whose stances on the SAME inquiry are both concluded, adopting claims whose text differs",
+    why: "two projects answered one question differently"
   })
 });
-var LAST_LEVEL = Object.freeze({ K1: "shared_side", K2: "shared_subject", K3: "shared_referent", K4: "discriminator" });
+var LAST_LEVEL = Object.freeze({
+  K1: "shared_side",
+  K2: "shared_subject",
+  K3: "shared_referent",
+  K4: "discriminator",
+  K5: "shared_question"
+});
 var CONTRADICTION_ABSENCE = Object.freeze({
   viewer: "this read was made with NO VIEWER the record recognises, so it compared nothing and every key below is empty for want of a reader rather than for want of material. This is an outage, not a statement about the record: ask again with a member's session",
   inquiry: "no question is in scope at all. Nothing has been asked here yet, so there is nothing for any key to pair \u2014 the record is EMPTY at the question level and says nothing whatever about whether the world contains contradictions",
@@ -26235,6 +26283,10 @@ var CONTRADICTION_ABSENCE = Object.freeze({
   shared_side: "questions hold both a supporting and a cutting leg, and each names a passage, but no ONE question holds both at once. The two sides of this key are the two sides of a SINGLE question, and none has them",
   shared_subject: "held claims and registered subjects both exist, and no two accepted claims share a subject. Every subject is spoken to once, so there is nothing about one subject for the record to disagree with itself about",
   shared_referent: "held claims rest on passages, and no two claims of DIFFERENT questions rest on the same one. Each passage is read by at most one held claim, so no text is read two ways here",
+  drawing_projects: "questions exist and no project you can see draws on any of them. K5 compares two projects' answers to one question, so there is nothing to compare until projects rest on the questions",
+  concluded_stances: "projects draw on questions and none of them has concluded one. A project that has not concluded holds no answer, so there is no answer to set beside another",
+  differing_claim: "projects have concluded, and no two concluded answers differ in their words. That is agreement in the claims adopted, as far as their text goes, not a finding that they agree",
+  shared_question: "projects have concluded with differing answers, but never on the SAME question. Each question has at most one concluded answer, so no question is answered two ways here",
   discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by kind or by date. Either the readers state the same kind and the same date on both, or they state neither \u2014 and where a value is missing the pair was left unformed rather than guessed. The counts beside this say which"
 });
 
