@@ -57,3 +57,7 @@ Prepared, waiting on the two merges (B1). The pre-read on tranche/T17 + my branc
 - `ownership promotion tranche/T17`: 1 file; legacy 0 lines; 0 failures.
 
 Size (session_011ju7BEaAQKe7REaDVMPKum): test runs 17, module lines 29
+
+## J2 · COMPLETE
+
+Complete on job/T17/promotion: 1.47.0 stamped. ROW_CENSUS is {879, b8bbd059…}: 17 arrived (with C-96.17), 15 departed, 11 changed, and the composition moved to tasks. Promotion tests: 71/0. test/m/ whole: 0 fail. All four checks: 0 failures. legacy-tests owns the re-pins: the row-census 1.47.0 fixture and d470's 1.47.0 row (340, c56ccc26…). The bio-plane bundle is stale. Details are in my record's Completion.
