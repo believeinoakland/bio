@@ -2882,14 +2882,16 @@ export class Membership {
    * the interface's to keep; the plane cannot test it). From a signed-in session the member registers its public
    * half here, and it attests exactly as an administrator-registered key does (R91: `SIGNER_ATTESTS` never reads
    * `origin`). Registration is no longer a custodial act, so what keeps it accountable is that every administrator
-   * is told (`notified`, R86's list at this instant; delivering each notice is the interface's, layer 11) and any
-   * of them can revoke the key (R26).
+   * is told (`notified`, R86's list at this instant, and the key's row, which the feed's notice reads: N375, K535)
+   * and any of them can revoke the key (R26).
    *
    * THE ORDER, and each step is the requirement's: who is asking (a machine credential, the operator's bearer or no
    * stamp at all has no member to register for); the key's shape (R25's answer, RELAYED from R25's own region so
    * C-96.8 keeps its one site); the member's standing (R25's bar, the gate's own question); and whether ANOTHER member
    * holds the key. A held key is never rebound, and the refusal names no one: whose key it is, is not the caller's
-   * to learn. A key `by` already holds answers `existed: true` and is left active and self-registered. */
+   * to learn. A key `by` already holds and that is active answers `existed: true` and is not rewritten: its origin
+   * and who registered it stay as first recorded. One `by` holds that was revoked is refused and stays revoked
+   * (K535): only an administrator re-activates a key (R26), so an administrator's revocation sticks. */
   signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
     if (by === null || by === undefined || by === "" || isMachineIdentity(by))
       return { ok: false, reason: "MACHINE_CANNOT_REGISTER_KEY", by: by || null,
@@ -2899,7 +2901,7 @@ export class Membership {
     if (!Membership.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });   /* R25's BAD_KEY, from its one site */
     const bar = this.#signerMemberBar(by);
     if (bar) return bar;
-    const held = this.#one(`SELECT member_id FROM signers WHERE key_b64=?`, keyB64);
+    const held = this.#one(`SELECT member_id, status, origin, registered_by FROM signers WHERE key_b64=?`, keyB64);
     /* DEC-49 REGION is-signer-key-held */
     if (held && held.member_id !== by) {
       const row = MEMBERSHIP_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
@@ -2909,18 +2911,27 @@ export class Membership {
                      + "rebound by its own member's act. Nothing was written." };
     }
     /* END DEC-49 REGION is-signer-key-held */
-    const at = new Date().toISOString();
-    if (held)
-      this.sql.exec(`UPDATE signers SET status='active', status_by=?, origin='self', registered_by=?,
-                       comment=COALESCE(?, comment) WHERE key_b64=?`, by, by, comment ?? null, keyB64);
-    else
+    /* DEC-49 REGION is-signer-key-revoked */
+    if (held && held.status !== "active") {
+      const row = MEMBERSHIP_CHECKS.SIGNER_KEY_REVOKED;
+      return { ok: false, reason: "SIGNER_KEY_REVOKED", code: "SIGNER_KEY_REVOKED", check: row.check,
+               translation: row.translation,
+               detail: "this key of yours was revoked, and a revoked key is re-activated only by an administrator "
+                     + "(op=signerset), so that a revocation stands. Nothing was written." };
+    }
+    /* END DEC-49 REGION is-signer-key-revoked */
+    if (!held)
       this.sql.exec(
         `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-         VALUES (?,?,?,'active',?,?,'self',?)`, keyB64, by, comment ?? null, at, by, by);
-    return { ok: true, keyB64, memberId: by, status: "active", origin: "self", registered_by: by, existed: !!held,
+         VALUES (?,?,?,'active',?,?,'self',?)`, keyB64, by, comment ?? null, new Date().toISOString(), by, by);
+    return { ok: true, keyB64, memberId: by, status: "active",
+             origin: held ? (held.origin === "self" ? "self" : "admin") : "self",
+             registered_by: held ? Membership.#statusBy(held.registered_by) : by, existed: !!held,
              notified: this.activeAdmins(),
-             detail: "registered to you, and it attests as any registered key does. Every administrator is told of "
-                   + "the registration, and any of them can revoke the key." };
+             detail: held ? "this key is already registered to you and active; nothing was written. Every administrator "
+                          + "is told of the registration, and any of them can revoke the key."
+                          : "registered to you, and it attests as any registered key does. Every administrator is told "
+                          + "of the registration, and any of them can revoke the key." };
   }
 
   /* R90 (N364): a member revokes their own key, and this is never refused for a key they hold, whatever its state

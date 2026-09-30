@@ -29,7 +29,9 @@
  * person's position in a project. NOT_PROPOSED (R6) takes the next free number of C-96.
  *
  * N364 (DEC-80 item 4, K509 (2)): SIGNER_KEY_HELD_BY_ANOTHER is R89's, a member registering a key another member holds,
- * minted at its one site in `signerRegisterOwn`; its row is C-96.15, as the requirement names it, worded there. */
+ * minted at its one site in `signerRegisterOwn`; its row is C-96.15, as the requirement names it, worded there.
+ * SIGNER_KEY_REVOKED is R89's too (K535): a member registering again a key of theirs that was revoked, which only an
+ * administrator re-activates (R26); its row is C-96.16, beside it. */
 
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
@@ -82,6 +84,11 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     check: 'C-96.15', where: at("signerRegisterOwn", "is-signer-key-held"),
     translation: 'This key is registered to another member, so it cannot be yours. Make a new key in this browser. '
       + 'Nothing was changed.',
+  }),
+  SIGNER_KEY_REVOKED: Object.freeze({
+    check: 'C-96.16', where: at("signerRegisterOwn", "is-signer-key-revoked"),
+    translation: 'This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an '
+      + 'administrator. Nothing was changed.',
   }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: 'C-96.13', where: at("expertiseDeclare", "is-expertise-labelled"),

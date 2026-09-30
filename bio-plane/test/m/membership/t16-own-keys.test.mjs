@@ -1,5 +1,5 @@
 /* T16 (N364; DEC-80 item 4, Bob's ruling K509 (2)): R89 `signerRegisterOwn`, R90 `signerRevokeOwn`, R91 (`attests`
-   ignores `origin`), R27's `origin` and `registered_by`, and row C-96.15. N357's R43 and R88 are asserted with their
+   ignores `origin`), R27's `origin` and `registered_by`, and rows C-96.15 and C-96.16 (K535). N357's R43 and R88 are asserted with their
    ids in `sight.test.mjs` and `hidden-bundles.test.mjs`. At the interface only. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -13,6 +13,7 @@ const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WH
 const keyRow = (w, k) => w.row(`SELECT member_id, status, status_by, origin, registered_by, comment FROM signers WHERE key_b64=?`, k);
 const listed = (w, k) => w.m.signerList().signers.find((s) => s.key_b64 === k);
 const ROW = MEMBERSHIP_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
+const REVOKED = MEMBERSHIP_CHECKS.SIGNER_KEY_REVOKED;
 
 /* ann and bob active; cal invited, never enrolled; dee revoked; second an administrator; the founder claimed. */
 async function keyWorld() {
@@ -23,11 +24,15 @@ async function keyWorld() {
 }
 const reg = (w, by, keyB64, comment = null) => w.m.signerRegisterOwn({ keyB64, comment, by });
 
-test("R89 C-96.15: the row is this module's, worded as the requirement words it, its where the one site", () => {
+test("R89 C-96.15 and C-96.16: the rows are this module's, worded as the requirement words them, each where its one site", () => {
   assert.deepEqual({ ...ROW }, { check: "C-96.15", where: "src/membership/index.mjs signerRegisterOwn > is-signer-key-held",
     translation: "This key is registered to another member, so it cannot be yours. Make a new key in this browser. "
       + "Nothing was changed." });
   assert.ok(Object.isFrozen(ROW));
+  assert.deepEqual({ ...REVOKED }, { check: "C-96.16", where: "src/membership/index.mjs signerRegisterOwn > is-signer-key-revoked",
+    translation: "This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an "
+      + "administrator. Nothing was changed." });
+  assert.ok(Object.isFrozen(REVOKED));
 });
 
 test("R89 refusals in order: a machine credential, the operator's token or no stamp; BAD_KEY as R25; the member's standing; a key another member holds; each writes nothing", async () => {
@@ -112,24 +117,45 @@ test("R89 a registration: active, origin self, registered by the member, every a
   assert.deepEqual([reg(w, "third", "AAAAthird").origin, listed(w, "AAAAthird").registered_by], ["self", "third"]);
 });
 
-test("R89 a key the member already holds answers existed: true, one row, left active and self-registered", async () => {
+test("R89 a key the member already holds: active, existed: true and nothing rewritten; revoked, SIGNER_KEY_REVOKED (C-96.16) and it stays revoked (K535)", async () => {
   const w = await keyWorld();
   reg(w, "bob", "AAAAbobkey", "laptop");
-  const again = reg(w, "bob", "AAAAbobkey");
-  assert.deepEqual([again.ok, again.existed, again.status, again.origin, again.notified], [true, true, "active", "self", ["admin", "second"]]);
-  assert.equal(w.row(`SELECT COUNT(*) AS n FROM signers WHERE key_b64='AAAAbobkey'`).n, 1);
-  assert.equal(keyRow(w, "AAAAbobkey").comment, "laptop", "no comment given keeps the one recorded");
-  /* revoked by an administrator (R26), then registered again by its member: active again, and told to every administrator */
-  w.m.signerSet({ keyB64: "AAAAbobkey", status: "revoked", by: "second" });
-  const back = reg(w, "bob", "AAAAbobkey", "phone");
-  assert.deepEqual([back.ok, back.existed], [true, true]);
-  assert.deepEqual(keyRow(w, "AAAAbobkey"), { member_id: "bob", status: "active", status_by: "bob", origin: "self",
-    registered_by: "bob", comment: "phone" });
-  /* one an administrator registered for them becomes theirs */
+  const before = snapshot(w);
+  const again = reg(w, "bob", "AAAAbobkey", "a new comment");
+  assert.deepEqual({ ...again, detail: null }, { ok: true, keyB64: "AAAAbobkey", memberId: "bob", status: "active", origin: "self",
+    registered_by: "bob", existed: true, notified: ["admin", "second"], detail: null });
+  assert.equal(snapshot(w), before, "nothing written: one row, its comment and stamps as they were");
+  /* one an administrator registered for them stays an administrator's registration (R27) */
   w.m.signerAdd({ keyB64: "AAAAgiven", memberId: "bob", by: "second" });
+  w.m.signerAdd({ keyB64: "AAAAunstamped", memberId: "bob" });
+  const given = snapshot(w);
+  const g = reg(w, "bob", "AAAAgiven");
+  assert.deepEqual([g.ok, g.existed, g.origin, g.registered_by, g.notified], [true, true, "admin", "second", ["admin", "second"]]);
+  assert.deepEqual([reg(w, "bob", "AAAAunstamped").origin, reg(w, "bob", "AAAAunstamped").registered_by], ["admin", "not recorded"]);
+  assert.equal(snapshot(w), given);
   assert.deepEqual([listed(w, "AAAAgiven").origin, listed(w, "AAAAgiven").registered_by], ["admin", "second"]);
-  assert.equal(reg(w, "bob", "AAAAgiven").existed, true);
-  assert.deepEqual([listed(w, "AAAAgiven").origin, listed(w, "AAAAgiven").registered_by], ["self", "bob"]);
+  /* revoked, by an administrator (R26), by its member (R90) or by the member's revocation (R20): refused, and it stays revoked */
+  w.m.signerSet({ keyB64: "AAAAbobkey", status: "revoked", by: "second" });
+  w.m.signerRevokeOwn({ keyB64: "AAAAgiven", by: "bob" });
+  reg(w, "ann", "AAAAannkey");
+  w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
+  w.m.memberSet({ memberId: "ann", status: "active", by: "admin" });
+  const revoked = snapshot(w);
+  for (const [by, key] of [["bob", "AAAAbobkey"], ["bob", "AAAAgiven"], ["ann", "AAAAannkey"]]) {
+    const r = reg(w, by, key, "again");
+    assert.deepEqual(Object.keys(r).sort(), ["check", "code", "detail", "ok", "reason", "translation"], key);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
+      [false, "SIGNER_KEY_REVOKED", "SIGNER_KEY_REVOKED", "C-96.16", REVOKED.translation], key);
+    assert.match(r.detail, /Nothing was written\.$/);
+    assert.equal(listed(w, key).status, "revoked", key);
+    assert.equal(listed(w, key).attests, false, key);
+  }
+  assert.equal(snapshot(w), revoked, "no refusal writes");
+  /* C-96.15 is asked first: a revoked key another member holds is theirs, not "revoked" */
+  assert.equal(reg(w, "bob", "AAAAannkey").reason, "SIGNER_KEY_HELD_BY_ANOTHER");
+  /* only an administrator re-activates it (R26); then it is the member's active key again */
+  assert.equal(w.m.signerSet({ keyB64: "AAAAbobkey", status: "active", by: "second" }).ok, true);
+  assert.deepEqual([reg(w, "bob", "AAAAbobkey").existed, listed(w, "AAAAbobkey").attests], [true, true]);
 });
 
 test("R90 signerRevokeOwn: never refused for a key the member holds, in any state; another's key and no key are one NO_SUCH_KEY", async () => {
