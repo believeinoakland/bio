@@ -92,3 +92,7 @@ Complete on J1's three readings (record, Completion). Tests: test/m/affordances 
 ## J4 · COMPLETE
 
 B2–B4 applied on the merged tranche (control-plane in). test/m/affordances 90 pass, 0 fail, 0 todo; control-plane 57/0, queue 69/0, skills 33/0, monitoring 65/0; four checks 0 failures. N345 marks met: R1, R2, R3, R4, R7, R8, R14. Still red, legacy-tests' pins (record): test/affordances.test.mjs 'thirty acts'; test/rung-ladder.test.mjs NO UNBACKED CLAIM (contradictionresolve, its scan does not follow resolve to basis-versions' NO_CONCLUSION); test/d311-roster-affordances.test.mjs (a drive for contradictionresolve); rung-ladder.control and d311.control refuse over those baselines. Plane bundle stale.
+
+## J5 · COMPLETE
+
+B5 applied: tranche/T15 merged @ bf5e17f257 (K520's R27 count 60; no test of mine names 59; the contradictionmeasures todo was already gone in J4). test/m/affordances 90/90, 0 todo; coverage 27/27, ownership 0 failures. Users and legacy results as J4 (control-plane's table unchanged since): still red only legacy-tests' pins in affordances.test ('thirty acts'), rung-ladder.test (NO UNBACKED CLAIM, contradictionresolve), d311-roster-affordances (drive), and the two controls over them.
