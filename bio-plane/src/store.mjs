@@ -533,6 +533,7 @@ export class Store extends DurableObject {
        the single-bundle projection's decorations (actions, inquiry, ai-runs), the frontier's hidden-run tail (ai-runs,
        D-486) and the selection sweep's arming (scheduler). */
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
+    basisVersionsOf(ctx, { retrieval });   /* basis-versions registers its projection decoration (its R42) */
     aiRunsOf(ctx, env);   /* ai-runs (K61) registers with retrieval before legacy-store does, in the modules' order */
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
        `deps` on the first call only, so created there it would never see `env` (its R25). */
@@ -546,14 +547,9 @@ export class Store extends DurableObject {
       return legs.map((l) => Store.#capturedAt(l.grade, cap[l.target_id], l.target_id));
     });
     retrieval.registerProjectionDecoration("legacy-store", (row, { viewer, nowMs }) => {
-      /* REC-24 (f)/(g): the ACTION's derived block, computed ON READ against the injectable clock; REC-144: the
-         inquiry's no-project conclusion by the one reader op=basisversions uses; D-85: the run it was opened inside
-         (a promise: the lens is hashed). Null on every other type. */
       const type = normalizeType(row.object_type);
-      const one = {
-                    no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null };
       const migrated = type === "inquiry" ? this.#surfacedIn(row.bundle_id) : null;
-      return migrated ? { ...one, surfaced_in: migrated } : one;
+      return migrated ? { surfaced_in: migrated } : {};
     });
     /* connections (K61): its projection of references[] and the fact citedBy join every promotion before legacy-store's
        (R19, R23), and it marks its own dirt on entities' notice (R17). legacy-store registers observation-log's row per
@@ -1203,7 +1199,6 @@ export class Store extends DurableObject {
 
   /* REC-13 / REC-124 / REC-136: the conclusion and a project's conclusion record are basis-versions' (R16–R23). */
   conclude(a) { return basisVersionsOf(this.ctx).conclude(a); }
-  #noProjectConclusionOf(...a) { return basisVersionsOf(this.ctx).noProjectConclusionOf(...a); }
 
   actionMove(a) { return actionsOf(this.ctx).actionMove(a); }
   actionCorrespond(a) { return actionsOf(this.ctx).actionCorrespond(a); }

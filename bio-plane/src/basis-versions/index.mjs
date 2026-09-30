@@ -13,13 +13,17 @@
  * shortened where they only restated it.
  *
  * REACHED as `basisVersionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
- * first call with `deps`, returned to every later caller. At creation it declares its tables to purge (R34) and joins
- * every promotion with its check (R6) and its projection (R7). `deps`:
+ * first call with `deps`, returned to every later caller. At creation it declares its tables to purge (R34), joins
+ * every promotion with its check (R6) and its projection (R7), and registers retrieval's `no_project_conclusion`
+ * decoration (R42). `deps`:
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
  *                test passes its own.
  *   inquiry      `{earned(subject, targetIds), legCapped(stated, earned, targetId), cyclePath(id, targetIds),
  *                basisFor(id, {limit})}`, inquiry's R13, R14, cycle read and R16, each through `inquiryOf(host)` unless
  *                a test passes its own.
+ *   retrieval    the host's retrieval instance (`retrievalOf(host)`), which R42 registers its projection decoration
+ *                with. The plane's host passes it on the first call, right after it creates retrieval with its clock;
+ *                a host that passes none (a test of another module) has no projection to decorate.
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock). */
 
 import { parseFrontmatter, isMachineIdentity, normalizeType, LEGACY_TYPE_ALIASES, OBJECT_TYPES, STATES, vocabFor, isBoilerplate,
@@ -282,7 +286,7 @@ export class BasisVersions {
       .map((r) => ({ version: r.name, ord: r.ord, target: r.target_id, content_id: r.content_id ?? null })) };
   }
 
-  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41) */
+  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41, R42) */
 
   /** D-235: the collections the record holds for one version, read once for `op=basisversions` and `op=suggest`'s
    *  answer. The ground labels come from the legs this answer carries, the blank label a legless part projects dropped.
@@ -485,6 +489,14 @@ export class BasisVersions {
                                 + "so the relationship that drew it cannot be established; it is read as the "
                                 + "no-project relationship's (INVESTIGATIVE-SESSION.md §7.1 item 5).",
              conclusion: s(fm.conclusion), falsifier: s(fm.falsifier) ?? "", claim };
+  }
+
+  /** R42 (N392, K593): the single-bundle projection's `no_project_conclusion` (retrieval R56), exactly as R11 answers
+   *  it for the same viewer: R23's answer for an inquiry the viewer may see, else null; null for every other type. */
+  projectionDecoration(row, { viewer = null } = {}) {
+    const id = row && typeof row.bundle_id === "string" ? row.bundle_id : "";
+    const inquiry = !!id && normalizeType(row.object_type) === "inquiry";
+    return { no_project_conclusion: inquiry && this.#seen(id, viewer) ? this.noProjectConclusionOf(id) : null };
   }
 
   /** R37 (N64): each project the viewer may see that draws on the inquiry — its document holds a `cites` reference to
@@ -1568,7 +1580,8 @@ export class BasisVersions {
 const instances = new WeakMap();
 
 /** The one basis-versions instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the
- *  first call only. At creation it declares its tables (R34) and joins every promotion (R6, R7). */
+ *  first call only. At creation it declares its tables (R34), joins every promotion (R6, R7) and registers its
+ *  projection decoration (R42). */
 export function basisVersionsOf(host, deps) {
   let bv = instances.get(host);
   if (!bv) {
@@ -1594,6 +1607,7 @@ export function basisVersionsOf(host, deps) {
     instances.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
+    if (d.retrieval) d.retrieval.registerProjectionDecoration("basis-versions", (row, o) => bv.projectionDecoration(row, o));
   }
   return bv;
 }

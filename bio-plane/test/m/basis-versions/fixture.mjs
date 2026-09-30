@@ -14,6 +14,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
+import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { readingSourceJson, readingOccurrenceKey } from "../../../src/textchain.mjs";
 
@@ -44,7 +45,7 @@ export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, mea
 export const V = (id) => `member:${id}`;
 export const MACHINE = "class:daemon";
 
-export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true } = {}) {
+export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true, withRetrieval = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -95,11 +96,17 @@ export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true } = 
         : { ok: true, bundleId: id, legs };
     },
   };
-  const bv = basisVersionsOf(host, { record, membership, promotion, content, inquiry, now: () => clock.now });
+  /* With `withRetrieval`, the real retrieval, handed to the factory as the plane's host hands it (R42); the observation
+     log's rows are not read by the single-bundle projection, so its reader is an empty one. */
+  const retrieval = withRetrieval
+    ? retrievalOf(host, { record, membership, promotion, extraction: realEx, observation: {}, now: () => Date.parse(clock.now) })
+    : null;
+  if (retrieval) retrieval.migrate();
+  const bv = basisVersionsOf(host, { record, membership, promotion, content, inquiry, retrieval, now: () => clock.now });
   bv.migrate();
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, k, bv, clock, facts, inq, readings,
+    st, host, record, membership, promotion, prov, content, k, bv, retrieval, clock, facts, inq, readings,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
