@@ -166,3 +166,62 @@ test("R14, R13 (d442-publish-writes-nothing): a second project's new case over b
   assert.ok(log.some((l) => l.includes(Q) && l.includes(PIN) && /edition 1\b/.test(l)), "the receipt names the pin and edition");
   assert.ok(body.includes(`Published by: ${B}`));
 });
+
+test("R2 (caseproduction): the owner fence is keyed on the pair — a joined participant who owns nothing, an owner of another project, and an administrator are each NOT_THE_PROJECT_OWNER — and every authority refusal comes before the authored fields: only the owner reaches NO_STATEMENT", () => {
+  const w = setup();
+  w.member("root", { role: "admin" });
+  w.finding(Q, [{ target: DOC }]);
+  const P = w.project("Team", "alice", [Q]);
+  const OTHER = w.project("Other", "bo", [Q]);
+  w.join(P, "bo"); w.join(OTHER, "alice");
+  const before = w.snapshot();
+  const ruth = w.publish(P, "bo", [Q]);
+  assert.deepEqual([ruth.ok, ruth.reason], [false, "NOT_THE_PROJECT_OWNER"]);
+  assert.ok(ruth.detail.includes("contributes to the work without putting the project's name on it"));
+  const wrong = w.publish(OTHER, "alice", [Q]);
+  assert.deepEqual([wrong.ok, wrong.reason, wrong.project], [false, "NOT_THE_PROJECT_OWNER", OTHER],
+    "alice owns a project, and not this one");
+  assert.equal(w.publish(P, "bo", [Q], { author: "class:daemon" }).reason, "MACHINE_CANNOT_PUBLISH", "R1 first");
+  const probe = (who) => w.publish(P, who, [Q], { statement: "" }).reason;
+  assert.deepEqual(["alice", "bo", "root"].map(probe), ["NO_STATEMENT", "NOT_THE_PROJECT_OWNER", "NOT_THE_PROJECT_OWNER"]);
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+});
+
+test("R6, R14, R15 (caseproduction): the bar is read at the act — a member refused under the project's bar publishes load-bearing once the project lowers it, the answer carrying the new bar — while a document authored under the old bar keeps stating it", () => {
+  const x = world(); x.member("alice"); for (const d of [DOC, DOC2]) x.doc(d);
+  x.finding(Q, [{ target: DOC, grade: "C", grade_axis: "capture", grade_source: "capture" }]);
+  x.finding(Q2, [{ target: DOC2, grade: "C", grade_axis: "capture", grade_source: "capture" }]);
+  const XP = x.project("Team", "alice", [Q, Q2], { extra: ["required_strength:", "  capture: B"] });
+  const old = x.publish(XP, "alice", [Q2, Q], { roles: { [Q2]: "load_bearing", [Q]: "supporting" } });
+  assert.deepEqual([old.ok, old.reason, old.target, old.axis, old.required, old.reached], [false, "BELOW_PROJECT_STRENGTH", Q2, "capture", "B", "C"]);
+  const kept = x.publish(XP, "alice", [Q], { roles: { [Q]: "load_bearing" } });
+  assert.deepEqual([kept.ok, kept.reason], [false, "BELOW_PROJECT_STRENGTH"]);
+  assert.equal(x.reviseProject(XP, "Team", "alice", [Q, Q2], ["required_strength:", "  capture: D"]).ok, true);
+  const now = x.publish(XP, "alice", [Q2], { roles: { [Q2]: "load_bearing" } });
+  assert.deepEqual([now.ok, now.edition, now.findings[0].role, now.required.capture], [true, 1, "load_bearing", "D"]);
+  assert.match(docOf(x, now).text, /^  capture: D$/m);
+  /* a document authored under the old bar keeps stating it after the bar moves */
+  const y = world(); y.member("alice"); y.doc(DOC);
+  y.finding(Q, [{ target: DOC, grade: "C", grade_axis: "capture", grade_source: "capture" }]);
+  const YP = y.project("Team", "alice", [Q], { extra: ["required_strength:", "  capture: C"] });
+  const under = y.publish(YP, "alice", [Q]);
+  assert.equal(under.ok, true, JSON.stringify(under).slice(0, 300));
+  assert.equal(y.reviseProject(YP, "Team", "alice", [Q], ["required_strength:", "  capture: D"]).ok, true);
+  assert.equal(y.fm(docOf(y, under).text).required_strength.capture, "C", "frozen at the act");
+  assert.deepEqual(y.strength.projectBar(YP).capture, "D");
+});
+
+test("R15 (publish): each finding's per-axis pair names its weakest leg — the target of the leg that sets the axis's grade, among several — beside its axis, state and grade, and nothing else; the act answers no case-level strength", () => {
+  const w = setup();
+  w.finding(Q, [{ target: DOC, grade: "B", grade_axis: "capture", grade_source: "capture" },
+                { target: DOC2, grade: "C", grade_axis: "capture", grade_source: "capture" },
+                { target: DOC3, grade: "B", grade_axis: "capture", grade_source: "capture" }]);
+  const P = w.project("Team", "alice", [Q]);
+  const r = w.publish(P, "alice", [Q]);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const pair = w.strength.strengthOf(Q);
+  assert.deepEqual(r.findings[0].strength, ["capture", "connection"].map((axis) => ({ axis, state: pair[axis].state,
+    grade: pair[axis].grade, weakest: pair[axis].weakest ? pair[axis].weakest.target_id : null })));
+  assert.deepEqual([r.findings[0].strength[0].grade, r.findings[0].strength[0].weakest], ["C", DOC2], "the weaker of two capture legs");
+  assert.equal("strength" in r, false);
+});
