@@ -1,6 +1,6 @@
 # Plan: tranche T16
 
-**Status** · OPEN · BOB #72 · session_01Dq8oQcVv2LH1fUh4JWPrHk · depth 1
+**Status** · OPEN · BOB #73 · session_01SgBCnPS48MxiscmhoWHwzR · depth 1
 
 Opened by BOB #71, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ f5554232cb, T15 closed (K525). Cut from `draft-T16.md` (re-read at T15's close by BOB #70: N359–N371 folded, K517, K523, K524; points 1–5 ruled, K494). N364 (Bob's DEC-78/80/81 rulings, K509) and W1–W5 fold into the requirements before layer 2 starts (K527); `sources` entered `modules.json` at the opening. An `N` entry's text is in `build/plan/next.md`. Bob's weekly meter at the opening: asked.
 
