@@ -2,6 +2,8 @@
 
 **Status** · Entries awaiting the tranche they join (PROCESS-MECHANICS §5), grouped by module, modules by layer. T18 (opened by BOB #75, 2026-09-30) carries the entries its plan names (`current.md`); an entry it carries only in part stays here for the shares it does not carry. Entries T18 carries stay here while it runs and move to `archive/next-applied.md` at a later opening (K424, K411). N61 moved there at T18's opening (met, K611).
 
+**T19's top priority (Bob, K632):** removing every legacy construct T18 leaves (legacy-checks, legacy-store, legacy-index, legacy-ui, legacy-tests); other work beside it as sizes allow.
+
 ## Later layers
 
 - N13 · 2026-09-26 · **affordances**, **queue** (affordances re-exports `ENTITY_KINDS`, `RELATION_KINDS` from entities; the store no longer imports them from it: ENTITIES #1): `store.mjs` imports `affordances.mjs` and `queuestate.mjs`, both later in the order. What the store needs from them moves to the module that owns it, earlier in the order, when each is extracted. Found by the architecture check.
