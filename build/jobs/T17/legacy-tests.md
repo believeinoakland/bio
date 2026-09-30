@@ -176,3 +176,7 @@ Cause: context (past half the window). Done and pushed: the deletions (ec24b52b6
 **b21–b30 verified: 1 COVERED (`opaque-ids`; to retire with the dead files once the removal is approved), 39 CONVERT.** With #15's 84: 124 `covered?` suites verified, 4 COVERED, 120 CONVERT. Every module test file run passed except `agent-worker/test/harness.test.mjs` (256 pass, 4 fail: its parse of the plane's OPS table; agent-worker's, for REPORT).
 
 **Still to do, in order.** (1) The removal above, once Bob approves (with `opaque-ids.test.mjs`). (2) The K612 moves (#15's list, item 3). (3) The scoped run (K570) and the DEC-49 guard once at the end (#15's item 5). (4) Completion and REPORT.
+
+## J5 · BLOCKED
+
+Cause: needs Bob. NEEDS BOB: commit and push the removal of 37 old test files on job/T17/legacy-tests (the 23 dead? instruments #15 confirmed dead, 13 controls and helpers only they use, and opaque-ids.test.mjs, verified covered), refused by this session's permission check. Nothing staged or pushed. Bob approves it in this session (LEGACY-TESTS #16, https://claude.ai/code/session_01SbVzzsbhZ7sfLECSnWAsmv); the list and reasons are in my record's Progress (LEGACY-TESTS #16). Done meanwhile and pushed: B3 (row-census 8/0, C-120.1/.2 recorded by K616), d470 over 1.47.0 (14/0), and b21-b30 verified: 1 covered, 39 CONVERT, each row in my record for your REPORT (124 covered? in all: 4 covered, 120 convert). Found: agent-worker/test/harness.test.mjs fails 4 (its parse of the plane's OPS table), agent-worker's. I carry on with the K612 moves.
