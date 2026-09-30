@@ -27,3 +27,7 @@ Size (session_01X781cDNM8B9Gk9XTmbmYhE): test runs 4, module lines 2733
 ## J1 · REPORT
 
 Two reports from N355 (record, 'Found in other modules'). (1) legacy-tests: civicos-ui/check-refusal-codes.mjs:3830, arm G's MULTI_SITE_CLOSED entry for FACT_UNAVAILABLE is now stale (filings no longer spells it); the guard prints 'FACT_UNAVAILABLE is declared in MULTI_SITE_CLOSED but is not multi-site on this tree'. Base tranche/T15 @ e44efa6b95: 22 failures; with this change 23, that line the only mover. The entry retires and arm G's multi-site ceiling drops by one. (2) bio-plane/dist/bio-plane.bundled.mjs inlines filings and is stale; not rebuilt. civicos-ui/affordances: no other hit.
+
+## J2 · COMPLETE
+
+N355 applied: the constructor's no-promotion fallback is gone; #group asks promotion itself and, with none reachable, leaves the group blank unfilled as undetermined (R3), spelling no FACT_UNAVAILABLE. test/m/filings 35/0 (R3 gains the no-promotion arm, negative control red on the old source); format, architecture, coverage (21/21), ownership: 0 failures. No row moved; no not-yet-met mark met; nothing deferred. Reports in J1. Record: build/jobs/T15/filings.md on job/T15/filings.
