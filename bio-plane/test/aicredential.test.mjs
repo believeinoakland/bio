@@ -345,9 +345,12 @@ const ORG = await mint({ tokenId: "org-agent", principalKind: "organisation", pr
   const forAnother = await mint({ tokenId: "for-another", principalKind: "member", principalMember: "anna" });
   t("R29: a member-scoped credential naming ANOTHER member as its principal is refused by name — a member cannot "
   + "authorise an agent in another member's name", codeOf(forAnother), "AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER");
-  const orgByMember = await mint({ tokenId: "org-by-a-member", principalKind: "organisation", principalMember: null }, ANNA);
-  t("R62: an ORGANISATION-scoped credential minted by a member who is not an administrator is refused by name",
-    codeOf(orgByMember), "AI_CREDENTIAL_ORG_NOT_ADMIN");
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "R62: an ORGANISATION-scoped credential minted by a member who
+     is not an administrator is refused by name". The mint is membership's and its refusal is now NOT_AN_ADMIN (C-96.1)
+     with its remedy (N327), membership's R62 with R84, tested at its interface in
+     `test/m/membership/expertise-keys-ai.test.mjs` ("R62 an organisation-scoped credential is minted only by an active
+     administrator, the founder included; anyone else NOT_AN_ADMIN (R84) with its remedy") and
+     `t14-rows-remedy-order.test.mjs` ("R84 R22 R41 R75 R62: each site refuses a non-administrator NOT_AN_ADMIN …"). */
 
   /* THE VALUE IS NOWHERE. Three arms, because "we do not log it" is a promise
      and "nothing here has ever held it" is a property. */
@@ -818,8 +821,16 @@ console.log("\n--- 9. over-strictness: a fence that refuses correct work is a de
 console.log("\n--- 10. DEC-49: every allocated code driven, and nothing driven that is not allocated ---");
 {
   const registry = Object.keys(AI_CREDENTIAL_CHECKS).sort();
+  /* ACCEPTED BY NAME 2026-09-30 (LEGACY-TESTS #12, T14; N327, t14-reread "C-29.12 left unminted"): C-29.12
+     AI_CREDENTIAL_ORG_NOT_ADMIN is still allocated in the catalogue but minted by nothing since membership's R62 answers
+     through R84's NOT_AN_ADMIN; legacy-checks retires the row in T15. It is the one code this floor does not ask to be
+     driven, and only while it is not: the arm after it fails the moment anything mints it again. Inert once the row
+     is gone. */
+  const UNMINTED_ACCEPTED = ["AI_CREDENTIAL_ORG_NOT_ADMIN"].filter((c) => registry.includes(c));
   t("every code this family allocates was DRIVEN out of the plane — an undrivable code is a refusal "
-  + "nobody can prove fires (PL-4's rule)", registry.filter((c) => !DRIVEN.has(c)), []);
+  + "nobody can prove fires (PL-4's rule)", registry.filter((c) => !DRIVEN.has(c) && !UNMINTED_ACCEPTED.includes(c)), []);
+  t("and the one row accepted as unminted (C-29.12, until legacy-checks retires it in T15) is still minted by nothing",
+    UNMINTED_ACCEPTED.filter((c) => DRIVEN.has(c)), []);
   t("and nothing was driven that the family does not allocate", [...DRIVEN].filter((c) => !registry.includes(c)), []);
   t("every driven code carried the C-NUMBER its row declares, taken off the wire rather than out of "
   + "the registry it came from",

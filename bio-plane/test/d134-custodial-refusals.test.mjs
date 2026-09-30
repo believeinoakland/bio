@@ -8,6 +8,8 @@
    (b) FIRST RUN GREEN 14/0 — the grade compared `undefined === undefined`; the grade was corrected to require the
    sentence, and the re-run read 13/1, `C-96.8` by name · (c) 13/1, `C-96.9` by name, C-96.1 green · (d) 14/2, both
    invited_by arms by name. Every restore sha256- and cmp-verified. Table: measurements/M-171.md.
+   T14 (LEGACY-TESTS #12, K457): the C-96.1 caller arms (c) names left for membership's R84 tests; arm (c) now reads
+   only its C-96.9 half.
  * =========================================================================
  * d134-custodial-refusals.test.mjs — D-134. §4.9's CUSTODIAL ACTS SAY THEIR REFUSALS IN WORDS.
  *
@@ -89,10 +91,13 @@ try {
   const O = await enrol(oliveAdd.invite, "olive");
 
   console.log("\n--- the four custodial acts' refusals, each from a real session ---");
-  grade("a member's session is not an administrator (memberset)",
-    await post("memberset", { memberId: "ruth", status: "revoked" }, O), "NOT_AN_ADMIN", "C-96.1");
-  grade("a member's session is not an administrator (signeradd)",
-    await post("signeradd", { memberId: "olive", keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIxyz" }, O), "NOT_AN_ADMIN", "C-96.1");
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457, K458): the two C-96.1 caller arms, "a member's session is not an
+     administrator (memberset)" and "(signeradd)", and the adminremove caller arm below. C-96.1's one row is
+     membership's (`MEMBERSHIP_CHECKS.NOT_AN_ADMIN`; the catalogue's copy left, K408 (4)), and each act's refusal of a
+     caller who is not an administrator is membership's R84, tested at its interface in
+     `test/m/membership/not-an-admin-visibility.test.mjs` ("R84 R6 R7 R9 R10 R11 R12 R20 R25 R26: each act's refusal of
+     a caller who is not an administrator is notAnAdmin's, byte for byte, and writes nothing", its row, check and
+     translation among them). */
   grade("the founder names an id outside the pattern",
     await post("memberadd", { memberId: "Not An Id", cover: "x" }, F), "BAD_MEMBER_ID", "C-96.2");
   grade("an enrolled administrator gives no cover",
@@ -112,8 +117,8 @@ try {
   console.log("\n--- the split: adminRemove's TARGET case is its own code, its CALLER case is still C-96.1 ---");
   grade("the member named for removal is not an administrator",
     await post("adminremove", { memberId: "olive", reason: "not one" }, F), "TARGET_NOT_AN_ADMIN", "C-96.9");
-  grade("a member's session voting on an administrator's removal",
-    await post("adminremove", { memberId: "ruth", reason: "no" }, O), "NOT_AN_ADMIN", "C-96.1");
+  /* RETIRED 2026-09-30 (K457): "a member's session voting on an administrator's removal" (C-96.1), as above. The split
+     this section pins is C-96.9's arm above: the TARGET case keeps its own code in the catalogue's family. */
 
   console.log("\n--- BOB #35 (2026-09-25): who INVITED a member is recorded, on every memberadd path ---");
   {
@@ -127,17 +132,20 @@ try {
       [bearer.invited_by, (list2.find((m) => m.member_id === "bea") || {}).invited_by], ["class:admin", "class:admin"]);
   }
 
-  /* The rows themselves: twelve, each named here, each distinct. A suite naming a check the catalogue does
+  /* The rows themselves: eleven since T14 (twelve until C-96.1's copy left), each named here, each distinct. A suite naming a check the catalogue does
      not hold, or a catalogue row this suite never names, both read below.
      RE-PINNED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1, N44): C-96.10 RESIGN_AT_TWO, C-96.11 NO_HOLDERS and
      C-96.12 PAIRING_NOT_YOURS, membership's R10, R11 and R19, joined the family; their refusals are driven by
      membership's own suite (`test/m/membership/`), not by this one. */
-  const named = ["C-96.1", "C-96.10", "C-96.11", "C-96.12", "C-96.2", "C-96.3", "C-96.4", "C-96.5", "C-96.6", "C-96.7",
+  /* RE-PINNED 2026-09-30 (LEGACY-TESTS #12, T14; LEGACY-CHECKS #8, K408 (4), K458): twelve -> eleven. C-96.1's
+     catalogue copy left; its one row is membership's `MEMBERSHIP_CHECKS.NOT_AN_ADMIN` (R84). KEPT under K457: the
+     catalogue's family is legacy-checks', which has no tests of its own. */
+  const named = ["C-96.10", "C-96.11", "C-96.12", "C-96.2", "C-96.3", "C-96.4", "C-96.5", "C-96.6", "C-96.7",
                  "C-96.8", "C-96.9"];
-  t("C-96: the family holds exactly the twelve checks this suite names",
+  t("C-96: the family holds exactly the eleven checks this suite names",
     Object.values(CUSTODIAL_CHECKS).map((r) => r.check).sort(), named);
-  t("C-96: twelve distinct translations",
-    new Set(Object.values(CUSTODIAL_CHECKS).map((r) => r.translation)).size, 12);
+  t("C-96: eleven distinct translations",
+    new Set(Object.values(CUSTODIAL_CHECKS).map((r) => r.translation)).size, 11);
 
   console.log(`\nd134-custodial-refusals: ${pass} pass, ${fail} fail`);
   exitCode = fail ? 1 : 0;

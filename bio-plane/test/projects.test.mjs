@@ -189,8 +189,10 @@ console.log("\n--- 7.10: addition, and consensus past the second ---");
     (await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=dave`)).reason, "NOT_THE_OWNER");
   t("nor can an administrator, who holds no authority over projects",
     (await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
-  t("someone who is not on the project cannot be made its owner",
-    (await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=carol`)).reason, "NOT_A_PARTICIPANT");
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "someone who is not on the project cannot be made its owner". The
+     act is membership's and the refusal is now TARGET_NOT_JOINED (C-56.5, N335): membership's R39, tested at its
+     interface in `test/m/membership/ownership.test.mjs` ("R39 projectOwnerAdd: refusals; an invited, leaving or absent
+     member is TARGET_NOT_JOINED (C-56.5); …"). */
   await call(`/projectinvite?projectId=${SECRET}&handle=dave&by=carol`);
   await call(`/projectjoin?projectId=${SECRET}&by=dave`);
   const add = await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=carol`);
@@ -491,10 +493,13 @@ console.log("\n--- 7.13: the ONE participation power an administrator has, and i
   t("while the owner is ACTIVE an administrator may not add an owner",
     (await call(`/projectownerrescue?projectId=${P}&handle=dave&by=alice&reason=${encodeURIComponent("x")}`)).reason,
     "OWNERS_ARE_ACTIVE");
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K457): "a non-administrator may not use it even once the owner is
+     inactive". The rescue is membership's and a non-administrator is refused NOT_AN_ADMIN with its remedy before the
+     owners' activity is asked (N327): membership's R41 with R84, tested at its interface in
+     `test/m/membership/ownership.test.mjs` ("R41 projectOwnerRescue: …") and `t14-rows-remedy-order.test.mjs` ("R84
+     R22 R41 R75 R62: each site refuses a non-administrator NOT_AN_ADMIN …"; "R84 R22 R41: the refusal order is
+     unchanged …"). */
   await call("/memberset", { memberId: "carol", status: "revoked" });
-  t("a non-administrator may not use it even once the owner is inactive",
-    (await call(`/projectownerrescue?projectId=${P}&handle=dave&by=dave&reason=${encodeURIComponent("x")}`)).reason,
-    "ADMIN_ONLY");
   t("and it is recorded with a reason like every other authority change",
     (await call(`/projectownerrescue?projectId=${P}&handle=dave&by=alice`)).reason, "NO_REASON");
 

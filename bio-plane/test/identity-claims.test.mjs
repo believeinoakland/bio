@@ -182,7 +182,11 @@ t("(a) the sweep reaches the stamp sites at all — corpus floored, never assume
    groupidentity, groupidentitypublic, runtimeobservations, cpuprobestate, recordcpuprobestep, recordruntime) left the
    store's `const map = {` for instance-setup's own Durable Object door (`instanceSetupRoute`, src/setup.mjs), which is
    no spread of the store's map and so no op of the dispatch table this sweep reads; queue's eight ops are read through
-   the fourth re-inlining pass above. The plane lost no op; the store's table is smaller by the ones that left it. */
+   the fourth re-inlining pass above. The plane lost no op; the store's table is smaller by the ones that left it.
+   CORRECTED 2026-09-30 (LEGACY-TESTS #12, T14; N348, LEGACY-INDEX #10, CONTROL-PLANE #5): the door that routes them is
+   now control-plane's `Store` (`src/control-plane/dispatch.mjs`, which composes legacy-store's routes with
+   `instanceSetupOps`), exported unwrapped from `src/index.mjs`; the wrapper named above is gone. The figure is unmoved:
+   still no spread of the store's map. */
 t("(a) the store's dispatch table is read and non-trivial", S.enforcement.size >= 145, true);
 t("(a) machine fences ARE found — a fence detector that finds none would pass everything",
   fencedCount >= 15, true);
@@ -353,8 +357,13 @@ const mExpC = await POST("op=expertiseconfirm&token=adm-rec65", { memberId: "rut
 const sExpC = await POST(`op=expertiseconfirm&token=${GUS}`, { memberId: "ruth", label: "CPA" });
 t("(i) a machine credential is REFUSED at both expertise acts",
   [val(mExpD, "ok"), val(mExpC, "ok")], [false, false]);
+/* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #12, T14; MEMBERSHIP #7, N327): the membership guard at op=expertiseconfirm
+   answers NOT_AN_ADMIN (C-96.1, R22 through R84) where it answered ADMIN_ONLY. KEPT under K457: the claim is the
+   WIRING, a machine stamp refused by the member's guard and not by a fence, across control-plane and membership.
+   The source marker (d) reads (`src/control-plane/index.mjs` IDENTITY-CLAIM: ENFORCED-ELSEWHERE NO_SUCH_MEMBER
+   ADMIN_ONLY) still names the old code: control-plane's comment, REPORTED, and (d) keeps pinning what the marker says. */
 t("(i) and what refuses is the MEMBERSHIP guard, named — not a machine fence (D-229's shape)",
-  [val(mExpD, "reason"), val(mExpC, "reason")], ["NO_SUCH_MEMBER", "ADMIN_ONLY"]);
+  [val(mExpD, "reason"), val(mExpC, "reason")], ["NO_SUCH_MEMBER", "NOT_AN_ADMIN"]);
 t("(i) the same payloads succeed for a member and an administrator, so the refusal is attributable",
   [val(sExpD, "ok"), val(sExpC, "ok")], [true, true]);
 
