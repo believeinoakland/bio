@@ -102830,6 +102830,7 @@ function noAttestingKeyRefusal(signer) {
 }
 
 // src/ratification/index.mjs
+var AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
 function fmSafe5(s) {
   return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 }
@@ -103300,10 +103301,10 @@ var Ratification = class _Ratification {
        What `op=caseratify` (R2) and its commit (R3) would refuse, asked over an unsigned case document's bytes before
        anybody signs, so the ceremony can say so before its first screen (case-authoring R34). Every refusal that holds
        is listed, each asked on its own and never stopping at the first, in R18's order:
-         C-32.13 and C-32.15, the credential fences, read from the control plane's `viewer` stamp: an agent
-           credential's `class:ai…` holds both (the act answers the first; lifted, the second would answer), another
-           `class:<cls>` bearer C-32.15, a member's or the founder's session neither; an absent viewer, an internal
-           caller, is not asked;
+         C-32.13 and C-32.15, the credential fences, read from the control plane's `viewer` stamp: every machine
+           identity (REC-46's predicate) holds both (the act answers the first; lifted, the second would answer) but an
+           operator's bearer stamp `class:<cls>`, which holds C-32.15 alone; a member's or the founder's session holds
+           neither; an absent viewer, an internal caller, is not asked;
          C-53.12, C-92.10, C-92.11 over publication's attribution facts for these bytes;
          NO_ATTESTING_KEY, the pre-flight's own: `signer` (a member id, or `member:<id>`) holds no key
            `membership.attestingKeys` answers (R19: whatever the key's origin);
@@ -103328,8 +103329,11 @@ var Ratification = class _Ratification {
       const refusals = [];
       const v = viewer === null || viewer === void 0 ? "" : String(viewer).trim();
       if (v && isMachineIdentity(v)) {
-        const cls = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX) ? v.slice(MACHINE_CLASS_PREFIX.length).split("/")[0] : v;
-        if (cls.toLowerCase() === "ai") refusals.push(machineCaseRefusal(cls));
+        const stamped = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX);
+        const rest = stamped ? v.slice(MACHINE_CLASS_PREFIX.length) : v;
+        const cls = stamped ? rest.split("/")[0] : v;
+        const bearer = stamped && !rest.includes("/") && v.toLowerCase() !== AGENT_ORGANISATION_STAMP;
+        if (!bearer) refusals.push(machineCaseRefusal(cls));
         refusals.push(operatorCaseRefusal(cls));
       }
       const attr2 = this.publication.attributionFacts({ text: src, case_id: caseId, edition });
@@ -103860,12 +103864,12 @@ var STATEMENT_ACK_CHECKS = Object.freeze({
 var CASE_DISCLOSURE_CHECKS = Object.freeze({
   TENSION_NOT_DISCLOSED: {
     check: "C-120.1",
-    where: at15("#publishCase", "is-tension-disclosed"),
+    where: at15("#tensionsJudged", "is-tension-disclosed"),
     translation: "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published."
   },
   DISCLOSURE_NOT_STANDING: {
     check: "C-120.2",
-    where: at15("#publishCase", "is-disclosure-standing"),
+    where: at15("#tensionsJudged", "is-disclosure-standing"),
     translation: "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published."
   },
   TENSIONS_UNDETERMINED: {
@@ -104042,7 +104046,7 @@ function captureBodyLines(captures, sources) {
     "## Each Document's Grade And Co-attestation",
     "",
     ...byCapture.size ? [
-      "Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a trusted timestamp and a third party's co-archive attest it. A co-attested Grade B document is enough to publish on; one that is not is published only as self-attested, by the owner's stated acknowledgement.",
+      `Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a trusted timestamp and a third party's co-archive attest it. A co-attested Grade ${EARNED_CAPTURE_CEILING} document is enough to publish on; one that is not is published only as self-attested, by the owner's stated acknowledgement.`,
       "",
       ...[...byCapture.values()].flatMap((c) => [
         `- ${c.capture} (under ${c.members.join(", ")}): ` + (c.grade ? `grade ${c.grade} (${c.grade_basis ?? "basis not stated"})` : `no capture letter (${c.grade_basis ?? "basis not stated"})`) + (c.co_attested ? `; co-attested: a timestamp${c.timestamp_at ? ` at ${c.timestamp_at}` : ""} and a co-archive at ${c.co_archive}` + (c.late ? ", obtained LATE: it proves the bytes existed by then, not at capture" : "") : "; NOT CO-ATTESTED" + (c.timestamp_at ? ` (a timestamp at ${c.timestamp_at}, no co-archive)` : "") + (c.co_archive ? ` (a co-archive at ${c.co_archive}, no timestamp)` : "")) + ".",
@@ -105551,10 +105555,10 @@ var CaseAuthoring = class _CaseAuthoring {
   /** R35 (DEC-81 item 3 (b), (d)): `selfAttested: [{capture, reason}]`, the owner's attributed acknowledgement of a
    *  document published as self-attested only. Any malformed shape is R3's `BAD_COMPLETENESS` naming the field (the
    *  pattern of `tensionsDisclosed`, K498); a capture listed twice is acknowledged once, its first reason kept. Then, in
-   *  R35's order: a load-bearing Grade B capture not co-attested and not listed is C-120.4, naming each; a listed one with
-   *  an empty reason C-120.5; a listed one that is co-attested, or not in the case, C-120.6. Answers `{refusals,
-   *  byCapture}`; `op=publish` answers the first, R34's pre-flight lists them all. Nothing here refuses a case because a
-   *  document is not co-attested. */
+   *  R35's order: a load-bearing capture at `EARNED_CAPTURE_CEILING` (Grade B, provenance R24's one definition) not
+   *  co-attested and not listed is C-120.4, naming each; a listed one with an empty reason C-120.5; a listed one that
+   *  is co-attested, or not in the case, C-120.6. Answers `{refusals, byCapture}`; `op=publish` answers the first, R34's
+   *  pre-flight lists them all. Nothing here refuses a case because a document is not co-attested. */
   #selfAttestedJudged(resting, facts, memberRoles, list2) {
     const byCapture = /* @__PURE__ */ new Map();
     const bad = (field, detail) => ({ refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field, detail }], byCapture });
@@ -105580,7 +105584,7 @@ var CaseAuthoring = class _CaseAuthoring {
       membersOf.get(r.capture).push(r.member);
     }
     const refusals = [];
-    const unacknowledged = [...facts.values()].filter((f9) => f9.grade === "B" && !f9.co_attested && membersOf.get(f9.capture).some((m) => roleOf.get(m) === "load_bearing") && !byCapture.has(f9.capture));
+    const unacknowledged = [...facts.values()].filter((f9) => f9.grade === EARNED_CAPTURE_CEILING && !f9.co_attested && membersOf.get(f9.capture).some((m) => roleOf.get(m) === "load_bearing") && !byCapture.has(f9.capture));
     if (unacknowledged.length)
       refusals.push(disclosureRefusal("CO_ATTESTATION_UNACKNOWLEDGED", {
         unacknowledged: unacknowledged.map((f9) => ({
@@ -105590,7 +105594,7 @@ var CaseAuthoring = class _CaseAuthoring {
           timestamp_at: f9.timestamp_at,
           co_archive: f9.co_archive
         })),
-        detail: `${unacknowledged.length} load-bearing Grade B document(s) hold no trusted timestamp and co-archive (` + unacknowledged.map((f9) => `${f9.capture} under ${membersOf.get(f9.capture).join(", ")}`).join("; ") + `). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.`
+        detail: `${unacknowledged.length} load-bearing Grade ${EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp and co-archive (` + unacknowledged.map((f9) => `${f9.capture} under ${membersOf.get(f9.capture).join(", ")}`).join("; ") + `). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.`
       }));
     const noReason = [...byCapture.values()].filter((d) => !d.reason);
     if (noReason.length)
