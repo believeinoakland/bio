@@ -6,7 +6,8 @@ import assert from "node:assert/strict";
 import { MACHINE, sha } from "./fixture.mjs";
 import { seeded, cand, recommend, refusedWith, IQ, INFO, CID, M1, M2, OUT } from "./seed.mjs";
 import { CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS, PAGE_MAX, TENSIONS_REFERENTS_MAX,
-         REACH_PROJECTS_MAX, REACH_INQUIRIES_MAX, UNRESOLVED_MAX } from "../../../src/contradiction/index.mjs";
+         REACH_PROJECTS_MAX, REACH_INQUIRIES_MAX, UNRESOLVED_MAX, TENSIONS_CANDIDATES_MAX,
+         FACTS_ENTITIES_MAX } from "../../../src/contradiction/index.mjs";
 
 const ROWS = { ...CONTRADICTION_PAIR_CHECKS, ...CONTRADICTION_CANDIDATE_CHECKS };
 const one = (w, id, viewer = M1) => w.c.candidatesFor({ on: { candidate: id }, viewer }).candidates[0] ?? null;
@@ -316,6 +317,53 @@ test("R27, R45: not_shown candidates put no mark; more than 200 referents is C-6
   assert.equal(w.c.tensionsOn({ referents: many.slice(0, 200), viewer: M1 }).referents.length, 200);
   assert.doesNotThrow(() => w.c.tensionsOn({ referents: [null, 3, {}, "x"], viewer: M1 }));
   assert.deepEqual(w.c.tensionsOn({ referents: "x", viewer: M1 }).referents, []);
+});
+
+test("R27 (N368): each referent's marks are read from at most 200 candidates (TENSIONS_CANDIDATES_MAX), and past it the referent says truncated", () => {
+  assert.equal(TENSIONS_CANDIDATES_MAX, 200);
+  /* one claim paired with 201 others on its subject, proposed 50 at a time (the pairing's bound): each batch's other
+     versions are then pruned (hidden), so the next batch forms; the candidates stay */
+  const w = seeded();
+  const A = "INQ-2026-0000-anchor";
+  w.inquiry(A, { subject: "E9" }); w.version(A, "v1", { claim: "the anchor" });
+  const others = Array.from({ length: 201 }, (_, i) => `INQ-2026-${String(1000 + i)}-o`);
+  for (const o of others) { w.inquiry(o, { subject: "E9" }); w.version(o, "v1", { claim: `other ${o}` }); }
+  let made = 0;
+  while (made < 201) {
+    const pairs = w.c.pairs({ key: "K2", viewer: MACHINE }).pairs.filter((p) => p.a.inquiry === A || p.b.inquiry === A);
+    const r = w.c.propose({ run: "RUN-2026-0001", proposedBy: "class:ai/t", viewer: MACHINE, caller: M1,
+                            proposals: pairs.map((p) => ({ key: "K2", a: p.a, b: p.b, label: "record", reason: "r" })) });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+    made += r.written;
+    for (const p of pairs) { const o = p.a.inquiry === A ? p.b.inquiry : p.a.inquiry; w.st.sql.exec(`UPDATE inquiry_basis_versions SET hidden=1 WHERE bundle_id=?`, o); }
+  }
+  const ref = claimRef(A, "the anchor");
+  const cut = w.c.tensionsOn({ referents: [ref], viewer: M1 });
+  assert.deepEqual([cut.referents[0].marks.length, cut.referents[0].truncated, cut.truncated, cut.limit], [200, true, true, 200]);
+  assert.ok(cut.referents[0].marks.every((m) => m.mark === "in_tension"));
+  /* at the bound, whole: one candidate fewer on the referent (its other side's bundle purged) */
+  w.record.purge({ bundleId: others[200] });
+  const whole = w.c.tensionsOn({ referents: [ref, claimRef(IQ.b, "the fee fell")], viewer: M1 });
+  assert.deepEqual([whole.referents[0].marks.length, whole.referents[0].truncated, whole.referents[1].truncated, whole.truncated],
+                   [200, false, false, false]);
+});
+
+test("R28 (N368): each side's resolved entities are at most 500 (FACTS_ENTITIES_MAX), and past it that fact says truncated", () => {
+  assert.equal(FACTS_ENTITIES_MAX, 500);
+  const w = seeded();
+  for (let i = 0; i < 500; i++) w.resolution("capA", INFO.a, `E-${String(i).padStart(4, "0")}`, { ref: `ref:${i}` });
+  const id = cand(w, "K4", "world");
+  const f = (r) => r.facts.find((x) => x.fact === "resolved_entities");
+  const cut = w.c.contextFacts({ candidate: id, viewer: M1 });
+  const [capASide, capBSide] = one(w, id).a.capture_sha === "capA" ? ["a", "b"] : ["b", "a"];
+  const ents = f(cut);
+  assert.deepEqual([ents[capASide].length, ents.truncated, ents[`${capASide}_truncated`], ents[`${capBSide}_truncated`], ents.limit, cut.truncated],
+                   [500, true, true, undefined, 500, true]);
+  assert.deepEqual(ents[capBSide], ["E1"]);
+  /* at the bound, whole */
+  w.st.sql.exec(`DELETE FROM resolutions WHERE capture_sha='capA' AND entity_id='E-0499'`);
+  const whole = w.c.contextFacts({ candidate: id, viewer: M1 });
+  assert.deepEqual([f(whole)[capASide].length, f(whole).truncated, whole.truncated], [500, undefined, false]);
 });
 
 test("R28: the facts on each coordinate, each the record's and never machine work, an unstated one undetermined with why; an absent or invisible candidate is C-93.9", () => {

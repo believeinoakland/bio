@@ -73,6 +73,10 @@ export const PAGE_MAX = 50;
 export const CANDIDATES_SCAN_MAX = 2000;
 /** R27: referents in one request. */
 export const TENSIONS_REFERENTS_MAX = 200;
+/** R27 (N368, K544): the candidates one referent's marks are read from; past it the referent says `truncated`. */
+export const TENSIONS_CANDIDATES_MAX = 200;
+/** R28 (N368, K544): each side's resolved entities; past it that fact says `truncated`. */
+export const FACTS_ENTITIES_MAX = 500;
 /** R29: candidates per finding. */
 export const UNRESOLVED_MAX = 200;
 /** R30, R51, R53: the caps on a member's free text, by field. */
@@ -1472,18 +1476,21 @@ export class Contradiction {
       const out = list.map((x) => {
         const ref = this.#referentOf(x);
         if (!ref) return { referent: x ?? null, marks: [], undetermined: true, why: "not a referent at a version" };
+        /* N368 (entities R39's class): bounded at the statement, over-fetching one so the cut is observed. */
         const ids = this.#rows(`SELECT candidate FROM contradiction_candidates
-                                 WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq`,
-                               ref.ref, ref.version, ref.ref, ref.version).map((r) => r.candidate);
+                                 WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq LIMIT ?`,
+                               ref.ref, ref.version, ref.ref, ref.version, TENSIONS_CANDIDATES_MAX + 1).map((r) => r.candidate);
+        const truncated = ids.length > TENSIONS_CANDIDATES_MAX;
         const marks = [];
-        for (const id of ids) {
+        for (const id of ids.slice(0, TENSIONS_CANDIDATES_MAX)) {
           const row = this.#candidate(id);
           const which = row ? Contradiction.#whichSide(row, ref) : null;
           if (which) marks.push(...this.#marksOn(row, which, viewer));
         }
-        return { referent: ref, marks };
+        return { referent: ref, marks, truncated };
       });
-      return { ok: true, wrote: false, referents: out };
+      return { ok: true, wrote: false, referents: out, limit: TENSIONS_CANDIDATES_MAX,
+               truncated: out.some((r) => r.truncated === true) };
     } catch (e) {
       return { ok: true, wrote: false, referents: [], undetermined: true, why: String(e && e.message || e).slice(0, 160) };
     }
@@ -1498,11 +1505,13 @@ export class Contradiction {
     /* END DEC-49 REGION is-no-such-candidate */
   }
 
-  /** The established resolutions of a capture (entities R35's read contract): the entities it is about. */
+  /** The established resolutions of a capture (entities R35's read contract): the entities it is about, at most
+   *  `FACTS_ENTITIES_MAX` in id order, with `truncated` observed by reading one past (R28, N368). */
   #entitiesOf(capture) {
-    if (!capture) return null;
-    return this.#rows(`SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=? AND established=1 ORDER BY entity_id`,
-                      capture).map((r) => r.entity_id);
+    if (!capture) return { ids: null, truncated: false };
+    const rows = this.#rows(`SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=? AND established=1
+                              ORDER BY entity_id LIMIT ?`, capture, FACTS_ENTITIES_MAX + 1).map((r) => r.entity_id);
+    return { ids: rows.slice(0, FACTS_ENTITIES_MAX), truncated: rows.length > FACTS_ENTITIES_MAX };
   }
 
   /** R28's facts for a candidate, computed from what its sides already carry. */
@@ -1523,16 +1532,21 @@ export class Contradiction {
     const subject = (s) => {
       if (isPart(s)) return this.#entitiesOf(s.capture_sha);
       const r = s && s.inquiry ? this.#one(`SELECT inquiry_subject_entity AS e FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
-      return r && r.e ? [r.e] : null;
+      return { ids: r && r.e ? [r.e] : null, truncated: false };
     };
+    const sa = subject(A), sb = subject(B);
+    const entities = fact("subject", "resolved_entities", sa.ids, sb.ids, "no established resolution or subject is held",
+                          "no established resolution or subject is held");
+    /* R28 (N368): a side's list cut at its bound says so, and is never answered as whole. */
+    if (sa.truncated || sb.truncated) Object.assign(entities, { truncated: true, limit: FACTS_ENTITIES_MAX,
+      ...(sa.truncated ? { a_truncated: true } : {}), ...(sb.truncated ? { b_truncated: true } : {}) });
     const facts = [
       fact("time_or_occasion", "stated_date", A.date, B.date, noDate(A), noDate(B)),
       fact("observer_or_method", "doctype", A.doctype, B.doctype, noType(A), noType(B)),
       fact("observer_or_method", "capture", A.capture_sha, B.capture_sha,
            isPart(A) ? "the passage is not held" : "a held claim rests on no one capture",
            isPart(B) ? "the passage is not held" : "a held claim rests on no one capture"),
-      fact("subject", "resolved_entities", subject(A), subject(B), "no established resolution or subject is held",
-           "no established resolution or subject is held"),
+      entities,
     ];
     if (row.key === "K5") facts.push(fact("scope", "project", A.project ?? null, B.project ?? null, "no project", "no project"));
     return facts;
@@ -1544,7 +1558,9 @@ export class Contradiction {
       const row = this.#candidate(candidate);
       if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer))
         return Contradiction.#noSuch("no contradiction you can see answers to that id");
-      return { ok: true, wrote: false, candidate: row.candidate, key: row.key, facts: this.#facts(row),
+      const facts = this.#facts(row);
+      return { ok: true, wrote: false, candidate: row.candidate, key: row.key, facts,
+               limit: FACTS_ENTITIES_MAX, truncated: facts.some((f) => f.truncated === true),
                says: "each fact is the record's, as its sides carry it, and none is machine work. A fact not stated is "
                    + "undetermined, with why, never guessed" };
     } catch (e) {
