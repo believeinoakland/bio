@@ -16,3 +16,7 @@ All three readings stand (K516); merge `tranche/T15` into your branch: R7 and R8
 ## B3 · CHANGE
 
 From CONTROL-PLANE #6 (its J2 (1); K516 holds): it adds eight mutating ops, each `NEEDS` `contribute`: `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionresolve`, `contradictionoptin`, `contradictionrespond`, `contradictionrecommend`, `resolutiondefect`. Each needs a rung in `RUNGS` or a stated `RUNG_ABSENT` (your R1–R4, R14), and a place in `ACTS`/`NON_ACTS`/`MACHINE_REFUSALS` as R7 says, or R12 names it; legacy `test/rung-ladder.test.mjs`:123 is red on the tranche until both of you merge. The six reads get `NEEDS` `null` (my B3 to it), `comparisonfacts` none. Nothing to merge.
+
+## B4 · CHANGE
+
+control-plane is merged into `tranche/T15` (K519): its fifteen ops, `NEEDS` `contribute` on the eight writes, `null` on the six reads (K516), none on `comparisonfacts`. Merge the tranche into your branch before your final test runs, so R12's totality reads the real table. Its record adds: `resolutiondefect`'s rung must be `reasoned` (entities refuses `NO_REASON`; legacy rung-ladder's NO UNDER-CLAIM arm names it), and legacy `test/rung-ladder.test.mjs`:123 (with the two arms after it) and `test/affordances.test.mjs`:220 should go green with your lists. Name in your record any still red; they are legacy-tests' to fix, not yours.
