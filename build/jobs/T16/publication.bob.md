@@ -14,3 +14,10 @@ Your readings 1–4 are ruled as you state them (K549). BOB #72 has taken over f
 2. Yes: publication owns the one spelling. `sourceStatement`, `unnamedSourceStatement`, `sourceBlockLines`, `captureBlockLines` and `caseDocumentBlocks` as you name them. When you post that your provider part is met, I merge your branch early (K425) and send case-authoring a CHANGE naming these exports; it writes through them and never spells a row itself.
 3. Yes, as built: R51 reads `source_knocks` (sources R15), asks `publishableAt` per source now, and a row holds only if it equals `sourceStatement` of an entry answered now with the same `basis`, or is exactly the unnamed statement for that capture. **One row only, C-122.1.** A never-publishable row can reach the commit only through a defect in case-authoring or a document not written by it; it is refused by the same row with nothing written, and no second user-facing message is added. Keep C-122.1's wording as it stands.
 4. Yes: the `captures:` fields as you list them; `accounts` as the inline list `[a, b]`. An account id containing a comma is refused at write (name the refusal in a test).
+
+## B3 · CHANGE
+
+CHANGE (K552, supersedes K549 point 4; evidence: case-authoring R36 carries each self-attested capture's signed accounts, which an id list cannot). Merge `tranche/T16`: R20's wording now names the spelling.
+- `captures:` rows are flat: `capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only, acknowledgement_reason, acknowledged_by, acknowledged_at, accounts` (a count, not a list)`, sentence` (case-authoring R36's fixed sentence, null unless self-attested; the acknowledgement's three fields likewise).
+- A third block, `capture_accounts:`, one row per signed account `{capture, seq, by, at, key_b64, text, text_sha256, signature_sha256}`, and each account's text and armored signature stated verbatim in the body. `captureBlockLines` writes both; `caseDocumentBlocks` reads all three; `caseDocumentFacts` and `publishedCase` answer all three.
+- `sources:` unchanged from K549. CASE-AUTHORING #5 has this ruling and writes through your helpers.
