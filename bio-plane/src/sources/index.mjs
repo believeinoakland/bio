@@ -568,7 +568,11 @@ export class Sources {
     const cap = this.#capture;
     let rate;
     try {
-      rate = await cap.knockAttempt({ sourceAddress: a.sourceAddress ?? null, now: a.now ?? null });
+      /* The instant is the control plane's stamp when it sends one, else this module's own clock, never a third: an
+         attempt counted on another clock lands in another window, and capture's prune of every bucket but the
+         current window's two would drop the others' counts (R31's window is one clock's). */
+      const stamped = a.now != null && a.now !== "" && Number.isFinite(Number(a.now)) ? Number(a.now) : null;
+      rate = await cap.knockAttempt({ sourceAddress: a.sourceAddress ?? null, now: stamped ?? this.#nowMs() });
     } catch { return SECRET_NOT_RECOGNISED_ANSWER; }
     if (rate && rate.ok === false) return rate;
     const secret = typeof a.knockerSecret === "string" ? a.knockerSecret : "";
