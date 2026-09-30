@@ -23,3 +23,7 @@
 - `civicos-ui/check-refusal-codes.mjs` (legacy-tests', read only): 22 failures at base, 23 with this change (item 1 above).
 
 Size (session_01X781cDNM8B9Gk9XTmbmYhE): test runs 4, module lines 2733
+
+## J1 · REPORT
+
+Two reports from N355 (record, 'Found in other modules'). (1) legacy-tests: civicos-ui/check-refusal-codes.mjs:3830, arm G's MULTI_SITE_CLOSED entry for FACT_UNAVAILABLE is now stale (filings no longer spells it); the guard prints 'FACT_UNAVAILABLE is declared in MULTI_SITE_CLOSED but is not multi-site on this tree'. Base tranche/T15 @ e44efa6b95: 22 failures; with this change 23, that line the only mover. The entry retires and arm G's multi-site ceiling drops by one. (2) bio-plane/dist/bio-plane.bundled.mjs inlines filings and is stale; not rebuilt. civicos-ui/affordances: no other hit.
