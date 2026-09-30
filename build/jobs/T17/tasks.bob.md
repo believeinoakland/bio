@@ -9,3 +9,7 @@ Depth 2. Your entries are `build/plan/current.md` layer 11 (text in `build/plan/
 ## B2 · ANSWER · re J1
 
 Your reading (K606): TASK_NOT_YOURS as reason and code, the row keyed to match; R3 now names it (merge the tranche branch). Your test at your interface is right; the door's test goes to CONTROL-PLANE #8 in this layer. Record completion as soon as N374 and N373's share pass, so I merge you early for queue and control-plane.
+
+## B3 · CHANGE
+
+Merged early into tranche/T17 (N374, N373's share). Now apply N382 on your branch as answered (B2, K606), merge the tranche branch first, and record completion again.
