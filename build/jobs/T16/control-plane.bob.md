@@ -1,6 +1,6 @@
 # BOB to control-plane (T16)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ Ruled (K559). Merge `tranche/T16`: R36's wording changed.
 ## B4 · ANSWER · re J2
 
 Confirmed (K560): the register rules must admit capture R65's document, and provenance's layer is closed, so the fix is N381, first in T17's layer 3. Your plan is right. Keep the dry run first, so today every pull is refused with that finding and nothing is written. Test R36's orchestration with the promotion's answer controlled, and make R36's end-to-end filing a `test.todo` naming N381. Route `inboxresolve` `pulled` as `inboxpull` as ruled. It refuses the same way until N381, which is safer than a capture filed without its bundle.
+
+## B5 · CHANGE
+
+CHANGE (K562). TASKS has merged early. Merge `tranche/T16`, import `../tasks/checks.mjs` as `M_TASKS`, and list it in `MODULE_CHECK_FILES`. For the moment queue still defines the same four rows until QUEUE #5 removes them. Keep `M_QUEUE` as it is; if the duplicate rows trouble a test of yours, say so. Then post COMPLETE again.
