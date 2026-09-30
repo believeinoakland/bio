@@ -32,3 +32,7 @@ Please word R62 accordingly (or tell me otherwise).
 - `node checks/ownership.mjs … record-core tranche/T17`: 3 files changed by record-core; legacy-store: 0 added, 0 removed; 0 failures.
 
 Size (session_015Z2ibFGipKFWMV5BopFcPH): test runs 5, module lines 1162
+
+## J2 · COMPLETE
+
+N376 applied: MINTED_OBJECT gains SRC, so mintExhausted("SRC")'s detail names a source id; tested at the module (the per-prefix R62 test covers SRC, and a new R62 (N376) test pins it whole). Built on J1's reading; R62's wording is yours (J1). No row or translation changed, so nothing is awaiting stamp. record-core 63/63; the five callers' suites (sources, case-authoring, tasks, review, promotion) 256/256; format, architecture, coverage and ownership 0 failures. Details in the record's Completion section.
