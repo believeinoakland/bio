@@ -81494,7 +81494,8 @@ var Reevaluation = class {
     } catch {
       dependents = [];
     }
-    const failed2 = this.#tell({
+    const out = { ok: true, moved: true, at: at20, dependents: dependents.length };
+    this.#tellAfterCommit({
       kind: "source",
       subject: id,
       source: "source",
@@ -81503,8 +81504,8 @@ var Reevaluation = class {
       rung_before: before,
       rung_after,
       dependents
-    });
-    return { ok: true, moved: true, at: at20, dependents: dependents.length, ...failed2.length ? { listeners_failed: failed2 } : {} };
+    }, out);
+    return out;
   }
   /* ---------------------------------------------------------------- R1–R6, R16, R17: the obligation */
   /** R1–R6: the re-evaluation obligation, derived on read. With `target`, the dependents of one moved thing (and, R17,
@@ -81697,9 +81698,22 @@ var Reevaluation = class {
     }
     return failed2;
   }
+  /* R8 (N406, K598): the listeners are told once what raised the event has committed, through record-core's
+     `afterCommit` (its R66): at once outside any transaction; inside one, just after the outermost commits and before
+     it returns; never when it, or the savepoint holding this call, rolls back. A listener that failed is named on
+     `out`, the answer already handed back, as `listeners_failed` (absent while none has). */
+  #tellAfterCommit(event2, out) {
+    this.record.afterCommit(() => {
+      const failed2 = this.#tell(event2);
+      if (!failed2.length) return;
+      const named = out.listeners_failed || (out.listeners_failed = []);
+      for (const m of failed2) if (!named.includes(m)) named.push(m);
+    });
+  }
   /** R7: the live legs resting on `target` (`inquiry.restsOnLive`), each `{bundle_id, ord, role, state}`, a dependent
-   *  the viewer may not see withheld and not counted, no titles. Called by the acts that move a target, after they
-   *  commit; the act puts the answer in its reply as `reevaluation`. R8's listeners are told. */
+   *  the viewer may not see withheld and not counted, no titles, answered at once. Called by the acts that move a
+   *  target; the act puts the answer in its reply as `reevaluation`, whole. R8's listeners are told after the act
+   *  commits, and any that failed are written onto this answer then (N406). */
   raise({ target = null, source = null, since = null, edition = null, viewer = null } = {}) {
     const t = str7(target);
     const visible = this.#redactor(viewer);
@@ -81711,7 +81725,7 @@ var Reevaluation = class {
     }
     const raised = (live && Array.isArray(live.all) ? live.all : []).filter((l) => visible(l.bundle_id) !== null).map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role ?? null, state: l.state ?? null }));
     const out = { source, since, ...edition != null ? { edition } : {}, raised };
-    const failed2 = t ? this.#tell({
+    if (t) this.#tellAfterCommit({
       kind: "finding",
       subject: t,
       source,
@@ -81719,8 +81733,7 @@ var Reevaluation = class {
       ...edition != null ? { edition } : {},
       detail: `${t} moved (${source}); ${raised.length ? "what rests on it is named" : "nothing visible here rests on it"}`,
       dependents: raised
-    }) : [];
-    if (failed2.length) out.listeners_failed = failed2;
+    }, out);
     return out;
   }
   /* ---------------------------------------------------------------- R9: the recovery read */
@@ -82173,7 +82186,24 @@ var Reevaluation = class {
       }
       return null;
     });
-    const failed2 = /* @__PURE__ */ new Set();
+    const last = legs.length ? legs[legs.length - 1] : null;
+    let cursor = truncated3 && last ? `${last.holder}#${last.ord}` : null;
+    if (cases && cases.cursor !== null) {
+      truncated3 = true;
+      cursor = `${CASE_CURSOR}${cases.cursor}`;
+    }
+    const out = {
+      ok: true,
+      examined,
+      chain_unread: unread,
+      raised,
+      count: raised.length,
+      limit: cap,
+      truncated: truncated3,
+      cursor,
+      ...cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the cited parts of a case edition, so no case's owners were told of a newer version of what it cites; that is not the same as none" } : {},
+      says: "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer capture to that case's owners, only where the newer version affects the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a reference"
+    };
     for (const r of raised) {
       const told = r.kind === "case" ? {
         kind: "passage",
@@ -82199,27 +82229,9 @@ var Reevaluation = class {
         affects: r.affects,
         notice: r.notice
       };
-      for (const mod of this.#tell(told)) failed2.add(mod);
+      this.#tellAfterCommit(told, out);
     }
-    const last = legs.length ? legs[legs.length - 1] : null;
-    let cursor = truncated3 && last ? `${last.holder}#${last.ord}` : null;
-    if (cases && cases.cursor !== null) {
-      truncated3 = true;
-      cursor = `${CASE_CURSOR}${cases.cursor}`;
-    }
-    return {
-      ok: true,
-      examined,
-      chain_unread: unread,
-      raised,
-      count: raised.length,
-      limit: cap,
-      truncated: truncated3,
-      cursor,
-      ...failed2.size ? { listeners_failed: [...failed2] } : {},
-      ...cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the cited parts of a case edition, so no case's owners were told of a newer version of what it cites; that is not the same as none" } : {},
-      says: "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer capture to that case's owners, only where the newer version affects the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a reference"
-    };
+    return out;
   }
   /* R26: R14's case half for one batch: the ratified cases after `afterCase`, one counting one toward `budget`, each
      cited part graded at the capture the edition pinned (its `capture_sha`, K365). Reads only; the caller writes. `cursor` is the last case read when more
