@@ -14,18 +14,21 @@
  * `CORRESPONDENCE_STAGES`, `CORRESPONDENCE_OUTCOMES`; `instance-setup`: `RISK_TIERS`, `riskTierState`), with the
  * quote and lifecycle grammars `correspondenceFindings` runs. This module imports each from there and re-exports it
  * (R40), so every reader can take it from here; they leave `legacy-checks` once their last reader there re-points
- * (N65 (3), layer 11). `legacy-checks` cannot import this module, so its `checkBundle` no longer runs the action arm:
- * this module registers it with record-core's audit and with promotion (R37). */
+ * (N65 (3), layer 11). `RFC_RESPONSE_WINDOW_PRECEDENT` is re-exported the same way (R44, N396): legacy-checks'
+ * `actionBasisFindings` names it in DEC-13's finding, so its definition stays there with the rule. `legacy-checks`
+ * cannot import this module, so its `checkBundle` no longer runs the action arm: this module registers it with
+ * record-core's audit and with promotion (R37). */
 
 import { isMachineIdentity, BUNDLE_ID_RE, OBJECT_TYPES, RISK_TIERS, riskTierState, RESOLUTIONS, ACTION_KINDS,
          ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings, correspondenceFindings, isQuoteEntry,
          quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings, CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES,
-         DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel, proposalLabel } from "../../checks/bio-checks.mjs";
+         DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel, proposalLabel, RFC_RESPONSE_WINDOW_PRECEDENT } from "../../checks/bio-checks.mjs";
 import { LAW_LEVELS } from "../../../jurisdictions/index.mjs";
 
 export { RISK_TIERS, riskTierState, RESOLUTIONS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings,
-         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel, LAW_LEVELS };
+         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel, LAW_LEVELS,
+         RFC_RESPONSE_WINDOW_PRECEDENT };
 
 /* The catalogue's finding shape (legacy-checks' private `f`), for the arms that moved here. */
 function f(check, severity, message, repairs, code) {
