@@ -19,3 +19,7 @@ run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branc
 ## B4 · CHANGE
 
 K676 (2), from SKILLS #6: renderPack(published) now takes one argument and throws unless published.fences is a non-empty list. (a) test/requirements.test.mjs:84's PUBLISHED_ANSWER carries fences: machineFences(CATALOGUE) (skills R7). (b) src/index.mjs:385 drops the second argument. Until control-plane R41 (layer 11) publishes fences the live render refuses PACK_UNRENDERABLE; accepted (no deployment runs model turns). Merge the tranche branch after skills merges (I will CHANGE you), or read skills' branch meanwhile.
+
+## B5 · CHANGE
+
+skills (renderPack(published), K674/K676) and run-rules' updated rows are merged into tranche/T18. Merge the tranche branch now and apply B4's fixture and argument fixes against it. run-productions' merge CHANGE follows when it completes.
