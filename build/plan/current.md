@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #75 · session_01SFKdEDXNPD63U2kdeajEsE · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #1 session_01HTBPsBTM23s6x7zFpscC9X
+**Jobs** · record-grammar: RECORD-GRAMMAR #1 session_01HTBPsBTM23s6x7zFpscC9X; legacy-checks: LEGACY-CHECKS #12 session_01PCFYYPfs1fNHKtD4GxpnRR
 
 Opened by BOB #75, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ ef7f089d2c, T17 closed (K623) and PR #4's DEC-86–DEC-95 merged to `main` on Bob's approval (K626). Cut from `draft-T18-recut.md` (reviewed, K624, K625), which re-cut `draft-T18.md` to lead with the Action layer (K608 (2)); the fold (requirements, `modules.json`, `layers.md`, the canon placement and §6's edits) is on this branch before layer 1 starts. Bob's weekly meter at the opening: asked.
 
