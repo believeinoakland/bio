@@ -10,7 +10,7 @@
  * promotion, extraction and observation-log through their factories on the same `ctx`; observation-log's services and
  * vocabulary (its R1, R9–R13, R18–R21) are read through `observationOf` below, which a test may replace. */
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, hiddenBundles, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf, stepContext } from "../promotion/index.mjs";
 import { extractionOf, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../extraction/index.mjs";
 import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
@@ -63,16 +63,9 @@ export const CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1
 /* D-724: the words a skipped unit is served in. */
 export const CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
 
-/* The bundles a gate does NOT admit, as a parenthesised set `{sql, args}` (the shape run-productions' and this module's
-   `counts(hid)` take), or null for a gate that admits every bundle. D-464: the complement of the one gate, so a count
-   taken through it and one taken through `viewerPredicate` can never disagree about who is hidden. */
 /* R17, R61: the text-index keys a bundle claims, through its projection row. */
 const CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
                   WHERE p.fts_id IS NOT NULL`;
-
-const hiddenSet = (gate) => (gate && gate.scope !== "member"
-  ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args }
-  : null);
 
 /* R61: the second argument of every `compile` this module runs (query-language R25): the projection is read through
    this module's own relation, never off `bundles`. */
@@ -715,8 +708,8 @@ export class Retrieval {
    *  for every visible bundle from the stored files and compares it against what the index holds. Paginated and
    *  resumable by cursor. REC-30: every finding NAMES a bundle, so the page carries the D-15 predicate; `orphans` are
    *  index rows no bundle claims, which name nothing and stay whole. D-464: `indexed` drops the rows a bundle the gate
-   *  does NOT pass claims and keeps every orphan, so parity is `indexed` against `keyed` plus the orphans, over what
-   *  the caller can see. */
+   *  does NOT pass claims (membership's `hiddenBundles`, its R88: the one spelling of that set) and keeps every orphan,
+   *  so parity is `indexed` against `keyed` plus the orphans, over what the caller can see. */
   searchIndexCheck({ after = "", limit = 200, viewer = null } = {}) {
     const cap = Math.max(1, Math.min(1000, Math.floor(Number(limit) || 200)));
     const gate = viewerPredicate(viewer);
@@ -751,7 +744,7 @@ export class Retrieval {
     return {
       checked: rows.length, findings, orphans,
       counts: { bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
-                indexed: this.#indexedCount(hiddenSet(gate)),
+                indexed: this.#indexedCount(hiddenBundles(viewer)),
                 keyed: this.#one(`SELECT count(*) c FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
                                    WHERE bp.fts_id IS NOT NULL AND (${gate.sql})`, ...gate.args).c },
       limit: cap,
@@ -963,8 +956,8 @@ export class Retrieval {
   }
 
   /** R21: the owner's selections newest first, the caps, and the instance's selection bytes. D-464: a row naming a
-   *  bundle the caller cannot see is not in the bytes (the complement of the one gate); `viewer === undefined` is a
-   *  direct internal call and stays whole. */
+   *  bundle the caller cannot see is not in the bytes (the complement of the one gate, membership's `hiddenBundles`,
+   *  its R88); `viewer === undefined` is a direct internal call and stays whole. */
   selectionList({ owner = null, viewer } = {}) {
     this.sweepSelections();
     if (!owner) return { ok: false, reason: "NO_OWNER" };
@@ -974,7 +967,7 @@ export class Retrieval {
         `SELECT handle, kind, q, n, created, touched, expires FROM selections WHERE owner=? ORDER BY created DESC`, owner),
       caps: { maxItems: SELECTION_MAX_ITEMS, maxPerOwner: SELECTION_MAX_PER_OWNER },
       bytes: (() => {
-        const hid = viewer === undefined ? null : hiddenSet(viewerPredicate(viewer));
+        const hid = viewer === undefined ? null : hiddenBundles(viewer);
         return this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`
           + (hid ? ` WHERE bundle_id NOT IN ${hid.sql}` : ""), ...(hid ? hid.args : [])).b;
       })(),
