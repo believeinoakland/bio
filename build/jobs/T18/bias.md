@@ -22,3 +22,7 @@
 - Layer tests: none named in `build/manifest.md`. No service I provide changed.
 
 Size (session_01LB1rWefscuBDQgpU9jLcJV): test runs 1, module lines 22
+
+## J1 · COMPLETE
+
+BIAS #4 complete on job/T18/bias. N242's share: verified still met (C-26.11's where names promotionCheck > bias-set-refusal, src/bias/index.mjs:199-205); the stale comment above the row fixed (comment only, no row changed, nothing awaiting stamp). Convert d84-case-manifest (bias R8): new module test, a same-state revision lands in every state (draft, proposed, adopted, retired) through the real promotion. No catalogue/store move owed (legacy-store 0/0, legacy-checks 0/0). Tests 54 pass / 0 fail / 1 todo (R26, K102); format, architecture, coverage (45/45), ownership: 0 failures. REPORT: the checks.mjs comment edit stales bio-plane/dist/bio-plane.bundled.mjs and agent-worker/dist/agent-worker.bundled.mjs (regenerate at the layer close). Record: build/jobs/T18/bias.md, Completion (BIAS #4).
