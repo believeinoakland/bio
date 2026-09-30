@@ -1,6 +1,6 @@
 # record-core (T18)
 
-**Status** · session_01Lj5VggHJkUrDw8F1WKQdSq · depth 2 · WORKING · handled B2
+**Status** · session_01Lj5VggHJkUrDw8F1WKQdSq · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
