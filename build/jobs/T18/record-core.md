@@ -58,3 +58,47 @@ What this job's change means for other modules:
    This does not bear on `raise` as long as its callers write through `transact`. It is a flaw in those two modules against record-core R32 ("one transaction over the whole store"): I recommend they move to `record.transact` at their next jobs.
 6. **The DEC-49 guard** (`civicos-ui/check-refusal-codes.mjs`, run only at a release) harvests `*_CHECKS` from the catalogue only. C-75 now reads as unregistered there, as C-35 does (K641's note).
 7. **Size note, for the plan.** R64/R65 left `store.mjs` at 4 lines added and 25 removed, not ~150: the counting stays in the source (`#counts`), per K645.
+
+## J3 · COMPLETE
+
+**Entries applied** (layer 2, record-core; requirements as K645 wrote them):
+- **N406, R66 `afterCommit(fn)`**, in `transact`: each open call holds a list. A committed savepoint hands its list up; the outermost commit runs it before `transact` returns; a rollback drops it.
+- **K621, R64 and R65.** `registerStatsSource`, `stats({capacity, viewer})` and the private `proofCounts()`:
+  - wire form: `leads`, `observations`, `themes` and `themePlacements` dropped, whatever the source answers;
+  - `dbBytes` only when `capacity === true`;
+  - proof form: whole, with `dbBytes`, without `observationsNonLead`.
+
+  `store.mjs` is rewired (§12.2): `#counts` is registered as the source, and `op=stats` and `purge` call record-core. The store's `stats()`, its `capacity` parameter and its `dbBytes` line are removed. **R64's `not yet met` mark is met.**
+- **§1b, R67 and R18.**
+  - `registerGrammar` and `grammars()`, validated against the catalogue's `EXTENSION_ARMS`.
+  - `auditPass` passes the grammars to `checkBundle(input, {grammars})`. Each arm is wrapped so that a throw is one `AUDIT_CHECK_FAILED` error under its module.
+- **C-75, ✱.** `PER_ITEM_CHECKS` is moved whole into `record-core/checks.mjs` and exported from record-core. The catalogue's copy is deleted (49 lines); record-core was its one importer. R55 met.
+- **C-59.5 and C-102.1–.3** copied into `RECORD_CORE_CHECKS`. `allocIdOp` and `registerAuditCheck` now read their own rows; `registerAuditCheck`'s refusals now carry code, check and translation.
+- **Convert `mint-ledger`, R28's caller half.** A pre-ledger store is fixtured with legacy-store's `#MINT_LEDGER_LIVE` sources and a `CASE-2026` counter. Its PROJ and CASE ids are refused after a whole-store purge and after a single-bundle purge, with a no-seed control. The counter's `CASE-2026-0001..0003` are refused, used or not. No figure of `stats`, `proofCounts`, `counts` or purge names the ledger. The old suite is not deleted (K619).
+
+**Rows `awaiting stamp`** (J2 item 3):
+- C-75.1–.5 moved;
+- C-59.5 and C-102.1–.3 copied (C-102.1–.3's `where`s now name regions);
+- C-102.15–.18 new.
+
+**Deferred:** nothing.
+
+**Found in other modules:** J2 (REPORT). In short:
+- the plane and agent-worker bundles are stale;
+- promotion should pass `record.grammars()` to the gate;
+- the catalogue copies go in T19;
+- capture and ai-runs bypass `transact`, which bears on `afterCommit` (R32);
+- the DEC-49 guard harvests the catalogue only.
+
+**Tests and checks:**
+- `node --test test/m/record-core/`: tests 78, pass 78, fail 0 (15 new, named R18, R28, R50, R52, R55, R59, R64–R67).
+- `node --test test/m/` whole: tests 3349, pass 3327, fail 0, todo 22. This covers every module that uses record-core's services; no layer tests are named in the manifest.
+- `format`: 77 modules, 72 requirements files; 0 failures.
+- `architecture record-core`: 5 product files, 8 relative imports; 0 failures.
+- `coverage record-core`: 67 of 67 live requirement ids named by a test; 0 failures.
+- `ownership record-core tranche/T18`: 6 files changed; legacy-store 4 lines added, 25 removed; legacy-checks 0 added, 49 removed; 0 failures. The 4 added lines, for BOB:
+  - `store.mjs`:513 `recordOf(ctx).registerStatsSource("legacy-store", …)`;
+  - :2357 and :2363 `recordOf(this.ctx).proofCounts()`;
+  - :3013 `stats: () => recordOf(this.ctx).stats({…`.
+
+Size (session_01Lj5VggHJkUrDw8F1WKQdSq): test runs 8, module lines 1419
