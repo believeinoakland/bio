@@ -1,6 +1,6 @@
 # capture-requests (T18)
 
-**Status** · session_01Ff7skf5DLANXvvLjjJWTYg · depth 2 · COMPLETE · handled B2
+**Status** · session_01Ff7skf5DLANXvvLjjJWTYg · depth 2 · COMPLETE · handled B3
 
 **Completion** (CAPTURE-REQUESTS #4, 2026-09-30)
 
