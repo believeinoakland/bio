@@ -1,7 +1,7 @@
 /* sources: consent by the knocker's own secret, with no account (R11). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, SECRET, OTHER_SECRET } from "./fixture.mjs";
+import { seeded, V, SECRET, OTHER_SECRET, T0 } from "./fixture.mjs";
 import { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT } from "../../../src/sources/index.mjs";
 
 test("R11 a source proves who they are by presenting their knocker secret and consents to, or withdraws from, one entry for one audience, as R7 records a consent", async () => {
@@ -98,3 +98,28 @@ test("R11 the act is rate-bound as a knock is, in the same windows as knocks: a 
                "SECRET_NOT_RECOGNISED");
   assert.equal(w2.count("source_consents"), 0);
 });
+
+test("R11 the rate is counted on one clock: an attempt the control plane sends no instant for is counted at this module's clock, never the wall clock, and the knock window holds across its edge (capture R31, R71)", async () => {
+  const W = 10 * 60 * 1000;
+  for (const offset of [-1, 0, 1, W / 2]) {
+    const w = seeded();
+    const edge = Math.ceil(T0 / W) * W + 7 * W;          // a window's edge, far from the wall clock's window
+    w.clock.now = edge - 2000;
+    const { sourceId } = await w.pulled({ secret: SECRET });
+    const e = w.disclose(sourceId);
+    w.clock.now = edge + offset;
+    const all = () => w.rows(`SELECT coalesce(sum(count), 0) AS n FROM knock_rate WHERE bucket LIKE 'all:%'`)[0].n;
+    const before = all();
+    await w.s.consentBySecret({ knockerSecret: "a wrong guess of sufficient length", entry: e.entry, audience: "group", sourceAddress: "x1" });
+    await w.s.consentBySecret(null);
+    await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "group", sourceAddress: "x1", now: String(w.clock.now) });
+    assert.equal(all(), before + 3, `offset ${offset}: three attempts, counted in the window, the earlier bucket kept`);
+    assert.ok(w.spy.attempts.slice(-3).every((a) => Number(a.now) === w.clock.now), `offset ${offset}: every attempt at the module's clock`);
+    /* the per-source bound holds across the edge: 12 in the window, the thirteenth refused */
+    for (let i = 0; i < 11; i++)
+      await w.s.consentBySecret({ knockerSecret: "another wrong guess, long enough " + i, entry: e.entry, audience: "public", sourceAddress: "x1" });
+    assert.equal((await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "public", sourceAddress: "x1" })).reason, "RATE_IP",
+                 `offset ${offset}: the thirteenth attempt from one source`);
+  }
+});
+
