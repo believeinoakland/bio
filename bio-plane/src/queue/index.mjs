@@ -2468,84 +2468,15 @@ export class Queue {
     return out;
   }
 
-  /** op=queue: the member's ONE feed.
-   *
-   *  `member` and `viewer` are BOTH stamped server-side at index.mjs and are
-   *  never taken from the caller — whose queue this is, and whose view its
-   *  case names are compiled for, are server decisions or they are not
-   *  decisions at all.
-   *
-   *  WHOSE OBLIGATIONS. Tasks assigned to the caller, PLUS tasks honestly
-   *  `unassigned`. D-98 intends an unassigned task to stay claimable and
-   *  routable by hand, and DEC-7 keeps it claimable rather than stranded, so
-   *  hiding it from every queue would strand exactly the work routing could
-   *  find nobody for. A machine credential has no member behind it and gets
-   *  the whole live set, which is the operator view the token exists for.
-   *
-   *  `refers_to` POINTS AT THE SUBJECT, NOT AT THE CASE. They are different
-   *  columns and the contract carries both: `subject` is what the item is
-   *  about, `case` is where it is filed. Collapsing them is how a queue
-   *  invents a home. */
-  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200 } = {}) {
-    const cap = clampLimit(limit, 200, 500);
-    const now = this.#nowMs(nowMs);
-    const me = typeof member === "string" && member.trim() ? member.trim() : null;
-    /* REC-132 / D-422: the queue's act options ask D-310's owner fact of the POSITIONAL
-       identity, which is `member` — already the control plane's stamp of who asks —
-       spelled in the viewer grammar. A machine credential stamps no member and keeps
-       the fallback to its viewer, byte-unchanged. */
-    const identity = me ? `member:${me}` : null;
+  /** queue-producers R8's `feedItems`, until that module merges: the `producers` dependency when one is given, else
+   *  this module's own producers, answering the same `{items, facts}`. */
+  #feedItems(args) {
+    const p = this.#deps.producers;
+    return p && typeof p.feedItems === "function" ? p.feedItems(args) : this.#ownFeedItems(args);
+  }
+
+  #ownFeedItems({ member: me, viewer, now, nowMs, identity }) {
     const items = [];
-
-    /* ---------------------------------------------------- OBLIGATION · tasks
-       REC-30: the CASE set was gated from birth (#queueAncestors) but the
-       SUBJECT was not, and an obligation's subject is a bundle id — with the
-       task's `subject_text` beside it. An item about a bundle this viewer may
-       not see is withheld whole, the same posture op=tasks now takes: an
-       obligation nobody may be told about is not an obligation this feed can
-       carry, and a routed task on an invisible project reaches its assignee,
-       who by construction can see it. Withheld silently and with no count, for
-       the reason `mute` states its own suppressions and this cannot: a count
-       here would say a project exists. */
-    const taskSeen = this.#bundleGate("tk.refers_to", viewer);
-    for (const row of this.#rows(
-      `SELECT tk.* FROM tasks tk WHERE (${taskSeen.sql}) ORDER BY tk.created DESC, tk.id LIMIT ?`,
-      ...taskSeen.args, cap * 2)) {
-      if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
-      const subject = row.refers_to;
-      /* The homes are derived FIRST and the event's state is asked ONCE, for
-         all of them. This ordering is the whole of DEC-16 in two lines: one
-         state, N homes.
-         NEGATIVE CONTROL (REC-20): replace the single event-keyed test below
-         with a per-(member, case) one — keep the item alive under every home
-         except the first, as a queue_state row keyed by (member, case) would —
-         and a resolved event with two ancestors leaves a stale unresolved copy
-         under the second. */
-      const homes = this.#queueAncestors([subject], viewer);
-      if (!this.#queueEventLive(row)) continue;
-      const createdMs = Date.parse(row.created);
-      items.push({
-        id: row.id,
-        class: "OBLIGATION",
-        kind: row.kind,
-        case: homes,
-        subject: { kind: "bundle", id: subject },
-        summary: row.subject_text,
-        detail: row.subject_desc ?? null,
-        basis: { source: "tasks", refers_to: subject, routed_role: row.assignee_role,
-                 status: row.status,
-                 detail: "an obligation is a routed task: a named person must act for the record "
-                       + "to proceed (D-98). refers_to points at the SUBJECT; case is derived." },
-        age: Number.isFinite(createdMs)
-          ? { state: "determined", since: row.created, ms: Math.max(0, now - createdMs) }
-          : { state: "undetermined", reason: "unparseable_created",
-              detail: "the task row carries a created stamp this producer cannot read as an instant" },
-        assignee: row.assignee,
-        assignee_role: row.assignee_role,
-        options: this.#queueOptions([subject], viewer, identity),
-      });
-    }
-
     /* --------------------------------------- OBLIGATION · D-86 · bias debt
        The OBLIGATION half's SECOND producer: one item per run whose lens moved, raised by the `bias-debt` alarm
        consumer. Pushed above the mint, like every producer, so the mint validates what it mints. */
@@ -2628,6 +2559,101 @@ export class Queue {
        only class a member may ever mute, so this is the first read in which
        that machinery does anything on a live item. */
     items.push(...this.#queueConditions(viewer, now, identity));
+    return { items, facts: {
+      objective_gap: { bound: gaps.bound, truncated: gaps.truncated === true },
+      unattributed: { count: Number(fromAnotherTeam.unattributed) || 0,
+                      inquiries: Array.isArray(fromAnotherTeam.unattributed_inquiries) ? fromAnotherTeam.unattributed_inquiries : [] },
+      contradiction: null,
+      dispositions: Array.isArray(feed.dispositions) ? feed.dispositions : [] } };
+  }
+
+  /** op=queue: the member's ONE feed.
+   *
+   *  `member` and `viewer` are BOTH stamped server-side at index.mjs and are
+   *  never taken from the caller — whose queue this is, and whose view its
+   *  case names are compiled for, are server decisions or they are not
+   *  decisions at all.
+   *
+   *  WHOSE OBLIGATIONS. Tasks assigned to the caller, PLUS tasks honestly
+   *  `unassigned`. D-98 intends an unassigned task to stay claimable and
+   *  routable by hand, and DEC-7 keeps it claimable rather than stranded, so
+   *  hiding it from every queue would strand exactly the work routing could
+   *  find nobody for. A machine credential has no member behind it and gets
+   *  the whole live set, which is the operator view the token exists for.
+   *
+   *  `refers_to` POINTS AT THE SUBJECT, NOT AT THE CASE. They are different
+   *  columns and the contract carries both: `subject` is what the item is
+   *  about, `case` is where it is filed. Collapsing them is how a queue
+   *  invents a home. */
+  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200 } = {}) {
+    const cap = clampLimit(limit, 200, 500);
+    const now = this.#nowMs(nowMs);
+    const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    /* REC-132 / D-422: the queue's act options ask D-310's owner fact of the POSITIONAL
+       identity, which is `member` — already the control plane's stamp of who asks —
+       spelled in the viewer grammar. A machine credential stamps no member and keeps
+       the fallback to its viewer, byte-unchanged. */
+    const identity = me ? `member:${me}` : null;
+    const items = [];
+
+    /* ---------------------------------------------------- OBLIGATION · tasks
+       REC-30: the CASE set was gated from birth (#queueAncestors) but the
+       SUBJECT was not, and an obligation's subject is a bundle id — with the
+       task's `subject_text` beside it. An item about a bundle this viewer may
+       not see is withheld whole, the same posture op=tasks now takes: an
+       obligation nobody may be told about is not an obligation this feed can
+       carry, and a routed task on an invisible project reaches its assignee,
+       who by construction can see it. Withheld silently and with no count, for
+       the reason `mute` states its own suppressions and this cannot: a count
+       here would say a project exists. */
+    const taskSeen = this.#bundleGate("tk.refers_to", viewer);
+    for (const row of this.#rows(
+      `SELECT tk.* FROM tasks tk WHERE (${taskSeen.sql}) ORDER BY tk.created DESC, tk.id LIMIT ?`,
+      ...taskSeen.args, cap * 2)) {
+      if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
+      const subject = row.refers_to;
+      /* The homes are derived FIRST and the event's state is asked ONCE, for
+         all of them. This ordering is the whole of DEC-16 in two lines: one
+         state, N homes.
+         NEGATIVE CONTROL (REC-20): replace the single event-keyed test below
+         with a per-(member, case) one — keep the item alive under every home
+         except the first, as a queue_state row keyed by (member, case) would —
+         and a resolved event with two ancestors leaves a stale unresolved copy
+         under the second. */
+      const homes = this.#queueAncestors([subject], viewer);
+      if (!this.#queueEventLive(row)) continue;
+      const createdMs = Date.parse(row.created);
+      items.push({
+        id: row.id,
+        class: "OBLIGATION",
+        kind: row.kind,
+        case: homes,
+        subject: { kind: "bundle", id: subject },
+        summary: row.subject_text,
+        detail: row.subject_desc ?? null,
+        basis: { source: "tasks", refers_to: subject, routed_role: row.assignee_role,
+                 status: row.status,
+                 detail: "an obligation is a routed task: a named person must act for the record "
+                       + "to proceed (D-98). refers_to points at the SUBJECT; case is derived." },
+        age: Number.isFinite(createdMs)
+          ? { state: "determined", since: row.created, ms: Math.max(0, now - createdMs) }
+          : { state: "undetermined", reason: "unparseable_created",
+              detail: "the task row carries a created stamp this producer cannot read as an instant" },
+        assignee: row.assignee,
+        assignee_role: row.assignee_role,
+        options: this.#queueOptions([subject], viewer, identity),
+      });
+    }
+
+    /* ------------------------------------------- the producers (queue-producers R8; N363)
+       Every item that is not a task comes from the producers' one read, handed this module's R7 walk and R12
+       options so there is one walk and one derivation; its `facts` are published below (R6, R15). Pushed above the
+       mint, like every producer, so the mint validates what it mints. */
+    const produced = this.#feedItems({ member: me, viewer, now, nowMs, identity,
+      homesOf: (subjects) => this.#queueAncestors(subjects, viewer),
+      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });
+    const facts = produced && produced.facts && typeof produced.facts === "object" ? produced.facts : {};
+    items.push(...(produced && Array.isArray(produced.items) ? produced.items : []));
 
     /* THE MINT, and PL-15 SWEPT IT FOR THE CLASS RATHER THAN ADDING TO IT.
      *
@@ -2725,6 +2751,14 @@ export class Queue {
          is the same argument `suppressedBy` makes one block down. A producer
          computing its own answer would be six copies of the act's key. */
       it.disposition = this.#dispositionOf(it);
+      /* R2, R8 (N363): the catalogue id is stamped here, where the catalogue is, and sits after `kind` as its producer
+         once placed it. */
+      const cid = catalogueIdOf(it.kind);
+      if (cid !== null && it.catalogue_id !== cid) {
+        const { id, class: cls, kind, catalogue_id: _, ...rest } = it;
+        for (const k of Object.keys(it)) delete it[k];
+        Object.assign(it, { id, class: cls, kind, catalogue_id: cid, ...rest });
+      }
       /* R18: the lead's set-aside, offered exactly when its disposition is available (R12). */
       if (it.kind === "out-of-inquiry-lead" && it.disposition.available === true) it.options = [...it.options, Queue.LEAD_SET_ASIDE];
     }
@@ -2931,7 +2965,7 @@ export class Queue {
        DOES have to be able to tell is whose feed each decision governs, and
        `scope` (with `project` beside it) says exactly that on every row. */
     const dispAll = [
-      ...(Array.isArray(feed.dispositions) ? feed.dispositions : []).map((d) => ({
+      ...(Array.isArray(facts.dispositions) ? facts.dispositions : []).map((d) => ({
         /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling, so a
            surface ties a decision to the thing it removed without rebuilding
            the identity from two columns — the drift class IC-53 closed one
@@ -3029,16 +3063,20 @@ export class Queue {
          when, so a member who did not resolve one reads "resolved by X on this date" rather than a gap. */
       resolved: this.#resolvedLately(viewer, now),
       /* N172: the bound on the projects `objective-gap` asks about, published beside whether it cut. */
-      objective_gap_projects_bound: gaps.bound,
-      objective_gap_projects_truncated: gaps.truncated === true,
+      objective_gap_projects_bound: facts.objective_gap ? facts.objective_gap.bound ?? null : null,
+      objective_gap_projects_truncated: !!(facts.objective_gap && facts.objective_gap.truncated === true),
+      /* R6 (N345): the bound on the projects the contradiction producers ask about (queue-producers R4), beside
+         whether it cut. Neither counts nor names the other side of a conflict a member cannot see. */
+      contradiction_projects_bound: facts.contradiction ? facts.contradiction.bound ?? null : null,
+      contradiction_projects_truncated: !!(facts.contradiction && facts.contradiction.truncated === true),
       /* D-266's SECOND, SMALLER HALF — the folded gap, counted rather than
          closed, because closing it needs an identity this record does not
          hold and inventing one would be the overclaim the silence exists to
          avoid. */
       unattributed_readings: {
-        count: Number(fromAnotherTeam.unattributed) || 0,
-        inquiries: Array.isArray(fromAnotherTeam.unattributed_inquiries)
-          ? fromAnotherTeam.unattributed_inquiries : [],
+        count: Number(facts.unattributed && facts.unattributed.count) || 0,
+        inquiries: facts.unattributed && Array.isArray(facts.unattributed.inquiries)
+          ? facts.unattributed.inquiries : [],
         detail: "readings of a SHARED question that this read met and could not attribute to a team, "
               + "so no `new-version-arrived-from-another-team` item was minted for them. The source "
               + "team is a run's own stored context or it is nothing: a member does not name a team in "

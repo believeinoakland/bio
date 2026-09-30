@@ -4,9 +4,11 @@
 
 ## Progress (QUEUE #5)
 
-- R1 amended (N345's seven kinds) committed alone at 89e91bd74c, reported J1 for an early merge.
-- R46 built in `#dispositionOf` (`#contradictionDisposition`, and side-corrected's act on R12's project-scoped disposition) on J2's reading of the subject shape; its test comes with the switch to `feedItems` (a stubbed producer), since until then no producer in queue mints these kinds.
-- **Next:** on BOB's ANSWER to J2, align R46. On each CHANGE (tasks merged; queue-producers merged): merge the tranche, remove the moved code, rewire (tasks R6's three reads; queue-producers R8's `feedItems` with `homesOf`/`optionsOf`, its `facts` published, `catalogue_id` stamped at the mint), R6's publication clause, R42's three figures, registrations as draft §3.3, tests re-mapped (§3.5), then steps 5–7.
+- R1 amended (N345's seven kinds) at 89e91bd74c; per B2 (K558) it merges with this job.
+- R46 in `#dispositionOf` (`#contradictionDisposition`; side-corrected's act on R12's project-scoped disposition), on the subject shapes K558 ruled (`queue-producers` R8).
+- The seam: `queueFeed` takes every non-task item from one `#feedItems({member, viewer, now, nowMs, identity, homesOf, optionsOf})` → `{items, facts}` (queue-producers R8). Until that module merges, a `producers` dependency answers it when given, else `#ownFeedItems` (today's producers, moved behind the seam unchanged). The answer publishes `facts` (R15's dispositions, the objective-gap bound, `unattributed_readings`) and R6's new `contradiction_projects_bound` / `contradiction_projects_truncated`; the mint stamps `catalogue_id` after `kind` (R2). Checked byte-equal: a feed with every producer firing (18 items as the admin credential, 17 as an administrator member) serialises identically to 375b8e5c10's, but for R6's two new fields.
+- Tests: `contradictions.test.mjs` (R1, R2, R6, R11, R19, R31, R32, R46) over a stubbed `feedItems`; queue 74/74. Negative control: with R46's dispatch disabled, 2 of its 5 tests fail.
+- **Next:** on each CHANGE (tasks merged; queue-producers merged): merge the tranche, remove the moved code, rewire (tasks R6's three reads; `feedItems` imported in place of `#ownFeedItems`), R42's three figures, registrations as draft §3.3, tests re-mapped (§3.5), then steps 5–7.
 
 ## J1 · REPORT
 
