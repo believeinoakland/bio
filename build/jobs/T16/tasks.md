@@ -46,3 +46,11 @@
 - `format`: 72 modules, 67 requirements files, 0 failures. `architecture tasks`: 8 files, 29 imports, 0 failures. `coverage tasks`: 11 of 11 live ids, 0 failures. `ownership tasks tranche/T16`: 10 files, legacy-store 4 added, 5 removed, 0 failures.
 
 Size (session_01GmhJiVaLDr9SrNLwSpEZMa): test runs 19, module lines 937
+
+## J1 · REPORT
+
+Found in other modules while writing `tasks` (detail in my record's Completion, "Found in other modules"):
+1. **queue (QUEUE #5):** after this merges, remove the moved code and rewire to R6: `recentTasks` (:2454), `resolvedTasks` (`#resolvedLately`, :3089) and `taskExists` (:3213). R6 answers tasks in `taskList`'s shape (`subject.text`). Drop `tasks` from queue's purge declaration, `COUNT_KEYS`/`counts`, its audit check, its promotion step, the `task-drain` consumer, `capture.on("task")`, `QUEUE_TABLES`/`QUEUE_SCHEMA`, `queueOps`' four task ops, and the four moved rows plus `checkInboxGrammar` from `queue/checks.mjs`. Tasks' registrations then become live by themselves: `tasksOf` registers only when its purge declaration of `tasks` holds, and today queue holds it.
+2. **control-plane:** `MODULE_CHECK_FILES` needs `../tasks/checks.mjs` once queue's rows go, and `uses` gains `tasks`.
+3. **legacy-tests**, new reds from this change, each a reading of source text, none a change of behaviour: `test/hygiene.test.mjs` (purge coverage lists `tasks`: it reads the store's literal list, and queue declares `tasks` at run time); `test/machinefences-dec49.test.mjs` ARM A3 (MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE are translated in two places while queue keeps its copy); `test/d484-refusal-translation.test.mjs` store floor (`src/store.mjs` is now 209,972 characters against 210,035); `civicos-ui/check-refusal-codes.mjs` (+8, all duplicate rows, regions and sites from the coexistence). Every other failing verdict of the 42 legacy suites that name the inbox is the same as on `tranche/T16`.
+4. **Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale; not rebuilt (§14).
