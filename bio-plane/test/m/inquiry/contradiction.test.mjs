@@ -277,7 +277,7 @@ test("R38 C-2.11–C-2.18 are held in this module's own table, each with its cod
   for (const r of Object.values(INQUIRY_CONTRADICTION_CHECKS)) assert.match(r.where, /^src\/inquiry\/(contradiction|index)\.mjs \w+ > is-[a-z-]+$/);
 });
 
-test("R47 R38 an arm that stops with an error refuses the document under its own row, CONTRADICTION_ARM_FAILED (C-2.18), never as a malformed link (N369)", () => {
+test("R47 R38 an arm that cannot judge: a check that stops with an error refuses the document under its own row, CONTRADICTION_ARM_FAILED (C-2.18), never as a malformed link (N369, K543)", () => {
   const row = INQUIRY_CONTRADICTION_CHECKS.CONTRADICTION_ARM_FAILED;
   /* a document whose fields cannot be read: every block the arm reads throws */
   for (const key of ["contradiction", "resolution", "explores"]) {
