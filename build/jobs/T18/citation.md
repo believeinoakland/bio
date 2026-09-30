@@ -1,6 +1,6 @@
 # citation (T18)
 
-**Status** · session_016yjBBai14h7u1bLpxUiV2n · depth 2 · COMPLETE · handled B1
+**Status** · session_016yjBBai14h7u1bLpxUiV2n · depth 2 · COMPLETE · handled B2
 
 ## Completion (CITATION #4, T18 layer 6)
 
