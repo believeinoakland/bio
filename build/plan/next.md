@@ -85,3 +85,5 @@
 - **N422** (K685; REEVALUATION #8's REPORT) · inquiry R42: `#raise` carries reevaluation's `raise` answer object itself rather than copying `listeners_failed` when `raise` returns (N406 writes it only after the outermost commit), as promotion's reopen and case-authoring do, so a re-read's reply names a failed listener; the same for `dispose` and `divide` under a caller's transaction. Also record-core: `registerGrammar`'s answer (`src/record-core/index.mjs`:970) classified for the DEC-49 guard (N242's share).
 
 - **N423** (K688; REVIEW #5 J2) · review: `src/review/index.mjs` imports `isMachineIdentity` from the catalogue (a re-export since T18 layer 1); re-point it to `record-grammar`, `uses` gaining `record-grammar` (BOB's edge, written before the job) and the Uses section re-worded; the catalogue's re-export is then one importer fewer.
+
+- **N424** (K690; CASE-GRAMMAR #1 J1) · case-authoring: `#reauthorAcknowledgements` spells case-grammar R3's acknowledgements locator a second time, and `document.mjs` keeps its own `fmSafe`; read both from `case-grammar` (`uses` gaining `case-grammar`, BOB's edge, written before the job).
