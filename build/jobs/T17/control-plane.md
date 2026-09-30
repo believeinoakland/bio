@@ -39,7 +39,17 @@ Proposed **R39** (for whichever module holds the gate): `op=purge` is refused 40
 
 **Tests and checks** (after merging `tranche/T17` for B3). `test/m/control-plane/`: 79 tests, 79 pass, 0 fail, 0 todo. format (72 modules; 0 failures), architecture (19 files, 101 imports; 0 failures), coverage (39 of 39; 0 failures), ownership (9 files; legacy 0/0; 0 failures). Negative controls, each restored: `captureaccounts` out of the viewer reads, `sourcesOps` not dispatched, the fault not sanitised, `within` not passed: each turns a doorbell test red (1, 1, 1, 3 fails).
 
-**Pending:** B2 (TASK_NOT_YOURS decorated at the door), on BOB's CHANGE that tasks' second completion has merged.
+**Pending:** B2 (TASK_NOT_YOURS decorated at the door), on BOB's CHANGE that tasks' second completion has merged. *(Done under B4: see Completion.)*
+
+## Completion (B1–B4)
+
+**Applied, beyond Progress above.** B2/B4 (N382, K606): after merging `tranche/T17` with tasks' `TASK_NOT_YOURS`, `envelope.test.mjs`' R22 test reads tasks' four rows under their new keys (the old arm pinning `NOT_YOURS` to intent's row is gone), and a new R22 test drives a forwarded `taskresolve` and `taskforward` refusal through the door: decorated with C-76.1 and tasks' sentence, never intent's C-111.15, with intent's own `NOT_YOURS` still reading intent's row as its negative control. No code change was needed: `dec49Row` finds the row by its new key.
+
+**Deferred.** None. R39 (`op=purge`'s confirmation gate) and `op=stats`' disclosure stay with their current modules by K607 (N408).
+
+**Tests and checks** (on the merged tree). `test/m/control-plane/`: 80 tests, 80 pass, 0 fail, 0 todo. format (72 modules; 0 failures), architecture (19 files, 102 imports; 0 failures), coverage (39 of 39; 0 failures), ownership (9 files; legacy 0/0; 0 failures).
+
+Size (session_01U9c3F6p3iPjDpkKhwgCrCS): test runs 17, module lines 9617
 
 ## J2 · REPORT
 
