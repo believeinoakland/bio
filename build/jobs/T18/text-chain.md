@@ -21,3 +21,25 @@ Found in other modules while doing this job (none changed by me):
 4. **Generated artifacts stale** (manifest §14): the plane's bundle (`bio-plane/dist/`) and agent-worker's (the catalogue is an input) are stale until regenerated at the layer close; `release/` likewise. Not written by me.
 5. **Red on `tranche/T18` before and after this job, not caused by it** (same failures on a clean `origin/tranche/T18` worktree): membership `module-order.test.mjs` R83, `t9-notice-sight-bounds.test.mjs` R79 and promotion `registry.test.mjs` R39/R45/R46 (`MODULE_ORDER` is not `modules.json`'s order since the T18 modules were added); ocr-worker R16 (2 fails, its own N402 entry this tranche); agent-worker R45 (2 fails, bundle static check and freshness).
 6. **text-chain's own exports with no requirement** (for BOB, P17): `weaker`, `stepCovers`, `perPageTierWinner`, `TIER_RULE`, `CONFIDENCE_BASES`, `EXTENT_KINDS`, `READING_POSITION_KINDS`, `READING_POSITION_UNPRODUCED` are exported and used (the legacy suites and callers read them) but named by no R; tested only indirectly. Propose Rs at the next requirements pass, or rule them internal.
+
+## J3 · COMPLETE
+
+**Entries applied** (layer 1, K629, K630, K634; B1, B3):
+- ✱ C-35 `TEXT_CHAIN_CHECKS` moved whole from `bio-plane/checks/bio-checks.mjs` into `bio-plane/src/textchain.mjs` (exported, fourteen rows byte-identical: compared as JSON against the catalogue's at the merge, `identical: true`; header comment carried with it). The catalogue's copy deleted in this job (§12.2, K586 BOB-1): 154 lines removed, 0 added.
+- Re-pointed: `refusal()` reads the module's own family; `BASIS_GRADES`, `EARNED_CAPTURE_CEILING`, `isMachineIdentity` now read from `record-grammar` (`./record-grammar/index.mjs`), K634 (2). The module no longer imports the catalogue.
+- The row is **awaiting stamp** (promotion, layer 2).
+- Converts (K619; old suites not deleted): `textchain` → `test/m/text-chain/family.test.mjs` (R86 and the Errors summary: exactly fourteen rows C-35.1–C-35.14, each `where` naming the region of the service that refuses it, a translation per row, every row driven through its own condition and read off the refusal). `drive-convert` → `grade.test.mjs` "R59: a host's conversion ahead of a text layer…" (with R29, R39: `[convert, layer]` bounds the capture axis to null for every byte grade and every layer letter, the layer alone as control, the sentence in order). R84's test now also reads every row's check, where and translation.
+- No `not yet met` mark in this module's requirements.
+
+**Deferred:** none.
+
+**Found in other modules:** J2 REPORT (control-plane N414; legacy suites; the stamp; stale bundles; pre-existing reds on the tranche branch; exports with no R).
+
+**Tests and checks** (on `job/T18/text-chain` after merging `tranche/T18` @ record-grammar's merge):
+- `node --test bio-plane/test/m/text-chain/`: tests 98, pass 98, fail 0.
+- `node --test bio-plane/test/m/` (every module test, as the catalogue lost rows and my uses' users read it): tests 3319, pass 3294, fail 3, todo 22; the 3 are membership R83, R79 and promotion R39/R45/R46 (`MODULE_ORDER`), the same 3 on a clean `origin/tranche/T18`.
+- `ocr-worker/test/` (uses text-chain): 193 passed, 2 failed (R16), the same on `origin/tranche/T18`. `agent-worker/test/requirements.test.mjs` (reads the catalogue): 253 passed, 2 failed (R45), the same on `origin/tranche/T18`.
+- No layer tests named in the manifest.
+- `format`: 77 modules, 72 requirements files; 0 failures. `architecture text-chain`: 8 product files, 11 relative imports; 0 failures. `coverage text-chain`: 91 of 91 live requirement ids named by a test; 0 failures. `ownership text-chain tranche/T18`: 8 files; legacy-checks: 0 line(s) added, 154 removed; 0 failures.
+
+Size (session_01N7QX5khED3EnvE1RYee7kL): test runs 9, module lines 1845
