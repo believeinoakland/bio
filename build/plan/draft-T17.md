@@ -35,6 +35,8 @@ Cut from T16's "Not in T16" (`current.md`), `next.md`'s open entries, rulings K5
 
 ## Layer 11
 
+- **tasks** · N382: its `NOT_YOURS` (C-76.1) gets its own code, apart from intent's C-111.15.
+
 On the modules T16's layer 11 writes (N363's split); re-read at its close.
 
 - **queue** · N373 (K531): the feed reads tasks capped at `cap×2` before dropping resolved ones (`queue/index.mjs`:2455 before the split), so many recently resolved tasks can hide open ones, short of R8.
