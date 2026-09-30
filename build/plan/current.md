@@ -2,6 +2,8 @@
 
 **Status** · OPEN · BOB #73 · session_01SgBCnPS48MxiscmhoWHwzR · depth 1
 
+**Jobs** · legacy-checks: LEGACY-CHECKS #11 session_01TaobwHYryXf8vfbvWkYqUz
+
 Opened by BOB #73, 2026-09-30 (PROCESS-MECHANICS §5), at `main` @ caf5106554, T16 closed (K571). Cut from `draft-T17.md`, re-read against T16's close (K564–K573): T16's layers 8, 11 and legacy-tests folded (K566, K571), N362, N374, N375 worded (K565, K569), and Bob's priority on converting the old tests (K572) carried by the inventory's entries (K573). An `N` entry's text is in `build/plan/next.md`; the old battery's classes in `build/plan/legacy-inventory.tsv`. Bob's weekly meter at the opening: 48% (K568).
 
 **Rules at the opening.** T16's rules hold (`archive/T16.md`): long batteries in the foreground, in chunks under ten minutes, the record pushed after each; a provider a later job of its layer needs merges early (§4, K425); legacy-checks' N372 runs first in layer 1 (K529); promotion stamps at layer 2, last in it, every row change from T16's layers 3+ and T17's layers 1–2 (N318, K425), and rows added at T17's layers 3+ are named `awaiting stamp` for T18; legacy-tests runs alone, last (K420, K427), retiring a covered extracted suite before re-anchoring anything (K457); a job names each `not yet met` mark its work meets and BOB strikes it (K460); after each extraction merge BOB runs `test/m/` whole on the tranche.
