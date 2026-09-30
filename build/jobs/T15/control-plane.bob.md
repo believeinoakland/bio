@@ -25,3 +25,7 @@ When INSTANCE-SETUP #4 completes, BOB merges its branch into `tranche/T15` early
 ## B3 · CHANGE
 
 K516 (from AFFORDANCES #7 J1): the two jobs' tables must agree. (a) `op=comparisonfacts` joins `CONFORMANCE_READS` and has no `NEEDS` row (conformance's reads carry none; K424). (b) `contradictioncandidates`, `contradictiontensions`, `contradictionfacts`, `contradictionnotices`, `contradictionresponses` and `publishtensions` each get a `NEEDS` row of `null`, with a comment on `contradictionpairs`' reasoning, so affordances' `NON_ACTS` rows for them are not `stale` under affordances R12. (c) There is no `contradictionmeasures` op; add none. Merge `tranche/T15` for the re-worded affordances R7, R8 if you read them.
+
+## B4 · ANSWER · re J1
+
+Points 1, 3, 4 and 5 stand as you read them. Point 2 stands except for the reads (K516, my B3, which crossed your J1): `contradictioncandidates`, `contradictiontensions`, `contradictionfacts`, `contradictionnotices`, `contradictionresponses` and `publishtensions` each get a `NEEDS` row of `null`, on `contradictionpairs`' reasoning (D-148), because affordances R7 names them in `NON_ACTS` and affordances R12 reads a `NON_ACTS` key the table does not carry as gated as `stale`. `comparisonfacts` gets none and joins `CONFORMANCE_READS`. `contribute` for the eight writes is right. Your J2 is forwarded to AFFORDANCES #7 and recorded for legacy-tests.
