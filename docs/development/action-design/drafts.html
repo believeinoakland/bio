@@ -78,7 +78,7 @@ table.wide{min-width:1180px}
 <p><strong>optionStart({plan, option, kind, contact?, breach?, author, viewer})</strong> (<code>op=optionstart</code>)
 - <strong>R18</strong> Refusals: <code>MACHINE_CANNOT_START</code>; <code>NO_SUCH_PLAN</code>; <code>PLAN_CLOSED</code>; <code>NO_SUCH_OPTION</code>; <code>OPTION_NOT_CHOSEN</code>; <code>OPTION_STARTED</code> (it names the action); <code>CONTACT_NOT_A_MEMBER</code>; then any refusal of the action's write (<code>actions</code> R1–R11). Otherwise it composes an action document (kind, the option's addressee, the option's regulated dates as pending clock entries with their bases, a <code>rests_on</code> leg to each subject's inquiry or determination, <code>plan</code> and <code>option</code>, <code>contact</code> when given, <code>breach: true</code> when asked) and promotes it; an action asserting a breach is refused by <code>actions</code> R8 unless it rests on a live noncompliant determination. It records the link and answers the action's id. The plan never opens, advances or ends an escalation.</p>
 <p><strong>The checks (derived on read, R6)</strong>
-- <strong>R19</strong> <code>planRead</code> answers, each with its reason: an option whose regulated date is past, or falls before the phase that holds it can start in a scenario; a phase whose judgement has no branch for one outcome; an option bound only to subjects no longer live; an outward option (one that addresses anyone) bound only to hypothetical subjects; a lobbying option whose <code>enforces</code> target is superseded. A check informs; it never refuses or changes anything.</p>
+- <strong>R19</strong> <code>planRead</code> answers, each with its reason: an option whose regulated date is past, or falls before the phase that holds it can start in a scenario; a phase whose judgement has no branch for one outcome; an option bound only to subjects no longer live; an outward option (one that addresses anyone) bound only to hypothetical subjects; a scenario whose outward options have no branch answering a hostile response (refusal, obstruction, retaliation; rule 12 of <code>BIO_Action_v0_1.md</code>, Bob 2026-09-30); a lobbying option whose <code>enforces</code> target is superseded. A check informs; it never refuses or changes anything.</p>
 <p><strong>planClose({id, reason, author, viewer})</strong> (<code>op=planclose</code>)
 - <strong>R20</strong> A member closes a plan with a reason (R4's rule); a plan never closes itself. A closed plan stays readable; its subjects become free to join another plan (R3). <code>PLAN_CLOSED</code> if already closed. Closing does not change any action or escalation. <em>(Bob, 2026-09-30)</em></p>
 <p><strong>The project's kind of work (D4)</strong>
@@ -147,6 +147,8 @@ table.wide{min-width:1180px}
 <li><strong>R7, amended (Bob: D3).</strong> Resolutions gain <code>completed</code>, allowed on any kind: the action was carried out and no counterparty answer decides it. <code>resolved</code> still needs one of the five. The action's own outcome (R26, DEC-14) says what happened; an impact claim still needs a leg outside the group's own actions.</li>
 <li><strong>New R44 (Bob: D5).</strong> An action may state <code>contact</code>, a member id, the group's contact for it; set or changed only by a member (<code>MACHINE_CANNOT_SET_CONTACT</code>), refused <code>CONTACT_NOT_A_MEMBER</code>; shown in the read (R25). It grants nothing.</li>
 <li><strong>New R45 (ruling 1; A12).</strong> An action may state <code>plan</code> and <code>option</code>, set only when created by <code>action-plans</code> R18 and never changed (<code>PLAN_LINK_REWRITTEN</code>); shown in the read.</li>
+<li><strong>New R47 (Bob, 2026-09-30: prepared for opposition).</strong> A received correspondence entry may be marked <code>pressure: true</code> with a note of at most 500 characters: a threat, retaliation, discrediting or legal harassment directed at the group or its supporters (Operational Principle 8, Design Requirement 13). Only a member marks it; the read (R25) lists an action's pressure entries apart; <code>actionsFor</code> can filter by it. It is evidence like any capture, and may be cited by a new inquiry.</li>
+<li><strong>New R48 (Bob, 2026-09-30: the venue sets the standard).</strong> No action, filing or packet is refused for the capture grade of what it rests on. <code>filings</code>' drafts and counsel packets show each exhibit's grade, and a profile kind may state its venue's standard of evidence (<code>jurisdictions</code>), shown beside the grades.</li>
 <li><strong>New R46 (BOB).</strong> <code>actionCreate({document, viewer, author})</code> (<code>op=actioncreate</code>): the same write as a promotion of an action document, answered with the action's id; and <code>op=action</code> (R29's <code>actionRead</code>) and <code>op=actions</code> (R30's <code>actionsFor</code>) routed.</li>
 <li><strong>Stale marks (BOB).</strong> Strike "not yet met" from R4–R11, R22, R28–R33, R40, R41: all built and tested (K253, K370).</li>
 </ul>
@@ -286,6 +288,11 @@ table.wide{min-width:1180px}
 <td>a plan with none of these answers no checks</td>
 </tr>
 <tr>
+<td>R19b</td>
+<td>a scenario whose outward options have no branch for a hostile response is flagged</td>
+<td>adding a <code>not_met</code> branch to a refusal clears it</td>
+</tr>
+<tr>
 <td>R20</td>
 <td>a member closes with a reason; the plan stays readable; its subjects join a new plan</td>
 <td>no reason refuses; closing twice refuses <code>PLAN_CLOSED</code>; a machine refuses; nothing closes a plan on its own (advance the clock a year: still open)</td>
@@ -361,6 +368,16 @@ table.wide{min-width:1180px}
 <td>R45</td>
 <td>an action created by <code>action-plans</code> R18 carries <code>plan</code> and <code>option</code></td>
 <td>changing either on a revision refuses <code>PLAN_LINK_REWRITTEN</code></td>
+</tr>
+<tr>
+<td>R47</td>
+<td>a member marks a received entry <code>pressure</code>; the read lists it apart; <code>actionsFor</code> filters by it</td>
+<td>a machine refuses; a <code>sent</code> entry refuses</td>
+</tr>
+<tr>
+<td>R48</td>
+<td>a Tier 2 filing resting on a Grade B capture is prepared and shows the grade and the venue's stated standard</td>
+<td>not applicable (nothing refuses)</td>
 </tr>
 <tr>
 <td>R46</td>

@@ -25,6 +25,7 @@
 | R17 | `checkpointsDue` lists the due, unjudged checkpoint once, oldest first, with days since due | after judging, it is absent; a closed plan's checkpoint is absent |
 | R18 | starting a chosen option creates an action with the option's addressee, dated clock entries with bases, `rests_on` legs, `plan` and `option`, and `contact`; the plan records the link | an unchosen option refuses `OPTION_NOT_CHOSEN`; `breach: true` on an inquiry-only subject is refused by `actions` R8 |
 | R19 | each check appears with its reason (past date, unbranched outcome, dead subject, outward option on hypothetical subjects, superseded `enforces`) and changes nothing | a plan with none of these answers no checks |
+| R19b | a scenario whose outward options have no branch for a hostile response is flagged | adding a `not_met` branch to a refusal clears it |
 | R20 | a member closes with a reason; the plan stays readable; its subjects join a new plan | no reason refuses; closing twice refuses `PLAN_CLOSED`; a machine refuses; nothing closes a plan on its own (advance the clock a year: still open) |
 | R21 | an owner sets `work_kinds: ["reporting"]`; `planRead` shows it; a proposal made with and without it lands identically in R11's checks | an unknown kind refuses `WORK_KIND_UNKNOWN`; a machine refuses |
 | R22 | every `NO_SUCH_PLAN` site answers through `noSuchPlan`, one code and sentence | an existing visible plan never answers it |
@@ -43,6 +44,8 @@
 | R7 amended | `completed` lands on a `media`-kind action and on a records request | `resolved` with no resolution still refuses `NO_RESOLUTION` |
 | R44 | a member sets `contact`; the read shows it | a machine refuses; a non-member id refuses `CONTACT_NOT_A_MEMBER` |
 | R45 | an action created by `action-plans` R18 carries `plan` and `option` | changing either on a revision refuses `PLAN_LINK_REWRITTEN` |
+| R47 | a member marks a received entry `pressure`; the read lists it apart; `actionsFor` filters by it | a machine refuses; a `sent` entry refuses |
+| R48 | a Tier 2 filing resting on a Grade B capture is prepared and shows the grade and the venue's stated standard | not applicable (nothing refuses) |
 | R46 | `op=actioncreate` answers the id and writes what a promote would; `op=action` and `op=actions` answer R29's and R30's reads | a malformed document refuses as promote does |
 
 ## `filings` (deltas §3)
