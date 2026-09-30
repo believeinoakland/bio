@@ -10,7 +10,7 @@
 
 **End to end, measured** (a scratch copy of control-plane's `doorbell.test.mjs`, not committed): through the record store's door with the real capture, promotion and provenance, `inboxpullfile` now pulls and files the knock: bundle `INFO-2026-0001-doorbell-knock`, the register row homed there, the receipt written.
 
-**Reported (another module).** `control-plane`: `test/m/control-plane/doorbell.test.mjs`:365–371 asserts the refusal N381 removes (`PROVENANCE_REGISTER_REFUSED` from the dry run), so it now fails, the one failure in `test/m/`; the door now files the pull (above). Its layer-11 entry (N381's share: R36's end-to-end `test.todo` runs, its mark goes) replaces it. REPORT J2.
+**Reported (another module).** `control-plane`: `test/m/control-plane/doorbell.test.mjs`:365–371 asserts the refusal N381 removes (`PROVENANCE_REGISTER_REFUSED` from the dry run), so it now fails, the one failure in `test/m/`; the door now files the pull (above). Its layer-11 entry (N381's share: R36's end-to-end `test.todo` runs, its mark goes) replaces it. REPORT J1.
 
 **Deferred, each needs a requirement change (BOB's).**
 1. R42's text names no doorbell arm ("a `grade` in `CAPTURE_GRADES` (none for an authored observation)"; the kinds are not listed). Proposed: "(none for an authored observation; none for a document received through the doorbell, `origin.kind` `doorbell`, which states R51's `grade_basis`)" and `doorbell` among the kinds. Built on R51 and the entry's text.
