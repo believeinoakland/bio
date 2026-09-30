@@ -1,6 +1,6 @@
 # capture (T18)
 
-**Status** · session_01F2hRC49z1gH7T1KRC7gwwg · depth 2 · RUNNING until 2026-09-30T21:08:47Z (node --test test/m/**/*.test.mjs (whole, for capture's service changes)) · handled B3
+**Status** · session_01F2hRC49z1gH7T1KRC7gwwg · depth 2 · WAITING ON BOB (J3) · handled B3
 
 ## J1 · QUESTION
 
