@@ -25,7 +25,7 @@
  *   membership    `sight`, `existenceAct`, `projectAuthority`, `positionalMember`, `inSight`; `viewerPredicate`,
  *                 `noSuchProject` (its R78: R1's `NO_SUCH_PROJECT`, minted there with its one row, N274).
  *   promotion     `promote`, `registerStep` (R6, R17).
- *   content       `contentRow`, `passageNotice` (R1's evidence, R10).
+ *   content       `contentRow`, `passageNotice` (R1's evidence, R10); `passageText` (its R46: R21's `text`, N362).
  *   inquiry       `supersededBy`, `stateHistory` (R10); `contradictionLink` (its R48: R12, R21; N345).
  *   strength      `inquiryStrength` (R9).
  *   reevaluation  `onBasisChanged` (R10).
@@ -937,7 +937,8 @@ export class Conformance {
 
   /** R21 (N345; DEC-76 item 3, DEC-84 item 10): the rows a comparison may start from, as facts: `requires` from the
    *  side of the contradiction inquiry's candidate named `standardSide` (`a` or `b`, the member's, never defaulted) and
-   *  `did` from the other, each with its source, content id and date, labelled the record's and never an outcome; and
+   *  `did` from the other, each with its source, content id, date and `text` (the passage's words, `#sideText`; N362),
+   *  labelled the record's and never an outcome; and
    *  the question's resolution when it is concluded. R12's refusal applies. It writes nothing.
    *    {ok, wrote: false, contradiction, candidate, standard_side, rows: [{requires, did, origin: "record",
    *     machine_work: false}], resolution: null | {kind, …}, concluded, says} */
@@ -957,13 +958,23 @@ export class Conformance {
     /* A candidate whose two sides the viewer may not both see is no question they may see as one taken up from a
        contradiction (contradiction R10): one answer, which says nothing of an unseen side. */
     if (!cand || !isObj(cand.a) || !isObj(cand.b)) return this.#contradictionInquiry(null, viewer);
-    const fact = (x) => ({ kind: x.kind ?? null, text: x.text ?? null, note: x.note ?? null, source: x.source ?? null,
+    const fact = (x) => ({ kind: x.kind ?? null, text: this.#sideText(x), note: x.note ?? null, source: x.source ?? null,
                            content_id: x.content_id ?? null, ref: x.ref ?? null, date: x.date ?? null,
                            doctype: x.doctype ?? null, capture_sha: x.capture_sha ?? null, stale: x.stale ?? null });
     const other = side === "a" ? "b" : "a";
     return { ok: true, wrote: false, contradiction: from.inquiry, candidate: from.candidate, standard_side: side,
              rows: [{ requires: fact(cand[side]), did: fact(cand[other]), origin: "record", machine_work: false }],
              resolution: from.resolution, concluded: !!from.resolution, says: FACTS_SAY };
+  }
+
+  /* R21 (N362, K569): a side's `text`. A side naming a content id (a leg or an extent) carries the passage's words as
+     `content.passageText` answers them (its R46), `null` where it answers `null` (a stale row, text not held whole);
+     a claim or stance side names no passage and keeps its claim's words as contradiction shows them. Asked only of a
+     side this viewer already sees (the caller's R12 gate); a read that throws is `null`, never guessed. */
+  #sideText(x) {
+    const cid = str(x.content_id);
+    if (!cid) return typeof x.text === "string" ? x.text : null;
+    try { const t = this.content.passageText(cid); return typeof t === "string" ? t : null; } catch { return null; }
   }
 
   /* ===================================================================== *

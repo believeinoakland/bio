@@ -270,3 +270,63 @@ test("R21: once the question is concluded, the facts carry its resolution, and s
   assert.deepEqual([f.concluded, f.resolution.kind], [true, "obligation_against_act"]);
   for (const k of ["outcome", "outcomes", "verdict", "reading"]) assert.equal(keysOf(f).has(k), false, k);
 });
+
+test("R21 (N362): each side's text is the passage's words as content.passageText answers them for its content id, null where it answers null (text not held whole, a stale row), a claim side's its claim; asked only of a side the viewer already sees", () => {
+  const { w } = scene();
+  const x = w.contradicted();
+  const words = { [x.rule.doc]: "thirty days' public notice is required before a closure",
+                  [x.act.doc]: "the playground was closed on 2 March with no notice" };
+  const facts = (side = "a", c = w.c, viewer = V("pat")) =>
+    c.comparisonFacts({ contradiction: x.inquiry, standardSide: side, viewer });
+  for (const side of ["a", "b"]) {
+    const [row] = facts(side).rows;
+    for (const part of ["requires", "did"]) {
+      const fact = row[part];
+      assert.equal(fact.text, words[fact.source.bundle], `${side}: ${part}`);
+      assert.equal(fact.text, w.content.passageText(fact.content_id), "content's R46, not a copy of it");
+    }
+  }
+  /* null where passageText answers null, never an empty string or a guess: the act's passage held only to the per-unit
+     cap, then the rule's row marked stale by a replaced reading (content R22) */
+  const units = w.ex.units[x.act.cap.sha].units;
+  units[1] = { ...units[1], truncated: true };
+  let row = facts("a").rows[0];
+  const byDoc = (b) => (row.requires.source.bundle === b ? row.requires : row.did);
+  assert.deepEqual([w.content.passageText(x.act.content), byDoc(x.act.doc).text], [null, null]);
+  assert.equal(byDoc(x.rule.doc).text, words[x.rule.doc], "the other side is unaffected");
+  w.st.sql.exec(`UPDATE content SET stale=1 WHERE content_id=?`, x.rule.content);
+  row = facts("a").rows[0];
+  assert.deepEqual([w.content.passageText(x.rule.content), byDoc(x.rule.doc).text, byDoc(x.act.doc).text], [null, null, null]);
+  for (const f of [row.requires, row.did]) assert.ok(f.content_id && f.source.bundle, "the side is still answered whole");
+  /* only on a side R21 already answers: a refused read never asks for a passage's words */
+  const asked = [];
+  const counting = new Proxy(w.content, { get: (t, p) => (p === "passageText" ? (id) => { asked.push(id); return t.passageText(id); }
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+  const halfSeen = over(w, { content: counting, contradiction: new Proxy(w.contradiction, { get: (t, p) => (p === "candidatesFor"
+    ? (a) => (a.viewer === V("quinn") ? { ok: true, candidates: [] } : t.candidatesFor(a))
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) }) });
+  refused(facts("a", halfSeen, V("quinn")), "NO_SUCH_CONTRADICTION_INQUIRY");
+  refused(halfSeen.comparisonFacts({ contradiction: x.inquiry, standardSide: "c", viewer: V("pat") }), "STANDARD_SIDE_UNNAMED");
+  refused(facts("a", halfSeen, "nobody"), "NO_SUCH_CONTRADICTION_INQUIRY");
+  assert.deepEqual(asked, []);
+  /* the control: a side the viewer sees is asked, once per side */
+  assert.equal(facts("a", halfSeen).ok, true);
+  assert.deepEqual(asked.sort(), [x.act.content, x.rule.content].sort());
+  /* a claim or stance side names no passage: its text is its claim as contradiction shows it, and no passage is asked */
+  asked.length = 0;
+  const claim = (s, claimText) => ({ kind: "claim", inquiry: `INQ-2026-0800-${s}`, version: "v1", claim: claimText,
+                                     text: claimText, source: { inquiry: `INQ-2026-0800-${s}`, title: null },
+                                     date: null, doctype: null, capture_sha: null });
+  const claims = over(w, { content: counting, contradiction: new Proxy(w.contradiction, { get: (t, p) => (p === "candidatesFor"
+    ? () => ({ ok: true, candidates: [{ candidate: x.candidate, a: claim("a", "Notice is owed."), b: claim("b", "None was given.") }] })
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) }) });
+  const [c] = facts("a", claims).rows;
+  assert.deepEqual([c.requires.text, c.did.text, c.requires.content_id, c.did.content_id],
+                   ["Notice is owed.", "None was given.", null, null]);
+  assert.deepEqual(asked, []);
+  /* a passage read that fails is null, never an error */
+  const failing = over(w, { content: new Proxy(w.content, { get: (t, p) => (p === "passageText" ? () => { throw new Error("boom"); }
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) }) });
+  const f = facts("a", failing);
+  assert.deepEqual([f.ok, f.rows[0].requires.text, f.rows[0].did.text], [true, null, null]);
+});
