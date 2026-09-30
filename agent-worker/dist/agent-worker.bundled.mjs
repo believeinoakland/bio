@@ -476,7 +476,6 @@ __export(bio_checks_exports, {
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
-  CASE_MEMBER_ROLES: () => CASE_MEMBER_ROLES,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
   CONNECTION_CHOICE_CHECKS: () => CONNECTION_CHOICE_CHECKS,
@@ -500,6 +499,7 @@ __export(bio_checks_exports, {
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
   EARNED_SOURCE_AXIS: () => EARNED_SOURCE_AXIS,
+  EXTENSION_ARMS: () => EXTENSION_ARMS,
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   FILENAME_RE: () => FILENAME_RE,
   FORBIDDEN_ALIASES: () => FORBIDDEN_ALIASES,
@@ -513,7 +513,6 @@ __export(bio_checks_exports, {
   INSTANCE_GROUP_CHECKS: () => INSTANCE_GROUP_CHECKS,
   ISO_TS_RE: () => ISO_TS_RE,
   KNOCK_CHECKS: () => KNOCK_CHECKS,
-  LAW_LEVELS: () => LAW_LEVELS,
   LAW_PROPOSAL_STATES: () => LAW_PROPOSAL_STATES,
   LEAD_CHECKS: () => LEAD_CHECKS,
   LEAD_ID_RE: () => LEAD_ID_RE,
@@ -558,7 +557,6 @@ __export(bio_checks_exports, {
   SURFACE_CHECKS: () => SURFACE_CHECKS,
   TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
-  TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
   THEME_CHECKS: () => THEME_CHECKS,
   THEME_ID_RE: () => THEME_ID_RE,
   TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
@@ -573,7 +571,6 @@ __export(bio_checks_exports, {
   VERSION_STATES: () => VERSION_STATES,
   a1ToRowCol: () => a1ToRowCol,
   actionBasisFindings: () => actionBasisFindings,
-  b64ToBytes: () => b64ToBytes,
   basisVersionFindings: () => basisVersionFindings,
   canonicalExtent: () => canonicalExtent,
   canonicalJson: () => canonicalJson,
@@ -629,10 +626,33 @@ __export(bio_checks_exports, {
   vocabFor: () => vocabFor,
   withProducingGroup: () => withProducingGroup
 });
-var BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-var ANN_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
+
+// ../bio-plane/src/record-grammar/ids.mjs
+var ID_PREFIXES = Object.freeze([
+  "INFO",
+  "PROB",
+  "FOCUS",
+  "INQ",
+  "PROJ",
+  "ACTN",
+  "BIAS",
+  "STD",
+  "CONF",
+  "CONS",
+  "ESC",
+  "ASP",
+  "GOAL",
+  "PLN"
+]);
+var PREFIX = `(${ID_PREFIXES.join("|")})`;
+var SLUG = "[a-z0-9]+(-[a-z0-9]+)*";
+var BUNDLE = `${PREFIX}-\\d{4}-\\d{4}-${SLUG}`;
+var BUNDLE_ID_RE = new RegExp(`^${BUNDLE}$`);
+var ANN_ID_RE = new RegExp(`^${BUNDLE}\\.ann-\\d{8}T\\d{6}Z-${SLUG}$`);
 var FILENAME_RE = /^[A-Za-z0-9._-]+$/;
 var ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+
+// ../bio-plane/src/record-grammar/types.mjs
 var OBJECT_TYPES = {
   INFO: "information",
   PROB: "inquiry",
@@ -646,24 +666,13 @@ var OBJECT_TYPES = {
   CONS: "consequence",
   ESC: "escalation",
   ASP: "aspiration",
-  GOAL: "goal"
+  GOAL: "goal",
+  PLN: "action_plan"
 };
 var LEGACY_TYPE_ALIASES = { problem: "inquiry", focus: "inquiry" };
-var normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
-var INQUIRY_TITLE_MAX = 120;
-var deriveInquiryTitle = (question) => {
-  const line = String(question == null ? "" : question).split("\n").map((s) => s.trim()).find((s) => s !== "") || "";
-  const flat = line.replace(/\s+/g, " ");
-  if (flat === "") return null;
-  if (flat.length <= 120) return flat;
-  const cut = flat.slice(0, 120);
-  const at6 = cut.lastIndexOf(" ");
-  return (at6 > 0 ? cut.slice(0, at6) : cut) + "\u2026";
-};
-var inquiryQuestionOf = (markdown) => {
-  const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
-  return m ? m[1] : "";
-};
+var normalizeType = (t) => typeof t === "string" && Object.prototype.hasOwnProperty.call(LEGACY_TYPE_ALIASES, t) ? LEGACY_TYPE_ALIASES[t] : t;
+
+// ../bio-plane/src/record-grammar/frontmatter.mjs
 var CORE_FIELDS = [
   "id",
   "object_type",
@@ -689,6 +698,414 @@ var FORBIDDEN_ALIASES = {
   type: "object_type",
   updated: "last_updated",
   modified: "last_updated"
+};
+function f(check, severity, message, repairs) {
+  const out = { check, severity, message };
+  if (repairs) {
+    out.repairable = true;
+    out.repairs = repairs;
+  }
+  return out;
+}
+var own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+function put(o, k, v) {
+  Object.defineProperty(o, k, { value: v, writable: true, enumerable: true, configurable: true });
+}
+function stripComment(raw) {
+  let inS = false, inD = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (c === "'" && !inD) inS = !inS;
+    else if (c === '"' && !inS) inD = !inD;
+    else if (c === "#" && !inS && !inD && (i === 0 || raw[i - 1] === " ")) return raw.slice(0, i);
+  }
+  return raw;
+}
+function parseScalar(raw) {
+  let v = stripComment(raw).trim();
+  if (v === "") return "";
+  if (v === "null" || v === "~") return null;
+  if (v === "true") return true;
+  if (v === "false") return false;
+  if (v.length >= 2 && (v.startsWith('"') && v.endsWith('"') || v.startsWith("'") && v.endsWith("'"))) return v.slice(1, -1);
+  if (v.startsWith("[") && v.endsWith("]")) {
+    const inner = v.slice(1, -1).trim();
+    if (inner === "") return [];
+    return inner.split(",").map((s) => parseScalar(s));
+  }
+  if (/^-?\d+$/.test(v)) return parseInt(v, 10);
+  if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
+  return v;
+}
+function parseFrontmatter(text) {
+  if (typeof text !== "string") throw new TypeError("parseFrontmatter: text must be a string");
+  const findings = [];
+  const lines = text.split(/\r?\n/);
+  if (lines[0] !== "---") {
+    findings.push(f("C-2.1", "error", "bundle.md does not begin with a --- frontmatter fence"));
+    return { data: null, findings, body: text };
+  }
+  let end = -1;
+  for (let i = 1; i < lines.length; i++) if (lines[i] === "---") {
+    end = i;
+    break;
+  }
+  if (end === -1) {
+    findings.push(f("C-2.1", "error", "frontmatter fence is never closed"));
+    return { data: null, findings, body: text };
+  }
+  const data = {};
+  let topKey = null;
+  let topMode = null;
+  let curElem = null;
+  const keyLine = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
+  const indKeyLine = /^( +)([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
+  const itemLine = /^( +)- (.*)$/;
+  for (let n = 1; n < end; n++) {
+    const line = lines[n];
+    const stripped = stripComment(line);
+    if (stripped.trim() === "") continue;
+    let m;
+    if (m = keyLine.exec(line)) {
+      const key = m[1];
+      const rest = m[2];
+      topKey = null;
+      topMode = null;
+      curElem = null;
+      if (own(data, key)) {
+        findings.push(f("C-2.1", "error", `duplicate top-level key '${key}' at line ${n + 1}`));
+      }
+      if (stripComment(rest).trim() === "") {
+        topKey = key;
+        put(data, key, void 0);
+      } else {
+        put(data, key, parseScalar(rest));
+      }
+    } else if (m = itemLine.exec(line)) {
+      const indent = m[1].length;
+      const rest = m[2];
+      if (!topKey) {
+        findings.push(f("C-2.1", "error", `array item outside any block at line ${n + 1}`));
+        continue;
+      }
+      if (indent !== 2) findings.push(f("C-2.1", "error", `array item indented ${indent} (expected 2) at line ${n + 1}`));
+      if (topMode === null) {
+        topMode = "array";
+        put(data, topKey, []);
+      }
+      if (topMode !== "array") {
+        findings.push(f("C-2.1", "error", `array item inside a map block '${topKey}' at line ${n + 1}`));
+        continue;
+      }
+      const km = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/.exec(rest);
+      if (km && stripComment(km[2]).trim() !== "") {
+        curElem = {};
+        put(curElem, km[1], parseScalar(km[2]));
+        data[topKey].push(curElem);
+      } else {
+        curElem = null;
+        data[topKey].push(parseScalar(rest));
+      }
+    } else if (m = indKeyLine.exec(line)) {
+      const indent = m[1].length;
+      const key = m[2];
+      const rest = m[3];
+      const isCore = CORE_FIELDS.includes(key) || own(FORBIDDEN_ALIASES, key);
+      if (topKey && topMode === null && indent === 2) {
+        topMode = "map";
+        put(data, topKey, {});
+        put(data[topKey], key, parseScalar(rest));
+      } else if (topKey && topMode === "map" && indent === 2) {
+        put(data[topKey], key, parseScalar(rest));
+      } else if (topKey && topMode === "array" && curElem && indent === 4) {
+        put(curElem, key, parseScalar(rest));
+      } else {
+        if (isCore) {
+          findings.push(f(
+            "C-2.4",
+            "error",
+            `top-level key '${key}' is buried by stray indentation at line ${n + 1} and will not register`,
+            [`re-indent '${key}' to column 0`]
+          ));
+          put(data, key, parseScalar(rest));
+        } else {
+          findings.push(f("C-2.1", "error", `key '${key}' indented ${indent} does not fit the restricted grammar at line ${n + 1}`));
+        }
+      }
+    } else {
+      findings.push(f("C-2.1", "error", `line ${n + 1} does not fit the restricted grammar: ${line.slice(0, 60)}`));
+    }
+  }
+  for (const k of Object.keys(data)) if (data[k] === void 0) data[k] = [];
+  return { data, findings, body: lines.slice(end + 1).join("\n") };
+}
+
+// ../bio-plane/src/record-grammar/json.mjs
+var unstorable = (x) => x === void 0 || typeof x === "function" || typeof x === "symbol";
+function canonicalJson(v) {
+  if (Array.isArray(v)) return "[" + v.map((x) => unstorable(x) ? "null" : canonicalJson(x)).join(",") + "]";
+  if (v !== null && typeof v === "object") {
+    return "{" + Object.keys(v).filter((k) => !unstorable(v[k])).sort().map((k) => JSON.stringify(k) + ":" + canonicalJson(v[k])).join(",") + "}";
+  }
+  return JSON.stringify(v);
+}
+
+// ../bio-plane/src/record-grammar/actors.mjs
+var NON_MEMBER_AUTHORS = ["claude", "pwa-client", "daemon", "sweep", "session", "accelerator", "apps-script", "system", "agent", "ai"];
+var ACTOR_CLASSES = ["daemon", "session", "member"];
+var MACHINE_AUTHOR_PREFIX = "token:";
+var MACHINE_CLASS_PREFIX = "class:";
+var MACHINE_STAMP_PREFIXES = [MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX];
+function fold(who) {
+  try {
+    return String(who ?? "").trim().toLowerCase();
+  } catch {
+    return "";
+  }
+}
+function isMachineStamp(who) {
+  const s = fold(who);
+  return s !== "" && MACHINE_STAMP_PREFIXES.some((p) => s.startsWith(p));
+}
+function isMachineIdentity(who) {
+  const s = fold(who);
+  if (s === "") return false;
+  return isMachineStamp(s) || ACTOR_CLASSES.includes(s) || NON_MEMBER_AUTHORS.includes(s);
+}
+
+// ../bio-plane/src/record-grammar/grades.mjs
+var BASIS_ROLES = ["supports", "cuts_against"];
+var BASIS_GRADES = ["A", "B", "C", "D"];
+var GRADE_AXES = ["capture", "connection", "testimony"];
+var TESTIMONY_GRADE = "D";
+var GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited", "capture"];
+var EARNED_GRADE_SOURCES = ["resolution", "capture"];
+var EARNED_CAPTURE_CEILING = "B";
+var UNREACHABLE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
+
+// ../bio-plane/src/record-grammar/locator.mjs
+function isPublicHttpsLocator(url) {
+  if (typeof url !== "string") return false;
+  const m = /^https:\/\/([^/?#]+)/i.exec(url);
+  if (!m) return false;
+  const hostport = m[1];
+  if (hostport.indexOf("@") !== -1) return false;
+  if (hostport.charAt(0) === "[") return false;
+  let host = hostport.split(":")[0].toLowerCase();
+  if (host.endsWith(".")) host = host.slice(0, -1);
+  if (host === "localhost" || host.endsWith(".local") || host.endsWith(".localhost")) return false;
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+  if (host.indexOf(".") === -1) return false;
+  return true;
+}
+
+// ../bio-plane/src/record-grammar/sha256.mjs
+function b64ToBytes(s) {
+  const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const clean = String(s).replace(/[\s=]+/g, "");
+  const out = new Uint8Array(Math.floor(clean.length * 3 / 4));
+  let o = 0, buf = 0, bits = 0;
+  for (let i = 0; i < clean.length; i++) {
+    const v = A.indexOf(clean[i]);
+    if (v === -1) throw new Error("invalid base64 at position " + i);
+    buf = buf << 6 | v;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      out[o++] = buf >> bits & 255;
+    }
+  }
+  return out.subarray(0, o);
+}
+var K = new Int32Array([
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+]);
+var isByteArrayLike = (c) => c !== null && typeof c === "object" && !(c instanceof String) && Number.isSafeInteger(c.length) && c.length >= 0;
+function createSha256() {
+  let h0 = 1779033703 | 0, h1 = 3144134277 | 0, h2 = 1013904242 | 0, h3 = 2773480762 | 0;
+  let h4 = 1359893119 | 0, h5 = 2600822924 | 0, h6 = 528734635 | 0, h7 = 1541459225 | 0;
+  const buf = new Uint8Array(64);
+  const w = new Int32Array(64);
+  let bufLen = 0;
+  let total = 0;
+  let finalized = false;
+  function compress(bytes, off) {
+    for (let i = 0; i < 16; i++) {
+      w[i] = bytes[off] << 24 | bytes[off + 1] << 16 | bytes[off + 2] << 8 | bytes[off + 3];
+      off += 4;
+    }
+    for (let i = 16; i < 64; i++) {
+      const x = w[i - 15], y = w[i - 2];
+      const s0 = (x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ x >>> 3;
+      const s1 = (y >>> 17 | y << 15) ^ (y >>> 19 | y << 13) ^ y >>> 10;
+      w[i] = w[i - 16] + s0 + w[i - 7] + s1 | 0;
+    }
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f22 = h5, g = h6, h = h7;
+    for (let i = 0; i < 64; i++) {
+      const S1 = (e >>> 6 | e << 26) ^ (e >>> 11 | e << 21) ^ (e >>> 25 | e << 7);
+      const ch = e & f22 ^ ~e & g;
+      const t1 = h + S1 + ch + K[i] + w[i] | 0;
+      const S0 = (a >>> 2 | a << 30) ^ (a >>> 13 | a << 19) ^ (a >>> 22 | a << 10);
+      const maj = a & b ^ a & c ^ b & c;
+      const t2 = S0 + maj | 0;
+      h = g;
+      g = f22;
+      f22 = e;
+      e = d + t1 | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = t1 + t2 | 0;
+    }
+    h0 = h0 + a | 0;
+    h1 = h1 + b | 0;
+    h2 = h2 + c | 0;
+    h3 = h3 + d | 0;
+    h4 = h4 + e | 0;
+    h5 = h5 + f22 | 0;
+    h6 = h6 + g | 0;
+    h7 = h7 + h | 0;
+  }
+  return {
+    /** Feed a chunk of bytes. Chainable. */
+    update(chunk) {
+      if (finalized) throw new Error("sha256 stream already finalized");
+      let c = chunk;
+      if (!(c instanceof Uint8Array)) {
+        if (!isByteArrayLike(c)) throw new TypeError("sha256 update takes a Uint8Array or a byte array-like, not " + (c === null ? "null" : typeof c));
+        c = Uint8Array.from(c);
+      }
+      let i = 0;
+      const n = c.length;
+      total += n;
+      if (bufLen > 0) {
+        while (bufLen < 64 && i < n) buf[bufLen++] = c[i++];
+        if (bufLen === 64) {
+          compress(buf, 0);
+          bufLen = 0;
+        }
+      }
+      while (n - i >= 64) {
+        compress(c, i);
+        i += 64;
+      }
+      while (i < n) buf[bufLen++] = c[i++];
+      return this;
+    },
+    /** Finalize and return the lowercase hex digest. */
+    hex() {
+      if (finalized) throw new Error("sha256 stream already finalized");
+      finalized = true;
+      const bitHi = Math.floor(total / 536870912);
+      const bitLo = total % 536870912 * 8;
+      buf[bufLen++] = 128;
+      if (bufLen > 56) {
+        while (bufLen < 64) buf[bufLen++] = 0;
+        compress(buf, 0);
+        bufLen = 0;
+      }
+      while (bufLen < 56) buf[bufLen++] = 0;
+      buf[56] = bitHi >>> 24 & 255;
+      buf[57] = bitHi >>> 16 & 255;
+      buf[58] = bitHi >>> 8 & 255;
+      buf[59] = bitHi & 255;
+      buf[60] = bitLo >>> 24 & 255;
+      buf[61] = bitLo >>> 16 & 255;
+      buf[62] = bitLo >>> 8 & 255;
+      buf[63] = bitLo & 255;
+      compress(buf, 0);
+      let out = "";
+      const H = [h0, h1, h2, h3, h4, h5, h6, h7];
+      for (let i = 0; i < 8; i++) {
+        const v = H[i] >>> 0;
+        out += ("00000000" + v.toString(16)).slice(-8);
+      }
+      return out;
+    }
+  };
+}
+var utf8 = new TextEncoder();
+function sha256HexSync(str) {
+  return createSha256().update(utf8.encode(String(str))).hex();
+}
+
+// ../bio-plane/checks/bio-checks.mjs
+var INQUIRY_TITLE_MAX = 120;
+var deriveInquiryTitle = (question) => {
+  const line = String(question == null ? "" : question).split("\n").map((s) => s.trim()).find((s) => s !== "") || "";
+  const flat = line.replace(/\s+/g, " ");
+  if (flat === "") return null;
+  if (flat.length <= 120) return flat;
+  const cut = flat.slice(0, 120);
+  const at6 = cut.lastIndexOf(" ");
+  return (at6 > 0 ? cut.slice(0, at6) : cut) + "\u2026";
+};
+var inquiryQuestionOf = (markdown) => {
+  const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
+  return m ? m[1] : "";
 };
 var HEADINGS = {
   information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
@@ -1010,6 +1427,12 @@ var STATES = {
   goal: {
     legal: ["open", "closed"],
     edges: { open: ["closed"], closed: [] }
+  },
+  /* N-A1 (T18, K608): `action-plans`' plan (its R2, `PLN-`, `action_plan` in record-grammar's `OBJECT_TYPES`). A plan
+     is `open` while the group works it and `closed` when a member closes it with a reason; nothing reopens it. */
+  action_plan: {
+    legal: ["open", "closed"],
+    edges: { open: ["closed"], closed: [] }
   }
 };
 STATES.problem = STATES.focus;
@@ -1024,7 +1447,6 @@ function riskTierState(v) {
   if (v === void 0 || v === null || v === "undetermined") return "undetermined";
   return v === 1 || v === 2 || v === 3 ? v : null;
 }
-var LAW_LEVELS = ["federal", "state", "local"];
 var LAW_PROPOSAL_STATES = {
   machine_proposed: "a machine credential proposed these citations. That is machine work, labelled as machine work: it can set a list of laws beside the request and it can never state which laws govern it. Nothing here is this action's list of governing laws, and nothing becomes one until a member states it themselves",
   member_proposed: "a member proposed these citations to whoever states this action's governing laws. It is a proposal and not the list: only the governing-laws act sets that, and the record holds who made it",
@@ -1056,6 +1478,19 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential proposed this candidate theory and remedy. That is machine work, labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it can never state the group's position. Nothing here is the group's position",
     member_proposed: "a member proposed this candidate theory and remedy. It is a candidate for members and counsel to weigh and not the group's position, and the record holds who proposed it",
     unstated: "the record does not say who proposed this candidate theory and remedy"
+  }),
+  /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
+     adopts it, and a prepared communication (filings R23) is a draft nobody has approved or sent, worded as
+     `filing_draft`'s sentences are. */
+  plan_option: Object.freeze({
+    machine_proposed: "a machine credential proposed this option. That is machine work, labelled as machine work: it can set an option beside the plan for members to weigh and it can never choose one. It is not an option until a member adopts it",
+    member_proposed: "a member proposed this option. It is a proposal and not an option: it is not an option until a member adopts it, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this option, and it is not an option until a member adopts it"
+  }),
+  communication: Object.freeze({
+    machine_proposed: "a machine credential prepared this communication. That is machine work, labelled as machine work: it can prepare the words of a message and it can never approve or send one. Nobody has approved or sent it, and nothing is sent until members decide to send it themselves",
+    member_proposed: "a member prepared this communication. It is a draft and not a message sent: nobody has approved or sent it, and the record holds who prepared it",
+    unstated: "the record does not say who prepared this communication, and nobody has approved or sent it"
   })
 });
 function proposalLabel(proposedBy, subject) {
@@ -1078,7 +1513,7 @@ var RFC_RESPONSE_WINDOW_PRECEDENT = {
   enforced: false
 };
 var ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
-function f(check, severity, message, repairs, code) {
+function f2(check, severity, message, repairs, code) {
   const out = { check, severity, message };
   if (repairs) {
     out.repairable = true;
@@ -1086,133 +1521,6 @@ function f(check, severity, message, repairs, code) {
   }
   if (code) out.code = code;
   return out;
-}
-function stripComment(raw) {
-  let inS = false, inD = false;
-  for (let i = 0; i < raw.length; i++) {
-    const c = raw[i];
-    if (c === "'" && !inD) inS = !inS;
-    else if (c === '"' && !inS) inD = !inD;
-    else if (c === "#" && !inS && !inD && (i === 0 || raw[i - 1] === " ")) return raw.slice(0, i);
-  }
-  return raw;
-}
-function parseScalar(raw) {
-  let v = stripComment(raw).trim();
-  if (v === "") return "";
-  if (v === "null" || v === "~") return null;
-  if (v === "true") return true;
-  if (v === "false") return false;
-  if (v.startsWith('"') && v.endsWith('"') || v.startsWith("'") && v.endsWith("'")) return v.slice(1, -1);
-  if (v.startsWith("[") && v.endsWith("]")) {
-    const inner = v.slice(1, -1).trim();
-    if (inner === "") return [];
-    return inner.split(",").map((s) => parseScalar(s));
-  }
-  if (/^-?\d+$/.test(v)) return parseInt(v, 10);
-  if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
-  return v;
-}
-function parseFrontmatter(text) {
-  const findings = [];
-  const lines = text.split(/\r?\n/);
-  if (lines[0] !== "---") {
-    findings.push(f("C-2.1", "error", "bundle.md does not begin with a --- frontmatter fence"));
-    return { data: null, findings, body: text };
-  }
-  let end = -1;
-  for (let i = 1; i < lines.length; i++) if (lines[i] === "---") {
-    end = i;
-    break;
-  }
-  if (end === -1) {
-    findings.push(f("C-2.1", "error", "frontmatter fence is never closed"));
-    return { data: null, findings, body: text };
-  }
-  const data = {};
-  let topKey = null;
-  let topMode = null;
-  let curElem = null;
-  const keyLine = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
-  const indKeyLine = /^( +)([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
-  const itemLine = /^( +)- (.*)$/;
-  for (let n = 1; n < end; n++) {
-    const line = lines[n];
-    const stripped = stripComment(line);
-    if (stripped.trim() === "") continue;
-    let m;
-    if (m = keyLine.exec(line)) {
-      const key = m[1];
-      const rest = m[2];
-      topKey = null;
-      topMode = null;
-      curElem = null;
-      if (Object.prototype.hasOwnProperty.call(data, key)) {
-        findings.push(f("C-2.1", "error", `duplicate top-level key '${key}' at line ${n + 1}`));
-      }
-      if (stripComment(rest).trim() === "") {
-        topKey = key;
-        data[key] = void 0;
-      } else {
-        data[key] = parseScalar(rest);
-      }
-    } else if (m = itemLine.exec(line)) {
-      const indent = m[1].length;
-      const rest = m[2];
-      if (!topKey) {
-        findings.push(f("C-2.1", "error", `array item outside any block at line ${n + 1}`));
-        continue;
-      }
-      if (indent !== 2) findings.push(f("C-2.1", "error", `array item indented ${indent} (expected 2) at line ${n + 1}`));
-      if (topMode === null) {
-        topMode = "array";
-        data[topKey] = [];
-      }
-      if (topMode !== "array") {
-        findings.push(f("C-2.1", "error", `array item inside a map block '${topKey}' at line ${n + 1}`));
-        continue;
-      }
-      const km = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/.exec(rest);
-      if (km && stripComment(km[2]).trim() !== "") {
-        curElem = {};
-        curElem[km[1]] = parseScalar(km[2]);
-        data[topKey].push(curElem);
-      } else {
-        curElem = null;
-        data[topKey].push(parseScalar(rest));
-      }
-    } else if (m = indKeyLine.exec(line)) {
-      const indent = m[1].length;
-      const key = m[2];
-      const rest = m[3];
-      const isCore = CORE_FIELDS.includes(key) || key in FORBIDDEN_ALIASES;
-      if (topKey && topMode === null && indent === 2) {
-        topMode = "map";
-        data[topKey] = {};
-        data[topKey][key] = parseScalar(rest);
-      } else if (topKey && topMode === "map" && indent === 2) {
-        data[topKey][key] = parseScalar(rest);
-      } else if (topKey && topMode === "array" && curElem && indent === 4) {
-        curElem[key] = parseScalar(rest);
-      } else {
-        if (isCore) {
-          findings.push(f(
-            "C-2.4",
-            "error",
-            `top-level key '${key}' is buried by stray indentation at line ${n + 1} and will not register`,
-            [`re-indent '${key}' to column 0`]
-          ));
-          data[key] = parseScalar(rest);
-        } else {
-          findings.push(f("C-2.1", "error", `key '${key}' indented ${indent} does not fit the restricted grammar at line ${n + 1}`));
-        }
-      }
-    } else {
-      findings.push(f("C-2.1", "error", `line ${n + 1} does not fit the restricted grammar: ${line.slice(0, 60)}`));
-    }
-  }
-  for (const k of Object.keys(data)) if (data[k] === void 0) data[k] = [];
-  return { data, findings, body: lines.slice(end + 1).join("\n") };
 }
 function asText(v) {
   if (typeof v === "string") return v;
@@ -1224,10 +1532,10 @@ function hasFile_(ctx, path) {
 function checkIdentity(ctx, findings) {
   const id = ctx.fm?.id;
   if (typeof id !== "string" || !BUNDLE_ID_RE.test(id)) {
-    findings.push(f("C-1.2", "error", `frontmatter id '${id}' does not match the canonical ID grammar`));
+    findings.push(f2("C-1.2", "error", `frontmatter id '${id}' does not match the canonical ID grammar`));
   }
   if (typeof id === "string" && id !== ctx.folderName) {
-    findings.push(f(
+    findings.push(f2(
       "C-1.1",
       "error",
       `folder name '${ctx.folderName}' does not equal frontmatter id '${id}'`,
@@ -1239,30 +1547,30 @@ function checkIdentity(ctx, findings) {
     if (!path.startsWith("annotations/")) continue;
     const name = path.slice("annotations/".length);
     if (!name.endsWith(".json")) {
-      findings.push(f("C-1.3", "error", `annotation file '${name}' is not a .json record`));
+      findings.push(f2("C-1.3", "error", `annotation file '${name}' is not a .json record`));
       continue;
     }
     let rec;
     try {
       rec = JSON.parse(asText(ctx.files.get(path)));
     } catch {
-      findings.push(f("C-1.3", "error", `annotation record '${name}' does not parse`));
+      findings.push(f2("C-1.3", "error", `annotation record '${name}' does not parse`));
       continue;
     }
     const rid = rec.id;
     if (typeof rid !== "string" || !ANN_ID_RE.test(rid)) {
-      findings.push(f("C-1.3", "error", `annotation id '${rid}' does not match the v1.1 timestamp-author grammar`));
+      findings.push(f2("C-1.3", "error", `annotation id '${rid}' does not match the v1.1 timestamp-author grammar`));
       continue;
     }
     if (!rid.startsWith(ctx.folderName + ".ann-")) {
-      findings.push(f("C-1.3", "error", `annotation '${rid}' does not belong to parent '${ctx.folderName}'`));
+      findings.push(f2("C-1.3", "error", `annotation '${rid}' does not belong to parent '${ctx.folderName}'`));
     }
     const expectedFile = rid.slice(ctx.folderName.length + 1) + ".json";
     if (name !== expectedFile) {
-      findings.push(f("C-1.3", "error", `annotation file '${name}' does not match its id (expected '${expectedFile}')`));
+      findings.push(f2("C-1.3", "error", `annotation file '${name}' does not match its id (expected '${expectedFile}')`));
     }
     if (seen.has(rid)) {
-      findings.push(f("C-1.3", "error", `duplicate annotation id '${rid}'`, ["adjust the later record timestamp suffix by one second, logged"]));
+      findings.push(f2("C-1.3", "error", `duplicate annotation id '${rid}'`, ["adjust the later record timestamp suffix by one second, logged"]));
     }
     seen.add(rid);
   }
@@ -1275,41 +1583,41 @@ function checkIdentity(ctx, findings) {
     }
   }
   if (ctx.fm && typeof ctx.fm.annotations_open === "number" && ctx.fm.annotations_open !== pending) {
-    findings.push(f("C-1.3", "warn", `annotations_open is ${ctx.fm.annotations_open} but ${pending} annotation record(s) are pending`, ["refresh annotations_open on the next write"]));
+    findings.push(f2("C-1.3", "warn", `annotations_open is ${ctx.fm.annotations_open} but ${pending} annotation record(s) are pending`, ["refresh annotations_open on the next write"]));
   }
 }
 function checkFrontmatterContract(ctx, findings) {
   const fm = ctx.fm;
   if (!fm) return;
   for (const key of CORE_FIELDS) {
-    if (!(key in fm)) findings.push(f("C-2.2", "error", `required core field '${key}' is missing`));
+    if (!(key in fm)) findings.push(f2("C-2.2", "error", `required core field '${key}' is missing`));
   }
   for (const [alias, canonical3] of Object.entries(FORBIDDEN_ALIASES)) {
-    if (alias in fm) findings.push(f("C-2.3", "error", `forbidden alias '${alias}' present (canonical name is '${canonical3}')`, [`rename '${alias}' to '${canonical3}'`]));
+    if (alias in fm) findings.push(f2("C-2.3", "error", `forbidden alias '${alias}' present (canonical name is '${canonical3}')`, [`rename '${alias}' to '${canonical3}'`]));
   }
   const ot = fm.object_type;
   if (!Object.values(OBJECT_TYPES).includes(normalizeType(ot))) {
-    findings.push(f("C-2.5", "error", `object_type '${ot}' is not a known type`));
+    findings.push(f2("C-2.5", "error", `object_type '${ot}' is not a known type`));
   } else {
     const prefix = fm.id && String(fm.id).split("-")[0];
     const wantType = OBJECT_TYPES[prefix];
-    if (wantType && wantType !== normalizeType(ot)) findings.push(f("C-2.5", "error", `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
+    if (wantType && wantType !== normalizeType(ot)) findings.push(f2("C-2.5", "error", `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
     const schema = fm.schema;
-    const sm = typeof schema === "string" && /^([a-z]+)@(\d+)$/.exec(schema);
-    if (!sm) findings.push(f("C-2.5", "error", `schema stamp '${schema}' is not of the form <type>@<n>`));
+    const sm = typeof schema === "string" && /^([a-z][a-z_]*)@(\d+)$/.exec(schema);
+    if (!sm) findings.push(f2("C-2.5", "error", `schema stamp '${schema}' is not of the form <type>@<n>`));
     else {
-      if (normalizeType(sm[1]) !== normalizeType(ot)) findings.push(f("C-2.5", "error", `schema stamp '${schema}' does not match object_type '${ot}'`));
-      if (!ctx.knownSchemas.includes(schema)) findings.push(f("C-2.5", "error", `schema version '${schema}' is not known to this check catalog`));
+      if (normalizeType(sm[1]) !== normalizeType(ot)) findings.push(f2("C-2.5", "error", `schema stamp '${schema}' does not match object_type '${ot}'`));
+      if (!ctx.knownSchemas.includes(schema)) findings.push(f2("C-2.5", "error", `schema version '${schema}' is not known to this check catalog`));
     }
   }
   for (const key of ["created", "last_updated"]) {
     if (typeof fm[key] === "string" && !ISO_TS_RE.test(fm[key])) {
-      findings.push(f("C-2.6", "error", `${key} '${fm[key]}' is not ISO 8601 UTC (YYYY-MM-DDTHH:MM:SSZ)`));
+      findings.push(f2("C-2.6", "error", `${key} '${fm[key]}' is not ISO 8601 UTC (YYYY-MM-DDTHH:MM:SSZ)`));
     }
   }
   if (fm.produced_by && typeof fm.produced_by === "object") {
-    if (!fm.produced_by.mode) findings.push(f("C-2.2", "error", "produced_by.mode is missing"));
-    if (!fm.produced_by.capability_tier) findings.push(f("C-2.2", "error", "produced_by.capability_tier is missing"));
+    if (!fm.produced_by.mode) findings.push(f2("C-2.2", "error", "produced_by.mode is missing"));
+    if (!fm.produced_by.capability_tier) findings.push(f2("C-2.2", "error", "produced_by.capability_tier is missing"));
   }
 }
 function checkHeadings(ctx, findings) {
@@ -1320,15 +1628,15 @@ function checkHeadings(ctx, findings) {
   const canonical3 = [...required, ...conditional.map((c) => c.heading)];
   const present = (ctx.body.match(/^## .*$/gm) || []).map((h) => h.trimEnd());
   for (const h of required) {
-    if (!present.includes(h)) findings.push(f("C-3.1", "error", `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
+    if (!present.includes(h)) findings.push(f2("C-3.1", "error", `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
   }
   for (const c of conditional) {
     const owed = c.whenCaseMember ? isCaseMemberBytes(ctx.fm) : (c.states || []).includes(ctx.fm?.current_state);
     if (owed && !present.includes(c.heading))
-      findings.push(f("C-3.1", "error", `required heading '${c.heading}' is missing: a member of a published case carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
+      findings.push(f2("C-3.1", "error", `required heading '${c.heading}' is missing: a member of a published case carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
   }
   for (const h of present) {
-    if (!canonical3.includes(h)) findings.push(f("C-3.1", "error", `heading '${h}' is not in the canonical set for ${ot}`, ["rename to the canonical heading, preserving body"]));
+    if (!canonical3.includes(h)) findings.push(f2("C-3.1", "error", `heading '${h}' is not in the canonical set for ${ot}`, ["rename to the canonical heading, preserving body"]));
   }
 }
 function checkStateLegality(ctx, findings) {
@@ -1338,17 +1646,17 @@ function checkStateLegality(ctx, findings) {
   const cur = ctx.fm.current_state;
   const readable = [...spec.legal, ...spec.legacy || []];
   if (!readable.includes(cur)) {
-    findings.push(f("C-4.1", "error", `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(", ")})`));
+    findings.push(f2("C-4.1", "error", `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(", ")})`));
   }
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
   for (let i = 0; i < hist.length; i++) {
     const e = hist[i];
     if (typeof e !== "object" || e === null) {
-      findings.push(f("C-4.2", "error", `state_history[${i}] is not an object`));
+      findings.push(f2("C-4.2", "error", `state_history[${i}] is not an object`));
       continue;
     }
     if (typeof e.timestamp === "string" && !ISO_TS_RE.test(e.timestamp)) {
-      findings.push(f("C-2.6", "error", `state_history[${i}].timestamp '${e.timestamp}' is not ISO 8601 UTC`));
+      findings.push(f2("C-2.6", "error", `state_history[${i}].timestamp '${e.timestamp}' is not ISO 8601 UTC`));
     }
   }
 }
@@ -1356,20 +1664,20 @@ function checkWriteCompleteness(ctx, findings) {
   const fm = ctx.fm;
   if (!fm) return;
   if (typeof fm.created === "string" && typeof fm.last_updated === "string" && fm.last_updated < fm.created) {
-    findings.push(f("C-13.1", "error", `last_updated '${fm.last_updated}' precedes created '${fm.created}'`));
+    findings.push(f2("C-13.1", "error", `last_updated '${fm.last_updated}' precedes created '${fm.created}'`));
   }
   const hist = Array.isArray(fm.state_history) ? fm.state_history : [];
   if (hist.length > 0) {
     const newest = hist[hist.length - 1].timestamp;
     if (typeof newest === "string" && typeof fm.last_updated === "string" && fm.last_updated < newest) {
-      findings.push(f("C-13.1", "error", `last_updated precedes the newest state_history timestamp '${newest}'`));
+      findings.push(f2("C-13.1", "error", `last_updated precedes the newest state_history timestamp '${newest}'`));
     }
   }
   if (typeof fm.created === "string" && typeof fm.last_updated === "string" && fm.last_updated > fm.created) {
     const idx = ctx.body.indexOf("## Session Log");
     const section = idx >= 0 ? ctx.body.slice(idx, ctx.body.indexOf("\n## ", idx + 1) === -1 ? void 0 : ctx.body.indexOf("\n## ", idx + 1)) : "";
     if (!/^### Session /m.test(section)) {
-      findings.push(f("C-13.2", "error", "bundle has been updated but carries no Session Log entry", ["append the missing Session Log entry naming the gap"]));
+      findings.push(f2("C-13.2", "error", "bundle has been updated but carries no Session Log entry", ["append the missing Session Log entry naming the gap"]));
     }
   }
 }
@@ -1378,18 +1686,18 @@ function checkFormatHygiene(ctx, findings) {
   for (const [path, content] of ctx.files) {
     const name = path.split("/").pop() || path;
     if (!FILENAME_RE.test(name) || name.includes(" ") || !name.includes(".") || !/\.[a-z0-9]+$/.test(name)) {
-      findings.push(f("C-14.2", "error", `filename '${path}' violates the naming rule`, ["rename file and update references"]));
+      findings.push(f2("C-14.2", "error", `filename '${path}' violates the naming rule`, ["rename file and update references"]));
     }
     if (name.endsWith(".md")) {
       const text = asText(content);
       const m = escapeRe.exec(text);
-      if (m) findings.push(f("C-14.1", "error", `escaped markdown character '${m[0]}' in ${path}`, ["normalize to clean markdown"]));
+      if (m) findings.push(f2("C-14.1", "error", `escaped markdown character '${m[0]}' in ${path}`, ["normalize to clean markdown"]));
     }
     if (name.endsWith(".json")) {
       try {
         JSON.parse(asText(content));
       } catch {
-        findings.push(f("C-14.3", "error", `${path} does not parse as JSON`, ["restore from history"]));
+        findings.push(f2("C-14.3", "error", `${path} does not parse as JSON`, ["restore from history"]));
       }
     }
   }
@@ -1397,14 +1705,14 @@ function checkFormatHygiene(ctx, findings) {
   const svgOnDisk = [...ctx.files.keys()].filter((p) => !p.includes("/") && p.endsWith(".svg"));
   for (const v of visuals) {
     if (typeof v !== "object" || !v.file || !v.description) {
-      findings.push(f("C-14.4", "error", `visuals entry ${JSON.stringify(v).slice(0, 50)} lacks file+description`));
+      findings.push(f2("C-14.4", "error", `visuals entry ${JSON.stringify(v).slice(0, 50)} lacks file+description`));
       continue;
     }
-    if (!ctx.files.has(v.file)) findings.push(f("C-14.4", "error", `visuals entry '${v.file}' has no file on disk`));
+    if (!ctx.files.has(v.file)) findings.push(f2("C-14.4", "error", `visuals entry '${v.file}' has no file on disk`));
   }
   for (const svg of svgOnDisk) {
     if (!visuals.some((v) => v && v.file === svg)) {
-      findings.push(f("C-14.4", "error", `svg '${svg}' on disk is absent from the visuals array`));
+      findings.push(f2("C-14.4", "error", `svg '${svg}' on disk is absent from the visuals array`));
     }
   }
 }
@@ -1435,14 +1743,14 @@ async function checkQueueAndBase(ctx, findings) {
       stale = ts === null || Number.isNaN(ts) || (ctx.nowMs ?? Date.now()) - ts > windowMs;
     }
     if (stale) {
-      findings.push(f("C-16.5", "info", `stale advisory artifact '${p}' (crashed or ended actor)`, ["delete the stale claim or presence marker"]));
+      findings.push(f2("C-16.5", "info", `stale advisory artifact '${p}' (crashed or ended actor)`, ["delete the stale claim or presence marker"]));
     }
   }
   const manifestRaw = ctx.files.get("PENDING_PROMOTION.json");
   const pendingFiles = [...ctx.files.keys()].filter((p) => p.endsWith(".pending"));
   if (!manifestRaw) {
     for (const p of pendingFiles) {
-      findings.push(f("C-16.4", "error", `orphaned pending file '${p}' with no manifest`, ["complete consumption: archive manifest, delete consumed files (idempotent)"]));
+      findings.push(f2("C-16.4", "error", `orphaned pending file '${p}' with no manifest`, ["complete consumption: archive manifest, delete consumed files (idempotent)"]));
     }
     return;
   }
@@ -1450,61 +1758,54 @@ async function checkQueueAndBase(ctx, findings) {
   try {
     man = JSON.parse(asText(manifestRaw));
   } catch {
-    findings.push(f("C-16.1", "error", "PENDING_PROMOTION.json does not parse"));
+    findings.push(f2("C-16.1", "error", "PENDING_PROMOTION.json does not parse"));
     return;
   }
   for (const k of ["target", "base", "files", "created", "author", "skill_version"]) {
-    if (!(k in man)) findings.push(f("C-16.1", "error", `manifest missing '${k}'`));
+    if (!(k in man)) findings.push(f2("C-16.1", "error", `manifest missing '${k}'`));
   }
   if (man.target && man.target !== ctx.folderName) {
-    findings.push(f("C-16.1", "error", `manifest target '${man.target}' does not match bundle '${ctx.folderName}'`));
+    findings.push(f2("C-16.1", "error", `manifest target '${man.target}' does not match bundle '${ctx.folderName}'`));
   }
   const listed = /* @__PURE__ */ new Set();
   if (Array.isArray(man.files)) {
     for (const entry of man.files) {
       if (!entry || !entry.name || !entry.sha256) {
-        findings.push(f("C-16.1", "error", `manifest files entry ${JSON.stringify(entry)} lacks name+sha256`));
+        findings.push(f2("C-16.1", "error", `manifest files entry ${JSON.stringify(entry)} lacks name+sha256`));
         continue;
       }
       listed.add(entry.name + ".pending");
       const pending = ctx.files.get(entry.name + ".pending");
       if (!pending) {
-        findings.push(f("C-16.2", "error", `package file '${entry.name}.pending' listed in manifest is missing`, ["discard the package with a finding to the producing author", "re-produce the package from the originating session outputs"]));
+        findings.push(f2("C-16.2", "error", `package file '${entry.name}.pending' listed in manifest is missing`, ["discard the package with a finding to the producing author", "re-produce the package from the originating session outputs"]));
         continue;
       }
       const hash = await ctx.sha256(pending);
       if (hash !== entry.sha256) {
-        findings.push(f("C-16.2", "error", `hash mismatch on '${entry.name}.pending' (manifest ${String(entry.sha256).slice(0, 12)}\u2026, actual ${hash.slice(0, 12)}\u2026)`, ["discard the package (never promote)", "re-produce the package"]));
+        findings.push(f2("C-16.2", "error", `hash mismatch on '${entry.name}.pending' (manifest ${String(entry.sha256).slice(0, 12)}\u2026, actual ${hash.slice(0, 12)}\u2026)`, ["discard the package (never promote)", "re-produce the package"]));
       }
     }
   }
   for (const p of pendingFiles) {
-    if (!listed.has(p)) findings.push(f("C-16.4", "error", `pending file '${p}' is not listed in the manifest`, ["complete consumption or discard with reason"]));
+    if (!listed.has(p)) findings.push(f2("C-16.4", "error", `pending file '${p}' is not listed in the manifest`, ["complete consumption or discard with reason"]));
   }
   if (typeof man.created === "string" && ISO_TS_RE.test(man.created)) {
     const ageDays = ((ctx.nowMs ?? Date.now()) - Date.parse(man.created)) / 864e5;
     if (ageDays > ctx.maxPackageAgeDays) {
-      findings.push(f("C-16.3", "warn", `pending package is ${Math.floor(ageDays)} days old (policy ${ctx.maxPackageAgeDays})`, ["promote now", "discard with reason if superseded, preserving the manifest as a record"]));
+      findings.push(f2("C-16.3", "warn", `pending package is ${Math.floor(ageDays)} days old (policy ${ctx.maxPackageAgeDays})`, ["promote now", "discard with reason if superseded, preserving the manifest as a record"]));
     }
   } else {
-    findings.push(f("C-16.1", "error", `manifest created '${man.created}' is not ISO 8601 UTC`));
+    findings.push(f2("C-16.1", "error", `manifest created '${man.created}' is not ISO 8601 UTC`));
   }
   const live = ctx.files.get("bundle.md");
   if (live && typeof man.base === "string") {
     const liveHash = await ctx.sha256(live);
     if (liveHash === man.base) {
-      findings.push(f("C-17.1", "info", "pending package base matches live bundle.md: fast-forward eligible"));
+      findings.push(f2("C-17.1", "info", "pending package base matches live bundle.md: fast-forward eligible"));
     } else {
-      findings.push(f("C-17.1", "warn", `pending package base ${String(man.base).slice(0, 12)}\u2026 does not match live bundle.md ${liveHash.slice(0, 12)}\u2026: divergence`, ["rebase via a reconciliation session", "supersede: human selects one, the other preserved as a diverged branch in _history", "apply-disjoint if file sets prove disjoint (requires history manifests)"]));
+      findings.push(f2("C-17.1", "warn", `pending package base ${String(man.base).slice(0, 12)}\u2026 does not match live bundle.md ${liveHash.slice(0, 12)}\u2026: divergence`, ["rebase via a reconciliation session", "supersede: human selects one, the other preserved as a diverged branch in _history", "apply-disjoint if file sets prove disjoint (requires history manifests)"]));
     }
   }
-}
-function canonicalJson(v) {
-  if (Array.isArray(v)) return "[" + v.map(canonicalJson).join(",") + "]";
-  if (v !== null && typeof v === "object") {
-    return "{" + Object.keys(v).sort().map((k) => JSON.stringify(k) + ":" + canonicalJson(v[k])).join(",") + "}";
-  }
-  return JSON.stringify(v);
 }
 var INFO_ENUMS = {
   criticality: ["crucial", "supporting"],
@@ -1517,24 +1818,24 @@ async function checkInformationExtension(ctx, findings) {
   const fm = ctx.fm;
   for (const [field, legal] of Object.entries(INFO_ENUMS)) {
     if (!legal.includes(fm[field])) {
-      findings.push(f("C-2.7", "error", `${field} '${fm[field]}' is not one of: ${legal.join(", ")}`));
+      findings.push(f2("C-2.7", "error", `${field} '${fm[field]}' is not one of: ${legal.join(", ")}`));
     }
   }
   const src = fm.source;
-  if (!src || typeof src !== "object") findings.push(f("C-2.7", "error", "source block is missing"));
+  if (!src || typeof src !== "object") findings.push(f2("C-2.7", "error", "source block is missing"));
   else for (const k of ["locator", "authority", "retrieved"]) {
-    if (!src[k]) findings.push(f("C-2.7", "error", `source.${k} is missing`));
+    if (!src[k]) findings.push(f2("C-2.7", "error", `source.${k} is missing`));
   }
   const mon = fm.monitoring;
-  if (!mon || typeof mon !== "object") findings.push(f("C-2.7", "error", "monitoring block is missing"));
+  if (!mon || typeof mon !== "object") findings.push(f2("C-2.7", "error", "monitoring block is missing"));
   else {
-    if (typeof mon.enabled !== "boolean") findings.push(f("C-2.7", "error", `monitoring.enabled '${mon.enabled}' is not boolean`));
-    if (!MONITOR_FREQ.includes(mon.frequency)) findings.push(f("C-2.7", "error", `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ.join(", ")}`));
+    if (typeof mon.enabled !== "boolean") findings.push(f2("C-2.7", "error", `monitoring.enabled '${mon.enabled}' is not boolean`));
+    if (!MONITOR_FREQ.includes(mon.frequency)) findings.push(f2("C-2.7", "error", `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ.join(", ")}`));
   }
   const ch = fm.content_hash;
   const chOk = typeof ch === "string" && CONTENT_HASH_RE.test(ch);
   if (ch !== void 0 && ch !== null && ch !== "" && !chOk) {
-    findings.push(f("C-2.7", "error", `content_hash '${String(ch).slice(0, 24)}\u2026' is not sha256:<64 hex>`));
+    findings.push(f2("C-2.7", "error", `content_hash '${String(ch).slice(0, 24)}\u2026' is not sha256:<64 hex>`));
   }
   const dsRaw = ctx.files.get("data/dataset.json");
   if (dsRaw && chOk) {
@@ -1542,7 +1843,7 @@ async function checkInformationExtension(ctx, findings) {
       const canon2 = canonicalJson(JSON.parse(asText(dsRaw)));
       const actual = "sha256:" + await ctx.sha256(canon2);
       if (actual !== ch) {
-        findings.push(f(
+        findings.push(f2(
           "C-2.7",
           "error",
           `content_hash does not match the canonicalized data/dataset.json (declared ${ch.slice(7, 19)}\u2026, actual ${actual.slice(7, 19)}\u2026)`,
@@ -1553,21 +1854,21 @@ async function checkInformationExtension(ctx, findings) {
     }
   }
   if (fm.current_state === "verified") {
-    if (!chOk) findings.push(f("C-2.7", "error", "verified state requires a well-formed content_hash"));
-    if (!dsRaw) findings.push(f("C-2.7", "error", "verified state requires data/dataset.json"));
+    if (!chOk) findings.push(f2("C-2.7", "error", "verified state requires a well-formed content_hash"));
+    if (!dsRaw) findings.push(f2("C-2.7", "error", "verified state requires data/dataset.json"));
     const hasSnap = [...ctx.files.keys()].some((p) => p.startsWith("snapshots/")) || ctx.elided && [...ctx.elided].some((p) => p.startsWith("snapshots/"));
-    if (!hasSnap) findings.push(f("C-2.7", "error", "verified state requires at least one file in snapshots/"));
+    if (!hasSnap) findings.push(f2("C-2.7", "error", "verified state requires at least one file in snapshots/"));
   }
   const chRaw = ctx.files.get("data/changes.json");
   if (chRaw) {
     try {
       const recs = JSON.parse(asText(chRaw));
       const arr = recs && Array.isArray(recs.records) ? recs.records : null;
-      if (!arr) findings.push(f("C-2.7", "error", 'data/changes.json must be {"records": [...]}'));
+      if (!arr) findings.push(f2("C-2.7", "error", 'data/changes.json must be {"records": [...]}'));
       else for (let i = 0; i < arr.length; i++) {
         const r = arr[i];
         if (!r || !ISO_TS_RE.test(r.detected || "") || !["modified", "removed", "corrected"].includes(r.kind) || !r.summary) {
-          findings.push(f("C-2.7", "error", `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
+          findings.push(f2("C-2.7", "error", `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
         }
       }
     } catch {
@@ -1582,20 +1883,6 @@ function sectionText(body, heading) {
   if (idx < 0) return null;
   const next = body.indexOf("\n## ", idx + 1);
   return body.slice(idx, next === -1 ? void 0 : next);
-}
-var NON_MEMBER_AUTHORS = ["claude", "pwa-client", "daemon", "sweep", "session", "accelerator", "apps-script", "system", "agent", "ai"];
-var ACTOR_CLASSES = ["daemon", "session", "member"];
-var MACHINE_AUTHOR_PREFIX = "token:";
-var MACHINE_CLASS_PREFIX = "class:";
-var MACHINE_STAMP_PREFIXES = [MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX];
-function isMachineStamp(who) {
-  const s = String(who ?? "").trim().toLowerCase();
-  return s !== "" && MACHINE_STAMP_PREFIXES.some((p) => s.startsWith(p));
-}
-function isMachineIdentity(who) {
-  const s = String(who ?? "").trim().toLowerCase();
-  if (s === "") return false;
-  return isMachineStamp(s) || ACTOR_CLASSES.includes(s) || NON_MEMBER_AUTHORS.includes(s);
 }
 var SUFFICIENCY_UNCLAIMED = "none:independent-sufficiency";
 var SUFFICIENCY_CLAIM_STATES = {
@@ -1647,11 +1934,11 @@ function checkAppendOnly(ctx, findings) {
     const prior = Array.isArray(snap.data[key]) ? snap.data[key] : [];
     const live = Array.isArray(ctx.fm[key]) ? ctx.fm[key] : [];
     if (live.length < prior.length) {
-      findings.push(f("C-5.1", "error", `${key} shrank from ${prior.length} to ${live.length} entries vs. the latest snapshot`, ["restore from _history and re-append new material"]));
+      findings.push(f2("C-5.1", "error", `${key} shrank from ${prior.length} to ${live.length} entries vs. the latest snapshot`, ["restore from _history and re-append new material"]));
     } else {
       for (let i = 0; i < prior.length; i++) {
         if (JSON.stringify(prior[i]) !== JSON.stringify(live[i])) {
-          findings.push(f("C-5.1", "error", `${key}[${i}] was modified retroactively (append-only surface)`, ["restore from _history and re-append new material"]));
+          findings.push(f2("C-5.1", "error", `${key}[${i}] was modified retroactively (append-only surface)`, ["restore from _history and re-append new material"]));
           break;
         }
       }
@@ -1659,12 +1946,12 @@ function checkAppendOnly(ctx, findings) {
   }
   const rn = sectionText(snap.body, "## Review Notes");
   if (rn && rn.trim() !== "## Review Notes" && !ctx.body.includes(rn.trimEnd())) {
-    findings.push(f("C-5.1", "error", "Review Notes content from the prior version is missing or altered (verbatim-immutable)", ["restore from _history and re-append new material", "record a tamper finding if history lacks the original"]));
+    findings.push(f2("C-5.1", "error", "Review Notes content from the prior version is missing or altered (verbatim-immutable)", ["restore from _history and re-append new material", "record a tamper finding if history lacks the original"]));
   }
   const priorLog = sectionText(snap.body, "## Session Log") || "";
   for (const header of priorLog.match(/^### Session .*$/gm) || []) {
     if (!ctx.body.includes(header)) {
-      findings.push(f("C-5.1", "error", `Session Log entry '${header.slice(0, 60)}' from the prior version is missing (append-only surface)`, ["restore from _history and re-append new material"]));
+      findings.push(f2("C-5.1", "error", `Session Log entry '${header.slice(0, 60)}' from the prior version is missing (append-only surface)`, ["restore from _history and re-append new material"]));
     }
   }
   const chSnaps = [...ctx.files.keys()].filter((p) => /^_history\/data\/changes_.*\.json$/.test(p)).sort();
@@ -1674,7 +1961,7 @@ function checkAppendOnly(ctx, findings) {
       const priorRecs = JSON.parse(asText(ctx.files.get(chSnaps[chSnaps.length - 1]))).records || [];
       const liveRecs = JSON.parse(asText(liveCh)).records || [];
       if (liveRecs.length < priorRecs.length || JSON.stringify(liveRecs.slice(0, priorRecs.length)) !== JSON.stringify(priorRecs)) {
-        findings.push(f("C-5.1", "error", "data/changes.json records were mutated or removed (append-only surface)", ["restore from _history and re-append new material"]));
+        findings.push(f2("C-5.1", "error", "data/changes.json records were mutated or removed (append-only surface)", ["restore from _history and re-append new material"]));
       }
     } catch {
     }
@@ -1685,35 +1972,35 @@ function checkReferences(ctx, findings) {
   for (let i = 0; i < refs.length; i++) {
     const r = refs[i];
     if (typeof r !== "object" || r === null) {
-      findings.push(f("C-6.1", "error", `references[${i}] is not an object`));
+      findings.push(f2("C-6.1", "error", `references[${i}] is not an object`));
       continue;
     }
-    if (!REL_VOCAB.includes(r.rel)) findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' is not in the closed vocabulary`, ["map to the nearest vocabulary value", "sever with reason"]));
+    if (!REL_VOCAB.includes(r.rel)) findings.push(f2("C-6.1", "error", `references[${i}].rel '${r.rel}' is not in the closed vocabulary`, ["map to the nearest vocabulary value", "sever with reason"]));
     if (SOURCE_ASSERTED_RELS.includes(r.rel)) {
       if (r.asserted_by !== "source")
-        findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim`));
+        findings.push(f2("C-6.1", "error", `references[${i}].rel '${r.rel}' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim`));
       if (typeof r.address !== "string" || !r.address)
-        findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' must carry the address the source wrote, as a comment string beside the canonical target`));
+        findings.push(f2("C-6.1", "error", `references[${i}].rel '${r.rel}' must carry the address the source wrote, as a comment string beside the canonical target`));
       if (!["contemporaneous", "superseded", "undetermined"].includes(r.verdict))
-        findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' must carry a contemporaneity verdict of contemporaneous, superseded or undetermined; undetermined is the resting state and must be stated rather than omitted`));
+        findings.push(f2("C-6.1", "error", `references[${i}].rel '${r.rel}' must carry a contemporaneity verdict of contemporaneous, superseded or undetermined; undetermined is the resting state and must be stated rather than omitted`));
     } else if (r.asserted_by === "source") {
-      findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' is a member's relation and cannot be asserted_by 'source'`));
+      findings.push(f2("C-6.1", "error", `references[${i}].rel '${r.rel}' is a member's relation and cannot be asserted_by 'source'`));
     }
-    if (!EDGE_STATUS.includes(r.status)) findings.push(f("C-6.1", "error", `references[${i}].status '${r.status}' is not one of: ${EDGE_STATUS.join(", ")}`));
+    if (!EDGE_STATUS.includes(r.status)) findings.push(f2("C-6.1", "error", `references[${i}].status '${r.status}' is not one of: ${EDGE_STATUS.join(", ")}`));
     const t = r.target;
     if (typeof t !== "string" || /:\/\/|[/\\]|drive\.google/i.test(t)) {
-      findings.push(f("C-6.1", "error", `references[${i}].target '${String(t).slice(0, 40)}' looks like a substrate locator; targets are canonical IDs only`));
+      findings.push(f2("C-6.1", "error", `references[${i}].target '${String(t).slice(0, 40)}' looks like a substrate locator; targets are canonical IDs only`));
     } else if (!BUNDLE_ID_RE.test(t)) {
-      findings.push(f("C-6.1", "error", `references[${i}].target '${t}' does not match the canonical ID grammar`));
+      findings.push(f2("C-6.1", "error", `references[${i}].target '${t}' does not match the canonical ID grammar`));
     } else if (ctx.resolveTarget) {
       if (!ctx.resolveTarget(t)) {
-        findings.push(f("C-6.2", "error", `references[${i}].target '${t}' does not resolve in the store`, ["restore target from history", "re-point to the successor object (derived_from chain)", "sever the edge with a reason note"]));
+        findings.push(f2("C-6.2", "error", `references[${i}].target '${t}' does not resolve in the store`, ["restore target from history", "re-point to the successor object (derived_from chain)", "sever the edge with a reason note"]));
       }
     }
   }
   if (ctx.fm?.workproduct_state === "distributed") {
     const hasDist = [...ctx.files.keys()].some((p) => p.startsWith("distributions/"));
-    if (!hasDist) findings.push(f("C-6.3", "error", "workproduct_state is distributed but distributions/ is empty"));
+    if (!hasDist) findings.push(f2("C-6.3", "error", "workproduct_state is distributed but distributions/ is empty"));
   }
   supersedesEdgeFindings(ctx.fm, findings);
   divisionDisclosureFindings(ctx.fm, findings);
@@ -1723,7 +2010,7 @@ function supersedesEdgeFindings(fm, findings) {
   refs.forEach((r, i) => {
     if (!r || typeof r !== "object" || r.rel !== "supersedes") return;
     if (typeof r.reason !== "string" || r.reason.trim() === "") {
-      findings.push(f(
+      findings.push(f2(
         "C-6.1",
         "error",
         `references[${i}] is a supersedes edge with no reason: supersession says this question replaced that one, and a replacement with no account of why cannot be checked by anyone`,
@@ -1731,7 +2018,7 @@ function supersedesEdgeFindings(fm, findings) {
       ));
     }
     if (typeof r.target !== "string" || !BUNDLE_ID_RE.test(r.target)) {
-      findings.push(f("C-6.1", "error", `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
+      findings.push(f2("C-6.1", "error", `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
     }
   });
 }
@@ -1744,7 +2031,7 @@ function divisionDisclosureFindings(fm, findings) {
   const sibs = Array.isArray(sibsRaw) ? sibsRaw.filter((x) => typeof x === "string" && x !== "") : null;
   if (!parent && supers.length === 0) return;
   if (supers.length && !parent) {
-    findings.push(f(
+    findings.push(f2(
       "C-6.1",
       "error",
       `this document carries a supersedes edge to ${supers[0].target} and declares no division_parent: a question that superseded another discloses which division it came out of, so a reader who can see one half can see that the other half exists (R4)`,
@@ -1752,7 +2039,7 @@ function divisionDisclosureFindings(fm, findings) {
     ));
   }
   if (parent && !supers.some((r) => r.target === parent)) {
-    findings.push(f(
+    findings.push(f2(
       "C-6.1",
       "error",
       `division_parent names ${parent} with no supersedes edge to it: the disclosure and the edge are two views of one fact and cannot disagree`,
@@ -1761,7 +2048,7 @@ function divisionDisclosureFindings(fm, findings) {
   }
   if (!parent) return;
   if (sibs === null || sibs.length === 0) {
-    findings.push(f(
+    findings.push(f2(
       "C-6.1",
       "error",
       `division_parent names ${parent} and division_siblings is ${sibs === null ? "absent" : "empty"}: a division produces at least two questions, so a child of one always has at least one sibling to name \u2014 NO_SIBLING_DISCLOSURE`,
@@ -1770,23 +2057,23 @@ function divisionDisclosureFindings(fm, findings) {
     return;
   }
   for (const s of sibs) {
-    if (!BUNDLE_ID_RE.test(s)) findings.push(f("C-6.1", "error", `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical bundle id`));
-    if (s === parent) findings.push(f("C-6.1", "error", `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
-    if (typeof fm.id === "string" && s === fm.id) findings.push(f("C-6.1", "error", `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
+    if (!BUNDLE_ID_RE.test(s)) findings.push(f2("C-6.1", "error", `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical bundle id`));
+    if (s === parent) findings.push(f2("C-6.1", "error", `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
+    if (typeof fm.id === "string" && s === fm.id) findings.push(f2("C-6.1", "error", `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
   }
 }
 function checkHistoryCoherence(ctx, findings) {
   const histFiles = [...ctx.files.keys()].filter((p) => p.startsWith("_history/"));
   const manRaw = ctx.files.get("_history/manifest.json");
   if (!manRaw) {
-    if (histFiles.length) findings.push(f("C-12.1", "error", "_history contains files but no manifest.json", ["rebuild manifest entry from surviving files"]));
+    if (histFiles.length) findings.push(f2("C-12.1", "error", "_history contains files but no manifest.json", ["rebuild manifest entry from surviving files"]));
     return;
   }
   let man;
   try {
     man = JSON.parse(asText(manRaw));
   } catch {
-    findings.push(f("C-12.1", "error", "_history/manifest.json does not parse", ["rebuild manifest entry from surviving files"]));
+    findings.push(f2("C-12.1", "error", "_history/manifest.json does not parse", ["rebuild manifest entry from surviving files"]));
     return;
   }
   const entries = Array.isArray(man.entries) ? man.entries : [];
@@ -1795,10 +2082,10 @@ function checkHistoryCoherence(ctx, findings) {
   const bundleMdCreated = [];
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
-    for (const k of ["key", "kind", "created", "files"]) if (!(k in (e || {}))) findings.push(f("C-12.1", "error", `manifest entry[${i}] missing '${k}'`));
+    for (const k of ["key", "kind", "created", "files"]) if (!(k in (e || {}))) findings.push(f2("C-12.1", "error", `manifest entry[${i}] missing '${k}'`));
     if (e?.key) {
-      if (keys.has(e.key)) findings.push(f("C-12.1", "error", `duplicate manifest key '${e.key}'`));
-      if (e.key < prevKey) findings.push(f("C-12.1", "error", `manifest keys out of order at '${e.key}'`));
+      if (keys.has(e.key)) findings.push(f2("C-12.1", "error", `duplicate manifest key '${e.key}'`));
+      if (e.key < prevKey) findings.push(f2("C-12.1", "error", `manifest keys out of order at '${e.key}'`));
       keys.add(e.key);
       prevKey = e.key;
     }
@@ -1806,14 +2093,14 @@ function checkHistoryCoherence(ctx, findings) {
       bundleMdCreated.push(e.created);
     }
     if (e?.kind === "promotion" && e.key && !ctx.files.has(`_history/promotion_${e.key}.json`)) {
-      findings.push(f("C-12.2", "error", `promotion record for '${e.key}' is missing`, ["rebuild manifest entry from surviving files", "record a history-loss finding and re-snapshot current state"]));
+      findings.push(f2("C-12.2", "error", `promotion record for '${e.key}' is missing`, ["rebuild manifest entry from surviving files", "record a history-loss finding and re-snapshot current state"]));
     }
     if (Array.isArray(e?.snapshotted)) {
       for (const name of e.snapshotted) {
         const dot = name.lastIndexOf(".");
         const snapPath = `_history/${name.slice(0, dot)}_${e.key}${name.slice(dot)}`;
         if (!hasFile_(ctx, snapPath)) {
-          findings.push(f("C-12.2", "error", `snapshot '${snapPath}' recorded in manifest entry '${e.key}' is missing`, ["record a history-loss finding and re-snapshot current state"]));
+          findings.push(f2("C-12.2", "error", `snapshot '${snapPath}' recorded in manifest entry '${e.key}' is missing`, ["record a history-loss finding and re-snapshot current state"]));
         }
       }
     }
@@ -1830,7 +2117,7 @@ function checkHistoryCoherence(ctx, findings) {
       } catch {
       }
       if (!parsed || !parsed.outcome) {
-        findings.push(f(
+        findings.push(f2(
           "C-12.2",
           "error",
           `refusal record '${p}' does not parse or names no outcome`,
@@ -1843,7 +2130,7 @@ function checkHistoryCoherence(ctx, findings) {
     if (pay) {
       const sibling = `_history/refused_${pay[1]}.json`;
       if (!ctx.files.has(sibling)) {
-        findings.push(f(
+        findings.push(f2(
           "C-12.2",
           "error",
           `preserved refusal payload '${p}' has no refusal record at '${sibling}'`,
@@ -1855,14 +2142,14 @@ function checkHistoryCoherence(ctx, findings) {
     const m = /_((?:\d{8}T\d{6}Z)_[0-9a-f]{8})\./.exec(p) || /^_history\/promotion_(.+)\.json$/.exec(p);
     const key = m ? m[1] : null;
     if (!key || !keys.has(key)) {
-      findings.push(f("C-12.2", "error", `history file '${p}' maps to no manifest entry`, ["rebuild manifest entry from surviving files"]));
+      findings.push(f2("C-12.2", "error", `history file '${p}' maps to no manifest entry`, ["rebuild manifest entry from surviving files"]));
     }
   }
   const sorted = bundleMdCreated.slice().sort();
   sorted.pop();
   const newestPrior = sorted.length ? sorted[sorted.length - 1] : "";
   if (typeof ctx.fm?.last_updated === "string" && newestPrior && ctx.fm.last_updated < newestPrior) {
-    findings.push(f(
+    findings.push(f2(
       "C-12.1",
       "error",
       `live last_updated '${ctx.fm.last_updated}' precedes an earlier history entry '${newestPrior}': the live bundle.md is older than a version already superseded`,
@@ -1874,15 +2161,15 @@ function checkRecheckCoverage(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== "inquiry") return;
   const rts = Array.isArray(ctx.fm.recheck_triggers) ? ctx.fm.recheck_triggers : [];
   if (rts.length === 0) {
-    findings.push(f("C-15.1", "error", "every Problem, in every disposition including dismissed, carries at least one recheck trigger", ["author a trigger, dual-audience shape, dated when time-bound"]));
+    findings.push(f2("C-15.1", "error", "every Problem, in every disposition including dismissed, carries at least one recheck trigger", ["author a trigger, dual-audience shape, dated when time-bound"]));
     return;
   }
   for (let i = 0; i < rts.length; i++) {
     const t = rts[i];
     if (typeof t !== "object" || !t?.text || !t?.description) {
-      findings.push(f("C-15.1", "error", `recheck_triggers[${i}] lacks the dual-audience {text, description} shape`));
+      findings.push(f2("C-15.1", "error", `recheck_triggers[${i}] lacks the dual-audience {text, description} shape`));
     } else if (t.date !== void 0 && !/^\d{4}-\d{2}-\d{2}$/.test(String(t.date))) {
-      findings.push(f("C-15.1", "error", `recheck_triggers[${i}].date '${t.date}' is not YYYY-MM-DD`));
+      findings.push(f2("C-15.1", "error", `recheck_triggers[${i}].date '${t.date}' is not YYYY-MM-DD`));
     }
   }
 }
@@ -1891,16 +2178,16 @@ function checkInquiryExtension(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== "inquiry") return;
   const fm = ctx.fm;
   if (!["agent", "human"].includes(fm.surfaced_by)) {
-    findings.push(f("C-2.8", "error", `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
+    findings.push(f2("C-2.8", "error", `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
   }
   if (["deferred", "dismissed"].includes(fm.current_state)) {
     if (typeof fm.disposition_reason !== "string" || fm.disposition_reason.trim() === "") {
-      findings.push(f("C-2.8", "error", `${fm.current_state} state requires a non-empty disposition_reason`));
+      findings.push(f2("C-2.8", "error", `${fm.current_state} state requires a non-empty disposition_reason`));
     }
   }
   if (fm.current_state === "concluded") {
     if (typeof fm.conclusion !== "string" || fm.conclusion.trim() === "") {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         "concluded state requires a non-empty conclusion",
@@ -1911,7 +2198,7 @@ function checkInquiryExtension(ctx, findings) {
     const ovAt = typeof fm.falsifier_override_at === "string" ? fm.falsifier_override_at.trim() : "";
     const falsStated = typeof fm.falsifier === "string" && fm.falsifier.trim() !== "";
     if (!falsStated && !ovBy && !ovAt) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         "concluded state requires a non-empty falsifier: a conclusion that names nothing which would overturn it cannot be checked by anyone, including its author",
@@ -1921,14 +2208,14 @@ function checkInquiryExtension(ctx, findings) {
         ]
       ));
     } else if (!falsStated && !(ovBy && ovAt)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         "concluded state has no falsifier and only a HALF-RECORDED override: an override missing its " + (ovBy ? "date" : "member") + " is a silent one, and a record that has stopped requiring a falsifier without saying who accepted that claims more than it can support",
         ["record both falsifier_override_by and falsifier_override_at, or state a falsifier"]
       ));
     } else if (falsStated && (ovBy || ovAt)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         "concluded state carries BOTH an authored falsifier and a record that none was stated: those are two contradictory claims about this finding and nothing may choose between them",
@@ -1939,7 +2226,7 @@ function checkInquiryExtension(ctx, findings) {
       ));
     }
     if (!Array.isArray(fm.basis) || fm.basis.length < 1) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         "concluded state requires at least one basis leg: an open inquiry may rest on nothing (a standing objective), a conclusion may not",
@@ -1959,7 +2246,7 @@ function checkInquiryExtension(ctx, findings) {
   ]) {
     const v = fm?.[k];
     if (v === void 0 || v === null || v === "" || v === "null") continue;
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `a finding's bytes name a case (${k}): since CASE-5b the case's own assertions \u2014 its identity, its edition, its producing project, its scope, its roster, its load-bearing partition, its bias acknowledgement and its bar \u2014 are signed ONCE, in the CASE DOCUMENT a member reviews and ratifies (op=caseratify), and not N times in N members' frontmatter. A finding is a member of a case because the case pinned its version hash, and that pin is inside the bytes the case's signer signed`,
@@ -1972,7 +2259,7 @@ function checkInquiryExtension(ctx, findings) {
   if (fm.current_state === "divided") checkDividedExtension(fm, findings);
   if (fm.subject_entity !== void 0 && fm.subject_entity !== null && fm.subject_entity !== "") {
     if (typeof fm.subject_entity !== "string" || !ENTITY_ID_RE.test(fm.subject_entity)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `subject_entity '${String(fm.subject_entity).slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
@@ -1985,7 +2272,7 @@ function checkInquiryExtension(ctx, findings) {
 function checkDividedExtension(fm, findings) {
   const d = typeof fm.division === "object" && fm.division && !Array.isArray(fm.division) ? fm.division : null;
   if (!d) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       "divided state requires a division block: a question recorded as divided with no account of the division is a state change wearing a correction's clothes",
@@ -2009,7 +2296,7 @@ function checkDividedExtension(fm, findings) {
   }
   const into = Array.isArray(d.into) ? d.into.filter((x) => typeof x === "string") : [];
   if (into.length < 2) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `division.into names ${into.length} child inquir${into.length === 1 ? "y" : "ies"}: a division produces at least TWO questions, because one is a rename and zero is a deletion`,
@@ -2017,13 +2304,13 @@ function checkDividedExtension(fm, findings) {
     ));
   }
   for (const id of into) {
-    if (!BUNDLE_ID_RE.test(id)) findings.push(f("C-2.8", "error", `division.into names '${String(id).slice(0, 40)}', which is not a canonical bundle id`));
+    if (!BUNDLE_ID_RE.test(id)) findings.push(f2("C-2.8", "error", `division.into names '${String(id).slice(0, 40)}', which is not a canonical bundle id`));
   }
   if (new Set(into).size !== into.length) {
-    findings.push(f("C-2.8", "error", "division.into names the same child twice: a leg apportioned to a child named twice has one home, not two"));
+    findings.push(f2("C-2.8", "error", "division.into names the same child twice: a leg apportioned to a child named twice has one home, not two"));
   }
   if (typeof d.reason !== "string" || d.reason.trim() === "") {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       "division requires a non-empty reason: the reason belongs to the ACT (DEC-28), and a restructuring nobody accounted for is indistinguishable from one nobody should have made",
@@ -2031,15 +2318,15 @@ function checkDividedExtension(fm, findings) {
     ));
   }
   if (typeof d.apportioned_by !== "string" || d.apportioned_by.trim() === "" || isMachineIdentity(d.apportioned_by)) {
-    findings.push(f("C-2.8", "error", `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
+    findings.push(f2("C-2.8", "error", `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
   }
   if (!ISO_TS_RE.test(String(d.at || ""))) {
-    findings.push(f("C-2.8", "error", `division requires 'at' as an ISO timestamp (got '${d.at}')`));
+    findings.push(f2("C-2.8", "error", `division requires 'at' as an ISO timestamp (got '${d.at}')`));
   }
   const legs = Array.isArray(fm.basis) ? fm.basis : [];
   const rows = Array.isArray(fm.division_apportionment) ? fm.division_apportionment : null;
   if (!rows) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       "divided state requires a division_apportionment field: the parent records WHERE EVERY LEG WENT, because dividing must not be a cheaper way to shed a finding that cuts against you than severing it (R4)",
@@ -2050,20 +2337,20 @@ function checkDividedExtension(fm, findings) {
   const homes = /* @__PURE__ */ new Map();
   rows.forEach((r, i) => {
     if (!r || typeof r !== "object") {
-      findings.push(f("C-2.8", "error", `division_apportionment[${i}] is not an object`));
+      findings.push(f2("C-2.8", "error", `division_apportionment[${i}] is not an object`));
       return;
     }
     if (!Number.isInteger(r.ord) || r.ord < 0 || r.ord >= legs.length) {
-      findings.push(f("C-2.8", "error", `division_apportionment[${i}].ord '${r.ord}' does not name a leg of this inquiry's basis (0..${legs.length - 1}): a leg is addressed by its ORDINAL, because one document legitimately carries two legs (D4)`));
+      findings.push(f2("C-2.8", "error", `division_apportionment[${i}].ord '${r.ord}' does not name a leg of this inquiry's basis (0..${legs.length - 1}): a leg is addressed by its ORDINAL, because one document legitimately carries two legs (D4)`));
       return;
     }
     if (typeof r.to !== "string" || !into.includes(r.to)) {
-      findings.push(f("C-2.8", "error", `division_apportionment[${i}].to '${r.to}' is not one of the children named in division.into: a leg's home is a child of THIS division`));
+      findings.push(f2("C-2.8", "error", `division_apportionment[${i}].to '${r.to}' is not one of the children named in division.into: a leg's home is a child of THIS division`));
       return;
     }
     const leg = legs[r.ord];
     if (leg && typeof leg === "object" && typeof r.target === "string" && r.target !== leg.target) {
-      findings.push(f("C-2.8", "error", `division_apportionment[${i}] names target '${r.target}' at ord ${r.ord}, where the basis carries '${leg.target}': the account and the basis are two views of one document and cannot disagree`));
+      findings.push(f2("C-2.8", "error", `division_apportionment[${i}] names target '${r.target}' at ord ${r.ord}, where the basis carries '${leg.target}': the account and the basis are two views of one document and cannot disagree`));
     }
     if (!homes.has(r.ord)) homes.set(r.ord, /* @__PURE__ */ new Set());
     homes.get(r.ord).add(r.to);
@@ -2072,7 +2359,7 @@ function checkDividedExtension(fm, findings) {
   for (let i = 0; i < legs.length; i++) if (!homes.has(i)) orphans.push(i);
   if (orphans.length) {
     const cutting = orphans.filter((i) => legs[i] && legs[i].role === "cuts_against");
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis leg${orphans.length === 1 ? "" : "s"} ${orphans.join(", ")} ${orphans.length === 1 ? "has" : "have"} no home in the apportionment${cutting.length ? ` (including ${cutting.length} that cut${cutting.length === 1 ? "s" : ""} AGAINST this inquiry)` : ""}: every leg gets a home on a child, because division RE-HOMES material and only severance REMOVES it (R4)`,
@@ -2081,26 +2368,17 @@ function checkDividedExtension(fm, findings) {
   }
   const empty = into.filter((c) => ![...homes.values()].some((s) => s.has(c)));
   if (empty.length) {
-    findings.push(f("C-2.8", "error", `division.into names ${empty.join(", ")}, which received no leg of the parent's basis: a child that inherits nothing is a new question, not a half of this one`));
+    findings.push(f2("C-2.8", "error", `division.into names ${empty.join(", ")}, which received no leg of the parent's basis: a child that inherits nothing is a new question, not a half of this one`));
   }
 }
 var SUBJECT_POSITIONS = ["sought_and_answered", "sought_no_answer", "not_sought"];
 var STRENGTH_STATES = ["graded", "unrated", "undetermined"];
-var CASE_MEMBER_ROLES = ["load_bearing", "supporting"];
-var BASIS_ROLES = ["supports", "cuts_against"];
-var BASIS_GRADES = ["A", "B", "C", "D"];
-var GRADE_AXES = ["capture", "connection", "testimony"];
-var TESTIMONY_GRADE = "D";
-var GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited", "capture"];
-var EARNED_GRADE_SOURCES = ["resolution", "capture"];
-var EARNED_CAPTURE_CEILING = "B";
-var UNREACHABLE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
 var EARNED_SOURCE_AXIS = { resolution: "connection", capture: "capture" };
 var GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
 function checkLegExtentGrammar(leg, label, checkId, findings) {
   const bad = checkContentExtent(legExtent(leg), CONTENT_EXTENT_DOCUMENT_ONLY);
   if (bad)
-    findings.push(f(
+    findings.push(f2(
       checkId,
       "error",
       `${label} names an extent this record cannot evaluate: ${bad.detail}`,
@@ -2124,7 +2402,7 @@ function checkLegExtentGrammar(leg, label, checkId, findings) {
   const cid = leg && typeof leg === "object" ? leg.content_id : void 0;
   if (cid !== void 0 && cid !== null && cid !== "") {
     if (typeof cid !== "string" || !CONTENT_ID_RE.test(cid.trim()))
-      findings.push(f(
+      findings.push(f2(
         checkId,
         "error",
         `${label}.content_id '${String(cid).slice(0, 40)}' is not a content id: a part of a document is named by the 64-character lowercase hexadecimal address this record mints for it, and nothing shorter or longer can be one`,
@@ -2134,7 +2412,7 @@ function checkLegExtentGrammar(leg, label, checkId, findings) {
         ]
       ));
     else if (legHasAuthoredExtent(leg))
-      findings.push(f(
+      findings.push(f2(
         checkId,
         "error",
         `${label} names BOTH a content_id and an extent: these are one fact written twice and they can disagree, which would leave the record holding two answers to what this leg rests on`,
@@ -2153,14 +2431,14 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     return;
   }
   if (!Array.isArray(legs)) {
-    findings.push(f("C-2.8", "error", `basis is not an array`));
+    findings.push(f2("C-2.8", "error", `basis is not an array`));
     return;
   }
   const refTargets = new Set((Array.isArray(fm.references) ? fm.references : []).filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => r.target));
   for (let i = 0; i < legs.length; i++) {
     const leg = legs[i];
     if (typeof leg !== "object" || leg === null) {
-      findings.push(f("C-2.8", "error", `basis[${i}] is not an object`));
+      findings.push(f2("C-2.8", "error", `basis[${i}] is not an object`));
       continue;
     }
     if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
@@ -2168,13 +2446,13 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     const t = leg.target;
     let targetType = null;
     if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
-      findings.push(f("C-2.8", "error", `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical bundle id`));
+      findings.push(f2("C-2.8", "error", `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical bundle id`));
     } else {
       const tt = targetType = normalizeType(OBJECT_TYPES[t.split("-")[0]]);
       if (tt !== "information" && tt !== "inquiry") {
-        findings.push(f("C-2.8", "error", `basis[${i}].target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else`));
+        findings.push(f2("C-2.8", "error", `basis[${i}].target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else`));
       } else if (!refTargets.has(t)) {
-        findings.push(f(
+        findings.push(f2(
           "C-6.3",
           "error",
           `basis[${i}].target '${t}' is not in references[]: an inquiry carrying a basis leg carries the same target as a reference, so the two projections cannot disagree`,
@@ -2183,28 +2461,28 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       }
     }
     if (!BASIS_ROLES.includes(leg.role)) {
-      findings.push(f("C-2.8", "error", `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(", ")}`));
+      findings.push(f2("C-2.8", "error", `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(", ")}`));
     }
     const graded = leg.grade !== void 0 && leg.grade !== null;
     if (graded && !BASIS_GRADES.includes(leg.grade)) {
-      findings.push(f("C-2.8", "error", `basis[${i}].grade '${leg.grade}' is not one of: ${BASIS_GRADES.join(", ")} (absent or null means undetermined, and is stated as such)`));
+      findings.push(f2("C-2.8", "error", `basis[${i}].grade '${leg.grade}' is not one of: ${BASIS_GRADES.join(", ")} (absent or null means undetermined, and is stated as such)`));
     }
     if (leg.grade_axis !== void 0 && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis)) {
-      findings.push(f("C-2.8", "error", `basis[${i}].grade_axis '${leg.grade_axis}' is not one of: ${GRADE_AXES.join(", ")}`));
+      findings.push(f2("C-2.8", "error", `basis[${i}].grade_axis '${leg.grade_axis}' is not one of: ${GRADE_AXES.join(", ")}`));
     }
     if (leg.grade_source !== void 0 && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source)) {
-      findings.push(f("C-2.8", "error", `basis[${i}].grade_source '${leg.grade_source}' is not one of: ${GRADE_SOURCES.join(", ")}`));
+      findings.push(f2("C-2.8", "error", `basis[${i}].grade_source '${leg.grade_source}' is not one of: ${GRADE_SOURCES.join(", ")}`));
     }
     if (graded) {
       if (!GRADE_AXES.includes(leg.grade_axis)) {
-        findings.push(f("C-2.8", "error", `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states which axis its grade is on (${GRADE_AXES.join(", ")})`));
+        findings.push(f2("C-2.8", "error", `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states which axis its grade is on (${GRADE_AXES.join(", ")})`));
       }
       if (!GRADE_SOURCES.includes(leg.grade_source)) {
-        findings.push(f("C-2.8", "error", `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(", ")})`));
+        findings.push(f2("C-2.8", "error", `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(", ")})`));
       }
     }
     if (leg.grade_axis === "capture" && targetType === "inquiry" && leg.grade_source !== "inherited") {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `basis[${i}] states a capture-axis grade on an inquiry leg: capture is a property of an information object (DEC-21) and an inquiry is not one, so this grade has no referent`,
@@ -2215,7 +2493,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       ));
     }
     if (leg.grade_axis === "testimony" && targetType === "inquiry" && leg.grade_source !== "inherited") {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `basis[${i}] states a testimony-axis grade on an inquiry leg: testimony is a property of a member's authored observation, which is a document, and an inquiry is not one, so this grade has no referent`,
@@ -2227,7 +2505,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       ));
     }
     if (leg.grade_axis === "capture" && graded && (leg.grade_source === "testimony" || leg.grade_source === "hunch")) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `basis[${i}] states a capture-axis grade with grade_source '${leg.grade_source}': a capture grade says how the BYTES REACHED US, which is a fact this record holds about its own machinery and not one a member can assert. ${leg.grade_source === "testimony" ? "Testimony is a member's account of a connection" : "A hunch is a member's provisional connection"}, and neither is an account of a fetch`,
@@ -2239,17 +2517,17 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     }
     if (leg.grade_source === "hunch") {
       if (typeof leg.author !== "string" || leg.author.trim() === "") {
-        findings.push(f("C-2.8", "error", `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
+        findings.push(f2("C-2.8", "error", `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
       }
       if (!DATE_RE.test(String(leg.date ?? ""))) {
-        findings.push(f("C-2.8", "error", `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
+        findings.push(f2("C-2.8", "error", `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
       }
     }
     if (leg.grade_source === "testimony" && graded && leg.grade !== TESTIMONY_GRADE && leg.grade_axis !== "testimony") {
-      findings.push(f("C-2.8", "error", `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade ${TESTIMONY_GRADE} at no other value \u2014 a hunch is the only authored grade permitted above ${TESTIMONY_GRADE} (DEC-15)`));
+      findings.push(f2("C-2.8", "error", `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade ${TESTIMONY_GRADE} at no other value \u2014 a hunch is the only authored grade permitted above ${TESTIMONY_GRADE} (DEC-15)`));
     }
     if ((leg.grade_source === "testimony" || EARNED_GRADE_SOURCES.includes(leg.grade_source)) && !graded) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `basis[${i}] states grade_source '${leg.grade_source}' with no grade: a source is an account of where a grade came from, and there is no grade here to account for`,
@@ -2257,7 +2535,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       ));
     }
     if (leg.note !== void 0 && leg.note !== null && typeof leg.note !== "string") {
-      findings.push(f("C-2.8", "error", `basis[${i}].note is not a string`));
+      findings.push(f2("C-2.8", "error", `basis[${i}].note is not a string`));
     }
     checkLegExtentGrammar(leg, `basis[${i}]`, "C-2.8", findings);
     checkTestimonyLeg(leg, i, graded, targetType, earnedRegistry, findings);
@@ -2278,14 +2556,14 @@ function checkGrounds(fm, legs, findings) {
       return;
     }
     if (typeof g !== "string" || !GROUND_LABEL_RE.test(g)) {
-      findings.push(f("C-2.8", "error", `basis[${i}].ground '${String(g).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_', naming the branch of the argument this leg belongs to`));
+      findings.push(f2("C-2.8", "error", `basis[${i}].ground '${String(g).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_', naming the branch of the argument this leg belongs to`));
       return;
     }
     labelled.push([i, g]);
   });
   if (rows === void 0 || rows === null) {
     if (labelled.length) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `basis leg${labelled.length === 1 ? "" : "s"} ${labelled.map(([i]) => i).join(", ")} name${labelled.length === 1 ? "s" : ""} a ground with no grounds[] block: grounds compose DISJUNCTIVELY, so a finding takes its STRONGEST ground rather than its weakest leg \u2014 and that is only ever reached by an affirmative, attributed act. Nothing may become stronger because a field was written and nobody signed for it`,
@@ -2298,27 +2576,27 @@ function checkGrounds(fm, legs, findings) {
     return;
   }
   if (!Array.isArray(rows)) {
-    findings.push(f("C-2.8", "error", "grounds is not an array"));
+    findings.push(f2("C-2.8", "error", "grounds is not an array"));
     return;
   }
   const declared = /* @__PURE__ */ new Map();
   rows.forEach((r, i) => {
     if (!r || typeof r !== "object" || Array.isArray(r)) {
-      findings.push(f("C-2.8", "error", `grounds[${i}] is not an object`));
+      findings.push(f2("C-2.8", "error", `grounds[${i}] is not an object`));
       return;
     }
     const label = r.ground;
     if (typeof label !== "string" || !GROUND_LABEL_RE.test(label)) {
-      findings.push(f("C-2.8", "error", `grounds[${i}].ground '${String(label).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`));
+      findings.push(f2("C-2.8", "error", `grounds[${i}].ground '${String(label).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`));
       return;
     }
     if (declared.has(label)) {
-      findings.push(f("C-2.8", "error", `grounds[${i}] declares '${label}' a second time: one ground, one assertion, one member answering for it`));
+      findings.push(f2("C-2.8", "error", `grounds[${i}] declares '${label}' a second time: one ground, one assertion, one member answering for it`));
       return;
     }
     declared.set(label, i);
     if (typeof r.asserted_by !== "string" || r.asserted_by.trim() === "" || isMachineIdentity(r.asserted_by)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `grounds[${i}].asserted_by '${r.asserted_by}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it \u2014 never a machine's`,
@@ -2326,14 +2604,14 @@ function checkGrounds(fm, legs, findings) {
       ));
     }
     if (!ISO_TS_RE.test(String(r.at || ""))) {
-      findings.push(f("C-2.8", "error", `grounds[${i}] requires 'at' as an ISO timestamp (got '${r.at}'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`));
+      findings.push(f2("C-2.8", "error", `grounds[${i}] requires 'at' as an ISO timestamp (got '${r.at}'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`));
     }
     if (r.statement !== void 0 && r.statement !== null && typeof r.statement !== "string") {
-      findings.push(f("C-2.8", "error", `grounds[${i}].statement is not a string`));
+      findings.push(f2("C-2.8", "error", `grounds[${i}].statement is not a string`));
     }
   });
   if (labelled.length && unlabelled) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `${unlabelled} basis leg${unlabelled === 1 ? "" : "s"} carr${unlabelled === 1 ? "ies" : "y"} no ground while ${labelled.length} do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at`,
@@ -2345,7 +2623,7 @@ function checkGrounds(fm, legs, findings) {
   }
   for (const [i, label] of labelled) {
     if (!declared.has(label)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `basis[${i}].ground '${label}' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for`,
@@ -2356,7 +2634,7 @@ function checkGrounds(fm, legs, findings) {
   const carried = new Set(labelled.map(([, l]) => l));
   for (const [label, i] of declared) {
     if (!carried.has(label)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `grounds[${i}] declares '${label}', which no basis leg belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own`,
@@ -2370,7 +2648,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   const target = typeof leg.target === "string" ? leg.target : null;
   const observation = registry && registry.earned && registry.earned.testimony && target ? registry.earned.testimony[target] || null : null;
   if (leg.grade_axis === "capture" && targetType === "information" && observation) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states a capture grade of ${leg.grade} for ${target}, which is a member's authored observation: the capture axis measures the act of reading a document in, and nobody read these words in from anywhere \u2014 they are the member's own. Its grade is testimony, ${observation.grade}, on the testimony axis, and its capture axis is not applicable`,
@@ -2384,7 +2662,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   }
   if (leg.grade_axis !== "testimony") return;
   if (leg.grade !== TESTIMONY_GRADE) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony grade of ${leg.grade}: a member's firsthand observation is graded ${TESTIMONY_GRADE} on the testimony axis and at no other value. It stands on the observing member's trust, and nothing raises it \u2014 a second member agreeing with it is a co-signature, not a second observation (a second member who saw the same thing records their own, and the case then rests on two testimonies, each ${TESTIMONY_GRADE})`,
@@ -2395,7 +2673,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   }
   if (leg.grade_source === "inherited" || targetType === "inquiry") return;
   if (leg.grade_source !== "testimony") {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony-axis grade with grade_source '${leg.grade_source}': a testimony grade comes from a member's own authored observation and from nothing else \u2014 a resolution, a capture or a hunch is an account of something other than whose word this is`,
@@ -2405,7 +2683,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (!registry) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony grade for ${target}, but whether that document IS a member's authored observation is held by the register, which cannot be read here: a document is an observation because the act that records one wrote it, never because a leg says so`,
@@ -2415,7 +2693,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (!observation) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony grade for ${target}, which is not a member's authored observation: the testimony axis grades whose word a document is, and this one's bytes were captured, not authored here. Grading it as testimony would let a captured source pass for a member's own word`,
@@ -2428,7 +2706,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (leg.grade !== observation.grade) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony grade of ${leg.grade} for ${target}, but the record holds ${observation.grade} for it. ${observation.why ?? ""}`.trimEnd(),
@@ -2442,7 +2720,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   if (!EARNED_GRADE_SOURCES.includes(src)) return;
   if (!graded) return;
   if (!registry) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle`,
@@ -2456,7 +2734,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   const wantAxis = EARNED_SOURCE_AXIS[src];
   if (leg.grade_axis === "capture" && targetType === "inquiry" && src !== "capture") return;
   if (leg.grade_axis !== wantAxis) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states grade_source '${src}' on the ${leg.grade_axis} axis: ${src === "resolution" ? "a resolution IS the framework's \xA78.1 connection grade and grades nothing else" : "a capture grade is a property of an information object and measures how the bytes arrived (DEC-21)"}, so it can only be a source for a ${wantAxis} grade`,
@@ -2468,7 +2746,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (src === "resolution" && targetType === "inquiry") {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] claims an EARNED resolution grade on an inquiry leg: a resolution matches a captured document's reading to a registry entity, and an inquiry is not a captured document \u2014 there is nothing here for the recogniser to have graded`,
@@ -2480,7 +2758,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (src === "resolution" && !registry.subject_entity) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] claims an EARNED resolution grade, but this inquiry names no subject_entity: an earned connection grade is the strongest resolution of the target's captures TO THE INQUIRY'S SUBJECT, and with no subject named there is nothing to have resolved to (DATA-MODEL D1(b))`,
@@ -2494,7 +2772,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   const earned = registry.earned && registry.earned[wantAxis] ? registry.earned[wantAxis][leg.target] : null;
   if (earned && earned.undetermined_because === "CAPTURE_AXIS_AUTHORED") return;
   if (earned && earned.mode === "ceiling" && earned.grade == null) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ""}`,
@@ -2507,7 +2785,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (!earned || !earned.grade) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       src === "resolution" ? `basis[${i}] states an EARNED resolution grade of ${leg.grade} for ${leg.target}, but the record holds no A/B/C resolution of that document to ${registry.subject_entity}: nothing was earned here. The recogniser never mints a D, so a document known to concern the subject only by a member's testimony earns nothing either \u2014 that leg is testimony and says so` : `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but the record holds no registered capture for that document: there are no bytes here whose arrival this grade could be measuring`,
@@ -2520,7 +2798,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   }
   if (earned.mode === "ceiling") {
     if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(earned.grade)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.8",
         "error",
         `basis[${i}] states a capture grade of ${leg.grade} for ${leg.target}, which is STRONGER than the ${earned.grade} the record can earn for it. ${earned.why} ${earned.ceiling ?? ""}`,
@@ -2530,7 +2808,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (earned.grade !== leg.grade) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states an EARNED ${wantAxis} grade of ${leg.grade} for ${leg.target}, but the record earns ${earned.grade}: an earned grade is computed by the record and a caller does not hand it to us in either direction. ${earned.why}`,
@@ -2543,7 +2821,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   const entry = registry && target ? registry[target] : null;
   const pub = entry && (entry.object_type == null || entry.object_type === "inquiry") ? entry : null;
   if (leg.grade_source === "inherited" && !pub) {
-    findings.push(f(
+    findings.push(f2(
       "C-2.8",
       "error",
       `basis[${i}] states grade_source 'inherited' but its target ${registry ? "is not a published case" : "cannot be checked against the published record here"}: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else`,
@@ -2554,12 +2832,12 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   if (!pub) return;
   if (!graded) {
     if (leg.grade_source === "inherited") {
-      findings.push(f("C-2.8", "error", `basis[${i}] claims 'inherited' with no grade: a leg resting on a published case may state no grade at all \u2014 undetermined, stated \u2014 but it may not claim to have inherited one`));
+      findings.push(f2("C-2.8", "error", `basis[${i}] claims 'inherited' with no grade: a leg resting on a published case may state no grade at all \u2014 undetermined, stated \u2014 but it may not claim to have inherited one`));
     }
     return;
   }
   if (leg.grade_source !== "inherited") {
-    findings.push(f(
+    findings.push(f2(
       "C-21.2",
       "error",
       `basis[${i}] carries a grade of its own on a PUBLISHED case (${target}): a leg resting on a published case inherits that case's frozen strength and says so with grade_source 'inherited'. A case built on a case cannot be stronger than the case beneath it`,
@@ -2569,7 +2847,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   }
   const ed = leg.target_edition;
   if (!Number.isInteger(ed)) {
-    findings.push(f(
+    findings.push(f2(
       "C-21.2",
       "error",
       `basis[${i}] inherits from ${target} without naming an edition: every edition is a SEPARATE DOCUMENT with its own frozen strength, so an unnamed edition leaves the inheritance rule nothing fixed to compare against (DEC-12)`,
@@ -2579,14 +2857,14 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   }
   const frozen = pub.editions ? pub.editions[String(ed)] : null;
   if (!frozen) {
-    findings.push(f("C-21.2", "error", `basis[${i}] names edition ${ed} of ${target}, which is not in the published record (published editions: ${pub.editions ? Object.keys(pub.editions).join(", ") || "none" : "none"})`));
+    findings.push(f2("C-21.2", "error", `basis[${i}] names edition ${ed} of ${target}, which is not in the published record (published editions: ${pub.editions ? Object.keys(pub.editions).join(", ") || "none" : "none"})`));
     return;
   }
   const axis = leg.grade_axis;
   if (!GRADE_AXES.includes(axis)) return;
   const on = frozen[axis];
   if (!on || on.state !== "graded") {
-    findings.push(f(
+    findings.push(f2(
       "C-21.2",
       "error",
       `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose ${axis} axis is ${on ? on.state.toUpperCase() : "ABSENT"}: ${on && on.state === "unrated" ? "nothing on that axis was ever established there, so a grade taken from it would be invented outright" : "what lies beneath is unknown rather than absent, so a grade taken from it would be a claim about material nobody has seen"}`,
@@ -2595,7 +2873,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
     return;
   }
   if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(on.grade)) {
-    findings.push(f(
+    findings.push(f2(
       "C-21.2",
       "error",
       `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose frozen ${axis} strength is ${on.grade}: a case built on a case cannot be stronger than the case beneath it, and the comparison is PER AXIS \u2014 this leg's ${axis} grade against that edition's ${axis} grade, never against a composed letter`,
@@ -2608,26 +2886,26 @@ function checkProjectExtension(ctx, findings) {
   const fm = ctx.fm;
   const WS2 = ["draft", "internally_checked", "externally_compliant", "distributed"];
   if (fm.workproduct_state !== void 0 && fm.workproduct_state !== null && !WS2.includes(fm.workproduct_state)) {
-    findings.push(f("C-2.9", "error", `workproduct_state '${fm.workproduct_state}' is not one of: ${WS2.join(", ")}`));
+    findings.push(f2("C-2.9", "error", `workproduct_state '${fm.workproduct_state}' is not one of: ${WS2.join(", ")}`));
   }
   const evals = Array.isArray(fm.evaluations) ? fm.evaluations : [];
   for (let i = 0; i < evals.length; i++) {
     const e = evals[i];
     if (!e || !["compliance", "argument"].includes(e.kind) || !["internal", "external"].includes(e.strictness) || !["pass", "findings"].includes(e.result) || !ISO_TS_RE.test(e.timestamp || "")) {
-      findings.push(f("C-2.9", "error", `evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`));
+      findings.push(f2("C-2.9", "error", `evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`));
     } else if (e.result === "findings" && !e.findings_ref) {
-      findings.push(f("C-2.9", "error", `evaluations[${i}] result is findings but findings_ref is empty`));
+      findings.push(f2("C-2.9", "error", `evaluations[${i}] result is findings but findings_ref is empty`));
     }
   }
   if (fm.current_state === "closed" && !["resolved", "superseded", "abandoned"].includes(fm.closed_reason)) {
-    findings.push(f("C-2.9", "error", `closed state requires closed_reason in: resolved, superseded, abandoned`));
+    findings.push(f2("C-2.9", "error", `closed state requires closed_reason in: resolved, superseded, abandoned`));
   }
   const ws = fm.workproduct_state;
   const passed = (kind, stricts) => evals.some((e) => e && e.kind === kind && e.result === "pass" && stricts.includes(e.strictness));
   if (["internally_checked", "externally_compliant", "distributed"].includes(ws)) {
     for (const kind of ["compliance", "argument"]) {
       if (!passed(kind, ["internal", "external"])) {
-        findings.push(f(
+        findings.push(f2(
           "C-9.1",
           "error",
           `workproduct_state '${ws}' requires a passing ${kind} evaluation (internal strictness or better)`,
@@ -2639,7 +2917,7 @@ function checkProjectExtension(ctx, findings) {
   if (["externally_compliant", "distributed"].includes(ws)) {
     for (const kind of ["compliance", "argument"]) {
       if (!passed(kind, ["external"])) {
-        findings.push(f(
+        findings.push(f2(
           "C-9.1",
           "error",
           `workproduct_state '${ws}' requires a passing external-strictness ${kind} evaluation`,
@@ -2797,21 +3075,21 @@ function actionBasisFindings(fm, findings) {
   const REPAIRS = ["point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"];
   legs.forEach((l, i) => {
     if (!l || typeof l !== "object" || Array.isArray(l)) {
-      findings.push(f("C-2.10", "error", `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
+      findings.push(f2("C-2.10", "error", `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
       return;
     }
     if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
     if (themeLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === "string" ? l.target : "";
     if (!BUNDLE_ID_RE.test(target)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical bundle id`,
         REPAIRS
       ));
     } else if (OBJECT_TYPES[target.split("-")[0]] === "action") {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `action_basis[${i}].target '${target}' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)`,
@@ -2819,7 +3097,7 @@ function actionBasisFindings(fm, findings) {
       ));
     }
     if (!ACTION_BASIS_KINDS.includes(l.kind)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `action_basis[${i}].kind '${l.kind}' is not one of: ${ACTION_BASIS_KINDS.join(", ")}`,
@@ -2830,7 +3108,7 @@ function actionBasisFindings(fm, findings) {
   if (fm?.action_kind === "request_for_comment") {
     const disclosed = legs.filter((l) => l && typeof l === "object" && l.kind === "advances" && typeof l.target === "string" && BUNDLE_ID_RE.test(l.target) && OBJECT_TYPES[l.target.split("-")[0]] === "inquiry");
     if (!disclosed.length) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         'a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. "We contacted them" and "we put these four claims to them" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)',
@@ -2839,7 +3117,7 @@ function actionBasisFindings(fm, findings) {
     }
     const clock = Array.isArray(fm.clock) ? fm.clock : [];
     if (!clock.length) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; ${RFC_RESPONSE_WINDOW_PRECEDENT.source} is the precedent to reason from and is not a constant this record enforces (DEC-13)`,
@@ -2852,11 +3130,11 @@ function correspondenceFindings(fm, findings) {
   const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
   entries.forEach((e, i) => {
     if (!e || typeof e !== "object" || Array.isArray(e)) {
-      findings.push(f("C-2.10", "error", `correspondence[${i}] is not an entry block`));
+      findings.push(f2("C-2.10", "error", `correspondence[${i}] is not an entry block`));
       return;
     }
     if (!CORRESPONDENCE_DIRECTIONS.includes(e.direction)) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `correspondence[${i}].direction '${e.direction}' is not one of: ${CORRESPONDENCE_DIRECTIONS.join(", ")}`,
@@ -2864,7 +3142,7 @@ function correspondenceFindings(fm, findings) {
       ));
     }
     if (!DATE_RE.test(String(e.at ?? "").slice(0, 10))) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `correspondence[${i}].at '${String(e.at).slice(0, 40)}' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due`
@@ -2878,14 +3156,14 @@ function correspondenceFindings(fm, findings) {
       "record a named account: account with the member who is testifying to it"
     ];
     if (sha && account) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `correspondence[${i}] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a reader would quote instead`,
         CHOICE
       ));
     } else if (!sha && !account) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `correspondence[${i}] carries NEITHER an artifact_sha nor an account: it asserts an exchange and offers no way to check that it happened`,
@@ -2893,14 +3171,14 @@ function correspondenceFindings(fm, findings) {
       ));
     } else if (sha) {
       if (!CONTENT_HASH_RE.test(sha) && !/^[0-9a-f]{64}$/i.test(sha)) {
-        findings.push(f(
+        findings.push(f2(
           "C-2.10",
           "error",
           `correspondence[${i}].artifact_sha '${sha.slice(0, 24)}' is not a sha256 hash`
         ));
       }
       if (e.direction === "no_response") {
-        findings.push(f(
+        findings.push(f2(
           "C-2.10",
           "error",
           `correspondence[${i}] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)`,
@@ -2908,14 +3186,14 @@ function correspondenceFindings(fm, findings) {
         ));
       }
     } else if (!author) {
-      findings.push(f(
+      findings.push(f2(
         "C-2.10",
         "error",
         `correspondence[${i}] carries an account with no author: testimony is somebody's, and an unattributed account is a claim nobody stands behind`
       ));
     }
-    for (const q of quoteFindings(entries, i)) findings.push(f("C-2.10", "error", q.message, null, q.code));
-    for (const q of lifecycleFindings(entries, i)) findings.push(f("C-2.10", "error", q.message, null, q.code));
+    for (const q of quoteFindings(entries, i)) findings.push(f2("C-2.10", "error", q.message, null, q.code));
+    for (const q of lifecycleFindings(entries, i)) findings.push(f2("C-2.10", "error", q.message, null, q.code));
   });
 }
 var QUOTE_KEYS = ["quote_amount", "quote_currency", "quote_basis", "quote_answers", "quote_revises"];
@@ -3023,203 +3301,8 @@ function lifecycleFindings(entries, i) {
   }
   return out;
 }
-function isPublicHttpsLocator(url) {
-  if (typeof url !== "string" || !/^https:\/\//.test(url)) return false;
-  const m = /^https:\/\/([^/?#]+)/.exec(url);
-  if (!m) return false;
-  const hostport = m[1];
-  if (hostport.indexOf("@") !== -1) return false;
-  const host = hostport.split(":")[0].toLowerCase();
-  if (host === "localhost" || host.charAt(0) === "[") return false;
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
-  if (host.indexOf(".") === -1) return false;
-  return true;
-}
 var CAPTURE_ENCODINGS = ["utf8", "base64", "binary"];
 var RAW_SHA_RE = /^[0-9a-f]{64}$/;
-function b64ToBytes(s) {
-  const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  const clean = String(s).replace(/[\s=]+/g, "");
-  const out = new Uint8Array(Math.floor(clean.length * 3 / 4));
-  let o = 0, buf = 0, bits = 0;
-  for (let i = 0; i < clean.length; i++) {
-    const v = A.indexOf(clean[i]);
-    if (v === -1) throw new Error("invalid base64 at position " + i);
-    buf = buf << 6 | v;
-    bits += 6;
-    if (bits >= 8) {
-      bits -= 8;
-      out[o++] = buf >> bits & 255;
-    }
-  }
-  return out.subarray(0, o);
-}
-function createSha256() {
-  const K2 = [
-    1116352408,
-    1899447441,
-    3049323471,
-    3921009573,
-    961987163,
-    1508970993,
-    2453635748,
-    2870763221,
-    3624381080,
-    310598401,
-    607225278,
-    1426881987,
-    1925078388,
-    2162078206,
-    2614888103,
-    3248222580,
-    3835390401,
-    4022224774,
-    264347078,
-    604807628,
-    770255983,
-    1249150122,
-    1555081692,
-    1996064986,
-    2554220882,
-    2821834349,
-    2952996808,
-    3210313671,
-    3336571891,
-    3584528711,
-    113926993,
-    338241895,
-    666307205,
-    773529912,
-    1294757372,
-    1396182291,
-    1695183700,
-    1986661051,
-    2177026350,
-    2456956037,
-    2730485921,
-    2820302411,
-    3259730800,
-    3345764771,
-    3516065817,
-    3600352804,
-    4094571909,
-    275423344,
-    430227734,
-    506948616,
-    659060556,
-    883997877,
-    958139571,
-    1322822218,
-    1537002063,
-    1747873779,
-    1955562222,
-    2024104815,
-    2227730452,
-    2361852424,
-    2428436474,
-    2756734187,
-    3204031479,
-    3329325298
-  ];
-  let h0 = 1779033703 | 0, h1 = 3144134277 | 0, h2 = 1013904242 | 0, h3 = 2773480762 | 0;
-  let h4 = 1359893119 | 0, h5 = 2600822924 | 0, h6 = 528734635 | 0, h7 = 1541459225 | 0;
-  const buf = new Uint8Array(64);
-  const w = new Int32Array(64);
-  let bufLen = 0;
-  let total = 0;
-  let finalized = false;
-  function compress(bytes, off) {
-    for (let i = 0; i < 16; i++) {
-      w[i] = bytes[off] << 24 | bytes[off + 1] << 16 | bytes[off + 2] << 8 | bytes[off + 3];
-      off += 4;
-    }
-    for (let i = 16; i < 64; i++) {
-      const x = w[i - 15], y = w[i - 2];
-      const s0 = (x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ x >>> 3;
-      const s1 = (y >>> 17 | y << 15) ^ (y >>> 19 | y << 13) ^ y >>> 10;
-      w[i] = w[i - 16] + s0 + w[i - 7] + s1 | 0;
-    }
-    let a = h0, b = h1, c = h2, d = h3, e = h4, f2 = h5, g = h6, h = h7;
-    for (let i = 0; i < 64; i++) {
-      const S1 = (e >>> 6 | e << 26) ^ (e >>> 11 | e << 21) ^ (e >>> 25 | e << 7);
-      const ch = e & f2 ^ ~e & g;
-      const t1 = h + S1 + ch + K2[i] + w[i] | 0;
-      const S0 = (a >>> 2 | a << 30) ^ (a >>> 13 | a << 19) ^ (a >>> 22 | a << 10);
-      const maj = a & b ^ a & c ^ b & c;
-      const t2 = S0 + maj | 0;
-      h = g;
-      g = f2;
-      f2 = e;
-      e = d + t1 | 0;
-      d = c;
-      c = b;
-      b = a;
-      a = t1 + t2 | 0;
-    }
-    h0 = h0 + a | 0;
-    h1 = h1 + b | 0;
-    h2 = h2 + c | 0;
-    h3 = h3 + d | 0;
-    h4 = h4 + e | 0;
-    h5 = h5 + f2 | 0;
-    h6 = h6 + g | 0;
-    h7 = h7 + h | 0;
-  }
-  return {
-    /** Feed a chunk of bytes. Chainable. */
-    update(chunk) {
-      if (finalized) throw new Error("sha256 stream already finalized");
-      let c = chunk;
-      if (!(c instanceof Uint8Array)) c = Uint8Array.from(c);
-      let i = 0;
-      const n = c.length;
-      total += n;
-      if (bufLen > 0) {
-        while (bufLen < 64 && i < n) buf[bufLen++] = c[i++];
-        if (bufLen === 64) {
-          compress(buf, 0);
-          bufLen = 0;
-        }
-      }
-      while (n - i >= 64) {
-        compress(c, i);
-        i += 64;
-      }
-      while (i < n) buf[bufLen++] = c[i++];
-      return this;
-    },
-    /** Finalize and return the lowercase hex digest. */
-    hex() {
-      if (finalized) throw new Error("sha256 stream already finalized");
-      finalized = true;
-      const bitHi = Math.floor(total / 536870912);
-      const bitLo = total % 536870912 * 8;
-      buf[bufLen++] = 128;
-      if (bufLen > 56) {
-        while (bufLen < 64) buf[bufLen++] = 0;
-        compress(buf, 0);
-        bufLen = 0;
-      }
-      while (bufLen < 56) buf[bufLen++] = 0;
-      buf[56] = bitHi >>> 24 & 255;
-      buf[57] = bitHi >>> 16 & 255;
-      buf[58] = bitHi >>> 8 & 255;
-      buf[59] = bitHi & 255;
-      buf[60] = bitLo >>> 24 & 255;
-      buf[61] = bitLo >>> 16 & 255;
-      buf[62] = bitLo >>> 8 & 255;
-      buf[63] = bitLo & 255;
-      compress(buf, 0);
-      let out = "";
-      const H = [h0, h1, h2, h3, h4, h5, h6, h7];
-      for (let i = 0; i < 8; i++) {
-        const v = H[i] >>> 0;
-        out += ("00000000" + v.toString(16)).slice(-8);
-      }
-      return out;
-    }
-  };
-}
 function storedToHashable(v, encoding) {
   if (encoding === "base64") return b64ToBytes(asText(v));
   return v;
@@ -3244,7 +3327,7 @@ async function checkInfo2Contract(ctx, findings) {
     if (!e || e.from_state !== "collected" || e.to_state !== "verified") continue;
     const signed = rels.some((r) => r && r.transition === e.timestamp && r.signature_file);
     if (!signed) {
-      findings.push(f(
+      findings.push(f2(
         "C-18.7",
         "warn",
         `collected -> verified transition at ${e.timestamp} has no signed release record; the target mechanism is a detached SSH signature over the transition record (ssh-keygen -Y sign, namespace bio-release; doctrine 4a)`,
@@ -3276,7 +3359,7 @@ async function checkInfo2Contract(ctx, findings) {
         hashable = storedToHashable(ctx.files.get(String(d.file)), cap.encoding);
       }
     } catch (err) {
-      findings.push(f("C-18.6", "error", `provenance documents[${i}]: stored content could not be decoded for hash verification (${err && err.message}) (@2)`));
+      findings.push(f2("C-18.6", "error", `provenance documents[${i}]: stored content could not be decoded for hash verification (${err && err.message}) (@2)`));
       continue;
     }
     if (actual === null) {
@@ -3284,7 +3367,7 @@ async function checkInfo2Contract(ctx, findings) {
       actual = await ctx.sha256(hashable);
     }
     if (actual !== cap.sha256) {
-      findings.push(f(
+      findings.push(f2(
         "C-18.6",
         "error",
         `provenance documents[${i}]: stored bytes hash ${actual.slice(0, 12)}\u2026 but the register records ${String(cap.sha256).slice(0, 12)}\u2026; silent content mutation fails the gate (@2)`,
@@ -3311,7 +3394,7 @@ function checkProjectNameUniqueness(corpus) {
     const fm = raw == null ? null : parseFrontmatter(asText(raw)).data;
     const label = fm && typeof fm.id === "string" && fm.id || input && input.folderName || "(unnamed bundle)";
     if (!fm) {
-      findings.push(f(
+      findings.push(f2(
         "C-77.2",
         "warning",
         `${label}: bundle.md is ${raw == null ? "absent" : "unreadable"}, so whether it is a project, and whether its name collides, is UNDETERMINED`,
@@ -3323,7 +3406,7 @@ function checkProjectNameUniqueness(corpus) {
     projects++;
     const key = projectNameKey(fm.title);
     if (!key) {
-      findings.push(f(
+      findings.push(f2(
         "C-77.2",
         "warning",
         `${label}: a project with no title cannot be compared for name uniqueness (the write path refuses it NO_TITLE)`,
@@ -3338,7 +3421,7 @@ function checkProjectNameUniqueness(corpus) {
       const a = keyed[i], b = keyed[j];
       if (a.key !== b.key) continue;
       const st = (p) => p.state === void 0 ? "" : ` [${p.state}]`;
-      findings.push(f(
+      findings.push(f2(
         "C-77.1",
         "error",
         `project names collide: ${a.id} "${a.title}"${st(a)} and ${b.id} "${b.title}"${st(b)} are the same name compared case-insensitively with whitespace collapsed (Membership v2 \xA77.1), which holds across deactivated projects too`,
@@ -3351,7 +3434,41 @@ function checkProjectNameUniqueness(corpus) {
   }
   return { pass: !findings.some((x) => x.severity === "error"), findings, projects, judged: keyed.length };
 }
+var EXTENSION_ARMS = Object.freeze([
+  { name: "checkInformationExtension", ids: ["C-2.7"] },
+  { name: "checkInfo2Contract", ids: ["C-18.6", "C-18.7"] },
+  { name: "checkInquiryExtension", ids: ["C-2.8"] },
+  { name: "checkProjectExtension", ids: ["C-2.9", "C-9.1"] }
+].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
+var GRAMMAR_ID_RE = /^C-\d+(\.\d+)?$/;
+function grammarsOf(list3) {
+  if (list3 === void 0 || list3 === null) return { byArm: /* @__PURE__ */ new Map(), rest: [] };
+  if (!Array.isArray(list3)) throw new TypeError("checkBundle: opts.grammars is a list of {module, ids, arm}");
+  const byArm = /* @__PURE__ */ new Map(), rest = [], claimed = /* @__PURE__ */ new Map();
+  list3.forEach((g, i) => {
+    const at6 = `checkBundle: opts.grammars[${i}]`;
+    if (!g || typeof g !== "object") throw new TypeError(`${at6} is not a {module, ids, arm} entry`);
+    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at6} names no module`);
+    if (!Array.isArray(g.ids) || g.ids.length === 0 || !g.ids.every((id) => typeof id === "string" && GRAMMAR_ID_RE.test(id)))
+      throw new TypeError(`${at6} (${g.module}): ids is a non-empty list of C-ids`);
+    if (typeof g.arm !== "function") throw new TypeError(`${at6} (${g.module}): arm is not a function`);
+    for (const id of g.ids) {
+      if (claimed.has(id)) throw new RangeError(`${at6} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
+      claimed.set(id, g.module);
+    }
+    const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => g.ids.includes(id)));
+    if (touched.length > 1)
+      throw new RangeError(`${at6} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
+    const [arm] = touched;
+    if (arm && !arm.ids.every((id) => g.ids.includes(id)))
+      throw new RangeError(`${at6} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
+    if (arm) byArm.set(arm.name, g);
+    else rest.push(g);
+  });
+  return { byArm, rest };
+}
 async function checkBundle(input, opts = {}) {
+  const grammars = grammarsOf(opts.grammars);
   const findings = [];
   const bundleRaw = input.files.get("bundle.md");
   const ctx = {
@@ -3376,7 +3493,8 @@ async function checkBundle(input, opts = {}) {
     /* PL-12 / D-84: `bias@1`. A type whose schema stamp the catalog does not
        know is refused by C-2.5 before any type-specific check runs, so the
        stamp has to be admitted in the same turn as the type. */
-    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason. */
+    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason; N-A1 (T18)
+       `action_plan@1` likewise. */
     knownSchemas: opts.knownSchemas ?? [
       "information@1",
       "information@2",
@@ -3391,7 +3509,8 @@ async function checkBundle(input, opts = {}) {
       "consequence@1",
       "escalation@1",
       "aspiration@1",
-      "goal@1"
+      "goal@1",
+      "action_plan@1"
     ],
     resolveTarget: input.resolveTarget,
     // D2.3: the key registry, injected exactly like resolveTarget. Absent
@@ -3439,7 +3558,7 @@ async function checkBundle(input, opts = {}) {
     body: ""
   };
   if (!bundleRaw) {
-    findings.push(f("C-13.1", "error", "bundle.md is missing"));
+    findings.push(f2("C-13.1", "error", "bundle.md is missing"));
   } else {
     const parsed = parseFrontmatter(asText(bundleRaw));
     findings.push(...parsed.findings);
@@ -3450,12 +3569,17 @@ async function checkBundle(input, opts = {}) {
     checkHeadings(ctx, findings);
     checkStateLegality(ctx, findings);
     checkWriteCompleteness(ctx, findings);
-    await checkInformationExtension(ctx, findings);
-    await checkInfo2Contract(ctx, findings);
+    const typeArm = async (name, builtIn) => {
+      const g = grammars.byArm.get(name);
+      await (g ? g.arm(ctx, findings) : builtIn(ctx, findings));
+    };
+    await typeArm("checkInformationExtension", checkInformationExtension);
+    await typeArm("checkInfo2Contract", checkInfo2Contract);
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
-    checkInquiryExtension(ctx, findings);
-    checkProjectExtension(ctx, findings);
+    await typeArm("checkInquiryExtension", checkInquiryExtension);
+    await typeArm("checkProjectExtension", checkProjectExtension);
+    for (const g of grammars.rest) await g.arm(ctx, findings);
     checkAppendOnly(ctx, findings);
     checkHistoryCoherence(ctx, findings);
   }
@@ -4010,11 +4134,11 @@ function basisVersionFindings(fm, findings) {
   const groundRows = Array.isArray(fm?.basis_version_grounds) ? fm.basis_version_grounds : [];
   const push = (key, message, repairs) => {
     const row = BASIS_VERSION_CHECKS[key];
-    findings.push(f(row.check, "error", message, repairs, key));
+    findings.push(f2(row.check, "error", message, repairs, key));
   };
   const pushSuggest = (key, message, repairs) => {
     const row = SUGGEST_CHECKS[key];
-    findings.push(f(row.check, "error", message, repairs, key));
+    findings.push(f2(row.check, "error", message, repairs, key));
   };
   if (rows === void 0 || rows === null) {
     for (let i = 0; i < legRows.length; i++)
@@ -5114,110 +5238,6 @@ var ROUTE_MARK_CHECKS = {
     translation: "Only a captured document travelled a route to get here, and this is not one. Questions, projects and actions were written in the record rather than fetched from anywhere, so there is no route to show or to doubt."
   }
 };
-var TEXT_CHAIN_CHECKS = {
-  /* RULE 1. The condition this family exists for. `text_source: "ocr"` is what
-     a careful author writes and it is still a loss: the engine is gone, and an
-     engine is what a calibration is OF (CPDF-13) and what a re-run would need. */
-  TEXT_CHAIN_COLLAPSED: {
-    check: "C-35.1",
-    where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: "This says the text came from a machine but not which one, or through how many hands. A scanned document can pass through a scanner, a reader and a clean-up pass before anyone sees it, and each one can change what it says \u2014 so the record keeps the whole sequence rather than a single word for it."
-  },
-  TEXT_CHAIN_EMPTY: {
-    check: "C-35.2",
-    where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: "Nothing here says where this text came from. Text with no stated origin looks exactly like text a publisher typed, and the difference is the whole reason this record is worth trusting."
-  },
-  TEXT_CHAIN_STEP_SHAPE: {
-    check: "C-35.3",
-    where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: "One of the steps that produced this text is not readable as a step."
-  },
-  TEXT_CHAIN_STEP_UNKNOWN: {
-    check: "C-35.4",
-    where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: "One step in this text's history is of a kind the record does not know. It cannot tell whether that step produced the text or checked it, and those are very different things, so it will not guess."
-  },
-  /* Rule 1 arriving one level down: the chain is an array and one of its
-     entries is still just a label. */
-  TEXT_CHAIN_STEP_UNNAMED: {
-    check: "C-35.5",
-    where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: "This says a machine read the text but not which machine. Two readers of the same scan disagree, and knowing which one produced a line is what lets anybody check it later."
-  },
-  /* RULE 2, and the translation carries the distinction the rule turns on,
-     because the member who trips this will believe they improved the text —
-     and they will be right about readability. */
-  TEXT_CHAIN_STRENGTHENS: {
-    check: "C-35.6",
-    where: "src/textchain.mjs appendStep > is-text-chain-monotone",
-    translation: "This step claims the text became more reliable by being processed further. Cleaning up a garbled line makes it easier to READ, not more likely to be what the page actually said \u2014 so a later step can only ever be as trustworthy as what it was given."
-  },
-  /* RULE 3. Note the fence is on the BASIS, not on the number: a self-reported
-     0.99 and a computed 0.99 are the same bytes. */
-  TEXT_CONFIDENCE_PSEUDO: {
-    check: "C-35.7",
-    where: "src/textchain.mjs checkConfidence > is-text-region-confidence",
-    translation: "This confidence figure is the machine's own opinion of itself. A reader that measures how clearly each character resolved is saying something checkable; a model asked how sure it is will answer confidently either way, and that number cannot be used as a threshold. Where an engine reports no confidence, the record says so plainly instead."
-  },
-  TEXT_CONFIDENCE_SHAPE: {
-    check: "C-35.8",
-    where: "src/textchain.mjs checkConfidence > is-text-region-confidence",
-    translation: 'The confidence on this region is not readable. Note that saying "this engine reports no confidence" is a real answer here \u2014 an absent one is not the same thing.'
-  },
-  /* The anchor. Without it there is no way to point a reader at the pixels, and
-     an unverifiable transcription is the thing this item refuses to ship. */
-  TEXT_ANCHOR_MISSING: {
-    check: "C-35.9",
-    where: "src/textchain.mjs checkAnchor > is-text-anchor",
-    translation: "Text a machine read off an image has to say WHERE on the page it came from, so anyone can look at that part of the scan and see for themselves. Without it the reading cannot be checked against the document at all."
-  },
-  /* Attestation, (a): a member act, refusable to a machine credential. */
-  TEXT_ATTEST_MACHINE: {
-    check: "C-35.10",
-    where: "src/textchain.mjs checkAttestation > is-text-attestation",
-    translation: "Attesting is a person saying they compared this text against the image of the page and it matches. The credential that asked here is an automated one: it can run the reader and lay the two side by side, and it cannot be the one who says they agree. Sign in and attest it yourself."
-  },
-  /* Attestation, (b): scoped to what was actually checked. */
-  TEXT_ATTEST_EXTENT: {
-    check: "C-35.11",
-    where: "src/textchain.mjs checkAttestation > is-text-attestation",
-    translation: "An attestation has to say how much of the document you checked \u2014 this region, this page, or all of it. Checking one table and having that stand behind an entire scanned report is exactly what this record will not do on your behalf."
-  },
-  /* CPDF-13 / D-253. The calibration REFERENCE, and note carefully what this
-     row does NOT refuse: a step with a `cap` and no calibration is the
-     pre-CPDF-13 shape and is LEGAL — every chain written before this rule
-     existed is that shape, and refusing it would be a fence tighter than its
-     rule wearing the costume of caution. What is refused is a reference that is
-     PRESENT AND UNREADABLE, because an unresolvable pointer is worse than an
-     absent one: it looks like a binding and joins to nothing. */
-  TEXT_CHAIN_CAL_REF: {
-    check: "C-35.12",
-    where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: "This step points at the measurement its fidelity rests on, but the pointer is not readable as one. A measurement nobody can look up is not a measurement this record can stand behind \u2014 and a broken pointer is worse than none, because it looks like one that works."
-  },
-  /* CAP-10 / DEC-75 / IC-122. A step kind that declares its letter must be
-     CALIBRATED (`STEP_KINDS[k].letter`) — today only `convert`, a conversion
-     the serving host made before any text was read — may carry a letter only
-     beside the calibration it rests on. The permitted move is UNDETERMINED
-     now, raised later by a calibration row (CAP-11 measures, a row raises);
-     a letter written now and lowered later is the move Bob's 5.8 forbids. */
-  TEXT_CHAIN_LETTER_UNCALIBRATED: {
-    check: "C-35.13",
-    where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: 'This step says how faithful a conversion of the document was, but nobody has measured that. When a site hands us its own converted copy of a file, the record cannot tell what the conversion changed until it has compared the copies \u2014 so until then it says "not yet determined" rather than giving a grade it has not earned.'
-  },
-  /* REC-87 / IC-127. A step kind whose letter is NEVER written on the step
-     (`STEP_KINDS[k].letter === "never"`) — today only `typed`, a member typing
-     a portion's text (Bob's 5.2). A person has no calibration, so the one route
-     to a letter is a SECOND member's attestation; a letter on the step would be
-     the typist grading their own work. */
-  TEXT_CHAIN_LETTER_ON_PERSON: {
-    check: "C-35.14",
-    where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: `This says how faithful a member's own typing of the page is. Nobody grades their own transcription: what a member typed stays "not yet determined" until a different member checks it against the page and says it matches.`
-  }
-};
 var REQUIRED_ARGUMENT_CHECKS = {
   /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
      tell a refused request from a half-applied one has to go and look, and this
@@ -6280,7 +6300,7 @@ function withProducingGroup(text, slug) {
 }
 function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
-  const refusal5 = (code, message, repairs) => f(LEAD_CHECKS[code].check, "error", message, repairs, code);
+  const refusal5 = (code, message, repairs) => f2(LEAD_CHECKS[code].check, "error", message, repairs, code);
   for (const field of ["target", "content_id"]) {
     const v = typeof l[field] === "string" ? l[field].trim() : "";
     if (v && LEAD_ID_RE.test(v)) {
@@ -6379,7 +6399,7 @@ var THEME_CHECKS = {
 };
 function themeLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
-  const refusal5 = (code, message, repairs) => f(THEME_CHECKS[code].check, "error", message, repairs, code);
+  const refusal5 = (code, message, repairs) => f2(THEME_CHECKS[code].check, "error", message, repairs, code);
   const REPAIRS = [
     "cite the document or the passage itself \u2014 the theme is how you found it, not what it shows",
     "or leave the theme out of the leg: membership in a theme is never a reason a leg counts"
@@ -6884,130 +6904,6 @@ var PROMOTED_TYPE_CHECKS = {
     translation: "The document being filed says where it stands, and the request that carried it says something different. Where a thing stands decides who may move it and what may cite it, and the record goes by the document, so it stops and tells you both. Nothing was written. Send it again with the request saying what the document says, or saying nothing about it, or change the document first."
   }
 };
-var SHA256_K = new Uint32Array([
-  1116352408,
-  1899447441,
-  3049323471,
-  3921009573,
-  961987163,
-  1508970993,
-  2453635748,
-  2870763221,
-  3624381080,
-  310598401,
-  607225278,
-  1426881987,
-  1925078388,
-  2162078206,
-  2614888103,
-  3248222580,
-  3835390401,
-  4022224774,
-  264347078,
-  604807628,
-  770255983,
-  1249150122,
-  1555081692,
-  1996064986,
-  2554220882,
-  2821834349,
-  2952996808,
-  3210313671,
-  3336571891,
-  3584528711,
-  113926993,
-  338241895,
-  666307205,
-  773529912,
-  1294757372,
-  1396182291,
-  1695183700,
-  1986661051,
-  2177026350,
-  2456956037,
-  2730485921,
-  2820302411,
-  3259730800,
-  3345764771,
-  3516065817,
-  3600352804,
-  4094571909,
-  275423344,
-  430227734,
-  506948616,
-  659060556,
-  883997877,
-  958139571,
-  1322822218,
-  1537002063,
-  1747873779,
-  1955562222,
-  2024104815,
-  2227730452,
-  2361852424,
-  2428436474,
-  2756734187,
-  3204031479,
-  3329325298
-]);
-function sha256HexSync(str) {
-  const bytes = new TextEncoder().encode(String(str));
-  const bitLen = bytes.length * 8;
-  const withPad = new Uint8Array(bytes.length + 9 + 63 >> 6 << 6);
-  withPad.set(bytes);
-  withPad[bytes.length] = 128;
-  const dv = new DataView(withPad.buffer);
-  dv.setUint32(withPad.length - 8, Math.floor(bitLen / 4294967296));
-  dv.setUint32(withPad.length - 4, bitLen >>> 0);
-  const h = new Uint32Array([
-    1779033703,
-    3144134277,
-    1013904242,
-    2773480762,
-    1359893119,
-    2600822924,
-    528734635,
-    1541459225
-  ]);
-  const w = new Uint32Array(64);
-  const rotr = (x, n) => x >>> n | x << 32 - n;
-  for (let off = 0; off < withPad.length; off += 64) {
-    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4);
-    for (let i = 16; i < 64; i++) {
-      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ w[i - 15] >>> 3;
-      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ w[i - 2] >>> 10;
-      w[i] = w[i - 16] + s0 + w[i - 7] + s1 >>> 0;
-    }
-    let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], ff = h[5], g = h[6], hh = h[7];
-    for (let i = 0; i < 64; i++) {
-      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
-      const ch = e & ff ^ ~e & g;
-      const t1 = hh + S1 + ch + SHA256_K[i] + w[i] >>> 0;
-      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
-      const maj = a & b ^ a & c ^ b & c;
-      const t2 = S0 + maj >>> 0;
-      hh = g;
-      g = ff;
-      ff = e;
-      e = d + t1 >>> 0;
-      d = c;
-      c = b;
-      b = a;
-      a = t1 + t2 >>> 0;
-    }
-    h[0] = h[0] + a >>> 0;
-    h[1] = h[1] + b >>> 0;
-    h[2] = h[2] + c >>> 0;
-    h[3] = h[3] + d >>> 0;
-    h[4] = h[4] + e >>> 0;
-    h[5] = h[5] + ff >>> 0;
-    h[6] = h[6] + g >>> 0;
-    h[7] = h[7] + hh >>> 0;
-  }
-  let out = "";
-  for (const v of h) out += v.toString(16).padStart(8, "0");
-  return out;
-}
 function contentIdFor(captureSha, extent, chain) {
   return sha256HexSync(canonicalJson({
     v: 1,
@@ -8154,13 +8050,13 @@ var REFUSED = Symbol("record-core-refusal");
 var hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
 var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-function fileDigestOf(f2) {
-  if (f2 && typeof f2.text === "string") return createSha256().update(te.encode(f2.text)).hex();
-  if (f2 && typeof f2.blobSha === "string" && f2.blobSha) return f2.blobSha.toLowerCase();
+function fileDigestOf(f3) {
+  if (f3 && typeof f3.text === "string") return createSha256().update(te.encode(f3.text)).hex();
+  if (f3 && typeof f3.blobSha === "string" && f3.blobSha) return f3.blobSha.toLowerCase();
   return null;
 }
-function inlineBytesOf(f2) {
-  return f2 && typeof f2.text === "string" ? te.encode(f2.text).length : null;
+function inlineBytesOf(f3) {
+  return f3 && typeof f3.text === "string" ? te.encode(f3.text).length : null;
 }
 function censusCap(limit) {
   const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
@@ -8173,7 +8069,7 @@ function manifestFiles(filesJson) {
   } catch {
     arr = null;
   }
-  return Array.isArray(arr) ? arr.filter((f2) => f2 && typeof f2 === "object") : [];
+  return Array.isArray(arr) ? arr.filter((f3) => f3 && typeof f3 === "object") : [];
 }
 var MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source" });
 var RecordCore = class _RecordCore {
@@ -8463,9 +8359,9 @@ var RecordCore = class _RecordCore {
         written = [];
       }
       if (!Array.isArray(written)) written = [];
-      const writtenPairs = written.map((f2) => typeof f2 === "string" ? { name: f2, sha256: null } : f2);
-      const files = writtenPairs.map((f2) => f2.name);
-      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f2) => f2.name);
+      const writtenPairs = written.map((f3) => typeof f3 === "string" ? { name: f3, sha256: null } : f3);
+      const files = writtenPairs.map((f3) => f3.name);
+      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f3) => f3.name);
       entries.push({
         key: r.snap_key,
         seq: ++seq,
@@ -8693,7 +8589,7 @@ var RecordCore = class _RecordCore {
         if (deficit < 0) out.excess += -deficit;
         const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA);
         const outputs = new Set(rows.map((r) => {
-          const md = manifestFiles(r.files_json).find((f2) => f2.name === "bundle.md");
+          const md = manifestFiles(r.files_json).find((f3) => f3.name === "bundle.md");
           return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
         }).filter(Boolean));
         const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
@@ -8777,22 +8673,22 @@ var RecordCore = class _RecordCore {
         base,
         author,
         now,
-        JSON.stringify(files.map((f2) => ({ name: f2.path, sha256: f2.sha256 }))),
+        JSON.stringify(files.map((f3) => ({ name: f3.path, sha256: f3.sha256 }))),
         writer,
         operation
       );
       this.#sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
-      for (const f2 of files)
+      for (const f3 of files)
         this.#sql.exec(
           `INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`,
           bundleId,
-          f2.path,
-          f2.text ?? null,
-          f2.blobSha ?? null,
-          f2.bytes ?? (typeof f2.text === "string" ? te.encode(f2.text).length : 0),
-          f2.sha256
+          f3.path,
+          f3.text ?? null,
+          f3.blobSha ?? null,
+          f3.bytes ?? (typeof f3.text === "string" ? te.encode(f3.text).length : 0),
+          f3.sha256
         );
-      const bundleSha = (files.find((f2) => f2.path === "bundle.md") || files[0] || {}).sha256 ?? "";
+      const bundleSha = (files.find((f3) => f3.path === "bundle.md") || files[0] || {}).sha256 ?? "";
       const given = [
         ["current_state", state],
         ["prior_state", priorState],
@@ -8973,9 +8869,9 @@ var RecordCore = class _RecordCore {
             message: `${module}'s audit check threw on ${id}: ${String(e && e.message || e).slice(0, 200)}`
           }];
         }
-        if (Array.isArray(more)) findings.push(...more.filter((f2) => f2 && typeof f2 === "object"));
+        if (Array.isArray(more)) findings.push(...more.filter((f3) => f3 && typeof f3 === "object"));
       }
-      const errs = findings.filter((f2) => f2.severity === "error");
+      const errs = findings.filter((f3) => f3.severity === "error");
       if (!errs.length) {
         clean++;
         continue;
@@ -9577,12 +9473,12 @@ function viewerPredicate(viewer) {
 var NO_SUCH_PROJECT_DETAIL = "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way.";
 var NO_SUCH_PROJECT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
 function noSuchProject(projectId, extra = null) {
-  let own2 = [];
+  let own3 = [];
   try {
     if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own2 = Object.entries(extra).filter(([k]) => !NO_SUCH_PROJECT_FIXED.has(k));
+      own3 = Object.entries(extra).filter(([k]) => !NO_SUCH_PROJECT_FIXED.has(k));
   } catch {
-    own2 = [];
+    own3 = [];
   }
   const row = MEMBERSHIP_CHECKS.NO_SUCH_PROJECT;
   return {
@@ -9592,22 +9488,22 @@ function noSuchProject(projectId, extra = null) {
     check: row.check,
     translation: row.translation,
     project: projectId ?? null,
-    ...Object.fromEntries(own2),
+    ...Object.fromEntries(own3),
     detail: NO_SUCH_PROJECT_DETAIL
   };
 }
 var NOT_AN_ADMIN_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "by", "detail", "message"]);
 function notAnAdmin(by, act, extra = null) {
-  let own2 = [];
+  let own3 = [];
   try {
     if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own2 = Object.entries(extra).filter(([k]) => !NOT_AN_ADMIN_FIXED.has(k));
+      own3 = Object.entries(extra).filter(([k]) => !NOT_AN_ADMIN_FIXED.has(k));
   } catch {
-    own2 = [];
+    own3 = [];
   }
-  const given = own2.find(([k]) => k === "remedy");
+  const given = own3.find(([k]) => k === "remedy");
   const remedy = given && typeof given[1] === "string" && given[1].trim() ? given[1].trim().slice(0, 400) : null;
-  own2 = own2.filter(([k]) => k !== "remedy");
+  own3 = own3.filter(([k]) => k !== "remedy");
   const what = typeof act === "string" && act.trim() ? act.trim().slice(0, 120) : "this act";
   const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
   return {
@@ -9617,7 +9513,7 @@ function notAnAdmin(by, act, extra = null) {
     check: row.check,
     translation: row.translation,
     by: by ?? null,
-    ...Object.fromEntries(own2),
+    ...Object.fromEntries(own3),
     ...remedy ? { remedy, message: `${row.translation} ${remedy}` } : {},
     detail: `${what} is an administrator's act (Membership Architecture v2 \xA74.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators. Nothing was changed.`
   };
@@ -9625,12 +9521,12 @@ function notAnAdmin(by, act, extra = null) {
 var NOT_A_PARTICIPANT_DETAIL = "the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 \xA77). Nothing was changed.";
 var NOT_A_PARTICIPANT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
 function notAParticipant(projectId, by, extra = null) {
-  let own2 = [];
+  let own3 = [];
   try {
     if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own2 = Object.entries(extra).filter(([k]) => !NOT_A_PARTICIPANT_FIXED.has(k));
+      own3 = Object.entries(extra).filter(([k]) => !NOT_A_PARTICIPANT_FIXED.has(k));
   } catch {
-    own2 = [];
+    own3 = [];
   }
   const row = MEMBERSHIP_CHECKS.NOT_A_PARTICIPANT;
   return {
@@ -9640,7 +9536,7 @@ function notAParticipant(projectId, by, extra = null) {
     check: row.check,
     translation: row.translation,
     project: projectId ?? null,
-    ...Object.fromEntries(own2),
+    ...Object.fromEntries(own3),
     detail: NOT_A_PARTICIPANT_DETAIL
   };
 }
@@ -9734,13 +9630,13 @@ var LISTENER_REFUSAL_FIELDS = /* @__PURE__ */ new Set(["ok", "reason", "code", "
 function listenerRefusal(held, module, fn, extra) {
   const refuse = (code, detail, fields) => {
     const row = MEMBERSHIP_CHECKS[code];
-    let own2 = {};
+    let own3 = {};
     try {
-      if (isObj(extra)) own2 = Object.fromEntries(Object.entries(extra).filter(([k]) => !LISTENER_REFUSAL_FIELDS.has(k)));
+      if (isObj(extra)) own3 = Object.fromEntries(Object.entries(extra).filter(([k]) => !LISTENER_REFUSAL_FIELDS.has(k)));
     } catch {
-      own2 = {};
+      own3 = {};
     }
-    return { ...own2, ok: false, reason: code, code, detail, ...fields, check: row.check, translation: row.translation };
+    return { ...own3, ok: false, reason: code, code, detail, ...fields, check: row.check, translation: row.translation };
   };
   const malformed = (detail) => refuse("LISTENER_MALFORMED", detail, {});
   const declared = (detail, holder) => refuse("LISTENER_DECLARED", detail, { module: holder });
@@ -13593,6 +13489,12 @@ var test_port_ellery_default = {
       label: "claim on a budget commitment",
       tier: 3,
       venue: { name: "Marlow County Court", how: "court", basis: "TEST" },
+      evidence: {
+        standard: "Marlow County Court Rule 9.02 (test): a record authenticated by its custodian",
+        accepts: [{ grade: "A", coattested: true }, { grade: "B" }],
+        contestable: [{ grade: "C" }],
+        basis: "TEST"
+      },
       basis: "TEST"
     }
   ],
@@ -13683,7 +13585,7 @@ var VOCABULARY = Object.freeze([
   "recommendation_openers",
   "template_blanks"
 ]);
-var LAW_LEVELS2 = Object.freeze(["federal", "state", "county", "city"]);
+var LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
 var COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
 var SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
 var VENUE_HOW = Object.freeze(["portal", "mail", "email", "in_person", "court"]);
@@ -13691,6 +13593,7 @@ var COUNTS = Object.freeze(["calendar", "business"]);
 var STARTS = Object.freeze(["received", "filed", "act", "known"]);
 var TIERS = Object.freeze([1, 2, 3]);
 var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
+var EVIDENCE_STANDARD_MAX = 200;
 var ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 var KIND_RE = /^[a-z][a-z0-9_]*$/;
 var HEX64 = /^[0-9a-f]{64}$/i;
@@ -13699,7 +13602,7 @@ var BASIS_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/
 var isObj2 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var isStr = (v) => typeof v === "string" && v.trim().length > 0;
 var isPosInt = (v) => Number.isInteger(v) && v > 0;
-var own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+var own2 = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 var isYear = (v) => Number.isInteger(v) && v >= 1e3 && v <= 9999;
 function isDate(v) {
   const m = typeof v === "string" && DATE_RE2.exec(v);
@@ -13727,7 +13630,7 @@ function basisValid(b, test = false) {
 function compile(p) {
   if (!isObj2(p) || typeof p.re !== "string") return null;
   for (const k of Object.keys(p)) if (k !== "re" && k !== "flags") return null;
-  const flags = own(p, "flags") ? p.flags : "";
+  const flags = own2(p, "flags") ? p.flags : "";
   if (typeof flags !== "string" || !/^[iu]*$/.test(flags) || new Set(flags).size !== flags.length) return null;
   try {
     return new RegExp(p.re, flags);
@@ -13762,7 +13665,7 @@ function applyForm(form, raw, prefixes = []) {
       continue;
     }
     let g = m[part.group];
-    if (g == null) g = own(part, "default") ? part.default : "";
+    if (g == null) g = own2(part, "default") ? part.default : "";
     if (part.unpad) g = g.replace(/^0+(?=.)/, "");
     if (part.upper) g = g.toUpperCase();
     out += g;
@@ -13790,9 +13693,9 @@ function validateInto(p, errors) {
   if (!isStr(p.name)) err("name", "NAME_MISSING", "a profile has a name");
   if (!Array.isArray(p.covers) || !p.covers.length || !p.covers.every(isStr))
     err("covers", "COVERS_MISSING", "covers is a non-empty list of names");
-  if (own(p, "test") && typeof p.test !== "boolean") err("test", "VALUE_INVALID", "test is true or false");
+  if (own2(p, "test") && typeof p.test !== "boolean") err("test", "VALUE_INVALID", "test is true or false");
   const basis = (path, o) => {
-    if (!own(o, "basis") || o.basis === void 0 || o.basis === null || o.basis === "")
+    if (!own2(o, "basis") || o.basis === void 0 || o.basis === null || o.basis === "")
       err(`${path}.basis`, "BASIS_MISSING", "every fact names its basis");
     else if (!basisValid(o.basis, test))
       err(`${path}.basis`, "BASIS_INVALID", o.basis === "TEST" ? "TEST is a basis only in a test profile" : `'${String(o.basis)}' names no measurement or ruling`);
@@ -13822,7 +13725,7 @@ function validateInto(p, errors) {
   };
   const origins = /* @__PURE__ */ new Set();
   const noPathHosts = /* @__PURE__ */ new Map();
-  if (own(p, "systems")) list3("systems", p.systems).forEach((s, i) => {
+  if (own2(p, "systems")) list3("systems", p.systems).forEach((s, i) => {
     const at6 = `systems[${i}]`;
     if (!entry(at6, s)) return;
     fields(at6, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
@@ -13831,12 +13734,12 @@ function validateInto(p, errors) {
     str(`${at6}.name`, s.name, "name");
     if (!Array.isArray(s.hosts) || !s.hosts.length || !s.hosts.every((h) => isStr(h) && h === h.toLowerCase()))
       err(`${at6}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
-    if (own(s, "path")) pattern(`${at6}.path`, s.path);
+    if (own2(s, "path")) pattern(`${at6}.path`, s.path);
     else if (Array.isArray(s.hosts)) {
       for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at6);
     }
-    if (own(s, "links")) {
-      if (!isObj2(s.links) || !own(s.links, "item") || !own(s.links, "file"))
+    if (own2(s, "links")) {
+      if (!isObj2(s.links) || !own2(s.links, "item") || !own2(s.links, "file"))
         err(`${at6}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
       else {
         fields(`${at6}.links`, s.links, ["item", "file"]);
@@ -13844,11 +13747,11 @@ function validateInto(p, errors) {
         pattern(`${at6}.links.file`, s.links.file);
       }
     }
-    if (own(s, "republishes") && typeof s.republishes !== "boolean") err(`${at6}.republishes`, "VALUE_INVALID", "true or false");
-    if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at6}.provenance_stated`, "VALUE_INVALID", "true or false");
+    if (own2(s, "republishes") && typeof s.republishes !== "boolean") err(`${at6}.republishes`, "VALUE_INVALID", "true or false");
+    if (own2(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at6}.provenance_stated`, "VALUE_INVALID", "true or false");
     basis(at6, s);
   });
-  if (own(p, "mixed_hosts")) list3("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
+  if (own2(p, "mixed_hosts")) list3("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
     const at6 = `mixed_hosts[${i}]`;
     if (!entry(at6, m)) return;
     fields(at6, m, ["host", "why", "basis"]);
@@ -13859,7 +13762,7 @@ function validateInto(p, errors) {
     basis(at6, m);
   });
   const spaceForms = {};
-  if (own(p, "spaces")) {
+  if (own2(p, "spaces")) {
     if (!isObj2(p.spaces)) err("spaces", "VALUE_INVALID", "spaces is an object keyed by space");
     else for (const [name, s] of Object.entries(p.spaces)) {
       const at6 = `spaces.${name}`;
@@ -13872,46 +13775,46 @@ function validateInto(p, errors) {
       str(`${at6}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list3(`${at6}.forms`, s.forms).forEach((f2, i) => {
+      list3(`${at6}.forms`, s.forms).forEach((f3, i) => {
         const fa = `${at6}.forms[${i}]`;
-        if (!entry(fa, f2)) return;
-        fields(fa, f2, ["form", "pattern", "normal", "clean", "basis"]);
-        str(`${fa}.form`, f2.form, "form");
-        if (isStr(f2.form)) {
-          if (names.has(f2.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f2.form}' is named twice in ${name}`);
-          names.add(f2.form);
+        if (!entry(fa, f3)) return;
+        fields(fa, f3, ["form", "pattern", "normal", "clean", "basis"]);
+        str(`${fa}.form`, f3.form, "form");
+        if (isStr(f3.form)) {
+          if (names.has(f3.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f3.form}' is named twice in ${name}`);
+          names.add(f3.form);
         }
-        const re = compile(f2.pattern);
-        if (!re) pattern(`${fa}.pattern`, f2.pattern);
+        const re = compile(f3.pattern);
+        if (!re) pattern(`${fa}.pattern`, f3.pattern);
         const groups = re ? groupCount(re) : Infinity;
-        let normalOk = Array.isArray(f2.normal) && f2.normal.length > 0;
+        let normalOk = Array.isArray(f3.normal) && f3.normal.length > 0;
         if (!normalOk) err(`${fa}.normal`, "NORMAL_INVALID", "normal is a non-empty list of parts");
-        else f2.normal.forEach((part, j) => {
+        else f3.normal.forEach((part, j) => {
           if (typeof part === "string") return;
           const pa = `${fa}.normal[${j}]`;
-          if (!isObj2(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k)) || own(part, "unpad") && typeof part.unpad !== "boolean" || own(part, "upper") && typeof part.upper !== "boolean" || own(part, "default") && typeof part.default !== "string") {
+          if (!isObj2(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k)) || own2(part, "unpad") && typeof part.unpad !== "boolean" || own2(part, "upper") && typeof part.upper !== "boolean" || own2(part, "default") && typeof part.default !== "string") {
             normalOk = false;
             err(pa, "NORMAL_INVALID", "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has");
           }
         });
-        if (own(f2, "clean")) {
-          const c = f2.clean;
-          const bad = !isObj2(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k)) || own(c, "strip") && (!Array.isArray(c.strip) || !c.strip.every((x) => compile(x))) || own(c, "spaces") && !["remove", "collapse"].includes(c.spaces) || own(c, "upper") && c.upper !== true;
+        if (own2(f3, "clean")) {
+          const c = f3.clean;
+          const bad = !isObj2(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k)) || own2(c, "strip") && (!Array.isArray(c.strip) || !c.strip.every((x) => compile(x))) || own2(c, "spaces") && !["remove", "collapse"].includes(c.spaces) || own2(c, "upper") && c.upper !== true;
           if (bad) {
             normalOk = false;
             err(`${fa}.clean`, "NORMAL_INVALID", "clean is {strip?: [pattern], spaces?: remove|collapse, upper?: true}");
           }
         }
-        basis(fa, f2);
-        if (isStr(f2.form) && re && normalOk) spaceForms[name].set(f2.form, f2);
+        basis(fa, f3);
+        if (isStr(f3.form) && re && normalOk) spaceForms[name].set(f3.form, f3);
       });
-      if (name === "enactment" && own(s, "kinds")) list3(`${at6}.kinds`, s.kinds).forEach((k, i) => {
+      if (name === "enactment" && own2(s, "kinds")) list3(`${at6}.kinds`, s.kinds).forEach((k, i) => {
         const ka = `${at6}.kinds[${i}]`;
         if (!entry(ka, k)) return;
         fields(ka, k, ["kind", "prefix", "floor", "basis"]);
         str(`${ka}.kind`, k.kind, "kind");
         pattern(`${ka}.prefix`, k.prefix);
-        if (own(k, "floor")) {
+        if (own2(k, "floor")) {
           const fl = k.floor;
           if (!isObj2(fl)) err(`${ka}.floor`, "VALUE_INVALID", "a floor is {first, system, basis}");
           else {
@@ -13925,18 +13828,18 @@ function validateInto(p, errors) {
       });
     }
   }
-  if (own(p, "crosswalks")) list3("crosswalks", p.crosswalks).forEach((x, i) => {
+  if (own2(p, "crosswalks")) list3("crosswalks", p.crosswalks).forEach((x, i) => {
     const at6 = `crosswalks[${i}]`;
     if (!entry(at6, x)) return;
     fields(at6, x, ["space", "forms", "pairs", "source", "basis"]);
     if (!SPACES.includes(x.space)) err(`${at6}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
-    if (!own(x, "source") || x.source === "" || x.source == null) err(`${at6}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
+    if (!own2(x, "source") || x.source === "" || x.source == null) err(`${at6}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
     else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at6}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
     if (!forms) err(`${at6}.forms`, "VALUE_INVALID", "forms is [a, b]");
-    else forms.forEach((f2, j) => {
-      if (!known.has(f2)) err(`${at6}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f2)}'`);
+    else forms.forEach((f3, j) => {
+      if (!known.has(f3)) err(`${at6}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f3)}'`);
     });
     list3(`${at6}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
@@ -13945,13 +13848,13 @@ function validateInto(p, errors) {
       }
       if (!forms) return;
       pair.forEach((v, n) => {
-        const f2 = known.get(forms[n]);
-        if (f2 && applyForm(f2, v) == null) err(`${at6}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        const f3 = known.get(forms[n]);
+        if (f3 && applyForm(f3, v) == null) err(`${at6}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
       });
     });
     basis(at6, x);
   });
-  if (own(p, "vocabulary")) {
+  if (own2(p, "vocabulary")) {
     if (!isObj2(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
       const at6 = `vocabulary.${key}`;
@@ -13975,11 +13878,11 @@ function validateInto(p, errors) {
       });
     }
   }
-  if (own(p, "practice")) {
+  if (own2(p, "practice")) {
     if (!isObj2(p.practice)) err("practice", "VALUE_INVALID", "practice is an object");
     else {
       fields("practice", p.practice, ["minutes_due_days"]);
-      if (own(p.practice, "minutes_due_days")) {
+      if (own2(p.practice, "minutes_due_days")) {
         const m = p.practice.minutes_due_days;
         if (!isObj2(m)) err("practice.minutes_due_days", "VALUE_INVALID", "{value, basis}");
         else {
@@ -13990,7 +13893,7 @@ function validateInto(p, errors) {
       }
     }
   }
-  if (own(p, "search_terms")) list3("search_terms", p.search_terms).forEach((t, i) => {
+  if (own2(p, "search_terms")) list3("search_terms", p.search_terms).forEach((t, i) => {
     const at6 = `search_terms[${i}]`;
     if (!entry(at6, t)) return;
     fields(at6, t, ["term", "basis"]);
@@ -13998,17 +13901,17 @@ function validateInto(p, errors) {
     basis(at6, t);
   });
   const lawNames = /* @__PURE__ */ new Set();
-  if (own(p, "records_laws")) list3("records_laws", p.records_laws).forEach((l, i) => {
+  if (own2(p, "records_laws")) list3("records_laws", p.records_laws).forEach((l, i) => {
     const at6 = `records_laws[${i}]`;
     if (!entry(at6, l)) return;
     fields(at6, l, ["level", "name", "citation", "basis"]);
-    if (!LAW_LEVELS2.includes(l.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS2.join(", ")}`);
+    if (!LAW_LEVELS.includes(l.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS.join(", ")}`);
     str(`${at6}.name`, l.name, "name");
     str(`${at6}.citation`, l.citation, "citation");
     if (isStr(l.name)) lawNames.add(l.name);
     basis(at6, l);
   });
-  if (own(p, "locale")) {
+  if (own2(p, "locale")) {
     const l = p.locale;
     if (!isObj2(l)) err("locale", "VALUE_INVALID", "locale is {value, basis}");
     else {
@@ -14017,8 +13920,8 @@ function validateInto(p, errors) {
       basis("locale", l);
     }
   }
-  const codeKeys = new Set(own(p, "vocabulary") && isObj2(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj2).map((c) => c.key) : []);
-  if (own(p, "standard_sources")) list3("standard_sources", p.standard_sources).forEach((s, i) => {
+  const codeKeys = new Set(own2(p, "vocabulary") && isObj2(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj2).map((c) => c.key) : []);
+  if (own2(p, "standard_sources")) list3("standard_sources", p.standard_sources).forEach((s, i) => {
     const at6 = `standard_sources[${i}]`;
     if (!entry(at6, s)) return;
     fields(at6, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
@@ -14026,12 +13929,12 @@ function validateInto(p, errors) {
     str(`${at6}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
     if (!SOURCE_KINDS.includes(s.kind)) err(`${at6}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
-    if (!LAW_LEVELS2.includes(s.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS2.join(", ")}`);
+    if (!LAW_LEVELS.includes(s.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS.join(", ")}`);
     pattern(`${at6}.cite`, s.cite);
-    if (own(s, "code") && !codeKeys.has(s.code)) err(`${at6}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
+    if (own2(s, "code") && !codeKeys.has(s.code)) err(`${at6}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
     basis(at6, s);
   });
-  if (own(p, "counterparties")) list3("counterparties", p.counterparties).forEach((c, i) => {
+  if (own2(p, "counterparties")) list3("counterparties", p.counterparties).forEach((c, i) => {
     const at6 = `counterparties[${i}]`;
     if (!entry(at6, c)) return;
     fields(at6, c, ["role", "body", "level", "elected", "oversight", "basis"]);
@@ -14039,15 +13942,15 @@ function validateInto(p, errors) {
     str(`${at6}.body`, c.body, "body");
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
     if (typeof c.elected !== "boolean") err(`${at6}.elected`, "VALUE_INVALID", "elected is true or false");
-    if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at6}.oversight`, "VALUE_INVALID", "oversight is true or false");
+    if (own2(c, "oversight") && typeof c.oversight !== "boolean") err(`${at6}.oversight`, "VALUE_INVALID", "oversight is true or false");
     basis(at6, c);
   });
   const kinds = /* @__PURE__ */ new Set();
   const tier3 = /* @__PURE__ */ new Set();
-  if (own(p, "action_kinds")) list3("action_kinds", p.action_kinds).forEach((k, i) => {
+  if (own2(p, "action_kinds")) list3("action_kinds", p.action_kinds).forEach((k, i) => {
     const at6 = `action_kinds[${i}]`;
     if (!entry(at6, k)) return;
-    fields(at6, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
+    fields(at6, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "evidence", "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at6}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
     else if (kinds.has(k.kind)) err(`${at6}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
     else {
@@ -14055,11 +13958,11 @@ function validateInto(p, errors) {
       if (k.tier === 3) tier3.add(k.kind);
     }
     str(`${at6}.label`, k.label, "label");
-    if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at6}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
-    if (own(k, "laws")) list3(`${at6}.laws`, k.laws).forEach((l, j) => {
+    if (own2(k, "tier") && !TIERS.includes(k.tier)) err(`${at6}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
+    if (own2(k, "laws")) list3(`${at6}.laws`, k.laws).forEach((l, j) => {
       if (!lawNames.has(l)) err(`${at6}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
     });
-    if (own(k, "venue")) {
+    if (own2(k, "venue")) {
       const v = k.venue;
       if (!isObj2(v)) err(`${at6}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
@@ -14069,17 +13972,45 @@ function validateInto(p, errors) {
         basis(`${at6}.venue`, v);
       }
     }
-    if (own(k, "template")) {
+    if (own2(k, "template")) {
       if (!isStr(k.template)) err(`${at6}.template`, "VALUE_INVALID", "a template is text");
       if (k.tier === 3) err(`${at6}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
     }
-    if (own(k, "advisory")) {
+    if (own2(k, "advisory")) {
       if (!isStr(k.advisory)) err(`${at6}.advisory`, "VALUE_INVALID", "an advisory note is text");
       if (k.tier !== 2) err(`${at6}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
     }
+    if (own2(k, "evidence")) {
+      const ev = k.evidence;
+      const ea = `${at6}.evidence`;
+      if (!isObj2(ev)) err(ea, "VALUE_INVALID", "evidence is {standard, accepts, contestable?, basis}");
+      else {
+        fields(ea, ev, ["standard", "accepts", "contestable", "basis"]);
+        if (!own2(ev, "standard") || ev.standard === void 0 || ev.standard === null || ev.standard === "")
+          err(`${ea}.standard`, "EVIDENCE_NO_STANDARD", "evidence names the venue's standard in words");
+        else if (!isStr(ev.standard) || ev.standard.length > EVIDENCE_STANDARD_MAX)
+          err(`${ea}.standard`, "VALUE_INVALID", `the standard is text of at most ${EVIDENCE_STANDARD_MAX} characters`);
+        const grades = (path, v) => v.forEach((g, j) => {
+          const ga = `${path}[${j}]`;
+          if (!isObj2(g)) {
+            err(ga, "VALUE_INVALID", "an admitted grade is {grade, coattested?}");
+            return;
+          }
+          fields(ga, g, ["grade", "coattested"]);
+          if (!BASIS_GRADES.includes(g.grade)) err(`${ga}.grade`, "GRADE_UNKNOWN", `grade is one of ${BASIS_GRADES.join(", ")}`);
+          if (own2(g, "coattested") && typeof g.coattested !== "boolean") err(`${ga}.coattested`, "VALUE_INVALID", "coattested is true or false");
+        });
+        if (!own2(ev, "accepts") || Array.isArray(ev.accepts) && !ev.accepts.length)
+          err(`${ea}.accepts`, "EVIDENCE_NO_STANDARD", "accepts lists at least one grade the venue admits");
+        else if (!Array.isArray(ev.accepts)) err(`${ea}.accepts`, "VALUE_INVALID", "accepts is a list of {grade, coattested?}");
+        else grades(`${ea}.accepts`, ev.accepts);
+        if (own2(ev, "contestable")) grades(`${ea}.contestable`, list3(`${ea}.contestable`, ev.contestable));
+        basis(ea, ev);
+      }
+    }
     basis(at6, k);
   });
-  if (own(p, "deadlines")) list3("deadlines", p.deadlines).forEach((d, i) => {
+  if (own2(p, "deadlines")) list3("deadlines", p.deadlines).forEach((d, i) => {
     const at6 = `deadlines[${i}]`;
     if (!entry(at6, d)) return;
     fields(at6, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
@@ -14089,7 +14020,7 @@ function validateInto(p, errors) {
     if (!isPosInt(d.days)) err(`${at6}.days`, "VALUE_INVALID", "days is a positive integer");
     if (!COUNTS.includes(d.count)) err(`${at6}.count`, "COUNT_UNKNOWN", "count is calendar or business");
     if (!STARTS.includes(d.starts)) err(`${at6}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
-    if (own(d, "extension")) {
+    if (own2(d, "extension")) {
       const x = d.extension;
       if (!isObj2(x)) err(`${at6}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
       else {
@@ -14102,7 +14033,7 @@ function validateInto(p, errors) {
     str(`${at6}.citation`, d.citation, "citation");
     basis(at6, d);
   });
-  if (own(p, "legal_organisations")) list3("legal_organisations", p.legal_organisations).forEach((o, i) => {
+  if (own2(p, "legal_organisations")) list3("legal_organisations", p.legal_organisations).forEach((o, i) => {
     const at6 = `legal_organisations[${i}]`;
     if (!entry(at6, o)) return;
     fields(at6, o, ["name", "evaluates", "contacts", "basis"]);
@@ -14124,7 +14055,7 @@ function validateInto(p, errors) {
     });
     basis(at6, o);
   });
-  if (own(p, "holidays")) {
+  if (own2(p, "holidays")) {
     const years = /* @__PURE__ */ new Set();
     list3("holidays", p.holidays).forEach((h, i) => {
       const at6 = `holidays[${i}]`;
@@ -14241,7 +14172,7 @@ function merge(profiles) {
     test: profiles.some((p) => p.test === true),
     profiles: profiles.map((p) => p.id)
   };
-  const has = (sec) => profiles.some((p) => own(p, sec));
+  const has = (sec) => profiles.some((p) => own2(p, sec));
   if (has("spaces")) {
     view.spaces = {};
     for (const space of SPACES) {
@@ -14249,9 +14180,9 @@ function merge(profiles) {
       if (!givers.length) continue;
       const s = { label: [...new Set(givers.map((p) => p.spaces[space].label))].join("; "), forms: [] };
       const byForm = /* @__PURE__ */ new Map();
-      for (const p of givers) for (const f2 of p.spaces[space].forms || []) {
-        if (!byForm.has(f2.form)) byForm.set(f2.form, []);
-        byForm.get(f2.form).push({ profile: p.id, value: f2 });
+      for (const p of givers) for (const f3 of p.spaces[space].forms || []) {
+        if (!byForm.has(f3.form)) byForm.set(f3.form, []);
+        byForm.get(f3.form).push({ profile: p.id, value: f3 });
       }
       for (const [form, given] of byForm) {
         const vals = given.map((g) => ({ profile: g.profile, value: (({ basis, ...rest }) => rest)(g.value), basis: g.value.basis }));
@@ -14267,7 +14198,7 @@ function merge(profiles) {
         for (const g of given) union(merged, [g.value], g.profile);
         s.forms.push(...strip(merged));
       }
-      if (space === "enactment" && givers.some((p) => own(p.spaces[space], "kinds"))) {
+      if (space === "enactment" && givers.some((p) => own2(p.spaces[space], "kinds"))) {
         const kinds = [];
         for (const p of givers) union(kinds, (p.spaces[space].kinds || []).map((k) => (({ floor, ...rest }) => rest)(k)), p.id);
         const floors = /* @__PURE__ */ new Map();
@@ -14344,7 +14275,7 @@ function merge(profiles) {
   if (has("vocabulary")) {
     view.vocabulary = {};
     for (const key of VOCABULARY) {
-      if (!profiles.some((p) => p.vocabulary && own(p.vocabulary, key))) continue;
+      if (!profiles.some((p) => p.vocabulary && own2(p.vocabulary, key))) continue;
       const v = [];
       for (const p of profiles) union(v, p.vocabulary && p.vocabulary[key], p.id);
       view.vocabulary[key] = strip(v);
@@ -14390,7 +14321,7 @@ function merge(profiles) {
     for (const p of profiles) for (const c of p.counterparties || []) {
       const { oversight, ...rest } = c;
       union(v, [rest], p.id);
-      if (own(c, "oversight")) {
+      if (own2(c, "oversight")) {
         const k = `${c.role}\0${c.body}`;
         if (!marks.has(k)) marks.set(k, []);
         marks.get(k).push({ profile: p.id, value: oversight, basis: c.basis });
@@ -14418,12 +14349,14 @@ function merge(profiles) {
     for (const [kind, given] of byKind) {
       const e = { kind, label: [...new Set(given.map((g) => g.k.label))].join("; ") };
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
-      if (given.some((g) => own(g.k, "laws"))) e.laws = laws;
-      for (const f2 of ["tier", "venue", "template", "advisory"]) {
-        const vals = given.filter((g) => own(g.k, f2)).map((g) => ({ profile: g.profile, value: clone(g.k[f2]), basis: g.k.basis }));
+      if (given.some((g) => own2(g.k, "laws"))) e.laws = laws;
+      const WHAT = { tier: "risk tiers", venue: "venues", template: "templates", advisory: "advisory notes", evidence: "evidence standards" };
+      for (const f3 of ["tier", "venue", "template", "advisory", "evidence"]) {
+        const carriesBasis = f3 === "venue" || f3 === "evidence";
+        const vals = given.filter((g) => own2(g.k, f3)).map((g) => ({ profile: g.profile, value: clone(g.k[f3]), basis: carriesBasis ? g.k[f3].basis : g.k.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f2] = f2 !== "venue" ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
-        else conflict(`action_kinds[${kind}].${f2}`, vals, `the active profiles give different ${f2 === "tier" ? "risk tiers" : f2 === "advisory" ? "advisory notes" : `${f2}s`} for ${kind}, so none is given`);
+        if (agree(vals)) e[f3] = !carriesBasis ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.basis })) };
+        else conflict(`action_kinds[${kind}].${f3}`, vals, `the active profiles give different ${WHAT[f3]} for ${kind}, so none is given` + (f3 === "evidence" ? ": the venue's standard is undetermined" : ""));
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -14442,11 +14375,11 @@ function merge(profiles) {
     for (const given of byRule.values()) {
       const { rule, applies_to } = given[0].d;
       const e = { rule, applies_to };
-      for (const f2 of ["days", "count", "starts", "extension"]) {
-        const vals = given.filter((g) => own(g.d, f2)).map((g) => ({ profile: g.profile, value: clone(g.d[f2]), basis: g.d.basis }));
+      for (const f3 of ["days", "count", "starts", "extension"]) {
+        const vals = given.filter((g) => own2(g.d, f3)).map((g) => ({ profile: g.profile, value: clone(g.d[f3]), basis: g.d.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f2] = vals[0].value;
-        else conflict(`deadlines[${rule}/${applies_to}].${f2}`, vals, `the active profiles disagree on the ${f2} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
+        if (agree(vals)) e[f3] = vals[0].value;
+        else conflict(`deadlines[${rule}/${applies_to}].${f3}`, vals, `the active profiles disagree on the ${f3} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
       }
       e.citation = [...new Set(given.map((g) => g.d.citation))].join("; ");
       e.basis = given[0].d.basis;
@@ -14875,7 +14808,7 @@ var PdfDoc = class {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f2) => f2 && f2.t === "name" ? f2.v : null) : [];
+    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f3) => f3 && f3.t === "name" ? f3.v : null) : [];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
     const inflated = await inflate(raw);
@@ -15710,9 +15643,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const ref = curFontDict[name];
     const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + scopeTag + name;
     if (fontCache.has(key)) return fontCache.get(key);
-    const f2 = await loadFont(doc, ref);
-    fontCache.set(key, f2);
-    return f2;
+    const f3 = await loadFont(doc, ref);
+    fontCache.set(key, f3);
+    return f3;
   };
   const show = (bytes) => {
     if (!bytes || bytes.length === 0) return;
@@ -16263,10 +16196,10 @@ function matrixOf(doc, v) {
   return n.every((x) => typeof x === "number" && Number.isFinite(x)) ? n : null;
 }
 function imageFilters(doc, dict) {
-  const f2 = doc.resolve(dict.Filter);
-  if (!f2) return [];
-  if (f2.t === "name") return [f2.v];
-  if (f2.t === "arr") return f2.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  const f3 = doc.resolve(dict.Filter);
+  if (!f3) return [];
+  if (f3.t === "name") return [f3.v];
+  if (f3.t === "arr") return f3.items.map((x) => nameOf(doc, x)).filter(Boolean);
   return [];
 }
 async function decodeContentStreams(doc, contents) {
@@ -16964,8 +16897,8 @@ async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAV
   signals.push(`container:zip entries=${container.count}`);
   const opcRows = [];
   const odfRows = [];
-  for (const f2 of Array.isArray(flavours) ? flavours : []) {
-    if (f2 && typeof f2 === "object") ((f2.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f2);
+  for (const f3 of Array.isArray(flavours) ? flavours : []) {
+    if (f3 && typeof f3 === "object") ((f3.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f3);
   }
   const ctEntry = container.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
@@ -16985,26 +16918,26 @@ async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAV
     return { ok: true, format: "undetermined", why: "content_types_unparseable", signals };
   }
   signals.push(`part:${CONTENT_TYPES_PART} parsed (${types2.defaults.size} defaults, ${types2.overrides.size} overrides)`);
-  for (const f2 of opcRows) {
+  for (const f3 of opcRows) {
     let declared = null;
     for (const [part, ct] of types2.overrides) {
-      if (ct === f2.mainContentType) {
+      if (ct === f3.mainContentType) {
         declared = part;
         break;
       }
     }
     if (!declared) {
-      const conv = normalizePartName(f2.conventionalMainPart);
-      if (partContentType(conv, types2) === f2.mainContentType) declared = conv;
+      const conv = normalizePartName(f3.conventionalMainPart);
+      if (partContentType(conv, types2) === f3.mainContentType) declared = conv;
     }
     if (!declared) continue;
     const present = container.byName.has(declared) || container.entries.some((e) => normalizePartName(e.name) === declared);
     if (!present) {
-      signals.push(`ct:${f2.mainContentType} declared for ${declared}, but the part is ABSENT`);
-      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f2.flavour, signals };
+      signals.push(`ct:${f3.mainContentType} declared for ${declared}, but the part is ABSENT`);
+      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f3.flavour, signals };
     }
-    signals.push(`ct:${f2.mainContentType}`, `part:${declared} present`);
-    return { ok: true, format: f2.flavour, mainPart: declared, confidence: "high", signals };
+    signals.push(`ct:${f3.mainContentType}`, `part:${declared} present`);
+    return { ok: true, format: f3.flavour, mainPart: declared, confidence: "high", signals };
   }
   signals.push("opc:no known main content type");
   return { ok: true, format: "undetermined", why: "opc_main_part_unrecognized", signals };
@@ -17032,7 +16965,7 @@ async function discriminateOdf(bytes, container, rows, signals) {
     return { ok: true, format: "undetermined", why: `odf_mimetype_unreadable:${read2.why}`, signals };
   }
   const declared = UTF8.decode(read2.bytes);
-  const row = rows.find((f2) => f2.mimetype === declared);
+  const row = rows.find((f3) => f3.mimetype === declared);
   if (!row) {
     signals.push(`odf:${ODF_MIMETYPE_PART}=${JSON.stringify(declared)} is no known OpenDocument media type`);
     return { ok: true, format: "undetermined", why: "odf_mimetype_unrecognized", signals };
@@ -17850,11 +17783,11 @@ function splitTopLevel(s, sep) {
   return out;
 }
 function definedNameUnit(formula, sheets) {
-  const f2 = String(formula ?? "").trim();
-  if (!f2) return { why: "empty_reference" };
-  if (/#REF!/i.test(f2)) return { why: "broken_reference" };
-  if (splitTopLevel(f2, ",").length > 1 || /^\(.*\)$/.test(f2)) return { why: "multi_area" };
-  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f2);
+  const f3 = String(formula ?? "").trim();
+  if (!f3) return { why: "empty_reference" };
+  if (/#REF!/i.test(f3)) return { why: "broken_reference" };
+  if (splitTopLevel(f3, ",").length > 1 || /^\(.*\)$/.test(f3)) return { why: "multi_area" };
+  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f3);
   if (!m) return { why: "not_a_range_reference" };
   const sheetName = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
   if (/\[[^\]]*\]/.test(sheetName)) return { why: "external_workbook" };
@@ -18032,13 +17965,13 @@ function walkSheetXml(xml) {
     r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
     hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
     cells: elements(row.inner, "c").map((c) => {
-      const f2 = elements(c.inner, "f");
+      const f3 = elements(c.inner, "f");
       const v = elements(c.inner, "v");
       const is = elements(c.inner, "is");
       return {
         cell: c.attrs.r ?? null,
         t: c.attrs.t ?? null,
-        f: f2.length ? decodeXmlEntities2(f2[0].inner) : null,
+        f: f3.length ? decodeXmlEntities2(f3[0].inner) : null,
         v: v.length ? decodeXmlEntities2(v[0].inner) : null,
         is: is.length ? textRuns(is[0].inner) : null
       };
@@ -19050,9 +18983,9 @@ function spendChars(n) {
   }
   meter.chars += n;
 }
-var ODF_ROWS = CONTAINER_FLAVOURS.filter((f2) => f2.partMap === "odf");
+var ODF_ROWS = CONTAINER_FLAVOURS.filter((f3) => f3.partMap === "odf");
 function odfRow(flavour) {
-  const row = ODF_ROWS.find((f2) => f2.flavour === flavour);
+  const row = ODF_ROWS.find((f3) => f3.flavour === flavour);
   if (!row) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
   return row;
 }
@@ -19419,8 +19352,8 @@ async function manifestIntraLinks(bytes, container, contentXml, undetermined) {
   }
   const fonts = /* @__PURE__ */ new Set();
   if (contentXml != null) {
-    for (const f2 of elementsNested(contentXml, "font-face-uri")) {
-      const href = f2.attrs.href;
+    for (const f3 of elementsNested(contentXml, "font-face-uri")) {
+      const href = f3.attrs.href;
       if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
     }
   }
@@ -20170,7 +20103,7 @@ function walkPage(pageXml, { withText = true } = {}) {
   const pending = [];
   const aStack = [];
   let paraDepth = 0;
-  const own2 = (href) => {
+  const own3 = (href) => {
     const top = open.length ? open[open.length - 1].index : null;
     if (top == null) pageHrefs.push(href);
     else {
@@ -20192,7 +20125,7 @@ function walkPage(pageXml, { withText = true } = {}) {
         const entry2 = aStack.pop();
         if (entry2 && !entry2.placed) {
           pending.splice(pending.indexOf(entry2), 1);
-          own2(entry2.href);
+          own3(entry2.href);
         }
         continue;
       }
@@ -20202,7 +20135,7 @@ function walkPage(pageXml, { withText = true } = {}) {
         continue;
       }
       if (paraDepth > 0 || selfClosed) {
-        own2(href);
+        own3(href);
         if (!selfClosed) aStack.push(null);
         continue;
       }
@@ -21503,10 +21436,10 @@ function selfNaming(text, re) {
 }
 var FURNITURE_RECURS = 3;
 function alsoSatisfies(ctx, selfKey) {
-  const f2 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
-  if (!f2) return [];
+  const f3 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
+  if (!f3) return [];
   try {
-    return f2(selfKey) || [];
+    return f3(selfKey) || [];
   } catch {
     return [];
   }
@@ -21531,8 +21464,8 @@ function readerView(ctx) {
 var VOCAB_REGEX_CACHE = /* @__PURE__ */ new Map();
 function vocabRegex(p, wrap, extra) {
   if (!p || typeof p.re !== "string" || !p.re.length) return null;
-  const own2 = String(p.flags || "").replace(/[^iu]/g, "");
-  const flags = [...new Set((own2 + (extra || "")).split(""))].join("");
+  const own3 = String(p.flags || "").replace(/[^iu]/g, "");
+  const flags = [...new Set((own3 + (extra || "")).split(""))].join("");
   const src = typeof wrap === "function" ? wrap(p.re) : p.re;
   const k = src + "\0" + flags;
   if (VOCAB_REGEX_CACHE.has(k)) return VOCAB_REGEX_CACHE.get(k);
@@ -21591,8 +21524,8 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
   const v = readerView(ctx);
   const sp = v.spaces && v.spaces.enactment;
   if (!sp || typeof sp !== "object") return [];
-  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f2) => f2 && f2.pattern && typeof f2.pattern.re === "string" && vocabRegex(f2.pattern));
-  const forms = formList.map((f2) => vocabPiece(f2.pattern.re));
+  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f3) => f3 && f3.pattern && typeof f3.pattern.re === "string" && vocabRegex(f3.pattern));
+  const forms = formList.map((f3) => vocabPiece(f3.pattern.re));
   const markers = vocabulary(ctx, "enactment_markers").map((e) => e.pattern && typeof e.pattern.re === "string" ? e.pattern.re : null).filter((s) => s && vocabRegex({ re: s }));
   if (!forms.length && !blankNumber) return [];
   const num = forms.length ? `(?<num>${forms.map((s) => `(?:${s})`).join("|")})` : "(?<num>(?!))";
@@ -21608,9 +21541,9 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
 }
 function enactmentNumber(forms, text) {
   if (typeof text !== "string" || !text.trim()) return null;
-  for (const f2 of forms || []) {
+  for (const f3 of forms || []) {
     let t = text.trim();
-    const c = f2.clean || {};
+    const c = f3.clean || {};
     for (const s of Array.isArray(c.strip) ? c.strip : []) {
       const re2 = vocabRegex(s, (x) => `^(?:${x})`);
       if (re2) t = t.replace(re2, "");
@@ -21618,11 +21551,11 @@ function enactmentNumber(forms, text) {
     if (c.spaces === "remove") t = t.replace(/\s+/g, "");
     else if (c.spaces === "collapse") t = t.replace(/\s+/g, " ");
     if (c.upper === true) t = t.toUpperCase();
-    const re = vocabRegex(f2.pattern);
+    const re = vocabRegex(f3.pattern);
     const m = re && re.exec(t);
     if (!m) continue;
     let out = "";
-    for (const part of Array.isArray(f2.normal) ? f2.normal : []) {
+    for (const part of Array.isArray(f3.normal) ? f3.normal : []) {
       if (typeof part === "string") {
         out += part;
         continue;
@@ -21693,9 +21626,9 @@ function diffEntities(before, after) {
       continue;
     }
     const moved = [];
-    for (const f2 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
-      if (String(was.facts[f2]) !== String(now.facts[f2]))
-        moved.push({ fact: f2, was: was.facts[f2], now: now.facts[f2] });
+    for (const f3 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
+      if (String(was.facts[f3]) !== String(now.facts[f3]))
+        moved.push({ fact: f3, was: was.facts[f3], now: now.facts[f3] });
     if (moved.length) altered.push({ entity: now, was, moved });
   }
   for (const [k, now] of a) if (!b.has(k)) appeared.push(now);
@@ -21835,38 +21768,38 @@ var meeting_calendar_default = {
       ));
     }
     for (const alt of d.altered) {
-      const f2 = new Map(alt.moved.map((m) => [m.fact, m]));
-      if (f2.has("status")) {
-        const now = f2.get("status").now;
+      const f3 = new Map(alt.moved.map((m) => [m.fact, m]));
+      if (f3.has("status")) {
+        const now = f3.get("status").now;
         events.push(event(
           now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
           {
             key: alt.entity.key,
             label: alt.entity.label,
-            was: f2.get("status").was,
+            was: f3.get("status").was,
             now,
-            why: `a meeting's status changed from ${f2.get("status").was} to ${now}`
+            why: `a meeting's status changed from ${f3.get("status").was} to ${now}`
           }
         ));
       }
-      if (f2.has("date"))
+      if (f3.has("date"))
         events.push(event("moved", {
           key: alt.entity.key,
           label: alt.entity.label,
-          was: f2.get("date").was,
-          now: f2.get("date").now,
+          was: f3.get("date").was,
+          now: f3.get("date").now,
           why: "a meeting's date changed"
         }));
-      if (f2.has("body"))
+      if (f3.has("body"))
         events.push(event("renamed", {
           key: alt.entity.key,
-          was: f2.get("body").was,
-          now: f2.get("body").now,
+          was: f3.get("body").was,
+          now: f3.get("body").now,
           why: "the body holding a meeting is named differently"
         }));
       for (const kind of ["agenda", "minutes"]) {
-        if (!f2.has(kind)) continue;
-        const { was, now } = f2.get(kind);
+        if (!f3.has(kind)) continue;
+        const { was, now } = f3.get(kind);
         if (!was && now)
           events.push(event(`${kind}_published`, {
             key: alt.entity.key,
@@ -22691,7 +22624,7 @@ var staff_report_default = {
     const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
     const memo = memoHeader(flat);
-    const f2 = memo && memo.fields || {};
+    const f3 = memo && memo.fields || {};
     const sections = reportSectionPatterns(ctx);
     const secs = reportSections(raw, sections);
     let recommendation = null;
@@ -22754,10 +22687,10 @@ var staff_report_default = {
       );
     return {
       entities,
-      to: f2.to || null,
-      from: f2.from || null,
-      subject: f2.subject || null,
-      date: f2.date || null,
+      to: f3.to || null,
+      from: f3.from || null,
+      subject: f3.subject || null,
+      date: f3.date || null,
       recommendation,
       sections: secs.length,
       signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
@@ -23994,9 +23927,9 @@ var NW = 16;
 var NE = 32;
 var SW = 64;
 var SE = 128;
-var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f2) => {
-  let h = ((f2 & W) !== 0) + ((f2 & E) !== 0), v = ((f2 & N) !== 0) + ((f2 & S) !== 0);
-  const d = ((f2 & NW) !== 0) + ((f2 & NE) !== 0) + ((f2 & SW) !== 0) + ((f2 & SE) !== 0);
+var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f3) => {
+  let h = ((f3 & W) !== 0) + ((f3 & E) !== 0), v = ((f3 & N) !== 0) + ((f3 & S) !== 0);
+  const d = ((f3 & NW) !== 0) + ((f3 & NE) !== 0) + ((f3 & SW) !== 0) + ((f3 & SE) !== 0);
   if (orient === 1) [h, v] = [v, h];
   if (orient === 3) {
     const hv = h + v;
@@ -24024,7 +23957,7 @@ for (let i = 0; i < 256; i++) {
   }
   SC[i] = !h ? v ? 1 : 0 : v === -1 ? 2 : v === 0 ? 3 : 4;
 }
-var K = f32(1.230174105);
+var K2 = f32(1.230174105);
 var TWO_INVK = f32(1.625732422);
 var ALPHA = f32(-1.586134342);
 var BETA = f32(-0.052980118);
@@ -24602,7 +24535,7 @@ var FIELDS = {
   overdue: { col: "action_clock_overdue", type: "bool", proj: true }
 };
 var CACHED_FIELDS = Object.fromEntries(
-  Object.entries(FIELDS).filter(([, f2]) => f2.asOf).map(([name, f2]) => [f2.col, { field: name, asOf: f2.asOf, authority: f2.authority, why: f2.why }])
+  Object.entries(FIELDS).filter(([, f3]) => f3.asOf).map(([name, f3]) => [f3.col, { field: name, asOf: f3.asOf, authority: f3.authority, why: f3.why }])
 );
 var RESOLUTION_SUB = {
   grade: { col: "grade", case: "upper", vocab: [] },
@@ -25137,10 +25070,10 @@ var MEANING = {
 };
 var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 var SORTABLE = { relevance: null, ...Object.fromEntries(
-  Object.entries(FIELDS).map(([k, f2]) => [k, f2.col])
+  Object.entries(FIELDS).map(([k, f3]) => [k, f3.col])
 ) };
 var TEXT_CAP = 128 * 1024;
-var PROJ_COLS = new Set(Object.values(FIELDS).filter((f2) => f2.proj).map((f2) => f2.col));
+var PROJ_COLS = new Set(Object.values(FIELDS).filter((f3) => f3.proj).map((f3) => f3.col));
 
 // ../bio-plane/src/retrieval/projection.mjs
 var PROJECTION_COLS = Object.freeze([

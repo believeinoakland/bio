@@ -571,6 +571,12 @@ var test_port_ellery_default = {
       label: "claim on a budget commitment",
       tier: 3,
       venue: { name: "Marlow County Court", how: "court", basis: "TEST" },
+      evidence: {
+        standard: "Marlow County Court Rule 9.02 (test): a record authenticated by its custodian",
+        accepts: [{ grade: "A", coattested: true }, { grade: "B" }],
+        contestable: [{ grade: "C" }],
+        basis: "TEST"
+      },
       basis: "TEST"
     }
   ],
@@ -625,6 +631,103 @@ var test_port_ellery_default = {
     }
   ]
 };
+
+// ../bio-plane/src/record-grammar/ids.mjs
+var ID_PREFIXES = Object.freeze([
+  "INFO",
+  "PROB",
+  "FOCUS",
+  "INQ",
+  "PROJ",
+  "ACTN",
+  "BIAS",
+  "STD",
+  "CONF",
+  "CONS",
+  "ESC",
+  "ASP",
+  "GOAL",
+  "PLN"
+]);
+var PREFIX = `(${ID_PREFIXES.join("|")})`;
+var SLUG = "[a-z0-9]+(-[a-z0-9]+)*";
+var BUNDLE = `${PREFIX}-\\d{4}-\\d{4}-${SLUG}`;
+var BUNDLE_ID_RE = new RegExp(`^${BUNDLE}$`);
+var ANN_ID_RE = new RegExp(`^${BUNDLE}\\.ann-\\d{8}T\\d{6}Z-${SLUG}$`);
+
+// ../bio-plane/src/record-grammar/grades.mjs
+var BASIS_GRADES = ["A", "B", "C", "D"];
+var EARNED_CAPTURE_CEILING = "B";
+var UNREACHABLE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
+
+// ../bio-plane/src/record-grammar/sha256.mjs
+var K = new Int32Array([
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+]);
+var utf8 = new TextEncoder();
 
 // ../jurisdictions/index.mjs
 var SECTIONS = Object.freeze([
@@ -919,7 +1022,7 @@ var ARMED_SIGNERS = [
 
 // ../bio-plane/src/sshsig.mjs
 var te = new TextEncoder();
-var b64ToBytes = (b64) => {
+var b64ToBytes2 = (b64) => {
   const bin = atob(b64.replace(/\s+/g, ""));
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
@@ -973,7 +1076,7 @@ function parsePubkeyLine(line) {
   if (m.length < 2) throw new Error("pubkey: not an OpenSSH public key line");
   const [keyType, b64] = m;
   if (keyType !== "ssh-ed25519") throw new Error("pubkey: only ssh-ed25519 is supported, got " + keyType);
-  const blob = b64ToBytes(b64);
+  const blob = b64ToBytes2(b64);
   const r = new Rd(blob);
   const t = new TextDecoder().decode(r.str());
   if (t !== "ssh-ed25519") throw new Error("pubkey: wire type mismatch");
@@ -1000,7 +1103,7 @@ var dearmor = (text) => {
     /-----BEGIN SSH SIGNATURE-----\s*([\s\S]*?)\s*-----END SSH SIGNATURE-----/
   );
   if (!m) throw new Error("sshsig: missing armor");
-  return b64ToBytes(m[1]);
+  return b64ToBytes2(m[1]);
 };
 function parseSshsig(armored) {
   const blob = dearmor(armored);
