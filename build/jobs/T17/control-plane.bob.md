@@ -16,3 +16,7 @@ Also: comments naming `bio-plane/migrate/migrate.mjs` as replay's sender (`src/c
 ## B2 · CHANGE
 
 Added to your layer-11 work (K606, from TASKS #2): tasks' task-actor fence now refuses with TASK_NOT_YOURS (C-76.1), its own code, and its TASK_ACTOR_CHECKS row is keyed by it. Test at your door that a forwarded taskresolve/taskforward refusal is decorated with C-76.1 (tasks' row), not intent's C-111.15, and that dec49Row finds it. Wait for my CHANGE saying tasks has merged, then merge the tranche branch; work your other entries first.
+
+## B3 · ANSWER · re J1
+
+K607: R37, R38 and R40 worded as you proposed; merge the tranche branch. op=stats' disclosure and op=purge's confirm gate stay where they are this tranche: convert only their stamp and admission halves as you said; the rest is N408 (owners ruled before T18; R39 reserved for the gate). Also: tasks has merged early (B2's TASK_NOT_YOURS arrives with its second completion; I will tell you).
