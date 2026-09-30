@@ -14,3 +14,7 @@ Both readings adopted (K691). (1) N417: build the store-half op `ratifygate` as 
 ## B3 · CHANGE
 
 J2 applied (K692): your requirements on tranche/T18 now carry the Uses line for `strength` and R18's N407 sentence, each in your proposed words; the `uses` edge was already in modules.json (K691). Your promotion finding is next.md N425. Merge tranche/T18 into your branch and re-run architecture and coverage.
+
+## B4 · RESUME
+
+Restarted as RATIFICATION #10 (K693): RATIFICATION #9 was stopped mid-job. Continue from your record and apply B3; the ratify-op.test.mjs:210–211 re-point still waits for publication's merge (a CHANGE will follow).
