@@ -225,10 +225,10 @@ export function projMd(title) {
           "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
 }
 
-/** A /4 case document's text over `members` ([{id, pin, role}]), with `conclusions` rows ([[member, conclusion]])
+/** A /5 case document's text (the format op=publish authors) over `members` ([{id, pin, role}]), with `conclusions` rows ([[member, conclusion]])
  *  written by this module's one writer, and `extra` frontmatter lines. */
 export function caseMd({ caseId, edition, project, members, conclusions = [], extra = [], rowLines }) {
-  return ["---", "format: bio-case-document/4", `case_id: ${caseId}`, `case_edition: ${edition}`,
+  return ["---", "format: bio-case-document/5", `case_id: ${caseId}`, `case_edition: ${edition}`,
     `case_project: ${project}`, `case_scope: "whether the permits were issued as the minutes say"`,
     `bias_acknowledgement: "we expected the permits were late"`,
     "case_findings:", ...members.map((m) => `  - ${m.id}`),
@@ -270,10 +270,11 @@ export function cleanInfoMd(id) {
     "## Provenance Notes", "", "None.", "", "## Review Notes", "", "## Session Log", ""].join("\n");
 }
 
-/** A catalogue-clean bio-case-document/4 as an object (`checkCaseDocument` draws no finding over it). */
+/** A catalogue-clean bio-case-document/5 as an object, the format op=publish authors, with its tension section empty
+ *  (`checkCaseDocument` draws no finding over it). */
 export function cleanCase({ caseId, edition, project, members }) {
   return {
-    format: "bio-case-document/4", case_id: caseId, case_edition: edition, case_project: project,
+    format: "bio-case-document/5", case_id: caseId, case_edition: edition, case_project: project,
     case_scope: "whether the permits were issued as the minutes say", bias_acknowledgement: "we expected them late",
     case_findings: members.map((m) => m.id),
     case_roles: members.map((m, i) => ({ target: m.id, role: i ? "supporting" : "load_bearing", version_sha: m.pin, edition: 1 })),
@@ -288,7 +289,7 @@ export function cleanCase({ caseId, edition, project, members }) {
     bias_manifest_bundles: [], bias_manifest_pins_proposed: [], case_citations: [],
     case_strength: members.flatMap((m) => [{ target: m.id, axis: "capture", state: "unrated", grade: null },
                                            { target: m.id, axis: "connection", state: "unrated", grade: null }]),
-    case_strength_grounds: [],
+    case_strength_grounds: [], case_tensions: [], case_tension_sentences: [], case_tensions_unread: [],
   };
 }
 export const CASE_BODY = "# Case\n\n## What This Excludes\n\nNothing named.\n";

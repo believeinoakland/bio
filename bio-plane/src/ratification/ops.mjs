@@ -18,7 +18,7 @@ import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from ".
 import { deliveringPrincipal, delivererOf } from "../deliverer.mjs";
 import { publishedGraphEdges } from "../publication/index.mjs";
 import { partsHeld, withRegisterChecks } from "../provenance/index.mjs";
-import { userAgent } from "../capture/acquire.mjs";
+import { userAgent } from "../acquisition/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, isPublicHttpsLocator,
          MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
 import { rowOf, isCaseMemberBytes, completenessFields, withCaseMemberChecks } from "./checks.mjs";
@@ -34,6 +34,14 @@ import { machineCaseRefusal, operatorCaseRefusal, testimonyCaseRefusal, attribut
    order, `refused` and then `answered`, in its own two lines. */
 function storeRefused(out, { json, storeRefusal }) {
   return typeof storeRefusal === "function" ? storeRefusal(out) : json(out.reply.body, out.reply.status);
+}
+
+/** The two ceremonies' dispatch (legacy-index map §4.4, moved in T18): `op=caseratify` and `op=ratify` answered with the
+ *  control plane's `ctx` (the union both handlers read); any other op is not this module's, and answers null. */
+export function ratificationOp(op, req, stub, ctx) {
+  if (op === "caseratify") return caseRatifyOp(req, stub, ctx);
+  if (op === "ratify") return ratifyOp(req, stub, ctx);
+  return null;
 }
 
   /* THE SIGNATURE, AND THE COMMIT. Same order of operations as `op=ratify`,
@@ -682,14 +690,13 @@ export async function ratifyOp(req, stub, ctx) {
       return json({ ok: false, ...(pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub }),
                     store: storeName, tokenClass: cls },
                   pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS"
-                          || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED"
-                          /* CASE-2 / DEC-72: both are DISAGREEMENTS BETWEEN
-                             SIGNED DOCUMENTS, which is what 409 says here —
-                             the same class as the roster and the assertion
-                             beside them, not a fault in this request. */
-                          || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED"
-                          || pub.reason === "CASE_NAMES_NO_PROJECT"
-                          || pub.reason === "CASE_ROSTER_EXCLUDES_SELF"
+                          /* CASE-2 / DEC-72: a DISAGREEMENT BETWEEN SIGNED DOCUMENTS (the case's signer and this
+                             member's own frozen bytes), which is what 409 says here, not a fault in this request.
+                             T18 (T17's finding): CASE_MEMBERSHIP_DIVERGED, CASE_ROLES_DIVERGED,
+                             CASE_PRODUCTION_DIVERGED, CASE_NAMES_NO_PROJECT and CASE_ROSTER_EXCLUDES_SELF left this
+                             list: publication's commit has not answered them since CASE-5b (one copy of a case fact
+                             cannot disagree with itself), and none has a row. */
+                          || pub.reason === "CASE_ASSERTION_DIVERGED"
                           /* REC-140: a pinned finding's authority refusals (C-57.1, and
                              C-56.1 through REC-134's one check) — the REQUEST was refused,
                              which is what 409 says; `op=caseratify` relays the same two. */

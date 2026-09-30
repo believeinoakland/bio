@@ -470,7 +470,8 @@ export class Ratification {
        C-32.13 and C-32.15, the credential fences, read from the control plane's `viewer` stamp: every machine
          identity (REC-46's predicate) holds both (the act answers the first; lifted, the second would answer) but an
          operator's bearer stamp `class:<cls>`, which holds C-32.15 alone; a member's or the founder's session holds
-         neither; an absent viewer, an internal caller, is not asked;
+         neither; an absent viewer, an internal caller, is not asked. A viewer `{stamp, aiCred}` carrying a minted agent
+         credential holds both, whatever its stamp (N407: a member-scoped agent's stamp is its minter's);
        C-53.12, C-92.10, C-92.11 over publication's attribution facts for these bytes;
        NO_ATTESTING_KEY, the pre-flight's own: `signer` (a member id, or `member:<id>`) holds no key
          `membership.attestingKeys` answers (R19: whatever the key's origin);
@@ -500,8 +501,17 @@ export class Ratification {
          answers C-32.15 only (it has no agent credential). A `class:` stamp is an agent credential's only in the
          shapes the plane mints for one: the act's `class:<cls>/<tokenId>`, and membership's organisation principal
          `class:ai` (`aiCredentialMint`), matched as the whole stamp. */
-      const v = viewer === null || viewer === undefined ? "" : String(viewer).trim();
-      if (v && isMachineIdentity(v)) {
+      /* N407 (K649 (4)): the viewer carries the agent credential. A viewer is the control plane's stamp, or
+         `{stamp, aiCred}` when the caller is a minted agent credential (admission stamps it, layer 11). A member-scoped
+         agent's stamp is its minter's (`member:<minter>`, membership R28), so the stamp alone cannot tell it from its
+         member; `aiCred` does, as it does for the act (`./ops.mjs`), which answers such a caller C-32.13 and, lifted,
+         C-32.15 (class `ai`, never through a session). */
+      const carried = viewer && typeof viewer === "object" ? viewer : null;
+      const aiCred = carried && carried.aiCred && typeof carried.aiCred === "object" ? carried.aiCred : null;
+      const v = carried ? String(carried.stamp ?? "").trim()
+        : viewer === null || viewer === undefined ? "" : String(viewer).trim();
+      if (aiCred) refusals.push(machineCaseRefusal("ai"), operatorCaseRefusal("ai"));
+      else if (v && isMachineIdentity(v)) {
         const stamped = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX);
         const rest = stamped ? v.slice(MACHINE_CLASS_PREFIX.length) : v;
         const cls = stamped ? rest.split("/")[0] : v;

@@ -79,6 +79,22 @@ test("R18: C-32.13 and C-32.15 are read from the viewer stamp, each the act's ow
   }
 });
 
+test("R18 (N407): a viewer carrying a minted agent credential holds both machine fences, each the act's own, whatever its stamp; a member-scoped agent is told from its member", async () => {
+  const { preflight, act } = await setup();
+  const agentOfAlice = { stamp: V("alice"), aiCred: { tokenId: "t9", principal: V("alice") } };
+  const pf = preflight({ viewer: agentOfAlice });
+  assert.deepEqual(reasons(pf), ["MACHINE_CANNOT_RATIFY_CASE", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"]);
+  assert.deepEqual(pf.refusals[0], (await act({ aiCred: agentOfAlice.aiCred, cls: "ai" })).body);
+  assert.deepEqual(pf.refusals[1], (await act({ viaSession: false, cls: "ai" })).body);
+  for (const stamp of ["class:ai", "founder", "", null])
+    assert.deepEqual(reasons(preflight({ viewer: { stamp, aiCred: { tokenId: "t9" } } })).slice(0, 2), reasons(pf), String(stamp));
+  /* negative controls: the member herself, as a stamp or as a viewer carrying no credential, holds neither */
+  for (const viewer of [V("alice"), { stamp: V("alice") }, { stamp: V("alice"), aiCred: null }])
+    assert.deepEqual(preflight({ viewer }).refusals, [], JSON.stringify(viewer));
+  assert.deepEqual(reasons(preflight({ viewer: { stamp: "class:admin" } })), ["OPERATOR_TOKEN_CANNOT_RATIFY_CASE"],
+    "a carried stamp is read as the stamp is");
+});
+
 test("R18 (N385): C-32.13 is chosen by the machine-identity predicate, never by the word \"ai\" in a name", async () => {
   const { preflight, act } = await setup();
   const both = ["MACHINE_CANNOT_RATIFY_CASE", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"];
