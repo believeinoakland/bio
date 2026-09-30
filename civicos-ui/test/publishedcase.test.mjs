@@ -2523,8 +2523,9 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
        (d) WAS BUILT TO MAKE IT FIRE, answered by naming the keys rather than relaxing the arm. A `/5` case document
        carries its disclosed tensions, and `publishedCase()` now answers four more top-level keys read from the signed
        document (publication R10; K499 for `tensions_unread`). This surface reads none of them yet. Each is a SURFACE
-       GAP, not an unconsumed publication: the plane's module tests assert them (test/m/publication, R10). The day this
-       page renders the disclosure, these entries are DELETED (the set is pinned in both directions). */
+       GAP, not an unconsumed publication: publication's module test drives the read
+       (test/m/publication/tensions.test.mjs, R10). The day this page renders the disclosure, these entries are DELETED
+       (the set is pinned in both directions). */
     tensions: "publication R10: each contradiction the edition's owner disclosed (case-authoring R31), read from the "
             + "signed /5 document, never live — both sides with their sources, its state, the explanation, who "
             + "acknowledged it and when, depth 1; null for a document before /5. A SURFACE GAP: the case page does "

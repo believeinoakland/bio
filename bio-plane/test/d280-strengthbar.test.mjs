@@ -775,45 +775,7 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
      site this item did not change is asserted to be STILL UNCHANGED, with the
      reason in the label. A later session that changes one of these has to move
      an assertion and read why it was there. */
-  /* RULED 2026-09-10 — DEC-70, Bob. This assertion does not move and its SUBJECT does not
-     move; what changes is its STANDING. It was pinned as a PROVISIONAL awaiting a ruling; the
-     ruling came back Reading B — SEVERANCE DISCHARGES SUPPORT, NEVER CONNECTION — and the
-     shipped provisional IS that ruling, so nothing in the plane moves. Flipping the words
-     rather than leaving them is the whole enactment: a comment that still says "a ruling is
-     raised rather than taken" tells the next session a question is open when it is closed,
-     which is the stale-instruction class this project keeps paying for.
-     WHY IT IS RULED THIS WAY, in Bob's own reasoning: relative contributions SHIFT under
-     DEC-32's arithmetic — when a strong branch later weakens, a severed corroborating leg's
-     relevance shifts AT THAT MOMENT, and discharging the connection would silently drop the one
-     thread then needed. WHAT THE RULING DOES NOT MOVE: a severed leg still contributes nothing
-     to strength, gates nothing, and counts toward no bar — every other D-280 site stands as
-     fixed. The connection INFORMS, never binds. */
-  t("SITE (c) `reevaluations` STILL FIRES ON A SEVERED LEG AND IS RULED SO — it consults the predicate "
-  + "only to MARK the leg (REC-160), never to drop it — DEC-70 (Bob, 2026-09-10): the "
-  + "obligation attaches to what a finding EVER rested on, because severance discharges SUPPORT "
-  + "and never CONNECTION. A severed leg contributes nothing to strength and counts toward no bar, "
-  + "but it stays CONNECTED, because relative contributions shift — when a strong branch later "
-  + "weakens, the severed corroborating leg is exactly the thread then needed. This pin is no "
-  + "longer a provisional awaiting an answer; it is the ruling's own pin",
-    /* CORRECTED 2026-09-23 by REC-160, NEVER EXEMPTED, AND THE OLD FORM WAS WRONG IN ONE
-       RESPECT: it pinned that `reevaluations` does not CONSULT the predicate at all, which
-       stood in for "does not FILTER on it" only while nothing needed the status. DEC-70's
-       home text (State Rules §5.4, folded by BOB #23) then required the read to MARK which
-       legs are severed and never describe one as resting on its target (REC-160) — which
-       needs the ONE predicate, consulted. What the ruling forbids is DROPPING the leg, so
-       the pin now asserts exactly that: the predicate is consulted to PUBLISH a status and
-       no `continue` rides on it. The behavioural half — a severed dependent STILL receives
-       the obligation — is driven through the op in `reevaluation.test.mjs` block 9. */
-    /* RE-ANCHORED 2026-09-28 (T7; REEVALUATION #1 J2.10, INQUIRY #1): `reevaluations` is reevaluation's and it no
-       longer calls the predicate itself: it reads each dependent leg's `status` from inquiry's `restingOn`, which
-       consults connections' ONE predicate per row, and marks the leg from it. The pin keeps its three halves:
-       the status is consulted to MARK (inquiry's `restingOn` asks the predicate; `reevaluations` reads `restingOn`
-       and derives `legStatus` from it), and no `continue`/`return` rides on it in `reevaluations`. */
-    [/\n  restingOn\(targetId\) \{[\s\S]{0,3000}?status: this\.connections\.edgeSevered\(d\.bundle_id, targetId\) \? "severed" : "confirmed"/.test(INQUIRY_SRC)
-       && /\n  reevaluations\([\s\S]{0,1500}?this\.inquiry\.restingOn\(t\)[\s\S]{0,3000}?const legStatus = mine\.some\(\(l\) => l\.status === "severed"\) \? "severed" : "confirmed"/.test(REEVAL_SRC),
-     /\n  reevaluations\([\s\S]{0,5000}?(?:edgeSevered|#refEdgeSevered)\([^)]*\)\)?\s*\)?\s*(continue|return)/.test(REEVAL_SRC),
-     /\n  reevaluations\([\s\S]{0,6000}?(?:legStatus|l\.status) === "severed"\)?\s*(continue|return)/.test(REEVAL_SRC)],
-    [true, false, false]);
+  /* RETIRED 2026-09-30 (LEGACY-TESTS #13, T15; K457): SITE (c) `reevaluations` still fires on a severed leg and only MARKS it (DEC-70, REC-160) — covered by reevaluation R3, test/m/reevaluation/obligation.test.mjs ("a severed leg is listed, marked and worded"); its source pin had gone red only because N345's R27 read moved `restingOn(t)` past its 1,500-character window. */
   t("SITE (e) `#leadBasisAbsence` IS DELIBERATELY UNCHANGED, AND THE ARGUMENT IS THE PIN: it counts "
   + "basis legs to answer WAS THIS DOCUMENT MADE PART OF A CASE, and a document that was made part "
   + "of a case and then withdrawn from it WAS made part of a case. Reading a severed-only leg as "
