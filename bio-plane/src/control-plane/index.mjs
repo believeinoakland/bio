@@ -1884,7 +1884,11 @@ export function makeFetch(hooks = {}) {
                                 /* N321 (publication R44): the stage read names a project by its own id and answers by
                                    the caller's SIGHT (the absent answer at NONE, the id and name at EXISTENCE), so it
                                    takes the stamp and fails closed without it. */
-                                "projectstage"];
+                                "projectstage",
+                                /* N388 (capture R69, K580): the accounts of a capture answer by the caller's SIGHT of
+                                   the bundle that files it, so an unseen capture reads as one with no account; capture
+                                   fails closed without the stamp. `lateattestations` names no bundle and takes none. */
+                                "captureaccounts"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
