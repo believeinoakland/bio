@@ -21,3 +21,13 @@ Q1 (my best reading, which I am building on now). ocr-worker calls no plane op: 
 **Tests and checks.** `node ocr-worker/test/ocr-worker.test.mjs`: 199 passed, 0 failed (baseline on the tranche: 193 passed, 2 failed, the two R16 arms). Layer tests: none named in the manifest. `node bio-plane/test/system/fleetbundles.test.mjs` (verify after regenerating): 96 pass, 0 fail, no skip. `format`: 77 modules, 72 requirements files; 0 failures. `architecture . ocr-worker`: 20 product files, 20 relative imports; 0 failures. `coverage . ocr-worker`: 21 of 21 live requirement ids named by a test; 0 failures. `ownership . ocr-worker tranche/T18`: 7 files changed; 0 failures.
 
 Size (session_01Si3ffbvMruZpr82kxNsAsb): test runs 4, module lines 1673
+
+## J3 · COMPLETE
+
+**B2 applied.** `tranche/T18` merged (R22, K631). R22 is named by the two arms that test it: `PLANE_OPS` exported from `contract.mjs`, empty and frozen; the refusal's `namespaces` equals the exported frozen `NAMESPACES` (R16's set), the one `member.mjs` re-exports. No code change beyond J2; the bundle is unchanged.
+
+**Tests and checks.** `node ocr-worker/test/ocr-worker.test.mjs`: 199 passed, 0 failed. `fleetbundles`: 96 pass, 0 fail. `format`: 77 modules, 72 requirements files; 0 failures. `architecture . ocr-worker`: 0 failures. `coverage . ocr-worker`: 22 of 22 live requirement ids named by a test; 0 failures. `ownership . ocr-worker tranche/T18`: 7 files changed; 0 failures.
+
+Everything else in J2 stands (entries, nothing deferred, the two findings for control-plane and legacy-tests).
+
+Size (session_01Si3ffbvMruZpr82kxNsAsb): test runs 5, module lines 1673
