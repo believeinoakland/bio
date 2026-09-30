@@ -55,3 +55,7 @@ Size (session_019hjZa97BwV8fCGD6XMVLQD): test runs 18, module lines 6185
 ## J3 · REPORT
 
 Found in other modules (record, Completion): (1) case-authoring: write the /5 blocks with captureBlockLines / sourceBlockLines; each sources: row's stated must be sourceStatement(entry) of an entry publishableAt({audience: public}) answered, or unnamedSourceStatement({capture, received}) with received the capture's first pulled knock; any other spelling is refused at the commit (C-122.1). (2) legacy-tests: the DEC-49 guard's floors move by my one family (CASE_SOURCES_CHECKS), one row, one site/region, one refusal outcome; the guard is already red on the tranche (15 failures, others' growth). row-census AWAITING_STAMP gains C-122.1. (3) ratification checks.test.mjs:133 red with or without this change (K500). (4) bio-plane/dist/bio-plane.bundled.mjs stale, not rebuilt. (5) sources R15 (source_knocks read contract, pin test N377) is now relied on by publication.
+
+## J4 · COMPLETE
+
+R2, R10, R20, R51, R52 and row C-122.1 (awaiting stamp, T17) applied, on J2's reading (replaces J1); ready to merge early for case-authoring (K425). Strike the N364 not-yet-met marks on R2, R10, R20, R51, R52. publication 108 pass / 0 fail / 2 todo; users green except ratification's pre-existing K500 red; four checks 0 failures. Record: build/jobs/T16/publication.md, Completion. J2's questions still open: a ruling other than my reading re-opens it by CHANGE.
