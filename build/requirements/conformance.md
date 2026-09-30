@@ -41,7 +41,7 @@ Terms. An **act** is `{id?, description, actor: {role, body}, at | period, evide
 - **R20** The one answer to one condition: the determination `determinationId` names has been superseded (it is not live, R10). It answers `{ok: false, reason: "DETERMINATION_SUPERSEDED", code: "DETERMINATION_SUPERSEDED", check, translation, determination, superseded_by, detail}`: `superseded_by` the determination that superseded it (null when the caller cannot read it), `detail` one fixed sentence, the same for every caller, and `check` and `translation` its catalogue row's. `extra` adds a caller's own fields and never replaces these. R7's supersession of a determination already superseded answers through it, as does every act of a later module that answers this condition (`consequences` R1, `actions` R8, `escalation` R1), so the code is minted at one site; its one catalogue row is this module's, its `where` naming this function, and escalation's C-116.4 gives way to it. It writes nothing and never throws.
 
 **A comparison started from a contradiction, and the cause** (N345; DEC-76 item 3, DEC-84 item 10)
-- **R21** `comparisonFacts({contradiction, standardSide, viewer})` answers the rows a comparison may start from, as facts: `requires` from the side named `standardSide` (`a` or `b`, named by the member, never defaulted) and `did` from the other, each with its source, content id and date, labelled the record's and never an outcome. It answers the question's resolution when it is concluded. R12's refusal applies. It writes nothing. *(not yet met: N345)*
+- **R21** `comparisonFacts({contradiction, standardSide, viewer})` answers the rows a comparison may start from, as facts: `requires` from the side named `standardSide` (`a` or `b`, named by the member, never defaulted) and `did` from the other, each with its source, content id and date, labelled the record's and never an outcome. It answers the question's resolution when it is concluded. R12's refusal applies. It writes nothing. *(not yet met: N345)* An absent or unnamed `standardSide` is `STANDARD_SIDE_UNNAMED` (C-113.28), asked after R12's `NO_SUCH_CONTRADICTION_INQUIRY` (K503).
 - **R22**
   - **The input.** `determine` takes `cause?: {statement, evidence}`, member-authored.
   - **Refusals.**
@@ -50,11 +50,12 @@ Terms. An **act** is `{id?, description, actor: {role, body}, at | period, evide
     - A determination carrying `recommendation` or `policy` is `RECOMMENDATION_IS_AN_ACTION` (C-113.27): a recommendation is a proposed action, recorded by `actions`, never a policy position held here.
   - **The read.** `determinationRead` (R9) answers the cause, or `cause: null` with the sentence "cause not established". *(not yet met: N345)*
 
-Rows C-113.24–C-113.27 (this module's C-113; N345), with their translations; promotion stamps them:
+Rows C-113.24–C-113.28 (this module's C-113; N345), with their translations; promotion stamps them:
 
 | row | code | translation |
 |---|---|---|
-| C-113.24 | `NO_SUCH_CONTRADICTION_INQUIRY` | "No question you can see answers to that id as one taken up from a contradiction. Nothing was written." |
+| C-113.24 | `NO_SUCH_CONTRADICTION_INQUIRY` | "No question you can see answers to that id as one taken up from a contradiction, so no comparison starts from it. Nothing was written." |
+| C-113.28 | `STANDARD_SIDE_UNNAMED` | "Name which side of the question states what the standard requires, a or b. The plane never chooses it. Nothing was written." |
 | C-113.25 | `CAUSE_NOT_EVIDENCED` | "A cause is recorded on a determination only when evidence you can see shows it. A cause not yet shown stays in the question where it is being worked out, and the determination says the cause is not established. Nothing was written." |
 | C-113.26 | `CAUSE_UNSTATED` | "The cause is stated in a sentence of your own, of at most 2,000 characters. Nothing was written." |
 | C-113.27 | `RECOMMENDATION_IS_AN_ACTION` | "A determination records what was required, what was done, and why, and never what should be done. Propose an action instead. Nothing was written." |
