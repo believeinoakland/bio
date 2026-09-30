@@ -129,6 +129,13 @@ export function world({ group = "test-group", provider = true, now = null, recor
      use it itself: the fixture reaches the one instance through inquiry's (below). */
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
+  /* capture (layer 3), its late attestations and signed accounts (its R68, R69) and its inbox (R72's read), and sources
+     (layer 3) over it, each the real one; nothing here fetches. Created before any module that reaches sources on this storage, so its
+     one instance keeps the test's clock. */
+  const capture = new Capture(st, { record, env: { INSTANCE_NAME: "test", VERSION: "0.0.0" }, governor: null,
+                                    provenance: prov, membership });
+  capture.migrate();
+  const sources = sourcesOf(host, { record, membership, capture, now: () => Date.parse(clock.now) });
   const ex = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
   ex.migrate();
   const readings = {};
@@ -181,12 +188,6 @@ export function world({ group = "test-group", provider = true, now = null, recor
              refusal: caller === r.principal ? null : { ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code: "AI_RUN_NOT_PRINCIPAL" } };
   });
   st.db.exec(CASE_DRAFTS);
-  /* capture (layer 3), its late attestations and signed accounts (its R68, R69) and its inbox (R72's read), and sources
-     (layer 3) over it, each the real one; nothing here fetches. */
-  const capture = new Capture(st, { record, env: { INSTANCE_NAME: "test", VERSION: "0.0.0" }, governor: null,
-                                    provenance: prov, membership });
-  capture.migrate();
-  const sources = sourcesOf(host, { record, membership, capture, now: () => Date.parse(clock.now) });
   const w = {
     st, host, record, membership, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
     bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),

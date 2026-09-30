@@ -209,6 +209,8 @@ test("R37: a capture given to the group states only what sources.publishableAt a
   assert.deepEqual(src, [{ capture: k, stated: unnamedSourceStatement({ capture: k, received: T0 }), basis: null }],
     "the fetched capture has no source row");
   assert.ok(!src.some((x) => x.capture === f));
+  /* what is written is what publication re-derives at the commit (its R51): the edition signs */
+  assert.equal(w.ratify(r).ok, true);
   /* a name disclosed to the group and consented for the public is stated, with its basis; one not consented is not */
   const sourceId = w.sources.sourceOf({ captureSha: k, viewer: V("alice") }).sourceId;
   const name = w.sources.recordDisclosure({ source: sourceId, revealed: { kind: "name", value: "Pat Q. Example" }, how: "self",
@@ -227,6 +229,7 @@ test("R37: a capture given to the group states only what sources.publishableAt a
   assert.equal(entry.length, 1);
   assert.deepEqual(caseDocumentBlocks(text).sources, [{ capture: k, stated: sourceStatement(entry[0]), basis: "consent" }]);
   assert.match(caseDocumentBlocks(text).sources[0].stated, /Pat Q\. Example/);
+  assert.equal(w.ratify(r2).ok, true, "the consented statement holds at the commit");
   for (const leak of [sourceId, name.entry, role.entry, "clerk"]) assert.equal(text.includes(leak), false, `names ${leak}`);
   assert.ok(bodyOf(text).includes("## Sources Of Material Given To The Group"));
 });

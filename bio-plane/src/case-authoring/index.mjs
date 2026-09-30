@@ -1118,11 +1118,15 @@ export class CaseAuthoring {
         try { pa = this.sources.publishableAt({ source: s.sourceId, audience: "public" }); } catch { pa = null; }
         const entries = (pa && pa.ok === true && Array.isArray(pa.entries) ? pa.entries : [])
           .map((e) => ({ stated: sourceStatement(e), basis: e.basis ?? null })).filter((e) => e.stated);
-        if (!entries.length) { rows.push(unnamed(sha, s.source && s.source.receipt)); continue; }
+        /* The unnamed statement is the capture's, from its first pulled knock (`sourceOf`'s own `source`), whichever
+           source says nothing: publication R51 re-derives it that way at the commit. */
+        if (!entries.length) { rows.push(unnamed(sha, of.source && of.source.receipt)); continue; }
         for (const e of entries) rows.push({ capture: sha, stated: e.stated, basis: e.basis });
       }
     }
-    return rows;
+    /* Each statement once: two knockers of the same bytes with nothing publishable are one unnamed statement. */
+    const once = new Set();
+    return rows.filter((r) => { const k = JSON.stringify([r.capture, r.stated, r.basis]); return once.has(k) ? false : once.add(k); });
   }
 
   /** R31's input: `tensionsDisclosed`, `[{candidate, words?}]`, as a map by candidate (a candidate listed twice is
