@@ -112,6 +112,10 @@ const chunked = (deviate = () => null) => member((body) => {
  * d606-perpage-ocr.test.mjs
  * ===================================================================== */
 
+/* R18: every read here names the instance's profiles, as an instance does; with none named a reader reads under the
+   empty view, never a fallback to every held profile. */
+const viewed = () => { const w = fresh(); w.core.setSetting("jurisdiction_profiles", ["oakland-alameda"], "member:admin"); return w; };
+
 test("R5 R7 (d606 §1): the committed OCR member, bound as OCR_WORKER, reads D-460's two-page scan past its first page: both pages transcribed, none unread, the agenda on page 1 read; agenda-p1 still reads as before", { timeout: 120000 }, async () => {
   const mf = new Miniflare({ workers: [ocrWorkerDef()] });
   try {
@@ -148,7 +152,7 @@ test("R5 R7 (d606 §1): the committed OCR member, bound as OCR_WORKER, reads D-4
 
 test("R5 (d606 §2): under the budget every deferred page is asked, one per call in order: six calls, six transcribed, none unread, nothing said about a budget, not a candidate", async () => {
   const ocr = chunked();
-  const rd = await readReal(fresh(), scanPdf(6), { OCR_WORKER: ocr });
+  const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.deepEqual(ocr.calls.map((c) => c.body.pages), [[0, 1, 2, 3, 4, 5], [1], [2], [3], [4], [5]]);
   assert.deepEqual(counts(rd), [6, 0]);
   assert.doesNotMatch(rd.basis, /not asked for/);
@@ -158,7 +162,7 @@ test("R5 (d606 §2): under the budget every deferred page is asked, one per call
 
 test("R5 R10 (d606 §2): over the budget, 24 calls on a 30-page scan: 24 transcribed, 6 unread, the tail named from 1 with whose limit, still a candidate", async () => {
   const ocr = chunked();
-  const rd = await readReal(fresh(), scanPdf(30), { OCR_WORKER: ocr });
+  const rd = await readReal(viewed(), scanPdf(30), { OCR_WORKER: ocr });
   assert.equal(ocr.calls.length, 24);
   assert.equal(ocr.calls[0].body.pages.length, 30);
   assert.deepEqual(counts(rd), [24, 6]);
@@ -168,7 +172,7 @@ test("R5 R10 (d606 §2): over the budget, 24 calls on a 30-page scan: 24 transcr
 
 test("R5 (d606 §3): a call that throws stops the loop: the pages before it kept, it and every page after it unread and named, the read itself not failed", async () => {
   const ocr = chunked((take) => (take === 3 ? new Error("the 33rd invocation") : null));
-  const rd = await readReal(fresh(), scanPdf(6), { OCR_WORKER: ocr });
+  const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.equal(ocr.calls.length, 4, "no call after the throw");
   assert.deepEqual(counts(rd), [3, 3]);
   assert.match(rd.basis, /the call for page 4 failed, so 3 page\(s\) from it on \(pages 4-6\) were not transcribed/);
@@ -180,7 +184,7 @@ test("R5 (d606 §3): a call that throws stops the loop: the pages before it kept
 test("R5 (d606 §3): a refused FIRST page does not end the document: its deferred pages are still asked, each refused page keeps its marker, the others are read, the note counts the declined", async () => {
   const ocr = chunked((take, deferred) => (take === 0 || take === 2
     ? { ok: false, reason: "PAGE_NOT_RENDERABLE", detail: "x", page: take, deferred, notes: [] } : null));
-  const rd = await readReal(fresh(), scanPdf(6), { OCR_WORKER: ocr });
+  const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.equal(ocr.calls.length, 6);
   assert.deepEqual(counts(rd), [4, 2]);
   assert.match(rd.basis, /the OCR member declined 2 page\(s\) it was asked for one at a time \(pages 1, 3\)/);
@@ -190,7 +194,7 @@ test("R5 (d606 §3): a refused FIRST page does not end the document: its deferre
 test("R5 R6 R11 (d606 §3): a page answered under another engine build is not merged and is named; the chain names the one build the merged pages came from", async () => {
   const ocr = chunked((take, deferred) => (take === 4
     ? { ...ENV0, version: "0.12.0", pages: [{ page: 4, regions: [region(4)] }], deferred, notes: [] } : null));
-  const rd = await readReal(fresh(), scanPdf(6), { OCR_WORKER: ocr });
+  const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.deepEqual(counts(rd), [5, 1]);
   assert.match(rd.basis, /1 page\(s\) \(page 5\) were answered under a different engine build/);
   assert.deepEqual(rd.text_source.map((s) => [s.step, s.engine ?? null, s.version ?? null]),
@@ -200,7 +204,7 @@ test("R5 R6 R11 (d606 §3): a page answered under another engine build is not me
 test("R5 (d606 §3): a page answered to the wrong call is dropped and counted, and the page asked stays unread", async () => {
   const ocr = chunked((take, deferred) => (take === 2
     ? { ...ENV0, pages: [{ page: 5, regions: [region(5)] }], deferred, notes: [] } : null));
-  const rd = await readReal(fresh(), scanPdf(6), { OCR_WORKER: ocr });
+  const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.deepEqual(counts(rd), [5, 1]);
   assert.match(rd.basis, /1 page\(s\) the OCR member returned were not the page that call asked for, and were dropped/);
 });
@@ -210,7 +214,7 @@ test("R5 (d606 §3): a page answered to the wrong call is dropped and counted, a
  * ===================================================================== */
 
 test("R5 R11 R12 (textchain): with no OCR member bound a scan is a failed reading named a tier-3 candidate, saying no OCR engine is installed, its chain the layer alone", async () => {
-  const rd = await readReal(fresh(), dctScan(2));
+  const rd = await readReal(viewed(), dctScan(2));
   assert.equal(rd.found, false);
   assert.equal(rd.tier3_candidate, true);
   assert.match(rd.basis, /no OCR engine is installed/);
@@ -218,7 +222,7 @@ test("R5 R11 R12 (textchain): with no OCR member bound a scan is a failed readin
 });
 
 test("R5 R11 (textchain, D-252): a mixed document with no OCR member still reads its text layer, is named a tier-3 candidate saying no OCR engine is installed, and its chain is the layer's, unscoped", async () => {
-  const rd = await readReal(fresh(), MIXED);
+  const rd = await readReal(viewed(), MIXED);
   assert.equal(rd.found, true);
   assert.equal(rd.tier3_candidate, true);
   assert.match(rd.basis, /no OCR engine is installed/);
@@ -226,11 +230,11 @@ test("R5 R11 (textchain, D-252): a mixed document with no OCR member still reads
 });
 
 test("R5 (textchain): a blank page (no font, no image) is not a tier-3 candidate and the OCR member is never asked", async () => {
-  const bare = await readReal(fresh(), BLANK);
+  const bare = await readReal(viewed(), BLANK);
   assert.equal(bare.tier3_candidate, undefined);
   assert.doesNotMatch(bare.basis, /OCR/);
   const ocr = member(() => { throw new Error("never"); });
-  const bound = await readReal(fresh(), BLANK, { OCR_WORKER: ocr });
+  const bound = await readReal(viewed(), BLANK, { OCR_WORKER: ocr });
   assert.equal(ocr.calls.length, 0);
   assert.equal(bound.tier3_candidate, undefined);
 });
@@ -245,7 +249,7 @@ test("R5 R6 (textchain): an answer refused whole leaves the scan unread with its
     [{ ...good, version: "" }, /did not name its engine and version/],
     [{ ...good, measured_by: "" }, /reported no MEASURED fidelity for itself/],
   ]) {
-    const rd = await readReal(fresh(), dctScan(2), { OCR_WORKER: member(() => answer) });
+    const rd = await readReal(viewed(), dctScan(2), { OCR_WORKER: member(() => answer) });
     assert.equal(rd.found, false, String(says));
     assert.match(rd.basis, says);
     assert.notEqual(rd.text_tier, 3);
@@ -257,7 +261,7 @@ test("R5 R6 (textchain): an answer refused whole leaves the scan unread with its
 test("R6 R7 (textchain, D-252): an OCR answer with no anchored page is refused whole: a mixed document's layer text stands, the scanned page is named unread, the chain is [\"layer\"]", async () => {
   const empty = { ok: true, engine: "tesseract", version: "5.3.4-fast", cap: "C", measured_by: "CPDF-9", confidence_floor: 0.6, pages: [] };
   const ocr = member(() => empty);
-  const rd = await readReal(fresh(), MIXED, { OCR_WORKER: ocr });
+  const rd = await readReal(viewed(), MIXED, { OCR_WORKER: ocr });
   assert.deepEqual(ocr.calls.map((c) => c.body.pages), [[1]]);
   assert.equal(rd.found, true);
   assert.match(rd.basis, /the OCR member returned no page this record could anchor/);

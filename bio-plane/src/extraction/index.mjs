@@ -287,12 +287,13 @@ export class Extraction {
     return out;
   }
 
-  /** R18: `jurisdictions.combine` of record-core's `jurisdiction_profiles`; undefined when the instance holds none. */
+  /** R18: `jurisdictions.combine` of record-core's `jurisdiction_profiles`, never a default. An instance that names
+   *  no profile, or profiles that do not combine, reads under the empty view (`combine([])`), which is a view: handed
+   *  none, docprofile's readers would fall back to every held profile (K39), a default R18 forbids. */
   view() {
     const ids = this.core && typeof this.core.getSetting === "function" ? this.core.getSetting("jurisdiction_profiles") : null;
-    if (!Array.isArray(ids)) return undefined;
-    const c = combine(ids);
-    return c && c.ok ? c.view : undefined;
+    const c = Array.isArray(ids) ? combine(ids) : null;
+    return c && c.ok ? c.view : combine([]).view;
   }
 
   async #liveCalibration(q) {
