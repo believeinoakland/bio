@@ -23,7 +23,7 @@
 - `node checks/coverage.mjs … citation`: 11 of 11 live requirement ids named by a test; 0 failures.
 - `node checks/ownership.mjs … citation tranche/T18`: 4 files changed by citation; legacy-store 0 added, 0 removed; legacy-checks 0 added, 0 removed; 0 failures.
 
-Size (session_016yjBBai14h7u1bLpxUiV2n): test runs 8, module lines 1040
+Size (session_016yjBBai14h7u1bLpxUiV2n): test runs 7, module lines 1040
 
 ## J1 · QUESTION
 
