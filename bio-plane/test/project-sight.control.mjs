@@ -256,7 +256,17 @@ const ARMS = {
                /* EXTENDED 2026-09-30 (LEGACY-TESTS #13, T15; N352), never exempted: the one helper is also retrieval's,
                   so the next two arms' subjects go red here by name — what one spelling of the rule costs a control. */
                "MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
-               "still a parity check over what she can see", "MOVE NOTHING: op=selectionlist (status"],
+               "still a parity check over what she can see", "MOVE NOTHING: op=selectionlist (status",
+               /* EXTENDED 2026-09-30 (LEGACY-TESTS #14, T16; N363, N352), MEASURED, never exempted: the queue split
+                  moved D-480's candidate walk (`#queueSharedInquiryCandidates`) to queue-producers, which reads
+                  membership's `hiddenBundles(viewer)` (R88) and keeps no private copy, so the ONE helper this arm
+                  neuters is now the walk's too and §10's seven arms go red here by name — the same seven
+                  d480-citers-ungated declares. "One spelling of the sight rule" holds again for store, retrieval and
+                  the feed. Measured on the armed copy: 240/15. */
+               "A HIDDEN PROJECT'S CITATIONS MOVE NOTHING", "A HIDDEN PROJECT'S CITATIONS TAKE NO SLOT",
+               "the bound is the plane's own published figure", "THE PAGE IS EXACTLY FULL",
+               "A TARGET VERA CANNOT SEE TAKES NO SLOT", "STILL LIVE: a target she CAN see DOES take a slot",
+               "STILL LIVE: crowding vera CAN see does reach her"],
   },
   /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
   "indexcheck-whole-index": {
