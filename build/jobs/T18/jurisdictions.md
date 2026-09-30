@@ -15,3 +15,7 @@
 ## J1 · REPORT
 
 Everything in N-A2 that does not need record-grammar is built and tested (R39 evidence in validate and combine, R28's GRADE_UNKNOWN and EVIDENCE_NO_STANDARD, R29, R36's test profile; 46 tests pass; format, architecture, coverage 39/39 and ownership clean). BASIS_GRADES is a marked stand-in until your CHANGE says record-grammar has merged; then I import it and complete. Generated artifact staled: newgroup/dist/newgroup.bundled.mjs (installer's), because newgroup/src/ui.mjs bundles jurisdictions/index.mjs and its profiles; bio-plane/test/system/newgroup-bundle-fresh.test.mjs (C) fails after this change, passes before. The record-grammar import will add that module to the bundle's inputs too.
+
+## J2 · COMPLETE
+
+N-A2 applied whole: R39 evidence (validate, combine) reading BASIS_GRADES from record-grammar, R28's two codes, R29, R36's test profile; R39's not-yet-met mark is met, for you to strike. 46 module tests pass; every module that uses jurisdictions passes its tests; format, architecture, coverage 39/39 and ownership 0 failures. Still stale, for the layer close: newgroup/dist/newgroup.bundled.mjs (installer's), now also taking record-grammar's index.mjs. Record: build/jobs/T18/jurisdictions.md, Completion.
