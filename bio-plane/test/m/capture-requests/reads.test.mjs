@@ -4,8 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, T0, refused, renderRefusal, sha, cursor } from "./fixture.mjs";
 import { captureRequestAttribution, captureRequestsOps, CAPTURE_REQUEST_TTL_MS, CAPTURE_REQUEST_READ_MAX,
-         CAPTURE_REQUEST_WAIT_BATCH, CAPTURE_SOURCE_CHECKS } from "../../../src/capture-requests/index.mjs";
-import { RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_CHECKS } from "../../../checks/bio-checks.mjs";
+         CAPTURE_REQUEST_WAIT_BATCH, CAPTURE_SOURCE_CHECKS, CAPTURE_REQUEST_CHECKS } from "../../../src/capture-requests/index.mjs";
+import { RENDER_CAPTURE_CHECKS } from "../../../src/acquisition/index.mjs";
 
 /** A scene with a hidden project whose inquiry only `inner` sees (membership R43: a project is seen by its
  *  participants), and requests under both. */

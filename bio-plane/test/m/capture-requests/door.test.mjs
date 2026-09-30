@@ -2,9 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, T0 } from "./fixture.mjs";
-import { CAPTURE_REQUEST_TTL_MS, CAPTURE_FIELDS, captureRequestsOps }
+import { CAPTURE_REQUEST_TTL_MS, CAPTURE_FIELDS, captureRequestsOps, CAPTURE_REQUEST_CHECKS as CATALOGUE }
   from "../../../src/capture-requests/index.mjs";
-import { CAPTURE_REQUEST_CHECKS as CATALOGUE } from "../../../checks/bio-checks.mjs";
 
 const count = (w) => w.row(`SELECT count(*) AS n FROM capture_requests`).n;
 const refusedWith = (a, code) => {
@@ -89,6 +88,19 @@ test("R3 a lead must be another inquiry the viewer can see (C-28.14) and never t
   assert.equal(a.ok, true);
   assert.equal(a.lead_inquiry, "INQ-2");
   assert.equal(w.req(a.request).lead_inquiry, "INQ-2");
+  /* a legacy spelling of a question is a question, as a lead exactly as a target (leadslug's share) */
+  w.bundle("FOCUS-L", "focus");
+  w.bundle("PROBLEM-L", "problem");
+  for (const [lead, address] of [["FOCUS-L", "https://example.org/focus"], ["PROBLEM-L", "https://example.org/problem"]]) {
+    const l = w.ask({ lead, address });
+    assert.deepEqual([l.ok, l.lead_inquiry, w.req(l.request).lead_inquiry], [true, lead, lead], lead);
+  }
+  /* no lead, or an empty one, is stored and answered as null: never a default */
+  for (const [over, address] of [[{}, "https://example.org/none"], [{ lead: "" }, "https://example.org/empty"],
+                                 [{ lead_inquiry: "   " }, "https://example.org/blank"]]) {
+    const n = w.ask({ ...over, address });
+    assert.deepEqual([n.ok, n.lead_inquiry, w.req(n.request).lead_inquiry], [true, null, null], address);
+  }
 });
 
 test("R4 a request carrying any capture field is CAPTURE_REQUEST_CARRIES_A_CAPTURE (C-28.4), naming every field; empty values are not carried", () => {
@@ -205,14 +217,27 @@ test("R9 the door makes no outbound request of any kind and runs no conduct or a
   assert.deepEqual(touched, []);
 });
 
-test("R34 every door refusal carries its catalogue row: the code, its C-28 check and its translation", () => {
-  for (const code of ["CAPTURE_REQUEST_NO_RUN", "CAPTURE_REQUEST_NOT_PUBLIC", "CAPTURE_REQUEST_NOT_AN_INQUIRY",
-                      "CAPTURE_REQUEST_CARRIES_A_CAPTURE", "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
-                      "CAPTURE_REQUEST_LEAD_IS_THE_TARGET", "CAPTURE_REQUEST_RENDER_MALFORMED"])
-    assert.match(CATALOGUE[code].check, /^C-28\.\d+$/);
-  const checks = Object.values(CATALOGUE).map((r) => r.check);
-  assert.equal(checks.includes("C-28.5"), false);
-  assert.equal(checks.includes("C-28.12"), false);
+test("R34 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.18, each row frozen, naming a region of this module and a translation; C-28.5 and C-28.12 stay unallocated and C-28.13 is acquisition's", () => {
+  assert.deepEqual(Object.fromEntries(Object.entries(CATALOGUE).map(([k, r]) => [k, r.check])), {
+    CAPTURE_REQUEST_NO_RUN: "C-28.1", CAPTURE_REQUEST_NOT_PUBLIC: "C-28.2", CAPTURE_REQUEST_NOT_AN_INQUIRY: "C-28.3",
+    CAPTURE_REQUEST_CARRIES_A_CAPTURE: "C-28.4", CAPTURE_CONDUCT_UA_ILLEGIBLE: "C-28.6",
+    CAPTURE_CONDUCT_UA_UNRECORDED: "C-28.7", CAPTURE_CONDUCT_NO_PURPOSE: "C-28.8", CAPTURE_CONDUCT_HOST_HELD: "C-28.9",
+    CAPTURE_CONDUCT_TICK_SPENT: "C-28.10", CAPTURE_ATTRIBUTION_ONE_PRINCIPAL: "C-28.11",
+    CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY: "C-28.14", CAPTURE_REQUEST_LEAD_IS_THE_TARGET: "C-28.15",
+    CAPTURE_REQUEST_RENDER_MALFORMED: "C-28.16", CAPTURE_FETCH_FAILED: "C-28.17", CAPTURE_REQUEST_NOT_RETRYABLE: "C-28.18",
+  });
+  assert.equal(Object.isFrozen(CATALOGUE), true);
+  for (const [code, r] of Object.entries(CATALOGUE)) {
+    assert.equal(Object.isFrozen(r), true, code);
+    assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], code);
+    assert.match(r.where, /^src\/capture-requests\/index\.mjs \S+ > is-capture-[a-z-]+$/, code);
+    assert.ok(typeof r.translation === "string" && r.translation.length > 60, code);
+  }
+  const door = ["CAPTURE_REQUEST_NO_RUN", "CAPTURE_REQUEST_NOT_PUBLIC", "CAPTURE_REQUEST_NOT_AN_INQUIRY",
+                "CAPTURE_REQUEST_CARRIES_A_CAPTURE", "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
+                "CAPTURE_REQUEST_LEAD_IS_THE_TARGET", "CAPTURE_REQUEST_RENDER_MALFORMED"];
+  for (const code of door) assert.match(CATALOGUE[code].where, / captureRequest > is-capture-request$/, code);
+  assert.equal("CAPTURE_NOT_DRAINING" in CATALOGUE, false, "C-28.13 is acquisition's (its R1)");
 });
 
 function st(w) { return w.st.sql; }
