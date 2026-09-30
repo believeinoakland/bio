@@ -1,6 +1,6 @@
 # retrieval (T17)
 
-**Status** · session_01KW1cix2vTmvtiwxv9N28w8 · depth 2 · WORKING · handled B1
+**Status** · session_01KW1cix2vTmvtiwxv9N28w8 · depth 2 · COMPLETE · handled B1
 
 ## J1 · QUESTION
 
