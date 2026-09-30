@@ -1,6 +1,6 @@
 # connections (T18)
 
-**Status** · session_01JLEr53cMreJB9heGcirz1s · depth 2 · RUNNING until 2026-09-30T22:05:59Z (four convert workers and the test/m battery) · handled B2
+**Status** · session_01JLEr53cMreJB9heGcirz1s · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
