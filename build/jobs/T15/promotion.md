@@ -47,3 +47,12 @@ Method: I diffed R50's census lines of this tree (`tranche/T15` after layer 1 me
 - `ownership promotion tranche/T15`: 1 file; legacy-checks and legacy-store 0 lines; 0 failures.
 
 Size (session_01ND9SZzuGAjq4MyXXivuefV): test runs 9, module lines 20
+
+## J1 · COMPLETE
+
+The stamp is applied on job/T15/promotion (2545e421b6, and the record after it).
+- CATALOG_VERSION is 1.45.0: 2 rows arrived (C-118.1 EVIDENCE_NOT_HELD, C-19.2 INBOX_REFUSED) and 4 departed (C-118.1 NOT_FOUND, C-26.20, C-111.16, C-29.12); the promote gate gains queue's step. Each one is named by a record.
+- ROW_CENSUS is {1.45.0, 825, dacbe36f...}. gate.mjs holds no live row list, so C-29.12 appears only in history notes.
+- Promotion tests: 70 pass, 0 fail. format, architecture, coverage (51/51) and ownership: 0 failures.
+- A question of fact: membership (layer 2) has not merged yet. Its entry names no row, so I stamped without it. Send a CHANGE if its merge moves a row.
+- Re-pins for legacy-tests (the row-census 1.45.0 fixture; d470's 1.45.0 row 356/968acdfb..., source b7d4112b...) and the two stale bundles are in my record's Completion.
