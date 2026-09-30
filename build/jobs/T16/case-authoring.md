@@ -57,3 +57,7 @@ No source id or entry id is written: an opaque id in two published cases would l
 - `format`: 72 modules, 0 failures. `architecture case-authoring`: 14 files, 71 imports, 0 failures. `coverage case-authoring`: 37 of 37 live ids, 0 failures. `ownership case-authoring tranche/T16`: 9 files, legacy 0 added / 0 removed, 0 failures.
 
 Size (session_01Q1akymVhSfhfv5f25VnNRw): test runs 21, module lines 3112
+
+## J2 · REPORT
+
+Found in other modules (record, Completion): (1) legacy-tests: derivation-bounds' census gains case-authoring #restingCaptures (unbounded basis and register reads, as #searchedForCase); check-refusal-codes' untranslated may fall by one (UNCLEARED_HUNCH now has C-120.7); the DEC-49 guard's floors grow by four rows, sites and regions; row-census AWAITING_STAMP gains C-120.4–C-120.7. Legacy verdicts are otherwise identical before and after. (2) affordances.mjs:7 and NON_ACTS.ratify (:2143) still call op=publishpreflight deferred (its R29, layer 11). (3) control-plane: route and stamp op=publishpreflight as op=publish; op=publish's body carries selfAttested. (4) reevaluation: raise tells R8's listeners synchronously inside the caller's transaction, so a rolled-back caller (the review copy's dry run) has told them of an edition never made, against R8's 'after the act commits'; the pre-flight avoids it by not raising. (5) bio-plane/dist/bio-plane.bundled.mjs stale, not rebuilt.
