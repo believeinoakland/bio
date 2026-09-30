@@ -23,4 +23,4 @@ N382, my best reading (carrying on with it; N374 and N373's share first, for the
 
 **Tests and checks.** `test/m/tasks/`: 67 tests, 67 pass, 0 fail. `test/m/queue/`: 45, 44 pass, 1 fail (R19, above). `test/m/control-plane/`: 70, 68 pass, 1 fail (pre-existing), 1 todo. format (72 modules; 0 failures), architecture (8 files, 29 imports; 0 failures), coverage (11 of 11; 0 failures), ownership (0 failures, legacy 0/0).
 
-Size (session_01BCChBKLgkZzLgjYXWvQhQh): test runs 5, module lines 1804
+Size (session_01BCChBKLgkZzLgjYXWvQhQh): test runs 5, module lines 1820
