@@ -1,6 +1,6 @@
 # record-core (T17)
 
-**Status** · session_015Z2ibFGipKFWMV5BopFcPH · depth 2 · COMPLETE · handled B1
+**Status** · session_015Z2ibFGipKFWMV5BopFcPH · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
