@@ -768,9 +768,20 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   for (const [hk, hv] of res.headers) profHeaders[hk.toLowerCase()] = hv;
   const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
                                     retrieved });
-  /* R4, CAP-8: Google's hop, built from what this call established; the confirmation is the FORMAT registry's own
-     detection over the bytes just hashed (`profile.format`), so the hop and the profile cannot disagree. */
-  if (driveCapture) driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: res.url || null, detected: profile.format });
+  /* R4, CAP-8: Google's hop, built from what this call established. Its confirmation is the FORMAT registry's own
+     detection over the stored export's BYTES, whole (an OpenDocument package is recognised by its central directory,
+     which lies past the first KiB `profile.format` reads for any export of real size): a detection that fell back to
+     Google's declared type is Google's label, never a confirmation, so the hop then says the bytes were not sniffed. */
+  if (driveCapture) {
+    let detected = null;
+    if (!multipart && total > 0 && total <= ODF_DIGEST_MAX) {
+      try {
+        const o = await ev.get(sha);
+        if (o) { const d = detectFormat(new Uint8Array(await o.arrayBuffer()), null); if (d && d.format !== "undetermined") detected = d; }
+      } catch { detected = null; }
+    }
+    driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: res.url || null, detected });
+  }
 
   /* R20: co-attestation at every capture (K60). */
   const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev });
