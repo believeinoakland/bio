@@ -1,4 +1,4 @@
-/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25, R26). The obligation itself is a
+/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25, R26, R28). The obligation itself is a
  * query and has no table (R18, P-64); these hold only what a member's act or the pushed notice writes. Each is keyed by
  * the bundle it is about and declared to record-core's purge (K23), so a purge of that bundle clears its rows; the sweep's
  * position (R25) is about no bundle and is cleared by a whole-store purge only. */
@@ -81,6 +81,21 @@ CREATE TABLE IF NOT EXISTS reevaluation_case_notices (
   UNIQUE (case_id, part, capture_sha, newer_capture)
 );
 CREATE INDEX IF NOT EXISTS reevaluation_case_notices_case ON reevaluation_case_notices (case_id, state);
+-- R28 (N364, K547): A RUNG MOVE HEARD FROM sources.onDisclosure (its R10), one
+-- row per move whose rung changed: the source, the entry that moved it, the
+-- rung before and after, and the instant this module heard it (the payload
+-- carries none). It holds no value, secret or contact (sources R13). The
+-- source cause is derived on read from these rows; sources' rungOf is never
+-- called on a read. Append-only.
+CREATE TABLE IF NOT EXISTS reevaluation_source_moves (
+  move_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_id    TEXT NOT NULL,
+  entry_id     TEXT,
+  rung_before  TEXT,
+  rung_after   TEXT NOT NULL,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reevaluation_source_moves_source ON reevaluation_source_moves (source_id, at);
 -- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
 -- of the pass part-way (after the last leg a batch read), when that pass began
 -- and when the last complete one began, and the receipt mark: receipt_seq is
@@ -106,6 +121,8 @@ export const REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_records", keys: ["dependent"] },
   /* R26: a case is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
   { name: "reevaluation_case_notices", keys: [] },
+  /* R28: a source is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
+  { name: "reevaluation_source_moves", keys: [] },
   /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
   { name: "reevaluation_sweep", keys: [] },
 ]);

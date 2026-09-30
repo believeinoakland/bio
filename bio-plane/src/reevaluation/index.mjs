@@ -32,13 +32,16 @@
  *   strength       `strengthOf` (its R1–R5).
  *   basisVersions  `appendVersion` (its R28).
  *   contradiction  `tensionsOn` (its R27): which sides a member's resolution named wrong (R27 here).
+ *   sources        `onDisclosure` (its R10): each rung move of a source, heard and kept (R28 here). Its `rungOf` is
+ *                  never called on a read.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *   env            the instance bindings: `REEVAL_NOTICE_DELAY_MS` (R25).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`, `title`,
  * `last_updated`, its R37) and `files` (the D-256 audit's scan, below); inquiry's `inquiry_basis` (`bundle_id`, `ord`,
  * `target_id`, `content_id`, its R40); content's `content` (its R45); provenance's `register` and `captured_locators`
- * (its R48); basis-versions' `inquiry_basis_versions` (`bundle_id`, `name`, `claim`, its R38), R27's claim referents. */
+ * (its R48); basis-versions' `inquiry_basis_versions` (`bundle_id`, `name`, `claim`, its R38), R27's claim referents;
+ * sources' `source_knocks` (`source_id`, `capture_sha`, its R15), R28's captures of a source. */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -49,6 +52,7 @@ import { inquiryOf, legCapped } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { strengthOf, GRADE_RANK } from "../strength/index.mjs";
 import { contradictionOf, TENSIONS_REFERENTS_MAX } from "../contradiction/index.mjs";
+import { sourcesOf } from "../sources/index.mjs";
 import { normalizeType, parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX, sha256HexSync,
          VERSION_NAME_RE, GROUND_LABEL_RE, canonicalExtent } from "../../checks/bio-checks.mjs";
 import { checkReevalPending, REEVAL_SOURCES, VERSION_NOTICE_SUBJECT_CHECKS, REEVALUATION_ACT_CHECKS,
@@ -82,10 +86,10 @@ export const REEVAL_NOTICE_DELAY_MS = 1000;
 /** R15, R16: the longest why or note a member's act stores. */
 export const NOTE_MAX = 500;
 /** R2, R16: the sources a cause may carry. R2's five are facts about the target's own row; `corrected` is R27's, a fact
- *  about a side the leg rests on; §5.4's four cascade events (the catalogue's `REEVAL_SOURCES`) are derived the same
+ *  about a side the leg rests on; `source` is R28's, a rung move of the source behind a capture the leg rests on; §5.4's four cascade events (the catalogue's `REEVAL_SOURCES`) are derived the same
  *  way; `weakened` is R17's. */
 export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred", "reopened", "dismissed", "corrected",
-  ...REEVAL_SOURCES, "weakened"]);
+  "source", ...REEVAL_SOURCES, "weakened"]);
 /** R21, R27: what an answer says when a tensions read could not be made. */
 const CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on "
   + "was named wrong was not read and no corrected cause could be derived; that is not the same as none";
@@ -113,6 +117,12 @@ const asList = (v) => {
 };
 const clamp = (v, dflt, max) => Math.max(1, Math.min(max, Math.floor(Number(v) || dflt)));
 
+/* R15: one ground of an adopted version, as the live document authored it, else asserted by the adopting member now. */
+function groundRow(ground, authored, who, when) {
+  const d = authored || {};
+  return { ground, asserted_by: d.asserted_by ?? who, at: d.at ?? when, ...(d.statement ? { statement: d.statement } : {}) };
+}
+
 /* A cause's `since` against a recorded one: closed when the cause is not later (R16). Two nulls are the same instant;
    an unreadable pair is compared as text, never read as later. */
 function notLater(since, recorded) {
@@ -128,12 +138,12 @@ export class Reevaluation {
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, content = null,
                 connections = null, provenance = null, strength = null, basisVersions = null, contradiction = null,
-                now = null, env = null } = {}) {
+                sources = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions, contradiction };
+    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions, contradiction, sources };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     this.env = env && typeof env === "object" ? env : {};
   }
@@ -145,6 +155,7 @@ export class Reevaluation {
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
+  get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host); }
 
   migrate() { migrateReevaluation(this.sql); }
 
@@ -458,8 +469,10 @@ export class Reevaluation {
           source: "corrected", since: m.at ?? null, ord: l.ord, candidate: m.candidate, kind: m.kind ?? null,
           reason: m.reason ?? null, member: m.member ?? null,
           ...(m.inquiry ? { inquiry: m.inquiry } : {}), ...(m.act ? { act: m.act } : {}), side,
-          ...(m.at ? {} : { since_why: "the side was named wrong by a contradiction inquiry's conclusion, and the "
-                              + "tensions read states no instant for it; none is invented here" }),
+          /* N359: a mark carries its marking act's instant (a member's `one_wrong`, or R36's concluding act); only a
+             conclusion reached by basis-versions' own door has none, and the mark says why. */
+          ...(m.at ? {} : { since_why: `${typeof m.why === "string" && m.why ? `${m.why}; ` : ""}the tensions read states `
+                              + "no instant for this mark, and none is invented here" }),
           detail: `${what} was named wrong by a member's resolution of contradiction ${m.candidate}`
             + `${m.reason ? ` (${m.reason})` : ""}. It still resolves and says it was corrected; nothing resting on it `
             + `was moved, and whether this finding still stands is the members' to decide.`,
@@ -469,6 +482,143 @@ export class Reevaluation {
     for (const list of byPair.values())
       list.sort((a, b) => (a.ord - b.ord) || (a.candidate < b.candidate ? -1 : a.candidate > b.candidate ? 1 : 0));
     return { byPair, read };
+  }
+
+  /* R28: the captures each leg rests on, keyed `<bundle>\0<ord>`: its content row's capture (content R45), or, on a
+     leg naming no passage, each capture its target registers (provenance's `register`, R48). */
+  #legCaptures(legs) {
+    const out = new Map();
+    const cids = [...new Set(legs.map((l) => l.content_id).filter(Boolean))];
+    const byCid = new Map((cids.length
+      ? this.#rows(`SELECT content_id, capture_sha FROM content WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+                   JSON.stringify(cids), cids.length) : []).filter((r) => r.capture_sha).map((r) => [r.content_id, r.capture_sha]));
+    const whole = [...new Set(legs.filter((l) => !l.content_id).map((l) => l.target_id))];
+    const byTarget = new Map();
+    for (const r of whole.length
+      ? this.#rows(`SELECT DISTINCT bundle_id, capture_sha FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
+                     ORDER BY bundle_id, capture_sha`, JSON.stringify(whole)) : []) {
+      if (!byTarget.has(r.bundle_id)) byTarget.set(r.bundle_id, []);
+      byTarget.get(r.bundle_id).push(r.capture_sha);
+    }
+    for (const l of legs)
+      out.set(`${l.bundle_id}\u0000${l.ord}`, l.content_id ? (byCid.has(l.content_id) ? [byCid.get(l.content_id)] : [])
+                                                            : byTarget.get(l.target_id) || []);
+    return out;
+  }
+
+  /* R7's live legs, as a set of `<bundle>\0<ord>` per target (`inquiry.restsOnLive`). */
+  #liveOn(targets) {
+    const live = new Map();
+    for (const t of new Set(targets)) {
+      let r = null;
+      try { r = this.inquiry.restsOnLive(t); } catch { r = null; }
+      live.set(t, new Map((r && Array.isArray(r.all) ? r.all : []).map((x) => [`${x.bundle_id}\u0000${x.ord}`, x])));
+    }
+    return live;
+  }
+
+  /** R28: the `source` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents. A live leg carries one
+   *  per heard rung move of a source standing behind a capture it rests on (`source_knocks`, sources R15), when the move
+   *  came after the dependent's last write (`bundles.last_updated`). Answers `{byPair}` keyed `<dependent>\0<target>`,
+   *  each list latest move first, then ord. Reads only; `rungOf` is never called here. */
+  #sourceMoves(legs, visible) {
+    const byPair = new Map();
+    if (!this.#one(`SELECT 1 AS x FROM reevaluation_source_moves LIMIT 1`)) return { byPair };
+    const rows = legs.filter((l) => l && l.bundle_id && l.target_id && visible(l.bundle_id) !== null);
+    if (!rows.length) return { byPair };
+    const caps = this.#legCaptures(rows);
+    const allCaps = [...new Set([...caps.values()].flat())];
+    if (!allCaps.length) return { byPair };
+    const sourcesOn = new Map();
+    for (const k of this.#rows(`SELECT DISTINCT capture_sha, source_id FROM source_knocks
+                                 WHERE capture_sha IN (SELECT value FROM json_each(?)) ORDER BY capture_sha, source_id`,
+                               JSON.stringify(allCaps))) {
+      if (!sourcesOn.has(k.capture_sha)) sourcesOn.set(k.capture_sha, []);
+      sourcesOn.get(k.capture_sha).push(k.source_id);
+    }
+    const srcs = [...new Set([...sourcesOn.values()].flat())];
+    if (!srcs.length) return { byPair };
+    const movesOf = new Map();
+    for (const m of this.#rows(`SELECT move_id, source_id, entry_id, rung_before, rung_after, at FROM reevaluation_source_moves
+                                 WHERE source_id IN (SELECT value FROM json_each(?)) ORDER BY source_id, move_id`,
+                               JSON.stringify(srcs))) {
+      if (!movesOf.has(m.source_id)) movesOf.set(m.source_id, []);
+      movesOf.get(m.source_id).push(m);
+    }
+    const deps = [...new Set(rows.map((l) => l.bundle_id))];
+    const written = new Map(this.#rows(`SELECT bundle_id, last_updated FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+                                       JSON.stringify(deps), deps.length).map((r) => [r.bundle_id, r.last_updated]));
+    const after = (at, w) => {
+      if (w == null) return true;
+      const o = instantOrder(at, w);
+      return Number.isNaN(o) ? String(at) > String(w) : o > 0;
+    };
+    const hits = [];
+    for (const l of rows)
+      for (const cap of caps.get(`${l.bundle_id}\u0000${l.ord}`) || [])
+        for (const src of sourcesOn.get(cap) || [])
+          for (const m of movesOf.get(src) || [])
+            if (after(m.at, written.get(l.bundle_id))) hits.push({ l, cap, m });
+    if (!hits.length) return { byPair };
+    const live = this.#liveOn(hits.map((h) => h.l.target_id));
+    for (const { l, cap, m } of hits) {
+      if (!live.get(l.target_id).has(`${l.bundle_id}\u0000${l.ord}`)) continue;
+      const pk = `${l.bundle_id}\u0000${l.target_id}`;
+      if (!byPair.has(pk)) byPair.set(pk, []);
+      byPair.get(pk).push({
+        source: "source", since: m.at, ord: l.ord, source_id: m.source_id, entry: m.entry_id ?? null,
+        rung_before: m.rung_before ?? null, rung_after: m.rung_after, capture_sha: cap,
+        detail: `the source of capture ${cap.slice(0, 12)}, which this leg rests on, moved from `
+          + `${m.rung_before ?? "an unstated rung"} to ${m.rung_after} at ${m.at}: what the group knows of who gave it `
+          + `has changed. The leg's grade is unchanged; whether this finding still stands is the members' to decide.`,
+      });
+    }
+    for (const list of byPair.values())
+      list.sort((a, b) => (a.since < b.since ? 1 : a.since > b.since ? -1 : 0) || (a.ord - b.ord));
+    return { byPair };
+  }
+
+  /* R28: the live legs resting on any capture `sourceId` stands behind, each `{bundle_id, ord, role, state, target}`, as
+     the plane reads them (a listener is the plane's own; no viewer is asked). */
+  #legsOnSource(sourceId) {
+    const caps = this.#rows(`SELECT DISTINCT capture_sha FROM source_knocks WHERE source_id = ? ORDER BY capture_sha`, sourceId)
+      .map((r) => r.capture_sha);
+    if (!caps.length) return [];
+    const legs = this.#rows(
+      `SELECT ib.bundle_id AS bundle_id, ib.ord AS ord, ib.target_id AS target_id FROM inquiry_basis ib
+         JOIN content c ON c.content_id = ib.content_id
+        WHERE c.capture_sha IN (SELECT value FROM json_each(?))
+       UNION
+       SELECT ib.bundle_id, ib.ord, ib.target_id FROM inquiry_basis ib JOIN register r ON r.bundle_id = ib.target_id
+        WHERE (ib.content_id IS NULL OR ib.content_id = '') AND r.capture_sha IN (SELECT value FROM json_each(?))
+       ORDER BY bundle_id, ord`, JSON.stringify(caps), JSON.stringify(caps));
+    const live = this.#liveOn(legs.map((l) => l.target_id));
+    const out = [];
+    for (const l of legs) {
+      const x = live.get(l.target_id).get(`${l.bundle_id}\u0000${l.ord}`);
+      if (x) out.push({ bundle_id: l.bundle_id, ord: l.ord, role: x.role ?? null, state: x.state ?? null, target: l.target_id });
+    }
+    return out;
+  }
+
+  /** R28, R8: the listener registered with `sources.onDisclosure` (its R10), called after each disclosure, link or
+   *  consent commits with `{source, entry, rung_before, rung_after}`. A move whose rung changed is kept as one row (R18),
+   *  then told to R8's listeners as `kind: "source"`; one whose rung did not change writes nothing. It carries no value
+   *  (sources R13) and regrades nothing. */
+  sourceMoved({ source = null, entry = null, rung_before = null, rung_after = null } = {}) {
+    const id = str(source);
+    if (!id || typeof rung_after !== "string" || !rung_after || rung_before === rung_after) return { ok: true, moved: false };
+    const before = typeof rung_before === "string" && rung_before ? rung_before : null;
+    const at = this.#when();
+    this.sql.exec(`INSERT INTO reevaluation_source_moves (source_id, entry_id, rung_before, rung_after, at) VALUES (?,?,?,?,?)`,
+                  id, str(entry), before, rung_after, at);
+    let dependents = [];
+    try { dependents = this.#legsOnSource(id); } catch { dependents = []; }
+    const failed = this.#tell({ kind: "source", subject: id, source: "source", since: at,
+      detail: `the source ${id} moved from ${before ?? "an unstated rung"} to ${rung_after}; `
+        + `${dependents.length ? "what rests on its captures is named" : "nothing here rests on its captures"}`,
+      rung_before: before, rung_after, dependents });
+    return { ok: true, moved: true, at, dependents: dependents.length, ...(failed.length ? { listeners_failed: failed } : {}) };
   }
 
   /* ---------------------------------------------------------------- R1–R6, R16, R17: the obligation */
@@ -491,16 +641,16 @@ export class Reevaluation {
        once after the walk (R16), so that read is bounded by the answer. */
     const found = [];
     const place = (o, causes) => found.push({ o, causes });
-    /* R27: the corrected causes, over the legs resting on these targets, read once for the whole answer. */
-    const corr = this.#corrected(
-      this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
-                   WHERE target_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, ord`, JSON.stringify(targets)),
-      viewer, visible);
-    const correctedOn = new Set([...corr.byPair.keys()].map((k) => k.slice(k.indexOf("\u0000") + 1)));
+    /* R27, R28: the corrected and source causes, over the legs resting on these targets, read once for the answer. */
+    const onTargets = this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
+                   WHERE target_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, ord`, JSON.stringify(targets));
+    const corr = this.#corrected(onTargets, viewer, visible);
+    const srcm = this.#sourceMoves(onTargets, visible);
+    const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys()].map((k) => k.slice(k.indexOf("\u0000") + 1)));
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg);
       if (!moved && !correctedOn.has(t)) continue;
-      /* A target whose only cause is R27's is read for its own state and type here, as `#moved` reads a moved one. */
+      /* A target whose only causes are R27's or R28's is read for its own state and type here, as `#moved` reads one. */
       const own = moved ? { state: moved.state, object_type: moved.object_type }
         : this.#one(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=?`, t)
           || { state: null, object_type: null };
@@ -552,7 +702,7 @@ export class Reevaluation {
                                 + `forward on your behalf (DEC-12).` });
           }
         }
-        causes.push(...(corr.byPair.get(`${bundleId}\u0000${t}`) || []));
+        causes.push(...(corr.byPair.get(`${bundleId}\u0000${t}`) || []), ...(srcm.byPair.get(`${bundleId}\u0000${t}`) || []));
         if (!causes.length) continue;
         place({
           bundle_id: bundleId, title: dep?.title ?? null,
@@ -689,7 +839,7 @@ export class Reevaluation {
   /* ---------------------------------------------------------------- R9: the recovery read */
 
   /** R9: now, the causes standing on each named finding (R2's arms and §5.4's, the finding as target, R17's, and R27's
-   *  `corrected` causes the finding carries on its own legs, each naming its target, less those a recorded
+   *  `corrected` and R28's `source` causes the finding carries on its own legs, each naming its target, less those a recorded
    *  re-evaluation closed) and each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see
    *  answer as absent. Writes nothing. */
   changesOf({ findings = null, contents = null, viewer = null } = {}) {
@@ -698,7 +848,7 @@ export class Reevaluation {
     const visible = this.#redactor(viewer);
     const seen = fl.filter((id) => this.#visible(id, viewer));
     const reg = this.#registry(seen);
-    const corr = this.#standingCorrected(seen, viewer, visible);
+    const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true });
     const outF = fl.map((id) => {
       if (!seen.includes(id)) return { id, absent: true };
       const moved = this.#moved(id, visible, reg);
@@ -730,15 +880,19 @@ export class Reevaluation {
              corrections_read: corr.read, ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }) };
   }
 
-  /* R9, R27: the corrected causes the named dependents carry on their own legs, each with its `target`, less those a
-     recorded re-evaluation closed (R16). `byDependent` keyed by dependent, in (target, ord, candidate) order. */
-  #standingCorrected(dependents, viewer, visible) {
+  /* R9, R27 (and R28 `withSource`): the corrected (and source) causes the named dependents carry on their own legs,
+     each with its `target`, less those a recorded re-evaluation closed (R16). `byDependent` keyed by dependent, in
+     (target, ord, candidate) order, each target's source causes after its corrected ones. */
+  #standingCorrected(dependents, viewer, visible, { withSource = false } = {}) {
     const byDependent = new Map();
     if (!dependents.length) return { byDependent, read: true };
-    const corr = this.#corrected(
-      this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
+    const legs = this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
                    WHERE bundle_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, target_id, ord`,
-                 JSON.stringify(dependents)), viewer, visible);
+                 JSON.stringify(dependents));
+    const corr = this.#corrected(legs, viewer, visible);
+    if (withSource)
+      for (const [k, list] of this.#sourceMoves(legs, visible).byPair)
+        corr.byPair.set(k, [...(corr.byPair.get(k) || []), ...list]);
     const pairs = [...corr.byPair.keys()].sort().map((k) => k.split("\u0000"));
     const records = this.#records(pairs);
     for (const [d, t] of pairs) {
@@ -1228,26 +1382,27 @@ export class Reevaluation {
     return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
   }
 
-  /* R15: the notice an act names, seen through its holder; a machine is refused first. */
+  /* R15: the notice an act names, seen through its holder; a machine is refused first. Answers the refusal itself, or
+     `{ok: true, who, r}`, so every outcome carries its verdict (DEC-49; N242). */
   #choiceSubject(machineCode, notice, author, viewer) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-version-choice */
     if (!who || isMachineIdentity(who))
-      return { refusal: this.#refuse(machineCode,
-        who ? `'${who.slice(0, 60)}' is a machine identity.` : "no member is named as the one choosing.") };
+      return this.#refuse(machineCode,
+        who ? `'${who.slice(0, 60)}' is a machine identity.` : "no member is named as the one choosing.");
     const id = String(notice ?? "").trim();
     /* R26: a case notice answers only to the owners it told; any other viewer reads it as absent. */
     const r = !id ? null
       : this.#noticeRows(viewerPredicate(viewer), `notice_id = ?`, [id], `LIMIT 1`, [])[0] ?? null;
     if (!r)
-      return { refusal: this.#refuse("VERSION_NOTICE_NOT_FOUND",
-        `no notice by the id '${id.slice(0, 60)}' is readable here.`, { notice: id || null }) };
+      return this.#refuse("VERSION_NOTICE_NOT_FOUND",
+        `no notice by the id '${id.slice(0, 60)}' is readable here.`, { notice: id || null });
     if (r.state !== "open")
-      return { refusal: this.#refuse("VERSION_NOTICE_CLOSED",
+      return this.#refuse("VERSION_NOTICE_CLOSED",
         `${id} was answered ${r.state === "adopted" ? "by adopting the newer version" : "by keeping the earlier version"} `
-        + `by ${r.closed_by} at ${r.closed_at}.`, { notice: id, state: r.state }) };
+        + `by ${r.closed_by} at ${r.closed_at}.`, { notice: id, state: r.state });
     /* END DEC-49 REGION is-version-choice */
-    return { who, r };
+    return { ok: true, who, r };
   }
 
   /** R15: ADOPT writes a new version of the reference pinned to the newer capture, the old staying readable: for a
@@ -1256,7 +1411,7 @@ export class Reevaluation {
    *  The version and the notice's closing land together or neither does. */
   adoptVersion({ notice = null, author = null, viewer = null } = {}) {
     const s = this.#choiceSubject("MACHINE_CANNOT_ADOPT_VERSION", notice, author, viewer);
-    if (s.refusal) return s.refusal;
+    if (!s.ok) return s;
     const { who, r } = s;
     if (r.kind === "case")
       return this.#refuse("VERSION_ADOPT_UNWRITABLE",
@@ -1312,11 +1467,7 @@ export class Reevaluation {
     let grounds;
     if (labels.size && vlegs.every((l) => typeof l.ground === "string" && l.ground.trim())) {
       const rowsG = Array.isArray(fm.grounds) ? fm.grounds.filter((g) => g && typeof g === "object") : [];
-      grounds = [...labels].map((g) => {
-        const d = rowsG.find((x) => String(x.ground ?? "").trim() === g) || {};
-        return { ground: g, asserted_by: d.asserted_by ?? who, at: d.at ?? when,
-                 ...(d.statement ? { statement: d.statement } : {}) };
-      });
+      grounds = [...labels].map((g) => groundRow(g, rowsG.find((x) => String(x.ground ?? "").trim() === g), who, when));
     } else {
       for (const l of vlegs) l.ground = "all";
       labels.clear(); labels.add("all");
@@ -1367,7 +1518,7 @@ export class Reevaluation {
   /** R15: KEEP records "stays on the earlier version" with who, when, the optional why and both captures. */
   keepVersion({ notice = null, why = null, author = null, viewer = null } = {}) {
     const s = this.#choiceSubject("MACHINE_CANNOT_KEEP_VERSION", notice, author, viewer);
-    if (s.refusal) return s.refusal;
+    if (!s.ok) return s;
     const { who, r } = s;
     const text = why == null ? null : String(why).trim() || null;
     if (text !== null && (text.length > NOTE_MAX || UNSTORABLE.test(text)))
@@ -1483,6 +1634,8 @@ export function reevaluationOf(host, deps) {
     record.registerAuditCheck("reevaluation", (image) => r.audit(image));
     /* R25: a receipt makes the notice sweep pending again (provenance R47). */
     r.provenance.onReceipt("reevaluation", () => r.receiptSeen());
+    /* R28: each rung move of a source is heard and kept (sources R10). */
+    r.sources.onDisclosure("reevaluation", (move) => r.sourceMoved(move));
   }
   return r;
 }
