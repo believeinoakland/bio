@@ -23,6 +23,6 @@
 - `node checks/format.mjs`: 82 modules, 77 requirements files; 0 failures.
 - `node checks/architecture.mjs … observation-log`: 11 product files, 34 relative imports; 0 failures.
 - `node checks/coverage.mjs … observation-log`: 29 of 29 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs … observation-log tranche/T18`: see below (run after commit).
+- `node checks/ownership.mjs … observation-log tranche/T18`: 9 files changed; legacy-store 1 line added, 5 removed (the added line: `store.mjs`:533, `observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) })`); legacy-checks 0; 0 failures.
 
 Size (session_01PsaM5ugjCPER1vjNE5prhR): test runs 9, module lines 3052
