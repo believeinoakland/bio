@@ -6,11 +6,11 @@
 
 **Entries applied** (plan layer 11; B1). (1) N345's rungs (K447, K481): R1 `contradictionresolve` in `ACTS`, weight `single`; R2 `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionresolve`, `resolutiondefect` graded `reasoned`, and the four codes their refusals use added to `JUSTIFICATION_REFUSALS` (`DISMISSAL_REASON_UNKNOWN`, `CLARIFY_NO_EXPLANATION`, `WRONG_SIDE_NO_REASON`, `TAKE_UP_NO_QUESTION`; `NO_CONCLUSION`, `NO_REASON` already held); R3 `contradictionrecommend`, `contradictionoptin`, `contradictionrespond` graded `undetermined`, each with its sentence; R4 `contradiction_coordinates`, `plurality_differences`, `resolution_kinds`, `norm_canons` (inquiry R46) and `dismissal_reasons` (contradiction R31), each the same reference; R7 `MACHINE_REFUSALS.contradictionresolve` → `MACHINE_CANNOT_ACT_ON_CANDIDATE` and `NON_ACTS` rows in R7's words for the three candidate-directed acts, `contradictionrecommend`, `resolutiondefect`, the opt-in and response, and the six reads; R8 `conclude` withheld on a contradiction inquiry, `contradictionresolve` offered there on conclude's state-machine arm (J1 item 2); R14 `contradiction_inquiry` from the front matter (null off an inquiry). (2) MEMBERSHIP #7's report: `projectownerrescue`'s comment names `NOT_AN_ADMIN` (membership `rescueRefusal`). (3) Handovers: `contradictionpairs` names five keys (K490); `comparisonpropose`'s two lines name the contradiction it may start from (conformance R21); `comparisonfacts` is an ungated read named in no registry (J1 item 3); every op T15 added is in the lists as its rung requires (tested against contradiction's op map). Files: `src/affordances.mjs`, `src/affordances/facts.mjs`; tests `catalogue`, `derive`, `plane` amended, `contradiction.test.mjs` new (over contradiction's own fixture: the fact's true arm, the offer agreeing with the act, R19's backing for the five, R20 at `resolve`'s method).
 
-**`not yet met` marks my work meets** (for BOB to strike, K460): R1, R2, R3, R4, R8, R14 (N345); R7 (N345) but for `contradictionmeasures` (J1 item 1: no such op exists; a `test.todo` names it).
+**`not yet met` marks my work meets** (for BOB to strike, K460): R1, R2, R3, R4, R7, R8, R14 (N345).
 
-**Readings taken** (J1, BOB's to confirm): (1) `contradictionmeasures` left out of `NON_ACTS`; (2) `contradictionresolve` has no project arm; (3) `comparisonfacts` in no registry, which holds only if control-plane gives it no `NEEDS` row.
+**Readings taken** (J1), all three confirmed by B2 (K516) and folded into R7 and R8: (1) `contradictionmeasures` in no registry (tested named nowhere); (2) `contradictionresolve` on conclude's state-machine arm only; (3) `comparisonfacts` in no registry. B3, B4: control-plane's rows merged (K519); the tranche merged into this branch before the final runs.
 
-**Deferred:** nothing of mine beyond J1 item 1.
+**Deferred:** nothing.
 
 **Rows `awaiting stamp`:** none (no check row added, moved or retired).
 
@@ -19,12 +19,18 @@
 **Greps.** `civicos-ui/`: no hit for any name added (`contradictionresolve`, `contradiction_inquiry`, the five vocabulary keys, the four justification codes, `MACHINE_CANNOT_ACT_ON_CANDIDATE`) or for "four named keys". Nothing retired.
 
 **Tests and checks run.**
-- `node --test test/m/affordances/`: tests 90, pass 89, fail 0, todo 1 (R7's `contradictionmeasures`).
-- Users of affordances: control-plane 52/0, queue 69/0, skills 33/0, monitoring 65/0 (6 todo).
+- `node --test test/m/affordances/` (after merging `tranche/T15` with control-plane, B4): tests 90, pass 90, fail 0, todo 0.
+- Users of affordances, same tree: control-plane 57/0, queue 69/0, skills 33/0, monitoring 65/0 (6 todo).
+- The seven legacy files, re-run on the same tree. Green now: `test/skillpack.test.mjs`, `test/skillpack.control.mjs`, and `test/affordances.test.mjs`'s four NEEDS/OPS arms. Still red, all legacy-tests' pins:
+  - `test/affordances.test.mjs`: "thirty acts" is 31.
+  - `test/rung-ladder.test.mjs`: NO UNBACKED CLAIM names `contradictionresolve`. Its source scan does not follow `resolve`'s delegation to basis-versions' `NO_CONCLUSION`, which is driven in `test/m/affordances/contradiction.test.mjs`. The other four new `reasoned` ops and BACKWARD/EXACT pass.
+  - `test/d311-roster-affordances.test.mjs`: the FIXTURE GUARD wants a drive for `contradictionresolve`, then throws at :373.
+  - `test/rung-ladder.control.mjs` and `test/d311.control.mjs`: each refuses to run its arms over those red baselines.
+- Earlier run, before the merge:
 - Legacy suites naming affordances (67 files, and each red one again on `tranche/T15`): red on the base as here, 15 (controls and probes that fail by design, and `derivation-bounds`). Newly red: `test/affordances.test.mjs` (5), `test/d311-roster-affordances.test.mjs` (2), `test/d311.control.mjs`, `test/rung-ladder.test.mjs` (4), `test/rung-ladder.control.mjs`, `test/skillpack.test.mjs` (A9), `test/skillpack.control.mjs`; causes in J2.
 - `node checks/format.mjs`: 0 failures. `architecture.mjs affordances`: 8 product files, 0 failures. `coverage.mjs affordances`: 27 of 27 live ids, 0 failures. `ownership.mjs affordances tranche/T15`: 0 failures.
 
-Size (session_01G3caQxYgKYDvauywiLFZHC): test runs 21, module lines 2801
+Size (session_01G3caQxYgKYDvauywiLFZHC): test runs 27, module lines 2801
 
 ## J1 · QUESTION
 

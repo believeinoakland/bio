@@ -480,10 +480,12 @@ test("R7: NON_ACTS gives N345's ops the reasons R7 states — candidate-directed
   assert.ok(!Object.hasOwn(NON_ACTS, "contradictionresolve"), "an ACTS row, never a non-act too");
 });
 
-/* R7 names a read `contradictionmeasures`, but no such op exists: contradiction's R39 and R40 are in-process
-   (`acceptanceRates`, `dismissalMeasure`), in no op map and routed by no control plane, so a `NON_ACTS` row for it would
-   read `stale` (R12). Asked of BOB (J1, item 1). */
-test.todo("R7: NON_ACTS names contradictionmeasures (\"read: …\") — no op of that name exists to gate (J1)");
+/* R7 (K516): contradiction's measures (its R39, R40) are in-process and no op, so no registry names them. */
+test("R7 R12: contradiction's measures are no op and are named in no registry", () => {
+  assert.ok(!Object.keys(contradictionOps({}, new URL("http://x/"), {})).includes("contradictionmeasures"));
+  for (const t of [NON_ACTS, RUNGS, RUNG_ABSENT]) assert.ok(!Object.hasOwn(t, "contradictionmeasures"));
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === "contradictionmeasures"));
+});
 
 test("R3 R27: contradictionrecommend, contradictionoptin and contradictionrespond are graded `undetermined`, each "
    + "with its sentence; no new rung is added for them", () => {
