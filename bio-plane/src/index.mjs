@@ -14,7 +14,8 @@ import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
 /* D-270 / C-61: the argument complaint's row, used AS A VALUE at the one governed site — the code is a STRING
    LITERAL there so the DEC-49 guard's arm C can COMPARE it rather than read past a variable. */
 import { REQUIRED_ARGUMENT_CHECKS, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
-import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "./publication/worker.mjs";
+import { bindPublishedPlane, assembleCaseContainer } from "./publication/worker.mjs";
+import { publicReadDoorOp } from "./public-read/door.mjs";
 /* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
    catalogue reads the legal-edge table from the check catalogue (exported,
    never copied); `needs` and `mode` are composed HERE from NEEDS and
@@ -125,51 +126,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
           method: "POST", body: JSON.stringify(body) }));
         return relayAnswer(r, "enroll");   /* control-plane R24 (D-679) */
       }
-      /* 7a. Anyone, no token, no session. The DO consults only the
-         published projection. */
-      if (op === "verify") {
-        const sha = (url.searchParams.get("sha256") || "").toLowerCase();
-        if (!/^[0-9a-f]{64}$/.test(sha))
-          /* D-278: C-61.1. `error` is written as a KEY here rather than passed into the helper, so the
-             sentence stays readable where `preauth-vocabulary.test.mjs` reads it textually; the key after
-             the spread is the one on the wire, byte-identical to the pre-D-278 answer. */
-          return json({ ok: false, ...requiredArgument("verify", "sha256", "<64 lowercase hex>"),
-            error: "verify requires sha256=<64 lowercase hex>" }, 400);
-        /* REC-52, SITE (a). This read used to be
-             `const out = await r.json(); return json({ ok: true, ...out.result }, 200);`
-           with no look at `out.ok`, so a store failure left the plane as an
-           HTTP 200 SUCCESS carrying nothing — no `published`, no `sha256`, no
-           `matches` — and D-197's public verification surface rendered that as
-           "NOT PUBLISHED … a hash that was never ratified and a hash that never
-           existed are the same answer here, deliberately", a sentence that is
-           true of a real absence and false of a silence. */
-        const out = await doAnswer(stub.fetch(new Request(`http://do/verify?sha256=${sha}`)));
-        if (out.refused) return storeRefusal(out);
-        if (!out.answered) return storeSilent("verify", out.correlation);
-        return json({ ok: true, ...out.result }, 200);
-      }
-      /* Section 8.2. Anyone, no token, no session, and nothing to withhold.
-         Published material is content-addressed and its hashes are public, so
-         any member or any stranger rebuilds and independently verifies the
-         published record without this instance's cooperation, permission, or
-         continued existence. Reads the published projection ONLY, exactly as
-         op=verify above does, which is the whole safety of an open endpoint:
-         working material is never consulted, so there is nothing to leak. */
-      if (op === "publishedmanifest") {
-        /* REC-52, and this one was NOT in the item's scope — the sweep found
-           it. The re-wrap read `result: (await r.json()).result`, so a store
-           failure produced `{ok:true, result:undefined}`, and `JSON.stringify`
-           DROPS an undefined value: `{ok:true}` at HTTP 200 again, by a
-           different route from section 7a's spread. This is the op that fills
-           the published INDEX, so the rendered consequence was the whole
-           record rather than one hash — which is the shape UI-37 measured as
-           the worst of its three. The WRAPPED envelope is preserved on the
-           success path (auth-surface.test.mjs pins that it is not flattened). */
-        const out = await doAnswer(stub.fetch(new Request("http://do/publishedmanifest")));
-        if (out.refused) return storeRefusal(out);
-        if (!out.answered) return storeSilent("publishedmanifest", out.correlation);
-        return json({ ok: true, result: out.result }, 200);
-      }
+      { const pr = await publicReadDoorOp(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (pr) return pr; }
 
       /* ===== REC-163 / IC-174: op=instancegroup — THE PRODUCING GROUP, AND ITS SLUG IS PUBLIC ================
          `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21). WHO ASKS DECIDES WHICH PROJECTION, NEVER
@@ -211,24 +168,6 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         return groupIdentityOp(env, giStore, giReader, { json, storeSilent, storeRefusal, doAnswer });
       }
 
-      /* ============================================================         REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
-         part that matters — nothing withheld, because there is nothing here
-         that was not deliberately published.
-
-         WHY THIS IS SAFE WITHOUT A CREDENTIAL, stated once for both ops: every
-         byte either op can reach comes from the published projection —
-         published_bundles, published_shas, published_edges, and the PUBLISHED
-         bucket, which the ratification act is the only writer of. The fence is
-         structural in two independent layers (a table set and a bucket
-         boundary), so it does not depend on a predicate being remembered. That
-         is the property schema.mjs states those tables exist for, and REC-30's
-         sweep classifies both ops as deliberately ungated for exactly it.
-
-         PINNED TO `bio`, like op=verify and op=publishedmanifest above: an
-         instance has ONE published record. A probe's `scratch` namespace has its
-         own Durable Object and its own PUBLISHED prefix and is therefore NOT
-         readable here, which is deliberate — rehearsing a publication must not
-         put anything on the public surface. */
       /* ---- CASE-4 / DEC-72: op=caseflags ----
          WHICH PUBLISHED CASES ARE CARRYING A STALE PIN, AND WHICH OWNING
          PROJECTS HAVE ACTED. Placed with the public read path above and pinned
@@ -306,7 +245,6 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
       }
 
 
-      if (op === "publishedcase" || op === "publishedbytes") return publishedRoutes({ op, url, env, stub });
       /* 7b. Anyone, no token, no session. Size-capped, rate-limited, and
          confined to the inbox namespace: payload bytes land under
          bio/inbox/<sha256> in the working bucket and nowhere else, the way
