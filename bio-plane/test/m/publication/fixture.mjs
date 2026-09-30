@@ -14,7 +14,7 @@ import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
-import { publicationOf, publicationOps, captureBlockLines, captureAccountsBodyLines, sourceBlockLines } from "../../../src/publication/index.mjs";
+import { publicationOf, publicationOps, captureBlockLines, sourceBlockLines } from "../../../src/publication/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -242,8 +242,8 @@ export function world({ group = "test-group", workerd = false, contradiction = n
  *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given);
  *  `tensions`: the /5 section as case-authoring writes it (case-authoring J1's shape): `{rows, sentences, depth?}`, each
  *  row's and sentence's fields written as given (a string quoted), `unread` ({target, legs}, K499) when given; with it
- *  the format defaults to /5. `blocks`: `{captures?, sources?}`, R20's /5 blocks through `captureBlockLines` (and the
- *  accounts' body section, `captureAccountsBodyLines`) and `sourceBlockLines`; with it, too, the format defaults to /5. */
+ *  the format defaults to /5. `blocks`: `{captures?, sources?}`, R20's /5 blocks through `captureBlockLines` and
+ *  `sourceBlockLines`; with it, too, the format defaults to /5. */
 export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findings = null, strength = [], excluded = [],
                                            attributions = null, citations = [], tensions = null, format = null,
                                            excludes = "Nothing else.", ack = false, blocks = null } = {}) {
@@ -280,8 +280,7 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
   const body = ["", "## Scope", "", "The question.", "",
     ...(ack ? ["**Who else read this statement.** Nobody yet.", ""] : []),
     ...(attributions ? ["## Whose Words These Are", "", "old words", ""] : []),
-    "## What This Excludes", "", excludes, "", "## What Was Searched", "", "Everything.", "",
-    ...(blocks && blocks.captures ? captureAccountsBodyLines(blocks.captures) : [])];
+    "## What This Excludes", "", excludes, "", "## What Was Searched", "", "Everything.", ""];
   return [...fm, ...body].join("\n");
 }
 
