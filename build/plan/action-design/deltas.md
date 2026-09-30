@@ -15,7 +15,8 @@
 - **New R44 (Bob: D5).** An action may state `contact`, a member id, the group's contact for it; set or changed only by a member (`MACHINE_CANNOT_SET_CONTACT`), refused `CONTACT_NOT_A_MEMBER`; shown in the read (R25). It grants nothing.
 - **New R45 (ruling 1; A12).** An action may state `plan` and `option`, set only when created by `action-plans` R18 and never changed (`PLAN_LINK_REWRITTEN`); shown in the read.
 - **New R47 (Bob, 2026-09-30: prepared for opposition).** A received correspondence entry may be marked `pressure: true` with a note of at most 500 characters: a threat, retaliation, discrediting or legal harassment directed at the group or its supporters (Operational Principle 8, Design Requirement 13). Only a member marks it; the read (R25) lists an action's pressure entries apart; `actionsFor` can filter by it. It is evidence like any capture, and may be cited by a new inquiry.
-- **New R48 (Bob, 2026-09-30: the venue sets the standard).** No action, filing or packet is refused for the capture grade of what it rests on. `filings`' drafts and counsel packets show each exhibit's grade, and a profile kind may state its venue's standard of evidence (`jurisdictions`), shown beside the grades.
+- **New R48 (Bob, 2026-09-30: the venue sets the standard).** No action, filing or packet is refused for the capture grade of what it rests on. `filings`' drafts and counsel packets show each exhibit's grade and whether it is co-attested; a profile kind may state its venue's standard of evidence and the grades it accepts (`jurisdictions`), shown beside the grades; an exhibit below that standard, or at a grade the profile marks contestable, is flagged so counsel and members can prepare.
+- **R8, amended (Bob, 2026-09-30: DEC-26 with Requirement 12, option (c)).** An action stating `breach: true` without a live noncompliant determination is still refused `ACTION_NO_DETERMINATION`, unless it states `premise_override: {reason}` (at most 500 characters, R14's text rule), authored by a member (`MACHINE_CANNOT_OVERRIDE` for a machine). The override is stamped with who and when, never edited, shown in the read (R25), and carried as a disclosure on every filing, counsel packet and communication prepared from the action (`filings` R24). An overridden breach action is never attachable to an escalation (which exists only for a determined breach, `escalation` R9).
 - **New R46 (BOB).** `actionCreate({document, viewer, author})` (`op=actioncreate`): the same write as a promotion of an action document, answered with the action's id; and `op=action` (R29's `actionRead`) and `op=actions` (R30's `actionsFor`) routed.
 - **Stale marks (BOB).** Strike "not yet met" from R4–R11, R22, R28–R33, R40, R41: all built and tested (K253, K370).
 
@@ -23,6 +24,8 @@
 
 - **New R22 (BOB: Publication §3 rule 9).** Every filing draft's approved bytes (R6), every counsel-packet export (R11) and every communication draft (R23) carries `publication.inbandQuartet` (its R16): hash, date, author and both threshold floors, in-band.
 - **New R23 (Bob: D2).** `communicationPrepare({action, text, purpose, preparer, viewer})` (`op=communicationprepare`): a draft message, briefing or statement for an action whose addressee is anyone, stored apart and labelled as R5's drafts are (`proposalLabel(preparer, "communication")`); a machine may prepare it from the published case and the plan; no template is needed. `filingApprove` (R6) and `filingRecordSent` (R7) apply to it unchanged: a member approves it, sends it by their own hand, and the sending is recorded with the bytes sent. Nothing is transmitted by the instance (R7). Placement: `filings` is "what the group sends"; this keeps one draft–approve–send path for every outward text (BOB to confirm).
+
+- **New R24 (Bob, 2026-09-30).** A filing draft, counsel packet or communication prepared from an action with a `premise_override` (`actions` R8) carries, on its face and in every export, "Rests on an unestablished premise:" with the override's reason, author and time.
 
 ## 4. `monitoring`, `scheduler`, `queue` (BOB)
 
@@ -38,11 +41,15 @@
 
 - The first profile's templates for its Tier 1–2 kinds, a complete holiday calendar, and measured offices and deadlines (all five offices and the one deadline are `UNMEASURED` today).
 
-## 7. Doctrine, no requirement change (Bob: D6)
+## 7. Deferred (Bob, 2026-09-30)
+
+- Joint action with another group: recorded in `BIO_Action_v0_1.md` §8 and deferred, including the near-term level (partner groups named on each group's own action, one jointly approved text). Trigger: a coalition asks.
+
+## 8. Doctrine, no requirement change (Bob: D6)
 
 - Any group may use CivicOS. A group with a stake in a matter discloses it (Design Requirement 6, already carried by the published case's declared bias and disclosures); its lobbying is limited by ruling 6 (`action-plans` R12). BOB records this with the rulings.
 
-## 8. Record-keeping (BOB)
+## 9. Record-keeping (BOB)
 
 - `build/plan/next.md`: drop N61, N129, N130 (applied in T8, K232).
 - DEC-1 to DEC-67: bring `docs/archive/ledgers/DECISIONS-2026-08.md` back onto `main` from `coord`, since the canon cites them.

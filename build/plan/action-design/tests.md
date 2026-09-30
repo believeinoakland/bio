@@ -44,6 +44,7 @@
 | R7 amended | `completed` lands on a `media`-kind action and on a records request | `resolved` with no resolution still refuses `NO_RESOLUTION` |
 | R44 | a member sets `contact`; the read shows it | a machine refuses; a non-member id refuses `CONTACT_NOT_A_MEMBER` |
 | R45 | an action created by `action-plans` R18 carries `plan` and `option` | changing either on a revision refuses `PLAN_LINK_REWRITTEN` |
+| R8 amended | a member's breach action with no determination but a `premise_override` lands, stamped, shown in the read; a filing prepared from it carries the disclosure | without the override it refuses `ACTION_NO_DETERMINATION`; a machine's override refuses; attaching it to an escalation refuses |
 | R47 | a member marks a received entry `pressure`; the read lists it apart; `actionsFor` filters by it | a machine refuses; a `sent` entry refuses |
 | R48 | a Tier 2 filing resting on a Grade B capture is prepared and shows the grade and the venue's stated standard | not applicable (nothing refuses) |
 | R46 | `op=actioncreate` answers the id and writes what a promote would; `op=action` and `op=actions` answer R29's and R30's reads | a malformed document refuses as promote does |
@@ -53,6 +54,7 @@
 | req | test | negative control |
 | --- | --- | --- |
 | R22 | the approved bytes of a filing draft, a counsel-packet export and a communication draft each carry the in-band quartet, verifiable with `publication`'s R16 | a draft not yet approved carries none |
+| R24 | a draft and a packet prepared from an overridden action carry "Rests on an unestablished premise:" with reason, author and time, in every export | a draft from a determined breach action carries none |
 | R23 | a machine prepares a communication draft for an action addressed to press; it is labelled machine work; a member approves; sending records the bytes | a machine approving refuses (R6); sending before approval refuses `NOT_APPROVED` |
 
 ## Wiring (deltas §4)

@@ -29,7 +29,7 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 ## 4. The rules
 
 1. **Humans decide.** A member takes every act that commits the group: declaring a standard, determining, assessing a consequence, choosing an option, approving, sending, advancing a stage, resolving, closing. The machine may find, compare, compute, propose and draft, always labelled as machine work, and never does any of these acts (DEC-24, DEC-27; Roadmap §10).
-2. **The gate is at the outward act, not the reasoning** (DEC-26). A plan may rest on premises not yet established, shown as hunch debt. An action that asserts a breach may not: it needs a live noncompliant determination. An action that seeks evidence (a records request, a request for comment) may go out while the matter is only suspected.
+2. **The gate is at the outward act, not the reasoning** (DEC-26), **and a member may pass it openly** (Bob, 2026-09-30). A plan may rest on premises not yet established, shown as hunch debt. An action that asserts a breach is refused by default unless it rests on a live noncompliant determination; a member may proceed anyway only by an attributed act with a stated reason, and the action and everything prepared from it carry that disclosure. No tool has the final word (Requirement 12), and a departure from the group's standard is visible to every reader. An action that seeks evidence (a records request, a request for comment) is never gated.
 3. **No significance, no score.** Whether a matter warrants action, and how urgently, is a member's judgment, recorded only in acts and their reasons: a declined option's reason, an escalation stage declined with a reason. No field holds significance, severity, priority or a score.
 4. **Compliance counts.** A compliant determination is recorded with the same care as a noncompliant one, and may start a plan: recognition and success stories are actions.
 5. **Every deadline names its basis.** A regulated date carries the statute, order or commitment it comes from. Two kinds of time never mix: the counterparty's deadlines (legal clocks, on the action) and the group's own intentions (checkpoints, in the plan). A missed checkpoint is never a finding about the government.
@@ -40,7 +40,7 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 10. **The work varies, not the person.** A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which shapes what the assistant suggests and nothing else. No attribute of a person gates, filters or orders anything (DEC-17, DEC-54).
 11. **Jurisdiction lives in data.** Kinds, venues, templates, offices, legal organisations, deadlines and holidays come from a jurisdiction profile; a missing fact reads undetermined, never a default (`build/layers.md`, "No jurisdiction in the product").
 12. **Hope for good faith; prepare for opposition** (Bob, 2026-09-30; Design Requirements 13 and 14). People are presumed to want better outcomes, and a bad actor is identified by evidence, never by role. The system is nonetheless fully prepared for responses that amount to war: stonewalling, retaliation, discrediting, legal harassment. So every plan is checked for a branch that answers a hostile response; pressure against the group or its supporters is recorded as evidence (Operational Principle 8), and can open an inquiry of its own; what counsel or another group needs to carry a matter on (the counsel packet, the published case, the evidence package) survives the group's disruption.
-13. **The venue sets the standard of evidence** (Bob, 2026-09-30). Courts and other venues hold different standards, some short of Grade A; no action is refused for its evidence grade. Every filing and counsel packet shows each exhibit's grade, and where the profile states a venue's standard, shows it beside them. DEC-81's "Grade A stays the ceiling for adversarial or legal use" is read as the highest grade the product offers, not a minimum.
+13. **The venue sets the standard of evidence** (Bob, 2026-09-30). Courts and other venues hold different standards: the project's research found that federal courts have accepted co-attested Grade B evidence since the 2017 amendments to Federal Rule of Evidence 902(13)–(14) (`docs/development/GRADE-A-CAPTURE.md`), and other venues accept other grades, though a lower grade may be contested by the opposition. No action is refused for its evidence grade. Where a filing rests on a grade the opposition could contest, it says so, so counsel and members can prepare (rule 12). Every filing and counsel packet shows each exhibit's grade, and where the profile states a venue's standard, shows it beside them. DEC-81's "Grade A stays the ceiling for adversarial or legal use" is read as the highest grade the product offers, not a minimum.
 
 ## 5. The contradictions, reconciled
 
@@ -61,7 +61,7 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 | 13 | Case Making listed as canon "whole" but calling itself non-authoritative | this document replaces Case Making's action sections as the authority; Case Making stays readable for why | this document, on Bob's approval |
 | 14 | "Layer 3" means Action (Functional Architecture's analysis) and "the UI surfaces" (its 2026-07-27 addition) | the build's numbering governs: Action is layer 9; the Functional Architecture's "Layer 3: Action" is read as the functional layer, the 2026-07-27 addition as an annotation outside canon | `build/layers.md`; `requirements/README.md` ("not the v3 annotations") |
 | 15 | The Roadmap's "war" and "protection network" against "all stakeholders are presumed to want better outcomes" | both hold, for different things: people are treated in good faith and judged by evidence; the system is prepared for opposition (rule 12) | Bob, 2026-09-30; Design Requirement 13 |
-| 16 | DEC-26's refusal of an unestablished outward act against Requirement 12 (no tool gates an action) and Requirement 8 (anyone may initiate Tier 1) | *for Bob* (§7, 2) | |
+| 16 | DEC-26's refusal of an unestablished outward act against Requirement 12 (no tool gates an action) and Requirement 8 (anyone may initiate Tier 1) | refuse by default; a member may override by an attributed act with a reason, disclosed on the action and everything prepared from it; evidence-seeking actions never gated (rule 2) | Bob, 2026-09-30, option (c); the pattern of DEC-81 (3) and DEC-76 |
 
 ## 6. Canon text this changes (on Bob's approval)
 
@@ -76,22 +76,22 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 ## 7. Bob's rulings on this draft (2026-09-30) and what is still his
 
 1. **The stance toward government:** agreed, amended by Bob: the system hopes for good faith and is fully prepared for opposition (rule 12).
-2. **DEC-26 and Requirement 12:** *open*, explained for Bob's decision (§8).
+2. **DEC-26 and Requirement 12:** option (c): refuse by default, a member may override openly (rule 2). Bob, 2026-09-30.
 3. **Evidence grade for legal use:** the venue sets the standard; no grade gate (rule 13).
 4. **Certification by a licensed professional:** deferred until a group needs a licensed name on an output; meanwhile the attribution levels serve (Publication §3 rule 7). Agreed.
 5. **Confidential referral:** an action addressed to the oversight office, prepared as a filing or communication, sent by the member's own hand and recorded; nothing non-public leaves by a system path (DEC-31). Agreed.
-6. **Joint action with another group:** *open*, explained for Bob's decision (§8).
+6. **Joint action with another group:** recorded and deferred (Bob, 2026-09-30). The design for when it is taken up is in §8.
 
-## 8. The two open points
+## 8. The reasoning behind points 2 and 6
 
 **DEC-26 and Requirement 12.** DEC-26 says the system refuses an outward act whose premise is not established; Requirement 12 says no tool may approve, reject or gate any action, and Requirement 8 that anyone may start a Tier 1 action. Built today: `actions` R8 refuses an action that asserts a breach unless it rests on a live noncompliant determination. Nothing stops a member acting outside CivicOS; the question is what the group's record will prepare and hold in its name. Three readings:
 - (a) *Refuse* (as built): the record never holds a breach claim the group has not established. Protects the group's standard; reads Requirement 12 narrowly.
 - (b) *Warn only*: the act proceeds, marked "rests on an unestablished premise" on the action and everything prepared from it. Honours Requirement 12's letter; DEC-26's gate becomes a label.
 - (c) *Refuse by default, a member may override*: a member proceeds by an attributed act with a stated reason, and the action and everything prepared from it carry the disclosure. The pattern Bob chose for a failed co-attestation (DEC-81 (3)) and for contradictions (DEC-76, disclose-not-block, confirmed in DEC-84).
-Recommended: (c). No tool has the final word, the group's standard is the default, and a departure from it is visible to every reader.
+Bob chose (c), 2026-09-30.
 
 **Joint action with another group.** Deferral was recommended for cost, not doctrine: each group runs its own sovereign instance, membership never crosses a group boundary (Membership §2), and a plan or filing shared across two instances would need cross-instance machinery the canon has not designed (how one group's strength composes with another's is unanswered; UX open questions 12 and 29). Most of what a coalition needs can be supported now without that machinery:
 - each group records the joint act as its own action, naming its partner groups (D1's `group` addressee kind, reused as `partners`);
 - the joint text is one communication draft that each group approves in its own instance; its in-band stamp's hash is identical in both, so either record proves the same bytes were sent;
 - each group's plan may carry the same option, and its published case may cite the other's.
-Recommended: support joint action at that level now; defer only a plan or filing shared live across instances until a coalition needs it.
+Bob, 2026-09-30: recorded, and deferred for now, including the near-term level above. Trigger: a coalition of groups asks to act jointly.
