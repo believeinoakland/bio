@@ -26,6 +26,7 @@
   - `test/rung-ladder.test.mjs`: NO UNBACKED CLAIM names `contradictionresolve`. Its source scan does not follow `resolve`'s delegation to basis-versions' `NO_CONCLUSION`, which is driven in `test/m/affordances/contradiction.test.mjs`. The other four new `reasoned` ops and BACKWARD/EXACT pass.
   - `test/d311-roster-affordances.test.mjs`: the FIXTURE GUARD wants a drive for `contradictionresolve`, then throws at :373.
   - `test/rung-ladder.control.mjs` and `test/d311.control.mjs`: each refuses to run its arms over those red baselines.
+- B5 (K520: R27's count 60, no test of mine names 59): `tranche/T15` merged again @ bf5e17f257; `test/m/affordances/` 90/90, coverage 27/27, ownership 0 failures. The users and legacy files above were run on control-plane's merged table (B4), and nothing they read changed since. J2 (4)'s residue is N365, T16.
 - Earlier run, before the merge:
 - Legacy suites naming affordances (67 files, and each red one again on `tranche/T15`): red on the base as here, 15 (controls and probes that fail by design, and `derivation-bounds`). Newly red: `test/affordances.test.mjs` (5), `test/d311-roster-affordances.test.mjs` (2), `test/d311.control.mjs`, `test/rung-ladder.test.mjs` (4), `test/rung-ladder.control.mjs`, `test/skillpack.test.mjs` (A9), `test/skillpack.control.mjs`; causes in J2.
 - `node checks/format.mjs`: 0 failures. `architecture.mjs affordances`: 8 product files, 0 failures. `coverage.mjs affordances`: 27 of 27 live ids, 0 failures. `ownership.mjs affordances tranche/T15`: 0 failures.
