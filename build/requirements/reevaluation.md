@@ -26,7 +26,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 - **R7** `raised` is the live legs resting on the target (`inquiry.restsOnLive`), each `{bundle_id, ord, role, state}`, with every dependent the viewer may not see withheld and not counted, and no titles. The act puts the answer in its own reply as `reevaluation`, whole, R8's `listeners_failed` with it; through `inquiry`'s `onRaised` (its R42) the registration answers `raise`'s answer whole.
 
 **onBasisChanged(listener)** (a registration later modules fill once at start; K31's pattern) **and changesOf({findings?, contents?, viewer}) → `{findings, contents}`**
-- **R8** Each registered listener is called once for every R7 raise and every R14 notice raised, with `{kind, subject, source, since, detail, dependents, affects?}`: `kind: finding` names the moved finding and R7's dependents; `kind: passage` names the content id, both captures and R14's grade and `affects`. It is called after the act commits: a listener that throws never undoes or refuses the act, and the act's reply names it under `reevaluation.listeners_failed`.
+- **R8** Each registered listener is called once for every R7 raise and every R14 notice raised, with `{kind, subject, source, since, detail, dependents, affects?}`: `kind: finding` names the moved finding and R7's dependents; `kind: passage` names the content id, both captures and R14's grade and `affects`; `kind: source` names the source whose rung moved (R28). It is called after the act commits: a listener that throws never undoes or refuses the act, and the act's reply names it under `reevaluation.listeners_failed`.
 - **R9** `changesOf` answers, now, the causes standing on each named finding (R2's arms, the finding as target) and each named passage's `affects` (`content.passageNotice`), so a module that missed an event, or records something after it, can ask. Ids the viewer may not see answer as absent. It writes nothing.
 
 **versionNotice({target | content, limit, viewer})** (`op=versionnotice`; admin, member, probe)
@@ -65,7 +65,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
   It writes nothing.
 
 **A source's rung moved** (N364; DEC-78 item 5(e))
-- **R28** R2 gains the cause arm `source`. A dependent carries it when a live leg rests on a capture whose source's rung (`sources.rungOf`, read as the plane) moved since the leg's basis version, with `detail` the rung before and after and the disclosure's instant. It is raised through R8's listeners from `sources.onDisclosure`, and it never regrades: the leg's grade is unchanged. *(not yet met: N364)*
+- **R28** R2 gains the cause arm `source`. A dependent carries it when a live leg (R7) rests on a capture (its content row's capture, or each capture a whole-document target registers) whose source (`sources`' `source_knocks` read contract, its R15) moved rung after the dependent's last write (`bundles.last_updated`), with `detail` the rung before and after and the move's instant. The moves are those this module heard from `sources.onDisclosure` (R10) and kept, one row per move whose rung changed (K547); `rungOf` is never called on a read. It is told to R8's listeners as `kind: "source"` (`subject` the source id, `since` the move's instant), once per move, after the row is written, carrying no value, and it never regrades: the leg's grade is unchanged. *(not yet met: N364)*
 
 ## Private
 
@@ -86,7 +86,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 
 ### Invariants
 
-- **R18** The obligation is a query: nothing is stored for it, and no read here writes (P-64). The only rows this module writes are R14's notices and their closures, R16's recorded re-evaluations, and R25's pass position (where the pass stands, when the running and the last complete pass began, and a count of receipts seen, so pending survives an eviction; no receipt content is stored; K237).
+- **R18** The obligation is a query: nothing is stored for it, and no read here writes (P-64). The only rows this module writes are R14's notices and their closures, R16's recorded re-evaluations, R28's heard rung moves (source, entry, rung before and after, instant; no value), and R25's pass position (where the pass stands, when the running and the last complete pass began, and a count of receipts seen, so pending survives an eviction; no receipt content is stored; K237).
 - **R19** Nothing here alters a strength, re-points a reference or moves a leg; only a member's act (R15) moves a reference, and it keeps the old one readable (DEC-12, Framework §14.4, §18.1).
 - **R20** Every viewer is given the same record facts; only ids a viewer may not see are withheld or nulled, and a withholding is never counted (REC-30).
 - **R21** Silence is earned: no answer reads "nothing newer" or "unaffected" unless the record read it; what could not be read is undetermined, by name (§18.1).
