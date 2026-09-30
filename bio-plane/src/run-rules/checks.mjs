@@ -507,35 +507,35 @@ export const AI_RUN_PLAN_CHECKS = {
   /* R46: a run in mode `plan` names the plan it works on; it is stored on the run verbatim. */
   AI_RUN_PLAN_REQUIRED: {
     check: 'C-109.2',
-    where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
     translation: 'Nothing was run, because a planning run was asked for without saying which plan it is for. A '
       + 'planning run works on one plan at a time, so it names that plan before it starts.',
   },
   /* R46: only a planning run carries a plan, so no other run's record suggests it worked on one. */
   AI_RUN_PLAN_UNEXPECTED: {
     check: 'C-109.3',
-    where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
     translation: 'Nothing was run, because this run named a plan but is not a planning run. Only a planning run '
       + 'works on a plan, so any other run is started without one and its record does not suggest otherwise.',
   },
   /* R46: a plan belongs to the project that will act on it. */
   AI_RUN_PLAN_NEEDS_PROJECT: {
     check: 'C-109.4',
-    where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
     translation: 'Nothing was run, because a planning run was asked for outside a project. A plan belongs to the '
       + 'project whose members will decide what to do, so a planning run is started from inside that project.',
   },
   /* R46: only a member starts a planning run, for one plan at a time; nothing schedules, wakes or starts one. */
   AI_RUN_PLAN_NEEDS_MEMBER: {
     check: 'C-109.5',
-    where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
     translation: 'Nothing was run, because a planning run is started only by a member of the group, for one plan '
       + 'at a time. Nothing starts one by itself, so a request that has no member behind it cannot start one.',
   },
   /* R46: a planning run declares `fetches` 0 and `subsessions` 0; it works from the record and does not search. */
   AI_RUN_PLAN_NO_SEARCH: {
     check: 'C-109.6',
-    where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
     translation: 'Nothing was run, because this planning run was allowed to fetch new material or to start further '
       + 'searches. A planning run proposes options from what the record already holds and does not go looking, so '
       + 'those parts of its budget are left out.',
@@ -543,7 +543,7 @@ export const AI_RUN_PLAN_CHECKS = {
   /* R47: fail closed. The check a later module registers for the mode is what judges the plan; with none, no run. */
   AI_RUN_MODE_UNCHECKED: {
     check: 'C-109.7',
-    where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-check, reached from op=airunopen',
     translation: 'Nothing was run, because this kind of work has nothing in place yet to check what it is asked to '
       + 'work on. Rather than start without that check, the run is refused until the part that provides it is running.',
   },
