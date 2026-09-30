@@ -1,3 +1,8 @@
 # legacy-tests (T16)
 
 **Status** · session_01Gyqr9BaBzAyqTz88xuiJwd · depth 2 · WORKING · handled B0
+
+## Progress (working notes; the COMPLETE entry supersedes)
+
+- Read whole: `roles/JOB.md`; `build/manifest.md`; B1; the plan (`build/plan/current.md`, "Last"); K457, K420, K427; T15's record. A legacy module: no requirements file, no live ids.
+- Baseline @ 757d033f85 (`tranche/T16` + mail), four at a time, foreground chunks: plane **332 of 371** green; red: affordances 99/2, aicredential 95/2, airuns 54/1, bias 135/1, bounds 226/4, caseproduction 85/1, content-capture-bound 31/2, d125-findingmute (threw: `src/queue/proposals.mjs` gone), current 64/1, d280-strengthbar 32/2, d311-roster-affordances 15/2 (threw), d470-catalog-census 12/2, d484-refusal-translation 31/1, d530-parted-attest (threw: publish refused C-120.4), d543-instant-precision 11/1, d556partedpublish (threw: C-120.4), derivation-bounds 67/10, divide 83/1, fence-e2e (threw: `QUEUE_MACHINE_CHECKS`), gate-reads 178/1, doorbell (threw), identity-claims 31/2, hygiene 1353/4, machine-attest 36/1, machinefences-dec49 82/5, machine-fences 89/3, meaning-bounds 95/4, m025-arm-anchor-witness 30/2, mint-ledger 25/1, monitor-assess 90/1, operator-attest 17/1, plane-envelope 62/1, project-sight 252/2, queue-conditions (threw), refusal-wire 37/5, row-census 6/2, rung-ladder 49/3, severedhomes 13/1, signer-enrolment 31/1. civicos-ui **82 of 90**; red: add-surface, bias-vocabulary 75/6, bound-sweep (3), member-respect 582/2, notifications (threw), publishedcase (1), semantics-harvest 13/3, surface-registry 503/1. The DEC-49 guard: **20** failures.
