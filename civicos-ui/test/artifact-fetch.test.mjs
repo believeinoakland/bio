@@ -18,7 +18,8 @@ const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date
      if(want===S1) return {ok:true, arrayBuffer:async()=>P1.buffer.slice(0)};
      if(want===S2) return {ok:true, arrayBuffer:async()=>P2.buffer.slice(0)};
      if(want==="feedbead") return {ok:true, arrayBuffer:async()=>new TextEncoder().encode("WRONG BYTES").buffer};
-     return {ok:false, json:async()=>({ok:false,reason:"NOT_FOUND"})};
+     /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N347, K458): capture R63's EVIDENCE_NOT_HELD (C-118.1), as the plane now answers. */
+     return {ok:false, status:404, json:async()=>({ok:false,reason:"EVIDENCE_NOT_HELD",code:"EVIDENCE_NOT_HELD",check:"C-118.1"})};
    }
    return {ok:true, json:async()=>({ok:true,result:{}})};
  }};
@@ -41,7 +42,7 @@ if(bad.ok || bad.reason!=="BYTES_DO_NOT_MATCH_THE_RECORD") throw new Error("mism
 
 // a missing capture carries the plane's reason
 const miss = await G.fetchParts([{path:"y",bytes:1,sha:"0".repeat(64)}]);
-if(miss.ok || miss.reason!=="NOT_FOUND") throw new Error("missing part reason wrong: "+JSON.stringify(miss));
+if(miss.ok || miss.reason!=="EVIDENCE_NOT_HELD") throw new Error("missing part reason wrong: "+JSON.stringify(miss));
 
 // kinds
 if(G.artKind("snapshots/x.pdf").view!=="pdf") throw new Error("pdf kind");

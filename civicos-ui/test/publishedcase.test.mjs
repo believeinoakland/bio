@@ -2519,6 +2519,22 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
                     + "registered the plane says the package carries no such block. A SURFACE GAP with no surface "
                     + "requirement yet: no requirement asks this page to render it. The day a reader lands, this "
                     + "entry is DELETED (the set is pinned in both directions).",
+    /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; N345 publication R10, R20: /5) — THIS ARM FIRING EXACTLY AS ARM
+       (d) WAS BUILT TO MAKE IT FIRE, answered by naming the keys rather than relaxing the arm. A `/5` case document
+       carries its disclosed tensions, and `publishedCase()` now answers four more top-level keys read from the signed
+       document (publication R10; K499 for `tensions_unread`). This surface reads none of them yet. Each is a SURFACE
+       GAP, not an unconsumed publication: the plane's module tests assert them (test/m/publication, R10). The day this
+       page renders the disclosure, these entries are DELETED (the set is pinned in both directions). */
+    tensions: "publication R10: each contradiction the edition's owner disclosed (case-authoring R31), read from the "
+            + "signed /5 document, never live — both sides with their sources, its state, the explanation, who "
+            + "acknowledged it and when, depth 1; null for a document before /5. A SURFACE GAP: the case page does "
+            + "not render the disclosure yet.",
+    highlighted: "publication R10 (DEC-85): the count of disclosed tensions resting on a side the publisher could not "
+               + "see, so that a reader's surface can set them apart. A SURFACE GAP: nothing here sets them apart yet.",
+    tensions_unread: "publication R10, K499: the member legs the conflict read could not examine, as the signed document "
+                   + "states them (null where it states none). A SURFACE GAP: not rendered yet.",
+    tensions_detail: "publication R10: the plane's own sentence saying what `tensions` is (or, for a document before /5, "
+                   + "that its format predates the disclosure). A SURFACE GAP: printed nowhere yet.",
     /* `bar` AND `bar_detail` CAME OFF THIS LIST AT CASE-6, 2026-09-10, AND THEY
        ARE THE ITEM. Both were declared here as SURFACE GAPS rather than as
        unconsumed publications — the entries said so, and named CASE-6 as the item

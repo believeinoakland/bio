@@ -77,7 +77,7 @@ const SCHEMA_SRC = readFileSync(join(SRC_DIR, "schema.mjs"), "utf8");
    The corpus widens to `queue`, so S6 still finds five sites and S8 still reads TASK's `taken` beside the store's seed.
    CORRECTED 2026-09-30 (LEGACY-TESTS #13, T15; queue R42, T14 a494f89e3f; N342): TASK's SEED left the store's
    `#MINT_LEDGER_LIVE` too; queue seeds its own prefix (`this.#record.seedMintLedger([["TASK", "tasks", "id"]])`), which
-   S8 reads with review's as a module seed, so S8 holds the store's four PROJ/CASE rows and queue's TASK row against the
+   S8 reads with review's as a module seed, so S8 holds the store's PROJ and CASE rows and queue's TASK row against the
    five sites' `taken`. */
 const MODULES = ["record-core", "membership", "promotion", "case-authoring", "review", "queue"];
 const moduleFiles = (d) => readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => `${d}/${f}`);
