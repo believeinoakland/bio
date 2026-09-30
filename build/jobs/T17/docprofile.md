@@ -40,3 +40,7 @@
 - Layer tests: none named in `build/manifest.md`. No provided service changed.
 
 Size (session_01PzNztiLm9r2dBH43cVX69y): test runs 12, module lines 5274
+
+## J1 · COMPLETE
+
+N390 applied: civicos-ui/test/staff-directory.test.mjs converted to docprofile/test/staff-directory.test.mjs, 11 requirement-named tests (R4, R5, R6, plus R14 R16 R19 R20 R29 R33 R34 R35 where the old assertions belong) over the same real fixtures, copied into docprofile/test/fixtures/. Its app.html arm dropped (P7). No product code changed. Assertion-by-assertion mapping, negative control (the old four arms: 7, 2, 2 and 0 failures, as declared) and checks in the record: docprofile tests 46/46; format, architecture, coverage (35/35), ownership (4 files): 0 failures. Deferred: nothing. For you: a wording mismatch in my own requirements (Uses names directory floors as view facts; R6 and the code keep them in code), and for legacy-tests the old fixtures are still read by nc-fw20, doctype-breadth and nc-fw18. The old suite is not deleted.
