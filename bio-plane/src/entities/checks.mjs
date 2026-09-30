@@ -67,4 +67,12 @@ export const ENTITY_CHECKS = Object.freeze({
     translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. "
       + 'Nothing was written.',
   }),
+  /* R29, R38 (N345, DEC-76 item 3): a defect report names a resolution (capture, reference, subject) the record does
+     not hold. The next of C-91. */
+  NO_SUCH_RESOLUTION: Object.freeze({
+    check: 'C-91.7',
+    where: 'src/entities/index.mjs reportResolutionDefect > is-resolution-held',
+    translation: "The record holds no resolution of that reference to that subject, so there is nothing to report as "
+      + "wrong. Read the capture's resolutions and name one of them. Nothing was written.",
+  }),
 });

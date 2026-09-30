@@ -117,7 +117,8 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
   const got = e.readEntity({ entityId: a });
   assert.equal(got.found, true);
   const ent = got.entity;
-  assert.deepEqual(Object.keys(ent).sort(), ["aliases", "at", "declared_by", "entity_id", "kind", "label", "note", "relations"]);
+  assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "declared_by", "defect_count", "defects",
+    "defects_truncated", "entity_id", "kind", "label", "limit", "note", "relations", "relations_limit", "relations_truncated"]);
   assert.deepEqual(ent.aliases.map((x) => [x.alias, x.canonical]), [["Zed", true], ["alpha", false]]);
   for (const x of ent.aliases) assert.ok(x.declared_by === "member:ann" && x.at);
   assert.deepEqual(ent.relations.map((r) => [r.relation_id, r.direction]), [[r1, "out"], [r2, "in"]]);
@@ -163,7 +164,8 @@ test("R8 an alias or a relation is withdrawn, never erased: NO_REASON, NO_SUCH_A
   const w = e.withdrawAlias({ entityId: a, alias: " clerk ", reason: "a different office", withdrawnBy: "member:ann" });
   assert.equal(w.ok, true);
   assert.equal(w.withdrawn.by, "member:ann");
-  assert.equal(w.resolutions_resting, 1);
+  assert.deepEqual(w.resolutions_resting, [{ capture_sha: sha("w1"), ref: "doc:1", grade: "C" }]);
+  assert.deepEqual([w.resolutions_resting_truncated, w.limit], [false, 500]);
   const before = rows(`SELECT * FROM entity_aliases`).length;
   const again = e.withdrawAlias({ entityId: a, alias: "Clerk", reason: "again", withdrawnBy: "member:bo" });
   assert.deepEqual([again.ok, again.already, again.withdrawn.by], [true, true, "member:ann"]);
@@ -208,7 +210,7 @@ test("R26 a declared relation carries no grade and is never traversed to resolve
   assert.equal(e.strongestByCapture(a).size, 0);
 });
 
-test("R30 purge: the registry is cleared by the whole-store purge only; resolutions are keyed to their bundle", () => {
+test("R30 purge: the registry is cleared by the whole-store purge only; resolutions and resolution_defects are keyed to their bundle", () => {
   const { e, read, record, rows } = world();
   const a = e.createEntity({ kind: "office", label: "Alpha" }).entity_id;
   const b = e.createEntity({ kind: "office", label: "Beta" }).entity_id;
@@ -216,12 +218,16 @@ test("R30 purge: the registry is cleared by the whole-store purge only; resoluti
   read("INFO-1", sha("p1"), [{ kind: "x", key: "1", label: "Alpha" }]);
   read("INFO-2", sha("p2"), [{ kind: "x", key: "2", label: "Alpha" }]);
   e.resolve({ captureSha: sha("p1") }); e.resolve({ captureSha: sha("p2") });
+  e.reportResolutionDefect({ captureSha: sha("p1"), ref: "x:1", entityId: a, reason: "wrong", by: "member:ann" });
+  e.reportResolutionDefect({ captureSha: sha("p2"), ref: "x:2", entityId: a, reason: "wrong", by: "member:ann" });
   const one = record.purge({ bundleId: "INFO-1" });
   assert.equal(one.removed.resolutions, 1);
+  assert.equal(one.removed.resolution_defects, 1, "a defect report is keyed to its bundle");
+  assert.deepEqual(rows(`SELECT capture_sha FROM resolution_defects`).map((r) => r.capture_sha), [sha("p2")]);
   for (const t of ["entities", "entity_aliases", "entity_relations"]) assert.equal(one.removed[t], 0, t);
   assert.equal(rows(`SELECT COUNT(*) AS n FROM entities`)[0].n, 2);
   const all = record.purge({});
-  for (const t of ["resolutions", "entities", "entity_aliases", "entity_relations"]) assert.ok(t in all.removed, t);
-  for (const t of ["resolutions", "entities", "entity_aliases", "entity_relations"])
+  for (const t of ["resolution_defects", "resolutions", "entities", "entity_aliases", "entity_relations"]) assert.ok(t in all.removed, t);
+  for (const t of ["resolution_defects", "resolutions", "entities", "entity_aliases", "entity_relations"])
     assert.equal(rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n, 0, t);
 });
