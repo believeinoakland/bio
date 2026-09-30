@@ -272,7 +272,7 @@ console.log("\n--- A2 · R2, R3, R16: the store is named, and it is exactly `bio
   /* THE COPY AGES, and the check that it has not is control-plane's (layer 11, N402): this layer-1 member cannot
      import the plane, so it EXPORTS its set from the engine-free contract and the plane pins it against its own
      namespace gate. Here: the set on the wire is the exported set, and the member's own module states the same. */
-  t("R16 the set this member refuses with EQUALS the exported, frozen contract set",
+  t("R16 R22 the set this member refuses with EQUALS the exported, frozen contract set",
     [unknown.body.namespaces, [...CONTRACT_NAMESPACES], Object.isFrozen(CONTRACT_NAMESPACES), NAMESPACES === CONTRACT_NAMESPACES],
     [["bio", "scratch"], ["bio", "scratch"], true, true]);
 }
@@ -584,7 +584,7 @@ console.log("\n--- A9 · R15, R21: what the member touched — only CAPTURES.get
   t("R15 and the stand-in bucket's contents are unchanged", [...w.bucket.objects.keys()].length, 2);
   /* The ops this member calls at the plane, declared for control-plane's pin (N402): none. It is called by the plane
      and reads only CAPTURES.get, so its declared set is empty — and frozen, so no caller can add one to it. */
-  t("R21 the member declares the plane ops it calls: none (PLANE_OPS is empty and frozen)",
+  t("R22 R21 the member exports the plane ops it calls from its contract: none (PLANE_OPS is empty and frozen)",
     [Object.keys(PLANE_OPS), Object.isFrozen(PLANE_OPS)], [[], true]);
   void b;
 }
