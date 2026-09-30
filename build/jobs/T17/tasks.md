@@ -44,3 +44,7 @@ Early merge (K425): N374 and N373's share pass, pushed on job/T17/tasks (record:
 **Tests and checks.** `test/m/tasks/`: 68 tests, 68 pass, 0 fail. `test/m/queue/`: 45, 44 pass, 1 fail (R19, above). `test/m/control-plane/`: 70, 67 pass, 2 fail (R22, above; R36/R35, pre-existing), 1 todo. format (72 modules; 0 failures), architecture (8 files, 29 imports; 0 failures), coverage (11 of 11; 0 failures), ownership (4 files, legacy 0/0; 0 failures).
 
 Size (session_01BCChBKLgkZzLgjYXWvQhQh): test runs 9, module lines 1852
+
+## J3 · COMPLETE
+
+N382 applied as B2 (K606): TASK_NOT_YOURS as reason and code, row keyed to match; tasks 68/68; checks 0 failures (record: 'Completion after B3'). Row change awaiting stamp for T18. Report: control-plane's envelope.test.mjs R22 (:511-517) pins tasks' old key NOT_YOURS and now fails: the door test for CONTROL-PLANE #8. Also legacy-tests' task-fence.test.mjs :151/:157/:198 assert NOT_YOURS. queue R19 unchanged (its entry).
