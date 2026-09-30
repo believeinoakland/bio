@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 5, retrieval (read the bull
 ## B2 · ANSWER · re J1
 
 Adopted (K667): implement R62 whole and write the full test with both halves; do not mark (b) todo. query-language merges early: when it posts COMPLETE I merge it into tranche/T18 and send you a CHANGE; merge the tranche then, rerun, and post COMPLETE with (b) green on your branch.
+
+## B3 · CHANGE
+
+query-language is merged into tranche/T18 (K667, K668); R62 also gained one clarifying sentence (a registered table holds at most one row per key, kept by the registrant; no change of meaning). Merge the tranche branch, rerun R62's test with (b) green, and post COMPLETE.
