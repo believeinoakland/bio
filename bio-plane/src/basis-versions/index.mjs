@@ -672,7 +672,9 @@ export class BasisVersions {
        Asked after the reading is located, so a mistyped name is told first. */
     if (to !== null) {
       const member = this.promotion.fact("caseMember", target);
-      if (!member.ok) return { ...member, act, target, version: vname };
+      /* a refusal relayed from another module states its verdict and code here, never only through the spread (N411) */
+      if (!member.ok)
+        return { ...member, ok: false, reason: member.reason, code: member.code, act, target, version: vname };
       if (member.value)
         return refuse("PUBLISHED_CANNOT_MOVE_VERSION",
           `'${vname}' belongs to a question that is PUBLISHED, and a published case froze this finding `
@@ -798,7 +800,7 @@ export class BasisVersions {
     /* R15 (REC-166): make-current writes only the project; the question is not promoted at all. */
     if (act === "current") {
       const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when, why);
-      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
+      if (!p.ok) return { ...p, ok: false, reason: p.reason, act, target, version: vname, project: projectId };
       return receipt;
     }
 
@@ -825,7 +827,7 @@ export class BasisVersions {
       meta: { object_type: fm.object_type ?? b.object_type, title: fm.title, current_state: b.current_state,
               prior_state: fm.prior_state ?? null, created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null } });
-    if (!promoted.ok) return { ...promoted, act, target, version: vname };
+    if (!promoted.ok) return { ...promoted, ok: false, reason: promoted.reason, act, target, version: vname };
     return receipt;
   }
 
