@@ -5,9 +5,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
-import { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
-         CAPTURE_FIELDS, SOURCE_FIELDS, SOURCE_BASES, BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE,
-         NOT_RECORDED_STATED, CASE_SOURCES_CHECKS } from "../../../src/publication/index.mjs";
+import { caseDocumentBlocks, captureBlockLines, captureAccountsBodyLines, sourceBlockLines, sourceStatement,
+         unnamedSourceStatement, CAPTURE_FIELDS, CAPTURE_ACCOUNT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
+         CAPTURE_ACCOUNTS_HEAD, BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED,
+         CASE_SOURCES_CHECKS } from "../../../src/publication/index.mjs";
 import { claimSentence } from "../../../src/sources/index.mjs";
 
 const F = "INQ-2026-0001";
@@ -51,15 +52,21 @@ function statedRows(w, capture, source) {
 const roster = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" }));
 const captureRow = (over = {}) => ({ capture: CAP, member: F, grade: "B", grade_basis: "a knock held under its digest",
   co_attested: false, timestamp_at: null, co_archive: null, late: false, self_attested_only: true,
-  acknowledgement: { reason: "the knocker's bytes, no public copy", acknowledged_by: V("olive"), at: NOW,
-                     sentence: "Without co-attestation an outsider can verify the copy has not changed since capture." },
-  accounts: [{ by: V("olive"), at: NOW, text: "I pulled it from the doorbell.\nThat evening.", signature: SIGNATURE }],
+  acknowledgement: { reason: "the knocker's bytes, no public copy", acknowledged_by: V("olive"), at: NOW },
+  sentence: "Without co-attestation an outsider can verify the copy has not changed since capture.",
+  accounts: [{ by: V("olive"), at: NOW, key_b64: "AAAAKEY", text: "I pulled it from the doorbell.\nThat evening.",
+               signature: SIGNATURE },
+             { by: V("olive"), at: NOW, key_b64: "AAAAKEY", text: "A second word, with ``` backticks\n## not a heading",
+               signature: SIGNATURE.replace("AAAA", "BBBB") }],
   ...over });
 const tick = (w, iso) => { w.clock.now = iso; };
 
-test("R20 the /5 blocks' grammar: written by the line builders, read back exactly by caseDocumentBlocks, the accounts byte for byte", () => {
+test("R20 the /5 blocks' grammar (K552): flat rows written by the line builders, read back by caseDocumentBlocks; each account verbatim in the body, matched by its hashes", () => {
   assert.deepEqual([...CAPTURE_FIELDS], ["capture", "member", "grade", "grade_basis", "co_attested", "timestamp_at",
-                                         "co_archive", "late", "self_attested_only"]);
+    "co_archive", "late", "self_attested_only", "acknowledgement_reason", "acknowledged_by", "acknowledged_at", "accounts",
+    "sentence"]);
+  assert.deepEqual([...CAPTURE_ACCOUNT_FIELDS], ["capture", "seq", "by", "at", "key_b64", "text", "text_sha256",
+                                                 "signature_sha256"]);
   assert.deepEqual([...SOURCE_FIELDS], ["capture", "stated", "basis"]);
   assert.deepEqual([...SOURCE_BASES], ["consent", "public_elsewhere"]);
   const plain = { capture: CAP2, member: F, grade: "A", grade_basis: 'fetched, "quoted"\nbasis', co_attested: true,
@@ -70,25 +77,40 @@ test("R20 the /5 blocks' grammar: written by the line builders, read back exactl
                                               blocks: { captures: [captureRow(), plain], sources } });
   const b = caseDocumentBlocks(text);
   assert.equal(b.detail, null);
-  const { acknowledgement, accounts, ...first } = b.captures[0];
-  const { acknowledgement: ack0, accounts: acc0, ...want } = captureRow();
-  assert.deepEqual(first, want);
-  assert.deepEqual(acknowledgement, ack0);
-  assert.deepEqual(accounts, acc0, "an account's text and signature are the exact bytes, so the signature still verifies");
-  assert.deepEqual(b.captures[1], { ...plain, grade_basis: "fetched, 'quoted' basis", accounts: [] },
-                   "a value is written on one line, quotes made apostrophes; an unacknowledged capture has no acknowledgement");
+  const row = captureRow();
+  assert.deepEqual(b.captures, [
+    { capture: CAP, member: F, grade: "B", grade_basis: row.grade_basis, co_attested: false, timestamp_at: null,
+      co_archive: null, late: false, self_attested_only: true, acknowledgement_reason: row.acknowledgement.reason,
+      acknowledged_by: V("olive"), acknowledged_at: NOW, accounts: 2, sentence: row.sentence },
+    { ...plain, grade_basis: "fetched, 'quoted' basis", acknowledgement_reason: null, acknowledged_by: null,
+      acknowledged_at: null, accounts: 0, sentence: null }],
+    "flat rows; a value on one line, quotes made apostrophes; the acknowledgement and sentence null unless self-attested");
+  assert.deepEqual(b.capture_accounts, row.accounts.map((a, i) => ({
+    capture: CAP, seq: i + 1, by: a.by, at: a.at, key_b64: a.key_b64, text: a.text, text_sha256: sha(a.text),
+    signature_sha256: sha(a.signature), signature: a.signature, verbatim: true })),
+    "each account's text and armored signature are the exact bytes, from the body, matched by the row's hashes");
+  assert.ok(text.includes(`${CAPTURE_ACCOUNTS_HEAD}\n`) && text.includes(SIGNATURE), "stated verbatim in the body");
+  assert.match(text, /text: "I pulled it from the doorbell\. That evening\."/, "and on one line in the row");
   assert.deepEqual(b.sources, sources);
-  /* the builders write every field of a row, and empty blocks as empty lists */
+  /* a body copy that is not the one signed is not answered as it */
+  const tampered = caseDocumentBlocks(text.replace("doorbell.\nThat evening.", "doorbell.\nThat morning."));
+  assert.deepEqual([tampered.capture_accounts[0].verbatim, tampered.capture_accounts[0].signature,
+                    tampered.capture_accounts[0].text], [false, null, "I pulled it from the doorbell. That evening."]);
+  assert.equal(tampered.capture_accounts[1].verbatim, true, "the other account is untouched");
+  /* the builders write empty blocks as empty lists, and no body section without an account */
   assert.deepEqual(captureBlockLines([]), ["captures: []", "capture_accounts: []"]);
+  assert.deepEqual(captureAccountsBodyLines([plain]), []);
   assert.deepEqual(sourceBlockLines([]), ["sources: []"]);
   const empty = caseDocumentBlocks(caseDoc("C", 1, { blocks: { captures: [], sources: [] } }));
-  assert.deepEqual(empty, { captures: [], sources: [], detail: null });
-  /* before /5: both null, said; a /5 without a block: that block null, said; never throws */
+  assert.deepEqual(empty, { captures: [], capture_accounts: [], sources: [], detail: null });
+  /* before /5: all null, said; a /5 without a block: that block null, said; never throws */
   assert.deepEqual(caseDocumentBlocks(caseDoc("C", 1, { blocks: null })),
-                   { captures: null, sources: null, detail: BLOCKS_PREDATE_SENTENCE });
+                   { captures: null, capture_accounts: null, sources: null, detail: BLOCKS_PREDATE_SENTENCE });
   const noSources = caseDocumentBlocks(caseDoc("C", 1, { blocks: { captures: [] } }));
-  assert.deepEqual([noSources.captures, noSources.sources, noSources.detail], [[], null, BLOCK_UNREADABLE_SENTENCE]);
-  for (const odd of [null, undefined, 7, "", "---\n", "not front matter", {}, "---\nformat: bio-case-document/5\n---\n"])
+  assert.deepEqual([noSources.captures, noSources.capture_accounts, noSources.sources, noSources.detail],
+                   [[], [], null, BLOCK_UNREADABLE_SENTENCE]);
+  for (const odd of [null, undefined, 7, "", "---\n", "not front matter", {}, "---\nformat: bio-case-document/5\n---\n",
+                     `---\nformat: bio-case-document/5\ncapture_accounts:\n  - capture: x\n    seq: 1\n---\n${CAPTURE_ACCOUNTS_HEAD}\n### Account 1 of x\n\`\`\`text\nunclosed`])
     assert.doesNotThrow(() => caseDocumentBlocks(odd));
 });
 
@@ -105,7 +127,7 @@ test("R20 sourceStatement is the one spelling of an entry publishableAt answers,
   assert.equal(unnamedSourceStatement({ capture: CAP, received: NOW }), `an unnamed source; received as ${CAP} at ${NOW}`);
 });
 
-test("R2 caseDocumentFacts answers a /5 document's captures and sources blocks, fenced as R1; an older one states them null", () => {
+test("R2 caseDocumentFacts answers a /5 document's captures, capture_accounts and sources blocks, fenced as R1; an older one states them null", () => {
   const { w, proj, roles, source } = base();
   disclose(w, source);
   w.prepare("CASE-2026-0001", 1, { project: proj, roles,
@@ -113,18 +135,19 @@ test("R2 caseDocumentFacts answers a /5 document's captures and sources blocks, 
   const f = w.p.caseDocumentFacts("CASE-2026-0001", 1, V("olive"));
   assert.equal(f.ok, true);
   assert.deepEqual(f.captures, caseDocumentBlocks(f.doc.text).captures);
+  assert.deepEqual(f.capture_accounts, caseDocumentBlocks(f.doc.text).capture_accounts);
   assert.deepEqual(f.sources, [{ capture: CAP, stated: "attribute employer: the water board", basis: "consent" }]);
   assert.equal(f.blocks_detail, null);
-  assert.equal(f.captures[0].accounts[0].signature, SIGNATURE);
+  assert.deepEqual([f.captures[0].accounts, f.capture_accounts[0].signature, f.capture_accounts[0].verbatim], [2, SIGNATURE, true]);
   /* fenced: an outsider reads exactly what a store with no document answers */
   assert.deepEqual(w.p.caseDocumentFacts("CASE-2026-0001", 1, V("bo")), world().p.caseDocumentFacts("CASE-2026-0001", 1, V("bo")));
   /* a /4 document states neither */
   w.prepare("CASE-2026-0002", 1, { project: proj, roles });
   const old = w.p.caseDocumentFacts("CASE-2026-0002", 1, V("olive"));
-  assert.deepEqual([old.captures, old.sources, old.blocks_detail], [null, null, BLOCKS_PREDATE_SENTENCE]);
+  assert.deepEqual([old.captures, old.capture_accounts, old.sources, old.blocks_detail], [null, null, null, BLOCKS_PREDATE_SENTENCE]);
 });
 
-test("R10 publishedCase carries a /5 document's captures and sources blocks as signed; an older document and a loose bundle answer null with a sentence", () => {
+test("R10 publishedCase carries a /5 document's captures, capture_accounts and sources blocks as signed; an older document and a loose bundle answer null with a sentence", () => {
   const { w, proj, roles, source } = base();
   disclose(w, source);
   const rows = statedRows(w, CAP, source);
@@ -135,7 +158,9 @@ test("R10 publishedCase carries a /5 document's captures and sources blocks as s
   assert.equal(c.ok, true);
   assert.deepEqual(c.sources, rows);
   assert.deepEqual(c.captures, caseDocumentBlocks(c.document.text).captures);
-  assert.equal(c.captures[0].acknowledgement.reason, "the knocker's bytes, no public copy");
+  assert.equal(c.captures[0].acknowledgement_reason, "the knocker's bytes, no public copy");
+  assert.deepEqual(c.capture_accounts.map((a) => [a.seq, a.signature, a.verbatim]),
+                   [[1, SIGNATURE, true], [2, SIGNATURE.replace("AAAA", "BBBB"), true]]);
   assert.match(c.blocks_detail, /as it could be published when the case was signed/);
   assert.deepEqual(w.op("publishedcase", { id: "CASE-2026-0001" }).sources, rows, "op=publishedcase is the same read");
   /* a /4 case */
@@ -146,12 +171,13 @@ test("R10 publishedCase carries a /5 document's captures and sources blocks as s
   w.signCase("CASE-2026-0002", 1, { project: proj, roster: roster(roles2) });
   w.signFinding("INQ-2026-0002");
   const old = w.p.publishedCase({ id: "CASE-2026-0002" });
-  assert.deepEqual([old.captures, old.sources, old.blocks_detail], [null, null, BLOCKS_PREDATE_SENTENCE]);
+  assert.deepEqual([old.captures, old.capture_accounts, old.sources, old.blocks_detail],
+                   [null, null, null, BLOCKS_PREDATE_SENTENCE]);
   /* a ratified bundle in no case */
   w.inquiry("INQ-2026-0003");
   w.signFinding("INQ-2026-0003");
   const loose = w.p.publishedCase({ id: "INQ-2026-0003" });
-  assert.deepEqual([loose.captures, loose.sources], [null, null]);
+  assert.deepEqual([loose.captures, loose.capture_accounts, loose.sources], [null, null, null]);
   assert.match(loose.blocks_detail, /not a case/);
 });
 

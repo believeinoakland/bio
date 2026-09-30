@@ -64,9 +64,9 @@ export { caseTensionsOf, TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSIO
          TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE } from "./tensions.mjs";
 export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, caseDocumentPath } from "./schema.mjs";
 export { CASE_SOURCES_CHECKS } from "./checks.mjs";
-export { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
-         CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES, BLOCKS_PREDATE_SENTENCE,
-         BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED } from "./blocks.mjs";
+export { caseDocumentBlocks, captureBlockLines, captureAccountsBodyLines, sourceBlockLines, sourceStatement,
+         unnamedSourceStatement, CAPTURE_FIELDS, CAPTURE_ACCOUNT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
+         CAPTURE_ACCOUNTS_HEAD, BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED } from "./blocks.mjs";
 
 /* CASE-4 / DEC-72 / REC-60: the page size for `op=caseflags` (R6). A CHOSEN CONSTANT and never a finding — the flag
    table grows with every revision of every published member and has no natural ceiling, so the read publishes `limit`
@@ -1961,10 +1961,11 @@ export class Publication {
          cannot produce is ABSENT from the map, which leaves those two arms unasked for it rather than
          asked of a basis nobody pinned — `checkCaseDocument` reads absence as absence. */
       memberBasis: this.#pinnedMemberBasis(doc.text),
-      /* R2, R20 (N364): a /5 document's `captures:` and `sources:` blocks, as its bytes state them; null (with
-         `blocks_detail`) for an older format or a block it does not carry. */
+      /* R2, R20 (N364; K552): a /5 document's `captures:`, `capture_accounts:` and `sources:` blocks, as its bytes
+         state them; null (with `blocks_detail`) for an older format or a block it does not carry. */
       ...(() => { const b = caseDocumentBlocks(doc.text);
-                  return { captures: b.captures, sources: b.sources, blocks_detail: b.detail }; })(),
+                  return { captures: b.captures, capture_accounts: b.capture_accounts, sources: b.sources,
+                           blocks_detail: b.detail }; })(),
     };
   }
 
@@ -3242,11 +3243,12 @@ export class Publication {
           detail: theCase ? "no signed case document is held for this edition, so it states no disclosure here"
                           : "this is not a case, so it discloses no contradiction" };
     for (const f of findings) f.tensions = disclosed.tensions === null ? null : disclosed.members[f.bundle_id] || [];
-    /* R10, R20, R52 (N364): the `captures:` and `sources:` blocks as signed, from the same bytes and never live: what
-       the document states of a source is what `publishableAt` answered at the commit (R51), and nothing is added. */
+    /* R10, R20, R52 (N364; K552): the `captures:`, `capture_accounts:` and `sources:` blocks as signed, from the same
+       bytes and never live: what the document states of a source is what `publishableAt` answered at the commit (R51),
+       and nothing is added. */
     const blocks = state.document && typeof state.document.text === "string"
       ? caseDocumentBlocks(state.document.text)
-      : { captures: null, sources: null,
+      : { captures: null, capture_accounts: null, sources: null,
           detail: theCase ? "no signed case document is held for this edition, so it states no capture or source here"
                           : "this is not a case, so it states no capture or source" };
     const cRow = theCase
@@ -3335,7 +3337,7 @@ export class Publication {
              tensions: disclosed.tensions, highlighted: disclosed.highlighted,
              /* K499: the member legs the conflict read could not examine, stated by the document; null where it states none. */
              tensions_unread: disclosed.unread,
-             captures: blocks.captures, sources: blocks.sources,
+             captures: blocks.captures, capture_accounts: blocks.capture_accounts, sources: blocks.sources,
              blocks_detail: blocks.detail
                ?? "each capture a member rests on, with its grade and co-attestation, and what may be told of the source "
                 + "behind it, read from the signed document: a source's detail is stated only as it could be published "
