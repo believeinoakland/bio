@@ -246,22 +246,22 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
          /* REC-145: which run contexts the gate consults a project for — one answer, shared. */
          runConsultsProjects,
          /* REC-153: the run's context is the kind it says it is — decided in `airun.mjs`, the facts from here. */
-         checkRunContextKind } from "./run-rules/index.mjs";
+         checkRunContextKind } from "./airun.mjs";
 /* REC-152: tick and close are the run's PRINCIPAL's acts — the positional half, decided once in `airun.mjs`.
    Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
-import { runPrincipalGate } from "./run-rules/index.mjs";
+import { runPrincipalGate } from "./airun.mjs";
 import { contradictionOf, contradictionOps } from "./contradiction/index.mjs";
 /* D-516 / BOB #33: that rule now answers THREE ways, so the two readers below map an ANSWER to a cause
    word instead of reading a boolean. The words and the band's cause key are imported rather than spelled
    at either site, for the reason the line above gives: the point of D-500 was one rule in one place, and a
    literal `"within_band"` typed at two readers is that rule growing two spellings again. Its own import
    line, for the reason REC-152's gives. */
-import { WATERMARK_AFTER, WATERMARK_WITHIN_BAND, WATERMARK_BAND_CAUSE } from "./run-rules/index.mjs";
+import { WATERMARK_AFTER, WATERMARK_WITHIN_BAND, WATERMARK_BAND_CAUSE } from "./airun.mjs";
 /* REC-169: a figure written into a run's bound is a non-negative integer and never a plane-counted bound's — decided
    once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives.
    REC-172: the tick hands it its `consume` whole (`map: true` — a MAP of named bounds) and the open its `bounds`
    whole (`list: true` — a LIST of named bounds, each allowance a whole number): still the one rule, in one place. */
-import { checkConsume } from "./run-rules/index.mjs";
+import { checkConsume } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
    it holds no copy of what a chain may claim, which engine weakens what, or who
