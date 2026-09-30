@@ -3,7 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V, infoMd } from "./fixture.mjs";
 import { ARCHIVE_CAPTURE_GRADE, ARCHIVE_VIA, DOORBELL_VIA } from "../../../src/provenance/index.mjs";
-import { EARNED_CAPTURE_CEILING, BASIS_GRADES, TESTIMONY_GRADE, PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING, BASIS_GRADES, TESTIMONY_GRADE } from "../../../checks/bio-checks.mjs";
+import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/checks.mjs";
 
 const T = "2026-09-27T01:00:00Z";
 const rank = (g) => BASIS_GRADES.indexOf(g);

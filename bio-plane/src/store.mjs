@@ -76,10 +76,6 @@ import { parseFrontmatter,
          /* PL-9 / DEC-49: the C-number, the wire code and the canned translation
             for the meaning-grain read's two refusals, as ONE row read from the
             catalog rather than restated here. */
-         /* PL-10 / DEC-49: the C-number, the wire code and the canned
-            translation for the version chain's three refusals, as ONE row read
-            from the catalog rather than restated here. */
-         VERSION_CHAIN_CHECKS,
          /* PL-1 / IS-1: the BASIS-VERSION grammar, imported rather than
             reimplemented, so the version rules run at BOTH gates through ONE
             function — a version that cannot land cannot audit clean either,
@@ -322,10 +318,6 @@ import { publicationOf, publicationOps, publicationOwns } from "./publication/in
 import { checkSkillVersion } from "./skillpack.mjs";
 import { biasOf, biasOps } from "./bias/index.mjs";
 import { aiRunsOf, aiRunsOps, hiddenRuns } from "./ai-runs/index.mjs";
-/* REC-63 / DEC-56: the route marker's four door refusals, imported for the same
-   reason every other DEC-49 family is — the C-number, the wire code and the
-   canned translation are ONE ROW there and this file holds no second copy. */
-import { ROUTE_MARK_CHECKS } from "../checks/bio-checks.mjs";
 /* SK-7 / framework Part II 14.4 (Bob's 5.7): WHO MINTED A CONTENT ROW, read in
    one place. The classifier and the sentences live in the catalogue beside
    `SUFFICIENCY_CLAIM_STATES`, whose shape they take, for the reason every
@@ -380,8 +372,6 @@ import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 import { SURFACE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
 import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
-/* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
-import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
    catalogue so this file holds no grade-letter literal for it. */
 import { TESTIMONY_GRADE } from "../checks/bio-checks.mjs";

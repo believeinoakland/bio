@@ -7,7 +7,9 @@
  * Extracted from the legacy modules (T4-2; K49, K59, K72): `store.mjs` (the register write and the testimony fence
  * that ran inside `promote`, `testify`, the chain and route-mark services, the register audit, census and holds, the
  * receipts and the version chain), `index.mjs` (`partsHeld` and the `attest` and `registeraudit` handlers), `schema.mjs`
- * (the three tables, now `./schema.mjs`) and `bio-checks.mjs` (the C-18 register arms, now `./register-checks.mjs`).
+ * (the three tables, now `./schema.mjs`) and `bio-checks.mjs` (the C-18 register arms, now `./register-checks.mjs`;
+ * since T18 the refusal families C-24, C-34, C-53, C-89 and C-103 too, now `./checks.mjs`). The two ops' Worker arms
+ * (`attest`, `registeraudit`) are `./ops.mjs` since T18.
  * The legacy code's comments moved with it; where one names `Store.x`, the thing it names is now this module's `x`.
  *
  * REACHED as `provenanceOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
@@ -24,8 +26,7 @@
  *   signingKey    the instance's receipt-signing key (R34, K59): an Ed25519 private key, PKCS#8, base64; held as a
  *                 secret by the operator and replaceable. Absent, `signReceipt` answers that no key is bound. */
 
-import { parseFrontmatter, isMachineIdentity, isPublicHttpsLocator, createSha256, TESTIMONY_CHECKS,
-         ROUTE_MARK_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS, EARNED_CAPTURE_CEILING, BASIS_GRADES,
+import { parseFrontmatter, isMachineIdentity, isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, BASIS_GRADES,
          TESTIMONY_GRADE } from "../../checks/bio-checks.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT, ARCHIVE_SAVE_BASE,
          ARCHIVE_SERVICE, archiveLocatorFrom } from "../tsa.mjs";
@@ -34,7 +35,8 @@ import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER
 import { promotionOf } from "../promotion/index.mjs";
 import { migrateProvenance } from "./schema.mjs";
 import { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
-import { REGISTER_ENTRY_CHECKS } from "./checks.mjs";
+import { REGISTER_ENTRY_CHECKS, TESTIMONY_CHECKS, ROUTE_MARK_CHECKS, VERSION_CHAIN_CHECKS, ATTEST_CHECKS,
+         PROVENANCE_ACT_CHECKS } from "./checks.mjs";
 
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
@@ -42,7 +44,8 @@ export { PROVENANCE_SCHEMA } from "./schema.mjs";
 export const PROVENANCE_TABLES = ["register", "captured_locators", "provenance_route_marks", "origin_declarations",
                                   "signed_receipts", "receipt_keys"];
 export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
-export { REGISTER_ENTRY_CHECKS } from "./checks.mjs";
+export { REGISTER_ENTRY_CHECKS, VERSION_CHAIN_CHECKS, ROUTE_MARK_CHECKS, ATTEST_CHECKS, PROVENANCE_ACT_CHECKS,
+         TESTIMONY_CHECKS } from "./checks.mjs";
 
 const te = new TextEncoder();
 const hexOf = (bytes) => createSha256().update(bytes).hex();
@@ -606,7 +609,7 @@ export async function registerAuditReport(r, evidence) {
     mismatched: mismatched.length, unbacked: unbacked.length, undetermined: undetermined.length,
     sound: unbacked.length === 0 && mismatched.length === 0, probed: canProbe,
     detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which "
-          + "is the deliberate pattern migrate.mjs uses and what the two-bucket design exists for. "
+          + "is what the two-bucket design exists for. "
           + "held_in_parts is the same for a document the store keeps only in parts: every part the "
           + "record names is in the working bucket and each part's digest is verified (the reassembled "
           + "whole's digest is C-18.6's check, not re-read here). "
@@ -666,7 +669,9 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
     } else {
       /* DEC-49 REGION is-attest-parts */
       if (holdsAnswer && holdsAnswer.registered === true)
-        return { ok: false, reason: "CAPTURE_HELD_IN_PARTS", sha256: sha,
+        return { ok: false, reason: "CAPTURE_HELD_IN_PARTS", code: "CAPTURE_HELD_IN_PARTS",
+          check: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.check, translation: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.translation,
+          sha256: sha,
           detail: "the record's register names these bytes, but no object is stored under this hash and "
                 + "this plane holds no receipt of having acquired them, which is the shape of a document "
                 + "kept only in parts. A register row is written from what the promoting caller named, so "
@@ -952,12 +957,9 @@ class Provenance {
    *
    * THE FIRST VERSION OF THIS LOOKED IN TWO OF THE THREE PLACES BYTES CAN LIVE.
    * It checked `files` and `history` and called everything else "dropped", which
-   * produced a confident and wrong finding: that the Apps Script migration could
-   * not be audited from the record it produced. The bytes were in R2 the whole
-   * time. `migrate.mjs` says so in its own header, carrying Drive provenance
-   * "verbatim as a registered drive-provenance capture, so the Drive era remains
-   * inspectable without polluting the live file image", which is precisely what
-   * the two-bucket design is for.
+   * produced a confident and wrong finding: that bytes registered but carried in
+   * no file could not be audited from the record. They were in R2 the whole time,
+   * which is precisely what the two-bucket design is for.
    *
    * So this returns rows and their capture hashes, and the CONTROL PLANE probes
    * `bio-captures` to finish the classification, exactly as the ratify path does
