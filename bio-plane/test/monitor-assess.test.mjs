@@ -589,9 +589,15 @@ t("…and its evidentiary digest is the container's, taken over content.xml",
   [DR.doc?.profile?.digests?.determined, DR.doc?.profile?.digests?.over], [true, "content.xml"]);
 
 console.log("\n--- D-472: TWO TICKS on an unchanged Drive document — `unchanged`, both times ---");
+/* LEGACY-TESTS #14 (T16, 2026-09-30): the bundle is weekly and never checked, so it is DUE and the scheduler's
+   `monitor-cadence` consumer (monitoring R19) may tick it in the background during this window (measured under
+   load: one extra export served and one extra call). Every tick, ours or the scheduler's, writes one "Monitor
+   tick:" line, so the calls are counted against the ticks the record holds, not against a bare 2. */
+const ticksBeforeTicks = (await bundleFacts(DR.id)).ticks;
 const askedBeforeTicks = driveAsked.length;
 const d1 = await P("monitor", { bundleId: DR.id });
 const d2 = await P("monitor", { bundleId: DR.id });
+const ticksMade = (await bundleFacts(DR.id)).ticks - ticksBeforeTicks;
 t("ACCEPTS-WHEN: an unchanged Drive document reads `unchanged` across two ticks",
   [d1.status, d2.status], ["unchanged", "unchanged"]);
 t("…on the EVIDENTIARY comparison, both times", [d1.compared, d2.compared], ["evidentiary", "evidentiary"]);
@@ -599,7 +605,7 @@ t("…on the EVIDENTIARY comparison, both times", [d1.compared, d2.compared], ["
 t("…while the RAW bytes differed from the capture on both ticks (the envelope moved)",
   [d1.seen === d1.baseline, d2.seen === d2.baseline, d1.seen === d2.seen], [false, false, false]);
 t("…and the three exports Google served were three different sets of bytes",
-  new Set(exportServed).size, 3);
+  [exportServed.length >= 3, new Set(exportServed).size === exportServed.length], [true, true]);
 t("neither tick raised a re-evaluation", [d1.reeval_raised, d2.reeval_raised], [false, false]);
 t("the answer names the export it watched and the document it answers for",
   [d1.fetched_address, d1.drive?.document_address, d1.drive?.export_format, d1.drive?.file_id],
@@ -610,7 +616,8 @@ t("the look is logged PRESENT unchanged against the capture",
    application page was never asked for at all" — which only the request log can say. */
 t("THE DOCUMENT ADDRESS WAS NEVER FETCHED: every outbound call went to the export address",
   driveAsked.filter((a) => a !== `/spreadsheets/d/${SHEET_ID}/export?format=ods`), []);
-t("…and the two ticks made exactly two calls", driveAsked.length - askedBeforeTicks, 2);
+t("…and the two ticks made exactly two calls (one per tick the record holds, the scheduler's included)",
+  [ticksMade >= 2, driveAsked.length - askedBeforeTicks], [true, ticksMade]);
 t("the Session Log says which bytes were compared",
   ((await G(`op=image&id=${encodeURIComponent(DR.id)}`)).result["bundle.md"] || "").includes(
     `fetched ${SHEET_EXPORT}, the OpenDocument export this instance composed from the Drive spreadsheet`), true);
