@@ -1,7 +1,7 @@
 /* conformance's tables (requirements: `build/requirements/conformance.md`, R16). Every table is APPEND-ONLY: a
  * determination is never edited (R7), a supersession is a row of its own and never an update of the one it supersedes,
- * a basis-changed flag is a notice recorded once (R10), and a proposal is stored apart from determinations and never
- * turned into one (R12). Each is keyed to the bundle it is about and declared to record-core's purge (K23), so a purge
+ * a basis-changed flag is a notice recorded once (R10), a cause is recorded with its determination and never after
+ * (R22), and a proposal is stored apart from determinations and never turned into one (R12). Each is keyed to the bundle it is about and declared to record-core's purge (K23), so a purge
  * of that bundle clears its rows. */
 
 export const CONFORMANCE_SCHEMA = `
@@ -120,6 +120,24 @@ CREATE TABLE IF NOT EXISTS comparison_proposals (
   at                TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS comparison_proposals_project ON comparison_proposals (project_id, proposal_id);
+-- R22 (N345): THE CAUSE, when the member states one with evidence they may
+-- see: one row per determination, its statement and the evidence's content
+-- ids. A determination with no row reads "cause not established".
+CREATE TABLE IF NOT EXISTS determination_causes (
+  determination_id  TEXT PRIMARY KEY,
+  statement         TEXT NOT NULL,
+  evidence          TEXT NOT NULL,
+  author            TEXT NOT NULL,
+  at                TEXT NOT NULL
+);
+-- R12 (N345): THE CONTRADICTION INQUIRY A COMPARISON CAME FROM, one row per
+-- proposal that names one (inquiry R48), with the candidate it took up.
+CREATE TABLE IF NOT EXISTS comparison_proposal_contradictions (
+  proposal_id       TEXT PRIMARY KEY,
+  inquiry_id        TEXT NOT NULL,
+  candidate         TEXT NOT NULL,
+  at                TEXT NOT NULL
+);
 -- R12: THE PROPOSAL RECORDS THAT A DETERMINATION DREW ON IT, one row each.
 CREATE TABLE IF NOT EXISTS comparison_proposal_uses (
   proposal_id       TEXT NOT NULL,
@@ -141,6 +159,8 @@ export const CONFORMANCE_TABLES = Object.freeze([
   { name: "determination_flags", keys: ["determination_id"] },
   { name: "comparison_proposals", keys: ["proposal_id", "project_id"] },
   { name: "comparison_proposal_uses", keys: ["proposal_id", "determination_id"] },
+  { name: "determination_causes", keys: ["determination_id"] },
+  { name: "comparison_proposal_contradictions", keys: ["proposal_id", "inquiry_id"] },
 ]);
 
 /** Creates the tables; idempotent. */

@@ -1,9 +1,12 @@
 /* conformance over the modules it uses, each the real one (record-core, membership, promotion, content, inquiry,
-   strength, reevaluation, publication, standards), on a real SQLite database (node:sqlite) standing in for a Durable
+   strength, reevaluation, publication, standards, contradiction), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage. The modules those reach in turn are created by their own factories on the same host. What a later
    module or the legacy store fills (the producing group) and the readings content reads through extraction are
    stand-ins the test controls. The ceremonies that publish a case (`case-authoring`, `ratification`) are played through
-   publication's R21 and R22, exactly as those modules call them. Every test drives `conformance` at its interface. */
+   publication's R21 and R22, exactly as those modules call them. A contradiction candidate is formed by contradiction's
+   own pairing and proposed through its door, a run gate standing in for `ai-runs`; `basis-versions`, which it reaches
+   for a duty's reach and a question's conclusion, is a stand-in built from its stated interface. Every test drives
+   `conformance` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -15,6 +18,7 @@ import { strengthOf } from "../../../src/strength/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
+import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 import { conformanceOf, conformanceOps } from "../../../src/conformance/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
@@ -65,6 +69,8 @@ export function storage() {
 
 export const V = (id) => `member:${id}`;
 export const MACHINE = "class:daemon";
+/** The one run `ai-runs`' stand-in gate answers as running (contradiction R13). */
+export const RUN = "RUN-2026-0001";
 export const NOW = "2026-09-28T01:00:00Z";
 export const SIG = (n = 1) => `-----BEGIN SSH SIGNATURE-----\nsig${n}\n-----END SSH SIGNATURE-----`;
 export const KEY = "AAAAC3NzaC1lZDI1NTE5AAAAIKEY";
@@ -136,11 +142,35 @@ export function world({ group = "test-group" } = {}) {
   const publication = publicationOf(host, { record, membership, promotion, inquiry: k, now });
   const standards = standardsOf(host, { record, membership, promotion, content, now });
   standards.migrate();
-  const c = conformanceOf(host, { record, membership, promotion, content, inquiry: k, strength, reevaluation,
-                                  publication, standards, now });
+  /* basis-versions as contradiction reads it (its R16–R19, R22, R37, R41): no project draws on an inquiry here, and its
+     no-project conclude writes the question's conclusion through promotion, as that module does. */
   let n = 0;
+  const bv = {
+    projectsDrawingOn() { const out = []; out.bound = 32; out.truncated = false; return out; },
+    conclusionOf: () => null,
+    projectQuestions: () => ({ items: [], cursor: null }),
+    conclude(args) {
+      const head = record.head(args.target);
+      const text = record.readFile(args.target, "bundle.md").text
+        .replace(/^current_state: .*$/m, "current_state: concluded")
+        .replace(/^prior_state: .*$/m, `prior_state: ${head.currentState}`)
+        .replace(/\n---\n/, `\nconclusion: "${args.conclusion}"\nfalsifier: "${args.falsifier || "a record showing otherwise"}"\n---\n`);
+      const r = promotion.promote({ bundleId: args.target, base: head.bundleSha, snapKey: `conclude${++n}`,
+        author: args.author, files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" } });
+      return r.ok ? { ok: true, target: args.target, to: "concluded", relationship: "no_project", project: null } : r;
+    },
+  };
+  const contradiction = contradictionOf(host, { record, membership, promotion, basisVersions: bv, entities: {},
+    extraction: { readingOf: (s) => ex.provider.readingOf(s) }, inquiry: inquiryServices(host), now });
+  contradiction.migrate();
+  /* ai-runs' gate, standing in: the one run `RUN` is running, and anyone may propose under it. */
+  contradiction.registerRunGate("test", (id) => (id === RUN ? { found: true, running: true, refusal: null }
+                                                            : { found: false, running: false, refusal: null }));
+  const c = conformanceOf(host, { record, membership, promotion, content, inquiry: k, strength, reevaluation,
+                                  publication, standards, contradiction, now });
   const w = {
-    st, host, record, membership, promotion, content, k, strength, reevaluation, publication, standards, c, clock, ex,
+    st, host, record, membership, promotion, content, k, strength, reevaluation, publication, standards, contradiction, c,
+    clock, ex,
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
@@ -202,11 +232,43 @@ export function world({ group = "test-group" } = {}) {
       if (!m.ok) throw new Error(`fixture passage refused: ${JSON.stringify(m).slice(0, 300)}`);
       return m.content_id;
     },
-    /** A document with one read capture and one minted passage of it: `{doc, cap, content}`. */
-    evidence(id, text = `the text of ${id}`) {
+    /** A document with one read capture and one minted passage of it: `{doc, cap, content}`. With `doctype` or
+     *  `date`, its reader states them (extraction's `readings` row and its reading's top-level `date`). */
+    evidence(id, text = `the text of ${id}`, { doctype = null, date = null } = {}) {
       const [cp] = w.doc(id, [w.cap(`${id}-0`, text)]);
       w.read(cp.sha, [U(0, "page one"), U(1, text)]);
+      if (doctype || date) {
+        ex.readings[cp.sha].reading = { page_boxes: null, ...(date ? { date } : {}) };
+        st.sql.exec(`INSERT OR REPLACE INTO readings (capture_sha, bundle_id, content_type, reading) VALUES (?,?,?,?)`,
+                    cp.sha, id, doctype, JSON.stringify({ content_type: doctype, ...(date ? { date } : {}) }));
+      }
       return { doc: id, cap: cp, content: w.passage(id, cp.sha) };
+    },
+    /** A contradiction taken up as a question (contradiction R35): two passages, one a rule and one an act, legs of one
+     *  inquiry that supports with the first and cuts against with the second (K1); the pair proposed `record` under the
+     *  run (a duty), then taken up by `by` framed around side `a`. Answers `{inquiry, candidate, rule, act, sides}`,
+     *  `sides` the candidate's own `a` and `b` as contradiction shows them. */
+    contradicted({ by = V("olive"), question = "Did the closure follow the notice rule?" } = {}) {
+      const tag = String(++n).padStart(4, "0");
+      const rule = w.evidence(`INFO-2026-${tag}-rule`, "thirty days' public notice is required before a closure",
+                              { doctype: "ordinance", date: "2020-01-01" });
+      const act = w.evidence(`INFO-2026-${tag}-act`, "the playground was closed on 2 March with no notice",
+                             { doctype: "minutes", date: "2026-03-02" });
+      const holder = `INQ-2026-${tag}-tension`;
+      w.inquiry(holder, { legs: [{ target: rule.doc, role: "supports", content_id: rule.content },
+                                 { target: act.doc, role: "cuts_against", content_id: act.content }] });
+      const pair = contradiction.pairs({ key: "K1", viewer: MACHINE }).pairs
+        .find((p) => p.a.inquiry === holder && p.b.inquiry === holder);
+      if (!pair) throw new Error(`fixture: no K1 pair formed over ${holder}`);
+      const pr = contradiction.propose({ run: RUN, proposedBy: MACHINE, viewer: MACHINE, caller: MACHINE,
+        proposals: [{ key: "K1", a: pair.a, b: pair.b, label: "record", reason: "the rule and the act disagree" }] });
+      if (!pr.ok) throw new Error(`fixture propose refused: ${JSON.stringify(pr).slice(0, 400)}`);
+      const candidate = pr.candidates[0].candidate;
+      const up = contradiction.takeUp({ candidate, question, frame: "a", viewer: by, author: by });
+      if (!up.ok) throw new Error(`fixture take-up refused: ${JSON.stringify(up).slice(0, 400)}`);
+      /* the candidate's own sides, `a` and `b` as contradiction orders them (its R15) and shows them (its R25) */
+      const shown = contradiction.candidatesFor({ on: { candidate }, viewer: MACHINE }).candidates[0];
+      return { inquiry: up.inquiry, candidate, rule, act, sides: { a: shown.a, b: shown.b } };
     },
     /** An inquiry through promotion (so inquiry's check and projection run); `legs` as inquiry's grammar. */
     inquiry(id, opts = {}) {

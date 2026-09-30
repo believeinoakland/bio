@@ -21,8 +21,12 @@ test("R9 R19: determinationRead answers R1's fields, the per-standard outcomes, 
   assert.deepEqual([r.id, r.project, r.author, r.at, r.supersedes, r.superseded_by, r.live, r.basis_changed],
     [d.id, proj, V("olive"), "2026-09-28T01:00:00Z", null, null, true, null]);
   /* the one shape (K248): exactly these keys, which consequences, actions, filings and escalation read */
-  assert.deepEqual(Object.keys(r).sort(), ["act", "at", "author", "basis_changed", "findings", "id", "live", "ok", "outcomes",
-    "project", "proposal", "questions", "reason", "standards", "superseded_by", "supersedes"]);
+  assert.deepEqual(Object.keys(r).sort(), ["act", "at", "author", "basis_changed", "cause", "cause_says", "findings", "id",
+    "live", "ok", "outcomes", "outcomes_differ", "outcomes_differ_says", "project", "proposal", "questions", "reason",
+    "standards", "superseded_by", "supersedes"]);
+  /* N345: no cause stated reads "cause not established" (R22); one standard, so the outcomes do not differ (R9) */
+  assert.deepEqual([r.cause, r.cause_says, r.outcomes_differ, r.outcomes_differ_says],
+    [null, "cause not established", false, null]);
   assert.deepEqual(r.outcomes, [{ standard: std, outcome: "noncompliant" }]);
   assert.deepEqual(r.act, { id: d.act.id, description: input().act.description,
     actor: { role: "Director of Parks", body: "Parks Department" }, at: "2026-03-02", period: null, evidence: [ev.content] });
@@ -219,7 +223,7 @@ test("R15: every read answers a determination in a project the viewer may not se
   assert.deepEqual(w.c.determinationsFor({ viewer: V("pat") }).items.map((i) => i.id), [d.id]);
 });
 
-test("R1 R9 R11 R12 R18: the ops route to the services, and the author, proposer and viewer are the control plane's stamps, never the body's", () => {
+test("R1 R9 R11 R12 R18 R21: the ops route to the services, and the author, proposer and viewer are the control plane's stamps, never the body's", () => {
   const { w, proj, input } = scene();
   const body = { ...input(), author: V("pat"), viewer: V("pat") };
   delete body.author;
@@ -234,4 +238,11 @@ test("R1 R9 R11 R12 R18: the ops route to the services, and the author, proposer
                  { project: proj, proposer: V("olive"), rows: [], standards: [] });
   assert.deepEqual([p.ok, p.proposal.proposer, p.proposal.machine_work], [true, MACHINE, true]);
   assert.equal(w.op("comparison", { id: p.proposal.id, viewer: V("pat") }).proposal.id, p.proposal.id);
+  /* R21 (N345): comparisonfacts, the viewer the control plane's stamp; the body's viewer never wins */
+  const x = w.contradicted();
+  const f = w.op("comparisonfacts", { viewer: V("pat") }, { contradiction: x.inquiry, standardSide: "b", viewer: "nobody" });
+  assert.deepEqual([f.ok, f.contradiction, f.standard_side], [true, x.inquiry, "b"]);
+  refused(w.op("comparisonfacts", { viewer: "nobody" }, { contradiction: x.inquiry, standardSide: "b", viewer: V("pat") }),
+          "NO_SUCH_CONTRADICTION_INQUIRY");
+  assert.equal(w.op("comparisonfacts", { viewer: V("pat"), contradiction: x.inquiry, standardSide: "a" }).standard_side, "a");
 });

@@ -26,11 +26,12 @@
  *                 `noSuchProject` (its R78: R1's `NO_SUCH_PROJECT`, minted there with its one row, N274).
  *   promotion     `promote`, `registerStep` (R6, R17).
  *   content       `contentRow`, `passageNotice` (R1's evidence, R10).
- *   inquiry       `supersededBy`, `stateHistory` (R10).
+ *   inquiry       `supersededBy`, `stateHistory` (R10); `contradictionLink` (its R48: R12, R21; N345).
  *   strength      `inquiryStrength` (R9).
  *   reevaluation  `onBasisChanged` (R10).
  *   publication   `publishedEditionsOf` (R2, R9, R10; its R37).
  *   standards     `standardRead`, `inForce` (R1, R3, R9, R10); `noSuchStandard` (its R17: R1's `NO_SUCH_STANDARD`).
+ *   contradiction `candidatesFor` (R21: the two sides of the candidate a contradiction inquiry took up; N345).
  *   now           the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, its R37), through
@@ -45,6 +46,7 @@ import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { standardsOf, noSuchStandard } from "../standards/index.mjs";
+import { contradictionOf } from "../contradiction/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle } from "../../checks/bio-checks.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
 import { CONFORMANCE_TABLES, migrateConformance } from "./schema.mjs";
@@ -72,6 +74,19 @@ export const PROPOSAL_SAYS = "This is a comparison, not a determination: it sets
 /** R10: the sentence beside the flag. */
 export const FLAG_SAYS = "This is a notice: something this determination rests on changed. The determination and its "
   + "outcomes are unchanged until a member supersedes it.";
+/** R22: the longest cause statement, in characters. */
+export const CAUSE_MAX = 2000;
+/** R22: the sentence a determination with no cause reads. */
+export const CAUSE_NOT_ESTABLISHED = "cause not established";
+/** R22: the keys no determination carries: a recommendation is a proposed action, recorded by `actions`. */
+export const RECOMMENDATION_KEYS = Object.freeze(["recommendation", "policy"]);
+/** R21: the sentence every answer of `comparisonFacts` carries. */
+export const FACTS_SAY = "These are facts the record holds, as the two sides of the question state them: what one side "
+  + "says the standard requires, and what the other says was done. They are the record's, not an outcome: whether the "
+  + "act complied is a member's determination.";
+/** R9: the sentence beside `outcomes_differ` (DEC-84 item 3): a statement, with no duty. */
+export const OUTCOMES_DIFFER_SAYS = "The outcomes differ from one standard to another. Each is the member's, given per "
+  + "standard, and none is composed into one verdict.";
 const UNSEEN = "an object you may not see";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -99,6 +114,18 @@ function significanceKeys(v, found = new Set(), depth = 0) {
   return found;
 }
 
+/* R22: every key anywhere in `v` named one of RECOMMENDATION_KEYS, compared lower-cased, bounded as R8's walk is. */
+function recommendationKeys(v, found = new Set(), depth = 0) {
+  if (depth > 12 || found.size > 20) return found;
+  if (Array.isArray(v)) { for (const x of v.slice(0, 500)) recommendationKeys(x, found, depth + 1); return found; }
+  if (isObj(v))
+    for (const [k, x] of Object.entries(v).slice(0, 200)) {
+      if (RECOMMENDATION_KEYS.includes(String(k).toLowerCase())) found.add(k);
+      recommendationKeys(x, found, depth + 1);
+    }
+  return found;
+}
+
 /* R12: whether a proposal names an outcome anywhere (an `outcome` or `outcomes` key, at any depth). */
 function namesOutcome(v, depth = 0) {
   if (depth > 12) return false;
@@ -117,12 +144,12 @@ export class Conformance {
   #writing = new Set();   // R13, R17: the determination ids this module is promoting now
 
   constructor({ storage, record, membership, promotion, host = null, content = null, inquiry = null, strength = null,
-                reevaluation = null, publication = null, standards = null, now = null } = {}) {
+                reevaluation = null, publication = null, standards = null, contradiction = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, content, inquiry, strength, reevaluation, publication, standards };
+    this.#deps = { host, content, inquiry, strength, reevaluation, publication, standards, contradiction };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -133,6 +160,7 @@ export class Conformance {
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get standards() { return this.#deps.standards ||= standardsOf(this.#deps.host); }
+  get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
 
   migrate() { migrateConformance(this.sql); }
 
@@ -180,14 +208,15 @@ export class Conformance {
     return null;
   }
 
-  /* The bounds every determination and comparison keeps (LIMITS). */
-  #sizeRefusal(parts) {
+  /* The bounds every determination and comparison keeps (LIMITS). `of` names what the part belongs to when it is not
+     the act or the determination itself (R22's cause). */
+  #sizeRefusal(parts, of = null) {
     for (const [part, v] of Object.entries(parts)) {
       const n = Array.isArray(v) ? v.length : 0;
       /* DEC-49 REGION is-within-bounds */
       if (n > LIMITS[part])
-        return refusal("DETERMINATION_TOO_LARGE", `${n} ${part} is more than one carries (at most ${LIMITS[part]}). `
-          + "Nothing was written.", { part, count: n, max: LIMITS[part] });
+        return refusal("DETERMINATION_TOO_LARGE", `${n} ${part}${of ? ` of the ${of}` : ""} is more than one carries (at `
+          + `most ${LIMITS[part]}). Nothing was written.`, { part, count: n, max: LIMITS[part], ...(of ? { of } : {}) });
       /* END DEC-49 REGION is-within-bounds */
     }
     return null;
@@ -203,6 +232,68 @@ export class Conformance {
         + "none. Nothing was written.", { keys });
     /* END DEC-49 REGION is-significance-absent */
     return null;
+  }
+
+  /* R22: a cause, when one is given, is a statement of the member's own with evidence the author may see; a cause not
+     yet shown stays in the working inquiry and never enters the determination. Absent (undefined or null) is no cause.
+     Answers `{ok, cause}` (cause null when none) or the refusal, in R22's order. */
+  #causeRefusal(cause, author) {
+    if (cause === undefined || cause === null) return { ok: true, cause: null };
+    const c = isObj(cause) ? cause : {};
+    const statement = typeof c.statement === "string" ? c.statement.trim() : "";
+    /* DEC-49 REGION is-cause-stated */
+    if (!statement || statement.length > CAUSE_MAX)
+      return refusal("CAUSE_UNSTATED", `a cause is stated as text of your own, of at most ${CAUSE_MAX} characters; this `
+        + `${statement ? `is ${statement.length}` : "states none"}. Nothing was written.`, { max: CAUSE_MAX });
+    /* END DEC-49 REGION is-cause-stated */
+    const list = Array.isArray(c.evidence) ? c.evidence : typeof c.evidence === "string" ? [c.evidence] : [];
+    const ids = list.map(str);
+    const unseen = ids.filter((cid) => {
+      if (!cid) return true;
+      let row = null;
+      try { row = this.content.contentRow(cid); } catch { row = null; }
+      return !row || !this.membership.inSight(row.bundle_id, author);
+    });
+    /* DEC-49 REGION is-cause-evidenced */
+    if (!ids.length || unseen.length)
+      return refusal("CAUSE_NOT_EVIDENCED", ids.length
+        ? "the cause names evidence you may not see, or that the record does not hold. A cause not yet shown stays in "
+          + "the question where it is worked out. Nothing was written."
+        : "the cause names no evidence. A cause not yet shown stays in the question where it is worked out, and the "
+          + "determination says the cause is not established. Nothing was written.",
+        { unresolved: unseen.filter(Boolean).slice(0, 20) });
+    /* END DEC-49 REGION is-cause-evidenced */
+    return { ok: true, cause: { statement, evidence: [...new Set(ids)] } };
+  }
+
+  /* R22: no recommendation or policy, anywhere in the input: a recommendation is a proposed action, recorded by
+     `actions`, never a policy position held here. */
+  #refuseRecommendation(input) {
+    const keys = [...recommendationKeys(input)];
+    /* DEC-49 REGION is-recommendation-absent */
+    if (keys.length)
+      return refusal("RECOMMENDATION_IS_AN_ACTION", `the input carries ${keys.join(", ")}: a determination records what `
+        + "was required, what was done and why, never what should be done. Propose an action instead. Nothing was "
+        + "written.", { keys });
+    /* END DEC-49 REGION is-recommendation-absent */
+    return null;
+  }
+
+  /* R12, R21 (inquiry R48): a contradiction inquiry the viewer may see, and the candidate it took up. Absent, unseen
+     and a plain inquiry are one answer. */
+  #contradictionInquiry(id, viewer) {
+    const iid = str(id);
+    let info = null, link = null;
+    try { info = iid ? this.record.bundleInfo(iid) : null; } catch { info = null; }
+    const seen = !!info && normalizeType(info.type) === "inquiry" && this.membership.inSight(iid, viewer);
+    if (seen) { try { link = this.inquiry.contradictionLink(iid); } catch { link = null; } }
+    /* DEC-49 REGION is-contradiction-inquiry-seen */
+    if (!seen || !isObj(link) || !str(link.candidate))
+      return refusal("NO_SUCH_CONTRADICTION_INQUIRY", "no question you may see answers to that id as one taken up from "
+        + "a contradiction. One you may not see answers exactly as one that does not exist. Nothing was written.",
+        { contradiction: iid });
+    /* END DEC-49 REGION is-contradiction-inquiry-seen */
+    return { ok: true, inquiry: iid, candidate: str(link.candidate), resolution: isObj(link.resolution) ? link.resolution : null };
   }
 
   /* ===================================================================== *
@@ -445,7 +536,7 @@ export class Conformance {
    *  determination and every inquiry it opens land together or not at all (R6). */
   determine(input = {}) {
     const { project = null, act = null, findings = null, standards = null, rows = null, questions = null,
-            supersedes = null, reason = null, proposal = null, author = null } = isObj(input) ? input : {};
+            supersedes = null, reason = null, proposal = null, cause = null, author = null } = isObj(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : author;
     const byMachine = this.#refuseMachine(author);
     if (byMachine) return byMachine;
@@ -455,7 +546,8 @@ export class Conformance {
     const notJoined = this.#participantRefusal(pid, author);
     if (notJoined) return notJoined;
     const large = this.#sizeRefusal({ findings, standards, rows, questions,
-                                      evidence: isObj(act) ? act.evidence : null });
+                                      evidence: isObj(act) ? act.evidence : null })
+      || this.#sizeRefusal({ evidence: isObj(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
     if (large) return large;
     const a = this.#actOf(act, pid, supersedes);
     if (!a.ok) return a;
@@ -478,18 +570,22 @@ export class Conformance {
     if (!qs.ok) return qs;
     const sig = this.#refuseSignificance(input);
     if (sig) return sig;
+    const why = this.#causeRefusal(cause, author);
+    if (!why.ok) return why;
+    const rec = this.#refuseRecommendation(input);
+    if (rec) return rec;
     const drew = str(proposal);
     if (drew && !this.#one(`SELECT proposal_id FROM comparison_proposals WHERE proposal_id=? AND project_id=?`, drew, pid))
       return refuseNoSuchComparison(drew);
     const sup = this.#supersession(supersedes, reason, a.act, pid, viewer);
     if (!sup.ok) return sup;
     return this.#write({ project: pid, act: a, pins: f.pins, standards: s.standards, rows: r.rows,
-                         questions: qs.questions, sup, proposal: drew, author: str(author), viewer });
+                         questions: qs.questions, sup, proposal: drew, cause: why.cause, author: str(author), viewer });
   }
 
   /* R6, R16, R17: one outer transaction: each new inquiry, then the determination's own promotion, then this module's
      rows. A refused promotion refuses the whole act, and nothing is written, no id spent (record-core R32). */
-  #write({ project, act, pins, standards, rows, questions, sup, proposal, author, viewer }) {
+  #write({ project, act, pins, standards, rows, questions, sup, proposal, cause, author, viewer }) {
     const at = this.#when();
     const year = at.slice(0, 4);
     let id = null;
@@ -509,7 +605,8 @@ export class Conformance {
       try {
         p = this.promotion.promote({ bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_${rand(4)}`, author,
           files: [{ path: "bundle.md", text: determinationDoc({ id, project, act: theAct, pins, standards, rows,
-                                                                    questions: qs, sup, proposal, author, at }) }],
+                                                                    questions: qs, sup, proposal, cause, author,
+                                                                    at }) }],
           meta: { object_type: "determination", current_state: "recorded", created: at, last_updated: at },
           actorIdentity: author, actorViewer: viewer });
       } finally { this.#writing.delete(id); }
@@ -541,6 +638,9 @@ export class Conformance {
       if (proposal)
         this.sql.exec(`INSERT INTO comparison_proposal_uses (proposal_id, determination_id, at) VALUES (?,?,?)`,
                       proposal, id, at);
+      if (cause)
+        this.sql.exec(`INSERT INTO determination_causes (determination_id, statement, evidence, author, at)
+                       VALUES (?,?,?,?,?)`, id, cause.statement, JSON.stringify(cause.evidence), author, at);
       return { ok: true };
     });
     if (!out || !out.ok) return out;
@@ -585,8 +685,12 @@ export class Conformance {
    *     outcome}], standards: [{standard, outcome, in_force, in_force_why, rows: [{requires, did, reading, content}],
    *     disagreement}], findings: [{finding, case, edition, version_sha, role, frozen, live}], questions: [{question,
    *     inquiry, opened}], author, at, supersedes, reason, superseded_by, live, proposal,
-   *     basis_changed: null | {causes: [{kind, subject, source, since, detail, affects?}], says}}
-   *  `at` or `period` is null as the act states; a standard or finding the viewer may not see is null beside `says`. */
+   *     basis_changed: null | {causes: [{kind, subject, source, since, detail, affects?}], says},
+   *     cause: null | {statement, evidence: [content id | null]}, cause_says: null | "cause not established",
+   *     outcomes_differ, outcomes_differ_says: null | sentence}
+   *  `at` or `period` is null as the act states; a standard or finding the viewer may not see is null beside `says`, and
+   *  a cause's evidence the viewer may not see is null (R22, N345). `outcomes_differ` is true when the per-standard
+   *  outcomes are not all the same (DEC-84 item 3): a statement, with no duty. */
   determinationRead({ id = null, viewer = null } = {}) {
     const r = this.#seen(id, viewer);
     if (!r) return noSuchDetermination(str(id));
@@ -627,11 +731,20 @@ export class Conformance {
       inquiry: this.membership.inSight(x.inquiry_id, viewer) ? x.inquiry_id : null, opened: x.opened === 1 }));
     const by = this.#one(`SELECT * FROM determination_supersessions WHERE superseded=?`, did);
     const flag = this.#flag(r, viewer);
+    const cz = this.#one(`SELECT statement, evidence FROM determination_causes WHERE determination_id=?`, did);
+    const cause = cz ? { statement: cz.statement, evidence: safeJson(cz.evidence, []).slice(0, LIMITS.evidence).map((cid) => {
+      let row = null;
+      try { row = this.content.contentRow(cid); } catch { row = null; }
+      return row && this.membership.inSight(row.bundle_id, viewer) ? cid : null;
+    }) } : null;
+    const differ = new Set(standards.map((s) => s.outcome)).size > 1;
     return { ok: true, id: did, project: r.project_id, act: this.#actView(r),
              outcomes: standards.map((s) => ({ standard: s.standard, outcome: s.outcome })), standards, findings,
              questions, author: r.author, at: r.at, supersedes: r.supersedes ?? null, reason: r.reason ?? null,
              superseded_by: by ? by.superseded_by : null, live: !by, proposal: r.proposal_id ?? null,
-             basis_changed: flag.causes.length ? { causes: flag.causes, says: FLAG_SAYS } : null };
+             basis_changed: flag.causes.length ? { causes: flag.causes, says: FLAG_SAYS } : null,
+             cause, cause_says: cause ? null : CAUSE_NOT_ESTABLISHED,
+             outcomes_differ: differ, outcomes_differ_says: differ ? OUTCOMES_DIFFER_SAYS : null };
   }
 
   /* R10: every cause standing on the determination: what reevaluation told (its R8, recorded as it came), and what the
@@ -746,10 +859,11 @@ export class Conformance {
 
   /** R12: a comparison a machine prepared or a member suggested, stored apart from determinations, labelled with who
    *  made it and whether it is machine work, and answered with the sentence that it is not a determination. It carries
-   *  rows and questions and never an outcome. */
+   *  rows and questions and never an outcome. It may name `contradiction`, the contradiction inquiry it came from
+   *  (inquiry R48, N345): the proposal records the link, and still carries no outcome. */
   comparisonPropose(input = {}) {
-    const { project = null, act = null, standards = null, rows = null, questions = null, proposer = null } =
-      isObj(input) ? input : {};
+    const { project = null, act = null, standards = null, rows = null, questions = null, proposer = null,
+            contradiction = null } = isObj(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : proposer;
     const pid = str(project);
     const unseen = this.#projectRefusal(pid, viewer);
@@ -763,6 +877,11 @@ export class Conformance {
     /* END DEC-49 REGION is-proposal-outcomeless */
     const sig = this.#refuseSignificance(input);
     if (sig) return sig;
+    let from = null;
+    if (contradiction !== null && contradiction !== undefined) {
+      from = this.#contradictionInquiry(contradiction, viewer);
+      if (!from.ok) return from;
+    }
     const a = isObj(act) ? act : {};
     const theAct = { id: str(a.id), description: text(a.description),
                      actor: isObj(a.actor) ? { role: text(a.actor.role), body: text(a.actor.body) } : null,
@@ -787,6 +906,9 @@ export class Conformance {
                        machine, at) VALUES (?,?,?,?,?,?,?,?,?)`,
                     id, pid, JSON.stringify(theAct), JSON.stringify(stds), JSON.stringify(rs), JSON.stringify(qs), who,
                     proposalLabel(who, "comparison").machine_work ? 1 : 0, at);
+      if (from)
+        this.sql.exec(`INSERT INTO comparison_proposal_contradictions (proposal_id, inquiry_id, candidate, at)
+                       VALUES (?,?,?,?)`, id, from.inquiry, from.candidate, at);
       return { ok: true };
     });
     return { ok: true, proposal: this.#proposalView(this.#one(`SELECT * FROM comparison_proposals WHERE proposal_id=?`, id),
@@ -804,11 +926,44 @@ export class Conformance {
     const label = proposalLabel(r.proposer ?? null, "comparison");
     const uses = this.#rows(`SELECT determination_id, at FROM comparison_proposal_uses WHERE proposal_id=?
                              ORDER BY determination_id LIMIT ?`, r.proposal_id, DETERMINATIONS_PAGE_MAX);
+    const from = this.#one(`SELECT inquiry_id FROM comparison_proposal_contradictions WHERE proposal_id=?`, r.proposal_id);
     return { id: r.proposal_id, project: r.project_id, act: safeJson(r.act, null),
              standards: safeJson(r.standards, []).map((s) => (this.membership.inSight(s, viewer) ? s : null)),
              rows: safeJson(r.rows, []), questions: safeJson(r.questions, []), proposer: r.proposer ?? null, label,
              machine_work: label.machine_work, at: r.at, says: PROPOSAL_SAYS,
-             drawn_on_by: uses.map((u) => ({ determination: u.determination_id, at: u.at })) };
+             drawn_on_by: uses.map((u) => ({ determination: u.determination_id, at: u.at })),
+             contradiction: from && this.membership.inSight(from.inquiry_id, viewer) ? from.inquiry_id : null };
+  }
+
+  /** R21 (N345; DEC-76 item 3, DEC-84 item 10): the rows a comparison may start from, as facts: `requires` from the
+   *  side of the contradiction inquiry's candidate named `standardSide` (`a` or `b`, the member's, never defaulted) and
+   *  `did` from the other, each with its source, content id and date, labelled the record's and never an outcome; and
+   *  the question's resolution when it is concluded. R12's refusal applies. It writes nothing.
+   *    {ok, wrote: false, contradiction, candidate, standard_side, rows: [{requires, did, origin: "record",
+   *     machine_work: false}], resolution: null | {kind, …}, concluded, says} */
+  comparisonFacts({ contradiction = null, standardSide = null, viewer = null } = {}) {
+    const from = this.#contradictionInquiry(contradiction, viewer);
+    if (!from.ok) return from;
+    const side = typeof standardSide === "string" ? standardSide : null;
+    /* DEC-49 REGION is-standard-side-named */
+    if (side !== "a" && side !== "b")
+      return refusal("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or "
+        + "b: the plane never chooses it. Nothing was written.", { contradiction: from.inquiry });
+    /* END DEC-49 REGION is-standard-side-named */
+    let listed = null;
+    try { listed = this.contradiction.candidatesFor({ on: { candidate: from.candidate }, viewer }); } catch { listed = null; }
+    const cand = listed && Array.isArray(listed.candidates)
+      ? listed.candidates.find((x) => x && x.candidate === from.candidate) : null;
+    /* A candidate whose two sides the viewer may not both see is no question they may see as one taken up from a
+       contradiction (contradiction R10): one answer, which says nothing of an unseen side. */
+    if (!cand || !isObj(cand.a) || !isObj(cand.b)) return this.#contradictionInquiry(null, viewer);
+    const fact = (x) => ({ kind: x.kind ?? null, text: x.text ?? null, note: x.note ?? null, source: x.source ?? null,
+                           content_id: x.content_id ?? null, ref: x.ref ?? null, date: x.date ?? null,
+                           doctype: x.doctype ?? null, capture_sha: x.capture_sha ?? null, stale: x.stale ?? null });
+    const other = side === "a" ? "b" : "a";
+    return { ok: true, wrote: false, contradiction: from.inquiry, candidate: from.candidate, standard_side: side,
+             rows: [{ requires: fact(cand[side]), did: fact(cand[other]), origin: "record", machine_work: false }],
+             resolution: from.resolution, concluded: !!from.resolution, says: FACTS_SAY };
   }
 
   /* ===================================================================== *
@@ -907,7 +1062,8 @@ function refuseNoSuchComparison(id) {
 
 /* R17: the determination's own document, the record's word on it, as promotion stores it (history, audit, export). Its
    front matter carries the core fields every record document states; its body states every part in words. */
-export function determinationDoc({ id, project, act, pins, standards, rows, questions, sup, proposal, author, at }) {
+export function determinationDoc({ id, project, act, pins, standards, rows, questions, sup, proposal, cause = null, author,
+                                   at }) {
   const when = act.at ? `on ${act.at}` : `from ${act.period.from} to ${act.period.to}`;
   const title = `Determination: ${oneLine(act.description).slice(0, 100)}`;
   const lines = ["---", `id: ${id}`, "object_type: determination", "schema: determination@1", `title: ${q(title)}`,
@@ -929,6 +1085,8 @@ export function determinationDoc({ id, project, act, pins, standards, rows, ques
     ...pins.map((p) => `- ${p.finding}, pinned at ${p.case} edition ${p.edition}${p.version_sha ? ` (${p.version_sha})` : ""}`),
     "", "## Open Questions", "",
     ...(questions.length ? questions.map((x) => `- ${oneLine(x.question)} (${x.inquiry})`) : ["None."]), "",
+    "## Cause", "", ...(cause ? [oneLine(cause.statement), "", `Shown by: ${cause.evidence.join(", ")}.`]
+                                : [`${CAUSE_NOT_ESTABLISHED[0].toUpperCase()}${CAUSE_NOT_ESTABLISHED.slice(1)}.`]), "",
     ...(sup && sup.prev ? ["## Supersedes", "", `${sup.prev.determination_id}: ${oneLine(sup.reason)}`, ""] : []),
     "## Session Log", "", `### Session ${at} | Determined | ${oneLine(author)}`,
     `Changes: determination recorded in ${project}.`, ""];
@@ -977,5 +1135,8 @@ export function conformanceOps(c, url, body) {
                                                 after: qp("after"), limit: qp("limit"), viewer: qp("viewer") }),
     comparisonpropose: () => c.comparisonPropose({ ...b, proposer: qp("author"), viewer: qp("viewer") }),
     comparison: () => c.comparisonRead({ id: qp("id") ?? b.id, viewer: qp("viewer") }),
+    comparisonfacts: () => c.comparisonFacts({ contradiction: qp("contradiction") ?? b.contradiction ?? null,
+                                               standardSide: qp("standardSide") ?? b.standardSide ?? null,
+                                               viewer: qp("viewer") }),
   };
 }

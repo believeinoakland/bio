@@ -1,4 +1,4 @@
-/* conformance's refusal rows (requirements: `build/requirements/conformance.md`, R1, R6–R8, R12, R18–R20). DEC-49:
+/* conformance's refusal rows (requirements: `build/requirements/conformance.md`, R1, R6–R8, R12, R18–R22). DEC-49:
  * every refusal this module answers carries its code, its row and the member's translation, so a surface shows the same
  * sentence wherever the act is reached. The family is C-113, this module's own, minted with the module (K107 (3)'s
  * rule: the job names a new code's row; K174: a module holds its new family). K275, K380 (N309, N312): a code names one
@@ -11,7 +11,8 @@
  * (C-112.10, its `noSuchStandard`, R17). Retired, their numbers never reused: C-113.2 (N274, N208, K275), C-113.9
  * (`NO_SUCH_STANDARD`, standards R17) and C-113.18 (`ALREADY_SUPERSEDED`, now R20's `DETERMINATION_SUPERSEDED`,
  * C-113.23) (K380). An absent supersession reason is `NO_REASON` (C-113.22), a malformed one `BAD_REASON` (N233,
- * K264). */
+ * K264). N345 adds C-113.24–C-113.27 (R12's contradiction link, R22's cause and recommendation) and C-113.28 (R21's
+ * side, named by the member), each `awaiting stamp` for T16. */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -110,6 +111,30 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     check: 'C-113.23', where: at("determinationSuperseded", "is-determination-live"),
     translation: 'That determination has been superseded, and a superseded determination is not acted on or superseded '
       + 'again. Use the determination that replaced it. Nothing was written.',
+  },
+  NO_SUCH_CONTRADICTION_INQUIRY: {
+    check: 'C-113.24', where: at("#contradictionInquiry", "is-contradiction-inquiry-seen"),
+    translation: 'No question you can see answers to that id as one taken up from a contradiction. Nothing was written.',
+  },
+  CAUSE_NOT_EVIDENCED: {
+    check: 'C-113.25', where: at("#causeRefusal", "is-cause-evidenced"),
+    translation: 'A cause is recorded on a determination only when evidence you can see shows it. A cause not yet shown '
+      + 'stays in the question where it is being worked out, and the determination says the cause is not established. '
+      + 'Nothing was written.',
+  },
+  CAUSE_UNSTATED: {
+    check: 'C-113.26', where: at("#causeRefusal", "is-cause-stated"),
+    translation: 'The cause is stated in a sentence of your own, of at most 2,000 characters. Nothing was written.',
+  },
+  RECOMMENDATION_IS_AN_ACTION: {
+    check: 'C-113.27', where: at("#refuseRecommendation", "is-recommendation-absent"),
+    translation: 'A determination records what was required, what was done, and why, and never what should be done. '
+      + 'Propose an action instead. Nothing was written.',
+  },
+  STANDARD_SIDE_UNNAMED: {
+    check: 'C-113.28', where: at("comparisonFacts", "is-standard-side-named"),
+    translation: 'Name which side of the question states what the standard requires, a or b. The plane never chooses '
+      + 'it. Nothing was written.',
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: 'C-113.21', where: at("check", "is-determination-act"),
