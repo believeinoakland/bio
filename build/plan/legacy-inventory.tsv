@@ -1,0 +1,854 @@
+file	lines	class	module	evidence	note
+bio-plane/test/accepts-without-reading.control.mjs	171	helper	entities	accepts-without-reading.measure.mjs	control driving the measure instrument; follows it
+bio-plane/test/accepts-without-reading.measure.mjs	457	dead?	entities	DEC-53 watch-item instrument (op=readingname/resolve); no assertions	an instrument, not a suite; battery never runs it; retire or move to tools
+bio-plane/test/acquire.test.mjs	572	covered	capture	m/capture/acquire.test.mjs (R1-R20,R18 N80); m/provenance/grade-origin.test.mjs	every section maps to capture R1-R20; partly reads index.mjs source
+bio-plane/test/action-loop.test.mjs	822	convert?	actions	covered: m/actions/acts,read,write (R12-R17,R25,R26,R34,R37,R40); missing: DEC-13 RFC names inquiries + response window	RFC rules live only in legacy-checks bio-checks.mjs; no actions requirement states them
+bio-plane/test/actionquote.test.mjs	353	covered	actions	m/actions/acts.test.mjs (R20,R27); m/actions/read.test.mjs (R37 purge)	quote, waiver and purge all in module tests
+bio-plane/test/adminvote.control.mjs	489	helper	membership	adminvote.test.mjs	control arms for adminvote
+bio-plane/test/adminvote.test.mjs	723	covered?	membership, control-plane	m/membership/administrators.test.mjs (R6-R9), signin (R5); m/control-plane/stamps.test.mjs (R17,R29), admission.test.mjs (R14)	forgery = stamp override; structure pins read control-plane source text
+bio-plane/test/admission-gate.test.mjs	372	covered	control-plane	m/control-plane/admission.test.mjs (R9-R13, R28)	C-38 family each driven in module tests
+bio-plane/test/adoptable-reading.mjs	68	helper	-	used by ~45 legacy suites (action-loop, caseflip, caselifecycle, caseobject ...)	fixture; retires with its suites
+bio-plane/test/affordances.test.mjs	1529	covered	affordances	m/affordances/catalogue,derive,plane,services.test.mjs (R1-R24)	drift guard, vocabularies, rungs, facts all covered; heavy source reads
+bio-plane/test/aicredential.control.mjs	273	helper	membership	aicredential.test.mjs	control arms
+bio-plane/test/aicredential.test.mjs	862	covered?	membership, control-plane	m/membership/expertise-keys-ai.test.mjs (R28-R30,R62); m/control-plane/admission (R8,R12), stamps (R19)	DEC-49/MACHINE_CANNOT sweeps are system-ish; reads schema source
+bio-plane/test/airun-contextkind.control.mjs	166	helper	ai-runs	airun-contextkind.test.mjs	control arms
+bio-plane/test/airun-contextkind.test.mjs	346	covered	ai-runs	m/ai-runs/words.test.mjs (R7), open.test.mjs (R9), reads.test.mjs (R19)	REC-153 mislabelled kind = R7
+bio-plane/test/airun-principal.control.mjs	128	helper	ai-runs	airun-principal.test.mjs	control arms
+bio-plane/test/airun-principal.test.mjs	317	covered	ai-runs	m/ai-runs/words.test.mjs (R5), tick-close.test.mjs (R11,R13), scheduler.test.mjs (R15)	principal gate, forged actor, reaper covered
+bio-plane/test/airun-projectgate.test.mjs	691	covered	ai-runs	m/ai-runs/words.test.mjs (R6), open.test.mjs (R9), tick-close.test.mjs (R11,R13)	project gate incl. DEC-17 inquiry arm
+bio-plane/test/airun.test.mjs	1379	covered?	ai-runs	m/ai-runs/words (R1-R4,R35), tick-close (R14,R31), scheduler (R15), open (R9), reads (R19,R24)	UI-38 arm reads civicos-ui/app.html (legacy-ui); rest covered
+bio-plane/test/airuns.control.mjs	252	helper	ai-runs	airuns.test.mjs	control arms
+bio-plane/test/airuns.test.mjs	908	covered?	ai-runs	m/ai-runs/reads.test.mjs (R22,R24), hidden-notices.test.mjs (R42)	D-15 compile-point arm is source-text on query.mjs
+bio-plane/test/analystvocab.control.mjs	230	helper	strength	analystvocab.test.mjs	control arms (edit sources)
+bio-plane/test/analystvocab.test.mjs	788	convert	strength	no requirement: D-269 analyst-vocabulary ban in member-facing axis prose	source-text sweep of strength/inquiry + app.html; convert at interface (P7)
+bio-plane/test/archive-monitoring.test.mjs	170	covered	monitoring, capture	m/monitoring/ticks.test.mjs (R20); m/capture/acquire.test.mjs (R3); m/capture/services.test.mjs (R8 R43)	archive fallback and governed exclusion covered
+bio-plane/test/attest.test.mjs	271	covered	signatures, provenance	m/signatures/signatures.test.mjs (R15-R24); m/provenance/attest.test.mjs (R31-R34,R39)	TSA request/response and op=attest covered
+bio-plane/test/audit-inheritance.test.mjs	249	covered?	inquiry	m/inquiry/grammar.test.mjs (R7)	inherited leg's own grade C-21.2; audit arm via record-core R59
+bio-plane/test/audit.test.mjs	163	covered	record-core, promotion	m/record-core/record-core.test.mjs (R18-R20,R59); m/promotion/history.test.mjs (R30)	auditPass paging and tallies
+bio-plane/test/basis.test.mjs	314	covered	inquiry	m/inquiry/promotion.test.mjs (R11,R12,R34,R36), reads.test.mjs (R16), grammar.test.mjs (R4)	basis projection, DAG, hunch, purge
+bio-plane/test/battery-provenance.test.mjs	249	dead?	legacy-index	tests the old battery runner (scripts/battery.mjs)	battery tooling retires with legacy-tests
+bio-plane/test/battery-residue.control.mjs	169	helper	legacy-index	battery-residue.test.mjs	control arms
+bio-plane/test/battery-residue.test.mjs	555	dead?	legacy-index	tests the old battery runner's residue scan (scripts/residue.mjs)	battery tooling retires with legacy-tests
+bio-plane/test/battery-verdict.test.mjs	442	dead?	legacy-index	tests the old battery runner's verdict/log (scripts/battery.mjs)	battery tooling retires with legacy-tests
+bio-plane/test/bias.test.mjs	1379	covered	bias	m/bias/checks,promotion,adopt-manifest,inhale,debt.test.mjs (R1-R30)	heavy source-text arms (store.mjs size floor) not needed
+bio-plane/test/bootstrap.test.mjs	86	covered	instance-setup, membership, control-plane	m/instance-setup/reports.test.mjs (R17,R18); m/membership/signin.test.mjs (R1,R3); m/control-plane/doors,admission (R2,R15)	legacy root /?op= path is legacy-index
+bio-plane/test/bounds.test.mjs	3190	system	-	cross-module bounds: roster of every op walked from source and driven twice	3190 lines; walks src for bounded ops; D-414 segmenter parity
+bio-plane/test/browse.test.mjs	173	covered?	instance-setup, control-plane	m/instance-setup/page.test.mjs (R20-R25); m/control-plane/admission.test.mjs (R10); m/capture/ops.test.mjs (R21)	page shape by string includes; mdRender escape maybe unowned
+bio-plane/test/browser-render.test.mjs	541	covered	capture-sources	m/capture-sources/browserrender.test.mjs (R19-R26); m/capture/acquire.test.mjs (R5)	BROWSER binding render
+bio-plane/test/budget-sweep.test.mjs	120	dead?	legacy-index	tests scripts/budgetsweep.mjs over the old gate	battery tooling retires with legacy-tests
+bio-plane/test/budget.mjs	81	helper	-	used by nearly every legacy suite and scripts/battery.mjs	M0-107 budget helper; retires with them
+bio-plane/test/bundle.test.mjs	42	system	-	bundle freshness: dist/bio-plane.bundled.mjs boots and answers	42 lines
+bio-plane/test/calibration.control.mjs	366	helper	calibration	calibration.test.mjs	control arms
+bio-plane/test/calibration.test.mjs	623	covered?	calibration	m/calibration/rules.test.mjs (R1-R3,R14), store.test.mjs (R4-R13), notices.test.mjs	clause (b) transcription arm is extraction's; reads SCHEDULER.md
+bio-plane/test/cap12-pin.probe.mjs	55	dead	-	one-off probe measuring a pinned digest; not run by anything	retire
+bio-plane/test/cap13-reuse-pages.test.mjs	210	covered?	capture, subresources	m/capture/services.test.mjs (R24,R25); m/subresources/subresources.test.mjs (R11)	chrome-by-recurrence arm: capture services R28
+bio-plane/test/cap14-reused-from.test.mjs	301	covered?	capture	m/capture/services.test.mjs (R24-R26), reads.test.mjs (R26)	migration arm D may lack a test
+bio-plane/test/capability.test.mjs	376	covered	membership, control-plane	m/control-plane/admission.test.mjs (R10,R13), stamps.test.mjs (R18); m/membership/signin (R4), ownership, expertise-keys-ai (R22)	capabilities gate sessions
+bio-plane/test/capture-container-extent.test.mjs	1190	covered?	extraction, content, office-readers	m/extraction/read.test.mjs (R13,R45,R16); m/content/grammar.test.mjs (R7,R33)	office inner bounds may sit in office-readers tests
+bio-plane/test/capture-pagecount.test.mjs	388	covered	extraction, content	m/extraction/read.test.mjs (R13); m/content/mint.test.mjs (R12), context.test.mjs (R42), grammar.test.mjs (R7)	page count persisted and bounds legs
+bio-plane/test/capture-progressions.test.mjs	202	covered	progressions	m/progressions/feeds.test.mjs (R19), overdue.test.mjs (R16)	captureprogressions per capture
+bio-plane/test/capture-text-index.test.mjs	1131	covered	extraction	m/extraction/store.test.mjs (R22,R36,R49), read.test.mjs (R16)	DDL arms read store.mjs source
+bio-plane/test/capture.test.mjs	81	covered	capture	m/capture/ops.test.mjs (R21), evidence-absent.test.mjs (R63)	op=capture put/get
+bio-plane/test/capturerequests.control.mjs	427	helper	capture-requests	capturerequests.test.mjs	control arms
+bio-plane/test/capturerequests.test.mjs	1257	covered	capture-requests	m/capture-requests/door,drain,plane,reads,retry.test.mjs (R1-R44)	schema-shape arms read schema source
+bio-plane/test/case-authority.test.mjs	416	covered	ratification	m/ratification/case-commit.test.mjs (R3), finding-commit.test.mjs (R5,R7), caseratify-op.test.mjs (R2)	owner signs, joined member delivers
+bio-plane/test/case-edition-conclusion.control.mjs	356	helper	case-authoring	case-edition-conclusion.test.mjs	control arms
+bio-plane/test/case-edition-conclusion.test.mjs	566	covered	case-authoring, ratification	m/case-authoring/identity.test.mjs (R8), members.test.mjs (R4); m/ratification/conclusion.test.mjs (R1)	ALREADY_A_CASE_MEMBER, NOT_CONCLUDED
+bio-plane/test/case-opened.test.mjs	743	dead?	-	REC-58 source-text walk: case.opened unpublished, DO_PATH routing	answers a closed question by reading source; no requirement; P7
+bio-plane/test/case-project-conclusion.control.mjs	258	helper	case-authoring	case-project-conclusion.test.mjs	control arms
+bio-plane/test/case-project-conclusion.test.mjs	467	covered	case-authoring, ratification	m/case-authoring/members.test.mjs (R4); m/ratification/conclusion.test.mjs (R1), case-commit.test.mjs (R3 C-65.1)	project relationship conclusion
+bio-plane/test/caseceremony.mjs	78	helper	-	used by ~25 legacy suites (caseflip, caselifecycle, caseobject, publish ...)	ssh signing ceremony fixture
+bio-plane/test/caseflip.control.mjs	258	helper	publication	caseflip.test.mjs	control arms
+bio-plane/test/caseflip.test.mjs	1224	covered?	publication	m/publication/published.test.mjs (R7-R11,R22), worker.test.mjs (R13); m/case-authoring/members.test.mjs (R13)	clause arm parses CASE-AS-PRODUCTION.md text
+bio-plane/test/caselifecycle.control.mjs	264	helper	publication	caselifecycle.test.mjs	control arms
+bio-plane/test/caselifecycle.test.mjs	961	covered	publication, inquiry, case-authoring	m/publication/relation.test.mjs (R4-R6); m/inquiry/grammar.test.mjs (R1); m/case-authoring/members.test.mjs (R4)	case flags set/discharged; doc-text clause arm
+bio-plane/test/caseobject.control.mjs	206	helper	publication	caseobject.test.mjs	control arms
+bio-plane/test/caseobject.test.mjs	554	covered?	publication	m/publication/casedoc.test.mjs (R40), published.test.mjs (R11,R22), invariants.test.mjs (R24)	design-document arm reads docs text
+bio-plane/test/casepin.control.mjs	321	helper	-	casepin.test.mjs (another batch)	follows casepin.test's class
+bio-plane/test/casepin.test.mjs	796	covered	basis-versions,ratification,publication,inquiry	m/basis-versions/acts.test.mjs (PUBLISHED_CANNOT_MOVE_VERSION R12); m/ratification/case-commit.test.mjs (pins); m/publication/published.test.mjs R10 R11; m/inquiry/divide,ground	also reads CASE-AS-PRODUCTION.md and src text (P7); interface behaviour already proven
+bio-plane/test/caseproduction.control.mjs	459	helper	case-authoring	caseproduction.test.mjs	NC driver editing src; follows caseproduction.test
+bio-plane/test/caseproduction.test.mjs	1303	covered?	case-authoring,ratification,strength,publication	m/case-authoring/preflight,members,identity (R1-R6 roles, BELOW_PROJECT_STRENGTH); m/ratification/case-commit (CASE_PRODUCTION_DIVERGED); m/strength (BAR_IS_A_PROJECT_PROPERTY)	CASE_NAMES_NO_PROJECT now CASE_SIGNER_NOT_AN_OWNER; also reads src text and DEC-49 census rows
+bio-plane/test/caseratify-conclusion.control.mjs	265	helper	ratification	caseratify-conclusion.test.mjs	NC driver
+bio-plane/test/caseratify-conclusion.test.mjs	405	covered	ratification	m/ratification/conclusion.test.mjs R1; case-commit.test.mjs R3 (CASE_CONCLUSION_MOVED, CASE_RATIFY_STALE)	
+bio-plane/test/casesearched.control.mjs	208	helper	case-authoring	casesearched.test.mjs	NC driver
+bio-plane/test/casesearched.test.mjs	616	covered	case-authoring,ratification	m/case-authoring/document.test.mjs R17 R11 (searched section); m/ratification/checks.test.mjs R8 (SEARCHED_SUBJECT_SOURCES)	
+bio-plane/test/casesign.control.mjs	347	helper	ratification	casesign.test.mjs	NC driver
+bio-plane/test/casesign.test.mjs	1090	covered?	ratification,publication	m/ratification/caseratify-op,case-commit,checks (R2 R3 R8: CASE_UNSIGNED, EDITION_ALREADY_RATIFIED, bad signature); m/publication/published,casedoc (R1 R10 R11)	legacy signs with real ssh-keygen; module uses stub signatures
+bio-plane/test/cdx.test.mjs	112	covered	capture-sources	m/capture-sources/cdx.test.mjs (CDX_NO_HEADER, CDX_UNPARSEABLE, NO_USABLE_CAPTURE)	verbatim archive.org fixture; check module test uses same bytes
+bio-plane/test/check-firing.test.mjs	650	system	legacy-checks,provenance,actions,reevaluation	catalogue census: every catalogue check fires; retired check ids never pushed; estate walk	source scan of checks (P7); retires with legacy-checks catalogue
+bio-plane/test/cite-extent.test.mjs	531	covered	citation,content	m/citation/cite-refusals.test.mjs R1 R11 (EXTENT_* codes, BASIS_REFUSED); m/content	
+bio-plane/test/cite-scale.mjs	209	covered?	citation	m/citation/cite-refusals.test.mjs R1 (CITATION_TOO_LARGE past 1 MiB)	probe (npm probe:cite), not a test; measured the limit
+bio-plane/test/cite.test.mjs	535	covered	citation	m/citation/cite-refusals.test.mjs, cite-write.test.mjs R1-R3 (BAD_NOTE, NOT_INFORMATION, SEVERED_EDGE)	
+bio-plane/test/citeinquiry.test.mjs	534	covered	citation,inquiry	m/citation/cite-write.test.mjs R2 R8 (inquiry legs), cite-refusals R1 (NO_ROLE, BAD_ROLE, BASIS_CYCLE, SELF_BASIS)	
+bio-plane/test/citeproject-inquiry.test.mjs	451	covered?	citation	m/citation/cite-write.test.mjs R2, sever.test.mjs (sever/reinstate), cite-refusals R1	citing an inquiry into a project; confirm project-arm inquiry member case
+bio-plane/test/claudecascade.test.mjs	141	covered	runtime-limits	m/runtime-limits/runtime-limits.test.mjs R13-R17 (instanceClaudeStatus/Token)	arm (f) is a source-text fence (P7); drop it
+bio-plane/test/clockadvance.control.mjs	193	helper	actions	action-loop.test.mjs	clock-arm NC driver
+bio-plane/test/clockpin.preload.mjs	43	helper	test-support	mint-ledger.test.mjs, opaque-ids.test.mjs	clock-freeze preload instrument
+bio-plane/test/clockshift.preload.mjs	46	helper	test-support	action-loop.test.mjs (via clockadvance.control.mjs)	clock-shift preload instrument
+bio-plane/test/conclude-project-arm.control.mjs	119	helper	basis-versions	conclude-project-arm.test.mjs	NC driver
+bio-plane/test/conclude-project-arm.test.mjs	309	covered?	basis-versions,affordances	m/basis-versions/conclude.test.mjs R16-R19; m/affordances (conclude offered to joined members)	who is offered conclude on a concluded question: check affordances test
+bio-plane/test/conclude-project.control.mjs	242	helper	basis-versions	conclude-project.test.mjs	NC driver
+bio-plane/test/conclude-project.test.mjs	636	covered?	basis-versions,queue-producers,queue	m/basis-versions/conclude.test.mjs R16-R21 (NO_CLAIM, CONCLUSION_IS_THE_CLAIM); m/queue-producers/producers.test.mjs R2 (shared-inquiry-concluded)	commentary not-evidence arm: confirm basis-versions R18
+bio-plane/test/conclude.test.mjs	697	covered	basis-versions	m/basis-versions/conclude.test.mjs R16-R19 (NO_CONCLUSION, NO_FALSIFIER, NO_BASIS, MACHINE_CANNOT_CONCLUDE)	
+bio-plane/test/conformance.test.mjs	496	system	legacy-checks,provenance,instance-setup	whole plane output audited clean by the full catalogue (zero findings, snapshot layout)	catalogue conformance across modules
+bio-plane/test/connection-derive-sweep.test.mjs	267	covered?	connections,scheduler	m/connections/derive.test.mjs R18 (dirty set, sweep); m/scheduler	
+bio-plane/test/connection.test.mjs	289	covered	connections,progressions	m/connections/derive.test.mjs R1; m/progressions (BAD_REQUIRED, DUPLICATE_STAGE, NO_STAGES, UNKNOWN_AFTER)	
+bio-plane/test/connections-growth.measure.mjs	125	dead?	connections	D-224 growth measurement	instrument, asserts nothing; figures already recorded
+bio-plane/test/content-arm.test.mjs	889	covered?	query-language,retrieval,content	m/query-language (CONTENT_EXTENT_KINDS, CHAIN_KIND_MIXED); m/retrieval (op=search, meaningrows)	imports schema modules directly
+bio-plane/test/content-capture-bound.test.mjs	486	convert	inquiry	inquiry R13, R6: capture ceiling CAPTURE_BOUNDED_BY_FIDELITY (weakest link) and leg refused above it	m/inquiry/earned tests route and unmeasured only, never fidelity bound
+bio-plane/test/content-chain-kind.test.mjs	463	covered?	text-chain,content	m/text-chain (CHAIN_KIND_MIXED, STEP_KINDS); m/content	migration arm reads schema
+bio-plane/test/content-extent-arms.test.mjs	652	covered?	content,office-readers,connections	m/content (CONTENT_EXTENT_DOCUMENT_ONLY, UNREADABLE); m/connections R13 R52 (portion grades)	READING_POSITION_ABSENT is legacyConnectionAxis only, untested; may be dead
+bio-plane/test/content-extent-leg.test.mjs	677	covered	content,basis-versions	m/content (CONTENT_EXTENT_OUT_OF_RANGE, ROW_NOT_THIS_TARGET); m/basis-versions (VERSION_FROZEN, BASIS_VERSION_REFUSED)	
+bio-plane/test/content-extent.test.mjs	639	covered?	content,text-chain	m/content, m/text-chain (TEXT_ATTEST_MACHINE, extent grammar)	CONTENT_EXTENT_KIND_NO_PRODUCER untested in modules
+bio-plane/test/content-index-probe.mjs	343	dead?	query-language	REC-90 SQL index measurement	probe, not a test; reads legacy schema.mjs
+bio-plane/test/content-machine-mint.test.mjs	614	covered	content,control-plane	m/content/mint.test.mjs; m/control-plane (AI_BEYOND_TASK_SCOPE)	
+bio-plane/test/content-reads.test.mjs	723	covered?	content,inquiry	m/content/reads.test.mjs R17-R20; m/inquiry (NOT_YET_RESOLVED, INQUIRY_TARGET)	CAPTURE_BOUNDED_BY_FIDELITY, READING_POSITION_ABSENT unproven in modules
+bio-plane/test/contradiction-corpus.mjs	148	helper	contradiction	contradiction-overstrict.test.mjs	labelled fixture
+bio-plane/test/contradiction-gate.mjs	107	helper	contradiction	contradiction-overstrict.test.mjs	gate measure()/gate()
+bio-plane/test/contradiction-judge-baseline.mjs	114	helper	contradiction	contradiction-overstrict.test.mjs	lexical baseline judgement
+bio-plane/test/contradiction-judge-recorded.mjs	71	helper	contradiction	contradiction-overstrict.test.mjs	recorded machine judgement
+bio-plane/test/contradiction-overstrict.control.mjs	167	helper	contradiction	contradiction-overstrict.test.mjs	NC driver
+bio-plane/test/contradiction-overstrict.test.mjs	541	convert?	contradiction	no requirement: over-strictness gate (false-conflict rate over labelled corpus); R2 only pins the prompt digest	CANDIDATE_* refusals covered in m/contradiction/propose
+bio-plane/test/contradictionpairs.test.mjs	507	covered	contradiction	m/contradiction (CONTRADICTION_KEY_UNKNOWN, HELD_APART, pair checks, R11 ladders)	
+bio-plane/test/counterparty.test.mjs	341	covered	actions	m/actions (COUNTERPARTY_REFUSED, C-2.10 action arms R9)	
+bio-plane/test/coverage-provenance.test.mjs	356	dead?	legacy-index	tests scripts/coverage.mjs control-register floor	old-process coverage/NC register tooling; retire with it
+bio-plane/test/cpdf15-tesseract-runtime.probe.mjs	1378	dead?	ocr-worker	CPDF-15 deployed-runtime tesseract cost probe	one-off platform measurement; deploys scratch worker
+bio-plane/test/cpdf15-tesseract-worker.mjs	151	helper	ocr-worker	cpdf15-tesseract-runtime.probe.mjs	scratch worker source; follows probe (dead?)
+bio-plane/test/cpdf16-floor-controls.mjs	213	helper	ocr-worker	ocr-measure-probe.mjs; witnessed by d322-floor-gate-witness.test.mjs	NC driver for OCR floor instrument
+bio-plane/test/cpdf18-pdf-images.test.mjs	375	covered?	pdf-reader,pdf-pixels	pdf-worker/test/imagecrop.test.mjs (RECT_REQUIRED, INLINE_IMAGE, NO_IMAGE_AT_RECT); m/pdf-reader/boxes.test.mjs R34	confirm pdfImageRef rect minting in pdf-reader tests
+bio-plane/test/curated-producer.probe.mjs	287	system?	promotion	census: edges with no curated producer (hand-promote only)	estate sweep probe, not in battery
+bio-plane/test/current-shared-question.control.mjs	244	helper	basis-versions	current-shared-question.test.mjs	NC driver
+bio-plane/test/current-shared-question.test.mjs	421	covered	basis-versions	m/basis-versions/acts.test.mjs R15 (current writes only the project)	
+bio-plane/test/current.control.mjs	405	helper	basis-versions	current.test.mjs	NC driver
+bio-plane/test/current.test.mjs	1004	covered?	basis-versions,queue-producers,queue	m/basis-versions/acts.test.mjs R13-R15; m/queue-producers/producers.test.mjs R2 (stance-changed, new-version findings)	
+bio-plane/test/d116-serving-builds.test.mjs	163	covered	instance-setup	m/instance-setup/reports.test.mjs R17 (storeVersion, memberVersions)	legacy used real DO skew; module uses stub
+bio-plane/test/d125-findingmute.control.mjs	114	helper	queue	d125-findingmute.test.mjs	NC driver
+bio-plane/test/d125-findingmute.test.mjs	371	covered?	queue	m/queue/catalogue.test.mjs R4 (item mute, suppressedBy); KIND_NOT_PERSONAL	
+bio-plane/test/d134-custodial-refusals.test.mjs	159	covered	membership	m/membership (C-96: ADMINS_FIRST, BAD_KEY, NO_COVER, TARGET_NOT_AN_ADMIN), t16-own-keys (signerSet)	
+bio-plane/test/d147-records-lifecycle.test.mjs	375	covered	actions	m/actions (lifecycle codes: DUE_*, OUTCOME_*, APPEAL_NAMES_NO_DECISION)	
+bio-plane/test/d149-governing-laws.test.mjs	346	covered	actions	m/actions (NO_LAWS, TOO_MANY_LAWS, BAD_LAW_LEVEL, GOVERNING_LAWS_REWRITTEN)	
+bio-plane/test/d150-statement-acknowledgement.test.mjs	1029	covered	case-authoring,review	m/case-authoring/statement.test.mjs (STATEMENT_ACK_*); m/review	STATEMENT_ACK_DOCUMENTS_OVER_BOUND retired in gate.mjs
+bio-plane/test/d168-retired-cite.test.mjs	321	covered	citation	m/citation/cite-refusals.test.mjs R1 R5 (RETIRED_NOT_CITABLE)	
+bio-plane/test/d179onehome.control.mjs	110	helper	provenance	d179onehome.test.mjs	NC driver
+bio-plane/test/d179onehome.test.mjs	198	covered	provenance	m/provenance (CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13)	
+bio-plane/test/d216-sharing.control.mjs	228	helper	basis-versions	d216-sharing.probe.mjs	NC driver for the probe
+bio-plane/test/d216-sharing.probe.mjs	745	covered?	basis-versions,citation	m/basis-versions/acts.test.mjs R13-R15 (current per project over refs edge)	model-check probe, not in battery
+bio-plane/test/d241-derivation-stated.control.mjs	104	helper	connections	d241-derivation-stated.test.mjs	NC driver
+bio-plane/test/d241-derivation-stated.test.mjs	216	covered?	connections,observation-log	connections R5 (derivation statement from observation-log)	confirm m/connections read test asserts cut/partial
+bio-plane/test/d249-port.control.mjs	204	dead?	legacy-index	port pin in scripts/battery.mjs	old battery infrastructure; retires with battery
+bio-plane/test/d249-port.probe.mjs	285	dead?	legacy-index	battery socket/port census	old battery infrastructure probe
+bio-plane/test/d260-resume.control.mjs	121	helper	ai-runs	d260-resume.test.mjs	NC driver
+bio-plane/test/d260-resume.test.mjs	418	covered?	ai-runs,agent-worker	m/ai-runs/scheduler.test.mjs (resume, MEMBER_PRINCIPAL_RUN); agent-worker/test	legacy drove real agent-worker binding
+bio-plane/test/d266.control.mjs	253	helper	queue	current.test.mjs, proposedispose.test.mjs	NC driver
+bio-plane/test/d266scope.control.mjs	246	helper	queue	d266scope.test.mjs	NC driver
+bio-plane/test/d266scope.test.mjs	642	covered?	queue,progressions	m/queue/dispose.test.mjs (dismissal scope, NO_PROJECT_SCOPE); m/progressions	
+bio-plane/test/d270-refusal-truth.control.mjs	261	helper	control-plane	d270-refusal-truth.test.mjs	NC driver
+bio-plane/test/d270-refusal-truth.test.mjs	762	system	control-plane	DEC-49 refusal guard: every refusal carries true code and translation	m/control-plane covers session codes
+bio-plane/test/d278-codeless-refusals.test.mjs	260	system	control-plane	DEC-49 refusal guard: no codeless refusal on any op	cross-module
+bio-plane/test/d280-strengthbar.control.mjs	293	helper	strength	d280-strengthbar.test.mjs	several arms unrunnable since CASE-2
+bio-plane/test/d280-strengthbar.test.mjs	826	covered?	strength	m/strength (BAR_IS_A_PROJECT_PROPERTY, strengthbar, strengthbarof)	superseded in part by CASE-2
+bio-plane/test/d301-census.control.mjs	329	helper	legacy-tests	hygiene.test.mjs, walkfloor.test.mjs census	NC for class census string-blinding (system)
+bio-plane/test/d310.control.mjs	290	helper	affordances	affordances.test.mjs, caseproduction.test.mjs	NC driver
+bio-plane/test/d311-roster-affordances.test.mjs	474	covered?	affordances,membership	m/affordances/catalogue,derive (roster acts, MACHINE_REFUSALS); m/membership (LAST_COMMITTED_OWNER, VOTES_SHORT)	
+bio-plane/test/d311.control.mjs	137	helper	affordances	d311-roster-affordances.test.mjs	control of d311-roster-affordances (not in batch); follows it
+bio-plane/test/d315-guard-controls.mjs	248	helper	legacy-tests	d315-guard-witness.test.mjs, ocr-composed-probe.mjs, cpdf15 probe	driver for OCR probe guards; follows d315-guard-witness (dead?)
+bio-plane/test/d315-guard-witness.test.mjs	294	dead?	legacy-tests	ocr-composed-probe.mjs, cpdf15-tesseract-runtime.probe.mjs	tests OCR measurement-probe digest guards, not product; retire with the probes
+bio-plane/test/d322-floor-gate-witness.test.mjs	456	dead?	legacy-tests	ocr-measure-probe.mjs, cpdf16-floor-controls.mjs	tests OCR floor-probe control gate, a measurement instrument, not product
+bio-plane/test/d334-monitor-credential.test.mjs	601	covered?	monitoring, instance-setup, control-plane	monitoring/ticks.test.mjs (R23,R24 retired), instance-setup/reports.test.mjs (R18), control-plane/admission.test.mjs (R7)	fallback half obsolete: ticks run in process, no credential (K372)
+bio-plane/test/d351-odf-evidentiary.test.mjs	453	covered	odf-reader, provenance, monitoring	odf-reader/ods.test.mjs, digest.test.mjs; provenance/register-checks.test.mjs (R43); monitoring/tick.test.mjs (R5)	e2e acquire/promote/monitor; parts proven per module
+bio-plane/test/d389-fullfetch.control.mjs	89	helper	retrieval	d389-fullfetch.test.mjs	control; follows d389 (covered)
+bio-plane/test/d389-fullfetch.test.mjs	246	covered	retrieval	retrieval/frontier.test.mjs, contentaxis.test.mjs, meaning.test.mjs (truncated per viewer)	
+bio-plane/test/d419-content-crop.control.mjs	126	helper	content	d419-content-crop.test.mjs	control; follows d419 (covered)
+bio-plane/test/d419-content-crop.test.mjs	249	covered	content, control-plane	content/crop.test.mjs (R32); control-plane/stamps.test.mjs (R17,R29 viewer stamp every op)	plane half = routing+stamp, swept by control-plane
+bio-plane/test/d420-image-page.test.mjs	335	covered	content, extraction	content/grammar.test.mjs (R7 CONTENT_EXTENT_NO_IMAGE_PAINTED); extraction/store.test.mjs, read.test.mjs (container_extent)	
+bio-plane/test/d440-image-part.test.mjs	336	covered	content	content/grammar.test.mjs (R7 CONTENT_EXTENT_NOT_A_CONTAINER, image_list undetermined)	
+bio-plane/test/d442-publish-writes-nothing.control.mjs	283	helper	publication	d442-publish-writes-nothing.test.mjs	control; follows d442
+bio-plane/test/d442-publish-writes-nothing.test.mjs	473	covered?	publication, case-authoring, ratification	case-authoring/members.test.mjs (R13,R23); publication/published.test.mjs, casedoc.test.mjs; ratification/checks.test.mjs	K457 already names case-authoring R13/R23 for arm (a)
+bio-plane/test/d444-reinstate-project-arm.control.mjs	191	helper	affordances	affordances.test.mjs (D-444 block)	control of legacy affordances.test.mjs (not in batch)
+bio-plane/test/d448-review-copy-translation.control.mjs	348	helper	review	d448-review-copy-translation.test.mjs	control; follows d448
+bio-plane/test/d448-review-copy-translation.test.mjs	360	covered	review	review/acts.test.mjs, invariants.test.mjs, copy.test.mjs (REVIEW_* codes with translation)	DEC-49 half also system guard
+bio-plane/test/d456-namespace-scope.test.mjs	290	covered	control-plane	control-plane/doors.test.mjs, admission.test.mjs (R3 NAMESPACE_UNKNOWN, R6)	
+bio-plane/test/d461-pinned-namespace.test.mjs	208	covered	control-plane	control-plane/doors.test.mjs, admission.test.mjs, doorbell.test.mjs (R5 NAMESPACE_PINNED)	
+bio-plane/test/d463-confined-credential.test.mjs	365	covered	control-plane, membership	control-plane/doors.test.mjs, admission.test.mjs (R4 NAMESPACE_CONFINED); membership AI_CREDENTIAL_CHECKS	section 8 structural pin reads index source
+bio-plane/test/d470-catalog-census.control.mjs	374	helper	promotion	d470-catalog-census.test.mjs	control; follows d470
+bio-plane/test/d470-catalog-census.test.mjs	1093	covered?	promotion	promotion/gate.test.mjs (R34 GATE_VERSION contains CATALOG_VERSION, R50 row census)	reads bio-checks source + esbuild; catalogue census is also a system property
+bio-plane/test/d473-odt-evidentiary.test.mjs	330	covered	odf-reader, provenance, monitoring	odf-reader/odt.test.mjs, digest.test.mjs; provenance/register-checks.test.mjs (R43); monitoring/tick.test.mjs	
+bio-plane/test/d475-page-namespace.test.mjs	256	covered	control-plane	control-plane/doors.test.mjs (R1 page reads namespace addressed; R3 applies to page)	
+bio-plane/test/d479-bounds.control.mjs	145	helper	legacy-tests	bounds.test.mjs, derivation-bounds.test.mjs	control of the bounds census suites (system)
+bio-plane/test/d484-refusal-translation.test.mjs	311	covered	inquiry, progressions	inquiry/nobasis.test.mjs (cites D-484, R27/R45); progressions NO_BASIS (R4,R28)	DEC-49 translation half is system guard
+bio-plane/test/d497-sight-index.control.mjs	185	helper	membership	bounds.test.mjs (directory sight index)	control of legacy bounds.test.mjs (not in batch)
+bio-plane/test/d50-project-names.test.mjs	181	covered	promotion	promotion/promote.test.mjs (R19,R43 NAME_TAKEN, name key)	
+bio-plane/test/d507-statement-ack-translation.control.mjs	294	helper	case-authoring	d507-statement-ack-translation.test.mjs	control; follows d507
+bio-plane/test/d507-statement-ack-translation.test.mjs	430	covered	case-authoring	case-authoring/statement.test.mjs (R19 STATEMENT_ACK_*), invariants.test.mjs (R28)	
+bio-plane/test/d510-promoted-type.test.mjs	314	covered	promotion	promotion/promote.test.mjs (R9 ENVELOPE_TYPE_DISAGREES)	
+bio-plane/test/d511-replay-server-word.control.mjs	130	helper	control-plane	risk-tier.test.mjs section 8	control of legacy risk-tier.test.mjs (not in batch)
+bio-plane/test/d512-replay-verified.control.mjs	120	helper	control-plane	d512-replay-verified.test.mjs	control; follows d512
+bio-plane/test/d512-replay-verified.test.mjs	234	covered	control-plane, promotion	control-plane/admission.test.mjs (R16 REPLAY_UNVERIFIED); promotion/promote.test.mjs, write-path.test.mjs (replay)	
+bio-plane/test/d522-unattended-render.test.mjs	325	covered?	capture-requests, capture, capture-sources	capture-requests/door.test.mjs, drain.test.mjs (render carry); capture-sources/render.test.mjs (shell)	render allowance deferral e2e; check drain-carries-render arm
+bio-plane/test/d524-archive-baseline.test.mjs	257	covered	monitoring	monitoring/tick.test.mjs (R3 archive.org hop baseline)	
+bio-plane/test/d525-driveshells.control.mjs	122	helper	monitoring	d525-driveshells.test.mjs	control; follows d525
+bio-plane/test/d525-driveshells.test.mjs	363	covered	monitoring	monitoring/reads.test.mjs (driveshells)	
+bio-plane/test/d526-refusal-order.control.mjs	150	helper	promotion	d526-refusal-order.test.mjs	control; follows d526
+bio-plane/test/d526-refusal-order.test.mjs	250	covered?	promotion, bias, actions	promotion/promote.test.mjs (R9); bias/promotion.test.mjs (cites D-526)	fences reading document type; check actionlaws arm in actions
+bio-plane/test/d530-parted-attest.test.mjs	273	covered	provenance, ratification	provenance/attest.test.mjs (R31 CAPTURE_HELD_IN_PARTS); ratification PLANE_HELD_IN_PARTS; promotion/gate.test.mjs (R28)	
+bio-plane/test/d533partsaudit.control.mjs	124	helper	provenance	d533partsaudit.test.mjs	control; follows d533
+bio-plane/test/d533partsaudit.test.mjs	215	covered	provenance	provenance/audit.test.mjs (R7 parts rule, R8 registerAudit)	
+bio-plane/test/d536-reading-provenance.test.mjs	422	covered	extraction	extraction/rules.test.mjs (R25 readingProvenance, R26 compareProvenance); store.test.mjs (R19,R20 re-read kept)	
+bio-plane/test/d543-instant-precision.test.mjs	301	covered?	review, record-core	review/copy.test.mjs (instantOrder last change); record-core/record-core.test.mjs (R47)	block reads module source text for instant spelling (P7)
+bio-plane/test/d547-revision-retype.test.mjs	203	covered	promotion	promotion/promote.test.mjs (R10 REVISION_RETYPES_BUNDLE)	
+bio-plane/test/d548-block.control.mjs	106	helper	case-authoring	d84-case-manifest.test.mjs	control of d84's recorder; follows d84
+bio-plane/test/d552-instance-disposition.test.mjs	249	covered	progressions	progressions/feeds.test.mjs (R18,R19), instance.test.mjs, dispose.test.mjs	
+bio-plane/test/d556partedpublish.control.mjs	124	helper	promotion	d556partedpublish.test.mjs	control; follows d556
+bio-plane/test/d556partedpublish.test.mjs	246	covered	promotion, provenance, publication	promotion/gate.test.mjs (R28 parts); provenance/audit.test.mjs (R7); publication/worker.test.mjs	
+bio-plane/test/d557-census-judged-text.test.mjs	208	dead?	legacy-index	scripts/fw20-decode-census.mjs	tests an FW-20 measurement script, not product
+bio-plane/test/d563-promoted-title-state.test.mjs	261	covered	promotion	promotion/promote.test.mjs (R9 ENVELOPE_TITLE/STATE_DISAGREES)	
+bio-plane/test/d573-lastchange-tie.test.mjs	255	covered	review	review/copy.test.mjs, acts.test.mjs (tie statement)	
+bio-plane/test/d575-pair-choice-state.test.mjs	223	covered	connections	connections/read.test.mjs (R6 choice and lapse on every arm)	
+bio-plane/test/d57selflink.test.mjs	150	covered?	capture	capture/services.test.mjs, reads.test.mjs (R27 links, self receipt)	self-link bracket arm not confirmed by name
+bio-plane/test/d606-perpage-ocr.test.mjs	200	covered?	extraction, ocr-worker	extraction/read.test.mjs, pdfstructure.test.mjs (deferred pages); ocr-worker own tests (chooseChunk)	real OCR member e2e path
+bio-plane/test/d608-form-text.test.mjs	180	covered	pdf-reader	pdf-reader/text.test.mjs (Form XObject text, marker)	
+bio-plane/test/d706-linkproject.test.mjs	337	covered	connections	connections/edges.test.mjs (R24-R29, R32 op=linkproject)	
+bio-plane/test/d84-case-manifest.test.mjs	858	covered?	case-authoring, bias	case-authoring/document.test.mjs (R14,R15,R22 bias_manifest); bias/adopt-manifest.test.mjs	named lens + frozen bytes arms
+bio-plane/test/d85-surface-run.control.mjs	198	helper	ai-runs	d85-surface-run.test.mjs	control; follows d85
+bio-plane/test/d85-surface-run.test.mjs	486	covered	ai-runs	ai-runs/surfacing.test.mjs (R25 SURFACE_* codes)	
+bio-plane/test/d86-bias-debt.control.mjs	147	helper	bias	d86-bias-debt.test.mjs	control; follows d86
+bio-plane/test/d86-bias-debt.test.mjs	402	covered	bias	bias/debt.test.mjs (R41); queue-producers producers.test.mjs	
+bio-plane/test/daemon-token.test.mjs	599	covered?	control-plane	control-plane/admission.test.mjs, declarations.test.mjs (daemon class, R7, R11)	monitor now in process; daemon scope swept over OPS table
+bio-plane/test/dec49-onecode-twoconditions.sweep.mjs	155	system	legacy-tests	DEC-49 refusal guard: one code, one condition (census of literal return sites)	reads source text; census, not a suite
+bio-plane/test/dec65-single-part.control.mjs	232	helper	basis-versions	dec65-single-part.test.mjs	control; follows dec65-single-part
+bio-plane/test/dec65-single-part.test.mjs	586	covered	basis-versions, run-productions, inquiry	basis-versions/grammar.test.mjs (DEC-65); run-productions/suggest.test.mjs; inquiry/ground.test.mjs (MACHINE_CANNOT_GROUND)	
+bio-plane/test/dec65-strength-reach.control.mjs	396	helper	strength	dec65-strength-reach.test.mjs	control; follows dec65-strength-reach
+bio-plane/test/dec65-strength-reach.test.mjs	894	covered	strength, basis-versions	strength/pair.test.mjs (R4 grounds weakest/strongest), version.test.mjs; basis-versions/grammar.test.mjs (DEC-65)	
+bio-plane/test/declared-corpus.control.mjs	261	helper	legacy-index	declared-corpus.test.mjs	drives scripts/coverage.mjs --strict; follows declared-corpus (dead?)
+bio-plane/test/declared-corpus.test.mjs	211	dead?	legacy-index	scripts/coverage.mjs, declared-source.mjs	old process coverage gate (K100 superseded); not product
+bio-plane/test/deliverer.control.mjs	221	helper	publication	deliverer.test.mjs	control; follows deliverer
+bio-plane/test/deliverer.test.mjs	447	covered?	publication, ratification	publication/casedoc.test.mjs, published.test.mjs (delivered_by, R1)	authorised vs delivered; founder unsigned standing arm
+bio-plane/test/deploybindings.test.mjs	251	system	legacy-index	deploy: bindings derived from wrangler.jsonc (scripts/derive-bindings.mjs)	deploy tooling, no requirement; owner legacy-index
+bio-plane/test/derivation-bounds.test.mjs	3543	system	legacy-tests	cross-module bounds census (every derivation/read bounded)	reads src source text heavily (P7)
+bio-plane/test/dispatch-reader.mjs	103	helper	legacy-tests	rung-ladder.test.mjs	reads dispatch table source
+bio-plane/test/disposition.test.mjs	461	covered	inquiry	inquiry/dispose.test.mjs (NOT_INQUIRIES, BAD_TARGET_STATE)	
+bio-plane/test/divide.test.mjs	711	covered	inquiry, affordances	inquiry/divide.test.mjs; affordances DIVIDE_PROMPT, MACHINE_REFUSALS	
+bio-plane/test/docdates.mjs	7	helper	legacy-tests	d512, deliverer, disposition, divide, publish, inquiry and ~17 other suites	fixture dates; follows its users
+bio-plane/test/doorbell.test.mjs	533	covered	capture, control-plane	capture/doorbell.test.mjs (KNOCK_*), control-plane/doorbell.test.mjs	
+bio-plane/test/drive-convert.control.mjs	151	helper	capture-sources	drive-convert.test.mjs	control; follows drive-convert
+bio-plane/test/drive-convert.test.mjs	437	covered?	capture-sources, text-chain	capture-sources/drive.test.mjs (google-export convert); text-chain/chain.test.mjs	convert step with cap undetermined
+bio-plane/test/drive.control.mjs	266	helper	capture-sources	drive.test.mjs	control; follows drive
+bio-plane/test/drive.test.mjs	704	covered	capture-sources, capture, monitoring	capture-sources/drive.test.mjs; capture DRIVE_* codes (acquire.test.mjs); monitoring	
+bio-plane/test/earned-connection.mjs	49	helper	legacy-tests	fence-e2e, publish, publishedcase, caseflip, reviewcopy-inband and others	fixture leg; follows its users
+bio-plane/test/earnedbasis.test.mjs	601	covered	inquiry	inquiry/earned.test.mjs (R13-R15 earnedBasis, ceilings)	
+bio-plane/test/edges.test.mjs	381	covered	citation	citation/sever.test.mjs (NOT_CITED, NOT_SEVERED, SET_MOVED)	
+bio-plane/test/empty-body.test.mjs	99	covered	control-plane	control-plane/dispatch.test.mjs, envelope.test.mjs (BAD_JSON, NO_BODY)	
+bio-plane/test/entityregistry.test.mjs	169	covered	entities	entities/registry.test.mjs, reads.test.mjs	
+bio-plane/test/exportnotice.test.mjs	158	covered	queue-producers, publication	queue-producers/producers.test.mjs (export-performed); publication/export.test.mjs	
+bio-plane/test/extracted-sources.mjs	118	helper	legacy-tests	~20 source-text census suites (bounds, derivation-bounds, fence-e2e, risk-tier ...)	source-text corpus helper; retires with those censuses
+bio-plane/test/extractrun.test.mjs	527	covered?	run-productions, ai-runs	run-productions/extract.test.mjs; ai-runs (R40 extract not deployed)	arms (b)-(f) already retired K220
+bio-plane/test/facet-probe-worker.mjs	355	dead?	legacy-tests	facet-probe.mjs, retrieval-scale.mjs	probe DO, not shipped; not a suite
+bio-plane/test/facet-probe.mjs	286	dead?	legacy-tests	retrieval-scale.mjs	measurement probe (reads /tmp corpus); not a suite
+bio-plane/test/fence-e2e.control.mjs	274	helper	legacy-tests	fence-e2e.test.mjs	control; follows fence-e2e (system)
+bio-plane/test/fence-e2e.test.mjs	1089	system	control-plane, agent-worker, several	machine-identity fence end to end across modules and agent-worker	per-module MACHINE_CANNOT_* covered; reads index source (P7)
+bio-plane/test/fence.test.mjs	217	covered?	control-plane	control-plane/doors.test.mjs, admission.test.mjs (public ops published-scope)	public class reads only published projection
+bio-plane/test/fieldread.control.mjs	920	helper	query-language	query.test.mjs	D-255 field-read instrument/control driver for query.test.mjs (and meaningread); edits real sources
+bio-plane/test/finallyexit.control.mjs	86	helper	legacy-tests	hygiene.test.mjs	M0-134 control arming hygiene's finally-exit reader; edits real suites
+bio-plane/test/fl1-attribution-diag.mjs	119	dead	-	FL-1 Cloudflare billing-attribution diagnostic; deploys throwaway Workers	measurement probe, not a test; recorded in MEASUREMENTS.md
+bio-plane/test/fl1-billing-surface-check.mjs	122	dead	-	helper to the fl1-* probes (loadEnv, creds, gql)	measurement probe helper; follows the fl1 probes
+bio-plane/test/fl1-cpu-probe.mjs	856	dead	-	FL-1/D-218 deployed CPU probe	measurement probe against live account, not a test
+bio-plane/test/fl1-real-payload-sweep.mjs	109	dead	-	FL-1 live-plane payload sweep	measurement probe against a live instance, not a test
+bio-plane/test/fleetbundles.control.mjs	597	helper	bundler	fleetbundles.test.mjs	18-arm negative-control driver for the bundle guard
+bio-plane/test/fleetbundles.test.mjs	691	system	bundler, not_product	bundle freshness: verifyStatic/verifyFresh over every fleet member, signpage render	manifest names it as the post-regeneration check; keep as the bundle-freshness system test
+bio-plane/test/formats-csv.test.mjs	425	covered	office-readers, format-registry	m/office-readers/{detect-parts,structure,text,builders-invariants}.test.mjs; m/format-registry/{dialect,builtins}.test.mjs	also reads index.mjs/formats.mjs source (registered once, not named): P7 source-text, drop
+bio-plane/test/formats-docx.test.mjs	384	covered	office-readers	m/office-readers/{detect-parts,structure,text}.test.mjs	tracked changes, superseded wording, links, size guard covered there
+bio-plane/test/formats-odf.test.mjs	918	covered	odf-reader	m/odf-reader/{entries,odt,ods,odp,envelope,repeats}.test.mjs; m/format-registry/builtins.test.mjs	source-text check on index.mjs dispatch dropped
+bio-plane/test/formats-pptx.test.mjs	595	covered	office-readers	m/office-readers/{detect-parts,structure,text,builders-invariants}.test.mjs	notes, hidden slides, slide-shape refs covered
+bio-plane/test/formats-xlsx.test.mjs	411	covered	office-readers	m/office-readers/{detect-parts,structure,text,range-units}.test.mjs	hidden sheets, formula beside value, size bound covered
+bio-plane/test/formats.test.mjs	208	covered	format-registry, capture, extraction	m/format-registry/{registry,builtins}.test.mjs; m/capture/acquire.test.mjs (R17 profile.format); m/extraction/pdfstructure.test.mjs (R31)	
+bio-plane/test/founder-sight.control.mjs	294	helper	membership	founder-sight.test.mjs	copies src/ to temp tree and arms it
+bio-plane/test/founder-sight.test.mjs	389	covered?	membership, observation-log	m/membership/hidden-bundles.test.mjs (R88 founder see-all); m/membership/sight.test.mjs; m/observation-log/lead.test.mjs (R15 lead not admin-readable)	its STRUCTURE arms read index/control-plane source (P7)
+bio-plane/test/framework-digest-audit.test.mjs	292	covered?	capture, provenance	m/capture/acquire.test.mjs (R17 digests); m/provenance/register-checks.test.mjs (R43 evidentiary-digest fold)	viewstate-pair fold end-to-end only via miniflare; digest computation lives in docprofile
+bio-plane/test/free-tier-fleet-probe.mjs	156	dead	-	CPDF-7/D-118 Workers Free probe	measurement probe, deploys throwaway Workers; not a test
+bio-plane/test/frontier-chunk.control.mjs	176	helper	legacy-tests	frontier-chunk.test.mjs	edits src/store.mjs per arm
+bio-plane/test/frontier-chunk.test.mjs	588	system	content, inquiry, strength, reevaluation, publication, retrieval	cross-module bound: D-36 SQL bound-variable ceiling (>100 ids) across reads	D443-7 is a source-text regex (P7)
+bio-plane/test/frontier-internet.test.mjs	310	covered	retrieval	m/retrieval/frontier.test.mjs (R47-R50 internet level)	
+bio-plane/test/fw19-extent-arms.test.mjs	468	covered?	content, office-readers, odf-reader	m/content/grammar.test.mjs (R1-R8 extents); m/office-readers/structure.test.mjs; m/odf-reader/odt.test.mjs,ods.test.mjs	end-to-end acquire->promote->content path only here; rec85 digest pin old-process
+bio-plane/test/fw19-rec85-digest.mjs	57	helper	content	fw19-extent-arms.test.mjs	over-strictness digest instrument imported by fw19-extent-arms
+bio-plane/test/gate-reads.test.mjs	2310	system?	control-plane, membership, many readers	viewer gate (D-15) on every read op, hidden==absent byte-identical	per-op stamping in m/control-plane/stamps.test.mjs R17/R29; reads source text of 4 modules
+bio-plane/test/gatedeps.mjs	82	helper	legacy-tests	moduleclosure.test.mjs	derives fixture deps from retired tools/gates.mjs; likely dead with the gate
+bio-plane/test/gateverdict.test.mjs	205	dead	-	scripts/battery.mjs residue pid + tools/pushguard.mjs, tools/gateverdict.mjs	tests the retired gate/verdict tooling of the old process
+bio-plane/test/gathering.test.mjs	238	covered	monitoring	m/monitoring/gathering.test.mjs (R27, R42)	
+bio-plane/test/governor.test.mjs	181	covered	host-governor	m/host-governor/governor.test.mjs (R1-R26), ops.test.mjs	
+bio-plane/test/grounds.test.mjs	830	covered?	strength, inquiry, ratification	m/strength/pair.test.mjs (R4), m/strength/version.test.mjs (R10); m/inquiry/grammar.test.mjs (R8); m/inquiry/ground.test.mjs	reads store/inquiry/strength/checks source (P7)
+bio-plane/test/group-identity.control.mjs	203	helper	instance-setup	group-identity.test.mjs	
+bio-plane/test/group-identity.test.mjs	366	covered	instance-setup	m/instance-setup/identity.test.mjs (R5-R11, R27)	B2 is a source census (P7)
+bio-plane/test/group-public.control.mjs	180	helper	instance-setup	group-public.test.mjs	
+bio-plane/test/group-public.test.mjs	351	covered?	instance-setup	m/instance-setup/group.test.mjs (R1-R4); m/instance-setup/page.test.mjs (R20)	S0/S1 literal census over served page modules is source-text
+bio-plane/test/homecensus.control.mjs	115	helper	provenance	homecensus.test.mjs	
+bio-plane/test/homecensus.test.mjs	198	covered	provenance	m/provenance/audit.test.mjs (R10 homeCensus)	class fence (probe yes, member no) is control-plane's
+bio-plane/test/hygiene.test.mjs	3330	system	legacy-tests (whole tree)	architecture/source hygiene: one-home vocabularies, table ownership & purge declarations, finally-exit reader, flat src	3330 lines, source-text; control-register/coverage arms are old-process (dead)
+bio-plane/test/identity-claims.control.mjs	169	helper	legacy-tests	identity-claims.test.mjs	
+bio-plane/test/identity-claims.test.mjs	480	system	all op-owning modules	DEC-52 identity-claim census: stamp-site comments vs machine fences over the OPS table	source-text sweep via scripts/identity-claims.mjs (P7)
+bio-plane/test/independence.control.mjs	195	helper	strength	independence.test.mjs	
+bio-plane/test/independence.test.mjs	356	covered	strength	m/strength/version.test.mjs (R12, R27); m/run-productions/module.test.mjs (R3)	C1 one-origin-walk is a source census
+bio-plane/test/index-store-export.test.mjs	63	system	legacy-index, control-plane	architecture: Worker entry exports control-plane's Store unwrapped (N348)	legacy-index has no tests path; retire with legacy-index
+bio-plane/test/inquiry.test.mjs	414	covered?	inquiry, query-language, legacy-checks	m/query-language/grammar.test.mjs (normalizeType, type:problem); m/inquiry/grammar.test.mjs (R1, R10)	legacy focus/problem conformance lives in bio-checks catalogue (legacy)
+bio-plane/test/inquiryground.test.mjs	667	covered	inquiry	m/inquiry/ground.test.mjs (R27, R28, R30, R42)	
+bio-plane/test/inquirystrength.test.mjs	755	covered	strength	m/strength/reads.test.mjs (inquiryStrength)	reads store/strength/query source (P7)
+bio-plane/test/installer.test.mjs	160	covered?	runtime-limits, instance-setup	m/runtime-limits/runtime-limits.test.mjs (published tokens); m/instance-setup/reports.test.mjs (R18 selftest); m/instance-setup/page.test.mjs	GET / HTML vs /api JSON is whole-Worker routing
+bio-plane/test/instance-group.control.mjs	233	helper	instance-setup	instance-group.test.mjs	
+bio-plane/test/instance-group.test.mjs	573	covered	instance-setup, promotion	m/instance-setup/group.test.mjs (R1-R4, R26, R28); promotion stamp tests	S-arms are literal census over src (P7)
+bio-plane/test/instrument-deps.mjs	95	helper	legacy-tests	coverage-provenance.test.mjs, owed-controls.test.mjs, m051-driver-census.test.mjs	old-process coverage tooling; dead with those
+bio-plane/test/jsonc.mjs	42	helper	legacy-tests	deploybindings.test.mjs (and dispatch-reader.mjs)	scripts/ keep their own jsonc.mjs
+bio-plane/test/label-variance-probe.mjs	137	dead	-	REC-36 label-variance measurement	measurement probe, not a test
+bio-plane/test/lead.test.mjs	502	covered	observation-log	m/observation-log/lead.test.mjs (R14-R25)	
+bio-plane/test/leadlist.test.mjs	208	covered	observation-log	m/observation-log/lead.test.mjs (R20, R21 leadList)	
+bio-plane/test/leadslug.control.mjs	342	helper	queue	leadslug.test.mjs	
+bio-plane/test/leadslug.test.mjs	884	covered?	queue, capture-requests, queue-producers	m/queue/catalogue.test.mjs, feed.test.mjs; m/capture-requests/door.test.mjs; m/queue-producers/producers.test.mjs	reads NOTIFICATIONS.md and src text (P7)
+bio-plane/test/limits-probe.mjs	238	dead	-	D-36 workerd SQL limit binary search	probe (npm probe:limits), not a test
+bio-plane/test/livefire.test.mjs	47	covered?	instance-setup	m/instance-setup/reports.test.mjs (R19 livefire)	whole-Worker smoke through index.mjs only here
+bio-plane/test/m0107-budget.control.mjs	178	helper	legacy-tests	owed-controls.test.mjs	old-process budget control; dead with owed-controls
+bio-plane/test/m0187-surfacing-fixture.control.mjs	139	helper	legacy-tests	m0187-surfacing-fixture.test.mjs	
+bio-plane/test/m0187-surfacing-fixture.test.mjs	240	dead	-	tests test/surfacing-run.mjs, a legacy-suite fixture	retire with the legacy suites using surfacing-run
+bio-plane/test/m0193-surfacing-fixture.control.mjs	96	helper	legacy-tests	m0193-surfacing-fixture.test.mjs	
+bio-plane/test/m0193-surfacing-fixture.test.mjs	202	dead	-	tests test/surfacing-run.mjs, a legacy-suite fixture	retire with the legacy suites using surfacing-run
+bio-plane/test/m025-anchor-witness.control.mjs	556	helper	legacy-tests	m025-arm-anchor-witness.test.mjs	
+bio-plane/test/m025-arm-anchor-witness.test.mjs	809	dead	-	old-process control-driver arm-liveness census	meta-test of control drivers; retired process
+bio-plane/test/m025-arm-census.mjs	690	dead	-	old-process arm-liveness census instrument	imported by hygiene and m025 witness; retires with them
+bio-plane/test/m035-cpu-currency-probe.mjs	347	dead	-	M0-35 CPU currency measurement	measurement probe, not a test
+bio-plane/test/m035-workload-generality.mjs	192	dead	-	M0-35 workload measurement	measurement probe, not a test
+bio-plane/test/m051-driver-census.control.mjs	198	helper	legacy-tests	m051-driver-census.test.mjs	
+bio-plane/test/m051-driver-census.test.mjs	237	dead	-	scripts/coverage.mjs driver census	old-process coverage tooling
+bio-plane/test/m061-undesigned-gap.control.mjs	89	dead	-	control for tools/corpuscheck.mjs, tools/statussweep.mjs	retired tools; referenced by nothing
+bio-plane/test/machine-attest.control.mjs	138	helper	legacy-tests	machine-attest.test.mjs	
+bio-plane/test/machine-attest.test.mjs	566	system?	ratification, provenance, content, control-plane	machine-fence census: no ai credential attests or ratifies, traced over OPS table	per-op MACHINE_CANNOT_* codes all appear in module tests; reads source and other suites
+bio-plane/test/machine-fences.control.mjs	383	helper	legacy-tests	machine-fences.test.mjs	
+bio-plane/test/machine-fences.test.mjs	1567	system	all authored-act modules	machine-fence census: every MACHINE_CANNOT_* fence harvested and driven	each code already in some m/ test; harvest is source-text
+bio-plane/test/machinefences-dec49.test.mjs	794	system	all modules	DEC-49 refusal guard: every refusal code has catalogue row and canned translation	reads source for codes (P7)
+bio-plane/test/meaning-bounds.test.mjs	2295	system	retrieval, connections, ai-runs, publication, many	cross-module bounds: every collection-returning op is bounded, roster ratchet	return-shape walk over re-inlined store source (P7)
+bio-plane/test/meaning-index-probe.mjs	203	dead	-	PL-8/D-222 grade-column index measurement	probe (npm probe:meaningindex), not a test
+bio-plane/test/meaningquery.test.mjs	909	covered?	query-language, retrieval	bio-plane/test/m/query-language/{grammar,vocabulary,statements}.test.mjs; bio-plane/test/m/retrieval/meaning.test.mjs	hunch/meaning arms; several arms read module source text (P7)
+bio-plane/test/meaningread.test.mjs	920	covered?	retrieval, query-language	bio-plane/test/m/retrieval/meaning.test.mjs (R10-R15,R31); bio-plane/test/m/query-language/statements.test.mjs (R15)	meaning-grain read; registry-count arms are source-text (P7)
+bio-plane/test/mechanical.test.mjs	359	covered	promotion, monitoring	bio-plane/test/m/promotion/promote.test.mjs (R8); bio-plane/test/m/promotion/history.test.mjs (R30); bio-plane/test/m/monitoring/tick.test.mjs (R8,R37)	mechanical writer envelope; monitor tick field set
+bio-plane/test/members.test.mjs	651	covered?	membership, control-plane	bio-plane/test/m/membership/{signin,roster,administrators}.test.mjs; bio-plane/test/m/control-plane/{stamps,admission}.test.mjs	login refusals, sessions, roster cover; wide e2e, spot-checked only
+bio-plane/test/membership.test.mjs	363	covered	membership	bio-plane/test/m/membership/administrators.test.mjs (R5-R11); bio-plane/test/m/membership/roster.test.mjs (R12-R16)	admin arithmetic, endorsements, handles, capabilities
+bio-plane/test/memoryshare.test.mjs	171	system	-	architecture doctrine: no live site states memory as share of 128 MB (INTERFACES.md)	source walk over agent-worker/pdf-worker src; source-text by nature
+bio-plane/test/migrate-released.control.mjs	236	helper	-	migrate-released.test.mjs	its negative-control driver; follows that suite (system)
+bio-plane/test/migrate-released.test.mjs	492	system	-	release compatibility: a store written by each released plane boots and migrates on this one	cross-module schema migration; reads released bundles from git
+bio-plane/test/migrate.test.mjs	336	convert?	legacy-index (bio-plane/migrate/)	no requirement: Drive-store migration replay (migrate.mjs) has no module or requirement	owner is a legacy module; decide retire-with-migrate.mjs or give it a module
+bio-plane/test/mint-ledger.control.mjs	169	helper	-	mint-ledger.test.mjs	its negative-control driver
+bio-plane/test/mint-ledger.test.mjs	569	covered?	record-core	bio-plane/test/m/record-core/record-core.test.mjs (R1,R6-R8,R28,R40)	S-arms are source-text (P7); legacy-build seed arms U* partly system
+bio-plane/test/mk1-publish-probe.mjs	229	dead	-	one-off MK-1 measurement probe; nothing imports or runs it	cited in prose only (mk6, testify)
+bio-plane/test/mk2-pristine-probe.mjs	132	helper	-	testimonyaxis.test.mjs (spawned by nc-mk2.mjs)	measurement probe for MK-2 control
+bio-plane/test/mk6-bundle-names-no-author.test.mjs	252	covered?	provenance, publication	bio-plane/test/m/provenance/testify.test.mjs (R28); bio-plane/test/m/publication/attribution.test.mjs (R17)	no published part names the author; whole publication driven e2e
+bio-plane/test/mk7-attribution.test.mjs	517	covered	publication, ratification	bio-plane/test/m/publication/attribution.test.mjs (R17,R39); bio-plane/test/m/ratification/caseratify-op.test.mjs (R2, C-92.10)	attribution act and levels
+bio-plane/test/moduleclosure.mjs	206	helper	-	civicos-ui/check-refusal-codes.mjs, civicos-ui/test/refusal-codes.test.mjs, gatedeps.mjs	fixture module-closure walk; follows the DEC-49 guard (system)
+bio-plane/test/moduleclosure.test.mjs	218	system?	-	test tooling for the DEC-49 refusal guard fixtures (moduleclosure.mjs)	tests a test helper; retire with the guard or move with it
+bio-plane/test/monitor-address.test.mjs	270	covered	monitoring	bio-plane/test/m/monitoring/cadence.test.mjs, reads.test.mjs (R15,R16)	address, not bundle, is scheduled
+bio-plane/test/monitor-assess.test.mjs	710	covered	monitoring	bio-plane/test/m/monitoring/tick.test.mjs (R6,R8,R9)	op=monitor asks assess
+bio-plane/test/monitor-cadence.test.mjs	658	covered?	monitoring, scheduler	bio-plane/test/m/monitoring/{cadence,ticks}.test.mjs (R14,R16,R19,R21,R23)	cadence table arm reads source text (P7)
+bio-plane/test/monitor-rendered.test.mjs	199	covered	monitoring	bio-plane/test/m/monitoring/tick.test.mjs (R5); bio-plane/test/m/monitoring/invariants.test.mjs (R38)	rendered frame watched, content undetermined
+bio-plane/test/monitor-substance.test.mjs	223	covered	monitoring	bio-plane/test/m/monitoring/tick.test.mjs (R5)	evidentiary vs raw comparison
+bio-plane/test/multicase.control.mjs	283	helper	-	multicase.test.mjs	its negative-control driver
+bio-plane/test/multicase.test.mjs	331	covered?	case-authoring	bio-plane/test/m/case-authoring/{identity,members}.test.mjs (R4,R7,R8)	source-walk census of scalar readers (P7); DEC-49 row part is system
+bio-plane/test/multifinding.test.mjs	1387	covered?	publication, case-authoring, ratification	bio-plane/test/m/case-authoring/members.test.mjs (R4-R24); bio-plane/test/m/publication/cases.test.mjs; bio-plane/test/m/ratification/caseratify-op.test.mjs	multi-finding case; 1387 lines, spot-checked
+bio-plane/test/multisite-census.mjs	76	helper	-	civicos-ui/check-refusal-codes.mjs (arm G), dec49-onecode-twoconditions.sweep.mjs	DEC-49 one-code-one-site walk; system
+bio-plane/test/n290-member-agent.test.mjs	80	covered	inquiry	bio-plane/test/m/inquiry/reads.test.mjs (R44)	memberUserAgent stamped on creation
+bio-plane/test/narrow.test.mjs	415	covered	basis-versions	bio-plane/test/m/basis-versions/narrow.test.mjs (R24-R28)	narrow and narrowCandidates
+bio-plane/test/nc-cap12.mjs	324	helper	-	capture-container-extent.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-cap9.mjs	187	helper	-	capture-pagecount.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-coff11.mjs	266	helper	-	formats-xlsx/formats-pptx/formats-odf.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-coff12.mjs	302	helper	-	capture-container-extent.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-coff13.mjs	218	helper	-	formats-pptx.test.mjs, capture-container-extent.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-cpdf10.mjs	227	helper	-	textchain.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-cpdf18.mjs	201	helper	-	cpdf18-pdf-images.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-cpdf19.mjs	178	helper	-	reextract.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-cpdf20.mjs	258	helper	-	tier-pagewise.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d162.mjs	248	helper	-	theme.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-d178.mjs	53	helper	-	audit-inheritance.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-d346.mjs	123	helper	-	formats-odf.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d355.mjs	299	helper	-	civicos-ui/test/refusal-partition.control.mjs, m025-arm-census.mjs (DEC-49 guard)	controls the DEC-49 guard drivers (system)
+bio-plane/test/nc-d394.mjs	178	helper	-	versionnotice.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d420.mjs	247	helper	-	d420-image-page.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-d456.mjs	76	helper	-	d456-namespace-scope.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d461.mjs	78	helper	-	d461-pinned-namespace.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d463.mjs	108	helper	-	d463-confined-credential.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d475.mjs	107	helper	-	d475-page-namespace.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d487.mjs	270	helper	-	doorbell.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-d490.mjs	119	helper	-	browser-render.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d492.mjs	90	helper	-	rendered-capture.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-d508.mjs	329	helper	-	doorbell.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-d513.mjs	344	helper	-	doorbell.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d536.mjs	164	helper	-	d536-reading-provenance.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d557.mjs	116	helper	-	d557-census-judged-text.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d585.mjs	96	helper	-	textshown.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-d64.mjs	117	helper	-	rendered-capture.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-fw17.mjs	291	helper	-	reading-position.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-fw19.mjs	196	helper	-	fw19-extent-arms.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-fw23.mjs	214	helper	-	formats-csv.test.mjs, ooxml.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-instr-cluster.mjs	284	helper	-	derivation-bounds.test.mjs, bounds.test.mjs, m025-arm-anchor-witness.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-m0182.mjs	168	helper	-	pen-sweep.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-m0196.mjs	138	helper	-	pen-sweep.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-m028.mjs	146	dead	-	controls tools/corpuscheck.mjs via test/corpuscheck.test.mjs, which no longer exists	old-process tool (tools/ retired)
+bio-plane/test/nc-m034.mjs	251	dead	-	controls tools/decided.mjs (DECIDED.md ruling index), old-process tooling	tools/ retired by the 2026-09-25 process change
+bio-plane/test/nc-m038.mjs	206	helper	-	derivation-bounds.test.mjs	re-anchored 2026-09-29 off store.mjs; arm 15 subject gone
+bio-plane/test/nc-m040.mjs	158	helper	-	derivation-bounds/meaning-bounds/bounds.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-m063.mjs	122	helper	-	derivation-bounds.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-mk1.mjs	296	helper	-	testify.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-mk2.mjs	329	helper	-	testimonyaxis.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-mk4.mjs	268	helper	-	lead.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-pl12.mjs	179	helper	-	bias.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-pl18.mjs	263	helper	-	airun-projectgate.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec100.mjs	309	helper	-	observation-log.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec102.mjs	404	helper	-	tier3-layer-parts.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec103.mjs	130	helper	-	observation-log.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec104.mjs	280	helper	-	content-arm.test.mjs, content-chain-kind.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec105.mjs	243	helper	-	inquirystrength.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec107.mjs	378	helper	-	observation-content.test.mjs, observation-meaning.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec108.mjs	235	helper	-	rec108-cache-asof.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec109.mjs	185	helper	-	observation-content.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec110.mjs	171	helper	-	observation-log/-content/-meaning.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec111.mjs	304	helper	-	capture-text-index.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec112-index-plan.mjs	154	dead?	-	standalone query-plan measurement (REC-112); no suite runs it	superseded by nc-rec116-plan.mjs (real reader); keep only if M-41 wanted
+bio-plane/test/nc-rec113.mjs	265	helper	-	observation-log.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec114.mjs	335	helper	-	rec114-leg-earned.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec115.mjs	178	helper	-	passage-arm.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec116-plan.mjs	160	helper	-	rec116-route-marked.test.mjs (query-plan measurement)	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec116.mjs	383	helper	-	rec116-route-marked.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec118.mjs	316	helper	-	rec118-reeval-earned.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec119-freeze-phase.mjs	163	helper	-	rec119-version-legs-earned.test.mjs (phase of nc-rec119.mjs)	negative-control driver; follows its suite
+bio-plane/test/nc-rec119.mjs	260	helper	-	rec119-version-legs-earned.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec121.mjs	210	helper	-	rec121-chain-bytes.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec127.mjs	214	helper	-	rec127-cap-bytes.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec129.mjs	316	helper	-	frontier-internet.test.mjs, stats-disclosure.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec146.mjs	174	helper	-	contradictionpairs.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec161.mjs	96	helper	-	partitionindependence.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec192.mjs	81	helper	-	partitionindependence.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec203.mjs	60	helper	-	rec203-idspaces.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec218.mjs	182	helper	-	reading-dialect.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec220.mjs	111	helper	-	rec220-version-pin.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec63.mjs	190	helper	-	provenance-marker.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec64.mjs	259	helper	-	machinefences-dec49.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec66.mjs	129	helper	-	derivation-bounds.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec69-selects.mjs	287	helper	-	run-conditions.test.mjs, airuns.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec72.mjs	160	helper	-	citeproject-inquiry.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec82.mjs	222	helper	-	content-extent.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec83.mjs	233	helper	-	content-reads.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec84.mjs	251	helper	-	content-extent-leg.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec85.mjs	300	helper	-	content-extent-arms.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec86.mjs	200	helper	-	narrow.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec87.mjs	221	helper	-	transcribe.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec88.mjs	264	helper	-	content-capture-bound.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec90.mjs	243	helper	-	content-arm.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec91.mjs	425	helper	-	capture-text-index.test.mjs	was dead since T5; re-derived 2026-09-29
+bio-plane/test/nc-rec92.mjs	215	helper	-	passage-arm.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec93.mjs	322	helper	-	observation-log.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec94.mjs	355	helper	-	observation-content.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec95.mjs	365	helper	-	observation-meaning.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-rec97.mjs	288	helper	-	cite-extent.test.mjs, citeinquiry.test.mjs, cite.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec98.mjs	327	helper	-	tier2-wire.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-rec99.mjs	161	helper	-	derivation-bounds.test.mjs	negative-control driver; follows its suite
+bio-plane/test/nc-sk7.mjs	319	helper	-	content-machine-mint.test.mjs	control driver; patches src/store.mjs anchors, may be stale
+bio-plane/test/nc-sk8.mjs	312	helper	-	extractrun.test.mjs	extract arms retired; remaining arms follow extractrun
+bio-plane/test/newgroup-bundle-fresh.test.mjs	77	system	-	bundle freshness: newgroup/dist bundle equals a fresh build of newgroup/src	installer module could own it as a build check
+bio-plane/test/observation-content.test.mjs	1209	covered?	observation-log, retrieval	bio-plane/test/m/observation-log/{vocabulary,writers}.test.mjs (R1,R6,R7,R12); bio-plane/test/m/retrieval/contentaxis.test.mjs (R23-R24)	A2/A3 literal-spelling walks are source-text (P7)
+bio-plane/test/observation-log.test.mjs	2559	covered?	observation-log; retrieval; ai-runs	m/observation-log/{append,writers,reads,fence,vocabulary}.test.mjs; m/retrieval/frontier.test.mjs; m/ai-runs/tick-close.test.mjs	sections A/B/K6 read schema/store source text (P7); behaviour R1-R13,R22-R27 proven in module
+bio-plane/test/observation-meaning.test.mjs	1194	covered?	observation-log	m/observation-log/writers.test.mjs (R8); m/observation-log/vocabulary.test.mjs	meaning-level writers; section A6 reads writer source text (P7)
+bio-plane/test/ocr-composed-probe.mjs	1088	dead	-	measurement probe CPDF-14 (MEASUREMENTS.md), not a test	needs .env/account; guarded by d315-guard-witness and cpdf16-floor-controls; archive with them
+bio-plane/test/ocr-measure-probe.mjs	321	dead	-	measurement probe CPDF-9, not a test	npm-installs engines into temp; read by d315-guard-witness/cpdf16; archive with MEASUREMENTS
+bio-plane/test/ocr-member-e2e.control.mjs	216	helper	-	ocr-member-e2e.test.mjs	NC driver editing real sources; follows ocr-member-e2e
+bio-plane/test/ocr-member-e2e.test.mjs	630	system	extraction; ocr-worker; text-chain	fleet e2e: plane -> real committed ocr-worker bundle over service binding on a real scan	module tests use stubs (extraction R5,R6); real member binding no single module owns
+bio-plane/test/ocr-moondream-probe.mjs	650	dead	-	measurement probe CPDF-11, not a test	deploys scratch Worker to account; archive with MEASUREMENTS
+bio-plane/test/ocr-moondream-worker.mjs	51	helper	-	ocr-moondream-probe.mjs, ocr-composed-probe.mjs	scratch Worker for probes; dead with them
+bio-plane/test/ooxml.test.mjs	697	covered	ooxml	m/ooxml/ooxml.test.mjs	pure container reader; module suite rebuilds zips the same way
+bio-plane/test/opaque-ids.control.mjs	158	helper	-	opaque-ids.test.mjs	NC driver on source copies
+bio-plane/test/opaque-ids.test.mjs	340	covered?	record-core; promotion	m/record-core/record-core.test.mjs (R3,R6-R9); m/promotion/registry.test.mjs (PROJ)	source-text corpus scan of all src for counter mints (P7); if kept, it is an architecture check (system)
+bio-plane/test/operator-attest.control.mjs	156	helper	-	operator-attest.test.mjs	NC driver editing src/index.mjs
+bio-plane/test/operator-attest.test.mjs	382	covered?	ratification; control-plane	m/ratification/{ratify-op,caseratify-op,checks}.test.mjs; m/control-plane/stamps.test.mjs	bearer-class operator fence on ratify; block 0 reads control-plane source (P7)
+bio-plane/test/overdue-successor.test.mjs	285	covered	progressions; scheduler	m/progressions/overdue.test.mjs (R16,R17); m/scheduler/alarm.test.mjs	through op=proposals; module proves clock and alarm
+bio-plane/test/owed-controls.control.mjs	264	helper	-	owed-controls.test.mjs	NC harness of old-process ledger; dead with it
+bio-plane/test/owed-controls.test.mjs	381	dead	-	old-process VF-1 owed-control ledger (docs/archive/IS-BUILD-PLAN.md, control-register)	old process retired; reads git log; already 2 pre-existing reds
+bio-plane/test/partitionindependence.test.mjs	417	covered?	strength	m/strength/reads.test.mjs; m/strength/version.test.mjs (partitionIndependence)	block E pins one walk off store/strength source (P7)
+bio-plane/test/passage-arm.test.mjs	837	covered?	retrieval; query-language	m/retrieval/{search,contentaxis,meaning}.test.mjs; m/query-language/grammar.test.mjs	passage: arm and rows=passage; reads extraction/query/schema source (P7)
+bio-plane/test/passage-axis-probe.mjs	122	dead	-	measurement probe for MEANING_AXIS_CAP (REC-92)	not a test; archive with MEASUREMENTS
+bio-plane/test/pdf-worker-binding.test.mjs	136	system?	extraction; pdf-worker	plane -> committed pdf-worker bundle over PDF_WORKER binding; escalation logic in m/extraction/{read,pdfstructure}.test.mjs (R4,R12,R31)	tier-2 rule covered; only the real-bundle binding is cross-member
+bio-plane/test/pdfstructure-op.test.mjs	139	covered	extraction	m/extraction/pdfstructure.test.mjs (R31: absent, non-PDF, structure)	op wiring now proven at extraction interface
+bio-plane/test/pdfstructure.test.mjs	1142	covered?	pdf-reader	m/pdf-reader/{structure,text,boxes,images,anchors,pdfdoc}.test.mjs	pdf-reader.md says legacy fixtures cover R1-R24; module suite re-proves them; check legistar fixture arm
+bio-plane/test/pen-sweep.test.mjs	274	dead?	-	grades pens of old nc-* control drivers (scripts/pensweep.mjs)	property of the old NC-driver estate; retires with nc-* drivers
+bio-plane/test/pen.mjs	44	helper	-	~75 nc-*.mjs drivers, owed-controls.control.mjs, pen-sweep.test.mjs	old NC-driver pen helper; retires with them
+bio-plane/test/peritem.test.mjs	568	covered?	record-core; queue; tasks; progressions	m/record-core/record-core.test.mjs (R50-R52); m/queue/dispose.test.mjs (R27); m/tasks/inbox.test.mjs; m/progressions/dispose.test.mjs	reads queue/record-core source (P7)
+bio-plane/test/pipeline-e2e.test.mjs	409	system	capture; extraction; entities; connections; progressions	cross-module composition: acquire->reading->resolve->derive->thread->proposals through the plane	no single module owns field hand-offs between stages
+bio-plane/test/plane-envelope.test.mjs	1206	system	control-plane; publication; ratification	store silence never answered as a record claim across every handler; DEC-49 verdict-reader guard	source-text json() site detectors (P7); relays partly in m/*/relays.test.mjs
+bio-plane/test/producer-provenance.control.mjs	210	helper	-	producer-provenance.test.mjs	NC driver editing real sources
+bio-plane/test/producer-provenance.test.mjs	427	covered?	pdf-reader; extraction	m/pdf-reader/pdfdoc.test.mjs (/Info); m/extraction/{rules,read}.test.mjs (chain, cap null)	pdf-reader.md names this suite as fixture source
+bio-plane/test/profile.test.mjs	125	covered?	capture	m/capture/acquire.test.mjs; m/capture/ops.test.mjs	acquire profile block (handler, content type, recogniser version)
+bio-plane/test/progression-exception.test.mjs	259	covered	progressions	m/progressions/exceptions.test.mjs (R14,R15)	through op=discharge/exceptions
+bio-plane/test/progression-instance.test.mjs	265	covered	progressions	m/progressions/instance.test.mjs (R6-R13)	through op=thread/instance
+bio-plane/test/progression-versions.test.mjs	238	covered	progressions	m/progressions/define.test.mjs (R2-R5,R23); m/progressions/instance.test.mjs (R10)	declared-flow revisions
+bio-plane/test/project-authority.control.mjs	172	helper	-	project-authority.test.mjs	NC driver on source copies
+bio-plane/test/project-authority.test.mjs	423	covered?	membership; affordances	m/membership/ownership.test.mjs (R38-R42); m/membership/requests-fence-facts.test.mjs (R55); m/affordances/catalogue.test.mjs	C-56.1/.2 fences and owner rescue through ops
+bio-plane/test/project-disclosure.control.mjs	183	helper	-	project-disclosure.test.mjs	NC driver on source copies
+bio-plane/test/project-disclosure.test.mjs	346	covered?	promotion; membership	m/promotion/promote.test.mjs, m/promotion/fork.test.mjs (NAME_TAKEN carries no id/title); m/membership/sight.test.mjs (R61)	hidden-project non-disclosure on create/fork
+bio-plane/test/project-discoverable.control.mjs	121	helper	-	project-discoverable.test.mjs	NC driver on source copies
+bio-plane/test/project-discoverable.test.mjs	519	covered?	membership	m/membership/sight.test.mjs (R44-R48,R77)	section 1 upgrade-over-predecessor arm reads store/schema source; migration arm may lack a module test
+bio-plane/test/project-join-request.test.mjs	405	covered	membership	m/membership/requests-fence-facts.test.mjs (R49-R53)	its control already retired (T3)
+bio-plane/test/project-mint.test.mjs	269	covered?	promotion; record-core	m/promotion/{promote,registry}.test.mjs (PROJ mint); m/record-core/record-core.test.mjs	reads store/src corpus text (P7)
+bio-plane/test/project-sight.control.mjs	607	helper	-	project-sight.test.mjs	NC driver on source copies
+bio-plane/test/project-sight.test.mjs	1277	covered?	membership; citation; retrieval	m/membership/sight.test.mjs (R43,R44,R61); m/membership/hidden-bundles.test.mjs	hidden = absent across ops; stats-whole-store arm pending N352 helper
+bio-plane/test/projection-noproject.control.mjs	205	helper	-	projection-noproject.test.mjs	NC driver editing store.mjs
+bio-plane/test/projection-noproject.test.mjs	323	convert?	basis-versions; retrieval	retrieval R5 single-bundle decoration + basis-versions R11: op=projection no_project_conclusion equals op=basisversions	decoration still registered in legacy-store; one-reader pin is source text (P7)
+bio-plane/test/projection.test.mjs	263	covered	retrieval	m/retrieval/projection.test.mjs (R1,R2)	metadata projection columns
+bio-plane/test/projects.test.mjs	599	covered	membership; query-language	m/membership/sight.test.mjs (R43); m/query-language/statements.test.mjs (viewerPredicate)	participant filter D-15
+bio-plane/test/proposals-feed.test.mjs	227	covered	progressions	m/progressions/feeds.test.mjs (R18,R25)	op=proposals feed
+bio-plane/test/proposedispose.test.mjs	687	covered	progressions; queue	m/progressions/dispose.test.mjs (R20-R22); m/queue/dispose.test.mjs; m/queue/feed.test.mjs	D-266 queue arms in queue module
+bio-plane/test/provenance-chain.test.mjs	595	covered?	provenance	m/provenance/register-checks.test.mjs (R46); m/provenance/chain-route.test.mjs (R19-R21)	reads checks/store source (P7)
+bio-plane/test/provenance-floor.control.mjs	488	dead?	bundler	NC for M0-18 walk floors (scripts/provenance.mjs); m/bundler/bundler.test.mjs R9 covers provenance	walks it arms are legacy suites; old-process driver
+bio-plane/test/provenance-marker.test.mjs	746	covered?	provenance	m/provenance/chain-route.test.mjs (R22,R23); m/provenance/audit.test.mjs	route-unshowable marker vs never-looked
+bio-plane/test/publish.test.mjs	1368	covered?	case-authoring; publication; ratification; strength	m/case-authoring/{statement,preflight,identity,document}.test.mjs; m/publication/{cases,export}.test.mjs; m/strength/*	wide op=publish suite; bar declaration and edition arms need spot-check
+bio-plane/test/publishedcase.test.mjs	1353	covered?	publication	m/publication/{published,relay,worker,sources}.test.mjs	reads publication/control-plane source (P7)
+bio-plane/test/publishingproject.mjs	113	helper	-	opaque-ids, operator-attest, publishedcase, ratify-authority, ratified-evidence, audit-inheritance, bounds, case* suites	shared publishing-project fixture; retires with last user
+bio-plane/test/purge.test.mjs	79	convert	control-plane; record-core	no requirement: op=purge confirm=<store> gate and member/public refusal (src/index.mjs); deletion is record-core R21	missing control-plane requirement for purge's confirm gate
+bio-plane/test/query-reach.control.mjs	161	dead?	query-language	branch-reachability measurement of query.mjs (REC-68)	instrument, not a test; archive with MEASUREMENTS
+bio-plane/test/query-reach.report.mjs	42	helper	-	query-reach.control.mjs	reporter half; hygiene.test names it
+bio-plane/test/query.control.mjs	222	helper	-	query.test.mjs	NC driver editing query.mjs
+bio-plane/test/query.test.mjs	644	covered	query-language	m/query-language/{statements,grammar,projection,vocabulary}.test.mjs	one readFileSync of query.mjs
+bio-plane/test/queue-conditions.test.mjs	576	covered?	queue; queue-producers; host-governor	m/queue/{feed,catalogue}.test.mjs; m/queue-producers/{producers,feeditems}.test.mjs	governor cool-off CONDITION items; reads queue source (P7)
+bio-plane/test/queue-state.test.mjs	580	covered?	queue	m/queue/{mute,catalogue,feed,ledger}.test.mjs	mute/snooze never touch the record
+bio-plane/test/queue.test.mjs	436	covered?	queue; tasks; progressions	m/queue/{feed,catalogue,invariants}.test.mjs; m/tasks/inbox.test.mjs	obligation+finding one contract
+bio-plane/test/ratified-evidence.mjs	115	helper	-	publishedcase, ratify-envelope, ratify, d530-parted-attest, d556partedpublish	shared fixture; retires with last user
+bio-plane/test/ratify-authority.control.mjs	205	helper	-	ratify-authority.test.mjs	NC driver on source copies
+bio-plane/test/ratify-authority.test.mjs	546	covered?	ratification; membership	m/ratification/{ratify-op,caseratify-op}.test.mjs; m/membership/requests-fence-facts.test.mjs (R55,R56)	sight/owner fences on op=ratify
+bio-plane/test/ratify-envelope.test.mjs	563	covered?	ratification; publication	m/ratification/relays.test.mjs (STORE_DID_NOT_ANSWER); m/publication/worker.test.mjs	reads publication/worker source (P7)
+bio-plane/test/ratify.test.mjs	342	covered?	ratification; signatures; membership; publication	m/ratification/ratify-op.test.mjs; m/signatures/signatures.test.mjs; m/membership/t16-own-keys.test.mjs; m/publication/published.test.mjs	SSHSIG allowed-key, signer keys, published fence
+bio-plane/test/reachability.test.mjs	162	covered	capture	m/capture/services.test.mjs (R8,R43,R59)	governed never counts as failure
+bio-plane/test/reading-dialect.test.mjs	249	covered	extraction; format-registry	m/extraction/read.test.mjs (R3,R14); m/format-registry/dialect.test.mjs	CSV dialect on reading
+bio-plane/test/reading-position-occurrences.test.mjs	350	covered?	extraction; text-chain	m/extraction/store.test.mjs (R19,R28); m/text-chain/position.test.mjs	occurrences per reference
+bio-plane/test/reading-position.test.mjs	523	covered?	text-chain; extraction; connections	m/text-chain/position.test.mjs; m/extraction/store.test.mjs (R28); m/connections/read.test.mjs	reads docprofile doctype source (P7)
+bio-plane/test/reading-wire.test.mjs	437	covered?	extraction	m/extraction/read.test.mjs (R1-R4,R12)	PDF text to reading; real legistar fixture
+bio-plane/test/reading.test.mjs	219	covered	extraction	m/extraction/read.test.mjs (R1,R2); m/extraction/store.test.mjs (R19,R27,R28)	reading persisted and indexed by reference
+bio-plane/test/readingname.test.mjs	960	covered?	entities, extraction	entities/naming.test.mjs (R17-R19), extraction/readcontract.test.mjs (R59 term fold)	op=readingname is entities namingDocuments; also reads store.mjs source text (P7)
+bio-plane/test/rec-181-promote-retire.control.mjs	91	helper	legacy-store	rec-181-promote-retire.test.mjs	patches store.mjs promote transition; promote moved to promotion, arms likely cannot anchor
+bio-plane/test/rec-181-promote-retire.test.mjs	231	covered?	promotion	promotion/promote.test.mjs (R16 CITED on move into retired)	op=retire door still legacy-store; its same-code arm unproven by module
+bio-plane/test/rec-182-created-tie.control.mjs	91	helper	legacy-store	rec-182-created-tie.test.mjs	patches exportManifest ORDER BY in store.mjs
+bio-plane/test/rec-182-created-tie.test.mjs	135	covered	publication, promotion	publication/export.test.mjs (R18 write order), promotion/history.test.mjs (R30 seq)	also reads architecture doc text
+bio-plane/test/rec-183-reinstate-retired.control.mjs	105	helper	legacy-store	rec-183-reinstate-retired.test.mjs	patches store.mjs/affordances.mjs copies
+bio-plane/test/rec-183-reinstate-retired.test.mjs	234	covered	citation, affordances	citation/sever.test.mjs (R4, R5, R11 RETIRED_NOT_CITABLE C-33.39)	affordance withholding reinstate assumed via affordances derive
+bio-plane/test/rec-186-leave-join.control.mjs	117	helper	legacy-store	rec-186-leave-join.test.mjs	edits store.mjs/affordances.mjs
+bio-plane/test/rec-186-leave-join.test.mjs	184	covered	membership, affordances	membership/ownership.test.mjs, membership/participation.test.mjs (LAST_COMMITTED_OWNER), affordances/plane.test.mjs (R18)	suite names retired code LAST_OWNER_CANNOT_LEAVE
+bio-plane/test/rec105-reader-census.mjs	289	dead	-	-	one-off REC-105 reader census instrument, not a suite, nothing imports it
+bio-plane/test/rec108-cache-asof.test.mjs	526	covered?	retrieval, query-language	retrieval/search.test.mjs (R8 cachedNotes), retrieval/meaning.test.mjs (R11 cached)	cached-column staleness vs C-2.8 re-promote arm unclear; reads query.mjs source
+bio-plane/test/rec113-identity.mjs	255	dead	-	-	one-off additive-change instrument booting another checkout; not a suite
+bio-plane/test/rec114-leg-earned.test.mjs	585	covered	retrieval	retrieval/meaning.test.mjs (R12, R55 grade earned + grade_authored + grade_why)	reads src text
+bio-plane/test/rec116-route-marked.test.mjs	493	covered	provenance	provenance/chain-route.test.mjs (R22, R23)	reads store.mjs source text
+bio-plane/test/rec118-reeval-earned.test.mjs	505	covered	reevaluation	reevaluation/obligation.test.mjs (R5 capture letter bounded, both fields)	reads src text
+bio-plane/test/rec119-version-legs-earned.test.mjs	502	covered	basis-versions, run-productions	basis-versions/reads.test.mjs (R10), run-productions/suggest.test.mjs, basis-versions/promote.test.mjs (R29 freeze)	
+bio-plane/test/rec120-onpoint-undetermined.test.mjs	230	covered	connections	connections/read.test.mjs (R7-R13, C-49.1/.4)	
+bio-plane/test/rec121-chain-bytes.test.mjs	251	covered	query-language, retrieval	query-language/grammar.test.mjs (content:chain filter), retrieval/meaning.test.mjs	
+bio-plane/test/rec122-onpoint-choice.test.mjs	312	covered	connections	connections/read.test.mjs (R14-R16, C-74.1-.4)	
+bio-plane/test/rec127-cap-bytes.test.mjs	241	covered	query-language, retrieval	query-language/grammar.test.mjs (content:cap filter), content/mint.test.mjs (R12 cap)	
+bio-plane/test/rec155-session-routes.test.mjs	289	covered?	control-plane	control-plane/admission.test.mjs (R7-R16 SESSION_OPS, MACHINE_CREDENTIAL_REQUIRED)	per-op session-set membership for five provenance/calibration ops not individually asserted
+bio-plane/test/rec165-production-principal.control.mjs	144	helper	legacy-store	rec165-production-principal.test.mjs	patches src copies
+bio-plane/test/rec165-production-principal.test.mjs	411	covered	run-productions, ai-runs	run-productions/suggest.test.mjs, run-productions/extract.test.mjs, ai-runs/words.test.mjs (R5 runPrincipalGate)	
+bio-plane/test/rec168-capturerequest-principal.control.mjs	179	helper	legacy-store	rec168-capturerequest-principal.test.mjs	
+bio-plane/test/rec168-capturerequest-principal.test.mjs	320	covered	capture-requests	capture-requests/door.test.mjs (R1-R9 CAPTURE_REQUEST_NO_RUN, AI_RUN_NOT_PRINCIPAL)	
+bio-plane/test/rec169-consume.control.mjs	150	helper	legacy-store	rec169-consume.test.mjs	
+bio-plane/test/rec169-consume.test.mjs	339	covered	ai-runs	ai-runs/tick-close.test.mjs (R11-R14), ai-runs/words.test.mjs (R3), ai-runs/surfacing.test.mjs	
+bio-plane/test/rec170-manifest-pair.control.mjs	211	helper	legacy-store	rec170-manifest-pair.test.mjs	
+bio-plane/test/rec170-manifest-pair.test.mjs	364	covered	publication	publication/published.test.mjs (R7, R11 CASES_DISAGREE)	
+bio-plane/test/rec171-surface-token.control.mjs	134	helper	legacy-store	rec171-surface-token.test.mjs	
+bio-plane/test/rec171-surface-token.test.mjs	255	covered	ai-runs	ai-runs/surfacing.test.mjs (R25-R27, SURFACE_NO_RUN C-66.1)	
+bio-plane/test/rec172-bounds.control.mjs	154	helper	legacy-store	rec172-bounds.test.mjs	
+bio-plane/test/rec172-bounds.test.mjs	307	covered	ai-runs	ai-runs/open.test.mjs (R9, R10), ai-runs/tick-close.test.mjs, ai-runs/words.test.mjs (R3 C-22.14/.15/.16)	
+bio-plane/test/rec173-migration-replay.control.mjs	132	helper	legacy-store	rec173-migration-replay.test.mjs	
+bio-plane/test/rec173-migration-replay.test.mjs	364	covered?	control-plane, promotion, ai-runs	control-plane/admission.test.mjs (REPLAY_UNVERIFIED C-66.6), promotion/promote.test.mjs (R5), ai-runs/surfacing.test.mjs	migration-replay row (no surfacing row) not confirmed in module tests
+bio-plane/test/rec174-supplyfetch.control.mjs	104	helper	legacy-store	rec174-supplyfetch.test.mjs	
+bio-plane/test/rec174-supplyfetch.test.mjs	333	covered	retrieval	retrieval/frontier.test.mjs (R37 supply came back full -> truncated)	reads frontier.mjs/store.mjs source
+bio-plane/test/rec175-digest.test.mjs	253	covered	promotion, record-core	promotion/promote.test.mjs (R5 FILE_DIGEST_MISMATCH), record-core/record-core.test.mjs (R56 digestCensus)	
+bio-plane/test/rec176-snapkey.test.mjs	274	covered	promotion, record-core	promotion/promote.test.mjs, promotion/write-path.test.mjs (SNAP_KEY_TAKEN C-67.1), record-core/record-core.test.mjs (snapKeyCensus)	
+bio-plane/test/rec177-allowance.control.mjs	118	helper	legacy-store	rec177-allowance.test.mjs	
+bio-plane/test/rec177-allowance.test.mjs	234	covered	ai-runs	ai-runs/open.test.mjs (AI_RUN_BOUND_NO_ALLOWANCE C-22.16), ai-runs/words.test.mjs (R3)	
+bio-plane/test/rec178-bytes.control.mjs	99	helper	legacy-store	rec178-bytes.test.mjs	
+bio-plane/test/rec178-bytes.test.mjs	190	covered	promotion	promotion/promote.test.mjs (OVERSIZE_INLINE, INLINE_MAX in UTF-8 bytes)	
+bio-plane/test/rec179-surfaced-by.control.mjs	108	helper	legacy-store	rec179-surfaced-by.test.mjs	
+bio-plane/test/rec179-surfaced-by.test.mjs	256	covered	promotion	promotion/write-path.test.mjs (R18 SURFACED_BY_REWRITTEN)	
+bio-plane/test/rec180-promote-rollback.test.mjs	171	covered	promotion, record-core	promotion/promote.test.mjs, promotion/registry.test.mjs (NAME_TAKEN, NO_TITLE), record-core/record-core.test.mjs (R32 rollback incl minted_ids)	
+bio-plane/test/rec195-laws-proposal.test.mjs	397	covered	actions	actions/acts.test.mjs (R18, R19 actionLaws / proposal), actions/read.test.mjs (R25)	
+bio-plane/test/rec203-idspaces.test.mjs	319	covered	entities, id-spaces	entities/idmatch.test.mjs (R20-R25, R29), id-spaces idspaces.test.mjs	
+bio-plane/test/rec207-bias-debt-settle.control.mjs	220	helper	legacy-store	rec207-bias-debt-settle.test.mjs	
+bio-plane/test/rec207-bias-debt-settle.test.mjs	525	covered	bias	bias/debt.test.mjs (R33-R41)	
+bio-plane/test/rec212-statement-writer.test.mjs	686	covered	case-authoring, ratification	case-authoring/statement.test.mjs (R19-R21), ratification/checks.test.mjs (C-41.10, C-41.13)	
+bio-plane/test/rec213-reviewcopy-writer.test.mjs	532	covered	review, case-authoring	review/copy.test.mjs (R15 writer rows withheld and counted), case-authoring/statement.test.mjs (R20, R21)	
+bio-plane/test/rec214-risk-tier-revision.test.mjs	350	covered	actions	actions/acts.test.mjs (R23, R24 actionRiskTier), actions/write.test.mjs (R1 C-90.1, C-32.19)	
+bio-plane/test/rec217-draft-binding.test.mjs	534	covered	case-authoring	case-authoring/identity.test.mjs (R9 draft=, C-44.3), case-authoring/statement.test.mjs (R20 matched by draft)	
+bio-plane/test/rec219-case-document-v4.test.mjs	479	covered	ratification, case-authoring, bias	ratification/checks.test.mjs (C-41.13/.14/.15), case-authoring/document.test.mjs (R14 bias manifest), bias/adopt-manifest.test.mjs (R12, R14 pins_proposed)	
+bio-plane/test/rec220-version-pin.test.mjs	302	covered?	citation, content	citation/cite-write.test.mjs (R2 pinned capture), content/mint.test.mjs (R11 authored capture wins)	earnedbasis resolving pinned leg after later capture not confirmed
+bio-plane/test/rec75-sweep.mjs	115	dead	-	-	one-off REC-75 class sweep over source text; not a suite
+bio-plane/test/rec83-baseline-probe.mjs	161	helper	-	content-reads.test.mjs	hand-run pin re-derivation instrument, referenced in comments only
+bio-plane/test/rec85-arm-digest.mjs	94	helper	-	content-extent-arms.test.mjs	imported (sweepDigest)
+bio-plane/test/rec88-baseline-probe.mjs	188	helper	-	content-capture-bound.test.mjs, content-reads.test.mjs	hand-run pin re-derivation instrument
+bio-plane/test/rec88-instance-census.mjs	222	dead	-	-	one-off census against a deployed instance
+bio-plane/test/rec88-residual-probe.mjs	152	dead	-	-	one-off residual verification probe; nothing references it
+bio-plane/test/rec93-fold-digest.mjs	184	dead	-	-	one-off byte-identity instrument booting another checkout
+bio-plane/test/rec93-migrate-probe.mjs	185	dead	-	-	one-off ai_run_log fold migration probe across two builds
+bio-plane/test/rec97-noextent-digest.mjs	131	helper	-	cite-extent.test.mjs	hand-run pristine-tree digest instrument
+bio-plane/test/reevaluation.test.mjs	834	covered?	reevaluation, inquiry	reevaluation/obligation.test.mjs (R1-R6), reevaluation/raise.test.mjs (R7), inquiry/dispose.test.mjs (R20-R22)	reads many src files as text (P7)
+bio-plane/test/reextract.test.mjs	538	covered	extraction	extraction/pdfstructure.test.mjs (R31-R35, R47, C-51.x)	
+bio-plane/test/ref-variance-probe.mjs	419	dead	-	-	M-4 measurement instrument; hygiene/walkfloor only exempt it by name
+bio-plane/test/ref-variance.control.mjs	74	helper	-	ref-variance-probe.mjs	follows the dead probe
+bio-plane/test/refselectivity.control.mjs	164	helper	legacy-store	readingname.test.mjs	
+bio-plane/test/refusal-wire.control.mjs	412	helper	-	refusal-wire.test.mjs	
+bio-plane/test/refusal-wire.test.mjs	1348	system	-	DEC-49 refusal guard: every refusal leaves the control plane by one door, catalogue walk, no code in two families	reads src text
+bio-plane/test/refuse-gate.test.mjs	591	covered?	retrieval	retrieval/selections.test.mjs (R19, R20 SET_MOVED, R59 answerChanged)	retire/release acts themselves still legacy-store; reads src text
+bio-plane/test/register-doc.mjs	64	helper	-	many suites (rec108, rec114, readingname, resolution, ...)	fixture: intake register shape
+bio-plane/test/register-grammar.control.mjs	314	helper	-	register-grammar.test.mjs	
+bio-plane/test/register-grammar.test.mjs	459	dead	legacy-index	-	tests the old process negative-control register tooling and git history of VERIFICATION.md
+bio-plane/test/register.control.mjs	263	helper	-	capture.test.mjs, suggest.test.mjs, strengthpair.test.mjs, hygiene.test.mjs	M0-14 control arms
+bio-plane/test/release.test.mjs	257	convert	legacy-store	no requirement: bulk op=release collected->verified with acknowledgment/mitigation (NO_ACKNOWLEDGMENT, MACHINE_CANNOT_RELEASE)	release act still in store.mjs; no module requirement names it
+bio-plane/test/rendered-capture.test.mjs	738	covered	capture-sources, capture-requests, capture	capture-sources/render.test.mjs (R1-R18), capture-requests/drain.test.mjs, capture/acquire.test.mjs	
+bio-plane/test/reopen.test.mjs	754	covered	promotion	promotion/reopen.test.mjs (R21-R26)	reads many src files as text
+bio-plane/test/repair-reachability.test.mjs	732	system	-	catalogue repair strings: every directed move is a legal edge and every named op is declared	reads bio-checks and src text
+bio-plane/test/replay-proof.mjs	45	helper	-	rec179-surfaced-by, reopen, risk-tier, suggest, gathering, ... suites	fixture: verifiable replay
+bio-plane/test/resolution.test.mjs	363	covered	entities	entities/resolve.test.mjs (R9-R13), entities/reads.test.mjs (R14-R16 concerns)	
+bio-plane/test/resolveset.test.mjs	211	covered	entities, record-core	entities/resolve.test.mjs (set items), record-core/record-core.test.mjs (R49, R50, R55 C-75)	
+bio-plane/test/resolveversion.test.mjs	146	system	legacy-index	fleet version authority: every member declares the plane version (scripts/resolve-version.mjs, used by deploy)	
+bio-plane/test/retirement.control.mjs	228	helper	-	check-firing.test.mjs	
+bio-plane/test/retrieval-probe-worker.mjs	102	helper	-	retrieval-probe.mjs	follows dead probe
+bio-plane/test/retrieval-probe.mjs	162	dead	-	-	one-off FTS5-vs-export design probe (npm probe:retrieval)
+bio-plane/test/retrieval-scale.mjs	268	system?	retrieval	whole-store retrieval scale benchmark at 20,000 bundles (npm bench:retrieval)	benchmark, not a test
+bio-plane/test/reuse-ratify.test.mjs	330	covered	ratification, subresources	ratification/ratify-op.test.mjs (R6 reused parts outcome), subresources/subresources.test.mjs	
+bio-plane/test/reviewcopy-inband.control.mjs	184	helper	-	reviewcopy-inband.test.mjs	
+bio-plane/test/reviewcopy-inband.test.mjs	622	covered	review, publication	review/copy.test.mjs (R11), publication/worker.test.mjs (R16 inband quartet hash, floors)	
+bio-plane/test/reviewcopy.control.mjs	415	helper	-	reviewcopy.test.mjs	
+bio-plane/test/reviewcopy.test.mjs	1276	covered?	review, case-authoring	review/acts.test.mjs (R1-R7), review/copy.test.mjs (R11-R18), review/doors.test.mjs (R8-R10, R19)	1276 lines; reads review schema/store source text
+bio-plane/test/risk-tier.test.mjs	960	covered?	actions, instance-setup	actions/read.test.mjs, actions/write.test.mjs (C-2.10, C-32.19), affordances/catalogue.test.mjs (R26), instance-setup tests	reads civicos-ui/app.html source text
+bio-plane/test/row-census.mjs	92	helper	-	row-census.test.mjs, d470-catalog-census.test.mjs	
+bio-plane/test/row-census.test.mjs	259	system	promotion	refusal-row census across every module table (promotion R50 ROW_CENSUS pin vs tree)	promotion cannot read later tables (P4)
+bio-plane/test/run-conditions.control.mjs	218	helper	-	run-conditions.test.mjs	
+bio-plane/test/run-conditions.test.mjs	1476	covered?	ai-runs	ai-runs/reads.test.mjs (R19-R24, STANDARD_BASIS), ai-runs/words.test.mjs	mostly a source-text walk of schema readers (P7)
+bio-plane/test/rung-ladder.control.mjs	207	helper	-	rung-ladder.test.mjs	
+bio-plane/test/rung-ladder.test.mjs	624	covered	affordances	affordances/catalogue.test.mjs (R2, R3, R12 rung or stated absence), affordances/services.test.mjs (R12 unaccounted)	
+bio-plane/test/sandbox.mjs	128	helper	test-support	nearly every suite	owned by test-support module, stays
+bio-plane/test/scale.mjs	147	system?	-	whole-store gate pass cost benchmark (npm bench)	benchmark, not a test
+bio-plane/test/scaling.mjs	75	dead	-	-	live-deployment load probe reading /tmp/tok; not a test, nothing imports it
+bio-plane/test/scheduler.control.mjs	267	helper	scheduler	scheduler.test.mjs	negative-control driver; follows scheduler.test.mjs
+bio-plane/test/scheduler.test.mjs	679	covered	scheduler	m/scheduler/alarm.test.mjs, registry.test.mjs, plane.test.mjs, invariants.test.mjs	one alarm, no starvation, self-termination, suspended-run wake (R1-R5, R12, R14-R20); block 4 reads source
+bio-plane/test/search.test.mjs	710	covered?	retrieval, query-language	m/retrieval/search.test.mjs, projection.test.mjs; m/query-language/statements.test.mjs	index check and search R6-R9, R29; part is source-text (no MATCH in store.mjs), P7
+bio-plane/test/selection.test.mjs	340	covered	retrieval	m/retrieval/selections.test.mjs	query vs enumerated selections, TTL keep-alive (R18-R22)
+bio-plane/test/setup-honesty.test.mjs	98	convert?	instance-setup	no requirement: page's bundle writer emits content_hash for a captured document (D-62)	source-text of SETUP_HTML (P7); record browser surfaces may leave per K102
+bio-plane/test/setup-signeradd.control.mjs	117	helper	instance-setup	setup-signeradd.test.mjs	negative-control driver; follows setup-signeradd.test.mjs
+bio-plane/test/setup-signeradd.test.mjs	155	convert	instance-setup	no requirement: page splits pasted ssh key line into keyB64/comment (D-605); near R23	page.test.mjs sandbox could drive signerAddBody at the interface
+bio-plane/test/severedhomes.control.mjs	295	helper	queue	severedhomes.test.mjs	negative-control driver; follows severedhomes.test.mjs
+bio-plane/test/severedhomes.test.mjs	555	covered?	queue	m/queue/feed.test.mjs (R7)	withdrawn cite/basis edge not a home; check every severed spelling is in feed R7 test
+bio-plane/test/shadowed-refusals.control.mjs	299	helper	-	shadowed-refusals.test.mjs	negative-control driver; follows shadowed-refusals.test.mjs
+bio-plane/test/shadowed-refusals.test.mjs	866	system?	membership, record-core, publication	cross-module refusal-shadowing census over the plane's sources	also pins 8 identity refusals (BAD_HANDLE, LEASE_HELD, NO_CASE, NO_OWNERS...); per-code pins likely in module tests
+bio-plane/test/signer-enrolment.control.mjs	237	helper	membership	signer-enrolment.test.mjs	negative-control driver; follows signer-enrolment.test.mjs
+bio-plane/test/signer-enrolment.test.mjs	406	covered?	membership	m/membership/expertise-keys-ai.test.mjs, t16-own-keys.test.mjs	SIGNER_MEMBER_NOT_ENROLLED refusal and roster key state (R25-R27); roster read-half unverified
+bio-plane/test/signpage.test.mjs	225	covered	signatures	m/signatures/signatures.test.mjs	signing page script vs ssh-keygen, plane verify
+bio-plane/test/skillpack.control.mjs	252	helper	skills	skillpack.test.mjs	negative-control driver; follows skillpack.test.mjs
+bio-plane/test/skillpack.test.mjs	708	covered?	skills, ai-runs	m/skills/pack.test.mjs, version.test.mjs; m/ai-runs/open.test.mjs	pack sourcing/version (R1-R13); several arms read source text (P7)
+bio-plane/test/skillsequencing.control.mjs	226	helper	skills	skillsequencing.test.mjs	negative-control driver; follows skillsequencing.test.mjs
+bio-plane/test/skillsequencing.test.mjs	615	covered?	skills, agent-worker	m/skills/doctrine.test.mjs; agent-worker/test/harness.test.mjs	DEPLOYMENT_SEQUENCE record vs harness gate; reads harness source and docs verbatim (P7)
+bio-plane/test/sshsig.test.mjs	119	covered	signatures	m/signatures/signatures.test.mjs	SSHSIG conformance with OpenSSH
+bio-plane/test/staff-directory-e2e.test.mjs	115	convert?	extraction, docprofile	extraction R4 (tier-2 via pdf-worker) with docprofile staff_directory type	real-bytes e2e through op=acquire and committed pdf-worker bundle; no module test names staff_directory
+bio-plane/test/stats-disclosure.test.mjs	253	convert	legacy-store -> control-plane	no requirement: op=stats per-class disclosure (leads, dbBytes, capacity); record-core counts R-row N342	op=stats still in legacy-store until moved to control-plane (N342)
+bio-plane/test/statusby.test.mjs	183	covered?	membership	m/membership/roster.test.mjs, administrators.test.mjs (R6, R8, R13)	every members.status writer stamps status_by; first arms are a source census (P7)
+bio-plane/test/stdio.mjs	109	helper	test-support	all suites; owned by test-support	already a test-support module path; keep, not legacy
+bio-plane/test/store-started.mjs	7	helper	legacy-index	store.test.mjs, search.test.mjs and ~23 other suites	boots legacy-index Store for Miniflare suites; retire with its users
+bio-plane/test/store.test.mjs	173	covered	promotion, record-core	m/promotion/promote.test.mjs (R1 CAS), m/record-core/record-core.test.mjs	CAS ladder, history snapshot, image projection
+bio-plane/test/strength.test.mjs	476	covered	strength	m/strength/pair.test.mjs (R1-R5)	two-axis pair, weakest leg, disjoint populations
+bio-plane/test/strengthpair.control.mjs	417	helper	strength	strengthpair.test.mjs	negative-control driver; follows strengthpair.test.mjs
+bio-plane/test/strengthpair.test.mjs	927	covered	strength	m/strength/version.test.mjs, pair.test.mjs (R7-R12)	pair over one version, never composed
+bio-plane/test/subresources.test.mjs	1703	covered?	subresources	m/subresources/subresources.test.mjs	capture fidelity and fences; store-integration arms (capture/promotion) may lack a module home
+bio-plane/test/sufficiency-state.control.mjs	271	helper	basis-versions	sufficiency-state.test.mjs	negative-control driver; follows sufficiency-state.test.mjs
+bio-plane/test/sufficiency-state.test.mjs	442	covered?	basis-versions, run-productions	m/basis-versions/grammar.test.mjs, m/run-productions/suggest.test.mjs	SUFFICIENCY_UNCLAIMED third asserted_by state; classifier lives in legacy-checks
+bio-plane/test/suggest.control.mjs	531	helper	run-productions	suggest.test.mjs	negative-control driver; follows suggest.test.mjs
+bio-plane/test/suggest.test.mjs	1795	covered	run-productions	m/run-productions/suggest.test.mjs (R1-R9)	op=suggest six pre-write refusals C-27.x
+bio-plane/test/surfaced-by.test.mjs	127	convert	control-plane	no requirement: server stamps surfaced_by agent/human from the credential at op=promote (D-78)	control-plane.md has no surfaced_by stamp row; inquiry R2 is only the grammar
+bio-plane/test/surfacing-run.mjs	163	helper	-	~113 suites (surfaced-by, severedhomes, skillpack, signer-enrolment...)	fixture wrapping promote with a run; retire with its users
+bio-plane/test/t4-extracted.mjs	71	helper	-	versionchain.test.mjs, bounds.test.mjs, meaning-bounds.test.mjs, hygiene.test.mjs	re-inlines extracted store methods for source-text censuses; follows those
+bio-plane/test/t5-extracted.mjs	243	helper	-	bounds.test.mjs, meaning-bounds.test.mjs, hygiene.test.mjs, airuns.test.mjs	re-inliner for source-text censuses; follows those
+bio-plane/test/t8-extracted.mjs	16	helper	-	bounds.test.mjs, meaning-bounds.test.mjs, hygiene.test.mjs, identity-claims.test.mjs	module map for re-inliner; follows those
+bio-plane/test/tally-through-pipe.control.mjs	306	helper	test-support	tally-through-pipe.test.mjs	negative-control driver; follows tally-through-pipe.test.mjs
+bio-plane/test/tally-through-pipe.test.mjs	180	covered	test-support	m/test-support/test-support.test.mjs	stdio.mjs pipe flush; module test drives stdio.mjs children
+bio-plane/test/task-drain-alarm.test.mjs	173	covered	tasks, scheduler	m/tasks/inbox.test.mjs (R1), m/scheduler/alarm.test.mjs	enqueue arms, drain, re-arm, self-terminate
+bio-plane/test/task-fence.test.mjs	204	covered	tasks	m/tasks/inbox.test.mjs (R3)	NOT_YOURS task-actor fence
+bio-plane/test/task-machine.test.mjs	289	covered	tasks	m/tasks/inbox.test.mjs (C-32.10, C-32.11)	machine cannot resolve/forward a task
+bio-plane/test/testify.test.mjs	666	covered?	provenance	m/provenance/testify.test.mjs (R28)	reader arms (op=image, content, search) are cross-module plane checks
+bio-plane/test/testimonyaxis.test.mjs	588	covered?	provenance, inquiry, strength	m/inquiry/earned.test.mjs (R13), provenance R27, m/strength/version.test.mjs	testimony axis at D; catalogue arms on publication/ratification checks
+bio-plane/test/textchain.test.mjs	1017	covered?	text-chain, extraction	m/text-chain/chain.test.mjs, grade.test.mjs; m/extraction/read.test.mjs	chain grammar, confidence floor, attestation; OCR stub via op=acquire
+bio-plane/test/textshown.test.mjs	241	covered	pdf-reader, pdf-pixels	m/pdf-reader/text.test.mjs (R9-R15), pdf-worker/test/pagepixels.test.mjs (R16)	pageShowsText shared predicate
+bio-plane/test/theme.test.mjs	503	covered	connections	m/connections/themes.test.mjs (R39-R48)	themes, C-81 refusals
+bio-plane/test/tier-pagewise.probe.mjs	320	helper	text-chain	tier-pagewise.test.mjs	probe writing tier2-recorded.json; network; follows that suite
+bio-plane/test/tier-pagewise.test.mjs	339	covered	text-chain	m/text-chain/tier2.test.mjs (R74-R80)	per-page tier-2 rule over fixtures
+bio-plane/test/tier1-coverage-probe.mjs	303	dead	-	-	network coverage measurement of Oakland PDFs; not a test
+bio-plane/test/tier1-coverage-tier2-oracle.mjs	99	dead	-	-	network unpdf oracle measurement; not a test
+bio-plane/test/tier2-wire.test.mjs	538	covered?	extraction	m/extraction/read.test.mjs (R4), pdfstructure.test.mjs (R31-R35)	per-page tier through op=acquire/pdfstructure; real bundle wire not driven by module tests
+bio-plane/test/tier3-layer-parts.test.mjs	742	covered?	extraction	m/extraction/read.test.mjs (R7, R10)	tier-3 merge keeps per-page tier-2 statement
+bio-plane/test/transcribe.test.mjs	421	covered?	content, text-chain	m/content/transcribe.test.mjs; m/text-chain/chain.test.mjs	typed chain, attestation ceiling, C-52 refusals
+bio-plane/test/unattended-lease.test.mjs	187	convert?	control-plane	record-core R10 covered; missing: control plane stamps lease actor token:<class> for machine credential (D-61)	record-core R10 in record-core.test.mjs; the stamp half has no row
+bio-plane/test/unpdf-measure-probe.mjs	101	dead	-	-	one-off bundle-size measurement; not a test
+bio-plane/test/unruled-op-fixture.mjs	77	helper	control-plane	d270-refusal-truth.test.mjs, admission-gate.test.mjs	plane with one unruled op (C-38.8); follows those suites
+bio-plane/test/verdict-excluder.control.mjs	496	system	-	DEC-49 refusal guard (verdict reader) negative controls	mutates meaning-bounds, plane-envelope, check-refusal-codes
+bio-plane/test/verdict-reader.mjs	593	system	-	DEC-49 refusal guard arm C; meaning-bounds, plane-envelope	shared instrument of the guard; follows those
+bio-plane/test/versionchain.test.mjs	1037	covered?	provenance	m/provenance/receipts.test.mjs (versionChain)	much is schema source-text (no edge, no new column), P7
+bio-plane/test/versiongrade.test.mjs	308	covered?	content	m/content/notice.test.mjs (R29-R31)	per-candidate grade A/B/C across pdf/docx/pptx
+bio-plane/test/versionnotice.test.mjs	497	covered?	reevaluation, content	m/reevaluation/notice.test.mjs (R10, R11), m/content/notice.test.mjs	cross-version notice is a read; tables unchanged
+bio-plane/test/versions.test.mjs	1099	covered?	basis-versions	m/basis-versions/grammar.test.mjs, promote.test.mjs, reads.test.mjs	versions of a basis, freeze, purge, run link
+bio-plane/test/versionstate.control.mjs	315	helper	basis-versions	versionstate.test.mjs	negative-control driver; follows versionstate.test.mjs
+bio-plane/test/versionstate.test.mjs	1384	covered?	basis-versions	m/basis-versions/acts.test.mjs (R12-R15, R30), grammar.test.mjs (R35)	sixth state machine, machine fence; implementation-count pins read source (P7)
+bio-plane/test/vf4-bindings.mjs	33	dead	-	-	live Cloudflare account binding lister; not a test
+bio-plane/test/vf4-call.mjs	35	helper	-	vf4-live-scratch.mjs, vf4-suggestprobe.mjs, rec88-instance-census.mjs	live op caller for probes; retire with them
+bio-plane/test/vf4-fixture.mjs	113	dead	-	-	fixture for the vf4 live probes only
+bio-plane/test/vf4-live-scratch.mjs	815	dead?	-	-	live deployed-plane run; rec172-bounds.test.mjs reads its tick body as source
+bio-plane/test/vf4-secretnames.mjs	15	dead	-	-	live Cloudflare secret-name lister; not a test
+bio-plane/test/vf4-suggestprobe.mjs	65	dead	-	-	measurement of record against deployed 0.57.0; not a test
+bio-plane/test/walkfigure.control.mjs	245	helper	-	walkfigure.test.mjs	negative-control driver; follows walkfigure.test.mjs
+bio-plane/test/walkfigure.test.mjs	288	system	-	test-estate hygiene instrument (walk brand, scripts/walkfigure.mjs)	drives the detector on fixtures and the estate
+bio-plane/test/walkfloor.control.mjs	294	helper	-	walkfloor.test.mjs	negative-control driver; follows walkfloor.test.mjs
+bio-plane/test/walkfloor.test.mjs	489	system	-	test-estate hygiene: cross-file walk->floor detector (scripts/walkfloor.mjs)	instrument over the test estate
+civicos-ui/test/accept-ceremony.control.mjs	198	helper	legacy-ui	accept-ceremony.test.mjs	negative-control driver; follows accept-ceremony.test.mjs
+civicos-ui/test/accept-ceremony.test.mjs	737	convert?	legacy-ui	no requirement: legacy-ui has no requirements file	UI accept ceremony vs real plane; plane half near basis-versions/strength
+civicos-ui/test/act-attest.test.mjs	700	convert?	legacy-ui	no requirement: legacy-ui has no requirements file	attestation act UI flow and fence rendering
+civicos-ui/test/act-ballot.test.mjs	459	convert?	legacy-ui	no requirement: legacy-ui has no requirements file	owner-removal ballot UI, reads the plane's arithmetic
+civicos-ui/test/act-dispose.test.mjs	446	convert?	legacy-ui	no requirement: legacy-ui has no requirements file	dispose UI reads op=affordances; region source-text checks (P7)
+civicos-ui/test/act-proposal.test.mjs	495	convert?	legacy-ui	no requirement: legacy-ui has no requirements file	proposal act UI (D-79, D-82 markers)
+civicos-ui/test/action-page.test.mjs	1253	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	UI-19 action page over mock plane (actionmove/actioncorrespond); plane half is actions'
+civicos-ui/test/add-surface.control.mjs	305	helper	legacy-ui	add-surface.test.mjs	negative-control driver; follows add-surface
+civicos-ui/test/add-surface.test.mjs	1296	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	UI writes catalog-conformant bundles; tree sweep of civicos-ui is source-text (P7); K283 arms wait
+civicos-ui/test/admission-translation.test.mjs	149	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	surface renders DEC-49 canned translation verbatim; control-plane catalogue imported
+civicos-ui/test/agent-surfaced-inquiry.control.mjs	128	helper	legacy-ui	agent-surfaced-inquiry.test.mjs	negative-control driver
+civicos-ui/test/agent-surfaced-inquiry.test.mjs	334	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	D-82 shown half over real plane; plane's surfaced_by stamp is inquiry's
+civicos-ui/test/ai-session-context.test.mjs	728	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	running-session indicator in inquiry/project windows (app.html call sites)
+civicos-ui/test/ai-session-fixture.mjs	219	helper	legacy-ui	ai-session-context.test.mjs; ai-session-wire.test.mjs	budget draw fixture
+civicos-ui/test/ai-session-wire.test.mjs	1075	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	aiSessionRead wired to op=airun; reads connections-sidebar suite text
+civicos-ui/test/analyst-vocabulary.control.mjs	272	helper	legacy-ui	analyst-vocabulary.test.mjs	negative-control driver; mutates DECISIONS.md
+civicos-ui/test/analyst-vocabulary.mjs	274	helper	legacy-ui	analyst-vocabulary.test.mjs, connections-sidebar, elicitation, member-respect, notifications, bio-plane analystvocab.test.mjs	DEC-32 ban family derived from DECISIONS.md and store.mjs text (source-text)
+civicos-ui/test/analyst-vocabulary.test.mjs	367	system?	legacy-tests	test-estate consumer census: every UI sweep imports the one DEC-32 ban family	meta-test over test files' text; retires with the UI suites
+civicos-ui/test/artifact-fetch.test.mjs	132	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	fetchParts sha-checks parts, EVIDENCE_NOT_HELD rendering; small mock
+civicos-ui/test/auth-surface.test.mjs	1326	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	signIn/pubList envelope handling; reads store/publication/membership source (P7)
+civicos-ui/test/authored-group.control.mjs	104	helper	legacy-ui	authored-group.test.mjs	negative-control driver
+civicos-ui/test/authored-group.test.mjs	389	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	UI composes no group literal; plane stamp covered by promotion (IC-172)
+civicos-ui/test/bias-vocabulary.test.mjs	500	system?	legacy-ui, legacy-checks	catalogue-copy drift: app.html's type tables vs the checks catalogue	K283: waits on UI replacement; currently red (N241)
+civicos-ui/test/bound-sweep.test.mjs	2237	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	surfaces show plane-published bounds; WALK 1 reads plane source corpus (P7, cross-module)
+civicos-ui/test/capture-honesty.test.mjs	218	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	UI unfinishedBanner/mergeManifest over real captureSubresources manifests
+civicos-ui/test/case-frozen-pair.test.mjs	490	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	rule-12 frozen pair shown per case over real plane publish/ratify
+civicos-ui/test/case6.control.mjs	373	helper	legacy-tests	bio-plane/test/publishedcase.test.mjs (caseflip, caseproduction, publication-entry)	control for plane suites, not UI; follows publishedcase
+civicos-ui/test/change-layers.test.mjs	198	covered	docprofile	docprofile/test/docprofile.test.mjs (R11-R16)	layered assess, calendar window, temporal connections
+civicos-ui/test/cite-act.test.mjs	1139	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	cite/retire/sever/reinstate flows over mock plane
+civicos-ui/test/conclude-act.test.mjs	658	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	conclude act bar from op=affordances, pre-flight; mock plane
+civicos-ui/test/conclude-nofalsifier.control.mjs	214	helper	legacy-ui	conclude-nofalsifier.test.mjs	negative-control driver
+civicos-ui/test/conclude-nofalsifier.test.mjs	736	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	no_falsifier override offered on surface; real plane
+civicos-ui/test/conclude-reading.control.mjs	185	helper	legacy-ui	conclude-reading.test.mjs	negative-control driver
+civicos-ui/test/conclude-reading.test.mjs	586	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	member picks reading version, project conclude, withdrawconclusion; real plane
+civicos-ui/test/connections-sidebar.test.mjs	681	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	machine-connection attribution sidebar; reads docs and ai-runs source (P7)
+civicos-ui/test/content-extent.control.mjs	181	helper	legacy-ui	content-extent.test.mjs	negative-control driver; also arms bio-checks
+civicos-ui/test/content-extent.test.mjs	543	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	leg on part of document in plane's words; reads citation source (P7)
+civicos-ui/test/custodial-acts.test.mjs	433	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	admin memberadd/set, signeradd/set dialogs over real plane; membership plane half
+civicos-ui/test/declared-flow-surface.control.mjs	155	helper	legacy-ui	declared-flow-surface.test.mjs	negative-control driver
+civicos-ui/test/declared-flow-surface.test.mjs	455	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	progression versions' basis and disposed block on page; real plane
+civicos-ui/test/docprofile.test.mjs	301	covered	docprofile	docprofile/test/docprofile.test.mjs (R1-R35)	real-page fixtures; module tests use synthetic profiles
+civicos-ui/test/doctype-breadth.test.mjs	362	covered?	docprofile	docprofile/test/docprofile.test.mjs (R4, R5, R19, R20, R30)	real Oakland fixtures unproven by module tests; app.html copy check is source-text
+civicos-ui/test/document-decided-finding.control.mjs	127	helper	legacy-ui	document-decided-finding.test.mjs	negative-control driver
+civicos-ui/test/document-decided-finding.test.mjs	340	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	document page shows finding disposition; real plane
+civicos-ui/test/document-page.test.mjs	371	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	openBundle end-to-end render over stub plane
+civicos-ui/test/document-structure.test.mjs	300	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	UI-9 resolutions/connections/progressions on document page; stub plane
+civicos-ui/test/elicitation.test.mjs	592	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	DEC-32 elicitation dialog, shared origins; mock plane
+civicos-ui/test/envelope-probe.mjs	139	helper	legacy-ui	auth-surface.test.mjs, intent-write.test.mjs, civicos-ui/check-mock-envelope.mjs	runtime mock-envelope probe
+civicos-ui/test/extract.mjs	8	helper	legacy-ui	every app.html harness (~60 civicos-ui suites)	extracts app.html script
+civicos-ui/test/finder.test.mjs	1049	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	evidence finder two routes; reads retrieval source (P7)
+civicos-ui/test/glossary-nav.test.mjs	36	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	glossWrap, nav stack; no plane
+civicos-ui/test/group-identity-surface.control.mjs	126	helper	legacy-ui	group-identity-surface.test.mjs	negative-control driver
+civicos-ui/test/group-identity-surface.test.mjs	281	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	header display name/slug, verified domain; real plane
+civicos-ui/test/group-surface.control.mjs	127	helper	legacy-ui	group-surface.test.mjs	negative-control driver
+civicos-ui/test/group-surface.test.mjs	308	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	no GROUP literal, slug from plane; real plane
+civicos-ui/test/header-facts.test.mjs	38	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	glossary layers, seal, monitorNext formatting; no plane
+civicos-ui/test/identifier-vocabulary.test.mjs	566	system?	legacy-ui, legacy-index	product-wide vocabulary census: 'handle' used consistently in plane corpus and app.html	source-text sweep (P7)
+civicos-ui/test/inquiry-page.test.mjs	482	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	inquiry page strengths per axis; mock plane
+civicos-ui/test/intent-write.test.mjs	1056	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	nine intent write ops via surface handlers; real plane; intent plane half
+civicos-ui/test/link-surface.test.mjs	260	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	link surface; structural half greps capture/subresources source (P7)
+civicos-ui/test/meaning-arms.control.mjs	230	helper	legacy-ui	meaning-arms.test.mjs (and passage-surface.test.mjs)	negative-control driver
+civicos-ui/test/meaning-arms.test.mjs	465	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	finder routes leg:/resolves:/content: meaning arms; real plane
+civicos-ui/test/meaning-arms.walks.mjs	181	helper	legacy-ui	meaning-arms.test.mjs	byte-identical walks measurement tool
+civicos-ui/test/member-respect.control.mjs	180	helper	legacy-ui	member-respect.test.mjs	negative-control driver
+civicos-ui/test/member-respect.test.mjs	939	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	DEC-69 sweep of app.html; reads store/review/queue/entities source and DECISIONS (P7)
+civicos-ui/test/members-roster.test.mjs	201	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	roster from memberlist/adminarith; mock plane
+civicos-ui/test/nc-fw18.mjs	265	helper	docprofile	doctype-breadth.test.mjs	negative-control driver; arms docprofile doctypes
+civicos-ui/test/nc-fw18.probe.mjs	39	helper	docprofile	nc-fw18.mjs (doctype-breadth.test.mjs)	probe for control
+civicos-ui/test/nc-fw20.mjs	137	helper	docprofile	civicos-ui/test/staff-directory.test.mjs, doctype-breadth.test.mjs	control arming staff-directory doctype
+civicos-ui/test/nc-m036.mjs	348	covered	test-support	bio-plane/test/m/test-support/test-support.test.mjs (R6)	control for stdio flush through run.mjs pipe
+civicos-ui/test/notifications.control.mjs	426	helper	legacy-ui	notifications.test.mjs	negative-control driver
+civicos-ui/test/notifications.test.mjs	1221	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	renderQueue in producer's words; imports queue-producers/queuestate for fixtures
+civicos-ui/test/onpoint-choice.control.mjs	77	helper	legacy-ui	onpoint-choice.test.mjs	negative-control driver on extracted script
+civicos-ui/test/onpoint-choice.test.mjs	337	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	on-point choice beside machine pair; reads store/connections source (P7)
+civicos-ui/test/passage-surface.control.mjs	251	helper	legacy-ui	passage-surface.test.mjs	negative-control driver
+civicos-ui/test/passage-surface.test.mjs	808	convert	legacy-ui	no requirement: legacy-ui has no requirements file (K5; UI replacement)	search at content grain, empty level said; real plane
+civicos-ui/test/plane-refusal-wire.mjs	294	helper	legacy-tests	document-structure, case-frozen-pair, auth-surface, act-proposal, refusal-codes suites, check-refusal-codes.mjs	DEC-49 refusal envelopes derived from plane source (source-text)
+civicos-ui/test/preauth-vocabulary.test.mjs	2758	system?	legacy-ui	DEC-49 member-vocabulary census over pre-auth UI surfaces; pins plane sentences by source	reads plane source text (P7); REPORT_ONLY until DEC-49; waits on UI replacement
+civicos-ui/test/progression-decided-finding.control.mjs	121	helper	legacy-ui	progression-decided-finding.test.mjs	mutation driver over app.html
+civicos-ui/test/progression-decided-finding.test.mjs	304	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by progressions/instance.test.mjs	UI renders findings' disposition beside finding; plane half proven
+civicos-ui/test/progression-revision.test.mjs	252	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by progressions/define.test.mjs	progression form's basis/citation fields; revision refusals plane-proven
+civicos-ui/test/project-id-surface.control.mjs	113	helper	legacy-ui	project-id-surface.test.mjs	mutation driver over app.html
+civicos-ui/test/project-id-surface.test.mjs	299	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by promotion/promote.test.mjs, promotion/fork.test.mjs (R19)	Add/fork forms send no id; id mint plane-proven
+civicos-ui/test/project-visibility-surface.control.mjs	103	helper	legacy-ui	project-visibility-surface.test.mjs	mutation driver over app.html
+civicos-ui/test/project-visibility-surface.test.mjs	391	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by promotion/write-path.test.mjs, membership/ownership.test.mjs, membership/sight.test.mjs	no preselected visibility; owner control; plane refusals proven
+civicos-ui/test/project-workspace.test.mjs	611	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mock plane; workspace render, ballot reach, sight per credential
+civicos-ui/test/provenance-floor.control.mjs	232	helper	legacy-tests	run.mjs (and bio-plane battery.mjs provenance floor)	D-257 phantom-suite provenance control; follows the runners (system)
+civicos-ui/test/publication-entry.test.mjs	632	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mock plane; publication section statement/DEC-69 rendering
+civicos-ui/test/published-index-pair.control.mjs	106	helper	legacy-ui	published-index-pair.test.mjs	mutation driver over app.html
+civicos-ui/test/published-index-pair.test.mjs	496	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by publication/published.test.mjs (strengthByCase, R10/R-manifest)	index draws per-case frozen pair; plane half proven
+civicos-ui/test/publishedcase.test.mjs	2992	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mostly mock; published case page render; reads publication/index.mjs source (P7)
+civicos-ui/test/question-npc.control.mjs	196	helper	legacy-ui	question-npc.test.mjs	mutation driver over app.html
+civicos-ui/test/question-npc.test.mjs	708	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by retrieval/projection.test.mjs, basis-versions/acts.test.mjs	question page reads no-project conclusion, cache invalidation (UI)
+civicos-ui/test/queue-allclear-limit.test.mjs	89	convert?	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	pure source-text pin of app.html and CIVICOS_UI_STATE.md (P7); likely retire
+civicos-ui/test/queue-peritem.control.mjs	113	helper	legacy-ui	queue-peritem.test.mjs	mutation driver
+civicos-ui/test/queue-peritem.test.mjs	433	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by queue/dispose.test.mjs, tasks/inbox.test.mjs	selection set act, drifted item kept (UI); plane per-item proven
+civicos-ui/test/queue-projectscope.control.mjs	102	helper	legacy-ui	queue-projectscope.test.mjs	mutation driver
+civicos-ui/test/queue-projectscope.test.mjs	482	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by queue/dispose.test.mjs	project-scoped item home choice is UI; plane per-item project proven
+civicos-ui/test/queue-recipients.control.mjs	71	helper	legacy-ui	queue-recipients.test.mjs	mutation driver
+civicos-ui/test/queue-recipients.test.mjs	278	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by queue/feed.test.mjs, bias/debt.test.mjs	obligation recipients rendered; plane recipients proven
+civicos-ui/test/queue-unmute.control.mjs	110	helper	legacy-ui	queue-unmute.test.mjs	mutation driver
+civicos-ui/test/queue-unmute.test.mjs	328	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by queue/mute.test.mjs	unmute control on surface; plane unmute proven
+civicos-ui/test/queue.test.mjs	961	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mock plane; queue screen feeds, degradation, acts
+civicos-ui/test/recipe-drive.control.mjs	133	helper	legacy-ui	recipe-drive.test.mjs	mutation driver
+civicos-ui/test/recipe-drive.test.mjs	433	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by citation/cite-write.test.mjs, inquiry/ground.test.mjs	recipes are app.html data (N144/N232 undecided); steps' ops plane-proven
+civicos-ui/test/record-list.test.mjs	97	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mock plane; record list, legacy alias rendering
+civicos-ui/test/refusal-codes.control.mjs	930	helper	legacy-tests	refusal-codes.test.mjs	destructive control of the DEC-49 guard over the real tree
+civicos-ui/test/refusal-codes.test.mjs	2266	system	legacy-tests	DEC-49 refusal guard (check-refusal-codes.mjs) own suite over fixture trees	guard is legacy-tests' file; becomes layer/release check
+civicos-ui/test/refusal-partition.control.mjs	557	helper	legacy-tests	bio-plane/test/admission-gate.test.mjs	REC-79 control; follows admission-gate's class
+civicos-ui/test/refusal-translation-surface.control.mjs	196	helper	legacy-ui	refusal-translation-surface.test.mjs	mutation driver; reads store.mjs source
+civicos-ui/test/refusal-translation-surface.test.mjs	464	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by control-plane/envelope.test.mjs (translation on wire)	actRefusalHtml renders translation; DEC-49 at the surface
+civicos-ui/test/release-flow.test.mjs	203	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mock plane; review list, release dialog, total
+civicos-ui/test/reopened-finding.control.mjs	137	helper	legacy-ui	reopened-finding.test.mjs	mutation driver
+civicos-ui/test/reopened-finding.test.mjs	320	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by queue/feed.test.mjs (prior_disposition)	queue paints prior decision; plane half proven
+civicos-ui/test/resolve-set.control.mjs	75	helper	legacy-ui	resolve-set.test.mjs	mutation driver
+civicos-ui/test/resolve-set.test.mjs	255	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by entities/resolve.test.mjs (items[] set form)	one op=resolve per selection (UI); plane set form proven
+civicos-ui/test/review-copy-newcase.control.mjs	112	helper	legacy-ui	review-copy-newcase.test.mjs	mutation driver
+civicos-ui/test/review-copy-newcase.test.mjs	443	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by review/copy.test.mjs, review/acts.test.mjs, case-authoring/identity.test.mjs	form keeps newCase; derived-draft wording (UI)
+civicos-ui/test/review-copy.control.mjs	203	helper	legacy-ui	review-copy.test.mjs	mutation driver
+civicos-ui/test/review-copy.test.mjs	744	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by review/copy.test.mjs, review/doors.test.mjs, review/acts.test.mjs	four review-copy surfaces, no export path (UI)
+civicos-ui/test/run.mjs	99	system	legacy-tests	UI battery runner: runs every civicos-ui suite, check-semantics, DEC-49 guard, mock-envelope; provenance report	retires with the civicos-ui estate
+civicos-ui/test/seals-backrestore.test.mjs	33	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mock; seal glyphs and back-navigation scroll restore
+civicos-ui/test/semantics-harvest.control.mjs	125	helper	legacy-tests	semantics-harvest.test.mjs	control over check-semantics.mjs
+civicos-ui/test/semantics-harvest.test.mjs	129	system?	legacy-tests	check-semantics.mjs (UI SEMANTICS vs store states census) own suite	reads store.mjs text; check waits on UI replacement (K283)
+civicos-ui/test/several-cases-choice.control.mjs	255	helper	legacy-ui	several-cases-choice.test.mjs	mutation driver
+civicos-ui/test/several-cases-choice.test.mjs	384	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by publication/published.test.mjs (FINDING_IN_SEVERAL_CASES, R10)	page offers each case, picks none (UI)
+civicos-ui/test/snapshot-render.test.mjs	178	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by subresources/subresources.test.mjs	app.html's inert snapshot resolver; fixture from captureSubresources
+civicos-ui/test/staff-directory.test.mjs	240	convert	docprofile	R4, R5, R6 (staff_directory doctype over real fixtures: negatives, address keys, events)	docprofile.test.mjs has positive detect only; section 8 app.html copy is source-text, drop
+civicos-ui/test/statement-ack.control.mjs	170	helper	legacy-ui	statement-ack.test.mjs	mutation driver
+civicos-ui/test/statement-ack.test.mjs	420	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by case-authoring/statement.test.mjs, review/copy.test.mjs	three-state acknowledgements render; reads case-authoring source (P7)
+civicos-ui/test/statement-writer.control.mjs	213	helper	legacy-ui	statement-writer.test.mjs	mutation driver
+civicos-ui/test/statement-writer.test.mjs	486	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by case-authoring/document.test.mjs (statement_by), publication/published.test.mjs (R10)	writer named apart from publisher on page
+civicos-ui/test/stdio-census.test.mjs	282	system	legacy-tests	census: every civicos-ui suite imports test-support stdio.mjs; runner maxBuffer (D-282/D-387)	harness integrity; retires with the estate
+civicos-ui/test/subject-view.test.mjs	276	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mock plane; subject view grades, declared relation unGraded
+civicos-ui/test/surface-registry-a4.control.mjs	210	helper	legacy-tests	surface-registry.test.mjs	UI-52 controls
+civicos-ui/test/surface-registry.test.mjs	1503	system	legacy-ui, affordances, control-plane	UI surface registry and recipes equal plane OPS and affordance acts (N144/N232)	parses index.mjs/ops.mjs source (P7); placement undecided (N232)
+civicos-ui/test/themes.control.mjs	88	helper	legacy-ui	themes.test.mjs	mutation driver
+civicos-ui/test/themes.test.mjs	455	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by connections/themes.test.mjs (R35-R48)	declare/test/place theme surface, declarer handle shown
+civicos-ui/test/ui100-mock-wire.control.mjs	297	helper	legacy-ui	preauth-vocabulary.test.mjs, publishedcase.test.mjs, queue.test.mjs	plane-refusal-wire.mjs derivation control
+civicos-ui/test/ui102-laws-proposals.control.mjs	132	helper	legacy-ui	ui102-laws-proposals.test.mjs	mutation driver
+civicos-ui/test/ui102-laws-proposals.test.mjs	358	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by actions/read.test.mjs, actions/acts.test.mjs	laws proposals rendered beside list, never a setter
+civicos-ui/test/ui104-risk-tier.control.mjs	99	helper	legacy-ui	ui104-risk-tier.test.mjs	mutation driver
+civicos-ui/test/ui104-risk-tier.test.mjs	332	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by actions/acts.test.mjs, actions/read.test.mjs, actions/write.test.mjs	risk-tier form requires reason; history rendered
+civicos-ui/test/ui84-mock-wire.control.mjs	233	helper	legacy-ui	preauth-vocabulary.test.mjs	mock refusal derivation control
+civicos-ui/test/version-notice-surface.control.mjs	74	helper	legacy-ui	version-notice-surface.test.mjs	splice driver
+civicos-ui/test/version-notice-surface.test.mjs	326	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5); plane half covered by content/notice.test.mjs (R29 chain_unread)	chain_unread drawn undetermined, nothing asked on load
+civicos-ui/test/version-predecessor.control.mjs	258	helper	legacy-ui	version-predecessor.test.mjs	mutation driver
+civicos-ui/test/version-predecessor.test.mjs	1020	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	app.html heldMatch/addGo 'changed from' sentence; mock plane
+civicos-ui/test/version-review.control.mjs	248	helper	legacy-ui	version-review.test.mjs	mutation driver
+civicos-ui/test/version-review.test.mjs	704	convert	legacy-ui	no requirement: UI surface (legacy-ui has none; layers.md ruling 4, K5)	mock plane; rotate/diff, prune offer wording, hidden version reach
