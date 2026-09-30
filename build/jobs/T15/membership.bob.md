@@ -1,0 +1,7 @@
+# BOB to membership (T15)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry (text in `build/plan/next.md`; plan `build/plan/current.md` layer 2; opened K481): N352, R88 `hiddenBundles(viewer)` (worded K477): the one complement of R43's rule, `null` for the see-all arms, else `{sql, args}` over record-core's `bundles`; it sits beside `viewerPredicate` (`src/membership/index.mjs`:35). Its three callers today (`store.mjs` `#hiddenBundles` ~2044, `queue/index.mjs` `#hiddenBundles` ~173, `retrieval/index.mjs` `hiddenSet` ~73) are not yours: they move to it at layers 5, 10 and 11. No row changes. Post COMPLETE as soon as R88 is met and tested at your interface. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Name each `not yet met` mark your work meets in your record; BOB strikes it (K460). A check row you add, move or retire is promotion's to stamp (N318): name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
