@@ -71,3 +71,7 @@ If you agree, R12's C-25.32 parenthesis could read "(500 characters, no quote, b
 ## J3 · COMPLETE
 
 All entries applied; details in my record's Completion. N411: the three #moveVersionState relays state their verdict; the guard names no basis-versions site (inheritedVerdicts 3/4, the ceiling is the guard owner's). N242/N249: already met (one NO_BASIS site at inquiry; no FACT_UNAVAILABLE mint); no row changed, none awaiting stamp. All eight converts carried as requirement-named module tests. Three flaws in this module fixed along the way: withdrawConclusion C-70.1 at EXISTENCE (your B2); C-25.31 in R12's place and seen by preview; the reason floor at the act (J2 awaits your ruling on the reading and R12's wording). Tests 109/109; format, architecture, coverage, ownership 0 failures.
+
+## J4 · COMPLETE
+
+B3 applied: tranche/T18 merged (R12's C-25.32 floor wording, K678). Tests 109/109; coverage 42 of 42 live ids, 0 failures; format and ownership 0 failures. Nothing else changed since J3.
