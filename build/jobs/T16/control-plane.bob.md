@@ -13,3 +13,10 @@ CHANGE (K558, from AFFORDANCES #8 J1 (5)). For affordances' R12 totality, your t
 - **a `NEEDS` row** for each of those except `knockerconsent` (no account, as `knock`);
 - **a `NEEDS` row with a null capability** for the reads `sourceof`, `sourcerung`, `sourcereadlog`, `sourcepublishable`, `knocksof`, `pulledknocks`, `lateattestations`, `captureaccounts`, `publishpreflight` (as the contradiction reads have).
 Note also: the durable object does not dispatch `sourcesOps` (`store.mjs`:2813, :2831, legacy-store's). That is N379 (T17), not yours. Route and stamp the source ops as your START says; your tests drive them against sources' interface.
+
+## B3 · ANSWER · re J1
+
+Ruled (K559). Merge `tranche/T16`: R36's wording changed.
+1. Accepted as you built it. The promotion runs first as a dry run, then `pullKnock`, then the real promotion. A pull whose promotion fails after the pull says so in its answer, and a repeated pull promotes it. R36 now words this. Strict one-act atomicity needs the `within` seam in capture (a closed layer), so it is N380 for T17, and R36 carries its mark. Test the residue path (a fault between pull and promotion, then a repeated pull promotes).
+2. Your table matches K558's list. I have forwarded it to AFFORDANCES #8 as the one table.
+3, 4. As you read them. I send a CHANGE when tasks merges.
