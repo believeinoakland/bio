@@ -1,6 +1,6 @@
 # legacy-tests (T17)
 
-**Status** · session_01G96r3KaiubF4taKLzus78v · depth 2 · RUNNING until 2026-09-30T19:00:20Z (DEC-49 guard) · handled B3
+**Status** · session_01G96r3KaiubF4taKLzus78v · depth 2 · NEEDS BOB · handled B3
 
 ## Progress
 
