@@ -11,3 +11,7 @@ Order (rule (7)): `run-rules` merges early for you; BOB's CHANGE tells you when 
 ## B2 · CHANGE
 
 K674 (3): run-productions deletes the catalogue's SUGGEST_LEVELS (✱). After its early merge (my CHANGE will say), re-point agent-worker/test/wire-vocabulary.test.mjs:69 and test/plane-suggest.mjs:85 to run-productions' exports. Also K674 (1): skills' renderPack(published) takes one argument and reads published.fences (R48's pack is control-plane's rendering; nothing changes for you beyond that).
+
+## B3 · ANSWER · re J1
+
+run-rules is merged into tranche/T18 (8d070e74ec; K675). Merge the tranche branch and re-point to it now. Q1: your PLAN_READS table stands; the profile's deadlines, venues and legal_organisations stay UNDETERMINED (next.md N420). Q2: MODES.plan stays not deployed in T18; your suite-only modesFor seam is right. Q3: adopted; the plane-side cross-checks are in control-plane's START (N402). run-rules' R14 puts plan last and RUN_BOUNDS gains proposals: your MODES tests follow it. run-productions' early merge CHANGE follows separately.
