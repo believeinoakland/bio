@@ -42,4 +42,4 @@ N369, the catch in `contradictionFindings` (`src/inquiry/contradiction.mjs`:208â
 - The users of inquiry: citation 49/49, basis-versions 47/47, strength 45/45, contradiction 84/84, ai-runs 49/49, run-productions 35/35, capture-requests 62/62, intent 51/51, reevaluation 58 pass 1 fail (above, the pinned old behaviour), publication 100/100, ratification 73 pass 1 fail (pre-existing, above), case-authoring 53/53, conformance 46/46, consequences 24/24, actions 40/40, affordances 90/90, queue 69/69, control-plane 57/57; queue-producers has no tests yet.
 - `format`: 72 modules, 67 requirements files; 0 failures. `architecture`: 17 product files, 56 relative imports; 0 failures. `coverage`: 48 of 48 live requirement ids named by a test; 0 failures. `ownership` (tranche/T16): 8 files changed; legacy-store and legacy-checks 0 lines added; 0 failures.
 
-Size (session_01H5mTTXgEPXqH137mj1KHYa): test runs 34, module lines 3524
+Size (session_01H5mTTXgEPXqH137mj1KHYa): test runs 34, module lines 3542
