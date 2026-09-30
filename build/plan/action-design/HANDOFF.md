@@ -15,6 +15,8 @@
 3. `drafts/tests.md`: the tests each requirement needs, with negative controls, for the jobs.
 4. `PATH.md`: the member's path, for the UX work; and per K438, UX open question 9 (the action plan surface) is now answered by the rulings above, so the substrate page should be updated and republished.
 
+5. `BIO_Action_v0_1.md` (added after the first ring; read the branch head): the proposed level-1 home of the Action layer. Its §6 canon edits and its listing in `requirements/README.md` wait on Bob's approval of §7.
+
 ## Found on the way (BOB's to plan)
 
 - Monitoring's `deadlineRecheck` has no caller outside tests, and the queue has no kind for an overdue clock or a due stage: `monitoring` R34–R35 never reach a member.
