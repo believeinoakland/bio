@@ -67,3 +67,7 @@ Two readings of R12 and R14, found while converting `versionstate`. Both are app
 (2) The catalogue's C-25.19 stores a `state_reason` only at 8 characters or more. The act had no floor, so reject or consider with a 1–7 character reason passed the act and its preview, then the promotion refused it as BASIS_VERSION_REFUSED / VERSION_DISPOSITION_UNATTRIBUTED. That is not an R12 refusal. My reading: such a reason "arrived and cannot be stored", which is C-25.32 VERSION_REASON_MALFORMED. So the act refuses it there, preview agreeing, only where the state needs a reason (VERSION_REASON_MIN = 8, exported).
 
 If you agree, R12's C-25.32 parenthesis could read "(500 characters, no quote, backslash or newline; at least 8 where the state needs a reason)". If you would rather make it a new row, or drop the floor from C-25.19, say so and I will follow.
+
+## J3 · COMPLETE
+
+All entries applied; details in my record's Completion. N411: the three #moveVersionState relays state their verdict; the guard names no basis-versions site (inheritedVerdicts 3/4, the ceiling is the guard owner's). N242/N249: already met (one NO_BASIS site at inquiry; no FACT_UNAVAILABLE mint); no row changed, none awaiting stamp. All eight converts carried as requirement-named module tests. Three flaws in this module fixed along the way: withdrawConclusion C-70.1 at EXISTENCE (your B2); C-25.31 in R12's place and seen by preview; the reason floor at the act (J2 awaits your ruling on the reading and R12's wording). Tests 109/109; format, architecture, coverage, ownership 0 failures.
