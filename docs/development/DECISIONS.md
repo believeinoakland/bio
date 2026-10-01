@@ -1736,3 +1736,23 @@ response: **As recommended (Bob, 2026-10-01): A.** Members see "To do" wherever 
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 25; NOTIFICATIONS.md (RULED 2026-10-01).
 owed: member-facing text that says "Obligation" for the to-do class re-worded to "To do" (queue, queue-producers, the redesign; BOB places it, as K899 (1) placed "record"); the UX page's question 25 marked ruled.
+
+### DEC-108 · answered in part
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 26: when the doorbell's limit is hit, what the sender and the group are told; Bob widened it to the doorbell's inbox, its limits, a gatekeeper and a discard archive)
+for: bob
+question: What the doorbell's inbox looks like and how it is sorted; whether the limits (12 per source and 300 in total in any 10 minutes) suffice; what a would-be knocker is told when a limit holds; whether spam and denial-of-service floods can be screened; what happens to discarded knocks; and whether a count-only tally of refused knocks is kept.
+why it is Bob's: UX, and doctrine (the doorbell is the one route in for people who cannot join).
+provisional: Intake Doctrine §2a (the limit is a bound, published with its method; a refused knock stores nothing); DEC-78 (pulling a knock).
+alternative: the brief's options on the tally: (A) record nothing, fix the refusal text; (B) a count-only status on the inbox page; (C) B plus one queue item when the doorbell stays full.
+recommendation: (B) for the tally.
+reversal cost: low; the limits are constants.
+response: **Bob, 2026-10-01, in his words:**
+  1. THE INBOX: "I imagine the doorbell experience to be like an email inbox, with unhandled entries highlighted, but handled entries still visible."
+  2. SORTING: "Knocks can be sorted in the list chronologically, by status, knocker identity (secret) or not, project affected, etc."
+  3. LOWER LIMITS, AND THE KNOCKER TOLD: "I don't think that the current limits (at most 12 from one sender and 300 in total in any 10 minutes) is sufficient. I think those limits should be 5 and 10, and potential knockers being aware when a limit is in affect so that they don't think that they've knocked when they haven't." Read as: at most 5 knocks from one source and 10 in total in any 10 minutes.
+  4. A GATEKEEPER: "It should also be possible to enable a gatekeeper function able to identify and dismiss obvious spam and DOS submissions." Read as: optional per group, labelled machine work, its dismissals going to the discard archive below.
+  5. A DISCARD ARCHIVE: "The system may want to archive the discards, just in case a gem comes in buried in the morass. But perhaps the archive is automatically cleared on a tight schedule (a week after receipt?)." Recorded as: discards are archived and cleared automatically one week after receipt, Bob's suggested figure.
+  NOT YET RULED: the count-only tally of refused knocks (the brief's sub-decisions 1 and 2) stays open.
+decided: 2026-10-01 · Bob (in part)
+reasoning recorded in: this entry; the UX substrate's brief for question 26; Intake Doctrine §2a.
+owed: the limits lowered to 5 and 10 with the published sentence; the knock page telling a would-be knocker when a limit holds; the inbox's highlighting and sorting; the optional gatekeeper (machine work) and the discard archive with its one-week clearing (capture, the doorbell's page, the inbox; BOB drafts for Bob's approval); how a litigation hold (question 31) affects the archive's clearing; the UX page's question 26 marked settled in part.

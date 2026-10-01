@@ -310,6 +310,16 @@ source in any 10 minutes, estimated by a sliding window"*, and the instance-wide
 the 429, at the one moment a caller is held to it. If the word "estimated" is ever dropped, the limiter must become exact in the same
 change.
 
+**The doorbell as an inbox, its limits, its gatekeeper and its discard archive (Bob, 2026-10-01, DEC-108).** The doorbell's inbox
+reads like an email inbox: knocks not yet handled are highlighted, and handled ones (pulled or discarded) stay visible. Members can
+sort the list by time, by status, by whether the knocker presented a knocker secret, by the project affected, and so on. **The limits
+are lowered** to at most 5 knocks from one source and 10 in total in any 10 minutes (replacing 12 and 300 above; the bound, its
+estimate and its published sentence work as described). A would-be knocker is made aware whenever a limit is in effect, so nobody
+believes they knocked when they did not. A group may enable a **gatekeeper** that identifies and dismisses obvious spam and
+denial-of-service submissions, labelled as machine work. Discarded knocks, whether dismissed by the gatekeeper or by a member, go to a
+**discard archive** in case a gem is buried in the flood, and the archive is cleared automatically on a tight schedule (Bob suggested
+one week after receipt).
+
 # 3. Capture grades (D3)
 
 Provenance has two orthogonal axes, both recorded per document, neither

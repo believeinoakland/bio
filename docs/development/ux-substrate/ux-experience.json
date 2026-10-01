@@ -14987,9 +14987,9 @@
     "stillOpen": "partly",
     "settledSince": "",
     "title": "When the doorbell is full: what the sender and the group are told",
-    "inOneBreath": "When the public doorbell turns senders away because a limit is reached, should the group's members be able to learn that it happened, as a bare count with nothing about who, or should refused knocks stay entirely unrecorded?",
-    "decision": "(1) Whether the system keeps a count-only tally of knocks it turned away (no addresses, no fingerprints, no content), or records nothing at all. (2) If it keeps a tally, whether members see it only as status on the doorbell's inbox page, or administrators also get one queue item when the doorbell stays full for a long time. (3) Either way, the sender's refusal text stops promising anything the system does not do.",
-    "alreadyDecidedPart": "How a knock becomes part of the record was ruled by you on 29 September: pulling a knock admits it as a held capture, its source is 'an unnamed knocker' identified by the receipt, the contact stays in the inbox, and a knocker may prove continuity with a secret. The limits themselves are set (12 per sender and 300 in total in any 10 minutes) and are published with how they are estimated. What is open is only what anyone is told when the limits bite.",
+    "inOneBreath": "Now that the doorbell's inbox, limits, gatekeeper and discard archive are set, should the group be able to see how often its doorbell turned people away?",
+    "decision": "Whether the system keeps a count-only tally of knocks it turned away (a daily total for the whole doorbell, how often the whole-doorbell limit was reached, and when last; no addresses, fingerprints or content), shown as status on the inbox page, or records nothing. With the limits now 5 and 10, a busy day will reach the whole-doorbell limit far more often, which makes the tally more useful.",
+    "alreadyDecidedPart": "On 1 October you ruled: the doorbell's inbox reads like an email inbox: unhandled knocks highlighted, handled ones still visible, sortable by time, status, whether the knocker presented a secret, the project affected, and so on. The limits are at most 5 knocks from one source and 10 in total in any 10 minutes, and a would-be knocker is made aware whenever a limit is in effect, so nobody believes they knocked when they did not. A group may enable a gatekeeper (machine work) that identifies and dismisses obvious spam and denial-of-service submissions. Discarded knocks go to an archive, in case a gem is buried in the flood, cleared automatically a week after receipt.",
     "basics": [
      "The doorbell is the one way into a group's copy of CivicOS that needs no account: anyone may hand the group a document. Each hand-over is a 'knock', and the person is the 'knocker'. It exists because a group whose purpose is accountability must be reachable by people who will not or cannot join it, whistleblowers above all.",
      "A knock writes one row in the group's inbox: the bytes, their fingerprint, the time, an optional note and an optional contact. Nothing enters the record until a signed-in member reads it and pulls it in, or discards it.",
@@ -15178,6 +15178,18 @@
      "ux-substrate-v2.json surfaces 'Inbox (knocks)', 'Setup page', 'A source's consent by knocker secret'"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-78",
+     "DEC-108"
+    ],
+    "status": "partly ruled",
+    "title": "The doorbell: its inbox, limits, gatekeeper and discards",
+    "decided": "The doorbell's inbox reads like an email inbox: unhandled knocks highlighted, handled ones still visible, sortable by time, status, whether the knocker presented a secret, the project affected, and so on. The limits are at most 5 knocks from one source and 10 in total in any 10 minutes, and a would-be knocker is made aware whenever a limit is in effect, so nobody believes they knocked when they did not. A group may enable a gatekeeper (machine work) that identifies and dismisses obvious spam and denial-of-service submissions. Discarded knocks go to an archive, in case a gem is buried in the flood, cleared automatically a week after receipt.",
+    "stillOpen": "whether a count-only tally of refused knocks is kept, and where members see it"
    }
   },
   {
