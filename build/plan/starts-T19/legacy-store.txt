@@ -3,3 +3,5 @@ Depth 2. Your entry: `build/plan/current.md` layer 10, legacy-store (amended; âš
  K815 (INQUIRY #8 J2): `auditPass`' context (`store.mjs` ~548â€“549) still passes `earnedRegistry`, which duplicates inquiry's registered audit context (K783); remove that half and the `#subjectEntityOf` delegation.
 
  K830 (RATIFICATION #11 J2): after ratification merges, `store.mjs`:24's `stampInstant` import may be dead (drop it if no use remains); the two CASE rows of `#MINT_LEDGER_LIVE` (`cases`, `case_documents`) duplicate ratification's registered seeds: remove them; `test/m/legacy-store/retire.test.mjs` goes (ratification holds the arm).
+
+ K834 (ESCALATION #7 J1): escalation publishes `escalationOps(escalation, url, body)` from `src/escalation/ops.mjs` with its own number parser; spread it, and remove the ten escalation arms and the N216 comment (`#numberParam` stays while other arms use it).

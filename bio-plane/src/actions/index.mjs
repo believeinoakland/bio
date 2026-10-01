@@ -5,12 +5,12 @@
  * Extracted from the legacy modules (T8, layer 9; K3, K4, K6, K23, K31, K57, K61, K64, K75 (2), K79, K102):
  * `store.mjs` (the clock rule, `#actionDerived`, `actionMove` … `#spliceCorrespondence`, the governing-laws fence, the
  * action, risk-tier and `responds_to` arms of the promotion step and its three projections, the purge list entries and
- * the dispatch) and `schema.mjs` (the four tables, now `./schema.mjs`); the catalogue's action arms and rows are
- * `./checks.mjs`. The legacy code's comments moved with it.
+ * the dispatch) and `schema.mjs` (the four tables, now `./schema.mjs`). The legacy code's comments moved with it. The
+ * action document's grammar, its arms, readers and rows are `action-grammar`'s (T19 layer 9), read from there.
  *
  * REACHED as `actionsOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R36), registers its check and projection with promotion (R1–R3,
- * R7, R11, R33), its audit check with record-core (R37), and its facts and projection decoration with retrieval (R12,
+ * R7, R11, R33), action-grammar's audit arm with record-core (R51), and its facts and projection decoration with retrieval (R12,
  * R25; retrieval R53, R56).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
@@ -32,23 +32,26 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
-import { retrievalOf, PROJECTION_TABLE } from "../retrieval/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity, createSha256,
-         BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
+         createSha256 } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, lifecycleFindings, lawProposalLabel,
          LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX, riskTierHistoryOf,
          governingLawsOf, requestLifecycleOf, consequenceState, respondsToEdgeFindings, checkActionExtension,
-         recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, kindReadsAsWritten,
-         addresseeIsOffice, ADDRESSEE_KINDS,
+         recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, addresseeIsOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
-         LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS, ACTION_CATALOGUE_CHECKS } from "./checks.mjs";
+         LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
+         ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
-export * from "./checks.mjs";
+/* K835 (N447 drops it in T20): the action vocabularies `affordances` and its tests read from here until its layer-11 job
+   re-points to action-grammar, re-exported, never a copy. */
+export { PRODUCT_KINDS, RISK_TIERS, LAW_LEVELS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, CORRESPONDENCE_STAGES,
+         CORRESPONDENCE_OUTCOMES, RESOLUTIONS, actionKinds } from "../action-grammar/index.mjs";
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 
 /** R13, R15: the longest reason, account, medium or party (the legacy store's `RELEASE_ACK_MAX`). */
@@ -63,10 +66,8 @@ export const LAW_PROPOSALS_READ_MAX = 12;
 export const RISK_PROPOSALS_READ_MAX = 12;
 /** R27: the most quotes one read answers. */
 export const QUOTES_MAX = 500;
-/** R30: the most actions one page lists; R31: the most pending clock entries, and the most actions one page reads. */
+/** R30: the most actions one page lists. */
 export const ACTIONS_PAGE_MAX = 200;
-export const PENDING_CLOCKS_MAX = 500;
-export const PENDING_CLOCKS_ACTIONS_MAX = 500;
 /** R3 (N237, K351): the most `action_basis` and `correspondence` entries one action's document holds. */
 export const ACTION_LEGS_MAX = 500;
 export const ACTION_LEDGER_MAX = 500;
@@ -117,6 +118,31 @@ export function noSuchAction(actionId, extra = null) {
   return { ok: false, reason: "NO_SUCH_ACTION", code: "NO_SUCH_ACTION", check: row.check,
            translation: row.translation, action, ...Object.fromEntries(own), detail: NO_SUCH_ACTION_DETAIL };
   /* END DEC-49 REGION is-no-such-action */
+}
+
+/* R45 (N427, K711). THE ONE ANSWER TO ONE CONDITION: an action's stated contact names no member of the instance. This
+   write answers it through here, and so does every later module asking it (`action-plans` R18), so
+   `CONTACT_NOT_A_MEMBER` is minted at one site with its one row (C-117.11). The detail is this write's own fixed
+   sentence; `extra` adds a caller's fields beside these and never replaces one. Writes nothing and never throws. */
+const CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of this instance by member id, and this one names none. "
+  + "Nothing was written.";
+const CONTACT_NOT_A_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "detail"]);
+export function contactNotAMember(extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !CONTACT_NOT_A_MEMBER_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-contact-member */
+  const row = ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER;
+  return { ok: false, reason: "CONTACT_NOT_A_MEMBER", code: "CONTACT_NOT_A_MEMBER", check: row.check,
+           translation: row.translation, ...Object.fromEntries(own), detail: CONTACT_NOT_A_MEMBER_DETAIL };
+  /* END DEC-49 REGION is-contact-member */
+}
+/** R45 (N427): a stated contact's member id, `member:<id>` or bare, or null. Never throws. */
+export function contactId(v) {
+  if (typeof v !== "string" || !v.trim()) return null;
+  return v.trim().replace(/^member:/, "");
 }
 const findingsOf = (list) => list.filter((x) => x.severity === "error")
   .map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}), ...(x.repairs ? { repairs: x.repairs } : {}) }));
@@ -225,7 +251,7 @@ export class Actions {
     const c = combine(ids);
     return c && c.ok ? c.view : null;
   }
-  /** R10, R40, R42 (N231): the kinds this instance accepts now: the product's own and the active profiles' combined
+  /** R10, R42 (N231; action-grammar R1's `actionKinds`): the kinds this instance accepts now: the product's own and the active profiles' combined
    *  view. Writes nothing and never throws: a view that cannot be read answers the product's kinds alone. */
   kinds() {
     let view = null;
@@ -436,12 +462,12 @@ export class Actions {
     return null;
   }
 
-  /* R4–R7, R9, R10, R33: the C-2.10 arms enforced at the write (C-73.6, C-101), each by its own name, carrying the
-     arm's own findings. A MISSING counterparty and a pending entry PAST its date land; the audit reports them (R37). */
+  /* R6, R7, R9, R10, R33: the C-2.10 arms enforced at the write (C-73.6, C-101), each by its own name, carrying the
+     arm's own findings. A MISSING counterparty and a pending entry PAST its date land; the audit reports them (R51). */
   #writeArms(c, heldFm, nextFm, who) {
     const { head, writer, operation } = c;
     const creation = !head;
-    /* R4, R6 (N297): the law arm's one refusal, minted by `recordsLawRefusal` alone. */
+    /* R6 (N297; action-grammar R3): the law arm's one refusal, minted by `recordsLawRefusal` alone. */
     const law = recordsLawRefusal(nextFm);
     if (law) return law;
     /* DEC-49 REGION is-promote-action-kind */
@@ -571,12 +597,6 @@ export class Actions {
     return null;
   }
 
-  /** R45: a stated contact's member id, `member:<id>` or bare, or null. */
-  static contactId(v) {
-    if (typeof v !== "string" || !v.trim()) return null;
-    return v.trim().replace(/^member:/, "");
-  }
-
   /* R45 (D5), R46 (Bob's ruling 1 of 2026-09-29): the group's contact, set or changed by a member and naming one; the
      plan and option an action was started from, set on its creation and never changed or removed. */
   #contactAndPlan(c, heldFm, nextFm, who) {
@@ -588,14 +608,10 @@ export class Actions {
         return refuse("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine "
           + "credential may not set or change it. Nothing was written.");
       /* END DEC-49 REGION is-machine-contact */
-      const id = Actions.contactId(nextFm.contact);
+      const id = contactId(nextFm.contact);
       let facts = null;
       if (id) { try { facts = this.membership.memberFacts(id); } catch { facts = null; } }
-      /* DEC-49 REGION is-contact-member */
-      if ((nextFm.contact !== undefined && nextFm.contact !== null) && !facts)
-        return refuse("CONTACT_NOT_A_MEMBER", "contact names a member of this instance by member id, and this one names "
-          + "none. Nothing was written.");
-      /* END DEC-49 REGION is-contact-member */
+      if ((nextFm.contact !== undefined && nextFm.contact !== null) && !facts) return contactNotAMember();
     }
     const has = (fm, k) => fm && fm[k] !== undefined && fm[k] !== null && fm[k] !== "";
     /* DEC-49 REGION is-plan-link */
@@ -803,7 +819,7 @@ export class Actions {
     return null;
   }
 
-  /** R37: the audit's action arm over one bundle image (record-core R59): C-2.10's arms and C-11.1 over an action,
+  /** R51: the audit's action arm over one bundle image (record-core R59): C-2.10's arms and C-11.1 over an action,
    *  and C-6.1's `responds_to` arm over any document. */
   audit(image) {
     const files = image && image.files instanceof Map ? image.files : null;
@@ -1372,7 +1388,7 @@ export class Actions {
     return { ok: true, target, ord: n, pressure: { kind: mark.kind, note: mark.note }, by: who, at, weight: "single" };
   }
 
-  /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R11, R44–R46 at the act): the plane
+  /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R3, R5–R11, R45, R46 and action-grammar R3 and R6 at the act): the plane
    *  mints the action's id and writes it into the document; the refusals are the promotion's. Answers `{ok, id}`. */
   actionCreate({ document = null, viewer = null, author = null } = {}) {
     const text = typeof document === "string" ? document : null;
@@ -1975,7 +1991,7 @@ export class Actions {
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
-  /* ================================================================ the read (R25, R26, R29–R31) */
+  /* ================================================================ the read (R25, R26, R29, R30) */
 
   /** R25, REC-24 (f)/(g): everything about ONE action that is DERIVED rather than stored — the clock's verdict at a
    *  named instant, the action's own outcome (DEC-14), the ledger, the legs, and what responded. `row` is the
@@ -2111,54 +2127,6 @@ export class Actions {
                  says: "the legs are matched by the determination named; whether it is live is conformance's to say, and it is not provided on this instance" } : {}) };
   }
 
-  /** R31 (N237, N311): every `pending` clock entry dated before `before` across visible actions, at most 500 per page,
-   *  in (action id, entry position) order after `after`: a previous page's `cursor` (`<action>#<position>`), or an
-   *  action id, read as after all that action's entries. A page reads at most 500 actions and may end inside one;
-   *  `cursor` is the last entry answered when `truncated`, else null, so paging from the start through each `cursor` to
-   *  null reaches every entry, an action holding more than a page among them. The seek is retrieval's projection
-   *  (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from the document, the authority. */
-  pendingClocks({ before, limit = null, after = null, viewer = null } = {}) {
-    const day = String(before ?? "").slice(0, 10);
-    /* DEC-49 REGION is-pending-before */
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
-      return refuse("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
-    /* END DEC-49 REGION is-pending-before */
-    const max = clampLimit(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
-    /* `<action>#<position>` resumes inside that action, after the position; anything else is an action id. */
-    const from = after === null || after === undefined || after === "" ? null : String(after);
-    const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
-    const seek = at ? { id: at[1], pos: Number(at[2]) } : from ? { id: from, pos: Infinity } : null;
-    const gate = viewerPredicate(viewer);
-    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
-      WHERE b.object_type='action' AND (${gate.sql}) ${seek ? "AND b.bundle_id>=?" : ""}
-        AND bp.action_clock_next IS NOT NULL AND bp.action_clock_next < ? ORDER BY b.bundle_id LIMIT ?`,
-      ...gate.args, ...(seek ? [seek.id] : []), day, PENDING_CLOCKS_ACTIONS_MAX + 1);
-    const items = [];
-    let truncated = rows.length > PENDING_CLOCKS_ACTIONS_MAX;
-    let full = false, lastRead = null;
-    read: for (const r of rows.slice(0, PENDING_CLOCKS_ACTIONS_MAX)) {
-      const fm = this.#heldFm(r.bundle_id) || {};
-      const clock = Array.isArray(fm.clock) ? fm.clock : [];
-      const skip = seek && r.bundle_id === seek.id ? seek.pos : -1;
-      for (let i = skip + 1; i < clock.length; i++) {
-        const e = clock[i];
-        if (!e || e.status !== "pending" || typeof e.date !== "string" || !(e.date < day)) continue;
-        /* The page is full and an entry remains: the next page resumes after the last one answered. */
-        if (items.length === max) { full = truncated = true; break read; }
-        items.push({ action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null,
-                     past: e.date < day });
-      }
-      lastRead = { id: r.bundle_id, end: Math.max(clock.length - 1, Number.isFinite(skip) ? skip : 0, 0) };
-    }
-    /* The last entry answered; when the page ends on the action bound past an action whose document holds none (its
-       projection behind it), the end of that action instead, so the next page still moves on. */
-    const tail = items[items.length - 1];
-    const cursor = !truncated ? null
-      : tail && (full || !lastRead || tail.action === lastRead.id) ? `${tail.action}#${tail.ord}`
-        : lastRead ? `${lastRead.id}#${lastRead.end}` : null;
-    return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated, cursor };
-  }
-
   /* ================================================================ proposals (R19, R28) */
 
   /** R28 (REC-215): a proposed tier, stored apart, labelled; it never touches `risk_tier` or its history. */
@@ -2261,7 +2229,7 @@ function proposalLabelFor(who, subject) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables, registers its step, audit, facts and
- *  decoration (R3, R12, R25, R36, R37; retrieval R53, R56). */
+ *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56). */
 export function actionsOf(host, deps) {
   let a = instances.get(host);
   if (!a) {
