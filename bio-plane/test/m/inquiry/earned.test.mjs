@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { legCapped, LEG_BACKFILL_MAX, EARNED_TARGETS_MAX } from "../../../src/inquiry/index.mjs";
-import { EARNED_CAPTURE_CEILING, TESTIMONY_GRADE } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING, TESTIMONY_GRADE } from "../../../src/record-grammar/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c", D = "INFO-2026-0004-d", E = "INFO-2026-0005-e";
 const LAYER = JSON.stringify([{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }]);
@@ -156,4 +156,24 @@ test("R13 R14 capture: bytes received through the doorbell, never fetched, keep 
   assert.equal(leg(EARNED_CAPTURE_CEILING).ok, true);
   assert.equal(legCapped("A", cap[B], B).grade, EARNED_CAPTURE_CEILING);
   assert.equal(legCapped("C", cap[B], B), null);
+});
+
+test("R13 K783 the earned registry is this module's audit context (record-core R69): each bundle's checks get the registry over the legs its basis projects, null for one resting on nothing; registered once", async () => {
+  const w = world(); w.entity("ENT-2026-0001");
+  const [cap] = w.doc("INFO-2026-0001-a");
+  w.resolve(cap, "INFO-2026-0001-a", "ref", "ENT-2026-0001", "B");
+  w.inquiry("INQ-2026-0001-q", { subject: "ENT-2026-0001", legs: [{ target: "INFO-2026-0001-a" }] });
+  w.inquiry("INQ-2026-0002-e");
+  const seen = new Map();
+  assert.equal(w.record.registerGrammar("audit-context-probe", { ids: ["C-2.8"], arm: (ctx) => {
+    seen.set(ctx.folderName, ctx.earnedRegistry);
+  } }).ok, true);
+  const page = await w.record.auditPass({ limit: 50, visible: () => true });
+  assert.equal(page.ok ?? true, true);
+  assert.deepEqual(seen.get("INQ-2026-0001-q"), w.k.earned("ENT-2026-0001", ["INFO-2026-0001-a"]));
+  assert.equal(seen.get("INQ-2026-0001-q").earned.connection["INFO-2026-0001-a"].grade, "B");
+  assert.equal(seen.get("INQ-2026-0002-e"), null, "an inquiry resting on nothing has no registry");
+  assert.equal(seen.get("INFO-2026-0001-a"), null, "nor a document");
+  const again = w.record.registerAuditContext("inquiry", () => ({}));
+  assert.deepEqual([again.ok, again.reason], [false, "AUDIT_CHECK_DECLARED"]);
 });

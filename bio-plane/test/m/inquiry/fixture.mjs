@@ -43,8 +43,9 @@ export const V = (id) => `member:${id}`;
 export const MACHINE = "class:daemon";
 export const NOW = "2026-09-28T01:00:00Z";
 
-/* The column this module writes on record-core's `bundles` (R40), which the store's additive list creates today. A
-   store written before T18 also held the leg count and the superseded-by index there (`legacyColumns`, R36's move). */
+/* The column the store's additive list still creates on record-core's `bundles`, where this module wrote the subject
+   entity until T19 (R40; since then it is written to this module's own table, and the column is inert). A store
+   written before T18 also held the leg count and the superseded-by index there (`legacyColumns`, R36's move). */
 const BUNDLE_COLUMNS = ["inquiry_subject_entity TEXT"];
 export const LEGACY_BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_superseded_by TEXT"];
 /* The strength columns legacy-store adds to `bundles` (strength's), which the real retrieval's search reads. */
@@ -171,7 +172,7 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   return w;
 }
 
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 const parseFm = (t) => (t ? parseFrontmatter(t).data : null);
 
 /** An inquiry document. `legs`: [{target, role?, grade?, grade_axis?, grade_source?, ground?, author?, date?, note?,

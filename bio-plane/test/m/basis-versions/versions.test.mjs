@@ -28,7 +28,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, merge, inqMd, V, MACHINE } from "./fixture.mjs";
 import { BASIS_VERSION_CHECKS, basisVersionFindings, basisVersionsOps } from "../../../src/basis-versions/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const LEDGER = "INFO-2026-1000-ledger", MINUTES = "INFO-2026-1000-minutes";
 const AUDIT = "INFO-2026-1000-audit", EMAIL = "INFO-2026-1000-email";
