@@ -72,9 +72,9 @@ CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(proj
 -- project_participants precedent).
 -- THE ROW IS THE PROJECT AND ITS SETTING AND NOTHING ELSE. No date: a projection needs none, the act log
 -- above carries every date there is, and a column that moved on each recompute would make an UNCHANGED boot
--- rewrite every row with different bytes -- which is a RESTART PLUS A PURE READ MOVING A TABLE, and is what
--- versionnotice.test.mjs's no-write WITNESS refuses. That witness is the guarantee a live verification's
--- no-write claim rests on, so the derivation is idempotent at the byte instead.
+-- rewrite every row with different bytes -- which is a RESTART PLUS A PURE READ MOVING A TABLE, and a live
+-- verification's no-write claim rests on the tables reading the same before and after, so the derivation is
+-- idempotent at the byte instead (test/m/membership/t19-enrol-boot.test.mjs holds a second boot's rows unchanged).
 CREATE TABLE IF NOT EXISTS project_sight (
   project_id TEXT PRIMARY KEY,
   setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden'))
