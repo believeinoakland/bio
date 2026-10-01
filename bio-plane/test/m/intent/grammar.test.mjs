@@ -1,13 +1,16 @@
-/* intent's project grammar (R29: C-2.9's other arms and C-9.1, registered in record-grammar's `checkProjectExtension`
-   slot through record-core's grammar seam) and its own codes (R30, with R2, R8, R10 and R22 answering them). Each arm is
-   checked over every rung, shape and reason the requirement names, through record-grammar's `checkBundle` called with
-   the grammars the record answers, and through record-core's audit. */
+/* intent's project grammar (R29: C-2.9's `closed_reason` arm, registered in record-grammar's `checkProjectExtension`
+   slot, which it claims whole with C-9.1, through record-core's grammar seam) and its own codes (R30, with R2, R8, R10
+   and R22 answering them). The arm is checked over every reason and state the requirement names, and the retired
+   fields (`workproduct_state`, `evaluations`, the C-9.1 ladder; K899 (3)) over every rung, shape and value the retired
+   arms judged, each drawing nothing; through record-grammar's `checkBundle` called with the grammars the record
+   answers, through the promotion, and through record-core's audit. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { checkBundle, EXTENSION_ARMS } from "../../../src/record-grammar/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
-import { INTENT_CHECKS, PROJECT_GRAMMAR, WORKPRODUCT_STATES, CLOSED_REASONS, checkProjectExtension,
-         registerProjectGrammar, intentOf } from "../../../src/intent/index.mjs";
+import * as INTENT from "../../../src/intent/index.mjs";
+import { INTENT_CHECKS, PROJECT_GRAMMAR, CLOSED_REASONS, checkProjectExtension, registerProjectGrammar, intentOf }
+  from "../../../src/intent/index.mjs";
 import { PROGRESSION_CHECKS } from "../../../src/progressions/index.mjs";
 import { world, seeded, storage, V, COND } from "./fixture.mjs";
 
@@ -30,24 +33,16 @@ const judge = async (w, text) => (await checkBundle({ folderName: "PROJ-2026-000
                                                        sha256: async () => "0" }, { grammars: w.record.grammars() })).findings;
 const ours = (findings) => findings.filter((f) => f.check === "C-2.9" || f.check === "C-9.1");
 const e29 = (message) => ({ check: "C-2.9", severity: "error", message });
-const REPAIRS = ["run the missing evaluation", "demote workproduct_state to the highest earned rung"];
-const e91 = (message) => ({ check: "C-9.1", severity: "error", message, repairable: true, repairs: REPAIRS });
-
-/* R29's ladder, as the requirement states it: at the top three rungs, each kind with no internal-or-external pass is
-   one error; at the top two, each with no external pass is one more; compliance before argument within each. */
-function ladder(ws, evals) {
-  const passed = (kind, stricts) => evals.some((e) => e && e.kind === kind && e.result === "pass" && stricts.includes(e.strictness));
-  const out = [];
-  if (["internally_checked", "externally_compliant", "distributed"].includes(ws))
-    for (const kind of ["compliance", "argument"])
-      if (!passed(kind, ["internal", "external"]))
-        out.push(e91(`workproduct_state '${ws}' requires a passing ${kind} evaluation (internal strictness or better)`));
-  if (["externally_compliant", "distributed"].includes(ws))
-    for (const kind of ["compliance", "argument"])
-      if (!passed(kind, ["external"]))
-        out.push(e91(`workproduct_state '${ws}' requires a passing external-strictness ${kind} evaluation`));
-  return out;
-}
+/* The values the retired arms judged (K899 (3)): the four rungs of the old ladder and values outside it, and evaluation
+   entries well-formed and not, so a test can show none of them draws a finding any more. */
+const RUNGS = ["draft", "internally_checked", "externally_compliant", "distributed"];
+const BAD_RUNGS = ["bogus", "Draft", "closed", "", "retracted", "redistributed"];
+const EVALS = {
+  good: [ev("compliance", "internal", "pass"), ev("argument", "external", "findings", { findings_ref: "INQ-1" })],
+  shape: [{ kind: "x" }, { ...ev("compliance", "internal", "pass"), strictness: "casual" }, { ...ev("compliance", "internal", "pass"), result: "fail" },
+          { ...ev("compliance", "internal", "pass"), timestamp: "2026-09-01" }, { kind: "compliance", strictness: "internal", result: "pass" }],
+  ref: [ev("argument", "internal", "findings"), ev("argument", "internal", "findings", { findings_ref: "" })],
+};
 
 test("R29 the project grammar is registered once at start through record-core's grammar seam, as intent, claiming record-grammar's checkProjectExtension slot (C-2.9, C-9.1) whole, its only claimant", () => {
   const w = world();
@@ -72,55 +67,44 @@ test("R29 the project grammar is registered once at start through record-core's 
   assert.throws(() => registerProjectGrammar(other), /intent: record-core refused the project grammar: GRAMMAR_DECLARED/);
 });
 
-test("R29 workproduct_state: absent or null is nothing; each of draft, internally_checked, externally_compliant, distributed is legal; any other value is one C-2.9 error; a document of any other type gets nothing", async () => {
+test("R29 a project carrying any workproduct_state, well-formed or not, draws no finding from this grammar: every rung of the retired ladder and every value outside it, at every state, through checkBundle and the arm alone; the module exports no rung list", async () => {
   const w = world();
-  assert.deepEqual([...WORKPRODUCT_STATES], ["draft", "internally_checked", "externally_compliant", "distributed"]);
+  assert.equal(INTENT.WORKPRODUCT_STATES, undefined, "the rung list is retired with its arm");
   assert.deepEqual(ours(await judge(w, projectDoc())), []);
-  assert.deepEqual(ours(await judge(w, projectDoc({ workproduct_state: null }))), []);
-  const full = [ev("compliance", "external", "pass"), ev("argument", "external", "pass")];
-  for (const ws of WORKPRODUCT_STATES)
-    assert.deepEqual(ours(await judge(w, projectDoc({ workproduct_state: ws, evaluations: full }))), [], ws);
-  for (const bad of ["bogus", "Draft", "closed", ""])
-    assert.deepEqual(ours(await judge(w, projectDoc({ workproduct_state: bad }))),
-                     [e29(`workproduct_state '${bad}' is not one of: draft, internally_checked, externally_compliant, distributed`)], bad);
+  for (const state of ["forming", "investigating", "matured"])
+    for (const workproduct_state of [null, ...RUNGS, ...BAD_RUNGS]) {
+      assert.deepEqual(ours(await judge(w, projectDoc({ current_state: state, workproduct_state }))), [], `${state} ${workproduct_state}`);
+      const direct = [];
+      checkProjectExtension({ fm: { object_type: "project", current_state: state, workproduct_state } }, direct);
+      assert.deepEqual(direct, [], `direct ${state} ${workproduct_state}`);
+    }
+  /* at closed with a reason, still nothing; at closed without one, only the closed_reason finding */
+  for (const workproduct_state of [...RUNGS, ...BAD_RUNGS]) {
+    assert.deepEqual(ours(await judge(w, projectDoc({ current_state: "closed", closed_reason: "resolved", workproduct_state }))), [], workproduct_state);
+    assert.deepEqual(ours(await judge(w, projectDoc({ current_state: "closed", workproduct_state }))),
+                     [e29("closed state requires closed_reason in: resolved, superseded, abandoned")], `closed ${workproduct_state}`);
+  }
   /* any other type: nothing, however wrong its fields */
   const wrong = { workproduct_state: "bogus", evaluations: [{ kind: "x" }], current_state: "closed" };
   for (const type of ["information", "inquiry", "goal", "aspiration"])
     assert.deepEqual(ours(await judge(w, projectDoc(wrong, type))), [], type);
   const direct = [];
-  checkProjectExtension({ fm: { object_type: "inquiry", workproduct_state: "bogus" } }, direct);
+  checkProjectExtension({ fm: { object_type: "inquiry", workproduct_state: "bogus", current_state: "closed" } }, direct);
   checkProjectExtension({}, direct);
   assert.deepEqual(direct, []);
 });
 
-test("R29 evaluations: each entry needs kind compliance or argument, strictness internal or external, result pass or findings and an ISO timestamp, else one C-2.9 error naming its index; a findings result with an empty findings_ref is one C-2.9 error naming its index; a non-list is not read", async () => {
+test("R29 a project carrying any evaluations, well-formed or not, draws no finding from this grammar: well-formed entries, every shape the retired arm refused, a findings result with no findings_ref, a null entry, and a value that is not a list", async () => {
   const w = world();
-  const good = [ev("compliance", "internal", "pass"), ev("argument", "external", "findings", { findings_ref: "INQ-1" })];
-  assert.deepEqual(ours(await judge(w, projectDoc({ evaluations: good }))), []);
-  const shape = (i) => e29(`evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`);
-  const ref = (i) => e29(`evaluations[${i}] result is findings but findings_ref is empty`);
-  const cases = [
-    [{ ...ev("compliance", "internal", "pass"), kind: "style" }, shape],
-    [{ ...ev("compliance", "internal", "pass"), strictness: "casual" }, shape],
-    [{ ...ev("compliance", "internal", "pass"), result: "fail" }, shape],
-    [{ ...ev("compliance", "internal", "pass"), timestamp: "2026-09-01" }, shape],
-    [{ ...ev("compliance", "internal", "pass"), timestamp: "2026-09-01T00:00:00.000Z" }, shape],
-    [{ kind: "compliance", strictness: "internal", result: "pass" }, shape],
-    [ev("argument", "internal", "findings"), ref],
-    [ev("argument", "internal", "findings", { findings_ref: "" }), ref],
-  ];
-  for (const [entry, want] of cases)
-    assert.deepEqual(ours(await judge(w, projectDoc({ evaluations: [good[0], entry] }))), [want(1)], JSON.stringify(entry));
-  /* every bad entry is its own error, in index order, and a null entry is a shape error */
-  const all = cases.map(([e]) => e);
-  assert.deepEqual(ours(await judge(w, projectDoc({ evaluations: all }))), cases.map(([, want], i) => want(i)));
-  const direct = [];
-  checkProjectExtension({ fm: { object_type: "project", evaluations: [null, good[0]] } }, direct);
-  assert.deepEqual(direct, [shape(0)]);
-  /* not a list: not read */
-  for (const evaluations of ["none", 3, { kind: "compliance" }]) {
+  const cases = [EVALS.good, EVALS.shape, EVALS.ref, [...EVALS.good, ...EVALS.shape, ...EVALS.ref], []];
+  for (const evaluations of cases)
+    for (const workproduct_state of [undefined, ...RUNGS, "bogus"]) {
+      const fields = workproduct_state === undefined ? { evaluations } : { evaluations, workproduct_state };
+      assert.deepEqual(ours(await judge(w, projectDoc(fields))), [], JSON.stringify(fields));
+    }
+  for (const evaluations of [[null, EVALS.good[0]], "none", 3, { kind: "compliance" }, null]) {
     const out = [];
-    checkProjectExtension({ fm: { object_type: "project", evaluations } }, out);
+    checkProjectExtension({ fm: { object_type: "project", current_state: "forming", evaluations } }, out);
     assert.deepEqual(out, [], JSON.stringify(evaluations));
   }
 });
@@ -138,51 +122,37 @@ test("R29 at closed, a closed_reason not one of resolved, superseded, abandoned 
     assert.deepEqual(ours(await judge(w, projectDoc({ current_state: state, closed_reason: "whatever" }))), [], state);
 });
 
-test("R29 C-9.1, the readiness ladder: at internally_checked or above, each of compliance and argument with no internal-or-external pass is one error; at externally_compliant or distributed, each with no external pass is one more; over every rung and every combination of passes", async () => {
+test("R29 C-9.1, the retired readiness ladder: no C-9.1 finding at any rung, over every rung and every combination of passes, and none from a value outside the rungs; the slot keeps the id C-9.1", async () => {
   const w = world();
-  /* each kind may hold: nothing, a findings result, an internal pass, an external pass */
+  /* each kind may hold: nothing, a findings result, an internal pass, an external pass (the combinations the ladder judged) */
   const options = (kind) => [[], [ev(kind, "external", "findings", { findings_ref: "R" })], [ev(kind, "internal", "pass")],
                              [ev(kind, "external", "pass")]];
   let checked = 0;
-  for (const ws of WORKPRODUCT_STATES)
+  for (const ws of [...RUNGS, "bogus"])
     for (const c of options("compliance"))
       for (const a of options("argument")) {
         const evals = [...c, ...a];
-        const want = ladder(ws, evals);
-        assert.deepEqual(ours(await judge(w, projectDoc({ workproduct_state: ws, evaluations: evals }))), want,
-                         `${ws} ${JSON.stringify(evals)}`);
+        const found = await judge(w, projectDoc({ workproduct_state: ws, evaluations: evals }));
+        assert.deepEqual(found.filter((f) => f.check === "C-9.1"), [], `${ws} ${JSON.stringify(evals)}`);
+        assert.deepEqual(ours(found), [], `${ws} ${JSON.stringify(evals)}`);
         checked += 1;
       }
-  assert.equal(checked, 64);
-  /* the ladder's figures at the rungs, stated outright */
-  const none = async (ws) => ours(await judge(w, projectDoc({ workproduct_state: ws }))).length;
-  assert.deepEqual([await none("draft"), await none("internally_checked"), await none("externally_compliant"), await none("distributed")],
-                   [0, 2, 4, 4]);
-  /* a pass with no timestamp is one C-2.9 error, and is still a pass evaluation on the ladder, as the catalogue read it */
-  const r = ours(await judge(w, projectDoc({ workproduct_state: "internally_checked", evaluations: [
-    { kind: "compliance", strictness: "internal", result: "pass" }, ev("argument", "internal", "pass")] })));
-  assert.deepEqual(r.map((f) => f.check), ["C-2.9"]);
+  assert.equal(checked, 80);
+  /* the rungs with no evaluation at all, which the ladder answered 0, 2, 4, 4 */
+  for (const ws of RUNGS) assert.deepEqual(ours(await judge(w, projectDoc({ workproduct_state: ws }))), [], ws);
+  /* the id stays claimed: record-grammar's slot still lists it (closed L1), so the grammar claims the slot whole */
+  assert.ok(PROJECT_GRAMMAR.ids.includes("C-9.1"));
 });
 
-test("R29 the findings and their order are the catalogue's: workproduct_state, then each evaluation by index, then closed_reason, then the ladder's internal and external errors, compliance before argument; run at the slot's place, in one contiguous run", async () => {
+test("R29 the closed_reason finding is this grammar's only finding: a project at closed with no reason, carrying every retired field, draws it alone, once, at the slot's place", async () => {
   const w = world();
   const evals = [{ kind: "x" }, ev("compliance", "internal", "findings")];
   const text = projectDoc({ current_state: "closed", workproduct_state: "distributed", evaluations: evals });
   const fs = await judge(w, text);
   const mine = ours(fs);
-  /* distributed is legal, so no workproduct_state error: the shape and ref errors, the reason, the ladder */
-  assert.deepEqual(mine, [
-    e29("evaluations[0] lacks the required kind/strictness/result/timestamp shape"),
-    e29("evaluations[1] result is findings but findings_ref is empty"),
-    e29("closed state requires closed_reason in: resolved, superseded, abandoned"),
-    ...ladder("distributed", evals),
-  ]);
+  assert.deepEqual(mine, [e29("closed state requires closed_reason in: resolved, superseded, abandoned")]);
   const bad = ours(await judge(w, projectDoc({ current_state: "closed", workproduct_state: "bogus", evaluations: evals })));
-  assert.deepEqual(bad.map((f) => f.message.split(" ")[0]), ["workproduct_state", "evaluations[0]", "evaluations[1]", "closed"],
-                   "an illegal rung is first, and earns no ladder error");
-  /* contiguous: the arm runs once, at its slot's place */
-  const at = fs.map((f, i) => (f.check === "C-2.9" || f.check === "C-9.1" ? i : -1)).filter((i) => i >= 0);
-  assert.deepEqual(at, Array.from({ length: at.length }, (_, k) => at[0] + k));
+  assert.deepEqual(bad, mine, "an illegal rung and ill-formed evaluations add nothing");
   /* the arm on its own answers what checkBundle runs */
   const direct = [];
   checkProjectExtension({ fm: { object_type: "project", current_state: "closed", workproduct_state: "distributed", evaluations: evals } }, direct);
@@ -193,18 +163,42 @@ test("R29 the findings and their order are the catalogue's: workproduct_state, t
   assert.deepEqual(ours(bare.findings), []);
 });
 
-test("R29 R22 the audit runs the grammar over every project held, beside R1's objective arm, through the registrations record-core holds", async () => {
+test("R29 a document carrying workproduct_state or evaluations is neither refused nor corrected for them: a project's creation and revision through promotion carry them as written", () => {
+  const w = world();
+  w.member("alice");
+  const P = w.project("Carrying", "alice");
+  const lines = ["workproduct_state: bogus", "evaluations:", "  - kind: x", "    strictness: casual", "  - kind: argument",
+                 "    strictness: internal", "    result: findings"];
+  const text = w.text(P).replace("references: []", `references: []\n${lines.join("\n")}`);
+  const r = w.revise(P, text, V("alice"));
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(w.text(P), text, "kept byte for byte");
+  for (const ws of RUNGS) {
+    const next = w.text(P).replace(/^workproduct_state: .*$/m, `workproduct_state: ${ws}`);
+    assert.equal(w.revise(P, next, V("alice")).ok, true, ws);
+    assert.equal(w.fm(P).workproduct_state, ws);
+  }
+});
+
+test("R29 R22 the audit runs the grammar over every project held, beside R1's objective arm, through the registrations record-core holds: the retired fields draw nothing, the closed_reason arm and the objective arm each count", async () => {
   const w = world();
   w.member("alice");
   const P = w.project("Audited", "alice");
+  const Q = w.project("Closed", "alice");
   const text = w.text(P).replace("references: []", "references: []\nworkproduct_state: externally_compliant\nevaluations:\n"
     + `  - kind: compliance\n    strictness: internal\n    result: pass\n    timestamp: "${TS}"`).replace(/^objective: .*\n/m, "");
   w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='bundle.md'`, text, P);
-  const pass = await w.record.auditPass({ limit: 50 });
-  /* C-9.1: argument has no pass at all (1), compliance and argument no external pass (2); C-2.9: the objective (R1) */
-  assert.equal(pass.tally["C-9.1"], 3);
+  let pass = await w.record.auditPass({ limit: 50 });
+  /* the ladder would have found 3 (C-9.1); the objective is missing (R1, C-2.9) */
+  assert.equal(pass.tally["C-9.1"], undefined, "no C-9.1 finding");
   assert.equal(pass.tally["C-2.9"], 1);
   assert.equal(pass.tallyDetail["C-2.9/NO_OBJECTIVE"], 1);
+  /* a project at closed with no reason: the grammar's one arm counts too */
+  const closed = w.text(Q).replace("current_state: forming", "current_state: closed").replace("references: []", "references: []\nworkproduct_state: bogus");
+  w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='bundle.md'`, closed, Q);
+  pass = await w.record.auditPass({ limit: 50 });
+  assert.equal(pass.tally["C-9.1"], undefined);
+  assert.equal(pass.tally["C-2.9"], 2, "the objective arm on P, the closed_reason arm on Q");
 });
 
 test("R30 R2 R8 R10 R22 intent's own codes: a progression the record has not declared is INTENT_NO_SUCH_PROGRESSION (C-111.4), a stage it does not declare INTENT_BAD_STAGE (C-111.6), a missing reason INTENT_NO_REASON (C-111.13), numbers and translations unchanged; never progressions' NO_SUCH_PROGRESSION, BAD_STAGE or NO_REASON", async () => {

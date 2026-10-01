@@ -7,8 +7,9 @@
  *
  * A new module (K102): C-2.9's objective arm was extracted from `legacy-checks` (`checkProjectExtension`) as R1 here,
  * run at the write as a registered promotion check and in the audit as a registered audit check, so neither loses it
- * (R22); C-2.9's other arms and C-9.1 followed in T19 (R29) as this module's grammar (`./grammar.mjs`), registered with
- * record-core's grammar seam in record-grammar's `checkProjectExtension` slot. Aspirations and goals are record
+ * (R22); C-2.9's `closed_reason` arm followed in T19 (R29) as this module's grammar (`./grammar.mjs`), registered with
+ * record-core's grammar seam in record-grammar's `checkProjectExtension` slot (its `workproduct_state` and
+ * `evaluations` arms and C-9.1 retired, K899 (3)). Aspirations and goals are record
  * documents of their own types (R26, `./doc.mjs`), written through `promotion` like every other record object, with
  * history, the gate and authored revisions; this module's
  * registered check holds their state machines (`held → retired`, `open → closed`) and who may write them.
@@ -47,8 +48,7 @@ import { ASPIRATION, GOAL, ASPIRATION_SCOPES, GRADES, TOKEN, quotable, q, parseF
 export { INTENT_CHECKS } from "./checks.mjs";
 export { INTENT_SCHEMA, INTENT_TABLES } from "./schema.mjs";
 export { ASPIRATION_SCOPES } from "./doc.mjs";
-export { PROJECT_GRAMMAR, WORKPRODUCT_STATES, CLOSED_REASONS, checkProjectExtension, registerProjectGrammar }
-  from "./grammar.mjs";
+export { PROJECT_GRAMMAR, CLOSED_REASONS, checkProjectExtension, registerProjectGrammar } from "./grammar.mjs";
 
 /** R9 (N327, DEC-83): the group aspiration's fixed act, and its next step, for `membership.notAnAdmin` (its R84), which
  *  answers `NOT_AN_ADMIN` in place of the retired `GROUP_ASPIRATION_NOT_ADMIN` (C-111.16, its number not reused). */
@@ -326,7 +326,8 @@ export class Intent {
     return null;
   }
 
-  /** record-core R59: C-2.9's objective arm in the audit, beside the grammar's other arms (R29), over the same image (R22). */
+  /** record-core R59: C-2.9's objective arm in the audit, beside the grammar's `closed_reason` arm (R29), over the same image
+   *  (R22). */
   auditCheck(image) {
     const md = image && image.files ? image.files.get("bundle.md") : null;
     const fm = parseFm(typeof md === "string" ? md : null);
@@ -1443,8 +1444,8 @@ export function intentOps(i, url, body) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It registers its check with promotion
- *  (R39), its audit check with record-core (R59), its tables with purge (R24) and its project grammar, C-2.9's other
- *  arms and C-9.1, in record-grammar's `checkProjectExtension` slot (R29). */
+ *  (R39), its audit check with record-core (R59), its tables with purge (R24) and its project grammar, C-2.9's
+ *  `closed_reason` arm, in record-grammar's `checkProjectExtension` slot (R29). */
 export function intentOf(host, deps) {
   let i = instances.get(host);
   if (!i) {
