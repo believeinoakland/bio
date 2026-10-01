@@ -84,7 +84,7 @@ Terms. A **subject** is `{kind: "inquiry", inquiry, act?, standards?}` (suspecte
 - `escalation`: `escalationsFor` (its R22), `escalationRead` (R6, R15).
 - `filings`: `availableActions` (shown beside legal options; never a catalogue, Bob's ruling 2 of 2026-09-29).
 - `jurisdictions`: `combine`'s view: `deadlines`, `legal_organisations`, for the assistant's suggestions; nothing here names a place.
-- `ai-runs`: `registerOpenCheck` (its R47; R30), `runFor` and `consumeBound` (its R28, R29; R31). `run-rules`: `runPrincipalGate` (its R5; R31). (K660)
+- `ai-runs`: `registerOpenCheck` (its R47; R30), `runFor` and `consumeBound` (its R28, R29; R31), `read` (its R19: the run's skill version, R32) and `onRunOpened` (its R43: the `work_kinds` snapshot, R32; K710). `run-rules`: `runPrincipalGate` (its R5; R31). (K660)
 
 ### Invariants
 
