@@ -35,3 +35,7 @@ Size (session_01WsT5JSUQHYjxrPzv8AYzFY): test runs 22, module lines 3766
 ## J1 · REPORT
 
 Stale generated artifact: agent-worker/dist/agent-worker.bundled.mjs and its manifest (inputs src/harness.mjs, src/index.mjs, src/subsession.mjs changed by N458/N469); requirements.test.mjs R45's two arms report STALE BUNDLE until regenerated. Regenerated nothing. fleet-member.json and package.json changed (not bundle inputs). Nothing found in another module's code.
+
+## J2 · COMPLETE
+
+N458: harness.mjs PLANE_OPS.search why and index.mjs unchained reason now say 'record'; R21 test gains an arm on the reason. N467: agent-worker.control V5 re-pointed to npm test (package.json test now runs every test/*.test.mjs; it ran one of eight); harness.control's airun/skillsequencing arms re-pointed to run-rules R1/R9, ai-runs R14 and requirements R14/R44 (E1 E2 F1 F2 F4 G1 G3 G4 G5), G2 retired (its subject was a source-text arm). N469: fleet-member.json note, index/subsession check-refusal-codes notes, every 'the battery' runner note, airun/aicredential/suggest.test/vf4 references re-pointed; nc-rec100's arms carried as harness.control S1/S2. Also fixed: H2, D2 never armed since K660 (re-anchored); requirements R14/R44 died on a deleted mode row (now null-tolerant). Suites green but R45 (stale bundle, REPORT J1); every armed control arm AS DECLARED; format, architecture, coverage (53/53), ownership: 0 failures. Record: build/jobs/T21/agent-worker.md on job/T21/agent-worker.
