@@ -46,3 +46,14 @@ Other modules' tests that go red with N456 (not fixed here, P7; each encodes the
 - project-stage stage.test.mjs:62, :100, :293, :385, :467 (R1, R2, R4): write investigating/matured moves, now STATE_MOVE_UNDECLARED.
 Rule 3 names only C-4.2 as accepted red; these nine are not named, so they are yours to place.
 Already red on tranche/T21 before this change: membership module-order.test.mjs:12 (R83), t9-notice-sight-bounds.test.mjs:185 (R79), promotion registry.test.mjs:58 (R39, R45, R46), all on modules.json's order after the fold.
+
+## J2 · COMPLETE
+
+Done; merge early: the change is in on job/T21/record-grammar. Details in this record's Completion section.
+- N456 form (b): C-6.3's workproduct_state arm deleted; checkProjectExtension's ids ['C-2.9']; STATES.project legal forming closed, legacy investigating matured, edges forming/investigating/matured → closed, closed → forming. Fixtures re-keyed (project stub on C-2.9; C-6.3 fixture kept as proof of retirement; four project-machine fixtures added).
+- N458: C-13.2's and C-16.1's messages say "record". No other outward "bundle" in my paths.
+- K921 R42: PROPOSAL_STATES.template, last, frozen, three sentences.
+- N469: the four listed notes handled (two dropped or re-worded, two kept as past-tense provenance); found on re-scan and re-worded: sha256.mjs:49–51 (now names digests.test.mjs), grades.mjs:27 and :86, acts.mjs:27.
+- not yet met: T21 marks met: R28, R35, R40, R42.
+- REPORT J1: two bundles staled; nine tests of intent, record-core, promotion and project-stage go red (not named as accepted red).
+- Tests: record-grammar 62/62. Users of record-grammar: 4018 tests, 12 fail (9 above, 3 already red on the tranche). format, architecture, coverage (40/40), ownership: 0 failures each.
