@@ -24,7 +24,7 @@
     {"id": "pdf-worker", "layer": 1, "paths": ["pdf-worker/"], "tests": ["pdf-worker/test/"], "uses": ["pdf-reader", "bundler", "test-support"]},
     {"id": "ocr-worker", "layer": 1, "paths": ["ocr-worker/"], "tests": ["ocr-worker/test/"], "uses": ["record-grammar", "pdf-pixels", "bundler", "text-chain", "test-support"]},
 
-    {"id": "record-core", "layer": 2, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/record-core/"], "tests": ["bio-plane/test/m/record-core/"], "uses": ["legacy-checks", "id-spaces"]},
+    {"id": "record-core", "layer": 2, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/record-core/"], "tests": ["bio-plane/test/m/record-core/"], "uses": ["record-grammar", "legacy-checks", "id-spaces"]},
     {"id": "membership", "layer": 2, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/membership/"], "tests": ["bio-plane/test/m/membership/"], "uses": ["legacy-checks", "signatures", "record-core"]},
     {"id": "credentials", "layer": 2, "from": ["legacy-checks", "legacy-store"], "paths": ["bio-plane/src/credentials/"], "tests": ["bio-plane/test/m/credentials/"], "uses": ["record-grammar", "legacy-checks", "record-core", "membership"]},
     {"id": "promotion", "layer": 2, "from": ["legacy-checks", "legacy-store"], "paths": ["bio-plane/src/gate.mjs", "bio-plane/src/promotion/"], "tests": ["bio-plane/test/m/promotion/"], "uses": ["legacy-checks", "signatures", "record-core", "membership"]},
