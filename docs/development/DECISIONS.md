@@ -1666,3 +1666,17 @@ response: **Bob, 2026-10-01: A, and testimony weighed by identity.**
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 19; MEMBER-KNOWLEDGE-DESIGN §3 (amended); Publication §3 rule 7 (amended).
 owed: how each identity level maps to the testimony grade and how anonymous testimony counts in strength (it cannot alone carry a finding until corroborated), what counts as corroboration to journalistic and legal standards, the re-evaluation notice on a change of level (strength, ratification, reevaluation; BOB drafts for Bob's approval); "for now" lifted from ratification R2/R18 and publication R17; the UX page's question 19 marked ruled.
+
+### DEC-103 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 20: how a group's declared bias appears to the public)
+for: bob
+question: Do public readers see the lens's actual statements with their justifications, or only the publisher's acknowledgement and a reference to the lens; are the statements printed into the signed case; and is the full form required on the page or may it open as a summary?
+why it is Bob's: doctrine (the two-audience choice: a lens that is weighable, not a weapon) and UX.
+provisional: the lens is public and accompanies every published case (DEC-20); the acknowledgement is the publisher's own words at publication (DEC-46 (2)); the signed case carries only the manifest (set names, revisions, fingerprint), not the statements (case-authoring R14).
+alternative: (B) the full lens on the page only, read live and checked against the fingerprint; (C) a summary first; (D) the acknowledgement and manifest only.
+recommendation: (A) the full lens printed into the signed case, reasons attached.
+reversal cost: moderate once cases are signed in the new format.
+response: **As recommended (Bob, 2026-10-01): A.** At publication every statement in force is printed into the signed case (kind in plain words, subject, text, justification and evidence), citing only public material and counting what is withheld. The page shows "The lens this case was produced under": the acknowledgement first, then each statement with its reasons beneath, then two lines on why groups declare bias; collapsed on screen to one line per statement with its justification, full in print. The publisher sees exactly what will be printed before signing. Earlier cases keep only the fingerprint.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 20; Declared Bias, "RULED 2026-10-01".
+owed: a new signed case format carrying the statements with their justifications and evidence, the withheld-citation count, the public page's lens section and its print form, the pre-signing preview (case-authoring, publication, public-read; BOB drafts for Bob's approval); the UX page's question 20 marked ruled.

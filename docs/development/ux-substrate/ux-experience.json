@@ -13421,7 +13421,7 @@
    "recommendation": "Option 1: pairing every statement with its justification is what makes the two-audience choice survivable, and it fixes the old page's mislabelled 'Declared bias'.",
    "whoDecides": "Design within the doctrine (DEC-20, DEC-46 and the two-audience choice already decide that it is shown); Bob only if the summary-first form is preferred.",
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "How a group's declared bias appears to the public",
     "inOneBreath": "When the public reads a published case, how should it see the lens the group worked under, so that a reader can weigh it and an opponent cannot easily quote it out of context?",
@@ -13609,6 +13609,16 @@
      "build/rulings.md K628–K859 checked: none touch bias display"
     ],
     "size": "short"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-103"
+    ],
+    "status": "ruled",
+    "title": "How a group's declared bias appears to the public",
+    "decided": "Readers see the lens itself. At publication every statement in force is printed into the signed case: its kind in plain words, its subject, its text, and its justification and evidence beneath, citing only public material and stating how many citations are withheld. The published page shows 'The lens this case was produced under': the publisher's acknowledgement first, then each statement with its reasons, then two lines on why groups declare bias; collapsed on screen to one line per statement with its justification, always full in print. The publisher sees exactly what will be printed before signing. Earlier cases keep only the manifest's fingerprint."
    }
   },
   {
