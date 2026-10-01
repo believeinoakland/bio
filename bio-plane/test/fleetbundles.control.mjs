@@ -54,6 +54,13 @@
  *
  * EACH ARM IS ARMED ALONE, with every other defence held open, and each names
  * what MUST fail AND what MUST NOT.
+ *
+ * RE-POINTED 2026-10-01 (LEGACY-TESTS #18, T20; N442, N31, N438): `tools/` and `scripts/coverage.mjs` are deleted, so
+ * arm 5's (b) and (c) and M0-152's two arms beside it (`5b-comment`, `5b-code`), whose whole subject was the gate's
+ * doc-facing derivation and coverage's floor, are retired with them; arm 6b arms the plane's entry where it now is,
+ * `src/plane/index.mjs`; arms 10, 10b and 10c arm the ONE remedy constant (`REBUILD`) in `fleet-bundle.mjs`, which the
+ * suite's arm (j) now reads through `verifyStatic`'s findings, never through the guard's source. The tally, counted off
+ * the table below: `1 1b 2 2-noinstall 2b 3 4 5 6 6b 7 8 9 10 10b 10c` is SIXTEEN arms plus a baseline.
  */
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, rmSync, lstatSync, symlinkSync, unlinkSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -66,7 +73,7 @@ const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
 const PEN = join(PLANE, ".nc-fleetbundles");        /* inside this worktree, rule 1 */
 const LOG = join(PEN, "run.out");
-const SUITE = join(DIR, "fleetbundles.test.mjs");
+const SUITE = join(DIR, "system", "fleetbundles.test.mjs");   /* moved to test/system/ (K612); re-pointed T20 */
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const FLOOR = 200;                                   /* a "restore" of a truncated file is not a restore */
@@ -158,30 +165,6 @@ const report = (label, r, { mustFail, mustNot }) => {
   return r;
 };
 const named = (r, ...needles) => needles.every((n) => r.out.includes(n));
-
-/* ARM 5(b)'s QUESTION — "is fleetbundles doc-facing?" — ANSWERED BY THE GATE, never restated here (M0-152).
-   CORRECTED 2026-09-25, never exempted: until M0-152 this arm decided it itself, `suiteSrc.includes(needle)` over the
-   suite and this driver read WHOLE, comments included. That restated the rule as it stood before M0-143, which made
-   the gate read every file as CODE with its comments blanked (`walkfloor.mjs` `stripComments`) and follow the tools a
-   suite names in code — so the arm and the gate disagreed the moment either file grew a comment naming the prose
-   directory, and neither ever saw the other's edge rule. A second copy of a rule is how the next one goes stale, so
-   there is none: the verdict is whether `gates.mjs --explain`'s own derived line lists this suite. The whole-file
-   read is still computed, printed beside the verdict for CONTRAST only (this arm's negative control reads the two
-   disagreeing). `--explain` prints the derivation in every class since M0-152; a run that prints none is UNDETERMINED
-   (`null`), never "not doc-facing". The gate is named as two arguments so this driver's CODE never spells the tool's
-   path — a `tools/<name>.mjs` literal in code would itself make the suite doc-facing through the gate's edge rule. */
-const GATES = join(REPO, "tools", "gates.mjs");
-function docFacingVerdict() {
-  const g = spawnSync("node", [GATES, "--explain"], { cwd: REPO, encoding: "utf8", env: { ...process.env, BIO_GATE_RESULTS: "off" } });
-  const out = (g.stdout || "") + (g.stderr || "");
-  writeFileSync(join(PEN, "explain.out"), out);
-  const cls = (/gates: change class (\w+)/.exec(out) || [, "UNREAD"])[1];
-  const m = /doc-facing suites derived fresh[^\n]*?plane \[([^\]]*)\]/.exec(out);
-  const docFacing = m ? m[1].split(", ").includes("fleetbundles.test.mjs") : null;
-  const needle = "do" + "cs/";
-  const wholeRead = readFileSync(SUITE, "utf8").includes(needle) || readFileSync(fileURLToPath(import.meta.url), "utf8").includes(needle);
-  return { status: g.status, cls, docFacing, wholeRead };
-}
 
 const ARMS = {
   baseline: {
@@ -300,9 +283,9 @@ const ARMS = {
   },
 
   5: {
-    label: "(5) OVER-STRICTNESS — correct work must PASS. (a) rebuild BOTH members from unchanged sources and the "
-      + "tree must be unchanged; (b) this suite must be OUTSIDE gates' doc-facing set, so a docs-only change cannot "
-      + "select it; (c) coverage --strict must exit 0.",
+    label: "(5) OVER-STRICTNESS — correct work must PASS: rebuild BOTH members from unchanged sources and the "
+      + "tree must be unchanged. ((b) and (c), the gate's doc-facing set and coverage's floor, retired with "
+      + "`tools/` and `scripts/coverage.mjs`, T20.)",
     run: () => {
       console.log("  (a) rebuilding both members from unchanged sources");
       for (const dir of ["agent-worker", "pdf-worker"]) {
@@ -316,50 +299,9 @@ const ARMS = {
         mustNot: "any assertion — a legitimately rebuilt, byte-identical bundle must still pass",
       });
 
-      console.log("  (b) gates' doc-facing derivation, READ OFF `gates.mjs --explain`");
-      const b = docFacingVerdict();
-      console.log(`      gates.mjs --explain: class ${b.cls}; fleetbundles.test.mjs doc-facing: ${b.docFacing}  (must be false)`);
-      console.log(`      superseded whole-file read, printed for CONTRAST and never the verdict: ${b.wholeRead}`);
-      console.log(b.docFacing === false
-        ? "      -> a DOCS-class run does not select this suite, so a docs-only change cannot fail on it"
-        : "      !! the gate counts this suite doc-facing, or printed no derivation — a FINDING, not a pass");
-
-      console.log("  (c) coverage --strict, status read from the process, never a pipeline");
-      const cov = spawnSync("node", ["scripts/coverage.mjs", "--strict"], { cwd: PLANE, encoding: "utf8" });
-      console.log(`      coverage --strict exit ${cov.status}`);
       return r;
     },
   },
-};
-
-/* ---- M0-152's ARMS, beside arm 5 whose (b) they control. No other arm is edited. Each arms THE SUITE ALONE, append-only,
- * restored with both proofs, and reads arm 5(b)'s own `docFacingVerdict` — the gate's `--explain`, not a restatement. */
-const DOCS_WORD = "do" + "cs/";                       /* spelled in two pieces so THIS driver's code never names it */
-
-ARMS["5b-comment"] = {
-  label: "(5b-comment) M0-152's NEGATIVE CONTROL — append a COMMENT naming the prose directory to the suite. The gate "
-    + "blanks comments (M0-143), so it must still say NOT doc-facing; the superseded whole-file read says the opposite.",
-  run: () => withAppended(SUITE, `\n/* see ${DOCS_WORD}architecture/BIO_System_Design.md */\n`, () => {
-    const b = docFacingVerdict();
-    console.log(`  -> class ${b.cls} · gate says doc-facing: ${b.docFacing} · superseded whole-file read: ${b.wholeRead}`);
-    console.log("     MUST : the gate's verdict stays false (a comment reads nothing); the whole-file read turns true — they DISAGREE");
-    console.log("     MUST NOT : the gate's verdict turn true, or come back null (no derivation printed in a non-DOCS class)");
-    console.log(`     held: ${b.docFacing === false && b.wholeRead === true}`);
-    return b;
-  }),
-};
-
-ARMS["5b-code"] = {
-  label: "(5b-code) THE OVER-LENIENCY ARM — append CODE whose string names the prose directory to the suite. A verdict "
-    + "that is false whatever the tree says would pass 5b-comment for free; this one the gate must turn TRUE.",
-  run: () => withAppended(SUITE, `\nexport const __m0152ArmedProbe = "${DOCS_WORD}";\n`, () => {
-    const b = docFacingVerdict();
-    console.log(`  -> class ${b.cls} · gate says doc-facing: ${b.docFacing} · superseded whole-file read: ${b.wholeRead}`);
-    console.log("     MUST : the gate's verdict turns true — a string path reads prose");
-    console.log("     MUST NOT : stay false or come back null");
-    console.log(`     held: ${b.docFacing === true}`);
-    return b;
-  }),
 };
 
 /* ---- FL-10's ARMS, APPENDED (D-298: the plane's own bundle gets the guard).
@@ -367,7 +309,7 @@ ARMS["5b-code"] = {
  * already arms `src/pdfstructure.mjs` — transiently, restored with both
  * proofs — and NEVER `store.mjs` or `schema.mjs`, which is FL-10's own claim
  * rule made physical here. */
-const PLANE_ENTRY = join(PLANE, "src/index.mjs");
+const PLANE_ENTRY = join(PLANE, "src/plane/index.mjs");   /* the plane's entry since T20 (plane R6, K846) */
 const SIGNPAGE_HTML = join(PLANE, "src/sign-release.html");
 
 ARMS["6"] = {
@@ -391,15 +333,15 @@ ARMS["6"] = {
 };
 
 ARMS["6b"] = {
-  label: "(6b) THE SAME CHANGE ON THE PLANE'S ENTRY — src/index.mjs, whose exports are NOT tree-shaken, "
+  label: "(6b) THE SAME CHANGE ON THE PLANE'S ENTRY — src/plane/index.mjs, whose exports are NOT tree-shaken, "
     + "so the byte-identity arm AND the input-hash arm must BOTH fire.",
   run: () => withAppended(PLANE_ENTRY, SUFFIX, () => {
     const r = report("6b", runSuite(), {
-      mustFail: "exit non-zero from BOTH plane arms — input-hash naming `src/index.mjs`, and byte-identity, "
+      mustFail: "exit non-zero from BOTH plane arms — input-hash naming `src/plane/index.mjs`, and byte-identity, "
         + "because an ENTRY's exports survive the bundle",
       mustNot: "either fleet member's own assertions",
     });
-    console.log(`     names bio-plane+file: ${named(r, "bio-plane:", "src/index.mjs")}`);
+    console.log(`     names bio-plane+file: ${named(r, "bio-plane:", "src/plane/index.mjs")}`);
     return r;
   }),
 };
@@ -522,34 +464,27 @@ function withReplacedOnce(file, from, to, body) {
   }
 }
 
-/* The ONE site, anchored on the line ABOVE it too: the remedy sentence itself occurs twice in
-   the file (here and in `verifyFresh`), and an anchor that matches both would arm two sites. */
-const REMEDY_HEAD = "        + `(source is now sha256 ${liveSha}, the bundle was built from ${inp.sha256}). `\n        + ";
-const REMEDY_NOW = "`Run \\`node tools/bundles.mjs\\`, which rebuilds every bundle this change staled, and commit the artifacts with the change.`);";
-const REMEDY_OLD = "`Run \\`npm run build\\` in ${member.dir}/ and commit the artifact with the change.`);";
+/* RE-ANCHORED 2026-10-01 (LEGACY-TESTS #18, T20; N442): the remedy is ONE constant, `REBUILD`, which every staleness
+   finding carries, so the anchor is its first line and it occurs exactly once. */
+const REMEDY_NOW = 'const REBUILD = "Run `node bio-plane/scripts/bundles.mjs` from the repository root, "';
+const REMEDY_OLD = 'const REBUILD = "Run `npm run build` in the member\'s own directory, "';
 
 ARMS["10"] = {
-  label: "(10) M0-188's OWN ARM — restore ONE site's pre-M0-188 sentence, the one-bundle remedy, "
-    + "in the (b) input-hash finding. Nothing else changes: the finding's DIAGNOSIS half is untouched.",
-  run: () => withReplacedOnce(FLEET_BUNDLE, REMEDY_HEAD + REMEDY_NOW, REMEDY_HEAD + REMEDY_OLD, () => {
+  label: "(10) M0-188's OWN ARM — put the one-bundle remedy back in the ONE constant every staleness finding "
+    + "carries. Nothing else changes: each finding's DIAGNOSIS half is untouched.",
+  run: () => withReplacedOnce(FLEET_BUNDLE, REMEDY_NOW, REMEDY_OLD, () => {
     const r = report("10", runSuite(), {
-      mustFail: "exit non-zero on FOUR (j) assertions: the behavioural none-names-`npm run build` arm, "
-        + "the behavioural at-least-four-name-`node tools/bundles.mjs` arm (3, not >= 4), the TOTAL over "
-        + "the guard's source (1, not 0), and the TOTAL's corpus floor (11, not >= 12)",
+      mustFail: "exit non-zero on THREE (j) assertions: none-names-`npm run build`, at-least-four-name-"
+        + "`node bio-plane/scripts/bundles.mjs` (0, not >= 4), and the TOTAL over every finding produced",
       mustNot: "any DIAGNOSIS assertion — (b) STALE BUNDLE, (d) the manifest mismatch, (g)/(h)/(i) the "
         + "upload-part arms, or any byte-identity arm: the remedy is the only thing that moved",
     });
-    /* PROBED THROUGH `failingLabels`, NOT through a `FAIL  `-prefixed `.includes`, and the
-       difference is A4's rule rather than a style: an anchor is a literal a driver searches
-       for, and `"FAIL  (b) and says it is a STALE BUNDLE"` exists in NO candidate subject —
-       the `FAIL  ` prefix is a runtime marking, not text in the suite. Written that way it
-       carried code punctuation, so `m025-arm-anchor-witness.test.mjs` harvested it and A4
-       fired, correctly, at the D-276 class: a quote that can never match. Each literal below
-       is the suite's own label text and occurs EXACTLY ONCE in `fleetbundles.test.mjs`, so
-       the quote dies loudly if a label is ever changed in place. */
+    /* PROBED THROUGH `failingLabels` (A4's rule): each literal below is the suite's own label text and occurs EXACTLY
+       ONCE in `fleetbundles.test.mjs`, so the quote dies loudly if a label is ever changed in place. */
     const red = failingLabels(r.out);
     const fired = (prefix) => red.some((l) => l.startsWith(prefix));
-    console.log(`     the TOTAL arm fired by name: ${fired("(j) TOTAL: no finding in scripts/fleet-bundle.mjs names the one-bundle command")}`);
+    console.log(`     the TOTAL arm fired by name: ${fired("(j) TOTAL: every finding the armed states produced names that remedy")}`);
+    console.log(`     the positive arm fired by name: ${fired("(j) and at least four DO name")}`);
     console.log(`     the behavioural arm fired by name: ${fired("(j) NONE of them names the one-bundle command")}`);
     console.log(`     (b) STALE BUNDLE held: ${!fired("(b) and says it is a STALE BUNDLE")}`);
     return r;
@@ -557,10 +492,10 @@ ARMS["10"] = {
 };
 
 ARMS["10b"] = {
-  label: "(10b) OVER-STRICTNESS, A SPELLING THE ARM WAS NOT WRITTEN FOR — the same site reworded "
-    + "around the SAME command. Correct work in an unanticipated spelling must PASS.",
-  run: () => withReplacedOnce(FLEET_BUNDLE, REMEDY_HEAD + REMEDY_NOW,
-    REMEDY_HEAD + "`Rebuild with \\`node tools/bundles.mjs\\` \\u2014 it rebuilds every bundle this change staled \\u2014 and commit the artifacts.`);", () => {
+  label: "(10b) OVER-STRICTNESS, A SPELLING THE ARM WAS NOT WRITTEN FOR — the constant reworded around the "
+    + "SAME command. Correct work in an unanticipated spelling must PASS.",
+  run: () => withReplacedOnce(FLEET_BUNDLE, REMEDY_NOW,
+    'const REBUILD = "Rebuild with `node bio-plane/scripts/bundles.mjs`, from the repository root, "', () => {
     const r = report("10b", runSuite(), {
       mustFail: "nothing",
       mustNot: "any (j) assertion: the command is the same, only the sentence around it differs",
@@ -571,14 +506,12 @@ ARMS["10b"] = {
 };
 
 ARMS["10c"] = {
-  label: "(10c) OVER-STRICTNESS, AND IT ASSERTS THE MATCHER'S DECLARED BLIND SPOT RATHER THAN "
-    + "PROMISING IT — a plain COMMENT in the guard naming `npm run build` unescaped must NOT be read "
-    + "as a remedy. The suite's stated reach is the backtick-escaped spelling inside a template "
-    + "literal; a comment writes the command unescaped and is not a finding's remedy.",
+  label: "(10c) OVER-STRICTNESS — a plain COMMENT in the guard naming `npm run build` must NOT be read as a "
+    + "remedy: the arm reads the findings a reader is handed, never the guard's text.",
   run: () => withAppended(FLEET_BUNDLE, "\n/* M0-188 over-strictness probe: a member is built by npm run build in its own directory. */\n", () => {
     const r = report("10c", runSuite(), {
       mustFail: "nothing",
-      mustNot: "the (j) TOTAL arm — a comment is prose about how a member is built, not a remedy handed to a reader",
+      mustNot: "any (j) assertion — a comment is prose about how a member is built, not a remedy handed to a reader",
     });
     console.log(`     no (j) assertion fired: ${failingLabels(r.out).filter((l) => l.startsWith("(j) ")).length === 0}`);
     return r;

@@ -126,7 +126,9 @@ import { readFileSync } from "node:fs";
 
 const HERE = new URL("./", import.meta.url);
 const DECISIONS = new URL("../../docs/development/DECISIONS.md", HERE);
-const STORE = new URL("../../bio-plane/src/store.mjs", HERE);
+/* RE-POINTED 2026-10-01 (LEGACY-TESTS #18, T20): `store.mjs` is deleted (T19); what it held of DEC-32's machine spellings
+   moved to basis-versions' grammar, whose header says it holds what moved from `store.mjs`. */
+const STORE = new URL("../../bio-plane/src/basis-versions/grammar.mjs", HERE);
 
 /* ------------------------------------------------------------------ *
  * TIER 1 · THE ATOMS, READ FROM THE RULING ITSELF.

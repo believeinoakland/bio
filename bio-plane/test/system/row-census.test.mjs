@@ -32,7 +32,12 @@
    RE-PINNED 2026-09-30 (LEGACY-TESTS #15, T17; PROMOTION #18, K577, K579): over 1.47.0, the stamp's own lines
    (`fixtures/row-census-1.47.0.jsonl`, 879 lines) reproduced by this reader on the stamp commit 6645daa0e0 (879 rows,
    b8bbd059…); 1.46.0's declarations (T16's layers 3+) and the queue split's composition are stamped in 1.47.0 and
-   retired; T17's layers 3+ declared (see AWAITING_STAMP). */
+   retired; T17's layers 3+ declared (see AWAITING_STAMP).
+   RE-PINNED 2026-10-01 (LEGACY-TESTS #18, T20; PROMOTION #21, K884): over 1.50.0, the stamp's own lines
+   (`fixtures/row-census-1.50.0.jsonl`, 986 lines) reproduced by this reader on the stamp commit 49c6e2762a (986 rows,
+   dd61926a…); the 1.43.0–1.47.0 snapshots (no stamp reads them) deleted; 1.47.0's declarations retired, T20's layers 3+
+   declared (see AWAITING_STAMP). The negative control no longer needs a snapshot: it drives `compare` against a stamp
+   it makes from the tree's own lines, so it holds at every stamp (K884). */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
@@ -50,24 +55,17 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #15, T17; PROMOTION #18, K577, K579): over 1.47.0, the stamp's own lines
-     (`fixtures/row-census-1.47.0.jsonl`, 879 lines) reproduced by this reader on the stamp commit 6645daa0e0 (879 rows,
-     b8bbd059…). T16's declarations (16 arrived: C-118.3–C-118.6, C-121.1–C-121.6, C-122.1, C-120.4–C-120.7, C-2.18;
-     11 changed: C-2.15's translation, the `where`s of C-19.2, C-32.10, C-32.11, C-76.1 moved to `src/tasks/` and of
-     C-32.13, C-32.15, C-53.12, C-65.1, C-92.10, C-92.11 moved to `src/ratification/refusals.mjs`) are stamped in 1.47.0
-     and retired.
-     T17's rows changed at layers 3+, after the layer-2 stamp, for T18's stamp (N318): C-76.1's key renamed by tasks
-     (N382, K606: `NOT_YOURS` departed, `TASK_NOT_YOURS` arrived, its line otherwise unchanged); C-120.1's and C-120.2's
-     `where` re-pointed to `#tensionsJudged` by case-authoring (N383). Found by diffing the tree's census against the
-     1.47.0 fixture; nothing else moved. CASE-AUTHORING #6 closed without naming them so; BOB's ruling K616
-     (`build/rulings.md`) names C-120.1 and C-120.2 `awaiting stamp` for T18 and is their record (LEGACY-TESTS #16). */
-  { after: "1.47.0", kind: "departed", by: "TASKS #2 (N382, K606, key renamed)", record: "build/jobs/T17/tasks.md",
-    line: ["C-76.1","NOT_YOURS","src/tasks/index.mjs #refuseNotYours > is-task-actor-fence","This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."] },
-  { after: "1.47.0", kind: "arrived", by: "TASKS #2 (N382, K606, key renamed)", record: "build/jobs/T17/tasks.md", check: "C-76.1", code: "TASK_NOT_YOURS" },
-  { after: "1.47.0", kind: "changed", by: "CASE-AUTHORING #6 (N383, `where` re-pointed to #tensionsJudged)", record: "build/rulings.md",
-    line: ["C-120.1","TENSION_NOT_DISCLOSED","src/case-authoring/index.mjs #publishCase > is-tension-disclosed","A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published."] },
-  { after: "1.47.0", kind: "changed", by: "CASE-AUTHORING #6 (N383, `where` re-pointed to #tensionsJudged)", record: "build/rulings.md",
-    line: ["C-120.2","DISCLOSURE_NOT_STANDING","src/case-authoring/index.mjs #publishCase > is-disclosure-standing","One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published."] },
+  /* RE-ANCHORED 2026-10-01 (LEGACY-TESTS #18, T20; PROMOTION #21, K884): over 1.50.0, the stamp's own lines
+     (`fixtures/row-census-1.50.0.jsonl`, 986 lines) reproduced by this reader on the stamp commit 49c6e2762a (986 rows,
+     dd61926a…). T17's declarations (C-76.1's re-key, C-120.1's and C-120.2's `where`) are stamped since and retired.
+     T20's rows changed at layers 3+, after the layer-2 stamp, for T21's stamp: C-68.1's `where` moved to
+     `evidenceStorageAbsent` by acquisition (K887); C-117.20–.22 added by action-grammar (K899 (7), K912). Found by
+     diffing the tree's census against the 1.50.0 fixture; nothing else moved. */
+  { after: "1.50.0", kind: "changed", by: "ACQUISITION #3 (K887, `where` moved to evidenceStorageAbsent)", record: "build/rulings.md",
+    line: ["C-68.1","EVIDENCE_STORAGE_NOT_CONFIGURED","src/acquisition/index.mjs acquire > is-storage-absent","This copy was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how the copy was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."] },
+  { after: "1.50.0", kind: "arrived", by: "ACTION-GRAMMAR #2 (K899 (7), DEC-61)", record: "build/jobs/T20/action-grammar.md", check: "C-117.20", code: "MACHINE_CANNOT_SET_HOLD" },
+  { after: "1.50.0", kind: "arrived", by: "ACTION-GRAMMAR #2 (K899 (7), DEC-61)", record: "build/jobs/T20/action-grammar.md", check: "C-117.21", code: "HOLD_REFUSED" },
+  { after: "1.50.0", kind: "arrived", by: "ACTION-GRAMMAR #2 (K899 (7), DEC-61)", record: "build/jobs/T20/action-grammar.md", check: "C-117.22", code: "HOLD_NO_LEGAL_MARK" },
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
    declared here by name, verified against its record like a row, and listed (R50, K408, K464). Queue's registered step
@@ -206,26 +204,31 @@ test("R50: the tree holds the pin, the rows awaiting stamp listed — any other 
 });
 
 test("R50 NEGATIVE CONTROL: a row added without a re-pin fails, naming it; so do a departure and a changed translation", () => {
+  /* The control's own stamp, made from the tree's lines (K884): the arm drives the SAME `compare` at every stamp, with
+     or without that stamp's snapshot, and first proves its stamp holds so a red below is the arm and not the stamp. */
+  const own = censusOf(now.lines.map((l) => { const [check, code, where, translation] = JSON.parse(l); return { check, code, where, translation }; }));
+  const ctl = { pin: { version: "control", rows: own.rows, digest: own.digest }, stamped: own.lines, awaiting: [] };
+  assert.equal(compare(now.lines, ctl).held, true, "the control's own stamp does not hold over the lines it was made from");
   const added = lineOf({ check: "C-999.1", code: "CONTROL_ARRIVAL", where: "src/nowhere.mjs control", translation: "A control arm's row." });
-  const a = compare([...now.lines, added], { stamped });
+  const a = compare([...now.lines, added], ctl);
   assert.equal(a.held, false);
   assert.ok(a.named.includes("arrived with no record: C-999.1 CONTROL_ARRIVAL"), a.named.join("; "));
   const gone = now.lines.find((l) => l.startsWith('["C-59.6",'));
-  const d = compare(now.lines.filter((l) => l !== gone), { stamped });
+  const d = compare(now.lines.filter((l) => l !== gone), ctl);
   assert.equal(d.held, false);
   assert.ok(d.named.includes("departed with no record: C-59.6 MINT_EXHAUSTED"), d.named.join("; "));
   const moved = JSON.parse(gone); moved[3] = `${moved[3]} (a control arm's edit)`;
-  const m = compare(now.lines.map((l) => (l === gone ? JSON.stringify(moved) : l)), { stamped });
+  const m = compare(now.lines.map((l) => (l === gone ? JSON.stringify(moved) : l)), ctl);
   assert.equal(m.held, false);
   assert.ok(m.named.includes("changed with no record: C-59.6 MINT_EXHAUSTED"), m.named.join("; "));
   /* And a declaration the tree does not bear out is itself a failure, not an exemption. */
-  const x = compare(now.lines, { stamped, awaiting: [...AWAITING_STAMP,
-    { after: ROW_CENSUS.version, kind: "arrived", by: "a control arm", record: "-", check: "C-999.2", code: "NOWHERE" }] });
+  const x = compare(now.lines, { ...ctl, awaiting: [
+    { after: "control", kind: "arrived", by: "a control arm", record: "-", check: "C-999.2", code: "NOWHERE" }] });
   assert.equal(x.held, false);
   assert.ok(x.problems.some((p) => p.includes("C-999.2 NOWHERE")), x.problems.join("; "));
   /* A row declared changed whose line the tree still bears as stamped is a failure too (LEGACY-TESTS #13, T15). */
-  const y = compare(now.lines, { stamped, awaiting: [...AWAITING_STAMP,
-    { after: ROW_CENSUS.version, kind: "changed", by: "a control arm", record: "-", line: JSON.parse(gone) }] });
+  const y = compare(now.lines, { ...ctl, awaiting: [
+    { after: "control", kind: "changed", by: "a control arm", record: "-", line: JSON.parse(gone) }] });
   assert.equal(y.held, false);
   assert.ok(y.problems.some((p) => p.includes("unchanged in the tree: C-59.6 MINT_EXHAUSTED")), y.problems.join("; "));
 });
