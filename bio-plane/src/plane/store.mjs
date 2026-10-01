@@ -7,6 +7,8 @@
 import { DurableObject } from "cloudflare:workers";
 import { actionsOf, actionsOps } from "../actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../action-clocks/index.mjs";
+import { localFactsOf, localFactsOps } from "../local-facts/index.mjs";
+import { filingTemplatesOf, filingTemplatesOps } from "../filing-templates/index.mjs";
 import { standardsOf, standardsOps } from "../standards/index.mjs";
 import { conformanceOf, conformanceOps } from "../conformance/index.mjs";
 import { consequencesModule, consequencesOps } from "../consequences/index.mjs";
@@ -60,8 +62,8 @@ import { registerOwnersCounts, registerStats } from "./stats.mjs";
 const STEP = "control-plane";
 
 /* The order promotion ranks its steps by: the modules' total order (membership R83), with control-plane's step (its R42;
-   R10) at the place `legacy-store`'s step held in it, after every module of layer 10 and before `affordances`' and
-   `tasks`', so every step's checks and projections, and the order of refusals, are today's. Promotion ranks a name the
+   R10) after every module of layer 10 and before `affordances`' and `tasks`', the rank the step has held since it was
+   `legacy-store`'s, so every step's checks and projections, and the order of refusals, are today's. Promotion ranks a name the
    order lacks last (its R39). */
 export const STEP_ORDER = Object.freeze((() => {
   const o = MODULE_ORDER.filter((m) => m !== STEP);
@@ -86,7 +88,7 @@ export class Store extends DurableObject {
     registerOwnersCounts(ctx);
     registerStats(ctx);
     /* promotion, built first with the order its steps rank by (membership, then promotion, as provenance's first call
-       built them), so control-plane's step ranks where `legacy-store`'s did. */
+       built them), so control-plane's step ranks after layer 10 and before `affordances` (STEP_ORDER). */
     const promotion = promotionOf(ctx, { order: STEP_ORDER });
     /* provenance declares its tables and joins every promotion first, so its register write runs before the
        projections that read it. observation-log registers its look on each receipt (its R5, provenance R47), and
@@ -124,10 +126,15 @@ export class Store extends DurableObject {
     intentOf(ctx);   /* intent: its check (R1, R2, R26) joins every promotion; its audit check keeps C-2.9 (R22) */
     caseAuthoringOf(ctx);
     /* layer 9, in the modules' order, each registering at start what its factory registers (checks, projections,
-       purge, filings' evidence block). standards creates its own tables at construction. */
+       purge, filings' evidence block). standards creates its own tables at construction. R11 (K921): local-facts heads
+       the layer, creating its table and declaring it to purge (record-core K23). */
+    const localFacts = localFactsOf(ctx);
     const conformance = conformanceOf(ctx);
     const consequences = consequencesModule(ctx, { conformance });
     actionClocksOf(ctx);   /* action-clocks (K704): after actions, which it reads and which joins the host first (its R9) */
+    /* R11 (K921): filing-templates, after action-clocks and before filings: it creates its tables, declares them to purge
+       (record-core K23), registers its opaque ids' seed and takes the library `filings` R26 kept (its migration). */
+    const filingTemplates = filingTemplatesOf(ctx);
     filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences });
     escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
     /* action-plans (K711): built before any route can run, so ai-runs holds its plan-mode open check (its R30) when the
@@ -145,8 +152,9 @@ export class Store extends DurableObject {
     /* R3: the migration pass, then scheduler's start. */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
-    /* queue, then tasks, each creating its own tables (queue R36, tasks R8). */
-    queueOf(ctx, { env }).migrate();
+    /* queue, then tasks, each creating its own tables (queue R36, tasks R8). R11: queue is handed the two modules
+       `queue-producers` R20 and R21 read (`Queue.PRODUCER_DEPS`). */
+    queueOf(ctx, { env, filingTemplates, localFacts }).migrate();
     tasksOf(ctx, { env }).migrate();
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage). */
     ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
@@ -195,6 +203,11 @@ export class Store extends DurableObject {
     progressionsOf(this.ctx).migrate();
     biasOf(this.ctx).migrate();
     intentOf(this.ctx).migrate();
+    /* R11 (K921): layer 9's two new modules, in the modules' order: local-facts' table, then filing-templates' tables
+       and its take of the library `filings` R26 kept (a template already taken is passed over). */
+    localFactsOf(this.ctx).migrate();
+    filingTemplatesOf(this.ctx).migrate();
+    filingTemplatesOf(this.ctx).migrateFromFilings();
 
     addColumns();   /* REC-143: the second pass */
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill */
@@ -277,10 +290,13 @@ export class Store extends DurableObject {
       ...retrievalRoutes(retrievalOf(ctx), url, body),
       ...actionsOps(actionsOf(ctx), url, body),
       ...actionClocksOps(actionClocksOf(ctx), url, body),
+      ...localFactsOps(localFactsOf(ctx), url, body),   /* R11 (K921) */
       ...standardsOps(standardsOf(ctx), url, body),
       ...conformanceOps(conformanceOf(ctx), url, body),
       ...consequencesOps(consequencesModule(ctx), url, body),
       ...filingsOps(filingsOf(ctx), url, body),
+      /* R11 (K921): after filings', so `op=templates`, in both maps until filings drops its arm, is filing-templates' (K991). */
+      ...filingTemplatesOps(filingTemplatesOf(ctx), url, body),
       ...actionPlansOps(actionPlansOf(ctx), url, body),   /* `optionpropose` answers a promise, which the frame awaits */
       ...escalationOps(escalationOf(ctx), url, body),
       ...monitoringOps(monitoringOf(ctx), url, body),

@@ -1,6 +1,6 @@
-/* plane R10 (K861): control-plane's promotion step (its R42: provenance's testimony slot and membership's sight index),
-   registered under control-plane's name where the held step stood, each promotion answering as it answered under
-   `legacy-store`. Its rank in the step order is `store.test.mjs`' R2 pin. */
+/* plane R10 (K861, K923): control-plane's promotion step (its R42: provenance's testimony slot and membership's sight
+   index), its export registered by plane under control-plane's name, each promotion answering as it answered under
+   `legacy-store` (pinned). Its rank in the step order is `store.test.mjs`' R2 pin. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
