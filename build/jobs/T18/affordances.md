@@ -1,6 +1,6 @@
 # affordances (T18)
 
-**Status** · session_01FgotLQ7FibdK7RNpDfo4m4 · depth 2 · COMPLETE · handled B5
+**Status** · session_01FgotLQ7FibdK7RNpDfo4m4 · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
