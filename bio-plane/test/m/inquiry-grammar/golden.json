@@ -232,51 +232,51 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0].target 'not-an-id' is not a canonical bundle id"
+     "message": "basis[0].target 'not-an-id' is not a canonical record id"
     },
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1].target '12' is not a canonical bundle id"
+     "message": "basis[1].target '12' is not a canonical record id"
     },
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[2].target 'undefined' is not a canonical bundle id"
+     "message": "basis[2].target 'undefined' is not a canonical record id"
     }
    ],
    "nosubject": [
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0].target 'not-an-id' is not a canonical bundle id"
+     "message": "basis[0].target 'not-an-id' is not a canonical record id"
     },
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1].target '12' is not a canonical bundle id"
+     "message": "basis[1].target '12' is not a canonical record id"
     },
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[2].target 'undefined' is not a canonical bundle id"
+     "message": "basis[2].target 'undefined' is not a canonical record id"
     }
    ],
    "none": [
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0].target 'not-an-id' is not a canonical bundle id"
+     "message": "basis[0].target 'not-an-id' is not a canonical record id"
     },
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1].target '12' is not a canonical bundle id"
+     "message": "basis[1].target '12' is not a canonical record id"
     },
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[2].target 'undefined' is not a canonical bundle id"
+     "message": "basis[2].target 'undefined' is not a canonical record id"
     }
    ]
   },
@@ -582,7 +582,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1166,7 +1166,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1272,7 +1272,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1386,7 +1386,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1396,7 +1396,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[1] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1434,7 +1434,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1481,7 +1481,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1491,7 +1491,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[1] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1547,7 +1547,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1557,7 +1557,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[1] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1593,7 +1593,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1603,7 +1603,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[1] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1643,7 +1643,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -1683,7 +1683,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'capture' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -2254,7 +2254,7 @@
     {
      "check": "C-6.1",
      "severity": "error",
-     "message": "references[0] is a supersedes edge whose target 'INQ-1' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from"
+     "message": "references[0] is a supersedes edge whose target 'INQ-1' is not a canonical record id: an edge that asserts a lineage must name the thing it came from"
     }
    ],
    "disclosure": [
@@ -2337,7 +2337,7 @@
     {
      "check": "C-6.1",
      "severity": "error",
-     "message": "division_siblings names 'nope', which is not a canonical bundle id"
+     "message": "division_siblings names 'nope', which is not a canonical record id"
     },
     {
      "check": "C-6.1",
@@ -5383,7 +5383,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
@@ -5813,7 +5813,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "division.into names 'x', which is not a canonical bundle id"
+     "message": "division.into names 'x', which is not a canonical record id"
     },
     {
      "check": "C-2.8",
@@ -5905,7 +5905,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "division.into names 'x', which is not a canonical bundle id"
+     "message": "division.into names 'x', which is not a canonical record id"
     },
     {
      "check": "C-2.8",
@@ -5997,7 +5997,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "division.into names 'x', which is not a canonical bundle id"
+     "message": "division.into names 'x', which is not a canonical record id"
     },
     {
      "check": "C-2.8",
@@ -7974,7 +7974,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[2].target 'x' is not a canonical bundle id"
+     "message": "basis[2].target 'x' is not a canonical record id"
     },
     {
      "check": "C-2.8",
@@ -8081,7 +8081,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[2].target 'x' is not a canonical bundle id"
+     "message": "basis[2].target 'x' is not a canonical record id"
     },
     {
      "check": "C-2.8",
@@ -8188,7 +8188,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[2].target 'x' is not a canonical bundle id"
+     "message": "basis[2].target 'x' is not a canonical record id"
     },
     {
      "check": "C-2.8",
@@ -8735,7 +8735,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle",
+     "message": "basis[0] states grade_source 'resolution' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
      "repairable": true,
      "repairs": [
       "run this through the ratification gate or op=promote, which read the record",
