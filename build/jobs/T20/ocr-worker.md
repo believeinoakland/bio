@@ -17,3 +17,7 @@
 **Tests and checks.** `node test/ocr-worker.test.mjs`: `198 passed, 1 failed`, the one being R19's "the committed manifest's input and asset hashes match the tree" (the stale manifest above); with the trial rebuild, `199 passed, 0 failed`. No layer tests (`build/manifest.md`). No service I provide changed. `format: 84 modules, 82 requirements files; 0 failures` · `architecture: 20 product files, 20 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 22 of 22 live requirement ids named by a test; 0 failures` · `ownership: 3 files changed by ocr-worker between tranche/T20 and HEAD; 0 failures`.
 
 Size (session_011c8rK8CoDV7XQj17vpk2hx): test runs 2, module lines 2 (one line in each of two files)
+
+## J2 · COMPLETE
+
+Entry applied: the tesslib header names bio-plane/test/system/fleetbundles.test.mjs, src/tesslib.mjs re-rendered (one line each in two files). Checks 0 failures each. Suite 198/1: the one is R19's stale dist manifest, which your L1-close regeneration clears (trial rebuild: 199/0). See J1 and the record.
