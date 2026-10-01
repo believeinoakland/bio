@@ -106,7 +106,7 @@ Internet level
 ### Uses
 
 - `query-language`: `compile`, `textOf`, `FIELDS`, `FTS_COLUMNS`, `DEFAULT_FACETS`, `IDS_MAX`, `MEANING`, `meaningVocabulary`, `cachedNotes`, `MEANING_AXIS_CAP`, `GATE_MARK`.
-- `membership`: `viewerPredicate` (R5, R17, R21, R38); `hiddenBundles` (R88) for R17's, R21's and R60's subtraction (N352) and `inSight` for `contentAxis` and the frontier (R23, R38; `legacy-store`'s `#bundleRedactor` wraps it today); `positionalMember` (R47); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
+- `membership`: `viewerPredicate` (R5, R17, R21, R38); `hiddenBundles` (R88) for R17's, R21's and R60's subtraction (N352) and `inSight` for `contentAxis` and the frontier (R23, R38); `positionalMember` (R47); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
 - `record-core`: `recordOf(ctx)`, `transact`, the `bundles` read contract (R37; `group_id` and `prior_state` for R1's projection, N287) and the bundle's live files (R41–R43), the latest manifest row (R19's revision class), `declarePurge`.
 - `promotion`: `registerStep` for R1's projection (K31). *(not declared)*
 - `provenance`: the `register` read contract (R48) for R14, R23, R38 and R43; `captured_locators` for R41.
