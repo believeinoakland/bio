@@ -283,7 +283,8 @@ t("session cannot livefire — still refused, under the code that carries §4.10
    session now reaches the op and the STORE answers: `memberadd` by 4.2/4.3's floor (she is the only
    administrator of this unclaimed store, and an ordinary member cannot come first), and `signeradd`
    by registering the key AS HER — the server's stamp, not anything she sent. A non-administrator's
-   refusal, NOT_AN_ADMIN, is graded in `adminvote.test.mjs` §9. */
+   refusal, NOT_AN_ADMIN, is credentials' to grade (`test/m/credentials/keys.test.mjs`; it was `adminvote.test.mjs` §9
+   until T20). */
 t("an enrolled administrator's session REACHES memberadd, and the store answers by the roster's own "
 + "rule (4.2/4.3) rather than the gate calling the op somebody else's",
   (await POST(`op=memberadd&${S}`, { memberId: "xo", cover: "xo" })).result?.reason, "ADMINS_FIRST");

@@ -1,6 +1,6 @@
 /* CPDF-9 instrument: is OCR reachable at all? (MEASUREMENTS.md 2026-08-03)
  *
- * A PROBE, not in the battery. It:
+ * A PROBE, not a suite (a `.mjs` no `node --test` run picks up). It:
  *   1. npm-installs tesseract.js@7.0.0 and tesseract-wasm@0.11.0 into an OS
  *      temp dir (nothing is added to the repo or any package.json), and
  *      downloads eng traineddata variants; measures every artifact raw+gzip-9;

@@ -28,7 +28,7 @@
  * for a case document authored BEFORE acknowledgements existed, and no such document can be made now. That is
  * a narrowing and it is stated rather than smoothed.
  *
- * NEGATIVE CONTROL: `node civicos-ui/test/statement-ack.control.mjs` from the repo root — every arm ALONE,
+ * NEGATIVE CONTROL: `node civicos-ui/test/statement-ack.control.mjs` from the repo root (deleted in T20) — every arm ALONE,
  * each anchor matched EXACTLY ONCE, restored by cp from a per-arm pristine copy and verified by sha256 AND cmp.
  * RUN 2026-09-24 by the UI-89 worker against app.html d25253ad731ff711… (1,538,717 B), IDENTICAL after every arm.
  * RUN 2: 8/8 AS DECLARED, baseline 28/0 GREEN — (A) the row's own control, `null` rendered as `[]` at the
@@ -147,7 +147,7 @@ await must(`promote ${Q}`, await POST(`op=promote&token=${IRIS}`, {
   meta: { object_type: "inquiry", group: "ui89-instance", title: "Did the transfer follow the process?",
           current_state: "open", created: NOW, last_updated: LATER } }));
 const projectMd = ["---", "object_type: project", "schema: project@1", 'title: "Oversight"',
-  "current_state: investigating", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "current_state: forming", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high", "group: ui89-instance",
   "references:", `  - target: ${Q}`, "    rel: cites", "    status: confirmed",
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
@@ -155,7 +155,7 @@ const projectMd = ["---", "object_type: project", "schema: project@1", 'title: "
   "A project.", "", "## Open Questions", "", "## Ruled Out", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const pj = await POST(`op=promote&token=${IRIS}`, { base: null, snapKey: `proj-${++snapSeq}`,
   files: [{ path: "bundle.md", text: projectMd, bytes: projectMd.length, sha256: sha(projectMd) }], register: [],
-  meta: { object_type: "project", group: "ui89-instance", title: "Oversight", current_state: "investigating",
+  meta: { object_type: "project", group: "ui89-instance", title: "Oversight", current_state: "forming",
           created: NOW, last_updated: LATER } });
 if (!pj?.ok || typeof pj.bundleId !== "string") { ok("FIXTURE: create the project", false, JSON.stringify(pj)); await finish(1); }
 const PROJ = pj.bundleId;

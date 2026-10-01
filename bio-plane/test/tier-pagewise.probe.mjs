@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /* CPDF-20 / D-283 — TWO DECODES OF ONE LAYER, MEASURED PAGE BY PAGE.
  *
- * NOT part of the battery. A `.probe.mjs` is not discovered by `battery.mjs` or
- * `coverage.mjs`, and this one must not be: it imports `unpdf` out of the
- * pdf-worker's install (the plane does not and must not depend on it — that is
- * the whole reason Tier 2 is a fleet member, CPDF-6), and with `--census` it
- * reaches the network. The battery-resident half is `tier-pagewise.test.mjs`,
- * which is hermetic: it runs Tier 1 for real over the committed fixture and
- * reads Tier 2's decode from `tier2-recorded.json`, which THIS probe writes.
+ * NOT a suite. A `.probe.mjs` is not a `.test.mjs`, so no `node --test` run picks
+ * it up, and this one must not be: it imports `unpdf` out of the pdf-worker's
+ * install (the plane does not and must not depend on it — that is the whole
+ * reason Tier 2 is a fleet member, CPDF-6), and with `--census` it reaches the
+ * network. The hermetic half is `tier2-wire.test.mjs`, which reads Tier 2's decode
+ * from `tier2-recorded.json`, which THIS probe writes; the per-page rule itself is
+ * text-chain's R102 test (`test/m/text-chain/exports.test.mjs`).
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT THIS MEASURES, AND WHY THE ANSWER WAS NOT THE ONE THE DESIGN PREDICTED
@@ -127,11 +127,9 @@ const undetChars = (p) => (p.undetermined || []).reduce((n, m) => n + (m.count |
 const C1 = (u1, u2) => (u2 < u1 ? "tier2" : "tier1");
 const C2 = (u1, u2, c1, c2) => (u2 < u1 && c2 > c1 ? "tier2" : "tier1");
 
-/* NAMED, NOT WALKED — the same manifest `tier-pagewise.test.mjs` carries, and for
-   the same reason: a corpus defined as "whatever is in the directory" shrinks in
+/* NAMED, NOT WALKED: a corpus defined as "whatever is in the directory" shrinks in
    silence, and a measurement over a silently smaller corpus is the failure this
-   probe's own floor exists to catch. It also keeps both files out of the estate's
-   walk census, which is for walks over ground the walker does not control. */
+   probe's own floor exists to catch. */
 const FIXTURE_MANIFEST = ["legistar-73450.pdf", "legistar-73545.pdf",
                           "legistar-73550.pdf", "legistar-73618.pdf"];
 function fixtureDocs() {

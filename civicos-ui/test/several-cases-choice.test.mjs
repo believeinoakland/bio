@@ -21,13 +21,13 @@
  *      the words above the choices are the plane's own `translation`, verbatim.
  *
  * WHY IT IS REAL: the two cases exist only once ratified with real SSHSIG signatures, so the plane is
- * `bio-plane/src/index.mjs` under miniflare and the fixture is UI-80's (`case-frozen-pair.test.mjs`,
- * itself D-442's): two projects, two cases over one finding. Every expected value is read back from
+ * `bio-plane/src/index.mjs` under miniflare and the fixture is UI-80's (from `case-frozen-pair.test.mjs`,
+ * deleted in T20; itself D-442's): two projects, two cases over one finding. Every expected value is read back from
  * the plane's own public op. WHAT IT CANNOT SEE: a plane older than this item (no `translation` on
  * the refusal) is driven over a wire-shaped mock in section 4; nothing is live (no deploy is this
  * item's).
  *
- * NEGATIVE CONTROL: `node civicos-ui/test/several-cases-choice.control.mjs` from the repo root — every
+ * NEGATIVE CONTROL: `node civicos-ui/test/several-cases-choice.control.mjs` from the repo root (deleted in T20) — every
  * arm ALONE, each anchor matched EXACTLY ONCE, restored by cp from a per-arm pristine copy and
  * verified by sha256 AND cmp. RUN 2026-09-23 by the UI-81 worker, 13/13 AS DECLARED on its sixth run, on the tree
  * merged onto origin/main 91913d6b (arm F3 added on the fourth: the plane's caseflip.test.mjs RED 58/1 at its C-44.2
@@ -174,7 +174,7 @@ const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema:
   "visuals: []", "---", "", "## Summary", "", "A captured document.", "", "## Provenance Notes", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 const projectMd = (title, cites) => ["---", "object_type: project", "schema: project@1", `title: "${title}"`,
-  "current_state: investigating", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "current_state: forming", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high", "group: ui81-instance",
   "references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"]),
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
@@ -192,7 +192,7 @@ const createProject = async (label, text) => {
     snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
     meta: { object_type: "project", group: "ui81-instance",
-            current_state: "investigating", created: NOW, last_updated: LATER } });
+            current_state: "forming", created: NOW, last_updated: LATER } });
   if (!r?.ok || typeof r.bundleId !== "string") { ok(`FIXTURE: create project ${label}`, false, JSON.stringify(r)); await finish(1); }
   return r.bundleId;
 };

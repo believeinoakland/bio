@@ -1,7 +1,7 @@
 /* stdio-census.test.mjs — M0-36. D-282'S OTHER ESTATE, ASSERTED AS A POPULATION
  * RATHER THAN COUNTED IN A ROW.
  *
- * NEGATIVE CONTROL: `node civicos-ui/test/nc-m036.mjs` — six arms and one reported cell,
+ * NEGATIVE CONTROL: `node civicos-ui/test/nc-m036.mjs` (deleted in T17; its run is recorded here) — six arms and one reported cell,
  * each armed ALONE, every one driven through a PIPE and none through a terminal (the
  * defect does not exist on a TTY, so a control run in a terminal refutes nothing while
  * looking exactly like a refutation). ARM 1: the LOSS RATE over 40 samples per cell at two
@@ -34,7 +34,7 @@
  * `civicos-ui/test/run.mjs` spawns every suite with `{stdio:"pipe"}`, and
  * `civicos-ui/check-mock-envelope.mjs` spawns every suite AGAIN with `{stdio:"pipe"}`
  * for its second pass. On darwin a write to a pipe is ASYNCHRONOUS, so a suite that
- * ends `process.exit(...)` — which `hygiene`'s dispose rule requires of the plane's
+ * ends `process.exit(...)` — which `hygiene`'s dispose rule required of the plane's
  * suites and which this estate copied — returns to the OS with its tail still queued.
  * The tail is where the TALLY lives, and D-93 exists because a suite that reports no
  * tally reads as a suite that was never run. The whole mechanism, the measurements
@@ -48,9 +48,9 @@
  *      already importing this very module by this very path. A copy would have made
  *      the estate inconsistent with itself to avoid a hop it already takes.
  *   2. A COPY WOULD BE UNGUARDED. The module reaches `_handle.setBlocking`, which is
- *      PRIVATE node API, and `bio-plane/test/tally-through-pipe.test.mjs` is what
- *      turns the day node closes that door into a red battery instead of a quiet
- *      one. That guard covers the file it imports. A second copy here would be a
+ *      PRIVATE node API, and test-support's R6 test
+ *      (`bio-plane/test/m/test-support/test-support.test.mjs`) is what turns the day
+ *      node closes that door into a red run instead of a quiet one. That guard covers the file it imports. A second copy here would be a
  *      second implementation of a private-API trick with no guard on it at all —
  *      the failure mode being guarded against, reintroduced by the fix for it.
  *   3. THE MODULE IS A SIDE EFFECT WITH NO SHAPE. It exports nothing this estate
@@ -89,9 +89,10 @@
  * THE RESIDUAL, NAMED HERE RATHER THAN LEFT TO A REGISTER
  * ============================================================================
  * `civicos-ui/check-*.mjs` is OUTSIDE M0-36's claimed region and is not repaired.
- * `check-semantics.mjs` has the live form of the defect — it prints its `OK: …`
- * verdict and calls `process.exit(fail ? 1 : 0)` on the next line. The other two are
- * at risk on their failure path only. A DELEGATION carries it to UI; ARM D below
+ * Of the three guards it held, `check-mock-envelope.mjs` is left, at risk on its
+ * failure path only (`check-refusal-codes.mjs` was repaired in T4 and
+ * `check-semantics.mjs`, which had the live form of the defect, was deleted in T20;
+ * ARM D below). A DELEGATION carries it to UI; ARM D below
  * PINS the residual so that landing it turns this file red, and whoever lands it
  * shrinks the list here in the same turn rather than discovering it later.
  */
@@ -232,9 +233,9 @@ ok(shared.length === exits.length,
 /* ---- ARM E — THE MECHANISM IS DRIVEN, NOT ARGUED ------------------------------- */
 /* A child that floods past the pipe buffer and then `process.exit`s, spawned through a
    REAL pipe exactly as run.mjs spawns a suite. With the shared import its tally must
-   arrive. `nc-m036.mjs` runs the same child WITHOUT the import and shows it does not —
-   that arm is the one that proves the gap was real and it lives in the control driver,
-   because a suite cannot assert its own subject is broken. */
+   arrive. `nc-m036.mjs` (deleted in T17) ran the same child WITHOUT the import and showed
+   it does not — that arm is the one that proved the gap was real and it lived in the
+   control driver, because a suite cannot assert its own subject is broken. */
 {
   const flood = `import ${JSON.stringify("file://" + MODULE_ABS)};\n`
     + `const pad = "x".repeat(4096);\n`
@@ -250,7 +251,7 @@ ok(shared.length === exits.length,
      `ARM E1: a child writing ~2.4 MB and then exiting delivered ${out.length} bytes through a PIPE and its TALLY `
      + `was not among them, WITH the shared module imported. That is the module failing, not this estate — the `
      + `private \`_handle.setBlocking\` door it uses may have closed in this node build. Check `
-     + `bio-plane/test/tally-through-pipe.test.mjs, which guards the same thing from the plane's side.`);
+     + `test-support's R6 test (bio-plane/test/m/test-support/test-support.test.mjs), which guards the same thing from the plane's side.`);
   ok(out.length > 2_000_000,
      `ARM E2: only ${out.length} bytes arrived through the pipe from a child that wrote ~2.4 MB. The tally may still `
      + `have made it, but bytes are being lost, which is the defect wearing a milder symptom. The fix delivers the `

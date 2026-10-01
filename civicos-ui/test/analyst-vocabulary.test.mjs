@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/analyst-vocabulary.control.mjs` —
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/analyst-vocabulary.control.mjs` (deleted in T20) —
    deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and
    `run.mjs` discovers by filename. THE PEN LIVES INSIDE THIS WORKTREE
    (`.ui53-harness/`), never in the shared scratchpad, which is not isolated
@@ -40,13 +40,14 @@
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
-   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
-   both estates and a node release closing the private door goes red once instead of half. The
-   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
+   this one — ONE implementation, so test-support's R6 test
+   (`bio-plane/test/m/test-support/test-support.test.mjs`) guards it for both estates and a
+   node release closing the private door goes red once instead of half.
+   The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import { readFileSync, readdirSync } from "node:fs";
 /* THE CENSUS BELOW WALKS A DIRECTORY THIS SUITE DOES NOT CONTROL AND FLOORS THE
-   FIGURE IT FINDS — exactly the shape `hygiene.test.mjs`'s class census requires
-   to be GUARDED rather than merely named, and the shape that let M0-15's phantom
+   FIGURE IT FINDS — exactly the shape `hygiene.test.mjs`'s class census (deleted in
+   T20) required to be GUARDED rather than merely named, and the shape that let M0-15's phantom
    (`machinefences-dec49.test.mjs`, 57 assertions, in no commit, gone by the next
    run) into a baseline. `refs/stash` is repository-wide across every worktree of
    this clone and `git stash push -u` carries UNTRACKED files, so another
@@ -191,15 +192,12 @@ section("ARM U", () => {
    was kept deliberately, never an exemption — WORKER.md: *distinguish a defect
    from a deliberate closure*. THE LAST TWO WERE FOUND BY THIS ARM ITSELF, on its
    first run, and neither was in D-269's delegation or in this item's brief. */
+/* EMPTIED 2026-10-01 (LEGACY-TESTS #19, T21; N469): the three files named here (`capture-honesty.test.mjs`,
+   `publishedcase.test.mjs`, `version-review.control.mjs`) were deleted in T20 with the old suites, so none is in the
+   directory to be named. The map stays: a ban site kept deliberately later is named here, with its reason. */
 const DIFFERENT_QUESTION = new Map([
-  ["capture-honesty.test.mjs",
-   "asks a DIFFERENT QUESTION and is deliberately NOT folded in: its `JARGON` list holds capture prose to Bob's plain-language ruling (`subrequest`, `runtime`, `manifest`, `sha256`, `Durable`, `op=`, `content_hash`). None of those is DEC-32 vocabulary and none of DEC-32's vocabulary is jargon in that sense — one instrument answering two questions would answer neither well"],
-  ["publishedcase.test.mjs",
-   "cites a DIFFERENT CLAUSE of the same ruling and holds no ban list at all: DEC-32's falsifier-count test (*one proposition, one falsifier, never merged*), which is about what a finding IS rather than about the words a surface may print. Detector 1 is keyed on the RULING, so a suite citing any clause of it surfaces here — that is the detector being honest, not a miss"],
-  ["version-review.control.mjs",
-   "is the NEGATIVE-CONTROL DRIVER for a consumer, not a rival to it: its arm `2-leak-a-banned-word` PLANTS the record's own set labels into the rendered surface and requires `version-review.test.mjs` to go RED, keyed on that suite's assertion text *\"not one analyst word\"*. It is the instrument that proves a consumer's sweep can fail, so it must keep naming the ban rather than importing it"],
 ]);
-const SELF = new Set(["analyst-vocabulary.test.mjs", "analyst-vocabulary.mjs", "analyst-vocabulary.control.mjs"]);
+const SELF = new Set(["analyst-vocabulary.test.mjs", "analyst-vocabulary.mjs"]);
 
 section("ARM C", () => {
   const files = readdirSync(UITEST).filter((f) => f.endsWith(".mjs") && !SELF.has(f));

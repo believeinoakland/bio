@@ -27,7 +27,7 @@
  * which no page can remove — the assertion is that THIS surface offers none and prepares none; nothing is live
  * (no deploy is this item's).
  *
- * NEGATIVE CONTROL: `node civicos-ui/test/review-copy.control.mjs` from the repo root — every arm ALONE, each
+ * NEGATIVE CONTROL: `node civicos-ui/test/review-copy.control.mjs` from the repo root (deleted in T20) — every arm ALONE, each
  * anchor matched EXACTLY ONCE, restored by cp from a per-arm pristine copy and verified by sha256 AND cmp.
  * RUN 2026-09-23 by the UI-68 worker: 8/8 AS DECLARED against app.html 85c4aa503c31e310… (1,471,639 B), IDENTICAL
  * after every arm (sha256 and cmp). Baseline 40/0 GREEN.
@@ -61,7 +61,8 @@
  * WHAT IT CANNOT SEE: a browser's own address bar (a member who kept a draft's address could always open it, and
  * that is what this list exists to make unnecessary); anything about a project with more drafts than the plane's
  * own ceiling, which is `REVIEW_LIST_MAX` at 500 and is not driven here — the `truncated` sentence is rendered
- * from the plane's own figures and its arm is the plane's, in `bio-plane/test/reviewcopy.test.mjs` block 9.
+ * from the plane's own figures and its arm is the plane's (it was `bio-plane/test/reviewcopy.test.mjs` block 9,
+ * deleted in T20).
  *
  * NEGATIVE CONTROL: RUN 2026-09-24 by the UI-92 worker, the whole file re-run per arm — 12/12 AS DECLARED against
  * app.html cf4960019506b6e35d… (1,574,906 B), IDENTICAL after every arm by sha256 AND cmp. Baseline 58/0 GREEN
@@ -182,7 +183,7 @@ await must(`promote ${Q}`, await POST(`op=promote&token=${IRIS}`, {
   meta: { object_type: "inquiry", group: "ui68-instance", title: "Did the transfer follow the process?",
           current_state: "open", created: NOW, last_updated: LATER } }));
 const projectMd = ["---", "object_type: project", "schema: project@1", 'title: "Oversight"',
-  "current_state: investigating", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "current_state: forming", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high", "group: ui68-instance",
   "references:", `  - target: ${Q}`, "    rel: cites", "    status: confirmed",
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
@@ -190,7 +191,7 @@ const projectMd = ["---", "object_type: project", "schema: project@1", 'title: "
   "A project.", "", "## Open Questions", "", "## Ruled Out", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const pj = await POST(`op=promote&token=${IRIS}`, { base: null, snapKey: `proj-${++snapSeq}`,
   files: [{ path: "bundle.md", text: projectMd, bytes: projectMd.length, sha256: sha(projectMd) }], register: [],
-  meta: { object_type: "project", group: "ui68-instance", title: "Oversight", current_state: "investigating",
+  meta: { object_type: "project", group: "ui68-instance", title: "Oversight", current_state: "forming",
           created: NOW, last_updated: LATER } });
 if (!pj?.ok || typeof pj.bundleId !== "string") { ok("FIXTURE: create the project", false, JSON.stringify(pj)); await finish(1); }
 const PROJ = pj.bundleId;

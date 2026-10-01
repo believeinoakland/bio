@@ -553,8 +553,10 @@ console.log("\n--- a normal (unencrypted) PDF is NOT flagged encrypted ---");
 
 /* ------------------------------------------------------------------ *
  * D-251 — the /Info READ itself, at the parser, where the two TRAILER SHAPES
- * live. The acquire-driven evidence is `producer-provenance.test.mjs`; what is
- * asserted here is the half that suite's fixtures cannot reach — an xref-STREAM
+ * live. The acquire-driven evidence is extraction's R11/R12 tests through the real
+ * pdf entry (`test/m/extraction/convert-chain.test.mjs`, converted from
+ * `producer-provenance.test.mjs`); what is asserted here is the half those
+ * fixtures cannot reach — an xref-STREAM
  * PDF (the shape Legistar and OpenGov actually serve, which has no `trailer`
  * keyword at all), an incremental update, and metadata compressed into an
  * object stream. A parser that only read the classic trailer would pass every
