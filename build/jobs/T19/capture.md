@@ -31,3 +31,27 @@ Tests: `test/m/capture/` 94 pass, 0 fail. Uses' tests (sources, extraction, conn
 Found for others:
 1. legacy-tests: `test/capturerequests.control.mjs`:49 and `test/system/fence-e2e.control.mjs`:54 anchor on `src/capture/acquire.mjs` (now deleted; it was already a 6-line re-export, so their arms and `MIN_BYTES.acquire` 5000 were already stale). Their anchor is `src/acquisition/index.mjs`. Not run (old suites).
 2. Generated artifact (§14): the plane bundle's inputs changed (`capture/acquire.mjs` gone, `capture/index.mjs`, `grammar.mjs`); not rebuilt.
+
+## J3 · COMPLETE
+
+**Entries applied** (`current.md` layer 3, capture; B1–B4), `job/T19/capture` @ 96c23e1882, tranche/T19 merged in:
+- **The split's leftover (K649 (1)).** `capture/acquire.mjs` deleted (no importer left at HEAD).
+- **Rule 1 / K785.** `grammar.mjs` (`canonicalJson`, `ISO_TS_RE`) and `index.mjs` (`isPublicHttpsLocator`, `createSha256`) import record-grammar; `doorbell.test.mjs`' catalogue import dropped (its line asserted the catalogue's export, not capture's interface); `grammar.test.mjs` uses record-grammar's `checkBundle` and pins each case's C-2.7 findings (captured while still equal to the catalogue's held copy). No capture file, test or source, imports `bio-checks.mjs`. The held C-2.7 copy stays for instance-setup (L11).
+- **K783.** `grammar.test.mjs` to record-core R67 as worded: another module's C-2.7 claim runs beside capture's; capture's own second registration still throws (`GRAMMAR_DECLARED`); "without" is the slot left unclaimed.
+- **R69 (K764).** Attesting keys from `credentials.attestingKeys` (`credentialsOf` on the instance's storage; constructor option `credentials`; membership's unused option gone).
+- **R75 (K763).** `taskQueue`, `sourceReachability` registered with `registerCounts` in `captureOf`, once per storage; whole counts (neither table names a bundle); null when unreadable; a refused registration throws. The store has two capture figures, not the plan's three; R75 names two. The store's lines are legacy-store's (L10).
+- **K787 / K794 / K797.** C-68.1 is acquisition's; `pullKnock`'s `EVIDENCE_STORAGE_NOT_CONFIGURED` now carries its `code`, `check` and `translation` from acquisition's `INSTALLATION_CHECKS`. Capture's table and the catalogue untouched.
+- **K789.** Fixture builds credentials after membership; the three reds are green.
+
+**R met, with their tests** (for the marks): R69 (`knocker.test.mjs` "R69 R37 (C-118.5, C-118.6)…", "R69: the puller…"; `figures.test.mjs` "R69 (credentials R11)…"); R75 (`figures.test.mjs`, three tests "R75: …"); R37 (`grammar.test.mjs` four tests; `knocker.test.mjs` "R65 R37 (C-118.2, C-118.4, R63)…" for C-68.1).
+
+**Deferred:** nothing.
+
+**Found in other modules** (J2): legacy-tests' `test/capturerequests.control.mjs`:49 and `test/system/fence-e2e.control.mjs`:54 anchor on the deleted `src/capture/acquire.mjs` (re-anchor at `src/acquisition/index.mjs`); the plane bundle is stale (capture's files changed), not rebuilt.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/capture/`: tests 94, pass 94, fail 0.
+- Uses' suites (sources, extraction, connections, observation-log, retrieval, capture-requests, ratification, case-authoring, monitoring, scheduler, affordances, tasks, queue-producers, instance-setup, control-plane): every red identical to `origin/tranche/T19` (ratification 81, queue-producers 32, instance-setup 4, tasks 2, case-authoring 1, monitoring 1, control-plane 1 (R22)); control-plane re-run after K797: pass 84, fail 1, the same R22.
+- `format`: 87 modules, 82 requirements files; 0 failures. `architecture`: 19 product files, 78 relative imports; 0 failures. `coverage`: 48 of 48 live ids; 0 failures. `ownership`: 8 files; legacy-store, legacy-index, legacy-checks 0 lines added; 0 failures.
+
+Size (session_01JMDXaCWfQTso3u1jkN2vbZ): test runs 34, module lines 3000
