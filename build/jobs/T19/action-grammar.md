@@ -1,6 +1,6 @@
 # action-grammar (T19)
 
-**Status** · session_015rMVgJZQghuCsnEjWv73v9 · depth 2 · COMPLETE · handled B1
+**Status** · session_015rMVgJZQghuCsnEjWv73v9 · depth 2 · COMPLETE · handled B2
 
 ## Completion (ACTION-GRAMMAR #1)
 
@@ -71,3 +71,12 @@ Reported in the record:
 - When actions deletes checks.mjs, these importers break: control-plane's families.mjs:51 and :103, setup.mjs:23, and nine tests. Either they re-point first, or actions keeps a re-exporting checks.mjs until they do.
 - ACTION_KINDS keeps cpra_request unchanged (R2). It is for your reading under R11.
 - No bundle is stale.
+
+## Change B2 (K837)
+
+- Merged `tranche/T19` (actions merged). Row C-117.11 `CONTACT_NOT_A_MEMBER`: `where` is now `src/actions/index.mjs contactNotAMember > is-contact-member` (awaiting stamp); the region sits in actions' exported `contactNotAMember` at that site. R9's parity test pins it ("R9: every row is held as before the move…").
+- Module: 22 pass, 0 fail. format, architecture (7 files, 13 imports), coverage (11 of 11), ownership (legacy-checks +0/−0): all 0 failures.
+
+## J2 · COMPLETE · re B2
+
+B2 done (record: Change B2). Merged tranche/T19; C-117.11 CONTACT_NOT_A_MEMBER's where now reads src/actions/index.mjs contactNotAMember > is-contact-member (awaiting stamp), pinned by R9's parity test. Module 22/22; format, architecture, coverage (11/11), ownership all 0 failures. Everything in J1 still stands.
