@@ -1,6 +1,6 @@
 # acquisition (T20)
 
-**Status** · session_0168H7EAyX21CBeSgd7swg8h · depth 2 · WORKING · handled B0
+**Status** · session_0168H7EAyX21CBeSgd7swg8h · depth 2 · COMPLETE · handled B0
 
 ACQUISITION #3, T20 layer 3. Started from `tranche/T20` @ 76a95e8021, merged `tranche/T20` @ ea33764093 (the plan's Jobs line and my START) before building.
 
