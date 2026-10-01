@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #87 · session_01SxgYvH1iLUimhr8gRsNm2Z · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #4 session_011zouWbsKdokGSgTHZdNzmM; jurisdictions: JURISDICTIONS #5 session_014nagcRH9hTKVppmJyfbM18
+**Jobs** · record-grammar: RECORD-GRAMMAR #4 session_011zouWbsKdokGSgTHZdNzmM; jurisdictions: JURISDICTIONS #5 session_014nagcRH9hTKVppmJyfbM18; signatures: SIGNATURES #4 session_01RVLyww2mbVhaNCnyJ1r3Vp
 
 Opened by BOB #87, 2026-10-01 ~17:10 UTC (PROCESS-MECHANICS §5), on `tranche/T21` from `main` @ 615672a1a0, T20 closed (K926), with `prep/T21` merged (K927, K928). The plan is `draft-T21.md` (K922), re-checked against K923–K928 (K929); the folds before each layer (rule 1) are done on this branch before that layer's jobs start.
 
