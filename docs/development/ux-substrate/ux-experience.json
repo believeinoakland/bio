@@ -17075,207 +17075,200 @@
    }
   },
   {
-   "question": "Once a case is signed and published, how should replies, coverage, citations, corrections and a possible withdrawal be attached to it, by whom, and how do people outside the group find them, when the signed edition itself can never change?",
+   "question": "Now that you have ruled who has standing and that nothing on the docket is sealed or redacted, how should the rest of a published case's docket work: its shelves and required core, how outside responses are found, kept and placed, how entries are signed and travel, and how a case is withdrawn?",
    "basis": "open",
    "relatedUseCases": [],
    "brief": {
-    "stillOpen": true,
-    "settledSince": "",
-    "title": "After publication: a case's docket, and withdrawing a case",
-    "inOneBreath": "Once a case is signed and published, how should replies, coverage, citations, corrections and a possible withdrawal be attached to it, by whom, and how do people outside the group find them, when the signed edition itself can never change?",
-    "decision": "(1) Whether each published case gets a docket: a dated, append-only list of entries kept beside its signed editions, never inside them. (2) Which entries are always listed and which the group chooses. (3) Who adds an entry, how it is signed, and how one is taken back. (4) What the case's subject sees, and how their reply appears before and after publication. (5) How the docket travels beyond the group: the public page, a machine-readable feed, and what a citing group's copy does with it. (6) Withdrawal: whether a group may withdraw a published case or edition, what it means while the signed text stays readable, who may do it and why, what readers, citing groups and the subject see, what happens to work resting on it, and whether it can be undone.",
-    "alreadyDecidedPart": "",
+    "stillOpen": "partly",
+    "settledSince": "Your ruling of 1 October, after our comparison with the CPUC's docket, settled three points: the named subject has party-like standing; there are no confidential or redacted entries; and no rule requires disclosing off-the-record contacts with the subject. The rest stays open and is what this brief asks.",
+    "title": "After publication: a case's docket, outside responses, and withdrawing a case",
+    "inOneBreath": "Now that you have ruled who has standing and that nothing on the docket is sealed or redacted, how should the rest of a published case's docket work: its shelves and required core, how outside responses are found, kept and placed, how entries are signed and travel, and how a case is withdrawn?",
+    "decision": "(1) The docket's shape: three shelves (what the group stands behind, 'Reactions elsewhere', and 'In our record only', never public) and its required core, including whether the subject's public statements elsewhere, such as a press release, count as required. (2) The outside-response path you asked for: find, capture with proof, link to the edition it answers, then a member's reasoned choice of record only, public docket, or both. (3) What happens when a reply the subject sends names a private person, since nothing may be redacted. (4) Whether a group may grant standing to others besides the subject, and what standing gives them. (5) Who adds and takes back entries and how they are signed; how the docket travels; and withdrawal: whether, what it means, who, what readers, citing groups and the subject see, and whether it can be undone.",
+    "alreadyDecidedPart": "On 1 October you ruled three points. First, the subject named in a case has party-like standing: its responses that reach the group are listed on the public docket; anyone else may still submit, and whether their submission goes on the public docket is the group's call. Second, there are no confidential filings and no redacted versions: an entry is public whole, or it is not on the public docket, though the group may still keep it in its record. Third, the group is not required to disclose its off-the-record contacts with the subject after publication.",
     "absorbs": [
      17
     ],
     "absorbNote": "Question 17 (how a case's subject sees it and replies) is wholly inside this one: its 'Did we ask them?' box, linked correspondence and late replies become part of the docket. From question 18 it takes only how readers and citing groups learn that a newer edition exists; 18 stays open as a quick question on the written 'What changed in this edition, and why' statement, which the docket's 'newer edition' entry would quote.",
     "basics": [
-     "A case is what a project publishes: a set of findings (questions the group has answered) with the evidence beneath them. Load-bearing findings are those the case stands on. The project's manager, by default its owner, signs it with a key registered to them. Each published version is an edition with a fingerprint, a short code computed from its exact bytes, so anyone can check it without the group's help.",
-     "Publication is one-way. A correction is a new edition, a separate document; the old edition keeps answering at its address, and a citation always names one edition. A reader of edition 1 is told that edition 2 exists, but is never silently moved to it.",
-     "Your point of 1 October: a case is a waypoint, not an end product. Three different things happen after publication. The group's conclusions change: that is a new edition, already ruled. The group acts on what it found, published or not: that is the Action layer (requests, letters, filings, escalations), largely built. And the world responds without changing the case: the office replies, a newspaper covers it, another group cites it. That third thing has no home today.",
-     "A docket, in the sense you know from the CPUC: the Commission's decision is never edited, but the proceeding's docket keeps receiving dated filings after it. The Commission can even rescind or amend a decision, but only by a later decision, and the original stays in the docket. The proposal is a docket beside each case: dated entries, each naming the edition it concerns by fingerprint, growing while the signed editions stay fixed.",
-     "Withdrawal (in journals, 'retraction') is not a correction. A correction says 'here is what we now conclude'; a withdrawal says 'we no longer stand behind this'. Journals leave a retracted article readable, stamped 'Retracted' and linked to a notice with the reason, so those who cited it can see what they relied on. Here, only the group can withdraw its own case.",
-     "'Pull, never push': CivicOS sends nothing to anyone. There is no email, no push and no outside channel; a group's copy transmits nothing by itself, and members send by their own hand. Readers learn of change by coming back to look. The earlier interface design refused a 'notify me' button, because the group would have to keep a list of readers. A feed is different: a page at a fixed address that a reader's own software checks, with no list kept.",
-     "A case's subject is the office, or official in their role, whose conduct it examines. Right of reply is putting the findings to them before publishing and reporting what came back. You ruled it a declaration, not a gate: each case states 'we asked and they answered', 'we asked and had no answer' or 'we did not ask', with a reason, and nothing is blocked. A request for comment is a recorded action with questions and a response window; a reply enters the record as the captured letter or a member's signed account of a call.",
-     "A re-evaluation notice tells members that something their work rests on has changed. Another group's work carries an origin mark ('Another group's', 'Accepted by our group'); accepting it names one edition (your ruling of 1 October)."
+     "A case is what a project publishes: findings (questions the group has answered) with the evidence beneath them. Load-bearing findings are those the case stands on. The project's manager, by default its owner, signs each published version, an edition, with a key registered to them; each has a fingerprint, a code computed from its exact bytes, so anyone can check it. Publication is one-way: a correction is a new edition, the old one stays readable, and a citation names one edition.",
+     "Your point of 1 October: a case is a waypoint, not an end product. After publication the world responds without changing the case: the office replies, a paper writes about it, another group cites it. The proposal is a docket beside each case: dated entries, each naming the edition it concerns, growing while the signed editions never change.",
+     "How the CPUC curates its docket, which you asked about: structurally, not editorially. Only parties file formally, and party status is ruled on. The public comments on a separate shelf, which the Commission says is not evidence and not part of the formal record. The Docket Office rejects for form only, with reasons. The decision rests on a record narrower than the docket. Corrections come as new filings or decisions. Anyone can follow through the information-only service list, by email.",
+     "What carries over. Here the publishing group keeps its own docket, a built-in conflict of interest, so neutrality is replaced by rules. The docket has shelves. The first holds what the group stands behind as accurately listed (vouching that each is what it says, not agreeing with it): the subject's responses, a newer edition, corrections, a withdrawal, outcomes. The second, 'Reactions elsewhere', is labelled 'Listed by the group. Not evidence. Not endorsed.' The third, 'In our record only', is seen by members and never published.",
+     "Checks are on form, never merit: every entry is dated, attributed, names its edition and has a captured copy with its origin. A docket entry never makes anything evidence: to affect a finding, material is captured, read, made to support it, and a new edition follows. Email push does not fit: CivicOS sends nothing. A feed does: a page at a fixed address that a reader's own software checks, with no list of readers kept.",
+     "A capture is the group's kept copy of a document's exact bytes, with where and when they came from and a grade saying how strongly that is proven. Where it can, it also has an independent archive, such as the Internet Archive, save the same page (a co-archive), so proof survives if the original is deleted. The doorbell is the group's public submission page; each submission is a knock, limited per sender and in total. Correspondence is the letters and calls recorded against one of the group's actions, such as a request for comment.",
+     "Withdrawal (in journals, retraction) is not a correction. A correction says 'here is what we now conclude'; a withdrawal says 'we no longer stand behind this'. A retracted article stays readable, stamped and linked to a notice with the reason."
     ],
     "today": [
-     "Built: every edition page carries a banner. An older edition reads: 'A newer edition of this case exists. ... Edition 1 has not been withdrawn and still answers: an edition is a separate document and every published one stands.' The group's copy serves a public, login-free list of editions, each downloadable and verifiable.",
-     "Built inside the group: the request-for-comment action and its reply log; a re-evaluation notice for work citing an older edition held in the same copy; a project's reasoned withdrawal of its conclusion on a question, both kept on record.",
-     "Not built or designed: anywhere to attach a reply, a news story or a citation to a published case. Only evidence that a published finding rests on may become public; nothing else crosses outside a signed case. So a late reply stays private unless a new edition rests on it. A group that cited edition 1 learns of edition 2 only if a member looks.",
-     "Withdrawal has no act at all, though the design rules have named it since August: a published case cannot be divided; 'retraction and revision are different acts'; reversing a signed act is a further act, dated, attributed and signed, with both standing, so a reader 'can now also see it was withdrawn'. The earlier interface design refused a take-down button for that reason.",
-     "The consistency rules list a retraction as an event that sends re-evaluation notices to everything resting on it. That requirement has never been met. Its only trigger was an old project field, retired by your ruling of 1 October that a project's stage is worked out from its record. The build plan proposed 'a case edition withdrawn or superseded' as the trigger; nothing withdraws, and you moved the question here."
+     "Built: each edition page carries a banner; an older one says a newer edition exists and that it 'has not been withdrawn and still answers'; a public list of editions, each verifiable. Inside the group: the request for comment and its reply log, a reply linked to the action it answers by a 'responds to' relationship; a received letter can be marked as pressure (threat, retaliation, discrediting, legal harassment), and a legal mark prompts a litigation hold decision; action plans with checkpoints a member judges; the doorbell; capture with co-archive.",
+     "The monitor watches named documents for change; watching a listing, such as the city's press page, for new items about a case does not exist. The assistant may suggest that a held capture bears on a question, under your six guards of 29 September, but not that something responds to a case.",
+     "Not built: any docket. Today only evidence a published finding rests on may become public outside a signed case, so your ruling's public docket widens that rule by design. Pointing an outside response at a case edition, rather than at an action, is new.",
+     "Withdrawal has no act. The design rules say reversing a signed act is a further signed act, both standing; the consistency rules say a retraction sends re-evaluation notices (to members whose work rests on it). That was never built and, since 1 October, has no trigger."
     ],
     "problem": [
-     "A late reply can appear only through a new edition: the full ceremony, four rewritten statements and a new fingerprint for citers to chase, just to say 'the Director answered on 20 March'. Late replies will be dropped, and 'asked, no answer' will look unfair forever.",
-     "Coverage, outcomes and citations show that a case mattered; today they have no signed home tied to an edition.",
-     "Curation cuts both ways. If the group picks every entry, it can show the flattering coverage and leave out the office's rebuttal. A docket that quietly omits the subject's reply is worse than none, because it looks complete.",
-     "Withdrawal is a real need. If a key document proves forged, the group must be able to say plainly that it no longer stands behind the case. Today its only tool is a new edition, which leaves the old one saying, in the product's own words, that it 'has not been withdrawn and still answers'. A new edition also cannot say 'nothing stands', because a case must keep at least one load-bearing finding.",
-     "Others rely on cases: reporters quote them, offices answer them, other groups cite them, and the group's own determinations and actions rest on them. A withdrawal they cannot discover fails them. A button that seemed to erase a case would be a lie: copies exist and the signed bytes still verify.",
-     "Why now: the re-evaluation build waits on what withdrawal means, and the published case page and the ceremony are being redesigned. Questions 17 and 18 also become simpler once a docket exists."
+     "Shelves answer the conflict of interest only with a core the group cannot leave out. You fixed its centre, the subject's responses. One edge is open: subjects often answer in public, by press release or at Council. If that is optional, a group can list the polite letter and skip the public rebuttal; if required, the group must list what the subject says anywhere, once it has captured it.",
+     "Your ban on redaction meets the rule that the group is never first to make a private person more public: published work names people only in their official capacity, and actions address roles, never private individuals. A subject's reply naming a complainant must be listed and cannot be trimmed. Something has to give.",
+     "Outside responses arrive scattered, rarely to the group, and some are later deleted. Without a path to find, keep, link and place them, members lose them or post them unchecked. Placement matters: a contesting article belongs in the record, where it can prompt a re-look; a threat belongs with the group's defences; only some belong in public. Republishing others' articles whole raises copyright and fairness questions.",
+     "'Unapproved subject' implies someone can be approved. If a group may grant standing to others, such as a contractor the case names, that must be stated before the first grant.",
+     "Withdrawal is a real need: if a key document proves forged, the group must say plainly it no longer stands behind the case. Today it can only publish a new edition, leaving the old one saying it 'has not been withdrawn'. Those relying on the case must be able to discover it; an erase button would be untrue, since copies exist and the bytes still verify. The re-evaluation build and the case page redesign wait on this."
     ],
     "story": {
-     "title": "The towing case, a late reply and a forged memo",
+     "title": "The towing case, its shelves, and a forged memo",
      "steps": [
-      "Dana Reyes owns the project 'Oakland towing contract' in the Eastlake Accountability group. Edition 1, published 3 March, has two load-bearing findings: (1) the towing contractor charged storage fees above the contract schedule on 1,240 tows in 2025, from invoices obtained by records request; (2) the Department of Transportation approved those invoices without the quarterly audits the contract requires, resting on an internal memo a source left through the group's anonymous tip line.",
-      "On 10 February Dana put both findings to the Director of Transportation's office, with ten days to answer. Nothing came; edition 1 says 'We asked and had no answer'.",
-      "On 20 March the Director's office writes that the audits were done but never filed with the City Clerk. A member captures the letter against the request.",
-      "On 25 March a local news site reports the case. On 2 April the Tenants' Defense Network, running its own copy of CivicOS, accepts edition 1 and cites finding 1 in its own published case on towing costs for low-income households. Eastlake had also sent the case to a Council committee on 15 March.",
-      "In July a member notices that the memo's file was created two months after the date it bears, and the manager whose name it carries says she never wrote it. By August the group concludes it is forged. Finding 1 still stands on the invoices; finding 2 does not.",
-      "What does the world see of the reply, the coverage, the citation and the forgery? The options differ at each step."
+      "Dana Reyes manages the project 'Oakland towing contract' in the Eastlake Accountability group. Edition 1, published 3 March, has two load-bearing findings: (1) the towing contractor overcharged storage fees on 1,240 tows in 2025, from invoices obtained by records request; (2) the Department of Transportation approved them without the audits the contract requires, resting on a memo left anonymously at the doorbell. The Department, the subject, did not answer the request for comment.",
+      "5 March: the group's standing watch over the city's press page sees a release, 'Transportation stands by towing oversight'. On the case page one quiet line appears: '1 new item may respond to this case. Machine work: names the towing contract and quotes finding 2.' Luis captures it, with co-archive, and links it as responding to edition 1. It is the subject speaking in public, not to the group.",
+      "9 March: a former council aide's op-ed in a local paper calls the case 'a hit job built on an anonymous memo'. Luis pastes the link; it is captured and co-archived. Dana places it on 'Reactions elsewhere': date, paper, a link to the original and to the archived copy, and two lines in the group's words, marked as theirs.",
+      "12 March: the contractor's lawyer writes, threatening a defamation suit. A member records it and marks it as legal pressure; the queue asks about a litigation hold. It stays in the record only, and becomes a checkpoint in the group's action plan: 'If the contractor sues, brief counsel within 7 days.'",
+      "20 March: the Director's office writes to the group: the audits were done but never filed with the City Clerk, and the review began with a complaint from a named resident, Mr. Tillman of East 18th Street. This is a subject's response, so it must be listed, whole. But it names a private person.",
+      "22 March: Marisol Ortega, a resident with no standing, knocks with her own 2025 tow receipt at the schedule rate: 'finding 1 is wrong'. Rachel brings it in; as it contests a finding, a re-evaluation notice reaches finding 1's members. Her tow ran two days; the overcharges begin on day four. Finding 1 holds; Dana keeps the knock in the record only.",
+      "2 April: the Tenants' Defense Network accepts edition 1 and cites finding 1. In August the group concludes the memo is forged: its file was created two months after its date. Finding 1 stands; finding 2 does not. Eastlake's 15 March letter to a Council committee rests on edition 1.",
+      "What does a reader of the public case page see on 20 August, and what was the group obliged to put there? The options differ on the press release, the Director's letter and the withdrawal."
      ]
     },
     "fixed": [
      {
-      "point": "Publication cannot be undone; other acts cannot be undone silently; corrections move forward.",
-      "why": "Your rulings of 2 and 3 August: a signed act is corrected by a further act on record; publishing alone is irreversible.",
-      "src": "Publication §3 rule 1; DEC-19; publication R24"
-     },
-     {
-      "point": "An edition is a separate document; a citation names one; a newer edition is shown, never followed.",
-      "why": "Your ruling on editions.",
-      "src": "DEC-12; Publication §2"
-     },
-     {
-      "point": "Reversing a signed act is a further signed act; both stand, so a reader sees what they relied on and that it was withdrawn.",
-      "why": "The design rules' reading of your 2 August ruling.",
-      "src": "Interaction Constructs §A (DEC-19); civicos-ui/app.html design note H1"
-     },
-     {
-      "point": "A published case cannot be divided; retraction and revision are different acts.",
-      "why": "Your rulings of 1 August on dividing questions.",
-      "src": "Case Making, division points 3 and 5"
-     },
-     {
-      "point": "Only a project publishes, through its manager (by default its owner); a case keeps at least one load-bearing finding.",
-      "why": "Your ruling of 10 August that a case is a production of a project.",
-      "src": "DEC-72 (2), (5) and its second default; Publication §3 rule 2"
-     },
-     {
-      "point": "Nothing becomes public outside a signed case, except evidence a published finding rests on.",
-      "why": "The architecture session's September reading of your rule that only a project publishes.",
-      "src": "Publication §3 rule 2, note (D-431)"
-     },
-     {
-      "point": "Right of reply is declared, never enforced; a reply is captured bytes or a signed account; silence is recorded with its date.",
-      "why": "Your ruling following the August case-making research.",
-      "src": "Publication §3 rule 6; DEC-13; case-authoring R3, R10; actions R15, R17, R34"
-     },
-     {
-      "point": "A problem found after publication leaves the edition as it is; the project is told; a later edition discloses it. A hidden project is never named.",
-      "why": "Your rulings of 29 September on conflicts.",
-      "src": "DEC-84 (13); DEC-85; DEC-76 item 4"
-     },
-     {
-      "point": "Accepting another group's work names one edition and changes no grade; withdrawing it sends re-evaluation notices; a case relying on it discloses any open flag.",
+      "point": "The named subject has party-like standing: its responses that reach the group are listed publicly. Anyone else may submit; listing theirs is the group's discretion.",
       "why": "Your ruling of 1 October.",
-      "src": "DEC-96 items 1 and 4"
+      "src": "DEC-100 item 1"
      },
      {
-      "point": "Nothing reaches anyone who has not opened the product; a group's copy transmits nothing; members send by their own hand.",
+      "point": "No confidential or redacted entries: an entry is public whole or not on the public docket, though it may stay in the record.",
+      "why": "Your ruling of 1 October, from CivicOS's founding principles.",
+      "src": "DEC-100 item 2"
+     },
+     {
+      "point": "No rule requiring disclosure of off-the-record contacts with the subject.",
+      "why": "Your ruling of 1 October.",
+      "src": "DEC-100 item 3"
+     },
+     {
+      "point": "Outside responses are captured and promoted; some go on the public docket, others only into the record for internal use.",
+      "why": "Your direction of 1 October in this session, not yet recorded as a numbered ruling.",
+      "src": "Bob, 2026-10-01, UX session on question 36"
+     },
+     {
+      "point": "People are named only in their official capacity; actions address roles, never private individuals; the group is never first to make a source more public. Published work shows its status with links to challenges and updates.",
+      "why": "The design requirements on naming and metadata; your rulings of 29 September on sources.",
+      "src": "Design Requirements v2 §6; Action §1 rule 6; DEC-78 item 5(a)"
+     },
+     {
+      "point": "Publication cannot be undone; acts are corrected by further acts; a citation names one edition; a newer edition is shown, never followed.",
+      "why": "Your rulings of 2 and 3 August and on editions.",
+      "src": "DEC-12; DEC-19; Publication §2, §3 rule 1"
+     },
+     {
+      "point": "Only a project publishes, through its manager's registered key; there is no group key; a case keeps a load-bearing finding.",
+      "why": "Your ruling of 10 August.",
+      "src": "DEC-72 (2), (5); Publication §3 rule 2"
+     },
+     {
+      "point": "The machine suggests under six guards: where the member already works, never notified; labelled with its reason; dismissals remembered; never during signing; switchable off; acceptance measured. A member acts.",
+      "why": "Your ruling of 29 September on suggesting held captures.",
+      "src": "DEC-95 item 3; DEC-77; DEC-24"
+     },
+     {
+      "point": "The machine suggests under your six guards (where the member already works, never notified, labelled with its reason, dismissals remembered, never during signing, switchable off, acceptance measured); a member acts. Nothing reaches anyone who has not opened the product.",
       "why": "Your rulings of 29 and 30 September.",
-      "src": "DEC-94 item 3; Action §4 rule 7; K597 (5)"
+      "src": "DEC-95 item 3; DEC-77; DEC-24; DEC-94 item 3; Action §4 rule 7; K597 (5)"
      },
      {
-      "point": "The machine proposes, labelled, under six guards; a member acts. A withdrawn consent binds only later publications.",
-      "why": "Your rulings of 29 September.",
-      "src": "DEC-24; DEC-77; DEC-95 item 3; DEC-78 item 5(d); affordances R29"
+      "point": "A reply links to the action it answers; received letters may be marked as pressure, a legal mark prompting a litigation hold decision; plan checkpoints are judged by a member.",
+      "why": "The Action layer as approved; your 30 September principle 'prepare for opposition'.",
+      "src": "actions R17, R48, R52; queue R1; Action §1 rule 12; DEC-61"
      },
      {
-      "point": "A retraction sends re-evaluation notices to everything resting on it; unmet, and without a trigger since 1 October.",
+      "point": "Right of reply before publication is declared, never enforced. A problem found after publication leaves the edition as it is.",
+      "why": "Your rulings of August and 29 September.",
+      "src": "Publication §3 rule 6; DEC-13; DEC-84 (13); DEC-85"
+     },
+     {
+      "point": "A retraction sends re-evaluation notices to everything resting on it; unbuilt, untriggered since 1 October.",
       "why": "The consistency rules; your ruling retiring the old project fields.",
-      "src": "State Rules §5.4; Technical Architecture Decisions v10 (distribution); reevaluation R16; K899 (3); K901; N457"
-     },
-     {
-      "point": "When a government withdraws a document, CivicOS keeps both versions, marks it, and it stays citable.",
-      "why": "The consistency rules (23 September): the standard CivicOS holds governments to.",
-      "src": "State Rules (retired item not citable, D-168; source_status removed)"
+      "src": "State Rules §5.4; reevaluation R16; K899 (3); K901; N457; DEC-96 item 1"
      }
     ],
     "options": [
      {
       "label": "A",
-      "name": "A docket with a required core; withdrawal as a signed notice",
-      "howItWorks": "Each case gets one docket, shared by its editions. Every entry is dated, names its edition by fingerprint, says who added it and is signed by the manager's registered key; entries are append-only. Two kinds are listed from public facts: 'a newer edition exists' and 'withdrawn'. Others are required by one rule: whatever the ceremony would have made the case disclose, had the group known it at signing, must be docketed once the group's record holds it. That covers a subject's reply recorded against this case, an open conflict on a load-bearing finding, and an open flag on relied-on work. Each puts a To-do in the manager's queue until filed. Coverage, outcomes, citations and updates are the manager's choice. Taking an entry back is a later entry with a reason; the first stays readable. An entry never changes a grade or finding (that needs a new edition). The assistant may suggest entries, labelled. Withdrawal is the manager's signed entry naming one edition or all, with a published reason saying what was wrong; each named edition stays readable under a 'Withdrawn' stamp. It is never lifted: to stand behind the case again, the group publishes a new edition. Beyond the group, by pull only: the public page shows each edition with its docket as of now; each docket is also a feed at a fixed address that a reporter, the subject, the directory or another group's copy may watch; a citing copy turns new entries into notices for its own members, grades unchanged.",
-      "inTheStory": "On 20 March Dana's queue shows: 'The Director of Transportation replied on 20 March to your request about this case. Edition 1 says no answer was received. Docket the reply.' She files: '20 March 2027 · Reply from the subject · [Read the letter in full]'. She adds the news story and the citation by choice. In July the memo's date conflict, recorded against finding 2, requires an entry: 'A question has been raised about the memo behind finding 2. We are examining it.' In August Dana signs a withdrawal of edition 1 and publishes edition 2 with finding 1 alone. Edition 1 now opens: 'Withdrawn by Eastlake Accountability on 14 August 2027. Finding 2 rested on a memo we now believe was forged. Finding 1 is republished unchanged in edition 2. The signed text below is kept as it was, so anyone who relied on it can see exactly what it said.' Eastlake's queue shows: 'Your letter of 15 March to the Council committee rests on edition 1, now withdrawn.' The tenants' copy, reading the feed, tells its members: 'The publisher withdrew edition 1 on 14 August. You cite finding 1; edition 2 carries it unchanged. Your grades are unchanged.'",
+      "name": "Shelved docket with a strict core; withdrawal as a signed, final notice",
+      "howItWorks": "Shelves as in the basics. Required on the first shelf, each a To-do (a queue item that leaves only when done) for the manager: every response the subject sends; any public statement by the subject the group has captured and linked to the case; a newer edition; a withdrawal; and anything the case would have had to disclose at signing, such as an open conflict on a load-bearing finding. Outcomes are optional. Outside responses are found by a member pasting a link, by standing watches over known sources (the city's press page, Council agendas), or by the assistant's labelled suggestion under your six guards; captured with grade and co-archive; linked as responding to a named edition; then a member chooses, with a reason, record only, public, or both. In the record, a contesting response prompts a re-evaluation notice, may become a plan checkpoint, and a threat takes a pressure mark. A public 'Reactions elsewhere' entry shows date, source, links to the original and the independent archive's copy, and a short summary marked as the group's words, never the article whole. A subject's reply naming a private person is listed as received, by date, without its text and with the reason, and the subject is asked to resend it without the name; the resent version is listed whole. A group may grant standing to others by a signed entry with its reason; their responses then join the required core. Any member files to the record; only the manager places an entry in public, signing with their registered key in a short step. An entry is taken back by a later entry with a reason. Withdrawal is the manager's signed entry naming an edition or all, with a published reason; the edition stays readable under a stamp; it is never lifted, and standing behind the case again needs a new edition. The docket travels by pull: the public page, a feed per case, citing groups' copies turning entries into notices, and the directory reading feeds if it exists.",
+      "inTheStory": "The press release raises a To-do: '5 March 2027 · Public statement by the subject · Department of Transportation press release · [Original] [Archived copy]'. The op-ed sits under 'Reactions elsewhere'. The lawyer's letter and Ms. Ortega's knock never appear. The Director's letter shows: '20 March · Reply from the subject received. Its text is not shown because it names a private individual; we have asked the Department to resend it without the name.' On 28 March the resent letter is listed whole. In August edition 1 opens: 'Withdrawn by Eastlake Accountability on 14 August 2027. Finding 2 rested on a memo we now believe was forged. Finding 1 is republished unchanged in edition 2.' Eastlake's queue names its Council letter; the tenants' copy tells its members finding 1 is carried unchanged.",
       "gains": [
-       "Late replies get a home without a new edition, and cannot be quietly left off.",
-       "Withdrawal becomes a clear, signed, readable fact that software and people can act on.",
-       "One rule decides what is required, matching your rules on disclosure at signing."
+       "The subject's public rebuttals cannot be skipped once the group has them.",
+       "Outside responses are kept with proof, placed for a reason, and never mistaken for evidence.",
+       "Withdrawal becomes a signed, readable fact that people and software can act on."
       ],
       "costs": [
-       "The most to build: entries, a signing step, required To-dos, the feed and the citing copy's check.",
-       "A required reply entry can be evaded by never recording the reply.",
-       "Publishing a reply's text widens the rule that nothing becomes public outside a signed case."
+       "The most to build: shelves, watches, the suggestion, required To-dos, signing, the feed, citing copies' checks.",
+       "The core can be evaded by never capturing or linking a statement; the docket shows its last entry's date, and the subject can publish its own letter.",
+       "Each public entry is a publication that cannot be unseen."
       ],
-      "commitsYouTo": "A second public, signed thing beside the case, permanent like the case. Withdrawal becomes final; a mistaken one is answered only by a new edition."
+      "commitsYouTo": "A second signed public object beside every case, kept by the group under rules; withdrawal final; a group's grant of standing permanent for what it already brought in."
      },
      {
       "label": "B",
-      "name": "A fully curated docket; withdrawal as in A",
-      "howItWorks": "As A, but only 'newer edition exists' and 'withdrawn' are automatic. The manager chooses every other entry, the subject's reply included. No required To-dos.",
-      "inTheStory": "Dana may docket the Director's reply or not. If she skips it, the docket shows the news story and the tenants' citation, and a reader takes 'asked, no answer' at face value. The withdrawal plays out as in A.",
+      "name": "As A, but only what the subject sends the group is required",
+      "howItWorks": "The subject's public statements elsewhere go to 'Reactions elsewhere', listed at the group's discretion like any outside reaction. Everything else as A.",
+      "inTheStory": "Dana may list the press release or not. If not, the docket shows the op-ed and, from 28 March, the Director's letter; the Department's public rebuttal is missing.",
       "gains": [
-       "Simpler, and nothing new lands in the manager's queue.",
-       "The docket is wholly the group's voice."
+       "Lighter: no duty to watch or list what the subject says elsewhere.",
+       "Reads your ruling's 'responses that reach the group' literally."
       ],
       "costs": [
-       "A group can bury a rebuttal behind flattering coverage.",
-       "A docket that looks complete but is not misleads more than none."
+       "A group can show a subject's mild letter and omit its sharper public rebuttal.",
+       "Subjects learn to answer in public, where listing is optional."
       ],
-      "commitsYouTo": "A docket readers must treat as the group's scrapbook. A required core added later would change what existing dockets mean."
+      "commitsYouTo": "Standing means 'what you send us', which the subject must be told."
      },
      {
       "label": "C",
-      "name": "No docket; everything by new edition",
-      "howItWorks": "As today. A reply, a news story or a withdrawal can appear only in a new edition. A withdrawing edition would need an exception to the rule that a case keeps a load-bearing finding.",
-      "inTheStory": "To show the Director's reply Dana must publish edition 2 through the full ceremony; she does not. The news story and the tenants' citation live nowhere. In August she publishes edition 2 with finding 1 alone; edition 1 still says it 'has not been withdrawn and still answers'.",
+      "name": "As A, but a subject's reply is always listed whole",
+      "howItWorks": "No exception for private names: the subject chose to write to a publisher, so its reply is listed in full.",
+      "inTheStory": "On 20 March Mr. Tillman's name and street go on the public docket, signed by Eastlake, though he never chose to be named.",
       "gains": [
-       "Nothing new to build; one kind of public object."
+       "No judgement call; the subject's words are never held back."
       ],
       "costs": [
-       "Late replies are dropped.",
-       "Withdrawal is impossible or awkward, and citers chase fingerprints.",
-       "The case stays an end product, the opposite of your waypoint view."
+       "The group becomes first to make a private person more public, against the naming rule.",
+       "A subject could use the docket to expose a complainant."
       ],
-      "commitsYouTo": "Nothing new. The re-evaluation build item is closed by deleting the withdrawal event."
+      "commitsYouTo": "The docket is the one public place where private people may be named."
      },
      {
       "label": "D",
-      "name": "Docket now, withdrawal later",
-      "howItWorks": "A's docket now. Withdrawal is designed when a group first needs it. Meanwhile a group can docket 'we no longer stand behind finding 2', but it carries no stamp and raises no notices.",
-      "inTheStory": "As A until August, when Dana dockets 'We believe the memo behind finding 2 is forged' and publishes edition 2. Edition 1's banner still says 'has not been withdrawn', and the tenants' copy raises no notice.",
+      "name": "As A, withdrawal designed later",
+      "howItWorks": "The docket now; withdrawal when a group first needs it. Meanwhile a group can file 'we no longer stand behind finding 2', with no stamp and no notices.",
+      "inTheStory": "In August Dana files that entry and publishes edition 2; edition 1's banner still says it 'has not been withdrawn', and the tenants' copy raises nothing.",
       "gains": [
-       "Leaves the harder question for a real case."
+       "Leaves the hardest question for a real case."
       ],
       "costs": [
-       "The first forgery arrives without a tool, and the banner contradicts the group's own docket.",
+       "The first forgery arrives without a tool; the banner contradicts the docket.",
        "The re-evaluation build item stays open."
       ],
-      "commitsYouTo": "A later design must fit withdrawal around docket entries already written."
+      "commitsYouTo": "A later design must fit around docket entries already written."
      }
     ],
-    "tradeoff": "Whether a case's after-publication record is the group's own scrapbook or carries a core the group cannot leave out; and whether 'we no longer stand behind this' becomes a signed fact that software and other groups can act on, or stays words.",
+    "tradeoff": "How much of a case's after-life the group must show, given that it keeps its own docket: strict enough that rebuttals cannot be buried, without making the group the first to expose private people or republish others' work; and whether 'we no longer stand behind this' becomes a signed fact or stays words.",
     "recommendation": {
      "choice": "A",
      "why": [
-      "A gives your waypoint idea a shape without touching the signed edition: the docket grows, the edition never changes, and anything that changes a conclusion still goes through a new edition. The required core follows one rule, not a list: what the case would have had to disclose at signing, it must disclose once the group knows. Those are your rules on conflicts (29 September) and flags (1 October), carried forward in time. It closes the main way curation buries a reply. A subject's reply is listed in full; the group may withhold the text only with a published reason (say, it names a junior employee), and never excerpts it. I would still not build a list of cases per office.",
-      "Withdrawal as a signed entry is what the design rules have long said reversing a signed act must be: a further act, both standing. Never lifting it keeps 'withdrawn' stable for citing groups; standing behind the case again goes through a new edition, which forces a fresh look. A problem with one finding is a correction; the two combine, as in the story. Inside the group, withdrawal is the missing re-evaluation trigger: every question, determination and action resting on the edition is told; a newer edition keeps its existing notice. The mechanism is the architecture session's.",
-      "Corrections to my first sketch: there is no group key, so entries are signed by the manager's key, as cases are. An entry that puts new material in public view, such as the Director's letter, is a publication in its own right and cannot be unseen, so it deserves a short signing step, not the full ceremony. And withdrawal never erases: nothing in the product removes published material, so a legally compelled removal has no path. That would be a separate question."
+      "The shelves replace the CPUC's neutrality with rules: the group lists, but cannot pass a reaction off as evidence or hide what the subject said once it has it. Counting the subject's captured public statements is my judgement: a press release is the subject's answer to the world, and a docket with only the private letter would look complete while missing it. 'Link and short quotation, never whole republication' for others' articles is also my judgement: the archived copy proves what was said without the group republishing another's work.",
+      "The private-name rule is the tension your ban on redaction creates. I recommend, as judgement, listing the receipt without the text, with the reason, and asking the subject to resend. I do not read it as redaction: the letter itself is simply not on the public docket, which your ruling allows, and the entry shown is whole. It keeps 'asked, no answer' from standing falsely, exposes no private person, and lets the subject cure it. If you see it as redaction in disguise, C is the honest alternative.",
+      "On standing, my reading of 'an unapproved subject' is that a group may approve others, as the CPUC grants party status. I recommend it, by a signed entry with a reason, giving exactly the subject's rights; please confirm or correct that reading. Withdrawal stays as a signed, final notice, the edition readable under a stamp, supplying the missing trigger for re-evaluation notices. It never erases, so a legally compelled removal has no path; that would be a separate question."
      ],
-     "risk": "The required core can be evaded by never recording a reply. It is contained only in part: an office that wrote can point to the group's own 'asked, no answer' and publish its letter itself, and every docket shows the date of its last entry. A citing copy that cannot reach the publisher says 'Could not read the publisher's docket', never that nothing changed."
+     "risk": "The required core rests on the group capturing and linking what it knows. Contained in part: watches and suggestions make missing things harder, the docket shows its last entry's date, the subject can always publish its own letter and point to the group's 'asked, no answer', and a citing copy that cannot reach the docket says 'Could not read the publisher's docket', never that nothing changed."
     },
     "howToAnswer": [
-     "36: as recommended.",
-     "36: A, but a withdrawal may be lifted by a later signed entry with its reason.",
-     "36: B; the group chooses everything on its docket, subject replies included.",
-     "36: question first: if an office asks us not to publish its letter, must we still docket it?"
+     "36: as recommended, and yes, a group may grant standing to others.",
+     "36: A, but with B's narrower core: only what the subject sends us is required.",
+     "36: A, but C on private names: the subject chose what to write.",
+     "36: question first: if a group grants the contractor standing, can it later revoke it?"
     ],
-    "ifLeftOpen": "Cases keep the banner and editions list only. Late replies, coverage and citations have no home, and a group that finds a forgery can only publish a new edition while the old one says it 'has not been withdrawn'. The withdrawal notice in the re-evaluation build stays unbuilt, and questions 17 and 18 wait with it.",
+    "ifLeftOpen": "Your three points stand but nothing is built: cases keep the banner and editions list only; replies, coverage and citations have no home; outside responses are kept, if at all, as ordinary captures with no link to the case; a group that finds a forgery can only publish a new edition while the old one says it 'has not been withdrawn'. The re-evaluation build's withdrawal trigger and question 17 wait.",
     "related": [
      {
       "n": 12,
-      "how": "Acceptance names one edition. A withdrawn edition's origin mark reads 'Another group's · withdrawn by its publisher', and a group whose published case relied on it owes a docket entry."
+      "how": "Acceptance names one edition; a withdrawn edition's origin mark reads 'Another group's · withdrawn by its publisher'."
      },
      {
       "n": 17,
@@ -17283,7 +17276,7 @@
      },
      {
       "n": 18,
-      "how": "Absorbed in part: how readers learn of a newer edition is decided here; the written 'what changed' statement stays a quick question."
+      "how": "Its notice part (how readers learn of a newer edition) is decided here; the written 'what changed' statement stays its own quick question."
      },
      {
       "n": 29,
@@ -17291,9 +17284,8 @@
      },
      {
       "n": 30,
-      "how": "The public case page that explains itself would carry the docket and the withdrawn banner."
-     },
-     "The Action layer: actions record what the group sent and to whom, so after a withdrawal they show whom to tell; a correction letter is a new action, sent by hand. Plans are never published."
+      "how": "The public case page that explains itself would carry the shelves and the withdrawn stamp."
+     }
     ],
     "glossary": [
      {
@@ -17302,55 +17294,59 @@
      },
      {
       "term": "Edition",
-      "plain": "One published version of a case; the old one stays readable."
-     },
-     {
-      "term": "Fingerprint",
-      "plain": "A code computed from exact bytes; any change gives a different code."
-     },
-     {
-      "term": "Load-bearing finding",
-      "plain": "A finding the case stands on."
+      "plain": "One published version of a case; older ones stay readable."
      },
      {
       "term": "Manager",
       "plain": "The member who may publish a project's cases; by default its owner."
      },
      {
-      "term": "Docket",
-      "plain": "The proposed dated, append-only list of entries beside a case's editions."
-     },
-     {
-      "term": "Withdrawal",
-      "plain": "A signed statement that the group no longer stands behind an edition, which stays readable, stamped."
-     },
-     {
-      "term": "Correction",
-      "plain": "A new edition that changes what the case concludes."
-     },
-     {
       "term": "Subject (of a case)",
       "plain": "The office, or official in their role, whose conduct the case examines."
      },
      {
-      "term": "Right of reply",
-      "plain": "Putting findings to the subject before publishing and reporting the answer."
+      "term": "Docket",
+      "plain": "The proposed dated list of entries beside a case's editions."
      },
      {
-      "term": "Request for comment",
-      "plain": "A recorded action putting named questions to an office, with a response window."
+      "term": "Shelf",
+      "plain": "A labelled section of the docket: what the group stands behind, 'Reactions elsewhere', or 'In our record only'."
+     },
+     {
+      "term": "Standing",
+      "plain": "The right to have one's responses listed as of right; the subject has it."
+     },
+     {
+      "term": "Outside response",
+      "plain": "A reaction to a case made elsewhere: an article, a press release, a remark, a letter."
+     },
+     {
+      "term": "Standing watch",
+      "plain": "A source the group asks the system to check regularly for new items."
      },
      {
       "term": "Capture",
-      "plain": "Keeping a document's exact bytes, with where and when they came from."
+      "plain": "The group's kept copy of a document's exact bytes, with where and when they came from."
+     },
+     {
+      "term": "Grade",
+      "plain": "How strongly a capture's origin is proven."
+     },
+     {
+      "term": "Co-archive",
+      "plain": "A copy of the same page saved by an independent archive at capture time."
+     },
+     {
+      "term": "Pressure mark",
+      "plain": "A member's mark on a received letter that is a threat, retaliation, discrediting or legal harassment."
      },
      {
       "term": "Re-evaluation notice",
       "plain": "A notice that something a member's work rests on has changed."
      },
      {
-      "term": "Origin mark",
-      "plain": "The label saying who made a piece of information."
+      "term": "Withdrawal",
+      "plain": "A signed statement that the group no longer stands behind an edition, which stays readable, stamped."
      },
      {
       "term": "Feed",
@@ -17365,43 +17361,40 @@
       "plain": "The label on anything the system computed or proposed."
      },
      {
-      "term": "Copy of CivicOS",
-      "plain": "A group's own installation, in its own hosting account."
+      "term": "Litigation hold",
+      "plain": "A decision to preserve material because a lawsuit may follow."
      },
      {
-      "term": "Ceremony",
-      "plain": "The five-step publishing sequence ending in the owner's signature."
+      "term": "Checkpoint",
+      "plain": "A condition in the group's action plan that a member judges when its time comes."
      },
      {
-      "term": "Banner",
-      "plain": "The notice atop an edition saying whether a newer one exists."
-     },
-     {
-      "term": "Determination",
-      "plain": "A member's judgement that a government act did or did not comply with a named standard."
-     },
-     {
-      "term": "Flag",
-      "plain": "A member's recorded concern about another group's work, naming the issue."
+      "term": "Doorbell, knock",
+      "plain": "The group's public submission page; one submission to it."
      }
     ],
     "sources": [
-     "BIO_Publication_v0_1.md §1, §2 (DEC-12), §3 rules 1 (DEC-19), 2 and its D-431 note, 6 (DEC-13), 10; §5 (DEC-80)",
-     "BIO_Interaction_Constructs_v0_1.md §A (attestation reversal, DEC-19; FW-14 narrowing)",
-     "BIO_Case_Making_v0_1.md, division points 3 and 5 ('retraction and revision are different acts'; a case is an input)",
-     "BIO_State_Rules_Consistency_v1_5.md §5.4 (cascade events incl. Work Product retraction); reeval_pending source enum incl. wp_retraction; D-168 paragraph (source_status removed stays citable)",
-     "BIO_Technical_Architecture_Decisions_v10.md (an upstream retraction propagates downstream as a re-evaluation)",
-     "build/requirements/reevaluation.md R2 (edition cause), R16 (not yet met), R17",
-     "build/requirements/publication.md R5 (case flags), R24, R37; public-read.md R2-R4 (credential-free lists and manifest)",
-     "build/requirements/basis-versions.md R20 (withdrawConclusion); case-authoring R3, R10; actions R15, R17, R34; affordances R29",
-     "BIO_Action_v0_1.md §2, §3, §4 rules 2 and 7",
-     "DEC-72 (2), (5), second default; DEC-76 item 4; DEC-77; DEC-78 item 5(d); DEC-84 (13); DEC-85; DEC-94 item 3; DEC-95 item 3; DEC-96 items 1 and 4",
-     "K597 (5); K899 (3); K901; N457; build/plan/draft-T20-answers.md §B.5; build/plan/draft-T21.md L7 (reevaluation)",
-     "civicos-ui/app.html: pubSupersessionHtml banner ('has not been withdrawn and still answers'); design notes H1 (take-down refused), H2 (notify me refused), H7 (reply box refused)",
-     "Analogies only: Cal. Public Utilities Code §1708 (rescind or amend a decision by a later one); COPE retraction guidelines (retracted article stays readable, watermarked, linked notice)",
-     "build/rulings.md K860-K926 checked: K899 (3), K901 and the T20/T21 plan entries create the withdrawal question; none settles it. main @ 615672a1a0"
+     "DEC-100 items 1-3 (DECISIONS.md, this branch); Bob's direction on outside responses, 2026-10-01, this session",
+     "Design Requirements v2 §6; Publication §2 (DEC-12), §3 rules 1 (DEC-19), 2 (D-431 note), 6 (DEC-13)",
+     "Action §1 rules 6 and 12, §4 rule 7; actions R17, R48, R52; queue R1 (plan-checkpoint-due, litigation-hold); State Rules §5.1 (responds_to)",
+     "capture R32, R47, R48, R53, R68; control-plane R36; acquisition R20 (co-archive); monitoring R33; DEC-78 items 1, 2, 5(a)",
+     "DEC-95 item 3; DEC-77; DEC-24; DEC-94 item 3; K597 (5); DEC-72 (2), (5); DEC-84 (13); DEC-85; DEC-96 items 1 and 4",
+     "State Rules §5.4; reevaluation R16; K899 (3); K901; N457; civicos-ui/app.html banner and design notes H1, H2, H7",
+     "Analogies only: CPUC Rules of Practice and Procedure (party status, Rule 1.4; information-only service list; public comments outside the formal record; Docket Office rejection for form); Pub. Util. Code §1708; COPE retraction guidelines",
+     "main @ 615672a1a0 (rulings to K926) checked; none settles the remaining parts"
     ],
     "size": "session"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-100"
+    ],
+    "status": "partly ruled",
+    "title": "After publication: a case's docket, and withdrawing a case",
+    "decided": "The subject named in a case has party-like standing: its responses that reach the group are listed on the public docket. Anyone else may still submit a response, and whether it is added to the publicly visible docket is the group's discretion. The docket has no confidential (sealed) entries and no redacted versions: an entry is public whole, or it is not on the public docket (it may still be held in the group's record). The group is not required to disclose its off-the-record contacts with the subject.",
+    "stillOpen": "the docket itself, its required core, outside responses, how entries are signed and travel, and withdrawal"
    }
   }
  ],
