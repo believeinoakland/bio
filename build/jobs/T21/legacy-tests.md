@@ -1,6 +1,6 @@
 # legacy-tests (T21)
 
-**Status** · session_01Wo7cuGi149GPKzvhNUPnDo · depth 2 · COMPLETE · handled B1
+**Status** · session_01Wo7cuGi149GPKzvhNUPnDo · depth 2 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -39,3 +39,18 @@ legacy-tests T21: N469 applied and row-census re-pinned to 1.51.0 (K941). Commit
 - Checks: format 0 failures, architecture 0, coverage 0 of 0 live ids (no requirements file), ownership 41 files and 0 failures.
 
 Size (session_01Wo7cuGi149GPKzvhNUPnDo): test runs 17, module lines 527
+
+## J2 · COMPLETE
+
+B2 applied. I merged `tranche/T21` into my branch. `bio-plane/test/conclude-project.test.mjs`:85–86 now starts Miniflare from `SRC("plane/index.mjs")`, the plane's entry and the same one `members.test.mjs` and `d526-refusal-order.test.mjs` use. Nothing else had to change: `modulesRoot: "/"` and the ESModule rule already resolve its imports. Commit 55d7ef2040.
+
+I re-scanned my paths for any other reader of `bio-plane/src/index.mjs` and found none. The remaining `src/index.mjs` names are other members' entries (agent-worker, pdf-worker, newgroup), synthetic fixture members, and prose.
+
+**Tests and checks.**
+- `conclude-project`: 75 pass, 0 fail.
+- The root proof (`node --test bio-plane/test/*.test.mjs bio-plane/test/system/*.test.mjs civicos-ui/test/*.test.mjs`): tests 47, pass 47, fail 0, skipped 0, no SKIP printed. That run includes fleetbundles, which is green.
+- `node test/fleetbundles.control.mjs` from `bio-plane/`: exit 0, with every arm as declared.
+- Checks: format 0 failures, architecture 0, coverage 0 of 0, ownership 0 (2 files).
+- Generated artifacts: none staled (the change is test-only).
+
+Size (session_01Wo7cuGi149GPKzvhNUPnDo): test runs 20, module lines 529
