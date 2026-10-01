@@ -601,6 +601,9 @@ const OPS = frozenTable({
      read and the list are viewer-stamped. */
   actioncreate:        { classes: ["admin", "member", "probe"],      mutating: true  },
   actionpressure:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* T20 (K899 (7), K902; actions R52): a litigation hold stated on a `legal` pressure mark, `actionpressure`'s posture
+     (the module refuses a machine by name, MACHINE_CANNOT_SET_HOLD). */
+  actionhold:          { classes: ["admin", "member", "probe"],      mutating: true  },
   action:              { classes: ["admin", "member", "probe"],      mutating: false },
   actions:             { classes: ["admin", "member", "probe"],      mutating: false },
   /* T18 (K704; action-clocks R4, R6, DEC-94): a member's own reminder on a dated clock entry, set and answered; a
@@ -1128,8 +1131,8 @@ const ESCALATION_READS = frozenList(["escalation", "escalationsdue"]);
    one. Each act reads `author` from the QUERY after the body and asks membership of it (a joined member's act, or the
    member whose reminder it is), so each joins `QUERY_AUTHOR_ACTIONS` and takes that stamp's positional identity; every
    read is stamped with the viewer. `actions`' two acts are `ACTIONS_ACTIONS`, apart from REC-24's `ACTION_ACTIONS`,
-   whose stamp is a different expression. */
-const ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure"]);
+   whose stamp is a different expression. T20 (K902; actions R52): `actionhold` joins them, its author query-stamped. */
+const ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold"]);
 const ACTIONS_READS = frozenList(["action", "actions"]);
 const ACTION_CLOCKS_ACTIONS = frozenList(["reminderset", "reminderanswer"]);
 const ACTION_PLANS_ACTIONS = frozenList(["planopen", "plansubjectadd", "plansubjectremove", "optionadd", "optionrevise",
@@ -2149,6 +2152,9 @@ const NEEDS = Object.freeze({
   templatesave:        "contribute",
   actioncreate:        "contribute",
   actionpressure:      "contribute",
+  /* T20 (K902; actions R52): a hold statement is appended to the action's record in a member's name, `actionpressure`'s
+     capability and reason. */
+  actionhold:          "contribute",
   planopen:            "contribute",
   plansubjectadd:      "contribute",
   plansubjectremove:   "contribute",
