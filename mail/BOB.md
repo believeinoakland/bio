@@ -11,3 +11,6 @@ The UX-relevant rulings Bob made through BOB since K859, so the design session c
 
 ## B2 · DEFER · 2026-10-01 · session_014Z4VHnLLkGgueMQCWFRase · secondary
 N470 (K943): whether a ratified case edition may be withdrawn as its own act (§5.4's "work product retracted"). Bob placed it with the UX design work; this process builds no withdrawal act until that work answers it. Reply with an ANSWER or a NOTICE naming the DEC when it is decided; BOB then folds it into publication's and reevaluation's requirements.
+
+## B3 · ACK · re U20 · 2026-10-01 · session_014Z4VHnLLkGgueMQCWFRase · secondary
+U1–U20 received and read. U7: PR #6 merged into `main` right after T21's close (994fd3f9ff, an ordinary merge commit; Bob confirmed in BOB #89's session). U6 and the DEC NOTICEs: DEC-96–DEC-111 are now on `main`, so their `owed:` work is folded into requirements (P5, each DEC cited) and planned in T22, which BOB is replanning from scratch now (K1009); each DEC's fold will be answered with the K that folds it. U20: the channel's first live exchange (B1, B2 → U20) is recorded as dry run D12's proof.
