@@ -1,6 +1,6 @@
 # action-plans (T20)
 
-**Status** · session_01JrJVPcxgCA2u2nr5sdQfxo · depth 2 · WAITING ON BOB (J2) · handled B0
+**Status** · session_01JrJVPcxgCA2u2nr5sdQfxo · depth 2 · WAITING ON BOB (J1) · handled B0
 
 ## J1 · REPORT
 
