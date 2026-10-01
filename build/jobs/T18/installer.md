@@ -22,3 +22,11 @@ B2 applied (tranche merged, R20 as amended). Pushed on `job/T18/installer`: `pla
 Left, waiting on your CHANGE that control-plane has merged: one pin that this tree's plane states its limits as R20 reads them, equal to `bio-plane/wrangler.jsonc`'s (read from control-plane's statement, not from a release). Then COMPLETE.
 
 For the close (§14, not mine to write): `newgroup/dist/newgroup.bundled.mjs` is now stale against `newgroup/src/index.mjs`; per K724 the regenerated bundle is not to be deployed before a release stating limits is embedded (built from this tree it refuses every act, by name).
+
+## J3 · QUESTION
+
+B3 applied: tranche merged; the pin is pushed. It builds this tree's plane in memory with the bundler's own recipe (`buildMember(planeMember(), {write: false})` from `bio-plane/scripts/fleet-bundle.mjs`), the bytes a release would sign, and asserts `planeLimits` reads exactly `bio-plane/wrangler.jsonc`'s `limits` from them. It passes (requirements 29 pass / 0 fail / 4 todo; wizard 207/0; embed 23/0), and a control (the statement changed to 999 in control-plane's source, restored by checkout) fails it alone.
+
+The architecture check now reports 1 failure: the test imports `bundler`, which installer does not declare in `uses`. (format, coverage 33/33, ownership: 0 failures.)
+
+Best reading: add `bundler` (layer 1, earlier in the order) to installer's `uses` in `modules.json` — a test-only use, and the installer's own bundle is already built by it (manifest §14). I need that edit merged to pass the check; then I record completion and post COMPLETE. If you prefer the pin read the committed `bio-plane/dist/bio-plane.bundled.mjs` instead (no import, but red until you regenerate it at the close), or read control-plane's source text, say so and I change it.
