@@ -6,7 +6,7 @@
 import { STATES, BASIS_ROLES, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf, checkBundle }
   from "../record-grammar/index.mjs";
 import { GROUND_LABEL_RE, checkInquiryBasis, checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings,
-         divisionDisclosureFindings, checkInquiryExtension, INQUIRY_GRAMMAR_ROWS, INQUIRY_GRAMMARS }
+         divisionDisclosureFindings, checkInquiryExtension, INQUIRY_GRAMMAR_CHECKS, INQUIRY_GRAMMARS }
   from "../inquiry-grammar/index.mjs";
 
 export { BASIS_ROLES, GROUND_LABEL_RE, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf, checkInquiryBasis,
@@ -17,7 +17,7 @@ export const INQUIRY_MACHINE = STATES.inquiry;
 
 /** R38: the rows this module's acts mint and its grammar raises, by code: `inquiry-grammar`'s (its R7), read, never a
  *  copy. */
-export const INQUIRY_ROWS = INQUIRY_GRAMMAR_ROWS;
+export const INQUIRY_ROWS = INQUIRY_GRAMMAR_CHECKS;
 
 /** R17 (`inquiry-grammar` R1, R2; C-2.8, C-6.1, C-15.1): an inquiry document's entry requirements, judged by
  *  record-grammar's `checkBundle` over the document as it reads it. `bundleMd` is the document's text; `opts` are
