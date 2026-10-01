@@ -35,3 +35,7 @@ Two findings outside signatures (details in my record's Completion section):
 1. **bundler:** `tools/release-assemble.mjs`:116 imports `./sign-sshsig.mjs`, gone once my branch merges; re-point to `../bio-plane/scripts/sign-sshsig.mjs` (same five exports). Its comment at :352 names the old path too.
 2. **build/layers.md** on `tranche/T19`, lines 7–11: unresolved merge-conflict markers (`<<<<<<< HEAD` … `>>>>>>> fold-bob5`) around layer 1's row; the HEAD side (with site-profiles) looks right. The format check does not catch it.
 No generated artifact made stale (no bundle input changed).
+
+## J3 · COMPLETE
+
+Done. **New path: `bio-plane/scripts/sign-sshsig.mjs`** (K754); `tools/sign-sshsig.mjs` deleted, no shim, so bundler can re-point and merge after me. R33–R36 tested at the interface in `bio-plane/test/m/signatures/release-signer.test.mjs` (verifySshsig, stock ssh-keygen verify, and byte-identity with `ssh-keygen -Y sign`). One improvement: `seedFromEnvelope` now accepts only canonical base64 (R34 "exactly"; it silently skipped stray characters). Deferred: `sshsig.mjs`'s notes, to avoid staling two bundles over a comment. Tests: signatures 55/55, bundler 19/19; format, architecture, coverage (36/36) and ownership all 0 failures.
