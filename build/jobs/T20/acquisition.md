@@ -14,7 +14,7 @@ ACQUISITION #3, T20 layer 3. Started from `tranche/T20` @ 76a95e8021, merged `tr
 
 None.
 
-## Found in other modules (REPORT J2)
+## Found in other modules (REPORT J1)
 
 1. **capture** (`bio-plane/src/capture/index.mjs`:605–:610, `pullKnock`). This is a third place that answers C-68.1. It reads acquisition's row and builds its own body: `{ok, reason, code, check, translation, status, knockId, detail}`, with no DEC-49 region and no `op` or `error`. Its body differs from both of the raiser's, so it cannot call the export without its answer changing. That change is BOB's call, measured against acquisition R29 ("minted at one region") and capture's own answer.
 2. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` (owned by `not_product`, built from the plane's source) still carries the old `where` and `acquire`'s inline region. It is regenerated at the layer's close (manifest, Generated artifacts).
