@@ -5,3 +5,5 @@ Depth 2. Your entry: `build/plan/current.md` layer 11, affordances (kept; ⚑L11
  K834 (CONFORMANCE #7 J1): `JUSTIFICATION_REFUSALS` (`src/affordances.mjs`:486) gains `CONFORMANCE_NO_REASON` beside `INTENT_NO_REASON`; re-word the comment at :807–809; test/m/affordances R19 "determine, graded reasoned (N310)" is red until then (accepted by name).
 
  K835 (ESCALATION #7 J2): `JUSTIFICATION_REFUSALS` also gains `ESCALATION_NO_REASON` (escalation R24); `backing.test.mjs`' R19 escalation arm is red until then (accepted by name); re-word the comments at :803–806.
+
+ K837 (ACTIONS #6 J2): `src/affordances.mjs`:89's vocabularies (`PRODUCT_KINDS`, `RISK_TIERS`, `LAW_LEVELS`, `ACTION_BASIS_KINDS`, the three `CORRESPONDENCE_*`, `RESOLUTIONS`) and its tests' `actionKinds` and `ACTION_KINDS` read action-grammar, not `actions/index.mjs` or the catalogue.
