@@ -381,3 +381,55 @@ test("R26 an attached action the viewer may not see is withheld whole from the r
     assert.ok(!("out_of_view" in open[`bob${s}`]));
   }
 });
+
+test("R26 R7 R8 a withheld action meets no trigger for the viewer who may not see it, whatever the stage, and no act of theirs is taken on it; an evaluation's trigger id stands for every viewer, <id>/evaluation#<n>, the same id whether or not something was withheld, counting no other entry", () => {
+  /* R7: stage 4 of R26's world, alice's evaluation reading H's reply (H withheld from bob) */
+  const r = withheldWorld(true);
+  const edge = (x, to) => x.triggers.find((t) => t.to === to);
+  const E = r.alice4.id;
+  assert.equal(r.bob4.out_of_view, true);
+  for (const x of [r.alice4, r.bob4]) assert.deepEqual([edge(x, 5).met, edge(x, 5).ids], [true, [`${E}/evaluation#1`]]);
+  /* the log numbers the evaluation after both attachments, H's among them; the id does not */
+  assert.ok(r.alice4.history.find((h) => h.kind === "evaluate").seq > 3);
+  assert.equal(JSON.stringify(r.bob4).includes("/evaluation/"), false, "no id carries the log's number");
+  const open = withheldWorld(false);
+  assert.deepEqual(edge(open.bob4, 5).ids, [`${open.alice4.id}/evaluation#1`], "the same id with nothing withheld");
+
+  /* R8, R11: stages 5 and 6, with H attached at stage 5 and withheld from bob */
+  const w = seeded();
+  toStage(w, 4);
+  const by = (who) => ({ author: V(who), viewer: V(who) });
+  assert.equal(w.esc.escalationEvaluate({ id: w.E, response: { action: w.N, ord: w.R }, reading: "denied", reason: "No.", ...by("alice") }).ok, true);
+  assert.equal(w.esc.escalationAdvance({ id: w.E, to: 5, reason: "Legal tools.", ...by("alice") }).ok, true);
+  const H = w.action({ project: w.P, restsOn: [w.D] });
+  w.actionHidden.add(H);
+  assert.equal(w.esc.escalationAttach({ id: w.E, action: H, ...by("alice") }).ok, true);
+  w.correspond(H, "sent", "2026-09-16");
+  const nowMs = ms("2026-09-30T00:00:00Z");
+  const as = (who) => w.esc.escalationRead({ id: w.E, nowMs, viewer: V(who) });
+  let a = as("alice"), b = as("bob");
+  assert.deepEqual([edge(a, 6).met, edge(a, 6).ids], [true, [H, `${H}#0`]]);
+  assert.deepEqual([edge(b, 6).met, edge(b, 6).ids], [false, []]);
+  assert.match(edge(b, 6).missing, /no breach action is attached at stage 5/, "the missing sentence counts no withheld action");
+  assert.deepEqual([a.proposed.map((p) => p.to), b.proposed.map((p) => p.to)], [[6, 7], [7]]);
+  for (const x of [a, b]) assert.deepEqual(edge(x, 7).ids, [`${w.E}/evaluation#1`], "R8's to 7 names R7's id");
+  /* monitoring's list, and the acts, derive the same way per viewer */
+  const due = (who) => w.esc.escalationsDue({ nowMs, viewer: V(who) }).items.map((i) => [i.to, i.ids]);
+  assert.deepEqual(due("alice"), [[6, [H, `${H}#0`]], [7, [`${w.E}/evaluation#1`]]]);
+  assert.deepEqual(due("bob"), [[7, [`${w.E}/evaluation#1`]]]);
+  const before = w.snapshot();
+  assert.equal(w.esc.escalationAdvance({ id: w.E, to: 6, reason: "Sent.", ...by("bob") }).reason, "TRIGGER_NOT_MET");
+  assert.equal(w.esc.escalationDecline({ id: w.E, to: 6, reason: "Not now.", ...by("bob") }).reason, "EDGE_NOT_PROPOSED");
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* stage 6: alice advances on H's sending; a reply on H recorded after the evaluation meets 6→4 for alice only */
+  assert.equal(w.esc.escalationAdvance({ id: w.E, to: 6, reason: "Sent.", ...by("alice") }).ok, true);
+  w.correspond(H, "received", "2026-09-29", "2026-09-29T09:00:00Z");
+  a = as("alice"); b = as("bob");
+  assert.deepEqual([edge(a, 4).met, edge(a, 4).ids], [true, [H, `${H}#1`]]);
+  assert.deepEqual([edge(b, 4).met, edge(b, 4).ids, b.proposed], [false, [], []]);
+  assert.deepEqual(b.history.at(-1).trigger.ids, [], "alice's advance on H's ids, shown to bob without them");
+  assert.ok(!JSON.stringify(b).includes(H));
+  /* a reply bob may see, on N, meets it for both */
+  w.correspond(w.N, "received", "2026-09-29", "2026-09-29T10:00:00Z");
+  assert.deepEqual(edge(as("bob"), 4).ids, [w.N, `${w.N}#2`]);
+});
