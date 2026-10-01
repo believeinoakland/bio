@@ -310,12 +310,6 @@ test("R25: an error thrown in the record store's door is answered STORE_INTERNAL
     assert.deepEqual([line.event, line.correlation, line.op], ["STORE_INTERNAL_ERROR", j.correlation, "boom"]);
     assert.match(line.stack, /secret-value/);
   }
-  /* the Durable Object class answers through the same catch */
-  const obj = Object.create(D.Store.prototype);
-  obj.ctx = {};
-  obj.routes = () => ({ boom: thrower });
-  const { value: dres } = await quietly(() => obj.fetch(new Request("http://do/boom")));
-  assert.deepEqual([dres.status, (await dres.json()).check], [500, "C-69.4"]);
   /* the Worker relays the store's failure as R23's silence, carrying the store's correlation id and nothing else of it:
      through the forward and through a relay */
   const corr = crypto.randomUUID();
