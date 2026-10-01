@@ -25,3 +25,7 @@
 - `ownership actions tranche/T21`: 0 failures. The check was re-run after the commit.
 
 Size (session_01VFxeE784CFxt5oNsJ1nMKX): test runs 1, module lines 25
+
+## J1 · REPORT
+
+Generated artifact made stale: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product). Two files under bio-plane/src/actions/ changed, comments only; not regenerated.
