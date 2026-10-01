@@ -9,7 +9,7 @@ const NOW = "2026-09-26T08:00:00.000Z";
 function origin(files = [{ path: "notes.md", text: "kept" }], refs = "[]") {
   const env = makePromotion({ now: () => NOW });
   const r = env.p.promote({ base: null, snapKey: "o", author: "member:ann", ownerMemberId: "ann",
-    files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Sewer Fund", current_state: "investigating",
+    files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Sewer Fund", current_state: "forming",
       created: T0, last_updated: T0, references: refs }) }, ...files], meta: {} });
   assert.equal(r.ok, true, JSON.stringify(r));
   env.membership.joined.set(r.bundleId, ["bob"]);

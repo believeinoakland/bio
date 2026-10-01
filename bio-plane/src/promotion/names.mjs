@@ -68,11 +68,11 @@ export function checkProjectNameUniqueness(corpus) {
   for (const input of corpus || []) {
     const raw = input && input.files && input.files.get ? input.files.get('bundle.md') : undefined;
     const fm = raw == null ? null : parseFrontmatter(asText(raw)).data;
-    const label = (fm && typeof fm.id === 'string' && fm.id) || (input && input.folderName) || '(unnamed bundle)';
+    const label = (fm && typeof fm.id === 'string' && fm.id) || (input && input.folderName) || '(unnamed record)';
     if (!fm) {
       findings.push(f('C-77.2', 'warning',
         `${label}: bundle.md is ${raw == null ? 'absent' : 'unreadable'}, so whether it is a project, and whether its name collides, is UNDETERMINED`,
-        ['hand the corpus with this bundle\'s bundle.md readable and run the check again']));
+        ['hand the corpus with this record\'s bundle.md readable and run the check again']));
       continue;
     }
     if (normalizeType(fm.object_type) !== 'project') continue;

@@ -88,6 +88,15 @@ export const PROMOTION_CHECKS = {
       + "account, and letting a later change move that would let anyone re-attribute it. Nothing was written. Send it "
       + "again with the group the record holds, or with none.",
   },
+  /* R56 (K899 (3), K904, N456; Bob's form (b)): a project's stage is computed (`project-stage` R2), so a creation stating
+     any other stage than `forming` or `closed` is refused; a revision's move is R15's over the declared table. */
+  PROJECT_STAGE_COMPUTED: {
+    check: "C-86.15",
+    where: "src/promotion/index.mjs #promote > is-project-stage-computed",
+    translation: "A project's stage is worked out from its record (the questions it holds, what it has concluded and "
+      + "what it has published), so it is never written by hand. Only closing a project, with its reason, or reopening "
+      + "it is written. Nothing was written.",
+  },
   BUNDLE_ID_DISAGREES: {
     check: "C-1.1",
     where: "src/promotion/index.mjs #promote > is-promote-bundle-id",

@@ -126,6 +126,41 @@ test("R32: an undeclared edge in the document's own state_history is an error, r
   assert.deepEqual(cat.findings.filter((f) => f.check === "C-4.2"), []);
 });
 
+test("R32, R56: the project fence (N456) — the hand-written moves recorded before 2026-10-01 read as made under earlier rules; after it they are errors", async () => {
+  assert.equal(STATE_MOVE_FENCED_SINCE.project, "2026-10-01");
+  assert.ok(STATE_MOVE_FENCED_SINCE.project > STATE_MOVE_FENCED_SINCE["*"], "projects' fence moved with R56, every other type's did not");
+  const PID = "PROJ-2026-0001-sewer";
+  const pmd = (state, prior, hist) => ["---", `id: ${PID}`, "object_type: project", "schema: project@1", 'title: "Sewer Fund"',
+    `current_state: ${state}`, `prior_state: ${prior}`, 'created: "2026-07-01T00:00:00Z"', 'last_updated: "2026-07-01T00:00:00Z"',
+    `state_history:${hist}`, "---", "", "## Session Log", ""].join("\n");
+  const entry = (ts, from, to) => `\n  - timestamp: "${ts}"\n    from_state: ${from}\n    to_state: ${to}\n    blurb: "moved"\n    author: member:a`;
+  /* Each move the table no longer carries (record-grammar R35, K904): forming -> investigating, investigating -> matured,
+     closed -> investigating; each a chain of two promotions whose second wrote it. */
+  const moves = [["forming", "investigating"], ["investigating", "matured"], ["closed", "investigating"]];
+  for (const [from, to] of moves) {
+    const c42 = async (date) => {
+      const before = pmd(from, "null", " []");
+      const after = pmd(to, from, entry(date, from, to));
+      const img = image([{ key: "k1", text: before }, { key: "k2", text: after, created: date }]);
+      return (await recordChecks({ folderName: PID, files: new Map(Object.entries(img)), sha256: async (v) => sha(v) }))
+        .filter((f) => f.check === "C-4.2").map((f) => [f.severity, f.message]);
+    };
+    const earlier = await c42("2026-09-30T12:00:00Z");
+    assert.deepEqual(earlier.map((x) => x[0]), ["info"], `${from} -> ${to}`);
+    assert.match(earlier[0][1], new RegExp(`transition ${from} -> ${to} is not a legal project edge: made by a path the current rules do not allow \\(at or before 2026-10-01\\)`));
+    assert.deepEqual((await c42("2026-10-01T09:00:00Z")).map((x) => x[0]), ["info"], "the fence's own day is at the fence");
+    assert.deepEqual((await c42("2026-10-02T00:00:00Z")).map((x) => x[0]), ["error"], `${from} -> ${to} after the fence`);
+  }
+  /* The declared project moves are not asked: to closed, and closed -> forming. */
+  for (const [from, to] of [["forming", "closed"], ["investigating", "closed"], ["closed", "forming"]]) {
+    const img = image([{ key: "k1", text: pmd(from, "null", " []") },
+                       { key: "k2", text: pmd(to, from, entry("2026-10-02T00:00:00Z", from, to)), created: "2026-10-02T00:00:00Z" }]);
+    const got = (await recordChecks({ folderName: PID, files: new Map(Object.entries(img)), sha256: async (v) => sha(v) }))
+      .filter((f) => f.check === "C-4.2");
+    assert.deepEqual(got, [], `${from} -> ${to}`);
+  }
+});
+
 test("R30, R32: the audit runs the moved checks too — promotion registers them once with record-core's audit (its R59), with the caller's release registry from its context (R59's second argument)", async () => {
   const { makePromotion } = await import("./fixtures.mjs");
   const { record } = makePromotion();

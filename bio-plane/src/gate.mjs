@@ -81,11 +81,12 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    reason the census exists. ADDITIVE on the same precedent: five checks arrive,
    none moves and none leaves.
 
-   WHAT KEEPS IT TRUE: `test/d470-catalog-census.test.mjs` pins this string to a
-   census of the catalog's C-numbers. Add a check and that suite goes red naming
-   the figures, and it stays red until this version moves and the new census is
-   recorded beside it. DO NOT edit this constant without reading that suite's
-   header — the two are one mechanism.
+   WHAT KEEPS IT TRUE (re-worded at 1.51.0, N469: the d470 suite this note named was
+   deleted in T20): `ROW_CENSUS` below pins this string to a census of every refusal
+   row (R50), and `bio-plane/test/system/row-census.test.mjs` holds that pin against
+   the tree. Add, remove or change a row and that suite goes red naming it, and it
+   stays red until this version moves and the census is re-pinned beside it. DO NOT
+   edit this constant without reading that suite's header — the two are one mechanism.
 
    1.20.0 (REC-23/D-130): C-2.10's counterparty becomes a three-valued block.
    A MINOR bump on REC-14's precedent (1.18.0 -> 1.19.0 also made the catalog
@@ -128,8 +129,9 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    arrival, no departures. THE FIGURE IS THE MERGED TREE'S: this item took 1.26.0 over origin/main 1a7f0bcc0 and
    then MERGED a main already at 1.28.0 (whose own 1.26.0 row is a different catalogue), so the stamp moves once
    more from the catalogue that actually runs and the census is RE-READ from d470-catalog-census.test.mjs's own
-   print — never either base's figure plus one. THREE PLACES MOVE WITH THIS CONSTANT and the gate names each if
-   one is missed: the census row in d470, that suite's (A5) literal, and ratify.test.mjs's gateVersion literal. */
+   print — never either base's figure plus one. THREE PLACES MOVED WITH THIS CONSTANT then, and the gate named each if
+   one was missed: the census row in d470, that suite's (A5) literal, and ratify.test.mjs's gateVersion literal (both
+   suites deleted in T20; since 1.43.0 it is `ROW_CENSUS` that moves with it, R50). */
 /* 1.29.0 (REC-214, 2026-09-24, branch land/worker/REC-214): the new `RISK_TIER_REVISION_CHECKS` family (C-90.1..5) —
    `op=actionrisktier`'s four conditions and `promote`'s refusal of a revision that moves a tier or its history
    without the act — so the catalogue moved 461 -> 466 and the stamp moves with it, MINOR and additive on this
@@ -575,8 +577,8 @@ export const CATALOG_VERSION = "1.50.0";
    the next number at the union and re-reads the print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 /* R50 (N319, K431): the census of every refusal row as this stamp read it, pinned here and held against the tree by
-   legacy-tests' census suite (this module cannot read a later module's table, P4). The stamp that moves CATALOG_VERSION
-   re-pins it. */
+   legacy-tests' census suite, `bio-plane/test/system/row-census.test.mjs` (this module cannot read a later module's
+   table, P4). The stamp that moves CATALOG_VERSION re-pins it. */
 export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 986,
   digest: "dd61926a033ecd289e1fa7446cae09aa976470daf13bc46d8bd379b072ff43a5" });
 
@@ -740,7 +742,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
       errors.push({ check: "PLANE_HELD_IN_PARTS",
                     detail: `registered capture is held only in parts: this plane's acquisition receipt names `
                           + `the whole hash, and the working bucket stores the document as its parts, each under `
-                          + `its own hash, but the bundle's data/provenance.json names no parts for it. `
+                          + `its own hash, but the record's data/provenance.json names no parts for it. `
                           + `Publication copies the parts the record names, so name them there, or register `
                           + `the parts rather than the whole`,
                     where: { path: r.path, sha256: r.capture_sha } });

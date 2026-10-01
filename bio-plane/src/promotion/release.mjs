@@ -102,7 +102,7 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
   /* An unreadable registry refuses at EVERY schema: "cannot check" is never "passed". */
   if (regAny && regAny.unavailable) {
     findings.push(finding("error", `the key registry is declared present but unreadable at this call site (${regAny.reason || "no reason given"}); the gate cannot check signatures and will not pass them`,
-      ["restore access to the registry bundle", "do not promote until the registry reads"]));
+      ["restore access to the registry record", "do not promote until the registry reads"]));
     return findings;
   }
   const history = Array.isArray(fm.state_history) ? fm.state_history : [];
@@ -112,10 +112,10 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
     if (!migration) return findings;
     for (const e of history.filter((x) => x && x.from_state === "collected" && x.to_state === "verified"
                                          && x.timestamp && x.timestamp >= migration))
-      findings.push(finding("error", `release at ${e.timestamp} is at or after the migration instant ${migration}, but this bundle is ${fm.schema || "a pre-contract schema"}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check`,
-        ["migrate the bundle to information@2, then sign the transition and add the releases[] entry",
+      findings.push(finding("error", `release at ${e.timestamp} is at or after the migration instant ${migration}, but this record is ${fm.schema || "a pre-contract schema"}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check`,
+        ["migrate the record to information@2, then sign the transition and add the releases[] entry",
          "or retire it with the reason recorded (verified -> retired, op=retire), if the release cannot be signed",
-         "either way the repair is made where the bundle stands: C-4.2 refuses any transition that is not an edge in this machine"]));
+         "either way the repair is made where the record stands: C-4.2 refuses any transition that is not an edge in this machine"]));
     return findings;
   }
   const releases = history.filter((x) => x && x.from_state === "collected" && x.to_state === "verified");
@@ -140,7 +140,7 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
       findings.push(finding("error", `release at ${e.timestamp} is at or after the migration instant ${migration} and carries no signed release record`,
         ["sign the transition and add the releases[] entry",
          "or retire it with the reason recorded (verified -> retired, op=retire), if the release cannot be signed",
-         "either way the repair is made where the bundle stands: C-4.2 refuses any transition that is not an edge in this machine"]));
+         "either way the repair is made where the record stands: C-4.2 refuses any transition that is not an edge in this machine"]));
       continue;
     }
     const author = String(e.author || "");
@@ -165,7 +165,7 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
     }
     if (rec.registry_sha256 && reg.sha256 && rec.registry_sha256 !== reg.sha256)
       findings.push(finding("warn", `release at ${e.timestamp} records registry ${String(rec.registry_sha256).slice(0, 12)}… but the registry in force is ${String(reg.sha256).slice(0, 12)}…; the usual cause is signing against a stale mirror`,
-        ["re-verify against the recorded registry version out of the registry bundle history"]));
+        ["re-verify against the recorded registry version out of the registry record's history"]));
     const message = latin1(releaseMessage({ bundle: folderName, transition: e.timestamp, from_state: e.from_state,
       to_state: e.to_state, signer: rec.signer, bundle_md_sha256: bundleSha,
       registry_sha256: rec.registry_sha256 || reg.sha256 }));
