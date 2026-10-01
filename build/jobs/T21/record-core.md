@@ -31,3 +31,7 @@ Size (session_015o5zPpvnxZMQdCfaHQg4En): test runs 5, module lines 1686
 ## J1 · REPORT
 
 A generated artifact my change made stale (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (owner `not_product`). Its inputs `bio-plane/src/record-core/index.mjs` and `schema.mjs` changed (comments and the census note's text only). I regenerated nothing. Also for the record: the 45 failures in `test/m` were already red on `tranche/T21` before this job, all in later modules (filings 35, project-stage 5, intent 1, membership 2, promotion 2). They are listed in my record.
+
+## J2 · COMPLETE
+
+record-core T21 complete. Applied: N458 (snapKeyCensus' note says record), N468 (R74 comments and tests: plane registers the export under record-core's name; no held copy), N469 (schema.mjs:101 now names R23's module test; storage.mjs' battery note now names the live Miniflare suites), K939 (two R67 tests re-keyed to the C-2.9 slot; code unchanged). Comments and note text only: no row change, nothing awaits stamp. test/m/record-core: 92/92. Whole test/m: no new red (45 failures, all already on the tranche, later modules). Checks format, architecture, coverage (74/74), ownership: 0 failures. Deferred: none. Merge early: ready. Details in my record.
