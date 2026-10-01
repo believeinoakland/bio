@@ -8,7 +8,7 @@
  *
  * Extracted from the legacy modules (T7, layer 6; K3, K86, K102, N60): `store.mjs` (the bar, DEC-72; the axes and the
  * walk, REC-12, REC-42, MK-2, REC-105; `op=inquirystrength`, REC-34; the pair over a version, PL-14; independence,
- * D-195, D-271, REC-161, REC-192), `schema.mjs` (`group_strength_bar`, now `./schema.mjs`) and `bio-checks.mjs`
+ * D-195, D-271, REC-161, REC-192), `schema.mjs` (`group_strength_bar`, now `./schema.mjs`) and the check catalogue
  * (C-30, C-71, C-32.9, now `./checks.mjs`). The arithmetic is `./arithmetic.mjs`. The legacy code's comments moved
  * with it, shortened where they only restated the code.
  *
@@ -43,11 +43,11 @@
 
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
-import { promotionOf } from "../promotion/index.mjs";
+import { promotionOf, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
 import { inquiryOf, legCapped } from "../inquiry/index.mjs";
-import { basisVersionsOf, BASIS_VERSION_LEGS_MAX } from "../basis-versions/index.mjs";
+import { basisVersionsOf, BASIS_VERSION_LEGS_MAX, VERSION_MACHINE } from "../basis-versions/index.mjs";
 import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_RE, parseFrontmatter,
-         isMachineIdentity, VERSION_MACHINE, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
+         isMachineIdentity } from "../record-grammar/index.mjs";
 import { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, GRADE_RANK, axisResult } from "./arithmetic.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES, VERSION_STRENGTH_INERT_SOURCES,
          PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS } from "./checks.mjs";
@@ -828,7 +828,8 @@ export class Strength {
        group for the declaration to belong to. */
     const gid = String(group ?? "").trim() || this.producingGroup();
     if (!gid) {
-      const row = INSTANCE_GROUP_CHECKS.GROUP_UNDETERMINED;
+      /* C-64.1, promotion's row (it mints the same refusal in `#promote`). */
+      const row = PROMOTION_ROW_CHECKS.GROUP_UNDETERMINED;
       return { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", check: row.check,
                translation: row.translation, act: "strengthbar",
                detail: "the default bar is the GROUP's declaration, keyed by its group; this request names no group "
