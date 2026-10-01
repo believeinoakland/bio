@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { checkBundle, EXTENSION_ARMS } from "../../../src/record-grammar/index.mjs";
 import { recordOf, RecordCore, RECORD_SCHEMA, stampInstant, instantOrder, PER_ITEM_MAX, perItem, EMPTY_STRING_SHA, fileDigestOf,
-         inlineBytesOf, mintExhausted, RECORD_CORE_CHECKS, PER_ITEM_CHECKS, registerLegacyGrammars,
+         inlineBytesOf, mintExhausted, RECORD_CORE_CHECKS, PER_ITEM_CHECKS,
          recordCoreOps } from "../../../src/record-core/index.mjs";
 import { storage, bucket } from "./storage.mjs";
 
@@ -649,7 +649,7 @@ test("R39: recordOf answers one instance per storage, the same to every caller, 
                    "purge", "getSetting", "setSetting", "transact", "commit", "bundleInfo", "listBundles", "listByType",
                    "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths", "manifestByAuthor", "isFirstBoot",
                    "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha", "releaseLease", "registerCounts", "counts",
-                   "afterCommit", "registerGrammar", "grammars", "registerStatsSource", "stats", "proofCounts"])
+                   "afterCommit", "registerGrammar", "grammars", "registerStatsSource", "stats", "proofCounts", "ownCounts"])
     assert.equal(typeof a[m], "function", m);
 });
 
@@ -1977,17 +1977,9 @@ test("R28 R40 R23 (mint-ledger): CASE-<year> ids the counter issued before CASE 
 });
 const pgKeys = (p) => ({ ...p.removed });
 
-/* ---- T19 layer 2: R67 as K766 words it, rule 2's legacy registration, R68–R73, R34/R37/R44's project (N426) ---- */
+/* ---- T19 layer 2: R67 as K766 words it, R68–R73, R34/R37/R44's project (N426) ---- */
 
 const doc = (id, type, extra = "") => `---\nid: ${id}\nobject_type: ${type}\ncurrent_state: open\n${extra}---\n\n## Summary\n\nx\n`;
-const imageOf = (rc, id) => {
-  const img = rc.readImage(id), files = new Map(), elided = new Set();
-  for (const [p, v] of Object.entries(img)) typeof v === "string" ? files.set(p, v) : elided.add(p);
-  return { folderName: id, files, elidedPaths: elided,
-           sha256: async (v) => hexOf(createHash("sha256").update(typeof v === "string" ? v : Buffer.from(v)).digest()),
-           sha512: async (b) => new Uint8Array(createHash("sha512").update(Buffer.from(b)).digest()),
-           resolveTarget: () => true };
-};
 
 test("R67 (K766, N422): a registration may claim several whole slots and a slot several registrations, run in its place in registration order; the acceptance is {ok: true, module, ids}", async () => {
   const { rc } = fresh();
@@ -2043,53 +2035,6 @@ test("R67 R59 R18: in the audit each claimant of a shared slot is wrapped on its
   assert.equal(r.tally.first, ids.length); assert.equal(r.tallyDetail["first/AUDIT_CHECK_FAILED"], ids.length);
   assert.equal(r.tallyDetail["C-2.7/SECOND"], ids.length);
   assert.deepEqual([r.clean, r.withErrors], [0, ids.length]);
-});
-
-test("R67 R18 (rule 2, K785): registerLegacyGrammars registers the handed-in grammars, as legacy-checks, only in the slots no registration holds, each run in its own slot; the audit runs them there", async () => {
-  /* a stand-in for the catalogue's LEGACY_GRAMMARS: one entry per slot, each claiming its slot whole and naming its slot */
-  const ran = [];
-  const legacyOf = (names) => EXTENSION_ARMS.filter((a) => names.includes(a.name)).map((a) => ({ module: "legacy-checks", ids: [...a.ids],
-    arm: (ctx, f) => { ran.push([a.name, ctx.folderName]); f.push({ check: a.ids[0], code: "LEGACY", severity: "error", message: a.name }); } }));
-  const all = legacyOf(EXTENSION_ARMS.map((a) => a.name));
-  const { rc } = fresh();
-  const capture = { ids: ["C-2.7"], arm: (ctx, f) => f.push({ check: "C-2.7", severity: "warning", message: "capture's" }) };
-  assert.equal(rc.registerGrammar("capture", capture).ok, true);
-  const want = all.filter((g) => !g.ids.includes("C-2.7")).flatMap((g) => g.ids);
-  assert.deepEqual(registerLegacyGrammars(rc, all), { ok: true, module: "legacy-checks", ids: want }, "every slot but capture's, which is never doubled");
-  assert.deepEqual(registerLegacyGrammars(rc, all), { ok: true, module: "legacy-checks", ids: [] }, "a second call finds every slot held");
-  assert.deepEqual(rc.grammars().map((x) => x.module), ["capture", ...Array(EXTENSION_ARMS.length - 1).fill("legacy-checks")],
-                   "one entry per slot it claims, after capture's");
-  /* each legacy arm runs in its own slot, in record-grammar's order, on every bundle the audit pages */
-  const bodies = [["INFO-2026-0001-a", "information"], ["INQ-2026-0001-b", "inquiry"]];
-  for (const [id, type] of bodies) rc.commit({ bundleId: id, type, snapKey: "K1", files: [file("bundle.md", doc(id, type))] });
-  const r = await rc.auditPass({ limit: 10 });
-  const order = EXTENSION_ARMS.map((a) => a.name).filter((n) => n !== "checkInformationExtension");
-  assert.deepEqual(ran, bodies.flatMap(([id]) => order.map((n) => [n, id])));
-  for (const g of all.filter((x) => !x.ids.includes("C-2.7"))) assert.equal(r.tallyDetail[`${g.ids[0]}/LEGACY`], bodies.length, g.ids[0]);
-  assert.ok(!("C-2.7/LEGACY" in r.tallyDetail), "the held slot's legacy arm never runs");
-  /* the same findings as checkBundle given grammars() over the same image */
-  for (const [id] of bodies) {
-    const own = await checkBundle(imageOf(rc, id), { grammars: rc.grammars() });
-    assert.deepEqual(own.findings.filter((f) => f.code === "LEGACY").map((f) => f.message), order);
-  }
-  /* a lone legacy entry is its own registration, run as it is */
-  const { rc: one } = fresh();
-  const only = legacyOf(["checkProjectExtension"]);
-  assert.deepEqual(registerLegacyGrammars(one, only), { ok: true, module: "legacy-checks", ids: ["C-2.9", "C-9.1"] });
-  ran.length = 0;
-  await checkBundle({ folderName: "x", files: new Map([["bundle.md", doc("x", "project")]]), sha256: async () => "", sha512: async () => new Uint8Array() },
-                    { grammars: one.grammars() });
-  assert.deepEqual(ran, [["checkProjectExtension", "x"]]);
-  /* with every slot held, or nothing handed in, nothing is registered; an entry that does not claim one slot whole is left out */
-  const { rc: full } = fresh();
-  for (const a of EXTENSION_ARMS) full.registerGrammar(`m-${a.name}`, { ids: [...a.ids], arm: () => {} });
-  assert.deepEqual(registerLegacyGrammars(full, all), { ok: true, module: "legacy-checks", ids: [] });
-  assert.ok(!full.grammars().some((x) => x.module === "legacy-checks"));
-  for (const bad of [undefined, null, "x", [], [{ ids: ["C-18.6"], arm: () => {} }], [{ ids: ["C-2.8"] }], [null]]) {
-    const { rc: b } = fresh();
-    assert.deepEqual(registerLegacyGrammars(b, bad), { ok: true, module: "legacy-checks", ids: [] }, JSON.stringify(bad));
-    assert.deepEqual(b.grammars(), []);
-  }
 });
 
 test("R68: a registered finding answers once per page under its key, beside the page's figures, which it never moves; one that throws is AUDIT_CHECK_FAILED under its key", async () => {
@@ -2367,4 +2312,112 @@ test("R46 R22 R72 (K775): a clears column is set to NULL where it names the purg
   assert.equal(rows(s, `SELECT COUNT(*) AS n FROM capture_requests WHERE lead_inquiry='INQ-2026-0002-b'`)[0].n, 2);
   rc.purge({});
   assert.equal(rows(s, `SELECT COUNT(*) AS n FROM capture_requests`)[0].n, 0, "the whole-store form clears the table, as declared");
+});
+
+/* ---- T20 layer 2: R74, this module's share of the instance's figures (K861, plane R10) ---- */
+
+/* The plane's held copy's sight: membership's `hiddenBundles` shape over a gate that hides one project and its bundles. */
+const HIDDEN_PROJECT = "PROJ-2026-0001-p";
+const hiddenOf = (gate) => ({ sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: [...gate.args] });
+const HID = hiddenOf({ sql: "COALESCE(b.project, '') <> ?", args: [HIDDEN_PROJECT] });
+
+/* Bundles in and out of the hidden project, with history, and connections' `refs` (a stand-in table of its shape) naming
+   them from either side, NULL keys and bundles not held among them. */
+function figuresFixture({ refs = true } = {}) {
+  const { s, rc } = fresh();
+  const c = (id, k, project, n = 1) => rc.commit({ bundleId: id, type: "information", snapKey: k, project,
+    files: Array.from({ length: n }, (_, i) => file(i ? `n${i}.md` : "bundle.md", `${id}${k}${i}`)) });
+  c(HIDDEN_PROJECT, "K1", HIDDEN_PROJECT); c(HIDDEN_PROJECT, "K2", HIDDEN_PROJECT, 2);
+  c("INFO-2026-0001-a", "K1", HIDDEN_PROJECT, 3); c("INFO-2026-0001-a", "K2", HIDDEN_PROJECT, 2);
+  c("INFO-2026-0002-b", "K1", null, 2); c("INFO-2026-0002-b", "K2", null);
+  c("INFO-2026-0003-c", "K1", "PROJ-2026-0002-q");
+  if (refs) {
+    s.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, rel TEXT)`);
+    for (const [from, to] of [["INFO-2026-0001-a", "INFO-2026-0002-b"], ["INFO-2026-0002-b", "INFO-2026-0001-a"], ["INFO-2026-0002-b", "INFO-2026-0003-c"],
+                              ["INFO-2026-0003-c", null], [null, "INFO-2026-0002-b"], [null, null], ["INFO-2026-0002-b", "INFO-2099-0000-gone"],
+                              [HIDDEN_PROJECT, null], [null, HIDDEN_PROJECT], ["INFO-2026-0003-c", "INFO-2026-0002-b"]])
+      s.sql.exec(`INSERT INTO refs VALUES (?, ?, 'cites')`, from, to);
+  }
+  return { s, rc };
+}
+
+/* The four figures as the held copy defines them, computed from the rows in JS: a row is dropped when a column that names
+   a bundle names a hidden one; a NULL names none. */
+function heldFigures(s, hidden) {
+  const out = {};
+  const named = (v) => v !== null && hidden.has(v);
+  for (const [key, table, keys] of [["bundles", "bundles", ["bundle_id"]], ["files", "files", ["bundle_id"]],
+                                     ["history", "history", ["bundle_id"]], ["refs", "refs", ["bundle_id", "target_id"]]])
+    out[key] = rows(s, `SELECT * FROM ${table}`).filter((r) => !keys.some((k) => named(r[k]))).length;
+  return out;
+}
+const hiddenIds = (s) => new Set(rows(s, `SELECT bundle_id FROM bundles WHERE COALESCE(project, '') = ?`, HIDDEN_PROJECT).map((r) => r.bundle_id));
+
+test("R74: the exported figure source answers bundles, files, history and refs as the held copy counts them, whole for a null hid and less a hidden project's rows through hid", () => {
+  const { s, rc } = figuresFixture();
+  assert.deepEqual(RecordCore.COUNT_KEYS, ["bundles", "files", "history", "refs"], "its key list, in order");
+  assert.ok(Object.isFrozen(RecordCore.COUNT_KEYS));
+  const hidden = hiddenIds(s);
+  assert.deepEqual([...hidden].sort(), ["INFO-2026-0001-a", HIDDEN_PROJECT], "the fixture hides a project and its bundle");
+  const whole = heldFigures(s, new Set()), sighted = heldFigures(s, hidden);
+  assert.deepEqual(whole, { bundles: 4, files: 6, history: 6, refs: 10 });
+  assert.deepEqual(sighted, { bundles: 2, files: 2, history: 2, refs: 6 }, "the reference: NULL keys kept, a hidden key on either side dropped");
+  assert.deepEqual(rc.ownCounts(null), whole, "a null hid counts whole");
+  assert.deepEqual(rc.ownCounts(), whole);
+  assert.deepEqual(rc.ownCounts(HID), sighted, "less the hidden project's rows, by bundle_id, and for refs by bundle_id or target_id");
+  assert.deepEqual(Object.keys(rc.ownCounts(HID)), RecordCore.COUNT_KEYS);
+  /* a sight that hides nothing, and one that hides everything (a viewer the gate refuses) */
+  assert.deepEqual(rc.ownCounts(hiddenOf({ sql: "1=1", args: [] })), whole);
+  const all = new Set(rows(s, `SELECT bundle_id FROM bundles`).map((r) => r.bundle_id));
+  assert.deepEqual(rc.ownCounts(hiddenOf({ sql: "0=1", args: [] })), heldFigures(s, all));
+  assert.deepEqual(heldFigures(s, all), { bundles: 0, files: 0, history: 0, refs: 1 }, "only the refs naming no held bundle stay");
+  /* it follows the tables, and writes nothing */
+  const before = dump(s);
+  rc.ownCounts(HID); rc.ownCounts(null);
+  assert.deepEqual(dump(s), before);
+  rc.commit({ bundleId: "INFO-2026-0004-d", type: "information", snapKey: "K1", project: HIDDEN_PROJECT, files: [file("bundle.md", "d")] });
+  assert.deepEqual(rc.ownCounts(HID), heldFigures(s, hiddenIds(s)));
+  assert.equal(rc.ownCounts(null).bundles, 5);
+});
+
+test("R74 R63: registered through R63 under this module's name the export answers the four figures, and the module registers nothing itself", () => {
+  const { s, rc } = figuresFixture();
+  assert.deepEqual(rc.counts(null), {}, "nothing registered: record-core registers no figure of its own");
+  assert.deepEqual(rc.registerCounts("record-core", [...RecordCore.COUNT_KEYS], (hid) => rc.ownCounts(hid)),
+                   { ok: true, module: "record-core", keys: ["bundles", "files", "history", "refs"] }, "the name and keys are free for plane to register");
+  assert.deepEqual(rc.counts(null), heldFigures(s, new Set()));
+  assert.deepEqual(rc.counts(HID), heldFigures(s, hiddenIds(s)));
+  /* beside another module's figures, as plane spreads them, each in its registration order */
+  rc.registerCounts("queue", ["tasks"], () => ({ tasks: 2 }));
+  assert.deepEqual(Object.keys(rc.counts(HID)), ["bundles", "files", "history", "refs", "tasks"]);
+  /* a table that cannot be read is a null figure, never zero, and the others still answer */
+  const { rc: bare } = figuresFixture({ refs: false });
+  bare.registerCounts("record-core", [...RecordCore.COUNT_KEYS], (hid) => bare.ownCounts(hid));
+  assert.deepEqual(bare.counts(null), { bundles: 4, files: 6, history: 6, refs: null });
+  assert.deepEqual(bare.counts(HID), { bundles: 2, files: 2, history: 2, refs: null });
+  assert.deepEqual(bare.counts({ sql: "(no sql", args: [] }), { bundles: null, files: null, history: null, refs: null }, "a hid SQLite cannot read");
+  assert.doesNotThrow(() => recordOf({ storage: storage({ schema: false }) }).ownCounts(HID));
+  assert.deepEqual(recordOf({ storage: storage({ schema: false }) }).ownCounts(null), {});
+});
+
+test("R74 R64 R72: in purge's proof, through a stats source spreading R63's figures as plane's does, the four are whole before and after, and removed is their difference", () => {
+  const { s, rc } = figuresFixture();
+  rc.declarePurge("connections", [{ name: "refs", keys: ["bundle_id", "target_id"] }]);
+  rc.registerCounts("record-core", [...RecordCore.COUNT_KEYS], (hid) => rc.ownCounts(hid));
+  /* the plane's source: the viewer's hid, null for a viewer never sent (purge's proof is asked with none) */
+  const asked = [];
+  rc.registerStatsSource("plane", ({ viewer, proof }) => { asked.push([viewer, proof]); return { ...rc.counts(viewer === undefined ? null : HID) }; });
+  assert.deepEqual(rc.stats({ viewer: "member:iris" }), heldFigures(s, hiddenIds(s)), "op=stats through the viewer's sight");
+  assert.deepEqual(rc.stats({}), heldFigures(s, new Set()), "a viewer never sent counts whole");
+  const whole = heldFigures(s, new Set());
+  const r = recordCoreOps(rc, opsUrl("purge", { bundleId: "INFO-2026-0001-a" }), null).purge();
+  assert.deepEqual(asked.slice(-2), [[undefined, true], [undefined, true]], "the proof is asked whole, before and after");
+  const pick = (o) => Object.fromEntries(RecordCore.COUNT_KEYS.map((k) => [k, o[k]]));
+  assert.deepEqual(pick(r.before), whole, "before: whole, the hidden project's rows included");
+  assert.deepEqual(pick(r.after), heldFigures(s, new Set()));
+  assert.deepEqual(pick(r.after), { bundles: 3, files: 4, history: 3, refs: 8 });
+  assert.deepEqual(pick(r.removed), { bundles: 1, files: 2, history: 3, refs: 2 }, "removed: before less after, for each of the four");
+  const all = recordCoreOps(rc, opsUrl("purge", {}), null).purge();
+  assert.deepEqual(pick(all.after), { bundles: 0, files: 0, history: 0, refs: 0 });
+  assert.deepEqual(pick(all.removed), pick(r.after));
 });
