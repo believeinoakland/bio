@@ -263,7 +263,7 @@ export class CaptureRequests {
         return refusal("CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
           `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this `
           + `evidence bears on, so it names a question or it names nothing — a document, a project or a `
-          + `bundle id nothing answers to would give the notification a home that cannot hold it.`,
+          + `record id nothing answers to would give the notification a home that cannot hold it.`,
           { lead_inquiry: lead });
       if (lead === target)
         return refusal("CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
