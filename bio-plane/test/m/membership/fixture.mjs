@@ -18,12 +18,12 @@ export function sqlOver(db) {
 
 export function world() {
   const db = new DatabaseSync(":memory:");
-  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT)`);
+  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
   const declared = [];
   const core = {
     bundleInfo(id) {
-      const r = db.prepare(`SELECT bundle_id, object_type, title FROM bundles WHERE bundle_id=?`).get(bind(id));
-      return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: null } : null;
+      const r = db.prepare(`SELECT bundle_id, object_type, title, project FROM bundles WHERE bundle_id=?`).get(bind(id));
+      return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: r.project ?? null } : null;
     },
     declarePurge(module, tables, opts) { declared.push({ module, tables, opts }); },
   };
@@ -34,8 +34,9 @@ export function world() {
   m.migrate();
   const w = {
     db, sql, core, m, declared,
-    bundle(id, type = "information", title = `title of ${id}`) {
-      db.prepare(`INSERT INTO bundles (bundle_id, object_type, title) VALUES (?,?,?)`).run(id, type, title);
+    /* `project` is record-core R34's: the project the bundle belongs to (N426). */
+    bundle(id, type = "information", title = `title of ${id}`, project = null) {
+      db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project) VALUES (?,?,?,?)`).run(id, type, title, project);
       return id;
     },
     project(id, title = `Project ${id}`) { w.bundle(id, "project", title); m.reindexProjectSight(id); return id; },
