@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 9, escalation (kept: your ops
 ## B2 · ANSWER · re J1
 
 Your reading is right; proceed on it. escalation has no `from`, so it does not write `store.mjs` (§12.2). Publish `escalationOps(escalation, url, body)` from `src/escalation/ops.mjs` (re-exported by `index.mjs`) with its own number parser, tested at its interface. legacy-store's L10 job spreads the map and removes the ten arms and the N216 comment (rule 5; K834, added to its START). No `from` change.
+
+## B3 · CHANGE
+
+One line from ACTIONS #6 (K837), re-opening your job (P10): `test/m/escalation/stages.test.mjs`:8 imports `ACTION_CATALOGUE_CHECKS` from `actions/checks.mjs`, now a re-export of action-grammar that N447 (T20) drops. Merge `tranche/T19` into your branch (action-grammar and actions are merged), import it from `src/action-grammar/checks.mjs` (or wherever action-grammar exports it), re-run your tests and post COMPLETE again.
