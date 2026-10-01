@@ -51,7 +51,7 @@ Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary acc
 ## Layer 2
 
 - **record-core** · **amended** as the refresh: `op=stats`, `registerStatsSource`, purge's call **done in T18** (K650); kept the rest as drafted; `registerGrammar` reads `EXTENSION_ARMS` from record-grammar; **N422** (record-core share): `registerGrammar`'s answer (`index.mjs`:970) classified for the DEC-49 guard. Catalogue imports: `index.mjs`, `test/m/record-core/record-core.test.mjs`.
-- **membership** · **amended** as the refresh (seam, the split's deletion, families, N70 bounds, converts; `MODULE_ORDER` if the fold did not). Catalogue imports: `index.mjs` and 11 module tests.
+- **membership** · **amended** as the refresh (seam, the split's deletion, families, N70 bounds, converts; `MODULE_ORDER` if the fold did not). Catalogue imports: `index.mjs` and 11 module tests. **Rule 8, as the L2 fold found it:** `MODULE_ORDER` (R83) gains `site-profiles` (before docprofile) and `credentials` (after membership), the two ids `modules.json` holds that it lacks; inquiry-grammar, action-grammar and plane are not yet in `modules.json` (their folds come before L6, L9, L11).
 - **credentials** (new) · **kept.**
 - **promotion** · **amended.** As drafted, plus:
   - **N425:** `bundles.criticality` derived from the document's own front matter as well as the envelope, named by a test (R39 worded before L2; matches ratification R22, K692).
@@ -79,14 +79,14 @@ Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary acc
 
 ## Layer 6
 
-- **inquiry-grammar** (new) · **kept.** Deletes the catalogue's `LEAD_ID_RE` (rule 1).
+- **inquiry-grammar** (new) · **kept.** Deletes the catalogue's `LEAD_ID_RE` (rule 1), **amended (K766):** not in L6: `LEAD_ID_RE`, `leadLegFindings`, `LEAD_CHECKS`, `checkLegExtentGrammar` and whatever else the catalogue's `actionBasisFindings` still calls stay in the catalogue until action-grammar takes C-2.10 in L9 (rule 1). Its R6 claims three slots in one registration (record-core R67 as K766 words it) and gives `basis-versions` a sub-slot inside the C-2.8 arm (P1).
 - **inquiry** · **amended** as the refresh (R11's arm, C-66.5, the grammar face; **N422**: R42's `#raise` carries `raise`'s answer object for `staled`, `dispose`, `divide`; **N136's rest**). New: `test/m/inquiry/content-legs.test.mjs`:18's `contentIdFor` re-pointed or computed through content, then the catalogue's `contentIdFor` deleted. Merges early for strength and contradiction.
 - **citation**, **run-productions** (N155's last share), **contradiction** (with N136's rest) · **kept.**
 - **basis-versions** · **kept** (catalogue share; merges early).
 - **strength** · **amended** as the refresh, plus: `converts.test.mjs`:10's catalogue parity arm dropped, then the catalogue's `STRENGTH_STATES` deleted (its last importer; ratification re-pointed, K691, K692).
 - **ai-runs** · **kept** (⚑L11 resolved). The four re-exports go: legacy-store's `airun.mjs` import is **done in T18** (K720); control-plane's `M_AI_RUNS` import of `ai-runs/checks.mjs` is gone (K737; no `src/` importer of the four at ac5ef075a0). N242's arm G: confirm with the guard that no code is minted in both ai-runs and run-rules (CONSEQUENCES #4's reading).
 - **capture-requests** · **amended.** Its C-28 copy becomes the only one: the catalogue's `CAPTURE_REQUEST_CHECKS` deleted after agent-worker's test re-point merges (rule 4).
-- **skills** · **amended.** As drafted, plus **N430** (K720): `src/skillpack.mjs` has no product importer left; the job deletes it (and its `test/m/skills/` uses) or shows its reader.
+- **skills** · **amended.** As drafted, plus **N430** (K720): `src/skillpack.mjs` has no product importer left; the job deletes it (and its `test/m/skills/` uses) or shows its reader. **Answered at the L6 fold (K766):** kept: control-plane reads it (`control-plane/index.mjs`:20, `renderPack`, `machineFences`); no R names it.
 - **agent-worker** · **amended** as the refresh (tests `wire-vocabulary.test.mjs`:68, `plane-capturerequest.mjs`:27, `plane-suggest.mjs`:86; **N421**). N420's share is **done in T18** (`test/plan.test.mjs`:222). Merges early for capture-requests' C-28 deletion.
 
 ## Layer 7
@@ -106,11 +106,11 @@ Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary acc
 
 ## Layer 9
 
-- **standards**, **conformance**, **consequences**, **filings** · **kept** (catalogue re-points, code and tests). ⚑L9 resolved: no N242 share remains (CONFORMANCE #6, CONSEQUENCES #4, ESCALATION #6 found theirs met; standards and filings had none); conformance's K680 arm **done in T18** (K703).
+- **standards**, **conformance**, **consequences**, **filings** · **kept** (catalogue re-points, code and tests). ⚑L9 resolved: no N242 share remains (CONFORMANCE #6, CONSEQUENCES #4, ESCALATION #6 found theirs met; standards and filings had none); conformance's K680 arm **done in T18** (K703). **N433 (K766):** conformance's `BAD_REASON` (C-113.17) and `NO_REASON` (C-113.22) become codes of its own, worded at the L9 fold.
 - **action-grammar** (new) · **kept.** ⚑L9 resolved: actions is 3,846 lines after T18; with its 444-line share it would pass 4,000, so the split holds (P6). REC-201's outward share as drafted. Merges early for actions and action-clocks.
 - **actions** · **amended.** The split's deletion and the catalogue re-points as drafted, plus **N428** (K717): delete its `pendingClocks` copy, its two bounds, `PENDING_CLOCKS_BAD_BEFORE`'s row and R31's tests (monitoring reads action-clocks', MONITORING #7). **N427:** export the governed helper `contactNotAMember` (R45), as `noSuchAction` is. Merges early for action-clocks and action-plans.
 - **action-clocks** · **new** (⚑L9 resolved: imports the catalogue). `parseFrontmatter`, `normalizeType`, `isMachineIdentity` (`index.mjs`:31, `fixture.mjs`:14) to record-grammar; `lawProposalLabel` to action-grammar (`uses` gains it). **N427:** export `reminderRefused` (R4). Merges early for action-plans. **Size:** ~20.
-- **escalation** · **kept** (its ops map out of `store.mjs`, lines ~1913–1942 at HEAD; re-points).
+- **escalation** · **kept** (its ops map out of `store.mjs`, lines ~1913–1942 at HEAD; re-points). **N433 (K766):** `NO_REASON` (C-116.24) becomes a code of its own, worded at the L9 fold.
 - **action-plans** · **new** (⚑L9 resolved). Catalogue re-points (`doc.mjs`:7, `index.mjs`:59, `fixture.mjs`:19). **N432** (K727): `optionPropose` reads a second stamp, `principal` (`<principal>/<tokenId>`), for the run gate (R31) and keeps `proposer` (`class:ai/<tokenId>`) for the label (R11); control-plane stamps both (K727, K737). **N427:** answer `CONTACT_NOT_A_MEMBER` and `REMINDER_REFUSED` through the two exports and drop the roll-back probes. ⚑L9's deferral row (unfinished Rs) is moot: ACTION-PLANS #1 deferred none (K711). Last in the layer.
 
 ## Layer 10

@@ -1,6 +1,6 @@
 # BOB to record-grammar (T19)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ K750: do not move `isMachineMinted` (K653 BOB-1: no reader); legacy-checks delet
 ## B4 · ANSWER · re J2
 
 K751, K752: (1) R30–R41 are worded on tranche/T19: merge it and tag your tests. (2) Option (a): R28 keeps the C-2.7 slot (`checkInformationExtension`, filled by capture's grammar). (3) Your order is adopted; R28 lists the slots in run order: C-2.7, C-18.6/.7, C-6.1 (`checkSupersession`), C-15.1 (`checkRecheckCoverage`), C-2.8, C-2.9/C-9.1; LEGACY_GRAMMARS fills C-6.1 and C-15.1 until L6. If R28's order differs from the code's actual run order, follow the code and tell me. Hand-off accepted: the catalogue's EXTENSION_ARMS re-export goes in with legacy-checks' wrapper. `isMachineMinted` stays out (B3).
+
+## B5 · RESUME
+
+Nothing pushed for 20 minutes (backstop). Read B1–B4 (K748, K750, K751: R28's slots incl. C-2.7; isMachineMinted stays out; R30–R41 worded on tranche/T19), merge tranche/T19, push your progress and set your state; legacy-checks waits on your merge.

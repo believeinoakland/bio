@@ -7,7 +7,7 @@
  * a system starts reassuring people about things it has not understood.
  */
 import { CONFIDENCE, CONTRACT } from "./index.mjs";
-import { event, worstSignificance, isMeaningful } from "../events.mjs";
+import { event, worstSignificance, isMeaningful } from "../../site-profiles/index.mjs";
 
 export default {
   key: "generic", label: "a document of no recognised type", version: 1, fallback: true,

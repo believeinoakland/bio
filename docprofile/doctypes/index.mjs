@@ -28,7 +28,7 @@
    CONFIDENCE duplicated because this axis was split off after the stack axis already
    had a ladder (CONSTRUCTS Step 0 #1). A content type simply never returns `possible`;
    the ladder is still one ladder. */
-export { CONFIDENCE } from "../recogniser.mjs";
+export { CONFIDENCE } from "../../site-profiles/index.mjs";
 
 /* What WATCHING this kind of document should do, DECLARED by the content type rather
    than derived from the stack handler (CONSTRUCTS Step 0 #4). The kind is the content

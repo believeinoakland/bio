@@ -1,12 +1,16 @@
-/* Produce an SSHSIG from this project's raw release seed.
+/* The release signer: an SSHSIG from this project's raw release seed.
+ *
+ * Part of the `signatures` module (R33–R36). It is run only on an operator's
+ * machine, by the release assembler; it lives in `scripts/`, not `src/`, so no
+ * bundle of the plane or the installer can ever reach it.
  *
  * ---- WHY THIS EXISTS, AND WHY IT IS NOT IN sshsig.mjs ----------------------
  *
- * `bio-plane/src/sshsig.mjs` states an invariant in its own header: "No secrets
- * appear anywhere in this module: it holds public keys and verifies." That is a
+ * `src/sshsig.mjs` states an invariant in its own header: "No secrets appear
+ * anywhere in this module: it holds public keys and verifies." That is a
  * property worth keeping — the module ships INSIDE the plane and inside the
  * installer, where a signing path would be a liability and never an asset. So
- * the signer lives here, in a DIST tool that runs on an operator's machine, and
+ * the signer lives here, in a script that runs on an operator's machine, and
  * the verifier stays there.
  *
  * ---- WHY NOT JUST RUN `ssh-keygen -Y sign` --------------------------------
@@ -15,8 +19,8 @@
  * OPENSSH PRIVATE KEY FILE and fails with "Couldn't load public key … No such
  * file or directory" when handed anything else. This project's seed is not that
  * shape — it is `BIOKEY-RAW1.<label>.<base64 32-byte ed25519 seed>`, the envelope
- * `tools/sign-release.html` mints and reads. Converting that into an
- * openssh-key-v1 file just to hand it back to ssh-keygen is more moving parts,
+ * the signer page (`src/sign-release.html`) mints and reads. Converting that into
+ * an openssh-key-v1 file just to hand it back to ssh-keygen is more moving parts,
  * and every one of them would be a place to get the bytes wrong silently.
  *
  * THE DOCTRINE IS UNAFFECTED, AND THAT IS THE POINT. The rule this repository
@@ -25,9 +29,14 @@
  * must satisfy it. Signing with a conforming implementation and then having
  * stock OpenSSH accept the result satisfies that rule completely; a signature
  * this project could produce but OpenSSH could not check is the thing being
- * guarded against, and `release-assemble.mjs` verifies with stock ssh-keygen
+ * guarded against, and the release assembler verifies with stock ssh-keygen
  * immediately after signing, every time, including when it signed the bytes
  * itself.
+ *
+ * THE SEED NEVER LEAVES (R36). Nothing here prints or writes, and the only
+ * values handed out of the two operator-facing calls are the signature and the
+ * public line; an error names the envelope's shape or the seed's length, never
+ * its bytes.
  */
 import { createPrivateKey, createPublicKey, sign as cryptoSign, createHash } from "node:crypto";
 
@@ -49,8 +58,10 @@ const cat = (...parts) => {
 /** Pull the 32-byte ed25519 seed out of the `BIOKEY-RAW1.<label>.<b64>` envelope. */
 export function seedFromEnvelope(envelope) {
   const text = String(envelope || "").trim();
-  const m = /^BIOKEY-RAW1\.([^.]*)\.(.+)$/.exec(text);
-  if (!m) throw new Error("release seed is not a BIOKEY-RAW1 envelope");
+  /* Exactly the envelope the signer page mints: canonical, padded base64 only,
+     so a stray character is refused rather than silently skipped by the decoder. */
+  const m = /^BIOKEY-RAW1\.([^.]*)\.((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)$/.exec(text);
+  if (!m || !m[2]) throw new Error("release seed is not a BIOKEY-RAW1 envelope");
   const seed = Buffer.from(m[2], "base64");
   if (seed.length !== 32) throw new Error(`release seed is ${seed.length} bytes, expected 32`);
   return { label: m[1], seed };

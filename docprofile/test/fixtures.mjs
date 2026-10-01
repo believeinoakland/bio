@@ -9,7 +9,7 @@
  * view a caller passes as `ctx.view`. Patterns are written the way the held profiles
  * write them, anchors and groups included.
  */
-import { combine, validate } from "../../jurisdictions/index.mjs";
+import { combine, validate, list } from "../../jurisdictions/index.mjs";
 
 const p = (re, flags) => (flags ? { re, flags } : { re });
 const fact = (pattern, extra) => ({ pattern, basis: "TEST", ...(extra || {}) });
@@ -81,6 +81,17 @@ export function view(...profiles) {
 /** A view with no profile in it: nothing local is known. */
 export const EMPTY = combine([]).view;
 
+/** The view of every NON-TEST profile `jurisdictions` holds, PASSED EXPLICITLY: the real
+ *  documents the converted suites read were published where the held profile describes, and
+ *  this is the view an instance using that profile hands its readers. Where a document came
+ *  from is provenance, not a place in the product (layers.md, "No jurisdiction in the
+ *  product", rule 6); the test names no place, it asks `jurisdictions` for what it holds. */
+export const HELD = (() => {
+  const r = combine(list().filter((x) => !x.test).map((x) => x.id));
+  if (!r.ok) throw new Error(`the held profiles do not combine: ${JSON.stringify(r.errors)}`);
+  return r.view;
+})();
+
 /* ---- documents written in Port Alder's vocabulary ---- */
 
 /** An agenda: file numbers alone on their lines, item blocks, a masthead on every
@@ -116,11 +127,6 @@ export const PA_AGENDA = [
   "Agenda - FINAL",
   "PA-101",
 ].join("\n");
-
-/** The same agenda with PA-102 pulled and PA-104 added, PA-103's subject changed. */
-export const PA_AGENDA_REVISED = PA_AGENDA
-  .replace("2.1\nPA-102", "2.1\nPA-104")
-  .replace("Mooring Permits", "Mooring Permits And Waitlist");
 
 /** Minutes: masthead at page rate, a motion with its vote, a roster, the frame. */
 export const PA_MINUTES = [
@@ -204,7 +210,7 @@ export const PA_DIRECTORY = [
   "Fay Lin, Engineer  flin@portalder.test  555-201-0006",
 ].join("\n");
 
-/* ---- HTML captures, for the stack axis and the layered pipeline ---- */
+/* ---- HTML captures, for the layered pipeline ---- */
 
 const vs = (v) => `<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="${v}" />`;
 
@@ -222,14 +228,6 @@ export function calendarHtml(rows, { state = "abc", range = "This Month" } = {})
 <input id="ctl00_lstYears_Input" value="${range}" />
 <table>${tr}</table>
 </main></form></body></html>`;
-}
-
-/** A WordPress article; `nav` is the site navigation outside the article. */
-export function wordpressArticle({ nav = "Home | News", body = "The harbor reopened today." } = {}) {
-  return `<html><head><meta name="generator" content="WordPress 6.5" />
-<link rel="stylesheet" href="/wp-content/themes/x/style.css?ver=1.2" /></head>
-<body><nav>${nav}</nav><article><h1>Harbor</h1><p>${body}</p></article>
-<footer>© the paper</footer></body></html>`;
 }
 
 /** A client-rendered shell: an empty mount point, a framework marker, no prose. */

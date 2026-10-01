@@ -1,0 +1,1969 @@
+{
+ "clean information": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "clean project": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "clean action": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "clean bias": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "clean inquiry": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "clean action plan": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "legacy problem spelling": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## Statement' is missing",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## Statement' with empty body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## Why It Matters' is missing",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## Why It Matters' with empty body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## Open Questions' is missing",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## Open Questions' with empty body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "heading '## Summary' is not in the canonical set for problem",
+    "repairable": true,
+    "repairs": [
+     "rename to the canonical heading, preserving body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "heading '## Provenance Notes' is not in the canonical set for problem",
+    "repairable": true,
+    "repairs": [
+     "rename to the canonical heading, preserving body"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "legacy focus at published-free state": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "no bundle.md": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-13.1",
+    "severity": "error",
+    "message": "bundle.md is missing"
+   }
+  ]
+ },
+ "no frontmatter fence": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.1",
+    "severity": "error",
+    "message": "bundle.md does not begin with a --- frontmatter fence"
+   },
+   {
+    "check": "C-1.2",
+    "severity": "error",
+    "message": "frontmatter id 'undefined' does not match the canonical ID grammar"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "frontmatter grammar errors": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.1",
+    "severity": "error",
+    "message": "duplicate top-level key 'title' at line 6"
+   },
+   {
+    "check": "C-2.4",
+    "severity": "error",
+    "message": "top-level key 'status' is buried by stray indentation at line 7 and will not register",
+    "repairable": true,
+    "repairs": [
+     "re-indent 'status' to column 0"
+    ]
+   },
+   {
+    "check": "C-2.1",
+    "severity": "error",
+    "message": "line 8 does not fit the restricted grammar: junk line"
+   },
+   {
+    "check": "C-2.3",
+    "severity": "error",
+    "message": "forbidden alias 'status' present (canonical name is 'current_state')",
+    "repairable": true,
+    "repairs": [
+     "rename 'status' to 'current_state'"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-1.1 folder differs from id": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-1.1",
+    "severity": "error",
+    "message": "folder name 'INFO-2026-0009-z' does not equal frontmatter id 'INFO-2026-0001-a'",
+    "repairable": true,
+    "repairs": [
+     "restore folder name from frontmatter id",
+     "restore frontmatter id from folder name if history confirms it"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-1.2 malformed id": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-1.2",
+    "severity": "error",
+    "message": "frontmatter id 'INFO-26-1-A' does not match the canonical ID grammar"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-1.3 annotations": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-1.3",
+    "severity": "error",
+    "message": "annotation file 'note.txt' is not a .json record"
+   },
+   {
+    "check": "C-1.3",
+    "severity": "error",
+    "message": "annotation record 'bad.json' does not parse"
+   },
+   {
+    "check": "C-1.3",
+    "severity": "error",
+    "message": "annotation id 'nope' does not match the v1.1 timestamp-author grammar"
+   },
+   {
+    "check": "C-1.3",
+    "severity": "error",
+    "message": "annotation 'INFO-2026-0002-b.ann-20260101T000001Z-eve' does not belong to parent 'INFO-2026-0001-a'"
+   },
+   {
+    "check": "C-1.3",
+    "severity": "error",
+    "message": "annotation file 'wrong-name.json' does not match its id (expected 'ann-20260101T000002Z-al.json')"
+   },
+   {
+    "check": "C-1.3",
+    "severity": "warn",
+    "message": "annotations_open is 3 but 2 annotation record(s) are pending",
+    "repairable": true,
+    "repairs": [
+     "refresh annotations_open on the next write"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-14.3",
+    "severity": "error",
+    "message": "annotations/bad.json does not parse as JSON",
+    "repairable": true,
+    "repairs": [
+     "restore from history"
+    ]
+   }
+  ]
+ },
+ "C-2.2 core field missing, produced_by incomplete": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.2",
+    "severity": "error",
+    "message": "required core field 'group' is missing"
+   },
+   {
+    "check": "C-2.2",
+    "severity": "error",
+    "message": "required core field 'visuals' is missing"
+   },
+   {
+    "check": "C-2.2",
+    "severity": "error",
+    "message": "produced_by.mode is missing"
+   },
+   {
+    "check": "C-2.2",
+    "severity": "error",
+    "message": "produced_by.capability_tier is missing"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-2.3 forbidden aliases": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.3",
+    "severity": "error",
+    "message": "forbidden alias 'status' present (canonical name is 'current_state')",
+    "repairable": true,
+    "repairs": [
+     "rename 'status' to 'current_state'"
+    ]
+   },
+   {
+    "check": "C-2.3",
+    "severity": "error",
+    "message": "forbidden alias 'modified' present (canonical name is 'last_updated')",
+    "repairable": true,
+    "repairs": [
+     "rename 'modified' to 'last_updated'"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-2.5 unknown type": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.5",
+    "severity": "error",
+    "message": "object_type 'memo' is not a known type"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-2.5 prefix implies another type": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.5",
+    "severity": "error",
+    "message": "id prefix 'INFO' implies 'information' but object_type is 'project'"
+   },
+   {
+    "check": "C-4.1",
+    "severity": "error",
+    "message": "current_state 'collected' is not legal for project (legal: forming, investigating, matured, closed)"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-2.5 bad schema stamp": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.5",
+    "severity": "error",
+    "message": "schema stamp 'information' is not of the form <type>@<n>"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-2.5 schema of another type": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.5",
+    "severity": "error",
+    "message": "schema stamp 'project@1' does not match object_type 'information'"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-2.5 unknown schema version": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.5",
+    "severity": "error",
+    "message": "schema version 'information@9' is not known to this check catalog"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-2.5 knownSchemas narrowed": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.5",
+    "severity": "error",
+    "message": "schema version 'information@1' is not known to this check catalog"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-2.6 timestamps": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-2.6",
+    "severity": "error",
+    "message": "created '2026-01-01' is not ISO 8601 UTC (YYYY-MM-DDTHH:MM:SSZ)"
+   },
+   {
+    "check": "C-2.6",
+    "severity": "error",
+    "message": "last_updated '2026-01-01T00:00:00+00:00' is not ISO 8601 UTC (YYYY-MM-DDTHH:MM:SSZ)"
+   },
+   {
+    "check": "C-2.6",
+    "severity": "error",
+    "message": "state_history[0].timestamp 'yesterday' is not ISO 8601 UTC"
+   },
+   {
+    "check": "C-13.1",
+    "severity": "error",
+    "message": "last_updated precedes the newest state_history timestamp 'yesterday'"
+   },
+   {
+    "check": "C-13.2",
+    "severity": "error",
+    "message": "bundle has been updated but carries no Session Log entry",
+    "repairable": true,
+    "repairs": [
+     "append the missing Session Log entry naming the gap"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-3.1 missing and extra headings": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## Provenance Notes' is missing",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## Provenance Notes' with empty body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## Session Log' is missing",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## Session Log' with empty body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "heading '## Extra' is not in the canonical set for information",
+    "repairable": true,
+    "repairs": [
+     "rename to the canonical heading, preserving body"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-3.1 case member owes the exclusion heading": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## What This Excludes' is missing: a member of a published case carries it",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## What This Excludes' with the assertion in it"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-3.1 case member carries it": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-3.1 not a case member: one axis": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-4.1 illegal state": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-4.1",
+    "severity": "error",
+    "message": "current_state 'published' is not legal for information (legal: collected, verified, retired)"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-4.1 inquiry legacy state is readable": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-4.1 focus machine on a problem": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## Statement' is missing",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## Statement' with empty body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## Why It Matters' is missing",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## Why It Matters' with empty body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "required heading '## Open Questions' is missing",
+    "repairable": true,
+    "repairs": [
+     "insert canonical heading '## Open Questions' with empty body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "heading '## Summary' is not in the canonical set for problem",
+    "repairable": true,
+    "repairs": [
+     "rename to the canonical heading, preserving body"
+    ]
+   },
+   {
+    "check": "C-3.1",
+    "severity": "error",
+    "message": "heading '## Provenance Notes' is not in the canonical set for problem",
+    "repairable": true,
+    "repairs": [
+     "rename to the canonical heading, preserving body"
+    ]
+   },
+   {
+    "check": "C-4.1",
+    "severity": "error",
+    "message": "current_state 'open' is not legal for problem (legal: surfaced, elevated, deferred, dismissed)"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-4.2 history entry not an object": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-4.2",
+    "severity": "error",
+    "message": "state_history[0] is not an object"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-13.1 last_updated precedes created and history": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-13.1",
+    "severity": "error",
+    "message": "last_updated '2026-01-15T00:00:00Z' precedes created '2026-02-01T00:00:00Z'"
+   },
+   {
+    "check": "C-13.1",
+    "severity": "error",
+    "message": "last_updated precedes the newest state_history timestamp '2026-03-01T00:00:00Z'"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-13.2 updated without a session entry": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-13.2",
+    "severity": "error",
+    "message": "bundle has been updated but carries no Session Log entry",
+    "repairable": true,
+    "repairs": [
+     "append the missing Session Log entry naming the gap"
+    ]
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-13.2 updated with a session entry": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-14 hygiene": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-14.2",
+    "severity": "error",
+    "message": "filename 'bad name.md' violates the naming rule",
+    "repairable": true,
+    "repairs": [
+     "rename file and update references"
+    ]
+   },
+   {
+    "check": "C-14.2",
+    "severity": "error",
+    "message": "filename 'noext' violates the naming rule",
+    "repairable": true,
+    "repairs": [
+     "rename file and update references"
+    ]
+   },
+   {
+    "check": "C-14.2",
+    "severity": "error",
+    "message": "filename 'UP.PNG' violates the naming rule",
+    "repairable": true,
+    "repairs": [
+     "rename file and update references"
+    ]
+   },
+   {
+    "check": "C-14.1",
+    "severity": "error",
+    "message": "escaped markdown character '\\*' in notes.md",
+    "repairable": true,
+    "repairs": [
+     "normalize to clean markdown"
+    ]
+   },
+   {
+    "check": "C-14.3",
+    "severity": "error",
+    "message": "data/x.json does not parse as JSON",
+    "repairable": true,
+    "repairs": [
+     "restore from history"
+    ]
+   },
+   {
+    "check": "C-14.4",
+    "severity": "error",
+    "message": "visuals entry 'missing.svg' has no file on disk"
+   },
+   {
+    "check": "C-14.4",
+    "severity": "error",
+    "message": "visuals entry {\"file\":\"x.svg\"} lacks file+description"
+   },
+   {
+    "check": "C-14.4",
+    "severity": "error",
+    "message": "svg 'b.svg' on disk is absent from the visuals array"
+   }
+  ]
+ },
+ "C-16.5 stale markers": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-14.3",
+    "severity": "error",
+    "message": "LEASE-carol.json does not parse as JSON",
+    "repairable": true,
+    "repairs": [
+     "restore from history"
+    ]
+   },
+   {
+    "check": "C-16.5",
+    "severity": "info",
+    "message": "stale advisory artifact 'PROMOTING-x.json' (crashed or ended actor)",
+    "repairable": true,
+    "repairs": [
+     "delete the stale claim or presence marker"
+    ]
+   },
+   {
+    "check": "C-16.5",
+    "severity": "info",
+    "message": "stale advisory artifact 'GATE_PASSED-0123abcd.json' (crashed or ended actor)",
+    "repairable": true,
+    "repairs": [
+     "delete the stale claim or presence marker"
+    ]
+   },
+   {
+    "check": "C-16.5",
+    "severity": "info",
+    "message": "stale advisory artifact 'LEASE-alice.json' (crashed or ended actor)",
+    "repairable": true,
+    "repairs": [
+     "delete the stale claim or presence marker"
+    ]
+   },
+   {
+    "check": "C-16.5",
+    "severity": "info",
+    "message": "stale advisory artifact 'LEASE-carol.json' (crashed or ended actor)",
+    "repairable": true,
+    "repairs": [
+     "delete the stale claim or presence marker"
+    ]
+   }
+  ]
+ },
+ "C-16.4 orphaned pending": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-16.4",
+    "severity": "error",
+    "message": "orphaned pending file 'data/x.json.pending' with no manifest",
+    "repairable": true,
+    "repairs": [
+     "complete consumption: archive manifest, delete consumed files (idempotent)"
+    ]
+   }
+  ]
+ },
+ "C-16.1 manifest does not parse": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-14.3",
+    "severity": "error",
+    "message": "PENDING_PROMOTION.json does not parse as JSON",
+    "repairable": true,
+    "repairs": [
+     "restore from history"
+    ]
+   },
+   {
+    "check": "C-16.1",
+    "severity": "error",
+    "message": "PENDING_PROMOTION.json does not parse"
+   }
+  ]
+ },
+ "C-16 package checks": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-16.1",
+    "severity": "error",
+    "message": "manifest missing 'skill_version'"
+   },
+   {
+    "check": "C-16.1",
+    "severity": "error",
+    "message": "manifest target 'INFO-2026-0003-c' does not match bundle 'INFO-2026-0001-a'"
+   },
+   {
+    "check": "C-16.2",
+    "severity": "error",
+    "message": "hash mismatch on 'data/b.json.pending' (manifest 4f53cda18c2b…, actual 080a9ed42855…)",
+    "repairable": true,
+    "repairs": [
+     "discard the package (never promote)",
+     "re-produce the package"
+    ]
+   },
+   {
+    "check": "C-16.4",
+    "severity": "error",
+    "message": "pending file 'data/c.json.pending' is not listed in the manifest",
+    "repairable": true,
+    "repairs": [
+     "complete consumption or discard with reason"
+    ]
+   },
+   {
+    "check": "C-17.1",
+    "severity": "warn",
+    "message": "pending package base 000000000000… does not match live bundle.md d8f9386c5781…: divergence",
+    "repairable": true,
+    "repairs": [
+     "rebase via a reconciliation session",
+     "supersede: human selects one, the other preserved as a diverged branch in _history",
+     "apply-disjoint if file sets prove disjoint (requires history manifests)"
+    ]
+   }
+  ]
+ },
+ "C-16 manifest entry malformed, file missing": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-16.1",
+    "severity": "error",
+    "message": "manifest files entry {\"name\":\"data/a.json\"} lacks name+sha256"
+   },
+   {
+    "check": "C-16.2",
+    "severity": "error",
+    "message": "package file 'data/z.json.pending' listed in manifest is missing",
+    "repairable": true,
+    "repairs": [
+     "discard the package with a finding to the producing author",
+     "re-produce the package from the originating session outputs"
+    ]
+   },
+   {
+    "check": "C-17.1",
+    "severity": "warn",
+    "message": "pending package base x… does not match live bundle.md d8f9386c5781…: divergence",
+    "repairable": true,
+    "repairs": [
+     "rebase via a reconciliation session",
+     "supersede: human selects one, the other preserved as a diverged branch in _history",
+     "apply-disjoint if file sets prove disjoint (requires history manifests)"
+    ]
+   }
+  ]
+ },
+ "C-16.3 old package": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-16.3",
+    "severity": "warn",
+    "message": "pending package is 151 days old (policy 14)",
+    "repairable": true,
+    "repairs": [
+     "promote now",
+     "discard with reason if superseded, preserving the manifest as a record"
+    ]
+   },
+   {
+    "check": "C-17.1",
+    "severity": "warn",
+    "message": "pending package base 000000000000… does not match live bundle.md d8f9386c5781…: divergence",
+    "repairable": true,
+    "repairs": [
+     "rebase via a reconciliation session",
+     "supersede: human selects one, the other preserved as a diverged branch in _history",
+     "apply-disjoint if file sets prove disjoint (requires history manifests)"
+    ]
+   }
+  ]
+ },
+ "C-16.1 created not ISO": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-16.1",
+    "severity": "error",
+    "message": "manifest created 'soon' is not ISO 8601 UTC"
+   },
+   {
+    "check": "C-17.1",
+    "severity": "warn",
+    "message": "pending package base 000000000000… does not match live bundle.md d8f9386c5781…: divergence",
+    "repairable": true,
+    "repairs": [
+     "rebase via a reconciliation session",
+     "supersede: human selects one, the other preserved as a diverged branch in _history",
+     "apply-disjoint if file sets prove disjoint (requires history manifests)"
+    ]
+   }
+  ]
+ },
+ "C-17.1 fast-forward": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-17.1",
+    "severity": "info",
+    "message": "pending package base matches live bundle.md: fast-forward eligible"
+   }
+  ]
+ },
+ "C-17.1 divergence": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-17.1",
+    "severity": "warn",
+    "message": "pending package base ffffffffffff… does not match live bundle.md d8f9386c5781…: divergence",
+    "repairable": true,
+    "repairs": [
+     "rebase via a reconciliation session",
+     "supersede: human selects one, the other preserved as a diverged branch in _history",
+     "apply-disjoint if file sets prove disjoint (requires history manifests)"
+    ]
+   }
+  ]
+ },
+ "C-5.1 append-only surfaces": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-5.1",
+    "severity": "error",
+    "message": "state_history[0] was modified retroactively (append-only surface)",
+    "repairable": true,
+    "repairs": [
+     "restore from _history and re-append new material"
+    ]
+   },
+   {
+    "check": "C-5.1",
+    "severity": "error",
+    "message": "conclusions shrank from 1 to 0 entries vs. the latest snapshot",
+    "repairable": true,
+    "repairs": [
+     "restore from _history and re-append new material"
+    ]
+   },
+   {
+    "check": "C-5.1",
+    "severity": "error",
+    "message": "Review Notes content from the prior version is missing or altered (verbatim-immutable)",
+    "repairable": true,
+    "repairs": [
+     "restore from _history and re-append new material",
+     "record a tamper finding if history lacks the original"
+    ]
+   },
+   {
+    "check": "C-5.1",
+    "severity": "error",
+    "message": "Session Log entry '### Session 1 gone' from the prior version is missing (append-only surface)",
+    "repairable": true,
+    "repairs": [
+     "restore from _history and re-append new material"
+    ]
+   },
+   {
+    "check": "C-5.1",
+    "severity": "error",
+    "message": "data/changes.json records were mutated or removed (append-only surface)",
+    "repairable": true,
+    "repairs": [
+     "restore from _history and re-append new material"
+    ]
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "_history contains files but no manifest.json",
+    "repairable": true,
+    "repairs": [
+     "rebuild manifest entry from surviving files"
+    ]
+   }
+  ]
+ },
+ "C-5.1 snapshot not a document": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "_history contains files but no manifest.json",
+    "repairable": true,
+    "repairs": [
+     "rebuild manifest entry from surviving files"
+    ]
+   }
+  ]
+ },
+ "C-6 references": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[0].rel 'knows' is not in the closed vocabulary",
+    "repairable": true,
+    "repairs": [
+     "map to the nearest vocabulary value",
+     "sever with reason"
+    ]
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[1].rel 'links_to' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[1].rel 'links_to' must carry the address the source wrote, as a comment string beside the canonical target"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[1].rel 'links_to' must carry a contemporaneity verdict of contemporaneous, superseded or undetermined; undetermined is the resting state and must be stated rather than omitted"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[3].rel 'cites' is a member's relation and cannot be asserted_by 'source'"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[4].status 'maybe' is not one of: proposed, confirmed, severed"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[5].target 'https://example.org/doc' looks like a substrate locator; targets are canonical IDs only"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[6].target 'folder/INFO-2026-0002-b' looks like a substrate locator; targets are canonical IDs only"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[7].target 'INFO-2026-2-b' does not match the canonical ID grammar"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[8] is not an object"
+   },
+   {
+    "check": "C-6.2",
+    "severity": "error",
+    "message": "references[9].target 'INFO-2026-0003-c' does not resolve in the store",
+    "repairable": true,
+    "repairs": [
+     "restore target from history",
+     "re-point to the successor object (derived_from chain)",
+     "sever the edge with a reason note"
+    ]
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-6.3 distributed with no distributions": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-6.3",
+    "severity": "error",
+    "message": "workproduct_state is distributed but distributions/ is empty"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-6.3 distributed with distributions": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "C-12.1 history with no manifest": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "_history contains files but no manifest.json",
+    "repairable": true,
+    "repairs": [
+     "rebuild manifest entry from surviving files"
+    ]
+   }
+  ]
+ },
+ "C-12.1 manifest does not parse": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "_history/manifest.json does not parse",
+    "repairable": true,
+    "repairs": [
+     "rebuild manifest entry from surviving files"
+    ]
+   },
+   {
+    "check": "C-14.3",
+    "severity": "error",
+    "message": "_history/manifest.json does not parse as JSON",
+    "repairable": true,
+    "repairs": [
+     "restore from history"
+    ]
+   }
+  ]
+ },
+ "C-12 manifest accounting": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "manifest keys out of order at '20260101T000000Z_aaaaaaaa'"
+   },
+   {
+    "check": "C-12.2",
+    "severity": "error",
+    "message": "promotion record for '20260101T000000Z_aaaaaaaa' is missing",
+    "repairable": true,
+    "repairs": [
+     "rebuild manifest entry from surviving files",
+     "record a history-loss finding and re-snapshot current state"
+    ]
+   },
+   {
+    "check": "C-12.2",
+    "severity": "error",
+    "message": "snapshot '_history/bundle_20260101T000000Z_aaaaaaaa.md' recorded in manifest entry '20260101T000000Z_aaaaaaaa' is missing",
+    "repairable": true,
+    "repairs": [
+     "record a history-loss finding and re-snapshot current state"
+    ]
+   },
+   {
+    "check": "C-12.2",
+    "severity": "error",
+    "message": "snapshot '_history/data/x_20260101T000000Z_aaaaaaaa.json' recorded in manifest entry '20260101T000000Z_aaaaaaaa' is missing",
+    "repairable": true,
+    "repairs": [
+     "record a history-loss finding and re-snapshot current state"
+    ]
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "manifest entry[2] missing 'created'"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "manifest entry[2] missing 'files'"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "duplicate manifest key '20260101T000000Z_aaaaaaaa'"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "manifest entry[3] missing 'key'"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "manifest entry[3] missing 'created'"
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "manifest entry[3] missing 'files'"
+   },
+   {
+    "check": "C-12.2",
+    "severity": "error",
+    "message": "snapshot '_history/bundle_20260104T000000Z_cccccccc.md' recorded in manifest entry '20260104T000000Z_cccccccc' is missing",
+    "repairable": true,
+    "repairs": [
+     "record a history-loss finding and re-snapshot current state"
+    ]
+   },
+   {
+    "check": "C-12.2",
+    "severity": "error",
+    "message": "history file '_history/stray_20260109T000000Z_dddddddd.md' maps to no manifest entry",
+    "repairable": true,
+    "repairs": [
+     "rebuild manifest entry from surviving files"
+    ]
+   },
+   {
+    "check": "C-12.2",
+    "severity": "error",
+    "message": "refusal record '_history/refused_20260106T000000Z_0123abce.json' does not parse or names no outcome",
+    "repairable": true,
+    "repairs": [
+     "restore the refusal record from history",
+     "remove the unexplained refusal artifacts"
+    ]
+   },
+   {
+    "check": "C-12.2",
+    "severity": "error",
+    "message": "preserved refusal payload '_history/refused_20260107T000000Z_0123abcf/payload.md' has no refusal record at '_history/refused_20260107T000000Z_0123abcf.json'",
+    "repairable": true,
+    "repairs": [
+     "restore the refusal record",
+     "remove the orphaned preserved payload"
+    ]
+   },
+   {
+    "check": "C-12.2",
+    "severity": "error",
+    "message": "history file '_history/odd.txt' maps to no manifest entry",
+    "repairable": true,
+    "repairs": [
+     "rebuild manifest entry from surviving files"
+    ]
+   },
+   {
+    "check": "C-12.1",
+    "severity": "error",
+    "message": "live last_updated '2026-01-01T00:00:00Z' precedes an earlier history entry '2026-01-03T00:00:00Z': the live bundle.md is older than a version already superseded",
+    "repairable": true,
+    "repairs": [
+     "restore the newer bundle.md from history",
+     "correct last_updated to reflect the live content"
+    ]
+   }
+  ]
+ },
+ "C-12.2 elided snapshots count as present": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ },
+ "type arms in their places": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-6.1",
+    "severity": "error",
+    "message": "references[0].rel 'knows' is not in the closed vocabulary",
+    "repairable": true,
+    "repairs": [
+     "map to the nearest vocabulary value",
+     "sever with reason"
+    ]
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-9.1",
+    "severity": "info",
+    "message": "C-9.1 arm ran"
+   }
+  ]
+ }
+}

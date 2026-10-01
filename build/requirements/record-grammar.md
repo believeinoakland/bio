@@ -83,7 +83,7 @@ None. It is first in the order.
 
 ### Invariants
 
-- **R24** Pure: no I/O, no store, no network, no clock, no randomness; the same input always gives the same answer, in Node, a Worker and the browser alike.
+- **R24** Pure: no I/O, no store, no network, no clock, no randomness; the same input always gives the same answer, in Node, a Worker and the browser alike. One exception: `checkBundle`'s `nowMs` defaults to the clock when a caller passes none, as today (R39; K765).
 - **R25** One SHA-256 implementation: `createSha256` and `sha256HexSync` are two names over one compression function and one round-constant table (map §4.4, K6).
 - **R26** Parity until the re-export goes: every name above that `legacy-checks` re-exports is the same binding (`===`), so a reader of either path gets identical answers.
 - **R27** No place is named (`layers.md`, "No jurisdiction in the product").
