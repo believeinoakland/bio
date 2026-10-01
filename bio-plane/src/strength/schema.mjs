@@ -17,7 +17,7 @@ export const STRENGTH_SCHEMA = `
 -- (AUDIENCES 5). An ABSENT declaration gates nothing and the published case
 -- SAYS SO -- an absent bar is not a bar of zero and must never render as one.
 -- Governance, not corpus: like members and signers it survives a whole-store
--- purge, and hygiene.test.mjs carries that exemption with its reason.
+-- purge; test/m/strength/cache.test.mjs (R23) proves that exemption.
 CREATE TABLE IF NOT EXISTS group_strength_bar (
   group_id   TEXT PRIMARY KEY,
   capture    TEXT,

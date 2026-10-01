@@ -317,7 +317,7 @@ export class Strength {
    *  its reader would claim different things to different people). Computed on read, never from the cache (R13). */
   inquiryStrength({ id = null, viewer = null } = {}) {
     if (!id) return { ok: false, reason: "NO_ID",
-      detail: "the derived pair is asked of one inquiry: pass id=<bundle id>" };
+      detail: "the derived pair is asked of one inquiry: pass id=<record id>" };
     if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     /* Refused rather than answered UNRATED: a document has no basis and no pair, and "unrated" would state a strength
        about a thing that cannot carry one. Reachable only after visibility, so it discloses nothing. */
@@ -325,7 +325,7 @@ export class Strength {
     const ty = normalizeType(row?.object_type);
     if (ty !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: ty ?? null,
-        detail: `${id} is a ${ty ?? "bundle"}, not an inquiry. The derived pair is a property of a `
+        detail: `${id} is a ${ty ?? "record"}, not an inquiry. The derived pair is a property of a `
               + `question and what it rests on; a document has no basis to derive one from.` };
     const s = this.strengthOf(id);
     if (!s.ok) return s;
@@ -513,7 +513,7 @@ export class Strength {
         project
           ? `${project.slice(0, 60)} has not said which reading of ${inq} it stands on, and there is `
             + `no default reading. Name one explicitly to measure it.`
-          : "name the reading to measure (version=<name>), or name the project asking (project=<PRJ-…>) "
+          : "name the reading to measure (version=<name>), or name the project asking (project=<PROJ-…>) "
             + "so the reading it stands on can be used. There is no default reading here.",
         { inquiry: inq, project: project || null });
     const row = this.#one(
