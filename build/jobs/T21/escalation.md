@@ -33,3 +33,7 @@
 **Read:** my requirements (both parts), layer 9's contract (`build/layers.md`), my module's code and tests whole, my entries in `build/plan/current.md` (rule 1, the L9 roster, the escalation entry), BOB's START. Of my uses' public parts I relied on what my own requirements' Uses state; the change touches no service of theirs.
 
 Size (session_01XnQkJQSGg5SKNNSMx7mZyS): test runs 14, module lines 1554
+
+## J1 · REPORT
+
+Generated artifact staled: my change to bio-plane/src/escalation/index.mjs (N462, evaluation trigger ids) stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owned by not_product; regenerate at the layer close: bio-plane/, npm run build). I regenerated nothing. No other module pins the old id form.
