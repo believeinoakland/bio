@@ -41,7 +41,7 @@ import { join } from "node:path";
 
 /* The control driver points this at an armed copy of the sources. */
 const SRC_DIR = process.env.D526_SRC || fileURLToPath(new URL("../src", import.meta.url));
-const IDX = join(SRC_DIR, "index.mjs");
+const IDX = join(SRC_DIR, "plane", "index.mjs");   /* the plane's entry since T20 (plane R6) */
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

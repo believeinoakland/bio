@@ -33,7 +33,7 @@ import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 import { ocrWorkerDef } from "../../ocr-worker/test/memberworker.mjs";
 
-const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 const FIX = (n) => new Uint8Array(readFileSync(fileURLToPath(new URL(`./fixtures/d460/${n}`, import.meta.url))));
 const P2 = FIX("agenda-p2.pdf"), P1 = FIX("agenda-p1.pdf");
 

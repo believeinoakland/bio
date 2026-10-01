@@ -53,7 +53,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { normalizeAddress } from "../src/subresources.mjs";
 
-const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 const sha = (s) => createHash("sha256").update(Buffer.from(s)).digest("hex");
 
 let pass = 0, fail = 0;

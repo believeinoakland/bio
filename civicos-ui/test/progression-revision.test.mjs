@@ -68,7 +68,7 @@ catch(e){
   console.error("  " + String(e && e.message || e));
   process.exit(1);
 }
-const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
+const IDX = new URL("../../bio-plane/src/plane/index.mjs", import.meta.url);
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX.pathname,
   script: fs.readFileSync(IDX, "utf8"),

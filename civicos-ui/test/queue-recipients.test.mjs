@@ -63,7 +63,7 @@ catch (e) {
   console.error("queue-recipients: the real plane could not be started — miniflare is not installed. Run `npm ci` in bio-plane/.");
   process.exit(1);
 }
-const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
+const IDX = new URL("../../bio-plane/src/plane/index.mjs", import.meta.url);
 const APP = process.env.D528_APP_SRC || null;   /* the control harness hands a mutated app script through this */
 const ADM = "adm-d528";
 const mf = new Miniflare({
