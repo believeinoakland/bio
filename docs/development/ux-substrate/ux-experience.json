@@ -11450,7 +11450,7 @@
    }
   },
   {
-   "question": "How is a member told a capture's grade, and whether it is co-attested, at the moment of capture (DEC-51, DEC-81)? Presentation only.",
+   "question": "Should members get one place that lists every document the group has collected but nobody has yet vouched for or set aside, and be allowed to vouch for many of them in one act?",
    "whyItMatters": "The belief about what a capture is worth forms at capture; the note is currently discarded before the member sees it.",
    "relatedUseCases": [
     "UC-009",
@@ -11523,64 +11523,201 @@
    },
    "brief": {
     "stillOpen": true,
-    "settledBy": "Only DEC-95 item 2 is open. Bob, correcting DEC-95: 'the held-captures list with bulk triage was proposed but not approved; it stays open.' Items 1 (grade note) and 3 (relevance suggestions) are ruled. Related substance is settled elsewhere: Intake Doctrine §4 allows batch release under conditions ('crucial-criticality or contested material is NEVER batch-released'), and K583 gives the bulk release act to the ratification module (N400, now carried to T19 per T18's current.md).",
-    "title": "A list of captures nobody has dealt with yet",
-    "decision": "Should members get a list of their held captures (per member and per project), showing each one's age and letting them sort it and deal with several at once, or should held captures only appear where they bear on work?",
-    "whyYours": "Bob raised this himself when he extended question 13. It is a UX choice with a doctrine edge: bulk handling makes the batch-release rule and the no-nagging rule (DEC-69, DEC-94) felt in daily work. The list's layout would be Design's.",
-    "context": "A 'capture' is a document the record fetched from a web address (or received) and fingerprinted. It lands 'held' (the record's state 'collected'): stored and fully traced, but not yet 'released', meaning vouched for by a member as appearing to be what it claims to be. Held captures pile up: the assistant requests them, sweeps bring in dozens, bulk uploads add more. DEC-95 already lets the system quietly suggest that a held capture bears on a question; the open part is whether there is also one place to see and clear the backlog.\n\nExample: a sweep of the city's job board brings in 120 near-identical postings. With a list, a member sorts by source, ticks the 120, chooses 'Release together', writes what she sampled and why they are alike, and the record answers per item. Two budget memos a live question relies on are 'crucial': they cannot be ticked for a batch release, and the list says why. Without a list, the postings are released one by one, or never.",
-    "alreadySettled": [
-     "Batch release is legitimate when a collection is large and uniform; each document still gets its own release entry; the member's acknowledgement of uniformity and of what they sampled is recorded; crucial or contested material is never batch-released (Intake Doctrine §4, operator ruling 2026-07-27)",
-     "Release is a named member's act, never a machine's (Intake Doctrine §4a)",
-     "A held item set aside stays at 'collected' with its reason; there is no route to 'retired' from there by design (Intake Doctrine §8)",
-     "Any bulk act: the member chooses, nothing is preselected, each item answers landed or refused with its reason, nothing half-runs silently (Interaction Constructs §S)",
-     "No nagging: age may be shown, but nothing is notified unless the member asked (DEC-69; DEC-94)",
-     "The bulk release act belongs to ratification (K583); carried to T19"
+    "settledSince": "",
+    "title": "A list of held captures, and dealing with several at once",
+    "inOneBreath": "Should members get one place that lists every document the group has collected but nobody has yet vouched for or set aside, and be allowed to vouch for many of them in one act?",
+    "decision": "(1) Whether there is a 'held captures' list at all, per member and per project, showing each one's age. (2) If there is, whether a member may act on several at once from it: vouch for a uniform batch in one act (with the recorded statement of what they checked), set several aside with one reason, or link several to a question. (3) Whether anything other than 'crucial' material is barred from a batch, for example a document caught in an unresolved conflict.",
+    "alreadyDecidedPart": "",
+    "basics": [
+     "A capture is a document the group's copy of CivicOS fetched from a public web address (or received) and stored byte for byte, with where and when it came from. Every capture lands 'held': stored and traced, but not yet part of the group's working evidence.",
+     "Vouching for a held capture (the record calls it 'release') is a named member's statement that the document appears to be what it claims to be: a real council agenda, not spam or a phishing page. It does not say the contents are true. Only a person may vouch; the machine never may.",
+     "Setting aside is the other way out: under the intake doctrine, a document the group will not proceed with stays held with its reason written down, never silently parked or deleted.",
+     "Held captures pile up: a member's own captures, captures the assistant requests (which arrive hours later), material pulled in from the public doorbell, bulk captures, and later standing 'sweeps' (searches the group approves in advance) bringing dozens per run.",
+     "Batch vouching is already doctrine. Your ruling of 27 July: a large, uniform collection (a hundred postings from a public jobs board) is 'one judgment made honestly once'. Each document still gets its own entry, the member's statement of why the batch is uniform and what they sampled is recorded, and crucial or contested material is never batch-released. That recorded statement is the only guard against a poisoned document hiding in the batch. It is like stipulating to the authenticity of a large set of routine data-request responses after a documented spot-check, while anything disputed is authenticated item by item."
+    ],
+    "today": [
+     "The batch vouching act is built, and moved into its own module in the last build round. It is all or nothing: every document is checked first, and if even one is not held, is marked crucial, or lacks a required piece, the whole batch is refused, nothing moves, and each offender is named. The member writes two one-line statements (why these are alike; what they sampled), each at most 500 characters, and each document's log gets its own 'batch release' entry carrying them.",
+     "No screen reaches it. There is no list of held captures, no way to sort or tick them, and no batch vouching in the old interface.",
+     "On 29 September you ruled the neighbouring parts of this question: the grade note shown once when a capture completes (and attached to captures that complete unattended), and quiet machine suggestions that a held capture bears on a question, under six guards (shown where the member works, never notified; labelled machine work with its reason; dismissals remembered; never during a heavy act; switchable off; acceptance measured). The same day you corrected the entry: the list with bulk handling 'was proposed but not approved; it stays open'.",
+     "Two gaps I found: the built check refuses crucial documents but has no test for 'contested'; and I found no dedicated act for setting a held capture aside with a reason. Sweeps are not built yet."
+    ],
+    "problem": [
+     "Without a list, held captures that bear on no live question are never seen again: your 29 September suggestions only point to captures that relate to current work. The doctrine names the danger of a growing pile ('flooding collected until review becomes rubber-stamping is an attack') and sets a ceiling on it, which members cannot manage if they cannot see it.",
+     "With a list, the risk runs the other way: a visible backlog can feel like a chore list, brushing against your 10 August ruling against nagging, and a 'tick all, vouch' button invites rubber-stamping.",
+     "It needs deciding now because the redesign is laying out the project page, the document page and the queue, and each needs to know whether a held list sits beside it. Affected: members doing intake, and the group's credibility if a wrong document is vouched for in bulk."
+    ],
+    "story": {
+     "title": "Rosa and the 120 job postings",
+     "steps": [
+      "Rosa's project asks whether Oakland is leaving budgeted police-oversight positions unfilled. Over a week the assistant captures 120 postings from the city's jobs site, and she adds the budget memo and an amendment memo. 122 captures are held.",
+      "Her question's page shows: '2 held captures may bear on this question (Machine work: names the same position code)'. Those are the memos. Nothing points to the 120 postings.",
+      "Without a list, the postings sit unseen; next month a colleague cites the jobs board from memory, not from the record.",
+      "With a list, Rosa opens 'Held captures' for the project, sorts by source, and sees 120 rows, each with its age ('held 6 days'). Nothing is pre-ticked.",
+      "She ticks the 120, opens three at random, and chooses 'Vouch for these together', writing 'All 120 are postings from the city's official jobs site, same template.' and 'Opened 3 at random; each matched the live posting.'",
+      "The amendment memo is marked crucial, so the list shows it greyed out: 'Crucial documents are vouched for one at a time.' She vouches for it alone."
+     ]
+    },
+    "fixed": [
+     {
+      "point": "Batch vouching is allowed for large, uniform collections; each document gets its own entry; the uniformity and sampling statement is recorded; crucial or contested material is never batched.",
+      "why": "Your ruling of 27 July on what vouching asserts.",
+      "src": "Intake Doctrine §4 (operator ruling 2026-07-27)"
+     },
+     {
+      "point": "Vouching is a named member's act, never a machine's.",
+      "why": "The intake doctrine's release rule.",
+      "src": "Intake Doctrine §4a; ratification R20"
+     },
+     {
+      "point": "The built batch act is all or nothing: one ineligible document refuses the whole set, naming each offender.",
+      "why": "Built in the last build round.",
+      "src": "ratification R20-R27; K583; K692"
+     },
+     {
+      "point": "A document set aside stays held with its reason, never deleted.",
+      "why": "The intake doctrine's disposition pattern.",
+      "src": "Intake Doctrine §8"
+     },
+     {
+      "point": "Acting on many items: the member chooses, nothing is pre-selected, and nothing half-runs without saying so.",
+      "why": "The rules for acting on a selection, and your ruling against unseen defaults.",
+      "src": "Interaction Constructs §S; DEC-69; DEC-77"
+     },
+     {
+      "point": "Age may be shown; nothing about held captures is pushed as a notification.",
+      "why": "Your rulings of 10 August and 29 September.",
+      "src": "DEC-69; DEC-94"
+     }
     ],
     "options": [
      {
       "label": "A",
-      "name": "Held list with bulk triage (as proposed)",
-      "whatTheMemberSees": "A 'Held captures' view, per member and per project, filtered by what they can see. It is sortable by age, source and project, and each row shows its age. Nothing is notified. Ticking several offers: release together (with the uniformity and sampling acknowledgement; crucial items shown as not eligible, with the reason), set aside with one reason, or link to a question.",
-      "gains": "Makes the backlog visible and clearable. The batch rule becomes real instead of theoretical. It matches how sweeps actually fill the record.",
-      "costs": "A visible backlog can feel like a to-do list. Bulk release invites rubber-stamping, and the acknowledgement is the only guard."
+      "name": "Held list with bulk handling",
+      "howItWorks": "A 'Held captures' view, per member and per project, showing only what the viewer may see. Sortable by age, source and project; each row shows its age; nothing is notified. Ticking several (nothing pre-ticked) offers three acts: vouch for these together (with the two recorded sentences; crucial and conflicted documents shown as not eligible, with the reason, before the member acts), set aside with one reason, or link to a question.",
+      "inTheStory": "Rosa releases the 120 postings in one act with her two sentences; the amendment memo is greyed out with 'Crucial documents are vouched for one at a time'.",
+      "gains": [
+       "Makes the backlog visible and manageable.",
+       "Puts the batch release the doctrine already allows within reach.",
+       "Matches how assistant requests and future sweeps actually fill the record."
+      ],
+      "costs": [
+       "A visible count can feel like a to-do list.",
+       "Bulk vouching invites rubber-stamping; the recorded statements are the only guard.",
+       "Needs a set-aside act that does not yet exist."
+      ],
+      "commitsYouTo": "A new screen and a bulk set-aside act; a rule for what 'contested' means in the eligibility check."
      },
      {
       "label": "B",
       "name": "List for seeing, one at a time for acting",
-      "whatTheMemberSees": "The same list, but every release or set-aside is done per capture.",
-      "gains": "Maximum care per document.",
-      "costs": "The 120 postings stay unreleased in practice. It withholds a batch release the doctrine allows."
+      "howItWorks": "The same list, sorted and aged, but every vouch or set-aside is done per document.",
+      "inTheStory": "Rosa sees the 120 postings, and must open and vouch for each one separately.",
+      "gains": [
+       "Maximum care per document.",
+       "No bulk-vouching risk."
+      ],
+      "costs": [
+       "In practice the 120 stay held.",
+       "Withholds a batch release your own ruling allows; the built act goes unused."
+      ],
+      "commitsYouTo": "A list screen only; batch release reachable later if you change your mind."
      },
      {
       "label": "C",
-      "name": "No list; held captures surface only where they bear",
-      "whatTheMemberSees": "Held captures appear in search and through DEC-95's quiet suggestions on a question's page. There is no backlog view.",
-      "gains": "Nothing that feels like a queue of chores.",
-      "costs": "Unrelated held captures are never seen. The Intake Doctrine's backlog ceiling becomes invisible to members."
+      "name": "No list; held captures appear only where they bear",
+      "howItWorks": "Held captures appear in search and through your 29 September quiet suggestions on a question's page. There is no backlog view.",
+      "inTheStory": "Rosa sees the two memos suggested; the 120 postings are never shown to anyone again unless searched for.",
+      "gains": [
+       "Nothing that feels like a chore list."
+      ],
+      "costs": [
+       "Unrelated held captures are never seen.",
+       "The doctrine's ceiling on the held backlog becomes invisible to members."
+      ],
+      "commitsYouTo": "Nothing new; the question can be reopened when backlogs grow."
      }
     ],
-    "recommendation": "Option A, with three guards drawn from standing rules: nothing ticked by default, crucial or contested captures shown but never batch-eligible, and age displayed but never notified. It is the only option that uses the batch release the doctrine already allows, and it keeps the acknowledgement as the honest record of what was checked.",
+    "tradeoff": "Seeing and clearing the backlog (and using the batch release you already allowed) against the risk that a visible pile and a bulk button turn careful vouching into rubber-stamping.",
+    "recommendation": {
+     "choice": "A",
+     "why": [
+      "It is the only option that makes the batch release you ruled for in July usable, and the act behind it is already built and all-or-nothing, so a mistake cannot half-run.",
+      "The guards come from rules you have already set: nothing pre-ticked, age shown but never notified, crucial documents shown as not eligible before the member acts, and the two recorded sentences as the honest account of what was checked. I would add documents caught in an unresolved conflict to the not-eligible list, which fills the doctrine's word 'contested'. That addition is my judgement, not existing canon.",
+      "Showing ineligible documents greyed out with the reason, rather than letting the act refuse the whole batch, follows the interaction rule that a member should see what an act will refuse before it runs."
+     ],
+     "risk": "Rubber-stamping. It is contained by the recorded sentences (which members and readers can inspect later), the per-document entries, and the exclusion of crucial and conflicted material; your 29 September measurement rule could also be applied to batch sizes if you want a signal."
+    },
     "howToAnswer": [
-     "As recommended.",
-     "Option A, but per project only, not per member.",
-     "Option C for now; revisit when a group's backlog becomes a problem.",
-     "Question first: can a member set aside a batch without giving a reason for each?"
+     "13: as recommended.",
+     "13: A, but per project only, not per member.",
+     "13: C for now; revisit when a group's backlog becomes a problem.",
+     "13: question first: can a member set aside a batch with one reason, or must each have its own?"
     ],
-    "ifLeftOpen": "Captures are released one by one where a member meets them. The bulk release act exists only in the old store code, and its module move (N400) is already set for T19. Nothing else is blocked.",
-    "relatedUseCases": [
-     "UC-021",
-     "UC-009",
-     "UC-089"
+    "ifLeftOpen": "Members vouch for captures one by one wherever they meet them; the built batch act stays unreachable from any screen; Design leaves room on the project page but builds no list. Nothing else in the build waits.",
+    "related": [
+     {
+      "n": 15,
+      "how": "An empty held list, and a capture still on its way, need the shared 'nothing here' and 'waiting' wording that question 15 asks for."
+     },
+     {
+      "n": 26,
+      "how": "Material pulled in from the doorbell lands held, so it would appear on this list."
+     },
+     {
+      "n": 28,
+      "how": "If held captures ever produced a queue item, it would be one of the queue's three kinds; the recommendation keeps them out of the queue entirely."
+     },
+     {
+      "n": 32,
+      "how": "The list's rows need the everyday word that replaces 'bundle' (here, 'document')."
+     }
+    ],
+    "glossary": [
+     {
+      "term": "Capture",
+      "plain": "A document the system fetched or received and stored byte for byte, with where and when."
+     },
+     {
+      "term": "Held",
+      "plain": "Stored and traced, not yet vouched for (the record's word is 'collected')."
+     },
+     {
+      "term": "Vouch for (release)",
+      "plain": "A named member's statement that a document appears to be what it claims; not that it is true."
+     },
+     {
+      "term": "Set aside",
+      "plain": "Not proceeding with a held document; it stays held with a written reason."
+     },
+     {
+      "term": "Batch vouching",
+      "plain": "Vouching for many uniform documents in one act, with a recorded statement of what was sampled."
+     },
+     {
+      "term": "Crucial",
+      "plain": "The criticality level for documents central to the group's work; always vouched for singly."
+     },
+     {
+      "term": "Sweep",
+      "plain": "A standing search the group approves in advance; not built yet."
+     },
+     {
+      "term": "Machine work",
+      "plain": "The label every machine output carries."
+     }
     ],
     "sources": [
-     "DECISIONS.md DEC-95 item 2",
-     "Intake Doctrine §4 ('What verification asserts, and batch ratification'), §4a, §8",
-     "Interaction Constructs §S",
-     "K583; T18 build/plan/current.md 'Not in T18'",
-     "DEC-69; DEC-94",
-     "monitoring R29 (backlog ceiling)"
+     "DECISIONS.md DEC-95 (items 1-3 and Bob's same-day correction of item 2)",
+     "BIO_Intake_Doctrine_v1_1.md §4 ('What verification asserts, and batch ratification'), §4 'Constraints as security controls' (backlog ceiling), §4a, §8",
+     "BIO_Interaction_Constructs_v0_1.md §S",
+     "build/requirements/ratification.md R20-R27",
+     "build/rulings.md K583 (owner of the bulk release), K692 (extraction pushed, crucial counted by front matter too)",
+     "build/requirements/monitoring.md R29 (sweeps not yet met)",
+     "build/requirements/capture-requests.md R6 (requests expire after 24 hours)",
+     "DEC-69; DEC-77; DEC-94",
+     "build/requirements/record-grammar.md R32 (Review Notes heading; no dedicated set-aside act found)"
     ],
-    "size": "quick (a yes is enough)"
+    "size": "short"
    }
   },
   {
@@ -11669,7 +11806,7 @@
    }
   },
   {
-   "question": "What are the empty and loading states across surfaces, especially long waits (renders deferred, capture requests hours away, statutory clocks of days)?",
+   "question": "Should every screen use one shared set of plain statements for 'nothing here', 'still loading', 'could not read' and 'waiting on someone until a date', and may an empty screen suggest a next step?",
    "whyItMatters": "Canon names waits but no treatment; an empty state can be mistaken for 'nothing to do' or 'could not read'.",
    "relatedUseCases": [
     "UC-089",
@@ -11725,64 +11862,212 @@
    "whoDecides": "Design: the canon already sets the principle (state it, never dress it as an error); the vocabulary and treatments are detail within it.",
    "brief": {
     "stillOpen": "partly",
-    "settledBy": "Part settled: DEC-86 fixes 'Undetermined' and its four neighbours ('Withheld', 'Unrated', 'Nobody looked', 'Refused'), each distinct and never dressed as an error; DEC-94 item 2 rules that as a deadline nears 'the item's position, colour or wording may change … That is display, not a notification'; capture-requests R17, R20, R25 state what a held or expired render says ('nothing was filed'); instance-setup R20 separates 'none' from 'unread'. Still open: a product-wide treatment for empty lists, loading, and long waits.",
-    "title": "What screens say while waiting or empty",
-    "decision": "Should every screen use one shared way of saying 'nothing here', 'still loading', 'could not read, and why', and 'waiting on X until date', or should each screen design its own?",
-    "whyYours": "This could be delegated to Design. The principle is already canon (state gaps, never dress them as errors, Interaction Constructs §U). Bob would still set one thing: whether a long wait must always say what happens next and when, and whether an empty screen may suggest a next step without nagging (DEC-69).",
-    "context": "Much in CivicOS takes time. A capture can take minutes. A city site may hold back ('defer') a page render. A capture the assistant asked for may run hours later. A legal response clock (for example, a public-records request) runs for days. And any list can be empty. Three different truths can look identical on screen: nothing exists, the record has not answered yet, and the record answered that it cannot know.\n\nExample: a member asks the assistant to capture the council's agenda page. The city's site defers it. Today the member sees a plain 'Loading…' or a blank list, and may conclude nothing was found. Under a shared pattern she would see: 'Waiting: the city's site asked us to slow down. We will try again after 3:10 pm. Nothing has been filed yet.' On a records request she would see: 'Waiting on the City Clerk's reply, due 14 October (10 days, Gov. Code §7922.535).'\n\nThe old interface mostly shows 'Loading…' and a few sentences such as 'Nothing is waiting for review'. Its setup page is the one place that separates 'none recorded' from 'could not read'.",
-    "alreadySettled": [
-     "'Undetermined' always carries its 'because…' line; four neighbours, each visibly different, none shown as an error (DEC-86; Interaction Constructs §U)",
-     "A nearing deadline changes position, colour or wording only; that is display, not a notification; overdue re-notifies once (DEC-94 items 2 and 4)",
-     "A deferred render is held with its code and plain explanation, content 'undetermined'; once expired, 'nothing was filed' (capture-requests R17, R20, R25)",
-     "A page that cannot read something says so, never that none is recorded (instance-setup R20; Publication §7)",
-     "'Alive means live': an open list updates when an item is added or removed, if it does not disrupt (UI-KICKOFF refinements)",
-     "Queue items say whose obligation it is: the group's own checkpoint or the counterparty's deadline (Action design PATH.md §3, approved K608)"
+    "settledSince": "",
+    "title": "What screens say while waiting, loading or empty",
+    "inOneBreath": "Should every screen use one shared set of plain statements for 'nothing here', 'still loading', 'could not read' and 'waiting on someone until a date', and may an empty screen suggest a next step?",
+    "decision": "(1) Whether empty, loading and waiting states use one shared vocabulary across the product, or are designed screen by screen. (2) Whether every wait must say what is awaited, from whom, and by when (where a date is known). (3) Whether an empty screen may offer a next step, and if so only on something the member has just created.",
+    "alreadyDecidedPart": "On 29 September you fixed how the product states what it does not know: 'Undetermined' always carries a 'because…' line, and its four neighbours ('Withheld', 'Unrated', 'Nobody looked', 'Refused') each look and read differently, none dressed as an error. The same day you ruled that as a deadline nears, an item's position, colour or wording may change, and that this is display, not a notification. What remains is the ordinary cases those rulings do not cover: an empty list, a screen still loading, a screen that failed to load, and a long wait.",
+    "basics": [
+     "Much in CivicOS takes time. A capture (fetching a public document and storing its exact bytes) can take minutes. The system paces itself per website so it does not hammer a city's server, so a capture may wait its turn. A capture the assistant asks for is queued and may run hours later; if it cannot be made within 24 hours, the request expires and the record says nothing was filed. A city site may refuse to let the system render a page fully; the request is then held with the site's reason. And outside the system, legal clocks run for days: a public-records request, for example, has a statutory response deadline.",
+     "Every list can also be empty. And every screen depends on asking the record a question; that question can fail (a dropped connection, a timeout).",
+     "So at least four different truths can look identical on screen, as a blank space or a spinner: there is nothing here; the answer has not arrived yet; the screen could not get an answer; and the record answered that it does not know. A fifth state is a wait with a known end: we are waiting on someone, until a date.",
+     "The product already sorts signals into three kinds: some are only recorded (no display at all), some are noticed (shown as status where the thing lives, such as 'the system is pacing this capture'), and some are actionable (they earn a queue item). Losing the middle kind means 'either drowning the member or hiding what is happening'.",
+     "An analogy: a docket that shows 'no filings' must mean no filings, not 'the docket server is down'. A party waiting on a data request wants to see 'response due 14 October', not a blank."
+    ],
+    "today": [
+     "Decided and partly built: the record answers 'undetermined' with its reason in many places; a held or expired page render says it was held under the site's reason and, once expired, that 'nothing was filed'; the group setup page is the one screen that tells 'no group recorded' apart from 'could not read the group'. The action design approved on 30 September says queue items must state whose deadline it is: the group's own checkpoint or the other party's.",
+     "Not decided: a general treatment. The inventory of screens marks empty, loading and waiting as 'not specified' on almost every screen.",
+     "What a member sees in the old interface: 18 plain 'Loading…' lines, and a scattering of empty sentences written one by one, such as 'Nothing is waiting for review.' and 'Nothing is in this project yet'. These are well meant but inconsistent, and a failed load often looks like an empty list."
+    ],
+    "problem": [
+     "If a failed read looks like an empty list, a member concludes there is nothing, and acts on it: drops a line of inquiry, or tells a reporter the city has not responded. In a record whose value rests on stating gaps honestly, that is a credibility problem, not only a cosmetic one.",
+     "If waits are blank, members cannot tell 'wait' from 'worry'. A records request ten days from its deadline and one ten days overdue look the same unless the screen says so.",
+     "If each screen is designed on its own, wording drifts, and the canon's own warning applies: when a gap looks like a failure in one place and a shrug in another, members learn to ignore it.",
+     "The opposite risk is nagging: an empty screen that keeps telling a member what to do next brushes against your ruling of 10 August that the workflow must not nag or second-guess members.",
+     "It matters now because the redesign is starting screen by screen. A shared vocabulary is cheap before the screens exist and expensive to retrofit."
+    ],
+    "story": {
+     "title": "Darnell, the council agenda and the Clerk's deadline",
+     "steps": [
+      "Darnell is tracking a proposed sale of city land. He asks the assistant to capture the Oakland City Council's agenda page for 7 October.",
+      "The city's site refuses a full render for now. Today he sees 'Loading…' for a while, then an empty documents list, and assumes the agenda was not posted.",
+      "Under a shared vocabulary he would see on the request: 'Waiting: the city's site asked us to wait before rendering this page. We will try again after 3:10 pm. Nothing has been filed yet.' If 24 hours pass: 'Expired: the site never allowed the render. Nothing was filed.'",
+      "He has also sent a public-records request to the City Clerk. Its action page reads: 'Waiting on the City Clerk's reply, due 14 October (10 days under the state public-records law).' As the date nears, the item moves up and changes colour, which you ruled is display, not a notification.",
+      "His project's 'Held captures' panel loses its connection. Instead of an empty list it says: 'Could not read this list just now. This is not the same as having none. Try again.'",
+      "Later the panel loads and genuinely has nothing: 'Nothing held for this project.'"
+     ]
+    },
+    "fixed": [
+     {
+      "point": "'Undetermined' always states its reason; 'Withheld', 'Unrated', 'Nobody looked' and 'Refused' each have their own look and sentence; none is shown as an error.",
+      "why": "Your ruling of 29 September on the five ways of stating a gap.",
+      "src": "DEC-86; Interaction Constructs §U"
+     },
+     {
+      "point": "A nearing deadline may change an item's position, colour or wording; that is display, not a notification. Overdue notifies once. There is no outside channel.",
+      "why": "Your ruling of 29 September on deadlines without nagging.",
+      "src": "DEC-94 items 2-4"
+     },
+     {
+      "point": "A held page render states the site's reason and that its content is undetermined; once expired, that nothing was filed. Requests expire after 24 hours.",
+      "why": "Requirements for assistant-requested captures.",
+      "src": "capture-requests R6, R17, R20, R25"
+     },
+     {
+      "point": "A screen that cannot read something says so, never that none is recorded.",
+      "why": "The setup page rule and the publication doctrine.",
+      "src": "instance-setup R20; Publication §7"
+     },
+     {
+      "point": "Signals are recorded, noticed (status where the thing lives) or actionable (a queue item).",
+      "why": "Your three dispositions, 1 August.",
+      "src": "NOTIFICATIONS.md (three dispositions)"
+     },
+     {
+      "point": "An open list updates when an item is added or removed, unless that disrupts.",
+      "why": "The interface kickoff's 'alive means live' rule.",
+      "src": "UI-KICKOFF.md 'Alive means live'"
+     },
+     {
+      "point": "Queue items say whose deadline it is: the group's own checkpoint or the other party's.",
+      "why": "The action design approved on 30 September.",
+      "src": "build/plan/action-design/PATH.md §3; K608"
+     },
+     {
+      "point": "No nagging or second-guessing; informing at the act, once, is respect.",
+      "why": "Your ruling of 10 August.",
+      "src": "DEC-69"
+     }
     ],
     "options": [
      {
       "label": "A",
-      "name": "One shared vocabulary",
-      "whatTheMemberSees": "Four named states used everywhere: 'Nothing here', 'Still reading', 'Could not read, because…', 'Not known, because…'. Every wait also carries a line naming what is awaited, from whom, and the expected or legal date.",
-      "gains": "Consistent and teachable, matching §U's 'one voice'. A member learns it once.",
-      "costs": "Every screen's data must tell the four apart, and some answers from the record may not yet do so."
+      "name": "One shared vocabulary, waits always say what and when",
+      "howItWorks": "Four plain states used everywhere, each with its own fixed look: 'Nothing here' (truly empty), 'Still loading', 'Could not read this, because…' (the screen's own request failed), and the record's own 'Undetermined, because…'. Every wait carries one line naming what is awaited, from whom, and the expected or legal date where one exists ('Waiting on the City Clerk's reply, due 14 October'). No next-step prompts.",
+      "inTheStory": "Darnell sees each of the lines in steps 3 to 6, worded the same way on every screen.",
+      "gains": [
+       "Learned once, trusted everywhere.",
+       "Empty and failed can never be confused.",
+       "Matches the 'one voice' rule you already set for gaps."
+      ],
+      "costs": [
+       "Every screen's data must tell the four apart; a few answers from the record may not yet do so cleanly.",
+       "Brand-new members on an empty project get no hint of where to start."
+      ],
+      "commitsYouTo": "Design writes the four patterns once; the build checks each screen's reads distinguish them."
      },
      {
       "label": "B",
       "name": "Each screen designed on its own",
-      "whatTheMemberSees": "Wording and look chosen per screen.",
-      "gains": "Fits each context closely.",
-      "costs": "The screens drift apart, and §U warns that inconsistency teaches members to ignore the signal."
+      "howItWorks": "Wording and look chosen per screen as the redesign reaches it.",
+      "inTheStory": "The request page might say 'Pending', the project panel 'No items', the action page 'Awaiting reply'; a failed load may still look empty on some screens.",
+      "gains": [
+       "Fits each context closely.",
+       "No up-front design work."
+      ],
+      "costs": [
+       "Drift; members learn to ignore the signal.",
+       "The failed-versus-empty confusion survives wherever a designer misses it."
+      ],
+      "commitsYouTo": "Nothing now; harder to unify later."
      },
      {
       "label": "C",
-      "name": "Shared vocabulary plus a next step when empty",
-      "whatTheMemberSees": "As A, and an empty screen offers the natural next step (for example, 'Add the first question' on a new project).",
-      "gains": "Helps newcomers.",
-      "costs": "Risks becoming a prompt that nags (DEC-69)."
+      "name": "A, plus a next step on something just created",
+      "howItWorks": "As A. In addition, an empty screen for something the member has just created (a new project, a new plan) shows one plain next step, for example 'Add the first question'. Nowhere else.",
+      "inTheStory": "When Darnell's colleague creates a new project, its empty page says 'Nothing here yet. Add the first question.' Darnell's older, emptied panel just says 'Nothing held for this project.'",
+      "gains": [
+       "Helps newcomers at the moment they act.",
+       "Fits 'informing at the act, once'."
+      ],
+      "costs": [
+       "A line to hold: the step must never spread to older or emptied screens, where it would become a nudge."
+      ],
+      "commitsYouTo": "A rule for which screens count as 'just created'."
      }
     ],
-    "recommendation": "Option A, adding C's next step only on something the member has just created (a new project, a new plan), where the step is information given at the act rather than a nudge. The wording and look can then be delegated to Design.",
+    "tradeoff": "Consistency and honesty about gaps, at the cost of making every screen tell its states apart, against the freedom (and drift) of designing each screen as it comes.",
+    "recommendation": {
+     "choice": "C",
+     "why": [
+      "A shared vocabulary is the natural extension of what you already ruled for 'Undetermined': the same principle (state it, never dress it as an error, one voice) applied to the ordinary empty, loading and failed cases. The most damaging confusion, a failed load read as 'none', is only reliably prevented if every screen is built to the same pattern.",
+      "Requiring every wait to say what, from whom and by when costs little and turns long waits from worry into information. Where no date is known, the line says so ('no date is set').",
+      "The next-step line on newly created things is informing at the act, once, which your 10 August ruling names as respect; limiting it to that moment keeps it from becoming a nudge. The exact wording and look can then go to Design."
+     ],
+     "risk": "Some screens may not yet be able to tell 'could not read' from 'none' because the record's answer does not distinguish them. Contained by making that a check in each screen's build: a screen that cannot tell them apart says 'could not read' rather than 'none'."
+    },
     "howToAnswer": [
-     "As recommended, and leave the rest to Design.",
-     "Option A only; no next-step prompts anywhere.",
-     "Delegate the whole question to Design."
+     "15: as recommended, and leave the wording to Design.",
+     "15: A only; no next-step prompts anywhere.",
+     "15: delegate the whole question to Design.",
+     "15: question first: what does a wait say when nobody knows the date?"
     ],
-    "ifLeftOpen": "Design treats each screen as it comes, and 'Loading…' and blank lists persist until the redesign reaches them. Nothing in the build waits.",
-    "relatedUseCases": [
-     "UC-089",
-     "UC-118"
+    "ifLeftOpen": "Design treats each screen as it comes; 'Loading…' and blank lists persist in the old interface. Nothing in the build waits on this.",
+    "related": [
+     {
+      "n": 13,
+      "how": "An empty or unreadable held-captures list is a direct case of these states."
+     },
+     {
+      "n": 26,
+      "how": "The doorbell's refusal to a sender is a wait message to the public ('try again later'), and should follow the same pattern."
+     },
+     {
+      "n": 28,
+      "how": "Question 28 names the queue's 'noticed' kind of item (status where the thing lives), which is where many waits are shown."
+     },
+     {
+      "n": 23,
+      "how": "'Withheld' (something exists you may not see) is one of the neighbouring states; question 23 asks whether it also applies to work that depends on what you see."
+     }
+    ],
+    "glossary": [
+     {
+      "term": "Capture",
+      "plain": "Fetching a public document and keeping its exact bytes, with where and when."
+     },
+     {
+      "term": "Render",
+      "plain": "Loading a web page fully, as a browser would, before capturing it; a site may refuse or delay this."
+     },
+     {
+      "term": "Capture request",
+      "plain": "The assistant's request that the system fetch an address later; it expires after 24 hours."
+     },
+     {
+      "term": "Undetermined",
+      "plain": "The record's own answer that it does not know something, always with 'because…'."
+     },
+     {
+      "term": "Withheld, Unrated, Nobody looked, Refused",
+      "plain": "The four neighbours of Undetermined: something exists you may not see; nothing graded yet; nobody has searched there; the system declined an act."
+     },
+     {
+      "term": "Noticed",
+      "plain": "A signal worth seeing but not acting on, shown as status where the thing lives."
+     },
+     {
+      "term": "Queue",
+      "plain": "The list of everything that wants a member's attention."
+     },
+     {
+      "term": "Checkpoint",
+      "plain": "A date the group set for itself in an action plan, as opposed to another party's legal deadline."
+     }
     ],
     "sources": [
-     "Interaction Constructs §U (DEC-86)",
-     "DEC-94",
-     "capture-requests R17, R20, R25",
-     "instance-setup R20; Publication §7",
-     "NOTIFICATIONS.md (recorded / noticed / actionable)",
-     "UI-KICKOFF refinements ('Alive means live')",
-     "Action design PATH.md §1, §3",
-     "DEC-69"
+     "BIO_Interaction_Constructs_v0_1.md §U; DECISIONS.md DEC-86",
+     "DECISIONS.md DEC-94 items 2-4; DEC-69",
+     "build/requirements/capture-requests.md R6, R17, R20, R25",
+     "build/requirements/instance-setup.md R20; BIO_Publication_v0_1.md §7",
+     "docs/development/NOTIFICATIONS.md (recorded / noticed / actionable)",
+     "docs/development/UI-KICKOFF.md 'Alive means live'",
+     "build/plan/action-design/PATH.md §3 (approved K608)",
+     "civicos-ui/app.html (18 'Loading…' lines; 'Nothing is waiting for review.')",
+     "ux-substrate-v2.json surfaces (empty/loading not specified)",
+     "California Gov. Code §7922.535 (10-day determination), for the story only"
     ],
-    "size": "quick (a yes is enough)"
+    "size": "quick"
    }
   },
   {
@@ -12364,7 +12649,7 @@
    }
   },
   {
-   "question": "How are hunches shown during investigation (temporary high grade) versus in strength (inert), and how is clearing one before publication presented?",
+   "question": "Now that a hunch counts for nothing in a question's strength, what is its temporary grade for, does the doctrine sentence saying it 'composes normally' get corrected, and how do members see the hunches they must clear before publishing?",
    "whyItMatters": "A hunch inflates a grade; a case over an uncleared hunch states a strength that is not true.",
    "relatedUseCases": [
     "UC-061"
@@ -12415,63 +12700,205 @@
    "whoDecides": "Bob for the one doctrinal point (whether a hunch counts in any strength figure while open, R5 versus the Declared Bias text); Design for the visual treatment and the clearing list.",
    "brief": {
     "stillOpen": "partly",
-    "settledBy": "Partly settled. strength R5 ('A leg whose grade source is hunch is inert in every pair, whatever grade it states … always named as a hunch') was approved by Bob 'as recommended, for now' (K102), and K187 reads it whole (a hunch contributes nothing). Clearing is settled in substance: case-authoring R12 refuses UNCLEARED_HUNCH, and DEC-80 item 3 lands it in the ceremony's pre-flight before the first screen, naming every leg (C-120.7). Still unreconciled: Declared Bias still says 'During open it composes normally', and nothing says where the hunch's temporary grade does its job if strength ignores it.",
-    "title": "What a hunch's grade does, and clearing it",
-    "decision": "Confirm that a hunch's temporary grade exists only to connect evidence while investigating and never counts in strength, and correct the Declared Bias sentence that says otherwise. Then approve how hunches are shown and listed for clearing before publishing.",
-    "whyYours": "Whether a hunch counts in any strength figure is doctrine, and it is Bob's own DEC-15 in tension with a requirement he approved 'for now'. The visual treatment and the clearing list are Design's.",
-    "context": "A 'hunch' is a member's declared guess that two pieces of evidence are connected before the record can show it. Bob's DEC-15 gives it 'a temporary high enough grade' so that otherwise disconnected evidence can be related while investigating. It must be cleared before publishing: the case has to stand without it. 'Strength' is the pair of letter grades (capture and connection) showing how easily someone else could check an answer. The workspace now shows it for every question (DEC-82).\n\nThe tension is between two texts. Declared Bias says a hunch 'composes normally' during investigation, meaning its grade counts. Strength R5 makes it count for nothing in every strength figure, so that the strength a member sees is never inflated by a guess.\n\nExample: a member suspects the contractor on two invoices is the same firm under two names. She links them as a hunch graded B. The question page shows the link in a distinct hunch style: 'Hunch (B) · Maria · 2 Oct'. The two invoices now appear together in searches and suggestions. The strength badges beside the question read '[capture B] [connection C] · 1 hunch not counted'. At publishing, the pre-flight lists the hunch before the first screen with its two ways out: earn a real grade from evidence, or show the case holds without it.",
-    "alreadySettled": [
-     "A hunch is temporary declared bias with a grade, visible as a hunch on every surface from the moment it is made (DEC-15; Declared Bias)",
-     "Only hunch debt blocks publication; other bias is disclosed (DEC-20; Publication §3 rule 4)",
-     "Hunch inert in strength, always named (strength R5; K102 'for now'; K187)",
-     "Uncleared hunch refused before the first screen of the ceremony, each leg named (case-authoring R12, C-120.7; DEC-80 item 3)",
-     "Strength shown as two badges, never one score; 'Unrated' and 'Undetermined' named (DEC-82; DEC-86)",
-     "Theme hunches are proposals kept apart from members until a member places them (connections R41, R44, R48)"
+    "settledSince": "",
+    "title": "What a hunch's grade does, and clearing hunches before publishing",
+    "inOneBreath": "Now that a hunch counts for nothing in a question's strength, what is its temporary grade for, does the doctrine sentence saying it 'composes normally' get corrected, and how do members see the hunches they must clear before publishing?",
+    "decision": "(1) Confirm that a hunch never counts in any strength reading, and that the doctrine sentence saying a hunch 'composes normally' while a question is open is corrected to match. (2) Decide what the hunch's letter is for once strength ignores it: shown on the link as the member's stated confidence, or dropped. (3) Approve a standing 'hunches to clear' list on the question and project pages, in addition to the check before publishing.",
+    "alreadyDecidedPart": "Your ruling of 1 August: a hunch is temporary declared bias, carries a temporary grade, is visible as a hunch everywhere from the moment it is made, and must be cleared before publication. Your ruling of 2 August: it is the one kind of bias that blocks publishing. On 26 September you approved, 'for now', the requirement that a hunch counts for nothing in strength and is always named. On 29 September you ruled that the check before publishing runs before the ceremony's first screen and names every hunch.",
+    "basics": [
+     "A question is something a project is trying to answer, such as 'Did the city split the paving contract to avoid council approval?'. Its evidence is a list of links (the record calls each a 'leg') from the question to documents or to other answered questions. Each link can carry a letter grade, A to D, for how easily someone else could check that the link holds. A grade never says whether something is true.",
+     "Strength is the question's summary: two letters shown side by side, the weakest capture grade and the weakest connection grade among what the answer depends on, never added into one score. Since your ruling of 29 September, every question in the project workspace shows its strength against the project's bar.",
+     "A hunch is a member's declared guess that a link holds before the record can show it. In your words of 1 August: hunches 'can also be dead wrong', but they 'help bring an investigation together', so 'hunch-based connections must be given a temporary high enough grade that otherwise disconnected evidence can be brought together'. A hunch carries its author's name and date, and it is the only grade a member may assert above D on their own say-so.",
+     "Clearing a hunch means showing the case still holds without it: either the link earns a real grade from the record, or the hunch is removed and the answer still stands. A case cannot publish while any hunch stands.",
+     "An analogy: a hunch is like a working hypothesis in a staff analysis. Useful for deciding what to look at, but nothing in the filed testimony may rest on it."
+    ],
+    "today": [
+     "Built in the new code, by my reading: the strength calculation treats a hunch link as counting for nothing, names it in a separate list of hunches, and explains it as 'this leg is marked as a hunch, so it is visible here and does not count as evidence'. The requirement file still marks this 'not yet met'; that mark appears out of date.",
+     "Built: publishing refuses any case with a standing hunch, naming each one: 'A finding in this case rests on a hunch. … Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.' Under your 29 September ruling this check moves to before the first screen of the publication ceremony, which is being designed now.",
+     "Not decided: any member screen for hunches in the new interface. The old interface marks a hunch link 'HUNCH' with author and date and warns on the strength panel that the case cannot publish.",
+     "The contradiction: the bias doctrine still says that while a question is open a hunch 'composes normally — that is what makes it useful', and that treating it as having no grade 'would destroy exactly the traversability this ruling exists to preserve'. The investigative-session design and the strength requirement you approved say the opposite: it 'does not count as evidence'.",
+     "One more use of the word: the Action canon you approved on 30 September says a plan resting on premises not yet established is 'shown as hunch debt'. That is a disclosure on a plan, not a publishing block."
+    ],
+    "problem": [
+     "Two canon texts disagree, and the workspace strength badges are being designed now. If a later session reads 'composes normally' literally, it could make a hunch lift a question's strength, and a member could then quote that strength to a reporter or an official. That is exactly the failure the bias doctrine names under your 2 August ruling: 'a case published over an uncleared hunch states a strength that is not true', except it would happen before publishing.",
+     "If strength ignores the hunch, the sources do not say what its letter still does. I found nothing in the record that reads the letter except to display it. What still works without the letter: the link itself ties the two items together on the question's evidence list, and a member can search for every hunch in a project. Whether that is the 'bringing together' you meant on 1 August is your call.",
+     "Clearing is only met at the end. A member who learns of five standing hunches at the publication check, after weeks of work, has been surprised. A standing list avoids that, but must not become a reminder that nags."
+    ],
+    "story": {
+     "title": "Maria and the two paving contractors",
+     "steps": [
+      "Maria's project asks whether the city split a street-resurfacing contract into pieces small enough to avoid council approval. Two invoices, from 'Bayside Paving LLC' and 'BSP Contracting', look like the same firm.",
+      "She cannot prove it yet, so she links the BSP invoice to the question as a hunch, graded B. The link shows in a distinct hunch style: 'Hunch (B) · Maria · 2 Oct'.",
+      "The question's strength badges read 'Capture B · Connection C · 1 hunch not counted'. The hunch does not lift the C.",
+      "On the project page, a small 'Hunches to clear (1)' list shows the link, with its two ways out: earn a real grade from evidence, or show the answer holds without it.",
+      "Two weeks later she captures the state's business registry entries: both firms list the same agent and address. She regrades the link from the record; the hunch is cleared and the list empties.",
+      "Had she not, the check before the publication ceremony's first screen would have listed the hunch by name and stopped there, writing nothing."
+     ]
+    },
+    "fixed": [
+     {
+      "point": "A hunch is temporary declared bias with a grade, visible as a hunch on every screen from the moment it is made, carrying its author and date.",
+      "why": "Your ruling of 1 August.",
+      "src": "DEC-15; Declared Bias 'RULED 2026-08-01'"
+     },
+     {
+      "point": "Only hunches block publication; other bias is disclosed.",
+      "why": "Your ruling of 2 August.",
+      "src": "DEC-20; Publication §3 rule 4"
+     },
+     {
+      "point": "A hunch counts for nothing in any strength reading and is always named as a hunch.",
+      "why": "The strength requirement you approved 'for now' on 26 September; built in the new strength code.",
+      "src": "strength R5; K102; K187; INVESTIGATIVE-SESSION §12"
+     },
+     {
+      "point": "A standing hunch is refused before the publication ceremony's first screen, each one named.",
+      "why": "Your ruling of 29 September on the ceremony.",
+      "src": "DEC-80 item 3; case-authoring R12, R34; C-120.7"
+     },
+     {
+      "point": "Strength is two badges, never one score; 'Unrated' and 'Undetermined' are named.",
+      "why": "Your rulings of 29 September on scales and gaps.",
+      "src": "DEC-82; DEC-86"
+     },
+     {
+      "point": "Only a member can mark a hunch; the assistant cannot.",
+      "why": "The investigative-session design.",
+      "src": "INVESTIGATIVE-SESSION §6.7 and DEC-15 note"
+     }
     ],
     "options": [
      {
       "label": "A",
-      "name": "Links, never counts",
-      "whatTheMemberSees": "As in the example. The hunch's grade appears only on the link, in hunch style, and lets evidence be connected and found together. Strength ignores it and says how many hunches it left out. A 'Hunches to clear' list sits on the question page and in the pre-flight.",
-      "gains": "Honest strength at all times. Teaches the rule. Matches the approved requirement.",
-      "costs": "Two readings sit side by side (the hunch's letter and the strength that ignores it), which needs clear styling."
+      "name": "The letter stays on the link; strength ignores it",
+      "howItWorks": "The hunch's letter appears only on the link itself, in the hunch style, as the member's stated confidence. Strength ignores it and says how many hunches it left out. A 'Hunches to clear' list sits on the question and project pages (status, never a notification), and the publication check lists them again. The doctrine sentence is corrected to say a hunch links evidence while open but never lifts strength.",
+      "inTheStory": "Exactly as steps 2 to 6.",
+      "gains": [
+       "Strength is honest at every moment, not only at publishing.",
+       "Keeps your 1 August idea that a hunch carries a grade.",
+       "No surprise at the publication check."
+      ],
+      "costs": [
+       "Two letters sit near each other (the hunch's B and the strength's C), which needs clear styling.",
+       "The letter does little work; it records confidence rather than changing any reading."
+      ],
+      "commitsYouTo": "Correcting the doctrine text; Design styles the hunch link and the list."
      },
      {
       "label": "B",
-      "name": "Counts while investigating",
-      "whatTheMemberSees": "Two strength readings: 'with hunches' and 'without hunches'.",
-      "gains": "Literal to 'composes normally'. Shows what the case would be if the hunch proves true.",
-      "costs": "Strength R5 must change. A 'with hunches' pair can be quoted as real strength."
+      "name": "Two strength readings while investigating",
+      "howItWorks": "Strength shows two pairs: 'with hunches' and 'without hunches'. Only the second counts for the bar and for publishing.",
+      "inTheStory": "Maria's badges read 'With hunches: B · B. Without: B · C.'",
+      "gains": [
+       "Literal to 'composes normally'.",
+       "Shows what the answer would be if the hunch proves right."
+      ],
+      "costs": [
+       "The strength requirement you approved must change.",
+       "A 'with hunches' pair can be quoted as real strength, by members or in screenshots.",
+       "Doubles the badges on every question."
+      ],
+      "commitsYouTo": "Rewriting the strength requirement and the workspace design."
      },
      {
       "label": "C",
-      "name": "Hunches carry no grade",
-      "whatTheMemberSees": "A hunch is a plain dashed link with no letter.",
-      "gains": "Simplest.",
-      "costs": "Contradicts DEC-15 ('the grade is the point')."
+      "name": "Hunches carry no letter",
+      "howItWorks": "A hunch is shown as a plain marked link, 'Hunch · Maria · 2 Oct', with no grade. Strength ignores it as in A; the clearing list is as in A.",
+      "inTheStory": "Maria's link reads 'Hunch' with no B.",
+      "gains": [
+       "Simplest; nothing to misread."
+      ],
+      "costs": [
+       "Departs from your 1 August words that a hunch is 'given a temporary high enough grade'."
+      ],
+      "commitsYouTo": "Amending your 1 August ruling and the record's rules for links."
      }
     ],
-    "recommendation": "Option A. Confirm R5 over the 'composes normally' sentence, which BOB then corrects in Declared Bias. The hunch's grade still does DEC-15's job of bringing evidence together, just not inside strength.",
+    "tradeoff": "Keeping strength honest during investigation (A or C) against showing what the answer could become if the hunch is right (B); and, within A and C, whether the hunch's letter is worth keeping when it changes no reading.",
+    "recommendation": {
+     "choice": "A",
+     "why": [
+      "It keeps both of your rulings intact: the hunch keeps its grade and announces itself everywhere, and no reading a member might quote is ever lifted by a guess. The contradiction is resolved by correcting the one doctrine sentence, not by changing what has been built.",
+      "The standing list removes the surprise at publication without nagging: it is status where the work lives, which is the 'noticed' treatment, not a queue item or a notification.",
+      "My judgement on the letter: keep it, because it records how confident the member was when they made the guess, which is useful when the hunch is later cleared or abandoned. If you see no value in that, C is a clean alternative."
+     ],
+     "risk": "Members may still read the hunch's B as part of the answer. Contained by the hunch style, the words 'not counted' beside strength, and the fixed sentence 'visible here and does not count as evidence'."
+    },
     "howToAnswer": [
-     "As recommended.",
-     "Option A, but hide the hunch letter too and show only 'hunch'.",
-     "Option B.",
-     "Question first: does a hunch still let the assistant treat the two documents as connected?"
+     "21: as recommended.",
+     "21: A, but drop the letter (option C's display).",
+     "21: B; I want members to see the 'with hunches' reading.",
+     "21: question first: does a hunch still let the assistant treat the two documents as connected?"
     ],
-    "ifLeftOpen": "Strength R5 stays approved 'for now' and is not yet met (the live code still counts a hunch at its stated grade), and the canon keeps two contradicting sentences, so the workspace's strength badges could be built on one reading and questioned under the other.",
-    "relatedUseCases": [
-     "UC-061"
+    "ifLeftOpen": "The new strength code keeps ignoring hunches as approved 'for now', but the doctrine keeps two contradicting sentences, so the workspace badges could be designed on one reading and challenged under the other. Members see hunches only at the publication check.",
+    "related": [
+     {
+      "n": 22,
+      "how": "The project's bar is what strength is compared against; a hunch never helps meet it."
+     },
+     {
+      "n": 30,
+      "how": "How a published case explains its strength to readers; with hunches cleared, readers never see one."
+     },
+     {
+      "n": 20,
+      "how": "Declared bias shown to the public; a hunch is the one bias that never reaches publication."
+     },
+     {
+      "n": 15,
+      "how": "The 'Hunches to clear' list needs the shared empty wording when none remain."
+     }
+    ],
+    "glossary": [
+     {
+      "term": "Question",
+      "plain": "Something a project is trying to answer; once answered, a finding."
+     },
+     {
+      "term": "Link (leg)",
+      "plain": "One piece of a question's evidence: a tie from the question to a document or another question."
+     },
+     {
+      "term": "Grade (A to D)",
+      "plain": "How easily someone else could check something, never whether it is true."
+     },
+     {
+      "term": "Strength",
+      "plain": "The weakest capture grade and weakest connection grade a question's answer depends on, shown as a pair."
+     },
+     {
+      "term": "Bar",
+      "plain": "The strength a project requires before it will publish."
+     },
+     {
+      "term": "Hunch",
+      "plain": "A member's declared guess that a link holds before the record can show it; named, dated, and cleared before publishing."
+     },
+     {
+      "term": "Hunch debt",
+      "plain": "Standing hunches that must be cleared before a case publishes; the Action canon also uses it for a plan resting on unproven premises."
+     },
+     {
+      "term": "Declared bias",
+      "plain": "The group's stated lens, disclosed with every published case."
+     },
+     {
+      "term": "Publication ceremony",
+      "plain": "The five steps an owner walks through to publish a case, preceded by a check that names anything blocking it."
+     }
     ],
     "sources": [
-     "Declared Bias 'RULED 2026-08-01: a HUNCH is temporary declared bias'",
-     "DEC-15; DEC-20",
-     "strength R5; K102; K187",
-     "case-authoring R12, C-120.7; DEC-80 item 3",
-     "DEC-82; DEC-86",
-     "connections R41, R44, R48",
-     "Publication §3 rule 4"
+     "BIO_Declared_Bias_v0_1.md 'RULED 2026-08-01: a HUNCH is temporary declared bias' (incl. 'During open it composes normally')",
+     "DECISIONS.md DEC-15, DEC-20, DEC-80 item 3, DEC-82, DEC-86",
+     "build/requirements/strength.md R5, R9; bio-plane/src/strength/index.mjs (HUNCH_WHY; hunch inert)",
+     "build/rulings.md K102, K187",
+     "build/requirements/case-authoring.md R12, R34, C-120.7",
+     "docs/development/INVESTIGATIVE-SESSION.md §6.7, §12",
+     "BIO_Publication_v0_1.md §3 rule 4",
+     "BIO_Action_v0_1.md point 2 (plan 'shown as hunch debt'); PATH.md §2 step 2",
+     "connections R41, R44, R48 (theme hunches are a separate use)"
     ],
-    "size": "quick (a yes is enough)"
+    "size": "short"
    }
   },
   {
@@ -12979,7 +13406,7 @@
    }
   },
   {
-   "question": "What does the knocker, and the member at the doorbell, see when the rate bound is hit (no translation yet, D-508)?",
+   "question": "When the public doorbell turns senders away because a limit is reached, should the group's members be able to learn that it happened, as a bare count with nothing about who, or should refused knocks stay entirely unrecorded?",
    "whyItMatters": "A refusal must teach; a 429 is a claim that needs a count behind it.",
    "relatedUseCases": [
     "UC-012"
@@ -13023,71 +13450,199 @@
    "whoDecides": "Design for the knocker's wording and page; Bob for whether refused knocks are recorded at all, which changes what the record holds.",
    "brief": {
     "stillOpen": "partly",
-    "settledBy": "Partly changed, not settled. DEC-78 (a knock's source is an unnamed knocker; an optional knocker secret proves continuity). K509 (3): doorbell material is graded 'received'. K530 and sources R11: a source giving or withdrawing consent with their secret is 'rate-bound as a knock is, in the same windows as knocks'. Still as built: capture R47-R48 say 'Nothing is stored and nothing is counted', and the Intake Doctrine status line still says RATE_IP and RATE_GLOBAL 'have no member-facing translation yet (D-508)', although the catalogue holds unreviewed translations (C-85.1, C-85.2).",
+    "settledSince": "",
     "title": "When the doorbell is full: what the sender and the group are told",
-    "decision": "Should the group's members learn that their doorbell has been turning people away, as a bare count with nothing about who? Or should refused knocks stay entirely unrecorded, in which case the refusal text stops promising that 'the group's members can be told'?",
-    "whyYours": "Whether refused knocks are recorded at all changes what the record holds about members of the public, which is intake doctrine (Intake Doctrine §2a). The sender's wording and the public page are Design's.",
-    "context": [
-     "The doorbell lets anyone, with no account, hand a group a document (a 'knock'), optionally with a note and a secret that proves several knocks came from the same person. The limit is 12 knocks per sender and 300 in total in any 10 minutes. Over the limit the sender is refused, and nothing is stored or counted.",
-     "Refusal texts exist, drafted by a builder and never reviewed. The one for a full instance ends: 'If it keeps happening, the group's members can be told the doorbell is saturated.' Nothing records that it happened, so members cannot be told.",
-     "Since DEC-78, a source's consent by secret counts against the same limits. Example: during a controversy a hostile party floods a group's doorbell. A whistleblower trying to send a second document, or to consent to publishing their job title, is turned away for hours. The members see a quiet inbox and assume nothing is coming."
+    "inOneBreath": "When the public doorbell turns senders away because a limit is reached, should the group's members be able to learn that it happened, as a bare count with nothing about who, or should refused knocks stay entirely unrecorded?",
+    "decision": "(1) Whether the system keeps a count-only tally of knocks it turned away (no addresses, no fingerprints, no content), or records nothing at all. (2) If it keeps a tally, whether members see it only as status on the doorbell's inbox page, or administrators also get one queue item when the doorbell stays full for a long time. (3) Either way, the sender's refusal text stops promising anything the system does not do.",
+    "alreadyDecidedPart": "How a knock becomes part of the record was ruled by you on 29 September: pulling a knock admits it as a held capture, its source is 'an unnamed knocker' identified by the receipt, the contact stays in the inbox, and a knocker may prove continuity with a secret. The limits themselves are set (12 per sender and 300 in total in any 10 minutes) and are published with how they are estimated. What is open is only what anyone is told when the limits bite.",
+    "basics": [
+     "The doorbell is the one way into a group's copy of CivicOS that needs no account: anyone may hand the group a document. Each hand-over is a 'knock', and the person is the 'knocker'. It exists because a group whose purpose is accountability must be reachable by people who will not or cannot join it, whistleblowers above all.",
+     "A knock writes one row in the group's inbox: the bytes, their fingerprint, the time, an optional note and an optional contact. Nothing enters the record until a signed-in member reads it and pulls it in, or discards it.",
+     "To stop one sender or a flood filling the inbox, the doorbell limits knocks: at most 12 from one sender and 300 in total in any 10 minutes. 'One sender' means one connecting internet address, kept only as a keyed fingerprint that cannot be turned back into the address. Over a limit, the sender gets a refusal (the web's standard 'too many requests' answer) with a plain explanation and the published limit. Nothing about a refused knock is stored, and it does not count toward the limits.",
+     "Since 29 September, a source who gave a knocker secret can also use it, with no account, to consent to (or withdraw consent from) publishing a detail about themselves, such as their job title. Each such attempt counts against the same limits as a knock.",
+     "An analogy: a public comment portal that goes down on the last day of a comment period. The commission wants to know it happened, even without knowing who was turned away, so it can extend the deadline or open another channel."
     ],
-    "alreadySettled": [
-     "A refusal carries its translation and the stated bound; nothing is stored or counted; a code without a translation never reaches a sender bare (capture R47-R48, R52).",
-     "A knock's source is an unnamed knocker; the contact stays in the inbox (DEC-78). Doorbell material is graded 'received' (K509 (3)).",
-     "Consent by secret counts in the same windows as knocks (sources R11, K530).",
-     "A 'noticed' condition shows as status where the thing lives, not as a queue item (NOTIFICATIONS.md)."
+    "today": [
+     "Built: both limits, the published statement of each ('at most 12 knocks from one source in any 10 minutes, estimated by a sliding window', and 300 for the whole doorbell), and a plain explanation for each refusal. Those explanations were drafted by a builder and never reviewed by you or Design. The doctrine's status line still says they do not exist yet; that line is out of date.",
+     "The explanation for the whole-doorbell limit ends: 'If it keeps happening, the group's members can be told the doorbell is saturated.' Nothing records refusals, so nobody can tell them. The sentence promises something the system does not do.",
+     "Neither explanation tells the sender when to try again; both say the limit 'lifts on its own shortly'.",
+     "What members see: on the old setup page, a list of knocks with 'Mark as taken up' and 'Set aside'. Nothing about refused knocks. There is no designed public page for knocking yet.",
+     "A correction to the previous brief: it argued for counting refusals because the doctrine says a refusal is 'a claim that needs a count behind it'. That sentence means something narrower: the system may only tell someone they knocked too often when a real count shows it, and a storage failure must never be reported as a rate refusal. It does not by itself argue for keeping a tally."
+    ],
+    "problem": [
+     "A flood is the case that matters. A hostile party who wants to stop a whistleblower reaching the group can send 300 knocks every 10 minutes from many addresses and keep the doorbell full for hours. The whistleblower is turned away, and so is a source trying to consent to publication. The members see a quiet inbox and conclude nothing is coming. They have no reason to post another way in, such as a lawyer's address or a drop box.",
+     "Recording anything about refused knocks changes what the record holds about members of the public. Even a bare total is a fact about public activity, and a record can be subpoenaed. That is why it is your call under the intake doctrine and not Design's.",
+     "Whatever you choose, the current refusal text should match it. A sentence that promises members will be told, when they cannot be, is a small but real breach of the record's honesty to the public.",
+     "Your rulings against nagging (10 August) and on reminders (29 September) bear on how members are told, if at all: status where the thing lives is fine; a pushed message is not."
+    ],
+    "story": {
+     "title": "The flooded doorbell during the port contract hearing",
+     "steps": [
+      "A group is investigating a disputed port maintenance contract. The week of the council hearing, a hostile party floods its doorbell from dozens of addresses.",
+      "Lena, a port employee, tries to send a second internal memo. She sees: 'This group's inbox is not taking any more material from anyone just now… it lifts on its own shortly.' She tries twice more over three hours and gives up.",
+      "Under the current text, her refusal adds: 'If it keeps happening, the group's members can be told the doorbell is saturated.' They cannot be.",
+      "With no tally, Andre, who handles the inbox, sees a normal day's three knocks and nothing else.",
+      "With a tally, the inbox page shows him: 'Turned away 4,180 knocks today (whole doorbell full 9 times; last at 14:05). Nothing is known about who sent them.'",
+      "Andre posts on the group's public site that sources can also reach them through their lawyer, and Lena does."
+     ]
+    },
+    "fixed": [
+     {
+      "point": "Limits: 12 per sender and 300 in total in any 10 minutes, published with how they are estimated; the statement travels with each refusal.",
+      "why": "The doorbell's limit rule, 24 September.",
+      "src": "Intake Doctrine §2a; capture R31, R47, R48"
+     },
+     {
+      "point": "A refused knock stores nothing and counts toward neither limit; a refusal explanation never reaches a sender as a bare code.",
+      "why": "As built.",
+      "src": "capture R47, R48, R52, R53"
+     },
+     {
+      "point": "A storage failure is reported as silence, never as a rate refusal.",
+      "why": "The doctrine's rule that a 'too many' claim needs a real count behind it.",
+      "src": "Intake Doctrine §2a; capture R31"
+     },
+     {
+      "point": "A knock's source is an unnamed knocker; the contact stays in the inbox and never enters the record.",
+      "why": "Your ruling of 29 September.",
+      "src": "DEC-78"
+     },
+     {
+      "point": "Consent by knocker secret counts against the same limits.",
+      "why": "The sources requirements folded on 30 September.",
+      "src": "sources R11; K530; capture R71"
+     },
+     {
+      "point": "Signals are recorded, noticed (status where the thing lives) or actionable (a queue item); there is no outside channel such as email.",
+      "why": "Your three dispositions (1 August) and your ruling of 29 September.",
+      "src": "NOTIFICATIONS.md; DEC-94 item 3"
+     }
     ],
     "options": [
      {
       "label": "A",
       "name": "Record nothing; fix the text",
-      "whatTheMemberSees": "The sender sees the refusal, the bound and 'try again in about N minutes'. Members see nothing.",
-      "gains": "Nothing about the public is stored.",
-      "costs": "The group never learns of floods, and the 'members can be told' sentence must go."
+      "howItWorks": "No tally. The sender's explanation loses its promise to members, and gains an estimated retry time where one can be computed ('try again after about 14:20').",
+      "inTheStory": "Lena sees an accurate refusal and a retry time; Andre sees nothing unusual all day.",
+      "gains": [
+       "Nothing about the public is stored.",
+       "No new requirement."
+      ],
+      "costs": [
+       "The group never learns of floods or of the sources it lost.",
+       "An attacker can silence the doorbell unnoticed."
+      ],
+      "commitsYouTo": "Striking one sentence; Design reviews the two explanations."
      },
      {
       "label": "B",
-      "name": "A count-only status on the doorbell",
-      "whatTheMemberSees": "The sender sees the same as A. On the doorbell page members see 'Turned away 214 knocks today (limit reached 3 times; last at 14:05)', with no addresses, fingerprints or content.",
-      "gains": "The group learns of floods or attacks and can publicise another way in.",
-      "costs": "'Nothing is counted' becomes 'only a daily total', which needs a requirement change and a check that the total reveals nothing."
+      "name": "A count-only status on the inbox page",
+      "howItWorks": "The system keeps a daily total of refusals for the whole doorbell, how many times the whole-doorbell limit was reached, and when last. No addresses, fingerprints, times of individual knocks or content. Members see it as status on the inbox page. The sender's text says, truthfully, that the group can see how often its doorbell turns people away.",
+      "inTheStory": "Step 5: Andre sees the total and posts another way in.",
+      "gains": [
+       "The group learns of floods and can respond.",
+       "Reveals nothing about any single sender."
+      ],
+      "costs": [
+       "'Nothing is counted' becomes 'only a daily total', which needs a requirement change and a privacy check.",
+       "A small new fact about public activity is kept and could be requested in litigation."
+      ],
+      "commitsYouTo": "A requirement for the tally and its privacy limits; Design for the status line and the two explanations."
      },
      {
       "label": "C",
-      "name": "B, plus one to-do when it lasts",
-      "whatTheMemberSees": "As B, and when the instance limit holds for (say) an hour, administrators get one queue item: 'The doorbell has been full for an hour.'",
-      "gains": "Reaches administrators who do not open the doorbell page.",
-      "costs": "Closer to nagging, even as a single item, and more to design."
+      "name": "B, plus one queue item when it lasts",
+      "howItWorks": "As B. In addition, when the whole-doorbell limit holds for, say, an hour, administrators get one queue item: 'The doorbell has been full for an hour.'",
+      "inTheStory": "Andre's administrator sees the item without opening the inbox page.",
+      "gains": [
+       "Reaches administrators who never open the inbox page."
+      ],
+      "costs": [
+       "Closer to nagging, though a single item for something a member can act on fits the 'actionable' kind.",
+       "More to design."
+      ],
+      "commitsYouTo": "As B, plus a queue producer and its threshold."
      }
     ],
-    "recommendation": "B. The doctrine itself says a refusal is 'a claim that needs a count behind it', and an instance-wide total helps the group without saying anything about any sender. Keep it as status on the doorbell page, not a queue item, in line with Bob's no-nagging rulings. Design then reviews the two refusal texts and the public page. (Recommendation, not canon.)",
+    "tradeoff": "Storing nothing at all about the public, against giving the group the one fact it needs to notice that someone is silencing its doorbell.",
+    "recommendation": {
+     "choice": "B",
+     "why": [
+      "The doorbell exists so that people who cannot join can still reach the group. A flood that silently defeats that purpose is the one failure the group must be able to see, and a whole-doorbell daily total tells them without saying anything about any sender.",
+      "Showing it as status on the inbox page, not a queue item, keeps to your rulings against nagging. C can be added later if groups miss it.",
+      "Whatever you choose, the promise in today's refusal text should be made true (B or C) or struck (A). This is my recommendation, not canon; the privacy check of the tally is BOB's to do before it is built."
+     ],
+     "risk": "A kept total about public activity. Contained by keeping it coarse (whole doorbell, per day, plus the time it was last full), never per sender, and never published outside the group."
+    },
     "howToAnswer": [
-     "As recommended.",
-     "A: record nothing, and strike the promise.",
-     "C: I want administrators told when it lasts.",
-     "Could the daily total itself tell an attacker anything?"
+     "26: as recommended.",
+     "26: A: record nothing, and strike the promise.",
+     "26: C: I want administrators told when it lasts.",
+     "26: question first: could the daily total itself tell an attacker anything?"
     ],
-    "ifLeftOpen": "Refusals keep working as built. The full-instance text keeps a promise nothing fulfils (BOB can strike that sentence meanwhile), and members stay unaware of floods.",
-    "relatedUseCases": [
-     "UC-012",
-     "UC-013",
-     "UC-149",
-     "UC-150"
+    "ifLeftOpen": "Refusals keep working as built. The whole-doorbell explanation keeps a promise nothing fulfils (BOB can strike that sentence meanwhile under the rule that refusals must be truthful), and members stay unaware of floods. Design's review of the two explanations waits.",
+    "related": [
+     {
+      "n": 15,
+      "how": "The sender's 'try again later' is a public-facing wait message and should follow the shared waiting pattern."
+     },
+     {
+      "n": 28,
+      "how": "Option B is the queue's 'noticed' kind (status where the thing lives); option C is the 'actionable' kind."
+     },
+     {
+      "n": 13,
+      "how": "Knocks members pull in land as held captures, which question 13's list would show."
+     },
+     {
+      "n": 2,
+      "how": "Ruled: how a knock becomes part of the record and how its source is named."
+     }
+    ],
+    "glossary": [
+     {
+      "term": "Doorbell",
+      "plain": "The public way for anyone, without an account, to hand the group a document."
+     },
+     {
+      "term": "Knock / knocker",
+      "plain": "One hand-over through the doorbell, and the person who made it."
+     },
+     {
+      "term": "Inbox",
+      "plain": "Where knocks wait until a member pulls them into the record or discards them."
+     },
+     {
+      "term": "Pull",
+      "plain": "A member bringing a knock into the record as a held capture."
+     },
+     {
+      "term": "Knocker secret",
+      "plain": "An optional secret a knocker reuses so the group can tell several knocks came from one person without learning who."
+     },
+     {
+      "term": "Fingerprint (of an address)",
+      "plain": "A keyed scramble of the sender's internet address, used only to count, that cannot be reversed."
+     },
+     {
+      "term": "Rate limit",
+      "plain": "The cap on knocks per 10 minutes: 12 per sender, 300 in total."
+     },
+     {
+      "term": "Noticed / actionable",
+      "plain": "A signal shown as status where it lives, versus one that earns a queue item because a member can act on it."
+     }
     ],
     "sources": [
-     "BIO_Intake_Doctrine_v1_1.md §2a and status (D-508)",
-     "capture R31, R47-R48, R52",
-     "bio-checks.mjs KNOCK_CHECKS C-85.1, C-85.2",
-     "DEC-78",
-     "K509 (3)",
-     "K530",
-     "sources R11",
-     "DEC-94 (3)",
-     "NOTIFICATIONS.md CONDITION dispositions",
-     "ux-experience.json openQuestions[26]"
+     "BIO_Intake_Doctrine_v1_1.md §2a and status line (D-508)",
+     "build/requirements/capture.md R30-R32, R47-R48, R52-R54, R56, R71",
+     "bio-plane/src/capture/checks.mjs KNOCK_CHECKS C-85.1, C-85.2 (the drafted explanations)",
+     "DECISIONS.md DEC-78; DEC-69; DEC-94 item 3",
+     "build/requirements/sources.md R11; build/rulings.md K530, K539",
+     "docs/development/NOTIFICATIONS.md (three dispositions)",
+     "ux-substrate-v2.json surfaces 'Inbox (knocks)', 'Setup page', 'A source's consent by knocker secret'"
     ],
-    "size": "quick (a yes is enough)"
+    "size": "quick"
    }
   },
   {
@@ -13555,135 +14110,402 @@
    }
   },
   {
-   "question": "What does placing a 'litigation hold' do in CivicOS: which routine deletions does it suspend, and for which material? Who may place it and lift it, and what do members see while it is on?",
+   "question": "When a group is threatened with legal action, what should placing a 'litigation hold' in CivicOS stop deleting, across how much of the group's work, who may place and lift it, and what should members see while it is on?",
    "basis": "open",
    "relatedUseCases": [
     "UC-129"
    ],
    "brief": {
     "stillOpen": true,
-    "settledBy": "Open, and marked as Bob's. build/plan/action-fold/t18-entries.md: the litigation-hold reminder 'waits for the hold's act, whose design (what a hold suspends, who lifts it) is Bob's doctrine'. draft-T18-recut: 'N-A19 (the litigation-hold item, once the hold's act is designed, Bob's doctrine)'. K624 (5) moved it to T19. Settled parts: K613 (2): the reminder 'is not repeated unless the member asks; the hold may be cleared when responding to it, and if not cleared it stays open until cleared'. DEC-61 (2026-08-06): 'THEREFORE THE PURGE MUST BE SUSPENDABLE — a litigation hold'.",
-    "title": "The litigation hold: what it stops, and who starts and ends it",
-    "decision": "What does placing a 'litigation hold' do in CivicOS: which routine deletions does it suspend, and for which material? Who may place it and lift it, and what do members see while it is on?",
-    "whyYours": "Doctrine with legal consequences for the group. DEC-61 set the deletion rules, and the canon warns that getting the hold wrong 'inverts the protection into liability'. The Action design hands this to Bob by name.",
-    "context": [
-     "Some material is deleted by design. An assistant session's transcript stays on the member's own device, is deleted after a set time and again when the case publishes (DEC-61), because such 'internal notes ... need to be protected from subpoenas'. Deleting on a fixed schedule is defensible; deleting once a lawsuit is expected is destruction of evidence. So the canon requires the routine deletion to be suspendable, which is a litigation hold, but no such act exists.",
-     "The Action design adds the trigger. When a member marks a reply as legal pressure (a threat to sue, a subpoena, a demand to preserve records), an administrator gets a to-do: 'Consider a litigation hold.' Bob ruled that the item is never repeated and stays open until it is cleared. With no hold to place, the item has no way to be resolved, so it was not built (moved to T19).",
-     "Example: the city attorney writes to a group demanding it preserve everything about its report on towing contracts. Paula marks the letter 'legal', and her administrator Sam sees 'Consider a litigation hold'. What should pressing 'Place hold' do? Stop transcript deletion on every member's device? For this project only, or the whole group? Who can lift it, and must they give a reason? None of this is decided."
+    "settledSince": "",
+    "title": "The litigation hold: what it stops, for which work, and who controls it",
+    "inOneBreath": "When a group is threatened with legal action, what should placing a 'litigation hold' in CivicOS stop deleting, across how much of the group's work, who may place and lift it, and what should members see while it is on?",
+    "decision": "(1) What a hold suspends: the two scheduled deletions of assistant transcripts (after a set time, and at publication), and whether it also blocks a deliberate wipe of the group's record. (2) How far it reaches: the threatened project, with others added by choice, or the whole group. (3) Who places it and who lifts it, and how heavy each act is. (4) What members see while it is on, and how the administrators' 'Consider a litigation hold' reminder is answered.",
+    "alreadyDecidedPart": "",
+    "basics": [
+     "A group (for example a neighbourhood budget watchdog) runs its own copy of CivicOS. Its members work in projects; a project investigates questions and may publish a case, the group's public account of what it found. A few members are administrators, who look after membership and settings.",
+     "The Action layer is where a group decides what to do with what it has learned. A project's action plan lists options (a records request, a demand letter, a press briefing). Starting a chosen option creates an action: one outward engagement with an addressee such as the City Clerk's office. CivicOS sends nothing itself; the member sends by the venue's own means and records what was sent. Replies are recorded on the action as correspondence.",
+     "On 30 September you ruled that CivicOS hopes for good faith but is fully prepared for opposition. So a member can mark a recorded reply as pressure, of one of four kinds: legal (a threat to sue, a subpoena, a demand to preserve records), retaliation, discrediting, or other. The mark is kept as evidence. Only a member can make it.",
+     "A member's session with the AI assistant produces a transcript: the assistant's working notes and the conversation. On 6 August you ruled that transcripts are internal notes, like a reporter's notebook: kept only on the member's own device, never in the shared record; deleted after a set time; and deleted when the work is published. The reason was subpoena protection. The group's hosting company can be served directly, sometimes without the group knowing; a member's device can only be reached through the member, who can contest it.",
+     "The same ruling explained why scheduled deletion is safe only until a lawsuit is in view. Deleting on a schedule fixed in advance, whatever the content, is defensible. Deleting once litigation is reasonably expected is spoliation (destruction of evidence), treated far worse than whatever the material showed. So once the group is on notice, both deletions must stop for relevant material. That suspension is a litigation hold: the same duty a utility has to switch off its email auto-delete once a complaint is in view."
     ],
-    "alreadySettled": [
-     "Transcripts are device-local, deleted after a set time and at publication, never in the record store; the deletion must be suspendable (DEC-61; INVESTIGATIVE-SESSION.md §14a).",
-     "Only a member marks pressure, and the legal kind is one of four (actions R48; K597 (1)).",
-     "The hold reminder is not repeated unless asked, may be cleared when answered, and otherwise stays open (K613 (2)).",
-     "Heavy acts get a full dialog (DEC-87, DEC-88); with no outside channel, a hold reaches a device when its member next opens the product (DEC-94 (3))."
+    "today": [
+     "Built: the pressure mark. A member can mark a received reply as pressure of the legal kind, and it is listed apart on the action.",
+     "Decided, not built: the reminder. The Action design says a legal-kind mark puts one item in the administrators' queue (the list of things waiting for attention): 'Consider a litigation hold · a reply marked as a legal threat on 29 Sep · for an administrator · deciding nothing by itself.' On 30 September you ruled that it is not repeated unless asked, that answering it may clear it, and that otherwise it stays open. It was held out of the last two build rounds because no hold exists, so the item could never be answered.",
+     "Transcripts on devices: the old interface has a place on the device where it would read a transcript, and never fetches one from the group's server. But nothing yet writes transcripts to devices or deletes them, and the time limit is not set. So nothing is being destroyed today, and the scheduled deletion should not be switched on before a hold exists.",
+     "As far as I can find, those two transcript deletions are the only deletions in CivicOS that run on a schedule. Other removals are deliberate acts, such as the operator's full wipe of the group's record (used to reset it). And since you ruled on 29 September that CivicOS has no email or push, a device learns of a hold only when its member next opens CivicOS."
+    ],
+    "problem": [
+     "Nothing about the hold itself is designed: what it covers, who controls it, what members are told. The canon warns that getting it wrong 'inverts the protection into liability'.",
+     "Too narrow, and related notes elsewhere keep being deleted after notice: spoliation exposure, which a court may sanction or answer by telling a jury to assume the notes were damaging. Too broad, and unrelated internal notes pile up for months, reachable by exactly the demand the device-only rule was meant to resist.",
+     "Devices add a gap. A device learns of a hold only when next opened, so it must check for a hold before deleting anything, and delete nothing if it cannot check (a build detail BOB can settle). A member can still clear their browser by hand; the hold can ask them not to, but cannot prevent it.",
+     "Why now: the reminder and the transcript store both wait on this, and the next build round can do them together only if the doctrine is set. Nothing here is legal advice; whether California's shield law reaches a civic group is a question for counsel."
+    ],
+    "story": {
+     "title": "Sam, the towing letter and Paula's laptop",
+     "steps": [
+      "Eastlake Budget Watch's project 'Towing contracts' sent the Oakland Department of Transportation a records request for tow-contract invoices.",
+      "On 2 October the City Attorney's office writes, disputing the group's draft findings, asking it to 'preserve all documents, notes and communications concerning the towing contract', and hinting at a defamation claim. Paula records the letter on the action and marks it as pressure, kind 'legal'.",
+      "Sam, an administrator, sees one item: 'Consider a litigation hold · a reply marked as a legal threat on 2 Oct · on \"Records request: tow-contract invoices\" · this decides nothing by itself.'",
+      "Paula's laptop holds three towing transcripts from September; the oldest reaches the time limit next week. Dev, in the separate project 'Parking citation revenue', has transcripts discussing the same tow operator.",
+      "The group plans to publish its towing case on 15 October, which under the rule deletes the towing transcripts on each device when next opened.",
+      "The decision bites here: what Sam's button does, whether it reaches Dev's laptop as well as Paula's, what Paula is told, whether publication deletes anything, and who ends the hold when the city drops the matter in March."
+     ]
+    },
+    "fixed": [
+     {
+      "point": "Transcripts stay on the member's device, never in the shared record; they are deleted after a set time and at publication; and that deletion must be suspendable once the group is on notice, for relevant material.",
+      "why": "Your ruling of 6 August on transcript retention: internal notes protected from subpoenas, with spoliation named as the reason the deletion must be stoppable.",
+      "src": "DEC-61; INVESTIGATIVE-SESSION.md 'TRANSCRIPT RETENTION'; BIO_Assistant_and_AI_Roles_v0_1.md item 6"
+     },
+     {
+      "point": "Only a member marks a reply as pressure, and 'legal' is one of four kinds.",
+      "why": "Your ruling of 30 September that the system is prepared for opposition and records pressure as evidence.",
+      "src": "actions R48; K597 (1); BIO_Action_v0_1.md §4 rule 12"
+     },
+     {
+      "point": "The hold reminder is shown once, is not repeated unless asked, may be cleared when answered, and otherwise stays open until cleared.",
+      "why": "Your ruling of 30 September on the Action layer's notices.",
+      "src": "K613 (2); K614"
+     },
+     {
+      "point": "No email or push: a member hears of anything only inside CivicOS.",
+      "why": "Your ruling of 29 September on deadline reminders.",
+      "src": "DEC-94 (3)"
+     },
+     {
+      "point": "A heavier act gets more friction: a reason field in place for a reasoned act, a full dialog stating what ends for an act whose effect cannot be undone.",
+      "why": "Your rulings of 29 September on how an act's weight is felt.",
+      "src": "DEC-87; DEC-88"
+     },
+     {
+      "point": "The reminder was held back from the build until the hold is designed.",
+      "why": "BOB's cut of the last two build rounds, naming this as your doctrine.",
+      "src": "K624 (5); build/plan/archive/T19.md (N-A19 kept)"
+     }
     ],
     "options": [
      {
       "label": "A",
-      "name": "A narrow hold on DEC-61's deletions, per project",
-      "whatTheMemberSees": "Sam places a hold on the towing project, with a reason. Members' devices stop deleting that project's session transcripts, and a band reads 'Litigation hold since 3 Oct: nothing in this project is deleted on schedule.' Lifting it is a reasoned administrator act.",
-      "gains": "Fits exactly what DEC-61 requires, and other projects keep their protection.",
-      "costs": "Project scope may miss related material in other projects."
+      "name": "A hold on the threatened project's transcripts, other projects addable",
+      "howItWorks": "An administrator places the hold from the reminder or a project's page, with a written reason. The threatened action's project is filled in; others may be added. While it is on, every member's device stops both scheduled deletions for transcripts of assistant sessions in those projects, including sessions on questions they draw on. Placing takes a reason in place. Lifting is an administrator's act with a reason, through a full dialog stating what will then be deleted. A band shows on each held project. The reminder is answered by placing a hold or by recording 'No hold, because ...'.",
+      "inTheStory": "Sam presses 'Place a litigation hold…'. 'Towing contracts' is filled in; he adds 'Parking citation revenue' because it names the same operator, and writes 'City Attorney letter of 2 Oct demands preservation.' Both projects show: 'Litigation hold since 2 Oct 2026, placed by an administrator. Assistant transcripts for this project stay on your device: they are not deleted after the usual time or at publication. Please do not clear them yourself.' On 15 October the publication steps say: 'Transcripts for this project are not deleted at this publication: a litigation hold is on.' In March Sam lifts it, and the dialog reads: 'Lifting the hold: transcripts for 2 projects that are past the time limit will be deleted on each member's device when it is next opened. This cannot be undone.'",
+      "gains": [
+       "Matches the ruling's 'relevant material' exactly.",
+       "Unrelated work keeps its subpoena protection.",
+       "A dated, attributed record of who placed and lifted the hold, and why."
+      ],
+      "costs": [
+       "Relies on an administrator judging which projects are related; a missed one is exposure.",
+       "More to design than a single switch."
+      ],
+      "commitsYouTo": "A recorded hold per project; every device checks for a hold before deleting; a band on held projects; lifting as a deliberate act with a stated effect."
      },
      {
       "label": "B",
-      "name": "A group-wide hold on all scheduled deletion",
-      "whatTheMemberSees": "A band across the whole app; every scheduled deletion stops.",
-      "gains": "The simplest to explain and the safest legally.",
-      "costs": "Keeps internal notes for unrelated work, exposing them to the very subpoena risk DEC-61 guards against."
+      "name": "A group-wide hold",
+      "howItWorks": "One administrator act stops every scheduled transcript deletion across the group, for every member, until lifted; same reasons, record and band, everywhere.",
+      "inTheStory": "Sam presses one button. Every page in the group reads: 'Litigation hold since 2 Oct 2026: no assistant transcript in this group is deleted on schedule or at publication.' Transcripts of a member working on library hours are kept too.",
+      "gains": [
+       "The simplest to explain and to build.",
+       "The strongest answer to any later claim of destroyed evidence."
+      ],
+      "costs": [
+       "Unrelated internal notes accumulate for as long as the hold lasts, often months, reachable by the very demand the device-only rule guards against.",
+       "The band tells members outside the towing project that a legal threat exists, which may reveal a hidden project's trouble."
+      ],
+      "commitsYouTo": "One group switch, and accepting that a single threat suspends the group's protection everywhere."
      },
      {
       "label": "C",
-      "name": "Record the decision; preserve by hand",
-      "whatTheMemberSees": "A reasoned act 'Hold considered: placed / not placed, because ...', plus a checklist of what to preserve.",
-      "gains": "No new machinery.",
-      "costs": "Device deletions keep running unless every member acts."
+      "name": "Record the decision; members preserve by hand",
+      "howItWorks": "The reminder is answered by a reasoned record, 'Hold placed' or 'Not placed, because ...', with a checklist asking members to save their own transcripts. Devices keep deleting on schedule unless each member acts.",
+      "inTheStory": "Sam records 'Hold placed'. Paula must remember to export her transcripts before next week. Dev never opens the checklist, and his transcripts go at the time limit.",
+      "gains": [
+       "No new machinery."
+      ],
+      "costs": [
+       "The scheduled deletions keep running after notice, which is exactly what your August ruling says must stop.",
+       "Depends on every member acting in time."
+      ],
+      "commitsYouTo": "Reading the ruling's 'suspendable' as a matter for members' discipline rather than for the product."
+     },
+     {
+      "label": "D",
+      "name": "Defer for counsel, and keep scheduled deletion switched off meanwhile",
+      "howItWorks": "Nothing about the hold is decided or built yet. To respect the August ruling, scheduled deletion is not switched on until it is.",
+      "inTheStory": "Sam sees no reminder. Paula's transcripts are kept anyway, because no deletion runs; so is everyone's, indefinitely.",
+      "gains": [
+       "Room to take counsel's view first.",
+       "No wrong design gets built."
+      ],
+      "costs": [
+       "Once transcripts are written to devices, they pile up with no deletion: the subpoena exposure the August ruling meant to remove.",
+       "The legal-pressure mark leads nowhere."
+      ],
+      "commitsYouTo": "Holding back part of the assistant's design until this is ruled."
      }
     ],
-    "recommendation": "A. It matches the one deletion DEC-61 says must be suspendable, keeps protection for unrelated work, and records who placed and lifted the hold and why. It should be a heavy act placed by an administrator. Counsel's view would be worth having, and nothing here is legal advice. (Recommendation, not canon.)",
+    "tradeoff": "Keep enough to answer any accusation of destroyed evidence, without keeping so much that the group's internal notes lose the protection they were designed to have.",
+    "recommendation": {
+     "choice": "A",
+     "why": [
+      "Your August ruling says deletion must stop 'for relevant material', not for everything. A hold on the threatened project, with related projects added by an administrator, does exactly that, keeps protection for unrelated work, and records who placed and lifted it and why.",
+      "Placing should be quick: any one administrator, with a reason. Lifting should be heavy, because it restarts deletion that cannot be undone. The reminder clears by placing a hold or recording a reasoned 'No hold', which gives your 'stays open until cleared' ruling a real way to close.",
+      "My judgement, where the sources are silent: while any hold is on, the operator's full wipe of the group's record should refuse to run on the real record."
+     ],
+     "risk": "An administrator may miss a related project. This is contained by filling in the threatened project automatically, by letting projects be added at any time, and by the record of the decision. Counsel's review of the defaults before the first group relies on them would be worth having."
+    },
     "howToAnswer": [
-     "As recommended.",
-     "B: group-wide, always.",
-     "A, but any member may place it; only administrators lift it.",
-     "Let's take this up with a lawyer first."
+     "31: as recommended.",
+     "31: A, but lifting needs two administrators.",
+     "31: B. Group-wide, always; simplicity wins.",
+     "31: before I decide, what would counsel need to see?"
     ],
-    "ifLeftOpen": "The legal-pressure mark is built, but no to-do follows it and no hold exists. Transcripts keep being deleted on schedule even after a legal threat is recorded.",
-    "relatedUseCases": [
-     "UC-129"
+    "ifLeftOpen": "The legal-pressure mark works, but no reminder follows it and no hold exists. No transcript is written to or deleted from devices yet, so nothing is lost today. But scheduled deletion must not be switched on until this is ruled, and the reminder keeps waiting.",
+    "related": [
+     {
+      "n": 35,
+      "how": "The queue sketch includes the 'Consider a litigation hold' item; whether that sketch binds the redesign depends partly on this ruling."
+     },
+     {
+      "n": 28,
+      "how": "The reminder is a to-do in the administrators' queue; the member-facing name for that kind of item is question 28."
+     }
+    ],
+    "glossary": [
+     {
+      "term": "Litigation hold",
+      "plain": "A suspension of routine deletion once legal action is reasonably expected, so relevant material is kept."
+     },
+     {
+      "term": "Spoliation",
+      "plain": "Destroying evidence once litigation is expected; courts may sanction it or let a jury assume the lost material was damaging."
+     },
+     {
+      "term": "Transcript",
+      "plain": "The record of a member's session with the AI assistant, kept only on the member's device."
+     },
+     {
+      "term": "Project, case, administrator",
+      "plain": "A line of investigation; what a project publishes; a member who looks after membership and settings."
+     },
+     {
+      "term": "Action, correspondence",
+      "plain": "One outward engagement started from a plan's option; what was sent and received on it."
+     },
+     {
+      "term": "Pressure mark",
+      "plain": "A member's label on a received reply: legal, retaliation, discrediting or other."
+     },
+     {
+      "term": "Queue",
+      "plain": "The list of things waiting for a member's attention inside CivicOS."
+     },
+     {
+      "term": "Full dialog, band",
+      "plain": "A stop that states what cannot be undone; a strip across a page stating a standing condition."
+     },
+     {
+      "term": "Operator's wipe",
+      "plain": "A deliberate act that clears the group's whole record."
+     }
     ],
     "sources": [
-     "DEC-61 (INVESTIGATIVE-SESSION.md 'TRANSCRIPT RETENTION')",
-     "K613 (2)",
-     "K614",
-     "K624 (5)",
-     "build/plan/action-fold/t18-entries.md 'Not in T18'",
-     "build/plan/draft-T18-recut.md (N-A19)",
-     "build/plan/action-design/deltas.md §4 (the fifth queue kind)",
-     "actions R48",
-     "DEC-94 (3)"
+     "docs/development/INVESTIGATIVE-SESSION.md 'TRANSCRIPT RETENTION' (DEC-61, Bob 2026-08-06)",
+     "docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md item 6",
+     "docs/architecture/BIO_Action_v0_1.md §4 rules 1, 7, 12",
+     "build/requirements/actions.md R48 (pressure; K597 (1))",
+     "build/plan/action-design/deltas.md §4 (the fifth queue kind); tests.md (litigation-hold reminder)",
+     "build/plan/action-design/surfaces.html (the queue item wording)",
+     "build/rulings.md K611, K613 (2), K614, K624 (5)",
+     "build/plan/action-fold/t18-entries.md 'Not in T18'; build/plan/archive/T19.md (N-A19 kept, Bob's doctrine)",
+     "docs/development/DECISIONS.md DEC-87, DEC-88, DEC-94 (3)",
+     "civicos-ui/app.html aiSessionTranscript (reads a device transcript; nothing writes or deletes one)",
+     "build/requirements/record-core.md R21-R23 and control-plane.md R39 (the store purge, a deliberate operator act)",
+     "Checked K628-K859: none settles or changes this question."
     ],
-    "size": "a short discussion"
+    "size": "session"
    }
   },
   {
-   "question": "Which plain word does member-facing text use for a single thing the record holds (a captured document, a written observation, a question, a finding), now that Bob has retired 'bundle'?",
+   "question": "Now that you have retired 'bundle', what word do members (and readers of published cases) see for a single thing the record holds when the screen cannot or should not say what kind of thing it is?",
    "basis": "open",
    "relatedUseCases": [],
    "brief": {
     "stillOpen": true,
-    "settledBy": "Open. K106 (Bob, 2026-09-26): 'the word \"bundle\" is outdated'. next.md N71: 'BOB asks Bob which word the member-facing text uses.' It is listed among 'Bob's first' in draft-T18.md §6. The UX inventory's glossary drafts 'Document' for evidence items only, and that is not approved.",
-    "title": "The everyday word for one item in the record (replacing 'bundle')",
-    "decision": "Which plain word does member-facing text use for a single thing the record holds (a captured document, a written observation, a question, a finding), now that Bob has retired 'bundle'?",
-    "whyYours": "It is member vocabulary, and Bob retired the word himself. It is the same kind of call as 'Noticed' (K356).",
-    "context": [
-     "Internally, everything the record holds is a 'bundle' with an id: a captured page, a transcription, a question, a finding. Bob called the word outdated. New canon and requirements avoid it, but some member-facing messages still say it, and the code keeps it as an internal name.",
-     "The difficulty is that 'bundle' covers two kinds of thing: evidence (documents and observations) and analysis (questions and findings). The inventory's draft glossary uses 'Document' for evidence only.",
-     "Example: Maya opens a link to something in a project she cannot see. Today: 'No such bundle.' The message must not reveal whether the thing exists, or what type it is (DEC-36; membership R88)."
+    "settledSince": "",
+    "title": "The everyday word for one thing in the record (replacing 'bundle')",
+    "inOneBreath": "Now that you have retired 'bundle', what word do members (and readers of published cases) see for a single thing the record holds when the screen cannot or should not say what kind of thing it is?",
+    "decision": "(1) The general word used when the type is unknown or must stay hidden: 'item', 'entry', or another you prefer. (2) Confirm that wherever the type is known and visible, the specific word is used instead: document, firsthand observation, question, finding, plan, action. (3) Whether 'document' covers all evidence (captured files and members' own written observations), as the draft glossary has it.",
+    "alreadyDecidedPart": "",
+    "basics": [
+     "Inside the system, everything the record holds is stored the same way, as a 'bundle' with an id: a captured council PDF, a member's written account of a meeting, a question the group is investigating, a finding, an action plan. The word came from the files each one is stored as.",
+     "On 26 September you called the word 'bundle' outdated. Since then, new canon and requirement text avoid it, and older files are reworded when next touched. The code's internal names (for example the id field and the table) keep it, because renaming them means a data migration, which BOB schedules separately. Members should never see internal names.",
+     "The difficulty is that one word covered two different families. Evidence: captured documents and members' firsthand observations. Analysis: questions, findings, plans and actions. Most screens know which one they are showing and can use the specific word. A few cannot, or must not.",
+     "The 'must not' case comes from your ruling of 4 August on hidden material: something a member may not see answers exactly as if it did not exist. No id, title, state, count, and not its type either. Only the fact that something is missing may be stated. So the message for a link to a hidden thing cannot say 'This question…', because that would reveal it is a question."
     ],
-    "alreadySettled": [
-     "'Bundle' is not used in new canon or requirement text; internal names change only with a migration BOB schedules (K106; N71).",
-     "A hidden item answers exactly as an absent one, and reveals nothing about itself (DEC-36; connections R20; membership R88)."
+    "today": [
+     "Member-facing text still uses the word in a few places. In the old interface: 'This bundle was not found.' when a link leads nowhere; tooltips such as 'no bundle has registered them'; and, on the published-case page every reader sees, 'the signature covers the bundle's hash'. Among roughly 1,060 refusal explanations in the system's catalogue, one still says 'bundle': 'The record already holds this document, under another bundle… Cite the bundle that holds it'.",
+     "The inventory's draft glossary proposes 'Document' for evidence only (a captured page or file, or a member's own written observation). It is not approved.",
+     "The next build round's plan defers renaming one internal identifier until you answer this question, because an internal rename should follow the member word."
+    ],
+    "problem": [
+     "Every screen of the redesign needs words, and the generic case appears in the most sensitive places: broken or hidden links, search results that mix types, lists of 'what depends on this', and refusal messages. If no word is chosen, designers will pick one per screen and the product will speak in several voices.",
+     "A bad choice has real costs. A word that suggests evidence ('document') used for a question confuses members about what they are looking at. A word that reveals type in a hidden-link message breaks your 4 August rule. A word that collides with an existing term ('record' already means the group's whole working record) invites misreading.",
+     "Readers of published cases are affected too, since the published page's integrity paragraph uses the word."
+    ],
+    "story": {
+     "title": "Maya and the link she cannot open",
+     "steps": [
+      "Maya, a new member, is on the transparency project. A colleague's note links to something in the police-overtime project, which Maya is not part of.",
+      "Today she clicks it and sees: 'This bundle was not found.' She has no idea what a bundle is.",
+      "The message must not say 'This question does not exist': that would reveal there is a question there, and what kind of thing it is.",
+      "With option A she sees: 'This item does not exist, or you cannot see it.'",
+      "Back in her own project, every screen that knows the type uses it: '12 documents · 3 questions · 1 finding'. A search result list mixing types labels each row by its type.",
+      "When she publishes, readers see: 'the signature covers each part's fingerprint', with no 'bundle' anywhere."
+     ]
+    },
+    "fixed": [
+     {
+      "point": "'Bundle' is retired from canon and new requirement text; internal names change only with a migration BOB schedules.",
+      "why": "Your remark of 26 September that the word is outdated.",
+      "src": "K106; next.md N71"
+     },
+     {
+      "point": "Something a member may not see answers exactly as if absent: no id, title, state, count or type; only the fact that something is missing may be stated.",
+      "why": "Your ruling of 4 August on hidden material.",
+      "src": "DEC-36; Interaction Constructs (RULED 2026-08-04); connections R20; membership R88"
+     },
+     {
+      "point": "Member wording avoids analysts' vocabulary.",
+      "why": "Your earlier rulings on plain member language, for example 'sets of reasons' instead of 'grounds'.",
+      "src": "DEC-32 clause 1; strength R28; K356 ('Noticed')"
+     },
+     {
+      "point": "The next build round's internal rename of a related identifier waits on this answer.",
+      "why": "The plan for the next round lists it as yours.",
+      "src": "build/plan/draft-T20.md 'Deferred beyond T20'"
+     }
     ],
     "options": [
      {
       "label": "A",
-      "name": "The specific name where known, 'item' otherwise",
-      "whatTheMemberSees": "'document', 'observation', 'question' or 'finding' wherever the type is known and visible; 'This item does not exist, or you cannot see it' where it is not.",
-      "gains": "Always accurate, and never reveals a hidden type.",
-      "costs": "'Item' is bland."
+      "name": "The specific word where known, 'item' otherwise",
+      "howItWorks": "'Document', 'firsthand observation', 'question', 'finding', 'plan' or 'action' wherever the type is known and visible. 'Item' only where the type is unknown or must stay hidden. 'Document' covers all evidence, as the draft glossary has it.",
+      "inTheStory": "Maya sees 'This item does not exist, or you cannot see it.'",
+      "gains": [
+       "Always accurate.",
+       "Never reveals a hidden type.",
+       "'Item' is ordinary English that suggests nothing about evidence or analysis."
+      ],
+      "costs": [
+       "'Item' is bland, and the queue's to-dos are also called items."
+      ],
+      "commitsYouTo": "A short glossary entry; the internal rename can then follow."
      },
      {
       "label": "B",
-      "name": "'Record entry'",
-      "whatTheMemberSees": "'No such record entry.'",
-      "gains": "Sounds official.",
-      "costs": "'The record' already means the whole working record, so it invites confusion."
+      "name": "'Entry' as the general word",
+      "howItWorks": "As A, but the general word is 'entry': 'This entry does not exist, or you cannot see it.'",
+      "inTheStory": "Maya sees 'This entry does not exist, or you cannot see it.'",
+      "gains": [
+       "Sounds like a record, which fits a record-keeping product.",
+       "Does not collide with queue items."
+      ],
+      "costs": [
+       "Can suggest a log line or a ledger row rather than a whole document or question."
+      ],
+      "commitsYouTo": "As A."
      },
      {
       "label": "C",
       "name": "'Document' for everything",
-      "whatTheMemberSees": "'No such document', even for a question.",
-      "gains": "Familiar.",
-      "costs": "Wrong for questions and findings."
+      "howItWorks": "Every stored thing is a 'document', including questions and findings.",
+      "inTheStory": "Maya sees 'This document does not exist, or you cannot see it.'",
+      "gains": [
+       "Familiar to everyone."
+      ],
+      "costs": [
+       "Wrong for questions, findings and plans, and blurs the line between evidence and analysis that the product works hard to keep."
+      ],
+      "commitsYouTo": "Re-wording the draft glossary."
      }
     ],
-    "recommendation": "A: the specific name wherever the type is known, 'item' only where it is unknown or must stay hidden, and 'Document' for evidence, as the glossary drafts. (Recommendation, not canon.)",
+    "tradeoff": "A neutral general word that never misleads or reveals ('item' or 'entry') against a familiar one ('document') that is wrong for half of what the record holds.",
+    "recommendation": {
+     "choice": "A",
+     "why": [
+      "The specific word is always better where it can be used, and that covers most screens. The general word is needed only for mixed lists and for hidden or broken links, where it must reveal nothing; 'item' does that and suggests nothing about evidence versus analysis.",
+      "The clash with queue 'items' is mild, because a queue item is always named by its kind on screen ('To do', 'Noticed'). If you prefer 'entry', option B costs nothing extra; this is a matter of your ear. This is my recommendation, not canon."
+     ],
+     "risk": "'Item' may read as vague in refusal messages. Contained by using it only where the type is unknown or hidden, and naming the type everywhere else."
+    },
     "howToAnswer": [
-     "As recommended.",
-     "As recommended, but use 'entry' instead of 'item'.",
-     "Show me the five places members see the word today."
+     "32: as recommended.",
+     "32: as recommended, but 'entry' instead of 'item'.",
+     "32: C: call everything a document.",
+     "32: show me the places members and readers see the word today."
     ],
-    "ifLeftOpen": "Member-facing messages keep 'bundle' where they have it, and the redesign picks words case by case.",
-    "relatedUseCases": [],
+    "ifLeftOpen": "Member-facing text keeps 'bundle' where it has it (including the published-case page), the redesign picks words screen by screen, and the internal rename planned beyond the next build round stays deferred.",
+    "related": [
+     {
+      "n": 13,
+      "how": "The held-captures list's rows would be 'documents'."
+     },
+     {
+      "n": 23,
+      "how": "How 'something you cannot see' is stated about dependent work uses the same general word."
+     },
+     {
+      "n": 34,
+      "how": "Another member-vocabulary choice ('Subjects' or 'Matters'); the two should read consistently."
+     },
+     {
+      "n": 28,
+      "how": "Names for the queue's kinds of item; relevant if you choose 'item' as the general word."
+     }
+    ],
+    "glossary": [
+     {
+      "term": "Bundle",
+      "plain": "The retired internal word for anything the record stores; kept only in the code's internal names."
+     },
+     {
+      "term": "Document",
+      "plain": "Evidence the group holds: a captured page or file, or a member's own written observation."
+     },
+     {
+      "term": "Firsthand observation",
+      "plain": "Something a member saw or heard, written in their own words and kept as evidence."
+     },
+     {
+      "term": "Question / finding",
+      "plain": "Something a project is trying to answer; once answered, a finding."
+     },
+     {
+      "term": "Plan / action",
+      "plain": "A group's options for acting on a finding, and one outward step it takes, such as a records request."
+     },
+     {
+      "term": "Hidden (withheld)",
+      "plain": "Something that exists but is not yours to see; stated only as 'something is missing'."
+     },
+     {
+      "term": "Migration",
+      "plain": "A scheduled change to stored data, needed to rename internal fields."
+     }
+    ],
     "sources": [
-     "K106",
+     "build/rulings.md K106 (2026-09-26)",
      "build/plan/next.md N71",
-     "build/plan/draft-T18.md §6 'Bob's first'",
+     "build/plan/draft-T20.md 'Deferred beyond T20' (cpra_request identifier, N71); build/plan/archive/T19.md (N71 deferred as Bob's)",
      "docs/development/ux-substrate/ux-substrate-v2.json glossary 'Document'",
-     "DEC-36",
-     "membership R88"
+     "BIO_Interaction_Constructs_v0_1.md 'RULED 2026-08-04 (DEC-36)'; build/plan/next.md N320",
+     "civicos-ui/app.html ('This bundle was not found.'; published-case integrity paragraph)",
+     "bio-plane/src/provenance/checks.mjs C-53.13 translation (the one catalogue sentence using 'bundle')"
     ],
-    "size": "quick (a yes is enough)"
+    "size": "quick"
    }
   },
   {
@@ -13757,127 +14579,392 @@
    }
   },
   {
-   "question": "The approved plan page heads its first section “Subjects”. Should members see “Subjects” there, or “Matters”, given that “Subject” already names something else in the product?",
+   "question": "On the action plan page, should the list of things the plan is about be headed 'Subjects' or 'Matters', given that 'Subject' already names a person, office, place, law or thing elsewhere in CivicOS?",
    "basis": "open",
    "relatedUseCases": [
     "UC-126"
    ],
    "brief": {
-    "question": "The word 'Subject' now means two things. Keep 'Subjects' on the plan page, or call them 'Matters'?",
-    "title": "What members call the things a plan is about: “Subjects” or “Matters”",
-    "decision": "The approved plan page heads its first section “Subjects”. Should members see “Subjects” there, or “Matters”, given that “Subject” already names something else in the product?",
-    "size": "quick",
-    "whyYours": "It is a word every member reads on the plan page, and choosing member vocabulary has been yours (“Noticed” for the queue's unjudged items, K356; retiring “bundle”).",
-    "context": "A plan is about one or more things the group suspects or has determined, for example “The city's certification of the bond measure” or “Late release of council minutes”. Each is either suspected (an open question the group is still investigating) or determined (a member has judged the government act compliant, noncompliant or unclear against a standard). The plan page lists them first, each with how well it is shown: established, short, or hypothetical.\n\nElsewhere in the product a “Subject” is already something the record knows by name: a person in a public role, an office, a place, a law or a thing. The Subjects screen lists, for example, “City Council (office)”. A member who meets both could reasonably read a plan as being about an office rather than about something the office did.\n\nThe Action canon's own prose already calls them matters (“one plan may address several related matters”). The requirements' internal term is “subject”, which members never need to see, whichever word you choose.",
-    "alreadySettled": [
-     "The plan page sketch, with its “Subjects” heading, is approved (K608 (4)).",
-     "The canon speaks of a plan's “matters” (BIO_Action_v0_1.md §3).",
-     "The internal term in the requirements stays “subject” (action-plans), whatever members see."
+    "stillOpen": true,
+    "settledSince": "",
+    "title": "What a plan is about: 'Subjects' or 'Matters'",
+    "inOneBreath": "On the action plan page, should the list of things the plan is about be headed 'Subjects' or 'Matters', given that 'Subject' already names a person, office, place, law or thing elsewhere in CivicOS?",
+    "decision": "Choose the word members see for the things an action plan addresses, used everywhere they appear: the plan page's heading and buttons, the preview when an action starts, queue items and the glossary. The term inside the requirements stays 'subject' whichever you pick; members never see it.",
+    "alreadyDecidedPart": "",
+    "basics": [
+     "The Action layer is where a group decides and records what to do with what it has learned. A project keeps an action plan, its private working notes (never published). The plan lists options: a demand letter, a records request, a grand-jury complaint, a press briefing. A member chooses some and declines others with a reason. Starting a chosen option creates an action, one outward engagement that a member sends by their own hand and records.",
+     "Each plan is about one or more things, which you ruled on 29 September may be several related ones. Each is one of two kinds. A suspected one is an open question the group is still investigating, such as 'Was the measure properly certified?'. A determined one is a member's judgement that a named government act was compliant, noncompliant or unclear against one named standard, resting on published findings: 'The city's certification of the bond measure as passed, against the two-thirds vote requirement'. Each shows its support: established, short (determined, but short of the project's evidence bar) or hypothetical (suspected, not yet shown).",
+     "Elsewhere, 'Subject' already has a meaning. The Subjects screen is the record's index of people in public roles, offices, places, laws and things it knows by name and alias, such as 'City Council (office)' or 'Office of the City Clerk'. Documents are linked when they name the same subject. And 'a subject named in a case' is the office or official a case is about, who may reply before publication.",
+     "The Action canon you approved on 30 September already says 'matters' in its own prose: 'one plan may address several related matters'."
+    ],
+    "today": [
+     "The plan page sketch you approved on 30 September (views/plan-page.html) heads its first section 'Subjects', with an 'Add subject' button. Options show 'serves 1 and 2', and the list sorts by 'subject'.",
+     "The other sketches already drift between the two words. The preview for starting an action lists 'Rests on: Subject 1 … Subject 3', and its refusal says 'one of the matters it rests on (subject 3)'. The matter page sketch's breadcrumb reads 'Matters'.",
+     "Nothing is built: the plan page waits for the interface redesign. The old interface's Subjects screen exists and is in use. The glossary lists both senses, with a note that the word is your decision."
+    ],
+    "problem": [
+     "A member who uses the Subjects screen will read 'Subjects' on a plan as people and offices. 'Add subject' looks like 'pick the City Council'. A plan 'about' an office reads as a campaign against a body, when the group acts on what an office did. On the start preview, 'Addressed to: Office of the City Clerk' (a subject in the first sense) sits a few lines above 'Rests on: Subject 1' (a subject in the second): two meanings on one screen.",
+     "Why now: the redesign is about to draw the plan page. The word then spreads to buttons, queue items, help text and the glossary, and changing it later touches all of them. The stakes are small, but the change is cheapest now.",
+     "Honest downsides of 'Matters': it is a small change to a sketch you approved. Lawyers use 'matter' for a case ('in the matter of …'), though the everyday sense is close. And the matter page sketch uses 'matter' for a whole government act judged against several standards, while a plan's matter is one act against one standard, or an open question. That nesting needs one sentence in the glossary, or the matter page needs another name (see question 35)."
+    ],
+    "story": {
+     "title": "Tanya and the two kinds of subject",
+     "steps": [
+      "Tanya, a new member of School Bond Watch, spent the morning on the Subjects screen tagging documents that name 'City Council (office)'.",
+      "She opens the plan 'Bond measure: certification and proceeds'. Its first section reads 'Subjects · 2'.",
+      "She wants the plan to cover the council's late release of minutes too. She presses 'Add subject' and expects a list of offices. Instead she is asked for an open question or a determination's outcome.",
+      "Later she starts 'Complaint to the county civil grand jury'. The preview reads 'Addressed to: Civil Grand Jury (an office)' and 'Rests on: Subject 1: certification against the two-thirds requirement'.",
+      "She asks the group whether the grand jury is now one of the plan's subjects. Under 'Matters', the same screens read 'Matters · 2', 'Add matter' and 'Rests on: Matter 1', and the question does not arise."
+     ]
+    },
+    "fixed": [
+     {
+      "point": "The plan page sketch, with its 'Subjects' heading, is approved; this question changes one word in it.",
+      "why": "Your approval of the plan page on 30 September.",
+      "src": "K608 (4); build/plan/action-design/plan-page.html"
+     },
+     {
+      "point": "The canon's own prose calls them matters, and a plan may address several related ones.",
+      "why": "Your ruling of 29 September and the Action canon approved 30 September.",
+      "src": "K590 (4); BIO_Action_v0_1.md §3"
+     },
+     {
+      "point": "A plan's matter is an open question (suspected) or one standard's outcome of a determination (determined), with its support shown in words.",
+      "why": "The action plan requirements you found correct and complete on 30 September.",
+      "src": "action-plans Terms, R6; K608 (3)"
+     },
+     {
+      "point": "'Subject' already names an entity (person in a public role, office, place, law or thing) on the existing Subjects screen.",
+      "why": "The record's index of names, in the old interface today.",
+      "src": "entities R9, R12; civicos-ui/app.html #subjects; ux-substrate-v2.json glossary 'Subject'"
+     },
+     {
+      "point": "The internal term stays 'subject'; only the member-facing word is in question.",
+      "why": "Internal names are BOB's technical detail.",
+      "src": "action-plans Terms; P17"
+     }
     ],
     "options": [
      {
       "label": "A",
-      "name": "“Matters”",
-      "whatTheMemberSees": "The plan page's first section reads “Matters · 2”; a queue item reads “Checkpoint due: the city shows earnest commitment (matter: the bond certification)”.",
-      "gains": "No clash with “Subject”; matches the canon's prose; neutral enough for a success story as well as a breach.",
-      "costs": "A small change to the approved sketch."
+      "name": "'Matters'",
+      "howItWorks": "Every member-facing use becomes 'matter': the section heading, the add button, the options' tags, the start preview, queue items, the glossary.",
+      "inTheStory": "Tanya sees 'Matters · 2', 'Add matter', options tagged 'serves matters 1 and 2', and a preview reading 'Rests on: Matter 1: the certification against the two-thirds requirement'. A queue item reads 'Checkpoint due: the city shows earnest commitment (matter: the bond certification)'.",
+      "gains": [
+       "No clash with the Subjects screen.",
+       "Matches the canon's own prose and the matter page sketch.",
+       "Neutral: reads as well for a success story as for a breach."
+      ],
+      "costs": [
+       "A one-word change to an approved sketch.",
+       "'Matter' must be defined once against the matter page's whole-act sense."
+      ],
+      "commitsYouTo": "'Matter' as the member word for what a plan addresses, and a consistent name for the matter page (question 35)."
      },
      {
       "label": "B",
-      "name": "Keep “Subjects”",
-      "whatTheMemberSees": "As sketched.",
-      "gains": "No change to the approved sketch.",
-      "costs": "One word with two meanings; the glossary has to warn members."
+      "name": "Keep 'Subjects'",
+      "howItWorks": "As sketched. The glossary carries both meanings with a warning.",
+      "inTheStory": "Tanya sees 'Subjects · 2' and 'Add subject'. The glossary's entry reads 'Subject (of a plan): not a person or office; one open question or one judged outcome.'",
+      "gains": [
+       "No change to the approved sketch."
+      ],
+      "costs": [
+       "One word, two meanings, sometimes on the same screen.",
+       "Relies on members reading the glossary."
+      ],
+      "commitsYouTo": "Permanent explanation in help text wherever the two meet."
      },
      {
       "label": "C",
-      "name": "“Issues” or “Concerns”",
-      "whatTheMemberSees": "“Issues · 2”.",
-      "gains": "Familiar in civic work.",
-      "costs": "Suggests a problem, which fits badly when a plan starts from a compliant determination (a success story)."
+      "name": "'Issues' (or 'Concerns')",
+      "howItWorks": "As A, with 'Issues'.",
+      "inTheStory": "Tanya sees 'Issues · 2' and 'Add issue'.",
+      "gains": [
+       "Familiar in civic work."
+      ],
+      "costs": [
+       "Suggests a problem, which fits badly when a plan starts from a compliant finding (a success story, which your 29 September ruling allows).",
+       "'Questions' is not an alternative either: it is what the product already calls an investigation's open questions."
+      ],
+      "commitsYouTo": "A word that leans toward breach."
      }
     ],
-    "recommendation": "A, “Matters”: it removes the clash, the canon already uses it, and it reads as well for a success as for a breach.",
+    "tradeoff": "A clean word that costs one edit to an approved sketch, against keeping the sketch exactly and living with one word that means two things.",
+    "recommendation": {
+     "choice": "A",
+     "why": [
+      "'Matters' removes the clash with the Subjects screen, which members will use daily. The canon already uses the word, and it is neutral between success and breach.",
+      "The edit is one word in an approved sketch, made before anything is built. The nesting with the matter page (a whole act versus one act against one standard) can be handled in a single glossary line, or by naming that page differently if you keep it (question 35)."
+     ],
+     "risk": "Readers with legal training may hear 'matter' as a legal proceeding. Contained by the plan page showing each matter's full wording ('The city's certification … against the two-thirds requirement'), so the word is never read alone."
+    },
     "howToAnswer": [
-     "“34: Matters.”",
-     "“34: keep Subjects.”",
-     "“34: Issues.”"
+     "34: Matters.",
+     "34: keep Subjects.",
+     "34: Issues.",
+     "34: Matters, and give the matter page a different name so 'matter' means one thing."
     ],
-    "relatedUseCases": [
-     "UC-126"
+    "ifLeftOpen": "The redesign uses 'Subjects' as sketched, and the glossary carries both meanings with a warning. Changing it later touches every screen the word has reached.",
+    "related": [
+     {
+      "n": 35,
+      "how": "The matter page sketch already uses 'Matters' for a whole government act; whether that page is kept, and under what name, should agree with this word."
+     },
+     {
+      "n": 32,
+      "how": "Another member-vocabulary choice; the same principle (one word, one meaning) applies."
+     }
+    ],
+    "glossary": [
+     {
+      "term": "Action plan",
+      "plain": "A project's private working notes for deciding what to do: options, which were chosen or declined and why, up to three scenarios, and what each started option became. Never published."
+     },
+     {
+      "term": "Option / action",
+      "plain": "An option is one thing the group could do; once a member starts it, it becomes an action, one outward engagement sent by a member's own hand."
+     },
+     {
+      "term": "Determination",
+      "plain": "A member's judgement that a named government act was compliant, noncompliant or unclear against a named standard, resting on published findings."
+     },
+     {
+      "term": "Standard",
+      "plain": "What an act is measured against: a statute, regulation, ordinance, court order, adopted policy or public commitment, held as captured text."
+     },
+     {
+      "term": "Support (established, short, hypothetical)",
+      "plain": "How well a plan's matter is shown: determined and meeting the project's bar; determined but short of it; or suspected, not yet shown."
+     },
+     {
+      "term": "Subject (the Subjects screen)",
+      "plain": "A person in a public role, office, place, law or thing the record knows by name and aliases."
+     },
+     {
+      "term": "Matter page",
+      "plain": "A sketched page gathering everything about one government act; not approved (question 35)."
+     }
     ],
     "sources": [
-     "build/plan/action-design/plan-page.html (approved by Bob, K608 (4))",
-     "docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §3",
-     "build/plan/action-design/matter-page.html (design view, not stated as approved)",
-     "ux-substrate-v2.json glossary 'Subject'"
+     "build/plan/action-design/plan-page.html (approved, K608 (4))",
+     "build/plan/action-design/start-and-send.html, matter-page.html (wording drift: 'Subject 1', 'matters', 'Matters')",
+     "docs/architecture/BIO_Action_v0_1.md §3 (canon whole, K608 (1)); K590 (4), (5)",
+     "build/requirements/action-plans.md Terms, R6",
+     "build/plan/action-design/PATH.md §1 (Subjects, Options, Scenarios, Started)",
+     "docs/development/ux-substrate/ux-substrate-v2.json glossary 'Subject', 'Subject (of a plan) / matter'; surfaces 'Subjects'",
+     "Checked K628-K859: none settles or changes this question."
     ],
-    "basis": "open",
-    "ifLeftOpen": "The redesign uses “Subjects” as sketched, and the glossary carries both meanings with a warning.",
-    "stillOpen": true
+    "size": "quick"
    }
   },
   {
-   "question": "You approved the plan page sketch. Should the Action design's other three sketches (starting and sending, the matter page, and the Action items in the queue) also be fixed as the design reference, or stay drafts the designer may change?",
+   "question": "Besides the plan page you approved, should the Action design's other three screen sketches (starting and sending an action, the matter page, and the sheet of standards, filings and queue items) bind the interface redesign as the plan page does, or stay examples the designer may rework?",
    "basis": "open",
    "relatedUseCases": [
     "UC-163",
     "UC-111"
    ],
    "brief": {
-    "question": "Are the matter page, start-and-send and queue views approved, as the plan page is?",
-    "title": "The three other Action screen sketches: fix them, or leave them to Design",
-    "decision": "You approved the plan page sketch. Should the Action design's other three sketches (starting and sending, the matter page, and the Action items in the queue) also be fixed as the design reference, or stay drafts the designer may change?",
-    "size": "quick",
-    "whyYours": "An approved sketch binds the redesign; a draft only informs it. Which screens are fixed at this stage is a UX decision.",
-    "context": "Starting and sending (views/start-and-send.html) is what a member sees on starting a chosen option: a preview of what the action will say (addressee, dates with their basis, what it rests on) and what it would refuse. It shows the case you ruled on: an action asserting a breach while the matter is unestablished is refused by default, with “Proceed with this reason”, after which the action and everything prepared from it say “rests on an unestablished premise”. It then shows a message drafted by the assistant, which the member edits, approves and sends by their own hand, recording the sending.\n\nThe matter page (views/matter-page.html) gathers everything about one government act: its determination, consequences, escalation stage and the actions taken on it. The member's path through acting (PATH.md) does not name this page, and it overlaps the existing Escalation and Standards screens.\n\nThe queue sketch (views/surfaces.html) shows the new queue items: a checkpoint due (the group's own to-do), a proposed escalation stage, and an action's deadline passed (a condition, told once). It also shows a “consider a litigation hold” item, which is not built until T19 and whose meaning is question 31. The approved plan page is at views/plan-page.html for comparison.",
-    "alreadySettled": [
-     "The plan page sketch is approved (K608 (4)).",
-     "What each Action screen must and must never show (PATH.md §3, in the approved design record).",
-     "The override pattern: refuse by default, a member may proceed openly with a reason, disclosed on everything prepared (BIO_Action_v0_1.md §4 rule 2)."
+    "stillOpen": true,
+    "settledSince": "",
+    "title": "The other three Action sketches: fix them as the reference, or leave them to Design",
+    "inOneBreath": "Besides the plan page you approved, should the Action design's other three screen sketches (starting and sending an action, the matter page, and the sheet of standards, filings and queue items) bind the interface redesign as the plan page does, or stay examples the designer may rework?",
+    "decision": "(1) For each of the three sketches, say whether it is fixed as the design reference or left to Design. Fixed means the redesign keeps what it shows, the order of its steps and its wording; look and layout stay Design's, as for the plan page. (2) If you wish, fix only part of a sketch, for example the filing panels of the third sheet but not its queue items.",
+    "alreadyDecidedPart": "",
+    "basics": [
+     "The Action layer is where a group decides what to do with what it has learned. A project's action plan, its private working notes, lists options (a demand letter, a records request, a grand-jury complaint). Starting a chosen option creates an action: one outward engagement with an addressee such as the City Clerk's office. CivicOS sends nothing itself. The assistant may draft the text as a proposal; a member edits and approves it, sends it by the venue's own means and records the sending with the exact text sent.",
+     "One rule shapes starting. An action that asserts a breach (says the government broke a rule) must rest on a member's determination, made on published findings, that the act was noncompliant. On 30 September you ruled that such an action is refused by default when it does not; a member may still proceed, by an act signed with their name and a stated reason, and then the action and everything prepared from it say it 'rests on an unestablished premise'. Actions that seek evidence, such as a records request, are never refused this way.",
+     "In the week of 29 September the Action design session drew four sample screens as clickable web pages with made-up data. You approved one, the plan page, on 30 September, leaving its look (spacing, colour, narrow screens) to Design. The interface redesign is done separately from the build, so a sketch is how your intent reaches whoever draws the screens.",
+     "The approved plan page (views/plan-page.html), for comparison: the plan's title; a 'Checks' strip in words ('no branch answers a hostile response'); the plan's subjects with their support; options collapsed to one line, sortable, with Choose and Decline and the assistant's suggestions in a separate tray marked 'not yet in the plan'; up to three scenarios of phases with checkpoints a member judges; 'Started', each action's state; and 'Close plan…'."
+    ],
+    "today": [
+     "Starting and sending (views/start-and-send.html), in two steps. Step 1, 'Start \"Complaint to the county civil grand jury\"', begins 'Nothing runs until you confirm.' It lists what the action will say: kind (tier 1), addressed to (Civil Grand Jury, an office), rests on (subject 1 'established'; subject 3 'hypothetical: not yet shown'), clock ('none regulated for this kind'), the plan and option it came from, the group's contact (none, or a cover name) and 'Asserts a breach: yes'. Then a box, 'Would be refused': 'This action asserts a breach, and one of the matters it rests on (subject 3) is not established… You can remove subject 3, wait for its determination, untick \"asserts a breach\", or proceed anyway with a reason. If you proceed, the action and everything prepared from it will say so.' A reason field, 'Proceed with this reason', then 'Start the action'. Step 2, 'What the group sends': the complaint drafted from a template, labelled 'a proposal until a member approves it', each filled blank naming its source ('[source: canvass report, capture grade B, co-attested]'); a line giving each exhibit's evidence grade and the venue's standard; 'Approve this text' ('Approving fixes the bytes and adds the stamp. The instance sends nothing.'); and 'I have sent it · record the sending' ('By the venue's own means: its web form, mail, or in person').",
+     "The matter page (views/matter-page.html): one page per government act, here 'The certification of the bond measure as passed' (a resolution of 18 July, by the City Council). It has five parts. Determination: a row per standard, giving what it requires, what the act did and the outcome, with 'A compliant outcome is recorded with the same care.' Consequences: who or what was affected (a class or programme, never a person), the measure, how it is known and whether the act caused it ('Undetermined is never read as zero'). Escalation (the group's seven-stage pursuit of a breach): 'Proposed: stage 3 … The system proposes; a member decides', with Advance and Decline. Actions attached, and the legal tools available 'as facts … Nothing here is a recommendation'. Pressure recorded: a council member's statement calling the group 'saboteurs', kept as evidence, with 'Mark a reply as pressure…' and 'Open an inquiry'. The member's path written by the Action design does not name this page. It overlaps the Standards and Escalation screens already planned, and it is about a whole act, while a plan's matter is one act against one standard.",
+     "Standards, filings and the queue (views/surfaces.html). The current brief describes it as queue items only; it has four panels. A standards list (citation, kind, issuer, in force, captured text; an assistant proposal marked 'not a standard until a member adopts it'). A tier 2 filing draft, with an '[UNFILLED: records]' blank a member must write before approval is allowed, and each exhibit's grade beside the venue's standard. A tier 3 counsel packet: 'Prepared for review by the named counsel … Not legal advice. Not for filing … Never published.' And four queue items labelled 'condition' (a deadline passed, 'the counterparty's deadline, not ours'), 'obligation' (a stage proposed), 'obligation · ours' (a checkpoint due, 'a missed checkpoint is never a finding about the city') and 'obligation' ('Consider a litigation hold').",
+     "Status: only the plan page is approved. The three are marked 'Design view · sample data' and nothing in the build cites them. None of the four screens is built yet; they wait for the redesign."
+    ],
+    "problem": [
+     "If a sketch is left open, the designer may keep the rules but lose their feel. Your override ruling could become a yellow banner with a one-click 'Continue', no reason asked. Approving and recording the sending could become a single 'Send' button that implies CivicOS sends. The requirements say what must happen; only a fixed picture says how it is met.",
+     "If everything is fixed, two open questions get decided by the back door. The queue panel's labels ('condition', 'obligation · ours') are internal class names whose member-facing words are question 28, and its litigation-hold item means whatever question 31 decides. The matter page's place among the existing screens is unsettled, and its use of 'matter' for a whole act sits awkwardly with question 34.",
+     "The filing and counsel-packet panels carry your rulings that the venue sets the standard of evidence and that a counsel packet is never fileable as it stands. They touch no open question, so they are low-risk to fix. The standards list is part of a screen the redesign already owns.",
+     "Who is affected: the designer, who needs to know what is fixed; members, who will meet the override and the sending every time they act; and the group's credibility, which rests on the disclosure travelling with an overridden action."
+    ],
+    "story": {
+     "title": "Lena redraws the grand-jury complaint",
+     "steps": [
+      "Lena, working on the interface redesign, receives the four sketches.",
+      "The plan page is fixed: she keeps its four parts and wording, and turns the scenarios into tabs on phones, which is hers to decide.",
+      "On starting and sending, she wants to merge the preview and the draft into one long form, with a yellow note 'This action rests on an unestablished premise' and a 'Continue' button.",
+      "On the matter page, she would rather fold it into the Escalation screen.",
+      "On the queue items, she uses the plain names question 28 proposes ('To do', 'Noticed', 'Status').",
+      "Which of these she may do depends on this decision."
+     ]
+    },
+    "fixed": [
+     {
+      "point": "The plan page sketch is approved; its layout remains Design's.",
+      "why": "Your approval of 30 September, with the plan page question answered 'layout remains Design's'.",
+      "src": "K608 (4); build/plan/action-design/UX-ANSWERS.md (OQ-9)"
+     },
+     {
+      "point": "A breach action without a noncompliant determination is refused by default; a member may proceed by a signed act with a reason, disclosed on everything prepared from it; evidence-seeking actions are never refused.",
+      "why": "Your ruling of 30 September on refusing versus overriding.",
+      "src": "K600 (a); BIO_Action_v0_1.md §4 rule 2, §7 (2); actions R8"
+     },
+     {
+      "point": "Nothing leaves by a system path: a member sends and records the sending with the bytes sent, stamped.",
+      "why": "The Action canon approved 30 September.",
+      "src": "BIO_Action_v0_1.md §4 rule 7; filings R22-R23"
+     },
+     {
+      "point": "The venue sets the standard of evidence; every filing and counsel packet shows each exhibit's grade and the venue's standard.",
+      "why": "Your ruling of 30 September.",
+      "src": "K597 (3); BIO_Action_v0_1.md §4 rule 13; filings R25"
+     },
+     {
+      "point": "The three other sketches are not approved.",
+      "why": "Only the plan page is named in your approval.",
+      "src": "build/plan/action-design/HANDOFF.md ('the plan-page view is approved'); K608 (4)"
+     }
     ],
     "options": [
      {
       "label": "A",
       "name": "Fix all three",
-      "whatTheMemberSees": "The redesign follows all four sketches.",
-      "gains": "The designer has a complete, fixed reference for the Action layer.",
-      "costs": "Fixes a matter page whose place among the existing screens is unsettled, and a queue item whose meaning is still open (31)."
+      "howItWorks": "All four sketches bind the redesign's content, steps and wording; only look and layout are Design's.",
+      "inTheStory": "Lena keeps the two-step start and the refusal box with its reason field, keeps the matter page as its own page, and keeps the queue's 'condition' and 'obligation · ours' labels and the litigation-hold item as drawn.",
+      "gains": [
+       "A complete, fixed picture of the Action layer."
+      ],
+      "costs": [
+       "Fixes a page whose place among the existing screens is unsettled.",
+       "Pre-empts questions 28 (queue names) and 31 (what the hold is)."
+      ],
+      "commitsYouTo": "Revisiting the queue sheet after 28 and 31 are ruled."
      },
      {
       "label": "B",
       "name": "Fix starting and sending only",
-      "whatTheMemberSees": "The start preview, the override and the draft-approve-send flow as sketched; the matter page and queue items as the designer settles them within PATH.md's rules.",
-      "gains": "Fixes the one flow that carries doctrine (the override and the member's own sending).",
-      "costs": "The other two wait for the designer."
+      "howItWorks": "The start-and-send sketch binds; the matter page and the whole third sheet are examples.",
+      "inTheStory": "Lena must keep preview, then the refusal with its reasons, then start, then approve, then record the sending. She may fold the matter page into Escalation. The queue items follow questions 28 and 31 when they are ruled.",
+      "gains": [
+       "Fixes the one flow that carries your override ruling and sending by a member's own hand.",
+       "Leaves nothing open decided by default."
+      ],
+      "costs": [
+       "The filing panels, which carry your evidence-grade ruling, have no fixed picture."
+      ],
+      "commitsYouTo": "The designer settling the matter page and the queue items within the requirements."
      },
      {
       "label": "C",
+      "name": "Fix starting and sending, plus the filing and counsel-packet panels",
+      "howItWorks": "As B, and the tier 2 filing draft and tier 3 counsel packet panels of the third sheet also bind. The standards list and the queue items stay examples.",
+      "inTheStory": "As B, and Lena also keeps the rule that approval is refused while a blank reads 'UNFILLED', the grade-and-venue line under the exhibits, and the counsel packet's header 'Not legal advice. Not for filing.'",
+      "gains": [
+       "Fixes every picture that carries one of your rulings and touches no open question."
+      ],
+      "costs": [
+       "Splits one sketch into fixed and open parts, which the designer must be told plainly."
+      ],
+      "commitsYouTo": "The same as B, plus the filing panels' wording."
+     },
+     {
+      "label": "D",
       "name": "Fix none",
-      "whatTheMemberSees": "The designer works from PATH.md and the requirements alone.",
-      "gains": "Most freedom for the redesign.",
-      "costs": "The override flow, which you ruled on, has no fixed picture."
+      "howItWorks": "Only the plan page binds; the designer works from the rules and requirements alone.",
+      "inTheStory": "Lena may merge the start into one form with a 'Continue' button, provided a reason is still recorded somewhere.",
+      "gains": [
+       "The most freedom for the redesign."
+      ],
+      "costs": [
+       "The override flow you ruled on has no fixed picture, so its feel can drift."
+      ],
+      "commitsYouTo": "Reviewing the redesign's version of starting and sending when it comes."
      }
     ],
-    "recommendation": "B: fix starting and sending, which carries your override ruling; leave the matter page and the queue items to the designer, the queue sketch to be revisited once question 31 is ruled.",
+    "tradeoff": "Fix the screens that carry your rulings, so their feel survives the redesign, without letting a sketch quietly decide questions still open.",
+    "recommendation": {
+     "choice": "C",
+     "why": [
+      "Starting and sending is where your override ruling and the member's own sending meet the member, every time. A fixed picture keeps the refusal visible before anything runs, the reason asked in place, and approving kept separate from recording the sending.",
+      "The filing and counsel-packet panels carry your rulings on evidence grades and on counsel packets, and are entangled with nothing open. The matter page and the queue items are entangled with questions 28, 31 and 34 and with an unsettled screen arrangement, so they should wait. B is nearly as good if you prefer not to split a sketch."
+     ],
+     "risk": "The queue items and matter page are left without a reference for now. Contained by the requirements, which already bind their content, and by revisiting the queue sheet once 28 and 31 are ruled."
+    },
     "howToAnswer": [
-     "“35: as recommended.”",
-     "“35: fix all three.”",
-     "“35: fix starting and sending, and the queue sketch once 31 is ruled.”"
+     "35: as recommended.",
+     "35: B, only starting and sending.",
+     "35: fix all three, and revisit the queue items once 28 and 31 are ruled.",
+     "35: what would the matter page replace, exactly?"
     ],
-    "relatedUseCases": [
-     "UC-163",
-     "UC-111"
+    "ifLeftOpen": "The designer treats all three as examples; only the plan page binds, and the rules in the requirements still apply.",
+    "related": [
+     {
+      "n": 31,
+      "how": "The queue sheet's 'Consider a litigation hold' item means whatever 31 decides."
+     },
+     {
+      "n": 28,
+      "how": "The queue sheet's 'condition' and 'obligation' labels are the class names 28 would replace."
+     },
+     {
+      "n": 34,
+      "how": "The matter page uses 'Matters' for a whole act; its name should agree with the word chosen in 34."
+     }
+    ],
+    "glossary": [
+     {
+      "term": "Sketch (design view)",
+      "plain": "A clickable sample screen with made-up data; nothing is saved or sent."
+     },
+     {
+      "term": "Fixed as the design reference",
+      "plain": "The redesign keeps the sketch's content, steps and wording; look and layout stay with Design."
+     },
+     {
+      "term": "Design, the redesign",
+      "plain": "The separate work of drawing CivicOS's new screens."
+     },
+     {
+      "term": "Determination",
+      "plain": "A member's judgement that a government act was compliant, noncompliant or unclear against a named standard, on published findings."
+     },
+     {
+      "term": "Override",
+      "plain": "Proceeding with a refused breach action by a signed act with a reason, disclosed on everything prepared from it."
+     },
+     {
+      "term": "Escalation",
+      "plain": "The group's seven-stage pursuit of one breach; the system proposes each stage, a member advances or declines it."
+     },
+     {
+      "term": "Tier 1, 2, 3; counsel packet",
+      "plain": "How cautious a filing must be (freely; with caution; only through named counsel). A counsel packet is the tier 3 bundle for the group's lawyer, never published or filed as it stands."
+     },
+     {
+      "term": "Evidence grade, co-attested",
+      "plain": "A letter for how easily others could check a captured document; co-attested means an independent party confirmed when it existed."
+     },
+     {
+      "term": "Stamp, queue",
+      "plain": "A line on approved text identifying what was approved, by whom and when; the list of things waiting for a member's attention."
+     }
     ],
     "sources": [
-     "build/plan/action-design/matter-page.html (design view, not stated as approved)",
-     "build/plan/action-design/start-and-send.html (design view, not stated as approved)",
-     "build/plan/action-design/surfaces.html (design view, not stated as approved)",
-     "HANDOFF.md ('the plan-page view is approved')"
+     "build/plan/action-design/start-and-send.html, matter-page.html, surfaces.html (design views, sample data, not approved)",
+     "build/plan/action-design/plan-page.html (approved, K608 (4))",
+     "build/plan/action-design/HANDOFF.md ('the plan-page view is approved'); UX-ANSWERS.md (OQ-9: layout remains Design's)",
+     "build/plan/action-design/PATH.md §1-§3 (a draft; does not name the matter page)",
+     "docs/architecture/BIO_Action_v0_1.md §4 rules 1, 2, 7, 13; §7",
+     "build/rulings.md K597, K600, K608",
+     "build/requirements/actions.md R8; filings.md R22-R25; action-plans.md R23",
+     "build/plan/archive/T19.md (the plan-page surface kept as Bob's UX)",
+     "Correction to the earlier brief: surfaces.html shows standards, a tier 2 filing draft and a tier 3 counsel packet as well as queue items; PATH.md is a draft, not part of the approved record.",
+     "Checked K628-K859: none settles or changes this question."
     ],
-    "basis": "open",
-    "ifLeftOpen": "The designer treats all three as drafts.",
-    "stillOpen": true
+    "size": "short"
    }
   }
  ],
