@@ -21,3 +21,7 @@
 - format: 84 modules, 82 requirements files; 0 failures. architecture: 31 product files, 83 relative imports; 0 failures. coverage: 53 of 53 live requirement ids named by a test; 0 failures. ownership: 11 files changed by agent-worker between tranche/T20 and HEAD; 0 failures.
 
 Size (session_01LCAbc33dhaBdU5szJg3Mky): test runs 12, module lines 25
+
+## J1 · REPORT
+
+Found in bundler (bio-plane/test/system/fleetbundles.test.mjs), red on tranche/T20 before my change too: the arm "agent-worker's 153 inputs are all recorded — … R48's pack check with everything it imports" expects the pre-K683 input set; the member now has 13 first-party inputs. On the unchanged tree the two (j) arms (name `node tools/bundles.mjs`; corpus non-empty) also fail; on my branch they pass. Details in my record.
