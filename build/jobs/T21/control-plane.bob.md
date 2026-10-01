@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T21) layer 11, control-plane. (1) 
 Also (K982; PUBLIC-READ #4 J1 (2)): public-read R7 names `inbandQuartet` (`bio-plane/src/inband.mjs`) the one hasher of the container manifest and of the review copy. The deleted `test/reviewcopy-inband.test.mjs` proved the review-copy half by reading source text. `op=reviewcopy` is yours: if your requirements state its in-band hash, prove at your interface that the review copy's hash equals `inbandQuartet`'s over the same bytes (a requirement-named test); if none states it, say so in your COMPLETE and BOB words it.
 
 Also (K992; FILINGS #9 J2 (3)): `control-plane/families.test.mjs` R22 is red on the tranche: `CHECK_FAMILIES` lacks local-facts' C-126 and filing-templates' C-125 (accepted by name until your merge); add both, with `catalogue-end.test.mjs` R43's digest (K952).
+
+## B2 · ANSWER · re J1
+
+Your readings (a)-(d) are adopted: they match op-declarations' START (member acts with `author` (or `by`) and `viewer` stamped; `templatepropose` with `proposer`; `templatereviewgrant` with `secretSha` as `reviewgrant`; the grant doors `classes: null`; `templates`, `factstatus`, `factsdue` reads). (b): your door stamps the body `by` for `factconfirm`, overriding a caller's; no local-facts change. I have told OP-DECLARATIONS #3 the lists you build on; if it declares them otherwise its COMPLETE says so, and at its merge I post a CHANGE naming its exported lists, and you merge `tranche/T21` and re-point. Your R44 tests stay red by name until then, as the START says.
