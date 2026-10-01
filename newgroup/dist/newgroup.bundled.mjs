@@ -238,6 +238,8 @@ var oakland_alameda_default = {
     minutes_due_days: { value: 21, basis: "UNMEASURED" }
   },
   locale: { value: "en-US", basis: "UNMEASURED" },
+  /* California's statutory time (Gov. Code § 6808), by its IANA name. */
+  time_zone: { value: "America/Los_Angeles", status: "researched", basis: "M-187" },
   search_terms: [
     { term: "oakland", basis: "UNMEASURED" },
     { term: "police", basis: "UNMEASURED" }
@@ -277,12 +279,27 @@ var oakland_alameda_default = {
       basis: "UNMEASURED"
     }
   ],
+  /* Hours only where the office publishes them (M-192). The Controller's Bureau (M-195), the City Council (M-196)
+     and the Civil Grand Jury (M-194) publish none, and the State Controller's Office could not be read: their hours
+     are absent, undetermined (R27, K925). */
   counterparties: [
     { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "UNMEASURED" },
     { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "UNMEASURED" },
     { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "UNMEASURED" },
     /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
-    { role: "City Auditor", body: "Office of the City Auditor, City of Oakland", level: "city", elected: true, oversight: true, basis: "UNMEASURED" },
+    {
+      role: "City Auditor",
+      body: "Office of the City Auditor, City of Oakland",
+      level: "city",
+      elected: true,
+      oversight: true,
+      hours: {
+        weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:30", close: "17:00" })),
+        status: "researched",
+        basis: "M-192"
+      },
+      basis: "UNMEASURED"
+    },
     { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "UNMEASURED" }
   ],
   action_kinds: [
@@ -308,7 +325,17 @@ var oakland_alameda_default = {
       label: "court petition to enforce a public records request",
       tier: 2,
       laws: ["California Public Records Act"],
-      venue: { name: "Alameda County Superior Court", how: "court", basis: "UNMEASURED" },
+      /* The hours are the civil clerk's office at the René C. Davidson Courthouse, in person, where writ matters
+         are filed (M-193); its drop box and e-filing hours are not office hours. */
+      venue: {
+        name: "Alameda County Superior Court",
+        how: "court",
+        basis: "UNMEASURED",
+        hours: { weekly: [
+          ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "08:30", close: "15:00" })),
+          { day: "fri", open: "08:30", close: "14:00" }
+        ], status: "researched", basis: "M-193" }
+      },
       advisory: "File with caution: a procedural error can have the petition dismissed, usually without prejudice, so refiling is possible but costs time and money. Legal review before filing is recommended.",
       basis: "D-182"
     },
@@ -344,13 +371,91 @@ var oakland_alameda_default = {
       contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }],
       basis: "UNMEASURED"
     }
+  ],
+  /* Each office's published closure days for 2026, by the list that governs it (K925). The City's and the
+     State's are employers' paid-holiday lists, read as closure days (K925 (2)); the City's 09-09 and 11-11,
+     marked "(HVA) If applicable", are left out until a member confirms (K925 (3)). The county's own list
+     (M-188) governs no office the profile names, and none names the Civil Grand Jury's: a business-day count
+     for it, for the records portal, and into 2027 (no list published) is undetermined (R27, R33). */
+  holidays: [
+    {
+      year: 2026,
+      offices: [{ venue: "records_petition" }],
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Martin Luther King Jr.'s Birthday" },
+        { date: "2026-02-12", name: "Lincoln's Birthday" },
+        { date: "2026-02-16", name: "Washington's Birthday" },
+        { date: "2026-03-31", name: "Pursuant to Code of Civil Procedure Section 135" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-06-19", name: "Juneteenth" },
+        { date: "2026-07-03", name: "Independence Day" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-09-25", name: "Native American Day" },
+        { date: "2026-11-11", name: "Veteran's Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-11-27", name: "Day after Thanksgiving" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "M-189"
+    },
+    {
+      year: 2026,
+      offices: ["Controller", "City Council", "City Auditor"],
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Dr. Martin Luther King, Jr. Day" },
+        { date: "2026-02-16", name: "President's Day" },
+        { date: "2026-03-31", name: "Cesar Chavez Day" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-06-19", name: "Juneteenth National Independence Day" },
+        { date: "2026-07-04", name: "Independence Day" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-11-27", name: "Day After Thanksgiving" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "M-190"
+    },
+    {
+      year: 2026,
+      offices: ["State Controller"],
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Martin Luther King Jr. Day" },
+        { date: "2026-02-16", name: "Presidents' Day" },
+        { date: "2026-03-31", name: "Cesar Chavez Day" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-07-04", name: "Independence Day" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-11-11", name: "Veteran's Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-11-27", name: "Day after Thanksgiving" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "M-191"
+    }
   ]
-  /* holidays: absent. No measurement names the offices' closure days, and the profile's one deadline
-     counts calendar days; a business-day count here is undetermined (R27, R33). */
 };
 
 // ../jurisdictions/profiles/test-port-ellery.mjs
 var R2 = String.raw;
+var attributed = (id, use, text, review) => ({
+  id,
+  version: 1,
+  use,
+  text,
+  notes: "A made-up template for tests.",
+  authored_by: "Ada Example",
+  contributors: ["Ben Example"],
+  reviews: [review],
+  approved_by: "Cy Example",
+  approved_at: "2026-09-01",
+  basis: "TEST"
+});
 var test_port_ellery_default = {
   id: "test-port-ellery",
   name: "City of Port Ellery and Marlow County (test)",
@@ -515,6 +620,7 @@ var test_port_ellery_default = {
   },
   practice: { minutes_due_days: { value: 30, basis: "TEST" } },
   locale: { value: "en-GB", basis: "TEST" },
+  time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
   records_laws: [
     { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. \xA7 1.100", basis: "TEST" },
@@ -541,7 +647,18 @@ var test_port_ellery_default = {
     }
   ],
   counterparties: [
-    { role: "Town Clerk", body: "City of Port Ellery", level: "city", elected: false, basis: "TEST" },
+    {
+      role: "Town Clerk",
+      body: "City of Port Ellery",
+      level: "city",
+      elected: false,
+      hours: { weekly: [
+        ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "09:00", close: "12:30" })),
+        ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "13:30", close: "16:00" })),
+        { day: "fri", open: "09:00", close: "12:00" }
+      ], status: "researched", basis: "TEST" },
+      basis: "TEST"
+    },
     { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true, basis: "TEST" },
     { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
     { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" }
@@ -552,8 +669,30 @@ var test_port_ellery_default = {
       label: "request under the records act",
       tier: 2,
       laws: ["Freedom of Records Act (test)", "Port Ellery Open Government Bylaw"],
-      venue: { name: "the Town Clerk's office", how: "email", basis: "TEST" },
-      template: "To the Town Clerk: under {{law}}, please provide {{records}}.",
+      venue: {
+        name: "the Town Clerk's office",
+        how: "email",
+        basis: "TEST",
+        hours: {
+          weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:00", close: "18:00" })),
+          status: "ruled",
+          basis: "TEST"
+        }
+      },
+      template: attributed(
+        "TPL-test-records-request",
+        "file",
+        "To the {{counterparty_role}}: under {{law}}, {{group}} asks for the records described below.",
+        {
+          reviewer: "Dee Example",
+          kind: "professional",
+          organisation: "Marlow Commons Legal Society (test)",
+          credential: "solicitor (test)",
+          scope: "the whole text",
+          outcome: "no_concerns",
+          at: "2026-08-20"
+        }
+      ),
       advisory: "A test advisory: have a solicitor read the request before it is sent.",
       basis: "TEST"
     },
@@ -563,7 +702,12 @@ var test_port_ellery_default = {
       tier: 1,
       laws: ["Port Ellery Bylaws"],
       venue: { name: "the Selectboard", how: "in_person", basis: "TEST" },
-      template: "To the Selectboard: {{act}} does not conform to {{bylaw}}.",
+      template: attributed(
+        "TPL-test-bylaw-complaint",
+        "file",
+        "To the {{counterparty_role}}: {{act}} does not conform to {{standards}}.",
+        { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-21" }
+      ),
       basis: "TEST"
     },
     {
@@ -577,6 +721,21 @@ var test_port_ellery_default = {
         contestable: [{ grade: "C" }],
         basis: "TEST"
       },
+      /* A Tier 3 kind takes a briefing to counsel, never a `file` template (K921). */
+      template: attributed(
+        "TPL-test-commitment-brief",
+        "brief",
+        "For counsel: {{group}} asks whether {{act}} ({{act_date}}) breaches {{standards}}, on {{findings}}.",
+        {
+          reviewer: "Dee Example",
+          kind: "professional",
+          organisation: "Marlow Commons Legal Society (test)",
+          credential: "solicitor (test)",
+          scope: "the whole text",
+          outcome: "concerns",
+          at: "2026-08-22"
+        }
+      ),
       basis: "TEST"
     }
   ],
@@ -609,7 +768,25 @@ var test_port_ellery_default = {
       basis: "TEST"
     }
   ],
+  /* The entries for one office and one venue come first: each adds its days to the year every office keeps (R43). */
   holidays: [
+    {
+      year: 2026,
+      offices: ["Town Clerk"],
+      days: [{ date: "2026-08-14", name: "Clerk's records day" }],
+      status: "ruled",
+      basis: "TEST"
+    },
+    {
+      year: 2026,
+      offices: [{ venue: "commitment_claim" }],
+      days: [
+        { date: "2026-08-31", name: "Court vacation day" },
+        { date: "2026-12-24", name: "Court closed" }
+      ],
+      status: "researched",
+      basis: "TEST"
+    },
     {
       year: 2026,
       days: [
@@ -618,6 +795,7 @@ var test_port_ellery_default = {
         { date: "2026-07-03", name: "Founders' Day (observed)" },
         { date: "2026-12-25", name: "Christmas Day" }
       ],
+      status: "researched",
       basis: "TEST"
     },
     {
@@ -627,6 +805,7 @@ var test_port_ellery_default = {
         { date: "2027-03-17", name: "Harbour Day" },
         { date: "2027-12-24", name: "Christmas Day (observed)" }
       ],
+      status: "researched",
       basis: "TEST"
     }
   ]
@@ -939,13 +1118,18 @@ var STATES = {
       elevated: []
     }
   },
+  /* K904 (form (b); N456, T21): A PROJECT'S STAGE IS COMPUTED, NOT WRITTEN. `project-stage` derives it at the read,
+     so the machine writes only whether the project is open or closed: `forming` (legal[0]) and `closed`, each to the
+     other. `investigating` and `matured` were the hand-written ladder; bytes that carry them stay valid (`legacy`),
+     and they may only close. */
   project: {
-    legal: ["forming", "investigating", "matured", "closed"],
+    legal: ["forming", "closed"],
+    legacy: ["investigating", "matured"],
     edges: {
-      forming: ["investigating", "closed"],
-      investigating: ["matured", "closed"],
+      forming: ["closed"],
+      investigating: ["closed"],
       matured: ["closed"],
-      closed: ["investigating"]
+      closed: ["forming"]
     }
   },
   action: {
@@ -1091,6 +1275,13 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential prepared this communication. That is machine work, labelled as machine work: it can prepare the words of a message and it can never approve or send one. Nobody has approved or sent it, and nothing is sent until members decide to send it themselves",
     member_proposed: "a member prepared this communication. It is a draft and not a message sent: nobody has approved or sent it, and the record holds who prepared it",
     unstated: "the record does not say who prepared this communication, and nobody has approved or sent it"
+  }),
+  /* K921 (T21, R42): wording proposed for a filing template (filing-templates R6, R13) is not a template's text until a
+     member adopts it into a draft, and a machine can propose it and never draft, review or approve a template. */
+  template: Object.freeze({
+    machine_proposed: "a machine credential proposed this wording for a filing template. That is machine work, labelled as machine work: it can propose wording and it can never draft, review or approve a template. It is not a template's text until a member adopts it into a draft",
+    member_proposed: "a member proposed this wording for a filing template. It is a proposal and not a template's text: it is not that until a member adopts it into a draft, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this wording for a filing template, and it is not a template's text until a member adopts it into a draft"
   })
 });
 
@@ -1111,10 +1302,10 @@ var SHARED_ACT_CHECKS = Object.freeze({
        inside the region named below, and every former site returns through it.
   
        So the `where` is not a narrowing of a claim this family could not support
-       — it is now literally true, and `store.mjs` holds one `reason: "NO_BASIS"`
-       and one `reason: "NO_CITATION"` literal to prove it (a structural pin in
-       `test/d484-refusal-translation.test.mjs` asserts exactly that, because a
-       second site added later would silently make this `where` a lie again).
+       — it was then literally true, `store.mjs` holding one `reason: "NO_BASIS"`
+       and one `reason: "NO_CITATION"` literal (the old battery's d484 suite pinned
+       that; both are deleted). Each `where` now names the module whose one
+       refusal helper mints the code (R29).
   
        EACH TRANSLATION IS TRUE AT EVERY SITE IT NOW SERVES, which is the price of
        consolidation and is where a careless one would do harm. `NO_BASIS` covers
@@ -1147,7 +1338,7 @@ var EXTENSION_ARMS = Object.freeze([
   { name: "checkSupersession", ids: ["C-6.1"] },
   { name: "checkRecheckCoverage", ids: ["C-15.1"] },
   { name: "checkInquiryExtension", ids: ["C-2.8"] },
-  { name: "checkProjectExtension", ids: ["C-2.9", "C-9.1"] }
+  { name: "checkProjectExtension", ids: ["C-2.9"] }
 ].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
 
 // ../jurisdictions/index.mjs
@@ -1170,7 +1361,8 @@ var SECTIONS = Object.freeze([
   "deadlines",
   "legal_organisations",
   "holidays",
-  "locale"
+  "locale",
+  "time_zone"
 ]);
 var SPACES = Object.freeze(["enactment", "project", "fund", "parcel"]);
 var VOCABULARY = Object.freeze([
@@ -1193,6 +1385,24 @@ var COUNTS = Object.freeze(["calendar", "business"]);
 var STARTS = Object.freeze(["received", "filed", "act", "known"]);
 var TIERS = Object.freeze([1, 2, 3]);
 var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
+var TEMPLATE_FIELDS = Object.freeze([
+  "id",
+  "version",
+  "use",
+  "text",
+  "notes",
+  "authored_by",
+  "contributors",
+  "reviews",
+  "approved_by",
+  "approved_at",
+  "basis"
+]);
+var TEMPLATE_USES = Object.freeze(["file", "brief"]);
+var REVIEW_KINDS = Object.freeze(["member", "professional"]);
+var REVIEW_OUTCOMES = Object.freeze(["no_concerns", "concerns", "changes_requested"]);
+var WEEKDAYS = Object.freeze(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]);
+var FACT_STATUSES = Object.freeze(["researched", "ruled"]);
 var deepFreeze = (o) => {
   if (o && typeof o === "object") {
     Object.values(o).forEach(deepFreeze);

@@ -700,13 +700,18 @@ var STATES = {
       elevated: []
     }
   },
+  /* K904 (form (b); N456, T21): A PROJECT'S STAGE IS COMPUTED, NOT WRITTEN. `project-stage` derives it at the read,
+     so the machine writes only whether the project is open or closed: `forming` (legal[0]) and `closed`, each to the
+     other. `investigating` and `matured` were the hand-written ladder; bytes that carry them stay valid (`legacy`),
+     and they may only close. */
   project: {
-    legal: ["forming", "investigating", "matured", "closed"],
+    legal: ["forming", "closed"],
+    legacy: ["investigating", "matured"],
     edges: {
-      forming: ["investigating", "closed"],
-      investigating: ["matured", "closed"],
+      forming: ["closed"],
+      investigating: ["closed"],
       matured: ["closed"],
-      closed: ["investigating"]
+      closed: ["forming"]
     }
   },
   action: {
@@ -870,6 +875,13 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential prepared this communication. That is machine work, labelled as machine work: it can prepare the words of a message and it can never approve or send one. Nobody has approved or sent it, and nothing is sent until members decide to send it themselves",
     member_proposed: "a member prepared this communication. It is a draft and not a message sent: nobody has approved or sent it, and the record holds who prepared it",
     unstated: "the record does not say who prepared this communication, and nobody has approved or sent it"
+  }),
+  /* K921 (T21, R42): wording proposed for a filing template (filing-templates R6, R13) is not a template's text until a
+     member adopts it into a draft, and a machine can propose it and never draft, review or approve a template. */
+  template: Object.freeze({
+    machine_proposed: "a machine credential proposed this wording for a filing template. That is machine work, labelled as machine work: it can propose wording and it can never draft, review or approve a template. It is not a template's text until a member adopts it into a draft",
+    member_proposed: "a member proposed this wording for a filing template. It is a proposal and not a template's text: it is not that until a member adopts it into a draft, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this wording for a filing template, and it is not a template's text until a member adopts it into a draft"
   })
 });
 function proposalLabel(proposedBy, subject) {
@@ -915,10 +927,10 @@ var SHARED_ACT_CHECKS = Object.freeze({
        inside the region named below, and every former site returns through it.
   
        So the `where` is not a narrowing of a claim this family could not support
-       — it is now literally true, and `store.mjs` holds one `reason: "NO_BASIS"`
-       and one `reason: "NO_CITATION"` literal to prove it (a structural pin in
-       `test/d484-refusal-translation.test.mjs` asserts exactly that, because a
-       second site added later would silently make this `where` a lie again).
+       — it was then literally true, `store.mjs` holding one `reason: "NO_BASIS"`
+       and one `reason: "NO_CITATION"` literal (the old battery's d484 suite pinned
+       that; both are deleted). Each `where` now names the module whose one
+       refusal helper mints the code (R29).
   
        EACH TRANSLATION IS TRUE AT EVERY SITE IT NOW SERVES, which is the price of
        consolidation and is where a careless one would do harm. `NO_BASIS` covers
@@ -1109,7 +1121,7 @@ function checkWriteCompleteness(ctx, findings) {
     const idx = ctx.body.indexOf("## Session Log");
     const section = idx >= 0 ? ctx.body.slice(idx, ctx.body.indexOf("\n## ", idx + 1) === -1 ? void 0 : ctx.body.indexOf("\n## ", idx + 1)) : "";
     if (!/^### Session /m.test(section)) {
-      findings.push(f2("C-13.2", "error", "bundle has been updated but carries no Session Log entry", ["append the missing Session Log entry naming the gap"]));
+      findings.push(f2("C-13.2", "error", "record has been updated but carries no Session Log entry", ["append the missing Session Log entry naming the gap"]));
     }
   }
 }
@@ -1197,7 +1209,7 @@ async function checkQueueAndBase(ctx, findings) {
     if (!(k in man)) findings.push(f2("C-16.1", "error", `manifest missing '${k}'`));
   }
   if (man.target && man.target !== ctx.folderName) {
-    findings.push(f2("C-16.1", "error", `manifest target '${man.target}' does not match bundle '${ctx.folderName}'`));
+    findings.push(f2("C-16.1", "error", `manifest target '${man.target}' does not match record '${ctx.folderName}'`));
   }
   const listed = /* @__PURE__ */ new Set();
   if (Array.isArray(man.files)) {
@@ -1319,10 +1331,6 @@ function checkReferences(ctx, findings) {
       }
     }
   }
-  if (ctx.fm?.workproduct_state === "distributed") {
-    const hasDist = [...ctx.files.keys()].some((p) => p.startsWith("distributions/"));
-    if (!hasDist) findings.push(f2("C-6.3", "error", "workproduct_state is distributed but distributions/ is empty"));
-  }
 }
 function checkHistoryCoherence(ctx, findings) {
   const histFiles = [...ctx.files.keys()].filter((p) => p.startsWith("_history/"));
@@ -1425,7 +1433,7 @@ var EXTENSION_ARMS = Object.freeze([
   { name: "checkSupersession", ids: ["C-6.1"] },
   { name: "checkRecheckCoverage", ids: ["C-15.1"] },
   { name: "checkInquiryExtension", ids: ["C-2.8"] },
-  { name: "checkProjectExtension", ids: ["C-2.9", "C-9.1"] }
+  { name: "checkProjectExtension", ids: ["C-2.9"] }
 ].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
 var GRAMMAR_ID_RE = /^C-\d+(\.\d+)?$/;
 function grammarsOf(list2) {
@@ -2775,8 +2783,8 @@ async function captureSubresources({
       deferred: records.filter((r) => r.reason === "DEFERRED").length,
       refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
       /* Deliberately not fetched: policy skips, plus the two bounds. Every
-         record lands in exactly one of fetched/failed/refused/skipped, and the
-         subresources test asserts that identity, so a new reason that forgets
+         record lands in exactly one of fetched/failed/refused/skipped, and this
+         module's R16 test asserts that identity, so a new reason that forgets
          to name a bucket fails rather than quietly vanishing from the totals. */
       skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY" || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED" || r.reason === "PLATFORM_LIMIT" || r.reason === "DEFERRED")).length,
       scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
@@ -2800,7 +2808,7 @@ async function captureSubresources({
     },
     subresources: records,
     links,
-    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another bundle is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
+    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this record and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another record is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
     note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."
   };
   const manifestBytes = meter2.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
@@ -10552,6 +10560,8 @@ var oakland_alameda_default = {
     minutes_due_days: { value: 21, basis: "UNMEASURED" }
   },
   locale: { value: "en-US", basis: "UNMEASURED" },
+  /* California's statutory time (Gov. Code § 6808), by its IANA name. */
+  time_zone: { value: "America/Los_Angeles", status: "researched", basis: "M-187" },
   search_terms: [
     { term: "oakland", basis: "UNMEASURED" },
     { term: "police", basis: "UNMEASURED" }
@@ -10591,12 +10601,27 @@ var oakland_alameda_default = {
       basis: "UNMEASURED"
     }
   ],
+  /* Hours only where the office publishes them (M-192). The Controller's Bureau (M-195), the City Council (M-196)
+     and the Civil Grand Jury (M-194) publish none, and the State Controller's Office could not be read: their hours
+     are absent, undetermined (R27, K925). */
   counterparties: [
     { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "UNMEASURED" },
     { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "UNMEASURED" },
     { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "UNMEASURED" },
     /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
-    { role: "City Auditor", body: "Office of the City Auditor, City of Oakland", level: "city", elected: true, oversight: true, basis: "UNMEASURED" },
+    {
+      role: "City Auditor",
+      body: "Office of the City Auditor, City of Oakland",
+      level: "city",
+      elected: true,
+      oversight: true,
+      hours: {
+        weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:30", close: "17:00" })),
+        status: "researched",
+        basis: "M-192"
+      },
+      basis: "UNMEASURED"
+    },
     { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "UNMEASURED" }
   ],
   action_kinds: [
@@ -10622,7 +10647,17 @@ var oakland_alameda_default = {
       label: "court petition to enforce a public records request",
       tier: 2,
       laws: ["California Public Records Act"],
-      venue: { name: "Alameda County Superior Court", how: "court", basis: "UNMEASURED" },
+      /* The hours are the civil clerk's office at the René C. Davidson Courthouse, in person, where writ matters
+         are filed (M-193); its drop box and e-filing hours are not office hours. */
+      venue: {
+        name: "Alameda County Superior Court",
+        how: "court",
+        basis: "UNMEASURED",
+        hours: { weekly: [
+          ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "08:30", close: "15:00" })),
+          { day: "fri", open: "08:30", close: "14:00" }
+        ], status: "researched", basis: "M-193" }
+      },
       advisory: "File with caution: a procedural error can have the petition dismissed, usually without prejudice, so refiling is possible but costs time and money. Legal review before filing is recommended.",
       basis: "D-182"
     },
@@ -10658,13 +10693,91 @@ var oakland_alameda_default = {
       contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }],
       basis: "UNMEASURED"
     }
+  ],
+  /* Each office's published closure days for 2026, by the list that governs it (K925). The City's and the
+     State's are employers' paid-holiday lists, read as closure days (K925 (2)); the City's 09-09 and 11-11,
+     marked "(HVA) If applicable", are left out until a member confirms (K925 (3)). The county's own list
+     (M-188) governs no office the profile names, and none names the Civil Grand Jury's: a business-day count
+     for it, for the records portal, and into 2027 (no list published) is undetermined (R27, R33). */
+  holidays: [
+    {
+      year: 2026,
+      offices: [{ venue: "records_petition" }],
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Martin Luther King Jr.'s Birthday" },
+        { date: "2026-02-12", name: "Lincoln's Birthday" },
+        { date: "2026-02-16", name: "Washington's Birthday" },
+        { date: "2026-03-31", name: "Pursuant to Code of Civil Procedure Section 135" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-06-19", name: "Juneteenth" },
+        { date: "2026-07-03", name: "Independence Day" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-09-25", name: "Native American Day" },
+        { date: "2026-11-11", name: "Veteran's Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-11-27", name: "Day after Thanksgiving" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "M-189"
+    },
+    {
+      year: 2026,
+      offices: ["Controller", "City Council", "City Auditor"],
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Dr. Martin Luther King, Jr. Day" },
+        { date: "2026-02-16", name: "President's Day" },
+        { date: "2026-03-31", name: "Cesar Chavez Day" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-06-19", name: "Juneteenth National Independence Day" },
+        { date: "2026-07-04", name: "Independence Day" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-11-27", name: "Day After Thanksgiving" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "M-190"
+    },
+    {
+      year: 2026,
+      offices: ["State Controller"],
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Martin Luther King Jr. Day" },
+        { date: "2026-02-16", name: "Presidents' Day" },
+        { date: "2026-03-31", name: "Cesar Chavez Day" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-07-04", name: "Independence Day" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-11-11", name: "Veteran's Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-11-27", name: "Day after Thanksgiving" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "M-191"
+    }
   ]
-  /* holidays: absent. No measurement names the offices' closure days, and the profile's one deadline
-     counts calendar days; a business-day count here is undetermined (R27, R33). */
 };
 
 // ../jurisdictions/profiles/test-port-ellery.mjs
 var R2 = String.raw;
+var attributed = (id, use, text5, review) => ({
+  id,
+  version: 1,
+  use,
+  text: text5,
+  notes: "A made-up template for tests.",
+  authored_by: "Ada Example",
+  contributors: ["Ben Example"],
+  reviews: [review],
+  approved_by: "Cy Example",
+  approved_at: "2026-09-01",
+  basis: "TEST"
+});
 var test_port_ellery_default = {
   id: "test-port-ellery",
   name: "City of Port Ellery and Marlow County (test)",
@@ -10829,6 +10942,7 @@ var test_port_ellery_default = {
   },
   practice: { minutes_due_days: { value: 30, basis: "TEST" } },
   locale: { value: "en-GB", basis: "TEST" },
+  time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
   records_laws: [
     { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. \xA7 1.100", basis: "TEST" },
@@ -10855,7 +10969,18 @@ var test_port_ellery_default = {
     }
   ],
   counterparties: [
-    { role: "Town Clerk", body: "City of Port Ellery", level: "city", elected: false, basis: "TEST" },
+    {
+      role: "Town Clerk",
+      body: "City of Port Ellery",
+      level: "city",
+      elected: false,
+      hours: { weekly: [
+        ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "09:00", close: "12:30" })),
+        ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "13:30", close: "16:00" })),
+        { day: "fri", open: "09:00", close: "12:00" }
+      ], status: "researched", basis: "TEST" },
+      basis: "TEST"
+    },
     { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true, basis: "TEST" },
     { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
     { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" }
@@ -10866,8 +10991,30 @@ var test_port_ellery_default = {
       label: "request under the records act",
       tier: 2,
       laws: ["Freedom of Records Act (test)", "Port Ellery Open Government Bylaw"],
-      venue: { name: "the Town Clerk's office", how: "email", basis: "TEST" },
-      template: "To the Town Clerk: under {{law}}, please provide {{records}}.",
+      venue: {
+        name: "the Town Clerk's office",
+        how: "email",
+        basis: "TEST",
+        hours: {
+          weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:00", close: "18:00" })),
+          status: "ruled",
+          basis: "TEST"
+        }
+      },
+      template: attributed(
+        "TPL-test-records-request",
+        "file",
+        "To the {{counterparty_role}}: under {{law}}, {{group}} asks for the records described below.",
+        {
+          reviewer: "Dee Example",
+          kind: "professional",
+          organisation: "Marlow Commons Legal Society (test)",
+          credential: "solicitor (test)",
+          scope: "the whole text",
+          outcome: "no_concerns",
+          at: "2026-08-20"
+        }
+      ),
       advisory: "A test advisory: have a solicitor read the request before it is sent.",
       basis: "TEST"
     },
@@ -10877,7 +11024,12 @@ var test_port_ellery_default = {
       tier: 1,
       laws: ["Port Ellery Bylaws"],
       venue: { name: "the Selectboard", how: "in_person", basis: "TEST" },
-      template: "To the Selectboard: {{act}} does not conform to {{bylaw}}.",
+      template: attributed(
+        "TPL-test-bylaw-complaint",
+        "file",
+        "To the {{counterparty_role}}: {{act}} does not conform to {{standards}}.",
+        { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-21" }
+      ),
       basis: "TEST"
     },
     {
@@ -10891,6 +11043,21 @@ var test_port_ellery_default = {
         contestable: [{ grade: "C" }],
         basis: "TEST"
       },
+      /* A Tier 3 kind takes a briefing to counsel, never a `file` template (K921). */
+      template: attributed(
+        "TPL-test-commitment-brief",
+        "brief",
+        "For counsel: {{group}} asks whether {{act}} ({{act_date}}) breaches {{standards}}, on {{findings}}.",
+        {
+          reviewer: "Dee Example",
+          kind: "professional",
+          organisation: "Marlow Commons Legal Society (test)",
+          credential: "solicitor (test)",
+          scope: "the whole text",
+          outcome: "concerns",
+          at: "2026-08-22"
+        }
+      ),
       basis: "TEST"
     }
   ],
@@ -10923,7 +11090,25 @@ var test_port_ellery_default = {
       basis: "TEST"
     }
   ],
+  /* The entries for one office and one venue come first: each adds its days to the year every office keeps (R43). */
   holidays: [
+    {
+      year: 2026,
+      offices: ["Town Clerk"],
+      days: [{ date: "2026-08-14", name: "Clerk's records day" }],
+      status: "ruled",
+      basis: "TEST"
+    },
+    {
+      year: 2026,
+      offices: [{ venue: "commitment_claim" }],
+      days: [
+        { date: "2026-08-31", name: "Court vacation day" },
+        { date: "2026-12-24", name: "Court closed" }
+      ],
+      status: "researched",
+      basis: "TEST"
+    },
     {
       year: 2026,
       days: [
@@ -10932,6 +11117,7 @@ var test_port_ellery_default = {
         { date: "2026-07-03", name: "Founders' Day (observed)" },
         { date: "2026-12-25", name: "Christmas Day" }
       ],
+      status: "researched",
       basis: "TEST"
     },
     {
@@ -10941,6 +11127,7 @@ var test_port_ellery_default = {
         { date: "2027-03-17", name: "Harbour Day" },
         { date: "2027-12-24", name: "Christmas Day (observed)" }
       ],
+      status: "researched",
       basis: "TEST"
     }
   ]
@@ -10966,7 +11153,8 @@ var SECTIONS = Object.freeze([
   "deadlines",
   "legal_organisations",
   "holidays",
-  "locale"
+  "locale",
+  "time_zone"
 ]);
 var SPACES = Object.freeze(["enactment", "project", "fund", "parcel"]);
 var VOCABULARY = Object.freeze([
@@ -10990,11 +11178,37 @@ var STARTS = Object.freeze(["received", "filed", "act", "known"]);
 var TIERS = Object.freeze([1, 2, 3]);
 var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 var EVIDENCE_STANDARD_MAX = 200;
+var TEMPLATE_FIELDS = Object.freeze([
+  "id",
+  "version",
+  "use",
+  "text",
+  "notes",
+  "authored_by",
+  "contributors",
+  "reviews",
+  "approved_by",
+  "approved_at",
+  "basis"
+]);
+var TEMPLATE_USES = Object.freeze(["file", "brief"]);
+var REVIEW_KINDS = Object.freeze(["member", "professional"]);
+var REVIEW_OUTCOMES = Object.freeze(["no_concerns", "concerns", "changes_requested"]);
+var REVIEW_REQUIRED = ["reviewer", "kind", "scope", "outcome", "at"];
+var WEEKDAYS = Object.freeze(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]);
+var FACT_STATUSES = Object.freeze(["researched", "ruled"]);
 var ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 var KIND_RE = /^[a-z][a-z0-9_]*$/;
 var HEX64 = /^[0-9a-f]{64}$/i;
 var DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+var TEMPLATE_ID_RE = /^TPL-[a-z0-9][a-z0-9-]*$/;
+var HHMM_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TZ_RE = /^(?:UTC|[A-Z][A-Za-z_-]*(?:\/[A-Za-z0-9_+-]+)+)$/;
 var BASIS_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/;
+var MEASUREMENT_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2})(?: [^\s,;]+)?$/;
+var RULING_REF = /^(?:D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/;
+var K_REF = /^K\d+(?: [^\s,;]+)?$/;
+var basisParts = (b) => b.split(/[,;]\s*/).map((x) => x.trim());
 var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var isStr = (v) => typeof v === "string" && v.trim().length > 0;
 var isPosInt = (v) => Number.isInteger(v) && v > 0;
@@ -11007,6 +11221,19 @@ function isDate(v) {
   const leap = y % 4 === 0 && y % 100 !== 0 || y % 400 === 0;
   const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
   return days !== void 0 && d >= 1 && d <= days;
+}
+function isTimeZone(v) {
+  if (typeof v !== "string" || !TZ_RE.test(v)) return false;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: v });
+    return true;
+  } catch {
+    return false;
+  }
+}
+function minutes(v) {
+  const m = typeof v === "string" && HHMM_RE.exec(v);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
 function isLocale(v) {
   if (!isStr(v) || /\s|,/.test(v)) return false;
@@ -11091,10 +11318,62 @@ function validateInto(p, errors) {
     err("covers", "COVERS_MISSING", "covers is a non-empty list of names");
   if (own2(p, "test") && typeof p.test !== "boolean") err("test", "VALUE_INVALID", "test is true or false");
   const basis = (path, o) => {
-    if (!own2(o, "basis") || o.basis === void 0 || o.basis === null || o.basis === "")
+    if (!own2(o, "basis") || o.basis === void 0 || o.basis === null || o.basis === "") {
       err(`${path}.basis`, "BASIS_MISSING", "every fact names its basis");
-    else if (!basisValid(o.basis, test))
+      return false;
+    }
+    if (!basisValid(o.basis, test)) {
       err(`${path}.basis`, "BASIS_INVALID", o.basis === "TEST" ? "TEST is a basis only in a test profile" : `'${String(o.basis)}' names no measurement or ruling`);
+      return false;
+    }
+    return true;
+  };
+  const statusBasis = (path, o) => {
+    const ok2 = basis(path, o);
+    if (!FACT_STATUSES.includes(o.status)) {
+      err(`${path}.status`, "BASIS_INVALID", `status is ${FACT_STATUSES.join(" or ")}, naming what the fact rests on`);
+      return;
+    }
+    if (!ok2 || test && o.basis === "TEST") return;
+    if (o.basis === "UNMEASURED")
+      err(`${path}.basis`, "BASIS_INVALID", "a calendar fact without a source is not written: UNMEASURED is no basis for it");
+    else if (!basisParts(o.basis).every((x) => (o.status === "researched" ? MEASUREMENT_REF : RULING_REF).test(x)))
+      err(`${path}.basis`, "BASIS_INVALID", o.status === "researched" ? "a researched fact rests on a measurement (M-<n> or a dated entry)" : "a ruled fact rests on a ruling (D-<n>, DEC-<n> or K<n>)");
+  };
+  const hours = (path, h) => {
+    if (!isObj(h)) {
+      err(path, "HOURS_INVALID", "hours is {weekly: [{day, open, close}], status, basis}");
+      return;
+    }
+    fields(path, h, ["weekly", "status", "basis"]);
+    if (!Array.isArray(h.weekly)) err(`${path}.weekly`, "HOURS_INVALID", "weekly is a list of {day, open, close}");
+    else {
+      const spans = /* @__PURE__ */ new Map();
+      h.weekly.forEach((s, i) => {
+        const at23 = `${path}.weekly[${i}]`;
+        if (!isObj(s)) {
+          err(at23, "HOURS_INVALID", "a span is {day, open, close}");
+          return;
+        }
+        fields(at23, s, ["day", "open", "close"]);
+        const day = WEEKDAYS.includes(s.day) ? s.day : null;
+        if (!day) err(`${at23}.day`, "HOURS_INVALID", `day is one of ${WEEKDAYS.join(", ")}`);
+        const [o, c] = [minutes(s.open), minutes(s.close)];
+        if (o === null) err(`${at23}.open`, "HOURS_INVALID", "open is HH:MM, 24-hour");
+        if (c === null) err(`${at23}.close`, "HOURS_INVALID", "close is HH:MM, 24-hour");
+        if (o === null || c === null) return;
+        if (o >= c) {
+          err(at23, "HOURS_INVALID", "open is before close");
+          return;
+        }
+        if (!day) return;
+        const prior = spans.get(day) || [];
+        const clash = prior.find((p2) => o < p2.c && p2.o < c);
+        if (clash) err(at23, "HOURS_INVALID", `${day} ${s.open}\u2013${s.close} overlaps ${clash.at}`);
+        spans.set(day, [...prior, { o, c, at: at23 }]);
+      });
+    }
+    statusBasis(path, h);
   };
   const pattern = (path, v) => {
     if (!compile(v)) err(path, "PATTERN_INVALID", "a pattern is {re, flags?}: a regular expression that compiles, flags from i and u");
@@ -11316,6 +11595,15 @@ function validateInto(p, errors) {
       basis("locale", l);
     }
   }
+  if (own2(p, "time_zone")) {
+    const z = p.time_zone;
+    if (!isObj(z)) err("time_zone", "VALUE_INVALID", "time_zone is {value, status, basis}");
+    else {
+      fields("time_zone", z, ["value", "status", "basis"]);
+      if (!isTimeZone(z.value)) err("time_zone.value", "VALUE_INVALID", "the value is an IANA time-zone name (Area/Location, or UTC)");
+      statusBasis("time_zone", z);
+    }
+  }
   const codeKeys = new Set(own2(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj).map((c) => c.key) : []);
   if (own2(p, "standard_sources")) list2("standard_sources", p.standard_sources).forEach((s, i) => {
     const at23 = `standard_sources[${i}]`;
@@ -11330,12 +11618,15 @@ function validateInto(p, errors) {
     if (own2(s, "code") && !codeKeys.has(s.code)) err(`${at23}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
     basis(at23, s);
   });
+  const roles = /* @__PURE__ */ new Set();
   if (own2(p, "counterparties")) list2("counterparties", p.counterparties).forEach((c, i) => {
     const at23 = `counterparties[${i}]`;
     if (!entry(at23, c)) return;
-    fields(at23, c, ["role", "body", "level", "elected", "oversight", "basis"]);
+    fields(at23, c, ["role", "body", "level", "elected", "oversight", "hours", "basis"]);
     str18(`${at23}.role`, c.role, "role");
     str18(`${at23}.body`, c.body, "body");
+    if (isStr(c.role)) roles.add(c.role);
+    if (own2(c, "hours")) hours(`${at23}.hours`, c.hours);
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at23}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
     if (typeof c.elected !== "boolean") err(`${at23}.elected`, "VALUE_INVALID", "elected is true or false");
     if (own2(c, "oversight") && typeof c.oversight !== "boolean") err(`${at23}.oversight`, "VALUE_INVALID", "oversight is true or false");
@@ -11343,6 +11634,8 @@ function validateInto(p, errors) {
   });
   const kinds = /* @__PURE__ */ new Set();
   const tier3 = /* @__PURE__ */ new Set();
+  const venueKinds = /* @__PURE__ */ new Set();
+  const templateIds = /* @__PURE__ */ new Set();
   if (own2(p, "action_kinds")) list2("action_kinds", p.action_kinds).forEach((k, i) => {
     const at23 = `action_kinds[${i}]`;
     if (!entry(at23, k)) return;
@@ -11362,15 +11655,65 @@ function validateInto(p, errors) {
       const v = k.venue;
       if (!isObj(v)) err(`${at23}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at23}.venue`, v, ["name", "how", "basis"]);
+        fields(`${at23}.venue`, v, ["name", "how", "hours", "basis"]);
         str18(`${at23}.venue.name`, v.name, "name");
         if (!VENUE_HOW.includes(v.how)) err(`${at23}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
+        if (own2(v, "hours")) hours(`${at23}.venue.hours`, v.hours);
         basis(`${at23}.venue`, v);
+        if (typeof k.kind === "string") venueKinds.add(k.kind);
       }
     }
     if (own2(k, "template")) {
-      if (!isStr(k.template)) err(`${at23}.template`, "VALUE_INVALID", "a template is text");
-      if (k.tier === 3) err(`${at23}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
+      const t = k.template;
+      const ta = `${at23}.template`;
+      if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", `a template is {${TEMPLATE_FIELDS.join(", ")}}, never bare text`);
+      else {
+        fields(ta, t, TEMPLATE_FIELDS);
+        for (const f17 of TEMPLATE_FIELDS)
+          if (!own2(t, f17) || t[f17] === void 0 || t[f17] === null) err(`${ta}.${f17}`, "TEMPLATE_UNATTRIBUTED", `the template's ${f17} is missing`);
+        const bad = (f17, why) => {
+          if (own2(t, f17) && t[f17] !== void 0 && t[f17] !== null) err(`${ta}.${f17}`, "VALUE_INVALID", why);
+        };
+        if (!(typeof t.id === "string" && TEMPLATE_ID_RE.test(t.id))) bad("id", "id matches ^TPL-[a-z0-9][a-z0-9-]*$");
+        else if (templateIds.has(t.id)) err(`${ta}.id`, "VALUE_INVALID", `'${t.id}' is given twice in the profile`);
+        else templateIds.add(t.id);
+        if (!isPosInt(t.version)) bad("version", "version is a positive integer");
+        if (!TEMPLATE_USES.includes(t.use)) bad("use", `use is ${TEMPLATE_USES.join(" or ")}`);
+        if (!isStr(t.text)) bad("text", "the text is non-empty");
+        if (typeof t.notes !== "string") bad("notes", "notes are text, possibly empty");
+        if (!isStr(t.authored_by)) bad("authored_by", "authored_by is a non-empty name");
+        if (!isStr(t.approved_by)) bad("approved_by", "approved_by is a non-empty name");
+        else if (isStr(t.authored_by) && t.approved_by.trim() === t.authored_by.trim())
+          err(`${ta}.approved_by`, "VALUE_INVALID", "the approver is not the template's author");
+        if (!Array.isArray(t.contributors) || !t.contributors.every(isStr)) bad("contributors", "contributors is a list of names");
+        if (!isDate(t.approved_at)) bad("approved_at", "approved_at is a real YYYY-MM-DD");
+        if (!Array.isArray(t.reviews)) bad("reviews", "reviews is a list of {reviewer, kind, organisation?, credential?, scope, outcome, at}");
+        else t.reviews.forEach((r, j) => {
+          const ra = `${ta}.reviews[${j}]`;
+          if (!isObj(r)) {
+            err(ra, "VALUE_INVALID", "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}");
+            return;
+          }
+          fields(ra, r, [...REVIEW_REQUIRED, "organisation", "credential"]);
+          for (const f17 of REVIEW_REQUIRED)
+            if (!own2(r, f17) || r[f17] === void 0 || r[f17] === null) err(`${ra}.${f17}`, "TEMPLATE_UNATTRIBUTED", `the review's ${f17} is missing`);
+          const rbad = (f17, ok2, why) => {
+            if (own2(r, f17) && r[f17] !== void 0 && r[f17] !== null && !ok2) err(`${ra}.${f17}`, "VALUE_INVALID", why);
+          };
+          rbad("reviewer", isStr(r.reviewer), "the reviewer is a non-empty name");
+          rbad("kind", REVIEW_KINDS.includes(r.kind), `kind is ${REVIEW_KINDS.join(" or ")}`);
+          rbad("scope", isStr(r.scope), "the scope is non-empty text");
+          rbad("outcome", REVIEW_OUTCOMES.includes(r.outcome), `outcome is one of ${REVIEW_OUTCOMES.join(", ")}`);
+          rbad("at", isDate(r.at), "at is a real YYYY-MM-DD");
+          rbad("organisation", isStr(r.organisation), "the organisation is a non-empty name");
+          rbad("credential", isStr(r.credential), "the credential is non-empty text");
+        });
+        if (own2(t, "basis") && t.basis !== void 0 && t.basis !== null) {
+          if (!(test && t.basis === "TEST") && !(typeof t.basis === "string" && t.basis !== "" && basisParts(t.basis).every((x) => K_REF.test(x))))
+            err(`${ta}.basis`, "BASIS_INVALID", t.basis === "TEST" ? "TEST is a basis only in a test profile" : "a template rests on the ruling that approved it (K<n>)");
+        }
+        if (t.use === "file" && k.tier === 3) err(ta, "TEMPLATE_TIER3", "a Tier 3 kind has no use: file template; a brief may serve it");
+      }
     }
     if (own2(k, "advisory")) {
       if (!isStr(k.advisory)) err(`${at23}.advisory`, "VALUE_INVALID", "an advisory note is text");
@@ -11456,10 +11799,38 @@ function validateInto(p, errors) {
     list2("holidays", p.holidays).forEach((h, i) => {
       const at23 = `holidays[${i}]`;
       if (!entry(at23, h)) return;
-      fields(at23, h, ["year", "days", "basis"]);
+      fields(at23, h, ["year", "offices", "days", "status", "basis"]);
+      let key = "";
+      if (own2(h, "offices")) {
+        if (!Array.isArray(h.offices) || !h.offices.length) {
+          err(`${at23}.offices`, "HOLIDAY_INVALID", "offices is a non-empty list of roles or {venue: <kind>}");
+          key = `${i}`;
+        } else {
+          const seenOffices = /* @__PURE__ */ new Set();
+          h.offices.forEach((o, j) => {
+            const oa = `${at23}.offices[${j}]`;
+            const k = officeKey(o);
+            if (typeof o === "string") {
+              if (!roles.has(o)) err(oa, "HOLIDAY_INVALID", `no counterparty of this profile has role '${o}'`);
+            } else if (isObj(o) && Object.keys(o).length === 1 && typeof o.venue === "string") {
+              if (!venueKinds.has(o.venue)) err(oa, "HOLIDAY_INVALID", `no kind of this profile with a venue is '${o.venue}'`);
+            } else {
+              err(oa, "HOLIDAY_INVALID", "an office is a counterparty role or {venue: <kind>}");
+              return;
+            }
+            if (seenOffices.has(k)) err(oa, "HOLIDAY_INVALID", "an office is named twice in one entry");
+            seenOffices.add(k);
+          });
+          key = officesKey(h.offices);
+        }
+      }
       if (!isYear(h.year)) err(`${at23}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
-      else if (years.has(h.year)) err(`${at23}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
-      else years.add(h.year);
+      else if (years.has(`${h.year}\0${key}`)) err(
+        `${at23}.year`,
+        "HOLIDAY_INVALID",
+        `${h.year} is listed twice for ${key ? "the same offices" : "all offices"}`
+      );
+      else years.add(`${h.year}\0${key}`);
       const dates = /* @__PURE__ */ new Set();
       list2(`${at23}.days`, h.days).forEach((d, j) => {
         const da = `${at23}.days[${j}]`;
@@ -11471,10 +11842,16 @@ function validateInto(p, errors) {
         else dates.add(d.date);
         str18(`${da}.name`, d.name, "name");
       });
-      basis(at23, h);
+      statusBasis(at23, h);
     });
   }
 }
+function officeKey(o) {
+  if (typeof o === "string") return `role:${o}`;
+  if (isObj(o) && typeof o.venue === "string") return `venue:${o.venue}`;
+  return `?:${JSON.stringify(o)}`;
+}
+var officesKey = (offices) => Array.isArray(offices) ? [...new Set(offices.map(officeKey))].sort().join("") : "";
 var deepFreeze = (o) => {
   if (o && typeof o === "object") {
     Object.values(o).forEach(deepFreeze);
@@ -11514,6 +11891,11 @@ function union(into, entries, profile) {
 var strip = (arr2) => arr2.map((e) => {
   const { __k, ...rest } = e;
   return rest;
+});
+var keep = (given) => ({
+  ...clone(given[0].value),
+  profile: given[0].profile,
+  bases: given.map((g) => ({ profile: g.profile, basis: g.basis }))
 });
 function agree(given) {
   const ks = [...new Set(given.map((g) => canon(g.value)))];
@@ -11705,6 +12087,11 @@ function merge(profiles) {
       };
     else conflict("locale", given, "the active profiles name different locales, so none is given: a render asks for its fallback");
   }
+  if (has3("time_zone")) {
+    const given = profiles.filter((p) => p.time_zone).map((p) => ({ profile: p.id, value: p.time_zone, basis: p.time_zone.basis }));
+    if (agree(given)) view.time_zone = keep(given);
+    else conflict("time_zone", given, "the active profiles name different time zones, so none is given: a time of day there is undetermined");
+  }
   for (const sec of ["search_terms", "records_laws", "standard_sources", "legal_organisations"])
     if (has3(sec)) {
       const v = [];
@@ -11714,23 +12101,48 @@ function merge(profiles) {
   if (has3("counterparties")) {
     const v = [];
     const marks = /* @__PURE__ */ new Map();
+    const hoursOf = /* @__PURE__ */ new Map();
+    const push = (m, k, g) => {
+      if (!m.has(k)) m.set(k, []);
+      m.get(k).push(g);
+    };
     for (const p of profiles) for (const c of p.counterparties || []) {
-      const { oversight, ...rest } = c;
+      const { oversight, hours, ...rest } = c;
       union(v, [rest], p.id);
-      if (own2(c, "oversight")) {
-        const k = `${c.role}\0${c.body}`;
-        if (!marks.has(k)) marks.set(k, []);
-        marks.get(k).push({ profile: p.id, value: oversight, basis: c.basis });
-      }
+      const k = `${c.role}\0${c.body}`;
+      if (own2(c, "oversight")) push(marks, k, { profile: p.id, value: oversight, basis: c.basis });
+      if (own2(c, "hours")) push(hoursOf, k, { profile: p.id, value: hours, basis: hours.basis });
     }
-    for (const [k, given] of marks) {
+    const each = (k, fn) => {
       const [role, body] = k.split("\0");
+      for (const c of v) if (c.role === role && c.body === body) fn(c);
+    };
+    for (const [k, given] of marks) {
       if (agree(given)) {
-        for (const c of v) if (c.role === role && c.body === body) c.oversight = given[0].value;
-      } else conflict(
+        each(k, (c) => {
+          c.oversight = given[0].value;
+        });
+        continue;
+      }
+      const [role, body] = k.split("\0");
+      conflict(
         `counterparties[${role}/${body}].oversight`,
         given,
         `the active profiles disagree on whether ${role} (${body}) is an oversight or audit body, so it is undetermined`
+      );
+    }
+    for (const [k, given] of hoursOf) {
+      if (agree(given)) {
+        each(k, (c) => {
+          c.hours = keep(given);
+        });
+        continue;
+      }
+      const [role, body] = k.split("\0");
+      conflict(
+        `counterparties[${role}/${body}].hours`,
+        given,
+        `the active profiles give different hours for ${role} (${body}), so its hours are undetermined`
       );
     }
     view.counterparties = strip(v);
@@ -11748,11 +12160,27 @@ function merge(profiles) {
       if (given.some((g) => own2(g.k, "laws"))) e.laws = laws;
       const WHAT = { tier: "risk tiers", venue: "venues", template: "templates", advisory: "advisory notes", evidence: "evidence standards" };
       for (const f17 of ["tier", "venue", "template", "advisory", "evidence"]) {
-        const carriesBasis = f17 === "venue" || f17 === "evidence";
-        const vals = given.filter((g) => own2(g.k, f17)).map((g) => ({ profile: g.profile, value: clone(g.k[f17]), basis: carriesBasis ? g.k[f17].basis : g.k.basis }));
+        const carriesBasis = f17 === "venue" || f17 === "evidence" || f17 === "template";
+        const vals = given.filter((g) => own2(g.k, f17)).map((g) => {
+          let value = clone(g.k[f17]);
+          if (f17 === "venue" && isObj(value)) {
+            const { hours, ...rest } = value;
+            value = rest;
+          }
+          return { profile: g.profile, value, basis: carriesBasis ? g.k[f17].basis : g.k.basis };
+        });
         if (!vals.length) continue;
-        if (agree(vals)) e[f17] = !carriesBasis ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.basis })) };
+        if (agree(vals)) e[f17] = !carriesBasis ? vals[0].value : keep(vals);
         else conflict(`action_kinds[${kind}].${f17}`, vals, `the active profiles give different ${WHAT[f17]} for ${kind}, so none is given` + (f17 === "evidence" ? ": the venue's standard is undetermined" : ""));
+      }
+      if (e.venue) {
+        const hrs = given.filter((g) => isObj(g.k.venue) && own2(g.k.venue, "hours")).map((g) => ({ profile: g.profile, value: g.k.venue.hours, basis: g.k.venue.hours.basis }));
+        if (hrs.length && agree(hrs)) e.venue.hours = keep(hrs);
+        else if (hrs.length) conflict(
+          `action_kinds[${kind}].venue.hours`,
+          hrs,
+          `the active profiles give different hours for ${kind}'s venue, so its hours are undetermined`
+        );
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -11785,24 +12213,30 @@ function merge(profiles) {
     }
   }
   if (has3("holidays")) {
-    const byYear = /* @__PURE__ */ new Map();
+    const byKey = /* @__PURE__ */ new Map();
+    const byDate = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
     for (const p of profiles) for (const h of p.holidays || []) {
-      if (!byYear.has(h.year)) byYear.set(h.year, []);
-      byYear.get(h.year).push({ profile: p.id, value: h.days.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0), basis: h.basis });
+      const k = `${h.year}\0${officesKey(h.offices)}`;
+      if (!byKey.has(k)) byKey.set(k, []);
+      byKey.get(k).push({ profile: p.id, h, value: h.days.slice().sort(byDate), status: h.status, basis: h.basis });
     }
     view.holidays = [];
-    for (const [year, given] of byYear) {
-      if (!agree(given)) {
+    for (const given of byKey.values()) {
+      const { year, offices } = given[0].h;
+      if (!agree(given.map((g) => ({ value: { days: g.value, status: g.status } })))) {
+        const whose = offices ? ` for ${offices.map((o) => typeof o === "string" ? o : `${o.venue}'s venue`).join(", ")}` : "";
         conflict(
-          `holidays[${year}]`,
-          given,
-          `the active profiles list different closure days for ${year}, so the year is withheld: a business-day count reaching into it is undetermined`
+          `holidays[${year}${offices ? ` offices=${officesKey(offices).replace(/\u0001/g, ",")}` : ""}]`,
+          given.map((g) => ({ profile: g.profile, value: g.value, status: g.status, basis: g.basis })),
+          `the active profiles list different closure days for ${year}${whose}, so the year is withheld there: a business-day count reaching into it is undetermined`
         );
         continue;
       }
       view.holidays.push({
         year,
+        ...offices ? { offices: clone(offices) } : {},
         days: clone(given[0].value),
+        status: given[0].status,
         basis: given[0].basis,
         profile: given[0].profile,
         bases: given.map((g) => ({ profile: g.profile, basis: g.basis }))
@@ -37010,13 +37444,13 @@ var MULTIPART_READ_MAX = 20 * 1024 * 1024;
 function decodeView(text5) {
   const marks = text5 && Array.isArray(text5.undetermined) ? text5.undetermined : null;
   if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text5;
-  const keep = (a) => Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a;
-  const undetermined = keep(marks);
+  const keep2 = (a) => Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a;
+  const undetermined = keep2(marks);
   const c = text5.counts;
   return {
     ...text5,
     undetermined,
-    ...Array.isArray(text5.pages) ? { pages: text5.pages.map((p) => p ? { ...p, undetermined: keep(p.undetermined) } : p) } : {},
+    ...Array.isArray(text5.pages) ? { pages: text5.pages.map((p) => p ? { ...p, undetermined: keep2(p.undetermined) } : p) } : {},
     ...c && typeof c.undetermined === "number" ? { counts: { ...c, undetermined: c.undetermined - (marks.length - undetermined.length) } } : {}
   };
 }
@@ -39025,7 +39459,7 @@ var Extraction = class _Extraction {
       cap + 1
     );
     const truncated3 = docs.length > cap;
-    const keep = this.#redactor(viewer);
+    const keep2 = this.#redactor(viewer);
     const documents = [];
     for (const d of docs.slice(0, cap)) {
       const rows2 = this.#rows(
@@ -39041,7 +39475,7 @@ var Extraction = class _Extraction {
       const position = readingSourceFromColumns(r0.pos_kind, r0.pos, r0.pos_ref);
       documents.push({
         capture_sha: r0.capture_sha,
-        bundle_id: keep(r0.bundle_id),
+        bundle_id: keep2(r0.bundle_id),
         ref: r0.ref,
         kind: r0.ref_kind,
         key: r0.ref_key,
@@ -39072,7 +39506,7 @@ var Extraction = class _Extraction {
       ...args,
       cap + 1
     );
-    const keep = this.#redactor(viewer);
+    const keep2 = this.#redactor(viewer);
     return {
       ok: true,
       count: Math.min(page.length, cap),
@@ -39081,7 +39515,7 @@ var Extraction = class _Extraction {
       kinds: Object.keys(STEP_KINDS),
       documents: page.slice(0, cap).map((r) => ({
         capture_sha: r.capture_sha,
-        bundle_id: keep(r.bundle_id),
+        bundle_id: keep2(r.bundle_id),
         transcribed: !!r.transcribed,
         terminal_step: r.terminal_step,
         engines: safeJson3(r.engines) || [],
@@ -40897,7 +41331,7 @@ var Content = class {
     const r = this.extraction.readingOf(captureSha);
     const chain2 = r ? r.chain ?? null : null;
     const live = chain2 == null ? null : JSON.stringify(chain2);
-    const keep = this.#redactor(viewer);
+    const keep2 = this.#redactor(viewer);
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || TEXT_SOURCE_LIMIT_DEFAULT2), TEXT_SOURCE_LIMIT_MAX2));
     const page = this.#rows(
       `SELECT capture_sha, bundle_id, attestor, at, extent_kind, extent_page, extent_rect, note, chain
@@ -40906,7 +41340,7 @@ var Content = class {
       cap + 1
     );
     const attestations = page.slice(0, cap).map((a) => ({
-      bundle_id: keep(a.bundle_id),
+      bundle_id: keep2(a.bundle_id),
       attestor: a.attestor,
       at: a.at,
       extent: attestationShape(a),
@@ -47083,8 +47517,8 @@ var Entities = class _Entities {
         WHERE a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`,
       norm
     );
-    const keep = this.#redactor(viewer);
-    return { ok: true, alias, alias_norm: norm, count: hits.length, entities: hits.map((e) => this.#entityView(e, keep)) };
+    const keep2 = this.#redactor(viewer);
+    return { ok: true, alias, alias_norm: norm, count: hits.length, entities: hits.map((e) => this.#entityView(e, keep2)) };
   }
   /** R6: one declared relation by its id; it has a justification and a citation and no grade key (D-83). */
   readRelation({ relationId } = {}) {
@@ -47209,7 +47643,7 @@ var Entities = class _Entities {
   }
   /* R5, R39, R38: the entity with its aliases (canonical first), the relations it is an end of (oldest first, at most
      1,000) and the defect reports on its resolutions (oldest first), the others at most 500; `keep` is the viewer's redactor (R32). */
-  #entityView(e, keep) {
+  #entityView(e, keep2) {
     const al = this.#bounded(
       ENTITY_COLLECTION_LIMIT,
       `SELECT alias, canonical, declared_by, at, withdrawn_by, withdrawn_at, withdrawn_reason FROM entity_aliases
@@ -47236,7 +47670,7 @@ var Entities = class _Entities {
         WHERE entity_id=? ORDER BY at, defect_id`,
       e.entity_id
     );
-    const defects = def.rows.map((d) => ({ capture_sha: d.capture_sha, ref: d.ref, ..._Entities.#defectView(d, keep) }));
+    const defects = def.rows.map((d) => ({ capture_sha: d.capture_sha, ref: d.ref, ..._Entities.#defectView(d, keep2) }));
     return {
       entity_id: e.entity_id,
       kind: e.kind,
@@ -47256,8 +47690,8 @@ var Entities = class _Entities {
     };
   }
   /* R38, R32: one report as it is read, `by` withheld where its document sits out of the viewer's sight. */
-  static #defectView(d, keep) {
-    const hidden = !!d.bundle_id && keep(d.bundle_id) == null;
+  static #defectView(d, keep2) {
+    const hidden = !!d.bundle_id && keep2(d.bundle_id) == null;
     return {
       reason: d.reason,
       source: d.source_module == null ? null : { module: d.source_module, id: d.source_id },
@@ -47568,7 +48002,7 @@ var Entities = class _Entities {
   }
   /* R38, R14, R15: the reports on the resolutions `scanSql` names (a statement answering capture_sha, ref, entity_id),
      keyed `capture\0ref\0entity`: each resolution's reports oldest first, at most the bound, and its whole count. */
-  #defectsOf(scanSql, args, keep) {
+  #defectsOf(scanSql, args, keep2) {
     const out = /* @__PURE__ */ new Map();
     const rows2 = this.#rows(
       `SELECT * FROM (SELECT d.capture_sha, d.bundle_id, d.ref, d.entity_id, d.reason, d.source_module, d.source_id,
@@ -47584,7 +48018,7 @@ var Entities = class _Entities {
     for (const d of rows2) {
       const k = `${d.capture_sha}\0${d.ref}\0${d.entity_id}`;
       if (!out.has(k)) out.set(k, { defects: [], defect_count: Number(d.n) });
-      out.get(k).defects.push(_Entities.#defectView(d, keep));
+      out.get(k).defects.push(_Entities.#defectView(d, keep2));
     }
     return out;
   }
@@ -47628,9 +48062,9 @@ var Entities = class _Entities {
     const rows2 = this.#rows(scan, captureSha, cap + 1);
     const truncated3 = rows2.length > cap;
     const page = truncated3 ? rows2.slice(0, cap) : rows2;
-    const keep = this.#redactor(viewer);
+    const keep2 = this.#redactor(viewer);
     const withdrawn = this.#withdrawnNames(page.map((r) => r.entity_id));
-    const defects = this.#defectsOf(scan, [captureSha, cap], keep);
+    const defects = this.#defectsOf(scan, [captureSha, cap], keep2);
     return {
       ok: true,
       capture_sha: captureSha,
@@ -47638,7 +48072,7 @@ var Entities = class _Entities {
       limit: cap,
       truncated: truncated3,
       resolutions: page.map((r) => {
-        const bundle = keep(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
+        const bundle = keep2(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
         return {
           capture_sha: r.capture_sha,
           bundle_id: bundle,
@@ -47673,7 +48107,7 @@ var Entities = class _Entities {
   concerns({ entityId, limit = null, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("the reverse index answers by entity id (op=concerns&id=ENT-...)");
-    const keep = this.#redactor(viewer);
+    const keep2 = this.#redactor(viewer);
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const cap = this.#clamp(limit);
     const scanSql = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, at
@@ -47682,9 +48116,9 @@ var Entities = class _Entities {
     const truncated3 = scan.length > cap;
     const rows2 = truncated3 ? scan.slice(0, cap) : scan;
     const withdrawn = this.#withdrawnNames([entityId]);
-    const defects = this.#defectsOf(scanSql, [entityId, cap], keep);
+    const defects = this.#defectsOf(scanSql, [entityId, cap], keep2);
     const documents = [..._Entities.#collapse(rows2).values()].map((r) => {
-      const bundle = keep(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
+      const bundle = keep2(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
       return {
         capture_sha: r.capture_sha,
         bundle_id: bundle,
@@ -49339,7 +49773,7 @@ var Connections = class _Connections {
     }
     const truncated3 = scan.length > cap;
     const rows2 = truncated3 ? scan.slice(0, cap) : scan;
-    const keep = this.redactor(viewer);
+    const keep2 = this.redactor(viewer);
     const derivation = entityId ? this.derivationStatement(entityId) : void 0;
     return {
       ok: true,
@@ -49348,7 +49782,7 @@ var Connections = class _Connections {
       count: rows2.length,
       connections: rows2.map((r) => {
         const st = this.#pairChoiceStates(r);
-        const a = keep(r.a_bundle_id), b = keep(r.b_bundle_id);
+        const a = keep2(r.a_bundle_id), b = keep2(r.b_bundle_id);
         const seen = { a: a ? st.a : null, b: b ? st.b : null };
         const view = this.#view(r, seen);
         return {
@@ -49466,10 +49900,10 @@ var Connections = class _Connections {
       JSON.stringify(shas),
       ...entityId ? [entityId] : []
     );
-    const keep = this.redactor(viewer);
+    const keep2 = this.redactor(viewer);
     for (const r of rows2) {
       const conns = all.filter((c) => c.a_capture_sha === r.capture_sha || c.b_capture_sha === r.capture_sha);
-      const g = this.#grade(r, conns, keep);
+      const g = this.#grade(r, conns, keep2);
       out[r.content_id] = {
         grade: g.grade,
         established: g.grade == null ? false : isEstablished(g.grade),
@@ -49504,7 +49938,7 @@ var Connections = class _Connections {
   /* R8–R11: sort one row's connections into reaching, undetermined and outside, and take the strongest reaching grade.
      A `document` extent is reached by every connection (5.3). A member's standing choice on the cited end answers
      instead of the machine's pair (R9); a lapsed one is stated and the pair read as unchosen. */
-  #grade(row2, conns, keep) {
+  #grade(row2, conns, keep2) {
     const extent = safeJson7(row2.extent);
     const whole = row2.extent_kind === "document";
     const reaching = [], undetermined = [], outside = [];
@@ -49534,14 +49968,14 @@ var Connections = class _Connections {
       const side = c.a_capture_sha === row2.capture_sha ? "a" : "b";
       const other = side === "a" ? "b" : "a";
       const states = this.#pairChoiceStates(c);
-      if (!keep(c[`${other}_bundle_id`])) states[other] = null;
+      if (!keep2(c[`${other}_bundle_id`])) states[other] = null;
       const view = this.#view(c, states);
       const entry = {
         entity_id: c.entity_id,
         grade: c.grade,
         side,
         other_capture_sha: side === "a" ? c.b_capture_sha : c.a_capture_sha,
-        other_bundle_id: keep(side === "a" ? c.b_bundle_id : c.a_bundle_id),
+        other_bundle_id: keep2(side === "a" ? c.b_bundle_id : c.a_bundle_id),
         determining_pair: view.determining_pair
       };
       if (whole) {
@@ -49645,7 +50079,7 @@ var Connections = class _Connections {
     const conn = capture && other && entityId && capture !== other ? this.#one(`SELECT a_capture_sha, b_capture_sha, entity_id, a_bundle_id, b_bundle_id, a_ref, b_ref
                      FROM connections WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=?`, aSha, bSha, entityId) : null;
     const side = capture === aSha ? "a" : "b";
-    const keep = this.redactor(args.viewer ?? null);
+    const keep2 = this.redactor(args.viewer ?? null);
     const mention = conn && ref ? this.#one(`SELECT ref, grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`, capture, entityId, ref) : null;
     const reads = mention ? this.#rows(`SELECT occurrence, seq, pos_kind, pos, pos_ref FROM reading_refs
                      WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT ?`, capture, mention.ref, OCCURRENCES_PER_REF + 1) : [];
@@ -49662,7 +50096,7 @@ var Connections = class _Connections {
         "CONNECTION_CHOICE_NOT_A_MEMBER",
         who2 ? `'${who2.slice(0, 60)}' is a machine credential. It may list a document's mentions (op=connections&content= names them where they bear on a citation); choosing which one a connection rests on is a member's act.` : `this act names no member, and a choice nobody made is not a choice.`
       );
-    if (!conn || !keep(side === "a" ? conn.a_bundle_id : conn.b_bundle_id))
+    if (!conn || !keep2(side === "a" ? conn.a_bundle_id : conn.b_bundle_id))
       return refusal20(
         "CONNECTION_CHOICE_NO_CONNECTION",
         `this record holds no connection between capture=${capture.slice(0, 12) || "(none)"}\u2026 and other=${other.slice(0, 12) || "(none)"}\u2026 through entity=${entityId || "(none)"} that you can see. Name the end the choice is about (capture), the other end (other) and the subject (entity).`,
@@ -50155,15 +50589,15 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       says: `recorded: ${who2} asserts that ${lo} and ${hi} are connected, on their stated basis. It is a member's assertion, grade D, kept apart from the connections the record derives`
     };
   }
-  #assertedView(r, keep) {
+  #assertedView(r, keep2) {
     const judged = r.kind === "containment" ? this.#rows(`SELECT verdict, judged_by, at, reason FROM asserted_connection_judgements
                      WHERE connection_id=? ORDER BY judgement_id`, r.connection_id) : [];
     const standing = judged.length ? judged[judged.length - 1] : null;
     return {
       connection_id: r.connection_id,
       kind: r.kind,
-      a_bundle_id: keep(r.a_bundle_id),
-      b_bundle_id: keep(r.b_bundle_id),
+      a_bundle_id: keep2(r.a_bundle_id),
+      b_bundle_id: keep2(r.b_bundle_id),
       grade: r.grade,
       established: !!r.established,
       needs_confirmation: !r.established,
@@ -50195,7 +50629,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
     if (!id || !this.record.bundleInfo(id) || !this.sees(id, viewer))
       return { ok: false, reason: "NO_SUCH_BUNDLE", target: id || null };
     const cap = clamp(limit, ASSERTED_LIMIT_DEFAULT, ASSERTED_LIMIT_MAX);
-    const keep = this.redactor(viewer);
+    const keep2 = this.redactor(viewer);
     const seen = this.#bundleGate("x.other_end", viewer);
     const rows2 = this.#rows(
       `SELECT x.* FROM (SELECT ac.*, CASE WHEN ac.a_bundle_id = ? THEN ac.b_bundle_id ELSE ac.a_bundle_id END AS other_end
@@ -50207,7 +50641,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       ...seen.args,
       cap + 1
     );
-    const shown2 = rows2.slice(0, cap).map((r) => this.#assertedView(r, keep));
+    const shown2 = rows2.slice(0, cap).map((r) => this.#assertedView(r, keep2));
     return {
       ok: true,
       bundle_id: id,
@@ -50360,7 +50794,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
     if (!home || !this.sees(home.bundle_id, viewer))
       return { ok: false, reason: "NO_SUCH_CAPTURE", capture_sha: sha || null };
     const cap = clamp(limit, ASSERTED_LIMIT_DEFAULT, ASSERTED_LIMIT_MAX);
-    const keep = this.redactor(viewer);
+    const keep2 = this.redactor(viewer);
     const ga = this.#bundleGate("ac.a_bundle_id", viewer), gb = this.#bundleGate("ac.b_bundle_id", viewer);
     const storedRows = this.#rows(
       `SELECT ac.* FROM asserted_connections ac WHERE ac.kind = 'containment' AND ac.origin = ?
@@ -50375,7 +50809,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       sha,
       cap + 1
     );
-    const stored = storedRows.slice(0, cap).map((r) => ({ ...this.#assertedView(r, keep), stored: true }));
+    const stored = storedRows.slice(0, cap).map((r) => ({ ...this.#assertedView(r, keep2), stored: true }));
     const pending = pendingRows.slice(0, cap).map((p) => ({
       ...MEMBERSHIP_LABEL,
       stored: false,
@@ -57807,8 +58241,8 @@ var Progressions = class _Progressions {
      withheld. Capture shas, grades, findings and counts are the same for everyone. */
   #redact(inst, viewer) {
     if (!inst || inst.ok !== true) return inst;
-    const keep = this.#redactor(viewer);
-    const doc = (d) => ({ ...d, bundle_id: keep(d.bundle_id) });
+    const keep2 = this.#redactor(viewer);
+    const doc = (d) => ({ ...d, bundle_id: keep2(d.bundle_id) });
     const list2 = (l) => Array.isArray(l) ? l.map(doc) : l;
     return {
       ...inst,
@@ -58072,7 +58506,7 @@ var Progressions = class _Progressions {
     const nameless = this.#entityNamed(entityId, how);
     if (nameless) return nameless;
     const key = str2(progressionKey), eid = str2(entityId);
-    const keep = this.#redactor(viewer);
+    const keep2 = this.#redactor(viewer);
     const versions = /* @__PURE__ */ new Map();
     for (const v of this.#rows(
       `SELECT stage_key, capture_sha, version, bundle_id, reason, citation, declared_by, at FROM progression_exception_versions
@@ -58084,7 +58518,7 @@ var Progressions = class _Progressions {
       if (!versions.has(k)) versions.set(k, []);
       versions.get(k).push({
         version: v.version,
-        bundle_id: keep(v.bundle_id),
+        bundle_id: keep2(v.bundle_id),
         reason: v.reason,
         citation: v.citation,
         declared_by: v.declared_by,
@@ -58100,11 +58534,11 @@ var Progressions = class _Progressions {
       const held = versions.get(r.stage_key + "\0" + r.capture_sha) || [];
       return {
         ...r,
-        bundle_id: keep(r.bundle_id),
+        bundle_id: keep2(r.bundle_id),
         version: held.length ? held[held.length - 1].version : 1,
         versions: held.length ? held : [{
           version: 1,
-          bundle_id: keep(r.bundle_id),
+          bundle_id: keep2(r.bundle_id),
           reason: r.reason,
           citation: r.citation,
           declared_by: r.declared_by,
@@ -67029,9 +67463,9 @@ var Strength = class _Strength {
       };
     const s = this.strengthOf(id);
     if (!s.ok) return s;
-    const keep = this.#redactor(viewer);
-    const hidden = this.#legsOf(id).some((l) => l.target_id && keep(l.target_id) === null);
-    const axes = Object.fromEntries(STRENGTH_AXES.map((a) => [a, redactAxis(s[a], keep, hidden)]));
+    const keep2 = this.#redactor(viewer);
+    const hidden = this.#legsOf(id).some((l) => l.target_id && keep2(l.target_id) === null);
+    const axes = Object.fromEntries(STRENGTH_AXES.map((a) => [a, redactAxis(s[a], keep2, hidden)]));
     const withheld = STRENGTH_AXES.some((a) => axes[a].out_of_view === true);
     return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ...withheld ? { out_of_view: true } : {} };
   }
@@ -67658,9 +68092,9 @@ var Strength = class _Strength {
 function distinctParts(legs) {
   return new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size;
 }
-function redactAxis(axis, keep, hidden) {
+function redactAxis(axis, keep2, hidden) {
   let touched = !!hidden;
-  const unseen = (id) => id != null && keep(id) === null;
+  const unseen = (id) => id != null && keep2(id) === null;
   const prose = (v) => {
     if (typeof v !== "string") return v;
     let hit = false;
@@ -119361,7 +119795,7 @@ function packVersion(pack) {
 }
 
 // src/signpage.mjs
-var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>CivicOS signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no CivicOS code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>CivicOS signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a CivicOS private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When CivicOS goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
+var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>CivicOS signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no CivicOS code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>CivicOS signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the record id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Record id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Record hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a CivicOS private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When CivicOS goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the record id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The record hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the record changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/control-plane/index.mjs
 var PUBLISHED_STORE = "bio";

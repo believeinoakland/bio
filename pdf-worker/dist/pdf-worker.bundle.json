@@ -23,18 +23,18 @@
     },
     {
       "path": "../bio-plane/src/pdfstructure.mjs",
-      "bytes": 137622,
-      "sha256": "21866d3e26e8c9f20544149a78aa7f491ffe49969d6abf2b1e922737733e1bee"
+      "bytes": 137669,
+      "sha256": "5dc4eae6f1157c73e7a915b84291754c69def7e615b28abc699d5ad933523478"
     },
     {
       "path": "../bio-plane/src/subresources.mjs",
-      "bytes": 77538,
-      "sha256": "038d34def7a6eb6550b031812907c4da6cdd084fd719614fd5780493b927adf0"
+      "bytes": 77539,
+      "sha256": "c82a0f292a37848930779f51003fe2a4d2bc40a077ffc687df93460207b60e5e"
     },
     {
       "path": "src/index.mjs",
-      "bytes": 13123,
-      "sha256": "dbac6da597c64d4b264866e472cbeb00a1a2f608db58a79cae9af82a7f30e539"
+      "bytes": 13179,
+      "sha256": "8e24e53af024e14e55eb6a8e16fdabf36403688c125f53f7c145825fcbcf7ab5"
     }
   ],
   "vendoredInputs": [

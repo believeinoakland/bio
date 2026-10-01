@@ -53,8 +53,8 @@
     },
     {
       "path": "../bio-plane/src/tokens.mjs",
-      "bytes": 9838,
-      "sha256": "53bd532b57511c0f79e80b9a253139ba984d5d5c09852b1a141a8fec84d09e49"
+      "bytes": 9772,
+      "sha256": "24bebd2e50489bd852f7749556c109af2d0735293cf987e03a61e9a8e325574c"
     },
     {
       "path": "src/cascade.mjs",
