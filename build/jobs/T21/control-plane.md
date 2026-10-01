@@ -56,3 +56,7 @@ R2, on B4. `tranche/T21` merged (c4bf2a3192, affordances in).
 - `format`: 86 modules, 84 requirements files; 0 failures. `architecture`: 32 product files, 187 relative imports (3 naming no tracked file, not judged); 0 failures. `coverage`: 28 of 28 live requirement ids named by a test; 0 failures. `ownership`: 15 files changed by control-plane between tranche/T21 and HEAD; 0 failures.
 
 Size (session_01Gmuq4U2PQihnDRrGeAzmtS): test runs 22, module lines 3445
+
+## J4 · COMPLETE
+
+Complete on job/T21/control-plane with tranche/T21 @ K1003 merged: test/m/control-plane 102/0; plane 28/0, op-declarations 21/0, affordances 138/0, filing-templates 46/0, local-facts 22/0, admission 19/0; format 0, architecture 0, coverage 28/28, ownership 0 (15 files). R44's 'not yet met: T21' mark is met. C-53.13 re-pinned (K952) with K992's filings rows (named in the snapshot). K982: R20 states only the in-band date; a test proves the hash anyway. Plane bundle (bio-plane/dist) staled, not regenerated. Details in my record's Completion section.
