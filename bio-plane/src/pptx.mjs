@@ -111,6 +111,7 @@ import {
   discriminate, walkRels, relsPartFor, sizeGuard,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
 } from "./ooxml.mjs";
+import { mceSkipper } from "./docx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
@@ -216,22 +217,36 @@ const showAttrOf = (rawAttrs) => {
  *  newline-joined. An `<a:fld>`'s cached literal is included — it IS in the
  *  bytes. Shape index: every SHAPE_TAGS open, 0-based, in document order
  *  (nested group members included) — one sequence per slide, so a shape
- *  index means the same thing to every reference into that slide. */
+ *  index means the same thing to every reference into that slide.
+ *
+ *  N439 (R11's pptx arm; K747, K863): in each `mc:AlternateContent` ONE
+ *  branch is read — the first `mc:Choice`, else the `mc:Fallback` — by the
+ *  same `mceSkipper` docx.mjs reads with (PowerPoint wraps p14/a14 graphic
+ *  frames, math and ink this way, the Fallback a picture of the Choice). A
+ *  branch not read adds no paragraph, text, shape index or hlink. Before
+ *  N439 both were walked: the text doubled and every later shape index on
+ *  the slide was off by the fallback's shapes (`pptxRenumbering` maps the
+ *  old numbers). A relationship used only inside a branch not read still
+ *  locates its part, at the shape that HOLDS the `mc:AlternateContent`
+ *  (null at the slide's top level) — where the branch sits, never a shape
+ *  the branch was not in. */
 export function walkSlide(xml) {
   const paragraphs = [];
   const hlinks = [];
   const ridUsage = new Map();
   let shape = -1;
+  const open = [];      // the shapes open here, innermost last
   let cur = null;       // current <a:p> text, when inside one
   let inText = false;   // inside an <a:t>
 
-  const noteRid = (attrs) => {
+  const noteRid = (attrs, at = shape >= 0 ? shape : null) => {
     for (const key of ["id", "embed", "link"]) {
       const v = attrs[key];
       if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, shape >= 0 ? shape : null);
+        ridUsage.set(v, at);
     }
   };
+  const skipped = mceSkipper();
 
   TOKEN_RE.lastIndex = 0;
   let m, prev = 0;
@@ -243,13 +258,19 @@ export function walkSlide(xml) {
     const selfClosed = m[3] === "/";
     const closing = m[0][1] === "/";
 
-    if (closing) {
-      if (name === "t") inText = false;
-      else if (name === "p") { if (cur != null) { paragraphs.push(cur); cur = null; } }
+    if (skipped(name, closing, selfClosed)) {
+      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf(m[2]), open.length ? open[open.length - 1] : null);
       continue;
     }
 
-    if (SHAPE_TAGS.has(name)) shape++;
+    if (closing) {
+      if (name === "t") inText = false;
+      else if (name === "p") { if (cur != null) { paragraphs.push(cur); cur = null; } }
+      else if (SHAPE_TAGS.has(name)) open.pop();
+      continue;
+    }
+
+    if (SHAPE_TAGS.has(name)) { shape++; if (!selfClosed) open.push(shape); }
     const attrs = m[2] && m[2].includes("=") ? attrsOf(m[2]) : {};
     switch (name) {
       case "p":
@@ -493,6 +514,46 @@ function deckOf(parts) {
   }
   for (const p of parts.slideParts) if (!seen.has(p)) seq.push({ part: p, slide: null });
   return seq;
+}
+
+/** N439's MIGRATION MAP (R29; K795 (6)) — how a stored pptx reading made
+ *  before N439 (every branch of `mc:AlternateContent` walked) is numbered
+ *  against one made now (one branch). For extraction's migration of stored
+ *  `slide-shape` references, and for nothing else; it goes when that
+ *  migration has run, as R28's docx map does.
+ *
+ *    { slides: [{ slide, shapes: [{ old, new }] }] }
+ *
+ *  `deck` is `pptxEntry.parts()`'s own result — the deck's files as read —
+ *  so the slides are numbered exactly as the reading numbers them (declared
+ *  deck order; `slide: null` for a part the order does not reach). One entry
+ *  per slide part the reading walked, in that order; `shapes` has one entry
+ *  per shape the OLD walk numbered (`old`, 0-based, every branch counted)
+ *  with its index now (`new`), null for a shape inside a branch not read —
+ *  its content was the duplicate of the branch that is. A slide whose part
+ *  was not read (unreadable, or over the size guard) held no shape index and
+ *  is not listed. Null when `deck` is not an ok parts result (R21). */
+export function pptxRenumbering(deck) {
+  if (!deck || deck.ok !== true || !(deck.slideXml instanceof Map) || !Array.isArray(deck.slideParts)) return null;
+  const slides = [];
+  for (const { part, slide } of deckOf(deck)) {
+    const xml = deck.slideXml.get(part);
+    if (typeof xml !== "string") continue;
+    const skipped = mceSkipper();
+    const shapes = [];
+    let now = 0;
+    TOKEN_RE.lastIndex = 0;
+    let m;
+    while ((m = TOKEN_RE.exec(xml)) !== null) {
+      if (m[1] === undefined) continue;
+      const name = localOf(m[1]);
+      const closing = m[0][1] === "/";
+      const skip = skipped(name, closing, m[3] === "/");
+      if (!closing && SHAPE_TAGS.has(name)) shapes.push({ old: shapes.length, new: skip ? null : now++ });
+    }
+    slides.push({ slide, shapes });
+  }
+  return { slides };
 }
 
 /* The guard marker's part field: the guard sums a FAMILY of parts, so the

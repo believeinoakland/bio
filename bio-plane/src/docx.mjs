@@ -182,8 +182,10 @@ const localOf = (name) => (name.includes(":") ? name.split(":").pop() : name);
  *  `<mc:Fallback>` are not read; with no `<mc:Choice>` the `<mc:Fallback>`
  *  is. Before N26 both branches were walked, so a text box's paragraphs,
  *  text and tables appeared twice. Returns a per-token test: true while the
- *  token lies in a branch not read (that branch's own tags included). */
-function mceSkipper() {
+ *  token lies in a branch not read (that branch's own tags included).
+ *  Exported for `pptx.mjs`' slide walk (N439), the same rule one format over:
+ *  one selection, never a second copy that could drift. */
+export function mceSkipper() {
   const taken = [];    // per open AlternateContent: has a branch been read
   let skip = null;     // { name, depth } while inside a branch not read
   return (name, closing, selfClosed) => {
