@@ -1,0 +1,7 @@
+# BOB to progressions (T19)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 5, progressions (kept; `draft-T19.md` layer 5: `ACT_SHAPE_CHECKS` re-pointed, C-33.40/.41 to record-grammar; legacy-store's share, your counts), plus N433: you hold your four rows (C-100.11, C-100.14, C-100.18, C-100.21) unchanged — BOB chose own codes for intent (K766: `INTENT_NO_SUCH_PROGRESSION`, `INTENT_BAD_STAGE`, `INTENT_NO_REASON`) and conformance and escalation (K768), so no shared row comes to you. Your requirement as folded (K764): R36 your figures (`progressionDefs`, `progressionStages`, `progressionDefVersions`, `progressionStageVersions`, `proposalDispositions`) registered through record-core's `registerCounts`. Rule 1: re-point `src/progressions/checks.mjs`:23 (`ACT_SHAPE_CHECKS`, read at :159 only for `NO_BASIS` C-33.40 and `NO_CITATION` C-33.41) to record-grammar's `SHARED_ACT_CHECKS` (`acts.mjs`, K765), and `test/m/progressions/define.test.mjs`:7 and `exceptions.test.mjs`:5 the same way (define's :179–180 arm asserting what the catalogue's `ACT_SHAPE_CHECKS` no longer holds: re-point to `SHARED_ACT_CHECKS` or drop), so no progressions file imports `bio-checks.mjs`; re-word `index.mjs`:11's comment. No merge-early obligation. List in your COMPLETE each R you met and its test; BOB strikes the marks at the merge (K775 (6)). Do not delete old suites (K619).
