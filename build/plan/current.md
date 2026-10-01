@@ -8,6 +8,8 @@
 
 **What changed versus `draft-T22.md`.** The draft carried 11 jobs from the queued entries. Written from what remains, T22 also carries: the legacy-tests retirement (K1006, N478) and its census; N476 (its order reason ended with T21's L9); scheduler R10's todo (N479); 33 stale or wrongly worded `not yet met` marks and notes, audited at the opening (A rows); four requirements with no test yet (capture-sources R37, monitoring R18 and R28, installer R32 and R33); monitoring R31/R34's todos; the shares of DEC-102, -104, -105, -107, -109 and -110 whose `owed:` line says BOB places them (now on `main`, so foldable, manifest "Parallel work"); and notes naming the deleted `src/index.mjs` as live (G1, proposed N480). 25 jobs.
 
+**Bob's weekly meter** · 39% at the opening (Bob, 2026-10-01 ~23:50 UTC, to BOB #90; P14). T21's opening read 25%.
+
 ## Legacy census (PROCESS-MECHANICS §5.2 (2), K1007 (a))
 
 | legacy module (`modules.json`) | in T22 | entry or hard reason |

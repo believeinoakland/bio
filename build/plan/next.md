@@ -5,6 +5,7 @@
 ## Entries
 
 - N480 · 2026-10-01 · **membership**, **text-chain**, **provenance**, **inquiry**, **ai-runs**, **public-read**, **run-rules** (MEMBERSHIP #15 "seen, not changed", `jobs/T21/membership.md`:16; K1010): notes name the deleted plane `src/index.mjs` as the live home of a table, function or stamp; re-word to the module that holds it now or put in the past tense (N469's rule). Carried in T22 by each listed module's job (STARTs); public-read in L8.
+- N481 · 2026-10-01 · **publication**, **case-grammar**, **case-authoring**, **public-read**, and a case-file import home (the UX stream's U21, DEC-112, Bob's question 30): a published case in three forms (the page's first line per finding naming its role and the project's bar; the complete edition in every case file; the case-file format as an open specification with a standalone checker; the method version inside the signed case; publication refused while a relied-on finding rests on material that cannot travel whole; off-the-record attestations; import into a new read-only project with recreation, acceptance gated on it). **Hard reason:** DEC-112 is on the design session's branch, not `main`; folded as requirements once it lands (manifest "Parallel work"), then placed by BOB (publication's split, K617, and DEC-111's new module bear on its home).
 
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
