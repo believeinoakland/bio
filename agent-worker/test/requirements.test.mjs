@@ -81,8 +81,8 @@ const real = new Miniflare({
 const PUBLISHED = (await (await real.dispatchFetch("http://x/api/?op=affordances&token=mem-req")).json());
 const PUBLISHED_ANSWER = PUBLISHED && typeof PUBLISHED === "object" && "result" in PUBLISHED ? PUBLISHED.result : PUBLISHED;
 /* R48 (N157, §1a): the member reads the pack the plane renders and publishes on this answer (`pack`, control-plane
-   R41) and renders nothing itself. The plane publishes it from layer 11 on, so the answer here is a STUB: the real
-   plane's answer with a stub pack beside it, carrying what the member reads (version, resident, disclosed). */
+   R41) and renders nothing itself. The answer here is the real plane's with a STUB pack in place of the one it renders,
+   carrying what the member reads (version, resident, disclosed), so a run's recorded skill can name it. */
 const PACK = Object.freeze({
   id: "investigative-session", edition: "stub", version: "investigative-session@stub+0123456789abcdef",
   resident: { objective: { text: "find what the record holds, and state what it does not" },
@@ -91,6 +91,9 @@ const PACK = Object.freeze({
                                body: [{ text: "no single confidence score" }] } },
 });
 const PUBLISHED_WITH_PACK = { ...PUBLISHED_ANSWER, pack: PACK };
+/* The real answer with no pack at all: since control-plane R41 the real plane publishes one, so R48's no-pack arm
+   takes the key away rather than relying on the plane to omit it. */
+const { pack: _realPack, pack_absent: _realAbsent, ...PUBLISHED_NO_PACK } = PUBLISHED_ANSWER || {};
 const planeNamespaces = (await (await real.dispatchFetch("http://x/api/?op=whoami&token=mem-req&store=biosmoke")).json()).namespaces;
 await real.dispose();
 
@@ -1084,11 +1087,12 @@ section("R48 · in the model mode the pack is the one the plane publishes, and a
     [absent.status, absent.out.code, absent.out.recorded, absent.out.rendered, absent.out.rendered_basis, absent.out.pack_absent,
      (await modelState(mf)).calls.length],
     [409, "SKILL_VERSION_MISMATCH", PACK.version, null, "UNDETERMINED", "renderPack: no fences published", 0]);
-  await reset(mf, { payer: "project", published: PUBLISHED_ANSWER });
+  await reset(mf, { payer: "project", published: PUBLISHED_NO_PACK });
   const none = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
   t("R48: an answer carrying no pack at all -> 409, its version UNDETERMINED, no turn",
-    [none.status, none.out.code, none.out.rendered, none.out.rendered_basis, (await modelState(mf)).calls.length],
-    [409, "SKILL_VERSION_MISMATCH", null, "UNDETERMINED", 0]);
+    ["pack" in PUBLISHED_NO_PACK, none.status, none.out.code, none.out.rendered, none.out.rendered_basis,
+     (await modelState(mf)).calls.length],
+    [false, 409, "SKILL_VERSION_MISMATCH", null, "UNDETERMINED", 0]);
   await reset(mf, { payer: "project", published: { ...PUBLISHED_ANSWER, pack: { version: PACK.version } } });
   const partial = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
   t("R48: a partial pack (a version and no layers) is never used: 409, UNDETERMINED, no turn",

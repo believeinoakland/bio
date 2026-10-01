@@ -197,7 +197,7 @@ function arm({ id, subject, what, mustFail, mustNot, file, find, replace, patche
 arm({
   id: "A1", subject: "FL-2's named control, half one — A DIRECT WRITE",
   what: "the member calls the plane's MUTATING op=purge beside its read",
-  mustFail: "the BEHAVIOURAL arm (the plane record's sha256 moves) AND the source-scan arm (the pinned op set is no longer exactly {whoami})",
+  mustFail: "the BEHAVIOURAL arm (the plane record's sha256 moves) AND the pinned-op-set arm (an op outside PLANE_OPS reached the binding; measured at the interface since N421)",
   mustNot: "the refusal arms, the version endpoint, the bound arms",
   file: SRC,
   find: `  const asked = await askPlane(env, "whoami", credential, store);`,
@@ -227,7 +227,7 @@ arm({
 arm({
   id: "A2", subject: "FL-2's named control, half two — A SECOND CREDENTIAL",
   what: "the member calls the plane a second time under a credential of its own instead of the one it was handed",
-  mustFail: "the 'exactly one distinct credential reached the plane' arm AND the 'no credential is compiled in' source arm",
+  mustFail: "the 'exactly one distinct credential reached the plane' arm AND section 6's interface arm that every plane call carried the credential its run was handed (N421; it was a source scan for an `aik-` literal)",
   mustNot: "the behavioural write arm (nothing is written — that is the point of arming this separately)",
   file: SRC,
   find: `  const asked = await askPlane(env, "whoami", credential, store);`,
@@ -235,7 +235,7 @@ arm({
   run: () => {
     const r = runSuite();
     const oneCred = r.failed.some((l) => /exactly one distinct credential/.test(l));
-    const compiledIn = r.failed.some((l) => /no credential is compiled in/.test(l));
+    const compiledIn = r.failed.some((l) => /no credential is compiled in|carried exactly the credential that run was handed/.test(l));
     const writeHeld = !r.failed.some((l) => /record moved only through ops in the pinned set/.test(l));
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · one-credential ${oneCred ? "FAILED" : "held"} · compiled-in-credential ${compiledIn ? "FAILED" : "held"} · write arm ${writeHeld ? "held (as declared)" : "also failed"}`,
@@ -248,7 +248,7 @@ arm({
 arm({
   id: "A3", subject: "THE BINDING IS THE ONLY ROUTE OUT",
   what: "env.PLANE.fetch(url) is replaced by a bare global fetch() at this account's own workers.dev name",
-  mustFail: "the URL-literal source arm, the workers.dev arm, the bare-fetch arm, and the round trip itself",
+  mustFail: "section 6's route arms (every request through the binding; no workers.dev address; the one other egress the model API — measured at the interface since N421), and the round trip itself",
   mustNot: "the config arms (wrangler.jsonc is untouched) and the manifest arms",
   file: SRC,
   /* PATCH STRING UPDATED BY FL-3, AND THE HARNESS CAUGHT ITS OWN STALENESS. FL-3
@@ -264,7 +264,7 @@ arm({
   replace: `    res = await fetch("https://bio-plane.20b533579290b9b93168345edd3b7f72.workers.dev/?op=whoami");`,
   run: () => {
     const r = runSuite();
-    const urlArm = r.failed.some((l) => /only absolute URL|workers\.dev|bare global fetch/.test(l));
+    const urlArm = r.failed.some((l) => /only absolute URL|workers\.dev|bare global fetch|went through the binding|one other egress/.test(l));
     const roundTrip = r.failed.some((l) => /the class comes from the PLANE|^200$|ok$/.test(l)) || r.fail > 3;
     const configHeld = !r.failed.some((l) => /account_id is PINNED|exactly one binding/.test(l));
     return {

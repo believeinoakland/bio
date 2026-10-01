@@ -98,24 +98,13 @@ const SRC = readFileSync(WORKER_SRC, "utf8");
    each pinned exactly here. control-plane pins both against its own op table, `AI_RUN_ACTIONS` and namespace gate
    (layer 11), which a layer-6 suite may not import. */
 import { NAMESPACES } from "../src/harness.mjs";
+/* N421: the fence measured at the member's interface, in this process (section 6). */
+import { SURFACE } from "../src/index.mjs";
+import { MODEL_ENDPOINT } from "../src/model.mjs";
+import { driveMember, AIK as INPROCESS_AIK, AIK_SECOND as INPROCESS_AIK_SECOND,
+         CLAUDE_TOKEN as INPROCESS_CLAUDE } from "./inprocess.mjs";
 /* The writes this member declares: exactly the mutating members of `PLANE_OPS`, pinned floor and ceiling (R37). */
 const DECLARED_WRITES = ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"];
-/* Comments carry this project's reasoning and are long; a scan that reads them
-   would match its own explanation of what must not appear.
- *
- * THE LINE-COMMENT STRIPPER IS NOT THE OBVIOUS ONE, AND THE DIFFERENCE IS A
- * DEFECT THIS SUITE MET. `pdf-worker`'s suite strips a line comment as "two
- * slashes to end of line", which is correct there and wrong here: the string
- * "http" plus a colon plus two slashes contains those two slashes, so the naive
- * stripper DELETED THE URL LITERAL AND THE REST OF ITS LINE, and the
- * only-one-absolute-URL arm came back green over a source it had silently
- * truncated by two thirds (6,029 characters read of 17,265). It found nothing and
- * reported nothing wrong — a walk that has gone blind reading as a subject that
- * is clean. Requiring a non-`:` before the `//` keeps every real line comment and
- * every scheme-relative-looking string literal. A DELEGATION is filed for
- * `pdf-worker`, where the same idiom is harmless today and is a trap the moment
- * that member holds a URL. */
-const CODE = SRC.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 
 let pass = 0, fail = 0;
@@ -454,98 +443,75 @@ console.log("\n--- 5 · GET /version — fleet rule 4: a verification must estab
   await mf.dispose();
 }
 
-/* ================================================================ 6 · THE FENCE, FROM THE SOURCE */
-console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE PLANE — structurally ---");
+/* ================================================================ 6 · THE FENCE, AT THE INTERFACE (N421) */
+/* CONVERTED BY N421 (T19), NEVER EXEMPTED. This section read `src/index.mjs` as TEXT: `.put(` and `.delete(`, `env.STORE`,
+   the `CAPTURES`/`PUBLISHED` words, URL literals, a bare `fetch(`, and the op names inside `call("…")` (resolving const
+   aliases and, since R51, `PLAN_READS`' table). Each of those scans went blind once already when a name moved behind a
+   constant or a table, and each could be satisfied by a spelling while the behaviour differed. The properties are now
+   MEASURED at the member's interface by `test/inprocess.mjs`: its own handler driven in this process through a supplied
+   run, a model run and a plan run (and every refusal before a plane call), with an `env` that records every key read and
+   holds a tripwire under each binding a member must not hold, a `PLANE` binding that records every property touched and
+   every request sent, and the global `fetch` recorded. */
+console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE PLANE — measured at its interface ---");
 {
-  t("no .put( anywhere in the source", /\.put\s*\(/.test(CODE), false);
-  t("no .delete( anywhere in the source", /\.delete\s*\(/.test(CODE), false);
-  t("no STORE (Durable Object) binding is read", /env\s*\.\s*STORE/.test(CODE), false);
-  /* WORD-BOUNDED, and that is not tidiness. A bare `/PUBLISHED/` matched the
-     substring inside `UNPUBLISHED` — the word this member uses to say its
-     principal is undetermined — and failed a Worker that holds no such binding.
-     An arm that fires on correct work is an arm that gets relaxed. */
-  t("no CAPTURES binding is read", /\bCAPTURES\b/.test(CODE), false);
-  t("no PUBLISHED binding is read", /\bPUBLISHED\b/.test(CODE), false);
+  const { drives, all, declared } = await driveMember();
+  t("ARMED: every drive answered, and the three runs completed (a drive that never ran would pass every arm below)",
+    [drives.supplied.answers[0]?.status, drives.model.answers[0]?.status, drives.plan.answers[0]?.status,
+     drives.second.answers[0]?.status, drives.edges.answers.length, all.planeCalls.length > 40],
+    [200, 200, 200, 200, 10, true]);
 
-  console.log("\n  -- the binding is the ONLY route out (FL-1's routing finding, enforced) --");
-  t("no workers.dev literal", /workers\.dev/.test(CODE), false);
-  const urls = [...new Set([...CODE.matchAll(/https?:\/\/[^"'`\s]*/g)].map((m) => m[0]))];
-  t("the only absolute URL in the source is the binding's own request name", urls, ["http://plane"]);
-  t("the plane is reached through the binding", /env\s*\.\s*PLANE\s*\.\s*fetch/.test(CODE), true);
-  /* A bare global `fetch(` — not `.fetch(` on a binding — would be an egress this
-     member is not entitled to. FL-1 measured that it would 404 against the
-     account's own name anyway, so this is a fence and not a style rule.
-     `async fetch(` is EXCLUDED because it is the module's own exported handler:
-     the first spelling of this arm fired on the Worker's entry point, which is
-     the shape every Worker in this repository has. */
-  t("no bare global fetch(", /(?<![.\w])(?<!async\s)fetch\s*\(/.test(CODE), false);
+  console.log("\n  -- it holds no binding but the plane: no store, no bucket, no write route --");
+  t("R35: the only keys of env it reads are PLANE and its configuration (VERSION, the two segment bounds, MODEL)",
+    [...all.envKeys].filter((k) => !["PLANE", "VERSION", "MAX_TURNS_PER_SEGMENT", "MAX_SEGMENT_BYTES", "MODEL"].includes(k)), []);
+  t("R35: offered STORE, CAPTURES, PUBLISHED, a KV, a D1 and a queue, it read and touched none of them",
+    all.forbiddenTouched, []);
+  t("R35: of the PLANE binding it touches `fetch` and nothing else — no put, delete, get or list on any binding",
+    [...all.planeProps], ["fetch"]);
+
+  console.log("\n  -- the binding is the ONLY route to the plane (FL-1's routing finding, enforced) --");
+  t("every request it sent the plane went through the binding, named by the binding's own request origin",
+    [...new Set(all.planeCalls.map((c) => c.origin))], ["http://plane"]);
+  t("no workers.dev address, and no plane URL, was ever the target of a request",
+    [...all.planeCalls, ...all.globalFetches].filter((c) => /workers\.dev/.test(c.url)).length, 0);
+  t("its one other egress is the model API, reached only by a run whose model turns ran",
+    [[...new Set(all.globalFetches.map((c) => c.url))], drives.model.globalFetches.length > 0,
+     drives.supplied.globalFetches.length + drives.plan.globalFetches.length + drives.second.globalFetches.length
+       + drives.edges.globalFetches.length],
+    [[MODEL_ENDPOINT], true, 0]);
+  t("no request before the credential's shape is checked, and none at all from a refusal that answers first",
+    drives.edges.planeCalls.length, 0);
 
   console.log("\n  -- THE SCOPE IS THE PLANE'S, and the ops this member may name are PINNED --");
-  /* CORRECTED BY D-276, NEVER EXEMPTED, AND THE OLD SCAN WAS RIGHT WHEN IT WAS
-     WRITTEN. It read op names out of `call("literal"` only. D-276 gave the
-     meaning read's op name a CONSTANT — `const MEANING_OP = "meaningrows"` —
-     because `planeAnswer` needs the same name and writing the literal twice
-     would have fired `harness.test.mjs`'s one-meaning-reader pin on a LABEL.
-     The moment that landed, this arm reported `meaningrows` as an op the source
-     "never names" while the source was calling it every run: a matcher that
-     goes blind reads exactly like a subject that changed. So the scan RESOLVES
-     a const alias, and — because a matcher must say what it cannot see — every
-     `call(IDENTIFIER,` it fails to resolve is NAMED by the arm below rather
-     than silently scored zero. */
-  const OP_ALIAS = Object.fromEntries(
-    [...CODE.matchAll(/const\s+([A-Z][A-Z0-9_]*)\s*=\s*"([a-z]+)"\s*;/g)].map((m) => [m[1], m[2]]));
-  const viaAlias = [...CODE.matchAll(/call\(\s*([A-Za-z_$][\w$]*)\s*,/g)].map((m) => m[1]);
-  /* R51 (K660): mode `plan`'s reads are named in ONE table, `harness.mjs`' `PLAN_READS` (`{ op: "<name>", … }`), and
-     the driver calls them as `call(op, …)` off that table; the scan reads the table and resolves `op` through it. */
-  const HARNESS_CODE = readFileSync(fileURLToPath(new URL("../src/harness.mjs", import.meta.url)), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "");
-  const planReadsBlock = (HARNESS_CODE.match(/export const PLAN_READS = \{([\s\S]*?)\n\};/) || [])[1] || "";
-  const PLAN_READ_OPS = [...planReadsBlock.matchAll(/op:\s*"([a-z]+)"/g)].map((m) => m[1]);
-  t("R51: the plan-mode reads table was read (guard: an empty parse would pass everything)", PLAN_READ_OPS.length >= 7, true);
-  t("every op named through a CONSTANT resolves to a literal — none is invisible to this scan",
-    viaAlias.filter((id) => !(id in OP_ALIAS) && !(id === "op" && PLAN_READ_OPS.length)), []);
-  const named = [...new Set([
-    ...[...CODE.matchAll(/askPlane\(\s*env\s*,\s*"([a-z]+)"/g)].map((m) => m[1]),
-    ...[...CODE.matchAll(/call\(\s*"([a-z]+)"/g)].map((m) => m[1]),
-    ...viaAlias.map((id) => OP_ALIAS[id]).filter(Boolean),
-    ...PLAN_READ_OPS,
-  ])].sort();
-  /* FLOOR AND CEILING BOTH, by exact equality. A call this member gains is a call
-     somebody decided to give it, and a call it loses is visible too. D-199 (2):
-     what an agent may reach is a row a member authored and read at the plane's
-     gate — never a list compiled into a Worker.
-     CORRECTED BY FL-3, NEVER EXEMPTED. The literal `["whoami"]` was FL-2's exact
-     truth; it is compared against `harness.mjs`'s declaration now so the set has
-     ONE home rather than a copy here that ages separately — which is the defect
-     this file's own header spends a paragraph on one arm over. It is still an
-     EXACT equality and still catches a gained call and a lost one. */
-  t("every op named in the source is in the pinned set", named.filter((op) => !PLANE_OPS[op]), []);
-  t("and the pinned set has no member the source never names",
-    Object.keys(PLANE_OPS).filter((op) => !named.includes(op)), []);
-  /* CORRECTED BY FL-3, NEVER EXEMPTED, AND THE OLD ARM WAS THE RIGHT ARM FOR A
-     MEMBER THAT MADE ONE READ. "No mutating op name appears in the source AT
-     ALL" cannot survive an endpoint that must write a version and spend a
-     budget, and FL-3's acceptance is unreachable without both. What replaces it
-     is not weaker: the writes this member declares are pinned exactly, floor and
-     ceiling, and control-plane pins that declaration to PL-11's `AI_RUN_ACTIONS`
-     (N402, layer 11) — so a write gained here fails this arm, and a write the
-     plane's list does not hold fails that pin. */
-  const mutatingNamed = named.filter((op) => PLANE_OPS[op] && PLANE_OPS[op].mutating);
-  t("the member does name mutating ops now, so this arm has a subject", mutatingNamed.length > 0, true);
+  /* FLOOR AND CEILING BOTH, by exact equality over what reached the binding. A call this member gains is a call
+     somebody decided to give it, and a call it loses is visible too. D-199 (2): what an agent may reach is a row a
+     member authored and read at the plane's gate — never a list compiled into a Worker. */
+  const reached = [...new Set(all.planeCalls.map((c) => c.op))].sort();
+  t("every op that reached the plane is in the pinned set", reached.filter((op) => !PLANE_OPS[op]), []);
+  t("and the pinned set has no member the three runs never reached", declared.filter((op) => !reached.includes(op)), []);
+  t("and no answer the stub gave was an unknown op", all.answers.filter((a) => /unknown op/.test(a.text)).length, 0);
+  const mutatingReached = reached.filter((op) => PLANE_OPS[op]?.mutating === true);
+  t("the member does name mutating ops, so the write arms below have a subject", mutatingReached.length > 0, true);
   t("R37: and the writes it declares are exactly airuntick, suggest, capturerequest, airunclose, optionpropose",
     Object.keys(PLANE_OPS).filter((op) => PLANE_OPS[op].mutating === true).sort(), DECLARED_WRITES);
-  t("no op outside the record's own agent-write declaration is named",
-    named.filter((op) => !PLANE_OPS[op]), []);
-  /* THE FIRST SPELLING OF THIS ARM WAS `/aik-[0-9a-f]/` AND CONTROL ARM A2
-     WALKED STRAIGHT PAST IT. A credential written as `"aik-" + "f".repeat(64)`
-     has no hex after the prefix anywhere in the source, so the scan found
-     nothing and reported the member clean while it was calling the plane under a
-     token of its own. The arm was right that something must be caught and wrong
-     about what the thing looks like — recorded here rather than quietly widened,
-     because a control that comes back green when red was predicted is a finding
-     about the control. Matching the START of any string literal catches the
-     split spelling and every simpler one. */
-  t("no credential is compiled in (no string literal opens with aik-)", /["'`]aik-/.test(CODE), false);
+  t("R37: and every write that reached the plane is one of them", mutatingReached, DECLARED_WRITES);
+  t("R53: a plan-mode run writes nothing but optionpropose, airuntick and airunclose, and spawns, requests and suggests nothing",
+    [[...new Set(drives.plan.planeCalls.filter((c) => PLANE_OPS[c.op]?.mutating).map((c) => c.op))].sort(),
+     drives.plan.planeCalls.filter((c) => ["airunspawn", "capturerequest", "suggest"].includes(c.op)).length],
+    [["airunclose", "airuntick", "optionpropose"], 0]);
+
+  console.log("\n  -- ONE credential, the one it was handed, and no credential of its own --");
+  /* A2's lesson, kept: the source scan looked for an `aik-` literal and a split spelling walked past it. What matters is
+     what reaches the plane, so that is what is counted — under two different handed credentials. */
+  t("every plane call of every run carried exactly the credential that run was handed",
+    [[...new Set([drives.supplied, drives.model, drives.plan].flatMap((d) => d.planeCalls.map((c) => c.token)))],
+     [...new Set(drives.second.planeCalls.map((c) => c.token))]],
+    [[INPROCESS_AIK], [INPROCESS_AIK_SECOND]]);
+  t("and no answer it gave carried a credential or a Claude token back",
+    all.answers.filter((a) => a.text.includes(INPROCESS_AIK) || a.text.includes(INPROCESS_AIK_SECOND)
+                               || a.text.includes(INPROCESS_CLAUDE)).length, 0);
+  t("the Claude token went only to the model API, never to the plane",
+    [all.planeCalls.some((c) => JSON.stringify(c).includes(INPROCESS_CLAUDE)),
+     [...new Set(drives.model.globalFetches.map((c) => c.key))]], [false, [INPROCESS_CLAUDE]]);
 
   console.log("\n  -- the config declares the narrowest bindings that do the job --");
   const cfg = readFileSync(WRANGLER, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
@@ -562,9 +528,11 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
   t("it declares its name, entry, surface table and test dir",
     [meta.name, meta.entry, meta.surface, meta.testDir],
     ["agent-worker", "src/index.mjs", "SURFACE", "test"]);
-  t("the SURFACE table it points at exists in the entry", /export const SURFACE\s*=/.test(SRC), true);
+  /* N421: the entry's export itself, never its text. */
+  t("the SURFACE table it points at is the entry's export", SURFACE != null && typeof SURFACE === "object"
+    && Object.keys(SURFACE).length > 0, true);
   t("every surface op declares itself non-mutating (fleet rule 2)",
-    /mutating:\s*true/.test(SRC.slice(SRC.indexOf("export const SURFACE"), SRC.indexOf("export const SURFACE") + 400)), false);
+    Object.entries(SURFACE).filter(([, d]) => d.mutating !== false).map(([op]) => op), []);
 }
 
 /* ================================================================ 7 · OVER-STRICTNESS */

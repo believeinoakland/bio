@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 6, basis-versions (kept: cata
 ## B2 · ANSWER · re J2
 
 Yes (K813). Your stage one is merged early into tranche/T19, so run-productions, skills, strength and agent-worker can re-point to your exports now. When inquiry-grammar merges, BOB posts a CHANGE: then merge the tranche branch, build R43, re-scan, and delete whatever catalogue copies have no importer left, then COMPLETE. J1.1 is carried to control-plane's START. Stay WAITING ON BOB (J2).
+
+## B3 · CHANGE
+
+INQUIRY-GRAMMAR #1 is merged into tranche/T19 (K817), with its R6 sub-slot and GROUND_LABEL_RE, leadLegFindings and checkLegExtentGrammar. Merge the tranche branch, build R43, re-scan, and delete the catalogue copies that have no importer left. K814: if you delete the catalogue's basisVersionFindings, delete SUGGEST_CHECKS with it when nothing else reads it (run-productions held it for you). Then COMPLETE.

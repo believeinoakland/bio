@@ -15,7 +15,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
 import { checkInquiryBasis, checkInquiryEntry } from "../../../src/inquiry/index.mjs";
-import { EARNED_CAPTURE_CEILING, TESTIMONY_GRADE, BASIS_GRADES } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING, TESTIMONY_GRADE, BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 
 const WORDS = "On 10 September at the Clerk's counter I watched the deputy clerk stamp the amended "
             + "contract RECEIVED before the council had voted on it. I was the next person in line.";
