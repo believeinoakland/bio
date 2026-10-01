@@ -26,3 +26,7 @@
 - `node checks/ownership.mjs … bundler tranche/T20`: 6 files changed; 0 failures.
 
 Size (session_01Bn7W4BUTLpR4VJ7vgYfCWR): test runs 1, module lines 2445
+
+## J1 · REPORT
+
+Generated artifacts this job stales (§14): the plane bundle and manifest, bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (recipe.entry is now src/plane/index.mjs; src/index.mjs leaves the inputs), so test/system/fleetbundles.test.mjs' bio-plane arms read stale until the L1 close regenerates them. The manifest _comment now names bio-plane/test/system/fleetbundles.test.mjs, so every member manifest's bytes move at its next regeneration (pdf-worker, ocr-worker, agent-worker); no guard reads _comment. Plane's L11 job may delete bio-plane/src/index.mjs once this branch merges (merge early). Wording (bundler's requirements): the paragraph after R19's heading on an UNDETERMINED limits read-back (K761) describes deploy.mjs (R18); deploy-fleet.mjs reads no limits.
