@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, plane, newKey, signCase, cleanCase, fmText, CASE_BODY, V, SILENT } from "./fixture.mjs";
-import { caseRatifyOp } from "../../../src/ratification/ops.mjs";
+import { caseRatifyOp, ratificationOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, RATIFY_MACHINE_FENCE_CHECKS as FENCE, RATIFY_TESTIMONY_CHECKS as TESTIMONY,
          RATIFY_ATTRIBUTION_CHECKS as ATTRIBUTION } from "../../../src/ratification/index.mjs";
 
@@ -137,4 +137,17 @@ test("R6: a case complete at its document's ratification has its container assem
   assert.deepEqual([r.p.assembled[0].via, r.p.assembled[0].cs], ["caseratify", state]);
   assert.deepEqual(r.body.container, { manifest_sha: "m".repeat(64), zip: "z" });
   assert.equal("completedCase" in r.body, false, "the store's internal state is not spread into the answer");
+});
+
+test("R2, R4: the ceremonies' dispatch answers op=caseratify and op=ratify through their handlers, and no other op", async () => {
+  const { w, run, docSha, sig } = await setup();
+  const body = { caseId: CASE, edition: 1, expectedSha: docSha, sig };
+  const direct = await run(body, { aiCred: { tokenId: "t1" }, cls: "ai" });
+  const p = plane(w, { aiCred: { tokenId: "t1" }, cls: "ai" });
+  const via = await ratificationOp("caseratify", p.request(body), p.stub, p.ctx);
+  assert.deepEqual([via.status, via.body], [direct.status, direct.body]);
+  const ratify = await ratificationOp("ratify", p.request({}), p.stub, p.ctx);
+  assert.deepEqual([ratify.status, ratify.body.reason], [403, "MACHINE_CANNOT_RATIFY"]);
+  for (const op of ["publish", "gatefacts", "release", "", undefined]) assert.equal(ratificationOp(op, p.request({}), p.stub, p.ctx), null, String(op));
+  assert.deepEqual(p.fetched, [], "nothing was asked of the store");
 });

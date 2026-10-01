@@ -43,7 +43,7 @@ import { captureOp } from "./capture/ops.mjs";
 import { monitorOp } from "./monitoring/index.mjs";
 import { EXTRACTION_OPS, extractionOp, acquireReadingOp } from "./extraction/ops.mjs";
 import { CONNECTIONS_OPS, connectionsOp } from "./connections/ops.mjs";
-import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
+import { ratificationOp } from "./ratification/ops.mjs";
 /* N348 (control-plane R35): the Durable Object class is control-plane's, which starts instance-setup and routes its ops
    inside the store's one frame. */
 export { Store } from "./control-plane/dispatch.mjs";
@@ -457,8 +457,7 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
     if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, requiredArgument, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
 
 
-    if (op === "caseratify") return caseRatifyOp(req, stub, { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights });
-    if (op === "ratify") return ratifyOp(req, stub, { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
+    return ratificationOp(op, req, stub, { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession, sessViewer, sessRights, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
 }
 
 export default { fetch: makeFetch({ publicOp, gatedOp,

@@ -1,8 +1,9 @@
 /* ratification's catalogue at its interface (`./checks.mjs`, re-exported by the module): the case-document catalogue
    C-41 with the case arms of C-2.8, C-3.1 and C-21.1 (R8), C-2.8's case-member arm and the pure vocabulary around it
    (R9), and the rows that moved here with their ids (R14). Each check is driven with its negative control: a document
-   that draws no finding, and the one mutation that makes each arm fire. The copies `legacy-checks` keeps while earlier
-   modules import them (`SUBJECT_POSITIONS`, N361; `isCaseMemberBytes` for C-3.1, N69) are asserted to answer alike. */
+   that draws no finding, and the one mutation that makes each arm fire. The copy `legacy-checks` keeps of
+   `isCaseMemberBytes` for C-3.1 (N69) is asserted to answer alike; `SUBJECT_POSITIONS` and `caseEditionClaimed` are
+   this module's alone (N211). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as R from "../../../src/ratification/checks.mjs";
@@ -11,11 +12,11 @@ import * as CAT from "../../../checks/bio-checks.mjs";
 const PIN = "a".repeat(64);
 const M1 = "INQ-2026-0001-first", M2 = "INQ-2026-0002-second";
 
-/* A bio-case-document/4 that draws no finding: every field the catalogue asks of a case document, and each member's
+/* A bio-case-document/5 (the format op=publish authors; T17's finding) that draws no finding: every field the catalogue asks of a case document, and each member's
    frozen blocks as rule 12 states them (the case-member arm of C-2.8 runs over those). */
 function doc() {
   return {
-    format: "bio-case-document/4",
+    format: "bio-case-document/5",
     case_id: "CASE-2026-0001", case_edition: 2, case_project: "PROJ-2026-0001-watch",
     case_scope: "whether the permits were issued as the minutes say",
     bias_acknowledgement: "we set out expecting the permits were late",
@@ -36,7 +37,7 @@ function doc() {
                      { target: "INFO-2026-0002-memo", version: "undetermined", capture: null }],
     case_strength: [M1, M2].flatMap((t) => [{ target: t, axis: "capture", state: "graded", grade: "B" },
                                             { target: t, axis: "connection", state: "unrated", grade: null }]),
-    case_strength_grounds: [],
+    case_strength_grounds: [], case_tensions: [], case_tension_sentences: [], case_tensions_unread: [],
   };
 }
 const CTX = { caseId: "CASE-2026-0001", edition: 2 };
@@ -63,9 +64,12 @@ const ARMS = [
   ["CITATIONS", "C-41.15", (d) => { d.case_citations[0].capture = null; return d; }],
 ];
 
-test("R8: the baseline /4 case document draws no finding, with its body, member basis and a fresh prior edition", () => {
+test("R8: the baseline /5 case document draws no finding, with its body, member basis and a fresh prior edition; a /4 one, read as written, neither", () => {
   assert.deepEqual(checks(doc(), { ...CTX, body: BODY, memberBasis: { [M1]: [], [M2]: [] },
                                    priorCase: { edition: 1, statement: "older", bias_acknowledgement: "older" } }), []);
+  const v4 = doc(); v4.format = "bio-case-document/4";
+  for (const k of ["case_tensions", "case_tension_sentences", "case_tensions_unread"]) delete v4[k];
+  assert.deepEqual(checks(v4, { ...CTX, body: BODY }), []);
 });
 
 test("R8: each of C-41.1–C-41.15 is declared in CASE_DOCUMENT_FAMILY and fires on its own mutation, and the arms cover the family exactly", () => {
@@ -130,11 +134,13 @@ test("R8: CASE_CITATION_VERSIONS and SEARCHED_SUBJECT_SOURCES are exported; C-41
   }
 });
 
-/* N361 (K529): the parity arm over the catalogue's copy of `checkCaseDocument`, `SEARCHED_SUBJECT_SOURCES` and
-   `CASE_DOCUMENT_FAMILY` is retired: promotion no longer imports that copy, and it goes in T17 (N372). What stays in the
-   catalogue and must still agree with this module, its owner (Decided 4), is `SUBJECT_POSITIONS`. */
-test("R9, N361: the catalogue's copy of SUBJECT_POSITIONS, which stays, answers as this module's, its owner", () => {
-  assert.deepEqual(CAT.SUBJECT_POSITIONS, R.SUBJECT_POSITIONS);
+/* N211 (T18): the catalogue's copies of `SUBJECT_POSITIONS` and `caseEditionClaimed` are deleted, every importer reading
+   this module's, their owner (Decided 4, 6); `isCaseMemberBytes` stays there for C-3.1's heading rule (N69). */
+test("R9, N211: SUBJECT_POSITIONS and caseEditionClaimed are this module's alone; the catalogue no longer exports them", () => {
+  assert.equal(CAT.SUBJECT_POSITIONS, undefined);
+  assert.equal(CAT.caseEditionClaimed, undefined);
+  assert.equal(typeof CAT.isCaseMemberBytes, "function", "negative control: the copy C-3.1 reads stays");
+  assert.deepEqual(R.SUBJECT_POSITIONS, ["sought_and_answered", "sought_no_answer", "not_sought"]);
 });
 
 /* A legacy (/1) case member's own bytes: the frozen blocks C-2.8's case-member arm requires. */
@@ -209,8 +215,6 @@ test("R9, N69: isCaseMemberBytes and the copy legacy-checks keeps for C-3.1's he
                  { published_strength: [{ axis: "capture" }, { axis: 2 }] }, { published_strength: [null, null] },
                  { published_strength: [{ axis: "capture" }, { axis: "connection" }, { axis: "testimony" }] }];
   for (const fm of cases) assert.equal(R.isCaseMemberBytes(fm), CAT.isCaseMemberBytes(fm), JSON.stringify(fm));
-  for (const fm of [{ case_edition: 1 }, { case_edition: "null" }, {}])
-    assert.equal(R.caseEditionClaimed(fm), CAT.caseEditionClaimed(fm));
 });
 
 test("R14: the catalogue's inquiry extension no longer runs the case-member arm; this module's registration does", async () => {

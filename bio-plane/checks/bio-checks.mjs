@@ -125,79 +125,6 @@ export const HEADINGS_WHEN = {
 };
 HEADINGS_WHEN.problem = HEADINGS_WHEN.focus = [];
 
-/** CASE-4 / DEC-72: THE CASE RELATION AS A DOCUMENT'S OWN BYTES CARRY IT.
- *
- * One predicate, exported, so the catalog's several "is this published" sites
- * cannot drift apart — the same reason DISPOSITIONS and REOPENABLE_FROM live in
- * one array each. `case_id` is the field REC-44 put inside the bytes the member
- * SIGNS precisely so a stranger holding one document can read which case it
- * belongs to without contacting this instance, which is what makes it the right
- * field to ask: the relation is inside the signature, exactly as the state word
- * used to be, and nothing here reads a table.
- *
- * The `'null'` guard is not decoration: `#setOrAddScalar` writes the STRING
- * "null" for an absent value, and publishCase()'s own case-identity resolution
- * already excludes it by name at store.mjs. Two readers of one convention that
- * disagreed about it would be the drift this file exists to prevent.
- *
- * IT IS THE PAIR AND NOT `case_id` ALONE, AND THAT WAS MEASURED RATHER THAN
- * preferred. `case_id` alone is what a document carries FOREVER after its first
- * publication — `op=reopen` deliberately leaves it, so `publishCase()` can
- * re-derive which case a second edition belongs to without taking an identity
- * from a caller. Keying on it alone therefore makes a REOPENED working document
- * read as a case member and drags the entire published ceremony onto a document
- * that is back in `open` being worked — a gate firing where the record says the
- * group is allowed to be mid-thought. The pair is the assertion: `case_edition`
- * is written by `publishCase()` and CLEARED by `op=reopen`, so "these bytes
- * claim to be a member of a specific edition of a specific case" is exactly what
- * the two of them together say, and it is true of precisely the documents that
- * used to say `current_state: published`.
- *
- * WHEN CASE-5b LANDS, THIS IS THE FIELD PAIR THAT MOVES. CASE-5b removes
- * `case_id` and friends from finding bytes once there is a case-level signing
- * ceremony for those facts to move to. This predicate is where that change
- * arrives, and it is ONE function rather than six inlined field reads for that
- * reason. */
-/* CASE-5b / DEC-72, 2026-09-10 — AND THIS IS THE CHANGE THE COMMENT ABOVE SAID
- * WOULD ARRIVE HERE, ARRIVING. It is ONE function and not six inlined field
- * reads for exactly this turn.
- *
- * WHY THE OLD PREDICATE WAS RIGHT AND IS NOW WRONG, stated rather than deleted.
- * It keyed on `(case_id, case_edition)` because those were the facts op=publish
- * stamped into every member's signed bytes, and because a REOPENED document
- * keeps `case_id` while losing `case_edition` — so the PAIR, and not `case_id`
- * alone, was what distinguished "these bytes claim membership of a specific
- * edition of a specific case" from "this document was published once and is
- * back in `open` being worked". Every word of that was true of the format as it
- * stood. CASE-5b deletes both fields from finding bytes: the case's own
- * assertions now live in a CASE DOCUMENT a member signs, which is where they
- * were always supposed to be and had nowhere to go until this item. A predicate
- * left keyed on `case_id` would be false for EVERY document published after
- * this item — and since it is the entry condition to the whole published
- * ceremony, the ceremony would stop being checked on every document, silently,
- * with the suite green. That is the same trap CASE-4 recorded one field
- * earlier, and it is why this is corrected rather than removed.
- *
- * THE NEW SIGNAL IS `published_strength`, AND IT IS NOT AN ARBITRARY PICK. It
- * is the FROZEN PAIR (R2/DEC-21) — both axis objects, derived at the publishing
- * act from the finding's own basis and stamped into the bytes before the sha is
- * taken. Three properties make it the right field:
- *   - op=publish is the ONLY writer. Nothing else in this plane mints it, so a
- *     document carrying it was published, which is precisely the question.
- *   - it is the FINDING's OWN fact, not the case's. That matters now: every
- *     case-level fact has left these bytes, so a predicate keyed on one would
- *     be keyed on something that is no longer here.
- *   - `op=reopen` clears it with the rest of the publication stamp, so the
- *     reopened-document hole the old pair was built to close stays closed. That
- *     is asserted rather than assumed — see the reopen arm in the suite.
- * The shape is checked, not merely the presence: an array of at least the two
- * axes R2 requires (three when a member's testimony is frozen, MK-2), which
- * ratification's `checkPublishedExtension` goes on to validate in detail, so a stray
- * `published_strength: []` does not drag a working document into the ceremony. */
-export const caseEditionClaimed = (fm) => {
-  const e = fm?.case_edition;
-  return !(e === undefined || e === null || e === '' || e === 'null');
-};
 /* CORRECTED BY MK-2 (IC-142), never exempted, AND IT IS THE MOST DANGEROUS LINE
    IN THAT ITEM — found by its own control arm, not by reading. This read
    `s.length === 2`, which was "the frozen PAIR" while there were two axes. A case
@@ -2151,13 +2078,6 @@ function checkDividedExtension(fm, findings) {
   }
 }
 
-/** REC-14 / DEC-13: the group's position on putting the case to its subject.
- *  EXPORTED so op=affordances publishes it and no surface keeps a copy.
- *  The gate is that the position is declared and justified; WHICH position it
- *  is gates nothing, here or anywhere — a group facing a non-supportive body
- *  may have real cause not to give notice, and what is refused is being silent
- *  about having chosen. */
-export const SUBJECT_POSITIONS = ['sought_and_answered', 'sought_no_answer', 'not_sought'];
 export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
 
 /* `CASE_MEMBER_ROLES` (CASE-2 / DEC-72 clause 4) stood here until T18 (legacy-checks). The two designations a case

@@ -21,10 +21,6 @@ import { parseFrontmatter,
             checker, so a malformed leg never lands and the two views cannot
             drift. */
          deriveInquiryTitle, inquiryQuestionOf, checkInquiryBasis,
-         /* REC-14: the published vocabulary and the ONE definition of what a
-            completeness block ASSERTS, imported so this act's pre-flight and
-            C-21.1's gate compare exactly the same fields. */
-         SUBJECT_POSITIONS,
          /* REC-16: the id grammar the division's CHILDREN are named under, and
             the two supersession rules — run here at the write (the
             checkInquiryBasis precedent) and by the checker, so a malformed
@@ -758,11 +754,6 @@ export class Store extends DurableObject {
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
   static EDGE_REASON_MAX = 160;
-  /* Longer than a reason, because a release acknowledgment is a statement of
-     what was weighed and what was checked, not a label. Same forbidden
-     characters, because it is spliced into the Session Log and must stay one
-     line per field. */
-  static RELEASE_ACK_MAX = 500;
   /* R20–R22, R39: disposing a selection of inquiries: inquiry's. */
   dispose(...a) { return inquiryOf(this.ctx).dispose(...a); }
   #refEdgeSevered(...a) { return connectionsOf(this.ctx).edgeSevered(...a); }
@@ -918,207 +909,6 @@ export class Store extends DurableObject {
       retired.push(id);
     }
     return { ok: true, reason: why, handle, retired: retired.sort(), weight: "refuse", drift: sel.drift };
-  }
-
-  /* S-11 step 5, the last rung of the ladder: bulk RELEASE of Information,
-     collected -> verified over a selection, weight `refuse`, whole set or
-     nothing. Decided by Bob 2026-07-27 and specified in Intake Doctrine v1.2:
-     what legitimizes a bulk release is volume plus little-to-no variance in the
-     trustworthiness of the collection, whatever origin brought it in, because
-     verification asserts only that a document APPEARS to be what it claims to
-     be, never accuracy.
-
-     Four properties carry the doctrine:
-     1. A NAMED MEMBER authors it. The author stamp arrives from the session;
-        a machine credential's stamp is `token:<class>` and is refused by
-        shape, because the collected-to-verified transition is a member's
-        decision (section 4, C-18.1), whatever else machines may prepare.
-     2. The ACKNOWLEDGMENT IS A RECORD, not a dialog. The member's explicit
-        acknowledgment of the batch's homogeneity and the mitigation steps
-        they actually took are required parameters, refused when absent, and
-        written into every released document's Session Log, so a batch release
-        is permanently distinguishable from a per-document one.
-     3. CRUCIAL NEVER RIDES A BATCH. Ratifying crucial-criticality material
-        requires verifying its co-attestations (doctrine section 3, F4), which
-        is per-document work, and a batch containing crucial material is by
-        definition not a low-variance collection.
-     4. NOTHING VERIFIED HERE AUDITS DIRTY. The verified-state entry
-        requirements — C-2.7's (well-formed content_hash, data/dataset.json, a
-        file in snapshots/) and, as of REC-54/D-200, C-18.9's provenance chain —
-        are checked per member BEFORE any state moves, offenders named, set
-        refused whole. */
-  release({ handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    /* DEC-49 REGION is-machine-release — REC-64/C-32.1. The FENCE and only the
-       fence: everything below in this method is a payload complaint and not this
-       family's business. D-229 measured that the two are confusable from the
-       outside, which is exactly why the governed span stops here. */
-    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
-      return { ok: false, reason: "MACHINE_CANNOT_RELEASE",
-               detail: "the collected-to-verified transition is a named member's decision (Intake Doctrine "
-                     + "section 4, C-18.1). A machine credential may read and may prepare the review packet, "
-                     + "and may not release. Sign in as a member." };
-    /* END DEC-49 REGION is-machine-release */
-    const ack = String(acknowledgment ?? "").trim();
-    const mit = String(mitigation ?? "").trim();
-    /* DEC-49 REGION is-release-account — REC-64/C-33.10-11. What the member has
-       to SAY to release a batch. The loop below refuses through a
-       template-literal code and is outside the span for that reason. */
-    if (!ack)
-      return { ok: false, reason: "NO_ACKNOWLEDGMENT",
-               detail: "a bulk release records the member's explicit acknowledgment that the batch is "
-                     + "homogeneous and that the risks of releasing in bulk were weighed. Without it the "
-                     + "record shows only that a button was pressed." };
-    if (!mit)
-      return { ok: false, reason: "NO_MITIGATION",
-               detail: "a bulk release records what the member actually did: what was sampled, what was "
-                     + "checked. 'Sender domains verified on a sample of twelve' can be audited later; "
-                     + "silence cannot." };
-    /* END DEC-49 REGION is-release-account */
-    for (const [name, v] of [["acknowledgment", ack], ["mitigation", mit]])
-      if (v.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
-        return { ok: false, reason: `BAD_${name.toUpperCase()}`,
-                 detail: `${name} is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a `
-                       + `quote, a backslash, or a newline` };
-
-    const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
-    if (!sel.ok) return sel;
-    if (!sel.members.length)
-      return { ok: false, reason: "EMPTY_SELECTION", handle, drift: sel.drift,
-               detail: "this selection resolves to no members, so there is nothing to release" };
-
-    const notInfo = [], illegal = [], crucial = [], entry = [];
-    for (const id of sel.members) {
-      const b = this.#one(`SELECT object_type, current_state, criticality FROM bundles WHERE bundle_id=?`, id);
-      if (!b || b.object_type !== "information") { notInfo.push(id); continue; }
-      if (b.current_state !== "collected") { illegal.push({ id, from: b.current_state }); continue; }
-      if (b.criticality === "crucial") { crucial.push(id); continue; }
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-      const fm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
-      const missing = [];
-      const ch = fm.content_hash;
-      if (!(typeof ch === "string" && /^sha256:[0-9a-f]{64}$/.test(ch))) missing.push("well-formed content_hash");
-      if (!this.#one(`SELECT 1 AS x FROM files WHERE bundle_id=? AND path='data/dataset.json'`, id))
-        missing.push("data/dataset.json");
-      if (!this.#one(`SELECT 1 AS x FROM files WHERE bundle_id=? AND path LIKE 'snapshots/%' LIMIT 1`, id))
-        missing.push("a file in snapshots/");
-      /* REC-54 / D-200: THE CHAIN IS AN ENTRY REQUIREMENT OF `verified`, and its
-         absence here is the write path the ten live bundles are a symptom of.
-         The catalog runs at op=ratify and NOWHERE ELSE — `runGate` has exactly
-         one call site — so this batch path, which is the OTHER way an
-         Information document reaches `verified`, checked three of C-2.7's entry
-         requirements and never asked C-18.9's question at all. A member could
-         release a hundred documents to verified, every one publishing a hash
-         that claims a route none of them names, and nothing in the plane would
-         object until an audit swept them afterwards. Checked HERE rather than
-         by running the whole catalog because this block is already the
-         entry-requirement gate and the refusal shape (`ENTRY_REQUIREMENTS`, the
-         offenders named, the set refused whole) is the one a caller of this op
-         already gets — a chain missing at release is the same KIND of fact as a
-         missing content_hash, and telling a member about it in a different
-         shape at a different moment would be the same defect wearing a
-         different hat. VERIFICATION.md 3a is the rule this satisfies: a rule
-         enforced in N places carries an assertion at EACH place, so the suite
-         asserts the audit arm AND this arm separately rather than letting one
-         absorb the other. */
-      const provRow = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, id);
-      if (provRow && provRow.content !== null) {
-        let preg = null;
-        try { preg = JSON.parse(provRow.content); } catch { preg = null; }
-        const pdocs = preg && Array.isArray(preg.documents) ? preg.documents : [];
-        const noChain = [];
-        pdocs.forEach((d, di) => {
-          const ch = d && typeof d === "object" ? d.provenance_chain : undefined;
-          if (!Array.isArray(ch) || ch.length === 0) noChain.push(di);
-        });
-        if (noChain.length)
-          missing.push(`a provenance_chain for documents[${noChain.join("], documents[")}] (C-18.9)`);
-      }
-      if (missing.length) entry.push({ id, missing });
-    }
-    if (notInfo.length)
-      return { ok: false, reason: "NOT_INFORMATION", offenders: notInfo.sort(),
-               detail: "release moves an Information state, and this selection carries something else. "
-                     + "The set is refused whole rather than narrowed." };
-    if (illegal.length)
-      return { ok: false, reason: "ILLEGAL_TRANSITION", to: "verified",
-               offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "only collected Information may be released. Something already verified has been "
-                     + "released once and release is not repeatable; something retired is terminal." };
-    if (crucial.length)
-      return { ok: false, reason: "CRUCIAL_IN_BATCH", offenders: crucial.sort(),
-               detail: "crucial-criticality material is never batch-released (Intake Doctrine v1.2): "
-                     + "ratifying it requires verifying its co-attestations, which is per-document work, "
-                     + "and a batch containing crucial material is not a low-variance collection. Release "
-                     + "these individually, or re-select without them." };
-    /* DEC-49 REGION is-release-entry — REC-64/C-33.12. */
-    if (entry.length)
-      return { ok: false, reason: "ENTRY_REQUIREMENTS",
-               offenders: entry.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, "
-                     + "and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route "
-                     + "for every document in the register (C-18.9). Releasing these as they stand would mint "
-                     + "bundles the catalog immediately rejects." };
-    /* END DEC-49 REGION is-release-entry */
-
-    const when = stampInstant("second");
-    const released = [];
-    for (const id of sel.members) {
-      const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-      const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", bundleId: id, releasedSoFar: released };
-      let text = liveMd.content;
-      const withHistory = Store.#appendStateHistory(text, {
-        timestamp: when, from_state: cur.current_state, to_state: "verified",
-        blurb: `batch release via selection ${handle}; acknowledgment and mitigation in Session Log`,
-        author: who });
-      if (!withHistory)
-        return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id, releasedSoFar: released,
-                 detail: "this document's state_history block cannot be extended in place, and a release "
-                       + "recording no transition would leave prior_state pointing at a history the "
-                       + "document does not carry (C-4.2)" };
-      text = withHistory;
-      text = Store.#setScalar(text, "prior_state", cur.current_state);
-      text = Store.#setScalar(text, "current_state", "verified");
-      text = Store.#setScalar(text, "last_updated", `"${when}"`);
-      const entryLog = `### Session ${when} | Released (batch) | ${who}\n`
-                     + `Trigger: selection ${handle}\n`
-                     + `Changes: state ${cur.current_state} to verified.\n`
-                     + `Acknowledgment: ${ack}\n`
-                     + `Mitigation: ${mit}\n`;
-      const at = text.indexOf("## Session Log");
-      if (at < 0) text += "\n## Session Log\n\n" + entryLog;
-      else {
-        const nxt = text.indexOf("\n## ", at + 1);
-        const cutAt = nxt === -1 ? text.length : nxt + 1;
-        text = text.slice(0, cutAt) + entryLog + "\n" + text.slice(cutAt);
-      }
-
-      const carried = [];
-      for (const r of this.sql.exec(
-        `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, id))
-        carried.push(r.content !== null
-          ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
-          : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-
-      const bytes = new TextEncoder().encode(text);
-      const fm = parseFrontmatter(text).data || {};
-      const promoted = this.promote({
-        bundleId: id, base: cur.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
-        author: who,
-        files: [{ path: "bundle.md", text, bytes: bytes.length,
-                  sha256: createSha256().update(bytes).hex() }, ...carried],
-        meta: { object_type: "information", title: fm.title,
-                current_state: "verified", prior_state: cur.current_state,
-                created: fm.created, last_updated: when,
-                criticality: fm.criticality ?? null },
-      });
-      if (!promoted.ok) return { ...promoted, bundleId: id, releasedSoFar: released };
-      released.push(id);
-    }
-    return { ok: true, handle, released: released.sort(), acknowledgment: ack, mitigation: mit,
-             weight: "refuse", drift: sel.drift };
   }
 
   /* REC-13 / REC-124 / REC-136: the conclusion and a project's conclusion record are basis-versions' (R16–R23). */
@@ -2872,11 +2662,6 @@ export class Store extends DurableObject {
                                    viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         retire: () => this.retire({ handle: url.searchParams.get("handle"),
           reason: url.searchParams.get("reason"),
-          viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),
-          author: url.searchParams.get("author") }),
-        release: () => this.release({ handle: url.searchParams.get("handle"),
-          acknowledgment: url.searchParams.get("acknowledgment"),
-          mitigation: url.searchParams.get("mitigation"),
           viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),
           author: url.searchParams.get("author") }),
         /* REC-54 / D-200. ONE bundle, no handle and no owner: this is a

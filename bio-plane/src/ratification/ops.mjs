@@ -1,7 +1,7 @@
 /* ratification — the Worker half of the two ceremonies (K3): `op=caseratify` (R2, the case document) and `op=ratify`
  * (R4–R6, a finding or its evidence), moved from `legacy-index` in T8. Each verifies everything at the control plane
  * (the fences, the signature, the gate), commits through this module's store half (`./index.mjs`, reached over the
- * Durable Object as `casedocfacts`, `casegate`, `caseratify`, `gatefacts`, `image`, `list`, `registerholds`, `publish`,
+ * Durable Object as `casedocfacts`, `casegate`, `caseratify`, `gatefacts`, `image`, `list`, `ratifygate`, `publish`,
  * `reusedparts`, `recordreuseverdicts`, `capturelimit`), and then copies the ratified bytes to the published store.
  * `op=caseratify`'s refusals before a signature exists are `./refusals.mjs`'s, the ones R18's pre-flight answers.
  *
@@ -9,16 +9,19 @@
  * the caller class (`cls`), the minted agent credential (`aiCred`), whether the caller arrived through a member's own
  * session (`viaSession`) with its viewer and session row (`sessViewer`, `sessRights`), the store's name and bindings,
  * and its helpers — `json`, `doAnswer`, `storeSilent`, `storeRefusal` (when the caller hands it), `STORE_SILENT_REASON`/
- * `_DETAIL`, `captureKey`, and two services of modules this one does not use directly: publication's container assembly
- * (`assembleCaseContainer`) and bias's gate arm (`withBiasChecks`). `stub` is the Durable Object stub the op is scoped
- * to. The legacy code's comments moved with it. */
+ * `_DETAIL`, and a service of a module this one does not use directly: bias's gate arm (`withBiasChecks`).
+ * The case container's assembly is public-read's (R6), imported; a caller may hand its own as `assembleCaseContainer`
+ * (the module's tests do). `stub` is the Durable Object stub the op is scoped to. The legacy code's comments moved with
+ * it. */
 
-import { runGate } from "../gate.mjs";
 import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../sshsig.mjs";
 import { deliveringPrincipal, delivererOf } from "../deliverer.mjs";
 import { publishedGraphEdges } from "../publication/index.mjs";
+/* K651, K691: the case container's one assembly (public-read R6), read here rather than handed in by the door; the file
+   is public-read's since publication's merge (K697). */
+import { assembleCaseContainer as assembleContainer } from "../publication/worker.mjs";
 import { partsHeld, withRegisterChecks } from "../provenance/index.mjs";
-import { userAgent } from "../capture/acquire.mjs";
+import { userAgent } from "../acquisition/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, isPublicHttpsLocator,
          MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
 import { rowOf, isCaseMemberBytes, completenessFields, withCaseMemberChecks } from "./checks.mjs";
@@ -36,14 +39,23 @@ function storeRefused(out, { json, storeRefusal }) {
   return typeof storeRefusal === "function" ? storeRefusal(out) : json(out.reply.body, out.reply.status);
 }
 
+/** The two ceremonies' dispatch (legacy-index map §4.4, moved in T18): `op=caseratify` and `op=ratify` answered with the
+ *  control plane's `ctx` (the union both handlers read); any other op is not this module's, and answers null. */
+export function ratificationOp(op, req, stub, ctx) {
+  if (op === "caseratify") return caseRatifyOp(req, stub, ctx);
+  if (op === "ratify") return ratifyOp(req, stub, ctx);
+  return null;
+}
+
   /* THE SIGNATURE, AND THE COMMIT. Same order of operations as `op=ratify`,
      deliberately: verify everything, run the catalog, then commit. What is
      different is the SUBJECT — this act commits the CASE's own assertions, out
      of the case document, which is the signature those facts had nowhere to
      move to before this item. */
 export async function caseRatifyOp(req, stub, ctx) {
-  const { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession,
+  const { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession,
           sessViewer, sessRights } = ctx;
+  const assembleCaseContainer = ctx.assembleCaseContainer || assembleContainer;
   const relay = { json, storeRefusal };
     /* REC-123 / C-32.13: the machine fence alone, FIRST and before the payload is read (`./refusals.mjs` holds the
        refusal and its region; R18's pre-flight answers the same one). THE GUARD'S SHAPE IS REC-46's AND NOT STYLE:
@@ -206,8 +218,9 @@ export async function caseRatifyOp(req, stub, ctx) {
      commit the published rows, then copy bytes to the published bucket.
      A failure mid-copy leaves rows that a re-ratification converges. */
 export async function ratifyOp(req, stub, ctx) {
-  const { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession,
-          sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL } = ctx;
+  const { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession,
+          sessViewer, sessRights, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL } = ctx;
+  const assembleCaseContainer = ctx.assembleCaseContainer || assembleContainer;
   const relay = { json, storeRefusal };
   const op = "ratify";
     /* DEC-49 REGION is-machine-ratify-bundle — REC-123 / C-32.12. The fence alone, first,
@@ -410,72 +423,33 @@ export async function ratifyOp(req, stub, ctx) {
     if (listOut.refused) return storeRefused(listOut, relay);
     if (!listOut.answered) return storeSilent("ratify/list", listOut.correlation);
     const known = new Set((listOut.result || []).map((b) => b.bundle_id));
-    /* D-556: the parts of each whole-hash row the gate admitted as HELD IN PARTS, as the record names them,
-       keyed by the whole hash. Publication copies exactly these, part by part. */
-    const partedRows = new Map();
-    /* R17 (N354, K477): the register probe below is a store read inside this act, so it follows R17's one rule. A
-       probe the store refused or did not answer is never a verdict about the bytes: the probe rejects (so `runGate`
-       rejects, promotion R28: an unanswered probe is never counted as present), and the act answers the store's
-       own refusal, or its silence with the correlation id, here, before any gate finding is composed. */
-    let probeUnanswered = null;
-    let registerGate;
-    try {
-      registerGate = await runGate({
-        bundleId: body.bundleId, image, knownIds: known,
+    /* N417 (K691): THE GATE RUNS IN THE STORE HALF (`ratifygate`), on this host's promotion instance, so the type
+       grammars later modules registered with record-core (C-2.7 among them) reach it as they reach promote's; the
+       Worker holds no host whose registrations it could read. What the gate reads is what this act read above under
+       the ratifier's scope, handed over whole. The register rows' bytes are probed there, in-process (the evidence
+       store, the register's receipts, the parts the bundle's record names); a store refused or silent here is R17's
+       relay, never a finding about the bytes (N354, K477): an unanswered gate is never read as a clean one, nor its
+       silence as PLANE_MISSING_BYTES.
+       D-556: `parted` names the parts of each whole-hash row the gate admitted as HELD IN PARTS, as the record names
+       them, keyed by the whole hash. Publication copies exactly these, part by part. */
+    const gateOut = await doAnswer(stub.fetch(new Request("http://do/ratifygate", {
+      method: "POST", body: JSON.stringify({
+        bundleId: body.bundleId, image, knownIds: [...known],
         registers: facts.registers,
-        /* REC-14: the two facts the catalog cannot read out of the bundle --
-           what THIS case asserted at its previous EDITION (C-21.1) and what the
-           cases beneath it FROZE when they were signed (C-21.2). They come from
-           the store with the rest of the gate facts, so the gate and the write
-           path judge against the same published record. Passing nothing here
-           does not soften the gate, it blinds it. */
-        publishedRegistry: facts.publishedRegistry,
-        /* REC-44: C-21.1's fact moved to CASE altitude and travels in its own
-           registry, from the same one place that has the rows. */
-        publishedCaseRegistry: facts.publishedCaseRegistry,
-        /* REC-18: and the third — what each basis target EARNS from the record
-           (resolutions against the question's subject entity; the capture
-           record for the capture axis). Same reasoning, same source: an earned
-           grade is computed by the record, so a gate that cannot see the record
-           cannot confirm one, and threading it here is what makes the gate and
+        /* REC-14: the two facts the catalog cannot read out of the bundle -- what THIS case asserted at its previous
+           EDITION (C-21.1) and what the cases beneath it FROZE when they were signed (C-21.2). They come from the
+           store with the rest of the gate facts, so the gate and the write path judge against the same published
+           record. Passing nothing here does not soften the gate, it blinds it. REC-44: C-21.1's fact at CASE altitude
+           travels in its own registry. REC-18: and what each basis target EARNS from the record, so the gate and
            op=promote's write path judge an earned leg identically. */
+        publishedRegistry: facts.publishedRegistry,
+        publishedCaseRegistry: facts.publishedCaseRegistry,
         earnedRegistry: facts.earnedRegistry,
-        hasCapture: async (sha) => {
-          if (!r2) return { present: false, bytes: 0 };
-          const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
-          if (h) return { present: true, bytes: h.size };
-          /* D-530: a miss on the whole-hash key is not absence. A register row naming the
-             WHOLE hash of a document captured in parts misses here, and the gate called it
-             "absent from the working bucket". The plane's own acquisition receipt (the
-             same question op=attest asks) says the bytes are held in parts; the gate still
-             refuses the row, because the publish step copies a capture by its whole hash,
-             but with a finding that is true. The register is not asked: it is the row
-             being checked. */
-          /* D-556 (BOB #34, 2026-09-25 00:00Z): and the parts THIS bundle's record names for the hash. When it
-             names them, each is headed and its digest verified by D-533's `partsHeld`, and the gate admits the
-             row only when all are present and verify; the verdict is the gate's. */
-          const hOut = await doAnswer(stub.fetch(
-            `http://x/registerholds?sha256=${encodeURIComponent(sha)}&bundle=${encodeURIComponent(body.bundleId)}`));
-          if (hOut.refused || !hOut.answered) {
-            probeUnanswered = hOut;
-            throw new Error("ratify/registerholds: the store did not answer the register probe");
-          }
-          const named = hOut.result ? hOut.result.parts : null;
-          if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
-          if (named?.state === "named") {
-            const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
-            if (!v.missing.length && !v.disagree.length && !v.unverified.length) partedRows.set(sha, named.parts);
-            return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
-          }
-          const inParts = !!(hOut.result && hOut.result.acquired === true);
-          return { present: false, bytes: 0, ...(inParts ? { heldInParts: true } : {}) };
-        },
-      });
-    } catch (e) {
-      if (!probeUnanswered) throw e;
-    }
-    if (probeUnanswered?.refused) return storeRefused(probeUnanswered, relay);
-    if (probeUnanswered) return storeSilent("ratify/registerholds", probeUnanswered.correlation);
+      }) })));
+    if (gateOut.refused) return storeRefused(gateOut, relay);
+    if (!gateOut.answered) return storeSilent("ratify/gate", gateOut.correlation);
+    const { parted, ...registerGate } = gateOut.result || {};
+    const partedRows = new Map(Array.isArray(parted) ? parted : []);
     /* The C-18 register arms run after the catalogue, over the same image (provenance R42–R46, K72 (4)), and
        bias's C-26.1–C-26.7 over it too (bias R9, K146): the catalogue no longer runs them. */
     /* R9: C-2.8's case-member arm, which the catalogue no longer runs, joins after it over the same image. */
@@ -682,14 +656,13 @@ export async function ratifyOp(req, stub, ctx) {
       return json({ ok: false, ...(pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub }),
                     store: storeName, tokenClass: cls },
                   pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS"
-                          || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED"
-                          /* CASE-2 / DEC-72: both are DISAGREEMENTS BETWEEN
-                             SIGNED DOCUMENTS, which is what 409 says here —
-                             the same class as the roster and the assertion
-                             beside them, not a fault in this request. */
-                          || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED"
-                          || pub.reason === "CASE_NAMES_NO_PROJECT"
-                          || pub.reason === "CASE_ROSTER_EXCLUDES_SELF"
+                          /* CASE-2 / DEC-72: a DISAGREEMENT BETWEEN SIGNED DOCUMENTS (the case's signer and this
+                             member's own frozen bytes), which is what 409 says here, not a fault in this request.
+                             T18 (T17's finding): CASE_MEMBERSHIP_DIVERGED, CASE_ROLES_DIVERGED,
+                             CASE_PRODUCTION_DIVERGED, CASE_NAMES_NO_PROJECT and CASE_ROSTER_EXCLUDES_SELF left this
+                             list: publication's commit has not answered them since CASE-5b (one copy of a case fact
+                             cannot disagree with itself), and none has a row. */
+                          || pub.reason === "CASE_ASSERTION_DIVERGED"
                           /* REC-140: a pinned finding's authority refusals (C-57.1, and
                              C-56.1 through REC-134's one check) — the REQUEST was refused,
                              which is what 409 says; `op=caseratify` relays the same two. */
