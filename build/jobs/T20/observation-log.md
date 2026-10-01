@@ -35,3 +35,22 @@ Job done on `job/T20/observation-log` (pushed, `e674376303`; ready to merge earl
 - `node checks/ownership.mjs … observation-log tranche/T20`: 4 files changed by observation-log; 0 failures.
 
 Size (session_01UacP3DwJUSWFBSvrTh4tEa): test runs 6, module lines 3123
+
+## J2 · COMPLETE
+
+B2 (CHANGE, K894) applied on `job/T20/observation-log` (pushed, `02888ac978`). No merge of `tranche/T20` was asked for.
+
+**Applied:**
+- `CONDITION_KINDS["render-deferred"]` (`vocabulary.mjs`:1400–1402): "LIVE: store.mjs #conditionsRenderDeferred" now reads "LIVE: queue-producers #conditionsRenderDeferred". The rest of the sentence is unchanged, and so is its comment above (:1395).
+- The rollup comment (:1592–1595) names `ai-runs`' `#aiRunSearchState`.
+- The header's provenance stays. So does the reader-run comment at :1095, a measurement dated to the tree it was taken on.
+
+**Generated artifact (REPORT, as J1 item 1, widened):** `agent-worker/dist/agent-worker.bundled.mjs` / `.bundle.json`. Its manifest hashes `vocabulary.mjs` too, and `fleetbundles.test.mjs` now names it beside `checks.mjs`. `CONDITION_KINDS`' sentence is outward text, so this time the bundle's bytes may move if the agent-worker build includes that table. Regenerate at layer close (`node bio-plane/scripts/bundles.mjs`). I did not write it (§14).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/observation-log/ bio-plane/test/m/queue/`: tests 133, pass 133, fail 0.
+- format: 0 failures; architecture `observation-log`: 0 failures; coverage: 32 of 32, 0 failures; ownership vs `tranche/T20`: 5 files, 0 failures.
+
+Everything else in J1 stands (R32 export and test, K882's header, deferred none).
+
+Size (session_01UacP3DwJUSWFBSvrTh4tEa): test runs 8, module lines 3123
