@@ -155,7 +155,7 @@ test("R14 profilesSet replaces the list: PROFILES_NOT_ADMIN, NOT_A_LIST, UNKNOWN
 
 /* ------------------------------------------------------------------------------ R15 end to end, on the real plane */
 
-const SRC = fileURLToPath(new URL("../../../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ADMIN_TOKEN = "adm-profiles-e2e-0123456789";
 let mf = null;
 after(async () => { if (mf) await mf.dispose(); });

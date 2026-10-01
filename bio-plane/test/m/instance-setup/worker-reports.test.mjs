@@ -1,7 +1,7 @@
-/* The instance's reports and its limits through the real Worker (Miniflare over `src/index.mjs`), where the door hands
-   the report ops to this module (`INSTANCE_SETUP_OPS`, the legacy-index map's §4.4 move): op=bootstrap (R17),
-   op=selftest (R18), op=livefire (R19), op=runtime (R37) and op=cpuprobe (R38, R40), and capture's compute listener
-   recording into the instance's own measurements (R42, R33, R34). Converts instance-setup's shares of
+/* The instance's reports and its limits through the real Worker (Miniflare over `src/plane/index.mjs`, plane R6's
+   entry), where the door hands the report ops to this module (`INSTANCE_SETUP_OPS`, the legacy-index map's §4.4 move):
+   op=bootstrap (R17), op=selftest (R18), op=livefire (R19), op=runtime (R37) and op=cpuprobe (R38, R40), and capture's
+   compute listener recording into the instance's own measurements (R42, R33, R34). Converts instance-setup's shares of
    `bio-plane/test/livefire.test.mjs` (the probe token's pass through the Worker), `installer.test.mjs` (no R2 declared;
    a published ADMIN_TOKEN named by its binding), `d334-monitor-credential.test.mjs` (arm B: a dead DAEMON_TOKEN still
    named) and `subresources.test.mjs` (the compute measurement, the probe's runs, op=runtime). The published values are
@@ -14,7 +14,7 @@ import { Miniflare } from "miniflare";
 import { liveToken } from "../../../src/tokens.mjs";
 import { RUNTIME_ASYMMETRY, FLEET_BINDINGS } from "../../../src/setup.mjs";
 
-const SRC = fileURLToPath(new URL("../../../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const SECRETS = fileURLToPath(new URL("../../../dist/SECRETS.txt", import.meta.url));
 const published = (name) => {
   const l = readFileSync(SECRETS, "utf8").split("\n").find((x) => x.startsWith(name + "="));
