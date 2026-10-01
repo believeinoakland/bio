@@ -31,7 +31,7 @@ import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
-import { lawProposalLabel } from "../../checks/bio-checks.mjs";
+import { lawProposalLabel } from "../action-grammar/index.mjs";
 import { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 import { ACTION_CLOCKS_TABLES, migrateActionClocks } from "./schema.mjs";
 
@@ -491,7 +491,7 @@ export class ActionClocks {
 }
 
 /* R2: the label of a clock entry proposed apart; it says, in each state, what the proposal is not. The governing-laws
-   label's states are legacy-checks' (REC-195). */
+   label's states are action-grammar's (REC-195, its R2). */
 const PROPOSAL_SAYS = {
   machine_proposed: "a machine credential computed this clock entry from the jurisdiction profile. That is machine "
     + "work, labelled as machine work: it is not on the action's clock, and nothing puts it there until a member "
