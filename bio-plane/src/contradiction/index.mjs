@@ -1,7 +1,7 @@
 /* contradiction (layer 6): Contradiction's IDENTIFY (`build/requirements/contradiction.md`;
    `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md`). The pairing read (R5–R12) and the one door a run's judgement
    enters the record by (R13–R16), reached through `contradictionOf(ctx)` (K61). Moved from `store.mjs` (REC-146's
-   pairing, REC-147's candidate door, their dispatch), `bio-checks.mjs` (C-60, C-93, now `checks.mjs`) and
+   pairing, REC-147's candidate door, their dispatch), the old catalogue (C-60, C-93, now `checks.mjs`) and
    `schema.mjs` (`contradiction_candidates`, now `schema.mjs` here). The judgement's words stay in
    `../contradiction.mjs` and are re-exported here. Whether a run is visible, running and the caller's is asked of a
    run gate `ai-runs` registers (R21, K31), `legacy-store` registering until then.
@@ -34,7 +34,10 @@ import { basisVersionsOf, versionsIn } from "../basis-versions/index.mjs";
 /* `inquiry`'s N345 services (its R46–R48) are read through the namespace, so a name its job has not yet exported reads
    `undefined` rather than failing the import: this module is built against their stated interface (START, K481). */
 import * as inquiryModule from "../inquiry/index.mjs";
-import { sha256HexSync, canonicalJson, isMachineIdentity, parseFrontmatter } from "../../checks/bio-checks.mjs";
+import { sha256HexSync } from "../record-grammar/sha256.mjs";
+import { canonicalJson } from "../record-grammar/json.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { CONTRADICTION_LABELS, JUDGEMENT_PROMPT, JUDGEMENT_PROMPT_SHA256, judgementSide,
          renderJudgementInput, RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../contradiction.mjs";
 import { CONTRADICTION_SCHEMA, CONTRADICTION_COLUMNS } from "./schema.mjs";

@@ -19,7 +19,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { migrateBasisVersions } from "../../../src/basis-versions/schema.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
