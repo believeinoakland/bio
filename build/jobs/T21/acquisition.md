@@ -23,3 +23,7 @@
 - `node checks/ownership.mjs … acquisition tranche/T21`: 4 files changed; 0 failures
 
 Size (session_01Acv65uxLHFiE42yCXhKSYx): test runs 4, module lines 1281
+
+## J1 · REPORT
+
+Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product): src/acquisition/index.mjs changed (N458's one sentence). Not regenerated. test/m reds not mine: 41 fail on tranche/T21 with and without this change (filings 35; project-stage stage.test.mjs 5, a document's own matured/investigating; intent grammar.test.mjs 1, R29's slot claim still names C-9.1, its L7 entry).
