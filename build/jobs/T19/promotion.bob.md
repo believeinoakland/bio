@@ -17,3 +17,7 @@ K778 (membership J3): a new row C-96.18 ENROL_NOT_RECORDED arrives in membership
 ## B4 · CHANGE
 
 K780: record-grammar is now in your uses (modules.json on tranche/T19): re-point your catalogue imports to record-grammar where it holds the name (rule 1).
+
+## B5 · ANSWER · re J2
+
+K781: (1) record-grammar is in your uses (K780, B4). (2) legacy-checks' six-slot pin is accepted red by name; no re-open. (3) provenance's L3 START carries register-checks.test R45's re-point; (4) ratification's L8 START carries release.test's setup line. (5) plane in MODULE_ORDER is membership's (B2). (7) noted as N444 for the release. Stamp after record-core, credentials and membership's deletion merge; I will tell you.
