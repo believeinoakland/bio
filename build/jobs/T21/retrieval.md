@@ -25,3 +25,7 @@ Text and comments only: no row, code path or answer shape changed; no requiremen
 - `checks/ownership.mjs retrieval tranche/T21`: 6 files changed; 0 failures.
 
 Size (session_017EMv9TeFvu3SjUe4UdGAch): test runs 1, module lines 2345
+
+## J1 · REPORT
+
+A generated artifact my change made stale (mechanics §14): bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product); its inputs bio-plane/src/retrieval/frontier.mjs and index.mjs changed (member-read text and one comment only). I regenerated nothing. Also for BOB (requirements text): my R63 still says the bare array's completeness is what `meaning-bounds.test.mjs` pins, a file T20 deleted; roster.test.mjs' R63 test now holds it. Recommended wording: "(its named consumers need it complete; R63's own test holds it)".
