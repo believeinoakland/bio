@@ -41,3 +41,7 @@ B3 asks for two tests (each op of `publicReadOps`, `projectStageOps`, `actionClo
 - `node checks/ownership.mjs … legacy-store tranche/T18`: `6 files changed; 0 failures`.
 
 Size (session_01HwGtdw3UFzQvnNqovnN3Mr): test runs 19, module lines 2287
+
+## J3 · REPORT
+
+Found in other modules (details in my record's Completion): (1) skills: `src/skillpack.mjs` has no product importer left in the plane (the store's import of `checkSkillVersion` was never read). (2) retrieval: `retrieval.md`:109 names legacy-store's `#bundleRedactor`, deleted (dead before this job). (3) record-core: R21's note that legacy-store "declares the rest" is stale; it declares nothing. (4) Stale generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` (not_product), regenerated at the layer close. Pre-existing, not mine: fleetbundles' "agent-worker's 153 inputs are all recorded", and test/m's `affordances/catalogue.test.mjs`:423 and `control-plane/doorbell.test.mjs`:465 fail on the unchanged tree too. (5) C-33.41's `where` names the deleted `actNoCitation`; T19's catalogue job re-points it to the entities and progressions sites (awaiting stamp).
