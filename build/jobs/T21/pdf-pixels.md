@@ -12,3 +12,7 @@
 - **Tests:** pagepixels 178 passed, 0 failed; imagecrop 54/0; jbig2 179/0; jpx 205/0; both probes pass `node --check`.
 - **Checks:** format: 86 modules, 0 failures; architecture: 13 product files, 0 failures; coverage: 25 of 25 live ids, 0 failures; ownership: 0 failures.
 - Size (session_01Se6xS58Nis2ohaMchdpduN): test runs 4, module lines 3111
+
+## J1 · COMPLETE
+
+Complete. N455 and N469 applied, comments only. Both probes no longer name battery.mjs or coverage.mjs as runners. agenda-scan-census's ocr-member-e2e notes: :8 names no file now, and the :32 claim is dropped (no test makes it; it is ocr-worker's, not a pdf-pixels requirement). Own fix: pagepixels-worker.mjs's note that the suite imports it (false). No generated artifact staled (pagepixels.mjs is untouched). Tests: pagepixels 178/0, imagecrop 54/0, jbig2 179/0, jpx 205/0. Checks: format, architecture, coverage (25/25) and ownership all 0 failures. For ocr-worker: no test now drives scan-ccitt-g4-page.pdf through the engine to show it mints no reading_refs reference. Details are in the record's Completion section.
