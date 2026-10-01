@@ -139,10 +139,13 @@ export function defaultFakes() {
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
     actionClocks: { overdueClocks: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
-                    remindersDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+                    remindersDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
+                    calendarFactsRead: () => ({ ok: true, as_of: "2026-09-01", paths: [], actions_limit: 500, truncated: false }) },
     escalation: { escalationsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
     actionPlans: { checkpointsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
     actions: { holdsDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    filingTemplates: { reviewsRequested: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    localFacts: { factsDue: () => ({ ok: true, due: [], unknown: [], absent: [] }) },
   };
 }
 

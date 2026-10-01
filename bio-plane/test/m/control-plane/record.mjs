@@ -50,7 +50,7 @@ function cursor(rows) {
 }
 
 /* R42: the order promotion ranks its steps by, as the composition root gives it: the modules' total order with this
-   module's step where the held step stood, after every module of layer 10 and before `affordances`. */
+   module's step at the rank `legacy-store`'s step had, after every module of layer 10 and before `affordances`. */
 export const STEP_ORDER = Object.freeze((() => {
   const o = MODULE_ORDER.filter((m) => m !== "control-plane");
   const at = o.indexOf("affordances");

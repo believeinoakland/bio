@@ -196,3 +196,48 @@ test("R19 R2: actionhold, graded `reasoned` (K918), is refused without its reaso
   assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "released", reason: "the claim was withdrawn", viewer: M, author: M }).ok, true);
   assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).pressure[0].holds.map((h) => h.hold), ["in_place", "released"]);
 });
+
+/* R30 (K921, T21): `templateretire` and `factconfirm`, graded `reasoned`, driven at filing-templates' and local-facts'
+   own interfaces over their fixtures (real record-core, membership and jurisdiction profiles). Each is called
+   well-formed but without its account, then with one. */
+import * as ft from "../filing-templates/fixture.mjs";
+import * as lf from "../local-facts/fixture.mjs";
+import { LOCAL_FACT_ACTS } from "../../../src/local-facts/index.mjs";
+
+test("R19 R30: templateretire, graded `reasoned`, is refused without its reason with a code in JUSTIFICATION_REFUSALS "
+   + "— retiring a whole template by an approver, and withdrawing a draft by its author — and accepted with one", () => {
+  assert.equal(RUNGS.templateretire, "reasoned");
+  for (const reason of [undefined, null, "", "   "]) {
+    const w = ft.seeded();
+    const a = ft.approved(w);
+    const whole = w.ft.templateRetire({ template: a.template, reason, by: ft.V("bob"), viewer: ft.V("bob") });
+    assert.ok(JUSTIFICATION_REFUSALS.includes(whole.reason), `retire ${JSON.stringify(reason)}: ${JSON.stringify(whole).slice(0, 200)}`);
+    const d = ft.draft(w, { name: "Another ask" });
+    const one = w.ft.templateRetire({ template: d.template, version: d.version, reason, by: ft.V("alice"), viewer: ft.V("alice") });
+    assert.ok(JUSTIFICATION_REFUSALS.includes(one.reason), `withdraw ${JSON.stringify(reason)}: ${JSON.stringify(one).slice(0, 200)}`);
+  }
+  const w = ft.seeded();
+  const a = ft.approved(w);
+  const ok = w.ft.templateRetire({ template: a.template, reason: "the law it relied on was repealed", by: ft.V("bob"), viewer: ft.V("bob") });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  const d = ft.draft(w, { name: "Another ask" });
+  const wd = w.ft.templateRetire({ template: d.template, version: d.version, reason: "drafted in error", by: ft.V("alice"), viewer: ft.V("alice") });
+  assert.equal(wd.ok, true, JSON.stringify(wd).slice(0, 300));
+});
+
+test("R19 R30: factconfirm, graded `reasoned`, is refused without how the member checked, for each of its three acts, "
+   + "with a code in JUSTIFICATION_REFUSALS, and accepted with it; a later act supersedes it on read", () => {
+  assert.equal(RUNGS.factconfirm, "reasoned");
+  const w = lf.world();
+  const fields = (act) => (act === "correct" ? { value: w.status(lf.P.tz).profile.value, source: "the office's posted notice" } : {});
+  for (const act of LOCAL_FACT_ACTS)
+    for (const how of [undefined, null, "", "   "]) {
+      const r = w.act(lf.P.tz, act, { ...fields(act), how });
+      assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason), `${act} ${JSON.stringify(how)}: ${JSON.stringify(r).slice(0, 200)}`);
+    }
+  for (const act of LOCAL_FACT_ACTS)
+    assert.equal(w.act(lf.P.tz, act, { ...fields(act), how: "called the clerk's office" }).ok, true, act);
+  assert.equal(w.status(lf.P.tz).status, "disputed", "the latest act, a dispute, governs on read");
+  assert.equal(w.act(lf.P.tz, "confirm", { how: "checked the posted notice again" }).ok, true);
+  assert.equal(w.status(lf.P.tz).status, "confirmed", "and a later confirmation supersedes it");
+});

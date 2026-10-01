@@ -133,6 +133,10 @@ export function defaultFakes() {
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
     /* actions R54 (queue-producers R19): no legal pressure mark awaits a hold until a test says otherwise. */
     actions: { holdsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }) },
+    /* filing-templates R20, local-facts R4 (queue-producers R20, R21; K921): no review asked and no fact due until a test
+       says otherwise. */
+    filingTemplates: { reviewsRequested: ({ limit } = {}) => ({ ok: true, items: [], limit: limit ?? 500, truncated: false, cursor: null }) },
+    localFacts: { factsDue: () => ({ ok: true, due: [], unknown: [], absent: [] }) },
     affordances: { affordanceFacts: () => ({ ok: false }) },
     scheduler: { arm: async () => null, register: () => ({ ok: true }) },
   };

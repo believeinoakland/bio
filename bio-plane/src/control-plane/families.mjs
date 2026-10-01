@@ -49,12 +49,16 @@ import * as PUBLIC_READ from "../public-read/checks.mjs";
 import * as RATIFICATION from "../ratification/checks.mjs";
 import * as CASE_AUTHORING from "../case-authoring/checks.mjs";
 import * as REVIEW from "../review/checks.mjs";
+import * as LOCAL_FACTS from "../local-facts/checks.mjs";
 import * as STANDARDS from "../standards/checks.mjs";
 import * as CONFORMANCE from "../conformance/checks.mjs";
 import * as CONSEQUENCES from "../consequences/checks.mjs";
-/* K835, K837: the action layer's eight families are action-grammar's; `actions/checks.mjs` only re-exports them. */
+/* K835, K837, K914: the action layer's eight families are action-grammar's, read from there; `actions` holds no file of
+   them (its re-export was deleted, K914). */
 import * as ACTION_GRAMMAR from "../action-grammar/checks.mjs";
 import * as ACTION_CLOCKS from "../action-clocks/checks.mjs";
+/* K921 (R43): filing-templates' C-125 and local-facts' C-126, each in its place in the module order. */
+import * as FILING_TEMPLATES from "../filing-templates/checks.mjs";
 import * as FILINGS from "../filings/checks.mjs";
 import * as ESCALATION from "../escalation/checks.mjs";
 import * as ACTION_PLANS from "../action-plans/checks.mjs";
@@ -106,11 +110,13 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/ratification/checks.mjs", RATIFICATION],
   ["src/case-authoring/checks.mjs", CASE_AUTHORING],
   ["src/review/checks.mjs", REVIEW],
+  ["src/local-facts/checks.mjs", LOCAL_FACTS],
   ["src/standards/checks.mjs", STANDARDS],
   ["src/conformance/checks.mjs", CONFORMANCE],
   ["src/consequences/checks.mjs", CONSEQUENCES],
   ["src/action-grammar/checks.mjs", ACTION_GRAMMAR],
   ["src/action-clocks/checks.mjs", ACTION_CLOCKS],
+  ["src/filing-templates/checks.mjs", FILING_TEMPLATES],
   ["src/filings/checks.mjs", FILINGS],
   ["src/escalation/checks.mjs", ESCALATION],
   ["src/action-plans/checks.mjs", ACTION_PLANS],

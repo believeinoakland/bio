@@ -4,7 +4,7 @@
    office-specific 2026 entries (M-189–M-191; K936). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, actionMd, CLK } from "./fixture.mjs";
+import { world, V, MACHINE, actionMd, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { factPath } from "../../../src/local-facts/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -155,14 +155,15 @@ test("R11 calendarFactsRead lists, once each, the holiday entries and office hou
     [pathOf(TEST, 2026), [A, B]], [pathOf(TEST, 2026, ["Town Clerk"]), [A, B]], [pathOf(TEST, 2027), [A, B]],
     [hours({ role: "Town Clerk", body: "City of Port Ellery" }), [A, B]],
   ].sort((x, y) => (x[0] < y[0] ? -1 : 1));
-  assert.deepEqual(r.paths.map((p) => [p.path, p.actions]), want,
+  assert.deepEqual(r.paths.map((p) => [p.path, p.actions.map((x) => x.action)]), want,
     "a kind with no business deadline (C) reads nothing; a closed action (D) reads nothing; 2028 is not listed, so is no fact; another office's entry, and the venue's hours (the addressee is the office), are not read");
   assert.equal(new Set(r.paths.map((p) => p.path)).size, r.paths.length, "once each");
   assert.deepEqual([r.as_of, r.actions_limit, r.truncated], ["2026-09-28", 500, false]);
   assert.deepEqual(w.rows(`SELECT (SELECT COUNT(*) FROM manifest) AS m, (SELECT COUNT(*) FROM action_reminders) AS r`), before, "writes nothing");
   /* an action addressing no office reads its kind's venue's hours. */
   w.promote("ACTN-2026-0005-e", actionMd("ACTN-2026-0005-e", ["counterparty:", "  state: audience", "  description: residents", "action_kind: records_request"]));
-  assert.deepEqual(w.c.calendarFactsRead({ viewer: M }).paths.find((p) => p.path === hours({ venue: "records_request" })).actions, ["ACTN-2026-0005-e"]);
+  assert.deepEqual(w.c.calendarFactsRead({ viewer: M }).paths.find((p) => p.path === hours({ venue: "records_request" })).actions,
+    [{ action: "ACTN-2026-0005-e", project: null, created_by: M }]);
   /* the horizon moves with the instance clock: from 2027, the 2026 entries are no longer read. */
   const later = w.c.calendarFactsRead({ viewer: M, now: Date.parse("2027-02-01T00:00:00Z") });
   assert.deepEqual(later.paths.map((p) => p.path).filter((x) => x.includes("2026")), []);
@@ -181,5 +182,29 @@ test("R11 at most 500 actions are read, `truncated` stated", () => {
   const r = w.c.calendarFactsRead({ viewer: M });
   assert.equal(r.truncated, true);
   assert.equal(r.paths[0].actions.length, 500);
-  assert.ok(!r.paths[0].actions.includes(id(501)));
+  assert.ok(!r.paths[0].actions.some((a) => a.action === id(501)));
+});
+
+test("R11 each path's actions are answered as {action, project, created_by}, the project and creator as R3 computes them (K1000): one created by a member in a project, one by a machine in another member's project", () => {
+  const w = world();
+  for (const x of ["CONF-2026-0001-mine", "CONF-2026-0002-bobs"]) w.doc(x);
+  w.determinations.set("CONF-2026-0001-mine", { project: "PROJ-2026-0001", sees: [M, BOB] });
+  w.determinations.set("CONF-2026-0002-bobs", { project: "PROJ-2026-0002", sees: [M, BOB] });
+  const rests = (t) => ["action_basis:", `  - target: ${t}`, "    kind: rests_on"];
+  const kind = [...CPL("Town Clerk", "City of Port Ellery"), "action_kind: records_request", "clock:", ...CLK("2026-09-01")];
+  assert.equal(w.promote(A, actionMd(A, [...kind, ...rests("CONF-2026-0001-mine")])).ok, true);
+  const byMachine = w.promote(B, actionMd(B, [...kind, ...rests("CONF-2026-0002-bobs")]), { author: MACHINE });
+  assert.equal(byMachine.ok, true, JSON.stringify(byMachine).slice(0, 300));
+  /* a later revision by another member: the creator is still the one whose write created it. */
+  assert.equal(w.promote(A, w.text(A).replace("title: ", "title: x"), { author: BOB }).ok, true);
+  const want = [{ action: A, project: "PROJ-2026-0001", created_by: M }, { action: B, project: "PROJ-2026-0002", created_by: MACHINE }];
+  const r = w.c.calendarFactsRead({ viewer: M });
+  assert.ok(r.paths.length >= 3);
+  for (const p of r.paths) assert.deepEqual(p.actions, want, p.path);
+  /* the same as R3 answers them (both carry a past pending entry). */
+  assert.deepEqual(w.c.overdueClocks({ viewer: M }).items.map(({ action, project, created_by }) => ({ action, project, created_by })), want);
+  /* the project is read as the viewer sees it: a determination the viewer may not see is passed over. */
+  w.determinations.set("CONF-2026-0002-bobs", { project: "PROJ-2026-0002", sees: [BOB] });
+  assert.deepEqual(w.c.calendarFactsRead({ viewer: M }).paths[0].actions.find((a) => a.action === B),
+    { action: B, project: null, created_by: MACHINE });
 });

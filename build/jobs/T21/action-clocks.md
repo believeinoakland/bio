@@ -1,6 +1,6 @@
 # action-clocks (T21)
 
-**Status** · session_01VHoiWTjJjQQgWM9t7qUp3J · depth 2 · COMPLETE · handled B3
+**Status** · session_015pvHnYxQ54F92EcJ7ppwXw · depth 2 · COMPLETE · handled B4
 
 ACTION-CLOCKS #3, T21 layer 9. Started from `tranche/T21` @ e6bec46fb1; merged `tranche/T21` @ 8158a9bd53 (local-facts, B3/K989) before aligning.
 
@@ -31,6 +31,20 @@ None.
 - `format`: 86 modules, 84 requirements files, 0 failures. `architecture action-clocks`: 8 product files, 36 relative imports, 0 failures. `coverage action-clocks`: 11 of 11 live ids named by a test, 0 failures. `ownership action-clocks tranche/T21`: 7 files changed, 0 failures.
 
 Size (session_01VHoiWTjJjQQgWM9t7qUp3J): test runs 14, module lines 859
+
+## Re-opening: ACTION-CLOCKS #4 (B4, K1000)
+
+Started from `job/T21/action-clocks` @ f8e0fea070 (the tranche head then).
+
+- **R11 (K1000).** `calendarFactsRead` now answers each path's actions as `{action, project, created_by}` instead of bare ids, the project from `#projectOf` (the first `rests_on` determination the viewer sees, through `conformance.determinationRead`) and the creator from `#createdBy` (the author of the first manifest entry): the same two private methods R3's `overdueClocks` uses, so the rule is not copied. Each action is computed once per read; every path gets its own copy of the object.
+- **Not yet met: T21 marks met:** R11. Test: `calendar.test.mjs` "R11 each path's actions are answered as {action, project, created_by} …": two actions, one created by a member resting on a determination in PROJ-2026-0001, one created by a machine resting on another member's determination in PROJ-2026-0002; every path answers both with that project and creator; a later revision by another member leaves the creator unchanged; the answer equals R3's for the same actions; a determination the viewer cannot see answers the project null. The two existing R11 tests now read `.action` from each entry.
+- **Catalogue rows:** none added, moved, re-keyed or re-worded.
+- **Deferred:** none.
+- **Found in other modules (REPORT J6):** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) is stale from this change under `bio-plane/src/action-clocks/`; regenerate at the layer close.
+- **Tests:** `node --test test/m/action-clocks/` (in `bio-plane/`): 27 pass, 0 fail. `node --test test/m/queue-producers/`: 47 pass, 0 fail. `build/manifest.md` names no layer tests.
+- **Checks:** format: 86 modules, 84 requirements files; 0 failures. architecture action-clocks: 8 product files, 36 relative imports; 0 failures. coverage action-clocks: 11 of 11 live ids named by a test; 0 failures. ownership action-clocks tranche/T21: 3 files changed; 0 failures.
+
+Size (session_015pvHnYxQ54F92EcJ7ppwXw): test runs 3, module lines 862
 
 ## J1 · QUESTION
 
@@ -65,3 +79,11 @@ Found in other modules (record, 'Found in other modules'): (1) Stale generated a
 ## J5 · COMPLETE
 
 B1-B3 applied. R10 (K921, K936, K986): a business count reads the all-offices entries plus those naming the action's ONE office (the addressee when it is a named office, else the kind's venue). It counts on local-facts' governing value and answers calendar {status confirmed|unconfirmed|corrected, years, says}, with 'counted on an unconfirmed calendar (<basis>, <date>)' or local-facts' 'corrected locally by <member>, <date>'. It is undetermined with why when an entry is disputed or absent, or when the office is named by no entry and there is none for all offices. R11: calendarFactsRead({viewer, now?}) gives the held holiday-entry and hours paths, once each with their actions, for the horizon this year to max(latest pending entry's year, next year); at most 500 actions, truncated stated. N465 re-worded (and the same stale note in schema.mjs and actionClocksOf). N469: nothing live in my paths. Not-yet-met marks met: R10, R11 (calendar.test.mjs: 3 'R10' tests on the test profile, one of them on the first profile's M-189-M-191; 2 'R11'). No catalogue rows added, moved or re-worded, so none is awaiting stamp. Tests 26/26; escalation, action-plans, monitoring, queue-producers, affordances and local-facts green; filings 13/35, the same on tranche/T21. format, architecture, coverage and ownership: 0 failures. Deferred: none. Record: build/jobs/T21/action-clocks.md.
+
+## J6 · REPORT
+
+Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product), from my R11 change under bio-plane/src/action-clocks/index.mjs; regenerate at the layer close. Nothing else found in other modules.
+
+## J7 · COMPLETE
+
+B4 (K1000) applied. R11: calendarFactsRead answers each path's actions as {action, project, created_by}, computed by the same #projectOf and #createdBy R3 uses (not copied). Not-yet-met mark met: R11 (calendar.test.mjs 'R11 each path's actions are answered as {action, project, created_by} ...': a member-created action in one project and a machine-created action in another member's project, each answered with its project and creator, equal to R3's answer; an unseen determination answers project null). No catalogue rows touched. Tests: action-clocks 27/27; queue-producers 47/47. format, architecture, coverage, ownership: 0 failures. Deferred: none. Stale: the plane's bundle (REPORT). Record: build/jobs/T21/action-clocks.md, section 'Re-opening: ACTION-CLOCKS #4'.

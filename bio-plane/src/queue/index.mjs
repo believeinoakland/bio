@@ -21,8 +21,8 @@
  *   record, membership, connections, progressions, bias, affordances, scheduler, tasks,
  *   producers   the providers (`producers` is `queue-producers`, handed whichever of its own providers were given
  *              here: governor, provenance, capture, captureRequests, basisVersions, aiRuns, publication, reevaluation,
- *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions and the shared
- *              ones);
+ *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions, filingTemplates,
+ *              localFacts and the shared ones);
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
@@ -97,7 +97,9 @@ export class Queue {
   static PRODUCER_DEPS = Object.freeze(["record", "membership", "governor", "provenance", "capture", "captureRequests",
     "basisVersions", "progressions", "aiRuns", "bias", "publication", "reevaluation", "intent", "monitoring", "contradiction",
     /* queue-producers R15–R19 (K608, K728; K899 (7)): the Action layer's providers, `actions` for R19's holds. */
-    "actionClocks", "escalation", "actionPlans", "actions"]);
+    "actionClocks", "escalation", "actionPlans", "actions",
+    /* queue-producers R20, R21 (K921): the review requests and the facts due; queue passes them and calls neither. */
+    "filingTemplates", "localFacts"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -485,10 +487,12 @@ export class Queue {
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
    *  task (taskresolve). The Action layer's four: a checkpoint is judged (action-plans R16), a proposed stage advanced
    *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold stated (actions R52;
-   *  K899 (7)). */
+   *  K899 (7)); and K921's two: a template version reviewed (filing-templates R9), a local fact confirmed
+   *  (local-facts R1). */
   static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset",
     "plan-checkpoint-due": "checkpointrecord", "escalation-stage-proposed": "escalationadvance",
-    "action-reminder": "reminderanswer", "litigation-hold": "actionhold" });
+    "action-reminder": "reminderanswer", "litigation-hold": "actionhold",
+    "template-review-requested": "templatereview", "local-fact-due": "factconfirm" });
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
     "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by "
@@ -510,6 +514,12 @@ export class Queue {
     "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry "
       + "rather than by a task: it leaves when a member records the hold in place or released, with a reason "
       + "(op=actionhold).",
+    "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by "
+      + "the version and by you rather than by a task: it leaves when you review the version's present text "
+      + "(op=templatereview), or when the version is no longer in review.",
+    "local-fact-due": " This one is a holiday calendar or office hours one of the group's deadlines reads, keyed by the "
+      + "fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no "
+      + "live action reads it.",
   });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
@@ -842,8 +852,8 @@ export class Queue {
      * mute. That reason is true and it is not the only one. A kind is the word
      * a SURFACE renders, a feed groups on and a member recognises across items,
      * and `queuestate.mjs`'s three vocabularies are the single authority on the
-     * whole set — `op=affordances` publishes them and `check-refusal-codes`'
-     * arm E holds every term to carrying the sentence a member reads. So an
+     * whole set — `op=affordances` publishes them and every term carries the
+     * sentence a member reads (R1; `catalogue.test.mjs`' R1 test). So an
      * OBLIGATION or a FINDING minted under a kind no vocabulary names is
      * exactly as unrenderable as a CONDITION was, and it was reaching members.
      * PL-15 needed one new FINDING slug refused when it is misspelled, and
@@ -890,8 +900,9 @@ export class Queue {
        * that claims too much — and whose set would GROW with the function. The
        * helper sits ABOVE the marker so its own variable-coded return is not
        * inside the governed span, and every code below is a STRING LITERAL at
-       * its site, which is what lets arm C COMPARE them rather than read past
-       * them (PL-3's convention, REC-71's measurement). */
+       * its site, as the old DEC-49 guard's arm C (`civicos-ui/check-refusal-codes.mjs`,
+       * deleted in T20) needed in order to COMPARE them (PL-3's convention, REC-71's
+       * measurement); the R11 tests compare code, check and translation now. */
       if (!Queue.QUEUE_CLASSES.includes(it.class))
         return refusal("NO_CLASS",
           `every queue item carries a class from ${Queue.QUEUE_CLASSES.join(" | ")}, and this one `
@@ -923,8 +934,8 @@ export class Queue {
       /* END DEC-49 REGION is-queue-mint */
       /* PL-13 — THE DISPOSITION KEY, PUBLISHED AT THE MINT AND NOWHERE ELSE.
          Deliberately OUTSIDE the governed region above: it mints no refusal
-         code and a `where` that swallowed it would claim a span whose set the
-         DEC-49 guard would then have to account for. And deliberately AT THE
+         code and a `where` that swallowed it would claim a span whose set it
+         does not answer. And deliberately AT THE
          MINT rather than in each producer: this is a property of the ITEM,
          asked of every item whatever its class and by one implementation, which
          is the same argument `suppressedBy` makes one block down. A producer
@@ -1193,7 +1204,7 @@ export class Queue {
            on `suppressed`) could be neither named nor undone — the case form's
            unmute takes the kinds. A map BESIDE `cases` rather than objects IN
            it, because every reader of `cases` holds it as a list of ids (the
-           queue-state suites and civicos-ui); this adds and moves nothing. */
+           module's R14 tests and civicos-ui); this adds and moves nothing. */
         case_kinds: Object.fromEntries([...mutes.keys()].sort()
           .map((c) => [c, [...mutes.get(c)].sort()])),
         /* D-125: every item id this member muted, whether or not it is live
@@ -1310,7 +1321,8 @@ export class Queue {
    *  that reaches every ancestor entry — including the entry of a member who
    *  muted conditions on that case, because the new event is an OBLIGATION and
    *  a mute cannot reach one. That is the ordinary consequence loop, not a
-   *  mechanism, and the suite asserts it end to end rather than trusting it.
+   *  mechanism; `feed.test.mjs`' R14/R31 test holds that a mute row naming an obligation's kind suppresses
+   *  none.
    * ======================================================================== */
 
   /** This member's mute rows, as the pure decision wants them: a Map
@@ -1689,7 +1701,7 @@ export class Queue {
   /** R29 (D-623): both of the project arm's no-scope refusals answer here, one code with its row (C-33.50). */
   #noProjectScope(extra) {
     /* DEC-49 REGION is-dispose-scope — R29/C-33.50. The whole of the refusal's site: the code is a STRING LITERAL
-       and the check and translation come off its row, so the guard can grade it and a member reads the same
+       and the check and translation come off its row (R29's test compares them), and a member reads the same
        sentence from the project arm and from the bridge. */
     const row = QUEUE_ACT_CHECKS.NO_PROJECT_SCOPE;
     return { ok: false, reason: "NO_PROJECT_SCOPE", code: "NO_PROJECT_SCOPE",
@@ -1776,7 +1788,7 @@ export class Queue {
     const keyClass = byId || (!scoped ? classOfKind(pk) : null);
     const keyKind = byId ? (keyed.split("::")[1] || null) : (keyClass ? pk : null);
     /* DEC-49 REGION is-dispose-class — REC-205/C-33.44. The code is a STRING LITERAL at its site and the
-       translation comes off the row, so the guard can grade it and a member reads the same sentence
+       translation comes off the row (R28's tests compare them), and a member reads the same sentence
        wherever this act is reached. */
     if (keyClass === "CONDITION" || keyClass === "OBLIGATION") {
       const row = QUEUE_ACT_CHECKS.CLASS_NOT_DISPOSED;
