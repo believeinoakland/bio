@@ -17,3 +17,7 @@ K989: local-facts is merged into tranche/T21 (8158a9bd53). Merge tranche/T21 and
 ## B4 · CHANGE
 
 K990: action-clocks is merged into tranche/T21 (41f70c4b65); merge it. Its R10 now reads the all-offices holiday entries plus those naming the action's ONE office (the addressee when a named office, else the kind's venue, K986), through a `factOf` over local-facts' `factStatus`. Your `src/filings/dates.mjs`:34 (`deadlineDate`) still calls `computeDeadline` with `{holidays}` alone and no action, so on the first profile's 2026 (office entries only) its business count is undetermined and its calendar `not_read`. Pass the action's `counterparty` and `action_kind` and a `factOf` over `local-facts.factStatus`, as `clockPropose` does, and prove it in your deadline tests (R31's).
+
+## B5 · CHANGE
+
+K991: filing-templates is merged into tranche/T21 (b3d1e63bce); you are unblocked (rule 2). Merge it, delete your copies of FILING_BLANKS, FILING_TEXT_MAX, templateSave's checks, templatesFor and their rows C-115.31-.33, .35-.38 (now held in filing-templates' FILING_TEMPLATE_CHECKS), drop your op=templates arm, and import from bio-plane/src/filing-templates/ (factory filingTemplatesOf). Its notes for you: offeredVersion answers `text` beside the metadata; a {filing, sha} source to templateDraft is passed in-process (its op refuses it); NO_SUCH_TEMPLATE, TEMPLATE_RETIRED, TEMPLATE_NOT_OFFERED and, for a profile template, TEMPLATE_BLANK_UNKNOWN pass through as its codes. Then record completion.
