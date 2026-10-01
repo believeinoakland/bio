@@ -34,3 +34,7 @@ op-declarations is COMPLETE and merged into tranche/T18 (K727); with queue (B4) 
 ## B6 · CHANGE
 
 instance-setup is COMPLETE and merged into tranche/T18 (K729): it moved the selftest/livefire/runtime/cpuprobe/bootstrap dispatch out of src/index.mjs into setup.mjs. Merge tranche/T18 before your src/index.mjs edits (one editor at a time, K661).
+
+## B7 · CHANGE
+
+admission is COMPLETE and merged into tranche/T18 (K731), and queue in full again (PRODUCER_DEPS). You now wait only on affordances. From ADMISSION #1 (details in build/jobs/T18/admission.md, Completion): re-point to admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret, projectCreationGate, answering {status, body} as given; a silence is {silent: {op, correlation}}. Your test/m/control-plane/admission.test.mjs mutates SESSION_OPS/UNATTENDED_BY_DECISION, which op-declarations R5 freezes: it fails once you read op-declarations' tables (admission's sessionOpGate/admit take an optional `tables` for that). N407's wiring to ratification R18 through op=publishpreflight is yours (the door's query string). Merge tranche/T18.
