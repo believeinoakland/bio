@@ -21,7 +21,7 @@ export const PROGRESSIONS_SCHEMA = `
 -- member-declared state carrying its author and date -- like the subject registry
 -- (entities), NOT a projection of the corpus. So a whole-store purge (the scratch-reset
 -- tool) clears it, but a per-bundle purge leaves it (it has no bundle_id). The connection
--- table above is the TWO-STAGE case of this one (framework: "a connection row is a
+-- table (connections' own) is the TWO-STAGE case of this one (framework: "a connection row is a
 -- progression of two stages; nothing needs both"); they are one construct at two
 -- generalities, not two tables beside each other.
 CREATE TABLE IF NOT EXISTS progression_defs (
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS progression_stage_versions (
 -- threaded_by is stamped server-side; the GRADE is the record's, never the caller's.
 --
 -- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly
--- as resolutions do (it is in op=purge's TABLES): a per-bundle purge removes that document's
+-- as resolutions do (declared to record-core's purge, R29): a per-bundle purge removes that document's
 -- placements and the instance honestly re-reads with that stage now unfilled, and a
 -- whole-store purge takes them all (D-113). EXCEPTION documents that discharge a lawful
 -- skip, JUNCTION checks as findings, and the SCHEDULED task that walks this table for
@@ -148,7 +148,7 @@ CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instance
 -- documents, not a stored "discharged" boolean that could go stale against the live placements.
 --
 -- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly as
--- progression_instances do (it is in op=purge's TABLES): a per-bundle purge removes that
+-- progression_instances do (declared to record-core's purge, R29): a per-bundle purge removes that
 -- document's discharges and the stage honestly re-reads as an undischarged gap; a whole-store
 -- purge takes them all (D-113). JUNCTION checks as findings and the SCHEDULED walking-task are
 -- DEFERRED past FW-10.
@@ -240,8 +240,8 @@ CREATE INDEX IF NOT EXISTS progression_exception_versions_bundle ON progression_
 -- like the registry and the progression definitions above -- but op=purge is the
 -- scratch-reset tool, so a whole-store purge that reported scope ALL while leaving
 -- dispositions is the D-113 silent-leftover: cleared in the whole-store arm only,
--- left by a per-bundle purge (it has no bundle_id). hygiene.test.mjs asserts this
--- against schema.mjs.
+-- left by a per-bundle purge (it has no bundle_id). R29's test in
+-- test/m/progressions/dispose.test.mjs proves it through record-core's purge.
 CREATE TABLE IF NOT EXISTS proposal_dispositions (
   progression_key TEXT NOT NULL,
   stage_key       TEXT NOT NULL,
