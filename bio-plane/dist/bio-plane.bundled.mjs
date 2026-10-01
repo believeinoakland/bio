@@ -77560,7 +77560,7 @@ var Publication = class {
       counts: { bundles: bundles.length, files: fileCount },
       register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
       recorded: "this export is in the append-only export log and is visible to every administrator",
-      verify: "every file carries its sha256 and every bundle its history chain and base links. Re-derive them on the way in and byte-compare every registered capture; trust nothing this manifest asserts about itself."
+      verify: "every file carries its sha256 and every record its history chain and base links. Re-derive them on the way in and byte-compare every registered capture; trust nothing this manifest asserts about itself."
     };
   }
   /** The log, readable by in-app administrators who cannot run an export.
@@ -78466,7 +78466,7 @@ function checkPublishedExtension(fm, findings) {
           "C-2.8",
           "error",
           `completeness_excluded[${i}] names neither a target nor a description: every exclusion row carries a target id OR prose, never neither`,
-          ["name the excluded bundle by id", "or describe what was excluded in prose"]
+          ["name the excluded record by id", "or describe what was excluded in prose"]
         ));
       }
       if (typeof r.reason !== "string" || r.reason.trim() === "") {
@@ -78585,7 +78585,7 @@ function checkCaseDocument(fm, ctx = {}) {
   if (!Number.isInteger(fm?.case_edition) || fm.case_edition < 1) {
     findings.push(f12(C41.EDITION, "error", `a case document requires an integer case_edition of 1 or more (got '${fm?.case_edition}'): an edition is a SEPARATE DOCUMENT and answers forever, so a signature that did not cover the number would stand for every edition of this case at once`));
   } else if (Number.isInteger(edition) && fm.case_edition !== edition) {
-    findings.push(f12(C41.EDITION, "error", `this case document names edition ${fm.case_edition} and is being ratified as edition ${edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a bundle`));
+    findings.push(f12(C41.EDITION, "error", `this case document names edition ${fm.case_edition} and is being ratified as edition ${edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a record`));
   }
   if (typeof fm?.case_project !== "string" || fm.case_project.trim() === "" || fm.case_project === "null") {
     findings.push(f12(
@@ -78720,7 +78720,7 @@ function checkCaseDocument(fm, ctx = {}) {
       findings.push(f12(
         C41.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (bundle, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
+        `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (record, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
         ["re-publish through op=publish"]
       ));
     } else if (bm.in_force === false && !(typeof bm.stated === "string" && bm.stated.trim())) {
@@ -78735,7 +78735,7 @@ function checkCaseDocument(fm, ctx = {}) {
       findings.push(f12(
         C41.DISCLOSURES,
         "error",
-        `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias bundle was in force) and is legal \u2014 an ABSENT field is silence about which revisions the lens was`,
+        `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias record was in force) and is legal \u2014 an ABSENT field is silence about which revisions the lens was`,
         ["re-publish through op=publish"]
       ));
     }
@@ -79223,7 +79223,7 @@ function noAttestingKeyRefusal(signer) {
     code: "NO_ATTESTING_KEY",
     signer: signer ?? null,
     detail: "you hold no registered, active signing key, so a signature you make now would not be accepted by the ceremony. Nothing was written.",
-    remedy: "Register a key of your own from your signed-in session (op=signerregister, membership R89), or ask an administrator to register one for you; then sign."
+    remedy: "Register a key of your own from your signed-in session (op=signerregister, credentials R9), or ask an administrator to register one for you; then sign."
   };
 }
 
@@ -79345,7 +79345,7 @@ function release({ sql, promotion, retrieval }, { handle, acknowledgment = "", m
       reason: "ENTRY_REQUIREMENTS",
       ...rowOf4("ENTRY_REQUIREMENTS"),
       offenders: entry.sort((a, b) => a.id < b.id ? -1 : 1),
-      detail: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route for every document in the register (C-18.9). Releasing these as they stand would mint bundles the catalog immediately rejects."
+      detail: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route for every document in the register (C-18.9). Releasing these as they stand would mint records the catalog immediately rejects."
     };
   const when = stampInstant("second");
   const released = [];
@@ -109530,7 +109530,7 @@ var PublicRead = class {
         required: r.required ? JSON.parse(r.required) : null,
         parts: r.parts ? JSON.parse(r.parts) : []
       }],
-      detail: "this is a RATIFIED BUNDLE that is not a member of any published case: it was never published as a finding, so it carries no case identity, no scope statement, no completeness assertion and no bias acknowledgement \u2014 those are claims a CASE makes, and this is not one. Its bytes are verifiable by hash exactly as any other ratified bytes are."
+      detail: "this is a RATIFIED RECORD that is not a member of any published case: it was never published as a finding, so it carries no case identity, no scope statement, no completeness assertion and no bias acknowledgement \u2014 those are claims a CASE makes, and this is not one. Its bytes are verifiable by hash exactly as any other ratified bytes are."
     };
   }
   /* D-309: THE READ SURFACE'S HALF OF CLAUSE 6 — one case to serve, chosen by the
@@ -120596,8 +120596,8 @@ async function publishedRoutes({ op, url, env, stub }) {
     return P.json({ ok: false, ...P.requiredArgument(
       "publishedcase",
       "id or sha256",
-      "id=<bundle id> (optional &edition=N) or sha256=<64 lowercase hex>",
-      "publishedcase requires id=<bundle id> (with an optional &edition=N, latest by default) or sha256=<the bundle sha of an edition>"
+      "id=<record id> (optional &edition=N) or sha256=<64 lowercase hex>",
+      "publishedcase requires id=<record id> (with an optional &edition=N, latest by default) or sha256=<the record sha of an edition>"
     ) }, 400);
   const q7 = new URLSearchParams();
   if (id) q7.set("id", id);
@@ -120720,7 +120720,7 @@ async function publishedRoutes({ op, url, env, stub }) {
         bundle_id: f17.bundle_id,
         bytes: `op=publishedbytes&sha256=${f17.bundle_sha}`
       })),
-      detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own bundle sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without this instance's cooperation."
+      detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without this instance's cooperation."
     }
   }, 200);
 }
@@ -129150,7 +129150,7 @@ async function ratifyOp(req, stub, ctx) {
     return json5({
       ok: false,
       reason: "RATIFY_STALE",
-      detail: "the bundle has changed since it was reviewed; read it again and re-sign",
+      detail: "the record has changed since it was reviewed; read it again and re-sign",
       expected: facts.row.bundle_sha,
       got: body.expectedSha,
       store: storeName,
@@ -129373,7 +129373,7 @@ async function ratifyOp(req, stub, ctx) {
       reason: STORE_SILENT_REASON2,
       op: "ratify/reusedparts",
       detail: STORE_SILENT_DETAIL2,
-      note: "whether this bundle reused any part from the record is UNDETERMINED for this ratification, and that is NOT the same as no part having been reused. The bundle is ratified -- the signature, the gate and the published rows are all unaffected by this read -- and the reuse re-check (CAP-4 item 6b) did not happen. Re-ratifying converges it."
+      note: "whether this record reused any part from the record is UNDETERMINED for this ratification, and that is NOT the same as no part having been reused. The record is ratified -- the signature, the gate and the published rows are all unaffected by this read -- and the reuse re-check (CAP-4 item 6b) did not happen. Re-ratifying converges it."
     };
   } else if (reused && Array.isArray(reused.parts) && reused.parts.length) {
     const limOut = await doAnswer2(stub.fetch("http://do/capturelimit?runtime=subrequests"));
@@ -129424,7 +129424,7 @@ async function ratifyOp(req, stub, ctx) {
           ...base,
           verdict: "unavailable",
           observed_sha: null,
-          basis: `a plain GET returned ${r ? r.status : "a network error"}; the source no longer answers, and the bundle is ratified with the bytes captured on the day`
+          basis: `a plain GET returned ${r ? r.status : "a network error"}; the source no longer answers, and the record is ratified with the bytes captured on the day`
         });
         continue;
       }
