@@ -54,8 +54,12 @@ on file), empty and delete them.
 
 ## Rebuilding after a bio-plane change
 
-The wizard carries the release inside itself. In `newgroup/`: `npm run
-build` re-bundles bio-plane, refuses to embed if any published token value
-appears in the bundle, and produces a fresh `dist/newgroup.bundled.mjs` to
-paste. Then paste and deploy as in step 2, and existing groups pick the
+The wizard carries the release inside itself, and that release is always a
+signed one: it builds nothing from the working tree. First cut and sign the
+release (`node bio-plane/scripts/release-assemble.mjs --sign`). Then, in
+`newgroup/`: `npm run build` copies the signed asset from `release/`,
+refuses to embed it unless it hashes to `RELEASE.json`, its signature
+verifies against the installer's own keys, it names the version
+`bio-plane/package.json` names, and no published token value appears in it,
+and produces a fresh `dist/newgroup.bundled.mjs` to paste. Then paste and deploy as in step 2, and existing groups pick the
 release up through the wizard's update option.
