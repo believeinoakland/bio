@@ -6,3 +6,4 @@ Also (K683, AGENT-WORKER #5's REPORT): the N402 pin imports `PLANE_OPS`, `NAMESP
 Also (K701): op specs for filings' `communicationprepare`, `templatesave` and `templates` (filings R23, R26).
 Also (K704): `ACTION_CLOCK_CHECKS` (C-123, and C-117.5's copy) in `CHECK_FAMILIES`.
 Also (K711): stamp `author`, `viewer` and `proposer` for action-plans' ops.
+Also (K717, MONITORING #7 J1): `monitoring/checks.mjs` `MONITORING_CHECKS` (C-18.10 and C-48.8/.9's copies) in `CHECK_FAMILIES`.
