@@ -1,6 +1,6 @@
 # promotion (T21)
 
-**Status** · session_019DDbAi6qXv77SjQcNNsRD3 · depth 2 · RUNNING until 2026-10-01T18:14:18Z (users' tests of promotion (33 modules)) · handled B1
+**Status** · session_019DDbAi6qXv77SjQcNNsRD3 · depth 2 · RUNNING until 2026-10-01T18:14:18Z (users' tests of promotion (33 modules)) · handled B2
 
 ## J1 · QUESTION
 
