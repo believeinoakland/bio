@@ -45,8 +45,8 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 ### Invariants
 
-- **R14** (the admission share of `control-plane` R32) Each check moves here as an invariant with its test (K6): C-38.1–C-38.8, C-78.1–C-78.3, C-29.6–C-29.10, C-32.17 and C-64.4. *(not yet met: the rows are in `control-plane/checks.mjs` until this module's job)*
-- **R15** No credential, session token or secret appears in any refusal this module answers, and no place is named in its behaviour or outward text (the door's own rule, applied to this module's share). *(not yet met: new, K624)*
+- **R14** (the admission share of `control-plane` R32) Each check moves here as an invariant with its test (K6): C-38.1–C-38.8, C-78.1–C-78.3, C-29.6–C-29.10, C-32.17 and C-64.4.
+- **R15** No credential, session token or secret appears in any refusal this module answers, and no place is named in its behaviour or outward text (the door's own rule, applied to this module's share).
 - **R16** (K723; was control-plane's `caseReader`) `readerOf` answers who is asking for a public op that answers working material only to some (op=instancegroup's whole row, op=groupidentity's claim, an unsigned case document, a review copy without a secret), and never refuses: a binding class stands as `class:<cls>` exactly when `OPS.index` admits that class and R4 lands it in the store the op reads; a live session as its viewer (the founder's `admin`, else `member:<id>`); an agent credential as its principal when R10 admits it to `index`; anyone else, an unknown or expired credential included, as no one (`""`). A store that does not answer a lookup is a silence (R6), never a statement about the caller.
 
 ### Satisfies

@@ -95,3 +95,15 @@ test("R14, R19, R20: a member mutes action-clock-overdue for themselves, by kind
   assert.ok(refused.available.includes("action-clock-overdue"));
   assert.ok(!refused.available.includes("action-reminder"));
 });
+
+test("R8, R15–R18 (K728): a caller's fakes for the Action layer's providers reach queue-producers, each asked by its producer", () => {
+  const asked = [];
+  const page = (name) => (a) => { asked.push([name, a.viewer]); return { ok: true, items: [], truncated: false, cursor: null }; };
+  const w = world({ actionClocks: { overdueClocks: page("overdueClocks"), remindersDue: page("remindersDue") },
+                    escalation: { escalationsDue: page("escalationsDue") },
+                    actionPlans: { checkpointsDue: page("checkpointsDue") } });
+  w.member("alice");
+  assert.equal(w.feed("alice").ok, true);
+  assert.deepEqual(asked.map(([n]) => n).sort(), ["checkpointsDue", "escalationsDue", "overdueClocks", "remindersDue"]);
+  for (const [n, v] of asked) if (n !== "checkpointsDue") assert.equal(v, "member:alice", n);
+});
