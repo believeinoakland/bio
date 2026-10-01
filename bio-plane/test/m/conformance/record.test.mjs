@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { scene, V, MACHINE, F } from "./fixture.mjs";
 import { CONFORMANCE_CHECKS, CONFORMANCE_TABLES, PROPOSAL_SAYS, FLAG_SAYS, SIGNIFICANCE_KEYS,
          LIMITS } from "../../../src/conformance/index.mjs";
-import { proposalLabel } from "../../../checks/bio-checks.mjs";
+import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);

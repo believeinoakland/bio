@@ -47,7 +47,7 @@ import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
-import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle } from "../record-grammar/index.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
 import { CONFORMANCE_TABLES, migrateConformance } from "./schema.mjs";
 
@@ -498,7 +498,8 @@ export class Conformance {
   }
 
   /* R7: `supersedes` names an earlier determination of the same act in the same project, not yet superseded, with a
-     reason: an absent one is `NO_REASON`, one over REASON_MAX characters `BAD_REASON` (N233, K264). */
+     reason: an absent one is `CONFORMANCE_NO_REASON`, one over REASON_MAX characters or not text
+     `CONFORMANCE_BAD_REASON` (N233, K264; R23: this module's own codes, never progressions' `NO_REASON`/`BAD_REASON`). */
   #supersession(supersedes, reason, act, project, viewer) {
     const id = str(supersedes);
     if (!id) return { ok: true, prev: null };
@@ -513,12 +514,12 @@ export class Conformance {
     const why = typeof reason === "string" ? reason.trim() : reason == null ? "" : null;
     /* DEC-49 REGION is-reason-given */
     if (why === "")
-      return refusal("NO_REASON", "superseding a determination says why it is superseded; this names no reason. "
+      return refusal("CONFORMANCE_NO_REASON", "superseding a determination says why it is superseded; this names no reason. "
         + "Nothing was written.", { supersedes: id, max: REASON_MAX });
     /* END DEC-49 REGION is-reason-given */
     /* DEC-49 REGION is-reason-stated */
     if (why === null || why.length > REASON_MAX)
-      return refusal("BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX} characters. `
+      return refusal("CONFORMANCE_BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX} characters. `
         + "Nothing was written.", { supersedes: id, max: REASON_MAX });
     /* END DEC-49 REGION is-reason-stated */
     /* R7, R20: superseded at most once; the successor is in the same project, which the viewer sees in full. */
