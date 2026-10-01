@@ -29,3 +29,7 @@
 - `node checks/ownership.mjs /home/user/bio inquiry-grammar tranche/T20`: 4 files changed by inquiry-grammar between tranche/T20 and HEAD; 0 failures.
 
 Size (session_01FE7geAT18GTqA8kB2o6acr): test runs 7, module lines 1447
+
+## J1 · COMPLETE
+
+Applied B1: INQUIRY_GRAMMAR_ROWS renamed INQUIRY_GRAMMAR_CHECKS in checks.mjs (rows, numbers, wheres, translations unchanged; nothing awaiting stamp); index.mjs re-exports it. The old name is kept, one line in each file, as the same frozen object, for its readers (control-plane families.mjs:94, inquiry grammar.mjs:9,:20 and its test :198, skilldoctrine.mjs:90,:253, skills fixture.mjs:12,:21; re-scan found no other). Its deletion waits for the last of those readers to re-point; BOB places it. CHECK_FAMILIES is unchanged (control-plane can drop its alias with no other edit). Tests re-pointed, plus one asserting the alias is the same object from both faces and the file's suffix families are exactly INQUIRY_GRAMMAR_CHECKS and LEAD_CHECKS. inquiry-grammar 24/24; inquiry 156 pass 0 fail (1 pre-existing todo), skills 39/39, control-plane 85/85; format, architecture, coverage (10/10), ownership: 0 failures. STALED: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (hash inquiry-grammar/checks.mjs and index.mjs). Pre-existing, not mine: fleetbundles.test.mjs fails identically on the untouched branch (pdf-worker arm still expects legacy paths such as checks/bio-checks.mjs). Ready to merge: inquiry's L6 job can re-point now. Record: build/jobs/T20/inquiry-grammar.md.
