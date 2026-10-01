@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
-import { REGISTRATION_CHECKS } from "../../../checks/bio-checks.mjs";
+import { MEMBERSHIP_CHECKS } from "../../../src/membership/checks.mjs";
 import { noEntity } from "../../../src/entities/index.mjs";
 import { Connections, PAIR_RULE, CONNECTIONS_LIMIT_DEFAULT, CONNECTIONS_LIMIT_MAX, weakerGrade } from "../../../src/connections/index.mjs";
 
@@ -162,8 +162,8 @@ test("R3 (N202): a malformed or second registration is refused through membershi
   for (const [m, fn] of [["", () => {}], [null, () => {}], ["observation-log", null], ["observation-log", "fn"]]) {
     const r = w.k.onDerived(m, fn);
     assert.equal(r.ok, false); assert.equal(r.reason, "LISTENER_MALFORMED"); assert.equal(r.code, "LISTENER_MALFORMED");
-    const row = REGISTRATION_CHECKS.LISTENER_MALFORMED;
-    if (row) { assert.equal(r.check, row.check); assert.equal(r.translation, row.translation); }
+    const row = MEMBERSHIP_CHECKS.LISTENER_MALFORMED;
+    assert.equal(r.check, row.check); assert.equal(r.translation, row.translation);
   }
   const order = [];
   /* Registered out of order: an unknown module first, then a later module, then an earlier one. */
@@ -173,8 +173,8 @@ test("R3 (N202): a malformed or second registration is refused through membershi
   assert.equal(w.k.onDerived("aa-unknown", () => order.push("aa-unknown")).ok, true);
   const again = w.k.onDerived("retrieval", () => order.push("again"));
   assert.equal(again.ok, false); assert.equal(again.reason, "LISTENER_DECLARED"); assert.equal(again.module, "retrieval");
-  const row = REGISTRATION_CHECKS.LISTENER_DECLARED;
-  if (row) { assert.equal(again.check, row.check); assert.equal(again.translation, row.translation); }
+  const row = MEMBERSHIP_CHECKS.LISTENER_DECLARED;
+  assert.equal(again.check, row.check); assert.equal(again.translation, row.translation);
   w.k.derive({ entityId: "ENT-2026-0404" });
   assert.ok(MODULE_ORDER.indexOf("observation-log") < MODULE_ORDER.indexOf("retrieval"));
   assert.deepEqual(order, ["observation-log", "retrieval", "zz-unknown", "aa-unknown"]);

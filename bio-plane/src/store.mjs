@@ -155,13 +155,12 @@ export class Store extends DurableObject {
     actionPlansOf(ctx);
     monitoringOf(ctx, { env });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
-    /* capture R55 (K99): legacy-store registers with capture the observation log's rows until observation-log does. */
     const capture = captureOf(ctx, { env });
     /* capture-requests (K58, K61): its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs'
        (its R28), and it registers its wait source with ai-runs (ai-runs R41). */
     captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio", now: () => this.#nowMs(null),
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
-    capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
+    observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
     registerLegacyGrammars(recordOf(ctx), LEGACY_GRAMMARS);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
@@ -290,9 +289,6 @@ export class Store extends DurableObject {
   dispose(...a) { return inquiryOf(this.ctx).dispose(...a); }
 
 
-  #citesInto(id) { return connectionsOf(this.ctx).citesInto(id); }
-
-
   /* publication (T8, K3): the published registries and the attribution reads are publication's; the store's callers not
      yet extracted, and the old battery, reach them here. */
   publishedRegistryFor(...a) { return publicationOf(this.ctx).publishedRegistryFor(...a); }
@@ -312,7 +308,7 @@ export class Store extends DurableObject {
     + "pointing at retired material, which C-6.2 treats as an error whose remedy is to "
     + "sever the edge with a reason. Sever first, then retire.";
   #retirementCitedBy(id) {
-    return this.#citesInto(id).confirmed;
+    return connectionsOf(this.ctx).citesInto(id).confirmed;
   }
 
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.

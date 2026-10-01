@@ -11,7 +11,9 @@
  * WHO IS SHOWN (R45, Membership v2 §3): handles for everyone; the member id and the cover only with the control
  * plane's affirmative administer stamp; a machine stamp shown as itself. */
 
-import { isMachineIdentity, BUNDLE_ID_RE, THEME_CHECKS } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
+import { BUNDLE_ID_RE } from "../record-grammar/ids.mjs";
+import { THEME_CHECKS } from "./checks.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
 import { CAPTURE_TEXT_UNIT_CAP } from "../extraction/index.mjs";
@@ -20,8 +22,8 @@ import { CAPTURE_TEXT_UNIT_CAP } from "../extraction/index.mjs";
 export const THEME_READ_LIMIT_DEFAULT = 200;
 export const THEME_READ_LIMIT_MAX = 2000;
 
-/** R43 (K102, N125): the refusals of taking a placement back, C-81.11–C-81.14. The catalogue carries them in
- *  `THEME_CHECKS` (legacy-checks T6); this is a view of those four rows, never a copy, kept under its name for the
+/** R43 (K102, N125): the refusals of taking a placement back, C-81.11–C-81.14. This module's `THEME_CHECKS`
+ *  (`./checks.mjs`) carries them; this is a view of those four rows, never a copy, kept under its name for the
  *  readers that ask for the withdrawal's family alone. */
 export const THEME_WITHDRAW_CHECKS = Object.freeze(Object.fromEntries(
   Object.entries(THEME_CHECKS).filter(([code]) => code.startsWith("THEME_WITHDRAW_"))));

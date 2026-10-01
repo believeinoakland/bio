@@ -2,7 +2,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as ol from "../../../src/observation-log/index.mjs";
-import { AI_RUN_CHECKS as CATALOGUE_AI_RUN_CHECKS, LEAD_CHECKS as CATALOGUE_LEAD_CHECKS } from "../../../checks/bio-checks.mjs";
 
 const sentence = (s) => typeof s === "string" && s.trim().length > 10;
 
@@ -124,7 +123,7 @@ test("R12 contentAxisFor: the two axes never merged; no row is not_extracted onl
   assert.equal(ol.contentAxisFor({ observed: "PRESENT", unitIndex: false }).state, "undetermined");
 });
 
-test("R26 every C-22 row is this module's: AI_RUN_CHECKS moved here whole (K586), numbers, codes and translations unchanged, each `where` naming this module's site, each translation a sentence a member can read; C-54.2–C-54.10 are this module's rows and have left the catalogue, C-54.1 staying with the leg grammars", () => {
+test("R26 every C-22 row is this module's: AI_RUN_CHECKS held here whole (K586), numbers and codes as allocated, each `where` naming this module's site, each translation a sentence a member can read, each refusal the append answers carrying its row; C-54.2–C-54.10 are this module's rows", () => {
   const want = { AI_LOG_STATE_UNKNOWN: "C-22.1", AI_LOG_GOVERNED_ABSENCE: "C-22.2", AI_LOG_SHELL_PRESENT: "C-22.3",
                  AI_RUN_CONDITION_UNKNOWN: "C-22.4", AI_LOG_NOT_A_BUNDLE: "C-22.6", OBS_AUTHORITY_UNNAMED: "C-22.9",
                  OBS_PRESENT_NO_REFERENT: "C-22.10", AI_LOG_NEVER_LOOKED_STORED: "C-22.17" };
@@ -135,11 +134,7 @@ test("R26 every C-22 row is this module's: AI_RUN_CHECKS moved here whole (K586)
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], k);
     assert.ok(r.translation.trim().length >= 40, `${k}'s translation is a sentence, not a label`);
     assert.match(r.where, /^src\/observation-log\/vocabulary\.mjs (checkObservation|checkCondition)\b/, `${k} names its site in this module`);
-    // moved whole: the catalogue's copy, held until T19's layer 1 deletes it (K529), is the same row
-    assert.deepEqual(r, CATALOGUE_AI_RUN_CHECKS[k], `${k} unchanged from the catalogue's row`);
-    assert.notEqual(r, CATALOGUE_AI_RUN_CHECKS[k], `${k} is this module's own row, not a reference to the catalogue's`);
   }
-  assert.deepEqual(Object.keys(CATALOGUE_AI_RUN_CHECKS).sort(), Object.keys(want).sort(), "the table moved whole: no row left behind");
   // every C-22 refusal the append answers carries the row's own number and translation, read from here
   const cases = {
     AI_LOG_NOT_A_BUNDLE: { bundle: "INFO-2026-0001" }, OBS_AUTHORITY_UNNAMED: { authority_kind: "member" },
@@ -165,10 +160,8 @@ test("R26 every C-22 row is this module's: AI_RUN_CHECKS moved here whole (K586)
   for (const [k, r] of Object.entries(ol.LEAD_CHECKS)) {
     assert.ok(sentence(r.translation), k);
     assert.match(r.where, /^src\/observation-log\/index\.mjs /, `${k} names its site in this module`);
-    assert.ok(!(k in CATALOGUE_LEAD_CHECKS), `${k} is no longer a catalogue row`);
   }
-  assert.deepEqual(Object.keys(CATALOGUE_LEAD_CHECKS), ["LEAD_NOT_EVIDENCE"]);
-  assert.equal(CATALOGUE_LEAD_CHECKS.LEAD_NOT_EVIDENCE.check, "C-54.1");
+  assert.ok(!("LEAD_NOT_EVIDENCE" in ol.LEAD_CHECKS), "C-54.1 is the leg grammars' row, not this module's");
 });
 
 test("R27 one judgement, one place: every writer's outcome rule, the content-axis rule and the missing-row rule are exported pure functions that answer without storage", () => {

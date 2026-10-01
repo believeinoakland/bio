@@ -250,9 +250,7 @@ test("R14, R35: refusals in order — C-74.1 not a member, C-74.2 no connection 
   assert.equal(w.count("connection_pair_choices"), 0);
 });
 
-test("R35 (T18, K585 (3)): C-74 is this module's own table — C-74.1–.4 in order, each refusal carries its row's check and translation, and the catalogue carries the family no longer", async () => {
-  const catalogue = await import("../../../checks/bio-checks.mjs");
-  assert.equal(catalogue.CONNECTION_CHOICE_CHECKS, undefined, "the catalogue's copy is deleted (✱)");
+test("R35 (T18, K585 (3)): C-74 is this module's own table — C-74.1–.4 in order, each refusal carries its row's check and translation", () => {
   assert.deepEqual(Object.entries(CONNECTION_CHOICE_CHECKS).map(([code, r]) => [code, r.check]), [
     ["CONNECTION_CHOICE_NOT_A_MEMBER", "C-74.1"], ["CONNECTION_CHOICE_NO_CONNECTION", "C-74.2"],
     ["CONNECTION_CHOICE_NOT_A_MENTION", "C-74.3"], ["CONNECTION_CHOICE_OCCURRENCE_UNNAMED", "C-74.4"]]);

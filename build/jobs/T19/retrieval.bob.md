@@ -1,7 +1,19 @@
 # BOB to retrieval (T19)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
 Depth 2. Your entry: `build/plan/current.md` layer 5, retrieval (kept; `draft-T19.md` layer 5: legacy-store's share — `op=list`, `op=index`, `op=image`, `op=file` with `#withRoute` over provenance's `routeFinding` and `#viewerSees` — into your ops map, and your counts; R62 `registerField` done in T18), with your requirements as folded (K764): R58 `migrate()` and `retrievalRoutes(retrieval, url, body)` answering R1–R54's ops and R63–R65's (R66); R63 `listBundles` (`op=list`) through membership's `viewerPredicate` (an absent viewer passes none); R64 `buildIndex` (`op=index`); R65 `op=image`/`op=file` only when membership's `inSight` is true, else null as for an absent bundle; R66 the four routes' parameters; R67 `indexed`, `selections`, `selectionItems` through `registerCounts`. Provenance R48 is widened for your R63 (K764). Remove the moved code from `store.mjs` in your layer (rule 5; legacy-store spreads your map at L10; BOB serialises `store.mjs` edits). Rule 1: re-point `src/retrieval/index.mjs`:23 (`normalizeType`), `projection.mjs`:2 (`parseFrontmatter`, `normalizeType`) and `test/m/retrieval/decoration.test.mjs`:13 (`normalizeType`) to record-grammar (`types.mjs`, `frontmatter.mjs`), so no retrieval file imports `bio-checks.mjs`. No merge-early obligation. List in your COMPLETE each R you met and its test; BOB strikes the marks at the merge (K775 (6)). Do not delete old suites (K619).
+
+## B2 · ANSWER · re J1
+
+Your reading is right (K804): rule 5 as amended in current.md (each owner removes its moved code in its own layer) is newer than R66's and R67's last sentences, which BOB re-words at your merge to say this job deleted them. Delete #withRoute, listBundles, buildIndex, #viewerSees, the four arms image/file/list/index and any import name in store.mjs they were the last users of; leave the #counts call retrievalOf(this.ctx).counts(hid) and its three keys to legacy-store (L10). Report test/project-sight.control.mjs's stale sight-via-redactor arm in your COMPLETE; BOB carries it to legacy-store's L10 entry. Serialising store.mjs (rule 5): OBSERVATION-LOG #5 also edits store.mjs (one line, its capture listener) and merges early; when it lands BOB sends you a CHANGE, and you merge the tranche branch before your COMPLETE. Carry on meanwhile.
+
+## B3 · CHANGE
+
+OBSERVATION-LOG #5 merged into tranche/T19 (K806): it changed store.mjs (capture's listener, one line) and deleted the catalogue's C-22. Merge the tranche branch into job/T19/retrieval before your COMPLETE, resolve any store.mjs overlap keeping both changes, and re-run your tests and the ownership check.
+
+## B4 · CHANGE
+
+CONNECTIONS #7 also merged into tranche/T19 (K807): it removed #citesInto from store.mjs (+1/-4) and deleted the catalogue's REGISTRATION_CHECKS. B3 stands: merge the tranche branch (now carrying observation-log and connections) into job/T19/retrieval before your COMPLETE, keep both sides of any store.mjs overlap, and re-run your tests and the ownership check.

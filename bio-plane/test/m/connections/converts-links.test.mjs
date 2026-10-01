@@ -10,7 +10,8 @@ import { createHash, webcrypto } from "node:crypto";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { CONNECTIONS_OPS, connectionsOp } from "../../../src/connections/ops.mjs";
 import { connectionsOps } from "../../../src/connections/index.mjs";
-import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { checkBundle } from "../../../src/record-grammar/bundle.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 const CAP = "ab".repeat(32);
@@ -270,7 +271,7 @@ test("R24, R25, R27 (converted, subresources.test \"a resolved link becomes an e
     "resolution is still computed at read time, unchanged by projecting");
 });
 
-test("R24, R28 (C-6.1's links_to arm; converted, subresources.test \"a links_to edge missing asserted_by/the address/the verdict is refused\"): the references[] entry the projection writes is asserted by the source on its face, with the address and the verdict, so the catalogue admits the source document", async () => {
+test("R24, R28 (C-6.1's links_to arm; converted, subresources.test \"a links_to edge missing asserted_by/the address/the verdict is refused\"): the references[] entry the projection writes is asserted by the source on its face, with the address and the verdict, so record-grammar's C-6.1 admits the source document", async () => {
   const w = world();
   const { s } = await linked(w);
   const r = w.k.projectLinks({ sourceCapture: s, viewer: MACHINE, identity: V("alice") });
@@ -282,8 +283,10 @@ test("R24, R28 (C-6.1's links_to arm; converted, subresources.test \"a links_to 
     { asserted_by: "source", address: r.edges[0].address, verdict: r.edges[0].verdict },
     "R24: asserted by the source — stated on the entry, with the address the source wrote and its verdict");
   const files = new Map(w.record.livePaths(A).map((p) => [p, w.record.readFile(A, p).text]));
+  /* record-grammar's `checkBundle` (R39): the links_to arm is its structural C-6.1, which runs with no grammar
+     registered; no type grammar is passed, since none of their findings is asked about here. */
   const { findings } = await checkBundle({ folderName: A, files,
     sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
-    sha512: async (b) => new Uint8Array(await webcrypto.subtle.digest("SHA-512", b)), resolveTarget: () => true });
+    sha512: async (b) => new Uint8Array(await webcrypto.subtle.digest("SHA-512", b)), resolveTarget: () => true }, { grammars: [] });
   assert.deepEqual(findings.filter((f) => f.check === "C-6.1" && f.severity === "error").map((f) => f.message), []);
 });

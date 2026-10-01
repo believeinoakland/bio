@@ -1,9 +1,9 @@
 /* connections — WHAT A PORTION MAY EARN FROM A CONNECTION'S PAIR (R8, R9; C-49.1, C-49.2, C-49.4). The two pair
  * predicates, moved from the check catalogue (`bio-checks.mjs`, FW-17 and REC-120) at this module's extraction: no
- * catalogue code calls them. Their rows (`CONNECTION_PAIR_CHECKS`, C-49) stay in the catalogue while its shared
- * refusal helper reads them (K138 Q7's pattern); this file mints each refusal from them. Pure; never throws. */
+ * catalogue code calls them. Their rows (`CONNECTION_PAIR_CHECKS`, C-49) are this module's own copy (`./checks.mjs`,
+ * T19); this file mints each refusal from them. Pure; never throws. */
 
-import { CONNECTION_PAIR_CHECKS } from "../../checks/bio-checks.mjs";
+import { CONNECTION_PAIR_CHECKS } from "./checks.mjs";
 import { describeExtent } from "../content/index.mjs";
 
 /** DEC-49's refusal helper for this family. The name is exactly `refusal` and every code a double-quoted literal at
