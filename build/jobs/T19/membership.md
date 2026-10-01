@@ -42,3 +42,14 @@ Progress, `job/T19/membership` @ HEAD (membership tests 158 pass, 0 fail). Done 
 **Found:** `modules.json` gives membership `uses` without `record-grammar`, while `membership.md`'s Uses names it (`isMachineIdentity`, `MACHINE_CLASS_PREFIX`); the architecture check refuses the import, so I still read them through the catalogue's re-export. Add `record-grammar` to membership's `uses` if you want the re-point in this job; it is a two-line change for me.
 
 Waiting for your word that credentials has merged, to make the split's deletion.
+
+## J5 · QUESTION
+
+The split's deletion (B9) finds three callers of membership's credential code that K636 BOB-1's two named copies (`attestingKeys`, `aiCredentialLook`) do not cover, at tranche/T19 @ 773b7be152 merged:
+- `queue-producers/index.mjs`:2259 `this.#membership.signerList()` (L11);
+- `control-plane/dispatch.mjs`:237–238 `membershipOf(ctx).signerRegisterOwn(...)` and `.signerRevokeOwn(...)` (L11; the plan already has control-plane re-point these to credentials).
+Deleting them breaks both modules until their L11 jobs.
+
+**My best reading:** keep `signerList`, `signerRegisterOwn` and `signerRevokeOwn` as named copies too (K636 BOB-1's pattern, deleted by membership's T20 job once queue-producers and control-plane re-point in L11), with what they need: `#signerMemberBar`, `#keyShaped`, `SIGNER_ATTESTS`, the BAD_KEY answer, rows C-96.15–.17, and the catalogue's `SIGNER_ENROLMENT_CHECKS` import. So I would delete `AI_CREDENTIAL_CHECKS` from the catalogue now (no copy needs it) but **not** `SIGNER_ENROLMENT_CHECKS` (B6/K779), and keep `BAD_KEY` and C-96.15–.17 here, all held twice with credentials' until T20 (K529's lag). Everything else in B3/B9 is deleted: sessions and passwords, `signerAdd`, `signerSet`, the AI mint/revoke/list, their routes, tables and tests, the interim arms, the direct session and signer writes in `memberSet`/`adminRemove`, the exempt list.
+
+The other reading: queue-producers and control-plane re-point in this layer instead (not my files). I am doing everything else now; the copies' part waits on your answer.
