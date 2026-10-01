@@ -13,3 +13,7 @@
 **Tests and checks** · `node --test bio-plane/test/m/publication/`: tests 96, pass 94, fail 0, todo 2 (R30, R32, not yet met). No layer tests named in `build/manifest.md`. `format`: 0 failures. `architecture publication`: 24 product files, 74 relative imports, 0 failures. `coverage publication`: 41 of 41 live requirement ids named by a test, 0 failures. `ownership publication tranche/T21`: 8 files changed, 0 failures.
 
 Size (session_01CCYTrHogp2BPXC92SHjSZ1): test runs 1, module lines 74
+
+## J1 · REPORT
+
+public-read: bio-plane/src/publication/worker.mjs (its path, K702) :546 says preauth-vocabulary.test.mjs reads NOT_PUBLISHED's sentence, and :286 says a measurement was taken across the battery; T20 deleted both, so they name deleted files as live (N469's kind, not in my paths). Generated artifact staled by my comment edits under bio-plane/src/publication/: bio-plane/dist/bio-plane.bundled.mjs (.bundle.json); I regenerated nothing.
