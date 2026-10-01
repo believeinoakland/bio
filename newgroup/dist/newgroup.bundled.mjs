@@ -729,6 +729,427 @@ var K = new Int32Array([
 ]);
 var utf8 = new TextEncoder();
 
+// ../bio-plane/src/record-grammar/document.mjs
+var HEADINGS = {
+  information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
+  inquiry: ["## Question", "## What It Rests On", "## Conclusion", "## What Would Falsify This", "## Session Log", "## Review Notes"],
+  focus: ["## Statement", "## Why It Matters", "## Open Questions", "## Session Log", "## Review Notes"],
+  project: ["## Thesis Summary", "## Open Questions", "## Ruled Out", "## Session Log", "## Review Notes"],
+  action: ["## Plan", "## Status", "## Correspondence", "## Session Log", "## Review Notes"],
+  /* PL-12 / D-84 — THE BIAS BUNDLE'S HEADING SET, and the third heading is the
+     one that is not decoration.
+     `## Statements` is the prose the members read; the STATEMENTS THEMSELVES
+     live in frontmatter as `statements[]`, exactly as an inquiry's legs live in
+     `basis[]`, because D-21 forbids a second place to state a fact and the
+     projection below is a projection of the DOCUMENT.
+     `## Adoption` is where the group records the process by which it adopted
+     this set. The doctrine deliberately does not define that process — "defined
+     and documented by that group, in the group's own process document" — and
+     requires only that adoption is a recorded, member-authored transition. So
+     the heading is where the group's own account of it lands, and it is what
+     makes `op=biasadopt`'s row point at something a reader can check.
+     `## What This Does Not Enforce` IS DEC-54 (b) IN THE DOCUMENT'S OWN BYTES.
+     The ruling is that the unenforceable residue is "a first-class published
+     output, not a log line": a case saying "held to AP's standards" must also
+     say which of AP's standards this system does not check, because in four of
+     five documented verification failures the countable rules were formally
+     satisfied while the uncountable properties failed. A residue that lived
+     only in an op's answer would be exactly the log line the ruling refuses —
+     it would not travel with the bundle, and a stranger reading the bytes after
+     this instance is gone would meet the enforcement without the caveat. It is
+     REQUIRED IN EVERY STATE rather than only in `adopted`, and C-26.7 refuses
+     it EMPTY on an adopted bundle, because a heading nobody filled is the
+     checkbox C-21.1 exists to refuse arriving one layer down. */
+  bias: ["## Statements", "## Adoption", "## What This Does Not Enforce", "## Session Log", "## Review Notes"]
+};
+HEADINGS.problem = HEADINGS.focus;
+var HEADINGS_WHEN = {
+  inquiry: [{ heading: "## What This Excludes", whenCaseMember: true }]
+};
+HEADINGS_WHEN.problem = HEADINGS_WHEN.focus = [];
+var STATES = {
+  information: {
+    legal: ["collected", "verified", "retired"],
+    edges: { collected: ["verified"], verified: ["retired"], retired: [] }
+  },
+  /* The INQUIRY machine (REC-10, extended by REC-13). `published` and
+       `divided` still wait for REC-14/16, and they arrive TOGETHER WITH their
+       entry requirements, so no state is ever legal before its gate exists —
+       which is why `concluded` lands here in the same turn as
+       checkInquiryExtension's concluded arm below and op=conclude in the store.
+       `surfaced` is a LEGAL ALIAS of `open` (DATA-MODEL §2.7's recommendation):
+       rewriting it would invent an authored fact and set current_state
+       disagreeing with the document's own state_history (C-4.2), so it stays
+       legal, appears wherever `open` appears — INCLUDING the new conclude edge,
+       because refusing to conclude an inquiry merely because it spells its open
+       state the old way would be the trap the alias exists to avoid — and the
+       drift stays visible. `open` is legal[0] deliberately — setup.mjs derives
+       FIRST_STATE from it.
+  
+       REC-13's edges, and only these: `open <-> concluded` both ways (a
+       conclusion is revisable — reopening is how a group says the answer did
+       not hold), and `concluded -> deferred|dismissed`, because a conclusion
+       nobody publishes STILL AGES (D-79: a finding that silently stops being
+       worked on is indistinguishable from one never made). Deliberately NOT
+       added: `deferred -> concluded` and `dismissed -> concluded`. Concluding
+       something the group set down means picking it back up first, and the
+       machine already carries deferred/dismissed -> open for exactly that.
+       `concluded -> surfaced` follows the table's own convention, where every
+       existing edge into `open` names the alias beside it. */
+  /* ============ CASE-4 / DEC-72, 2026-09-10: `published` LEAVES THIS MACHINE.
+       THE STATE GOES; THE PRECONDITION IT ENFORCED DOES NOT, AND THAT DISTINCTION
+       IS THE WHOLE ITEM.
+  
+       Bob's ruling (DEC-72) makes a case ITS OWN OBJECT — a set of
+       finding-versions plus the publishing project — rather than a phase of a
+       finding. `CASE-AS-PRODUCTION.md`: *"A finding's lifecycle ends at
+       `concluded`; publication is the case relation."* Its supersession table
+       rules on this table by name: *"`published` as an inquiry lifecycle state
+       (State Rules per-type machine; ILLEGAL_TRANSITION publishing-only-from-
+       concluded) — the precondition survives as 'only a CONCLUDED finding may be
+       a case member'; the state itself becomes the case relation."*
+  
+       WHAT `concluded: [... 'published' ...]` WAS ACTUALLY DOING, and it is why
+       deleting it alone would have been a defect rather than the change. That one
+       array entry was carrying TWO facts at once. The first is that publishing
+       moves the document to a new lifecycle state — that fact is what DEC-72
+       deletes. The second is that publishing is reachable from `concluded` AND
+       FROM NOWHERE ELSE — a material set cannot be asserted over a question with
+       no conclusion — and THAT fact survives the ruling untouched. Because both
+       rode on one array entry, removing the entry removes both: with no
+       `published` anywhere in `edges`, the old guard
+       `legalFrom.includes("published")` is false from EVERY state, which reads as
+       a gate that refuses everything and is in fact a gate that has stopped
+       asking. So `publishCase()` now carries the precondition EXPLICITLY, as its
+       own named refusal (`NOT_CONCLUDED`) over `concluded` alone. A rule that used
+       to be a side effect of a table is now a sentence, which is the only form in
+       which it can survive the table.
+  
+       `published` IS STILL IN `legacy` BELOW AND THAT IS NOT A HEDGE. Ratified
+       bytes are immutable and a store that has published anything holds documents
+       whose frontmatter says `current_state: published` — bytes whose hash a
+       stranger may already be verifying against. Rewriting them to say something
+       else would break every pin that names them and would be this record editing
+       what it already signed. The focus machine four rows down is kept whole for
+       exactly this reason and states it in those words: a legacy document
+       validates against the vocabulary it was authored under. So the word stays
+       VALID and stops being REACHABLE — nothing in `edges` names it as a
+       destination, which is what "removed from the state machine" means for a
+       machine that cannot rewrite its own history. `legal` is what this machine
+       produces; `legacy` is what it must still read.
+  
+       THE OUT-EDGES ARE KEPT for the same reason and only for it: a document
+       already sitting at `published` must still be pickable-up, or the removal
+       would strand every case ever published behind a state with no exit. Nothing
+       new ever arrives there to use them.
+  
+       WHAT REPLACED THE STATE EVERYWHERE ELSE: the CASE RELATION. Every guard
+       that read `current_state === 'published'` — cannot divide, cannot
+       restructure, cannot move a version, the frozen/confirmed basis split,
+       reopen's own gate — now asks whether the document's CURRENT VERSION is a
+       case member, which CASE-5 made answerable by the pin (`bundle_sha =
+       version_sha`). That is one question with one answer instead of a state word
+       and a roster that could disagree, and it is also why CASE-4 needed no second
+       mechanism to notice a revision: a revised member's head stops matching the
+       pin, and that same inequality IS the revision flag.
+  
+       ============ The REC-14 / DEC-12 reasoning that put `published` here, kept
+       because it is what the removal has to preserve. It was: reachable ONLY from
+       `concluded` — a material set cannot be asserted over a question with no
+       conclusion — and it leaves ONLY to `open` (and its `surfaced` alias), which
+       is DEC-12's reopening: *"A closed finding can be reopened, and a published
+       case can be revised, though when republished, the edition number must be
+       incremented and the case treated as a separate document."*
+  
+       REOPENING DOES NOT UNPUBLISH, and this table is where that survives. The
+       inquiry's STATE and its PUBLICATION HISTORY are two different records: the
+       edges here move the working document, and published_bundles keeps every
+       edition with its own signature, attestor, time and gate version forever.
+       A revision therefore costs the full ceremony — published -> open ->
+       concluded -> published at edition 2 — because each edition is a separate
+       document that carries its own conclusion, its own falsifier and its own
+       freshly authored completeness (C-21.1).
+  
+       DELIBERATELY NOT ADDED: `published -> deferred|dismissed`. Ageing is what
+       happens to a finding NOBODY published (D-79); a published case cannot
+       quietly stop being worked on, because it is already out in the world.
+       `published -> published` is not an edge either: a new edition is entered
+       through `open`, so the state_history a reader checks shows the reopening
+       that produced it rather than a case that mutated in place. */
+  /* REC-16 / DEC-28: `divided` joins, and it IS TERMINAL. It is a STATE and not
+       a disposition, and the line between the two families is not terminality —
+       `deferred` and `dismissed` are terminal-ish too — it is WHAT THE WORD
+       CLAIMS ABOUT THE QUESTION. A disposition is a member's judgment about a
+       well-formed question and the question survives it unchanged; `divided` says
+       the QUESTION ITSELF was malformed, it was two questions, and the parent is
+       corrected FORWARD into its children. That is DEC-19's shape and the
+       supersession family, not the declination family. Its reason belongs to the
+       ACT and `disposition_reason` is untouched.
+  
+       ENTERED FROM `open` (and its `surfaced` alias) AND FROM `concluded`, and
+       NOT FROM `published` — the store refuses that one BY NAME
+       (PUBLISHED_CANNOT_DIVIDE) rather than as a generic illegal move, because
+       the two are different statements: an EDITION says the case continues, a
+       DIVISION says the parent was malformed, and a signed edition cannot be
+       retroactively declared malformed without erasing what a reader relied on.
+       DEC-12 changed publishing; it did not change this.
+  
+       DELIBERATELY NOT ADDED: `deferred|dismissed -> divided`. A question the
+       group set DOWN is picked back up first (op=reopen), exactly as concluding
+       one is — the machine already carries those edges, and dividing something
+       nobody is working on would make the disposition a state nothing can be
+       reasoned about from.
+  
+       TERMINAL, and structurally so rather than by policy: the parent's legs are
+       OWNED by its children now, and un-dividing would be the record changing its
+       mind in silence. `divided: []` is that fact, and it is what makes the
+       children's `supersedes` edges the only forward path. */
+  inquiry: {
+    legal: ["open", "deferred", "dismissed", "surfaced", "concluded", "divided"],
+    /* CASE-4 / DEC-72: STATES THIS MACHINE NO LONGER PRODUCES AND MUST STILL
+       READ. Valid in bytes that already carry them; named by no edge as a
+       destination, so nothing can enter them again. See the block above. */
+    legacy: ["published"],
+    edges: {
+      open: ["deferred", "dismissed", "concluded", "divided"],
+      surfaced: ["deferred", "dismissed", "concluded", "divided"],
+      deferred: ["open", "surfaced", "dismissed"],
+      dismissed: ["open", "surfaced", "deferred"],
+      /* `published` REMOVED from this list by CASE-4 — it was the only edge INTO
+         the state, and with it gone the state is unreachable. The precondition
+         it also carried (publishing only from `concluded`) is now publishCase()'s
+         own NOT_CONCLUDED refusal. */
+      concluded: ["open", "surfaced", "deferred", "dismissed", "divided"],
+      /* KEPT so a document already at `published` is not stranded. No new
+         document ever arrives here to use these. */
+      published: ["open", "surfaced"],
+      divided: []
+    }
+  },
+  /* The LEGACY focus machine, kept whole (elevated included) because a
+     legacy focus/problem document validates against the vocabulary it was
+     authored under — see the HEADINGS note. Nothing produces these states
+     anymore; op=dispose runs on the inquiry machine above. */
+  focus: {
+    legal: ["surfaced", "elevated", "deferred", "dismissed"],
+    edges: {
+      surfaced: ["elevated", "deferred", "dismissed"],
+      deferred: ["surfaced", "elevated", "dismissed"],
+      dismissed: ["surfaced", "elevated", "deferred"],
+      elevated: []
+    }
+  },
+  project: {
+    legal: ["forming", "investigating", "matured", "closed"],
+    edges: {
+      forming: ["investigating", "closed"],
+      investigating: ["matured", "closed"],
+      matured: ["closed"],
+      closed: ["investigating"]
+    }
+  },
+  action: {
+    legal: ["planned", "active", "awaiting_response", "resolved", "abandoned"],
+    edges: {
+      planned: ["active", "abandoned"],
+      active: ["awaiting_response", "resolved", "abandoned"],
+      awaiting_response: ["active", "resolved", "abandoned"],
+      resolved: [],
+      abandoned: []
+    }
+  },
+  /* PL-12 / D-84 — THE BIAS MACHINE, and `proposed` is DEC-54 (c) made
+     structural rather than documented.
+     `draft` is where a set is written. The doctrine already puts one rule on
+     it — "a pattern statement without at least one citation cannot leave
+     draft" — and C-26.4 is that rule, which is why it fires on the way OUT of
+     draft rather than on the way in.
+     `proposed` is the ONLY state an INHALE could ever reach, and the reason it
+     exists as a state of its own. DEC-54 (c): "INHALE MEANS PROPOSE FOR
+     ADOPTION, NEVER INSTALL. Adoption is an authored, attributed act (DEC-46,
+     D-90, D-82). Otherwise adopting a policy becomes a way to LAUNDER a
+     standard — 'we follow BBC standards' with nobody in the group having
+     authored anything, which is the never-prefill violation wearing a
+     compliance badge." A machine that could write `adopted` directly would BE
+     that laundering, so the machine's ceiling is a state and not a convention.
+     `adopted` is entered ONLY from `proposed`, and entering it is what
+     `op=biasadopt` records with an author and a date.
+     NO EDGE OUT OF `adopted` EXCEPT `retired`, and that is deliberate. An
+     adopted set is PINNED (DEC-54 (d)) and a published case names the version
+     it was held to; a set that could slide back to draft in place would make
+     "the lens this case was produced under" unresolvable after the fact.
+     Amending an adopted set is a NEW REVISION of the same bundle under
+     append-only history — which re-pins — or a retirement and a successor.
+     DELIBERATELY NOT ADDED: `draft -> adopted`. It is the only edge that could
+     let a set become binding without ever having been proposed, and closing it
+     is what makes the proposed state load-bearing rather than ceremonial.
+     AND SINCE D-468 (2026-09-24) THIS TABLE IS ENFORCED AT THE WRITE PATH AND NOT
+     ONLY DESCRIBED HERE. Everything above was true of the table and false of the
+     plane: `op=promote` consulted no edge table, so `adopted -> proposed` landed
+     and moved the head — a constraint that existed as a comment, which is the
+     defect this repository meets most. `promote`'s `bias-state-edge` region now
+     reads this table through `vocabFor` and refuses any move it does not declare
+     (BIAS_ILLEGAL_TRANSITION, C-26.12). A revision that leaves a set where it
+     stands is not a move and is not asked: that is how an adopted set is amended
+     (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption"). This fence is
+     THIS machine's alone — `promote` still asks no edge table for any other
+     object_type. */
+  bias: {
+    legal: ["draft", "proposed", "adopted", "retired"],
+    edges: {
+      draft: ["proposed", "retired"],
+      proposed: ["draft", "adopted", "retired"],
+      adopted: ["retired"],
+      retired: []
+    }
+  },
+  /* K171 (1) (T8, N129): THE ACTION LAYER'S RECORD OBJECTS. A standard, a determination and a consequence part
+     are each RECORDED once and never move: a correction is a new object that supersedes the old one (standards
+     R4 and R6, conformance R7, consequences R6), so each machine is one state and no edge, and a promotion that
+     names any other state is refused by `promote` (promotion R15). */
+  standard: {
+    legal: ["recorded"],
+    edges: { recorded: [] }
+  },
+  determination: {
+    legal: ["recorded"],
+    edges: { recorded: [] }
+  },
+  consequence: {
+    legal: ["recorded"],
+    edges: { recorded: [] }
+  },
+  /* An escalation (escalation R21) is `open` while its stages run and `suspended` while a member has set it
+     aside; `escalationResume` restores it at the same stage (R15). It is `ended` only by `escalationEnd`, once
+     compliance is restored and the consequences are addressed (R14), and nothing leaves `ended`. */
+  escalation: {
+    legal: ["open", "suspended", "ended"],
+    edges: {
+      open: ["suspended", "ended"],
+      suspended: ["open", "ended"],
+      ended: []
+    }
+  },
+  /* K198 (2) (T8, N159): intent's two pursuit documents (intent R26). An aspiration is held until it is retired;
+     a goal is open until it is closed. Neither returns: intent's step refuses any other move
+     (PURSUIT_STATE_MOVE_UNDECLARED), and this table states the same machine so the audit and the gate read the
+     states as legal. */
+  aspiration: {
+    legal: ["held", "retired"],
+    edges: { held: ["retired"], retired: [] }
+  },
+  goal: {
+    legal: ["open", "closed"],
+    edges: { open: ["closed"], closed: [] }
+  },
+  /* N-A1 (T18, K608): `action-plans`' plan (its R2, `PLN-`, `action_plan` in record-grammar's `OBJECT_TYPES`). A plan
+     is `open` while the group works it and `closed` when a member closes it with a reason; nothing reopens it. */
+  action_plan: {
+    legal: ["open", "closed"],
+    edges: { open: ["closed"], closed: [] }
+  }
+};
+STATES.problem = STATES.focus;
+
+// ../bio-plane/src/record-grammar/labels.mjs
+var LAW_PROPOSAL_STATES = {
+  machine_proposed: "a machine credential proposed these citations. That is machine work, labelled as machine work: it can set a list of laws beside the request and it can never state which laws govern it. Nothing here is this action's list of governing laws, and nothing becomes one until a member states it themselves",
+  member_proposed: "a member proposed these citations to whoever states this action's governing laws. It is a proposal and not the list: only the governing-laws act sets that, and the record holds who made it",
+  unstated: "the record does not say who proposed these citations"
+};
+var PROPOSAL_STATES = Object.freeze({
+  governing_laws: LAW_PROPOSAL_STATES,
+  standard: Object.freeze({
+    machine_proposed: "a machine credential proposed this standard. That is machine work, labelled as machine work: it can set a standard beside the record for members to consider and it can never enter one. Nothing here is a standard this record holds, and nothing becomes one until a member records it themselves",
+    member_proposed: "a member proposed this standard to whoever records the group's standards. It is a proposal and not a standard: only recording a standard enters one, and the record holds who made the proposal",
+    unstated: "the record does not say who proposed this standard"
+  }),
+  comparison: Object.freeze({
+    machine_proposed: "a machine credential prepared this comparison of a government act against standards. That is machine work, labelled as machine work: it can set out rows and questions for members and it can never determine whether the act complied. Nothing here is a determination, and nothing becomes one until a member records it themselves",
+    member_proposed: "a member suggested this comparison of a government act against standards. It is a comparison and not a determination: only a determination records whether the act complied, and the record holds who made the comparison",
+    unstated: "the record does not say who prepared this comparison"
+  }),
+  filing_draft: Object.freeze({
+    machine_proposed: "a machine credential prepared this draft. That is machine work, labelled as machine work: it can prepare the words of a filing and it can never approve or send one. Nobody has approved or sent this draft, and nothing is filed until members decide to file it and send it themselves",
+    member_proposed: "a member prepared this draft. It is a draft and not a filing: nobody has approved or sent it, and the record holds who prepared it",
+    unstated: "the record does not say who prepared this draft, and nobody has approved or sent it"
+  }),
+  theory: Object.freeze({
+    machine_proposed: "a machine credential proposed this candidate theory and remedy. That is machine work, labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it can never state the group's position. Nothing here is the group's position",
+    member_proposed: "a member proposed this candidate theory and remedy. It is a candidate for members and counsel to weigh and not the group's position, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this candidate theory and remedy"
+  }),
+  /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
+     adopts it, and a prepared communication (filings R23) is a draft nobody has approved or sent, worded as
+     `filing_draft`'s sentences are. */
+  plan_option: Object.freeze({
+    machine_proposed: "a machine credential proposed this option. That is machine work, labelled as machine work: it can set an option beside the plan for members to weigh and it can never choose one. It is not an option until a member adopts it",
+    member_proposed: "a member proposed this option. It is a proposal and not an option: it is not an option until a member adopts it, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this option, and it is not an option until a member adopts it"
+  }),
+  communication: Object.freeze({
+    machine_proposed: "a machine credential prepared this communication. That is machine work, labelled as machine work: it can prepare the words of a message and it can never approve or send one. Nobody has approved or sent it, and nothing is sent until members decide to send it themselves",
+    member_proposed: "a member prepared this communication. It is a draft and not a message sent: nobody has approved or sent it, and the record holds who prepared it",
+    unstated: "the record does not say who prepared this communication, and nobody has approved or sent it"
+  })
+});
+
+// ../bio-plane/src/record-grammar/acts.mjs
+var SHARED_ACT_CHECKS = Object.freeze({
+  /* ---------------------------------------------------------------------------
+       D-484, 2026-09-24 — THE FIRST TWO ROWS THIS FAMILY'S OWN HEADER SAID IT
+       COULD NOT HOLD, AND THEY EXIST BECAUSE THE PLANE CHANGED SHAPE RATHER THAN
+       BECAUSE A SENTENCE WAS FINALLY WRITTEN.
+  
+       The header above states the bar and the reason: a row holds ONE `where`,
+       one code may not hold two rows, and a `where` naming one of four sites
+       would claim a span the code is not confined to — *"REC-71's overstatement
+       wearing the other face"*. It then names the honest fix — *"the refusals
+       consolidated behind one helper so there IS one site"* — and ROUTES it.
+       D-484 is that routing coming back. `NO_BASIS` was minted at four sites in
+       `store.mjs` and `NO_CITATION` at three; each is now minted at exactly ONE,
+       inside the region named below, and every former site returns through it.
+  
+       So the `where` is not a narrowing of a claim this family could not support
+       — it is now literally true, and `store.mjs` holds one `reason: "NO_BASIS"`
+       and one `reason: "NO_CITATION"` literal to prove it (a structural pin in
+       `test/d484-refusal-translation.test.mjs` asserts exactly that, because a
+       second site added later would silently make this `where` a lie again).
+  
+       EACH TRANSLATION IS TRUE AT EVERY SITE IT NOW SERVES, which is the price of
+       consolidation and is where a careless one would do harm. `NO_BASIS` covers
+       concluding an inquiry that rests on nothing, partitioning a question with no
+       legs, a grade-D testimony with no stated basis, and a revision of a declared
+       flow that does not say why it changes — so the sentence speaks about WHAT
+       THIS RESTS ON and never about legs, or documents, or flows. The per-site
+       `detail` still carries the particular, unchanged.
+  
+       THE UNDETERMINED DOOR IS NAMED, on NO_FALSIFIER's precedent (REC-117): a
+       member refused for a missing basis is a member under pressure to invent one,
+       and the record would rather carry *nothing supports this yet* in the open.
+       --------------------------------------------------------------------------- */
+  NO_BASIS: {
+    check: "C-33.40",
+    where: "src/inquiry/index.mjs actNoBasis > is-act-no-basis",
+    translation: "This asks the record to stand behind something without saying what it rests on. Say what that is first \u2014 what the question is grounded in, what you personally observed, or why a settled thing is being changed \u2014 and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked."
+  },
+  NO_CITATION: {
+    check: "C-33.41",
+    where: "src/entities/index.mjs actShapeRefusal (entities' declared relation, `declareRelation`), and src/progressions/checks.mjs refusal (progressions' revision of a declared flow and exception document, src/progressions/index.mjs)",
+    translation: "A citation is the address of something somebody who was not here can go and read. Without one, what you have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is published or held \u2014 if it is not public, say who holds it and how it was seen, which is still an address and is still checkable."
+  }
+});
+
+// ../bio-plane/src/record-grammar/bundle.mjs
+var EXTENSION_ARMS = Object.freeze([
+  { name: "checkInformationExtension", ids: ["C-2.7"] },
+  { name: "checkInfo2Contract", ids: ["C-18.6", "C-18.7"] },
+  { name: "checkSupersession", ids: ["C-6.1"] },
+  { name: "checkRecheckCoverage", ids: ["C-15.1"] },
+  { name: "checkInquiryExtension", ids: ["C-2.8"] },
+  { name: "checkProjectExtension", ids: ["C-2.9", "C-9.1"] }
+].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
+
 // ../jurisdictions/index.mjs
 var SECTIONS = Object.freeze([
   "id",

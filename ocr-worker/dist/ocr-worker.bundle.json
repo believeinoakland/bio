@@ -65,18 +65,18 @@
     },
     {
       "path": "src/contract.mjs",
-      "bytes": 8518,
-      "sha256": "6138ab7497881d55f363a590c7d8c3f9c4ef47fd232f3c4dfc8392ed2ee06cd9"
+      "bytes": 8601,
+      "sha256": "23cd5b7e89affe7af4199d37c742a263c9d509a6621cb6bc8e4cc81eee39a472"
     },
     {
       "path": "src/index.mjs",
-      "bytes": 4203,
-      "sha256": "359d8a773eb609f324adbe505c54406a86929d92f4674031f857d6007a82b74d"
+      "bytes": 4360,
+      "sha256": "5da49b9ce352212d052dc5ae6a5d4e03f3f2705717e09fff41633c6139a6067a"
     },
     {
       "path": "src/member.mjs",
-      "bytes": 16993,
-      "sha256": "c3ca93e148737481c0ac0a42a8af848cca37c6f3d0aaee6b1a0de8eb6663bf7d"
+      "bytes": 17007,
+      "sha256": "946ed77baa0a992d9f6c83f8eb429c59f2eaaef805286c48471bff202ff112e4"
     },
     {
       "path": "src/pngsamples.mjs",
@@ -85,8 +85,8 @@
     },
     {
       "path": "src/tessengine.mjs",
-      "bytes": 8159,
-      "sha256": "2c4215cb8da961cb2da03d215be7ac0a8a0a10d7485a073070b400ae80ba7653"
+      "bytes": 8171,
+      "sha256": "34373f40d13cd0dfdcd748361708ed1509a684aa94a6a1d92b08744de3483b5b"
     },
     {
       "path": "src/tesslib.mjs",

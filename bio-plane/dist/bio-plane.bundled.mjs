@@ -60,7 +60,6 @@ __export(bio_checks_exports, {
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
-  CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
   CONNECTION_PAIR_CHECKS: () => CONNECTION_PAIR_CHECKS,
   CONTENT_EXTENT_A1_RE: () => CONTENT_EXTENT_A1_RE,
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
@@ -77,7 +76,6 @@ __export(bio_checks_exports, {
   CORRESPONDENCE_STAGES: () => CORRESPONDENCE_STAGES,
   CUSTODIAL_CHECKS: () => CUSTODIAL_CHECKS,
   DECISION_STAGES: () => DECISION_STAGES,
-  DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
   EARNED_SOURCE_AXIS: () => EARNED_SOURCE_AXIS,
@@ -96,6 +94,7 @@ __export(bio_checks_exports, {
   LAW_PROPOSAL_STATES: () => LAW_PROPOSAL_STATES,
   LEAD_CHECKS: () => LEAD_CHECKS,
   LEAD_ID_RE: () => LEAD_ID_RE,
+  LEGACY_GRAMMARS: () => LEGACY_GRAMMARS,
   LEGACY_TYPE_ALIASES: () => LEGACY_TYPE_ALIASES,
   LIFECYCLE_KEYS: () => LIFECYCLE_KEYS,
   MACHINE_AUTHOR_PREFIX: () => MACHINE_AUTHOR_PREFIX,
@@ -104,7 +103,6 @@ __export(bio_checks_exports, {
   MACHINE_STAMP_PREFIXES: () => MACHINE_STAMP_PREFIXES,
   MECHANICAL_FIELD_SETS: () => MECHANICAL_FIELD_SETS,
   MEMBER_ID_CHECKS: () => MEMBER_ID_CHECKS,
-  MONITOR_FREQ: () => MONITOR_FREQ,
   NARROW_CHECKS: () => NARROW_CHECKS,
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
@@ -115,7 +113,6 @@ __export(bio_checks_exports, {
   PROPOSAL_STATES: () => PROPOSAL_STATES,
   QUOTE_KEYS: () => QUOTE_KEYS,
   REGISTRATION_CHECKS: () => REGISTRATION_CHECKS,
-  RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   RISK_TIERS: () => RISK_TIERS,
   SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
@@ -125,7 +122,6 @@ __export(bio_checks_exports, {
   SUFFICIENCY_UNCLAIMED: () => SUFFICIENCY_UNCLAIMED,
   SUGGEST_CHECKS: () => SUGGEST_CHECKS,
   SUGGEST_KINDS: () => SUGGEST_KINDS,
-  SUGGEST_LEVELS: () => SUGGEST_LEVELS,
   SURFACE_CHECKS: () => SURFACE_CHECKS,
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   THEME_CHECKS: () => THEME_CHECKS,
@@ -144,11 +140,10 @@ __export(bio_checks_exports, {
   canonicalExtent: () => canonicalExtent,
   canonicalJson: () => canonicalJson,
   canonicalRange: () => canonicalRange,
-  checkBundle: () => checkBundle,
+  checkBundle: () => checkBundle2,
   checkContentExtent: () => checkContentExtent,
   checkInquiryBasis: () => checkInquiryBasis,
   checkLegExtentGrammar: () => checkLegExtentGrammar,
-  civicosUserAgent: () => civicosUserAgent,
   contentCitedAs: () => contentCitedAs,
   contentIdFor: () => contentIdFor,
   contentMintState: () => contentMintState,
@@ -163,11 +158,9 @@ __export(bio_checks_exports, {
   isBoilerplate: () => isBoilerplate,
   isCaseMemberBytes: () => isCaseMemberBytes,
   isMachineIdentity: () => isMachineIdentity,
-  isMachineMinted: () => isMachineMinted,
   isMachineStamp: () => isMachineStamp,
   isPublicHttpsLocator: () => isPublicHttpsLocator,
   isQuoteEntry: () => isQuoteEntry,
-  isSufficiencyClaimed: () => isSufficiencyClaimed,
   isSufficiencyUnclaimed: () => isSufficiencyUnclaimed,
   lawProposalLabel: () => lawProposalLabel,
   lawProposalState: () => lawProposalState,
@@ -301,13 +294,13 @@ function parseScalar(raw) {
   if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
   return v;
 }
-function parseFrontmatter(text4) {
-  if (typeof text4 !== "string") throw new TypeError("parseFrontmatter: text must be a string");
+function parseFrontmatter(text5) {
+  if (typeof text5 !== "string") throw new TypeError("parseFrontmatter: text must be a string");
   const findings = [];
-  const lines = text4.split(/\r?\n/);
+  const lines = text5.split(/\r?\n/);
   if (lines[0] !== "---") {
     findings.push(f("C-2.1", "error", "bundle.md does not begin with a --- frontmatter fence"));
-    return { data: null, findings, body: text4 };
+    return { data: null, findings, body: text5 };
   }
   let end2 = -1;
   for (let i = 1; i < lines.length; i++) if (lines[i] === "---") {
@@ -316,7 +309,7 @@ function parseFrontmatter(text4) {
   }
   if (end2 === -1) {
     findings.push(f("C-2.1", "error", "frontmatter fence is never closed"));
-    return { data: null, findings, body: text4 };
+    return { data: null, findings, body: text5 };
   }
   const data = {};
   let topKey = null;
@@ -656,7 +649,7 @@ function sha256HexSync(str18) {
   return createSha256().update(utf8.encode(String(str18))).hex();
 }
 
-// checks/bio-checks.mjs
+// src/record-grammar/titles.mjs
 var INQUIRY_TITLE_MAX = 120;
 var deriveInquiryTitle = (question) => {
   const line = String(question == null ? "" : question).split("\n").map((s) => s.trim()).find((s) => s !== "") || "";
@@ -671,6 +664,8 @@ var inquiryQuestionOf = (markdown) => {
   const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
   return m ? m[1] : "";
 };
+
+// src/record-grammar/document.mjs
 var HEADINGS = {
   information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
   inquiry: ["## Question", "## What It Rests On", "## Conclusion", "## What Would Falsify This", "## Session Log", "## Review Notes"],
@@ -996,16 +991,20 @@ var STATES = {
   }
 };
 STATES.problem = STATES.focus;
-var ACTION_KINDS = ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"];
-var RISK_TIERS = {
-  1: "file freely",
-  2: "file with caution",
-  3: "do not file without counsel",
-  undetermined: "not assessed: no member has stated a risk tier for this action"
-};
-function riskTierState(v) {
-  if (v === void 0 || v === null || v === "undetermined") return "undetermined";
-  return v === 1 || v === 2 || v === 3 ? v : null;
+function sectionText(body, heading) {
+  const idx = body.indexOf(heading);
+  if (idx < 0) return null;
+  const next = body.indexOf("\n## ", idx + 1);
+  return body.slice(idx, next === -1 ? void 0 : next);
+}
+
+// src/record-grammar/labels.mjs
+function text(v) {
+  try {
+    return String(v ?? "").trim();
+  } catch {
+    return "";
+  }
 }
 var LAW_PROPOSAL_STATES = {
   machine_proposed: "a machine credential proposed these citations. That is machine work, labelled as machine work: it can set a list of laws beside the request and it can never state which laws govern it. Nothing here is this action's list of governing laws, and nothing becomes one until a member states it themselves",
@@ -1013,7 +1012,7 @@ var LAW_PROPOSAL_STATES = {
   unstated: "the record does not say who proposed these citations"
 };
 function lawProposalState(proposedBy) {
-  const s = String(proposedBy ?? "").trim();
+  const s = text(proposedBy);
   if (s.length === 0) return "unstated";
   return isMachineIdentity(s) ? "machine_proposed" : "member_proposed";
 }
@@ -1060,18 +1059,68 @@ function proposalLabel(proposedBy, subject) {
   const state = lawProposalState(proposedBy);
   return { by: proposedBy ?? null, state, machine_work: state === "machine_proposed", says: table2[state] };
 }
-function lawProposalLabel(proposedBy) {
-  return proposalLabel(proposedBy, "governing_laws");
-}
-var ACTION_BASIS_KINDS = ["rests_on", "advances"];
-var CORRESPONDENCE_DIRECTIONS = ["sent", "received", "no_response"];
-var RFC_RESPONSE_WINDOW_PRECEDENT = {
-  min_days: 7,
-  max_days: 30,
-  source: "GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft)",
-  enforced: false
+var CONTENT_MINTED_BY_PLANE = "plane";
+var CONTENT_MINT_STATES = {
+  member_marked: "a member marked this passage as citable, and the record holds their name and the date",
+  plane_minted: "this record minted this reference when a member first cited the passage in their own words \u2014 it is the address of what that member pointed at, and not a separate claim about the document",
+  machine_marked: "a machine credential marked this passage as citable. That is machine work, labelled as machine work: it can lay the passage beside the question and it can never attest that the text matches the page, and nothing here is part of a finding until a member cites it themselves",
+  unstated: "the record does not say who marked this passage as citable"
 };
-var ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
+function contentMintState(mintedBy) {
+  const s = text(mintedBy);
+  if (s.length === 0) return "unstated";
+  if (s.toLowerCase() === CONTENT_MINTED_BY_PLANE) return "plane_minted";
+  if (isMachineIdentity(s)) return "machine_marked";
+  return "member_marked";
+}
+
+// src/record-grammar/acts.mjs
+var SHARED_ACT_CHECKS = Object.freeze({
+  /* ---------------------------------------------------------------------------
+       D-484, 2026-09-24 — THE FIRST TWO ROWS THIS FAMILY'S OWN HEADER SAID IT
+       COULD NOT HOLD, AND THEY EXIST BECAUSE THE PLANE CHANGED SHAPE RATHER THAN
+       BECAUSE A SENTENCE WAS FINALLY WRITTEN.
+  
+       The header above states the bar and the reason: a row holds ONE `where`,
+       one code may not hold two rows, and a `where` naming one of four sites
+       would claim a span the code is not confined to — *"REC-71's overstatement
+       wearing the other face"*. It then names the honest fix — *"the refusals
+       consolidated behind one helper so there IS one site"* — and ROUTES it.
+       D-484 is that routing coming back. `NO_BASIS` was minted at four sites in
+       `store.mjs` and `NO_CITATION` at three; each is now minted at exactly ONE,
+       inside the region named below, and every former site returns through it.
+  
+       So the `where` is not a narrowing of a claim this family could not support
+       — it is now literally true, and `store.mjs` holds one `reason: "NO_BASIS"`
+       and one `reason: "NO_CITATION"` literal to prove it (a structural pin in
+       `test/d484-refusal-translation.test.mjs` asserts exactly that, because a
+       second site added later would silently make this `where` a lie again).
+  
+       EACH TRANSLATION IS TRUE AT EVERY SITE IT NOW SERVES, which is the price of
+       consolidation and is where a careless one would do harm. `NO_BASIS` covers
+       concluding an inquiry that rests on nothing, partitioning a question with no
+       legs, a grade-D testimony with no stated basis, and a revision of a declared
+       flow that does not say why it changes — so the sentence speaks about WHAT
+       THIS RESTS ON and never about legs, or documents, or flows. The per-site
+       `detail` still carries the particular, unchanged.
+  
+       THE UNDETERMINED DOOR IS NAMED, on NO_FALSIFIER's precedent (REC-117): a
+       member refused for a missing basis is a member under pressure to invent one,
+       and the record would rather carry *nothing supports this yet* in the open.
+       --------------------------------------------------------------------------- */
+  NO_BASIS: {
+    check: "C-33.40",
+    where: "src/inquiry/index.mjs actNoBasis > is-act-no-basis",
+    translation: "This asks the record to stand behind something without saying what it rests on. Say what that is first \u2014 what the question is grounded in, what you personally observed, or why a settled thing is being changed \u2014 and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked."
+  },
+  NO_CITATION: {
+    check: "C-33.41",
+    where: "src/entities/index.mjs actShapeRefusal (entities' declared relation, `declareRelation`), and src/progressions/checks.mjs refusal (progressions' revision of a declared flow and exception document, src/progressions/index.mjs)",
+    translation: "A citation is the address of something somebody who was not here can go and read. Without one, what you have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is published or held \u2014 if it is not public, say who holds it and how it was seen, which is still an address and is still checkable."
+  }
+});
+
+// src/record-grammar/bundle.mjs
 function f2(check, severity, message2, repairs, code) {
   const out = { check, severity, message: message2 };
   if (repairs) {
@@ -1248,8 +1297,8 @@ function checkFormatHygiene(ctx, findings) {
       findings.push(f2("C-14.2", "error", `filename '${path}' violates the naming rule`, ["rename file and update references"]));
     }
     if (name.endsWith(".md")) {
-      const text4 = asText(content);
-      const m = escapeRe.exec(text4);
+      const text5 = asText(content);
+      const m = escapeRe.exec(text5);
       if (m) findings.push(f2("C-14.1", "error", `escaped markdown character '${m[0]}' in ${path}`, ["normalize to clean markdown"]));
     }
     if (name.endsWith(".json")) {
@@ -1366,120 +1415,9 @@ async function checkQueueAndBase(ctx, findings) {
     }
   }
 }
-var INFO_ENUMS = {
-  criticality: ["crucial", "supporting"],
-  source_status: ["unchanged", "modified", "removed"]
-};
-var MONITOR_FREQ = ["hourly", "daily", "weekly", "monthly", "per_meeting", "none"];
-var CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
-async function checkInformationExtension(ctx, findings) {
-  if (ctx.fm?.object_type !== "information") return;
-  const fm = ctx.fm;
-  for (const [field, legal] of Object.entries(INFO_ENUMS)) {
-    if (!legal.includes(fm[field])) {
-      findings.push(f2("C-2.7", "error", `${field} '${fm[field]}' is not one of: ${legal.join(", ")}`));
-    }
-  }
-  const src = fm.source;
-  if (!src || typeof src !== "object") findings.push(f2("C-2.7", "error", "source block is missing"));
-  else for (const k of ["locator", "authority", "retrieved"]) {
-    if (!src[k]) findings.push(f2("C-2.7", "error", `source.${k} is missing`));
-  }
-  const mon = fm.monitoring;
-  if (!mon || typeof mon !== "object") findings.push(f2("C-2.7", "error", "monitoring block is missing"));
-  else {
-    if (typeof mon.enabled !== "boolean") findings.push(f2("C-2.7", "error", `monitoring.enabled '${mon.enabled}' is not boolean`));
-    if (!MONITOR_FREQ.includes(mon.frequency)) findings.push(f2("C-2.7", "error", `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ.join(", ")}`));
-  }
-  const ch = fm.content_hash;
-  const chOk = typeof ch === "string" && CONTENT_HASH_RE.test(ch);
-  if (ch !== void 0 && ch !== null && ch !== "" && !chOk) {
-    findings.push(f2("C-2.7", "error", `content_hash '${String(ch).slice(0, 24)}\u2026' is not sha256:<64 hex>`));
-  }
-  const dsRaw = ctx.files.get("data/dataset.json");
-  if (dsRaw && chOk) {
-    try {
-      const canon3 = canonicalJson(JSON.parse(asText(dsRaw)));
-      const actual = "sha256:" + await ctx.sha256(canon3);
-      if (actual !== ch) {
-        findings.push(f2(
-          "C-2.7",
-          "error",
-          `content_hash does not match the canonicalized data/dataset.json (declared ${ch.slice(7, 19)}\u2026, actual ${actual.slice(7, 19)}\u2026)`,
-          ["refresh content_hash and append a change record", "restore data/dataset.json from history"]
-        ));
-      }
-    } catch {
-    }
-  }
-  if (fm.current_state === "verified") {
-    if (!chOk) findings.push(f2("C-2.7", "error", "verified state requires a well-formed content_hash"));
-    if (!dsRaw) findings.push(f2("C-2.7", "error", "verified state requires data/dataset.json"));
-    const hasSnap = [...ctx.files.keys()].some((p) => p.startsWith("snapshots/")) || ctx.elided && [...ctx.elided].some((p) => p.startsWith("snapshots/"));
-    if (!hasSnap) findings.push(f2("C-2.7", "error", "verified state requires at least one file in snapshots/"));
-  }
-  const chRaw = ctx.files.get("data/changes.json");
-  if (chRaw) {
-    try {
-      const recs = JSON.parse(asText(chRaw));
-      const arr2 = recs && Array.isArray(recs.records) ? recs.records : null;
-      if (!arr2) findings.push(f2("C-2.7", "error", 'data/changes.json must be {"records": [...]}'));
-      else for (let i = 0; i < arr2.length; i++) {
-        const r = arr2[i];
-        if (!r || !ISO_TS_RE.test(r.detected || "") || !["modified", "removed", "corrected"].includes(r.kind) || !r.summary) {
-          findings.push(f2("C-2.7", "error", `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
-        }
-      }
-    } catch {
-    }
-  }
-}
 var REL_VOCAB = ["cites", "relates_to", "elevated_into", "initiates", "derived_from", "supersedes", "corroborates", "links_to", "responds_to"];
 var SOURCE_ASSERTED_RELS = ["links_to"];
 var EDGE_STATUS = ["proposed", "confirmed", "severed"];
-function sectionText(body, heading) {
-  const idx = body.indexOf(heading);
-  if (idx < 0) return null;
-  const next = body.indexOf("\n## ", idx + 1);
-  return body.slice(idx, next === -1 ? void 0 : next);
-}
-var SUFFICIENCY_UNCLAIMED = "none:independent-sufficiency";
-var SUFFICIENCY_CLAIM_STATES = {
-  claimed: "a member said this group of reasons would carry the answer on its own, and the record holds their name and the date",
-  unclaimed: "nobody said this group of reasons would carry the answer on its own, and the record states that outright rather than leaving it blank",
-  unstated: "the record does not say whether anyone claimed this group of reasons would carry the answer on its own",
-  machine_stamped: "a machine credential stands where the name of the member making that claim has to be, so no member has claimed anything here"
-};
-function sufficiencyClaimState(assertedBy) {
-  const s = String(assertedBy ?? "").trim();
-  if (s === "") return "unstated";
-  if (s.toLowerCase() === SUFFICIENCY_UNCLAIMED) return "unclaimed";
-  if (isMachineIdentity(s)) return "machine_stamped";
-  return "claimed";
-}
-function isSufficiencyClaimed(assertedBy) {
-  return sufficiencyClaimState(assertedBy) === "claimed";
-}
-function isSufficiencyUnclaimed(assertedBy) {
-  return sufficiencyClaimState(assertedBy) === "unclaimed";
-}
-var CONTENT_MINTED_BY_PLANE = "plane";
-var CONTENT_MINT_STATES = {
-  member_marked: "a member marked this passage as citable, and the record holds their name and the date",
-  plane_minted: "this record minted this reference when a member first cited the passage in their own words \u2014 it is the address of what that member pointed at, and not a separate claim about the document",
-  machine_marked: "a machine credential marked this passage as citable. That is machine work, labelled as machine work: it can lay the passage beside the question and it can never attest that the text matches the page, and nothing here is part of a finding until a member cites it themselves",
-  unstated: "the record does not say who marked this passage as citable"
-};
-function contentMintState(mintedBy) {
-  const s = String(mintedBy ?? "").trim();
-  if (s.length === 0) return "unstated";
-  if (s.toLowerCase() === CONTENT_MINTED_BY_PLANE) return "plane_minted";
-  if (isMachineIdentity(s)) return "machine_marked";
-  return "member_marked";
-}
-function isMachineMinted(mintedBy) {
-  return contentMintState(mintedBy) === "machine_marked";
-}
 function latestHistorySnapshot(ctx) {
   const snaps = [...ctx.files.keys()].filter((p) => /^_history\/bundle_.*\.md$/.test(p)).sort();
   return snaps.length ? snaps[snaps.length - 1] : null;
@@ -1560,65 +1498,6 @@ function checkReferences(ctx, findings) {
   if (ctx.fm?.workproduct_state === "distributed") {
     const hasDist = [...ctx.files.keys()].some((p) => p.startsWith("distributions/"));
     if (!hasDist) findings.push(f2("C-6.3", "error", "workproduct_state is distributed but distributions/ is empty"));
-  }
-  supersedesEdgeFindings(ctx.fm, findings);
-  divisionDisclosureFindings(ctx.fm, findings);
-}
-function supersedesEdgeFindings(fm, findings) {
-  const refs = Array.isArray(fm?.references) ? fm.references : [];
-  refs.forEach((r, i) => {
-    if (!r || typeof r !== "object" || r.rel !== "supersedes") return;
-    if (typeof r.reason !== "string" || r.reason.trim() === "") {
-      findings.push(f2(
-        "C-6.1",
-        "error",
-        `references[${i}] is a supersedes edge with no reason: supersession says this question replaced that one, and a replacement with no account of why cannot be checked by anyone`,
-        ["author the reason this supersedes its target", "or use relates_to, which claims nothing about replacement"]
-      ));
-    }
-    if (typeof r.target !== "string" || !BUNDLE_ID_RE.test(r.target)) {
-      findings.push(f2("C-6.1", "error", `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
-    }
-  });
-}
-function divisionDisclosureFindings(fm, findings) {
-  if (normalizeType(fm?.object_type) !== "inquiry") return;
-  const refs = Array.isArray(fm?.references) ? fm.references : [];
-  const supers = refs.filter((r) => r && typeof r === "object" && r.rel === "supersedes" && typeof r.target === "string" && normalizeType(OBJECT_TYPES[r.target.split("-")[0]]) === "inquiry");
-  const parent = typeof fm?.division_parent === "string" && fm.division_parent !== "null" ? fm.division_parent : null;
-  const sibsRaw = fm?.division_siblings;
-  const sibs = Array.isArray(sibsRaw) ? sibsRaw.filter((x) => typeof x === "string" && x !== "") : null;
-  if (!parent && supers.length === 0) return;
-  if (supers.length && !parent) {
-    findings.push(f2(
-      "C-6.1",
-      "error",
-      `this document carries a supersedes edge to ${supers[0].target} and declares no division_parent: a question that superseded another discloses which division it came out of, so a reader who can see one half can see that the other half exists (R4)`,
-      ["set division_parent to the inquiry this was divided out of", "or sever the supersedes edge"]
-    ));
-  }
-  if (parent && !supers.some((r) => r.target === parent)) {
-    findings.push(f2(
-      "C-6.1",
-      "error",
-      `division_parent names ${parent} with no supersedes edge to it: the disclosure and the edge are two views of one fact and cannot disagree`,
-      [`add a references[] entry {rel: supersedes, target: ${parent}} with its reason`]
-    ));
-  }
-  if (!parent) return;
-  if (sibs === null || sibs.length === 0) {
-    findings.push(f2(
-      "C-6.1",
-      "error",
-      `division_parent names ${parent} and division_siblings is ${sibs === null ? "absent" : "empty"}: a division produces at least two questions, so a child of one always has at least one sibling to name \u2014 NO_SIBLING_DISCLOSURE`,
-      ["name every OTHER child of this division in division_siblings"]
-    ));
-    return;
-  }
-  for (const s of sibs) {
-    if (!BUNDLE_ID_RE.test(s)) findings.push(f2("C-6.1", "error", `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical bundle id`));
-    if (s === parent) findings.push(f2("C-6.1", "error", `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
-    if (typeof fm.id === "string" && s === fm.id) findings.push(f2("C-6.1", "error", `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
   }
 }
 function checkHistoryCoherence(ctx, findings) {
@@ -1716,19 +1595,356 @@ function checkHistoryCoherence(ctx, findings) {
     ));
   }
 }
+var EXTENSION_ARMS = Object.freeze([
+  { name: "checkInformationExtension", ids: ["C-2.7"] },
+  { name: "checkInfo2Contract", ids: ["C-18.6", "C-18.7"] },
+  { name: "checkSupersession", ids: ["C-6.1"] },
+  { name: "checkRecheckCoverage", ids: ["C-15.1"] },
+  { name: "checkInquiryExtension", ids: ["C-2.8"] },
+  { name: "checkProjectExtension", ids: ["C-2.9", "C-9.1"] }
+].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
+var GRAMMAR_ID_RE = /^C-\d+(\.\d+)?$/;
+function grammarsOf(list2) {
+  if (list2 === void 0 || list2 === null) return { byArm: /* @__PURE__ */ new Map(), rest: [] };
+  if (!Array.isArray(list2)) throw new TypeError("checkBundle: opts.grammars is a list of {module, ids, arm}");
+  const byArm = /* @__PURE__ */ new Map(), rest = [], claimed = /* @__PURE__ */ new Map();
+  list2.forEach((g, i) => {
+    const at22 = `checkBundle: opts.grammars[${i}]`;
+    if (!g || typeof g !== "object") throw new TypeError(`${at22} is not a {module, ids, arm} entry`);
+    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at22} names no module`);
+    if (!Array.isArray(g.ids) || g.ids.length === 0 || !g.ids.every((id) => typeof id === "string" && GRAMMAR_ID_RE.test(id)))
+      throw new TypeError(`${at22} (${g.module}): ids is a non-empty list of C-ids`);
+    if (typeof g.arm !== "function") throw new TypeError(`${at22} (${g.module}): arm is not a function`);
+    for (const id of g.ids) {
+      if (claimed.has(id)) throw new RangeError(`${at22} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
+      claimed.set(id, g.module);
+    }
+    const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => g.ids.includes(id)));
+    if (touched.length > 1)
+      throw new RangeError(`${at22} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
+    const [arm] = touched;
+    if (arm && !arm.ids.every((id) => g.ids.includes(id)))
+      throw new RangeError(`${at22} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
+    if (arm) byArm.set(arm.name, g);
+    else rest.push(g);
+  });
+  return { byArm, rest };
+}
+async function checkBundle(input, opts = {}) {
+  const grammars = grammarsOf(opts.grammars);
+  const findings = [];
+  const bundleRaw = input.files.get("bundle.md");
+  const ctx = {
+    folderName: input.folderName,
+    files: input.files,
+    // 1.13.0 (three-tier read model): paths known to exist in the
+    // authoritative store but whose bytes the caller deliberately did not
+    // carry (a tier-scoped client mirror eliding snapshots/ and _history/).
+    // Presence assertions ("this registered path must exist") consult
+    // files UNION elided via hasFile_; byte checks (hashing, parsing,
+    // history audits) stay files-only and skip elided content exactly as
+    // they skip absent content, so nothing is ever verified against bytes
+    // the caller does not hold. The gate and cli pass nothing here and are
+    // byte-complete as before.
+    elided: input.elidedPaths instanceof Set ? input.elidedPaths : new Set(Array.isArray(input.elidedPaths) ? input.elidedPaths : []),
+    sha256: input.sha256,
+    nowMs: input.nowMs,
+    maxPackageAgeDays: input.maxPackageAgeDays ?? 14,
+    maxReevalAgeDays: input.maxReevalAgeDays ?? 30,
+    /* inquiry@1 joins; focus@1 and problem@1 STAY KNOWN forever — schema
+       stamps are document truth in append-only history (REC-10). */
+    /* PL-12 / D-84: `bias@1`. A type whose schema stamp the catalog does not
+       know is refused by C-2.5 before any type-specific check runs, so the
+       stamp has to be admitted in the same turn as the type. */
+    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason; N-A1 (T18)
+       `action_plan@1` likewise. */
+    knownSchemas: opts.knownSchemas ?? [
+      "information@1",
+      "information@2",
+      "inquiry@1",
+      "focus@1",
+      "problem@1",
+      "project@1",
+      "action@1",
+      "bias@1",
+      "standard@1",
+      "determination@1",
+      "consequence@1",
+      "escalation@1",
+      "aspiration@1",
+      "goal@1",
+      "action_plan@1"
+    ],
+    resolveTarget: input.resolveTarget,
+    // D2.3: the key registry, injected exactly like resolveTarget. Absent
+    // is legal and means pre-migration behavior; absent WITH a
+    // post-migration release is an error, never a skip.
+    releaseRegistry: input.releaseRegistry || null,
+    /* REC-14: the published projection, injected exactly like releaseRegistry
+       and for the same reason — the checker is a pure function over a
+       filesystem, and what OTHER cases were published (and at which editions,
+       with which frozen pair) is not in this bundle. Shape:
+         { <bundleId>: { latest: n, editions: { "1": {edition, completeness,
+             capture: {state, grade}, connection: {state, grade}} } } }
+       Absent means the caller cannot see the published record (the cli, the
+       migrate tool) and C-21.1/C-21.2 cannot fire. Every path a real caller
+       has — the ratification gate and the store's own write path — injects it,
+       which is what keeps the absence from being a way through. */
+    publishedRegistry: input.publishedRegistry || null,
+    /* REC-44 / DEC-44: the CASE-altitude half of the same fact, injected on the
+       same terms and separated for the reason DEC-44 gives — a case is a
+       CONTAINER over one or more findings, so what the previous edition of THIS
+       CASE asserted about its limits is not a fact about any one finding.
+       Shape:
+         { <caseId>: { latest: n, editions: { "1": {edition, scope,
+             completeness, ratified_at} } } }
+       Absent means the caller cannot see the published record (the cli, the
+       migrate tool) and C-21.1 cannot fire; every path a real caller has
+       injects it. Kept SEPARATE from publishedRegistry deliberately: one
+       registry serving both altitudes is how the collapse this item corrects
+       happened in the first place. */
+    publishedCaseRegistry: input.publishedCaseRegistry || null,
+    /* REC-18: the second fact the catalog cannot get from the bundle, and it is
+       injected on exactly the same terms and for the same reason. What
+       `resolutions` holds about this bundle's basis targets, and what `register`
+       holds about their captures, is the record — not this document — so a
+       checker over a filesystem has no way to compute an earned grade and says
+       so rather than passing the leg (checkEarnedLeg). Shape:
+         { subject_entity, subject_label, earned: {
+             connection: { <target>: {grade, why, ...} },
+             capture:    { <target>: {grade, why, ceiling?} } } }
+       Absent means the caller cannot see the record (the cli, the migrate tool).
+       Every path a real caller has injects it. */
+    earnedRegistry: input.earnedRegistry || null,
+    sha512: input.sha512 || null,
+    fm: null,
+    body: ""
+  };
+  if (!bundleRaw) {
+    findings.push(f2("C-13.1", "error", "bundle.md is missing"));
+  } else {
+    const parsed = parseFrontmatter(asText(bundleRaw));
+    findings.push(...parsed.findings);
+    ctx.fm = parsed.data;
+    ctx.body = parsed.body;
+    checkIdentity(ctx, findings);
+    checkFrontmatterContract(ctx, findings);
+    checkHeadings(ctx, findings);
+    checkStateLegality(ctx, findings);
+    checkWriteCompleteness(ctx, findings);
+    const typeArm = async (name) => {
+      const g = grammars.byArm.get(name);
+      if (g) await g.arm(ctx, findings);
+    };
+    await typeArm("checkInformationExtension");
+    await typeArm("checkInfo2Contract");
+    checkReferences(ctx, findings);
+    await typeArm("checkSupersession");
+    await typeArm("checkRecheckCoverage");
+    await typeArm("checkInquiryExtension");
+    await typeArm("checkProjectExtension");
+    for (const g of grammars.rest) await g.arm(ctx, findings);
+    checkAppendOnly(ctx, findings);
+    checkHistoryCoherence(ctx, findings);
+  }
+  checkFormatHygiene(ctx, findings);
+  await checkQueueAndBase(ctx, findings);
+  const pass = !findings.some((x) => x.severity === "error");
+  return { pass, findings };
+}
+
+// checks/bio-checks.mjs
+var ACTION_KINDS = ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"];
+var RISK_TIERS = {
+  1: "file freely",
+  2: "file with caution",
+  3: "do not file without counsel",
+  undetermined: "not assessed: no member has stated a risk tier for this action"
+};
+function riskTierState(v) {
+  if (v === void 0 || v === null || v === "undetermined") return "undetermined";
+  return v === 1 || v === 2 || v === 3 ? v : null;
+}
+function lawProposalLabel(proposedBy) {
+  return proposalLabel(proposedBy, "governing_laws");
+}
+var ACTION_BASIS_KINDS = ["rests_on", "advances"];
+var CORRESPONDENCE_DIRECTIONS = ["sent", "received", "no_response"];
+var RFC_RESPONSE_WINDOW_PRECEDENT = {
+  min_days: 7,
+  max_days: 30,
+  source: "GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft)",
+  enforced: false
+};
+var ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
+function f3(check, severity, message2, repairs, code) {
+  const out = { check, severity, message: message2 };
+  if (repairs) {
+    out.repairable = true;
+    out.repairs = repairs;
+  }
+  if (code) out.code = code;
+  return out;
+}
+function asText2(v) {
+  if (typeof v === "string") return v;
+  return new TextDecoder().decode(v);
+}
+var CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
+var INFO_ENUMS = {
+  criticality: ["crucial", "supporting"],
+  source_status: ["unchanged", "modified", "removed"]
+};
+var MONITOR_FREQ = ["hourly", "daily", "weekly", "monthly", "per_meeting", "none"];
+async function checkInformationExtension(ctx, findings) {
+  if (ctx.fm?.object_type !== "information") return;
+  const fm = ctx.fm;
+  for (const [field, legal] of Object.entries(INFO_ENUMS)) {
+    if (!legal.includes(fm[field])) {
+      findings.push(f3("C-2.7", "error", `${field} '${fm[field]}' is not one of: ${legal.join(", ")}`));
+    }
+  }
+  const src = fm.source;
+  if (!src || typeof src !== "object") findings.push(f3("C-2.7", "error", "source block is missing"));
+  else for (const k of ["locator", "authority", "retrieved"]) {
+    if (!src[k]) findings.push(f3("C-2.7", "error", `source.${k} is missing`));
+  }
+  const mon = fm.monitoring;
+  if (!mon || typeof mon !== "object") findings.push(f3("C-2.7", "error", "monitoring block is missing"));
+  else {
+    if (typeof mon.enabled !== "boolean") findings.push(f3("C-2.7", "error", `monitoring.enabled '${mon.enabled}' is not boolean`));
+    if (!MONITOR_FREQ.includes(mon.frequency)) findings.push(f3("C-2.7", "error", `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ.join(", ")}`));
+  }
+  const ch = fm.content_hash;
+  const chOk = typeof ch === "string" && CONTENT_HASH_RE.test(ch);
+  if (ch !== void 0 && ch !== null && ch !== "" && !chOk) {
+    findings.push(f3("C-2.7", "error", `content_hash '${String(ch).slice(0, 24)}\u2026' is not sha256:<64 hex>`));
+  }
+  const dsRaw = ctx.files.get("data/dataset.json");
+  if (dsRaw && chOk) {
+    try {
+      const canon3 = canonicalJson(JSON.parse(asText2(dsRaw)));
+      const actual = "sha256:" + await ctx.sha256(canon3);
+      if (actual !== ch) {
+        findings.push(f3(
+          "C-2.7",
+          "error",
+          `content_hash does not match the canonicalized data/dataset.json (declared ${ch.slice(7, 19)}\u2026, actual ${actual.slice(7, 19)}\u2026)`,
+          ["refresh content_hash and append a change record", "restore data/dataset.json from history"]
+        ));
+      }
+    } catch {
+    }
+  }
+  if (fm.current_state === "verified") {
+    if (!chOk) findings.push(f3("C-2.7", "error", "verified state requires a well-formed content_hash"));
+    if (!dsRaw) findings.push(f3("C-2.7", "error", "verified state requires data/dataset.json"));
+    const hasSnap = [...ctx.files.keys()].some((p) => p.startsWith("snapshots/")) || ctx.elided && [...ctx.elided].some((p) => p.startsWith("snapshots/"));
+    if (!hasSnap) findings.push(f3("C-2.7", "error", "verified state requires at least one file in snapshots/"));
+  }
+  const chRaw = ctx.files.get("data/changes.json");
+  if (chRaw) {
+    try {
+      const recs = JSON.parse(asText2(chRaw));
+      const arr2 = recs && Array.isArray(recs.records) ? recs.records : null;
+      if (!arr2) findings.push(f3("C-2.7", "error", 'data/changes.json must be {"records": [...]}'));
+      else for (let i = 0; i < arr2.length; i++) {
+        const r = arr2[i];
+        if (!r || !ISO_TS_RE.test(r.detected || "") || !["modified", "removed", "corrected"].includes(r.kind) || !r.summary) {
+          findings.push(f3("C-2.7", "error", `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
+        }
+      }
+    } catch {
+    }
+  }
+}
+var SUFFICIENCY_UNCLAIMED = "none:independent-sufficiency";
+var SUFFICIENCY_CLAIM_STATES = {
+  claimed: "a member said this group of reasons would carry the answer on its own, and the record holds their name and the date",
+  unclaimed: "nobody said this group of reasons would carry the answer on its own, and the record states that outright rather than leaving it blank",
+  unstated: "the record does not say whether anyone claimed this group of reasons would carry the answer on its own",
+  machine_stamped: "a machine credential stands where the name of the member making that claim has to be, so no member has claimed anything here"
+};
+function sufficiencyClaimState(assertedBy) {
+  const s = String(assertedBy ?? "").trim();
+  if (s === "") return "unstated";
+  if (s.toLowerCase() === SUFFICIENCY_UNCLAIMED) return "unclaimed";
+  if (isMachineIdentity(s)) return "machine_stamped";
+  return "claimed";
+}
+function isSufficiencyUnclaimed(assertedBy) {
+  return sufficiencyClaimState(assertedBy) === "unclaimed";
+}
+function supersedesEdgeFindings(fm, findings) {
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  refs.forEach((r, i) => {
+    if (!r || typeof r !== "object" || r.rel !== "supersedes") return;
+    if (typeof r.reason !== "string" || r.reason.trim() === "") {
+      findings.push(f3(
+        "C-6.1",
+        "error",
+        `references[${i}] is a supersedes edge with no reason: supersession says this question replaced that one, and a replacement with no account of why cannot be checked by anyone`,
+        ["author the reason this supersedes its target", "or use relates_to, which claims nothing about replacement"]
+      ));
+    }
+    if (typeof r.target !== "string" || !BUNDLE_ID_RE.test(r.target)) {
+      findings.push(f3("C-6.1", "error", `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
+    }
+  });
+}
+function divisionDisclosureFindings(fm, findings) {
+  if (normalizeType(fm?.object_type) !== "inquiry") return;
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  const supers = refs.filter((r) => r && typeof r === "object" && r.rel === "supersedes" && typeof r.target === "string" && normalizeType(OBJECT_TYPES[r.target.split("-")[0]]) === "inquiry");
+  const parent = typeof fm?.division_parent === "string" && fm.division_parent !== "null" ? fm.division_parent : null;
+  const sibsRaw = fm?.division_siblings;
+  const sibs = Array.isArray(sibsRaw) ? sibsRaw.filter((x) => typeof x === "string" && x !== "") : null;
+  if (!parent && supers.length === 0) return;
+  if (supers.length && !parent) {
+    findings.push(f3(
+      "C-6.1",
+      "error",
+      `this document carries a supersedes edge to ${supers[0].target} and declares no division_parent: a question that superseded another discloses which division it came out of, so a reader who can see one half can see that the other half exists (R4)`,
+      ["set division_parent to the inquiry this was divided out of", "or sever the supersedes edge"]
+    ));
+  }
+  if (parent && !supers.some((r) => r.target === parent)) {
+    findings.push(f3(
+      "C-6.1",
+      "error",
+      `division_parent names ${parent} with no supersedes edge to it: the disclosure and the edge are two views of one fact and cannot disagree`,
+      [`add a references[] entry {rel: supersedes, target: ${parent}} with its reason`]
+    ));
+  }
+  if (!parent) return;
+  if (sibs === null || sibs.length === 0) {
+    findings.push(f3(
+      "C-6.1",
+      "error",
+      `division_parent names ${parent} and division_siblings is ${sibs === null ? "absent" : "empty"}: a division produces at least two questions, so a child of one always has at least one sibling to name \u2014 NO_SIBLING_DISCLOSURE`,
+      ["name every OTHER child of this division in division_siblings"]
+    ));
+    return;
+  }
+  for (const s of sibs) {
+    if (!BUNDLE_ID_RE.test(s)) findings.push(f3("C-6.1", "error", `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical bundle id`));
+    if (s === parent) findings.push(f3("C-6.1", "error", `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
+    if (typeof fm.id === "string" && s === fm.id) findings.push(f3("C-6.1", "error", `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
+  }
+}
 function checkRecheckCoverage(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== "inquiry") return;
   const rts = Array.isArray(ctx.fm.recheck_triggers) ? ctx.fm.recheck_triggers : [];
   if (rts.length === 0) {
-    findings.push(f2("C-15.1", "error", "every Problem, in every disposition including dismissed, carries at least one recheck trigger", ["author a trigger, dual-audience shape, dated when time-bound"]));
+    findings.push(f3("C-15.1", "error", "every Problem, in every disposition including dismissed, carries at least one recheck trigger", ["author a trigger, dual-audience shape, dated when time-bound"]));
     return;
   }
   for (let i = 0; i < rts.length; i++) {
     const t = rts[i];
     if (typeof t !== "object" || !t?.text || !t?.description) {
-      findings.push(f2("C-15.1", "error", `recheck_triggers[${i}] lacks the dual-audience {text, description} shape`));
+      findings.push(f3("C-15.1", "error", `recheck_triggers[${i}] lacks the dual-audience {text, description} shape`));
     } else if (t.date !== void 0 && !/^\d{4}-\d{2}-\d{2}$/.test(String(t.date))) {
-      findings.push(f2("C-15.1", "error", `recheck_triggers[${i}].date '${t.date}' is not YYYY-MM-DD`));
+      findings.push(f3("C-15.1", "error", `recheck_triggers[${i}].date '${t.date}' is not YYYY-MM-DD`));
     }
   }
 }
@@ -1737,16 +1953,16 @@ function checkInquiryExtension(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== "inquiry") return;
   const fm = ctx.fm;
   if (!["agent", "human"].includes(fm.surfaced_by)) {
-    findings.push(f2("C-2.8", "error", `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
+    findings.push(f3("C-2.8", "error", `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
   }
   if (["deferred", "dismissed"].includes(fm.current_state)) {
     if (typeof fm.disposition_reason !== "string" || fm.disposition_reason.trim() === "") {
-      findings.push(f2("C-2.8", "error", `${fm.current_state} state requires a non-empty disposition_reason`));
+      findings.push(f3("C-2.8", "error", `${fm.current_state} state requires a non-empty disposition_reason`));
     }
   }
   if (fm.current_state === "concluded") {
     if (typeof fm.conclusion !== "string" || fm.conclusion.trim() === "") {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         "concluded state requires a non-empty conclusion",
@@ -1757,7 +1973,7 @@ function checkInquiryExtension(ctx, findings) {
     const ovAt = typeof fm.falsifier_override_at === "string" ? fm.falsifier_override_at.trim() : "";
     const falsStated = typeof fm.falsifier === "string" && fm.falsifier.trim() !== "";
     if (!falsStated && !ovBy && !ovAt) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         "concluded state requires a non-empty falsifier: a conclusion that names nothing which would overturn it cannot be checked by anyone, including its author",
@@ -1767,14 +1983,14 @@ function checkInquiryExtension(ctx, findings) {
         ]
       ));
     } else if (!falsStated && !(ovBy && ovAt)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         "concluded state has no falsifier and only a HALF-RECORDED override: an override missing its " + (ovBy ? "date" : "member") + " is a silent one, and a record that has stopped requiring a falsifier without saying who accepted that claims more than it can support",
         ["record both falsifier_override_by and falsifier_override_at, or state a falsifier"]
       ));
     } else if (falsStated && (ovBy || ovAt)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         "concluded state carries BOTH an authored falsifier and a record that none was stated: those are two contradictory claims about this finding and nothing may choose between them",
@@ -1785,7 +2001,7 @@ function checkInquiryExtension(ctx, findings) {
       ));
     }
     if (!Array.isArray(fm.basis) || fm.basis.length < 1) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         "concluded state requires at least one basis leg: an open inquiry may rest on nothing (a standing objective), a conclusion may not",
@@ -1805,7 +2021,7 @@ function checkInquiryExtension(ctx, findings) {
   ]) {
     const v = fm?.[k];
     if (v === void 0 || v === null || v === "" || v === "null") continue;
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `a finding's bytes name a case (${k}): since CASE-5b the case's own assertions \u2014 its identity, its edition, its producing project, its scope, its roster, its load-bearing partition, its bias acknowledgement and its bar \u2014 are signed ONCE, in the CASE DOCUMENT a member reviews and ratifies (op=caseratify), and not N times in N members' frontmatter. A finding is a member of a case because the case pinned its version hash, and that pin is inside the bytes the case's signer signed`,
@@ -1818,7 +2034,7 @@ function checkInquiryExtension(ctx, findings) {
   if (fm.current_state === "divided") checkDividedExtension(fm, findings);
   if (fm.subject_entity !== void 0 && fm.subject_entity !== null && fm.subject_entity !== "") {
     if (typeof fm.subject_entity !== "string" || !ENTITY_ID_RE.test(fm.subject_entity)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `subject_entity '${String(fm.subject_entity).slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
@@ -1831,7 +2047,7 @@ function checkInquiryExtension(ctx, findings) {
 function checkDividedExtension(fm, findings) {
   const d = typeof fm.division === "object" && fm.division && !Array.isArray(fm.division) ? fm.division : null;
   if (!d) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       "divided state requires a division block: a question recorded as divided with no account of the division is a state change wearing a correction's clothes",
@@ -1855,7 +2071,7 @@ function checkDividedExtension(fm, findings) {
   }
   const into = Array.isArray(d.into) ? d.into.filter((x) => typeof x === "string") : [];
   if (into.length < 2) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `division.into names ${into.length} child inquir${into.length === 1 ? "y" : "ies"}: a division produces at least TWO questions, because one is a rename and zero is a deletion`,
@@ -1863,13 +2079,13 @@ function checkDividedExtension(fm, findings) {
     ));
   }
   for (const id of into) {
-    if (!BUNDLE_ID_RE.test(id)) findings.push(f2("C-2.8", "error", `division.into names '${String(id).slice(0, 40)}', which is not a canonical bundle id`));
+    if (!BUNDLE_ID_RE.test(id)) findings.push(f3("C-2.8", "error", `division.into names '${String(id).slice(0, 40)}', which is not a canonical bundle id`));
   }
   if (new Set(into).size !== into.length) {
-    findings.push(f2("C-2.8", "error", "division.into names the same child twice: a leg apportioned to a child named twice has one home, not two"));
+    findings.push(f3("C-2.8", "error", "division.into names the same child twice: a leg apportioned to a child named twice has one home, not two"));
   }
   if (typeof d.reason !== "string" || d.reason.trim() === "") {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       "division requires a non-empty reason: the reason belongs to the ACT (DEC-28), and a restructuring nobody accounted for is indistinguishable from one nobody should have made",
@@ -1877,15 +2093,15 @@ function checkDividedExtension(fm, findings) {
     ));
   }
   if (typeof d.apportioned_by !== "string" || d.apportioned_by.trim() === "" || isMachineIdentity(d.apportioned_by)) {
-    findings.push(f2("C-2.8", "error", `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
+    findings.push(f3("C-2.8", "error", `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
   }
   if (!ISO_TS_RE.test(String(d.at || ""))) {
-    findings.push(f2("C-2.8", "error", `division requires 'at' as an ISO timestamp (got '${d.at}')`));
+    findings.push(f3("C-2.8", "error", `division requires 'at' as an ISO timestamp (got '${d.at}')`));
   }
   const legs = Array.isArray(fm.basis) ? fm.basis : [];
   const rows2 = Array.isArray(fm.division_apportionment) ? fm.division_apportionment : null;
   if (!rows2) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       "divided state requires a division_apportionment field: the parent records WHERE EVERY LEG WENT, because dividing must not be a cheaper way to shed a finding that cuts against you than severing it (R4)",
@@ -1896,20 +2112,20 @@ function checkDividedExtension(fm, findings) {
   const homes = /* @__PURE__ */ new Map();
   rows2.forEach((r, i) => {
     if (!r || typeof r !== "object") {
-      findings.push(f2("C-2.8", "error", `division_apportionment[${i}] is not an object`));
+      findings.push(f3("C-2.8", "error", `division_apportionment[${i}] is not an object`));
       return;
     }
     if (!Number.isInteger(r.ord) || r.ord < 0 || r.ord >= legs.length) {
-      findings.push(f2("C-2.8", "error", `division_apportionment[${i}].ord '${r.ord}' does not name a leg of this inquiry's basis (0..${legs.length - 1}): a leg is addressed by its ORDINAL, because one document legitimately carries two legs (D4)`));
+      findings.push(f3("C-2.8", "error", `division_apportionment[${i}].ord '${r.ord}' does not name a leg of this inquiry's basis (0..${legs.length - 1}): a leg is addressed by its ORDINAL, because one document legitimately carries two legs (D4)`));
       return;
     }
     if (typeof r.to !== "string" || !into.includes(r.to)) {
-      findings.push(f2("C-2.8", "error", `division_apportionment[${i}].to '${r.to}' is not one of the children named in division.into: a leg's home is a child of THIS division`));
+      findings.push(f3("C-2.8", "error", `division_apportionment[${i}].to '${r.to}' is not one of the children named in division.into: a leg's home is a child of THIS division`));
       return;
     }
     const leg = legs[r.ord];
     if (leg && typeof leg === "object" && typeof r.target === "string" && r.target !== leg.target) {
-      findings.push(f2("C-2.8", "error", `division_apportionment[${i}] names target '${r.target}' at ord ${r.ord}, where the basis carries '${leg.target}': the account and the basis are two views of one document and cannot disagree`));
+      findings.push(f3("C-2.8", "error", `division_apportionment[${i}] names target '${r.target}' at ord ${r.ord}, where the basis carries '${leg.target}': the account and the basis are two views of one document and cannot disagree`));
     }
     if (!homes.has(r.ord)) homes.set(r.ord, /* @__PURE__ */ new Set());
     homes.get(r.ord).add(r.to);
@@ -1918,7 +2134,7 @@ function checkDividedExtension(fm, findings) {
   for (let i = 0; i < legs.length; i++) if (!homes.has(i)) orphans.push(i);
   if (orphans.length) {
     const cutting = orphans.filter((i) => legs[i] && legs[i].role === "cuts_against");
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis leg${orphans.length === 1 ? "" : "s"} ${orphans.join(", ")} ${orphans.length === 1 ? "has" : "have"} no home in the apportionment${cutting.length ? ` (including ${cutting.length} that cut${cutting.length === 1 ? "s" : ""} AGAINST this inquiry)` : ""}: every leg gets a home on a child, because division RE-HOMES material and only severance REMOVES it (R4)`,
@@ -1927,7 +2143,7 @@ function checkDividedExtension(fm, findings) {
   }
   const empty = into.filter((c) => ![...homes.values()].some((s) => s.has(c)));
   if (empty.length) {
-    findings.push(f2("C-2.8", "error", `division.into names ${empty.join(", ")}, which received no leg of the parent's basis: a child that inherits nothing is a new question, not a half of this one`));
+    findings.push(f3("C-2.8", "error", `division.into names ${empty.join(", ")}, which received no leg of the parent's basis: a child that inherits nothing is a new question, not a half of this one`));
   }
 }
 var STRENGTH_STATES = ["graded", "unrated", "undetermined"];
@@ -1936,7 +2152,7 @@ var GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
 function checkLegExtentGrammar(leg, label, checkId, findings) {
   const bad = checkContentExtent(legExtent(leg), CONTENT_EXTENT_DOCUMENT_ONLY);
   if (bad)
-    findings.push(f2(
+    findings.push(f3(
       checkId,
       "error",
       `${label} names an extent this record cannot evaluate: ${bad.detail}`,
@@ -1960,7 +2176,7 @@ function checkLegExtentGrammar(leg, label, checkId, findings) {
   const cid = leg && typeof leg === "object" ? leg.content_id : void 0;
   if (cid !== void 0 && cid !== null && cid !== "") {
     if (typeof cid !== "string" || !CONTENT_ID_RE.test(cid.trim()))
-      findings.push(f2(
+      findings.push(f3(
         checkId,
         "error",
         `${label}.content_id '${String(cid).slice(0, 40)}' is not a content id: a part of a document is named by the 64-character lowercase hexadecimal address this record mints for it, and nothing shorter or longer can be one`,
@@ -1970,7 +2186,7 @@ function checkLegExtentGrammar(leg, label, checkId, findings) {
         ]
       ));
     else if (legHasAuthoredExtent(leg))
-      findings.push(f2(
+      findings.push(f3(
         checkId,
         "error",
         `${label} names BOTH a content_id and an extent: these are one fact written twice and they can disagree, which would leave the record holding two answers to what this leg rests on`,
@@ -1989,14 +2205,14 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     return;
   }
   if (!Array.isArray(legs)) {
-    findings.push(f2("C-2.8", "error", `basis is not an array`));
+    findings.push(f3("C-2.8", "error", `basis is not an array`));
     return;
   }
   const refTargets = new Set((Array.isArray(fm.references) ? fm.references : []).filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => r.target));
   for (let i = 0; i < legs.length; i++) {
     const leg = legs[i];
     if (typeof leg !== "object" || leg === null) {
-      findings.push(f2("C-2.8", "error", `basis[${i}] is not an object`));
+      findings.push(f3("C-2.8", "error", `basis[${i}] is not an object`));
       continue;
     }
     if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
@@ -2004,13 +2220,13 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     const t = leg.target;
     let targetType = null;
     if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
-      findings.push(f2("C-2.8", "error", `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical bundle id`));
+      findings.push(f3("C-2.8", "error", `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical bundle id`));
     } else {
       const tt = targetType = normalizeType(OBJECT_TYPES[t.split("-")[0]]);
       if (tt !== "information" && tt !== "inquiry") {
-        findings.push(f2("C-2.8", "error", `basis[${i}].target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else`));
+        findings.push(f3("C-2.8", "error", `basis[${i}].target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else`));
       } else if (!refTargets.has(t)) {
-        findings.push(f2(
+        findings.push(f3(
           "C-6.3",
           "error",
           `basis[${i}].target '${t}' is not in references[]: an inquiry carrying a basis leg carries the same target as a reference, so the two projections cannot disagree`,
@@ -2019,28 +2235,28 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       }
     }
     if (!BASIS_ROLES.includes(leg.role)) {
-      findings.push(f2("C-2.8", "error", `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(", ")}`));
+      findings.push(f3("C-2.8", "error", `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(", ")}`));
     }
     const graded = leg.grade !== void 0 && leg.grade !== null;
     if (graded && !BASIS_GRADES.includes(leg.grade)) {
-      findings.push(f2("C-2.8", "error", `basis[${i}].grade '${leg.grade}' is not one of: ${BASIS_GRADES.join(", ")} (absent or null means undetermined, and is stated as such)`));
+      findings.push(f3("C-2.8", "error", `basis[${i}].grade '${leg.grade}' is not one of: ${BASIS_GRADES.join(", ")} (absent or null means undetermined, and is stated as such)`));
     }
     if (leg.grade_axis !== void 0 && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis)) {
-      findings.push(f2("C-2.8", "error", `basis[${i}].grade_axis '${leg.grade_axis}' is not one of: ${GRADE_AXES.join(", ")}`));
+      findings.push(f3("C-2.8", "error", `basis[${i}].grade_axis '${leg.grade_axis}' is not one of: ${GRADE_AXES.join(", ")}`));
     }
     if (leg.grade_source !== void 0 && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source)) {
-      findings.push(f2("C-2.8", "error", `basis[${i}].grade_source '${leg.grade_source}' is not one of: ${GRADE_SOURCES.join(", ")}`));
+      findings.push(f3("C-2.8", "error", `basis[${i}].grade_source '${leg.grade_source}' is not one of: ${GRADE_SOURCES.join(", ")}`));
     }
     if (graded) {
       if (!GRADE_AXES.includes(leg.grade_axis)) {
-        findings.push(f2("C-2.8", "error", `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states which axis its grade is on (${GRADE_AXES.join(", ")})`));
+        findings.push(f3("C-2.8", "error", `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states which axis its grade is on (${GRADE_AXES.join(", ")})`));
       }
       if (!GRADE_SOURCES.includes(leg.grade_source)) {
-        findings.push(f2("C-2.8", "error", `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(", ")})`));
+        findings.push(f3("C-2.8", "error", `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(", ")})`));
       }
     }
     if (leg.grade_axis === "capture" && targetType === "inquiry" && leg.grade_source !== "inherited") {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `basis[${i}] states a capture-axis grade on an inquiry leg: capture is a property of an information object (DEC-21) and an inquiry is not one, so this grade has no referent`,
@@ -2051,7 +2267,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       ));
     }
     if (leg.grade_axis === "testimony" && targetType === "inquiry" && leg.grade_source !== "inherited") {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `basis[${i}] states a testimony-axis grade on an inquiry leg: testimony is a property of a member's authored observation, which is a document, and an inquiry is not one, so this grade has no referent`,
@@ -2063,7 +2279,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       ));
     }
     if (leg.grade_axis === "capture" && graded && (leg.grade_source === "testimony" || leg.grade_source === "hunch")) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `basis[${i}] states a capture-axis grade with grade_source '${leg.grade_source}': a capture grade says how the BYTES REACHED US, which is a fact this record holds about its own machinery and not one a member can assert. ${leg.grade_source === "testimony" ? "Testimony is a member's account of a connection" : "A hunch is a member's provisional connection"}, and neither is an account of a fetch`,
@@ -2075,17 +2291,17 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     }
     if (leg.grade_source === "hunch") {
       if (typeof leg.author !== "string" || leg.author.trim() === "") {
-        findings.push(f2("C-2.8", "error", `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
+        findings.push(f3("C-2.8", "error", `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
       }
       if (!DATE_RE.test(String(leg.date ?? ""))) {
-        findings.push(f2("C-2.8", "error", `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
+        findings.push(f3("C-2.8", "error", `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
       }
     }
     if (leg.grade_source === "testimony" && graded && leg.grade !== TESTIMONY_GRADE && leg.grade_axis !== "testimony") {
-      findings.push(f2("C-2.8", "error", `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade ${TESTIMONY_GRADE} at no other value \u2014 a hunch is the only authored grade permitted above ${TESTIMONY_GRADE} (DEC-15)`));
+      findings.push(f3("C-2.8", "error", `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade ${TESTIMONY_GRADE} at no other value \u2014 a hunch is the only authored grade permitted above ${TESTIMONY_GRADE} (DEC-15)`));
     }
     if ((leg.grade_source === "testimony" || EARNED_GRADE_SOURCES.includes(leg.grade_source)) && !graded) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `basis[${i}] states grade_source '${leg.grade_source}' with no grade: a source is an account of where a grade came from, and there is no grade here to account for`,
@@ -2093,7 +2309,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       ));
     }
     if (leg.note !== void 0 && leg.note !== null && typeof leg.note !== "string") {
-      findings.push(f2("C-2.8", "error", `basis[${i}].note is not a string`));
+      findings.push(f3("C-2.8", "error", `basis[${i}].note is not a string`));
     }
     checkLegExtentGrammar(leg, `basis[${i}]`, "C-2.8", findings);
     checkTestimonyLeg(leg, i, graded, targetType, earnedRegistry, findings);
@@ -2114,14 +2330,14 @@ function checkGrounds(fm, legs, findings) {
       return;
     }
     if (typeof g !== "string" || !GROUND_LABEL_RE.test(g)) {
-      findings.push(f2("C-2.8", "error", `basis[${i}].ground '${String(g).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_', naming the branch of the argument this leg belongs to`));
+      findings.push(f3("C-2.8", "error", `basis[${i}].ground '${String(g).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_', naming the branch of the argument this leg belongs to`));
       return;
     }
     labelled.push([i, g]);
   });
   if (rows2 === void 0 || rows2 === null) {
     if (labelled.length) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `basis leg${labelled.length === 1 ? "" : "s"} ${labelled.map(([i]) => i).join(", ")} name${labelled.length === 1 ? "s" : ""} a ground with no grounds[] block: grounds compose DISJUNCTIVELY, so a finding takes its STRONGEST ground rather than its weakest leg \u2014 and that is only ever reached by an affirmative, attributed act. Nothing may become stronger because a field was written and nobody signed for it`,
@@ -2134,27 +2350,27 @@ function checkGrounds(fm, legs, findings) {
     return;
   }
   if (!Array.isArray(rows2)) {
-    findings.push(f2("C-2.8", "error", "grounds is not an array"));
+    findings.push(f3("C-2.8", "error", "grounds is not an array"));
     return;
   }
   const declared = /* @__PURE__ */ new Map();
   rows2.forEach((r, i) => {
     if (!r || typeof r !== "object" || Array.isArray(r)) {
-      findings.push(f2("C-2.8", "error", `grounds[${i}] is not an object`));
+      findings.push(f3("C-2.8", "error", `grounds[${i}] is not an object`));
       return;
     }
     const label = r.ground;
     if (typeof label !== "string" || !GROUND_LABEL_RE.test(label)) {
-      findings.push(f2("C-2.8", "error", `grounds[${i}].ground '${String(label).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`));
+      findings.push(f3("C-2.8", "error", `grounds[${i}].ground '${String(label).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`));
       return;
     }
     if (declared.has(label)) {
-      findings.push(f2("C-2.8", "error", `grounds[${i}] declares '${label}' a second time: one ground, one assertion, one member answering for it`));
+      findings.push(f3("C-2.8", "error", `grounds[${i}] declares '${label}' a second time: one ground, one assertion, one member answering for it`));
       return;
     }
     declared.set(label, i);
     if (typeof r.asserted_by !== "string" || r.asserted_by.trim() === "" || isMachineIdentity(r.asserted_by)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `grounds[${i}].asserted_by '${r.asserted_by}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it \u2014 never a machine's`,
@@ -2162,14 +2378,14 @@ function checkGrounds(fm, legs, findings) {
       ));
     }
     if (!ISO_TS_RE.test(String(r.at || ""))) {
-      findings.push(f2("C-2.8", "error", `grounds[${i}] requires 'at' as an ISO timestamp (got '${r.at}'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`));
+      findings.push(f3("C-2.8", "error", `grounds[${i}] requires 'at' as an ISO timestamp (got '${r.at}'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`));
     }
     if (r.statement !== void 0 && r.statement !== null && typeof r.statement !== "string") {
-      findings.push(f2("C-2.8", "error", `grounds[${i}].statement is not a string`));
+      findings.push(f3("C-2.8", "error", `grounds[${i}].statement is not a string`));
     }
   });
   if (labelled.length && unlabelled) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `${unlabelled} basis leg${unlabelled === 1 ? "" : "s"} carr${unlabelled === 1 ? "ies" : "y"} no ground while ${labelled.length} do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at`,
@@ -2181,7 +2397,7 @@ function checkGrounds(fm, legs, findings) {
   }
   for (const [i, label] of labelled) {
     if (!declared.has(label)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `basis[${i}].ground '${label}' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for`,
@@ -2192,7 +2408,7 @@ function checkGrounds(fm, legs, findings) {
   const carried = new Set(labelled.map(([, l]) => l));
   for (const [label, i] of declared) {
     if (!carried.has(label)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `grounds[${i}] declares '${label}', which no basis leg belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own`,
@@ -2206,7 +2422,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   const target = typeof leg.target === "string" ? leg.target : null;
   const observation = registry && registry.earned && registry.earned.testimony && target ? registry.earned.testimony[target] || null : null;
   if (leg.grade_axis === "capture" && targetType === "information" && observation) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states a capture grade of ${leg.grade} for ${target}, which is a member's authored observation: the capture axis measures the act of reading a document in, and nobody read these words in from anywhere \u2014 they are the member's own. Its grade is testimony, ${observation.grade}, on the testimony axis, and its capture axis is not applicable`,
@@ -2220,7 +2436,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   }
   if (leg.grade_axis !== "testimony") return;
   if (leg.grade !== TESTIMONY_GRADE) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony grade of ${leg.grade}: a member's firsthand observation is graded ${TESTIMONY_GRADE} on the testimony axis and at no other value. It stands on the observing member's trust, and nothing raises it \u2014 a second member agreeing with it is a co-signature, not a second observation (a second member who saw the same thing records their own, and the case then rests on two testimonies, each ${TESTIMONY_GRADE})`,
@@ -2231,7 +2447,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   }
   if (leg.grade_source === "inherited" || targetType === "inquiry") return;
   if (leg.grade_source !== "testimony") {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony-axis grade with grade_source '${leg.grade_source}': a testimony grade comes from a member's own authored observation and from nothing else \u2014 a resolution, a capture or a hunch is an account of something other than whose word this is`,
@@ -2241,7 +2457,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (!registry) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony grade for ${target}, but whether that document IS a member's authored observation is held by the register, which cannot be read here: a document is an observation because the act that records one wrote it, never because a leg says so`,
@@ -2251,7 +2467,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (!observation) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony grade for ${target}, which is not a member's authored observation: the testimony axis grades whose word a document is, and this one's bytes were captured, not authored here. Grading it as testimony would let a captured source pass for a member's own word`,
@@ -2264,7 +2480,7 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (leg.grade !== observation.grade) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states a testimony grade of ${leg.grade} for ${target}, but the record holds ${observation.grade} for it. ${observation.why ?? ""}`.trimEnd(),
@@ -2278,7 +2494,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   if (!EARNED_GRADE_SOURCES.includes(src)) return;
   if (!graded) return;
   if (!registry) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle`,
@@ -2292,7 +2508,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   const wantAxis = EARNED_SOURCE_AXIS[src];
   if (leg.grade_axis === "capture" && targetType === "inquiry" && src !== "capture") return;
   if (leg.grade_axis !== wantAxis) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states grade_source '${src}' on the ${leg.grade_axis} axis: ${src === "resolution" ? "a resolution IS the framework's \xA78.1 connection grade and grades nothing else" : "a capture grade is a property of an information object and measures how the bytes arrived (DEC-21)"}, so it can only be a source for a ${wantAxis} grade`,
@@ -2304,7 +2520,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (src === "resolution" && targetType === "inquiry") {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] claims an EARNED resolution grade on an inquiry leg: a resolution matches a captured document's reading to a registry entity, and an inquiry is not a captured document \u2014 there is nothing here for the recogniser to have graded`,
@@ -2316,7 +2532,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (src === "resolution" && !registry.subject_entity) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] claims an EARNED resolution grade, but this inquiry names no subject_entity: an earned connection grade is the strongest resolution of the target's captures TO THE INQUIRY'S SUBJECT, and with no subject named there is nothing to have resolved to (DATA-MODEL D1(b))`,
@@ -2330,7 +2546,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   const earned = registry.earned && registry.earned[wantAxis] ? registry.earned[wantAxis][leg.target] : null;
   if (earned && earned.undetermined_because === "CAPTURE_AXIS_AUTHORED") return;
   if (earned && earned.mode === "ceiling" && earned.grade == null) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ""}`,
@@ -2343,7 +2559,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (!earned || !earned.grade) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       src === "resolution" ? `basis[${i}] states an EARNED resolution grade of ${leg.grade} for ${leg.target}, but the record holds no A/B/C resolution of that document to ${registry.subject_entity}: nothing was earned here. The recogniser never mints a D, so a document known to concern the subject only by a member's testimony earns nothing either \u2014 that leg is testimony and says so` : `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but the record holds no registered capture for that document: there are no bytes here whose arrival this grade could be measuring`,
@@ -2356,7 +2572,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   }
   if (earned.mode === "ceiling") {
     if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(earned.grade)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.8",
         "error",
         `basis[${i}] states a capture grade of ${leg.grade} for ${leg.target}, which is STRONGER than the ${earned.grade} the record can earn for it. ${earned.why} ${earned.ceiling ?? ""}`,
@@ -2366,7 +2582,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   if (earned.grade !== leg.grade) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states an EARNED ${wantAxis} grade of ${leg.grade} for ${leg.target}, but the record earns ${earned.grade}: an earned grade is computed by the record and a caller does not hand it to us in either direction. ${earned.why}`,
@@ -2379,7 +2595,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   const entry = registry && target ? registry[target] : null;
   const pub = entry && (entry.object_type == null || entry.object_type === "inquiry") ? entry : null;
   if (leg.grade_source === "inherited" && !pub) {
-    findings.push(f2(
+    findings.push(f3(
       "C-2.8",
       "error",
       `basis[${i}] states grade_source 'inherited' but its target ${registry ? "is not a published case" : "cannot be checked against the published record here"}: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else`,
@@ -2390,12 +2606,12 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   if (!pub) return;
   if (!graded) {
     if (leg.grade_source === "inherited") {
-      findings.push(f2("C-2.8", "error", `basis[${i}] claims 'inherited' with no grade: a leg resting on a published case may state no grade at all \u2014 undetermined, stated \u2014 but it may not claim to have inherited one`));
+      findings.push(f3("C-2.8", "error", `basis[${i}] claims 'inherited' with no grade: a leg resting on a published case may state no grade at all \u2014 undetermined, stated \u2014 but it may not claim to have inherited one`));
     }
     return;
   }
   if (leg.grade_source !== "inherited") {
-    findings.push(f2(
+    findings.push(f3(
       "C-21.2",
       "error",
       `basis[${i}] carries a grade of its own on a PUBLISHED case (${target}): a leg resting on a published case inherits that case's frozen strength and says so with grade_source 'inherited'. A case built on a case cannot be stronger than the case beneath it`,
@@ -2405,7 +2621,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   }
   const ed = leg.target_edition;
   if (!Number.isInteger(ed)) {
-    findings.push(f2(
+    findings.push(f3(
       "C-21.2",
       "error",
       `basis[${i}] inherits from ${target} without naming an edition: every edition is a SEPARATE DOCUMENT with its own frozen strength, so an unnamed edition leaves the inheritance rule nothing fixed to compare against (DEC-12)`,
@@ -2415,14 +2631,14 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   }
   const frozen = pub.editions ? pub.editions[String(ed)] : null;
   if (!frozen) {
-    findings.push(f2("C-21.2", "error", `basis[${i}] names edition ${ed} of ${target}, which is not in the published record (published editions: ${pub.editions ? Object.keys(pub.editions).join(", ") || "none" : "none"})`));
+    findings.push(f3("C-21.2", "error", `basis[${i}] names edition ${ed} of ${target}, which is not in the published record (published editions: ${pub.editions ? Object.keys(pub.editions).join(", ") || "none" : "none"})`));
     return;
   }
   const axis = leg.grade_axis;
   if (!GRADE_AXES.includes(axis)) return;
   const on = frozen[axis];
   if (!on || on.state !== "graded") {
-    findings.push(f2(
+    findings.push(f3(
       "C-21.2",
       "error",
       `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose ${axis} axis is ${on ? on.state.toUpperCase() : "ABSENT"}: ${on && on.state === "unrated" ? "nothing on that axis was ever established there, so a grade taken from it would be invented outright" : "what lies beneath is unknown rather than absent, so a grade taken from it would be a claim about material nobody has seen"}`,
@@ -2431,7 +2647,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
     return;
   }
   if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(on.grade)) {
-    findings.push(f2(
+    findings.push(f3(
       "C-21.2",
       "error",
       `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose frozen ${axis} strength is ${on.grade}: a case built on a case cannot be stronger than the case beneath it, and the comparison is PER AXIS \u2014 this leg's ${axis} grade against that edition's ${axis} grade, never against a composed letter`,
@@ -2444,26 +2660,26 @@ function checkProjectExtension(ctx, findings) {
   const fm = ctx.fm;
   const WS2 = ["draft", "internally_checked", "externally_compliant", "distributed"];
   if (fm.workproduct_state !== void 0 && fm.workproduct_state !== null && !WS2.includes(fm.workproduct_state)) {
-    findings.push(f2("C-2.9", "error", `workproduct_state '${fm.workproduct_state}' is not one of: ${WS2.join(", ")}`));
+    findings.push(f3("C-2.9", "error", `workproduct_state '${fm.workproduct_state}' is not one of: ${WS2.join(", ")}`));
   }
   const evals = Array.isArray(fm.evaluations) ? fm.evaluations : [];
   for (let i = 0; i < evals.length; i++) {
     const e = evals[i];
     if (!e || !["compliance", "argument"].includes(e.kind) || !["internal", "external"].includes(e.strictness) || !["pass", "findings"].includes(e.result) || !ISO_TS_RE.test(e.timestamp || "")) {
-      findings.push(f2("C-2.9", "error", `evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`));
+      findings.push(f3("C-2.9", "error", `evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`));
     } else if (e.result === "findings" && !e.findings_ref) {
-      findings.push(f2("C-2.9", "error", `evaluations[${i}] result is findings but findings_ref is empty`));
+      findings.push(f3("C-2.9", "error", `evaluations[${i}] result is findings but findings_ref is empty`));
     }
   }
   if (fm.current_state === "closed" && !["resolved", "superseded", "abandoned"].includes(fm.closed_reason)) {
-    findings.push(f2("C-2.9", "error", `closed state requires closed_reason in: resolved, superseded, abandoned`));
+    findings.push(f3("C-2.9", "error", `closed state requires closed_reason in: resolved, superseded, abandoned`));
   }
   const ws = fm.workproduct_state;
   const passed = (kind, stricts) => evals.some((e) => e && e.kind === kind && e.result === "pass" && stricts.includes(e.strictness));
   if (["internally_checked", "externally_compliant", "distributed"].includes(ws)) {
     for (const kind of ["compliance", "argument"]) {
       if (!passed(kind, ["internal", "external"])) {
-        findings.push(f2(
+        findings.push(f3(
           "C-9.1",
           "error",
           `workproduct_state '${ws}' requires a passing ${kind} evaluation (internal strictness or better)`,
@@ -2475,7 +2691,7 @@ function checkProjectExtension(ctx, findings) {
   if (["externally_compliant", "distributed"].includes(ws)) {
     for (const kind of ["compliance", "argument"]) {
       if (!passed(kind, ["external"])) {
-        findings.push(f2(
+        findings.push(f3(
           "C-9.1",
           "error",
           `workproduct_state '${ws}' requires a passing external-strictness ${kind} evaluation`,
@@ -2633,21 +2849,21 @@ function actionBasisFindings(fm, findings) {
   const REPAIRS = ["point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"];
   legs.forEach((l, i) => {
     if (!l || typeof l !== "object" || Array.isArray(l)) {
-      findings.push(f2("C-2.10", "error", `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
+      findings.push(f3("C-2.10", "error", `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
       return;
     }
     if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
     if (themeLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === "string" ? l.target : "";
     if (!BUNDLE_ID_RE.test(target)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical bundle id`,
         REPAIRS
       ));
     } else if (OBJECT_TYPES[target.split("-")[0]] === "action") {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `action_basis[${i}].target '${target}' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)`,
@@ -2655,7 +2871,7 @@ function actionBasisFindings(fm, findings) {
       ));
     }
     if (!ACTION_BASIS_KINDS.includes(l.kind)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `action_basis[${i}].kind '${l.kind}' is not one of: ${ACTION_BASIS_KINDS.join(", ")}`,
@@ -2666,7 +2882,7 @@ function actionBasisFindings(fm, findings) {
   if (fm?.action_kind === "request_for_comment") {
     const disclosed = legs.filter((l) => l && typeof l === "object" && l.kind === "advances" && typeof l.target === "string" && BUNDLE_ID_RE.test(l.target) && OBJECT_TYPES[l.target.split("-")[0]] === "inquiry");
     if (!disclosed.length) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         'a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. "We contacted them" and "we put these four claims to them" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)',
@@ -2675,7 +2891,7 @@ function actionBasisFindings(fm, findings) {
     }
     const clock = Array.isArray(fm.clock) ? fm.clock : [];
     if (!clock.length) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; ${RFC_RESPONSE_WINDOW_PRECEDENT.source} is the precedent to reason from and is not a constant this record enforces (DEC-13)`,
@@ -2688,11 +2904,11 @@ function correspondenceFindings(fm, findings) {
   const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
   entries.forEach((e, i) => {
     if (!e || typeof e !== "object" || Array.isArray(e)) {
-      findings.push(f2("C-2.10", "error", `correspondence[${i}] is not an entry block`));
+      findings.push(f3("C-2.10", "error", `correspondence[${i}] is not an entry block`));
       return;
     }
     if (!CORRESPONDENCE_DIRECTIONS.includes(e.direction)) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `correspondence[${i}].direction '${e.direction}' is not one of: ${CORRESPONDENCE_DIRECTIONS.join(", ")}`,
@@ -2700,7 +2916,7 @@ function correspondenceFindings(fm, findings) {
       ));
     }
     if (!DATE_RE.test(String(e.at ?? "").slice(0, 10))) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `correspondence[${i}].at '${String(e.at).slice(0, 40)}' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due`
@@ -2714,14 +2930,14 @@ function correspondenceFindings(fm, findings) {
       "record a named account: account with the member who is testifying to it"
     ];
     if (sha && account) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `correspondence[${i}] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a reader would quote instead`,
         CHOICE
       ));
     } else if (!sha && !account) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `correspondence[${i}] carries NEITHER an artifact_sha nor an account: it asserts an exchange and offers no way to check that it happened`,
@@ -2729,14 +2945,14 @@ function correspondenceFindings(fm, findings) {
       ));
     } else if (sha) {
       if (!CONTENT_HASH_RE.test(sha) && !/^[0-9a-f]{64}$/i.test(sha)) {
-        findings.push(f2(
+        findings.push(f3(
           "C-2.10",
           "error",
           `correspondence[${i}].artifact_sha '${sha.slice(0, 24)}' is not a sha256 hash`
         ));
       }
       if (e.direction === "no_response") {
-        findings.push(f2(
+        findings.push(f3(
           "C-2.10",
           "error",
           `correspondence[${i}] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)`,
@@ -2744,14 +2960,14 @@ function correspondenceFindings(fm, findings) {
         ));
       }
     } else if (!author) {
-      findings.push(f2(
+      findings.push(f3(
         "C-2.10",
         "error",
         `correspondence[${i}] carries an account with no author: testimony is somebody's, and an unattributed account is a claim nobody stands behind`
       ));
     }
-    for (const q7 of quoteFindings(entries, i)) findings.push(f2("C-2.10", "error", q7.message, null, q7.code));
-    for (const q7 of lifecycleFindings(entries, i)) findings.push(f2("C-2.10", "error", q7.message, null, q7.code));
+    for (const q7 of quoteFindings(entries, i)) findings.push(f3("C-2.10", "error", q7.message, null, q7.code));
+    for (const q7 of lifecycleFindings(entries, i)) findings.push(f3("C-2.10", "error", q7.message, null, q7.code));
   });
 }
 var QUOTE_KEYS = ["quote_amount", "quote_currency", "quote_basis", "quote_answers", "quote_revises"];
@@ -2862,7 +3078,7 @@ function lifecycleFindings(entries, i) {
 var CAPTURE_ENCODINGS = ["utf8", "base64", "binary"];
 var RAW_SHA_RE = /^[0-9a-f]{64}$/;
 function storedToHashable(v, encoding) {
-  if (encoding === "base64") return b64ToBytes(asText(v));
+  if (encoding === "base64") return b64ToBytes(asText2(v));
   return v;
 }
 async function checkInfo2Contract(ctx, findings) {
@@ -2873,7 +3089,7 @@ async function checkInfo2Contract(ctx, findings) {
   }
   let reg;
   try {
-    reg = JSON.parse(asText(raw));
+    reg = JSON.parse(asText2(raw));
   } catch {
     return;
   }
@@ -2885,7 +3101,7 @@ async function checkInfo2Contract(ctx, findings) {
     if (!e || e.from_state !== "collected" || e.to_state !== "verified") continue;
     const signed = rels.some((r) => r && r.transition === e.timestamp && r.signature_file);
     if (!signed) {
-      findings.push(f2(
+      findings.push(f3(
         "C-18.7",
         "warn",
         `collected -> verified transition at ${e.timestamp} has no signed release record; the target mechanism is a detached SSH signature over the transition record (ssh-keygen -Y sign, namespace bio-release; doctrine 4a)`,
@@ -2908,7 +3124,7 @@ async function checkInfo2Contract(ctx, findings) {
           hashable = stored.join("");
         } else if (stored.every((v) => !textStored(v))) {
           const h = createSha256();
-          for (const v of stored) h.update(cap.encoding === "base64" ? b64ToBytes(asText(v)) : v);
+          for (const v of stored) h.update(cap.encoding === "base64" ? b64ToBytes(asText2(v)) : v);
           actual = h.hex();
         } else {
           throw new Error("parts mix text and binary storage");
@@ -2917,7 +3133,7 @@ async function checkInfo2Contract(ctx, findings) {
         hashable = storedToHashable(ctx.files.get(String(d.file)), cap.encoding);
       }
     } catch (err) {
-      findings.push(f2("C-18.6", "error", `provenance documents[${i}]: stored content could not be decoded for hash verification (${err && err.message}) (@2)`));
+      findings.push(f3("C-18.6", "error", `provenance documents[${i}]: stored content could not be decoded for hash verification (${err && err.message}) (@2)`));
       continue;
     }
     if (actual === null) {
@@ -2925,7 +3141,7 @@ async function checkInfo2Contract(ctx, findings) {
       actual = await ctx.sha256(hashable);
     }
     if (actual !== cap.sha256) {
-      findings.push(f2(
+      findings.push(f3(
         "C-18.6",
         "error",
         `provenance documents[${i}]: stored bytes hash ${actual.slice(0, 12)}\u2026 but the register records ${String(cap.sha256).slice(0, 12)}\u2026; silent content mutation fails the gate (@2)`,
@@ -2940,159 +3156,23 @@ var MECHANICAL_FIELD_SETS = {
   "deadline-recheck": ["clock[].status", "last_updated"],
   "member-attest": ["last_updated"]
 };
-var EXTENSION_ARMS = Object.freeze([
-  { name: "checkInformationExtension", ids: ["C-2.7"] },
-  { name: "checkInfo2Contract", ids: ["C-18.6", "C-18.7"] },
-  { name: "checkInquiryExtension", ids: ["C-2.8"] },
-  { name: "checkProjectExtension", ids: ["C-2.9", "C-9.1"] }
-].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
-var GRAMMAR_ID_RE = /^C-\d+(\.\d+)?$/;
-function grammarsOf(list2) {
-  if (list2 === void 0 || list2 === null) return { byArm: /* @__PURE__ */ new Map(), rest: [] };
-  if (!Array.isArray(list2)) throw new TypeError("checkBundle: opts.grammars is a list of {module, ids, arm}");
-  const byArm = /* @__PURE__ */ new Map(), rest = [], claimed = /* @__PURE__ */ new Map();
-  list2.forEach((g, i) => {
-    const at22 = `checkBundle: opts.grammars[${i}]`;
-    if (!g || typeof g !== "object") throw new TypeError(`${at22} is not a {module, ids, arm} entry`);
-    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at22} names no module`);
-    if (!Array.isArray(g.ids) || g.ids.length === 0 || !g.ids.every((id) => typeof id === "string" && GRAMMAR_ID_RE.test(id)))
-      throw new TypeError(`${at22} (${g.module}): ids is a non-empty list of C-ids`);
-    if (typeof g.arm !== "function") throw new TypeError(`${at22} (${g.module}): arm is not a function`);
-    for (const id of g.ids) {
-      if (claimed.has(id)) throw new RangeError(`${at22} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
-      claimed.set(id, g.module);
-    }
-    const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => g.ids.includes(id)));
-    if (touched.length > 1)
-      throw new RangeError(`${at22} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
-    const [arm] = touched;
-    if (arm && !arm.ids.every((id) => g.ids.includes(id)))
-      throw new RangeError(`${at22} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
-    if (arm) byArm.set(arm.name, g);
-    else rest.push(g);
-  });
-  return { byArm, rest };
-}
-async function checkBundle(input, opts = {}) {
-  const grammars = grammarsOf(opts.grammars);
-  const findings = [];
-  const bundleRaw = input.files.get("bundle.md");
-  const ctx = {
-    folderName: input.folderName,
-    files: input.files,
-    // 1.13.0 (three-tier read model): paths known to exist in the
-    // authoritative store but whose bytes the caller deliberately did not
-    // carry (a tier-scoped client mirror eliding snapshots/ and _history/).
-    // Presence assertions ("this registered path must exist") consult
-    // files UNION elided via hasFile_; byte checks (hashing, parsing,
-    // history audits) stay files-only and skip elided content exactly as
-    // they skip absent content, so nothing is ever verified against bytes
-    // the caller does not hold. The gate and cli pass nothing here and are
-    // byte-complete as before.
-    elided: input.elidedPaths instanceof Set ? input.elidedPaths : new Set(Array.isArray(input.elidedPaths) ? input.elidedPaths : []),
-    sha256: input.sha256,
-    nowMs: input.nowMs,
-    maxPackageAgeDays: input.maxPackageAgeDays ?? 14,
-    maxReevalAgeDays: input.maxReevalAgeDays ?? 30,
-    /* inquiry@1 joins; focus@1 and problem@1 STAY KNOWN forever — schema
-       stamps are document truth in append-only history (REC-10). */
-    /* PL-12 / D-84: `bias@1`. A type whose schema stamp the catalog does not
-       know is refused by C-2.5 before any type-specific check runs, so the
-       stamp has to be admitted in the same turn as the type. */
-    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason; N-A1 (T18)
-       `action_plan@1` likewise. */
-    knownSchemas: opts.knownSchemas ?? [
-      "information@1",
-      "information@2",
-      "inquiry@1",
-      "focus@1",
-      "problem@1",
-      "project@1",
-      "action@1",
-      "bias@1",
-      "standard@1",
-      "determination@1",
-      "consequence@1",
-      "escalation@1",
-      "aspiration@1",
-      "goal@1",
-      "action_plan@1"
-    ],
-    resolveTarget: input.resolveTarget,
-    // D2.3: the key registry, injected exactly like resolveTarget. Absent
-    // is legal and means pre-migration behavior; absent WITH a
-    // post-migration release is an error, never a skip.
-    releaseRegistry: input.releaseRegistry || null,
-    /* REC-14: the published projection, injected exactly like releaseRegistry
-       and for the same reason — the checker is a pure function over a
-       filesystem, and what OTHER cases were published (and at which editions,
-       with which frozen pair) is not in this bundle. Shape:
-         { <bundleId>: { latest: n, editions: { "1": {edition, completeness,
-             capture: {state, grade}, connection: {state, grade}} } } }
-       Absent means the caller cannot see the published record (the cli, the
-       migrate tool) and C-21.1/C-21.2 cannot fire. Every path a real caller
-       has — the ratification gate and the store's own write path — injects it,
-       which is what keeps the absence from being a way through. */
-    publishedRegistry: input.publishedRegistry || null,
-    /* REC-44 / DEC-44: the CASE-altitude half of the same fact, injected on the
-       same terms and separated for the reason DEC-44 gives — a case is a
-       CONTAINER over one or more findings, so what the previous edition of THIS
-       CASE asserted about its limits is not a fact about any one finding.
-       Shape:
-         { <caseId>: { latest: n, editions: { "1": {edition, scope,
-             completeness, ratified_at} } } }
-       Absent means the caller cannot see the published record (the cli, the
-       migrate tool) and C-21.1 cannot fire; every path a real caller has
-       injects it. Kept SEPARATE from publishedRegistry deliberately: one
-       registry serving both altitudes is how the collapse this item corrects
-       happened in the first place. */
-    publishedCaseRegistry: input.publishedCaseRegistry || null,
-    /* REC-18: the second fact the catalog cannot get from the bundle, and it is
-       injected on exactly the same terms and for the same reason. What
-       `resolutions` holds about this bundle's basis targets, and what `register`
-       holds about their captures, is the record — not this document — so a
-       checker over a filesystem has no way to compute an earned grade and says
-       so rather than passing the leg (checkEarnedLeg). Shape:
-         { subject_entity, subject_label, earned: {
-             connection: { <target>: {grade, why, ...} },
-             capture:    { <target>: {grade, why, ceiling?} } } }
-       Absent means the caller cannot see the record (the cli, the migrate tool).
-       Every path a real caller has injects it. */
-    earnedRegistry: input.earnedRegistry || null,
-    sha512: input.sha512 || null,
-    fm: null,
-    body: ""
-  };
-  if (!bundleRaw) {
-    findings.push(f2("C-13.1", "error", "bundle.md is missing"));
-  } else {
-    const parsed = parseFrontmatter(asText(bundleRaw));
-    findings.push(...parsed.findings);
-    ctx.fm = parsed.data;
-    ctx.body = parsed.body;
-    checkIdentity(ctx, findings);
-    checkFrontmatterContract(ctx, findings);
-    checkHeadings(ctx, findings);
-    checkStateLegality(ctx, findings);
-    checkWriteCompleteness(ctx, findings);
-    const typeArm = async (name, builtIn) => {
-      const g = grammars.byArm.get(name);
-      await (g ? g.arm(ctx, findings) : builtIn(ctx, findings));
-    };
-    await typeArm("checkInformationExtension", checkInformationExtension);
-    await typeArm("checkInfo2Contract", checkInfo2Contract);
-    checkReferences(ctx, findings);
-    checkRecheckCoverage(ctx, findings);
-    await typeArm("checkInquiryExtension", checkInquiryExtension);
-    await typeArm("checkProjectExtension", checkProjectExtension);
-    for (const g of grammars.rest) await g.arm(ctx, findings);
-    checkAppendOnly(ctx, findings);
-    checkHistoryCoherence(ctx, findings);
-  }
-  checkFormatHygiene(ctx, findings);
-  await checkQueueAndBase(ctx, findings);
-  const pass = !findings.some((x) => x.severity === "error");
-  return { pass, findings };
+var LEGACY_GRAMMARS = Object.freeze([
+  { module: "legacy-checks", ids: ["C-2.7"], arm: checkInformationExtension },
+  { module: "legacy-checks", ids: ["C-18.6", "C-18.7"], arm: checkInfo2Contract },
+  { module: "legacy-checks", ids: ["C-6.1"], arm: (ctx, findings) => {
+    supersedesEdgeFindings(ctx.fm, findings);
+    divisionDisclosureFindings(ctx.fm, findings);
+  } },
+  { module: "legacy-checks", ids: ["C-15.1"], arm: checkRecheckCoverage },
+  { module: "legacy-checks", ids: ["C-2.8"], arm: checkInquiryExtension },
+  { module: "legacy-checks", ids: ["C-2.9", "C-9.1"], arm: checkProjectExtension }
+].map((g) => Object.freeze({ ...g, ids: Object.freeze(g.ids) })));
+async function checkBundle2(input, opts = {}) {
+  const given = opts.grammars;
+  if (given !== void 0 && given !== null && !Array.isArray(given)) return checkBundle(input, opts);
+  const claimed = new Set((given || []).flatMap((g) => g && Array.isArray(g.ids) ? g.ids : []));
+  const legacy = LEGACY_GRAMMARS.filter((g) => !g.ids.some((id) => claimed.has(id)));
+  return checkBundle(input, { ...opts, grammars: [...given || [], ...legacy] });
 }
 var AI_RUN_CHECKS = {
   /* §11: "Absence uses D-129's vocabulary — NEVER_LOOKED / LOOKED_ABSENT /
@@ -3562,7 +3642,7 @@ var VERSION_ACT_CHECKS = {
      verification pass), which measured it free when it looked, and stepping over
      an id somebody holds is cheaper than the collision seven items paid for in one
      day. **Writing the numeral in this comment ALLOCATED IT AS A CHECK**:
-     `scripts/coverage.mjs` builds the catalogue with
+     the retired `scripts/coverage.mjs` (gone since T18, K739) built the catalogue with
      `checksSrc.matchAll(/C-\d+\.\d+/g)` over the RAW source of this file, comments
      included, so a number named in prose becomes a check `--strict` then demands
      an assertion for. Measured at this item: the catalogue read 225 where the
@@ -3609,11 +3689,11 @@ function basisVersionFindings(fm, findings) {
   const groundRows = Array.isArray(fm?.basis_version_grounds) ? fm.basis_version_grounds : [];
   const push = (key, message2, repairs) => {
     const row2 = BASIS_VERSION_CHECKS[key];
-    findings.push(f2(row2.check, "error", message2, repairs, key));
+    findings.push(f3(row2.check, "error", message2, repairs, key));
   };
   const pushSuggest = (key, message2, repairs) => {
     const row2 = SUGGEST_CHECKS[key];
-    findings.push(f2(row2.check, "error", message2, repairs, key));
+    findings.push(f3(row2.check, "error", message2, repairs, key));
   };
   if (rows2 === void 0 || rows2 === null) {
     for (let i = 0; i < legRows.length; i++)
@@ -3886,7 +3966,6 @@ var SUGGEST_KINDS = {
   "level-empty": "we looked at this level \u2014 meaning, content, documents, or the open internet \u2014 and it is empty, with the observation-log address of the search that establishes it. Without this kind a run that honestly found nothing supportable is indistinguishable from a run that emitted nothing (SWEEP section 6), and section 15's empty-run instrument has no object to count",
   "new-edition": "evidence bearing on a PUBLISHED finding. A published case cannot be changed, so the only act available is a new edition, and it is the member's"
 };
-var SUGGEST_LEVELS = ["meaning", "content", "documents", "internet"];
 var BOILERPLATE_FORMS = [
   "to be named",
   "tbd",
@@ -4112,10 +4191,6 @@ var BIAS_CHECKS = {
     translation: "That is not a move this bias set can make from where it stands. A set is written, then offered, then adopted \u2014 and once it is adopted the only move left is to retire it, because a case published under it names the revision it was held to and a set that could slide backwards would make that unresolvable after the fact. To change an adopted set, write the amendment AS the adopted set \u2014 a new revision re-pins the lens \u2014 or retire it and adopt a successor. Nothing was written."
   }
 };
-var CIVICOS_CONTACT_URL = "https://github.com/believeinoakland/bio";
-function civicosUserAgent(version, instance, purpose) {
-  return `CivicOS/${version || "0.0.0"} (+${CIVICOS_CONTACT_URL}; instance ${instance || "unnamed"}; ${purpose})`;
-}
 var CAPTURE_REQUEST_CHECKS = {
   /* ---- THE DOOR. Refused at the request, before any row exists. These are
      SHAPE rules and NOT conduct: conduct is enforced once, at the drain. ---- */
@@ -4221,7 +4296,7 @@ var CAPTURE_REQUEST_CHECKS = {
        hold for a credential class that does not exist yet (PL-11). */
   CAPTURE_NOT_DRAINING: {
     check: "C-28.13",
-    where: "src/capture/acquire.mjs acquire > is-capture-request-arm",
+    where: "src/acquisition/index.mjs acquire > is-capture-request-arm",
     translation: "Only this instance's own background worker fetches documents, and it does so from its own queue. Nothing else can ask it to fetch something right now \u2014 including the assistant that asked for the document in the first place."
   },
   /* PL-15 / D-213 — THE LEAD'S TWO DOOR REFUSALS, ADDED TO THIS FAMILY RATHER
@@ -4367,7 +4442,7 @@ var AI_CREDENTIAL_CHECKS = {
 var MACHINE_FENCE_CHECKS = {
   MACHINE_CANNOT_RELEASE: {
     check: "C-32.1",
-    where: "src/store.mjs release > is-machine-release",
+    where: "src/ratification/release.mjs release > is-machine-release",
     translation: "Moving documents from collected to verified is a decision a named person makes and signs. The credential that asked here is an automated one, so it can gather the batch and lay out the review, and cannot be the one who says the batch is good. Sign in and release it yourself."
   },
   MACHINE_CANNOT_CONCLUDE: {
@@ -4460,17 +4535,17 @@ var ACT_SHAPE_CHECKS = {
   },
   NO_ACKNOWLEDGMENT: {
     check: "C-33.10",
-    where: "src/store.mjs release > is-release-account",
+    where: "src/ratification/release.mjs release > is-release-account",
     translation: "Releasing a batch at once records your explicit acknowledgment that the batch is of a piece and that you weighed the risk of doing them together. Without it the record shows only that a button was pressed."
   },
   NO_MITIGATION: {
     check: "C-33.11",
-    where: "src/store.mjs release > is-release-account",
+    where: "src/ratification/release.mjs release > is-release-account",
     translation: "Releasing a batch at once records what you actually did to check it \u2014 what was sampled and what was verified. A concrete note can be audited by somebody later; silence cannot be audited at all."
   },
   ENTRY_REQUIREMENTS: {
     check: "C-33.12",
-    where: "src/store.mjs release > is-release-entry",
+    where: "src/ratification/release.mjs release > is-release-entry",
     translation: "Some of these documents are missing something the verified state requires, and releasing them as they stand would produce records the catalog rejects the moment they exist. The offending documents are named so they can be fixed rather than guessed at."
   },
   NOT_INQUIRIES: {
@@ -4547,48 +4622,9 @@ var ACT_SHAPE_CHECKS = {
     where: "src/membership/index.mjs projectOwnerRemove > is-owner-floor",
     translation: "A project always has at least one owner, so the last one cannot be removed \u2014 the result would be work nobody is answerable for. Add another owner first, or stand the project down."
   },
-  /* ---------------------------------------------------------------------------
-       D-484, 2026-09-24 — THE FIRST TWO ROWS THIS FAMILY'S OWN HEADER SAID IT
-       COULD NOT HOLD, AND THEY EXIST BECAUSE THE PLANE CHANGED SHAPE RATHER THAN
-       BECAUSE A SENTENCE WAS FINALLY WRITTEN.
-  
-       The header above states the bar and the reason: a row holds ONE `where`,
-       one code may not hold two rows, and a `where` naming one of four sites
-       would claim a span the code is not confined to — *"REC-71's overstatement
-       wearing the other face"*. It then names the honest fix — *"the refusals
-       consolidated behind one helper so there IS one site"* — and ROUTES it.
-       D-484 is that routing coming back. `NO_BASIS` was minted at four sites in
-       `store.mjs` and `NO_CITATION` at three; each is now minted at exactly ONE,
-       inside the region named below, and every former site returns through it.
-  
-       So the `where` is not a narrowing of a claim this family could not support
-       — it is now literally true, and `store.mjs` holds one `reason: "NO_BASIS"`
-       and one `reason: "NO_CITATION"` literal to prove it (a structural pin in
-       `test/d484-refusal-translation.test.mjs` asserts exactly that, because a
-       second site added later would silently make this `where` a lie again).
-  
-       EACH TRANSLATION IS TRUE AT EVERY SITE IT NOW SERVES, which is the price of
-       consolidation and is where a careless one would do harm. `NO_BASIS` covers
-       concluding an inquiry that rests on nothing, partitioning a question with no
-       legs, a grade-D testimony with no stated basis, and a revision of a declared
-       flow that does not say why it changes — so the sentence speaks about WHAT
-       THIS RESTS ON and never about legs, or documents, or flows. The per-site
-       `detail` still carries the particular, unchanged.
-  
-       THE UNDETERMINED DOOR IS NAMED, on NO_FALSIFIER's precedent (REC-117): a
-       member refused for a missing basis is a member under pressure to invent one,
-       and the record would rather carry *nothing supports this yet* in the open.
-       --------------------------------------------------------------------------- */
-  NO_BASIS: {
-    check: "C-33.40",
-    where: "src/inquiry/index.mjs actNoBasis > is-act-no-basis",
-    translation: "This asks the record to stand behind something without saying what it rests on. Say what that is first \u2014 what the question is grounded in, what you personally observed, or why a settled thing is being changed \u2014 and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked."
-  },
-  NO_CITATION: {
-    check: "C-33.41",
-    where: "src/store.mjs actNoCitation > is-act-no-citation",
-    translation: "A citation is the address of something somebody who was not here can go and read. Without one, what you have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is published or held \u2014 if it is not public, say who holds it and how it was seen, which is still an address and is still checkable."
-  },
+  /* C-33.40 NO_BASIS and C-33.41 NO_CITATION, the shared act rows, are record-grammar's (T19, its R29); this family
+     holds them by reference, so every reader of the family still meets them here. */
+  ...SHARED_ACT_CHECKS,
   /* REC-186 (BOB #31, 2026-09-23 21:37Z): the last owner's request to leave. C-33.48, not the next
      free number on main, because REC-205 and REC-207's unmerged branches already hold C-33.44..46 in
      this family; the integrator renumbers if the union needs it. RENUMBERED C-33.47 -> C-33.48 by CONDUCT #22
@@ -4611,183 +4647,6 @@ var INSTALLATION_CHECKS = {
     check: "C-68.1",
     where: "src/index.mjs storageAbsent > is-storage-absent",
     translation: "This copy was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how the copy was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."
-  }
-};
-var RENDER_CAPTURE_CHECKS = {
-  /* `render` present and not `true`. Refused rather than read as absent: a
-     `render: "yes"` answered with the plain capture would file the shell as the
-     content, which is the outcome this family exists to prevent. */
-  RENDER_FLAG_MALFORMED: {
-    check: "C-83.1",
-    where: "src/capture/acquire.mjs acquire > is-render-admit",
-    translation: "This request asked for a rendered capture in a form this instance does not recognise. It answers render: true or nothing, so a request for the page as a visitor saw it is never quietly answered with the page's empty frame. Nothing was fetched."
-  },
-  /* A render combined with an arm whose bytes are not a live page: an archive
-     replay, a Drive export, or the continuation of a capture already filed. */
-  RENDER_ARM_CONFLICT: {
-    check: "C-83.2",
-    where: "src/capture/acquire.mjs acquire > is-render-admit",
-    translation: "A rendered capture runs the live page in a browser, and this request combined that with a way of capturing that does not load a live page (an archived copy, a Drive export, or the continuation of an earlier capture). Ask for one or the other. Nothing was fetched."
-  },
-  /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a
-     BROWSER bound to something that is not a Fetcher, so there is no endpoint to
-     open a devtools session on. Named rather than falling back.
-     CORRECTED BY D-490: this comment read "the Browser Rendering binding is bound
-     and the in-plane driver over it is not built", which was the state D-64 shipped
-     and is the state D-490 ended (`src/browserrender.mjs`). The TRANSLATION below
-     did not move and did not need to — "no working page renderer" is true of every
-     case this code still names — but a comment describing a condition that no longer
-     exists is how the next reader is told the wrong thing by the record. */
-  RENDER_NO_RENDERER: {
-    check: "C-83.3",
-    where: "src/capture/acquire.mjs acquire > is-render-admit",
-    translation: "This instance has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
-  },
-  /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by
-     renders in flight (D-492). The render is DEFERRED and the deferral is recorded;
-     the shell is never the content. CORRECTED 2026-09-24 (D-492), and the old sentence
-     is why: it said the allowance had been USED, which was true only of the time
-     already reported. Since a render now reserves its maximum cost at admission, a
-     deferral can also mean the day's remaining time is held by renders still running,
-     and a member told "used" would have gone away for the day when the answer may be a
-     minute off. The sentence says which, without naming a mechanism. */
-  RENDER_DEFERRED: {
-    check: "C-83.4",
-    where: "src/capture/acquire.mjs acquire > is-render-admit",
-    translation: "Today's allowance for rendering pages is fully committed \u2014 either already used, or held by renders this instance is running right now \u2014 so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in flight have finished, or after midnight UTC."
-  },
-  /* The render loads the page again, which is a second document load to the
-     host, so it asks the per-host governor like any other (BOB #32 item 3:
-     "through the host governor"). Refused by name when the host is cooling off. */
-  RENDER_HOST_COOLING_OFF: {
-    check: "C-83.5",
-    where: "src/capture/acquire.mjs acquire > is-render-admit",
-    translation: "This instance is giving that website a rest after it asked us to slow down, and a rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again after the wait shown beside this message."
-  },
-  /* The shell is not an HTML page small enough to render (a PDF, an office
-     file, a multipart giant). A document that is not a page has nothing a
-     browser adds; capture it without `render`. */
-  RENDER_NOT_A_PAGE: {
-    check: "C-83.6",
-    where: "src/capture/acquire.mjs acquire > is-render-result",
-    translation: "The address served something that is not a web page a browser can render, such as a PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. Capture it the ordinary way."
-  },
-  /* The renderer did not produce a rendered document. The shell's bytes are
-     held content-addressed and unregistered, exactly as TOO_LARGE's parts are;
-     no document names them. */
-  RENDER_FAILED: {
-    check: "C-83.7",
-    where: "src/capture/acquire.mjs acquire > is-render-result",
-    translation: "The page was fetched but the renderer did not produce the page as a visitor would see it, so nothing was filed: the page's empty frame is never filed as its content. The reason the renderer gave is beside this message."
-  },
-  /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a cap from the
-     vendor's stated limit, and a render over it WAITS, never dropped). Decided in the
-     admission span, before the shell is fetched, and distinct from C-83.4 on purpose: the
-     day's allowance is untouched and may have room, so the sentence must not say it is
-     used. The unattended drain holds the row under this code and asks again next tick. */
-  RENDER_AT_CAPACITY: {
-    check: "C-83.8",
-    where: "src/capture/acquire.mjs acquire > is-render-admit",
-    translation: "This instance is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
-  }
-};
-var DRIVE_CAPTURE_CHECKS = {
-  /* D-112, AND IT IS THE SPINE OF THE ITEM. The three facts this capture's hop
-     carries — the export address, the export format, the producer — are derived
-     by the plane from the file id and the kind in the address. A body carrying
-     one is a caller trying to author the record's own provenance, and it is
-     refused BY NAME rather than having the field quietly dropped: a caller told
-     nothing learns nothing, and a hop a caller can hand us is one a caller can
-     invent. */
-  DRIVE_HOP_FACT_SUPPLIED: {
-    check: "C-48.1",
-    where: "src/capture/acquire.mjs acquire > is-drive-capture",
-    translation: "This request tried to tell the record where a document was exported from, in what format, or by whom. Those are facts this instance establishes by doing the fetch itself, never facts it accepts from whoever asked. Send the Drive link and nothing else."
-  },
-  /* A FOLDER. There is nothing to export and no single set of bytes a capture
-     could honestly hold, so the honest answer is the shape's name and the reason. */
-  DRIVE_FOLDER_NOT_A_DOCUMENT: {
-    check: "C-48.2",
-    where: "src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both",
-    translation: "That address is a Drive FOLDER \u2014 a listing of files rather than a document. There is nothing to export and no single set of bytes a capture of it would hold. Name the document you want; harvesting everything a folder lists is a different act."
-  },
-  /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an
-     export address here would mean guessing which conversion to ask for, and
-     filing bytes whose format the record had invented. Undetermined is
-     first-class and must be STATED. */
-  DRIVE_KIND_UNDETERMINED: {
-    check: "C-48.3",
-    where: "src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
-    translation: "That Drive address names a file but not what KIND of file it is, and the kind is what decides which export to ask for. Guessing would file bytes in a format nobody established. Use the address that opens the document itself, which carries the kind."
-  },
-  /* A DRIVE HOST WITH AN UNREAD PATH. Named rather than harvested, and named
-     rather than passed through: a Drive address whose shape is unread is not a
-     document this instance can promise to have captured. */
-  DRIVE_SHAPE_UNRECOGNISED: {
-    check: "C-48.4",
-    where: "src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
-    translation: "That is a Google Drive address in a form this instance does not recognise. Rather than capture whatever bytes the address happens to serve and call it the document, it says so. If this shape should be harvestable, that is a change worth making deliberately."
-  },
-  /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the
-     export address with `text/html` when the file is not shared with anyone who
-     has the link: a sign-in page, an error page, the app. It is never the
-     document. Filing it would put a page of Google's furniture into the record
-     under a city document's address — the record claiming more than it can
-     support, which CLAUDE.md ranks worse than a missing feature. */
-  DRIVE_EXPORT_IS_THE_SHELL: {
-    check: "C-48.5",
-    where: "src/capture/acquire.mjs acquire > is-drive-export",
-    translation: "Google answered the export address with a web page rather than a document \u2014 which is what it does when a file is not shared with anyone who has the link. That page is the application, not the document, and it is not filed as one. Check that the file is shared."
-  },
-  /* THE SAME SHELL, CAUGHT ON THE BYTES, AND IT IS A SECOND CODE RATHER THAN THE
-     ROW ABOVE FIRING TWICE. PL-4 measured what one predicate at two points costs:
-     one of the two becomes unreachable and can never be driven. These are two
-     different predicates over two different pieces of evidence — the header, and
-     the first kibibyte — and they are two different findings. C-48.5 is "Google
-     told us it was a web page"; this is "Google told us it was a document and it
-     was a web page", which is the more serious fact and is why detection here is
-     bytes-first (COFF-1: a byte signature ALWAYS outranks a declared type). */
-  DRIVE_EXPORT_BYTES_ARE_THE_SHELL: {
-    check: "C-48.7",
-    where: "src/capture/acquire.mjs acquire > is-drive-bytes",
-    translation: "The export address said it was sending a document and sent a web page instead. This instance checks the bytes rather than taking the label, so the application page was recognised and refused. Nothing was filed under that document address."
-  },
-  /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT*
-     HAPPEN. There is no fallback to the shell. A 403 or a 404 at the export
-     address ends the capture with the failure named; it never quietly becomes a
-     capture of the application page, which would look like a success and hold
-     nothing. */
-  /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
-     FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
-     nothing and the member's remedy is to share the file. A TICK that meets the
-     shell has not captured anything either — it never would — and what it has
-     lost is the CHECK: the record's last comparison still stands, undisturbed,
-     and nothing about the document changed. Those are two different facts about
-     the member's own situation, and DEC-49's canned translation is the sentence
-     they actually read, so one sentence cannot be true of both. PL-4's rule cuts
-     the same way it did for C-48.5/C-48.7: two predicates, two sites, both
-     drivable — `op=acquire` drives the pair above, `op=monitor` drives this pair,
-     and `test/monitor-assess.test.mjs` drives both of these by name. */
-  DRIVE_TICK_EXPORT_IS_THE_SHELL: {
-    check: "C-48.8",
-    where: "src/monitoring/index.mjs monitor > is-drive-tick-export",
-    translation: "The check of that Google Drive document did not run: the export address answered with a web page rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. Nothing was compared and nothing about the record changed \u2014 what is known is that this instance could not see the document today."
-  },
-  /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
-     declared type and the first kibibyte are two different pieces of evidence,
-     and "Google told us it was a document and it was a web page" is the more
-     serious fact. On a tick the consequence is the same either way and it is
-     still worth two codes, because a tick that compared the shell would report
-     the document CHANGED on every visit — the cry-wolf this row exists to end. */
-  DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
-    check: "C-48.9",
-    where: "src/monitoring/index.mjs monitor > is-drive-tick-bytes",
-    translation: "The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. This instance reads the bytes rather than the label, so the application page was recognised and not compared against the captured document \u2014 comparing it would report a change on every visit that nobody made."
-  },
-  DRIVE_EXPORT_UNREACHABLE: {
-    check: "C-48.6",
-    where: "src/capture/acquire.mjs acquire > is-drive-export",
-    translation: "The OpenDocument export of that Drive document could not be fetched, so nothing was captured. The application page at the same address is NOT captured instead: a record holding the app in place of the document would look like evidence and be none."
   }
 };
 var CONTENT_EXTENT_KINDS = {
@@ -5440,7 +5299,7 @@ var INSTANCE_GROUP_CHECKS = {
 };
 function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
-  const refusal20 = (code, message2, repairs) => f2(LEAD_CHECKS[code].check, "error", message2, repairs, code);
+  const refusal20 = (code, message2, repairs) => f3(LEAD_CHECKS[code].check, "error", message2, repairs, code);
   for (const field of ["target", "content_id"]) {
     const v = typeof l[field] === "string" ? l[field].trim() : "";
     if (v && LEAD_ID_RE.test(v)) {
@@ -5539,7 +5398,7 @@ var THEME_CHECKS = {
 };
 function themeLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
-  const refusal20 = (code, message2, repairs) => f2(THEME_CHECKS[code].check, "error", message2, repairs, code);
+  const refusal20 = (code, message2, repairs) => f3(THEME_CHECKS[code].check, "error", message2, repairs, code);
   const REPAIRS = [
     "cite the document or the passage itself \u2014 the theme is how you found it, not what it shows",
     "or leave the theme out of the leg: membership in a theme is never a reason a leg counts"
@@ -5974,15 +5833,15 @@ var checks_exports = {};
 __export(checks_exports, {
   ACQUISITION_CHECKS: () => ACQUISITION_CHECKS,
   CAPTURE_REQUEST_ARM_CHECKS: () => CAPTURE_REQUEST_ARM_CHECKS,
-  CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL2,
-  DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS2,
-  RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS2,
-  civicosUserAgent: () => civicosUserAgent2
+  CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
+  DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
+  RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
+  civicosUserAgent: () => civicosUserAgent
 });
 var at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
-var CIVICOS_CONTACT_URL2 = "https://github.com/believeinoakland/bio";
-function civicosUserAgent2(version, instance, purpose) {
-  return `CivicOS/${version || "0.0.0"} (+${CIVICOS_CONTACT_URL2}; instance ${instance || "unnamed"}; ${purpose})`;
+var CIVICOS_CONTACT_URL = "https://github.com/believeinoakland/bio";
+function civicosUserAgent(version, instance, purpose) {
+  return `CivicOS/${version || "0.0.0"} (+${CIVICOS_CONTACT_URL}; instance ${instance || "unnamed"}; ${purpose})`;
 }
 var CAPTURE_REQUEST_ARM_CHECKS = Object.freeze({
   CAPTURE_NOT_DRAINING: Object.freeze({
@@ -5991,7 +5850,7 @@ var CAPTURE_REQUEST_ARM_CHECKS = Object.freeze({
     translation: "Only this instance's own background worker fetches documents, and it does so from its own queue. Nothing else can ask it to fetch something right now \u2014 including the assistant that asked for the document in the first place."
   })
 });
-var RENDER_CAPTURE_CHECKS2 = Object.freeze({
+var RENDER_CAPTURE_CHECKS = Object.freeze({
   /* `render` present and not `true`. Refused rather than read as absent: a `render: "yes"` answered with the plain
      capture would file the shell as the content, which is the outcome this family exists to prevent. */
   RENDER_FLAG_MALFORMED: Object.freeze({
@@ -6051,7 +5910,7 @@ var RENDER_CAPTURE_CHECKS2 = Object.freeze({
     translation: "This instance is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
   })
 });
-var DRIVE_CAPTURE_CHECKS2 = Object.freeze({
+var DRIVE_CAPTURE_CHECKS = Object.freeze({
   /* D-112, AND IT IS THE SPINE OF THE ITEM. The three facts this capture's hop carries — the export address, the
      export format, the producer — are derived by the plane from the file id and the kind in the address. A body
      carrying one is a caller trying to author the record's own provenance, and it is refused BY NAME rather than
@@ -6103,7 +5962,7 @@ var DRIVE_CAPTURE_CHECKS2 = Object.freeze({
     translation: "The export address said it was sending a document and sent a web page instead. This instance checks the bytes rather than taking the label, so the application page was recognised and refused. Nothing was filed under that document address."
   })
 });
-var ACQUISITION_CHECKS = Object.freeze({ ...CAPTURE_REQUEST_ARM_CHECKS, ...RENDER_CAPTURE_CHECKS2, ...DRIVE_CAPTURE_CHECKS2 });
+var ACQUISITION_CHECKS = Object.freeze({ ...CAPTURE_REQUEST_ARM_CHECKS, ...RENDER_CAPTURE_CHECKS, ...DRIVE_CAPTURE_CHECKS });
 
 // src/cpu.mjs
 function makeMeter() {
@@ -6238,14 +6097,14 @@ function srcsetCandidates(v) {
 var CSS_COMMENT_RE = /\/\*[\s\S]*?\*\//g;
 function cssRefList(css) {
   const out = [];
-  const text4 = String(css).replace(CSS_COMMENT_RE, "");
+  const text5 = String(css).replace(CSS_COMMENT_RE, "");
   let m;
   CSS_IMPORT_RE.lastIndex = 0;
-  while (m = CSS_IMPORT_RE.exec(text4)) {
+  while (m = CSS_IMPORT_RE.exec(text5)) {
     const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
     if (u.trim()) out.push({ url: u.trim(), kind: "stylesheet" });
   }
-  const rest = text4.replace(CSS_IMPORT_RE, "");
+  const rest = text5.replace(CSS_IMPORT_RE, "");
   CSS_URL_RE.lastIndex = 0;
   while (m = CSS_URL_RE.exec(rest)) {
     const u = m[1] ?? m[2] ?? m[3] ?? "";
@@ -6886,11 +6745,11 @@ async function captureSubresources({
           reused_from: known.last_fetched_by || null
         });
         if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
-          const text4 = await readBack(known.sha256);
-          if (text4 != null) {
+          const text5 = await readBack(known.sha256);
+          if (text5 != null) {
             rec2.css = true;
             rec2.rewrite = [];
-            for (const c of cssRefList(text4))
+            for (const c of cssRefList(text5))
               queue.push({
                 ref: c.url,
                 kind: c.kind,
@@ -6999,15 +6858,15 @@ async function captureSubresources({
     });
     const isCss = item.kind === "stylesheet" || ct === "text/css";
     if (isCss && item.depth < CSS_MAX_DEPTH) {
-      let text4 = "";
+      let text5 = "";
       try {
-        text4 = meter2.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes2), bytes2.length);
+        text5 = meter2.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes2), bytes2.length);
       } catch {
-        text4 = "";
+        text5 = "";
       }
       rec.css = true;
       rec.rewrite = [];
-      for (const c of meter2.sync("parse_css", () => cssRefList(text4)))
+      for (const c of meter2.sync("parse_css", () => cssRefList(text5)))
         queue.push({
           ref: c.url,
           kind: c.kind,
@@ -7624,7 +7483,7 @@ var PdfDoc = class {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f11) => f11 && f11.t === "name" ? f11.v : null) : [];
+    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f12) => f12 && f12.t === "name" ? f12.v : null) : [];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
     const inflated = await inflate(raw);
@@ -8214,15 +8073,15 @@ function unicodeIncr(hex6, off) {
   units[units.length - 1] = units[units.length - 1] + off & 65535;
   return units.map((u) => String.fromCharCode(u)).join("");
 }
-function parseToUnicodeCMap(text4) {
+function parseToUnicodeCMap(text5) {
   const map = /* @__PURE__ */ new Map();
   let width = null;
-  const csr = /begincodespacerange([\s\S]*?)endcodespacerange/.exec(text4);
+  const csr = /begincodespacerange([\s\S]*?)endcodespacerange/.exec(text5);
   if (csr) {
     const first = /<([0-9a-fA-F]+)>/.exec(csr[1]);
     if (first) width = Math.max(1, Math.round(first[1].length / 2));
   }
-  for (const m of text4.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
+  for (const m of text5.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
     const toks = m[1].match(/<([0-9a-fA-F]*)>/g) || [];
     for (let i = 0; i + 1 < toks.length; i += 2) {
       const src = toks[i].replace(/[<>]/g, "");
@@ -8232,7 +8091,7 @@ function parseToUnicodeCMap(text4) {
       if (width == null) width = Math.max(1, Math.round(src.length / 2));
     }
   }
-  for (const m of text4.matchAll(/beginbfrange([\s\S]*?)endbfrange/g)) {
+  for (const m of text5.matchAll(/beginbfrange([\s\S]*?)endbfrange/g)) {
     parseBfrange(m[1], map, (w) => {
       if (width == null) width = w;
     });
@@ -8459,9 +8318,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const ref = curFontDict[name];
     const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + scopeTag + name;
     if (fontCache.has(key)) return fontCache.get(key);
-    const f11 = await loadFont(doc, ref);
-    fontCache.set(key, f11);
-    return f11;
+    const f12 = await loadFont(doc, ref);
+    fontCache.set(key, f12);
+    return f12;
   };
   const show = (bytes2) => {
     if (!bytes2 || bytes2.length === 0) return;
@@ -8838,8 +8697,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
   };
   await run(toks, 0, []);
-  let text4 = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
-  if (!text4.length && !undetermined.length && pageDrawsImage(doc, resources) && (!fontDict || await pageShowsText(doc, pageMap) === false)) {
+  let text5 = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
+  if (!text5.length && !undetermined.length && pageDrawsImage(doc, resources) && (!fontDict || await pageShowsText(doc, pageMap) === false)) {
     undetermined.push({
       page: pageIdx,
       reason: "no_text_layer",
@@ -8848,7 +8707,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       count: 0
     });
   }
-  return { text: text4, undetermined, placed: { pieces, boxes: boxes2, undecodedCenters, unpositioned } };
+  return { text: text5, undetermined, placed: { pieces, boxes: boxes2, undecodedCenters, unpositioned } };
 }
 var TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
 var TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
@@ -9012,10 +8871,10 @@ function matrixOf(doc, v) {
   return n.every((x) => typeof x === "number" && Number.isFinite(x)) ? n : null;
 }
 function imageFilters(doc, dict) {
-  const f11 = doc.resolve(dict.Filter);
-  if (!f11) return [];
-  if (f11.t === "name") return [f11.v];
-  if (f11.t === "arr") return f11.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  const f12 = doc.resolve(dict.Filter);
+  if (!f12) return [];
+  if (f12.t === "name") return [f12.v];
+  if (f12.t === "arr") return f12.items.map((x) => nameOf(doc, x)).filter(Boolean);
   return [];
 }
 async function decodeContentStreams(doc, contents) {
@@ -9189,10 +9048,10 @@ function unionArea(rects) {
   }
   return total;
 }
-function markImageContent(doc, text4, images) {
-  if (!text4 || !Array.isArray(text4.pages) || !Array.isArray(images)) return;
+function markImageContent(doc, text5, images) {
+  if (!text5 || !Array.isArray(text5.pages) || !Array.isArray(images)) return;
   let added = 0;
-  for (const pg of text4.pages) {
+  for (const pg of text5.pages) {
     const painted = images.filter((im) => im.page === pg.page);
     if (!painted.length) continue;
     const marks = pg.undetermined;
@@ -9217,20 +9076,20 @@ function markImageContent(doc, text4, images) {
     added++;
   }
   if (!added) return;
-  restateUndetermined(text4);
+  restateUndetermined(text5);
 }
-function restateUndetermined(text4) {
-  text4.undetermined = [
-    ...text4.pages.flatMap((p) => p.undetermined),
-    ...text4.undetermined.filter((m) => !Number.isInteger(m.page))
+function restateUndetermined(text5) {
+  text5.undetermined = [
+    ...text5.pages.flatMap((p) => p.undetermined),
+    ...text5.undetermined.filter((m) => !Number.isInteger(m.page))
   ];
-  text4.counts = { ...text4.counts, undetermined: text4.undetermined.length };
+  text5.counts = { ...text5.counts, undetermined: text5.undetermined.length };
 }
 var IMAGE_UNREAD_MIN_SHARE = 1e-3;
-function markImagesUnread(doc, text4, images) {
-  if (!text4 || !Array.isArray(text4.pages) || !Array.isArray(images)) return;
+function markImagesUnread(doc, text5, images) {
+  if (!text5 || !Array.isArray(text5.pages) || !Array.isArray(images)) return;
   let added = 0;
-  for (const pg of text4.pages) {
+  for (const pg of text5.pages) {
     const painted = images.filter((im) => im.page === pg.page);
     if (!painted.length) continue;
     const pageMap = doc.pageDict(pg.page);
@@ -9254,7 +9113,7 @@ function markImagesUnread(doc, text4, images) {
     pg.undetermined = [...pg.undetermined, ...marks];
     added += marks.length;
   }
-  if (added) restateUndetermined(text4);
+  if (added) restateUndetermined(text5);
 }
 function pdfPageBox(doc, pageMap) {
   if (!pageMap) return null;
@@ -9353,11 +9212,11 @@ async function extractPdfStructure(bytes2) {
   for (const l of links) counts[l.partition]++;
   const placedByPage = /* @__PURE__ */ new Map();
   const linkPages = new Set(links.map((l) => l.source && l.source.page));
-  const text4 = await extractText(doc, placedByPage, linkPages);
+  const text5 = await extractText(doc, placedByPage, linkPages);
   for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
   const imgs = await extractImages(doc);
-  if (imgs.images) markImageContent(doc, text4, imgs.images);
-  if (imgs.images) markImagesUnread(doc, text4, imgs.images);
+  if (imgs.images) markImageContent(doc, text5, imgs.images);
+  if (imgs.images) markImagesUnread(doc, text5, imgs.images);
   return {
     ok: true,
     container: "pdf",
@@ -9365,7 +9224,7 @@ async function extractPdfStructure(bytes2) {
     pages: doc.pageCount,
     links,
     counts,
-    text: text4,
+    text: text5,
     images: imgs.images,
     ...imgs.images ? {} : { imagesWhy: imgs.why },
     /* R33: each page's MediaBox, top-level for `images`' reason (tier 2
@@ -9723,8 +9582,8 @@ async function discriminate(bytes2, contentType = null, flavours = CONTAINER_FLA
   signals.push(`container:zip entries=${container2.count}`);
   const opcRows = [];
   const odfRows = [];
-  for (const f11 of Array.isArray(flavours) ? flavours : []) {
-    if (f11 && typeof f11 === "object") ((f11.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f11);
+  for (const f12 of Array.isArray(flavours) ? flavours : []) {
+    if (f12 && typeof f12 === "object") ((f12.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f12);
   }
   const ctEntry = container2.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
@@ -9744,26 +9603,26 @@ async function discriminate(bytes2, contentType = null, flavours = CONTAINER_FLA
     return { ok: true, format: "undetermined", why: "content_types_unparseable", signals };
   }
   signals.push(`part:${CONTENT_TYPES_PART} parsed (${types2.defaults.size} defaults, ${types2.overrides.size} overrides)`);
-  for (const f11 of opcRows) {
+  for (const f12 of opcRows) {
     let declared = null;
     for (const [part, ct] of types2.overrides) {
-      if (ct === f11.mainContentType) {
+      if (ct === f12.mainContentType) {
         declared = part;
         break;
       }
     }
     if (!declared) {
-      const conv = normalizePartName(f11.conventionalMainPart);
-      if (partContentType(conv, types2) === f11.mainContentType) declared = conv;
+      const conv = normalizePartName(f12.conventionalMainPart);
+      if (partContentType(conv, types2) === f12.mainContentType) declared = conv;
     }
     if (!declared) continue;
     const present2 = container2.byName.has(declared) || container2.entries.some((e) => normalizePartName(e.name) === declared);
     if (!present2) {
-      signals.push(`ct:${f11.mainContentType} declared for ${declared}, but the part is ABSENT`);
-      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f11.flavour, signals };
+      signals.push(`ct:${f12.mainContentType} declared for ${declared}, but the part is ABSENT`);
+      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f12.flavour, signals };
     }
-    signals.push(`ct:${f11.mainContentType}`, `part:${declared} present`);
-    return { ok: true, format: f11.flavour, mainPart: declared, confidence: "high", signals };
+    signals.push(`ct:${f12.mainContentType}`, `part:${declared} present`);
+    return { ok: true, format: f12.flavour, mainPart: declared, confidence: "high", signals };
   }
   signals.push("opc:no known main content type");
   return { ok: true, format: "undetermined", why: "opc_main_part_unrecognized", signals };
@@ -9791,7 +9650,7 @@ async function discriminateOdf(bytes2, container2, rows2, signals) {
     return { ok: true, format: "undetermined", why: `odf_mimetype_unreadable:${read2.why}`, signals };
   }
   const declared = UTF8.decode(read2.bytes);
-  const row2 = rows2.find((f11) => f11.mimetype === declared);
+  const row2 = rows2.find((f12) => f12.mimetype === declared);
   if (!row2) {
     signals.push(`odf:${ODF_MIMETYPE_PART}=${JSON.stringify(declared)} is no known OpenDocument media type`);
     return { ok: true, format: "undetermined", why: "odf_mimetype_unrecognized", signals };
@@ -9984,6 +9843,34 @@ function attrsOf2(raw) {
 }
 var TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
 var localOf = (name) => name.includes(":") ? name.split(":").pop() : name;
+function mceSkipper() {
+  const taken = [];
+  let skip = null;
+  return (name, closing, selfClosed) => {
+    if (skip) {
+      if (name === skip.name) {
+        if (closing) {
+          if (--skip.depth === 0) skip = null;
+        } else if (!selfClosed) skip.depth++;
+      }
+      return true;
+    }
+    if (name === "AlternateContent") {
+      if (closing) taken.pop();
+      else if (!selfClosed) taken.push(false);
+      return false;
+    }
+    if ((name === "Choice" || name === "Fallback") && !closing && taken.length) {
+      const top2 = taken.length - 1;
+      if (taken[top2]) {
+        if (!selfClosed) skip = { name, depth: 1 };
+        return true;
+      }
+      taken[top2] = true;
+    }
+    return false;
+  };
+}
 function walkDocumentBody(xml) {
   const paragraphs = [];
   const hyperlinks = [];
@@ -10013,6 +9900,7 @@ function walkDocumentBody(xml) {
     paragraphs[para].text += s;
     for (const c of insStack) c.text += s;
   };
+  const skipped = mceSkipper();
   TOKEN_RE.lastIndex = 0;
   let m, prev = 0;
   while ((m = TOKEN_RE.exec(xml)) !== null) {
@@ -10026,6 +9914,10 @@ function walkDocumentBody(xml) {
     const name = localOf(m[1]);
     const selfClosed = m[3] === "/";
     const closing = m[0][1] === "/";
+    if (skipped(name, closing, selfClosed)) {
+      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf2(m[2]));
+      continue;
+    }
     if (closing) {
       if (name === "t" || name === "delText") textTarget = null;
       else if (name === "p") {
@@ -10120,10 +10012,10 @@ function parseComments(xml) {
     const a = attrsOf2(m[1]);
     const paras = [];
     for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
-      let text4 = "";
+      let text5 = "";
       for (const t of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
-        text4 += decodeEntities(t[1]);
-      if (text4) paras.push(text4);
+        text5 += decodeEntities(t[1]);
+      if (text5) paras.push(text5);
     }
     comments.push({
       id: a.id ?? null,
@@ -10222,6 +10114,7 @@ function walkDocumentTables(xml) {
   const done = [];
   const stack = [];
   let next = 0;
+  const skipped = mceSkipper();
   TOKEN_RE.lastIndex = 0;
   let m;
   while ((m = TOKEN_RE.exec(xml)) !== null) {
@@ -10229,6 +10122,7 @@ function walkDocumentTables(xml) {
     const name = localOf(m[1]);
     const closing = m[0][1] === "/";
     const selfClosed = m[3] === "/";
+    if (skipped(name, closing, selfClosed)) continue;
     const top2 = stack.length ? stack[stack.length - 1] : null;
     if (closing) {
       if (name === "tbl" && stack.length) {
@@ -10609,11 +10503,11 @@ function splitTopLevel(s, sep) {
   return out;
 }
 function definedNameUnit(formula, sheets) {
-  const f11 = String(formula ?? "").trim();
-  if (!f11) return { why: "empty_reference" };
-  if (/#REF!/i.test(f11)) return { why: "broken_reference" };
-  if (splitTopLevel(f11, ",").length > 1 || /^\(.*\)$/.test(f11)) return { why: "multi_area" };
-  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f11);
+  const f12 = String(formula ?? "").trim();
+  if (!f12) return { why: "empty_reference" };
+  if (/#REF!/i.test(f12)) return { why: "broken_reference" };
+  if (splitTopLevel(f12, ",").length > 1 || /^\(.*\)$/.test(f12)) return { why: "multi_area" };
+  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f12);
   if (!m) return { why: "not_a_range_reference" };
   const sheetName = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
   if (/\[[^\]]*\]/.test(sheetName)) return { why: "external_workbook" };
@@ -10791,13 +10685,13 @@ function walkSheetXml(xml) {
     r: row2.attrs.r != null ? parseInt(row2.attrs.r, 10) : null,
     hidden: row2.attrs.hidden === "1" || row2.attrs.hidden === "true",
     cells: elements(row2.inner, "c").map((c) => {
-      const f11 = elements(c.inner, "f");
+      const f12 = elements(c.inner, "f");
       const v = elements(c.inner, "v");
       const is = elements(c.inner, "is");
       return {
         cell: c.attrs.r ?? null,
         t: c.attrs.t ?? null,
-        f: f11.length ? decodeXmlEntities2(f11[0].inner) : null,
+        f: f12.length ? decodeXmlEntities2(f12[0].inner) : null,
         v: v.length ? decodeXmlEntities2(v[0].inner) : null,
         is: is.length ? textRuns(is[0].inner) : null
       };
@@ -11109,7 +11003,7 @@ function xlsxText(parts) {
       }
       if (vals.length) lines.push(vals.join("	"));
     }
-    const text4 = lines.join("\n");
+    const text5 = lines.join("\n");
     outSheets.push({
       sheet: sheet.index,
       name: sheet.name,
@@ -11120,7 +11014,7 @@ function xlsxText(parts) {
       usedCols: walked.usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text: text4,
+      text: text5,
       undetermined
     });
     for (const u of undetermined) allUndetermined.push(u);
@@ -11285,8 +11179,8 @@ function walkSlide(xml) {
         noteRid(attrs);
     }
   }
-  const text4 = paragraphs.filter((t) => t.length).join("\n");
-  return { paragraphs, text: text4, shapes: shape + 1, hlinks, ridUsage };
+  const text5 = paragraphs.filter((t) => t.length).join("\n");
+  return { paragraphs, text: text5, shapes: shape + 1, hlinks, ridUsage };
 }
 function classifyUri3(uri) {
   const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
@@ -11809,9 +11703,9 @@ function spendChars(n) {
   }
   meter.chars += n;
 }
-var ODF_ROWS = CONTAINER_FLAVOURS.filter((f11) => f11.partMap === "odf");
+var ODF_ROWS = CONTAINER_FLAVOURS.filter((f12) => f12.partMap === "odf");
 function odfRow(flavour) {
-  const row2 = ODF_ROWS.find((f11) => f11.flavour === flavour);
+  const row2 = ODF_ROWS.find((f12) => f12.flavour === flavour);
   if (!row2) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
   return row2;
 }
@@ -12178,8 +12072,8 @@ async function manifestIntraLinks(bytes2, container2, contentXml, undetermined) 
   }
   const fonts = /* @__PURE__ */ new Set();
   if (contentXml != null) {
-    for (const f11 of elementsNested(contentXml, "font-face-uri")) {
-      const href = f11.attrs.href;
+    for (const f12 of elementsNested(contentXml, "font-face-uri")) {
+      const href = f12.attrs.href;
       if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
     }
   }
@@ -12862,7 +12756,7 @@ function odsText(parts) {
       }
       if (vals.length) lines.push(vals.join("	"));
     }
-    const text4 = lines.join("\n");
+    const text5 = lines.join("\n");
     let usedRows = 0, usedCols = 0;
     for (const row2 of walked.rows) {
       if (!row2.cells.length) continue;
@@ -12881,7 +12775,7 @@ function odsText(parts) {
       usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, usedRows, usedCols),
-      text: text4,
+      text: text5,
       undetermined: []
     });
   }
@@ -13141,14 +13035,14 @@ function odpText(parts) {
   const deck = deckOf2(body, styles);
   for (const page of deck) {
     const walked = walkPage(page.xml);
-    const text4 = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
+    const text5 = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
     slides.push({
       slide: page.slide,
       ref: `slide ${page.slide}`,
       part: CONTENT_PART,
       hidden: page.hidden,
       shapes: walked.count,
-      text: text4
+      text: text5
     });
     const nt = notesTextOf(page.xml);
     if (nt != null && nt.length) {
@@ -13434,8 +13328,8 @@ function countOutsideQuotes(line, ch) {
   }
   return n;
 }
-function delimiterSignature(text4) {
-  const raw = text4.split("\n");
+function delimiterSignature(text5) {
+  const raw = text5.split("\n");
   const complete = raw.slice(0, -1).map((l) => l.endsWith("\r") ? l.slice(0, -1) : l);
   const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
   if (lines.length < 2) {
@@ -13489,7 +13383,7 @@ function delimiterSignature(text4) {
     tied: []
   };
 }
-function walkRecords(text4, delimiter) {
+function walkRecords(text5, delimiter) {
   const records = [];
   let row2 = [], field = "", inQuotes = false, started = false;
   const endField = () => {
@@ -13502,12 +13396,12 @@ function walkRecords(text4, delimiter) {
     row2 = [];
     started = false;
   };
-  for (let i = 0; i < text4.length; i++) {
-    const c = text4[i];
+  for (let i = 0; i < text5.length; i++) {
+    const c = text5[i];
     started = true;
     if (inQuotes) {
       if (c === '"') {
-        if (text4[i + 1] === '"') {
+        if (text5[i + 1] === '"') {
           field += '"';
           i++;
         } else inQuotes = false;
@@ -13523,7 +13417,7 @@ function walkRecords(text4, delimiter) {
       continue;
     }
     if (c === "\r") {
-      if (text4[i + 1] === "\n") i++;
+      if (text5[i + 1] === "\n") i++;
       endRecord();
       continue;
     }
@@ -13568,19 +13462,19 @@ async function csvParts(bytes2) {
   } : null;
   let records = null, transport = false, invalidUtf16 = false;
   if (!guard) {
-    let text4;
+    let text5;
     if (enc4.encoding === "utf-16le" || enc4.encoding === "utf-16be") {
       try {
-        text4 = new TextDecoder(enc4.encoding, { fatal: true, ignoreBOM: true }).decode(body);
+        text5 = new TextDecoder(enc4.encoding, { fatal: true, ignoreBOM: true }).decode(body);
       } catch {
-        text4 = new TextDecoder(enc4.encoding, { fatal: false, ignoreBOM: true }).decode(body);
+        text5 = new TextDecoder(enc4.encoding, { fatal: false, ignoreBOM: true }).decode(body);
         invalidUtf16 = true;
       }
     } else {
-      text4 = BYTE_TRANSPORT.decode(body);
+      text5 = BYTE_TRANSPORT.decode(body);
       transport = true;
     }
-    records = walkRecords(text4, delim.delimiter);
+    records = walkRecords(text5, delim.delimiter);
   }
   return {
     ok: true,
@@ -13711,7 +13605,7 @@ function csvText(parts) {
     });
     if (vals.length) lines.push(vals.join("	"));
   });
-  const text4 = lines.join("\n");
+  const text5 = lines.join("\n");
   const sheet = {
     sheet: 0,
     name: CSV_SHEET_NAME,
@@ -13725,16 +13619,16 @@ function csvText(parts) {
     usedRows,
     usedCols,
     range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
-    text: text4,
+    text: text5,
     undetermined
   };
   return {
     ...base,
-    document: text4,
+    document: text5,
     sheets: [sheet],
     undetermined,
     counts: {
-      chars: text4.length,
+      chars: text5.length,
       cells: cellCount,
       formulas: 0,
       undetermined: undetermined.length
@@ -13933,11 +13827,11 @@ function readingDialect(emitted) {
   };
 }
 
-// ../docprofile/recogniser.mjs
+// ../site-profiles/recogniser.mjs
 var CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", POSSIBLE: "possible", NONE: "none" };
 var RANK = { none: 0, possible: 1, likely: 2, certain: 3 };
 function confidenceRank(c) {
-  return RANK[c] || 0;
+  return typeof c === "string" && Object.hasOwn(RANK, c) ? RANK[c] : 0;
 }
 function makeRegistry(opts = {}) {
   const isFallback = opts.isFallback || ((m) => m.fallback === true);
@@ -13971,169 +13865,10 @@ function makeRegistry(opts = {}) {
   return registry;
 }
 
-// ../docprofile/index.mjs
-function unescapeHtml(s) {
-  return String(s).replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ");
-}
+// ../site-profiles/region.mjs
 var REGION = { EVIDENTIARY: "evidentiary", PRESENTATIONAL: "presentational", MECHANICAL: "mechanical" };
-var PLACEHOLDER = "\0BIO-NORMALISED\0";
-function applyRules(text4, rules) {
-  let out = String(text4);
-  const found = [];
-  for (const rule of rules || []) {
-    let count = 0, bytes2 = 0;
-    for (const re of rule.patterns) {
-      out = out.replace(re, (whole, pre, mid, post) => {
-        if (!mid || !mid.length) return whole;
-        count++;
-        bytes2 += mid.length;
-        return (pre || "") + PLACEHOLDER + (post || "");
-      });
-    }
-    if (count) found.push({ rule: rule.key, region: rule.region, label: rule.label, count, bytes: bytes2 });
-  }
-  return { text: out, found, bytes: found.reduce((n, f11) => n + f11.bytes, 0) };
-}
-function applyBoundary(text4, boundary) {
-  if (!boundary) return { text: text4, found: [], bytes: 0 };
-  const m = boundary.exec(String(text4));
-  if (!m || !m[1]) return { text: text4, found: [], bytes: 0, missed: true };
-  const inner = m[1];
-  const outside = String(text4).length - inner.length;
-  return {
-    text: PLACEHOLDER + inner + PLACEHOLDER,
-    found: [{
-      rule: "outside_the_document",
-      region: REGION.PRESENTATIONAL,
-      label: "everything around the document itself, such as navigation and footers",
-      count: 1,
-      bytes: outside
-    }],
-    bytes: outside
-  };
-}
-async function digests(bytes2, handler, ctx) {
-  const sha2562 = ctx && ctx.sha256;
-  if (typeof sha2562 !== "function") throw new TypeError("docprofile: digests() needs ctx.sha256, a hash function");
-  const h = handler || {};
-  const identity = await sha2562(bytes2);
-  if (!h.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
-  let text4 = "";
-  try {
-    text4 = new TextDecoder("utf-8", { fatal: false }).decode(bytes2);
-  } catch {
-    text4 = "";
-  }
-  let rules = [];
-  try {
-    rules = (typeof h.rules === "function" ? h.rules(ctx) : null) || [];
-  } catch {
-    rules = [];
-  }
-  const mech = rules.filter((r) => r.region === REGION.MECHANICAL);
-  const pres = rules.filter((r) => r.region === REGION.PRESENTATIONAL);
-  const r1 = applyRules(text4, mech);
-  let boundary = null;
-  try {
-    boundary = typeof h.boundary === "function" ? h.boundary(ctx) : null;
-  } catch {
-    boundary = null;
-  }
-  const b = applyBoundary(r1.text, boundary);
-  const r2 = b.found.length ? b : b.missed ? { text: r1.text, found: [], bytes: 0 } : applyRules(r1.text, pres);
-  const enc4 = new TextEncoder();
-  return {
-    identity,
-    rendition: await sha2562(enc4.encode(r1.text)),
-    evidentiary: await sha2562(enc4.encode(r2.text)),
-    applied: [...r1.found, ...r2.found],
-    boundary_missed: !!b.missed,
-    mechanical_bytes: r1.bytes,
-    presentational_bytes: r2.bytes,
-    textual: true
-  };
-}
-async function compare(before, after, handler, ctx) {
-  const a = await digests(before, handler, ctx);
-  const b = await digests(after, handler, ctx);
-  const base = {
-    handler: handler.key,
-    confidence: ctx.confidence || CONFIDENCE.NONE,
-    artifacts: [...new Set(a.applied.concat(b.applied).map((x) => x.label))],
-    applied: a.applied,
-    digests: { before: a, after: b }
-  };
-  if (a.identity === b.identity)
-    return {
-      ...base,
-      verdict: "identical",
-      evidentiary_change: false,
-      why: "the source served exactly the same document"
-    };
-  if (base.confidence !== CONFIDENCE.CERTAIN && !handler.conservative)
-    return {
-      ...base,
-      verdict: "undetermined",
-      evidentiary_change: null,
-      why: "the document differs and this kind of document is not recognised well enough to say whether the difference matters"
-    };
-  if (a.evidentiary !== b.evidentiary)
-    return {
-      ...base,
-      verdict: "changed",
-      evidentiary_change: true,
-      why: "the substance of the document differs"
-    };
-  if (a.rendition !== b.rendition)
-    return {
-      ...base,
-      verdict: "restyled",
-      evidentiary_change: false,
-      why: "the substance is the same; something around it changed, such as navigation or related links"
-    };
-  return {
-    ...base,
-    verdict: "unchanged",
-    evidentiary_change: false,
-    why: "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs"
-  };
-}
-var stacks = makeRegistry();
-function register(handler) {
-  return stacks.register(handler);
-}
-function identify(ctx) {
-  const r = stacks.recognise(ctx);
-  const handler = r.member;
-  if (!r.matched)
-    return {
-      handler,
-      confidence: CONFIDENCE.NONE,
-      signals: [],
-      considered: r.considered,
-      why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
-    };
-  const out = { handler, confidence: r.confidence, signals: r.signals, considered: r.considered };
-  if (typeof handler.kind === "function") out.kind = handler.kind(ctx);
-  return out;
-}
-function profileRecord(id, ctx) {
-  const x = id && typeof id === "object" ? id : {};
-  const h = x.handler && typeof x.handler === "object" ? x.handler : {};
-  return {
-    handler: h.key == null ? null : h.key,
-    handler_label: h.label == null ? null : h.label,
-    handler_version: h.version == null ? null : h.version,
-    confidence: x.confidence == null ? null : x.confidence,
-    signals: x.signals || [],
-    document_kind: x.kind || "unknown",
-    considered: x.considered || [],
-    at: ctx && ctx.now || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z",
-    note: x.why || null
-  };
-}
 
-// ../docprofile/handlers/aspnet-webforms.mjs
+// ../site-profiles/handlers/aspnet-webforms.mjs
 var VIEWSTATE_FIELDS = "__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY|__LASTFOCUS";
 var aspnet_webforms_default = {
   key: "aspnet_webforms",
@@ -14142,11 +13877,11 @@ var aspnet_webforms_default = {
   textual: true,
   detect(ctx) {
     const h = ctx.headers || {};
-    const text4 = ctx.text || "";
+    const text5 = ctx.text || "";
     const signals = [];
-    if (/<input[^>]*\bname="__VIEWSTATE"/i.test(text4)) signals.push("__VIEWSTATE field");
-    if (/<input[^>]*\bname="__EVENTVALIDATION"/i.test(text4)) signals.push("__EVENTVALIDATION field");
-    if (/\bid="aspnetForm"/i.test(text4)) signals.push("aspnetForm");
+    if (/<input[^>]*\bname="__VIEWSTATE"/i.test(text5)) signals.push("__VIEWSTATE field");
+    if (/<input[^>]*\bname="__EVENTVALIDATION"/i.test(text5)) signals.push("__EVENTVALIDATION field");
+    if (/\bid="aspnetForm"/i.test(text5)) signals.push("aspnetForm");
     const powered = String(h["x-powered-by"] || "");
     if (/asp\.net/i.test(powered)) signals.push("x-powered-by: " + powered);
     if (h["x-aspnet-version"]) signals.push("x-aspnet-version: " + h["x-aspnet-version"]);
@@ -14241,21 +13976,21 @@ var aspnet_webforms_default = {
   }
 };
 
-// ../docprofile/handlers/wordpress.mjs
+// ../site-profiles/handlers/wordpress.mjs
 var wordpress_default = {
   key: "wordpress",
   label: "a page published with WordPress",
   version: 1,
   textual: true,
   detect(ctx) {
-    const text4 = ctx.text || "";
+    const text5 = ctx.text || "";
     const signals = [];
-    if (/\/wp-content\//i.test(text4)) signals.push("wp-content asset paths");
-    if (/\/wp-includes\//i.test(text4)) signals.push("wp-includes asset paths");
-    if (/\/wp-json\//i.test(text4)) signals.push("wp-json API link");
-    const gen = /<meta[^>]+name="generator"[^>]+content="([^"]*WordPress[^"]*)"/i.exec(text4);
+    if (/\/wp-content\//i.test(text5)) signals.push("wp-content asset paths");
+    if (/\/wp-includes\//i.test(text5)) signals.push("wp-includes asset paths");
+    if (/\/wp-json\//i.test(text5)) signals.push("wp-json API link");
+    const gen = /<meta[^>]+name="generator"[^>]+content="([^"]*WordPress[^"]*)"/i.exec(text5);
     if (gen) signals.push("generator: " + gen[1]);
-    if (/\bid="wp-block-|\bclass="[^"]*wp-block-/i.test(text4)) signals.push("block editor markup");
+    if (/\bid="wp-block-|\bclass="[^"]*wp-block-/i.test(text5)) signals.push("block editor markup");
     if (gen || signals.length >= 2) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     if (signals.length) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
     return { match: false, confidence: CONFIDENCE.NONE };
@@ -14273,14 +14008,14 @@ var wordpress_default = {
      listing is recognisable from its address with no ambiguity, so the address is
      asked first and the markup only gets a say when the address is silent. */
   kind(ctx) {
-    const text4 = ctx.text || "";
+    const text5 = ctx.text || "";
     const p = String(ctx.locator || "");
     if (/^https?:\/\/[^/]+\/?(?:\?|#|$)/.test(p)) return "index";
     if (/\/(?:category|tag|author|page|section|topics?)\//i.test(p)) return "index";
     if (/\/(?:feed|search)\/?$/i.test(p) || /[?&]s=/.test(p)) return "index";
     if (/\/\d{4}\/\d{2}\//.test(p)) return "article";
-    if (/<meta[^>]+property="og:type"[^>]+content="article"/i.test(text4) && !/<meta[^>]+property="og:type"[^>]+content="website"/i.test(text4)) return "article";
-    if (/\bclass="[^"]*\bsingle(?:-post)?\b/i.test(text4)) return "article";
+    if (/<meta[^>]+property="og:type"[^>]+content="article"/i.test(text5) && !/<meta[^>]+property="og:type"[^>]+content="website"/i.test(text5)) return "article";
+    if (/\bclass="[^"]*\bsingle(?:-post)?\b/i.test(text5)) return "article";
     return "page";
   },
   rules(ctx) {
@@ -14364,7 +14099,7 @@ var wordpress_default = {
   }
 };
 
-// ../docprofile/handlers/client-rendered.mjs
+// ../site-profiles/handlers/client-rendered.mjs
 var client_rendered_default = {
   key: "client_rendered",
   label: "an application that builds its pages in the browser",
@@ -14374,19 +14109,19 @@ var client_rendered_default = {
      treating as the document at all. */
   shell: true,
   detect(ctx) {
-    const text4 = ctx.text || "";
+    const text5 = ctx.text || "";
     const signals = [];
-    if (/<div[^>]+\bid="(?:root|app|__next|ember-basic-dropdown-wormhole)"[^>]*>\s*<\/div>/i.test(text4))
+    if (/<div[^>]+\bid="(?:root|app|__next|ember-basic-dropdown-wormhole)"[^>]*>\s*<\/div>/i.test(text5))
       signals.push("an empty mount point");
-    if (/__NEXT_DATA__/.test(text4)) signals.push("Next.js data island");
-    if (/\bng-version=/.test(text4)) signals.push("Angular");
-    if (/\bdata-reactroot\b/.test(text4)) signals.push("React root");
-    if (/\/reporting-classic-app\//.test(text4)) signals.push("OpenGov reporting app");
-    if (/window\.__(?:NUXT|INITIAL_STATE|PRELOADED_STATE)__/.test(text4)) signals.push("a hydration payload");
-    const anchors = (text4.match(/<a\b[^>]*\bhref=/gi) || []).length;
-    const paras = (text4.match(/<p\b/gi) || []).length;
-    const body = /<body\b[\s\S]*<\/body>/i.exec(text4);
-    const bodyLen = body ? body[0].length : text4.length;
+    if (/__NEXT_DATA__/.test(text5)) signals.push("Next.js data island");
+    if (/\bng-version=/.test(text5)) signals.push("Angular");
+    if (/\bdata-reactroot\b/.test(text5)) signals.push("React root");
+    if (/\/reporting-classic-app\//.test(text5)) signals.push("OpenGov reporting app");
+    if (/window\.__(?:NUXT|INITIAL_STATE|PRELOADED_STATE)__/.test(text5)) signals.push("a hydration payload");
+    const anchors = (text5.match(/<a\b[^>]*\bhref=/gi) || []).length;
+    const paras = (text5.match(/<p\b/gi) || []).length;
+    const body = /<body\b[\s\S]*<\/body>/i.exec(text5);
+    const bodyLen = body ? body[0].length : text5.length;
     if (bodyLen > 2e3 && anchors === 0 && paras <= 1) signals.push("no links and no prose in the body");
     if (signals.includes("no links and no prose in the body") && signals.length >= 2)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
@@ -14417,7 +14152,7 @@ var client_rendered_default = {
   warning: "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first."
 };
 
-// ../docprofile/handlers/conservative.mjs
+// ../site-profiles/handlers/conservative.mjs
 var conservative_default = {
   key: "conservative",
   label: "an unrecognised document",
@@ -14465,9 +14200,12 @@ var conservative_default = {
   }
 };
 
-// ../docprofile/events.mjs
+// ../site-profiles/events.mjs
 var SIGNIFICANCE = { EVENT: "event", NOTICE: "notice", ROUTINE: "routine" };
 var SIG_RANK = { routine: 0, notice: 1, event: 2 };
+function significanceRank(s) {
+  return typeof s === "string" && Object.hasOwn(SIG_RANK, s) ? SIG_RANK[s] : -1;
+}
 var EVENTS = {
   /* a public record removed from a public list, or one that cannot be told apart
      from that because the window could not be read — close to the reason BIO exists */
@@ -14519,21 +14257,197 @@ var EVENTS = {
   substance_changed: { significance: SIGNIFICANCE.EVENT }
 };
 function event(type, detail) {
-  const spec = EVENTS[type];
-  if (!spec) throw new Error(`docprofile: unknown event type "${type}" \u2014 add it to the catalogue in events.mjs`);
-  return { type, significance: spec.significance, ...detail || {} };
+  const spec = typeof type === "string" && Object.hasOwn(EVENTS, type) ? EVENTS[type] : null;
+  if (!spec) throw new Error(`site-profiles: unknown event type "${type}" \u2014 add it to the catalogue in events.mjs`);
+  const out = { type, significance: spec.significance, ...detail && typeof detail === "object" ? detail : {} };
+  out.type = type;
+  out.significance = spec.significance;
+  return out;
 }
 function worstSignificance(events) {
   let worst = null;
-  for (const e of events)
-    if (worst === null || SIG_RANK[e.significance] > SIG_RANK[worst]) worst = e.significance;
+  for (const e of events) {
+    const s = e && e.significance;
+    if (significanceRank(s) >= 0 && (worst === null || significanceRank(s) > significanceRank(worst))) worst = s;
+  }
   return worst;
 }
 function isMeaningful(events) {
   return worstSignificance(events) === SIGNIFICANCE.EVENT;
 }
 function bySeverity(events) {
-  return events.sort((a, b) => SIG_RANK[b.significance] - SIG_RANK[a.significance]);
+  return events.sort((a, b) => significanceRank(b && b.significance) - significanceRank(a && a.significance));
+}
+
+// ../site-profiles/index.mjs
+var ENTITY = { amp: "&", "#39": "'", quot: '"', lt: "<", gt: ">", nbsp: " " };
+function unescapeHtml(s) {
+  return String(s).replace(/&(amp|#39|quot|lt|gt|nbsp);/g, (_, e) => ENTITY[e]);
+}
+var PLACEHOLDER = "\0BIO-NORMALISED\0";
+function applyRules(text5, rules) {
+  let out = String(text5);
+  const found = [];
+  for (const rule of Array.isArray(rules) ? rules : []) {
+    if (!rule || !Array.isArray(rule.patterns)) continue;
+    let count = 0, bytes2 = 0;
+    for (const re of rule.patterns) {
+      if (!(re instanceof RegExp)) continue;
+      out = out.replace(re, (whole, pre, mid, post) => {
+        if (!mid || !mid.length) return whole;
+        count++;
+        bytes2 += mid.length;
+        return (pre || "") + PLACEHOLDER + (post || "");
+      });
+    }
+    if (count) found.push({ rule: rule.key, region: rule.region, label: rule.label, count, bytes: bytes2 });
+  }
+  return { text: out, found, bytes: found.reduce((n, f12) => n + f12.bytes, 0) };
+}
+function applyBoundary(text5, boundary) {
+  if (!(boundary instanceof RegExp)) return { text: text5, found: [], bytes: 0 };
+  const m = boundary.exec(String(text5));
+  if (!m || !m[1]) return { text: text5, found: [], bytes: 0, missed: true };
+  const inner = m[1];
+  const outside = String(text5).length - inner.length;
+  return {
+    text: PLACEHOLDER + inner + PLACEHOLDER,
+    found: [{
+      rule: "outside_the_document",
+      region: REGION.PRESENTATIONAL,
+      label: "everything around the document itself, such as navigation and footers",
+      count: 1,
+      bytes: outside
+    }],
+    bytes: outside
+  };
+}
+async function digests(bytes2, handler, ctx) {
+  const sha2562 = ctx && ctx.sha256;
+  if (typeof sha2562 !== "function") throw new TypeError("site-profiles: digests() needs ctx.sha256, a hash function");
+  const h = handler || {};
+  const identity = await sha2562(bytes2);
+  if (!h.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
+  let text5 = "";
+  try {
+    text5 = new TextDecoder("utf-8", { fatal: false }).decode(bytes2);
+  } catch {
+    text5 = "";
+  }
+  let rules = [];
+  try {
+    rules = (typeof h.rules === "function" ? h.rules(ctx) : null) || [];
+  } catch {
+    rules = [];
+  }
+  if (!Array.isArray(rules)) rules = [];
+  const mech = rules.filter((r) => r && r.region === REGION.MECHANICAL);
+  const pres = rules.filter((r) => r && r.region === REGION.PRESENTATIONAL);
+  const r1 = applyRules(text5, mech);
+  let boundary = null;
+  try {
+    boundary = typeof h.boundary === "function" ? h.boundary(ctx) : null;
+  } catch {
+    boundary = null;
+  }
+  const b = applyBoundary(r1.text, boundary);
+  const r2 = b.found.length ? b : b.missed ? { text: r1.text, found: [], bytes: 0 } : applyRules(r1.text, pres);
+  const enc4 = new TextEncoder();
+  return {
+    identity,
+    rendition: await sha2562(enc4.encode(r1.text)),
+    evidentiary: await sha2562(enc4.encode(r2.text)),
+    applied: [...r1.found, ...r2.found],
+    boundary_missed: !!b.missed,
+    mechanical_bytes: r1.bytes,
+    presentational_bytes: r2.bytes,
+    textual: true
+  };
+}
+async function compare(before, after, handler, ctx) {
+  const a = await digests(before, handler, ctx);
+  const b = await digests(after, handler, ctx);
+  const h = handler || {};
+  const base = {
+    handler: h.key == null ? null : h.key,
+    confidence: ctx.confidence || CONFIDENCE.NONE,
+    artifacts: [...new Set(a.applied.concat(b.applied).map((x) => x.label))],
+    applied: a.applied,
+    digests: { before: a, after: b }
+  };
+  if (a.identity === b.identity)
+    return {
+      ...base,
+      verdict: "identical",
+      evidentiary_change: false,
+      why: "the source served exactly the same document"
+    };
+  if (base.confidence !== CONFIDENCE.CERTAIN && !h.conservative)
+    return {
+      ...base,
+      verdict: "undetermined",
+      evidentiary_change: null,
+      why: "the document differs and this kind of document is not recognised well enough to say whether the difference matters"
+    };
+  if (a.evidentiary !== b.evidentiary)
+    return {
+      ...base,
+      verdict: "changed",
+      evidentiary_change: true,
+      why: "the substance of the document differs"
+    };
+  if (a.rendition !== b.rendition)
+    return {
+      ...base,
+      verdict: "restyled",
+      evidentiary_change: false,
+      why: "the substance is the same; something around it changed, such as navigation or related links"
+    };
+  return {
+    ...base,
+    verdict: "unchanged",
+    evidentiary_change: false,
+    why: "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs"
+  };
+}
+var stacks = makeRegistry();
+function register(handler) {
+  return stacks.register(handler);
+}
+register(client_rendered_default);
+register(aspnet_webforms_default);
+register(wordpress_default);
+register(conservative_default);
+function identify(ctx) {
+  if (!ctx || typeof ctx !== "object") ctx = {};
+  const r = stacks.recognise(ctx);
+  const handler = r.member;
+  if (!r.matched)
+    return {
+      handler,
+      confidence: CONFIDENCE.NONE,
+      signals: [],
+      considered: r.considered,
+      why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+    };
+  const out = { handler, confidence: r.confidence, signals: r.signals, considered: r.considered };
+  if (typeof handler.kind === "function") out.kind = handler.kind(ctx);
+  return out;
+}
+function profileRecord(id, ctx) {
+  const x = id && typeof id === "object" ? id : {};
+  const h = x.handler && typeof x.handler === "object" ? x.handler : {};
+  return {
+    handler: h.key == null ? null : h.key,
+    handler_label: h.label == null ? null : h.label,
+    handler_version: h.version == null ? null : h.version,
+    confidence: x.confidence == null ? null : x.confidence,
+    signals: x.signals || [],
+    document_kind: x.kind || "unknown",
+    considered: x.considered || [],
+    at: ctx && ctx.now || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z",
+    note: x.why || null
+  };
 }
 
 // ../jurisdictions/profiles/oakland-alameda.mjs
@@ -15395,21 +15309,21 @@ function validateInto(p, errors) {
       str18(`${at22}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list2(`${at22}.forms`, s.forms).forEach((f11, i) => {
+      list2(`${at22}.forms`, s.forms).forEach((f12, i) => {
         const fa = `${at22}.forms[${i}]`;
-        if (!entry(fa, f11)) return;
-        fields(fa, f11, ["form", "pattern", "normal", "clean", "basis"]);
-        str18(`${fa}.form`, f11.form, "form");
-        if (isStr(f11.form)) {
-          if (names.has(f11.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f11.form}' is named twice in ${name}`);
-          names.add(f11.form);
+        if (!entry(fa, f12)) return;
+        fields(fa, f12, ["form", "pattern", "normal", "clean", "basis"]);
+        str18(`${fa}.form`, f12.form, "form");
+        if (isStr(f12.form)) {
+          if (names.has(f12.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f12.form}' is named twice in ${name}`);
+          names.add(f12.form);
         }
-        const re = compile(f11.pattern);
-        if (!re) pattern(`${fa}.pattern`, f11.pattern);
+        const re = compile(f12.pattern);
+        if (!re) pattern(`${fa}.pattern`, f12.pattern);
         const groups = re ? groupCount(re) : Infinity;
-        let normalOk = Array.isArray(f11.normal) && f11.normal.length > 0;
+        let normalOk = Array.isArray(f12.normal) && f12.normal.length > 0;
         if (!normalOk) err(`${fa}.normal`, "NORMAL_INVALID", "normal is a non-empty list of parts");
-        else f11.normal.forEach((part, j) => {
+        else f12.normal.forEach((part, j) => {
           if (typeof part === "string") return;
           const pa = `${fa}.normal[${j}]`;
           if (!isObj(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k)) || own2(part, "unpad") && typeof part.unpad !== "boolean" || own2(part, "upper") && typeof part.upper !== "boolean" || own2(part, "default") && typeof part.default !== "string") {
@@ -15417,16 +15331,16 @@ function validateInto(p, errors) {
             err(pa, "NORMAL_INVALID", "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has");
           }
         });
-        if (own2(f11, "clean")) {
-          const c = f11.clean;
+        if (own2(f12, "clean")) {
+          const c = f12.clean;
           const bad = !isObj(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k)) || own2(c, "strip") && (!Array.isArray(c.strip) || !c.strip.every((x) => compile(x))) || own2(c, "spaces") && !["remove", "collapse"].includes(c.spaces) || own2(c, "upper") && c.upper !== true;
           if (bad) {
             normalOk = false;
             err(`${fa}.clean`, "NORMAL_INVALID", "clean is {strip?: [pattern], spaces?: remove|collapse, upper?: true}");
           }
         }
-        basis(fa, f11);
-        if (isStr(f11.form) && re && normalOk) spaceForms[name].set(f11.form, f11);
+        basis(fa, f12);
+        if (isStr(f12.form) && re && normalOk) spaceForms[name].set(f12.form, f12);
       });
       if (name === "enactment" && own2(s, "kinds")) list2(`${at22}.kinds`, s.kinds).forEach((k, i) => {
         const ka = `${at22}.kinds[${i}]`;
@@ -15458,8 +15372,8 @@ function validateInto(p, errors) {
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
     if (!forms) err(`${at22}.forms`, "VALUE_INVALID", "forms is [a, b]");
-    else forms.forEach((f11, j) => {
-      if (!known.has(f11)) err(`${at22}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f11)}'`);
+    else forms.forEach((f12, j) => {
+      if (!known.has(f12)) err(`${at22}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f12)}'`);
     });
     list2(`${at22}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
@@ -15468,8 +15382,8 @@ function validateInto(p, errors) {
       }
       if (!forms) return;
       pair.forEach((v, n) => {
-        const f11 = known.get(forms[n]);
-        if (f11 && applyForm(f11, v) == null) err(`${at22}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        const f12 = known.get(forms[n]);
+        if (f12 && applyForm(f12, v) == null) err(`${at22}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
       });
     });
     basis(at22, x);
@@ -15800,9 +15714,9 @@ function merge(profiles) {
       if (!givers.length) continue;
       const s = { label: [...new Set(givers.map((p) => p.spaces[space].label))].join("; "), forms: [] };
       const byForm = /* @__PURE__ */ new Map();
-      for (const p of givers) for (const f11 of p.spaces[space].forms || []) {
-        if (!byForm.has(f11.form)) byForm.set(f11.form, []);
-        byForm.get(f11.form).push({ profile: p.id, value: f11 });
+      for (const p of givers) for (const f12 of p.spaces[space].forms || []) {
+        if (!byForm.has(f12.form)) byForm.set(f12.form, []);
+        byForm.get(f12.form).push({ profile: p.id, value: f12 });
       }
       for (const [form, given] of byForm) {
         const vals = given.map((g) => ({ profile: g.profile, value: (({ basis, ...rest }) => rest)(g.value), basis: g.value.basis }));
@@ -15971,12 +15885,12 @@ function merge(profiles) {
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
       if (given.some((g) => own2(g.k, "laws"))) e.laws = laws;
       const WHAT = { tier: "risk tiers", venue: "venues", template: "templates", advisory: "advisory notes", evidence: "evidence standards" };
-      for (const f11 of ["tier", "venue", "template", "advisory", "evidence"]) {
-        const carriesBasis = f11 === "venue" || f11 === "evidence";
-        const vals = given.filter((g) => own2(g.k, f11)).map((g) => ({ profile: g.profile, value: clone(g.k[f11]), basis: carriesBasis ? g.k[f11].basis : g.k.basis }));
+      for (const f12 of ["tier", "venue", "template", "advisory", "evidence"]) {
+        const carriesBasis = f12 === "venue" || f12 === "evidence";
+        const vals = given.filter((g) => own2(g.k, f12)).map((g) => ({ profile: g.profile, value: clone(g.k[f12]), basis: carriesBasis ? g.k[f12].basis : g.k.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f11] = !carriesBasis ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.basis })) };
-        else conflict(`action_kinds[${kind}].${f11}`, vals, `the active profiles give different ${WHAT[f11]} for ${kind}, so none is given` + (f11 === "evidence" ? ": the venue's standard is undetermined" : ""));
+        if (agree(vals)) e[f12] = !carriesBasis ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.basis })) };
+        else conflict(`action_kinds[${kind}].${f12}`, vals, `the active profiles give different ${WHAT[f12]} for ${kind}, so none is given` + (f12 === "evidence" ? ": the venue's standard is undetermined" : ""));
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -15995,11 +15909,11 @@ function merge(profiles) {
     for (const given of byRule.values()) {
       const { rule, applies_to } = given[0].d;
       const e = { rule, applies_to };
-      for (const f11 of ["days", "count", "starts", "extension"]) {
-        const vals = given.filter((g) => own2(g.d, f11)).map((g) => ({ profile: g.profile, value: clone(g.d[f11]), basis: g.d.basis }));
+      for (const f12 of ["days", "count", "starts", "extension"]) {
+        const vals = given.filter((g) => own2(g.d, f12)).map((g) => ({ profile: g.profile, value: clone(g.d[f12]), basis: g.d.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f11] = vals[0].value;
-        else conflict(`deadlines[${rule}/${applies_to}].${f11}`, vals, `the active profiles disagree on the ${f11} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
+        if (agree(vals)) e[f12] = vals[0].value;
+        else conflict(`deadlines[${rule}/${applies_to}].${f12}`, vals, `the active profiles disagree on the ${f12} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
       }
       e.citation = [...new Set(given.map((g) => g.d.citation))].join("; ");
       e.basis = given[0].d.basis;
@@ -16038,20 +15952,20 @@ function merge(profiles) {
 
 // ../docprofile/doctypes/index.mjs
 var CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" };
-function flatten(text4) {
-  return String(text4 || "").replace(/\s+/g, " ");
+function flatten(text5) {
+  return String(text5 || "").replace(/\s+/g, " ");
 }
-function selfNaming(text4, re) {
+function selfNaming(text5, re) {
   let n = 0;
-  for (const line of String(text4 || "").split(/\r?\n/)) if (re.test(line.trim())) n++;
+  for (const line of String(text5 || "").split(/\r?\n/)) if (re.test(line.trim())) n++;
   return n;
 }
 var FURNITURE_RECURS = 3;
 function alsoSatisfies(ctx, selfKey) {
-  const f11 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
-  if (!f11) return [];
+  const f12 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
+  if (!f12) return [];
   try {
-    return f11(selfKey) || [];
+    return f12(selfKey) || [];
   } catch {
     return [];
   }
@@ -16136,8 +16050,8 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
   const v = readerView(ctx);
   const sp = v.spaces && v.spaces.enactment;
   if (!sp || typeof sp !== "object") return [];
-  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f11) => f11 && f11.pattern && typeof f11.pattern.re === "string" && vocabRegex(f11.pattern));
-  const forms = formList.map((f11) => vocabPiece(f11.pattern.re));
+  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f12) => f12 && f12.pattern && typeof f12.pattern.re === "string" && vocabRegex(f12.pattern));
+  const forms = formList.map((f12) => vocabPiece(f12.pattern.re));
   const markers = vocabulary(ctx, "enactment_markers").map((e) => e.pattern && typeof e.pattern.re === "string" ? e.pattern.re : null).filter((s) => s && vocabRegex({ re: s }));
   if (!forms.length && !blankNumber) return [];
   const num2 = forms.length ? `(?<num>${forms.map((s) => `(?:${s})`).join("|")})` : "(?<num>(?!))";
@@ -16151,11 +16065,11 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
   }
   return out;
 }
-function enactmentNumber(forms, text4) {
-  if (typeof text4 !== "string" || !text4.trim()) return null;
-  for (const f11 of forms || []) {
-    let t = text4.trim();
-    const c = f11.clean || {};
+function enactmentNumber(forms, text5) {
+  if (typeof text5 !== "string" || !text5.trim()) return null;
+  for (const f12 of forms || []) {
+    let t = text5.trim();
+    const c = f12.clean || {};
     for (const s of Array.isArray(c.strip) ? c.strip : []) {
       const re2 = vocabRegex(s, (x) => `^(?:${x})`);
       if (re2) t = t.replace(re2, "");
@@ -16163,11 +16077,11 @@ function enactmentNumber(forms, text4) {
     if (c.spaces === "remove") t = t.replace(/\s+/g, "");
     else if (c.spaces === "collapse") t = t.replace(/\s+/g, " ");
     if (c.upper === true) t = t.toUpperCase();
-    const re = vocabRegex(f11.pattern);
+    const re = vocabRegex(f12.pattern);
     const m = re && re.exec(t);
     if (!m) continue;
     let out = "";
-    for (const part of Array.isArray(f11.normal) ? f11.normal : []) {
+    for (const part of Array.isArray(f12.normal) ? f12.normal : []) {
       if (typeof part === "string") {
         out += part;
         continue;
@@ -16238,9 +16152,9 @@ function diffEntities(before, after) {
       continue;
     }
     const moved = [];
-    for (const f11 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
-      if (String(was.facts[f11]) !== String(now.facts[f11]))
-        moved.push({ fact: f11, was: was.facts[f11], now: now.facts[f11] });
+    for (const f12 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
+      if (String(was.facts[f12]) !== String(now.facts[f12]))
+        moved.push({ fact: f12, was: was.facts[f12], now: now.facts[f12] });
     if (moved.length) altered.push({ entity: now, was, moved });
   }
   for (const [k, now] of a) if (!b.has(k)) appeared.push(now);
@@ -16380,38 +16294,38 @@ var meeting_calendar_default = {
       ));
     }
     for (const alt of d.altered) {
-      const f11 = new Map(alt.moved.map((m) => [m.fact, m]));
-      if (f11.has("status")) {
-        const now = f11.get("status").now;
+      const f12 = new Map(alt.moved.map((m) => [m.fact, m]));
+      if (f12.has("status")) {
+        const now = f12.get("status").now;
         events.push(event(
           now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
           {
             key: alt.entity.key,
             label: alt.entity.label,
-            was: f11.get("status").was,
+            was: f12.get("status").was,
             now,
-            why: `a meeting's status changed from ${f11.get("status").was} to ${now}`
+            why: `a meeting's status changed from ${f12.get("status").was} to ${now}`
           }
         ));
       }
-      if (f11.has("date"))
+      if (f12.has("date"))
         events.push(event("moved", {
           key: alt.entity.key,
           label: alt.entity.label,
-          was: f11.get("date").was,
-          now: f11.get("date").now,
+          was: f12.get("date").was,
+          now: f12.get("date").now,
           why: "a meeting's date changed"
         }));
-      if (f11.has("body"))
+      if (f12.has("body"))
         events.push(event("renamed", {
           key: alt.entity.key,
-          was: f11.get("body").was,
-          now: f11.get("body").now,
+          was: f12.get("body").was,
+          now: f12.get("body").now,
           why: "the body holding a meeting is named differently"
         }));
       for (const kind of ["agenda", "minutes"]) {
-        if (!f11.has(kind)) continue;
-        const { was, now } = f11.get(kind);
+        if (!f12.has(kind)) continue;
+        const { was, now } = f12.get(kind);
         if (!was && now)
           events.push(event(`${kind}_published`, {
             key: alt.entity.key,
@@ -17236,7 +17150,7 @@ var staff_report_default = {
     const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
     const memo = memoHeader(flat);
-    const f11 = memo && memo.fields || {};
+    const f12 = memo && memo.fields || {};
     const sections = reportSectionPatterns(ctx);
     const secs = reportSections(raw, sections);
     let recommendation = null;
@@ -17299,10 +17213,10 @@ var staff_report_default = {
       );
     return {
       entities,
-      to: f11.to || null,
-      from: f11.from || null,
-      subject: f11.subject || null,
-      date: f11.date || null,
+      to: f12.to || null,
+      from: f12.from || null,
+      subject: f12.subject || null,
+      date: f12.date || null,
       recommendation,
       sections: secs.length,
       signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
@@ -17612,6 +17526,9 @@ var staff_directory_default = {
    *  THE KEY IS THE ADDRESS, NEVER THE NAME. An address is the identifier the document
    *  itself assigns to an entry and is stable across revisions of the sheet; a person's
    *  name is not a source-assigned id (framework §7, and the minutes reader's own rule).
+   *  The key is the BARE address, as every other type's key is bare (`26-0910`, never
+   *  `legislation:26-0910`): a consumer writes the reference as `kind:key`, and a key
+   *  that carried its kind read `contact:contact:<address>` there (N404).
    *
    *  FW-17 / IC-86 — each entry carries WHERE it was read, from `ctx.locate` at the
    *  address's own RAW offset. `rect` is null: tier-1 and tier-2 text carry no geometry. */
@@ -17626,7 +17543,7 @@ var staff_directory_default = {
       const line = raw.slice(start, endAt < 0 ? raw.length : endAt).replace(/\s+/g, " ").trim();
       const phones = [...new Set(line.match(SD_PHONE) || [])];
       entities.push(entity(
-        `contact:${a.address}`,
+        a.address,
         "contact",
         line.slice(0, 160) || a.address,
         { address: a.address, organisation: a.domain === domain, line, phone: phones.join(", ") || null },
@@ -17783,8 +17700,8 @@ async function assess(before, after, ctx) {
   const note = (layer, said2, detail) => {
     trail.push({ layer, said: said2, ...detail || {} });
   };
-  const text4 = pipelineText(after);
-  const id = identify({ ...ctx, text: text4 });
+  const text5 = pipelineText(after);
+  const id = identify({ ...ctx, text: text5 });
   note(
     LAYER.STACK,
     `${id.handler.label} (${id.confidence})`,
@@ -17800,7 +17717,7 @@ async function assess(before, after, ctx) {
       connections: [],
       why: id.handler.warning
     });
-  const dctx = { ...ctx, text: text4, confidence: id.confidence };
+  const dctx = { ...ctx, text: text5, confidence: id.confidence };
   let cmp;
   try {
     cmp = await compare(before, after, id.handler, dctx);
@@ -17885,7 +17802,7 @@ async function assess(before, after, ctx) {
   note(LAYER.NOTEWORTHY, "the substance differs");
   let dt;
   try {
-    dt = doctypeFor({ ...ctx, text: text4, handler: id.handler, kind: id.kind });
+    dt = doctypeFor({ ...ctx, text: text5, handler: id.handler, kind: id.kind });
   } catch (e) {
     note(LAYER.CONTENT_TYPE, "no content type could be decided");
     return out({
@@ -17918,7 +17835,7 @@ async function assess(before, after, ctx) {
   let a, b, m;
   try {
     a = read2(textBefore, ctx.before_at);
-    b = read2(text4, ctx.after_at);
+    b = read2(text5, ctx.after_at);
   } catch (e) {
     return unread(`its contents could not be read this time (${String(e && e.message || e)})`);
   }
@@ -17969,17 +17886,17 @@ function docParaSource(para, ref) {
 }
 function joinItemised(items, textOf2, sourceOf) {
   const segments = [];
-  let text4 = "";
+  let text5 = "";
   for (let i = 0; i < items.length; i++) {
     const t = textOf2(items[i]);
     if (!t || !t.length) continue;
-    if (text4.length) text4 += "\n";
-    const start = text4.length;
-    text4 += t;
+    if (text5.length) text5 += "\n";
+    const start = text5.length;
+    text5 += t;
     const source = sourceOf(items[i], i);
-    if (source) segments.push({ start, end: text4.length, source });
+    if (source) segments.push({ start, end: text5.length, source });
   }
-  return { text: text4, segments };
+  return { text: text5, segments };
 }
 function flattenText(supplied2) {
   if (typeof supplied2 === "string")
@@ -18002,9 +17919,9 @@ function flattenText(supplied2) {
       segments: [],
       position_why: "no text was supplied"
     };
-  let text4 = "", source = null, segments = [], position_why = null;
+  let text5 = "", source = null, segments = [], position_why = null;
   if (typeof supplied2.document === "string" && supplied2.document.length) {
-    text4 = supplied2.document;
+    text5 = supplied2.document;
     source = "document";
     const pages = Array.isArray(supplied2.pages) ? supplied2.pages : null;
     const paras = Array.isArray(supplied2.paragraphs) ? supplied2.paragraphs : null;
@@ -18014,7 +17931,7 @@ function flattenText(supplied2) {
         (p) => p && typeof p.text === "string" ? p.text : "",
         (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
       );
-      if (j.text === text4) segments = j.segments;
+      if (j.text === text5) segments = j.segments;
       else position_why = "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed";
     } else if (paras && paras.length) {
       const j = joinItemised(
@@ -18025,7 +17942,7 @@ function flattenText(supplied2) {
           p && p.ref
         )
       );
-      if (j.text === text4) segments = j.segments;
+      if (j.text === text5) segments = j.segments;
       else position_why = "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed";
     } else {
       position_why = "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said";
@@ -18036,7 +17953,7 @@ function flattenText(supplied2) {
       (p) => p && typeof p.text === "string" ? p.text : "",
       (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
     );
-    text4 = j.text;
+    text5 = j.text;
     segments = j.segments;
     source = "pages";
   } else if (Array.isArray(supplied2.paragraphs) && supplied2.paragraphs.length) {
@@ -18045,7 +17962,7 @@ function flattenText(supplied2) {
       (p) => p && typeof p.text === "string" ? p.text : "",
       (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i, p && p.ref)
     );
-    text4 = j.text;
+    text5 = j.text;
     segments = j.segments;
     source = "paragraphs";
   }
@@ -18056,9 +17973,9 @@ function flattenText(supplied2) {
   const undetermined = c && typeof c.undetermined === "number" ? c.undetermined : markers.reduce((n, m) => n + (m && typeof m.count === "number" ? m.count : 1), 0);
   const reasons = [...new Set(markers.map((m) => m && m.reason).filter(Boolean))];
   return {
-    text: text4,
+    text: text5,
     source,
-    chars: text4.trim().length,
+    chars: text5.trim().length,
     undetermined,
     reasons,
     segments,
@@ -18145,12 +18062,6 @@ function readText(supplied2, ctx = {}) {
     why: partial ? `read over a PARTIAL decode, stated: ${flat.undetermined} undetermined region(s)/code point(s)${named} beside ${flat.chars} decoded characters` : `read over a full decode (${flat.chars} characters)`
   };
 }
-
-// ../docprofile/registry.mjs
-register(client_rendered_default);
-register(aspnet_webforms_default);
-register(wordpress_default);
-register(conservative_default);
 
 // src/drive.mjs
 var DRIVE_HOSTS = [
@@ -18345,9 +18256,9 @@ function classifyDriveBaseline({ drive, locator, rows: rows2, retrievals = [] })
   const htmlSaid = format === "html" || declared !== null && HTML_TYPE.test(declared) || kind === "shell";
   const docSaid = !htmlSaid && format !== null && format !== "html" && format !== "undetermined";
   const fetched = (Array.isArray(retrievals) ? retrievals : []).map((r) => r.via && r.via !== "direct" ? { via: r.via, at: r.retrieval_locator || null } : { via: "direct", at: r.retrieval_locator || r.address || null });
-  const fromExport = fetched.some((f11) => f11.via === "direct" && f11.at === drive.exportAddress);
-  const fromPage = fetched.some((f11) => f11.via === "direct" && f11.at && f11.at !== drive.exportAddress);
-  const fetchedAddress = fromExport ? drive.exportAddress : (fetched.find((f11) => f11.via === "direct" && f11.at) || {}).at || null;
+  const fromExport = fetched.some((f12) => f12.via === "direct" && f12.at === drive.exportAddress);
+  const fromPage = fetched.some((f12) => f12.via === "direct" && f12.at && f12.at !== drive.exportAddress);
+  const fetchedAddress = fromExport ? drive.exportAddress : (fetched.find((f12) => f12.via === "direct" && f12.at) || {}).at || null;
   const facts = {
     baseline: {
       sha256: row2.capture?.sha256 || null,
@@ -18396,10 +18307,10 @@ function classifyDriveBaseline({ drive, locator, rows: rows2, retrievals = [] })
 
 // src/cdx.mjs
 var EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
-function parseCdx(text4) {
+function parseCdx(text5) {
   let raw;
   try {
-    raw = JSON.parse(text4);
+    raw = JSON.parse(text5);
   } catch (e) {
     return { ok: false, reason: "CDX_UNPARSEABLE", detail: String(e && e.message || e) };
   }
@@ -18530,8 +18441,8 @@ var BODY_CALL_MS = 5e3;
 async function openSession(binding) {
   const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
   if (acq.status !== 200) {
-    const text4 = await acq.text().catch(() => "");
-    throw new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text4.slice(0, 200)}`);
+    const text5 = await acq.text().catch(() => "");
+    throw new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text5.slice(0, 200)}`);
   }
   let sessionId = null;
   try {
@@ -18994,11 +18905,11 @@ var TIMEOUT_WORD = /timed?[ _-]?out|timeout/;
 var SETTLED_WORD = "quiet_excluding_long_lived";
 function waitFiredClass(fired, askedWait) {
   if (!isStr2(fired)) return "undetermined";
-  const f11 = fired.trim().toLowerCase();
-  if (TIMEOUT_WORD.test(f11)) return "timeout";
-  if (f11 === SETTLED_WORD) return "settled";
+  const f12 = fired.trim().toLowerCase();
+  if (TIMEOUT_WORD.test(f12)) return "timeout";
+  if (f12 === SETTLED_WORD) return "settled";
   const until = askedWait && isStr2(askedWait.until) ? askedWait.until.trim().toLowerCase() : null;
-  return until && f11 === until ? "condition" : "undetermined";
+  return until && f12 === until ? "condition" : "undetermined";
 }
 var RENDER_INCOMPLETE_READING = "render may be incomplete (wait timed out)";
 function settledReading(count) {
@@ -19544,13 +19455,13 @@ function instantOrder(a, b) {
   return x - y;
 }
 var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-function fileDigestOf(f11) {
-  if (f11 && typeof f11.text === "string") return createSha256().update(te.encode(f11.text)).hex();
-  if (f11 && typeof f11.blobSha === "string" && f11.blobSha) return f11.blobSha.toLowerCase();
+function fileDigestOf(f12) {
+  if (f12 && typeof f12.text === "string") return createSha256().update(te.encode(f12.text)).hex();
+  if (f12 && typeof f12.blobSha === "string" && f12.blobSha) return f12.blobSha.toLowerCase();
   return null;
 }
-function inlineBytesOf(f11) {
-  return f11 && typeof f11.text === "string" ? te.encode(f11.text).length : null;
+function inlineBytesOf(f12) {
+  return f12 && typeof f12.text === "string" ? te.encode(f12.text).length : null;
 }
 function censusCap(limit) {
   const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
@@ -19563,7 +19474,7 @@ function manifestFiles(filesJson) {
   } catch {
     arr2 = null;
   }
-  return Array.isArray(arr2) ? arr2.filter((f11) => f11 && typeof f11 === "object") : [];
+  return Array.isArray(arr2) ? arr2.filter((f12) => f12 && typeof f12 === "object") : [];
 }
 var MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source" });
 function mintExhausted(prefix, extra) {
@@ -19988,9 +19899,9 @@ var RecordCore = class _RecordCore {
         written = [];
       }
       if (!Array.isArray(written)) written = [];
-      const writtenPairs = written.map((f11) => typeof f11 === "string" ? { name: f11, sha256: null } : f11);
-      const files = writtenPairs.map((f11) => f11.name);
-      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f11) => f11.name);
+      const writtenPairs = written.map((f12) => typeof f12 === "string" ? { name: f12, sha256: null } : f12);
+      const files = writtenPairs.map((f12) => f12.name);
+      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f12) => f12.name);
       entries.push({
         key: r.snap_key,
         seq: ++seq,
@@ -20218,7 +20129,7 @@ var RecordCore = class _RecordCore {
         if (deficit < 0) out.excess += -deficit;
         const hasCreation = rows2.some((r) => r.base === EMPTY_STRING_SHA);
         const outputs = new Set(rows2.map((r) => {
-          const md = manifestFiles(r.files_json).find((f11) => f11.name === "bundle.md");
+          const md = manifestFiles(r.files_json).find((f12) => f12.name === "bundle.md");
           return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
         }).filter(Boolean));
         const unanchored = rows2.filter((r) => r.base !== EMPTY_STRING_SHA && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
@@ -20302,22 +20213,22 @@ var RecordCore = class _RecordCore {
         base,
         author,
         now,
-        JSON.stringify(files.map((f11) => ({ name: f11.path, sha256: f11.sha256 }))),
+        JSON.stringify(files.map((f12) => ({ name: f12.path, sha256: f12.sha256 }))),
         writer,
         operation
       );
       this.#sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
-      for (const f11 of files)
+      for (const f12 of files)
         this.#sql.exec(
           `INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`,
           bundleId,
-          f11.path,
-          f11.text ?? null,
-          f11.blobSha ?? null,
-          f11.bytes ?? (typeof f11.text === "string" ? te.encode(f11.text).length : 0),
-          f11.sha256
+          f12.path,
+          f12.text ?? null,
+          f12.blobSha ?? null,
+          f12.bytes ?? (typeof f12.text === "string" ? te.encode(f12.text).length : 0),
+          f12.sha256
         );
-      const bundleSha = (files.find((f11) => f11.path === "bundle.md") || files[0] || {}).sha256 ?? "";
+      const bundleSha = (files.find((f12) => f12.path === "bundle.md") || files[0] || {}).sha256 ?? "";
       const given = [
         ["current_state", state],
         ["prior_state", priorState],
@@ -20488,20 +20399,20 @@ var RecordCore = class _RecordCore {
    *  admin class still receives a figure that moves on every write, so an operator can tell that something large was
    *  written, never that it was a lead, and no lead is readable to it. Writes nothing; never throws. */
   stats({ capacity = false, viewer } = {}) {
-    const f11 = this.#figures(viewer, false);
-    for (const k of [..._RecordCore.#PROOF_ONLY, "dbBytes"]) delete f11[k];
-    if (capacity === true) f11.dbBytes = this.#dbBytes();
-    return f11;
+    const f12 = this.#figures(viewer, false);
+    for (const k of [..._RecordCore.#PROOF_ONLY, "dbBytes"]) delete f12[k];
+    if (capacity === true) f12.dbBytes = this.#dbBytes();
+    return f12;
   }
   /** R64: purge's proof of what it removed, the private form of the same figures, WHOLE (§5: *the purge proof's own
    *  count stays whole*): the whole log as `observations`, with `leads`, the themes and `dbBytes`, and no
    *  `observationsNonLead`. No route answers it: purge reads it before and after it clears. Writes nothing; never
    *  throws. */
   proofCounts() {
-    const f11 = this.#figures(void 0, true);
-    for (const k of [..._RecordCore.#WIRE_ONLY, "dbBytes"]) delete f11[k];
-    f11.dbBytes = this.#dbBytes();
-    return f11;
+    const f12 = this.#figures(void 0, true);
+    for (const k of [..._RecordCore.#WIRE_ONLY, "dbBytes"]) delete f12[k];
+    f12.dbBytes = this.#dbBytes();
+    return f12;
   }
   /* ---- the audit sweep (R18–R20, R45, R59, R67) ---- */
   /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
@@ -20600,7 +20511,7 @@ var RecordCore = class _RecordCore {
           found.push(_RecordCore.#checkFailed(g.module, id, e));
         }
       } }));
-      const { findings } = await checkBundle({
+      const { findings } = await checkBundle2({
         folderName: id,
         files,
         elidedPaths: elided,
@@ -20625,9 +20536,9 @@ var RecordCore = class _RecordCore {
         } catch (e) {
           more = [_RecordCore.#checkFailed(module, id, e)];
         }
-        if (Array.isArray(more)) findings.push(...more.filter((f11) => f11 && typeof f11 === "object"));
+        if (Array.isArray(more)) findings.push(...more.filter((f12) => f12 && typeof f12 === "object"));
       }
-      const errs = findings.filter((f11) => f11.severity === "error");
+      const errs = findings.filter((f12) => f12.severity === "error");
       if (!errs.length) {
         clean++;
         continue;
@@ -25485,13 +25396,13 @@ var PROJECT_CREATION_VISIBILITY_CHECKS = {
 };
 
 // src/promotion/history.mjs
-var f3 = (check, severity, message2, repairs) => ({ check, severity, message: message2, ...repairs ? { repairs } : {} });
-var asText2 = (v) => typeof v === "string" ? v : new TextDecoder().decode(v);
+var f4 = (check, severity, message2, repairs) => ({ check, severity, message: message2, ...repairs ? { repairs } : {} });
+var asText3 = (v) => typeof v === "string" ? v : new TextDecoder().decode(v);
 var readJson = (files, path) => {
   const raw = files.get(path);
   if (raw == null) return { absent: true };
   try {
-    return { value: JSON.parse(asText2(raw)) };
+    return { value: JSON.parse(asText3(raw)) };
   } catch {
     return { unreadable: true };
   }
@@ -25556,7 +25467,7 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
   if (!man.value) return;
   const { order, entries } = historyWriteOrder(man.value.entries);
   if (order !== "write" && entries.length > 1)
-    findings.push(f3(
+    findings.push(f4(
       "C-20.1",
       "info",
       'the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: "prior" may not be the snapshot written before (I-20)',
@@ -25571,7 +25482,7 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
     if ((man2.writer || rec.writer) !== "mechanical") continue;
     const op = man2.operation || rec.operation;
     if (!op || !Object.prototype.hasOwnProperty.call(MECHANICAL_FIELD_SETS2, op)) {
-      findings.push(f3(
+      findings.push(f4(
         "C-20.1",
         "error",
         `history entry '${e.key}' is marked mechanical but names undeclared operation '${op}'`,
@@ -25604,10 +25515,10 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
       }
     }
     if (!postRaw) continue;
-    const post = parseFrontmatter(asText2(postRaw));
+    const post = parseFrontmatter(asText3(postRaw));
     if (isCreation) {
       if (post.data && post.data.current_state && post.data.current_state !== "collected" && post.data.object_type === "information")
-        findings.push(f3(
+        findings.push(f4(
           "C-20.1",
           "error",
           `mechanical creation '${e.key}' lands at '${post.data.current_state}', not collected (daemon creations never elevate)`,
@@ -25615,11 +25526,11 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
         ));
       continue;
     }
-    const prev = parseFrontmatter(asText2(preSnap));
+    const prev = parseFrontmatter(asText3(preSnap));
     const allowed = new Set(MECHANICAL_FIELD_SETS2[op]);
     for (const path of fmDiffPaths(prev.data || {}, post.data || {}))
       if (!allowed.has(path))
-        findings.push(f3(
+        findings.push(f4(
           "C-20.1",
           "error",
           `mechanical '${op}' promotion '${e.key}' changed frontmatter '${path}', outside its declared field set {${[...allowed].join(", ")}}`,
@@ -25629,7 +25540,7 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
     for (const h of /* @__PURE__ */ new Set([...Object.keys(prevSec), ...Object.keys(postSec)])) {
       if (h === "## Session Log") continue;
       if ((prevSec[h] || "") !== (postSec[h] || ""))
-        findings.push(f3(
+        findings.push(f4(
           "C-20.1",
           "error",
           `mechanical '${op}' promotion '${e.key}' changed body section '${h}'; a mechanical writer touches only the Session Log`,
@@ -25638,7 +25549,7 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
     }
     for (const name of Array.isArray(man2.files) ? man2.files.map((x) => x && x.name) : [])
       if (!(name === "bundle.md" || String(name).startsWith("snapshots/") || MECHANICAL_APPEND_FILES.includes(name)))
-        findings.push(f3(
+        findings.push(f4(
           "C-20.1",
           "error",
           `mechanical '${op}' promotion '${e.key}' wrote '${name}', outside the mechanical envelope (bundle.md, snapshots/, ${MECHANICAL_APPEND_FILES.join(", ")})`,
@@ -25689,7 +25600,7 @@ async function checkDivergence({ files, sha256: sha2562 }, findings) {
   if (!live || typeof man.base !== "string" || await sha2562(live) === man.base) return;
   const cls = classifyDivergence(man, files);
   if (cls.order === "key" && cls.walked > 1)
-    findings.push(f3(
+    findings.push(f4(
       "C-17.2",
       "info",
       "the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)",
@@ -25697,14 +25608,14 @@ async function checkDivergence({ files, sha256: sha2562 }, findings) {
     ));
   const names = Array.isArray(man.files) ? man.files.map((e) => e && e.name) : [];
   if (cls.rung === "disjoint-auto")
-    findings.push(f3(
+    findings.push(f4(
       "C-17.2",
       "info",
       `divergence classified disjoint-auto: base found in history at ${cls.baseKey}; intervening promotion(s) [${cls.intervening.join(", ")}] touched {${[...cls.interveningFiles].join(", ")}}, package touches {${names.join(", ")}}, sets disjoint; apply in sequence recording both bases`,
       ["apply-disjoint: promote in sequence, recording base and applied-over in the history manifest entry"]
     ));
   else
-    findings.push(f3(
+    findings.push(f4(
       "C-17.2",
       "warn",
       `divergence classified adjudicated: ${cls.reason}`,
@@ -25750,26 +25661,26 @@ function checkStateHistory({ fm, files }, findings) {
     const e = hist[i];
     if (typeof e !== "object" || e === null) continue;
     for (const k of ["timestamp", "from_state", "to_state", "blurb", "author"])
-      if (!(k in e)) findings.push(f3("C-4.2", "error", `state_history[${i}] missing '${k}'`));
-    if (prevTs && e.timestamp && e.timestamp < prevTs) findings.push(f3("C-4.2", "error", `state_history[${i}] is out of chronological order`));
+      if (!(k in e)) findings.push(f4("C-4.2", "error", `state_history[${i}] missing '${k}'`));
+    if (prevTs && e.timestamp && e.timestamp < prevTs) findings.push(f4("C-4.2", "error", `state_history[${i}] is out of chronological order`));
     prevTs = e.timestamp || prevTs;
     const edges = spec.edges[e.from_state];
     if (edges && !edges.includes(e.to_state)) {
       const k = corroborating.findIndex((m) => m.from === e.from_state && m.to === e.to_state && typeof m.date === "string" && m.date.slice(0, 10) <= fence4);
       if (k >= 0) {
         const m = corroborating.splice(k, 1)[0];
-        findings.push(f3("C-4.2", "info", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge: made by a path the current rules do not allow (at or before ${fence4}); the record's own history holds the same move (promotion ${m.key}), dated by its writer ${m.date}`));
-      } else findings.push(f3("C-4.2", "error", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge`));
+        findings.push(f4("C-4.2", "info", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge: made by a path the current rules do not allow (at or before ${fence4}); the record's own history holds the same move (promotion ${m.key}), dated by its writer ${m.date}`));
+      } else findings.push(f4("C-4.2", "error", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge`));
     }
   }
   if (hist.length > 0) {
     const last = hist[hist.length - 1];
     if (last && typeof last === "object") {
-      if (last.to_state !== fm.current_state) findings.push(f3("C-4.2", "error", `current_state '${fm.current_state}' disagrees with last transition to '${last.to_state}'`));
-      if (fm.prior_state !== last.from_state) findings.push(f3("C-4.2", "error", `prior_state '${fm.prior_state}' disagrees with last transition from '${last.from_state}'`));
+      if (last.to_state !== fm.current_state) findings.push(f4("C-4.2", "error", `current_state '${fm.current_state}' disagrees with last transition to '${last.to_state}'`));
+      if (fm.prior_state !== last.from_state) findings.push(f4("C-4.2", "error", `prior_state '${fm.prior_state}' disagrees with last transition from '${last.from_state}'`));
     }
   } else if (fm.prior_state !== null && fm.prior_state !== void 0) {
-    findings.push(f3("C-4.2", "error", `prior_state is '${fm.prior_state}' but state_history is empty (expected null)`));
+    findings.push(f4("C-4.2", "error", `prior_state is '${fm.prior_state}' but state_history is empty (expected null)`));
   }
 }
 
@@ -25851,8 +25762,8 @@ function normalizeKey(entry) {
     return null;
   }
 }
-var dearmor = (text4) => {
-  const m = String(text4 || "").match(
+var dearmor = (text5) => {
+  const m = String(text5 || "").match(
     /-----BEGIN SSH SIGNATURE-----\s*([\s\S]*?)\s*-----END SSH SIGNATURE-----/
   );
   if (!m) throw new Error("sshsig: missing armor");
@@ -25963,15 +25874,15 @@ var latin1 = (s) => {
   for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i) & 255;
   return u;
 };
-var asText3 = (v) => typeof v === "string" ? v : new TextDecoder().decode(v);
+var asText4 = (v) => typeof v === "string" ? v : new TextDecoder().decode(v);
 var SIGNER_TS_RE = /^(\d{4})(\d{2})(\d{2})(?:(\d{2})(\d{2})(?:(\d{2}))?)?Z?$/;
 function signerTimestamp(v) {
   const m = SIGNER_TS_RE.exec(String(v || "").replace(/^"|"$/g, ""));
   return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4] || "00"}:${m[5] || "00"}:${m[6] || "00"}Z` : null;
 }
-function signerKeysAt(text4, principal, at22) {
+function signerKeysAt(text5, principal, at22) {
   const out = [];
-  for (const raw of String(text4 || "").split(/\r?\n/)) {
+  for (const raw of String(text5 || "").split(/\r?\n/)) {
     const line = raw.trim();
     if (line === "" || line.startsWith("#")) continue;
     const toks = line.split(/\s+/);
@@ -26069,7 +25980,7 @@ async function checkReleaseSignature({ folderName, fm, files, releaseRegistry, s
   const prov = files.get("data/provenance.json");
   if (prov) {
     try {
-      const p = JSON.parse(asText3(prov));
+      const p = JSON.parse(asText4(prov));
       records = Array.isArray(p.releases) ? p.releases : [];
     } catch {
     }
@@ -26129,7 +26040,7 @@ async function checkReleaseSignature({ folderName, fm, files, releaseRegistry, s
       registry_sha256: rec.registry_sha256 || reg.sha256
     }));
     const v = await verifyFor({
-      armored: asText3(armored),
+      armored: asText4(armored),
       message: message2,
       signersText: reg.signers,
       namespace,
@@ -26167,8 +26078,8 @@ function projectNameKey(title) {
 }
 
 // src/promotion/text.mjs
-function appendStateHistory(text4, e) {
-  const lines = text4.split("\n");
+function appendStateHistory(text5, e) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -26195,8 +26106,8 @@ function appendStateHistory(text4, e) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function setScalar(text4, key, value) {
-  const lines = text4.split("\n");
+function setScalar(text5, key, value) {
+  const lines = text5.split("\n");
   const end2 = lines.indexOf("---", 1);
   for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
     if (lines[i].startsWith(key + ":")) {
@@ -26204,20 +26115,20 @@ function setScalar(text4, key, value) {
       return lines.join("\n");
     }
   }
-  return text4;
+  return text5;
 }
-function appendSessionLog(text4, entry) {
-  const at22 = text4.indexOf("## Session Log");
-  if (at22 < 0) return text4 + "\n## Session Log\n\n" + entry;
-  const nxt = text4.indexOf("\n## ", at22 + 1);
-  const cutAt = nxt === -1 ? text4.length : nxt + 1;
-  return text4.slice(0, cutAt) + entry + "\n" + text4.slice(cutAt);
+function appendSessionLog(text5, entry) {
+  const at22 = text5.indexOf("## Session Log");
+  if (at22 < 0) return text5 + "\n## Session Log\n\n" + entry;
+  const nxt = text5.indexOf("\n## ", at22 + 1);
+  const cutAt = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cutAt) + entry + "\n" + text5.slice(cutAt);
 }
-function setOrAddScalar(text4, key, value) {
-  const lines = text4.split("\n");
-  if (lines[0] !== "---") return text4;
+function setOrAddScalar(text5, key, value) {
+  const lines = text5.split("\n");
+  if (lines[0] !== "---") return text5;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text4;
+  if (end2 === -1) return text5;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith(key + ":")) {
       lines[i] = `${key}: ${value}`;
@@ -26225,8 +26136,8 @@ function setOrAddScalar(text4, key, value) {
     }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function spliceReferences(text4, additions) {
-  const lines = text4.split("\n");
+function spliceReferences(text5, additions) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -26254,13 +26165,13 @@ function spliceReferences(text4, additions) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function withProducingGroup(text4, slug) {
-  if (typeof text4 !== "string" || typeof slug !== "string" || !slug) return text4;
-  if (parseFrontmatter(text4).data?.group === slug) return text4;
-  const lines = text4.split("\n");
-  if (lines[0] !== "---") return text4;
+function withProducingGroup(text5, slug) {
+  if (typeof text5 !== "string" || typeof slug !== "string" || !slug) return text5;
+  if (parseFrontmatter(text5).data?.group === slug) return text5;
+  const lines = text5.split("\n");
+  if (lines[0] !== "---") return text5;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text4;
+  if (end2 === -1) return text5;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith("group:")) {
       lines[i] = `group: ${slug}`;
@@ -26327,7 +26238,7 @@ async function runGate({
     else elided.add(path);
   }
   const sha2562 = async (v) => hex2(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te3.encode(v) : v));
-  const { findings: catalogue } = await checkBundle({
+  const { findings: catalogue } = await checkBundle2({
     folderName: bundleId,
     files,
     elidedPaths: elided,
@@ -26364,7 +26275,7 @@ async function runGate({
     releaseRegistry: releaseRegistry || null,
     sha256: sha2562
   })];
-  const errors = findings.filter((f11) => f11.severity === "error").map((f11) => ({ check: f11.check, detail: f11.message, ...f11.repairs ? { repairs: f11.repairs } : {} }));
+  const errors = findings.filter((f12) => f12.severity === "error").map((f12) => ({ check: f12.check, detail: f12.message, ...f12.repairs ? { repairs: f12.repairs } : {} }));
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
     if (!probe.present && probe.parts) {
@@ -26419,7 +26330,7 @@ async function runGate({
     gateVersion: GATE_VERSION,
     ok: errors.length === 0,
     findings: errors,
-    warnings: findings.filter((f11) => f11.severity !== "error").length
+    warnings: findings.filter((f12) => f12.severity !== "error").length
   };
 }
 
@@ -26459,21 +26370,21 @@ var refusal2 = (code, detail, extra) => {
 };
 function digestFiles(files) {
   const disagree = [];
-  const out = files.map((f11) => {
-    const computed = fileDigestOf(f11);
-    if (computed === null) return f11;
-    const supplied2 = f11.sha256;
-    if (supplied2 === void 0 || supplied2 === null) return { ...f11, sha256: computed };
+  const out = files.map((f12) => {
+    const computed = fileDigestOf(f12);
+    if (computed === null) return f12;
+    const supplied2 = f12.sha256;
+    if (supplied2 === void 0 || supplied2 === null) return { ...f12, sha256: computed };
     if (typeof supplied2 !== "string" || supplied2.toLowerCase() !== computed) {
       disagree.push({
-        path: f11.path ?? null,
-        kind: typeof f11.text === "string" ? "inline" : "blob",
+        path: f12.path ?? null,
+        kind: typeof f12.text === "string" ? "inline" : "blob",
         supplied: typeof supplied2 === "string" ? supplied2 : String(supplied2),
         computed
       });
-      return f11;
+      return f12;
     }
-    return supplied2 === computed ? f11 : { ...f11, sha256: computed };
+    return supplied2 === computed ? f12 : { ...f12, sha256: computed };
   });
   return { files: out, disagree };
 }
@@ -26484,24 +26395,24 @@ function samePromotion(entry, want) {
   if (!held.length || held.length !== want.files.length) return false;
   const digestOf2 = (v) => typeof v === "string" && v !== "" ? v.toLowerCase() : null;
   const byName = /* @__PURE__ */ new Map();
-  for (const f11 of held) {
-    const d = digestOf2(f11.sha256);
-    if (typeof f11.name !== "string" || d === null || byName.has(f11.name)) return false;
-    byName.set(f11.name, d);
+  for (const f12 of held) {
+    const d = digestOf2(f12.sha256);
+    if (typeof f12.name !== "string" || d === null || byName.has(f12.name)) return false;
+    byName.set(f12.name, d);
   }
-  for (const f11 of want.files) {
-    const d = f11 ? digestOf2(f11.sha256) : null;
-    if (!f11 || typeof f11.path !== "string" || d === null || byName.get(f11.path) !== d) return false;
-    byName.delete(f11.path);
+  for (const f12 of want.files) {
+    const d = f12 ? digestOf2(f12.sha256) : null;
+    if (!f12 || typeof f12.path !== "string" || d === null || byName.get(f12.path) !== d) return false;
+    byName.delete(f12.path);
   }
   return byName.size === 0;
 }
 function stampGroup(files, slug) {
-  return files.map((f11) => {
-    if (!f11 || f11.path !== "bundle.md" || typeof f11.text !== "string") return f11;
-    const text4 = withProducingGroup(f11.text, slug);
-    if (text4 === f11.text) return f11;
-    return { ...f11, text: text4, bytes: inlineBytesOf({ text: text4 }), sha256: fileDigestOf({ text: text4 }) };
+  return files.map((f12) => {
+    if (!f12 || f12.path !== "bundle.md" || typeof f12.text !== "string") return f12;
+    const text5 = withProducingGroup(f12.text, slug);
+    if (text5 === f12.text) return f12;
+    return { ...f12, text: text5, bytes: inlineBytesOf({ text: text5 }), sha256: fileDigestOf({ text: text5 }) };
   });
 }
 var factUnavailable = (fact, detail) => ({
@@ -26616,7 +26527,7 @@ var Promotion = class {
       let held = false;
       try {
         const e = this.#record.manifestEntry(n.bundleId, n.snapKey);
-        const md = e && Array.isArray(e.files) ? e.files.find((f11) => f11 && f11.name === "bundle.md") : null;
+        const md = e && Array.isArray(e.files) ? e.files.find((f12) => f12 && f12.name === "bundle.md") : null;
         held = !!md && String(e.base) === String(n.base) && md.sha256 === n.bundleSha;
       } catch {
         held = false;
@@ -26756,7 +26667,7 @@ var Promotion = class {
         reason: "BASIS_IN_PAYLOAD",
         detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field"
       };
-    const sentMd = Array.isArray(files) ? files.find((f11) => isObj3(f11) && f11.path === "bundle.md") : null;
+    const sentMd = Array.isArray(files) ? files.find((f12) => isObj3(f12) && f12.path === "bundle.md") : null;
     const sentFm0 = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
     const sentFm = isObj3(sentFm0) ? sentFm0 : null;
     const envelope = isObj3(meta) ? meta : null;
@@ -26808,22 +26719,22 @@ var Promotion = class {
         "PROMOTE_SNAP_KEY_UNSTATED",
         "this request names no snapKey (a non-blank string), so the revision has no name in the history. Nothing was written."
       );
-    const pathless = files.map((f11, i) => isObj3(f11) && typeof f11.path === "string" && f11.path.trim() !== "" ? -1 : i).filter((i) => i >= 0);
+    const pathless = files.map((f12, i) => isObj3(f12) && typeof f12.path === "string" && f12.path.trim() !== "" ? -1 : i).filter((i) => i >= 0);
     if (pathless.length)
       return refusal2(
         "PROMOTED_FILE_PATH_UNSTATED",
         `files entr${pathless.length > 1 ? "ies" : "y"} ${pathless.join(", ")} (counting from 0) name no path (a non-blank string), or are not file objects. Nothing was written.`,
         { entries: pathless }
       );
-    const blobHeld = (f11) => typeof f11.text !== "string" && typeof f11.blobSha === "string" && f11.blobSha !== "";
-    const empty = files.filter((f11) => typeof f11.text !== "string" && !blobHeld(f11)).map((f11) => f11.path);
+    const blobHeld = (f12) => typeof f12.text !== "string" && typeof f12.blobSha === "string" && f12.blobSha !== "";
+    const empty = files.filter((f12) => typeof f12.text !== "string" && !blobHeld(f12)).map((f12) => f12.path);
     if (empty.length)
       return refusal2(
         "PROMOTED_FILE_CONTENT_UNSTATED",
         `${empty.join(", ")}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.`,
         { paths: empty }
       );
-    const sizeless = files.filter((f11) => blobHeld(f11) && !(Number.isInteger(f11.bytes) && f11.bytes >= 0)).map((f11) => f11.path);
+    const sizeless = files.filter((f12) => blobHeld(f12) && !(Number.isInteger(f12.bytes) && f12.bytes >= 0)).map((f12) => f12.path);
     if (sizeless.length)
       return refusal2(
         "PROMOTED_FILE_BYTES_UNSTATED",
@@ -26863,9 +26774,9 @@ var Promotion = class {
         "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ") + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.",
         { paths: digested.disagree.map((d) => d.path), files: digested.disagree }
       );
-    files = digested.files.map((f11) => {
-      const n = inlineBytesOf(f11);
-      return n === null || f11.bytes === n ? f11 : { ...f11, bytes: n };
+    files = digested.files.map((f12) => {
+      const n = inlineBytesOf(f12);
+      return n === null || f12.bytes === n ? f12 : { ...f12, bytes: n };
     });
     let groupStamp = null, createdGroup = null;
     if (base === null) {
@@ -26907,9 +26818,9 @@ var Promotion = class {
         if (!bundleId) return mintExhausted("PROJ");
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
-        const text4 = lines.join("\n");
-        const written = { ...files.find((f11) => f11.path === "bundle.md"), text: text4, bytes: inlineBytesOf({ text: text4 }), sha256: fileDigestOf({ text: text4 }) };
-        files = files.map((f11) => f11.path === "bundle.md" ? written : f11);
+        const text5 = lines.join("\n");
+        const written = { ...files.find((f12) => f12.path === "bundle.md"), text: text5, bytes: inlineBytesOf({ text: text5 }), sha256: fileDigestOf({ text: text5 }) };
+        files = files.map((f12) => f12.path === "bundle.md" ? written : f12);
       }
       if (groupStamp) files = stampGroup(files, groupStamp);
       const head = record.head(bundleId);
@@ -26937,7 +26848,7 @@ var Promotion = class {
         writer,
         operation
       })) {
-        const md = held.files.find((f11) => f11 && f11.name === "bundle.md");
+        const md = held.files.find((f12) => f12 && f12.name === "bundle.md");
         return {
           ok: true,
           bundleId,
@@ -27029,7 +26940,7 @@ var Promotion = class {
           `${cut(bundleId, 80)} was produced by '${cut(head.groupId, 40)}' and this revision says '${cut(revisionGroup, 40)}'. A revision changes what a document says, never whose it is. Send it again with the group the record holds, or with none. Nothing was written.`,
           { head_group: cut(head.groupId, 80), revision_group: cut(revisionGroup, 80) }
         );
-      const finalMd = files.find((f11) => f11.path === "bundle.md");
+      const finalMd = files.find((f12) => f12.path === "bundle.md");
       const finalFm0 = finalMd && typeof finalMd.text === "string" ? parseFrontmatter(finalMd.text).data : null;
       const finalFm = isObj3(finalFm0) ? finalFm0 : null;
       if (!replay && finalFm && has(finalFm, "id") && finalFm.id !== null && String(finalFm.id).trim() !== bundleId)
@@ -27051,9 +26962,9 @@ var Promotion = class {
             detail: RETIRE_CITED_DETAIL
           };
       }
-      for (const f11 of files) {
-        const n = inlineBytesOf(f11);
-        if (n !== null && n > INLINE_MAX) return { ok: false, reason: "OVERSIZE_INLINE", path: f11.path, bytes: n };
+      for (const f12 of files) {
+        const n = inlineBytesOf(f12);
+        if (n !== null && n > INLINE_MAX) return { ok: false, reason: "OVERSIZE_INLINE", path: f12.path, bytes: n };
       }
       if (!replay) {
         if (documentType !== null && envelopeType !== null && documentType !== envelopeType)
@@ -27119,7 +27030,7 @@ var Promotion = class {
         }
       }
       if (head && !replay) {
-        const now = new Set(files.map((f11) => f11.path));
+        const now = new Set(files.map((f12) => f12.path));
         const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
         const dropped = record.livePaths(bundleId).filter((p) => !now.has(p) && !declared.has(p));
         if (dropped.length)
@@ -27298,21 +27209,21 @@ var Promotion = class {
         projectId,
         detail: "the origin's references block is not in a shape this grammar can extend in place, so the clone could not be given a recorded origin. A fork with no provenance is not written."
       };
-    let text4 = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
-    text4 = setScalar(text4, "title", JSON.stringify(title));
-    text4 = setScalar(text4, "current_state", "forming");
-    text4 = setOrAddScalar(text4, "created", `"${when}"`);
-    text4 = setScalar(text4, "last_updated", `"${when}"`);
-    text4 = appendSessionLog(text4, `### Session ${when} | forked from ${projectId} | ${by}
+    let text5 = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
+    text5 = setScalar(text5, "title", JSON.stringify(title));
+    text5 = setScalar(text5, "current_state", "forming");
+    text5 = setOrAddScalar(text5, "created", `"${when}"`);
+    text5 = setScalar(text5, "last_updated", `"${when}"`);
+    text5 = appendSessionLog(text5, `### Session ${when} | forked from ${projectId} | ${by}
 Trigger: fork
 Changes: created as a clone of ${projectId}, recorded as a derived_from reference. Participants were NOT copied.
 `);
     const carried = [];
     for (const path of record.livePaths(projectId)) {
       if (path === "bundle.md") continue;
-      const f11 = record.readFile(projectId, path);
-      if (!f11) continue;
-      carried.push(typeof f11.text === "string" ? { path, text: f11.text, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes });
+      const f12 = record.readFile(projectId, path);
+      if (!f12) continue;
+      carried.push(typeof f12.text === "string" ? { path, text: f12.text, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes });
     }
     const promoted = this.promote({
       base: null,
@@ -27320,7 +27231,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       author: by,
       ownerMemberId: by,
       visibility,
-      files: [{ path: "bundle.md", text: text4 }, ...carried],
+      files: [{ path: "bundle.md", text: text5 }, ...carried],
       meta: { object_type: "project", title, current_state: "forming", created: when, last_updated: when }
     });
     if (!promoted.ok) return promoted;
@@ -27449,8 +27360,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         target,
         detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
       };
-    let text4 = live.text;
-    const fm = parseFrontmatter(text4).data || {};
+    let text5 = live.text;
+    const fm = parseFrontmatter(text5).data || {};
     if (!REOPENABLE_FROM.includes(head.currentState)) {
       const m = this.#fact("caseMember", target);
       if (!m.ok) return { ...m, target };
@@ -27478,7 +27389,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         detail: "this is not a legal move in the catalogue's state table for this document's own vocabulary."
       };
     const when = this.#now().replace(/\.\d+Z$/, "Z");
-    const withHistory = appendStateHistory(text4, {
+    const withHistory = appendStateHistory(text5, {
       timestamp: when,
       from_state: head.currentState,
       to_state: "open",
@@ -27492,28 +27403,28 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         target,
         detail: "this document's state_history block cannot be extended in place, and a reopening recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text4 = setScalar(withHistory, "prior_state", head.currentState);
-    text4 = setScalar(text4, "current_state", "open");
-    text4 = setScalar(text4, "disposition_reason", `""`);
-    text4 = setScalar(text4, "case_edition", "null");
-    text4 = setScalar(text4, "last_updated", `"${when}"`);
-    text4 = appendSessionLog(text4, `### Session ${when} | Reopened | ${who2}
+    text5 = setScalar(withHistory, "prior_state", head.currentState);
+    text5 = setScalar(text5, "current_state", "open");
+    text5 = setScalar(text5, "disposition_reason", `""`);
+    text5 = setScalar(text5, "case_edition", "null");
+    text5 = setScalar(text5, "last_updated", `"${when}"`);
+    text5 = appendSessionLog(text5, `### Session ${when} | Reopened | ${who2}
 Trigger: op=reopen on ${target}
 Changes: state ${head.currentState} to open. Reason: ${why}.
 `);
     const carried = [];
     for (const path of record.livePaths(target)) {
       if (path === "bundle.md") continue;
-      const f11 = record.readFile(target, path);
-      if (!f11) continue;
-      carried.push(typeof f11.text === "string" ? { path, text: f11.text, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes });
+      const f12 = record.readFile(target, path);
+      if (!f12) continue;
+      carried.push(typeof f12.text === "string" ? { path, text: f12.text, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes });
     }
     const promoted = this.promote({
       bundleId: target,
       base: head.bundleSha,
       snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`,
       author: who2,
-      files: [{ path: "bundle.md", text: text4 }, ...carried],
+      files: [{ path: "bundle.md", text: text5 }, ...carried],
       meta: {
         object_type: declared,
         title: fm.title,
@@ -27797,7 +27708,7 @@ function respellReceiptInstants(sql) {
 }
 
 // src/provenance/register-checks.mjs
-function f4(check, severity, message2, repairs, code) {
+function f5(check, severity, message2, repairs, code) {
   const out = { check, severity, message: message2 };
   if (repairs) {
     out.repairable = true;
@@ -27806,7 +27717,7 @@ function f4(check, severity, message2, repairs, code) {
   if (code) out.code = code;
   return out;
 }
-function asText4(v) {
+function asText5(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
@@ -27828,7 +27739,7 @@ function checkAuthorityPublishable(ctx, findings) {
   if (!raw) return;
   let reg;
   try {
-    reg = JSON.parse(asText4(raw));
+    reg = JSON.parse(asText5(raw));
   } catch {
     return;
   }
@@ -27837,7 +27748,7 @@ function checkAuthorityPublishable(ctx, findings) {
     if (!d || typeof d !== "object") return;
     const chain2 = d.provenance_chain;
     if (!("provenance_chain" in d)) {
-      findings.push(f4(
+      findings.push(f5(
         "C-18.9",
         "error",
         `provenance documents[${i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none`,
@@ -27852,7 +27763,7 @@ function checkAuthorityPublishable(ctx, findings) {
         "chain-absent"
       ));
     } else if (!Array.isArray(chain2)) {
-      findings.push(f4(
+      findings.push(f5(
         "C-18.9",
         "error",
         `provenance documents[${i}] is at or past verified and its provenance_chain is ${chain2 === null ? "null" : typeof chain2}, not an array of hops: whatever wrote this did not write a chain`,
@@ -27860,7 +27771,7 @@ function checkAuthorityPublishable(ctx, findings) {
         "chain-not-an-array"
       ));
     } else if (chain2.length === 0) {
-      findings.push(f4(
+      findings.push(f5(
         "C-18.9",
         "error",
         `provenance documents[${i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route`,
@@ -27873,7 +27784,7 @@ function checkAuthorityPublishable(ctx, findings) {
     } else {
       chain2.forEach((hop, h) => {
         if (!hop || typeof hop !== "object" || typeof hop.who !== "string" || hop.who.trim() === "") {
-          findings.push(f4(
+          findings.push(f5(
             "C-18.9",
             "error",
             `provenance documents[${i}].provenance_chain[${h}] names no attestor: an unattributed hop cannot support the claim a published hash makes`,
@@ -27885,7 +27796,7 @@ function checkAuthorityPublishable(ctx, findings) {
     if (d.authority_state === "undetermined") {
       const basis = d.authority_basis;
       if (typeof basis !== "string" || basis.trim() === "") {
-        findings.push(f4(
+        findings.push(f5(
           "C-18.9",
           "error",
           `provenance documents[${i}] is content-authority undetermined and this bundle is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
@@ -27896,7 +27807,7 @@ function checkAuthorityPublishable(ctx, findings) {
         ));
       }
     } else if (d.authority_state === "determined" && (typeof d.authority !== "string" || d.authority.trim() === "")) {
-      findings.push(f4(
+      findings.push(f5(
         "C-18.9",
         "error",
         `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this bundle is at or past verified`,
@@ -27911,62 +27822,62 @@ function checkReleaseAuthority(ctx, findings) {
   if (!raw) return;
   let reg;
   try {
-    reg = JSON.parse(asText4(raw));
+    reg = JSON.parse(asText5(raw));
   } catch {
     return;
   }
   const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
   if (!docs) {
-    findings.push(f4("C-18.1", "error", 'data/provenance.json must be {"documents": [...]} (the intake provenance register)'));
+    findings.push(f5("C-18.1", "error", 'data/provenance.json must be {"documents": [...]} (the intake provenance register)'));
     return;
   }
   let sweepOrigin = false;
   docs.forEach((d, i) => {
     if (!d || typeof d !== "object") {
-      findings.push(f4("C-18.1", "error", `provenance documents[${i}] is not an object`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}] is not an object`));
       return;
     }
     for (const k of ["file", "locator", "retrieved"]) {
-      if (!d[k]) findings.push(f4("C-18.1", "error", `provenance documents[${i}] missing '${k}'`));
+      if (!d[k]) findings.push(f5("C-18.1", "error", `provenance documents[${i}] missing '${k}'`));
     }
     const aState = d.authority_state;
     if (aState !== void 0 && !["determined", "undetermined"].includes(aState)) {
-      findings.push(f4("C-18.1", "error", `provenance documents[${i}].authority_state '${aState}' is not 'determined' or 'undetermined'`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}].authority_state '${aState}' is not 'determined' or 'undetermined'`));
     }
     if (aState === "undetermined") {
-      if (!d.authority_basis) findings.push(f4("C-18.1", "error", `provenance documents[${i}] is authority-undetermined but names no authority_basis: why it could not be established is itself a recorded fact`));
+      if (!d.authority_basis) findings.push(f5("C-18.1", "error", `provenance documents[${i}] is authority-undetermined but names no authority_basis: why it could not be established is itself a recorded fact`));
     } else if (!d.authority) {
-      findings.push(f4("C-18.1", "error", `provenance documents[${i}] missing 'authority' and does not state authority_state 'undetermined': the source axis is named or its absence is declared, never left blank`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}] missing 'authority' and does not state authority_state 'undetermined': the source axis is named or its absence is declared, never left blank`));
     }
     if (aState === "determined" && !d.authority_basis) {
-      findings.push(f4("C-18.1", "error", `provenance documents[${i}] is authority-determined but names no authority_basis: how it was reached is recorded in BOTH cases`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}] is authority-determined but names no authority_basis: how it was reached is recorded in BOTH cases`));
     }
     if (d.file && !hasFile_2(ctx, String(d.file)) && !Array.isArray(d.parts)) {
-      findings.push(f4("C-18.1", "error", `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
     }
     const cap = d.capture;
-    if (!cap || typeof cap !== "object") findings.push(f4("C-18.1", "error", `provenance documents[${i}] missing capture block`));
+    if (!cap || typeof cap !== "object") findings.push(f5("C-18.1", "error", `provenance documents[${i}] missing capture block`));
     else {
-      if (!cap.method) findings.push(f4("C-18.1", "error", `provenance documents[${i}].capture missing 'method'`));
+      if (!cap.method) findings.push(f5("C-18.1", "error", `provenance documents[${i}].capture missing 'method'`));
       if (d.authored === true) {
-        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f4("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md \xA73)`));
-        if (cap.actor_class !== "member") findings.push(f4("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md \xA73)`));
+        if (cap.actor_class !== "member") findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
       } else if (d.origin && typeof d.origin === "object" && d.origin.kind === DOORBELL_ORIGIN) {
-        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f4("C-18.1", "error", `provenance documents[${i}] was received through the doorbell and carries capture.grade '${cap.grade}': received material was fetched from no address, so it earns no fetched letter (Intake Doctrine \xA72a)`));
-        if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f4("C-18.1", "error", `provenance documents[${i}] was received through the doorbell and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
-      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f4("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
-      if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f4("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
+        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was received through the doorbell and carries capture.grade '${cap.grade}': received material was fetched from no address, so it earns no fetched letter (Intake Doctrine \xA72a)`));
+        if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was received through the doorbell and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
+      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f5("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
+      if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f5("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
     }
     const or = d.origin;
     if (d.authored === true && (!or || typeof or !== "object" || or.kind !== "member")) {
-      findings.push(f4("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === "object" ? or.kind : or}', not 'member'`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === "object" ? or.kind : or}', not 'member'`));
     }
     if (!or || typeof or !== "object" || !ORIGIN_KINDS.includes(or.kind)) {
-      findings.push(f4("C-18.1", "error", `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(", ")}`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(", ")}`));
     } else if (or.kind === "sweep") {
       sweepOrigin = true;
-      if (!or.matched_sweep) findings.push(f4("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'matched_sweep'`));
-      if (!or.deeming_actor) findings.push(f4("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'deeming_actor'`));
+      if (!or.matched_sweep) findings.push(f5("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'matched_sweep'`));
+      if (!or.deeming_actor) findings.push(f5("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'deeming_actor'`));
     }
   });
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
@@ -27974,7 +27885,7 @@ function checkReleaseAuthority(ctx, findings) {
   for (const e of releases) {
     const a = String(e.author || "").toLowerCase();
     if (!a || isMachineIdentity(a)) {
-      findings.push(f4(
+      findings.push(f5(
         "C-18.1",
         "error",
         `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
@@ -27992,7 +27903,7 @@ function checkReleaseAuthority(ctx, findings) {
     return a && !isMachineIdentity(a);
   });
   if (sweepOrigin && everVerified && !memberRelease) {
-    findings.push(f4(
+    findings.push(f5(
       "C-18.1",
       "error",
       "sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)",
@@ -28010,7 +27921,7 @@ function checkRegisterIntegrity(ctx, findings) {
   if (!raw) return;
   let reg;
   try {
-    reg = JSON.parse(asText4(raw));
+    reg = JSON.parse(asText5(raw));
   } catch {
     return;
   }
@@ -28027,7 +27938,7 @@ function checkRegisterIntegrity(ctx, findings) {
   }
   for (const h of Object.keys(byHash)) {
     if (byHash[h].length > 1) {
-      findings.push(f4(
+      findings.push(f5(
         "C-18.3",
         "error",
         `capture hash ${h.slice(0, 16)}\u2026 appears in ${byHash[h].length} register documents (indices ${byHash[h].join(", ")}); identical content is corroboration on one entry, never duplicate review items`,
@@ -28040,7 +27951,7 @@ function checkRegisterIntegrity(ctx, findings) {
     if (idx.length < 2) continue;
     const rawShas = new Set(idx.map((i) => docs[i] && docs[i].capture && docs[i].capture.sha256).filter(Boolean));
     if (rawShas.size < 2) continue;
-    findings.push(f4(
+    findings.push(f5(
       "C-18.3",
       "error",
       `${idx.length} register documents (indices ${idx.join(", ")}) share the evidentiary digest ${e.slice(0, 16)}\u2026 but differ in raw bytes; the substance is identical and only per-render machinery or furniture differs \u2014 corroboration on one entry, never duplicate review items`,
@@ -28052,7 +27963,7 @@ function checkRegisterIntegrity(ctx, findings) {
       const d = docs[i];
       if (!d || typeof d !== "object") continue;
       if (!d.co_archive && !d.timestamp) {
-        findings.push(f4(
+        findings.push(f5(
           "C-18.4",
           "warn",
           `crucial-criticality document[${i}] (${d.file || "?"}) carries neither co_archive nor timestamp; a reviewing member must verify co-attestation before release (F4)`,
@@ -28066,12 +27977,12 @@ function checkInfo2Register(ctx, findings) {
   if (ctx.fm?.object_type !== "information" || ctx.fm?.schema !== "information@2") return;
   const raw = ctx.files.get("data/provenance.json");
   if (!raw) {
-    findings.push(f4("C-18.1", "error", "information@2 requires data/provenance.json: the schema bump makes the intake provenance register mandatory"));
+    findings.push(f5("C-18.1", "error", "information@2 requires data/provenance.json: the schema bump makes the intake provenance register mandatory"));
     return;
   }
   let reg;
   try {
-    reg = JSON.parse(asText4(raw));
+    reg = JSON.parse(asText5(raw));
   } catch {
     return;
   }
@@ -28082,51 +27993,51 @@ function checkInfo2Register(ctx, findings) {
     if (!d || typeof d !== "object") continue;
     const cap = d.capture && typeof d.capture === "object" ? d.capture : {};
     if (!CAPTURE_ENCODINGS2.includes(cap.encoding)) {
-      findings.push(f4("C-18.1", "error", `provenance documents[${i}].capture.encoding '${cap.encoding}' is not one of: ${CAPTURE_ENCODINGS2.join(", ")} (@2)`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}].capture.encoding '${cap.encoding}' is not one of: ${CAPTURE_ENCODINGS2.join(", ")} (@2)`));
     }
     const or = d.origin && typeof d.origin === "object" ? d.origin : {};
     if (or.kind === "member") {
       if (cap.actor_class !== "member") {
-        findings.push(f4("C-18.1", "error", `provenance documents[${i}]: member-origin capture must record actor_class 'member' (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}]: member-origin capture must record actor_class 'member' (@2)`));
       }
       const c = d.custody;
       if (!c || typeof c !== "object") {
-        findings.push(f4("C-18.1", "error", `provenance documents[${i}]: member-origin document missing custody block {holder, obtained, setting, attestation} (doctrine 3a) (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}]: member-origin document missing custody block {holder, obtained, setting, attestation} (doctrine 3a) (@2)`));
       } else {
         for (const k of ["holder", "setting", "attestation"]) {
-          if (!c[k]) findings.push(f4("C-18.1", "error", `provenance documents[${i}].custody missing '${k}' (@2)`));
+          if (!c[k]) findings.push(f5("C-18.1", "error", `provenance documents[${i}].custody missing '${k}' (@2)`));
         }
         if (!HIST_TS_RE.test(c.obtained || "")) {
-          findings.push(f4("C-18.1", "error", `provenance documents[${i}].custody.obtained '${c.obtained}' is not YYYY-MM-DDTHH:MM:SSZ (@2)`));
+          findings.push(f5("C-18.1", "error", `provenance documents[${i}].custody.obtained '${c.obtained}' is not YYYY-MM-DDTHH:MM:SSZ (@2)`));
         }
       }
       if (d.attestation_attempts === void 0) {
-        findings.push(f4("C-18.1", "error", `provenance documents[${i}]: member-origin document missing attestation_attempts; the 7.7 asymmetry is recorded honestly, attempted false with the reason in note (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}]: member-origin document missing attestation_attempts; the 7.7 asymmetry is recorded honestly, attempted false with the reason in note (@2)`));
       }
     }
     if (d.attestation_attempts !== void 0) {
       if (!Array.isArray(d.attestation_attempts)) {
-        findings.push(f4("C-18.1", "error", `provenance documents[${i}].attestation_attempts must be an array (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}].attestation_attempts must be an array (@2)`));
       } else {
         d.attestation_attempts.forEach((a, j) => {
           if (!a || typeof a !== "object" || !a.service || typeof a.attempted !== "boolean" || typeof a.ok !== "boolean") {
-            findings.push(f4("C-18.1", "error", `provenance documents[${i}].attestation_attempts[${j}] lacks the {service, attempted, ok} shape (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].attestation_attempts[${j}] lacks the {service, attempted, ok} shape (@2)`));
           }
         });
       }
     }
     if (d.parts !== void 0) {
       if (!Array.isArray(d.parts) || !d.parts.length) {
-        findings.push(f4("C-18.1", "error", `provenance documents[${i}].parts must be a nonempty array (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}].parts must be a nonempty array (@2)`));
       } else {
         if (!RAW_SHA_RE2.test(cap.sha256 || "")) {
-          findings.push(f4("C-18.1", "error", `provenance documents[${i}]: parts require capture.sha256 over the reassembled whole (@2)`));
+          findings.push(f5("C-18.1", "error", `provenance documents[${i}]: parts require capture.sha256 over the reassembled whole (@2)`));
         }
         d.parts.forEach((p, j) => {
           if (!p || typeof p !== "object" || !p.file || !RAW_SHA_RE2.test(p.sha256 || "") || !(Number.isInteger(p.bytes) && p.bytes > 0)) {
-            findings.push(f4("C-18.1", "error", `provenance documents[${i}].parts[${j}] lacks the {file, sha256, bytes} shape (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].parts[${j}] lacks the {file, sha256, bytes} shape (@2)`));
           } else if (!hasFile_2(ctx, String(p.file))) {
-            findings.push(f4("C-18.1", "error", `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the bundle (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the bundle (@2)`));
           }
         });
       }
@@ -28135,28 +28046,28 @@ function checkInfo2Register(ctx, findings) {
       const dv = d.derived;
       const shapeOk = dv && typeof dv === "object" && dv.transform && dv.reason && (dv.from_file || dv.from_ref);
       if (!shapeOk) {
-        findings.push(f4("C-18.1", "error", `provenance documents[${i}].derived lacks the {transform, reason, from_file|from_ref} shape (doctrine 4a) (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}].derived lacks the {transform, reason, from_file|from_ref} shape (doctrine 4a) (@2)`));
       } else if (dv.from_file && !hasFile_2(ctx, String(dv.from_file))) {
-        findings.push(f4("C-18.1", "error", `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the bundle (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the bundle (@2)`));
       }
     }
     if (d.renditions !== void 0) {
       if (!Array.isArray(d.renditions)) {
-        findings.push(f4("C-18.1", "error", `provenance documents[${i}].renditions must be an array (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions must be an array (@2)`));
       } else {
         d.renditions.forEach((r, j) => {
           if (!r || typeof r !== "object" || !r.file || !RAW_SHA_RE2.test(r.sha256 || "") || !r.transform || !r.reason || !r.from_file) {
-            findings.push(f4("C-18.1", "error", `provenance documents[${i}].renditions[${j}] lacks the {file, sha256, transform, reason, from_file} shape: a derived artifact must say what was done to it, why, and what it was made from (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}] lacks the {file, sha256, transform, reason, from_file} shape: a derived artifact must say what was done to it, why, and what it was made from (@2)`));
             return;
           }
           if (!hasFile_2(ctx, String(r.file))) {
-            findings.push(f4("C-18.1", "error", `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the bundle (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the bundle (@2)`));
           }
           if (!hasFile_2(ctx, String(r.from_file)) && !Array.isArray(d.parts)) {
-            findings.push(f4("C-18.1", "error", `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the bundle (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the bundle (@2)`));
           }
           if (r.sha256 === cap?.sha256) {
-            findings.push(f4("C-18.1", "error", `provenance documents[${i}].renditions[${j}] has the same hash as the capture it claims to be derived from, so one of the two is mislabelled (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}] has the same hash as the capture it claims to be derived from, so one of the two is mislabelled (@2)`));
           }
         });
       }
@@ -28164,20 +28075,20 @@ function checkInfo2Register(ctx, findings) {
   }
   if (reg.releases !== void 0) {
     if (!Array.isArray(reg.releases)) {
-      findings.push(f4("C-18.1", "error", "provenance releases must be an array (@2)"));
+      findings.push(f5("C-18.1", "error", "provenance releases must be an array (@2)"));
     } else {
       reg.releases.forEach((r, i) => {
         if (!r || typeof r !== "object" || !HIST_TS_RE.test(r.transition || "") || !r.author) {
-          findings.push(f4("C-18.1", "error", `provenance releases[${i}] lacks the {transition, author} shape (@2)`));
+          findings.push(f5("C-18.1", "error", `provenance releases[${i}] lacks the {transition, author} shape (@2)`));
           return;
         }
         if (r.signature_file) {
           if (!hasFile_2(ctx, String(r.signature_file))) {
-            findings.push(f4("C-18.1", "error", `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the bundle (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the bundle (@2)`));
           }
-          if (!r.signer) findings.push(f4("C-18.1", "error", `provenance releases[${i}] carries a signature_file but no signer (@2)`));
+          if (!r.signer) findings.push(f5("C-18.1", "error", `provenance releases[${i}] carries a signature_file but no signer (@2)`));
           if (r.namespace !== "bio-release") {
-            findings.push(f4("C-18.1", "error", `provenance releases[${i}].namespace '${r.namespace}' must be 'bio-release' (ssh-keygen -Y namespace discipline) (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance releases[${i}].namespace '${r.namespace}' must be 'bio-release' (ssh-keygen -Y namespace discipline) (@2)`));
           }
         }
       });
@@ -28406,9 +28317,9 @@ var isObj4 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var secondOf = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
 var b64 = (bytes2) => btoa(String.fromCharCode(...new Uint8Array(bytes2)));
 var unb64 = (s) => Uint8Array.from(atob(String(s)), (c) => c.charCodeAt(0));
-function safeJson(text4) {
+function safeJson(text5) {
   try {
-    return JSON.parse(text4);
+    return JSON.parse(text5);
   } catch {
     return null;
   }
@@ -28562,7 +28473,7 @@ function observerRef(testimonyId) {
   return `observer:${testimonyId}`;
 }
 function rowUnlessStated(files, row2) {
-  const md = files.find((f11) => f11 && f11.path === "bundle.md");
+  const md = files.find((f12) => f12 && f12.path === "bundle.md");
   const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
   const out = {};
   for (const [k, v] of Object.entries(row2))
@@ -28913,10 +28824,10 @@ var Provenance = class _Provenance {
     if (replay) return null;
     const type = String(promotedType ?? "").toLowerCase();
     if (type !== "information") return null;
-    if (!files.some((f11) => f11 && f11.path === "data/provenance.json")) return null;
+    if (!files.some((f12) => f12 && f12.path === "data/provenance.json")) return null;
     const asImage = (list2) => {
       const img = {};
-      for (const f11 of list2) if (f11 && typeof f11.path === "string") img[f11.path] = typeof f11.text === "string" ? f11.text : { blobSha: f11.blobSha };
+      for (const f12 of list2) if (f12 && typeof f12.path === "string") img[f12.path] = typeof f12.text === "string" ? f12.text : { blobSha: f12.blobSha };
       return img;
     };
     const now = registerChecks({ ...imageForChecks(asImage(files)), fm: isObj4(docFm) ? docFm : imageForChecks(asImage(files)).fm }).filter((x) => x.severity === "error");
@@ -28925,8 +28836,8 @@ var Provenance = class _Provenance {
     if (head) {
       const live = {};
       for (const p of this.#record.livePaths(bundleId) || []) {
-        const f11 = this.#record.readFile(bundleId, p);
-        if (f11) live[p] = typeof f11.text === "string" ? f11.text : { blobSha: f11.blobSha };
+        const f12 = this.#record.readFile(bundleId, p);
+        if (f12) live[p] = typeof f12.text === "string" ? f12.text : { blobSha: f12.blobSha };
       }
       held = new Set(registerChecks(imageForChecks(live)).filter((x) => x.severity === "error").map((x) => `${x.check}\0${x.message}`));
     }
@@ -29043,13 +28954,13 @@ var Provenance = class _Provenance {
    *
    * It reads the live image only (`files`), which is what the audit's `live` class reads too. */
   partsNamed(bundleId, sha) {
-    const f11 = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
-    if (!f11) return { state: "none" };
-    if (typeof f11.text !== "string")
+    const f12 = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
+    if (!f12) return { state: "none" };
+    if (typeof f12.text !== "string")
       return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
     let reg;
     try {
-      reg = JSON.parse(f11.text);
+      reg = JSON.parse(f12.text);
     } catch {
       return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
     }
@@ -29264,10 +29175,10 @@ var Provenance = class _Provenance {
     if (!home)
       return answer([], "no register row names this capture under a bundle that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
     const PATH = "data/provenance.json";
-    const f11 = this.#record.readFile(home.bundleId, PATH);
-    if (!f11) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
-    if (typeof f11.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
-    const reg = safeJson(f11.text);
+    const f12 = this.#record.readFile(home.bundleId, PATH);
+    if (!f12) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
+    if (typeof f12.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
+    const reg = safeJson(f12.text);
     if (!isObj4(reg) || !Array.isArray(reg.documents)) return answer([], `its home's ${PATH} cannot be read as a register`);
     const str18 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
     const out = [];
@@ -29891,14 +29802,14 @@ sha256: ${captureSha}
         route: routeFinding("information", this.#latestRouteMark(bundleId)),
         detail: changed ? "pass apply=1 to write these chains into the register" : "every document already records a chain"
       };
-    const text4 = JSON.stringify({ ...reg, documents: next }, null, 2);
-    const bytes2 = new TextEncoder().encode(text4);
+    const text5 = JSON.stringify({ ...reg, documents: next }, null, 2);
+    const bytes2 = new TextEncoder().encode(text5);
     const carried = [];
     for (const path of this.#record.livePaths(bundleId) || []) {
       if (path === "data/provenance.json") continue;
-      const f11 = this.#record.readFile(bundleId, path);
-      if (!f11) continue;
-      carried.push(typeof f11.text === "string" ? { path, text: f11.text, bytes: te4.encode(f11.text).length, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes });
+      const f12 = this.#record.readFile(bundleId, path);
+      if (!f12) continue;
+      carried.push(typeof f12.text === "string" ? { path, text: f12.text, bytes: te4.encode(f12.text).length, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes });
     }
     const promoted = this.#promotion.promote({
       bundleId,
@@ -29907,7 +29818,7 @@ sha256: ${captureSha}
       author: who2,
       files: [{
         path: "data/provenance.json",
-        text: text4,
+        text: text5,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -30259,7 +30170,7 @@ sha256: ${captureSha}
    *  shas travel as one bound JSON array (D-36's ~100-variable ceiling). */
   #testimonyFence(bundleId, files, register2, testimony, viewing = {}) {
     const refusal20 = rowRefusal2(TESTIMONY_CHECKS);
-    const prov = Array.isArray(files) ? files.find((f11) => f11 && f11.path === "data/provenance.json") : null;
+    const prov = Array.isArray(files) ? files.find((f12) => f12 && f12.path === "data/provenance.json") : null;
     let docs = [], unreadable = false;
     if (prov) {
       const j = typeof prov.text === "string" ? safeJson(prov.text) : null;
@@ -30357,12 +30268,12 @@ sha256: ${captureSha}
         "TESTIMONY_AUTHOR_SUPPLIED",
         `the request names an author (${JSON.stringify(claimedAuthor).slice(0, 60)}). The author of an observation is the signed-in member, stamped by the plane, and is never taken from the request`
       );
-    const text4 = typeof words === "string" ? words : "";
-    const bytes2 = new TextEncoder().encode(text4);
+    const text5 = typeof words === "string" ? words : "";
+    const bytes2 = new TextEncoder().encode(text5);
     const recorded = secondOf(this.#now());
     const obs = typeof observedAt === "string" ? observedAt.trim() : "";
     const obsMs = observedMs(obs);
-    if (!text4.trim())
+    if (!text5.trim())
       return refusal20(
         "TESTIMONY_NO_WORDS",
         `the observation is empty. Nothing is prefilled: the words are what the member saw, in theirs`
@@ -30382,7 +30293,7 @@ sha256: ${captureSha}
     const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
     const out = this.#record.transact(() => {
       const id2 = `${this.#record.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
-      const fileText = testimonyBytes({ id: id2, observedAt: obs, words: text4 });
+      const fileText = testimonyBytes({ id: id2, observedAt: obs, words: text5 });
       const fileBytes2 = new TextEncoder().encode(fileText);
       const sha2 = createSha256().update(fileBytes2).hex();
       if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha2)) return { spent: { id: id2, sha: sha2 } };
@@ -30498,7 +30409,7 @@ sha256: ${captureSha}
           criticality: "supporting"
         },
         register: [{ sha256: sha2, path: file2, encoding: "utf8", bytes: fileBytes2.length }],
-        [TESTIMONY_PATH]: { captureSha: sha2, author: who2, observedAt: obs, recordedAt: recorded, words: text4 }
+        [TESTIMONY_PATH]: { captureSha: sha2, author: who2, observedAt: obs, recordedAt: recorded, words: text5 }
       });
       if (!promoted2.ok) return promoted2;
       return { ok: true, id: id2, sha: sha2, file: file2, fileBytes: fileBytes2, promoted: promoted2 };
@@ -30579,13 +30490,13 @@ async function sha256Hex6(v) {
   return hex3(await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v));
 }
 var driveRow = (code) => {
-  const row2 = DRIVE_CAPTURE_CHECKS2[code];
+  const row2 = DRIVE_CAPTURE_CHECKS[code];
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row2.check, translation: row2.translation };
 };
 var renderRow = (code) => {
-  const row2 = RENDER_CAPTURE_CHECKS2[code];
+  const row2 = RENDER_CAPTURE_CHECKS[code];
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
     throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row2.check, translation: row2.translation };
@@ -30598,7 +30509,7 @@ var acquireGradeNote = (ceiling, unreachable) => {
 var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 function userAgent(env, purpose = "acquire", delegated = null) {
   if (typeof delegated === "string" && delegated.trim() !== "") return delegated.trim();
-  return civicosUserAgent2(env && env.VERSION || "0.0.0", env && env.INSTANCE_NAME || "unnamed", purpose);
+  return civicosUserAgent(env && env.VERSION || "0.0.0", env && env.INSTANCE_NAME || "unnamed", purpose);
 }
 var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
 var ODF_DIGEST_MAX = 8 * 1024 * 1024;
@@ -30678,7 +30589,7 @@ async function governedFetch2(cap, target, purpose, delegated = null, { headers 
 }
 var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 var REDIRECT_MAX = 20;
-var base64Of = (text4) => btoa(String.fromCharCode(...new TextEncoder().encode(text4)));
+var base64Of = (text5) => btoa(String.fromCharCode(...new TextEncoder().encode(text5)));
 function withCredential(headers, credential, env, purpose) {
   if (credential.kind === "user-agent") return { ...headers, "user-agent": userAgent(env, purpose, credential.secret) };
   if (credential.kind === "login") return { ...headers, authorization: `Basic ${base64Of(credential.secret)}` };
@@ -31862,7 +31773,7 @@ __export(checks_exports6, {
   riskTierHistoryOf: () => riskTierHistoryOf,
   riskTierState: () => riskTierState
 });
-function f5(check, severity, message2, repairs, code) {
+function f6(check, severity, message2, repairs, code) {
   const out = { check, severity, message: message2 };
   if (repairs) {
     out.repairable = true;
@@ -31905,7 +31816,7 @@ function recordsLawRefusal(fm) {
 }
 function recordsLawFindings(fm, findings) {
   const r = recordsLawRefusal(fm);
-  if (r) for (const x of r.findings) findings.push(f5(x.check, "error", x.detail, x.repairs, r.code));
+  if (r) for (const x of r.findings) findings.push(f6(x.check, "error", x.detail, x.repairs, r.code));
 }
 function recordsLawOf(fm, author = null) {
   const law = fm && typeof fm.law === "string" && fm.law.trim() ? fm.law.trim() : null;
@@ -32014,34 +31925,34 @@ function riskTierHistoryOf(fm) {
 function riskTierHistoryFindings(fm, findings) {
   if (!Object.prototype.hasOwnProperty.call(fm, "risk_tier_history") || fm.risk_tier_history === null || Array.isArray(fm.risk_tier_history) && !fm.risk_tier_history.length) return;
   if (!Array.isArray(fm.risk_tier_history)) {
-    findings.push(f5("C-2.10", "error", "risk_tier_history is not a list of revisions (REC-214)"));
+    findings.push(f6("C-2.10", "error", "risk_tier_history is not a list of revisions (REC-214)"));
     return;
   }
   if (fm.risk_tier_history.length > RISK_TIER_HISTORY_MAX)
-    findings.push(f5("C-2.10", "error", `risk_tier_history holds ${fm.risk_tier_history.length} entries; at most ${RISK_TIER_HISTORY_MAX}`));
+    findings.push(f6("C-2.10", "error", `risk_tier_history holds ${fm.risk_tier_history.length} entries; at most ${RISK_TIER_HISTORY_MAX}`));
   const h = riskTierHistoryOf(fm);
   let prev = null;
   for (const e of h.revisions) {
     if (!e.readable) {
-      findings.push(f5("C-2.10", "error", `risk_tier_history[${e.ord}] is not a revision: each names tier (1, 2 or 3), prior, by, at and a reason (REC-214)`, ["revise the tier with op=actionrisktier"]));
+      findings.push(f6("C-2.10", "error", `risk_tier_history[${e.ord}] is not a revision: each names tier (1, 2 or 3), prior, by, at and a reason (REC-214)`, ["revise the tier with op=actionrisktier"]));
       prev = null;
       continue;
     }
     if (isMachineIdentity(e.by))
-      findings.push(f5("C-2.10", "error", `risk_tier_history[${e.ord}].by '${e.by.slice(0, 40)}' is a machine identity: a risk tier is revised by a member's authored act (REC-214)`));
+      findings.push(f6("C-2.10", "error", `risk_tier_history[${e.ord}].by '${e.by.slice(0, 40)}' is a machine identity: a risk tier is revised by a member's authored act (REC-214)`));
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(e.at))
-      findings.push(f5("C-2.10", "error", `risk_tier_history[${e.ord}].at '${e.at}' is not a timestamp`));
+      findings.push(f6("C-2.10", "error", `risk_tier_history[${e.ord}].at '${e.at}' is not a timestamp`));
     if (e.reason.length > RISK_TIER_REASON_MAX)
-      findings.push(f5("C-2.10", "error", `risk_tier_history[${e.ord}].reason is longer than ${RISK_TIER_REASON_MAX} characters`));
+      findings.push(f6("C-2.10", "error", `risk_tier_history[${e.ord}].reason is longer than ${RISK_TIER_REASON_MAX} characters`));
     if (e.prior === e.tier)
-      findings.push(f5("C-2.10", "error", `risk_tier_history[${e.ord}] replaces tier ${e.tier} with itself: a revision changes the tier`));
+      findings.push(f6("C-2.10", "error", `risk_tier_history[${e.ord}] replaces tier ${e.tier} with itself: a revision changes the tier`));
     if (prev && e.prior !== prev.tier)
-      findings.push(f5("C-2.10", "error", `risk_tier_history[${e.ord}].prior is ${e.prior}, and the revision before it set ${prev.tier}: the history does not close (REC-214)`));
+      findings.push(f6("C-2.10", "error", `risk_tier_history[${e.ord}].prior is ${e.prior}, and the revision before it set ${prev.tier}: the history does not close (REC-214)`));
     prev = e;
   }
   const last = h.revisions[h.revisions.length - 1];
   if (last && last.readable && last.tier !== h.current)
-    findings.push(f5(
+    findings.push(f6(
       "C-2.10",
       "error",
       `risk_tier is ${h.current} and the last revision in risk_tier_history set ${last.tier}: the tier stated is not the tier the history ends on (REC-214)`,
@@ -32077,7 +31988,7 @@ function governingLawsFindings(fm, findings) {
   const at22 = typeof fm.governing_laws_at === "string" ? fm.governing_laws_at.trim() : "";
   if (!has3 || fm.governing_laws === null || Array.isArray(fm.governing_laws) && !fm.governing_laws.length) {
     if (by || at22)
-      findings.push(f5(
+      findings.push(f6(
         "C-2.10",
         "error",
         "governing_laws is empty and governing_laws_by/_at name an act that set it: an attribution with no list asserts a statement the document does not carry (D-149)",
@@ -32086,32 +31997,32 @@ function governingLawsFindings(fm, findings) {
     return;
   }
   if (!Array.isArray(fm.governing_laws)) {
-    findings.push(f5("C-2.10", "error", "governing_laws is not a list of {level, citation} entries (D-149)"));
+    findings.push(f6("C-2.10", "error", "governing_laws is not a list of {level, citation} entries (D-149)"));
     return;
   }
   if (fm.governing_laws.length > GOVERNING_LAWS_MAX)
-    findings.push(f5("C-2.10", "error", `governing_laws holds ${fm.governing_laws.length} entries; at most ${GOVERNING_LAWS_MAX}`));
+    findings.push(f6("C-2.10", "error", `governing_laws holds ${fm.governing_laws.length} entries; at most ${GOVERNING_LAWS_MAX}`));
   fm.governing_laws.forEach((l, i) => {
     if (!l || typeof l !== "object" || Array.isArray(l)) {
-      findings.push(f5("C-2.10", "error", `governing_laws[${i}] is not a {level, citation} entry`));
+      findings.push(f6("C-2.10", "error", `governing_laws[${i}] is not a {level, citation} entry`));
       return;
     }
     if (!LAW_LEVELS.includes(l.level) && l.level !== "local")
-      findings.push(f5("C-2.10", "error", `governing_laws[${i}].level '${l.level}' is not one of: ${LAW_LEVELS.join(", ")}`));
+      findings.push(f6("C-2.10", "error", `governing_laws[${i}].level '${l.level}' is not one of: ${LAW_LEVELS.join(", ")}`));
     const c = typeof l.citation === "string" ? l.citation.trim() : "";
-    if (!c) findings.push(f5("C-2.10", "error", `governing_laws[${i}].citation is empty: a law is named by its citation`));
+    if (!c) findings.push(f6("C-2.10", "error", `governing_laws[${i}].citation is empty: a law is named by its citation`));
     else if (c.length > CITATION_MAX)
-      findings.push(f5("C-2.10", "error", `governing_laws[${i}].citation is longer than ${CITATION_MAX} characters`));
+      findings.push(f6("C-2.10", "error", `governing_laws[${i}].citation is longer than ${CITATION_MAX} characters`));
   });
   if (!by || isMachineIdentity(by))
-    findings.push(f5(
+    findings.push(f6(
       "C-2.10",
       "error",
       by ? `governing_laws_by '${by.slice(0, 40)}' is a machine identity: the laws governing a request are a member's authored statement (D-149)` : "governing_laws carries no governing_laws_by: a list of governing laws is a member's authored statement and names who made it (D-149)",
       ["set the list with op=actionlaws, signed in as a member"]
     ));
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(at22))
-    findings.push(f5("C-2.10", "error", `governing_laws_at '${at22}' is not a timestamp: the act that set the list is dated`));
+    findings.push(f6("C-2.10", "error", `governing_laws_at '${at22}' is not a timestamp: the act that set the list is dated`));
 }
 var LAW_PROPOSAL_WHY_MAX = 240;
 var COUNTERPARTY_STATES = ["named", "audience", "undetermined"];
@@ -32122,7 +32033,7 @@ function respondsToEdgeFindings(fm, findings) {
     if (!r || typeof r !== "object" || r.rel !== "responds_to") return;
     const target = typeof r.target === "string" ? r.target : "";
     if (!BUNDLE_ID_RE.test(target) || OBJECT_TYPES[target.split("-")[0]] !== "action") {
-      findings.push(f5(
+      findings.push(f6(
         "C-6.1",
         "error",
         `references[${i}] is a responds_to edge whose target '${String(r.target).slice(0, 40)}' is not an ACTION: this edge says "this is what came back when we asked", so it points at the ask`,
@@ -32143,7 +32054,7 @@ function counterpartyFindings(fm, findings) {
   ];
   const cp = fm.counterparty;
   if (typeof cp === "string") {
-    findings.push(f5(
+    findings.push(f6(
       "C-2.10",
       "error",
       isPlaceholder(cp) ? `counterparty is the placeholder '${cp.trim()}', which asserts a counterparty this action does not have (D-130). It is not a name and it is not an honest undetermined` : `counterparty '${cp.trim().slice(0, 40)}' is a bare string; it is a block of {state, name, basis} so that "we do not know yet" can be STATED rather than invented`,
@@ -32152,7 +32063,7 @@ function counterpartyFindings(fm, findings) {
     return;
   }
   if (!cp || typeof cp !== "object" || Array.isArray(cp)) {
-    findings.push(f5(
+    findings.push(f6(
       "C-2.10",
       "error",
       "counterparty block is missing: an action names who it is addressed to, or states that it is undetermined and why",
@@ -32161,7 +32072,7 @@ function counterpartyFindings(fm, findings) {
     return;
   }
   if (!COUNTERPARTY_STATES.includes(cp.state)) {
-    findings.push(f5(
+    findings.push(f6(
       "C-2.10",
       "error",
       `counterparty.state '${cp.state}' is not one of: ${COUNTERPARTY_STATES.join(", ")}`,
@@ -32182,26 +32093,26 @@ function counterpartyFindings(fm, findings) {
     ["description", description]
   ])
     if (isPlaceholder(v))
-      findings.push(f5("C-2.10", "error", `counterparty.${k} is the placeholder '${COUNTERPARTY_PLACEHOLDER}', which is not an addressee or a reason (D-130)`, REPAIRS));
+      findings.push(f6("C-2.10", "error", `counterparty.${k} is the placeholder '${COUNTERPARTY_PLACEHOLDER}', which is not an addressee or a reason (D-130)`, REPAIRS));
   if (cp.state === "named") {
     const kind = cp.kind === void 0 || cp.kind === null ? "office" : cp.kind;
     if (!ADDRESSEE_KINDS.includes(kind)) {
-      findings.push(f5("C-2.10", "error", `counterparty.kind '${String(cp.kind).slice(0, 40)}' is not one of: ${ADDRESSEE_KINDS.join(", ")} (R9, arm: kind)`, REPAIRS));
+      findings.push(f6("C-2.10", "error", `counterparty.kind '${String(cp.kind).slice(0, 40)}' is not one of: ${ADDRESSEE_KINDS.join(", ")} (R9, arm: kind)`, REPAIRS));
       return;
     }
     if (kind === "office") {
       if (!name && (!role || !body))
-        findings.push(f5("C-2.10", "error", "counterparty.state is named and the office is not: a named office is stated by its official role and the body it belongs to (R9, arm: office)", REPAIRS));
+        findings.push(f6("C-2.10", "error", "counterparty.state is named and the office is not: a named office is stated by its official role and the body it belongs to (R9, arm: office)", REPAIRS));
       if (org)
-        findings.push(f5("C-2.10", "error", "counterparty names an office and carries an organisation: an office is stated by its role and body (R9, arm: office)", REPAIRS));
+        findings.push(f6("C-2.10", "error", "counterparty names an office and carries an organisation: an office is stated by its role and body (R9, arm: office)", REPAIRS));
     } else {
       if (!role || !org)
-        findings.push(f5("C-2.10", "error", `counterparty is a named ${kind} with no ${!role ? "role" : "organisation"}: a ${kind} addressee is stated by a role and the organisation it belongs to, never a person by name (R9, arm: ${kind})`, REPAIRS));
+        findings.push(f6("C-2.10", "error", `counterparty is a named ${kind} with no ${!role ? "role" : "organisation"}: a ${kind} addressee is stated by a role and the organisation it belongs to, never a person by name (R9, arm: ${kind})`, REPAIRS));
       for (const [k, v] of [["body", body], ["name", name], ["level", str18(cp.level)]])
-        if (v) findings.push(f5("C-2.10", "error", `counterparty is a named ${kind} and carries ${k}: only an office carries one (R9, arm: ${kind})`, REPAIRS));
+        if (v) findings.push(f6("C-2.10", "error", `counterparty is a named ${kind} and carries ${k}: only an office carries one (R9, arm: ${kind})`, REPAIRS));
     }
     if (entityId && !ENTITY_ID_RE2.test(entityId))
-      findings.push(f5(
+      findings.push(f6(
         "C-2.10",
         "error",
         `counterparty.entity_id '${entityId.slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
@@ -32209,15 +32120,15 @@ function counterpartyFindings(fm, findings) {
       ));
   } else if (cp.state === "audience") {
     if (!description)
-      findings.push(f5("C-2.10", "error", "counterparty.state is audience and counterparty.description is empty: an audience addressee is described in words (R9, arm: audience)", REPAIRS));
+      findings.push(f6("C-2.10", "error", "counterparty.state is audience and counterparty.description is empty: an audience addressee is described in words (R9, arm: audience)", REPAIRS));
     else if (description.length > AUDIENCE_DESCRIPTION_MAX || UNWRITABLE.test(String(cp.description)))
-      findings.push(f5("C-2.10", "error", `counterparty.description is not 1 to ${AUDIENCE_DESCRIPTION_MAX} characters with no quote, backslash or line break (R9, arm: audience)`, REPAIRS));
+      findings.push(f6("C-2.10", "error", `counterparty.description is not 1 to ${AUDIENCE_DESCRIPTION_MAX} characters with no quote, backslash or line break (R9, arm: audience)`, REPAIRS));
     const asserted = [["name", name], ["role", role], ["body", body], ["organisation", org], ["entity_id", entityId]].filter(([, v]) => v);
     if (asserted.length)
-      findings.push(f5("C-2.10", "error", `counterparty is an audience and carries ${asserted.map(([k]) => k).join(", ")}: an audience is described, never named (R9, arm: audience)`, REPAIRS));
+      findings.push(f6("C-2.10", "error", `counterparty is an audience and carries ${asserted.map(([k]) => k).join(", ")}: an audience is described, never named (R9, arm: audience)`, REPAIRS));
   } else {
     if (!basis)
-      findings.push(f5(
+      findings.push(f6(
         "C-2.10",
         "error",
         "counterparty.state is undetermined and counterparty.basis is empty: undetermined is first-class and must be STATED, so an action that does not know who it is addressed to says what it does know (R9, arm: undetermined)",
@@ -32225,7 +32136,7 @@ function counterpartyFindings(fm, findings) {
       ));
     const asserted = [["name", name], ["role", role], ["body", body], ["organisation", org], ["entity_id", entityId]].filter(([, v]) => v);
     if (asserted.length)
-      findings.push(f5(
+      findings.push(f6(
         "C-2.10",
         "error",
         `counterparty.state is undetermined and it carries ${asserted.map(([k]) => k).join(", ")}: the block asserts a counterparty and denies having one in the same breath (R9, arm: undetermined)`,
@@ -32348,14 +32259,14 @@ function checkActionExtension(ctx, findings) {
   correspondenceFindings(fm, findings);
   const kinds = Array.isArray(ctx.actionKinds) ? ctx.actionKinds : PRODUCT_KINDS;
   if (!kinds.includes(fm.action_kind) && !kindReadsAsWritten(fm.action_kind))
-    findings.push(f5("C-2.10", "error", `action_kind '${fm.action_kind}' is not a kind this instance offers`));
+    findings.push(f6("C-2.10", "error", `action_kind '${fm.action_kind}' is not a kind this instance offers`));
   recordsLawFindings(fm, findings);
-  if (riskTierState(fm.risk_tier) === null) findings.push(f5("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(", ")}`));
+  if (riskTierState(fm.risk_tier) === null) findings.push(f6("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(", ")}`));
   counterpartyFindings(fm, findings);
   governingLawsFindings(fm, findings);
   riskTierHistoryFindings(fm, findings);
   if (fm.current_state === "resolved" && !RESOLUTIONS.includes(fm.resolution)) {
-    findings.push(f5("C-2.10", "error", `resolved state requires resolution in: ${RESOLUTIONS.join(", ")}`));
+    findings.push(f6("C-2.10", "error", `resolved state requires resolution in: ${RESOLUTIONS.join(", ")}`));
   }
   const clock = Array.isArray(fm.clock) ? fm.clock : [];
   const today = new Date(ctx.nowMs ?? Date.now()).toISOString().slice(0, 10);
@@ -32363,16 +32274,16 @@ function checkActionExtension(ctx, findings) {
   for (let i = 0; i < clock.length; i++) {
     const e = clock[i];
     if (!e || !e.text || !e.description) {
-      findings.push(f5("C-11.1", "error", `clock[${i}] lacks the dual-audience {text, description} shape`));
+      findings.push(f6("C-11.1", "error", `clock[${i}] lacks the dual-audience {text, description} shape`));
       continue;
     }
-    if (!DATE_RE3.test(e.date || "")) findings.push(f5("C-11.1", "error", `clock[${i}].date '${e.date}' is not YYYY-MM-DD`));
+    if (!DATE_RE3.test(e.date || "")) findings.push(f6("C-11.1", "error", `clock[${i}].date '${e.date}' is not YYYY-MM-DD`));
     if (typeof e.basis !== "string" || e.basis.trim() === "") {
-      findings.push(f5("C-11.1", "error", `clock[${i}] has no basis (the statute, order, or commitment the date derives from)`, ["supply basis"]));
+      findings.push(f6("C-11.1", "error", `clock[${i}] has no basis (the statute, order, or commitment the date derives from)`, ["supply basis"]));
     }
-    if (!STATUSES.includes(e.status)) findings.push(f5("C-11.1", "error", `clock[${i}].status '${e.status}' is not one of: ${STATUSES.join(", ")}`));
+    if (!STATUSES.includes(e.status)) findings.push(f6("C-11.1", "error", `clock[${i}].status '${e.status}' is not one of: ${STATUSES.join(", ")}`));
     if (DATE_RE3.test(e.date || "") && e.date < today && e.status === "pending") {
-      findings.push(f5(
+      findings.push(f6(
         "C-11.1",
         "error",
         `clock[${i}] '${e.text}' is silently past-due (${e.date} < today, status still pending)`,
@@ -33619,7 +33530,9 @@ var textchain_exports = {};
 __export(textchain_exports, {
   CHAIN_KIND_MIXED: () => CHAIN_KIND_MIXED,
   CONFIDENCE_BASES: () => CONFIDENCE_BASES,
-  EXTENT_KINDS: () => EXTENT_KINDS,
+  CONTENT_EXTENT_A1_RE: () => CONTENT_EXTENT_A1_RE2,
+  CONTENT_EXTENT_KINDS: () => CONTENT_EXTENT_KINDS2,
+  CONTENT_EXTENT_RANGE_RE: () => CONTENT_EXTENT_RANGE_RE2,
   MACHINE_READ_KINDS: () => MACHINE_READ_KINDS,
   READING_POSITION_KINDS: () => READING_POSITION_KINDS,
   READING_POSITION_UNPRODUCED: () => READING_POSITION_UNPRODUCED,
@@ -33627,18 +33540,23 @@ __export(textchain_exports, {
   STEP_KINDS: () => STEP_KINDS,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
   TIER_RULE: () => TIER_RULE,
+  a1ToRowCol: () => a1ToRowCol2,
   appendStep: () => appendStep,
   applyConfidenceFloor: () => applyConfidenceFloor,
   calibrationsOf: () => calibrationsOf,
+  canonicalExtent: () => canonicalExtent2,
+  canonicalRange: () => canonicalRange2,
   captureBound: () => captureBound,
   chainKindFor: () => chainKindFor,
   checkAnchor: () => checkAnchor,
   checkAttestation: () => checkAttestation,
   checkChain: () => checkChain,
   checkConfidence: () => checkConfidence,
+  contentCitedAs: () => contentCitedAs2,
   convertedChain: () => convertedChain,
   derivationCap: () => derivationCap,
   describeChain: () => describeChain,
+  describeExtent: () => describeExtent2,
   extentCovers: () => extentCovers,
   glyphCount: () => glyphCount,
   gradeCeiling: () => gradeCeiling,
@@ -33647,6 +33565,7 @@ __export(textchain_exports, {
   mergeTier2Text: () => mergeTier2Text,
   mergedChain: () => mergedChain,
   perPageTierWinner: () => perPageTierWinner,
+  rangeCorners: () => rangeCorners2,
   readingOccurrenceKey: () => readingOccurrenceKey,
   readingPositionInExtent: () => readingPositionInExtent,
   readingSource: () => readingSource,
@@ -33978,7 +33897,7 @@ function checkChain(chain2) {
         `the ${step.step} step names no engine. What performed a derivation is the fact the chain exists to carry \u2014 a calibration is OF an engine and a version, and neither can be recovered from the word '${step.step}'`
       );
     const mustName = STEP_KINDS[step.step].names || [];
-    const unnamed = mustName.filter((f11) => !(typeof step[f11] === "string" && step[f11].trim()));
+    const unnamed = mustName.filter((f12) => !(typeof step[f12] === "string" && step[f12].trim()));
     if (unnamed.length)
       return refusal4(
         "TEXT_CHAIN_STEP_UNNAMED",
@@ -34197,7 +34116,7 @@ function applyConfidenceFloor(regions, floor) {
   return { regions: out, floored, undetermined };
 }
 function undeterminedRegion(region, why) {
-  const { text: text4, confidence, ...rest } = region;
+  const { text: text5, confidence, ...rest } = region;
   return { ...rest, text: null, undetermined: true, why, confidence: "none" };
 }
 function checkAnchor(source) {
@@ -34389,8 +34308,7 @@ function readingPositionInExtent(position, extentKind, extent) {
 }
 var A1_COL = (letters) => [...letters.toUpperCase()].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
 function a1Cell(s) {
-  const m = typeof s === "string" && /^\$?([A-Za-z]{1,3})\$?([1-9][0-9]{0,6})$/.exec(s.trim());
-  return m ? { col: A1_COL(m[1]), row: Number(m[2]) } : null;
+  return typeof s === "string" && CONTENT_EXTENT_A1_RE2.test(s.trim()) ? a1ToRowCol2(s.trim()) : null;
 }
 function a1Range(s) {
   if (typeof s !== "string" || !s.trim()) return null;
@@ -34417,6 +34335,131 @@ function a1Range(s) {
     return { c0: 1, c1: Infinity, r0: Math.min(p, q7), r1: Math.max(p, q7) };
   }
   return null;
+}
+var CONTENT_EXTENT_KINDS2 = {
+  document: { landed: true, human: "the whole document" },
+  "pdf-page": { landed: true, human: "a page of a PDF" },
+  "sheet-cell": { landed: true, human: "a cell of a spreadsheet" },
+  "slide-shape": { landed: true, human: "a shape on a slide" },
+  "doc-para": { landed: true, human: "a paragraph of a document" },
+  "sheet-range": { landed: true, human: "a range of cells in a spreadsheet" },
+  "doc-table": { landed: true, human: "a table in a document" },
+  image: { landed: true, human: "an image in a document" }
+};
+var CONTENT_EXTENT_A1_RE2 = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}$/;
+var CONTENT_EXTENT_RANGE_RE2 = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}(:\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6})?$/;
+function asString(x) {
+  if (x == null) return "";
+  try {
+    return String(x);
+  } catch {
+    return "";
+  }
+}
+function a1ToRowCol2(cell) {
+  const t = asString(cell).replace(/\$/g, "").toUpperCase();
+  const m = /^([A-Z]{1,3})([1-9][0-9]{0,6})$/.exec(t);
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1]) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { col, row: parseInt(m[2], 10) };
+}
+function rangeCorners2(range) {
+  const t = asString(range).trim();
+  if (!CONTENT_EXTENT_RANGE_RE2.test(t)) return null;
+  const [a, b = a] = t.split(":");
+  const p = a1ToRowCol2(a), q7 = a1ToRowCol2(b);
+  if (!p || !q7) return null;
+  return {
+    r0: Math.min(p.row, q7.row),
+    c0: Math.min(p.col, q7.col),
+    r1: Math.max(p.row, q7.row),
+    c1: Math.max(p.col, q7.col)
+  };
+}
+function a1Letters2(n) {
+  let out = "";
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
+  return out;
+}
+function canonicalRange2(range) {
+  const k = rangeCorners2(range);
+  if (!k) return null;
+  return `${a1Letters2(k.c0)}${k.r0}:${a1Letters2(k.c1)}${k.r1}`;
+}
+function contentCitedAs2(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  const v = e.cited_as;
+  if (v === void 0 || v === null || v === "") return e.kind === "image" ? "bytes" : "text";
+  return v;
+}
+var isFourFinite = (r) => Array.isArray(r) && r.length === 4 && r.every((n) => typeof n === "number" && Number.isFinite(n));
+var minMaxRect = (r) => [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
+var trimmedOrNull = (s) => typeof s === "string" && s.trim() ? s.trim() : null;
+var canonicalCell = (c) => typeof c === "string" && CONTENT_EXTENT_A1_RE2.test(c.trim()) ? c.trim().replace(/\$/g, "").toUpperCase() : null;
+var intOrNull = (n) => Number.isInteger(n) ? n : null;
+function canonicalExtent2(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (e.kind === "document") return canonicalJson({ kind: "document" });
+  if (e.kind === "pdf-page")
+    return canonicalJson({ kind: "pdf-page", page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null });
+  if (e.kind === "sheet-cell")
+    return canonicalJson({ kind: "sheet-cell", sheet: trimmedOrNull(e.sheet), cell: canonicalCell(e.cell) });
+  if (e.kind === "slide-shape")
+    return canonicalJson({ kind: "slide-shape", slide: intOrNull(e.slide), shape: intOrNull(e.shape) });
+  if (e.kind === "doc-para")
+    return canonicalJson({ kind: "doc-para", para: intOrNull(e.para), run: intOrNull(e.run) });
+  if (e.kind === "sheet-range")
+    return canonicalJson({
+      kind: "sheet-range",
+      sheet: trimmedOrNull(e.sheet),
+      range: typeof e.range === "string" ? canonicalRange2(e.range) : null
+    });
+  if (e.kind === "doc-table")
+    return canonicalJson({ kind: "doc-table", table: intOrNull(e.table), cell: canonicalCell(e.cell) });
+  if (e.kind === "image")
+    return canonicalJson({
+      kind: "image",
+      cited_as: contentCitedAs2(e),
+      part: typeof e.part === "string" ? e.part.trim().toLowerCase() : null,
+      page: intOrNull(e.page),
+      rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null
+    });
+  return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
+}
+function describeExtent2(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (typeof e.ref === "string" && e.ref.trim()) return e.ref.trim();
+  if (e.kind === "document") return "the whole document";
+  if (e.kind === "pdf-page") {
+    if (!Number.isInteger(e.page)) return "a page of this document";
+    return Array.isArray(e.rect) && e.rect.length === 4 ? `page ${e.page + 1}, a region of it` : `page ${e.page + 1}`;
+  }
+  if (e.kind === "sheet-cell") {
+    const sheet = trimmedOrNull(e.sheet), cell = trimmedOrNull(e.cell);
+    return sheet && cell ? `${sheet}!${cell}` : "a cell of this spreadsheet";
+  }
+  if (e.kind === "doc-para")
+    return Number.isInteger(e.para) ? `\xB6${e.para + 1}` : "a paragraph of this document";
+  if (e.kind === "slide-shape")
+    return Number.isInteger(e.slide) ? `slide ${e.slide}` : "a shape in this deck";
+  if (e.kind === "sheet-range") {
+    const sheet = trimmedOrNull(e.sheet);
+    const range = typeof e.range === "string" ? canonicalRange2(e.range) : null;
+    return sheet && range ? `${sheet}!${range}` : "a range of cells in this spreadsheet";
+  }
+  if (e.kind === "doc-table") {
+    if (!Number.isInteger(e.table)) return "a table in this document";
+    const cell = typeof e.cell === "string" && e.cell.trim() ? e.cell.trim().replace(/\$/g, "").toUpperCase() : null;
+    return `table ${e.table + 1}${cell ? `, ${cell}` : ""}`;
+  }
+  if (e.kind === "image") {
+    if (typeof e.part === "string" && e.part.trim()) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
+    if (Number.isInteger(e.page)) return `an image on page ${e.page + 1}`;
+    return "an image in this document";
+  }
+  const row2 = typeof e.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, e.kind) ? CONTENT_EXTENT_KINDS2[e.kind] : null;
+  return row2 ? row2.human : "a part of this document the record cannot name";
 }
 var TIER_RULE = "per page, tier 2 replaces tier 1 only when it has strictly fewer undetermined characters AND strictly more decoded GLYPHS \u2014 non-whitespace code points, so neither tier's whitespace policy can move the award; anything else keeps tier 1";
 var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
@@ -34489,7 +34532,7 @@ function mergeTier2Text(base, t2) {
     for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
   }
   const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
-  const text4 = {
+  const text5 = {
     ...base,
     document,
     pages,
@@ -34498,7 +34541,7 @@ function mergeTier2Text(base, t2) {
   };
   return {
     ok: true,
-    text: text4,
+    text: text5,
     wholesale: false,
     replaced,
     kept,
@@ -34559,7 +34602,7 @@ function chainTierOf(chain2, page) {
   return all.length ? all[all.length - 1] : null;
 }
 async function readingProvenance({
-  text: text4 = null,
+  text: text5 = null,
   chain: chain2 = null,
   tier = null,
   container: container2 = null,
@@ -34577,12 +34620,12 @@ async function readingProvenance({
     pages: null,
     pages_why: null
   };
-  if (text4 == null) {
+  if (text5 == null) {
     out.why = "no text surface answered for this document, so no text was classified and there is nothing to digest";
     out.pages_why = out.why;
     return out;
   }
-  const flat = flattenText(text4);
+  const flat = flattenText(text5);
   out.text_from = flat.source;
   out.text_chars = flat.text.length;
   out.text_sha256 = flat.text.length ? await sha256Hex7(flat.text) : null;
@@ -34600,7 +34643,7 @@ async function readingProvenance({
       });
     if (page != null) byKey.get(key).pages.push(page);
   };
-  const pages = text4 && typeof text4 === "object" && Array.isArray(text4.pages) ? text4.pages : null;
+  const pages = text5 && typeof text5 === "object" && Array.isArray(text5.pages) ? text5.pages : null;
   if (pages && pages.some((p) => p && Number.isInteger(p.page))) {
     out.pages = [];
     for (const p of pages) {
@@ -35550,15 +35593,15 @@ function deriveMembership(structure, view) {
     },
     files: []
   }));
-  for (const f11 of files) {
-    const p = at22(f11);
+  for (const f12 of files) {
+    const p = at22(f12);
     let g = -1;
     for (let i = 0; i < items.length; i++) {
       if (before(p, at22(items[i]))) break;
       g = i;
     }
-    if (g < 0) unplaced.push({ kind: "file", ...end(f11), why: "above_the_first_item" });
-    else groups[g].files.push(end(f11));
+    if (g < 0) unplaced.push({ kind: "file", ...end(f12), why: "above_the_first_item" });
+    else groups[g].files.push(end(f12));
   }
   return {
     membership: {
@@ -35599,32 +35642,32 @@ var ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
 var ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
 var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 var MULTIPART_READ_MAX = 20 * 1024 * 1024;
-function decodeView(text4) {
-  const marks = text4 && Array.isArray(text4.undetermined) ? text4.undetermined : null;
-  if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text4;
+function decodeView(text5) {
+  const marks = text5 && Array.isArray(text5.undetermined) ? text5.undetermined : null;
+  if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text5;
   const keep = (a) => Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a;
   const undetermined = keep(marks);
-  const c = text4.counts;
+  const c = text5.counts;
   return {
-    ...text4,
+    ...text5,
     undetermined,
-    ...Array.isArray(text4.pages) ? { pages: text4.pages.map((p) => p ? { ...p, undetermined: keep(p.undetermined) } : p) } : {},
+    ...Array.isArray(text5.pages) ? { pages: text5.pages.map((p) => p ? { ...p, undetermined: keep(p.undetermined) } : p) } : {},
     ...c && typeof c.undetermined === "number" ? { counts: { ...c, undetermined: c.undetermined - (marks.length - undetermined.length) } } : {}
   };
 }
 function needsTier2(text0) {
-  const text4 = decodeView(text0);
-  const c = text4 && text4.counts;
+  const text5 = decodeView(text0);
+  const c = text5 && text5.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  const glyphs = typeof text4.document === "string" ? glyphCount(text4.document) : c.chars;
+  const glyphs = typeof text5.document === "string" ? glyphCount(text5.document) : c.chars;
   if (!(c.undetermined > glyphs)) return false;
-  const marks = Array.isArray(text4.undetermined) ? text4.undetermined : [];
+  const marks = Array.isArray(text5.undetermined) ? text5.undetermined : [];
   if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer" || m.reason === "image_content_unread" || m.reason === "image_content_undetermined"))) return false;
   return true;
 }
-async function tier2Escalate(env, { sha, storeName, text: text4 }) {
-  const out = { outcome: "not_needed", text: text4, replaced: [], kept: [], perPage: null, note: null, memberNotes: [] };
-  if (!needsTier2(text4)) return out;
+async function tier2Escalate(env, { sha, storeName, text: text5 }) {
+  const out = { outcome: "not_needed", text: text5, replaced: [], kept: [], perPage: null, note: null, memberNotes: [] };
+  if (!needsTier2(text5)) return out;
   if (!(env && env.PDF_WORKER)) {
     out.outcome = "unbound";
     return out;
@@ -35641,10 +35684,10 @@ async function tier2Escalate(env, { sha, storeName, text: text4 }) {
       return out;
     }
     out.memberNotes = (Array.isArray(t2.notes) ? t2.notes : []).filter((n) => typeof n === "string");
-    const m = mergeTier2Text(text4, t2.text);
+    const m = mergeTier2Text(text5, t2.text);
     if (m.ok) {
       out.outcome = "merged";
-      out.text = text4 && text4.producer && !m.text.producer ? { ...m.text, producer: text4.producer } : m.text;
+      out.text = text5 && text5.producer && !m.text.producer ? { ...m.text, producer: text5.producer } : m.text;
       out.replaced = m.replaced;
       out.kept = m.kept || [];
       out.perPage = m.perPageTier || null;
@@ -35683,13 +35726,13 @@ function layerChainFor(i2text, { tier, container: container2 }) {
   return Array.isArray(ext) ? ext : base;
 }
 var TIER3_REASONS = Object.freeze(["no_text_layer", "image_content_unread"]);
-function needsTier3(text4) {
-  const marks = text4 && Array.isArray(text4.undetermined) ? text4.undetermined : [];
+function needsTier3(text5) {
+  const marks = text5 && Array.isArray(text5.undetermined) ? text5.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return false;
   return marks.some((m) => m && TIER3_REASONS.includes(m.reason));
 }
-function tier3Pages(text4) {
-  const marks = text4 && Array.isArray(text4.undetermined) ? text4.undetermined : [];
+function tier3Pages(text5) {
+  const marks = text5 && Array.isArray(text5.undetermined) ? text5.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return [];
   const pages = [];
   for (const m of marks) {
@@ -35782,17 +35825,17 @@ ${said2}` : b.text,
   const unanswered3 = eligible.filter((p) => !filled.includes(p));
   const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
   const regions = ocr && Array.isArray(ocr.regions) ? ocr.regions.filter((r) => r && r.source && filled.includes(r.source.page)) : [];
-  const text4 = {
+  const text5 = {
     ...base,
     document,
     pages,
     undetermined,
     counts: { chars: document.length, undetermined: undetermined.length }
   };
-  if (regions.length) text4.regions = regions;
+  if (regions.length) text5.regions = regions;
   return {
     ok: true,
-    text: text4,
+    text: text5,
     filled,
     appended,
     refused: refusedWhy.map((r) => r.page),
@@ -35914,29 +35957,29 @@ function tier3SeedFrom(reading, units) {
     if (g.extent == null && chain2.some((x) => x.step !== "pixels" && x.step !== "ocr")) continue;
     parts.push({ chain: g.chain, covers: (p) => stepCovers({ step: "ocr", extent: g.extent ?? void 0 }, p) });
   }
-  const text4 = /* @__PURE__ */ new Map(), pagesOf = parts.map(() => []);
+  const text5 = /* @__PURE__ */ new Map(), pagesOf = parts.map(() => []);
   for (const u of units) {
     if (!u || !Number.isInteger(u.page) || typeof u.text !== "string" || !(glyphCount(u.text) > 0)) continue;
     const owners = parts.map((pt, i) => pt.covers(u.page) ? i : -1).filter((i) => i >= 0);
     if (owners.length !== 1) continue;
-    text4.set(u.page, u.text);
+    text5.set(u.page, u.text);
     pagesOf[owners[0]].push(u.page);
   }
   const kept = parts.map((pt, i) => ({ chain: pt.chain, pages: pagesOf[i] })).filter((pt) => pt.pages.length);
-  return kept.length ? { parts: kept, text: text4 } : null;
+  return kept.length ? { parts: kept, text: text5 } : null;
 }
-function withKeptPages(text4, kept, seed) {
-  if (!kept.length) return text4;
+function withKeptPages(text5, kept, seed) {
+  if (!kept.length) return text5;
   const pages = [
-    ...Array.isArray(text4 && text4.pages) ? text4.pages : [],
+    ...Array.isArray(text5 && text5.pages) ? text5.pages : [],
     ...kept.map((p) => ({ page: p, text: seed.text.get(p), undetermined: [] }))
   ].sort((a, b) => a.page - b.page);
   const document = pages.map((p) => p.text).filter(Boolean).join("\n");
   return {
-    ...text4 || {},
+    ...text5 || {},
     document,
     pages,
-    counts: { ...text4 && text4.counts || {}, chars: pages.reduce((n, p) => n + (p.text || "").length, 0) }
+    counts: { ...text5 && text5.counts || {}, chars: pages.reduce((n, p) => n + (p.text || "").length, 0) }
   };
 }
 function ocrTextFromMember(res, { calibration = null } = {}) {
@@ -35962,15 +36005,15 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
       anchored.push(region);
     }
     if (!anchored.length) continue;
-    const f11 = applyConfidenceFloor(anchored, typeof r.confidence_floor === "number" ? r.confidence_floor : null);
-    floored += f11.floored;
-    undetermined += f11.undetermined;
-    kept += f11.regions.filter((x) => x.text != null).length;
+    const f12 = applyConfidenceFloor(anchored, typeof r.confidence_floor === "number" ? r.confidence_floor : null);
+    floored += f12.floored;
+    undetermined += f12.undetermined;
+    kept += f12.regions.filter((x) => x.text != null).length;
     outPages.push({
       page: pageNo,
-      regions: f11.regions,
-      text: f11.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
-      undetermined: f11.regions.filter((x) => x.undetermined).map((x) => ({
+      regions: f12.regions,
+      text: f12.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
+      undetermined: f12.regions.filter((x) => x.undetermined).map((x) => ({
         page: pageNo,
         reason: "ocr_below_floor",
         font: null,
@@ -35995,7 +36038,7 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
   );
   if (!Array.isArray(chain2))
     return { ok: false, why: `the OCR member's own provenance was refused: ${chain2.detail}` };
-  const text4 = {
+  const text5 = {
     document: outPages.map((p) => p.text).filter(Boolean).join("\n"),
     pages: outPages.map((p) => ({ page: p.page, text: p.text, undetermined: p.undetermined })),
     undetermined: outPages.flatMap((p) => p.undetermined),
@@ -36003,7 +36046,7 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
     regions: outPages.flatMap((p) => p.regions)
   };
   const note = anchorless ? `${anchorless} region(s) the OCR member returned carried no checkable image region and were dropped rather than recorded` : null;
-  return { ok: true, text: text4, chain: chain2, kept, floored, note };
+  return { ok: true, text: text5, chain: chain2, kept, floored, note };
 }
 async function tier3Extend(env, {
   sha,
@@ -36141,15 +36184,15 @@ function textUnitsFor(i2text) {
     };
     for (const u of units || []) {
       const cut3 = u.text.length > CAPTURE_TEXT_UNIT_CAP;
-      const text4 = cut3 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
-      const size = new TextEncoder().encode(text4).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      const text5 = cut3 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
+      const size = new TextEncoder().encode(text5).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size > budget) {
         dropped++;
         skip(u);
         continue;
       }
       budget -= size;
-      kept.push(cut3 ? { ...u, text: text4, truncated: true } : u);
+      kept.push(cut3 ? { ...u, text: text5, truncated: true } : u);
       run = null;
     }
     textUnits = kept.length ? kept : null;
@@ -36167,16 +36210,16 @@ var readEntities = (list2) => (Array.isArray(list2) ? list2 : []).map((e) => ({
   source: readingSource(e && e.source),
   ...Array.isArray(e && e.occurrences) ? { occurrences: e.occurrences } : {}
 })).filter((e) => e.key != null || e.kind != null);
-function textCountsOf(text4) {
-  if (text4 == null) return null;
-  if (typeof text4 === "string")
-    return { text_chars: text4.length, text_glyphs: glyphCount(text4), text_undetermined: null };
-  if (typeof text4 !== "object") return null;
-  const c = decodeView(text4).counts;
+function textCountsOf(text5) {
+  if (text5 == null) return null;
+  if (typeof text5 === "string")
+    return { text_chars: text5.length, text_glyphs: glyphCount(text5), text_undetermined: null };
+  if (typeof text5 !== "object") return null;
+  const c = decodeView(text5).counts;
   const n = (v) => Number.isInteger(v) && v >= 0 ? v : null;
   return {
     text_chars: n(c && c.chars),
-    text_glyphs: typeof text4.document === "string" ? glyphCount(text4.document) : null,
+    text_glyphs: typeof text5.document === "string" ? glyphCount(text5.document) : null,
     text_undetermined: n(c && c.undetermined)
   };
 }
@@ -36384,8 +36427,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, why: "the evidence store could not be read" }));
   const bytes2 = got.bytes;
   const textRead = !multipart && profile.profiled_from_text === true && bytes2;
-  const text4 = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "";
-  const profCtx = { headers, locator, content_type: ct || null, text: text4 };
+  const text5 = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "";
+  const profCtx = { headers, locator, content_type: ct || null, text: text5 };
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
   if (!bytes2)
@@ -36395,7 +36438,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect;
   if (!wireable && textRead) {
-    classifiedText = text4;
+    classifiedText = text5;
     member = "plane";
     if (typeof docType.type.parse === "function") {
       try {
@@ -36852,7 +36895,7 @@ var Extraction = class {
    *  same `at` (CPDF-19: an ordinary revision re-submits the acquire-time reading, which must not undo the re-read). */
   projectPromotion(c) {
     const { bundleId, files, author } = c || {};
-    const prov = (Array.isArray(files) ? files : []).find((f11) => f11 && f11.path === "data/provenance.json");
+    const prov = (Array.isArray(files) ? files : []).find((f12) => f12 && f12.path === "data/provenance.json");
     if (!prov || typeof prov.text !== "string") return null;
     let docs;
     try {
@@ -36966,12 +37009,12 @@ var Extraction = class {
           );
           wrote.add(occ);
         }
-        for (const [src, text4] of refTermSources({
+        for (const [src, text5] of refTermSources({
           ref,
           ref_key: e.key == null ? null : String(e.key),
           label: e.label == null ? null : String(e.label)
         }))
-          for (const term of labelTerms(text4))
+          for (const term of labelTerms(text5))
             this.#sql.exec(
               `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
               sha,
@@ -37513,8 +37556,8 @@ var Extraction = class {
     let n = 0;
     for (const r of stale) {
       let wrote = 0;
-      for (const [src, text4] of refTermSources(r))
-        for (const term of labelTerms(text4)) {
+      for (const [src, text5] of refTermSources(r))
+        for (const term of labelTerms(text5)) {
           this.#sql.exec(
             `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
             r.capture_sha,
@@ -37561,8 +37604,8 @@ var Extraction = class {
     if (!row2 || !this.#sees(row2.bundle_id, viewer)) return { held: false };
     let docText = null;
     try {
-      const f11 = this.core && typeof this.core.readFile === "function" ? this.core.readFile(row2.bundle_id, "data/provenance.json") : null;
-      docText = f11 && typeof f11 === "object" ? f11.text ?? f11.content ?? null : typeof f11 === "string" ? f11 : null;
+      const f12 = this.core && typeof this.core.readFile === "function" ? this.core.readFile(row2.bundle_id, "data/provenance.json") : null;
+      docText = f12 && typeof f12 === "object" ? f12.text ?? f12.content ?? null : typeof f12 === "string" ? f12 : null;
     } catch {
       docText = null;
     }
@@ -40258,10 +40301,10 @@ var Bits = class {
   }
   decode(h) {
     if (this.n < 16) this.fill();
-    const f11 = h.fast[this.peek(h.FAST)];
-    if (f11 >= 0) {
-      this.skip(f11 >> 8);
-      return f11 & 255;
+    const f12 = h.fast[this.peek(h.FAST)];
+    if (f12 >= 0) {
+      this.skip(f12 >> 8);
+      return f12 & 255;
     }
     let code = this.bits(h.FAST), l = h.FAST;
     for (; ; ) {
@@ -42565,9 +42608,9 @@ var NEG = 8192;
 var REFINED = 16384;
 var VISIT = 32768;
 var NBR = 255;
-var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f11) => {
-  let h = ((f11 & W) !== 0) + ((f11 & E) !== 0), v = ((f11 & N) !== 0) + ((f11 & S) !== 0);
-  const d = ((f11 & NW) !== 0) + ((f11 & NE) !== 0) + ((f11 & SW) !== 0) + ((f11 & SE) !== 0);
+var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f12) => {
+  let h = ((f12 & W) !== 0) + ((f12 & E) !== 0), v = ((f12 & N) !== 0) + ((f12 & S) !== 0);
+  const d = ((f12 & NW) !== 0) + ((f12 & NE) !== 0) + ((f12 & SW) !== 0) + ((f12 & SE) !== 0);
   if (orient === 1) [h, v] = [v, h];
   if (orient === 3) {
     const hv = h + v;
@@ -42658,8 +42701,8 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
     flags[i + fw - 1] |= NE;
     flags[i + fw + 1] |= NW;
   };
-  const nbr = (f11, y) => vsc && (y & 3) === 3 ? f11 & ~(S | SW | SE | SGN_S) : f11;
-  const scIndex = (f11) => (f11 & N ? 1 : 0) | (f11 & S ? 2 : 0) | (f11 & W ? 4 : 0) | (f11 & E ? 8 : 0) | (f11 & SGN_N ? 16 : 0) | (f11 & SGN_S ? 32 : 0) | (f11 & SGN_W ? 64 : 0) | (f11 & SGN_E ? 128 : 0);
+  const nbr = (f12, y) => vsc && (y & 3) === 3 ? f12 & ~(S | SW | SE | SGN_S) : f12;
+  const scIndex = (f12) => (f12 & N ? 1 : 0) | (f12 & S ? 2 : 0) | (f12 & W ? 4 : 0) | (f12 & E ? 8 : 0) | (f12 & SGN_N ? 16 : 0) | (f12 & SGN_S ? 32 : 0) | (f12 & SGN_W ? 64 : 0) | (f12 & SGN_E ? 128 : 0);
   for (const seg of segs) {
     const raw = lazy && bpno <= lazyFrom - 4 && passtype < 2;
     const mq = raw ? null : new MqDecoder(seg.data, 0, seg.data.length);
@@ -42668,14 +42711,14 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
       const one2 = 1 << bpno, half = one2 >> 1, oneplushalf = one2 | half;
       if (passtype === 0) {
         for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) for (let y = y0; y < y0 + 4 && y < h; y++) {
-          const i = at22(x, y), f11 = nbr(flags[i], y);
-          if (f11 & SIG || !(f11 & NBR)) continue;
-          const bit = raw ? rd.bit() : mq.decode(ctx, zc[f11 & NBR]);
+          const i = at22(x, y), f12 = nbr(flags[i], y);
+          if (f12 & SIG || !(f12 & NBR)) continue;
+          const bit = raw ? rd.bit() : mq.decode(ctx, zc[f12 & NBR]);
           if (bit) {
             let neg;
             if (raw) neg = rd.bit();
             else {
-              const k = scIndex(f11);
+              const k = scIndex(f12);
               neg = mq.decode(ctx, CTX_SC + SC[k]) ^ SPB[k];
             }
             out[y * w + x] = neg ? -oneplushalf : oneplushalf;
@@ -42685,9 +42728,9 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
         }
       } else if (passtype === 1) {
         for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) for (let y = y0; y < y0 + 4 && y < h; y++) {
-          const i = at22(x, y), f11 = flags[i];
-          if ((f11 & (SIG | VISIT)) !== SIG) continue;
-          const bit = raw ? rd.bit() : mq.decode(ctx, f11 & REFINED ? CTX_MAG + 2 : nbr(f11, y) & NBR ? CTX_MAG + 1 : CTX_MAG);
+          const i = at22(x, y), f12 = flags[i];
+          if ((f12 & (SIG | VISIT)) !== SIG) continue;
+          const bit = raw ? rd.bit() : mq.decode(ctx, f12 & REFINED ? CTX_MAG + 2 : nbr(f12, y) & NBR ? CTX_MAG + 1 : CTX_MAG);
           const v = out[y * w + x];
           out[y * w + x] = v + (bit ^ (v < 0 ? 1 : 0) ? half : -half);
           flags[i] |= REFINED;
@@ -42698,15 +42741,15 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
           if (y0 + 4 <= h) {
             let quiet = true;
             for (let k = 0; k < 4 && quiet; k++) {
-              const f11 = nbr(flags[at22(x, y0 + k)], y0 + k);
-              if (f11 & (SIG | VISIT | NBR)) quiet = false;
+              const f12 = nbr(flags[at22(x, y0 + k)], y0 + k);
+              if (f12 & (SIG | VISIT | NBR)) quiet = false;
             }
             if (quiet) {
               if (!mq.decode(ctx, CTX_AGG)) continue;
               const k = mq.decode(ctx, CTX_UNI) << 1 | mq.decode(ctx, CTX_UNI);
               y = y0 + k;
-              const f11 = nbr(flags[at22(x, y)], y);
-              const sk = scIndex(f11);
+              const f12 = nbr(flags[at22(x, y)], y);
+              const sk = scIndex(f12);
               const neg = mq.decode(ctx, CTX_SC + SC[sk]) ^ SPB[sk];
               out[y * w + x] = neg ? -oneplushalf : oneplushalf;
               setSig(x, y, neg);
@@ -42714,10 +42757,10 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
             }
           }
           for (; y < y0 + 4 && y < h; y++) {
-            const i = at22(x, y), f11 = nbr(flags[i], y);
-            if (f11 & (SIG | VISIT)) continue;
-            if (mq.decode(ctx, zc[f11 & NBR])) {
-              const sk = scIndex(f11);
+            const i = at22(x, y), f12 = nbr(flags[i], y);
+            if (f12 & (SIG | VISIT)) continue;
+            if (mq.decode(ctx, zc[f12 & NBR])) {
+              const sk = scIndex(f12);
               const neg = mq.decode(ctx, CTX_SC + SC[sk]) ^ SPB[sk];
               out[y * w + x] = neg ? -oneplushalf : oneplushalf;
               setSig(x, y, neg);
@@ -43147,10 +43190,10 @@ function concat(parts) {
   return out;
 }
 function rintEven(v) {
-  const f11 = Math.floor(v), d = v - f11;
-  if (d < 0.5) return f11;
-  if (d > 0.5) return f11 + 1;
-  return f11 % 2 === 0 ? f11 : f11 + 1;
+  const f12 = Math.floor(v), d = v - f12;
+  if (d < 0.5) return f12;
+  if (d > 0.5) return f12 + 1;
+  return f12 % 2 === 0 ? f12 : f12 + 1;
 }
 function decodeJpx(d) {
   const box = container(d);
@@ -43690,7 +43733,7 @@ async function decodeImage(doc, im, opts) {
   if (last === "CCITTFaxDecode" || last === "CCF") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
-      if (filters.slice(0, -1).every((f11) => f11 === "FlateDecode" || f11 === "Fl")) {
+      if (filters.slice(0, -1).every((f12) => f12 === "FlateDecode" || f12 === "Fl")) {
         const st = { ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" } } };
         data = await doc.streamDecoded(st);
       } else return refuse("UNSUPPORTED_FILTER", { filters });
@@ -43740,7 +43783,7 @@ async function decodeImage(doc, im, opts) {
   if (last === "JBIG2Decode") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
-      if (!filters.slice(0, -1).every((f11) => f11 === "FlateDecode" || f11 === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      if (!filters.slice(0, -1).every((f12) => f12 === "FlateDecode" || f12 === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
       data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
     }
     if (!data) return refuse("IMAGE_UNREADABLE", { filters });
@@ -43780,7 +43823,7 @@ async function decodeImage(doc, im, opts) {
   if (last === "JPXDecode") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
-      if (!filters.slice(0, -1).every((f11) => f11 === "FlateDecode" || f11 === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      if (!filters.slice(0, -1).every((f12) => f12 === "FlateDecode" || f12 === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
       data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
     }
     if (!data) return refuse("IMAGE_UNREADABLE", { filters });
@@ -43816,7 +43859,7 @@ async function decodeImage(doc, im, opts) {
       jpx: { ...out.detail, comps: out.comps, stream_bytes: data.length }
     };
   }
-  if (filters.length === 0 || filters.every((f11) => f11 === "FlateDecode" || f11 === "Fl")) {
+  if (filters.length === 0 || filters.every((f12) => f12 === "FlateDecode" || f12 === "Fl")) {
     const data = await doc.streamDecoded(im.obj);
     if (!data) return refuse("IMAGE_UNREADABLE", { filters });
     const bpc = im.isMask ? 1 : im.bpc ?? 8;
@@ -44192,21 +44235,21 @@ __export(extent_exports, {
   CONTENT_EXTENT_A1_RE: () => CONTENT_EXTENT_A1_RE,
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
   CONTENT_EXTENT_DOCUMENT_ONLY: () => CONTENT_EXTENT_DOCUMENT_ONLY,
-  CONTENT_EXTENT_KINDS: () => CONTENT_EXTENT_KINDS2,
+  CONTENT_EXTENT_KINDS: () => CONTENT_EXTENT_KINDS3,
   CONTENT_EXTENT_KIND_NO_PRODUCER: () => CONTENT_EXTENT_KIND_NO_PRODUCER,
   CONTENT_EXTENT_OWN_CHECKS: () => CONTENT_EXTENT_OWN_CHECKS,
   CONTENT_ID_RE: () => CONTENT_ID_RE,
   ENVELOPE_ANCHOR_KINDS: () => ENVELOPE_ANCHOR_KINDS,
   ENVELOPE_ITEM_KINDS: () => ENVELOPE_ITEM_KINDS,
-  canonicalExtent: () => canonicalExtent2,
+  canonicalExtent: () => canonicalExtent3,
   checkContentExtent: () => checkContentExtent2,
   citationContentId: () => citationContentId,
   citationExtent: () => citationExtent,
   citationHasAuthoredExtent: () => citationHasAuthoredExtent,
   containerBoundUndetermined: () => containerBoundUndetermined,
-  contentCitedAs: () => contentCitedAs2,
+  contentCitedAs: () => contentCitedAs3,
   contentIdFor: () => contentIdFor2,
-  describeExtent: () => describeExtent2,
+  describeExtent: () => describeExtent3,
   extentRelation: () => extentRelation2,
   imagePageUndetermined: () => imagePageUndetermined,
   imagePartUndetermined: () => imagePartUndetermined,
@@ -44219,7 +44262,7 @@ __export(extent_exports, {
   unitChainKind: () => unitChainKind,
   unitTargetOf: () => unitTargetOf
 });
-var CONTENT_EXTENT_KINDS2 = Object.freeze({
+var CONTENT_EXTENT_KINDS3 = Object.freeze({
   ...CONTENT_EXTENT_KINDS,
   envelope: { landed: true, human: "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body" }
 });
@@ -44245,19 +44288,19 @@ function refusal6(code, detail) {
   const row2 = CONTENT_EXTENT_CHECKS[code] || CONTENT_EXTENT_OWN_CHECKS[code];
   return { ok: false, code, check: row2.check, translation: row2.translation, detail };
 }
-function contentCitedAs2(extent) {
+function contentCitedAs3(extent) {
   const e = isObj5(extent) ? extent : {};
   const v = e.cited_as;
   if ((v === void 0 || v === null || v === "") && e.kind === "envelope") return CONTENT_CITED_AS_ENVELOPE;
   return contentCitedAs(e);
 }
-function canonicalExtent2(extent) {
+function canonicalExtent3(extent) {
   const e = isObj5(extent) ? extent : {};
   if (e.kind === "envelope") {
     const at22 = isObj5(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? JSON.parse(canonicalExtent(e.at)) : null;
     return canonicalJson({
       kind: "envelope",
-      cited_as: contentCitedAs2(e),
+      cited_as: contentCitedAs3(e),
       item: typeof e.item === "string" ? e.item.trim() : null,
       part: typeof e.part === "string" && e.part.trim() ? e.part.trim() : null,
       at: at22,
@@ -44267,7 +44310,7 @@ function canonicalExtent2(extent) {
   }
   return canonicalExtent(e);
 }
-function describeExtent2(extent) {
+function describeExtent3(extent) {
   const e = isObj5(extent) ? extent : {};
   if (typeof e.ref === "string" && e.ref.trim()) return e.ref.trim();
   if (e.kind === "envelope") {
@@ -44282,7 +44325,7 @@ function contentIdFor2(captureSha, extent, chain2) {
   return sha256HexSync(canonicalJson({
     v: 1,
     capture_sha: String(captureSha ?? ""),
-    extent: canonicalExtent2(extent),
+    extent: canonicalExtent3(extent),
     chain: chain2 == null ? null : canonicalJson(chain2)
   }));
 }
@@ -44316,9 +44359,9 @@ function extentRelation2(outer, inner) {
   if (!a || !b) return "unreadable";
   if (rectSpace(a) !== RECT_USER_SPACE || rectSpace(b) !== RECT_USER_SPACE) return "unreadable";
   if (a.kind === "envelope" || b.kind === "envelope") {
-    const known = (k) => Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, k);
+    const known = (k) => Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS3, k);
     if (!known(a.kind) || !known(b.kind)) return "unreadable";
-    if (canonicalExtent2(a) === canonicalExtent2(b)) return "same";
+    if (canonicalExtent3(a) === canonicalExtent3(b)) return "same";
     if (a.kind === "document") return "narrower";
     if (b.kind === "document") return "wider";
     return "disjoint";
@@ -44385,7 +44428,7 @@ function containerBoundUndetermined(extent, ctx = {}) {
   const e = isObj5(extent) ? extent : null;
   if (!e || !ctx || ctx.known === false) return null;
   const c = isObj5(ctx.container) ? ctx.container : {};
-  const u = (level, why) => ({ level, why: `${why}, so whether ${describeExtent2({ ...e, ref: void 0 })} lies inside the document is UNDETERMINED, admitted and stated rather than guessed` });
+  const u = (level, why) => ({ level, why: `${why}, so whether ${describeExtent3({ ...e, ref: void 0 })} lies inside the document is UNDETERMINED, admitted and stated rather than guessed` });
   const pages = Number.isInteger(ctx.pageCount) && ctx.pageCount > 0;
   switch (e.kind) {
     case "pdf-page":
@@ -44439,14 +44482,14 @@ function imagePageUndetermined(extent, ctx = {}) {
 }
 function checkContentExtent2(extent, ctx = {}) {
   const e = isObj5(extent) ? extent : null;
-  if (!e || e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, e.kind))
+  if (!e || e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS3, e.kind))
     return checkContentExtent(extent, ctx);
   if ((e.kind === "pdf-page" || e.kind === "image") && rectSpace(e) !== RECT_USER_SPACE)
     return refusal6(
       "CONTENT_EXTENT_NOT_USER_SPACE",
       `this ${e.kind} extent states its rect in space '${String(e.space).slice(0, 40)}'; the grammar addresses PDF default user space only (points, the page as the file lays it out), so the rect is not converted and not read as points. A text-recognition anchor is in the pixels of the frame it read`
     );
-  const citedAs = contentCitedAs2(e);
+  const citedAs = contentCitedAs3(e);
   if (citedAs === CONTENT_CITED_AS_ENVELOPE !== (e.kind === "envelope"))
     return refusal6(
       "CONTENT_EXTENT_UNREADABLE",
@@ -44495,7 +44538,7 @@ function checkEnvelope(e, ctx) {
   if (ctx && ctx.known !== false && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal6(
       "CONTENT_EXTENT_NO_CHAIN",
-      `this record holds no extraction chain for the capture this citation names, so there is no transcription over ${describeExtent2(e)} for the citation to point at`
+      `this record holds no extraction chain for the capture this citation names, so there is no transcription over ${describeExtent3(e)} for the citation to point at`
     );
   return null;
 }
@@ -44838,9 +44881,9 @@ function extentBoundUnheld(extent, ctx, pdfPageBoxUndetermined2) {
       return `this read cannot bound an extent of kind '${String(extent.kind).slice(0, 40)}'`;
   }
 }
-function bagOf(text4) {
+function bagOf(text5) {
   const bag = /* @__PURE__ */ new Map();
-  for (const w of String(text4).toLowerCase().match(/[\p{L}\p{N}]+/gu) || []) bag.set(w, (bag.get(w) || 0) + 1);
+  for (const w of String(text5).toLowerCase().match(/[\p{L}\p{N}]+/gu) || []) bag.set(w, (bag.get(w) || 0) + 1);
   let n = 0;
   for (const v of bag.values()) n += v;
   return { bag, n };
@@ -44857,12 +44900,12 @@ function heldTextAt(extent, held) {
   if (extent.kind === "document") {
     if (held.state !== "whole" || !held.units.length || held.units.some((u2) => u2.truncated))
       return { text: null, reason: "cited_text_partial", why: `the citation is to the whole document, and the record does not hold the cited version's text whole (its index reads ${said(held.state)}), so there is no whole text` };
-    return { text: held.units.map((u2) => u2.text).join("\n"), extent: canonicalExtent2(extent) };
+    return { text: held.units.map((u2) => u2.text).join("\n"), extent: canonicalExtent3(extent) };
   }
-  const at22 = canonicalExtent2(extent);
+  const at22 = canonicalExtent3(extent);
   const u = held.units.find((x) => x.extent === at22);
   if (!u)
-    return { text: null, reason: "cited_text_not_held", why: `the record holds no text at exactly ${describeExtent2(extent)} of the cited version (only whole indexed units \u2014 a PDF page, a paragraph, a slide \u2014 carry text)` };
+    return { text: null, reason: "cited_text_not_held", why: `the record holds no text at exactly ${describeExtent3(extent)} of the cited version (only whole indexed units \u2014 a PDF page, a paragraph, a slide \u2014 carry text)` };
   if (u.truncated)
     return { text: null, reason: "cited_text_truncated", why: "the cited passage's text is held only to the per-unit cap, so the whole passage is not held" };
   return { text: u.text, extent: at22 };
@@ -44895,9 +44938,9 @@ function gradeAcross(row2, extent, older, newer) {
       );
     const same = newer.units.length === older.units.length && newer.units.every((u, i) => u.extent === older.units[i].extent && u.text === older.units[i].text);
     if (same) return out("A", "identical_at_extent", "every unit of the newer version's text is byte-identical at the same position", { extent, ref: row2.ref });
-    const text4 = newer.units.map((u) => u.text).join("\n");
-    if (text4 === cited.text) return out("B", "identical_elsewhere", "the newer version's text is byte-identical, divided into different units", { extent, ref: row2.ref });
-    const sim = dice(bagOf(cited.text), bagOf(text4));
+    const text5 = newer.units.map((u) => u.text).join("\n");
+    if (text5 === cited.text) return out("B", "identical_elsewhere", "the newer version's text is byte-identical, divided into different units", { extent, ref: row2.ref });
+    const sim = dice(bagOf(cited.text), bagOf(text5));
     const r2 = Math.round(sim * 1e3) / 1e3;
     return sim >= VERSION_NOTICE_SIMILAR ? out("C", "similar_text", `the document's text changed; word similarity ${r2}`, { extent, ref: row2.ref }, r2) : out("NOT_FOUND", "text_not_found", `the document's text changed past the similarity floor (${VERSION_NOTICE_SIMILAR}); word similarity ${r2}`, null, r2);
   }
@@ -44906,7 +44949,7 @@ function gradeAcross(row2, extent, older, newer) {
     return out(
       "A",
       "identical_at_extent",
-      `the text at ${describeExtent2(extent)} is byte-identical in the newer version`,
+      `the text at ${describeExtent3(extent)} is byte-identical in the newer version`,
       found(here)
     );
   const moved = newer.units.find((x) => !x.truncated && x.text === cited.text);
@@ -44995,14 +45038,14 @@ function transcriptionCovering(tx, kind, extent) {
   if (!tx || !scope) return [];
   return tx.attestations.filter((a) => a.attestor !== tx.transcriber).map((a) => ({ member: a.attestor, at: a.at, extent: scope }));
 }
-var staleSays = (extent) => `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent2(extent)} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's`;
+var staleSays = (extent) => `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent3(extent)} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's`;
 function normUnits(u) {
   const units = u && Array.isArray(u.units) ? u.units.filter((x) => x && typeof x === "object") : [];
   const seq = (x) => Number.isFinite(x.seq) ? x.seq : Infinity;
   return {
     units: units.map((x, i) => ({ x, i })).sort((a, b) => seq(a.x) - seq(b.x) || a.i - b.i).map(({ x }) => ({
       ...x,
-      extent: typeof x.extent === "string" ? x.extent : canonicalExtent2(x.extent),
+      extent: typeof x.extent === "string" ? x.extent : canonicalExtent3(x.extent),
       truncated: !!x.truncated
     })),
     state: u ? u.state ?? null : null
@@ -45276,7 +45319,7 @@ var Content = class {
     const c = context || ctx || this.contentContextFor(captureSha);
     const bad = checkContentExtent2(extent, c);
     if (bad) return bad;
-    const citedAs = contentCitedAs2(extent);
+    const citedAs = contentCitedAs3(extent);
     const chain2 = citedAs === "bytes" ? null : c.chain;
     const id = contentIdFor2(captureSha, extent, chain2);
     const before = this.#one(`SELECT content_id FROM content WHERE content_id=?`, id);
@@ -45291,8 +45334,8 @@ var Content = class {
         captureSha,
         bundleId,
         extent.kind,
-        canonicalExtent2(extent),
-        describeExtent2(extent),
+        canonicalExtent3(extent),
+        describeExtent3(extent),
         chain2 == null ? null : JSON.stringify(chain2),
         /* THE CAP IS ASKED ABOUT THE EXTENT, not about the document (D-252); NULL is undetermined and STATED. */
         citedAs === "bytes" ? null : derivationCap(chain2, target),
@@ -45452,7 +45495,7 @@ var Content = class {
             check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.check,
             code: "CONTENT_EXTENT_NO_CHAIN",
             translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.translation,
-            detail: `${lab(i)} cites ${describeExtent2(ext)} of '${cit.target}', and this record holds no capture of that document at all` + (typeof cit.extent_capture === "string" && cit.extent_capture.trim() ? ` under the capture the leg names (${cit.extent_capture.trim().slice(0, 16)}\u2026)` : ``)
+            detail: `${lab(i)} cites ${describeExtent3(ext)} of '${cit.target}', and this record holds no capture of that document at all` + (typeof cit.extent_capture === "string" && cit.extent_capture.trim() ? ` under the capture the leg names (${cit.extent_capture.trim().slice(0, 16)}\u2026)` : ``)
           });
         continue;
       }
@@ -45513,7 +45556,7 @@ var Content = class {
       stale: !!r.stale,
       resolves: true,
       mint: mintLabel(r.minted_by),
-      says: r.stale ? staleSays(ext) : `${describeExtent2(ext)}, as this record holds it`
+      says: r.stale ? staleSays(ext) : `${describeExtent3(ext)}, as this record holds it`
     };
   }
   /** Fill in each projected referent's standing, in ONE query over the ids, mutating the rows in place (the legacy
@@ -45538,7 +45581,7 @@ var Content = class {
       r.minted_by = row2.minted_by;
       r.mint = mintLabel(row2.minted_by);
       const ext = { kind: row2.extent_kind, ...safeJson5(row2.extent) || {} };
-      r.says = row2.stale ? staleSays(ext) : `${describeExtent2(ext)}, as this record holds it`;
+      r.says = row2.stale ? staleSays(ext) : `${describeExtent3(ext)}, as this record holds it`;
     }
   }
   /** The capture's text attestations over a set of captures, in ONE bounded read; truncation stated. */
@@ -45599,7 +45642,7 @@ var Content = class {
       determinant: null,
       by: [],
       applies: false,
-      why: `this row cites ${describeExtent2(extent)} AS ITSELF \u2014 the image's bytes, not text read off it \u2014 so no transcription stands between the citation and what it points at. Its fidelity is the capture's own, established on the provenance chain; a transcription ceiling does not apply, which is a different fact from one that is undetermined`
+      why: `this row cites ${describeExtent3(extent)} AS ITSELF \u2014 the image's bytes, not text read off it \u2014 so no transcription stands between the citation and what it points at. Its fidelity is the capture's own, established on the provenance chain; a transcription ceiling does not apply, which is a different fact from one that is undetermined`
     } : target == null ? {
       ceiling: null,
       determinant: null,
@@ -45629,7 +45672,7 @@ var Content = class {
         why: `the capture axis is answered once, for the DOCUMENT, and never per portion: there is no per-portion capture grade in this record and inventing one would be a third scale (DEC-4). What that one answer states is the weakest link of how the BYTES arrived and what any machine transcription of this document's text is measured at \u2014 so a portion of an OCR'd document is bounded exactly as the document is, under earned.capture`
       },
       ...atts.truncated || tx && txs.truncated ? { attestations_truncated: true } : {},
-      says: r.stale ? staleSays(extent) : `${describeExtent2(extent)}, as this record holds it`
+      says: r.stale ? staleSays(extent) : `${describeExtent3(extent)}, as this record holds it`
     };
     if (connectionByBundle) out.connection = legacyConnectionAxis(r, extent, connectionByBundle);
     return out;
@@ -45815,7 +45858,7 @@ var Content = class {
     const row2 = TRANSCRIBE_CHECKS[code];
     return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
   }
-  transcribe({ bundleId = null, extent = null, text: text4 = null, transcriber = null, viewer = null, at: at22 = null } = {}) {
+  transcribe({ bundleId = null, extent = null, text: text5 = null, transcriber = null, viewer = null, at: at22 = null } = {}) {
     const refusal20 = (code, detail, extra) => this.#transcribeRefusal(code, detail, extra);
     const who2 = typeof transcriber === "string" ? transcriber.trim() : "";
     const target = typeof bundleId === "string" ? bundleId.trim() : "";
@@ -45846,7 +45889,7 @@ var Content = class {
         `no portion was selected. A transcription is of a PART the member read \u2014 a page or a region of one, or the whole document NAMED as such \u2014 and a typing with no stated part would be read as covering all of it`,
         { target }
       );
-    const typed = typeof text4 === "string" ? text4 : "";
+    const typed = typeof text5 === "string" ? text5 : "";
     const bytes2 = new TextEncoder().encode(typed).length;
     const digest2 = sha256HexSync(typed);
     const chain2 = [{ step: "typed", member: who2, text_sha256: digest2 }];
@@ -45854,16 +45897,16 @@ var Content = class {
     const bad = checkContentExtent2(isObj6(extent) ? extent : null, ctx);
     if (bad) return bad;
     const ekind = extent.kind;
-    if (contentCitedAs2(extent) === "bytes" || transcriptionAttestExtent(ekind, extent) == null)
+    if (contentCitedAs3(extent) === "bytes" || transcriptionAttestExtent(ekind, extent) == null)
       return refusal20(
         "TRANSCRIBE_PORTION_UNREADABLE",
-        `${describeExtent2(extent)} is a part this plane cannot check a typing against \u2014 a second member's attestation needs a document, a page or a region of a page to scope to, and a transcription nobody could ever attest would stand undetermined for good`,
+        `${describeExtent3(extent)} is a part this plane cannot check a typing against \u2014 a second member's attestation needs a document, a page or a region of a page to scope to, and a transcription nobody could ever attest would stand undetermined for good`,
         { target, extent_kind: ekind ?? null }
       );
     if (!typed.trim())
       return refusal20(
         "TRANSCRIBE_NO_TEXT",
-        `the typed text is empty. Nothing is prefilled: the text is what the member read off ${describeExtent2(extent)}, typed by them`,
+        `the typed text is empty. Nothing is prefilled: the text is what the member read off ${describeExtent3(extent)}, typed by them`,
         { target }
       );
     if (bytes2 > TRANSCRIPTION_MAX_BYTES)
@@ -45901,7 +45944,7 @@ var Content = class {
       capture_sha: sha,
       extent_kind: ekind,
       extent: standing ? standing.extent : extent,
-      ref: describeExtent2(extent),
+      ref: describeExtent3(extent),
       transcriber: who2,
       text_sha256: digest2,
       bytes: bytes2,
@@ -45909,7 +45952,7 @@ var Content = class {
       chain_says: describeChain(chain2),
       derivation_cap: standing ? standing.derivation_cap : null,
       transcription: standing ? standing.transcription : null,
-      says: `${who2} typed ${describeExtent2(extent)}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused` + (out.minted ? `` : `. This exact typing by ${who2} was already recorded, and is found rather than written again`)
+      says: `${who2} typed ${describeExtent3(extent)}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused` + (out.minted ? `` : `. This exact typing by ${who2} was already recorded, and is found rather than written again`)
     };
   }
   #transcriptionStanding(contentId) {
@@ -46016,7 +46059,7 @@ var Content = class {
     const existing = (e) => this.#one(
       `SELECT content_id FROM content WHERE capture_sha=? AND extent=? ORDER BY content_id LIMIT 1`,
       newerSha,
-      canonicalExtent2(e)
+      canonicalExtent3(e)
     )?.content_id ?? null;
     if (!isObj6(extent) || typeof extent.kind !== "string")
       return {
@@ -46068,7 +46111,7 @@ var Content = class {
       holds: true,
       reason: "extent_in_newer_capture",
       existing_content_id: existing(extent),
-      why: `${describeExtent2(extent)} exists in the newer capture as the record holds it`
+      why: `${describeExtent3(extent)} exists in the newer capture as the record holds it`
     };
   }
   #unitsOf(captureSha, memo) {
@@ -46366,7 +46409,7 @@ function legacyConnectionAxis(r, extent, connectionByBundle) {
     grade: null,
     undetermined_because: "READING_POSITION_ABSENT",
     empty_level: "position within the reading \u2014 `reading_refs` records THAT a reference was read in this document and not WHERE it was read (I2, FW-17)",
-    why: `this leg cites ${describeExtent2(extent)} and refers only to that portion (Bob, 2026-09-14). Whether any resolution of this document to the subject was established inside it is undetermined and stated, never borrowed from the whole document. The document-grain answer is under earned.connection for ${r.bundle_id}, and it is the DOCUMENT's, not this portion's`
+    why: `this leg cites ${describeExtent3(extent)} and refers only to that portion (Bob, 2026-09-14). Whether any resolution of this document to the subject was established inside it is undetermined and stated, never borrowed from the whole document. The document-grain answer is under earned.connection for ${r.bundle_id}, and it is the DOCUMENT's, not this portion's`
   };
 }
 var instances6 = /* @__PURE__ */ new WeakMap();
@@ -46464,7 +46507,7 @@ var FIELDS = {
   overdue: { col: "action_clock_overdue", type: "bool", proj: true }
 };
 var CACHED_FIELDS = Object.fromEntries(
-  Object.entries(FIELDS).filter(([, f11]) => f11.asOf).map(([name, f11]) => [f11.col, { field: name, asOf: f11.asOf, authority: f11.authority, why: f11.why }])
+  Object.entries(FIELDS).filter(([, f12]) => f12.asOf).map(([name, f12]) => [f12.col, { field: name, asOf: f12.asOf, authority: f12.authority, why: f12.why }])
 );
 function metaColumnsOf(node, into = /* @__PURE__ */ new Set()) {
   if (!node || typeof node !== "object") return into;
@@ -46481,12 +46524,12 @@ function cachedRoutes(ast, facetList, sortField) {
     (routes[col] ||= /* @__PURE__ */ new Set()).add(route);
   };
   for (const c of cols) mark(c, "filter");
-  for (const f11 of facetList) mark(FIELDS[f11]?.col, "facet");
+  for (const f12 of facetList) mark(FIELDS[f12]?.col, "facet");
   if (sortField && sortField in FIELDS) mark(FIELDS[sortField].col, "sort");
   return routes;
 }
 function cachedNotes(routes, { facets = true, ordered = true } = {}) {
-  const order = Object.values(FIELDS).map((f11) => f11.col);
+  const order = Object.values(FIELDS).map((f12) => f12.col);
   return Object.entries(routes).map(([col, set]) => {
     const via = ["filter", "facet", "sort"].filter((r) => set.has(r) && (r !== "facet" || facets) && (r !== "sort" || ordered));
     return { col, via };
@@ -46521,7 +46564,7 @@ var RESOLUTION_ROW = {
   rowGrain: "one RESOLUTION of one reference in one capture to one registered subject, addressed by (capture_sha, ref, entity_id)"
 };
 var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = ${alias}.content_id) OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = ${alias}.content_id))`;
-var CONTENT_CITED_AS_BYTES = contentCitedAs2({ kind: "image" });
+var CONTENT_CITED_AS_BYTES = contentCitedAs3({ kind: "image" });
 var CHAIN_DOES_NOT_APPLY = "does-not-apply";
 var CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
 var MEANING = {
@@ -46735,7 +46778,7 @@ var MEANING = {
          three), and `dom` is absent from that map ON PURPOSE — it is refused
          by name until CONTENT-HTML produces one, so it is not a word here
          either, and that falls out rather than being restated. */
-      kind: { col: "extent_kind", case: "lower", vocab: Object.keys(CONTENT_EXTENT_KINDS2) },
+      kind: { col: "extent_kind", case: "lower", vocab: Object.keys(CONTENT_EXTENT_KINDS3) },
       /* REC-82's stale rule as a QUESTION. A content row is never rewritten and
          never deleted: when the capture is re-read the chain moves and the row
          becomes a reference to a transcription that no longer stands, recorded
@@ -47107,7 +47150,7 @@ function rowColumns(m) {
 }
 var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 var SORTABLE = { relevance: null, ...Object.fromEntries(
-  Object.entries(FIELDS).map(([k, f11]) => [k, f11.col])
+  Object.entries(FIELDS).map(([k, f12]) => [k, f12.col])
 ) };
 var DEFAULT_FACETS = [
   "type",
@@ -47122,8 +47165,8 @@ var MEANING_AXIS_CAP = 500;
 var TEXT_PATHS = /\.(md|txt)$/i;
 var TEXT_CAP = 128 * 1024;
 function textOf(bundleId, files) {
-  const list2 = (files || []).map((f11) => ({ path: f11.path, text: typeof f11.text === "string" ? f11.text : typeof f11.content === "string" ? f11.content : null }));
-  const md = list2.find((f11) => f11.path === "bundle.md");
+  const list2 = (files || []).map((f12) => ({ path: f12.path, text: typeof f12.text === "string" ? f12.text : typeof f12.content === "string" ? f12.content : null }));
+  const md = list2.find((f12) => f12.path === "bundle.md");
   let fm = null, prose = "";
   if (md && md.text !== null) {
     let p = null;
@@ -47152,7 +47195,7 @@ function textOf(bundleId, files) {
     bits.push(String(v));
   };
   walk(fm);
-  const others = list2.filter((f11) => f11.path !== "bundle.md" && f11.text !== null && TEXT_PATHS.test(f11.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  const others = list2.filter((f12) => f12.path !== "bundle.md" && f12.text !== null && TEXT_PATHS.test(f12.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
   const cap = (s) => String(s ?? "").slice(0, TEXT_CAP);
   const nested = (block, key) => {
     const b = fm && typeof fm === "object" ? fm[block] : null;
@@ -47160,7 +47203,7 @@ function textOf(bundleId, files) {
   };
   return {
     title: cap(fm && fm.title != null ? String(fm.title) : ""),
-    body: cap([prose, ...others.map((f11) => f11.path + "\n" + f11.text)].join("\n\n")),
+    body: cap([prose, ...others.map((f12) => f12.path + "\n" + f12.text)].join("\n\n")),
     /* The identifier is folded into `meta` so pasting a bundle id into the
        search bar finds the bundle, which is the first thing anyone tries. */
     meta: cap([String(bundleId), ...bits].join(" ")),
@@ -47419,12 +47462,12 @@ function selector(tok3, ctx) {
   if (name === "has") {
     const v = String(tok3.value).toLowerCase();
     if (v in MEANING) return { op: "meaning", arm: v, col: null, cmp: "present", value: null };
-    const f12 = FIELDS[v];
-    if (!f12) {
+    const f13 = FIELDS[v];
+    if (!f13) {
       ctx.warnings.push(`has: unknown field ${JSON.stringify(tok3.value)}`);
       return null;
     }
-    return { op: "meta", col: f12.col, cmp: "present", value: null };
+    return { op: "meta", col: f13.col, cmp: "present", value: null };
   }
   if (name === "sort") {
     applySort(tok3.value, ctx);
@@ -47442,25 +47485,25 @@ function selector(tok3, ctx) {
     return val3 === null ? { op: "meta", json: "$." + path, cmp: "present", value: null } : { op: "meta", json: "$." + path, cmp: "=", value: val3 };
   }
   if (name in MEANING) return meaningAtom(name, tok3, ctx);
-  const f11 = FIELDS[name];
-  if (!f11) {
+  const f12 = FIELDS[name];
+  if (!f12) {
     ctx.warnings.push(`unknown field ${JSON.stringify(tok3.field)}; read as free text`);
     return textAtom(null, `${tok3.field} ${tok3.value}`.trim(), true, ctx);
   }
   let raw = String(tok3.value);
-  if (f11.col === "object_type") raw = normalizeType(raw.toLowerCase());
+  if (f12.col === "object_type") raw = normalizeType(raw.toLowerCase());
   const range = raw.split("..");
-  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f11.type === "time" || f11.type === "number")) {
+  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f12.type === "time" || f12.type === "number")) {
     return { op: "and", kids: [
-      { op: "meta", col: f11.col, cmp: ">=", value: coerce(f11, range[0]) },
-      { op: "meta", col: f11.col, cmp: "<=", value: coerce(f11, range[1]) }
+      { op: "meta", col: f12.col, cmp: ">=", value: coerce(f12, range[0]) },
+      { op: "meta", col: f12.col, cmp: "<=", value: coerce(f12, range[1]) }
     ] };
   }
   for (const [lead, cmp] of CMP)
-    if (raw.startsWith(lead)) return { op: "meta", col: f11.col, cmp, value: coerce(f11, raw.slice(lead.length)) };
-  if (raw === "" || raw === "*") return { op: "meta", col: f11.col, cmp: "present", value: null };
-  if (f11.fts) return textAtom(f11.fts, raw, tok3.quoted, ctx);
-  return { op: "meta", col: f11.col, cmp: "=", value: coerce(f11, raw) };
+    if (raw.startsWith(lead)) return { op: "meta", col: f12.col, cmp, value: coerce(f12, raw.slice(lead.length)) };
+  if (raw === "" || raw === "*") return { op: "meta", col: f12.col, cmp: "present", value: null };
+  if (f12.fts) return textAtom(f12.fts, raw, tok3.quoted, ctx);
+  return { op: "meta", col: f12.col, cmp: "=", value: coerce(f12, raw) };
 }
 function meaningAtom(arm, tok3, ctx) {
   const m = MEANING[arm];
@@ -47534,13 +47577,13 @@ function meaningAtom(arm, tok3, ctx) {
       return { op: "meaning", arm, field: subName, col: sub.col, cmp, value: norm(raw.slice(lead.length)) };
   return { op: "meaning", arm, field: subName, col: sub.col, cmp: "=", value: norm(raw) };
 }
-function coerce(f11, v) {
-  if (f11.type === "number") {
+function coerce(f12, v) {
+  if (f12.type === "number") {
     const n = Number(v);
     return Number.isFinite(n) ? n : v;
   }
-  if (f11.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
-  return f11.lower ? String(v).toLowerCase() : f11.upper ? String(v).toUpperCase() : String(v);
+  if (f12.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
+  return f12.lower ? String(v).toLowerCase() : f12.upper ? String(v).toUpperCase() : String(v);
 }
 function applySort(spec, ctx) {
   let s = String(spec || "");
@@ -47630,7 +47673,7 @@ function visibleBm25({ terms, gate, rel }) {
   return { parts, args };
 }
 var ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
-var PROJ_COLS = new Set(Object.values(FIELDS).filter((f11) => f11.proj).map((f11) => f11.col));
+var PROJ_COLS = new Set(Object.values(FIELDS).filter((f12) => f12.proj).map((f12) => f12.col));
 var allOf = (rel) => rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL` : ALL;
 function keysWhere(rel, where, fromProj) {
   if (!rel) return `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${where}`;
@@ -47920,7 +47963,7 @@ SELECT b.bundle_id, b.bundle_sha FROM scope s ${rowJoin}${joinRanked}
 WHERE ${gate.sql}
 ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
-  const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS).map((f11) => String(f11).toLowerCase()).filter((f11) => f11 in FIELDS);
+  const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS).map((f12) => String(f12).toLowerCase()).filter((f12) => f12 in FIELDS);
   const facets_ = () => {
     if (!facetList.length) return [];
     const out = [];
@@ -47928,10 +47971,10 @@ ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
       const group = facetList.slice(i, i + MAX_COMPOUND);
       const c = cte(false);
       const arms = group.map((name) => {
-        const f11 = FIELDS[name];
-        return `SELECT '${name}' AS field, ${fieldRef(f11.col)} AS value, count(*) AS n
+        const f12 = FIELDS[name];
+        return `SELECT '${name}' AS field, ${fieldRef(f12.col)} AS value, count(*) AS n
   FROM scope s ${rowJoin}
-  WHERE ${gate.sql} AND ${fieldRef(f11.col)} IS NOT NULL GROUP BY ${fieldRef(f11.col)}`;
+  WHERE ${gate.sql} AND ${fieldRef(f12.col)} IS NOT NULL GROUP BY ${fieldRef(f12.col)}`;
       });
       out.push({
         sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}
@@ -48864,8 +48907,8 @@ var Frontier = class {
       n
     ), () => recognised);
     const missing = [];
-    for (const [kind, f11] of [["capture", captureFetch], ["reference", referenceFetch], ["entity", entityFetch]])
-      for (const r of f11.rows)
+    for (const [kind, f12] of [["capture", captureFetch], ["reference", referenceFetch], ["entity", entityFetch]])
+      for (const r of f12.rows)
         missing.push({
           subject: r.subject,
           subject_kind: kind,
@@ -49201,7 +49244,7 @@ var Retrieval = class {
     if (this.#stepped || !this.promotion || typeof this.promotion.registerStep !== "function") return false;
     const r = this.promotion.registerStep("retrieval", { project: (c) => {
       const { bundleId, files } = stepContext(c);
-      const md = (files || []).find((f11) => f11 && f11.path === "bundle.md");
+      const md = (files || []).find((f12) => f12 && f12.path === "bundle.md");
       this.#writeProjection(bundleId, md && typeof md.text === "string" ? md.text : null);
       this.#writeText(bundleId, files || []);
       return null;
@@ -49286,7 +49329,7 @@ var Retrieval = class {
     const { table: table2, key, col } = relation && typeof relation === "object" ? relation : {};
     if (![table2, key, col].every((n) => typeof n === "string" && SQL_IDENT.test(n)))
       return bad("a relation is a table, a key and a column, each an SQL identifier");
-    const held = this.#fields.find((f11) => f11.field === field);
+    const held = this.#fields.find((f12) => f12.field === field);
     if (held) return {
       ok: false,
       reason: "FIELD_DECLARED",
@@ -49299,7 +49342,7 @@ var Retrieval = class {
     this.#fields.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     this.#via = Object.freeze({
       projection: PROJECTION_RELATION,
-      fields: Object.freeze(Object.fromEntries(this.#fields.map((f11) => [f11.field, Object.freeze({ table: f11.table, key: f11.key, col: f11.col })])))
+      fields: Object.freeze(Object.fromEntries(this.#fields.map((f12) => [f12.field, Object.freeze({ table: f12.table, key: f12.key, col: f12.col })])))
     });
     return { ok: true, module, field };
   }
@@ -49396,7 +49439,7 @@ var Retrieval = class {
     let n = 0, t = 0;
     for (const r of stale) {
       const files = this.#filesOf(r.bundle_id);
-      const md = files.find((f11) => f11.path === "bundle.md");
+      const md = files.find((f12) => f12.path === "bundle.md");
       if (!md || md.text === null) continue;
       if (r.need_proj) {
         this.#writeProjection(r.bundle_id, md.text);
@@ -49424,11 +49467,11 @@ var Retrieval = class {
   }
   /** R4: clear a projection (and by default its index row, since the two are one derived structure with one backfill)
    *  so the backfill path can be exercised against a row that looks like it predates the columns. A test seam. */
-  projectionClear({ bundleId = null, text: text4 = true } = {}) {
+  projectionClear({ bundleId = null, text: text5 = true } = {}) {
     const set = PROJECTION_COLS.map((c) => `${c}=NULL`).join(", ");
     if (bundleId) this.#sql.exec(`UPDATE ${PROJECTION_TABLE} SET ${set} WHERE bundle_id=?`, bundleId);
     else this.#sql.exec(`UPDATE ${PROJECTION_TABLE} SET ${set}`);
-    if (text4) {
+    if (text5) {
       if (bundleId) {
         const r = this.#one(`SELECT fts_id FROM ${PROJECTION_TABLE} WHERE bundle_id=?`, bundleId);
         if (r && r.fts_id != null) this.#sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
@@ -49438,7 +49481,7 @@ var Retrieval = class {
         this.#sql.exec(`UPDATE ${PROJECTION_TABLE} SET fts_id=NULL`);
       }
     }
-    return { ok: true, scope: bundleId || "ALL", text: text4 };
+    return { ok: true, scope: bundleId || "ALL", text: text5 };
   }
   /** R5: the projected metadata for one bundle, or a json_extract query over the per-schema tail.
    *
@@ -49574,7 +49617,7 @@ var Retrieval = class {
    *  value, and both forms exclude it; both order by count descending then value ascending. */
   #facetCounts(plan, tally, mode) {
     const use = mode === "groupby" || mode === "scan" ? mode : FACET_MODE_DEFAULT;
-    const out = Object.fromEntries(plan.facetFields.map((f11) => [f11, []]));
+    const out = Object.fromEntries(plan.facetFields.map((f12) => [f12, []]));
     if (!plan.facetFields.length) return out;
     if (use === "groupby") {
       for (const stmt2 of plan.statements.facets())
@@ -49744,7 +49787,7 @@ var Retrieval = class {
    *  of it that drifts; the meaning arms DERIVED from the compiler's registry; and the syntax sentences. */
   searchFields() {
     return {
-      fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f11]) => [k, { type: f11.type, freeText: !!f11.fts, column: f11.col }])),
+      fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f12]) => [k, { type: f12.type, freeText: !!f12.fts, column: f12.col }])),
       ftsColumns: FTS_COLUMNS,
       defaultFacets: DEFAULT_FACETS,
       idsMax: IDS_MAX,
@@ -49850,9 +49893,9 @@ var Retrieval = class {
    *  writes nothing, never throws: a figure it cannot read is null, never a zero. */
   counts(hid = null) {
     const h = hid && typeof hid === "object" && typeof hid.sql === "string" ? { sql: hid.sql, args: Array.isArray(hid.args) ? hid.args : [] } : null;
-    const read2 = (f11) => {
+    const read2 = (f12) => {
       try {
-        const n = Number(f11());
+        const n = Number(f12());
         return Number.isFinite(n) ? n : null;
       } catch {
         return null;
@@ -50525,7 +50568,7 @@ function capturePublicOp(op, req, env, store, hooks) {
 }
 
 // src/capture/grammar.mjs
-var f6 = (check, severity, message2, repairs) => {
+var f7 = (check, severity, message2, repairs) => {
   const out = { check, severity, message: message2 };
   if (repairs) {
     out.repairable = true;
@@ -50533,7 +50576,7 @@ var f6 = (check, severity, message2, repairs) => {
   }
   return out;
 };
-var asText5 = (v) => typeof v === "string" ? v : new TextDecoder().decode(v);
+var asText6 = (v) => typeof v === "string" ? v : new TextDecoder().decode(v);
 var INFO_ENUMS2 = {
   criticality: ["crucial", "supporting"],
   source_status: ["unchanged", "modified", "removed"]
@@ -50545,32 +50588,32 @@ async function checkInformationExtension2(ctx, findings) {
   const fm = ctx.fm;
   for (const [field, legal] of Object.entries(INFO_ENUMS2)) {
     if (!legal.includes(fm[field])) {
-      findings.push(f6("C-2.7", "error", `${field} '${fm[field]}' is not one of: ${legal.join(", ")}`));
+      findings.push(f7("C-2.7", "error", `${field} '${fm[field]}' is not one of: ${legal.join(", ")}`));
     }
   }
   const src = fm.source;
-  if (!src || typeof src !== "object") findings.push(f6("C-2.7", "error", "source block is missing"));
+  if (!src || typeof src !== "object") findings.push(f7("C-2.7", "error", "source block is missing"));
   else for (const k of ["locator", "authority", "retrieved"]) {
-    if (!src[k]) findings.push(f6("C-2.7", "error", `source.${k} is missing`));
+    if (!src[k]) findings.push(f7("C-2.7", "error", `source.${k} is missing`));
   }
   const mon = fm.monitoring;
-  if (!mon || typeof mon !== "object") findings.push(f6("C-2.7", "error", "monitoring block is missing"));
+  if (!mon || typeof mon !== "object") findings.push(f7("C-2.7", "error", "monitoring block is missing"));
   else {
-    if (typeof mon.enabled !== "boolean") findings.push(f6("C-2.7", "error", `monitoring.enabled '${mon.enabled}' is not boolean`));
-    if (!MONITOR_FREQ2.includes(mon.frequency)) findings.push(f6("C-2.7", "error", `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ2.join(", ")}`));
+    if (typeof mon.enabled !== "boolean") findings.push(f7("C-2.7", "error", `monitoring.enabled '${mon.enabled}' is not boolean`));
+    if (!MONITOR_FREQ2.includes(mon.frequency)) findings.push(f7("C-2.7", "error", `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ2.join(", ")}`));
   }
   const ch = fm.content_hash;
   const chOk = typeof ch === "string" && CONTENT_HASH_RE2.test(ch);
   if (ch !== void 0 && ch !== null && ch !== "" && !chOk) {
-    findings.push(f6("C-2.7", "error", `content_hash '${String(ch).slice(0, 24)}\u2026' is not sha256:<64 hex>`));
+    findings.push(f7("C-2.7", "error", `content_hash '${String(ch).slice(0, 24)}\u2026' is not sha256:<64 hex>`));
   }
   const dsRaw = ctx.files.get("data/dataset.json");
   if (dsRaw && chOk) {
     try {
-      const canon3 = canonicalJson(JSON.parse(asText5(dsRaw)));
+      const canon3 = canonicalJson(JSON.parse(asText6(dsRaw)));
       const actual = "sha256:" + await ctx.sha256(canon3);
       if (actual !== ch) {
-        findings.push(f6(
+        findings.push(f7(
           "C-2.7",
           "error",
           `content_hash does not match the canonicalized data/dataset.json (declared ${ch.slice(7, 19)}\u2026, actual ${actual.slice(7, 19)}\u2026)`,
@@ -50581,21 +50624,21 @@ async function checkInformationExtension2(ctx, findings) {
     }
   }
   if (fm.current_state === "verified") {
-    if (!chOk) findings.push(f6("C-2.7", "error", "verified state requires a well-formed content_hash"));
-    if (!dsRaw) findings.push(f6("C-2.7", "error", "verified state requires data/dataset.json"));
+    if (!chOk) findings.push(f7("C-2.7", "error", "verified state requires a well-formed content_hash"));
+    if (!dsRaw) findings.push(f7("C-2.7", "error", "verified state requires data/dataset.json"));
     const hasSnap = [...ctx.files.keys()].some((p) => p.startsWith("snapshots/")) || ctx.elided && [...ctx.elided].some((p) => p.startsWith("snapshots/"));
-    if (!hasSnap) findings.push(f6("C-2.7", "error", "verified state requires at least one file in snapshots/"));
+    if (!hasSnap) findings.push(f7("C-2.7", "error", "verified state requires at least one file in snapshots/"));
   }
   const chRaw = ctx.files.get("data/changes.json");
   if (chRaw) {
     try {
-      const recs = JSON.parse(asText5(chRaw));
+      const recs = JSON.parse(asText6(chRaw));
       const arr2 = recs && Array.isArray(recs.records) ? recs.records : null;
-      if (!arr2) findings.push(f6("C-2.7", "error", 'data/changes.json must be {"records": [...]}'));
+      if (!arr2) findings.push(f7("C-2.7", "error", 'data/changes.json must be {"records": [...]}'));
       else for (let i = 0; i < arr2.length; i++) {
         const r = arr2[i];
         if (!r || !ISO_TS_RE.test(r.detected || "") || !["modified", "removed", "corrected"].includes(r.kind) || !r.summary) {
-          findings.push(f6("C-2.7", "error", `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
+          findings.push(f7("C-2.7", "error", `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
         }
       }
     } catch {
@@ -51142,8 +51185,8 @@ var base32Of = (bytes2) => {
 var pseudonymOf = (digestHex) => `knocker-${base32Of(Uint8Array.from(String(digestHex).slice(0, 20).match(/../g).map((h) => parseInt(h, 16)))).match(/.{4}/g).join("-")}`;
 var memberIdOf = (who2) => typeof who2 === "string" ? who2.replace(/^member:/, "") : "";
 var CAPTURE_ACCOUNT_TOKEN = "bio-capture-account";
-var captureAccountStatement = (captureSha, text4) => te5.encode(`${CAPTURE_ACCOUNT_TOKEN} ${String(captureSha)}
-${String(text4)}`);
+var captureAccountStatement = (captureSha, text5) => te5.encode(`${CAPTURE_ACCOUNT_TOKEN} ${String(captureSha)}
+${String(text5)}`);
 var lateSentence = (at22) => `proves the bytes existed by ${at22}, not at capture`;
 var rawReplayOf = (archived) => {
   const m = /^(https:\/\/web\.archive\.org\/web\/)(\d{14})(?:[a-z_]*)\/(.+)$/.exec(String(archived || ""));
@@ -51275,8 +51318,8 @@ var Capture = class _Capture {
       const have = this.#cols(table2);
       if (have.length && !have.includes(column)) this.#sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
     }
-    for (const text4 of [CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA]) {
-      const bare2 = text4.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const text5 of [CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA]) {
+      const bare2 = text5.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
       for (const st of bare2.split(";")) {
         const t = st.trim();
         if (t) this.#sql.exec(t);
@@ -51914,7 +51957,7 @@ var Capture = class _Capture {
    *  recorded no actor for), `ACCOUNT_NO_TEXT` (C-118.6), and `SIG_<reason>` unless `signature` verifies
    *  (`signatures.verifySshsig`, `NS_RATIFY`) over `captureAccountStatement(captureSha, text)` against one of `by`'s
    *  attesting keys (`membership.attestingKeys`). Append-only. */
-  async recordCaptureAccount({ captureSha, text: text4, signature, by, at: at22 = null } = {}) {
+  async recordCaptureAccount({ captureSha, text: text5, signature, by, at: at22 = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const who2 = memberIdOf(by);
     const actors = HEX643.test(sha) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha).map((r) => memberIdOf(r.actor)) : [];
@@ -51930,7 +51973,7 @@ var Capture = class _Capture {
         status: 403
       };
     }
-    if (typeof text4 !== "string" || !text4.trim()) {
+    if (typeof text5 !== "string" || !text5.trim()) {
       const row2 = CAPTURE_CHECKS.ACCOUNT_NO_TEXT;
       return {
         ok: false,
@@ -51948,7 +51991,7 @@ var Capture = class _Capture {
     } catch {
       keys = [];
     }
-    const v = await verifySshsig(typeof signature === "string" ? signature : "", captureAccountStatement(sha, text4), NS_RATIFY, keys);
+    const v = await verifySshsig(typeof signature === "string" ? signature : "", captureAccountStatement(sha, text5), NS_RATIFY, keys);
     if (!v.ok) {
       const { ok: _ok, reason, ...rest } = v;
       return {
@@ -51968,7 +52011,7 @@ var Capture = class _Capture {
         sha,
         n,
         by,
-        text4,
+        text5,
         signature,
         v.keyB64,
         when
@@ -52379,7 +52422,7 @@ var Capture = class _Capture {
         sourceCapture
       );
       const pick1 = (k) => {
-        const x = found2.find((f11) => f11.k === k);
+        const x = found2.find((f12) => f12.k === k);
         return x ? {
           capture_sha: x.capture_sha,
           first_retrieved: x.first_retrieved,
@@ -52387,7 +52430,7 @@ var Capture = class _Capture {
           observations: x.observations
         } : null;
       };
-      const count = Number((found2.find((f11) => f11.k === "n") || {}).observations || 0);
+      const count = Number((found2.find((f12) => f12.k === "n") || {}).observations || 0);
       if (!count) {
         tally.offsite++;
         out.push({ ...r, resolution: "offsite", verdict: null, basis: "the record holds no capture of this address" });
@@ -52693,12 +52736,12 @@ var Capture = class _Capture {
     );
     const seq = found.slice(0, cap).reverse();
     const fps = [...new Set(seq.map((o) => o.fingerprint))];
-    const linksOf = new Map(fps.map((f11) => [f11, JSON.parse(this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, h, f11)?.links || "[]")]));
-    const records = fps.map((f11) => {
-      const mine = seq.filter((o) => o.fingerprint === f11);
+    const linksOf = new Map(fps.map((f12) => [f12, JSON.parse(this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, h, f12)?.links || "[]")]));
+    const records = fps.map((f12) => {
+      const mine = seq.filter((o) => o.fingerprint === f12);
       return {
-        fingerprint: f11,
-        links: linksOf.get(f11),
+        fingerprint: f12,
+        links: linksOf.get(f12),
         captures: mine.length,
         first_observed: mine.map((o) => o.first_observed).sort()[0],
         last_observed: mine.map((o) => o.last_observed).sort().pop()
@@ -53198,7 +53241,7 @@ var Capture = class _Capture {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
     if (typeof captureSha !== "string" || !HEX643.test(captureSha))
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
-    const text4 = boundedSubject(subject) || "a capture whose authority could not be determined";
+    const text5 = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
     const now = at22 && ISO_INSTANT.test(at22) ? at22 : stampSecond3();
     const existing = this.#tx(() => {
@@ -53208,13 +53251,13 @@ var Capture = class _Capture {
           `INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
           kind,
           captureSha,
-          text4,
+          text5,
           loc,
           now
         );
       return held;
     });
-    const heard = await this.#emit("task", { kind, captureSha, subject: text4, locator: loc, enqueued: now, deduped: !!existing });
+    const heard = await this.#emit("task", { kind, captureSha, subject: text5, locator: loc, enqueued: now, deduped: !!existing });
     const armedAt = heard.map((h) => h.ok && h.result && h.result.armedAt).find((x) => x != null) ?? null;
     return existing ? { ok: true, queued: false, deduped: true, kind, captureSha, armedAt } : { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
   }
@@ -53529,7 +53572,7 @@ function spaces(v) {
   return SPACE_NAMES.map((space) => {
     const s = spaceOf(view, space);
     const label = typeof s.label === "string" && s.label ? s.label : SPACES2[space].label;
-    return { space, label, referent: SPACES2[space].referent, forms: formsOf(view, space).map((f11) => ({ ...f11 })) };
+    return { space, label, referent: SPACES2[space].referent, forms: formsOf(view, space).map((f12) => ({ ...f12 })) };
   });
 }
 function cleaned(form, value) {
@@ -53589,11 +53632,11 @@ function recognise(v, space, value) {
   let rest = raw, kind = null;
   if (space === "enactment") ({ kind, rest } = kindPrefix(view, raw));
   if (!rest) return null;
-  for (const f11 of formsOf(view, space)) {
-    if (typeof f11.form !== "string") continue;
-    const normal = matchForm(f11, rest);
+  for (const f12 of formsOf(view, space)) {
+    if (typeof f12.form !== "string") continue;
+    const normal = matchForm(f12, rest);
     if (normal == null) continue;
-    const out = { space, value: raw, form: f11.form, normal };
+    const out = { space, value: raw, form: f12.form, normal };
     if (space === "enactment") {
       out.kind = kind;
       out.reach = reach(v, normal, kind);
@@ -53618,11 +53661,11 @@ function conflictSays(cs) {
 }
 function floorOf(view, conflicts, kind) {
   const entries = kindsOf(view).filter((k) => k.kind === kind);
-  const floors = entries.map((k) => k.floor).filter((f11) => isObj7(f11) && Number.isFinite(f11.first));
-  const distinct = [...new Set(floors.map((f11) => f11.first))];
+  const floors = entries.map((k) => k.floor).filter((f12) => isObj7(f12) && Number.isFinite(f12.first));
+  const distinct = [...new Set(floors.map((f12) => f12.first))];
   if (distinct.length === 1) {
-    const f11 = floors[0];
-    return { floor: f11.first, system: f11.system, basis: f11.basis };
+    const f12 = floors[0];
+    return { floor: f12.first, system: f12.system, basis: f12.basis };
   }
   const cs = floorConflicts(conflicts, kind);
   if (distinct.length > 1 || cs.length)
@@ -53630,16 +53673,16 @@ function floorOf(view, conflicts, kind) {
   if (!entries.length) return { why: `the active profiles name no enactment kind "${kind}", so no coverage floor is measured for it` };
   return { why: `no coverage floor is measured for ${kind} in the active profiles` };
 }
-var outsideSays = (view, kind, f11) => `a ${kind} below ${systemName(view, f11.system)}'s first (${f11.floor}): OUTSIDE THE RECORD'S REACH, never "not found" \u2014 the record's source holds no ${kind} that old`;
+var outsideSays = (view, kind, f12) => `a ${kind} below ${systemName(view, f12.system)}'s first (${f12.floor}): OUTSIDE THE RECORD'S REACH, never "not found" \u2014 the record's source holds no ${kind} that old`;
 function reach(v, number, kind = null) {
   const { view, conflicts } = viewOf(v);
   const n = typeof number === "number" ? number : typeof number === "string" && /^\s*\d+\s*$/.test(number) ? Number(number) : NaN;
   if (!Number.isFinite(n))
     return { reach: "UNDETERMINED", says: `${JSON.stringify(String(number))} is not a number, so it cannot be compared with a coverage floor` };
   if (typeof kind === "string" && kind) {
-    const f11 = floorOf(view, conflicts, kind);
-    if (f11.floor == null) return { reach: "UNDETERMINED", says: `${f11.why}: whether ${n} is inside the record's reach is undetermined` };
-    return n >= f11.floor ? { reach: "INSIDE", floor: f11.floor, says: `a ${kind} at or above ${systemName(view, f11.system)}'s first (${f11.floor}): the record can look it up` } : { reach: "OUTSIDE_REACH", floor: f11.floor, says: outsideSays(view, kind, f11) };
+    const f12 = floorOf(view, conflicts, kind);
+    if (f12.floor == null) return { reach: "UNDETERMINED", says: `${f12.why}: whether ${n} is inside the record's reach is undetermined` };
+    return n >= f12.floor ? { reach: "INSIDE", floor: f12.floor, says: `a ${kind} at or above ${systemName(view, f12.system)}'s first (${f12.floor}): the record can look it up` } : { reach: "OUTSIDE_REACH", floor: f12.floor, says: outsideSays(view, kind, f12) };
   }
   const kinds = [...new Set(kindsOf(view).map((k) => k.kind).filter((k) => typeof k === "string" && k))];
   if (!kinds.length)
@@ -53742,10 +53785,10 @@ var unpadAll = (s) => String(s).replace(/(^|\D)0+(?=\d)/g, "$1");
 function throughCrosswalk(view, space, ra, rb) {
   const walks = arr(view.crosswalks).filter((c) => isObj7(c) && c.space === space && Array.isArray(c.forms) && (c.forms[0] === ra.form && c.forms[1] === rb.form || c.forms[0] === rb.form && c.forms[1] === ra.form));
   if (!walks.length) return null;
-  const formByName = new Map(formsOf(view, space).map((f11) => [f11.form, f11]));
+  const formByName = new Map(formsOf(view, space).map((f12) => [f12.form, f12]));
   const norm = (form, value) => {
-    const f11 = formByName.get(form);
-    return f11 && (typeof value === "string" || typeof value === "number") ? matchForm(f11, String(value)) : null;
+    const f12 = formByName.get(form);
+    return f12 && (typeof value === "string" || typeof value === "number") ? matchForm(f12, String(value)) : null;
   };
   const partners = /* @__PURE__ */ new Set();
   for (const c of walks) {
@@ -55228,7 +55271,7 @@ var Entities = class _Entities {
     if (!ra || pair && !rb)
       return idspaceRefusal("IDSPACE_VALUE_NOT_IN_SPACE", {
         space: sp,
-        forms: S2.forms.map((f11) => f11.form),
+        forms: S2.forms.map((f12) => f12.form),
         profiles,
         detail: `${!ra ? "a" : "b"} has the shape of no form of the ${S2.label}` + (S2.forms.length ? "" : "; the instance's active jurisdiction profiles give this space no form")
       });
@@ -55670,12 +55713,12 @@ function checkConnectionPairCovers(pair, side, extentKind, extent, covers2) {
   if (!position)
     return refusal7(
       "CONNECTION_PAIR_UNPLACED",
-      `the determining reference on end ${side === "b" ? "B" : "A"}${ref ? ` (${ref})` : ""} carries no position, so whether it was read inside ${describeExtent2({ kind: extentKind, ...extent || {} })} is undetermined`
+      `the determining reference on end ${side === "b" ? "B" : "A"}${ref ? ` (${ref})` : ""} carries no position, so whether it was read inside ${describeExtent3({ kind: extentKind, ...extent || {} })} is undetermined`
     );
   if (typeof covers2 !== "function" || !covers2(position, extentKind, extent))
     return refusal7(
       "CONNECTION_PAIR_OUTSIDE_EXTENT",
-      `the determining reference on end ${side === "b" ? "B" : "A"}${ref ? ` (${ref})` : ""} was read at ${position.ref}, which is outside ${describeExtent2({ kind: extentKind, ...extent || {} })}`
+      `the determining reference on end ${side === "b" ? "B" : "A"}${ref ? ` (${ref})` : ""} was read at ${position.ref}, which is outside ${describeExtent3({ kind: extentKind, ...extent || {} })}`
     );
   return null;
 }
@@ -55701,7 +55744,7 @@ function checkConnectionMentionUnchosen({
     position: m.position ?? null,
     inside: place(m)
   }));
-  const part = describeExtent2({ kind: extentKind, ...extent || {} });
+  const part = describeExtent3({ kind: extentKind, ...extent || {} });
   const name = (list2) => list2.map((m) => `${m.ref} (${m.position ? `read at ${m.position.ref}` : "where it was read is not recorded"})`).join(", ");
   if (!pairReached) {
     const bearing = others.filter((m) => m.inside !== false);
@@ -57049,7 +57092,7 @@ var Connections = class _Connections {
     const bundleId = c.bundleId;
     c.refsReplaced = this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, bundleId);
     this.sql.exec(`DELETE FROM refs WHERE bundle_id=?`, bundleId);
-    const md = (c.files || []).find((f11) => f11.path === "bundle.md");
+    const md = (c.files || []).find((f12) => f12.path === "bundle.md");
     const fmRefs = md && typeof md.text === "string" ? parseFrontmatter(md.text).data?.references ?? [] : [];
     for (const t of Array.isArray(fmRefs) ? fmRefs : []) {
       if (!t || typeof t !== "object" || typeof t.target !== "string") continue;
@@ -57225,7 +57268,7 @@ var Connections = class _Connections {
     if (!add.length) return { ok: true, promoted: false, added: 0 };
     const when = this.now();
     const quoted4 = (v) => cut2(String(v || "").replace(/["\\\n\r]/g, ""), 400);
-    let text4 = spliceReferences2(md.text, add.map((e) => ({
+    let text5 = spliceReferences2(md.text, add.map((e) => ({
       rel: "links_to",
       target: e.to,
       status: "confirmed",
@@ -57234,39 +57277,39 @@ var Connections = class _Connections {
       verdict: LINK_VERDICTS.includes(e.verdict) ? e.verdict : "undetermined",
       note: quoted4(e.address)
     })));
-    if (!text4) return {
+    if (!text5) return {
       ok: false,
       reason: "UNSPLICEABLE_REFERENCES",
       detail: "the source document's references block is not in a shape this act can extend in place"
     };
-    text4 = setScalar2(text4, "last_updated", `"${when}"`);
+    text5 = setScalar2(text5, "last_updated", `"${when}"`);
     const by = typeof identity === "string" && identity.trim() ? identity.trim() : "system";
     const entry = `### Session ${when} | Projected ${add.length} link${add.length === 1 ? "" : "s"} | ${by}
 Trigger: op=linkproject
 Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the source's own link, resolved to a held document; asserted by the source, never by the group.
 `;
-    const logAt = text4.indexOf("## Session Log");
-    if (logAt < 0) text4 += "\n## Session Log\n\n" + entry;
+    const logAt = text5.indexOf("## Session Log");
+    if (logAt < 0) text5 += "\n## Session Log\n\n" + entry;
     else {
-      const nxt = text4.indexOf("\n## ", logAt + 1);
-      const end2 = nxt === -1 ? text4.length : nxt + 1;
-      text4 = text4.slice(0, end2) + entry + "\n" + text4.slice(end2);
+      const nxt = text5.indexOf("\n## ", logAt + 1);
+      const end2 = nxt === -1 ? text5.length : nxt + 1;
+      text5 = text5.slice(0, end2) + entry + "\n" + text5.slice(end2);
     }
     const carried = [];
     for (const path of this.record.livePaths(bundle) || []) {
       if (path === "bundle.md") continue;
-      const f11 = this.record.readFile(bundle, path);
-      if (!f11) continue;
-      carried.push(typeof f11.text === "string" ? { path, text: f11.text, bytes: new TextEncoder().encode(f11.text).length, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes });
+      const f12 = this.record.readFile(bundle, path);
+      if (!f12) continue;
+      carried.push(typeof f12.text === "string" ? { path, text: f12.text, bytes: new TextEncoder().encode(f12.text).length, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes });
     }
-    const bytes2 = new TextEncoder().encode(text4);
-    const fm = parseFrontmatter(text4).data || {};
+    const bytes2 = new TextEncoder().encode(text5);
+    const fm = parseFrontmatter(text5).data || {};
     const r = this.promotion.promote({
       bundleId: bundle,
       base: head.bundleSha,
       snapKey: `${when.replace(/[-:.]/g, "")}_links_${randHex2(4)}`,
       author: by,
-      files: [{ path: "bundle.md", text: text4, bytes: bytes2.length, sha256: sha256HexSync(text4) }, ...carried],
+      files: [{ path: "bundle.md", text: text5, bytes: bytes2.length, sha256: sha256HexSync(text5) }, ...carried],
       meta: {
         object_type: fm.object_type ?? head.type,
         title: fm.title ?? head.title,
@@ -57546,12 +57589,12 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
     let stored = 0, pending = 0;
     this.#transact(() => {
       for (const g of m.items || [])
-        for (const f11 of g.files || []) {
+        for (const f12 of g.files || []) {
           const out = this.#storePair(sha, home.bundle_id, {
             item_address: g.item.url,
-            file_address: f11.url,
+            file_address: f12.url,
             item_anchor: g.item.anchor ?? null,
-            file_anchor: f11.anchor ?? null,
+            file_anchor: f12.anchor ?? null,
             system: m.system ?? null
           }, at22);
           if (out === "stored") stored++;
@@ -57714,8 +57757,8 @@ function portionConnectionAxis(s) {
 function refsReplacedOf(c, kind) {
   return (c && Array.isArray(c.refsReplaced) ? c.refsReplaced : []).filter((r) => r.kind === kind).map((r) => r.target_id);
 }
-function spliceReferences2(text4, additions) {
-  const lines = text4.split("\n");
+function spliceReferences2(text5, additions) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -57746,10 +57789,10 @@ function spliceReferences2(text4, additions) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function setScalar2(text4, key, value) {
-  const lines = text4.split("\n");
+function setScalar2(text5, key, value) {
+  const lines = text5.split("\n");
   const end2 = lines.indexOf("---", 1);
-  if (lines[0] !== "---" || end2 === -1) return text4;
+  if (lines[0] !== "---" || end2 === -1) return text5;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith(`${key}:`)) {
       lines[i] = `${key}: ${value}`;
@@ -59020,8 +59063,8 @@ var Progressions = class {
   #withDecisions(inst, byStage = null) {
     if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
     const decided = byStage || this.#decisionsByStage(inst.progression_key);
-    const findings = inst.findings.map((f11) => ({ ...f11, disposition: decided.get(f11.stage_key) ?? null }));
-    return { ...inst, findings, open_finding_count: findings.filter((f11) => !(f11.disposition && f11.disposition.applies)).length };
+    const findings = inst.findings.map((f12) => ({ ...f12, disposition: decided.get(f12.stage_key) ?? null }));
+    return { ...inst, findings, open_finding_count: findings.filter((f12) => !(f12.disposition && f12.disposition.applies)).length };
   }
   /* R13: the whole derivation stands for every reader; only the back-references to bundles the viewer may not see are
      withheld. Capture shas, grades, findings and counts are the same for everyone. */
@@ -59360,17 +59403,17 @@ var Progressions = class {
   #deadlines(inst) {
     const out = [];
     if (!inst || !inst.found || !Array.isArray(inst.findings)) return out;
-    const missing = inst.findings.filter((f11) => f11.kind === "missing_predecessor");
+    const missing = inst.findings.filter((f12) => f12.kind === "missing_predecessor");
     if (!missing.length) return out;
     const within = new Map(this.#rows(
       `SELECT stage_key, within_interval FROM progression_stages WHERE progression_key=?`,
       inst.progression_key
     ).map((r) => [r.stage_key, r.within_interval]));
     const stageByKey = new Map((inst.stages || []).map((s) => [s.stage_key, s]));
-    for (const f11 of missing) {
-      const wi = within.get(f11.stage_key);
-      if (!wi || !f11.after_stage) continue;
-      const anchor = stageByKey.get(f11.after_stage);
+    for (const f12 of missing) {
+      const wi = within.get(f12.stage_key);
+      if (!wi || !f12.after_stage) continue;
+      const anchor = stageByKey.get(f12.after_stage);
       if (!anchor || !anchor.present) continue;
       let anchorMs = null;
       for (const d of anchor.documents || []) {
@@ -59380,7 +59423,7 @@ var Progressions = class {
       if (anchorMs === null) continue;
       const deadline = intervalDeadlineMs(anchorMs, wi);
       if (deadline === null) continue;
-      out.push({ finding: f11, within_interval: wi, predecessor_stage: f11.after_stage, predecessor_ms: anchorMs, deadline_ms: deadline });
+      out.push({ finding: f12, within_interval: wi, predecessor_stage: f12.after_stage, predecessor_ms: anchorMs, deadline_ms: deadline });
     }
     return out;
   }
@@ -59389,22 +59432,22 @@ var Progressions = class {
     const out = [];
     for (const d of this.#deadlines(inst)) {
       if (d.deadline_ms >= nowMs) continue;
-      const f11 = d.finding;
+      const f12 = d.finding;
       out.push({
         kind: "overdue_successor",
-        stage_key: f11.stage_key,
-        stage_label: f11.stage_label,
-        required: f11.required,
-        after_stage: f11.after_stage,
-        definition_version: f11.definition_version,
+        stage_key: f12.stage_key,
+        stage_label: f12.stage_label,
+        required: f12.required,
+        after_stage: f12.after_stage,
+        definition_version: f12.definition_version,
         predecessor_stage: d.predecessor_stage,
         predecessor_at: new Date(d.predecessor_ms).toISOString(),
         within_interval: d.within_interval,
         deadline: new Date(d.deadline_ms).toISOString(),
         overdue_by_ms: nowMs - d.deadline_ms,
-        grade: f11.grade,
-        grade_determined: f11.grade_determined,
-        detail: "the '" + f11.stage_key + "' stage is " + f11.required + " required and still absent past its '" + d.within_interval + "' deadline after '" + d.predecessor_stage + "' (" + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = " + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade"
+        grade: f12.grade,
+        grade_determined: f12.grade_determined,
+        detail: "the '" + f12.stage_key + "' stage is " + f12.required + " required and still absent past its '" + d.within_interval + "' deadline after '" + d.predecessor_stage + "' (" + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = " + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade"
       });
     }
     return out;
@@ -59447,11 +59490,11 @@ var Progressions = class {
     const groups = /* @__PURE__ */ new Map();
     for (const p of this.#pairs()) {
       const inst = this.#assemble(p.progression_key, p.entity_id);
-      const open = (f11) => !aged(inst.progression_key, f11.stage_key);
-      const missing = (inst.findings || []).filter((f11) => f11.kind === "missing_predecessor" && open(f11));
+      const open = (f12) => !aged(inst.progression_key, f12.stage_key);
+      const missing = (inst.findings || []).filter((f12) => f12.kind === "missing_predecessor" && open(f12));
       const overdueF = this.#overdue(inst, now).filter(open);
-      const others = (inst.findings || []).filter((f11) => f11.kind !== "missing_predecessor" && open(f11));
-      const overdueByStage = new Map(overdueF.map((f11) => [f11.stage_key, f11]));
+      const others = (inst.findings || []).filter((f12) => f12.kind !== "missing_predecessor" && open(f12));
+      const overdueByStage = new Map(overdueF.map((f12) => [f12.stage_key, f12]));
       const findings = [...missing, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
@@ -59463,8 +59506,8 @@ var Progressions = class {
         entity_label: entityLabel,
         findings
       });
-      for (const f11 of missing) {
-        const key = inst.progression_key + "::" + f11.stage_key;
+      for (const f12 of missing) {
+        const key = inst.progression_key + "::" + f12.stage_key;
         let g = groups.get(key);
         if (!g) {
           const prior = recorded.get(key) || null;
@@ -59472,9 +59515,9 @@ var Progressions = class {
             key,
             progression_key: inst.progression_key,
             progression_label: inst.label,
-            stage_key: f11.stage_key,
-            stage_label: f11.stage_label,
-            required: f11.required,
+            stage_key: f12.stage_key,
+            stage_label: f12.stage_label,
+            required: f12.required,
             definition_version: inst.definition_version,
             surfaced_by: "machine",
             overdue_count: 0,
@@ -59492,15 +59535,15 @@ var Progressions = class {
           };
           groups.set(key, g);
         }
-        const od = overdueByStage.get(f11.stage_key) || null;
+        const od = overdueByStage.get(f12.stage_key) || null;
         if (od) g.overdue_count += 1;
         g.instances.push({
           entity_id: inst.entity_id,
           entity_label: entityLabel,
           progression_key: inst.progression_key,
           definition_version: inst.definition_version,
-          grade: f11.grade_determined ? f11.grade : null,
-          grade_determined: f11.grade_determined === true,
+          grade: f12.grade_determined ? f12.grade : null,
+          grade_determined: f12.grade_determined === true,
           overdue: !!od,
           deadline: od ? od.deadline : null
         });
@@ -59554,10 +59597,10 @@ var Progressions = class {
       captureSha
     );
     const assembled = /* @__PURE__ */ new Map();
-    const project = (f11) => ({
-      ...f11,
-      established: f11.grade_determined === true && isEstablished(f11.grade),
-      needs_confirmation: f11.grade === "C"
+    const project = (f12) => ({
+      ...f12,
+      established: f12.grade_determined === true && isEstablished(f12.grade),
+      needs_confirmation: f12.grade === "C"
     });
     const instances38 = [];
     for (const r of rows2) {
@@ -59575,9 +59618,9 @@ var Progressions = class {
       const inst = a.inst;
       if (!inst || !inst.found) continue;
       const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
-      const missing = inst.findings.filter((f11) => f11.kind === "missing_predecessor");
-      const others = inst.findings.filter((f11) => f11.kind !== "missing_predecessor");
-      const findings = [...missing, ...a.overdue, ...others].map(project).map((f11) => ({ ...f11, disposition: a.decided.get(f11.stage_key) ?? null }));
+      const missing = inst.findings.filter((f12) => f12.kind === "missing_predecessor");
+      const others = inst.findings.filter((f12) => f12.kind !== "missing_predecessor");
+      const findings = [...missing, ...a.overdue, ...others].map(project).map((f12) => ({ ...f12, disposition: a.decided.get(f12.stage_key) ?? null }));
       instances38.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
@@ -59588,7 +59631,7 @@ var Progressions = class {
         stage_label: stage ? stage.label : r.stage_key,
         findings,
         finding_count: findings.length,
-        open_finding_count: findings.filter((f11) => !(f11.disposition && f11.disposition.applies)).length
+        open_finding_count: findings.filter((f12) => !(f12.disposition && f12.disposition.applies)).length
       });
     }
     return { ok: true, capture_sha: captureSha, count: instances38.length, instances: instances38 };
@@ -59734,7 +59777,7 @@ __export(checks_exports16, {
   withBiasChecks: () => withBiasChecks
 });
 var ENTITY_ID_RE3 = /^ENT-\d{4}-\d{4}$/;
-function f7(check, severity, message2, repairs) {
+function f8(check, severity, message2, repairs) {
   const out = { check, severity, message: message2 };
   if (repairs) {
     out.repairable = true;
@@ -59742,7 +59785,7 @@ function f7(check, severity, message2, repairs) {
   }
   return out;
 }
-function asText6(v) {
+function asText7(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
@@ -59764,7 +59807,7 @@ function checkBiasExtension(ctx, findings) {
   const state = fm.current_state;
   const statements = Array.isArray(fm.statements) ? fm.statements : null;
   if (statements === null) {
-    findings.push(f7(
+    findings.push(f8(
       "C-26.1",
       "error",
       "a bias bundle carries its statements in frontmatter as statements[], and this one has none",
@@ -59777,17 +59820,17 @@ function checkBiasExtension(ctx, findings) {
     const s = statements[i];
     const at22 = `statements[${i}]`;
     if (!s || typeof s !== "object") {
-      findings.push(f7("C-26.1", "error", `${at22} is not a statement object`));
+      findings.push(f8("C-26.1", "error", `${at22} is not a statement object`));
       continue;
     }
     const id = typeof s.id === "string" ? s.id.trim() : "";
-    const text4 = typeof s.text === "string" ? s.text.trim() : "";
+    const text5 = typeof s.text === "string" ? s.text.trim() : "";
     const kind = typeof s.kind === "string" ? s.kind.trim() : "";
-    if (!id) findings.push(f7("C-26.1", "error", `${at22} has no id, and an id is what an override names`));
-    else if (seen.has(id)) findings.push(f7("C-26.1", "error", `${at22} repeats the statement id '${id}'; ids are stable and unique within a bundle`));
+    if (!id) findings.push(f8("C-26.1", "error", `${at22} has no id, and an id is what an override names`));
+    else if (seen.has(id)) findings.push(f8("C-26.1", "error", `${at22} repeats the statement id '${id}'; ids are stable and unique within a bundle`));
     else seen.add(id);
     if (!BIAS_STATEMENT_KINDS.includes(kind)) {
-      findings.push(f7(
+      findings.push(f8(
         "C-26.1",
         "error",
         `${at22} kind '${kind || "(absent)"}' is not one of: ${BIAS_STATEMENT_KINDS.join(", ")}`,
@@ -59796,7 +59839,7 @@ function checkBiasExtension(ctx, findings) {
     }
     const subject = s.subject === void 0 || s.subject === null ? "" : String(s.subject).trim();
     if (!subject || !ENTITY_ID_RE3.test(subject)) {
-      findings.push(f7(
+      findings.push(f8(
         "C-26.2",
         "error",
         `${at22} subject '${subject.slice(0, 40) || "(absent)"}' is not a subject registry key (ENT-YYYY-NNNN)`,
@@ -59804,11 +59847,11 @@ function checkBiasExtension(ctx, findings) {
       ));
     }
     const nullifies = typeof s.nullifies === "string" ? s.nullifies.trim() : "";
-    if (!text4 && !nullifies)
-      findings.push(f7("C-26.1", "error", `${at22} has no declarative text and nullifies nothing, so it says nothing at all`));
+    if (!text5 && !nullifies)
+      findings.push(f8("C-26.1", "error", `${at22} has no declarative text and nullifies nothing, so it says nothing at all`));
     const justification = typeof s.justification === "string" ? s.justification.trim() : "";
     if (!justification) {
-      findings.push(f7(
+      findings.push(f8(
         "C-26.3",
         "error",
         `${at22} has no justification`,
@@ -59817,7 +59860,7 @@ function checkBiasExtension(ctx, findings) {
     }
     const citations = Array.isArray(s.citations) ? s.citations.filter((c) => c != null && String(c).trim() !== "") : [];
     if (kind === "pattern" && citations.length === 0 && state !== "draft") {
-      findings.push(f7(
+      findings.push(f8(
         "C-26.4",
         "error",
         `${at22} is a pattern statement with no citation, and a pattern statement cannot leave draft without one`,
@@ -59838,8 +59881,8 @@ function checkBiasExtension(ctx, findings) {
         ]
       ));
     }
-    if (text4 && (BIAS_VERDICT_WHOLESALE.test(text4) || BIAS_VERDICT_SPEAKER.some((re) => re.test(text4)))) {
-      findings.push(f7(
+    if (text5 && (BIAS_VERDICT_WHOLESALE.test(text5) || BIAS_VERDICT_SPEAKER.some((re) => re.test(text5)))) {
+      findings.push(f8(
         "C-26.5",
         "error",
         `${at22} pre-assigns a truth value wholesale to its subject, which is MALFORMED whoever declares it`,
@@ -59849,9 +59892,9 @@ function checkBiasExtension(ctx, findings) {
         ]
       ));
     }
-    const carriesBar = s.required_strength !== void 0 || s.bar !== void 0 && s.bar !== null || text4 && BIAS_BAR_PHRASING.some((re) => re.test(text4));
+    const carriesBar = s.required_strength !== void 0 || s.bar !== void 0 && s.bar !== null || text5 && BIAS_BAR_PHRASING.some((re) => re.test(text5));
     if (carriesBar) {
-      findings.push(f7(
+      findings.push(f8(
         "C-26.6",
         "error",
         `${at22} states a BAR \u2014 how strong support must be before you assert \u2014 and a bar is not a lens`,
@@ -59864,10 +59907,10 @@ function checkBiasExtension(ctx, findings) {
   }
   if (state === "adopted") {
     const body = ctx.files.get("bundle.md");
-    const md = body === void 0 ? "" : asText6(body);
+    const md = body === void 0 ? "" : asText7(body);
     const m = /\n## What This Does Not Enforce[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + md);
     if (!m || m[1].trim() === "") {
-      findings.push(f7(
+      findings.push(f8(
         "C-26.7",
         "error",
         'this bias set is adopted and says nothing under "## What This Does Not Enforce"',
@@ -59887,7 +59930,7 @@ function checkBiasSet(fm, files) {
 }
 function checkBiasImage(image) {
   const raw = image instanceof Map ? image.get("bundle.md") : image ? image["bundle.md"] : void 0;
-  const md = typeof raw === "string" ? raw : raw instanceof Uint8Array ? asText6(raw) : null;
+  const md = typeof raw === "string" ? raw : raw instanceof Uint8Array ? asText7(raw) : null;
   if (md === null) return [];
   const fm = parseFrontmatter(md).data;
   return fm && typeof fm === "object" ? checkBiasSet(fm, /* @__PURE__ */ new Map([["bundle.md", md]])) : [];
@@ -60228,7 +60271,7 @@ var safeJson8 = (s) => {
 };
 var isObj8 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var str3 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var sha256Hex10 = (text4) => createSha256().update(enc.encode(String(text4))).hex();
+var sha256Hex10 = (text5) => createSha256().update(enc.encode(String(text5))).hex();
 function statementRows(bundleId, fm) {
   const stmts = fm && Array.isArray(fm.statements) ? fm.statements : [];
   const out = [];
@@ -60339,9 +60382,9 @@ var Bias = class _Bias {
     if (!c || c.replay || c.pkg && c.pkg.replay) return null;
     const envelopeType = c.meta && typeof c.meta === "object" ? normalizeType(c.meta.object_type) : null;
     if (c.promotedType !== "bias" && envelopeType !== "bias") return null;
-    const text4 = bundleMdText(c.files) ?? "";
-    const fm = parseFrontmatter(text4).data;
-    const errs = checkBiasSet(fm, /* @__PURE__ */ new Map([["bundle.md", text4]])).filter((x) => x.severity === "error");
+    const text5 = bundleMdText(c.files) ?? "";
+    const fm = parseFrontmatter(text5).data;
+    const errs = checkBiasSet(fm, /* @__PURE__ */ new Map([["bundle.md", text5]])).filter((x) => x.severity === "error");
     if (!errs.length) return null;
     return this.#refuse(
       "BIAS_REFUSED",
@@ -60569,12 +60612,12 @@ var Bias = class _Bias {
         ...seen.args
       );
       for (const a of rows2) {
-        const text4 = this.#record.textAtSha(a.bundle_id, a.bundle_sha);
-        if (text4 === null) {
+        const text5 = this.#record.textAtSha(a.bundle_id, a.bundle_sha);
+        if (text5 === null) {
           unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type });
           continue;
         }
-        const fm = parseFrontmatter(text4).data || {};
+        const fm = parseFrontmatter(text5).data || {};
         if (fm.current_state !== "adopted") {
           const pinnedState = fm.current_state;
           pinsProposed.push({
@@ -60588,7 +60631,7 @@ var Bias = class _Bias {
           continue;
         }
         pinned.set(a.bundle_id, fm);
-        pinnedText.set(a.bundle_id, text4);
+        pinnedText.set(a.bundle_id, text5);
         out.push(a);
       }
       return out;
@@ -60772,8 +60815,8 @@ var Bias = class _Bias {
         "BIAS_INHALE_CANNOT_ADOPT",
         "op=biasinhale reads a policy and returns a PROPOSAL. Adopting is op=biasadopt, signed by a member \u2014 and only after the proposed set has been written into a bias bundle and offered."
       );
-    const text4 = String(policy || "");
-    const allSentences = text4.split(/\n{2,}|(?<=[.;:])\s+/).map((s) => s.replace(/\s+/g, " ").trim()).filter((s) => s.length > 12);
+    const text5 = String(policy || "");
+    const allSentences = text5.split(/\n{2,}|(?<=[.;:])\s+/).map((s) => s.replace(/\s+/g, " ").trim()).filter((s) => s.length > 12);
     const readSentences = allSentences.slice(0, BIAS_INHALE_SENTENCES_MAX);
     const SCRUTINY = /\b(verify|verified|verification|corroborat\w+|cross-?check\w*|confirm\w*|reliab\w+|track record|motive|direct knowledge|first-?hand|vet\w*|scrutin\w+|authenticat\w+)\b/i;
     const INFERENCE = /\b(does not (mean|indicate|imply|constitute)|is not (evidence|an indication|proof|confirmation)|should not be (taken|read|treated|inferred)|do not (assume|infer)|cannot be inferred|must not be (taken|read) as)\b/i;
@@ -61853,12 +61896,12 @@ var INQUIRY_ROWS = Object.freeze({
 async function checkInquiryEntry(bundleMd, opts = {}) {
   try {
     const o = opts && typeof opts === "object" ? opts : {};
-    const text4 = String(bundleMd ?? "");
-    const id = (/^id:\s*(\S+)/m.exec(text4) || [])[1] || "";
-    const r = await checkBundle(
+    const text5 = String(bundleMd ?? "");
+    const id = (/^id:\s*(\S+)/m.exec(text5) || [])[1] || "";
+    const r = await checkBundle2(
       {
         folderName: id,
-        files: /* @__PURE__ */ new Map([["bundle.md", text4]]),
+        files: /* @__PURE__ */ new Map([["bundle.md", text5]]),
         publishedRegistry: o.publishedRegistry ?? null,
         earnedRegistry: o.earnedRegistry ?? null
       },
@@ -61872,8 +61915,8 @@ async function checkInquiryEntry(bundleMd, opts = {}) {
 }
 
 // src/inquiry/text.mjs
-function setScalar3(text4, key, value) {
-  const lines = text4.split("\n");
+function setScalar3(text5, key, value) {
+  const lines = text5.split("\n");
   const end2 = lines.indexOf("---", 1);
   for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
     if (lines[i].startsWith(key + ":")) {
@@ -61881,13 +61924,13 @@ function setScalar3(text4, key, value) {
       return lines.join("\n");
     }
   }
-  return text4;
+  return text5;
 }
-function setOrAddScalar2(text4, key, value) {
-  const lines = text4.split("\n");
-  if (lines[0] !== "---") return text4;
+function setOrAddScalar2(text5, key, value) {
+  const lines = text5.split("\n");
+  if (lines[0] !== "---") return text5;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text4;
+  if (end2 === -1) return text5;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith(key + ":")) {
       lines[i] = `${key}: ${value}`;
@@ -61895,8 +61938,8 @@ function setOrAddScalar2(text4, key, value) {
     }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function appendStateHistory2(text4, e) {
-  const lines = text4.split("\n");
+function appendStateHistory2(text5, e) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -61923,17 +61966,17 @@ function appendStateHistory2(text4, e) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function removeBlock(text4, key) {
-  const lines = text4.split("\n");
-  if (lines[0] !== "---") return text4;
+function removeBlock(text5, key) {
+  const lines = text5.split("\n");
+  if (lines[0] !== "---") return text5;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text4;
+  if (end2 === -1) return text5;
   let at22 = -1;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
     at22 = i;
     break;
   }
-  if (at22 === -1) return text4;
+  if (at22 === -1) return text5;
   let last = at22;
   for (let i = at22 + 1; i < end2; i++) {
     if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
@@ -61941,37 +61984,37 @@ function removeBlock(text4, key) {
   }
   return [...lines.slice(0, at22), ...lines.slice(last + 1)].join("\n");
 }
-function setOrAddBlock(text4, key, block) {
-  const t = removeBlock(text4, key);
+function setOrAddBlock(text5, key, block) {
+  const t = removeBlock(text5, key);
   const lines = t.split("\n");
   if (lines[0] !== "---") return t;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return t;
   return [...lines.slice(0, end2), `${key}:`, ...block, ...lines.slice(end2)].join("\n");
 }
-function setSection(text4, heading, lines) {
-  const at22 = text4.indexOf(`
+function setSection(text5, heading, lines) {
+  const at22 = text5.indexOf(`
 ${heading}
 `);
   const body = `${heading}
 
 ${lines.join("\n")}
 `;
-  if (at22 === -1) return text4.replace(/\s*$/, "\n") + "\n" + body;
+  if (at22 === -1) return text5.replace(/\s*$/, "\n") + "\n" + body;
   const start = at22 + 1;
-  const nxt = text4.indexOf("\n## ", start + 1);
-  const end2 = nxt === -1 ? text4.length : nxt + 1;
-  return text4.slice(0, start) + body + "\n" + text4.slice(end2);
+  const nxt = text5.indexOf("\n## ", start + 1);
+  const end2 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, start) + body + "\n" + text5.slice(end2);
 }
-function appendSessionLog2(text4, entry) {
-  const at22 = text4.indexOf("## Session Log");
-  if (at22 < 0) return text4 + "\n## Session Log\n\n" + entry;
-  const nxt = text4.indexOf("\n## ", at22 + 1);
-  const cut3 = nxt === -1 ? text4.length : nxt + 1;
-  return text4.slice(0, cut3) + entry + "\n" + text4.slice(cut3);
+function appendSessionLog2(text5, entry) {
+  const at22 = text5.indexOf("## Session Log");
+  if (at22 < 0) return text5 + "\n## Session Log\n\n" + entry;
+  const nxt = text5.indexOf("\n## ", at22 + 1);
+  const cut3 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
 }
-function spliceBasisGround(text4, byOrd) {
-  const lines = text4.split("\n");
+function spliceBasisGround(text5, byOrd) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -62007,8 +62050,8 @@ function spliceBasisGround(text4, byOrd) {
   }
   return [...lines.slice(0, starts[0]), ...segs.flat(), ...lines.slice(blockEnd + 1)].join("\n");
 }
-function blockEntries(text4, key) {
-  const lines = String(text4 ?? "").split("\n");
+function blockEntries(text5, key) {
+  const lines = String(text5 ?? "").split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -62069,19 +62112,19 @@ var EXPLORES_FIELDS = ["coordinate", "canon", "hypothesis"];
 var isMap = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var present = (v) => v !== void 0 && v !== null;
 var blank = (v) => !present(v) || typeof v === "string" && v.trim() === "";
-var text = (v) => typeof v === "string" ? v : typeof v === "number" ? String(v) : null;
+var text2 = (v) => typeof v === "string" ? v : typeof v === "number" ? String(v) : null;
 function resolutionLines(resolution) {
   try {
     if (!isMap(resolution)) return [];
     const q7 = (v) => `"${fmSafe(v)}"`;
     const out = ["resolution:"];
     const scalar2 = (key, v) => {
-      const s = text(v);
+      const s = text2(v);
       if (s !== null && fmSafe(s) !== "") out.push(`  ${key}: ${q7(s)}`);
     };
     scalar2("kind", resolution.kind);
     if (Array.isArray(resolution.coordinates)) {
-      const items = resolution.coordinates.map((c) => fmSafe(String(text(c) ?? "").replace(/[,[\]]/g, " ")).replace(/\s+/g, " ")).filter((c) => c !== "");
+      const items = resolution.coordinates.map((c) => fmSafe(String(text2(c) ?? "").replace(/[,[\]]/g, " ")).replace(/\s+/g, " ")).filter((c) => c !== "");
       if (items.length) out.push(`  coordinates: [${items.join(", ")}]`);
     }
     const qual = isMap(resolution.qualifiers) ? resolution.qualifiers : {};
@@ -62118,7 +62161,7 @@ function exploresOf(fm) {
   const [k] = keys, v = e[k];
   if (k === "coordinate") return DISSOLVED_BY.includes(v) ? { coordinate: v } : null;
   if (k === "canon") return NORM_CANONS.includes(v) ? { canon: v } : null;
-  const h = text(v);
+  const h = text2(v);
   return h !== null && h.trim() !== "" && h.length <= HYPOTHESIS_MAX ? { hypothesis: h } : null;
 }
 function contradictionFindings(fm) {
@@ -62153,7 +62196,7 @@ function contradictionFindings(fm) {
       else {
         const family = isMap(block) ? resolutionFamily(kind) : null;
         if (isMap(block) && !family)
-          find("RESOLUTION_KIND_UNKNOWN", `'${fmSafe(text(kind) ?? typeof kind)}' is not a resolution kind; the kinds are ${RESOLUTION_KINDS.join(", ")}.`, "kind");
+          find("RESOLUTION_KIND_UNKNOWN", `'${fmSafe(text2(kind) ?? typeof kind)}' is not a resolution kind; the kinds are ${RESOLUTION_KINDS.join(", ")}.`, "kind");
         const incomplete = (field, detail) => find("RESOLUTION_INCOMPLETE", detail, field);
         if (!isMap(block))
           incomplete("resolution", "`resolution` is a block of fields (`kind` and what that kind needs), not a single value.");
@@ -62175,7 +62218,7 @@ function contradictionFindings(fm) {
           const reason = block.reason;
           if (family === "CORRECTED" && blank(reason))
             incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
-          else if (present(reason) && (text(reason) === null || text(reason).trim() === ""))
+          else if (present(reason) && (text2(reason) === null || text2(reason).trim() === ""))
             incomplete("reason", "`reason` is a non-empty statement.");
           const canon3 = block.canon;
           if (kind === "conflict_of_norms" && !present(canon3))
@@ -62185,7 +62228,7 @@ function contradictionFindings(fm) {
           for (const [key, name] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
             const v = block[key];
             if (!present(v)) continue;
-            const s = text(v);
+            const s = text2(v);
             if (s === null || s.length > QUALIFIER_MAX)
               incomplete(`qualifiers.${name}`, `a qualifier on side ${name} is a statement of at most ${QUALIFIER_MAX} characters.`);
           }
@@ -62243,7 +62286,7 @@ var ROW_FAMILIES2 = [
 ];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
-  const row2 = ROW_FAMILIES2.map((f11) => f11 && f11[answer.reason]).find((r) => r && r.check);
+  const row2 = ROW_FAMILIES2.map((f12) => f12 && f12[answer.reason]).find((r) => r && r.check);
   return row2 ? { ...answer, check: row2.check, translation: row2.translation } : answer;
 }
 function legCapped(stated, earned, targetId) {
@@ -62284,9 +62327,9 @@ function carriedFiles(sql, bundleId) {
     carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
   return carried;
 }
-var mdFile = (text4) => {
-  const bytes2 = new TextEncoder().encode(text4);
-  return { path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() };
+var mdFile = (text5) => {
+  const bytes2 = new TextEncoder().encode(text5);
+  return { path: "bundle.md", text: text5, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() };
 };
 var LEG_FIELDS = ["target", "role", "grade", "grade_axis", "grade_source", "target_edition", "author", "date", "ground"];
 function legRebuilt(l) {
@@ -62369,16 +62412,16 @@ var Inquiry = class _Inquiry {
   /* ---------------------------------------------------------------- facts from later modules (N56, promotion R40) */
   /* A published case's member cannot be divided, re-grouped or set down (R35). Unprovided, it is refused, never false. */
   #caseMemberFact(id) {
-    const f11 = this.promotion.fact("caseMember", id);
-    return f11.ok ? { member: !!f11.value } : { unavailable: f11 };
+    const f12 = this.promotion.fact("caseMember", id);
+    return f12.ok ? { member: !!f12.value } : { unavailable: f12 };
   }
   #caseMember(id) {
-    const f11 = this.#caseMemberFact(id);
-    return f11.unavailable ? true : f11.member;
+    const f12 = this.#caseMemberFact(id);
+    return f12.unavailable ? true : f12.member;
   }
   #publishedRegistry(bundleId, targets) {
-    const f11 = this.promotion.fact("publishedRegistry", bundleId, targets);
-    return f11.ok ? f11.value : null;
+    const f12 = this.promotion.fact("publishedRegistry", bundleId, targets);
+    return f12.ok ? f12.value : null;
   }
   /* ---------------------------------------------------------------- registrations this module offers (K31) */
   /** R21, R25: `reevaluation`'s obligation. `fn({target, cause, since, viewer})` answers the dependents raised. */
@@ -62419,7 +62462,7 @@ var Inquiry = class _Inquiry {
     if (raises === null)
       return { reevaluation_absent: "no module is registered to raise the re-evaluation this act would raise, so none is named here" };
     const failed2 = [];
-    for (const r of raises) for (const f11 of r.failed) if (!failed2.includes(f11)) failed2.push(f11);
+    for (const r of raises) for (const f12 of r.failed) if (!failed2.includes(f12)) failed2.push(f12);
     return { reevaluation: {
       source: cause,
       since,
@@ -62458,7 +62501,7 @@ var Inquiry = class _Inquiry {
    *  inside the promotion's transaction, before the write. */
   check(c) {
     const { pkg, bundleId, files, promotedType } = stepContext(c);
-    const basisMd = Array.isArray(files) ? files.find((f11) => f11 && f11.path === "bundle.md") : null;
+    const basisMd = Array.isArray(files) ? files.find((f12) => f12 && f12.path === "bundle.md") : null;
     const docFm = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
     const isInquiry = promotedType === "inquiry";
     const basisFm = isInquiry ? docFm : null;
@@ -62640,7 +62683,7 @@ var Inquiry = class _Inquiry {
           const named = legContentId(leg);
           if (named) rowId = named;
           else {
-            const held = cp.authored ? priorContentAt.get(`${leg.target}\0${canonicalExtent2(ext)}\0${cp.captureSha}`) : priorContent.get(`${leg.target}\0${canonicalExtent2(ext)}`);
+            const held = cp.authored ? priorContentAt.get(`${leg.target}\0${canonicalExtent3(ext)}\0${cp.captureSha}`) : priorContent.get(`${leg.target}\0${canonicalExtent3(ext)}`);
             if (held) {
               rowId = held;
               carriedRow = true;
@@ -63108,38 +63151,38 @@ var Inquiry = class _Inquiry {
             bundleId: id,
             detail: "this inquiry has no readable bundle.md, so its state cannot be moved; nothing was moved"
           };
-        let text4 = appendStateHistory2(liveMd.content, {
+        let text5 = appendStateHistory2(liveMd.content, {
           timestamp: when,
           from_state: cur.current_state,
           to_state: to,
           blurb: why,
           author: author || "member"
         });
-        if (!text4)
+        if (!text5)
           return {
             ok: false,
             reason: "UNSPLICEABLE_STATE_HISTORY",
             bundleId: id,
             detail: "this document's state_history block is not in a shape this grammar can extend in place, and a disposition that recorded no transition would leave prior_state pointing at a history the document does not carry (C-4.2); nothing was moved"
           };
-        text4 = setScalar3(text4, "prior_state", cur.current_state);
-        text4 = setScalar3(text4, "current_state", to);
-        text4 = setOrAddScalar2(text4, "disposition_reason", `"${why}"`);
-        text4 = setScalar3(text4, "last_updated", `"${when}"`);
-        text4 = appendSessionLog2(
-          text4,
+        text5 = setScalar3(text5, "prior_state", cur.current_state);
+        text5 = setScalar3(text5, "current_state", to);
+        text5 = setOrAddScalar2(text5, "disposition_reason", `"${why}"`);
+        text5 = setScalar3(text5, "last_updated", `"${when}"`);
+        text5 = appendSessionLog2(
+          text5,
           `### Session ${when} | ${to === "deferred" ? "Deferred" : "Dismissed"} | ${author || "member"}
 Trigger: selection ${handle}
 Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
 `
         );
-        const fm = parseFrontmatter(text4).data || {};
+        const fm = parseFrontmatter(text5).data || {};
         const promoted = this.#promote({
           bundleId: id,
           base: cur.bundle_sha,
           snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
           author: author || "member",
-          files: [mdFile(text4), ...carriedFiles(this.sql, id)],
+          files: [mdFile(text5), ...carriedFiles(this.sql, id)],
           meta: {
             object_type: "inquiry",
             title: fm.title,
@@ -63535,26 +63578,26 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
       const sibs = ids.filter((x) => x !== id);
       const mine = [...homes.entries()].filter(([, to]) => to.includes(id)).map(([ord]) => ord).sort((x, y) => x - y);
       const childLegs = mine.map((ord) => legs[ord]);
-      let text5 = parentText;
-      text5 = setScalar3(text5, "id", id);
-      text5 = setScalar3(text5, "title", `"${fmSafe(deriveInquiryTitle(q7) ?? q7)}"`);
-      text5 = setScalar3(text5, "current_state", "open");
-      text5 = setScalar3(text5, "prior_state", "null");
-      text5 = setOrAddScalar2(text5, "created", `"${when}"`);
-      text5 = setOrAddScalar2(text5, "last_updated", `"${when}"`);
-      text5 = removeBlock(text5, "state_history");
-      text5 = setOrAddScalar2(text5, "state_history", "[]");
-      text5 = setOrAddScalar2(text5, "conclusion", `""`);
-      text5 = setScalar3(text5, "conclusion_version", `""`);
-      text5 = setScalar3(text5, "conclusion_claim", `""`);
-      text5 = setOrAddScalar2(text5, "falsifier", `""`);
-      text5 = setOrAddScalar2(text5, "falsifier_override_by", `""`);
-      text5 = setOrAddScalar2(text5, "falsifier_override_at", `""`);
-      text5 = setOrAddScalar2(text5, "disposition_reason", `""`);
-      text5 = setOrAddScalar2(text5, "division_parent", target);
-      text5 = setOrAddScalar2(text5, "division_siblings", `[${sibs.join(", ")}]`);
+      let text6 = parentText;
+      text6 = setScalar3(text6, "id", id);
+      text6 = setScalar3(text6, "title", `"${fmSafe(deriveInquiryTitle(q7) ?? q7)}"`);
+      text6 = setScalar3(text6, "current_state", "open");
+      text6 = setScalar3(text6, "prior_state", "null");
+      text6 = setOrAddScalar2(text6, "created", `"${when}"`);
+      text6 = setOrAddScalar2(text6, "last_updated", `"${when}"`);
+      text6 = removeBlock(text6, "state_history");
+      text6 = setOrAddScalar2(text6, "state_history", "[]");
+      text6 = setOrAddScalar2(text6, "conclusion", `""`);
+      text6 = setScalar3(text6, "conclusion_version", `""`);
+      text6 = setScalar3(text6, "conclusion_claim", `""`);
+      text6 = setOrAddScalar2(text6, "falsifier", `""`);
+      text6 = setOrAddScalar2(text6, "falsifier_override_by", `""`);
+      text6 = setOrAddScalar2(text6, "falsifier_override_at", `""`);
+      text6 = setOrAddScalar2(text6, "disposition_reason", `""`);
+      text6 = setOrAddScalar2(text6, "division_parent", target);
+      text6 = setOrAddScalar2(text6, "division_siblings", `[${sibs.join(", ")}]`);
       const refTargets = [...new Set(childLegs.map((l) => l.target).filter((t) => typeof t === "string"))];
-      text5 = setOrAddBlock(text5, "references", [
+      text6 = setOrAddBlock(text6, "references", [
         ...refTargets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
         `  - target: ${target}`,
         "    rel: supersedes",
@@ -63568,26 +63611,26 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         const lines = seg || legRebuilt(legs[ord]);
         return keepGroups ? lines : lines.filter((ln) => !/^\s+ground:/.test(ln));
       };
-      text5 = setOrAddBlock(text5, "basis", mine.flatMap(legLines));
+      text6 = setOrAddBlock(text6, "basis", mine.flatMap(legLines));
       if (keepGroups) {
         const labels = new Set(mine.map((ord) => ordGround[ord]));
-        text5 = setOrAddBlock(text5, "grounds", rawGrounds.filter((r) => labels.has(r.label)).flatMap((r) => r.lines));
-      } else text5 = removeBlock(text5, "grounds");
-      text5 = removeBlock(text5, "division");
-      text5 = removeBlock(text5, "division_apportionment");
-      text5 = removeBlock(text5, "contradiction");
-      text5 = removeBlock(text5, "resolution");
-      text5 = setSection(text5, "## Question", [q7]);
-      text5 = setSection(text5, "## What It Rests On", [
+        text6 = setOrAddBlock(text6, "grounds", rawGrounds.filter((r) => labels.has(r.label)).flatMap((r) => r.lines));
+      } else text6 = removeBlock(text6, "grounds");
+      text6 = removeBlock(text6, "division");
+      text6 = removeBlock(text6, "division_apportionment");
+      text6 = removeBlock(text6, "contradiction");
+      text6 = removeBlock(text6, "resolution");
+      text6 = setSection(text6, "## Question", [q7]);
+      text6 = setSection(text6, "## What It Rests On", [
         `Divided out of ${target} on ${when} by ${who2}.`,
         "",
         why,
         "",
         `The other half of that question stays on the record: ${sibs.join(", ")}. ${target} is the divided parent and records where every leg went, including any leg that cuts against this question.`
       ]);
-      text5 = setSection(text5, "## Conclusion", []);
-      text5 = setSection(text5, "## What Would Falsify This", []);
-      text5 = setSection(text5, "## Session Log", [
+      text6 = setSection(text6, "## Conclusion", []);
+      text6 = setSection(text6, "## What Would Falsify This", []);
+      text6 = setSection(text6, "## Session Log", [
         `### Session ${when} | Divided out | ${who2}`,
         `Trigger: op=inquirydivide on ${target}`,
         `Changes: created from ${target}, ${childLegs.length} leg(s) apportioned here.`,
@@ -63595,7 +63638,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         `Siblings: ${sibs.join(", ")}`,
         `Reason: ${why}`
       ]);
-      plans.push({ id, q: q7, sibs, mine, legs: childLegs, text: text5 });
+      plans.push({ id, q: q7, sibs, mine, legs: childLegs, text: text6 });
     }
     for (const pl of plans) {
       const cf = parseFrontmatter(pl.text).data || {};
@@ -63628,8 +63671,8 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
           detail: `the document this division would create for ${pl.id} would not pass the catalog, so nothing was written: the parent is untouched and no child exists. A division that landed half-applied would leave a terminal parent naming a question nobody can open.`
         };
     }
-    let text4 = parentText;
-    const withHistory = appendStateHistory2(text4, {
+    let text5 = parentText;
+    const withHistory = appendStateHistory2(text5, {
       timestamp: when,
       from_state: b.current_state,
       to_state: "divided",
@@ -63643,10 +63686,10 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         target,
         detail: "this document's state_history block cannot be extended in place, and a division recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text4 = withHistory;
-    text4 = setScalar3(text4, "prior_state", b.current_state);
-    text4 = setScalar3(text4, "current_state", "divided");
-    text4 = setOrAddBlock(text4, "division", [
+    text5 = withHistory;
+    text5 = setScalar3(text5, "prior_state", b.current_state);
+    text5 = setScalar3(text5, "current_state", "divided");
+    text5 = setOrAddBlock(text5, "division", [
       `  reason: "${fmSafe(why)}"`,
       `  apportioned_by: ${who2}`,
       `  at: "${when}"`,
@@ -63661,9 +63704,9 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
           `    role: ${legs[i].role ?? "supports"}`,
           `    to: ${to}`
         ]);
-    text4 = setOrAddBlock(text4, "division_apportionment", rows2.flat());
-    text4 = setScalar3(text4, "last_updated", `"${when}"`);
-    text4 = setSection(text4, "## Conclusion", [
+    text5 = setOrAddBlock(text5, "division_apportionment", rows2.flat());
+    text5 = setScalar3(text5, "last_updated", `"${when}"`);
+    text5 = setSection(text5, "## Conclusion", [
       ...typeof fm.conclusion === "string" && fm.conclusion.trim() ? [fm.conclusion, ""] : [],
       `Divided on ${when} by ${who2} into ${ids.join(", ")}: ${why}`,
       "",
@@ -63678,12 +63721,12 @@ Into: ${ids.join(", ")}
 Reason: ${why}
 Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter((l) => l.role === "cuts_against").length} cutting against.
 `;
-    const at22 = text4.indexOf("## Session Log");
-    if (at22 < 0) text4 += "\n## Session Log\n\n" + entry;
+    const at22 = text5.indexOf("## Session Log");
+    if (at22 < 0) text5 += "\n## Session Log\n\n" + entry;
     else {
-      const nxt = text4.indexOf("\n## ", at22 + 1);
-      const cutAt = nxt === -1 ? text4.length : nxt + 1;
-      text4 = text4.slice(0, cutAt) + entry + "\n" + text4.slice(cutAt);
+      const nxt = text5.indexOf("\n## ", at22 + 1);
+      const cutAt = nxt === -1 ? text5.length : nxt + 1;
+      text5 = text5.slice(0, cutAt) + entry + "\n" + text5.slice(cutAt);
     }
     let promoted = null;
     const created = [];
@@ -63693,7 +63736,7 @@ Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter(
         base: b.bundle_sha,
         snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
         author: who2,
-        files: [mdFile(text4), ...carriedFiles(this.sql, target)],
+        files: [mdFile(text5), ...carriedFiles(this.sql, target)],
         meta: {
           object_type: fm.object_type ?? b.object_type,
           title: fm.title,
@@ -63923,8 +63966,8 @@ Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter(
         target,
         detail: "this inquiry has no readable bundle.md, so its structure cannot be authored"
       };
-    let text4 = liveMd.content;
-    const fm = parseFrontmatter(text4).data || {};
+    let text5 = liveMd.content;
+    const fm = parseFrontmatter(text5).data || {};
     const all = Array.isArray(fm.basis) ? fm.basis : [];
     const legs = all.filter((l) => l && typeof l === "object");
     if (!legs.length)
@@ -64089,7 +64132,7 @@ Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter(
         detail: "the structure this would author is refused by the SAME catalog function op=promote runs at the write, so nothing was written. Every group is a claim that its legs are enough on their own, and that claim carries a name and a date."
       };
     const before = this.#strength(target);
-    const spliced = spliceBasisGround(text4, nextLabel);
+    const spliced = spliceBasisGround(text5, nextLabel);
     if (!spliced)
       return {
         ok: false,
@@ -64097,17 +64140,17 @@ Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter(
         target,
         detail: "this document's basis block is not in a shape this grammar can edit in place. Nothing was written \u2014 a partial edit of a basis is worse than none."
       };
-    text4 = spliced;
-    text4 = grounds.length ? setOrAddBlock(text4, "grounds", rowsOut.flatMap((r) => [
+    text5 = spliced;
+    text5 = grounds.length ? setOrAddBlock(text5, "grounds", rowsOut.flatMap((r) => [
       `  - ground: ${r.ground}`,
       `    asserted_by: ${r.asserted_by}`,
       `    at: "${r.at}"`,
       ...r.statement === null ? [] : [`    statement: "${r.statement}"`]
-    ])) : removeBlock(text4, "grounds");
-    text4 = setScalar3(text4, "last_updated", `"${when}"`);
+    ])) : removeBlock(text5, "grounds");
+    text5 = setScalar3(text5, "last_updated", `"${when}"`);
     const w = (p) => `capture ${p.capture.state === "graded" ? p.capture.grade : p.capture.state}, connection ${p.connection.state === "graded" ? p.connection.grade : p.connection.state}` + (p.testimony && p.testimony.state !== "unrated" ? `, testimony ${p.testimony.state === "graded" ? p.testimony.grade : p.testimony.state}` : "");
-    text4 = appendSessionLog2(
-      text4,
+    text5 = appendSessionLog2(
+      text5,
       `### Session ${when} | ${restructure ? "Restructured" : "Grouped"} | ${who2}
 Trigger: op=inquiryground on ${target}
 Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(s) \u2014 ` + rowsOut.map((r) => `${r.ground}: ${r.legs.join(", ")}`).join("; ") : `grouping removed; ${legs.length} leg(s) read as necessary again`}.
@@ -64120,7 +64163,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
       base: b.bundle_sha,
       snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
       author: who2,
-      files: [mdFile(text4), ...carriedFiles(this.sql, target)],
+      files: [mdFile(text5), ...carriedFiles(this.sql, target)],
       /* NO STATE MOVES. The meta carries the document's own state forward
          unchanged — this act authors what a question rests on, not where it
          stands — which is why it is not in index.mjs's STATE_ACTIONS. */
@@ -64811,8 +64854,8 @@ function blockAt(lines, end2, key) {
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(`${key}:`)) return i;
   return -1;
 }
-function setVersionField(text4, rowName, key, value) {
-  const lines = text4.split("\n");
+function setVersionField(text5, rowName, key, value) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -64844,8 +64887,8 @@ function setVersionField(text4, rowName, key, value) {
   }
   return [...lines.slice(0, rowEnd), `    ${key}: ${lit}`, ...lines.slice(rowEnd)].join("\n");
 }
-function setCurrentVersionRow(text4, inquiryId, vname, who2, when) {
-  const lines = text4.split("\n");
+function setCurrentVersionRow(text5, inquiryId, vname, who2, when) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -64874,9 +64917,9 @@ function setCurrentVersionRow(text4, inquiryId, vname, who2, when) {
   if (rowEnd === -1) rowEnd = i;
   return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join("\n");
 }
-function appendFmRows(text4, key, rowLines) {
-  if (!rowLines.length) return text4;
-  const lines = text4.split("\n");
+function appendFmRows(text5, key, rowLines) {
+  if (!rowLines.length) return text5;
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -64889,30 +64932,30 @@ function appendFmRows(text4, key, rowLines) {
   while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) i++;
   return [...lines.slice(0, i), ...rowLines, ...lines.slice(i)].join("\n");
 }
-function appendConclusionEntry(text4, inquiryId, f11) {
-  const lines = text4.split("\n");
+function appendConclusionEntry(text5, inquiryId, f12) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
   const q7 = quoted;
-  const block = f11.act === "withdrawn" ? [
+  const block = f12.act === "withdrawn" ? [
     `  - inquiry: ${q7(inquiryId)}`,
     `    act: "withdrawn"`,
-    `    withdraws_version: ${q7(f11.version)}`,
-    `    withdraws_at: ${q7(f11.withdrawsAt)}`,
-    `    reason: ${q7(f11.reason)}`,
-    `    at: ${q7(f11.when)}`,
-    `    by: ${q7(f11.who)}`
+    `    withdraws_version: ${q7(f12.version)}`,
+    `    withdraws_at: ${q7(f12.withdrawsAt)}`,
+    `    reason: ${q7(f12.reason)}`,
+    `    at: ${q7(f12.when)}`,
+    `    by: ${q7(f12.who)}`
   ] : [
     `  - inquiry: ${q7(inquiryId)}`,
     `    act: "concluded"`,
-    `    version: ${q7(f11.version)}`,
-    `    claim: ${q7(f11.claim)}`,
-    `    falsifier: ${q7(f11.falsifier)}`,
-    ...f11.noFals ? [`    falsifier_override_by: ${q7(f11.who)}`, `    falsifier_override_at: ${q7(f11.when)}`] : [],
-    ...f11.commentary ? [`    commentary: ${q7(f11.commentary)}`] : [],
-    `    at: ${q7(f11.when)}`,
-    `    by: ${q7(f11.who)}`
+    `    version: ${q7(f12.version)}`,
+    `    claim: ${q7(f12.claim)}`,
+    `    falsifier: ${q7(f12.falsifier)}`,
+    ...f12.noFals ? [`    falsifier_override_by: ${q7(f12.who)}`, `    falsifier_override_at: ${q7(f12.when)}`] : [],
+    ...f12.commentary ? [`    commentary: ${q7(f12.commentary)}`] : [],
+    `    at: ${q7(f12.when)}`,
+    `    by: ${q7(f12.who)}`
   ];
   const at22 = blockAt(lines, end2, "conclusions");
   if (at22 === -1) return [...lines.slice(0, end2), "conclusions:", ...block, ...lines.slice(end2)].join("\n");
@@ -65203,7 +65246,7 @@ function extentLegFields(extent) {
     para: "extent_para",
     run: "extent_run"
   };
-  for (const [f11, k] of Object.entries(FIELD_OF)) if (e[f11] !== void 0 && e[f11] !== null) out[k] = e[f11];
+  for (const [f12, k] of Object.entries(FIELD_OF)) if (e[f12] !== void 0 && e[f12] !== null) out[k] = e[f12];
   return out;
 }
 var safeJson10 = (s) => {
@@ -65269,25 +65312,25 @@ var BasisVersions = class _BasisVersions {
   }
   /* A bundle's live `bundle.md` text, or null. */
   #doc(id) {
-    const f11 = this.record.readFile(id, "bundle.md");
-    return f11 && typeof f11.text === "string" ? f11.text : null;
+    const f12 = this.record.readFile(id, "bundle.md");
+    return f12 && typeof f12.text === "string" ? f12.text : null;
   }
   /* ---- the one write: a new revision of a document through promotion (R14, R15, R18, R19, R27, R28) ---- */
-  #repromote({ bundleId, base, text: text4, when, author, meta }) {
+  #repromote({ bundleId, base, text: text5, when, author, meta }) {
     const carried = [];
     for (const path of this.record.livePaths(bundleId) || []) {
       if (path === "bundle.md") continue;
-      const f11 = this.record.readFile(bundleId, path);
-      if (!f11) continue;
-      carried.push(typeof f11.text === "string" ? { path, text: f11.text, bytes: new TextEncoder().encode(f11.text).length, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes });
+      const f12 = this.record.readFile(bundleId, path);
+      if (!f12) continue;
+      carried.push(typeof f12.text === "string" ? { path, text: f12.text, bytes: new TextEncoder().encode(f12.text).length, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes });
     }
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     return this.promotion.promote({
       bundleId,
       base,
       snapKey: `${when.replace(/[-:]/g, "")}_${randHex3(4)}`,
       author,
-      files: [{ path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
+      files: [{ path: "bundle.md", text: text5, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
       meta
     });
   }
@@ -65575,9 +65618,9 @@ var BasisVersions = class _BasisVersions {
   currentOf(projectId, inquiryId, viewer) {
     const pid = String(projectId ?? "").trim();
     if (!pid || !this.#seen(pid, viewer)) return null;
-    const text4 = this.#doc(pid);
-    if (text4 === null) return null;
-    const fm = parseFrontmatter(text4).data || {};
+    const text5 = this.#doc(pid);
+    if (text5 === null) return null;
+    const fm = parseFrontmatter(text5).data || {};
     const rows2 = Array.isArray(fm.current_versions) ? fm.current_versions : [];
     for (const r of rows2) {
       if (!r || typeof r !== "object") continue;
@@ -65601,9 +65644,9 @@ var BasisVersions = class _BasisVersions {
   conclusionRecordOf(projectId, inquiryId, viewer) {
     const pid = String(projectId ?? "").trim();
     if (!pid || !this.#seen(pid, viewer)) return { history: [], stance: null };
-    const text4 = this.#doc(pid);
-    if (text4 === null) return { history: [], stance: null };
-    return _BasisVersions.#recordIn(parseFrontmatter(text4).data || {}, pid, inquiryId);
+    const text5 = this.#doc(pid);
+    if (text5 === null) return { history: [], stance: null };
+    return _BasisVersions.#recordIn(parseFrontmatter(text5).data || {}, pid, inquiryId);
   }
   /* R22's one reading of a project's parsed document: its rows for one question, in order, and the stance. Shared by
      `conclusionRecordOf` (after its sight test) and R41 (viewer-free), so the two cannot read a row differently. */
@@ -65673,8 +65716,8 @@ var BasisVersions = class _BasisVersions {
   noProjectConclusionOf(inquiryId) {
     const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, inquiryId);
     if (!b || b.current_state !== "concluded") return null;
-    const text4 = this.#doc(inquiryId);
-    const fm = text4 !== null ? parseFrontmatter(text4).data || {} : {};
+    const text5 = this.#doc(inquiryId);
+    const fm = text5 !== null ? parseFrontmatter(text5).data || {} : {};
     const s = (v) => typeof v === "string" ? v : null;
     const nv = (s(fm.conclusion_version) ?? "").trim(), nc = (s(fm.conclusion_claim) ?? "").trim();
     let claim = _BasisVersions.undeterminedClaim();
@@ -65737,9 +65780,9 @@ var BasisVersions = class _BasisVersions {
             out.truncated = true;
             return out;
           }
-          const text4 = this.#doc(r.pid);
-          if (text4 === null) continue;
-          if (!drawsOn(parseFrontmatter(text4).data || {}, inq)) continue;
+          const text5 = this.#doc(r.pid);
+          if (text5 === null) continue;
+          if (!drawsOn(parseFrontmatter(text5).data || {}, inq)) continue;
           if (out.length === PROJECTS_DRAWING_MAX2) {
             out.truncated = true;
             return out;
@@ -65765,9 +65808,9 @@ var BasisVersions = class _BasisVersions {
       if (!pid) return out;
       const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
       if (!p || normalizeType(p.object_type) !== "project") return out;
-      const text4 = this.#doc(pid);
-      if (text4 === null) return out;
-      const fm = parseFrontmatter(text4).data || {};
+      const text5 = this.#doc(pid);
+      if (text5 === null) return out;
+      const fm = parseFrontmatter(text5).data || {};
       const live = [...new Set((Array.isArray(fm.references) ? fm.references : []).filter((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed").map((x) => String(x.target ?? "").trim()).filter(Boolean))];
       if (!live.length) return out;
       const n = Math.floor(Number(limit));
@@ -65903,14 +65946,14 @@ var BasisVersions = class _BasisVersions {
         "no question by that id is readable here, so it holds no reading by that name either.",
         { target, version: vname }
       );
-    let text4 = this.#doc(target);
-    if (text4 === null)
+    let text5 = this.#doc(target);
+    if (text5 === null)
       return refuse6(
         "VERSION_ACT_UNWRITABLE",
         "this question has no readable file, so nothing about its readings can be moved.",
         { target, version: vname }
       );
-    const fm = parseFrontmatter(text4).data || {};
+    const fm = parseFrontmatter(text5).data || {};
     const rows2 = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const idx = rows2.findIndex((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname);
     if (idx < 0)
@@ -65921,7 +65964,7 @@ var BasisVersions = class _BasisVersions {
       );
     const row2 = rows2[idx];
     const from = typeof row2.state === "string" ? row2.state.trim() : "";
-    if (act !== "current" && setVersionField(text4, vname, "hidden", row2.hidden === true) === null)
+    if (act !== "current" && setVersionField(text5, vname, "hidden", row2.hidden === true) === null)
       return refuse6(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
@@ -66054,23 +66097,23 @@ var BasisVersions = class _BasisVersions {
       if (!p.ok) return { ...p, ok: false, reason: p.reason, act, target, version: vname, project: projectId };
       return receipt;
     }
-    text4 = setVersionField(text4, vname, "state", to === null ? from : to);
-    if (to !== null && text4 !== null) {
-      text4 = setVersionField(text4, vname, "state_by", who2);
-      if (text4 !== null) text4 = setVersionField(text4, vname, "state_at", when);
-      if (text4 !== null) text4 = setVersionField(text4, vname, "state_reason", why);
-      if (text4 !== null) text4 = setVersionField(text4, vname, "affirmed_parts", affirmedParts ?? "");
+    text5 = setVersionField(text5, vname, "state", to === null ? from : to);
+    if (to !== null && text5 !== null) {
+      text5 = setVersionField(text5, vname, "state_by", who2);
+      if (text5 !== null) text5 = setVersionField(text5, vname, "state_at", when);
+      if (text5 !== null) text5 = setVersionField(text5, vname, "state_reason", why);
+      if (text5 !== null) text5 = setVersionField(text5, vname, "affirmed_parts", affirmedParts ?? "");
     }
-    if (act === "hide" && text4 !== null) text4 = setVersionField(text4, vname, "hidden", hidden);
-    if (text4 === null)
+    if (act === "hide" && text5 !== null) text5 = setVersionField(text5, vname, "hidden", hidden);
+    if (text5 === null)
       return refuse6(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
       );
-    text4 = setScalar(text4, "last_updated", `"${when}"`);
-    text4 = appendSessionLog(
-      text4,
+    text5 = setScalar(text5, "last_updated", `"${when}"`);
+    text5 = appendSessionLog(
+      text5,
       `### Session ${when} | Version ${act} | ${who2}
 Trigger: op=version${act} on ${target}
 Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returned to"} the display` : `${from} to ${to}`}.
@@ -66080,7 +66123,7 @@ Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returne
     const promoted = this.#repromote({
       bundleId: target,
       base: b.bundle_sha,
-      text: text4,
+      text: text5,
       when,
       author: who2,
       meta: {
@@ -66114,11 +66157,11 @@ Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returne
     const md = this.#doc(pid);
     if (md === null) return unwritable(`${pid} has no readable file, so its stance cannot be recorded`);
     const pfm = parseFrontmatter(md).data || {};
-    let text4 = setCurrentVersionRow(md, inquiryId, vname, who2, when);
-    if (text4 === null) return unwritable(`${pid}'s current_versions block could not be rewritten in place`);
-    text4 = setScalar(text4, "last_updated", `"${when}"`);
-    text4 = appendSessionLog(
-      text4,
+    let text5 = setCurrentVersionRow(md, inquiryId, vname, who2, when);
+    if (text5 === null) return unwritable(`${pid}'s current_versions block could not be rewritten in place`);
+    text5 = setScalar(text5, "last_updated", `"${when}"`);
+    text5 = appendSessionLog(
+      text5,
       `### Session ${when} | Stands on | ${who2}
 Trigger: op=versioncurrent on ${inquiryId}
 Changes: this project now stands on reading '${vname}' of ${inquiryId}.
@@ -66128,7 +66171,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     return this.#repromote({
       bundleId: pid,
       base: projectRow.bundle_sha,
-      text: text4,
+      text: text5,
       when,
       author: who2,
       meta: {
@@ -66218,15 +66261,15 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         object_type: b.object_type,
         detail: "concluding answers a question, and only an inquiry carries one."
       };
-    let text4 = this.#doc(target);
-    if (text4 === null)
+    let text5 = this.#doc(target);
+    if (text5 === null)
       return {
         ok: false,
         reason: "NO_DOCUMENT",
         target,
         detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
       };
-    const fm = parseFrontmatter(text4).data || {};
+    const fm = parseFrontmatter(text5).data || {};
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legalFrom = spec?.edges?.[b.current_state] || [];
     if (!legalFrom.includes("concluded") && !(pid && b.current_state === "concluded"))
@@ -66368,7 +66411,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       };
     }
     const when = this.now();
-    const withHistory = appendStateHistory(text4, {
+    const withHistory = appendStateHistory(text5, {
       timestamp: when,
       from_state: b.current_state,
       to_state: "concluded",
@@ -66382,23 +66425,23 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         target,
         detail: "this document's state_history block cannot be extended in place, and a conclusion recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text4 = withHistory;
-    text4 = setScalar(text4, "prior_state", b.current_state);
-    text4 = setScalar(text4, "current_state", "concluded");
-    text4 = setOrAddScalar(text4, "conclusion", `"${concl}"`);
-    text4 = setOrAddScalar(text4, "conclusion_version", quoted(adopted.version));
-    text4 = setOrAddScalar(text4, "conclusion_claim", quoted(adopted.claim));
-    text4 = setOrAddScalar(text4, "falsifier", `"${fals}"`);
+    text5 = withHistory;
+    text5 = setScalar(text5, "prior_state", b.current_state);
+    text5 = setScalar(text5, "current_state", "concluded");
+    text5 = setOrAddScalar(text5, "conclusion", `"${concl}"`);
+    text5 = setOrAddScalar(text5, "conclusion_version", quoted(adopted.version));
+    text5 = setOrAddScalar(text5, "conclusion_claim", quoted(adopted.claim));
+    text5 = setOrAddScalar(text5, "falsifier", `"${fals}"`);
     if (noFals) {
-      text4 = setOrAddScalar(text4, "falsifier_override_by", quoted(who2));
-      text4 = setOrAddScalar(text4, "falsifier_override_at", `"${when}"`);
+      text5 = setOrAddScalar(text5, "falsifier_override_by", quoted(who2));
+      text5 = setOrAddScalar(text5, "falsifier_override_at", `"${when}"`);
     } else {
-      text4 = setScalar(text4, "falsifier_override_by", `""`);
-      text4 = setScalar(text4, "falsifier_override_at", `""`);
+      text5 = setScalar(text5, "falsifier_override_by", `""`);
+      text5 = setScalar(text5, "falsifier_override_at", `""`);
     }
-    text4 = setScalar(text4, "last_updated", `"${when}"`);
-    text4 = appendSessionLog(
-      text4,
+    text5 = setScalar(text5, "last_updated", `"${when}"`);
+    text5 = appendSessionLog(
+      text5,
       `### Session ${when} | Concluded | ${who2}
 Trigger: op=conclude on ${target}
 Changes: state ${b.current_state} to concluded.
@@ -66411,7 +66454,7 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
     const promoted = this.#repromote({
       bundleId: target,
       base: b.bundle_sha,
-      text: text4,
+      text: text5,
       when,
       author: who2,
       meta: {
@@ -66445,45 +66488,45 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
   }
   /* The conclusion record's ONE writer (R18, R20, R21), paired with `conclusionRecordOf`, its one reader: it only ever
      appends, then promotes the PROJECT. */
-  #setProjectConclusion(projectRow, inquiryId, f11) {
+  #setProjectConclusion(projectRow, inquiryId, f12) {
     const pid = projectRow.bundle_id;
     const md = this.#doc(pid);
     if (md === null)
       return { ok: false, reason: "NO_DOCUMENT", detail: `${pid} has no readable file, so its conclusion cannot be recorded` };
     const pfm = parseFrontmatter(md).data || {};
-    let text4 = appendConclusionEntry(md, inquiryId, f11);
-    if (text4 === null)
+    let text5 = appendConclusionEntry(md, inquiryId, f12);
+    if (text5 === null)
       return {
         ok: false,
         reason: "UNSPLICEABLE_CONCLUSIONS",
         detail: `${pid}'s conclusions block could not be extended in place`
       };
-    text4 = setScalar(text4, "last_updated", `"${f11.when}"`);
-    text4 = appendSessionLog(text4, f11.act === "withdrawn" ? `### Session ${f11.when} | Conclusion withdrawn | ${f11.who}
+    text5 = setScalar(text5, "last_updated", `"${f12.when}"`);
+    text5 = appendSessionLog(text5, f12.act === "withdrawn" ? `### Session ${f12.when} | Conclusion withdrawn | ${f12.who}
 Trigger: op=withdrawconclusion on ${inquiryId} for ${pid}
-Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f11.version}', concluded ${f11.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.
-Reason: ${f11.reason}
-` : `### Session ${f11.when} | Concluded | ${f11.who}
+Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f12.version}', concluded ${f12.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.
+Reason: ${f12.reason}
+` : `### Session ${f12.when} | Concluded | ${f12.who}
 Trigger: op=conclude on ${inquiryId} for ${pid}
-Changes: this project concluded ${inquiryId} on reading '${f11.version}', adopting its claim.
-Claim: ${f11.claim}
-` + (f11.noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${f11.who} at ${f11.when}
-` : `Falsifier: ${f11.falsifier}
-`) + (f11.commentary ? `Commentary (${f11.who}, not evidence): ${f11.commentary}
+Changes: this project concluded ${inquiryId} on reading '${f12.version}', adopting its claim.
+Claim: ${f12.claim}
+` + (f12.noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${f12.who} at ${f12.when}
+` : `Falsifier: ${f12.falsifier}
+`) + (f12.commentary ? `Commentary (${f12.who}, not evidence): ${f12.commentary}
 ` : ""));
     return this.#repromote({
       bundleId: pid,
       base: projectRow.bundle_sha,
-      text: text4,
-      when: f11.when,
-      author: f11.who,
+      text: text5,
+      when: f12.when,
+      author: f12.who,
       meta: {
         object_type: pfm.object_type ?? "project",
         title: pfm.title,
         current_state: pfm.current_state ?? "forming",
         prior_state: pfm.prior_state ?? null,
         created: pfm.created,
-        last_updated: f11.when,
+        last_updated: f12.when,
         criticality: pfm.criticality ?? null
       }
     });
@@ -66609,27 +66652,27 @@ Claim: ${f11.claim}
       }
       return lines.join("\n");
     };
-    let text4 = appendFmRows(src, "basis_versions", [vLines.join("\n")]);
+    let text5 = appendFmRows(src, "basis_versions", [vLines.join("\n")]);
     const gRows = (Array.isArray(grounds) ? grounds : []).map(rowOf8);
     const lRows = (Array.isArray(legs) ? legs : []).map(rowOf8);
-    if (text4 !== null && gRows.length) text4 = appendFmRows(text4, "basis_version_grounds", gRows);
-    if (text4 !== null && lRows.length) text4 = appendFmRows(text4, "basis_version_legs", lRows);
-    if (text4 === null)
+    if (text5 !== null && gRows.length) text5 = appendFmRows(text5, "basis_version_grounds", gRows);
+    if (text5 !== null && lRows.length) text5 = appendFmRows(text5, "basis_version_legs", lRows);
+    if (text5 === null)
       return {
         ok: false,
         reason: "UNSPLICEABLE_BASIS",
         target: tgt,
         detail: "this question's version block is in a shape the restricted frontmatter grammar cannot extend in place, so nothing was written."
       };
-    text4 = setScalar(text4, "last_updated", `"${when}"`);
-    text4 = appendSessionLog(text4, typeof log === "string" && log ? log : `### Session ${when} | Version appended | ${author}
+    text5 = setScalar(text5, "last_updated", `"${when}"`);
+    text5 = appendSessionLog(text5, typeof log === "string" && log ? log : `### Session ${when} | Version appended | ${author}
 Trigger: appendVersion on ${tgt}
 Changes: reading '${fmSafe2(name)}' added, in state suggested.
 `);
     return this.#repromote({
       bundleId: tgt,
       base: b.bundle_sha,
-      text: text4,
+      text: text5,
       when,
       author,
       meta: {
@@ -66668,8 +66711,8 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
         tgt ? `no question by the id '${tgt.slice(0, 60)}' is readable here. A question you may not see answers exactly as one that does not exist.` : `pass target=<INQ-\u2026>: the question whose reading holds the citation.`,
         { target: tgt || null }
       );
-    const text4 = this.#doc(b.bundle_id);
-    const fm = text4 !== null ? parseFrontmatter(text4).data || {} : {};
+    const text5 = this.#doc(b.bundle_id);
+    const fm = text5 !== null ? parseFrontmatter(text5).data || {} : {};
     const versions = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const vrow = vname ? versions.find((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname) : null;
     if (!vrow)
@@ -66705,7 +66748,7 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
         { target: b.bundle_id, version: vname, ord: k, leg_target: leg.target ?? null }
       );
     const extent = row2.extent && typeof row2.extent === "object" ? row2.extent : { kind: row2.extent_kind };
-    return { ok: true, b, fm, text: text4, vrow, vname, legRows, k, leg, row: row2, extent };
+    return { ok: true, b, fm, text: text5, vrow, vname, legRows, k, leg, row: row2, extent };
   }
   /* R25: the machine's proposals for one leg, strictly NARROWER than it and in the same capture, per source. */
   #narrowCandidateList(src) {
@@ -66718,7 +66761,7 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
     const counts = { reading: 0, extract: 0, marked: 0 };
     const push = (c) => {
       c.fields = c.content_id ? { content_id: c.content_id } : extentLegFields(c.extent);
-      const key = canonicalExtent2(c.extent);
+      const key = canonicalExtent3(c.extent);
       if (seen.has(key)) return;
       if (extentRelation2(src.extent, c.extent) !== "narrower") return;
       seen.add(key);
@@ -66955,7 +66998,7 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
     if (relation !== "narrower")
       return refusal20(
         "NARROW_NOT_NARROWER",
-        `the citation points at ${src.row.ref} and the part named (${describeExtent2(newExtent)}) is ` + (relation === "same" ? "that same part" : relation === "wider" ? "WIDER than it" : relation === "disjoint" ? "a different place, not a part of it" : "not one this record can compare with it") + ". Narrowing only ever points a citation at less of its document.",
+        `the citation points at ${src.row.ref} and the part named (${describeExtent3(newExtent)}) is ` + (relation === "same" ? "that same part" : relation === "wider" ? "WIDER than it" : relation === "disjoint" ? "a different place, not a part of it" : "not one this record can compare with it") + ". Narrowing only ever points a citation at less of its document.",
         { relation, from: src.extent, to: newExtent }
       );
     if (!name || !VERSION_NAME_RE.test(name) || existingNames.has(nameWritten))
@@ -67015,8 +67058,8 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
       }
       return o;
     });
-    const toKey = canonicalExtent2(newExtent);
-    const matched = this.#narrowCandidateList(src).candidates.find((c) => canonicalExtent2(c.extent) === toKey) || null;
+    const toKey = canonicalExtent3(newExtent);
+    const matched = this.#narrowCandidateList(src).candidates.find((c) => canonicalExtent3(c.extent) === toKey) || null;
     const promoted = this.appendVersion({
       target: src.b.bundle_id,
       version,
@@ -67026,7 +67069,7 @@ Changes: reading '${fmSafe2(name)}' added, in state suggested.
       at: nowIso,
       log: `### Session ${nowIso} | Narrowed a citation | ${who2}
 Trigger: op=narrow on ${src.b.bundle_id}
-Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggested; piece ${src.k} (${src.leg.target}) now points at ${fmSafe2(describeExtent2(newExtent))} instead of ${fmSafe2(src.row.ref)}. '${src.vname}' is unchanged.` + (matched ? ` Chosen from a machine proposal (${matched.source}).` : ` Named by the member.`) + (Object.keys(dropped).length ? ` The old grade was not carried: a part earns only from what is in it.` : ``) + `
+Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggested; piece ${src.k} (${src.leg.target}) now points at ${fmSafe2(describeExtent3(newExtent))} instead of ${fmSafe2(src.row.ref)}. '${src.vname}' is unchanged.` + (matched ? ` Chosen from a machine proposal (${matched.source}).` : ` Named by the member.`) + (Object.keys(dropped).length ? ` The old grade was not carried: a part earns only from what is in it.` : ``) + `
 `
     });
     if (!promoted.ok) return { ...promoted, target: src.b.bundle_id, name: nameWritten };
@@ -67065,7 +67108,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           extent: toRow.extent,
           capture_sha: toRow.capture_sha,
           mint: mintLabel(toRow.minted_by)
-        } : { content_id: null, ref: describeExtent2(newExtent), extent: newExtent }
+        } : { content_id: null, ref: describeExtent3(newExtent), extent: newExtent }
       },
       chosen_from: matched ? { source: matched.source, machine_work: true, says: matched.says } : null,
       grade_not_carried: Object.keys(dropped).length ? {
@@ -67583,17 +67626,17 @@ var isStanding = (state) => state === "open" || state === "explained_not_shown";
 function fmSafe3(s) {
   return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 }
-function removeBlock2(text4, key) {
-  const lines = text4.split("\n");
-  if (lines[0] !== "---") return text4;
+function removeBlock2(text5, key) {
+  const lines = text5.split("\n");
+  if (lines[0] !== "---") return text5;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text4;
+  if (end2 === -1) return text5;
   let at22 = -1;
   for (let i = 1; i < end2; i++) if (lines[i] === `${key}:` || lines[i].startsWith(`${key}: `)) {
     at22 = i;
     break;
   }
-  if (at22 === -1) return text4;
+  if (at22 === -1) return text5;
   let last = at22;
   for (let i = at22 + 1; i < end2; i++) {
     if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
@@ -67601,27 +67644,27 @@ function removeBlock2(text4, key) {
   }
   return [...lines.slice(0, at22), ...lines.slice(last + 1)].join("\n");
 }
-function setFrontmatterLines(text4, key, lines) {
-  const t = removeBlock2(text4, key);
+function setFrontmatterLines(text5, key, lines) {
+  const t = removeBlock2(text5, key);
   const all = t.split("\n");
   if (all[0] !== "---") return t;
   const end2 = all.indexOf("---", 1);
   if (end2 === -1) return t;
   return [...all.slice(0, end2), ...lines, ...all.slice(end2)].join("\n");
 }
-function appendSessionLog3(text4, entry) {
-  const at22 = text4.indexOf("## Session Log");
-  if (at22 < 0) return text4.replace(/\s*$/, "\n") + "\n## Session Log\n\n" + entry + "\n";
-  const nxt = text4.indexOf("\n## ", at22 + 1);
-  const cut3 = nxt === -1 ? text4.length : nxt + 1;
-  const head = text4.slice(0, cut3);
-  return head + (head.endsWith("\n") ? "" : "\n") + entry + "\n" + text4.slice(cut3);
+function appendSessionLog3(text5, entry) {
+  const at22 = text5.indexOf("## Session Log");
+  if (at22 < 0) return text5.replace(/\s*$/, "\n") + "\n## Session Log\n\n" + entry + "\n";
+  const nxt = text5.indexOf("\n## ", at22 + 1);
+  const cut3 = nxt === -1 ? text5.length : nxt + 1;
+  const head = text5.slice(0, cut3);
+  return head + (head.endsWith("\n") ? "" : "\n") + entry + "\n" + text5.slice(cut3);
 }
-function setOrAddScalar3(text4, key, value) {
-  const lines = text4.split("\n");
-  if (lines[0] !== "---") return text4;
+function setOrAddScalar3(text5, key, value) {
+  const lines = text5.split("\n");
+  if (lines[0] !== "---") return text5;
   const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return text4;
+  if (end2 === -1) return text5;
   for (let i = 1; i < end2; i++)
     if (lines[i].startsWith(key + ":")) {
       lines[i] = `${key}: ${value}`;
@@ -68278,11 +68321,11 @@ var Contradiction = class _Contradiction {
         const stances = [];
         for (const pr of projects) {
           const st = bv.conclusionOf(pr.id, r.id, viewer);
-          const text4 = st ? typeof st.claim === "string" ? st.claim : st.claim && typeof st.claim.text === "string" ? st.claim.text : null : null;
-          if (!st || text4 === null || !text4.trim()) continue;
+          const text5 = st ? typeof st.claim === "string" ? st.claim : st.claim && typeof st.claim.text === "string" ? st.claim.text : null : null;
+          if (!st || text5 === null || !text5.trim()) continue;
           found.concluded_stances = true;
-          stances.push({ project: pr.id, version: st.version ?? null, claim: text4 });
-          claims.add(text4.trim());
+          stances.push({ project: pr.id, version: st.version ?? null, claim: text5 });
+          claims.add(text5.trim());
         }
         if (claims.size > 1) found.differing_claim = true;
         stances.sort((x, y) => x.project < y.project ? -1 : x.project > y.project ? 1 : 0);
@@ -68324,13 +68367,13 @@ var Contradiction = class _Contradiction {
     const rung = (level, sql, ...args) => ({ level, present: !!this.#one(sql, ...args) });
     if (scope === "DENY") return [{ level: "viewer", present: false }];
     if (key === "K5") {
-      const f11 = out && out.found || {};
+      const f12 = out && out.found || {};
       return [
         { level: "viewer", present: true },
-        { level: "inquiry", present: !!f11.inquiry },
-        { level: "drawing_projects", present: !!f11.drawing_projects },
-        { level: "concluded_stances", present: !!f11.concluded_stances },
-        { level: "differing_claim", present: !!f11.differing_claim }
+        { level: "inquiry", present: !!f12.inquiry },
+        { level: "drawing_projects", present: !!f12.drawing_projects },
+        { level: "concluded_stances", present: !!f12.concluded_stances },
+        { level: "differing_claim", present: !!f12.differing_claim }
       ];
     }
     const gi = this.#gate("ib.bundle_id", viewer);
@@ -68618,20 +68661,20 @@ var Contradiction = class _Contradiction {
       const p = item(i);
       const key = String(p.key ?? "").trim().toUpperCase();
       const a = this.#side(p.a), b = this.#side(p.b);
-      const f11 = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
-      if (!f11)
+      const f12 = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
+      if (!f12)
         return refusal20(
           "CANDIDATE_PAIR_NOT_FORMED",
           `proposal ${i} names a ${key || "(no key)"} pair the pairing does not form for this viewer now` + (cutKeys.length ? ` (the read was cut at its bound on ${cutKeys.join(", ")}, and a pair past the bound is not formed here)` : ""),
           { run: runId, index: i, cut_keys: cutKeys }
         );
-      const inOrder = handle(f11.a) <= handle(f11.b);
-      const [x, y] = inOrder ? [f11.a, f11.b] : [f11.b, f11.a];
-      const { a: pa, b: pb, key: _k, ...context } = f11.pair;
+      const inOrder = handle(f12.a) <= handle(f12.b);
+      const [x, y] = inOrder ? [f12.a, f12.b] : [f12.b, f12.a];
+      const { a: pa, b: pb, key: _k, ...context } = f12.pair;
       const [sx, sy] = inOrder ? [pa, pb] : [pb, pa];
       rows2.push({
-        candidate: sha256HexSync(canonicalJson({ v: 1, key: f11.key, sides: [handle(x), handle(y)] })),
-        key: f11.key,
+        candidate: sha256HexSync(canonicalJson({ v: 1, key: f12.key, sides: [handle(x), handle(y)] })),
+        key: f12.key,
         a: x,
         b: y,
         run: runId,
@@ -68757,10 +68800,10 @@ var Contradiction = class _Contradiction {
   }
   /** The family of a resolution kind, through `inquiry` R46; null when it is not a kind or cannot be read. */
   #family(kind) {
-    const f11 = this.#i().resolutionFamily;
-    if (typeof f11 === "function") {
+    const f12 = this.#i().resolutionFamily;
+    if (typeof f12 === "function") {
       try {
-        return f11(kind);
+        return f12(kind);
       } catch {
         return null;
       }
@@ -69414,7 +69457,7 @@ var Contradiction = class _Contradiction {
         key: row2.key,
         facts,
         limit: FACTS_ENTITIES_MAX,
-        truncated: facts.some((f11) => f11.truncated === true),
+        truncated: facts.some((f12) => f12.truncated === true),
         says: "each fact is the record's, as its sides carry it, and none is machine work. A fact not stated is undetermined, with why, never guessed"
       };
     } catch (e) {
@@ -69423,9 +69466,9 @@ var Contradiction = class _Contradiction {
   }
   /** R29's referents of a finding pinned at `sha`, held one level deep. `null` when no text answers to the bytes. */
   #heldAt(finding3, sha) {
-    const text4 = this.#record.textAtSha(finding3, sha);
-    if (typeof text4 !== "string") return null;
-    const fm = parseFrontmatter(text4).data || {};
+    const text5 = this.#record.textAtSha(finding3, sha);
+    if (typeof text5 !== "string") return null;
+    const fm = parseFrontmatter(text5).data || {};
     const refs = /* @__PURE__ */ new Set();
     const held = (v) => v && v.state === "accepted" && !v.hidden && typeof v.claim === "string" && v.claim.trim();
     for (const v of versionsIn(fm)) if (held(v)) refs.add(`${finding3}|${v.name}@${sha256HexSync(String(v.claim))}`);
@@ -69457,13 +69500,13 @@ var Contradiction = class _Contradiction {
   /** R29 (in-process; read as the plane): the candidates a case pinning `finding` at `sha` must disclose. */
   unresolvedRecordOn({ finding: finding3 = null, sha = null, viewer = void 0 } = {}) {
     try {
-      const f11 = typeof finding3 === "string" ? finding3.trim() : "";
+      const f12 = typeof finding3 === "string" ? finding3.trim() : "";
       const h = typeof sha === "string" ? sha.trim() : "";
-      const held = f11 && h ? this.#heldAt(f11, h) : null;
+      const held = f12 && h ? this.#heldAt(f12, h) : null;
       if (!held) return {
         ok: true,
         wrote: false,
-        finding: f11 || null,
+        finding: f12 || null,
         sha: h || null,
         candidates: [],
         truncated: false,
@@ -69516,7 +69559,7 @@ var Contradiction = class _Contradiction {
       return {
         ok: true,
         wrote: false,
-        finding: f11,
+        finding: f12,
         sha: h,
         candidates: out,
         truncated: truncated3,
@@ -69731,7 +69774,7 @@ var Contradiction = class _Contradiction {
           const leg = this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE bundle_id=? AND ord=?`, e.inquiry, Number(e.ord));
           ok2 = !!leg && this.#sees(e.inquiry, viewer);
         } else if (typeof e.fact === "string" && e.fact) {
-          ok2 = facts.some((f11) => f11.coordinate === e.fact && !f11.undetermined);
+          ok2 = facts.some((f12) => f12.coordinate === e.fact && !f12.undetermined);
         }
       }
       if (!ok2) return _Contradiction.#refuse(
@@ -69926,7 +69969,7 @@ var Contradiction = class _Contradiction {
       ...l.content_id ? [`    content_id: ${l.content_id}`] : [],
       `    note: "${fmSafe3(l.note)}"`
     ];
-    const text4 = [
+    const text5 = [
       "---",
       `id: ${id}`,
       "object_type: inquiry",
@@ -69956,7 +69999,7 @@ var Contradiction = class _Contradiction {
       `- ${at22} \xB7 ${who2} \xB7 taken up from contradiction ${row2.candidate}, framed around side ${frame}`,
       ""
     ].join("\n");
-    return { text: text4, title: title ?? question };
+    return { text: text5, title: title ?? question };
   }
   /** op=contradictiontakeup — R35: take a candidate up as a contradiction inquiry, in one act through
    *  `promotion.promote`. */
@@ -70031,8 +70074,8 @@ var Contradiction = class _Contradiction {
   #liveFiles(id) {
     const paths = this.#record.livePaths(id) || [];
     return paths.map((path) => {
-      const f11 = this.#record.readFile(id, path);
-      return f11 && typeof f11.text === "string" ? { path, text: f11.text } : { path, blobSha: f11.blobSha, bytes: f11.bytes };
+      const f12 = this.#record.readFile(id, path);
+      return f12 && typeof f12.text === "string" ? { path, text: f12.text } : { path, blobSha: f12.blobSha, bytes: f12.bytes };
     });
   }
   /** R36's C-93.27 check and R56's one predicate: the candidate a contradiction inquiry names, when the inquiry is held
@@ -70088,15 +70131,15 @@ var Contradiction = class _Contradiction {
     return this.#record.transact(() => {
       const head = this.#record.head(id);
       const files = this.#liveFiles(id);
-      const md = files.find((f11) => f11.path === "bundle.md");
+      const md = files.find((f12) => f12.path === "bundle.md");
       if (!head || !md || typeof md.text !== "string")
         return _Contradiction.#notContradictionInquiry("the question's document is not held as text");
       let lines = i.resolutionLines(res);
       lines = Array.isArray(lines) ? lines : String(lines ?? "").split("\n").filter(Boolean);
       if (!lines.length || !/^resolution:/.test(lines[0])) lines = ["resolution:", ...lines.map((l) => `  ${l.replace(/^\s*/, "")}`)];
-      let text4 = setFrontmatterLines(md.text, "resolution", lines);
-      text4 = setOrAddScalar3(text4, "last_updated", `"${when}"`);
-      text4 = appendSessionLog3(text4, `- ${when} \xB7 ${who2} \xB7 resolution recorded as ${fmSafe3(res.kind)} (contradiction ${row2.candidate})`);
+      let text5 = setFrontmatterLines(md.text, "resolution", lines);
+      text5 = setOrAddScalar3(text5, "last_updated", `"${when}"`);
+      text5 = appendSessionLog3(text5, `- ${when} \xB7 ${who2} \xB7 resolution recorded as ${fmSafe3(res.kind)} (contradiction ${row2.candidate})`);
       const written = this.#p().promote({
         bundleId: id,
         base: head.bundleSha,
@@ -70104,7 +70147,7 @@ var Contradiction = class _Contradiction {
         author: who2,
         actorIdentity: who2,
         actorViewer: viewer,
-        files: files.map((f11) => f11.path === "bundle.md" ? { path: "bundle.md", text: text4 } : f11),
+        files: files.map((f12) => f12.path === "bundle.md" ? { path: "bundle.md", text: text5 } : f12),
         meta: { object_type: "inquiry", last_updated: when }
       });
       if (written.ok === false) return written;
@@ -70610,15 +70653,15 @@ var Contradiction = class _Contradiction {
     return { cover, email: typeof disclose.email === "string" ? disclose.email.trim() : null };
   }
   /** op=contradictionrespond — R53: a member responds to the notice, sharing only what they choose. */
-  respond({ candidate = null, project = null, text: text4 = null, disclose = void 0, viewer = null, author = null, at: at22 = null } = {}) {
+  respond({ candidate = null, project = null, text: text5 = null, disclose = void 0, viewer = null, author = null, at: at22 = null } = {}) {
     const g = this.#partyRefusals({ candidate, project, viewer, author });
     if (g.refusal) return g.refusal;
     const { row: row2 } = g;
     if (!this.#optins(row2.candidate).opted.includes(g.project))
       return _Contradiction.#refuse("RESPONSE_BEFORE_OPT_IN", "this project has not asked to resolve it yet", { project: g.project });
-    if (typeof text4 !== "string" || !text4.trim())
+    if (typeof text5 !== "string" || !text5.trim())
       return _Contradiction.#refuse("RESPONSE_NO_TEXT", "a response says something in the responder's own words");
-    const over = this.#overCap({ text: text4 });
+    const over = this.#overCap({ text: text5 });
     if (over) return over;
     const bad = this.#disclosureRefusal(disclose, g.member, author.trim());
     if (bad) return bad;
@@ -70637,7 +70680,7 @@ var Contradiction = class _Contradiction {
         who2,
         when,
         seq,
-        text4.trim(),
+        text5.trim(),
         d.cover,
         d.email,
         row2.a_bundle_id,
@@ -71872,7 +71915,7 @@ var AiRuns = class _AiRuns {
    * nothing will ever complete). With none registered the wake holds and wakes nothing (R17). */
   registerWaitSource(module, source) {
     const fns = ["tickMs", "holds", "woken", "completions", "markWoken"];
-    if (typeof module !== "string" || !module || !source || fns.some((f11) => typeof source[f11] !== "function"))
+    if (typeof module !== "string" || !module || !source || fns.some((f12) => typeof source[f12] !== "function"))
       return { ok: false, reason: "WAIT_SOURCE_MALFORMED", detail: `a wait source names its module and ${fns.join(", ")}` };
     if (this.#waitSource) return { ok: false, reason: "WAIT_SOURCE_DECLARED", module, declaredBy: this.#waitSource.module };
     this.#waitSource = { module, source };
@@ -74271,8 +74314,8 @@ var CaptureCredentials = class _CaptureCredentials {
   }
   /* ---- who is who (membership) ---- */
   #active(memberId) {
-    const f11 = typeof memberId === "string" && memberId !== "" ? this.#members.memberFacts(memberId) : null;
-    return !!f11 && f11.status === "active";
+    const f12 = typeof memberId === "string" && memberId !== "" ? this.#members.memberFacts(memberId) : null;
+    return !!f12 && f12.status === "active";
   }
   /* R58: may this member (by id) see this row? The listing asks the same rule in its SQL (`#visibleClause`). */
   #sees(memberId, row2) {
@@ -74903,8 +74946,8 @@ function sourceReasonOf(status) {
 }
 function renderHoldReason(code) {
   const own3 = (fam) => code && Object.prototype.hasOwnProperty.call(fam, code) ? fam[code] : null;
-  const family = own3(RENDER_CAPTURE_CHECKS2) ? "C-83" : own3(CAPTURE_REQUEST_CHECKS2) ? "C-28" : own3(CAPTURE_SOURCE_CHECKS) ? "C-108" : null;
-  const row2 = own3(RENDER_CAPTURE_CHECKS2) || own3(CAPTURE_REQUEST_CHECKS2) || own3(CAPTURE_SOURCE_CHECKS);
+  const family = own3(RENDER_CAPTURE_CHECKS) ? "C-83" : own3(CAPTURE_REQUEST_CHECKS2) ? "C-28" : own3(CAPTURE_SOURCE_CHECKS) ? "C-108" : null;
+  const row2 = own3(RENDER_CAPTURE_CHECKS) || own3(CAPTURE_REQUEST_CHECKS2) || own3(CAPTURE_SOURCE_CHECKS);
   return { code: code ?? null, family, check: row2 ? row2.check : null, translation: row2 ? row2.translation : null };
 }
 function captureRequestAttribution(row2) {
@@ -74926,7 +74969,7 @@ function captureRequestAttribution(row2) {
 function unattendedBound(env) {
   return !!(env && (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN !== "" || typeof env.ADMIN_TOKEN === "string" && env.ADMIN_TOKEN !== ""));
 }
-var text2 = (v) => typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : "";
+var text3 = (v) => typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : "";
 var shown = (v) => {
   try {
     return String(JSON.stringify(v) ?? typeof v).slice(0, 40);
@@ -75004,7 +75047,7 @@ var CaptureRequests = class _CaptureRequests {
       const row2 = CAPTURE_REQUEST_CHECKS2[code];
       return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
     };
-    const run = text2(args.run).trim();
+    const run = text3(args.run).trim();
     const runRow = run ? this.#deps.runs.runFor(run, viewer) : null;
     if (!runRow)
       return refusal20(
@@ -75034,7 +75077,7 @@ var CaptureRequests = class _CaptureRequests {
         `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
         { run }
       );
-    const address = text2(args.address).trim();
+    const address = text3(args.address).trim();
     if (!isPublicHttpsLocator(address))
       return refusal20(
         "CAPTURE_REQUEST_NOT_PUBLIC",
@@ -75053,14 +75096,14 @@ var CaptureRequests = class _CaptureRequests {
         "this address has no host this plane can read, and the per-host pacing DEC-47 requires is computed from one.",
         { address }
       );
-    const target = text2(args.target).trim();
+    const target = text3(args.target).trim();
     if (!this.#inquiryInSight(target, viewer))
       return refusal20(
         "CAPTURE_REQUEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is accountable to the question it was asked under, and a fetch belonging to nothing is a fetch nobody can account for afterwards.`,
         { target: target || null }
       );
-    const lead = text2(args.lead_inquiry ?? args.lead).trim();
+    const lead = text3(args.lead_inquiry ?? args.lead).trim();
     if (lead) {
       if (!this.#inquiryInSight(lead, viewer))
         return refusal20(
@@ -75090,9 +75133,9 @@ var CaptureRequests = class _CaptureRequests {
         { render: null }
       );
     const render = renderRaw === true ? 1 : 0;
-    const purpose = text2(args.purpose).trim();
-    const uaMode = text2(args.ua_mode ?? args.uaMode ?? "civicos").trim();
-    const callerPlane = text2(caller).trim();
+    const purpose = text3(args.purpose).trim();
+    const uaMode = text3(args.ua_mode ?? args.uaMode ?? "civicos").trim();
+    const callerPlane = text3(caller).trim();
     const standing = this.#one(
       `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
       run,
@@ -75440,7 +75483,7 @@ var CaptureRequests = class _CaptureRequests {
             ...promoted ? { promoted } : {}
           });
         } else if (r.renderCode) {
-          const renderRow2 = RENDER_CAPTURE_CHECKS2[r.renderCode];
+          const renderRow2 = RENDER_CAPTURE_CHECKS[r.renderCode];
           const why = String(r.detail || r.reason || "").slice(0, 400);
           if (renderRow2.check === RENDER_NOT_A_PAGE_CHECK) {
             settle(q7, {
@@ -75575,7 +75618,7 @@ var CaptureRequests = class _CaptureRequests {
         };
     } else {
       const env = this.#env();
-      ua = civicosUserAgent2(env.VERSION, env.INSTANCE_NAME, q7.purpose);
+      ua = civicosUserAgent(env.VERSION, env.INSTANCE_NAME, q7.purpose);
       if (!userAgentIsLegible(ua))
         return {
           ok: false,
@@ -75676,7 +75719,7 @@ var CaptureRequests = class _CaptureRequests {
       if (out && out.ok && out.unchanged === true && out.capture && out.capture.sha256)
         return { ok: true, sha: out.capture.sha256, grade: null, existed: true, document: null };
       const reason = out && (out.reason || out.error) || `http ${res && res.status}`;
-      const renderCode = q7.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS2, reason) ? reason : null;
+      const renderCode = q7.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
       return {
         ok: false,
         reason,
@@ -75760,7 +75803,7 @@ var CaptureRequests = class _CaptureRequests {
           "## Review Notes",
           ""
         ].join("\n");
-        const blob = (f11) => f11 && typeof f11.file === "string" && /^[0-9a-f]{64}$/.test(String(f11.sha256 || "")) && Number.isSafeInteger(f11.bytes) ? { path: f11.file, blobSha: f11.sha256, sha256: f11.sha256, bytes: f11.bytes } : null;
+        const blob = (f12) => f12 && typeof f12.file === "string" && /^[0-9a-f]{64}$/.test(String(f12.sha256 || "")) && Number.isSafeInteger(f12.bytes) ? { path: f12.file, blobSha: f12.sha256, sha256: f12.sha256, bytes: f12.bytes } : null;
         const blobs = [
           blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }),
           blob(doc.shell),
@@ -75770,7 +75813,7 @@ var CaptureRequests = class _CaptureRequests {
         const files = [
           { path: "bundle.md", ...enc4(md) },
           { path: "data/provenance.json", ...enc4(JSON.stringify({ documents: [doc] }, null, 2)) },
-          ...blobs.filter((f11) => seen.has(f11.path) ? false : seen.add(f11.path))
+          ...blobs.filter((f12) => seen.has(f12.path) ? false : seen.add(f12.path))
         ];
         const p = promotion.promote({
           bundleId: id,
@@ -75908,7 +75951,7 @@ var CaptureRequests = class _CaptureRequests {
   requestById(a = {}) {
     try {
       const { request = null, viewer = null } = a && typeof a === "object" ? a : {};
-      const id = text2(request).trim();
+      const id = text3(request).trim();
       if (!id) return null;
       const seen = _CaptureRequests.#gate("cr.target", viewer);
       const r = this.#one(
@@ -76050,7 +76093,7 @@ var CaptureRequests = class _CaptureRequests {
    *  C-28.18 and nothing is written. Never throws. */
   captureRequestRetry(a = {}, { viewer = null } = {}) {
     const args = a && typeof a === "object" ? a : {};
-    const request = text2(args.request).trim();
+    const request = text3(args.request).trim();
     const row2 = request ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request) : null;
     if (!row2 || row2.state !== "refused" || !SOURCE_REASONS.includes(row2.source_reason) || !this.#inquiryInSight(row2.target, viewer)) {
       const c = CAPTURE_REQUEST_CHECKS2.CAPTURE_REQUEST_NOT_RETRYABLE;
@@ -76343,9 +76386,9 @@ var ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
 var GRADES = BASIS_GRADES;
 var TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
 var q = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
-var parseFm = (text4) => {
-  if (typeof text4 !== "string") return null;
-  const d = parseFrontmatter(text4).data;
+var parseFm = (text5) => {
+  if (typeof text5 !== "string") return null;
+  const d = parseFrontmatter(text5).data;
   return d && typeof d === "object" && !Array.isArray(d) ? d : null;
 };
 function fence(lines) {
@@ -76353,34 +76396,34 @@ function fence(lines) {
   const end2 = lines.indexOf("---", 1);
   return end2 === -1 ? null : end2;
 }
-function setField(text4, key, value) {
-  const lines = text4.split("\n");
+function setField(text5, key, value) {
+  const lines = text5.split("\n");
   const end2 = fence(lines);
-  if (end2 === null) return text4;
+  if (end2 === null) return text5;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
     lines[i] = `${key}: ${value}`;
     return lines.join("\n");
   }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function removeBlock3(text4, key) {
-  const lines = text4.split("\n");
+function removeBlock3(text5, key) {
+  const lines = text5.split("\n");
   const end2 = fence(lines);
-  if (end2 === null) return text4;
+  if (end2 === null) return text5;
   const at22 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
-  if (at22 === -1) return text4;
+  if (at22 === -1) return text5;
   let last = at22;
   for (let i = at22 + 1; i < end2 && (/^\s/.test(lines[i]) || lines[i].trim() === ""); i++) last = i;
   return [...lines.slice(0, at22), ...lines.slice(last + 1)].join("\n");
 }
-function setBlock(text4, key, childLines) {
-  const lines = removeBlock3(text4, key).split("\n");
+function setBlock(text5, key, childLines) {
+  const lines = removeBlock3(text5, key).split("\n");
   const end2 = fence(lines);
-  if (end2 === null) return text4;
+  if (end2 === null) return text5;
   return [...lines.slice(0, end2), `${key}:`, ...childLines, ...lines.slice(end2)].join("\n");
 }
-function appendItem(text4, key, fields) {
-  const lines = text4.split("\n");
+function appendItem(text5, key, fields) {
+  const lines = text5.split("\n");
   const end2 = fence(lines);
   if (end2 === null) return null;
   const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
@@ -76393,54 +76436,54 @@ function appendItem(text4, key, fields) {
   for (let i = at22 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
   return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
 }
-function appendHistory(text4, { at: at22, from, to, blurb, author }) {
+function appendHistory(text5, { at: at22, from, to, blurb, author }) {
   return appendItem(
-    text4,
+    text5,
     "state_history",
     { timestamp: q(at22), from_state: from, to_state: to, blurb: q(blurb), author: TOKEN.test(author) ? author : q(author) }
   );
 }
-function sectionSpan(text4, heading) {
+function sectionSpan(text5, heading) {
   const marker = `
 ## ${heading}
 `;
-  const at22 = text4.indexOf(marker);
+  const at22 = text5.indexOf(marker);
   if (at22 === -1) return null;
   const start = at22 + marker.length;
-  const nxt = text4.indexOf("\n## ", start - 1);
-  return { at: at22, start, end: nxt === -1 ? text4.length : nxt };
+  const nxt = text5.indexOf("\n## ", start - 1);
+  return { at: at22, start, end: nxt === -1 ? text5.length : nxt };
 }
-function readSection(text4, heading) {
-  if (typeof text4 !== "string") return null;
-  const s = sectionSpan(text4, heading);
-  return s ? text4.slice(s.start, s.end).trim() : null;
+function readSection(text5, heading) {
+  if (typeof text5 !== "string") return null;
+  const s = sectionSpan(text5, heading);
+  return s ? text5.slice(s.start, s.end).trim() : null;
 }
-function setSection2(text4, heading, body) {
-  const s = sectionSpan(text4, heading);
+function setSection2(text5, heading, body) {
+  const s = sectionSpan(text5, heading);
   const content = `
 ${String(body).trim()}
 `;
-  if (!s) return `${text4.replace(/\n*$/, "\n")}
+  if (!s) return `${text5.replace(/\n*$/, "\n")}
 ## ${heading}
 ${content}`;
-  return text4.slice(0, s.start) + content + text4.slice(s.end);
+  return text5.slice(0, s.start) + content + text5.slice(s.end);
 }
-function appendSection(text4, heading, entry) {
-  const s = sectionSpan(text4, heading);
-  if (!s) return `${text4.replace(/\n*$/, "\n")}
+function appendSection(text5, heading, entry) {
+  const s = sectionSpan(text5, heading);
+  if (!s) return `${text5.replace(/\n*$/, "\n")}
 ## ${heading}
 
 ${entry.trim()}
 `;
-  const head = text4.slice(0, s.end).replace(/\n*$/, "\n");
+  const head = text5.slice(0, s.end).replace(/\n*$/, "\n");
   return `${head}
 ${entry.trim()}
-${text4.slice(s.end)}`;
+${text5.slice(s.end)}`;
 }
-var logEntry = (text4, at22, what, author, changes) => appendSection(text4, "Session Log", `### Session ${at22} | ${what} | ${author}
+var logEntry = (text5, at22, what, author, changes) => appendSection(text5, "Session Log", `### Session ${at22} | ${what} | ${author}
 Changes: ${changes}`);
-function deadEndsOf(text4) {
-  const body = readSection(text4, "Dead Ends");
+function deadEndsOf(text5) {
+  const body = readSection(text5, "Dead Ends");
   if (!body) return [];
   const out = [];
   for (const part of body.split(/\n(?=### )/)) {
@@ -76650,9 +76693,9 @@ var Intent = class {
     if (typeof id !== "string" || !id) return null;
     const head = this.record.head(id);
     if (!head) return null;
-    const f11 = this.record.readFile(id, "bundle.md");
-    const text4 = f11 && typeof f11.text === "string" ? f11.text : null;
-    return { id, head, text: text4, fm: parseFm(text4) || {}, type: normalizeType(head.type) };
+    const f12 = this.record.readFile(id, "bundle.md");
+    const text5 = f12 && typeof f12.text === "string" ? f12.text : null;
+    return { id, head, text: text5, fm: parseFm(text5) || {}, type: normalizeType(head.type) };
   }
   /* R23: a project the viewer may see, or the one answer an absent project gets. A viewer who sees the project at
      existence only is told so (membership R77, C-70.1), before the absent answer. */
@@ -76687,14 +76730,14 @@ var Intent = class {
    * THE WRITE (R2, R8–R11, R16, R26): every document intent writes goes through `promotion`, whose check runs this
    * module's own (below), so an act and a raw promotion meet one rule.
    * ===================================================================== */
-  #create(id, type, text4, author, extra = {}) {
-    const fm = parseFm(text4) || {};
+  #create(id, type, text5, author, extra = {}) {
+    const fm = parseFm(text5) || {};
     return this.promotion.promote({
       bundleId: id,
       base: null,
       snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand6(4)}`,
       author,
-      files: [{ path: "bundle.md", text: text4 }],
+      files: [{ path: "bundle.md", text: text5 }],
       meta: {
         object_type: type,
         title: fm.title,
@@ -76705,11 +76748,11 @@ var Intent = class {
       ...extra
     });
   }
-  #revise(d, text4, author, viewer, extra = {}) {
-    const fm = parseFm(text4) || {};
+  #revise(d, text5, author, viewer, extra = {}) {
+    const fm = parseFm(text5) || {};
     const carried = this.record.livePaths(d.id).filter((p) => p !== "bundle.md").map((path) => {
-      const f11 = this.record.readFile(d.id, path);
-      return typeof f11.text === "string" ? { path, text: f11.text, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes };
+      const f12 = this.record.readFile(d.id, path);
+      return typeof f12.text === "string" ? { path, text: f12.text, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes };
     });
     const member = this.#memberOf(author);
     return this.promotion.promote({
@@ -76717,7 +76760,7 @@ var Intent = class {
       base: d.head.bundleSha,
       snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand6(4)}`,
       author,
-      files: [{ path: "bundle.md", text: text4 }, ...carried],
+      files: [{ path: "bundle.md", text: text5 }, ...carried],
       meta: {
         object_type: d.type,
         title: fm.title,
@@ -76766,15 +76809,15 @@ var Intent = class {
         `a ${type} ${c.head ? `at '${from}' moves only to '${last}', once` : `is created '${first}'`}, and this promotion names '${String(to).slice(0, 40)}'. Nothing was written.`,
         { object_type: type, from, to: to ?? null }
       );
-    const text4 = typeof c.bundleMd?.text === "string" ? c.bundleMd.text : "";
-    if (!readSection(text4, "Statement") || type === GOAL && !readSection(text4, "Bounds"))
+    const text5 = typeof c.bundleMd?.text === "string" ? c.bundleMd.text : "";
+    if (!readSection(text5, "Statement") || type === GOAL && !readSection(text5, "Bounds"))
       return refusePursuitUnstated(`a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, in its Statement section. Nothing was written.`);
     if (type === GOAL) {
-      if (to === "closed" && from !== "closed" && !readSection(text4, "Why It Closed"))
+      if (to === "closed" && from !== "closed" && !readSection(text5, "Why It Closed"))
         return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
       return null;
     }
-    if (to === "retired" && from !== "retired" && !readSection(text4, "Taught"))
+    if (to === "retired" && from !== "retired" && !readSection(text5, "Taught"))
       return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
     const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : fm;
     if (c.head && (fm.scope !== heldFm.scope || String(fm.owner ?? null) !== String(heldFm.owner ?? null)))
@@ -76866,17 +76909,17 @@ var Intent = class {
       if (bad) return bad;
     }
     const at22 = this.#when();
-    let text4 = removeBlock3(p.doc.text, CONDITION_KEY);
-    if (c) text4 = setBlock(text4, CONDITION_KEY, conditionLines(c, str4(author), at22));
-    text4 = setField(text4, "last_updated", q(at22));
-    text4 = logEntry(
-      text4,
+    let text5 = removeBlock3(p.doc.text, CONDITION_KEY);
+    if (c) text5 = setBlock(text5, CONDITION_KEY, conditionLines(c, str4(author), at22));
+    text5 = setField(text5, "last_updated", q(at22));
+    text5 = logEntry(
+      text5,
       at22,
       c ? "Objective condition set" : "Objective condition removed",
       str4(author),
       c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."
     );
-    const r = this.#revise(p.doc, text4, str4(author), viewer);
+    const r = this.#revise(p.doc, text5, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, project, condition: c, set_by: str4(author), at: at22, bundleSha: r.bundleSha };
   }
@@ -77260,10 +77303,10 @@ var Intent = class {
     if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj9(o) && o.project === project))
       return { ok: true, goal, project, already: true };
     const at22 = this.#when();
-    let text4 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str4(author)) ? str4(author) : q(author), at: q(at22) });
-    text4 = setField(text4, "last_updated", q(at22));
-    text4 = logEntry(text4, at22, "Objective linked", str4(author), `${project}'s objective serves this goal.`);
-    const r = this.#revise(g, text4, str4(author), viewer);
+    let text5 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str4(author)) ? str4(author) : q(author), at: q(at22) });
+    text5 = setField(text5, "last_updated", q(at22));
+    text5 = logEntry(text5, at22, "Objective linked", str4(author), `${project}'s objective serves this goal.`);
+    const r = this.#revise(g, text5, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, goal, project, by: str4(author), at: at22 };
   }
@@ -77277,17 +77320,17 @@ var Intent = class {
     if (g.head.currentState === "closed")
       return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
     const at22 = this.#when();
-    let text4 = appendHistory(g.text, {
+    let text5 = appendHistory(g.text, {
       at: at22,
       from: "open",
       to: "closed",
       blurb: "closed; the reason is in its document",
       author: str4(author)
     });
-    text4 = setField(setField(setField(text4, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at22));
-    text4 = setSection2(text4, "Why It Closed", bodyText(reason));
-    text4 = logEntry(text4, at22, "Closed", str4(author), "open to closed.");
-    const r = this.#revise(g, text4, str4(author), viewer);
+    text5 = setField(setField(setField(text5, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at22));
+    text5 = setSection2(text5, "Why It Closed", bodyText(reason));
+    text5 = logEntry(text5, at22, "Closed", str4(author), "open to closed.");
+    const r = this.#revise(g, text5, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, goal, state: "closed", reason: str4(reason), author: str4(author), at: at22 };
   }
@@ -77400,15 +77443,15 @@ var Intent = class {
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at22 = this.#when();
-    let text4 = appendSection(
+    let text5 = appendSection(
       a.text,
       "Dead Ends",
       `### ${at22} | ${str4(author)}
 ${bodyText(note)}`
     );
-    text4 = setField(text4, "last_updated", q(at22));
-    text4 = logEntry(text4, at22, "Dead end recorded", str4(author), "a dead end was appended to the pursuit record.");
-    const r = this.#revise(a, text4, str4(author), viewer);
+    text5 = setField(text5, "last_updated", q(at22));
+    text5 = logEntry(text5, at22, "Dead end recorded", str4(author), "a dead end was appended to the pursuit record.");
+    const r = this.#revise(a, text5, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, aspiration, note: str4(note), author: str4(author), at: at22 };
   }
@@ -77428,17 +77471,17 @@ ${bodyText(note)}`
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at22 = this.#when();
-    let text4 = appendHistory(a.text, {
+    let text5 = appendHistory(a.text, {
       at: at22,
       from: "held",
       to: "retired",
       blurb: "retired; what it taught is in its document",
       author: str4(author)
     });
-    text4 = setField(setField(setField(text4, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at22));
-    text4 = setSection2(text4, "Taught", bodyText(taught));
-    text4 = logEntry(text4, at22, "Retired", str4(author), "held to retired.");
-    const r = this.#revise(a, text4, str4(author), viewer);
+    text5 = setField(setField(setField(text5, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at22));
+    text5 = setSection2(text5, "Taught", bodyText(taught));
+    text5 = logEntry(text5, at22, "Retired", str4(author), "held to retired.");
+    const r = this.#revise(a, text5, str4(author), viewer);
     if (!r.ok) return r;
     return { ok: true, aspiration, state: "retired", taught: str4(taught), author: str4(author), at: at22 };
   }
@@ -77828,7 +77871,7 @@ ${bodyText(note)}`
     const at22 = this.#when();
     let inquiry = null, extra = {};
     if (act === "adopt") {
-      let text4 = appendItem(
+      let text5 = appendItem(
         proj.text,
         "objective_adoptions",
         {
@@ -77838,10 +77881,10 @@ ${bodyText(note)}`
           at: q(at22)
         }
       );
-      if (text4 === null) return refusal12("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
-      text4 = setField(text4, "last_updated", q(at22));
-      text4 = logEntry(text4, at22, "Proposal adopted", str4(author), `the proposal ${found.key} is adopted into the objective.`);
-      const r = this.#revise(proj, text4, str4(author), viewer);
+      if (text5 === null) return refusal12("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
+      text5 = setField(text5, "last_updated", q(at22));
+      text5 = logEntry(text5, at22, "Proposal adopted", str4(author), `the proposal ${found.key} is adopted into the objective.`);
+      const r = this.#revise(proj, text5, str4(author), viewer);
       if (!r.ok) return r;
     } else if (act === "question") {
       const opened = this.#openQuestion(found, author, viewer, run, assistantPrincipal, at22);
@@ -77891,7 +77934,7 @@ ${bodyText(note)}`
     const id = `${this.record.allocId("INQ", at22.slice(0, 4)).id}-question`;
     const question = questionOf(found);
     const who2 = str4(author) || PLANE_ACTOR;
-    const text4 = [
+    const text5 = [
       "---",
       `id: ${id}`,
       "object_type: inquiry",
@@ -77942,7 +77985,7 @@ ${bodyText(note)}`
       base: null,
       snapKey: `${at22.replace(/[-:]/g, "")}_${rand6(4)}`,
       author: who2,
-      files: [{ path: "bundle.md", text: text4 }],
+      files: [{ path: "bundle.md", text: text5 }],
       meta: { object_type: "inquiry", current_state: "surfaced", created: at22, last_updated: at22 },
       ...run ? { run } : {},
       ...str4(assistantPrincipal) ? { assistantPrincipal: str4(assistantPrincipal) } : {},
@@ -79544,7 +79587,7 @@ function redactAxis(axis, keep, hidden) {
     touched = true;
     return t ? `${t} ${OUT_OF_VIEW_WORDS}` : OUT_OF_VIEW_WORDS;
   };
-  const seen = (m) => !MEMBER_ID_FIELDS.some((f11) => f11 !== "through" && unseen(m[f11]));
+  const seen = (m) => !MEMBER_ID_FIELDS.some((f12) => f12 !== "through" && unseen(m[f12]));
   const named = (m) => {
     const out2 = { ...m };
     if (unseen(out2.through)) {
@@ -79660,8 +79703,8 @@ function strengthOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const producingGroup = d.producingGroup || (() => {
-      const f11 = promotion.fact("producingGroup");
-      return f11 && f11.ok ? f11.value || null : null;
+      const f12 = promotion.fact("producingGroup");
+      return f12 && f12.ok ? f12.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, producingGroup });
     instances17.set(host, s);
@@ -81064,8 +81107,8 @@ var Reevaluation = class {
   #registry(ids) {
     const list2 = [...new Set(ids.filter(Boolean))];
     if (!list2.length) return {};
-    const f11 = this.promotion.fact("publishedRegistry", null, list2);
-    return f11 && f11.ok && f11.value && typeof f11.value === "object" ? f11.value : null;
+    const f12 = this.promotion.fact("publishedRegistry", null, list2);
+    return f12 && f12.ok && f12.value && typeof f12.value === "object" ? f12.value : null;
   }
   /* A target's own row, read through record-core: its `bundles` columns (R37) and its prior state (`head`, R41). */
   #targetRow(id) {
@@ -81092,8 +81135,8 @@ var Reevaluation = class {
       if (!p.startsWith("annotations/") || !p.endsWith(".json")) continue;
       let a = null;
       try {
-        const f11 = this.record.readFile(id, p);
-        a = f11 && typeof f11.text === "string" ? JSON.parse(f11.text) : null;
+        const f12 = this.record.readFile(id, p);
+        a = f12 && typeof f12.text === "string" ? JSON.parse(f12.text) : null;
       } catch {
         a = null;
       }
@@ -81242,11 +81285,11 @@ var Reevaluation = class {
     if (!derived) return null;
     const axes = [];
     for (const axis of PAIR_AXES) {
-      const f11 = frozen[axis], d = derived[axis];
-      if (!f11 || !d || f11.state !== "graded" || d.state !== "graded" || !f11.grade || !d.grade) continue;
-      if (!(f11.grade in GRADE_RANK2) || !(d.grade in GRADE_RANK2)) continue;
-      if (GRADE_RANK2[d.grade] < GRADE_RANK2[f11.grade])
-        axes.push({ axis, frozen: { state: f11.state, grade: f11.grade }, derived: { state: d.state, grade: d.grade } });
+      const f12 = frozen[axis], d = derived[axis];
+      if (!f12 || !d || f12.state !== "graded" || d.state !== "graded" || !f12.grade || !d.grade) continue;
+      if (!(f12.grade in GRADE_RANK2) || !(d.grade in GRADE_RANK2)) continue;
+      if (GRADE_RANK2[d.grade] < GRADE_RANK2[f12.grade])
+        axes.push({ axis, frozen: { state: f12.state, grade: f12.grade }, derived: { state: d.state, grade: d.grade } });
     }
     if (!axes.length) return null;
     return {
@@ -82667,11 +82710,11 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
     const s = this.#choiceSubject("MACHINE_CANNOT_KEEP_VERSION", notice, author, viewer);
     if (!s.ok) return s;
     const { who: who2, r } = s;
-    const text4 = why == null ? null : String(why).trim() || null;
-    if (text4 !== null && (text4.length > NOTE_MAX2 || UNSTORABLE.test(text4)))
+    const text5 = why == null ? null : String(why).trim() || null;
+    if (text5 !== null && (text5.length > NOTE_MAX2 || UNSTORABLE.test(text5)))
       return this.#refuse(
         "VERSION_CHOICE_WHY_MALFORMED",
-        `the reason is ${text4.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
+        `the reason is ${text5.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
         { notice: r.notice_id, limit: NOTE_MAX2 }
       );
     const when = this.#when();
@@ -82680,7 +82723,7 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
                       SET state='kept', closed_by=?, closed_at=?, why=? WHERE notice_id=? AND state='open'`,
       who2,
       when,
-      text4,
+      text5,
       r.notice_id
     );
     return {
@@ -82691,7 +82734,7 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
       act: "kept",
       author: who2,
       at: when,
-      why: text4,
+      why: text5,
       capture_sha: r.capture_sha,
       newer_capture: r.newer_capture,
       says: `${r.kind === "case" ? `case ${r.holder}'s cited part ${r.target_id}` : `${r.holder}'s leg ${r.ord}`} stays on the earlier version (${r.capture_sha.slice(0, 12)}); the newer capture (${r.newer_capture.slice(0, 12)}) will not raise this notice again`
@@ -82716,11 +82759,11 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
         "MACHINE_CANNOT_RECORD_REEVALUATION",
         who2 ? `'${who2.slice(0, 60)}' is a machine identity.` : "no member is named as the one who looked again."
       );
-    const text4 = String(note ?? "").trim();
-    if (!text4 || text4.length > NOTE_MAX2 || UNSTORABLE.test(text4))
+    const text5 = String(note ?? "").trim();
+    if (!text5 || text5.length > NOTE_MAX2 || UNSTORABLE.test(text5))
       return this.#refuse(
         "REEVALUATION_NOTE_MALFORMED",
-        !text4 ? "pass note=<what was looked at and what was decided>." : `the note is ${text4.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
+        !text5 ? "pass note=<what was looked at and what was decided>." : `the note is ${text5.length} characters (at most ${NOTE_MAX2}), or holds a quote, backslash or line break.`,
         { limit: NOTE_MAX2 }
       );
     const dep = str7(dependent), tgt = str7(target), src = str7(source);
@@ -82739,14 +82782,14 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
       return noCause(`nothing owed on ${dep} for ${tgt} (${src}${since != null ? ` since ${since}` : ""}) is standing now.`);
     const when = this.#when();
     this.sql.exec(`INSERT INTO reevaluation_records (dependent, target, source, since, note, author, at)
-                   VALUES (?,?,?,?,?,?,?)`, dep, tgt, src, cause.since ?? null, text4, who2, when);
+                   VALUES (?,?,?,?,?,?,?)`, dep, tgt, src, cause.since ?? null, text5, who2, when);
     return {
       ok: true,
       dependent: dep,
       target: tgt,
       source: src,
       since: cause.since ?? null,
-      note: text4,
+      note: text5,
       author: who2,
       at: when,
       closed: true,
@@ -82758,7 +82801,7 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
    *  infos are the audit's. */
   check(c) {
     if (!c || c.replay || c.pkg && c.pkg.replay) return null;
-    const md = Array.isArray(c.files) ? c.files.find((f11) => f11 && f11.path === "bundle.md") : null;
+    const md = Array.isArray(c.files) ? c.files.find((f12) => f12 && f12.path === "bundle.md") : null;
     if (!md || typeof md.text !== "string") return null;
     let fm = null;
     try {
@@ -82780,11 +82823,11 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
   audit(image) {
     const files = image && image.files instanceof Map ? image.files : null;
     const md = files ? files.get("bundle.md") : null;
-    const text4 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
-    if (text4 === null) return [];
+    const text5 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
+    if (text5 === null) return [];
     let fm = null;
     try {
-      fm = parseFrontmatter(text4).data;
+      fm = parseFrontmatter(text5).data;
     } catch {
       fm = null;
     }
@@ -82956,7 +82999,7 @@ var unb643 = (s) => {
     return null;
   }
 };
-var rowsBlock = (key, rows2, fields) => rows2.length ? [`${key}:`, ...rows2.flatMap((r) => fields.filter((f11) => f11 in r).map((f11, i) => `${i ? "   " : "  -"} ${f11}: ${scalar(r[f11])}`))] : [`${key}: []`];
+var rowsBlock = (key, rows2, fields) => rows2.length ? [`${key}:`, ...rows2.flatMap((r) => fields.filter((f12) => f12 in r).map((f12, i) => `${i ? "   " : "  -"} ${f12}: ${scalar(r[f12])}`))] : [`${key}: []`];
 function sourceStatement(entry) {
   if (!entry || typeof entry !== "object" || typeof entry.kind !== "string" || !entry.kind) return null;
   const label = entry.attribute ? `${entry.kind} ${entry.attribute}` : entry.kind;
@@ -82973,7 +83016,7 @@ function sourceBlockLines(rows2) {
 function captureBlockLines(rows2) {
   const list2 = (Array.isArray(rows2) ? rows2 : []).filter((r) => r && typeof r === "object");
   const caps = list2.map((r) => {
-    const row2 = Object.fromEntries(CAPTURE_FIELDS2.map((f11) => [f11, r[f11] ?? null]));
+    const row2 = Object.fromEntries(CAPTURE_FIELDS2.map((f12) => [f12, r[f12] ?? null]));
     const a = r.acknowledgement && typeof r.acknowledgement === "object" ? r.acknowledgement : null;
     return a ? {
       ...row2,
@@ -82995,9 +83038,9 @@ function captureBlockLines(rows2) {
     ...rowsBlock("capture_accounts", accounts, ["capture", "by", "at", "text_b64", "signature_b64"])
   ];
 }
-function caseDocumentBlocks(text4) {
+function caseDocumentBlocks(text5) {
   try {
-    const fm = parseFrontmatter(String(text4 ?? "")).data || {};
+    const fm = parseFrontmatter(String(text5 ?? "")).data || {};
     if (!caseDocumentRequiresTensionSection(fm)) return { captures: null, sources: null, detail: BLOCKS_PREDATE_SENTENCE };
     const accounts = /* @__PURE__ */ new Map();
     for (const a of Array.isArray(fm.capture_accounts) ? fm.capture_accounts : []) {
@@ -83073,11 +83116,11 @@ var TENSIONS_PREDATE_SENTENCE = "this case document's format predates the disclo
 var TENSIONS_UNREADABLE_SENTENCE = "this case document declares a format that discloses contradictions, but carries no readable tension section, so what it disclosed is undetermined";
 var SIDE_FIELDS = ["kind", "text", "source", "date", "doctype", "capture"];
 var val2 = (v) => v === void 0 || v === null || v === "null" ? null : typeof v === "string" ? v : v;
-var sideOf = (row2, prefix) => Object.fromEntries(SIDE_FIELDS.map((f11) => [f11, val2(row2[`${prefix}_${f11}`])]));
+var sideOf = (row2, prefix) => Object.fromEntries(SIDE_FIELDS.map((f12) => [f12, val2(row2[`${prefix}_${f12}`])]));
 var stateWords = (row2) => row2.state === "resolved" && row2.kind === "irreconcilable" ? TENSION_STATE_WORDS.irreconcilable : Object.prototype.hasOwnProperty.call(TENSION_STATE_WORDS, row2.state) ? TENSION_STATE_WORDS[row2.state] : row2.state == null ? null : String(row2.state);
-function caseTensionsOf(text4) {
+function caseTensionsOf(text5) {
   try {
-    const fm = parseFrontmatter(String(text4 ?? "")).data || {};
+    const fm = parseFrontmatter(String(text5 ?? "")).data || {};
     if (!caseDocumentRequiresTensionSection(fm))
       return { tensions: null, highlighted: null, depth: null, members: {}, unread: null, detail: TENSIONS_PREDATE_SENTENCE };
     if (!Array.isArray(fm.case_tensions))
@@ -83129,8 +83172,8 @@ function caseTensionsOf(text4) {
     return { tensions: null, highlighted: null, depth: null, members: {}, unread: null, detail: TENSIONS_UNREADABLE_SENTENCE };
   }
 }
-function disclosedCandidates(text4) {
-  const t = caseTensionsOf(text4);
+function disclosedCandidates(text5) {
+  const t = caseTensionsOf(text5);
   return new Set((t.tensions || []).map((x) => x.candidate).filter((c) => typeof c === "string" && c));
 }
 
@@ -83196,9 +83239,9 @@ var SECTIONS2 = Object.freeze({
 });
 var REAUTHORABLE_SECTIONS = Object.freeze(Object.keys(SECTIONS2));
 var CITATIONS_UNDETERMINED_SENTENCE = "version undetermined (signed before capture pins): this document was signed before a case's citation edges were pinned to the capture they were made against, and it carries neither";
-function signedCitations(text4) {
+function signedCitations(text5) {
   try {
-    const fm = parseFrontmatter(String(text4 || "")).data || {};
+    const fm = parseFrontmatter(String(text5 || "")).data || {};
     if (caseDocumentRequiresV4Disclosures(fm) && Array.isArray(fm.case_citations))
       return { state: "signed", rows: fm.case_citations };
   } catch {
@@ -84006,7 +84049,7 @@ function migratePublication(sql) {
   ))
     registerCaseDocumentSha(sql, d.case_id, d.edition, d.doc_sha, d.text, d.ratified_at);
 }
-function registerCaseDocumentSha(sql, caseId, edition, docSha, text4, at22) {
+function registerCaseDocumentSha(sql, caseId, edition, docSha, text5, at22) {
   sql.exec(
     `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
      ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
@@ -84014,7 +84057,7 @@ function registerCaseDocumentSha(sql, caseId, edition, docSha, text4, at22) {
     caseId,
     caseDocumentPath(edition),
     "case_document",
-    new TextEncoder().encode(String(text4 ?? "")).length,
+    new TextEncoder().encode(String(text5 ?? "")).length,
     at22
   );
 }
@@ -84047,7 +84090,7 @@ var safeJson14 = (s) => {
   }
 };
 var str8 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
-var shaOf = (text4) => createSha256().update(new TextEncoder().encode(String(text4))).hex();
+var shaOf = (text5) => createSha256().update(new TextEncoder().encode(String(text5))).hex();
 var REVIEW_DOORS = Object.freeze([
   "draftForMember",
   "draftIdentity",
@@ -84137,13 +84180,13 @@ var Publication = class {
   }
   /* A live file's inline text as `{content}` (record-core R13), or null when it is not held inline. */
   #fileText(bundleId, path) {
-    let f11 = null;
+    let f12 = null;
     try {
-      f11 = this.record.readFile(bundleId, path);
+      f12 = this.record.readFile(bundleId, path);
     } catch {
-      f11 = null;
+      f12 = null;
     }
-    return f11 && typeof f11.text === "string" ? { content: f11.text } : null;
+    return f12 && typeof f12.text === "string" ? { content: f12.text } : null;
   }
   #headSha(bundleId) {
     let h = null;
@@ -84157,8 +84200,8 @@ var Publication = class {
   /* The instance's producing group, promotion's fact (legacy-store provides it until instance-setup does); null when
      no module provides it, which the attribution prose states rather than filling. */
   #producingGroup() {
-    const f11 = this.promotion.fact("producingGroup");
-    return f11 && f11.ok ? f11.value ?? null : null;
+    const f12 = this.promotion.fact("producingGroup");
+    return f12 && f12.ok ? f12.value ?? null : null;
   }
   /* ---------------------------------------------------------------- R23: the review provider */
   /** R23 (K240): a later module fills, once at start, the review doors this module and `case-authoring` read:
@@ -84230,15 +84273,15 @@ var Publication = class {
     case: caseArg = null,
     caseId = null,
     edition = null,
-    text: text4 = null,
+    text: text5 = null,
     author = null,
     at: at22 = null,
     draft = null
   } = {}) {
     const id = str8(caseArg ?? caseId), ed = Number(edition);
-    if (!id || !Number.isInteger(ed) || ed < 1 || typeof text4 !== "string" || !text4)
+    if (!id || !Number.isInteger(ed) || ed < 1 || typeof text5 !== "string" || !text5)
       return { ok: false, reason: "MALFORMED", detail: "a case document names its case, a positive edition and its text" };
-    const docSha = shaOf(text4);
+    const docSha = shaOf(text5);
     this.sql.exec(
       `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by,draft_id)
        VALUES (?,?,?,?,?,?,?)
@@ -84248,7 +84291,7 @@ var Publication = class {
       id,
       ed,
       docSha,
-      text4,
+      text5,
       str8(at22) || this.#when(),
       author ?? null,
       draft ?? null
@@ -84295,11 +84338,11 @@ var Publication = class {
     const all = doc.text.split("\n");
     const at22 = locate(all);
     if (!at22) return { ok: true, ...held, reauthored: false, why: `this case document carries no ${section} section to re-author` };
-    const text4 = [...all.slice(0, at22.f0), ...fmLines, ...all.slice(at22.f1, at22.b0), ...bodyLines, ...all.slice(at22.b1)].join("\n");
-    if (text4 === doc.text) return { ok: true, ...held, reauthored: false };
-    const newSha = shaOf(text4);
+    const text5 = [...all.slice(0, at22.f0), ...fmLines, ...all.slice(at22.f1, at22.b0), ...bodyLines, ...all.slice(at22.b1)].join("\n");
+    if (text5 === doc.text) return { ok: true, ...held, reauthored: false };
+    const newSha = shaOf(text5);
     this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
-                   AND sig_armored IS NULL`, newSha, text4, id, ed, doc.doc_sha);
+                   AND sig_armored IS NULL`, newSha, text5, id, ed, doc.doc_sha);
     this.projectCaseExclusions(id, ed);
     const now = this.#one(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
     return {
@@ -84657,8 +84700,8 @@ var Publication = class {
      capture are the pulled knocks `sources` minted for it (its `source_knocks` read contract, R15), each asked what the
      public may be told at `at`; a source that cannot be read answers nothing, so its rows fail closed (R52). A document
      before /5, or one stating no `sources:` block, states no source and has nothing to re-read. */
-  #sourcesLapsed(text4, at22) {
-    const { sources: rows2 } = caseDocumentBlocks(text4);
+  #sourcesLapsed(text5, at22) {
+    const { sources: rows2 } = caseDocumentBlocks(text5);
     if (!Array.isArray(rows2) || !rows2.length) return [];
     const src = this.sources;
     return sourceRowsStanding(rows2, (capture) => {
@@ -85431,9 +85474,9 @@ var Publication = class {
     const out = {};
     for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
       if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
-      const text4 = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
-      if (text4 === null) continue;
-      const mfm = parseFrontmatter(text4).data || {};
+      const text5 = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
+      if (text5 === null) continue;
+      const mfm = parseFrontmatter(text5).data || {};
       out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
     }
     return out;
@@ -85866,12 +85909,12 @@ var Publication = class {
       fileCount += files.length;
       return {
         ...b,
-        files: files.map((f11) => ({
-          path: f11.path,
-          sha256: f11.sha256,
-          bytes: f11.bytes,
-          blobSha: f11.blob_sha ?? null,
-          inline: !!f11.inline
+        files: files.map((f12) => ({
+          path: f12.path,
+          sha256: f12.sha256,
+          bytes: f12.bytes,
+          blobSha: f12.blob_sha ?? null,
+          inline: !!f12.inline
         })),
         /* The manifest chain and the base links, so the receiving side can
            re-derive the chain rather than believe it. `history` holds the
@@ -86403,9 +86446,9 @@ var Publication = class {
     if (more) pins.length = cap;
     const findings = [];
     for (const p of pins) {
-      const text4 = this.record.textAtSha(p.bundle_id, p.version_sha);
-      if (typeof text4 !== "string") continue;
-      const fm = parseFrontmatter(text4).data || {};
+      const text5 = this.record.textAtSha(p.bundle_id, p.version_sha);
+      if (typeof text5 !== "string") continue;
+      const fm = parseFrontmatter(text5).data || {};
       if (publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === id))
         findings.push({ case_id: p.case_id, finding: p.bundle_id, project: p.project_id ?? null });
     }
@@ -86919,10 +86962,10 @@ var Standards = class {
     if (!view) return undetermined(why);
     const entries = Array.isArray(view.standard_sources) ? view.standard_sources : [];
     if (!entries.length) return undetermined("the active jurisdiction profiles list no source of standards");
-    const text4 = String(cite ?? "");
+    const text5 = String(cite ?? "");
     const matches = entries.filter((e) => {
       try {
-        return !!e.cite && new RegExp(e.cite.re, e.cite.flags || "").test(text4);
+        return !!e.cite && new RegExp(e.cite.re, e.cite.flags || "").test(text5);
       } catch {
         return false;
       }
@@ -86946,13 +86989,13 @@ var Standards = class {
       );
     const level = typeof first.level === "string" && first.level ? first.level : "undetermined";
     const differs = [];
-    for (const f11 of ["kind", "issuer"])
-      if (str9(declared[f11]) && str9(declared[f11]) !== first[f11])
+    for (const f12 of ["kind", "issuer"])
+      if (str9(declared[f12]) && str9(declared[f12]) !== first[f12])
         differs.push({
-          field: f11,
-          declared: str9(declared[f11]),
-          source: first[f11],
-          says: `recorded as declared; the matched source says ${f11} '${first[f11]}'`
+          field: f12,
+          declared: str9(declared[f12]),
+          source: first[f12],
+          says: `recorded as declared; the matched source says ${f12} '${first[f12]}'`
         });
     return {
       state: "matched",
@@ -87039,12 +87082,12 @@ var Standards = class {
   }
   /* R1, R10: the one write. The id is allocated, the document promoted and the rows written in one transaction, so a
      refusal anywhere leaves nothing (record-core R32). */
-  #write(f11, author, viewer, proposalId) {
+  #write(f12, author, viewer, proposalId) {
     return this.record.transact(() => {
       const at22 = this.#when();
-      const id = `${this.record.allocId("STD", at22.slice(0, 4)).id}-${f11.kind}`;
-      const source = this.sourceOf(f11.cite, f11);
-      const text4 = standardDoc({ id, ...f11, source, proposal: proposalId, author, at: at22 });
+      const id = `${this.record.allocId("STD", at22.slice(0, 4)).id}-${f12.kind}`;
+      const source = this.sourceOf(f12.cite, f12);
+      const text5 = standardDoc({ id, ...f12, source, proposal: proposalId, author, at: at22 });
       this.#writing = id;
       let r;
       try {
@@ -87053,8 +87096,8 @@ var Standards = class {
           base: null,
           snapKey: `${at22.replace(/[-:]/g, "")}_${rand7(4)}`,
           author,
-          files: [{ path: "bundle.md", text: text4 }],
-          meta: { object_type: STANDARD, title: titleOf2(f11.cite), current_state: "recorded", created: at22, last_updated: at22 },
+          files: [{ path: "bundle.md", text: text5 }],
+          meta: { object_type: STANDARD, title: titleOf2(f12.cite), current_state: "recorded", created: at22, last_updated: at22 },
           actorIdentity: author,
           actorViewer: viewer ?? author
         });
@@ -87066,18 +87109,18 @@ var Standards = class {
         `INSERT INTO standards (standard_id, cite, kind, issuer, period_from, period_to, supersedes,
                        source_json, proposal_id, declared_by, declared_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
         id,
-        f11.cite,
-        f11.kind,
-        f11.issuer,
-        f11.period.from,
-        f11.period.to,
-        f11.supersedes,
+        f12.cite,
+        f12.kind,
+        f12.issuer,
+        f12.period.from,
+        f12.period.to,
+        f12.supersedes,
         JSON.stringify(source),
         proposalId,
         author,
         at22
       );
-      f11.texts.forEach((c, i) => this.sql.exec(
+      f12.texts.forEach((c, i) => this.sql.exec(
         `INSERT INTO standard_texts (standard_id, ord, content_id) VALUES (?,?,?)`,
         id,
         i,
@@ -87822,7 +87865,7 @@ var UNSEEN = "an object you may not see";
 var DATE_RE4 = /^\d{4}-\d{2}-\d{2}$/;
 var str10 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj12 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-var text3 = (v) => typeof v === "string" && v.trim() && v.length <= TEXT_MAX ? v.trim() : null;
+var text4 = (v) => typeof v === "string" && v.trim() && v.length <= TEXT_MAX ? v.trim() : null;
 var isDate3 = (v) => typeof v === "string" && DATE_RE4.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
 var q3 = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'")}"`;
 var oneLine2 = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").trim();
@@ -88076,10 +88119,10 @@ var Conformance = class _Conformance {
       );
       return { ok: true, act: this.#actView(held), minted: false };
     }
-    const description = text3(a.description);
+    const description = text4(a.description);
     if (!description) return incomplete("description", "the act states no description of what the government did.");
     const actor = isObj12(a.actor) ? a.actor : {};
-    const role = text3(actor.role), body = text3(actor.body);
+    const role = text4(actor.role), body = text4(actor.body);
     if (!role || !body)
       return incomplete("actor", "the act names the office that did it by its official role and body, never by a person.");
     let at22 = null, from = null, to = null;
@@ -88138,30 +88181,30 @@ var Conformance = class _Conformance {
       return refusal14("NO_FINDINGS", "a determination rests on at least one published finding (R14). Nothing was written.");
     const pins = [], seen = /* @__PURE__ */ new Set();
     for (const item of list2) {
-      const f11 = isObj12(item) ? {
+      const f12 = isObj12(item) ? {
         finding: str10(item.finding ?? item.id),
         version: str10(item.version),
         case: str10(item.case),
         edition: item.edition == null ? null : Number(item.edition)
       } : { finding: str10(item), version: null, case: null, edition: null };
       let items = [];
-      if (f11.finding) {
+      if (f12.finding) {
         let r = null;
         try {
-          r = this.publication.publishedEditionsOf({ finding: f11.finding, version: f11.version, project });
+          r = this.publication.publishedEditionsOf({ finding: f12.finding, version: f12.version, project });
         } catch {
           r = null;
         }
         items = r && r.ok !== false && Array.isArray(r.items) ? r.items : [];
-        items = items.filter((i) => i.project === project && (!f11.case || i.case === f11.case) && (f11.edition == null || i.edition === f11.edition));
+        items = items.filter((i) => i.project === project && (!f12.case || i.case === f12.case) && (f12.edition == null || i.edition === f12.edition));
       }
       if (!items.length)
-        return refusal14("FINDING_NOT_PUBLISHED", `${String(f11.finding ?? "a finding named").slice(0, 80)} is not a finding this project has published in a ratified case edition. A finding published only by another project, or not at all, is not one. Nothing was written.`, { finding: f11.finding });
+        return refusal14("FINDING_NOT_PUBLISHED", `${String(f12.finding ?? "a finding named").slice(0, 80)} is not a finding this project has published in a ratified case edition. A finding published only by another project, or not at all, is not one. Nothing was written.`, { finding: f12.finding });
       const pick2 = items.reduce((best, i) => !best || i.case > best.case || i.case === best.case && i.edition > best.edition ? i : best, null);
-      if (seen.has(f11.finding)) continue;
-      seen.add(f11.finding);
+      if (seen.has(f12.finding)) continue;
+      seen.add(f12.finding);
       pins.push({
-        finding: f11.finding,
+        finding: f12.finding,
         case: pick2.case,
         edition: pick2.edition,
         version_sha: pick2.version_sha ?? null,
@@ -88233,7 +88276,7 @@ var Conformance = class _Conformance {
     };
     for (const [i, r] of list2.entries()) {
       const row2 = isObj12(r) ? r : {};
-      const standard = str10(row2.standard), requires = text3(row2.requires), did = text3(row2.did);
+      const standard = str10(row2.standard), requires = text4(row2.requires), did = text4(row2.did);
       const reading = READINGS.includes(row2.reading) ? row2.reading : null;
       if (!standard || !named.has(standard))
         return incomplete(`row ${i} names no standard this determination names.`, { row: i });
@@ -88260,7 +88303,7 @@ var Conformance = class _Conformance {
     };
     for (const [i, x] of list2.entries()) {
       const item = isObj12(x) ? x : { question: x };
-      const question = text3(item.question);
+      const question = text4(item.question);
       if (!question) return bad(`question ${i} states no question.`, { question: i });
       const inquiry = str10(item.inquiry);
       if (inquiry) {
@@ -88331,8 +88374,8 @@ var Conformance = class _Conformance {
     if (large) return large;
     const a = this.#actOf(act, pid, supersedes);
     if (!a.ok) return a;
-    const f11 = this.#pinFindings(findings, pid);
-    if (!f11.ok) return f11;
+    const f12 = this.#pinFindings(findings, pid);
+    if (!f12.ok) return f12;
     const s = this.#readStandards(standards, a.act, viewer);
     if (!s.ok) return s;
     const r = this.#readRows(rows2, s.standards);
@@ -88359,7 +88402,7 @@ var Conformance = class _Conformance {
     return this.#write({
       project: pid,
       act: a,
-      pins: f11.pins,
+      pins: f12.pins,
       standards: s.standards,
       rows: r.rows,
       questions: qs.questions,
@@ -88868,12 +88911,12 @@ var Conformance = class _Conformance {
           outcome: s.outcome
         })),
         findings: this.#rows(`SELECT finding_id, case_id, edition, version_sha, role FROM determination_findings
-                                     WHERE determination_id=? ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.findings).map((f11) => this.membership.inSight(f11.finding_id, viewer) ? {
-          finding: f11.finding_id,
-          case: f11.case_id,
-          edition: Number(f11.edition),
-          version_sha: f11.version_sha,
-          role: f11.role
+                                     WHERE determination_id=? ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.findings).map((f12) => this.membership.inSight(f12.finding_id, viewer) ? {
+          finding: f12.finding_id,
+          case: f12.case_id,
+          edition: Number(f12.edition),
+          version_sha: f12.version_sha,
+          role: f12.role
         } : { finding: null, says: UNSEEN }),
         author: r.author,
         at: r.at,
@@ -88919,8 +88962,8 @@ var Conformance = class _Conformance {
     const a = isObj12(act) ? act : {};
     const theAct = {
       id: str10(a.id),
-      description: text3(a.description),
-      actor: isObj12(a.actor) ? { role: text3(a.actor.role), body: text3(a.actor.body) } : null,
+      description: text4(a.description),
+      actor: isObj12(a.actor) ? { role: text4(a.actor.role), body: text4(a.actor.body) } : null,
       at: isDate3(a.at) ? a.at : null,
       period: isObj12(a.period) ? {
         from: isDate3(a.period.from) ? a.period.from : null,
@@ -88931,12 +88974,12 @@ var Conformance = class _Conformance {
     const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj12(x) ? str10(x.standard ?? x.id) : str10(x)).filter(Boolean);
     const rs = (Array.isArray(rows2) ? rows2 : []).filter(isObj12).map((x) => ({
       standard: str10(x.standard),
-      requires: text3(x.requires),
-      did: text3(x.did),
+      requires: text4(x.requires),
+      did: text4(x.did),
       reading: READINGS.includes(x.reading) ? x.reading : null,
       content: Array.isArray(x.content) ? x.content.map(str10).filter(Boolean).slice(0, LIMITS.evidence) : []
     }));
-    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj12(x) ? x : { question: x }).map((x) => ({ question: text3(x.question), inquiry: str10(x.inquiry) })).filter((x) => x.question);
+    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj12(x) ? x : { question: x }).map((x) => ({ question: text4(x.question), inquiry: str10(x.inquiry) })).filter((x) => x.question);
     const at22 = this.#when();
     const who2 = str10(proposer);
     let id = null;
@@ -89710,9 +89753,9 @@ var Actions = class _Actions {
     const out = [];
     for (const path of this.record.livePaths(id) || []) {
       if (path === "bundle.md") continue;
-      const f11 = this.record.readFile(id, path);
-      if (!f11) continue;
-      out.push(typeof f11.text === "string" ? { path, text: f11.text, bytes: new TextEncoder().encode(f11.text).length, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes });
+      const f12 = this.record.readFile(id, path);
+      if (!f12) continue;
+      out.push(typeof f12.text === "string" ? { path, text: f12.text, bytes: new TextEncoder().encode(f12.text).length, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes });
     }
     return out;
   }
@@ -89721,9 +89764,9 @@ var Actions = class _Actions {
     this.record.releaseLease(id, who2);
   }
   #heldFm(id) {
-    const f11 = this.record.readFile(id, "bundle.md");
-    if (!f11 || typeof f11.text !== "string") return null;
-    const fm = parseFrontmatter(f11.text).data;
+    const f12 = this.record.readFile(id, "bundle.md");
+    if (!f12 || typeof f12.text !== "string") return null;
+    const fm = parseFrontmatter(f12.text).data;
     return fm && typeof fm === "object" ? fm : null;
   }
   #visibleAction(id, viewer) {
@@ -89735,8 +89778,8 @@ var Actions = class _Actions {
     );
   }
   /* K57's small helpers, copied from the legacy store (which keeps its own for its other writers). */
-  static #appendStateHistory(text4, e) {
-    const lines = text4.split("\n");
+  static #appendStateHistory(text5, e) {
+    const lines = text5.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -89763,8 +89806,8 @@ var Actions = class _Actions {
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
-  static #setScalar(text4, key, value) {
-    const lines = text4.split("\n");
+  static #setScalar(text5, key, value) {
+    const lines = text5.split("\n");
     const end2 = lines.indexOf("---", 1);
     for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
       if (lines[i].startsWith(key + ":")) {
@@ -89772,13 +89815,13 @@ var Actions = class _Actions {
         return lines.join("\n");
       }
     }
-    return text4;
+    return text5;
   }
-  static #setOrAddScalar(text4, key, value) {
-    const lines = text4.split("\n");
-    if (lines[0] !== "---") return text4;
+  static #setOrAddScalar(text5, key, value) {
+    const lines = text5.split("\n");
+    if (lines[0] !== "---") return text5;
     const end2 = lines.indexOf("---", 1);
-    if (end2 === -1) return text4;
+    if (end2 === -1) return text5;
     for (let i = 1; i < end2; i++)
       if (lines[i].startsWith(key + ":")) {
         lines[i] = `${key}: ${value}`;
@@ -89786,8 +89829,8 @@ var Actions = class _Actions {
       }
     return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
   }
-  static #spliceReferences(text4, additions) {
-    const lines = text4.split("\n");
+  static #spliceReferences(text5, additions) {
+    const lines = text5.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -89822,16 +89865,16 @@ var Actions = class _Actions {
     return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
   }
   /* One Session Log appender for this module's writers. */
-  static #appendSessionLog(text4, entry) {
-    const at22 = text4.indexOf("## Session Log");
-    if (at22 < 0) return text4 + "\n## Session Log\n\n" + entry;
-    const nxt = text4.indexOf("\n## ", at22 + 1);
-    const cut3 = nxt === -1 ? text4.length : nxt + 1;
-    return text4.slice(0, cut3) + entry + "\n" + text4.slice(cut3);
+  static #appendSessionLog(text5, entry) {
+    const at22 = text5.indexOf("## Session Log");
+    if (at22 < 0) return text5 + "\n## Session Log\n\n" + entry;
+    const nxt = text5.indexOf("\n## ", at22 + 1);
+    const cut3 = nxt === -1 ? text5.length : nxt + 1;
+    return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
   }
   /* A revision of `id` through promotion, carrying every other live file (R14, R16, R18, R24). */
-  #revise(id, text4, fm, b, when, who2, marks = {}, state = null) {
-    const bytes2 = new TextEncoder().encode(text4);
+  #revise(id, text5, fm, b, when, who2, marks = {}, state = null) {
+    const bytes2 = new TextEncoder().encode(text5);
     return this.promotion.promote({
       bundleId: id,
       base: this.#baseOf(id),
@@ -89840,7 +89883,7 @@ var Actions = class _Actions {
       viewer: marks.viewer ?? who2,
       ...marks,
       files: [
-        { path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() },
+        { path: "bundle.md", text: text5, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() },
         ...this.#carried(id)
       ],
       meta: {
@@ -90063,7 +90106,7 @@ var Actions = class _Actions {
   /** R1–R3, R5–R8, R33: this module's check, run inside every promotion before the write (promotion R39). */
   check(c) {
     const { pkg, meta, author, bundleId, files, head } = c;
-    const md = (files || []).find((f11) => f11 && f11.path === "bundle.md");
+    const md = (files || []).find((f12) => f12 && f12.path === "bundle.md");
     const nextFm = c.docFm && typeof c.docFm === "object" ? c.docFm : md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
     const heldFm = head ? this.#heldFm(bundleId) : null;
     const isAction = normalizeType(meta && meta.object_type) === "action" || nextFm && typeof nextFm === "object" && normalizeType(nextFm.object_type) === "action";
@@ -90253,11 +90296,11 @@ var Actions = class _Actions {
   audit(image) {
     const files = image && image.files instanceof Map ? image.files : null;
     const md = files ? files.get("bundle.md") : null;
-    const text4 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
-    if (text4 === null) return [];
+    const text5 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
+    if (text5 === null) return [];
     let fm = null;
     try {
-      fm = parseFrontmatter(text4).data;
+      fm = parseFrontmatter(text5).data;
     } catch {
       fm = null;
     }
@@ -90363,8 +90406,8 @@ var Actions = class _Actions {
         target,
         detail: "this action has no readable bundle.md, so its state cannot be moved"
       };
-    let text4 = liveMd.content;
-    const fm = parseFrontmatter(text4).data || {};
+    let text5 = liveMd.content;
+    const fm = parseFrontmatter(text5).data || {};
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legal = spec?.legal || [];
     if (!legal.includes(to))
@@ -90406,7 +90449,7 @@ var Actions = class _Actions {
         detail: `a resolution describes how an action ENDED; supplying one on a move to ${to} would record an outcome the action has not reached.`
       };
     const when = stampInstant("second", this.#nowMs(null));
-    const withHistory = _Actions.#appendStateHistory(text4, {
+    const withHistory = _Actions.#appendStateHistory(text5, {
       timestamp: when,
       from_state: b.current_state,
       to_state: to,
@@ -90420,19 +90463,19 @@ var Actions = class _Actions {
         target,
         detail: "this document's state_history block cannot be extended in place, and a move recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text4 = withHistory;
-    text4 = _Actions.#setOrAddScalar(text4, "prior_state", b.current_state);
-    text4 = _Actions.#setScalar(text4, "current_state", to);
-    if (to === "resolved") text4 = _Actions.#setOrAddScalar(text4, "resolution", res);
-    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
+    text5 = withHistory;
+    text5 = _Actions.#setOrAddScalar(text5, "prior_state", b.current_state);
+    text5 = _Actions.#setScalar(text5, "current_state", to);
+    if (to === "resolved") text5 = _Actions.#setOrAddScalar(text5, "resolution", res);
+    text5 = _Actions.#setScalar(text5, "last_updated", `"${when}"`);
     const entry = `### Session ${when} | Action ${b.current_state} to ${to} | ${who2}
 Trigger: op=actionmove on ${target}
 Changes: state ${b.current_state} to ${to}.${to === "resolved" ? ` Resolution: ${res}.` : ""}
 Reason: ${why}
 `;
-    text4 = _Actions.#appendSessionLog(text4, entry);
+    text5 = _Actions.#appendSessionLog(text5, entry);
     const carried = this.#carried(target);
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     const promoted = this.promotion.promote({
       bundleId: target,
       base: this.#baseOf(target),
@@ -90441,7 +90484,7 @@ Reason: ${why}
       viewer: viewer ?? who2,
       files: [{
         path: "bundle.md",
-        text: text4,
+        text: text5,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -90772,18 +90815,18 @@ Reason: ${why}
         { governing_laws: listed }
       );
     }
-    let text4 = _Actions.#spliceCorrespondence(liveMd.content, entryFm);
-    if (!text4) this.#releaseLease(target, who2);
-    if (!text4)
+    let text5 = _Actions.#spliceCorrespondence(liveMd.content, entryFm);
+    if (!text5) this.#releaseLease(target, who2);
+    if (!text5)
       return {
         ok: false,
         reason: "UNSPLICEABLE_CORRESPONDENCE",
         target,
         detail: "this action's correspondence block is not in a shape this grammar can extend in place. Appending never rewrites the rest of the document, so nothing was written."
       };
-    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
-    text4 = _Actions.#appendSessionLog(
-      text4,
+    text5 = _Actions.#setScalar(text5, "last_updated", `"${when}"`);
+    text5 = _Actions.#appendSessionLog(
+      text5,
       `### Session ${when} | Correspondence ${direction} | ${who2}
 Trigger: op=actioncorrespond on ${target}
 Changes: correspondence[${ord}] recorded, dated ${day}${String(party ?? "").trim() ? `, with ${String(party).trim()}` : ""}.
@@ -90792,7 +90835,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
 ` : ""}`
     );
     const carried = this.#carried(target);
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     const promoted = this.promotion.promote({
       bundleId: target,
       base: this.#baseOf(target),
@@ -90801,7 +90844,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       viewer: viewer ?? who2,
       files: [{
         path: "bundle.md",
-        text: text4,
+        text: text5,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -90918,10 +90961,10 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
   /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R11, R44–R46 at the act): the plane
    *  mints the action's id and writes it into the document; the refusals are the promotion's. Answers `{ok, id}`. */
   actionCreate({ document = null, viewer = null, author = null } = {}) {
-    const text4 = typeof document === "string" ? document : null;
+    const text5 = typeof document === "string" ? document : null;
     let fm = null;
     try {
-      fm = text4 ? parseFrontmatter(text4).data : null;
+      fm = text5 ? parseFrontmatter(text5).data : null;
     } catch {
       fm = null;
     }
@@ -90931,7 +90974,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const minted = this.record.allocId("ACTN", when.slice(0, 4));
     const id = minted && minted.id;
     if (!id) return { ok: false, reason: "NO_ID", detail: "no action id could be allocated. Nothing was written." };
-    const withId = _Actions.#setOrAddScalar(text4, "id", id);
+    const withId = _Actions.#setOrAddScalar(text5, "id", id);
     const bytes2 = new TextEncoder().encode(withId);
     const who2 = String(author ?? "").trim();
     const r = this.promotion.promote({
@@ -91014,19 +91057,19 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const fm = parseFrontmatter(liveMd.content).data || {};
     const before = governingLawsOf(fm);
     const when = stampInstant("second", this.#nowMs(null));
-    let text4 = _Actions.#replaceGoverningLaws(liveMd.content, entries);
-    if (!text4)
+    let text5 = _Actions.#replaceGoverningLaws(liveMd.content, entries);
+    if (!text5)
       return {
         ok: false,
         reason: "UNSPLICEABLE_GOVERNING_LAWS",
         target,
         detail: "this action's governing_laws block is not in a shape this grammar can replace in place, so nothing was written."
       };
-    text4 = _Actions.#setOrAddScalar(text4, "governing_laws_by", `"${_Actions.#fmSafe(who2)}"`);
-    text4 = _Actions.#setOrAddScalar(text4, "governing_laws_at", `"${when}"`);
-    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
-    text4 = _Actions.#appendSessionLog(
-      text4,
+    text5 = _Actions.#setOrAddScalar(text5, "governing_laws_by", `"${_Actions.#fmSafe(who2)}"`);
+    text5 = _Actions.#setOrAddScalar(text5, "governing_laws_at", `"${when}"`);
+    text5 = _Actions.#setScalar(text5, "last_updated", `"${when}"`);
+    text5 = _Actions.#appendSessionLog(
+      text5,
       `### Session ${when} | Governing laws stated | ${who2}
 Trigger: op=actionlaws on ${target}
 Changes: governing_laws set to ${entries.map((e) => `${e.level} ${e.citation}`).join("; ")}.
@@ -91034,7 +91077,7 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
 `
     );
     const carried = this.#carried(target);
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     const promoted = this.promotion.promote({
       bundleId: target,
       base: this.#baseOf(target),
@@ -91044,7 +91087,7 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
       [LAWS_ACT]: true,
       files: [{
         path: "bundle.md",
-        text: text4,
+        text: text5,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -91150,8 +91193,8 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
      or open it before the closing fence when absent — `#spliceCorrespondence`'s grammar, whole-block. Returns
      null for a block it cannot read as that shape (an inline value other than `[]`), refusing rather than
      guessing: the grammar has no escapes and a wrong guess corrupts the document silently. */
-  static #replaceGoverningLaws(text4, entries) {
-    const lines = text4.split("\n");
+  static #replaceGoverningLaws(text5, entries) {
+    const lines = text5.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -91265,11 +91308,11 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
       };
     const when = stampInstant("second", this.#nowMs(null));
     const entry = { tier: next, prior: held, by: _Actions.#fmSafe(who2), at: when, reason: why };
-    let text4 = _Actions.#appendRiskTierHistory(liveMd.content, entry);
-    text4 = _Actions.#setOrAddScalar(text4, "risk_tier", String(next));
-    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
-    text4 = _Actions.#appendSessionLog(
-      text4,
+    let text5 = _Actions.#appendRiskTierHistory(liveMd.content, entry);
+    text5 = _Actions.#setOrAddScalar(text5, "risk_tier", String(next));
+    text5 = _Actions.#setScalar(text5, "last_updated", `"${when}"`);
+    text5 = _Actions.#appendSessionLog(
+      text5,
       `### Session ${when} | Risk tier revised | ${who2}
 Trigger: op=actionrisktier on ${target}
 Changes: risk_tier ${held} (${RISK_TIERS[held]}) -> ${next} (${RISK_TIERS[next]}).
@@ -91277,7 +91320,7 @@ Reason: ${why}
 `
     );
     const carried = this.#carried(target);
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     const promoted = this.promotion.promote({
       bundleId: target,
       base: this.#baseOf(target),
@@ -91287,7 +91330,7 @@ Reason: ${why}
       [RISK_TIER_ACT]: true,
       files: [{
         path: "bundle.md",
-        text: text4,
+        text: text5,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -91302,7 +91345,7 @@ Reason: ${why}
       }
     });
     if (!promoted.ok) return { ...promoted, target };
-    const after = parseFrontmatter(text4).data || {};
+    const after = parseFrontmatter(text5).data || {};
     return {
       ok: true,
       target,
@@ -91331,8 +91374,8 @@ Reason: ${why}
      `entry` null it answers only whether the block can be appended to (the act asks before it refuses anything
      that would write). Returns null for a block it cannot read as that shape — an inline value other than `[]` —
      refusing rather than guessing: the grammar has no escapes, and a wrong guess rewrites history silently. */
-  static #appendRiskTierHistory(text4, entry) {
-    const lines = text4.split("\n");
+  static #appendRiskTierHistory(text5, entry) {
+    const lines = text5.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -91479,21 +91522,21 @@ Reason: ${why}
     if (refs.some((r) => r && typeof r === "object" && r.rel === "responds_to" && r.target === actionId))
       return { bundle_id: doc.bundle_id, already: true };
     const when = stampInstant("second", this.#nowMs(null));
-    let text4 = _Actions.#spliceReferences(
+    let text5 = _Actions.#spliceReferences(
       doc.content,
       [{ rel: "responds_to", target: actionId, status: "confirmed", note: "" }]
     );
-    if (!text4) return null;
-    text4 = _Actions.#setScalar(text4, "last_updated", `"${when}"`);
-    text4 = _Actions.#appendSessionLog(
-      text4,
+    if (!text5) return null;
+    text5 = _Actions.#setScalar(text5, "last_updated", `"${when}"`);
+    text5 = _Actions.#appendSessionLog(
+      text5,
       `### Session ${when} | Recorded as a response | ${who2}
 Trigger: op=actioncorrespond on ${actionId}
 Changes: responds_to edge added to ${actionId}.
 `
     );
     const carried = this.#carried(doc.bundle_id);
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     const p = this.promotion.promote({
       bundleId: doc.bundle_id,
       base: this.#baseOf(doc.bundle_id),
@@ -91502,7 +91545,7 @@ Changes: responds_to edge added to ${actionId}.
       viewer: who2,
       files: [{
         path: "bundle.md",
-        text: text4,
+        text: text5,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -91670,8 +91713,8 @@ Changes: responds_to edge added to ${actionId}.
      Values are emitted quoted where they are prose (account, medium, party) and
      bare where they are tokens, matching what the restricted grammar's parser
      reads back. */
-  static #spliceCorrespondence(text4, e) {
-    const lines = text4.split("\n");
+  static #spliceCorrespondence(text5, e) {
+    const lines = text5.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -92365,11 +92408,11 @@ var ActionClocks = class {
   }
   /* The action's document, the authority for its clock. */
   #heldFm(id) {
-    const f11 = this.record.readFile(id, "bundle.md");
-    if (!f11 || typeof f11.text !== "string") return null;
+    const f12 = this.record.readFile(id, "bundle.md");
+    if (!f12 || typeof f12.text !== "string") return null;
     let fm = null;
     try {
-      fm = parseFrontmatter(f11.text).data;
+      fm = parseFrontmatter(f12.text).data;
     } catch {
       fm = null;
     }
@@ -92929,10 +92972,10 @@ function parseFigure(figure2) {
   if (!Number.isFinite(number)) return { ok: false, why: "the figure is not a finite number" };
   return { ok: true, number: Object.is(number, -0) ? 0 : number, decimals };
 }
-function passageHolds(text4, figure2) {
-  if (typeof text4 !== "string" || typeof figure2 !== "string") return false;
-  const f11 = fold2(figure2);
-  return f11 !== "" && fold2(text4).includes(f11);
+function passageHolds(text5, figure2) {
+  if (typeof text5 !== "string" || typeof figure2 !== "string") return false;
+  const f12 = fold2(figure2);
+  return f12 !== "" && fold2(text5).includes(f12);
 }
 var toDecimals = (x, d) => Number(x.toFixed(Math.min(20, d)));
 var toPrecision = (x) => Number(x.toPrecision(15));
@@ -93623,14 +93666,14 @@ var Consequences = class {
         if (o.figure == null || !String(o.figure).trim()) {
           lacking ||= { code: "not_in_record", why: `operand ${i} states no figure as read` };
         } else {
-          const f11 = parseFigure(o.figure);
-          if (!f11.ok) return basisUnreadable(`operand ${i}: ${f11.why}`, { operand: i });
-          const text4 = this.#passageText(o.content);
-          if (text4 === null)
+          const f12 = parseFigure(o.figure);
+          if (!f12.ok) return basisUnreadable(`operand ${i}: ${f12.why}`, { operand: i });
+          const text5 = this.#passageText(o.content);
+          if (text5 === null)
             lacking ||= { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` };
-          else if (!passageHolds(text4, o.figure))
+          else if (!passageHolds(text5, o.figure))
             lacking ||= { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` };
-          else Object.assign(o, { number: f11.number, decimals: f11.decimals });
+          else Object.assign(o, { number: f12.number, decimals: f12.decimals });
         }
       }
       operands.push(o);
@@ -94064,7 +94107,7 @@ var PublicRead = class {
     const { name, module, fn } = this.#evidenceBlock;
     let value;
     try {
-      value = fn({ caseId, edition, findings: findings.map((f11) => f11.bundle_id) });
+      value = fn({ caseId, edition, findings: findings.map((f12) => f12.bundle_id) });
     } catch (e) {
       value = { unavailable: true, detail: `${module} could not compute this block: ${String(e && e.message || e).slice(0, 200)}` };
     }
@@ -94453,7 +94496,7 @@ var PublicRead = class {
       unread: null,
       detail: theCase ? "no signed case document is held for this edition, so it states no disclosure here" : "this is not a case, so it discloses no contradiction"
     };
-    for (const f11 of findings) f11.tensions = disclosed.tensions === null ? null : disclosed.members[f11.bundle_id] || [];
+    for (const f12 of findings) f12.tensions = disclosed.tensions === null ? null : disclosed.members[f12.bundle_id] || [];
     const blocks = state.document && typeof state.document.text === "string" ? caseDocumentBlocks(state.document.text) : {
       captures: null,
       sources: null,
@@ -95276,13 +95319,13 @@ var TEMPLATE_NAME_MAX = 200;
 var TEMPLATES_FOR_MAX = 200;
 var INBAND_RULE = "---- in-band ----";
 function inbandBlock(q7) {
-  const f11 = q7.floors || {};
+  const f12 = q7.floors || {};
   return [
     INBAND_RULE,
     `Format: ${q7.format}.`,
     `Hash: sha256 ${q7.hash.sha256} over ${q7.hash.over} (${q7.hash.bytes} bytes; ${q7.hash.canonical}).`,
     `Date: ${q7.date ?? "undetermined"}. Author: ${q7.author ?? "undetermined"}.`,
-    `Floors: capture ${f11.capture ?? "none"}, connection ${f11.connection ?? "none"}. ${f11.detail ?? ""}`.trimEnd(),
+    `Floors: capture ${f12.capture ?? "none"}, connection ${f12.connection ?? "none"}. ${f12.detail ?? ""}`.trimEnd(),
     JSON.stringify(q7),
     ""
   ].join("\n");
@@ -95512,7 +95555,7 @@ var Filings = class _Filings {
       project: str13(d.project),
       act: isObj14(d.act) ? d.act : {},
       /* K252: conformance names a finding `finding` and a standard `standard`; each is read here under `id`. */
-      findings: (Array.isArray(d.findings) ? d.findings : []).map((f11) => isObj14(f11) ? { ...f11, id: str13(f11.finding) || str13(f11.id) } : f11),
+      findings: (Array.isArray(d.findings) ? d.findings : []).map((f12) => isObj14(f12) ? { ...f12, id: str13(f12.finding) || str13(f12.id) } : f12),
       standards: (Array.isArray(d.standards) ? d.standards : []).map((x) => isObj14(x) ? { ...x, id: str13(x.standard) || str13(x.id) } : x),
       live: d.live !== false && !str13(d.superseded_by),
       superseded_by: str13(d.superseded_by),
@@ -95607,10 +95650,10 @@ var Filings = class _Filings {
         srcs.push(sid);
       }
       out.standards = withheld ? none("a standard the determination names is not one you may see") : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
-      const fs = det.findings.filter((f11) => isObj14(f11) && str13(f11.id));
+      const fs = det.findings.filter((f12) => isObj14(f12) && str13(f12.id));
       out.findings = fs.length !== det.findings.length ? none("a finding the determination rests on is not one you may see") : fs.length ? {
-        value: fs.map((f11) => `${f11.id} (case ${f11.case ?? "undetermined"}, edition ${f11.edition ?? "undetermined"})`).join("; "),
-        source: fs.map((f11) => `${f11.id}@${f11.case ?? "?"}/${f11.edition ?? "?"}`).join(", ")
+        value: fs.map((f12) => `${f12.id} (case ${f12.case ?? "undetermined"}, edition ${f12.edition ?? "undetermined"})`).join("; "),
+        source: fs.map((f12) => `${f12.id}@${f12.case ?? "?"}/${f12.edition ?? "?"}`).join(", ")
       } : none("the determination names no finding");
     } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
     const gl = action.governing_laws;
@@ -95740,31 +95783,31 @@ var Filings = class _Filings {
       else unfilled.push({ name: n, why: val3.why });
     }
     const filled = new Map(blanks.map((b) => [b.name, b.value]));
-    let text4 = source.text.replace(BLANK_RE, (_, n) => filled.has(n) ? filled.get(n) : unfilledMarker(n));
+    let text5 = source.text.replace(BLANK_RE, (_, n) => filled.has(n) ? filled.get(n) : unfilledMarker(n));
     let advisory = null;
     if (gov.tier === 2) {
       advisory = entry ? str13(entry.advisory) : null;
-      if (advisory) text4 = `${advisory}
+      if (advisory) text5 = `${advisory}
 
-${text4}`;
+${text5}`;
       else {
-        text4 = `${unfilledMarker("advisory")}
+        text5 = `${unfilledMarker("advisory")}
 
-${text4}`;
+${text5}`;
         unfilled.unshift({ name: "advisory", why: "the profile gives no advisory note for this kind (or its profiles disagree), so it is undetermined; a member writes one in before the draft can be approved" });
       }
     }
     const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
-    if (disclosure) text4 = `${disclosure}
+    if (disclosure) text5 = `${disclosure}
 
-${text4}`;
+${text5}`;
     const venue = entry && isObj14(entry.venue) ? {
       name: entry.venue.name ?? null,
       how: entry.venue.how ?? null,
       source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue`
     } : { state: "undetermined", why: "the profile gives this kind no venue" };
     const standard = this.#venueStandard(v, a.kind);
-    const facts = det ? det.findings.map((f11) => this.#fact(f11, det)) : [];
+    const facts = det ? det.findings.map((f12) => this.#fact(f12, det)) : [];
     const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard);
     const basis = this.#basisOf(a, det, gov);
     const tpl = { from: source.from, source: source.source, ...source.template ? { template: source.template, name: source.name } : {} };
@@ -95780,7 +95823,7 @@ ${text4}`;
         a.kind,
         gov.tier,
         json2(gov),
-        text4,
+        text5,
         json2(blanks),
         json2(unfilled),
         advisory,
@@ -95799,7 +95842,7 @@ ${text4}`;
         action: a.id,
         tier: gov.tier,
         governing: gov,
-        text: text4,
+        text: text5,
         blanks,
         unfilled,
         ...gov.tier === 2 ? { advisory } : {},
@@ -95820,14 +95863,14 @@ ${text4}`;
   /** R23, R24: a draft message, briefing or statement for an action whose addressee is anyone, from no template: the
    *  words are the preparer's (a machine's from the published case and the plan). Stored apart, labelled as R5's
    *  drafts are; R6's approval and R7's sending apply to it unchanged. */
-  communicationPrepare({ action = null, text: text4 = null, purpose = null, preparer = null, viewer = null } = {}) {
+  communicationPrepare({ action = null, text: text5 = null, purpose = null, preparer = null, viewer = null } = {}) {
     const who2 = str13(preparer);
     if (!who2) return { ok: false, reason: "COMMUNICATION_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
     const closed = this.#closed(a);
     if (closed) return closed;
-    if (typeof text4 !== "string" || !text4.trim() || WELL_FORMED.test(text4) || utf83(text4) > FILING_TEXT_MAX)
+    if (typeof text5 !== "string" || !text5.trim() || WELL_FORMED.test(text5) || utf83(text5) > FILING_TEXT_MAX)
       return {
         ok: false,
         reason: "COMMUNICATION_TEXT_REFUSED",
@@ -95848,7 +95891,7 @@ ${text4}`;
     const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
     const body = disclosure ? `${disclosure}
 
-${text4}` : text4;
+${text5}` : text5;
     return this.record.transact(() => {
       const { id } = this.record.allocId("FIL", when.slice(0, 4));
       this.sql.exec(`INSERT INTO communication_drafts (filing_id, action_id, text, purpose, disclosure, preparer, prepared_at, basis)
@@ -95903,9 +95946,9 @@ ${text4}` : text4;
   /* A draft the viewer may see (through its action and the project it draws on), or null (R6, R7, R19; K316). A
      communication (R23) is a draft of the same id space, `form` telling them apart. */
   #draft(id, viewer) {
-    const f11 = str13(id);
-    const filing2 = f11 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f11) : null;
-    const d = filing2 ? { ...filing2, form: "filing" } : f11 ? ((c) => c ? { ...c, form: "communication" } : null)(this.#one(`SELECT * FROM communication_drafts WHERE filing_id=?`, f11)) : null;
+    const f12 = str13(id);
+    const filing2 = f12 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f12) : null;
+    const d = filing2 ? { ...filing2, form: "filing" } : f12 ? ((c) => c ? { ...c, form: "communication" } : null)(this.#one(`SELECT * FROM communication_drafts WHERE filing_id=?`, f12)) : null;
     return d && this.#action(d.action_id, viewer) && this.#sees(parse2(d.basis), viewer) ? d : null;
   }
   /* R6: a draft is approved at most once; asked before the approval and again as it is written, since computing the
@@ -95925,7 +95968,7 @@ ${text4}` : text4;
   /* ---------------------------------------------------------------- R6: filingApprove */
   /** R6, R22, R24: a member approves the draft's text or an edited text, at most once; the approved text is the
    *  member's. The approved bytes carry R24's disclosure first where the draft did, and the in-band quartet (R22). */
-  async filingApprove({ filing: filing2 = null, text: text4 = void 0, author = null, viewer = null } = {}) {
+  async filingApprove({ filing: filing2 = null, text: text5 = void 0, author = null, viewer = null } = {}) {
     const who2 = str13(author);
     if (!who2 || isMachineIdentity(who2))
       return {
@@ -95946,7 +95989,7 @@ ${text4}` : text4;
         changed,
         detail: `since the draft was prepared: ${changed.join("; ")} changed. Prepare it again.`
       };
-    const body = text4 === void 0 || text4 === null ? d.text : text4;
+    const body = text5 === void 0 || text5 === null ? d.text : text5;
     if (typeof body === "string" && UNFILLED_RE.test(body))
       return {
         ok: false,
@@ -96105,21 +96148,21 @@ ${body}` : body;
   }
   /* ---------------------------------------------------------------- R8–R12: the counsel packet */
   /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. */
-  #fact(f11, det) {
-    if (!isObj14(f11) || !str13(f11.id))
+  #fact(f12, det) {
+    if (!isObj14(f12) || !str13(f12.id))
       return { finding: null, withheld: "an object you may not see", source: det.id };
-    const source = `${f11.id}@${f11.case ?? "?"}/${f11.edition ?? "?"}`;
-    const text4 = f11.version_sha ? this.#call(() => this.record.textAtSha(f11.id, f11.version_sha)) : null;
-    const base = { finding: f11.id, case: f11.case ?? null, edition: f11.edition ?? null, version_sha: f11.version_sha ?? null, source };
-    if (typeof text4 !== "string")
+    const source = `${f12.id}@${f12.case ?? "?"}/${f12.edition ?? "?"}`;
+    const text5 = f12.version_sha ? this.#call(() => this.record.textAtSha(f12.id, f12.version_sha)) : null;
+    const base = { finding: f12.id, case: f12.case ?? null, edition: f12.edition ?? null, version_sha: f12.version_sha ?? null, source };
+    if (typeof text5 !== "string")
       return { ...base, claim: { state: "undetermined", why: "the finding's published bytes are not held here as text" }, citations: [] };
     let fm = null;
     try {
-      fm = parseFrontmatter(text4).data;
+      fm = parseFrontmatter(text5).data;
     } catch {
       fm = null;
     }
-    const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text4);
+    const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text5);
     const conclusion = m && m[1].trim() ? m[1].trim() : null;
     const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj14) : [];
     return {
@@ -96141,7 +96184,7 @@ ${body}` : body;
      names, and each artifact the action's correspondence holds, with the source that cites it. */
   #citesOf(a, det, facts) {
     const cites = [];
-    for (const f11 of facts) for (const c of f11.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f11.source });
+    for (const f12 of facts) for (const c of f12.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f12.source });
     const act = det ? det.act || {} : {};
     for (const cid of Array.isArray(act.evidence) ? act.evidence : []) cites.push({ content_id: str13(cid), source: det.id });
     for (const [i, e] of a.correspondence.entries())
@@ -96300,7 +96343,7 @@ ${body}` : body;
   #assemble(a, det, viewer, marking) {
     const v = this.#view();
     const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
-    const facts = det ? det.findings.map((f11) => this.#fact(f11, det)) : [];
+    const facts = det ? det.findings.map((f12) => this.#fact(f12, det)) : [];
     const events = [], undated = [];
     const act = det ? det.act || {} : {};
     const actDay = realDate(act.at) || (isObj14(act.period) ? realDate(act.period.from) : null);
@@ -96311,12 +96354,12 @@ ${body}` : body;
         source: det.id,
         ...isObj14(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
       });
-    for (const f11 of facts) {
-      if (!f11.finding) continue;
-      const r = f11.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f11.case, Number(f11.edition)) : null;
+    for (const f12 of facts) {
+      if (!f12.finding) continue;
+      const r = f12.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f12.case, Number(f12.edition)) : null;
       push(
         r ? realDate(String(r.ratified_at).slice(0, 10)) : null,
-        { event: `${f11.finding} published in case ${f11.case} edition ${f11.edition}`, source: f11.source }
+        { event: `${f12.finding} published in case ${f12.case} edition ${f12.edition}`, source: f12.source }
       );
     }
     if (a.state_history === null)
@@ -96405,7 +96448,7 @@ ${body}` : body;
     return {
       determination: det.id,
       project: det.project,
-      findings: det.findings.filter((f11) => isObj14(f11) && str13(f11.id)).map((f11) => ({ id: f11.id, case: f11.case ?? null, edition: f11.edition ?? null })),
+      findings: det.findings.filter((f12) => isObj14(f12) && str13(f12.id)).map((f12) => ({ id: f12.id, case: f12.case ?? null, edition: f12.edition ?? null })),
       standards: det.standards.map((s) => str13(isObj14(s) ? s.id : s)).filter(Boolean),
       ...over
     };
@@ -96427,14 +96470,14 @@ ${body}` : body;
       determination: basis.determination,
       causes: d.basis_changed.causes ?? []
     });
-    for (const f11 of basis.findings || []) {
-      const e = this.#call(() => this.publication.publishedEditionsOf({ finding: f11.id, project: basis.project || null }));
-      const later = e && e.ok ? e.items.filter((i) => i.case === f11.case && Number(i.edition) > Number(f11.edition)) : [];
+    for (const f12 of basis.findings || []) {
+      const e = this.#call(() => this.publication.publishedEditionsOf({ finding: f12.id, project: basis.project || null }));
+      const later = e && e.ok ? e.items.filter((i) => i.case === f12.case && Number(i.edition) > Number(f12.edition)) : [];
       if (later.length) causes.push({
         cause: "finding_later_edition",
-        finding: f11.id,
-        case: f11.case,
-        edition: f11.edition,
+        finding: f12.id,
+        case: f12.case,
+        edition: f12.edition,
         later: Math.max(...later.map((i) => Number(i.edition)))
       });
     }
@@ -96794,7 +96837,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
   /* ---------------------------------------------------------------- R26: the group's template library */
   /** R26: a member keeps an approved draft (R6), or a derivative of its text, as a template of the group's, named, for
    *  a kind or for none. No machine writes a template. */
-  templateSave({ from = null, text: text4 = void 0, name = null, kind = null, author = null, viewer = null } = {}) {
+  templateSave({ from = null, text: text5 = void 0, name = null, kind = null, author = null, viewer = null } = {}) {
     const who2 = str13(author);
     if (!who2 || isMachineIdentity(who2))
       return {
@@ -96827,7 +96870,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       filing: d.filing_id,
       detail: "a template is kept from a draft a member has approved"
     };
-    const body = text4 === void 0 || text4 === null ? approved.text : text4;
+    const body = text5 === void 0 || text5 === null ? approved.text : text5;
     if (typeof body !== "string" || !body.trim() || WELL_FORMED.test(body) || utf83(body) > FILING_TEXT_MAX)
       return {
         ok: false,
@@ -96939,7 +96982,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
           },
           ...tier3 ? { tier3: {
             standards: d.standards.filter((s) => isObj14(s) && s.outcome === "noncompliant").map((s) => s.id),
-            factual_basis: d.findings.filter((f11) => isObj14(f11) && str13(f11.id)).map((f11) => ({ finding: f11.id, case: f11.case ?? null, edition: f11.edition ?? null })),
+            factual_basis: d.findings.filter((f12) => isObj14(f12) && str13(f12.id)).map((f12) => ({ finding: f12.id, case: f12.case ?? null, edition: f12.edition ?? null })),
             counsel: COUNSEL_SENTENCE
           } } : {}
         };
@@ -96967,8 +97010,8 @@ ${inbandBlock(quartet)}`, inband: quartet };
     const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, String(caseId ?? ""));
     const seen = /* @__PURE__ */ new Map();
     if (this.conformance && typeof this.conformance.determinationsFor === "function")
-      for (const f11 of Array.isArray(findings) ? findings : []) {
-        const page = this.#call(() => this.conformance.determinationsFor({ finding: f11, live: true, viewer: MACHINE_READER }));
+      for (const f12 of Array.isArray(findings) ? findings : []) {
+        const page = this.#call(() => this.conformance.determinationsFor({ finding: f12, live: true, viewer: MACHINE_READER }));
         for (const it of page && page.ok !== false && Array.isArray(page.items) ? page.items : []) {
           const id = str13(isObj14(it) ? it.id : it);
           if (!id || seen.has(id)) continue;
@@ -96994,37 +97037,37 @@ ${inbandBlock(quartet)}`, inband: quartet };
 };
 var instances26 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f11 = instances26.get(host);
-  if (!f11) {
+  let f12 = instances26.get(host);
+  if (!f12) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
-    f11 = new Filings({ ...d, host, storage, record });
-    instances26.set(host, f11);
-    f11.migrate();
+    f12 = new Filings({ ...d, host, storage, record });
+    instances26.set(host, f12);
+    f12.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
-    f11.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f11.evidenceBlock(arg));
+    f12.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f12.evidenceBlock(arg));
   }
-  return f11;
+  return f12;
 }
-function filingsOps(f11, url, body) {
+function filingsOps(f12, url, body) {
   const q7 = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
-    filingprepare: () => f11.filingPrepare({
+    filingprepare: () => f12.filingPrepare({
       action: b.action ?? q7("action"),
       template: b.template ?? q7("template"),
       preparer: q7("author"),
       viewer: q7("viewer")
     }),
-    communicationprepare: () => f11.communicationPrepare({
+    communicationprepare: () => f12.communicationPrepare({
       action: b.action ?? q7("action"),
       text: b.text,
       purpose: b.purpose,
       preparer: q7("author"),
       viewer: q7("viewer")
     }),
-    templatesave: () => f11.templateSave({
+    templatesave: () => f12.templateSave({
       from: b.from ?? q7("from"),
       text: b.text,
       name: b.name,
@@ -97032,9 +97075,9 @@ function filingsOps(f11, url, body) {
       author: q7("author"),
       viewer: q7("viewer")
     }),
-    templates: () => f11.templatesFor({ kind: q7("kind"), viewer: q7("viewer") }),
-    filingapprove: () => f11.filingApprove({ filing: b.filing ?? q7("filing"), text: b.text, author: q7("author"), viewer: q7("viewer") }),
-    filingsent: () => f11.filingRecordSent({
+    templates: () => f12.templatesFor({ kind: q7("kind"), viewer: q7("viewer") }),
+    filingapprove: () => f12.filingApprove({ filing: b.filing ?? q7("filing"), text: b.text, author: q7("author"), viewer: q7("viewer") }),
+    filingsent: () => f12.filingRecordSent({
       filing: b.filing ?? q7("filing"),
       at: b.at ?? q7("at"),
       medium: b.medium ?? null,
@@ -97043,21 +97086,21 @@ function filingsOps(f11, url, body) {
       author: q7("author"),
       viewer: q7("viewer")
     }),
-    counselpacket: () => f11.counselPacket({
+    counselpacket: () => f12.counselPacket({
       action: b.action ?? q7("action"),
       counsel: b.counsel ?? null,
       author: q7("author"),
       viewer: q7("viewer")
     }),
-    counselpacketread: () => f11.counselPacketRead({ id: q7("id"), version: q7("version"), viewer: q7("viewer") }),
-    counselpacketexport: () => f11.counselPacketExport({
+    counselpacketread: () => f12.counselPacketRead({ id: q7("id"), version: q7("version"), viewer: q7("viewer") }),
+    counselpacketexport: () => f12.counselPacketExport({
       id: b.id ?? q7("id"),
       version: b.version ?? q7("version"),
       author: q7("author"),
       viewer: q7("viewer")
     }),
-    filingsfor: () => f11.filingsFor({ action: q7("action"), viewer: q7("viewer") }),
-    theorypropose: () => f11.theoryPropose({
+    filingsfor: () => f12.filingsFor({ action: q7("action"), viewer: q7("viewer") }),
+    theorypropose: () => f12.theoryPropose({
       packet: b.packet ?? null,
       action: b.action ?? null,
       theory: b.theory,
@@ -97067,7 +97110,7 @@ function filingsOps(f11, url, body) {
       proposer: q7("author"),
       viewer: q7("viewer")
     }),
-    availableactions: () => f11.availableActions({ determination: q7("determination"), viewer: q7("viewer") })
+    availableactions: () => f12.availableActions({ determination: q7("determination"), viewer: q7("viewer") })
   };
 }
 
@@ -97077,9 +97120,9 @@ var LOG = "Escalation Log";
 var TOKEN3 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
 var q5 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
 var tok = (s) => TOKEN3.test(String(s)) ? String(s) : q5(s);
-var parseFm2 = (text4) => {
-  if (typeof text4 !== "string") return null;
-  const d = parseFrontmatter(text4).data;
+var parseFm2 = (text5) => {
+  if (typeof text5 !== "string") return null;
+  const d = parseFrontmatter(text5).data;
   return d && typeof d === "object" && !Array.isArray(d) ? d : null;
 };
 var escalationId = (allocated) => `${allocated}-escalation`;
@@ -97129,16 +97172,16 @@ function escalationDoc({ id, project, determination, act, standards, author, at:
 }
 var logText = (seq, entry) => `### ${seq} | ${entry.kind} | ${entry.author} | ${entry.at}
 ${JSON.stringify(entry)}`;
-function logOf(text4) {
-  if (typeof text4 !== "string") return [];
+function logOf(text5) {
+  if (typeof text5 !== "string") return [];
   const marker = `
 ## ${LOG}
 `;
-  const at22 = text4.indexOf(marker);
+  const at22 = text5.indexOf(marker);
   if (at22 === -1) return [];
   const start = at22 + marker.length;
-  const nxt = text4.indexOf("\n## ", start - 1);
-  const body = text4.slice(start, nxt === -1 ? text4.length : nxt).trim();
+  const nxt = text5.indexOf("\n## ", start - 1);
+  const body = text5.slice(start, nxt === -1 ? text5.length : nxt).trim();
   if (!body) return [];
   return body.split(/\n(?=### )/).map((part) => {
     const m = /^### (\d+) \| [^\n]*\n([\s\S]*)$/.exec(part.trim());
@@ -97151,34 +97194,34 @@ function logOf(text4) {
     }
   });
 }
-function logSection(text4) {
-  if (typeof text4 !== "string") return null;
+function logSection(text5) {
+  if (typeof text5 !== "string") return null;
   const marker = `
 ## ${LOG}
 `;
-  const at22 = text4.indexOf(marker);
+  const at22 = text5.indexOf(marker);
   if (at22 === -1) return null;
   const start = at22 + marker.length;
-  const nxt = text4.indexOf("\n## ", start - 1);
-  return text4.slice(start, nxt === -1 ? text4.length : nxt).trim();
+  const nxt = text5.indexOf("\n## ", start - 1);
+  return text5.slice(start, nxt === -1 ? text5.length : nxt).trim();
 }
 function fence2(lines) {
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   return end2 === -1 ? null : end2;
 }
-function setField2(text4, key, value) {
-  const lines = text4.split("\n");
+function setField2(text5, key, value) {
+  const lines = text5.split("\n");
   const end2 = fence2(lines);
-  if (end2 === null) return text4;
+  if (end2 === null) return text5;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
     lines[i] = `${key}: ${value}`;
     return lines.join("\n");
   }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function appendItem2(text4, key, fields) {
-  const lines = text4.split("\n");
+function appendItem2(text5, key, fields) {
+  const lines = text5.split("\n");
   const end2 = fence2(lines);
   if (end2 === null) return null;
   const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
@@ -97191,26 +97234,26 @@ function appendItem2(text4, key, fields) {
   for (let i = at22 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
   return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
 }
-function appendToSection(text4, heading, entry) {
+function appendToSection(text5, heading, entry) {
   const marker = `
 ## ${heading}
 `;
-  const at22 = text4.indexOf(marker);
-  if (at22 === -1) return `${text4.replace(/\n*$/, "\n")}
+  const at22 = text5.indexOf(marker);
+  if (at22 === -1) return `${text5.replace(/\n*$/, "\n")}
 ## ${heading}
 
 ${entry.trim()}
 `;
   const start = at22 + marker.length;
-  const nxt = text4.indexOf("\n## ", start - 1);
-  const end2 = nxt === -1 ? text4.length : nxt;
-  const head = text4.slice(0, end2).replace(/\n*$/, "\n");
+  const nxt = text5.indexOf("\n## ", start - 1);
+  const end2 = nxt === -1 ? text5.length : nxt;
+  const head = text5.slice(0, end2).replace(/\n*$/, "\n");
   return `${head}
 ${entry.trim()}
-${text4.slice(end2)}`;
+${text5.slice(end2)}`;
 }
-function appendEntry(text4, { entry, seq, stage, state, fromState, blurb }) {
-  let t = appendToSection(text4, LOG, logText(seq, entry));
+function appendEntry(text5, { entry, seq, stage, state, fromState, blurb }) {
+  let t = appendToSection(text5, LOG, logText(seq, entry));
   t = setField2(t, "last_updated", q5(entry.at));
   if (stage !== void 0) t = setField2(t, "stage", String(stage));
   if (state !== void 0 && state !== fromState) {
@@ -97585,7 +97628,7 @@ var actOf = (d) => isObj15(d.act) ? d.act : {};
 var actIdOf = (d) => actOf(d).id ?? null;
 var projectOf = (d) => d.project ?? null;
 var recordedAtOf = (d) => d.at ?? null;
-var overrideOf = (text4) => Actions.overrideOf(parseFm2(text4));
+var overrideOf = (text5) => Actions.overrideOf(parseFm2(text5));
 function ledgerOf(block) {
   const raw = Array.isArray(block.correspondence) ? block.correspondence : [];
   return raw.map((e, i) => isObj15(e) ? {
@@ -97696,8 +97739,8 @@ var Escalation = class {
     }));
   }
   #text(id) {
-    const f11 = this.record.readFile(id, "bundle.md");
-    return f11 && typeof f11.text === "string" ? f11.text : null;
+    const f12 = this.record.readFile(id, "bundle.md");
+    return f12 && typeof f12.text === "string" ? f12.text : null;
   }
   /* An action's ledger as `actions` answers it to this viewer; null when it does not answer one. */
   #ledger(action, viewer) {
@@ -97882,8 +97925,8 @@ var Escalation = class {
           item.oversight = { state: "undetermined", says: "the active profiles do not say whether this office is an oversight or audit body" };
       }
       if (a.stage === 5) {
-        const f11 = this.filings.filingsFor({ action: a.action, viewer });
-        item.filings = f11 && f11.ok !== false ? { drafts: f11.drafts ?? [], packets: f11.packets ?? [] } : null;
+        const f12 = this.filings.filingsFor({ action: a.action, viewer });
+        item.filings = f12 && f12.ok !== false ? { drafts: f12.drafts ?? [], packets: f12.packets ?? [] } : null;
       }
       return item;
     });
@@ -97948,15 +97991,15 @@ var Escalation = class {
   }
   #append(e, entry, { stage, state, blurb }) {
     const head = this.record.head(e.id);
-    const text4 = this.#text(e.id);
-    if (!head || text4 === null) return refuseNoSuchEscalation();
-    const seq = logOf(text4).length + 1;
-    const next = appendEntry(text4, { entry, seq, stage, state, fromState: head.currentState, blurb });
+    const text5 = this.#text(e.id);
+    if (!head || text5 === null) return refuseNoSuchEscalation();
+    const seq = logOf(text5).length + 1;
+    const next = appendEntry(text5, { entry, seq, stage, state, fromState: head.currentState, blurb });
     if (next === null)
       return refusal15("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
     const carried = this.record.livePaths(e.id).filter((p) => p !== "bundle.md").map((path) => {
-      const f11 = this.record.readFile(e.id, path);
-      return typeof f11.text === "string" ? { path, text: f11.text, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes };
+      const f12 = this.record.readFile(e.id, path);
+      return typeof f12.text === "string" ? { path, text: f12.text, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes };
     });
     const fm = parseFm2(next) || {};
     const r = this.promotion.promote({
@@ -98000,9 +98043,9 @@ var Escalation = class {
   /** R21: the tables, projected from the promoted document in the promotion's transaction. */
   project(c) {
     if (c.promotedType !== ESCALATION || !c.bundleMd || typeof c.bundleMd.text !== "string") return null;
-    const id = c.bundleId, text4 = c.bundleMd.text;
-    const fm = parseFm2(text4) || {};
-    const log = logOf(text4).filter((x) => !x.unreadable);
+    const id = c.bundleId, text5 = c.bundleMd.text;
+    const fm = parseFm2(text5) || {};
+    const log = logOf(text5).filter((x) => !x.unreadable);
     const held = this.#one(`SELECT log_len FROM escalations WHERE escalation_id=?`, id);
     const from = held ? held.log_len : 0;
     const open = log.find((x) => x.kind === "open") || {};
@@ -98104,14 +98147,14 @@ var Escalation = class {
     const r = this.record.transact(() => {
       const id = escalationId(this.record.allocId("ESC", at22.slice(0, 4)).id);
       const entry = { kind: "open", to: 1, determination, project, standards: pursued, author, at: at22 };
-      const text4 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at22, entry });
-      const fm = parseFm2(text4) || {};
+      const text5 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at22, entry });
+      const fm = parseFm2(text5) || {};
       const p = this.promotion.promote({
         bundleId: id,
         base: null,
         snapKey: this.#snap(),
         author,
-        files: [{ path: "bundle.md", text: text4 }],
+        files: [{ path: "bundle.md", text: text5 }],
         meta: {
           object_type: ESCALATION,
           title: fm.title,
@@ -98510,10 +98553,10 @@ for (const name of [
   "escalationsDue",
   "escalationsFor"
 ]) {
-  const f11 = Escalation.prototype[name];
+  const f12 = Escalation.prototype[name];
   Object.defineProperty(Escalation.prototype, name, { configurable: true, writable: true, value: function(...a) {
     try {
-      return f11.apply(this, a);
+      return f12.apply(this, a);
     } catch (e) {
       if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider);
       throw e;
@@ -98554,10 +98597,10 @@ __export(checks_exports31, {
   MONITORING_CHECKS: () => MONITORING_CHECKS,
   checkGatheringGrammar: () => checkGatheringGrammar
 });
-function f8(check, severity, message2) {
+function f9(check, severity, message2) {
   return { check, severity, message: message2 };
 }
-function asText7(v) {
+function asText8(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
@@ -98597,23 +98640,23 @@ function checkGatheringGrammar(ctx, findings) {
   if (!raw) return;
   let g;
   try {
-    g = JSON.parse(asText7(raw));
+    g = JSON.parse(asText8(raw));
   } catch {
     return;
   }
   if (typeof g !== "object" || g === null || Array.isArray(g)) {
-    findings.push(f8("C-18.5", "error", "data/gathering.json must be a JSON object"));
+    findings.push(f9("C-18.5", "error", "data/gathering.json must be a JSON object"));
     return;
   }
   if (g.daemon !== void 0) {
     const dmn = g.daemon;
     if (typeof dmn !== "object" || dmn === null || Array.isArray(dmn)) {
-      findings.push(f8("C-18.5", "error", "gathering.json daemon block must be an object"));
+      findings.push(f9("C-18.5", "error", "gathering.json daemon block must be an object"));
     } else {
-      if (typeof dmn.enabled !== "boolean") findings.push(f8("C-18.5", "error", "gathering.json daemon.enabled must be boolean"));
+      if (typeof dmn.enabled !== "boolean") findings.push(f9("C-18.5", "error", "gathering.json daemon.enabled must be boolean"));
       for (const bk of ["tick_budget", "sweep_budget"]) {
         if (dmn[bk] !== void 0 && !(Number.isInteger(dmn[bk]) && dmn[bk] >= 0)) {
-          findings.push(f8("C-18.5", "error", `gathering.json daemon.${bk} must be a non-negative integer`));
+          findings.push(f9("C-18.5", "error", `gathering.json daemon.${bk} must be a non-negative integer`));
         }
       }
     }
@@ -98622,43 +98665,43 @@ function checkGatheringGrammar(ctx, findings) {
   for (let i = 0; i < reqs.length; i++) {
     const r = reqs[i];
     if (typeof r !== "object" || r === null) {
-      findings.push(f8("C-18.5", "error", `gathering.json requests[${i}] is not an object`));
+      findings.push(f9("C-18.5", "error", `gathering.json requests[${i}] is not an object`));
       continue;
     }
-    if (!GATH_ID_RE.test(r.id || "")) findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].id '${r.id}' does not match the GATH grammar`));
+    if (!GATH_ID_RE.test(r.id || "")) findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].id '${r.id}' does not match the GATH grammar`));
     const tgt = r.target;
-    if (!tgt || typeof tgt !== "object") findings.push(f8("C-18.5", "error", `gathering.json requests[${i}] missing target block`));
+    if (!tgt || typeof tgt !== "object") findings.push(f9("C-18.5", "error", `gathering.json requests[${i}] missing target block`));
     else {
       if (typeof tgt.text !== "string" || tgt.text.length === 0 || tgt.text.length > 200 || /[\r\n]/.test(tgt.text)) {
-        findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].target.text must be a nonempty single-line string under 200 chars`));
+        findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].target.text must be a nonempty single-line string under 200 chars`));
       }
       if (tgt.description !== void 0 && (typeof tgt.description !== "string" || tgt.description.length > 2e3)) {
-        findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].target.description must be a string under 2000 chars`));
+        findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].target.description must be a string under 2000 chars`));
       }
     }
     const locs = Array.isArray(r.locators) ? r.locators : null;
-    if (!locs || locs.length === 0) findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].locators must be a nonempty array`));
+    if (!locs || locs.length === 0) findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].locators must be a nonempty array`));
     else for (let L2 = 0; L2 < locs.length; L2++) {
-      if (!isPublicHttpsLocator(locs[L2])) findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].locators[${L2}] '${String(locs[L2]).slice(0, 40)}' is not an https public-host locator`));
+      if (!isPublicHttpsLocator(locs[L2])) findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].locators[${L2}] '${String(locs[L2]).slice(0, 40)}' is not an https public-host locator`));
     }
-    if (typeof r.authority !== "string" || r.authority.trim() === "") findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].authority must be a nonempty string`));
-    if (!CRITICALITY_ENUM.includes(r.criticality)) findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].criticality must be one of: ${CRITICALITY_ENUM.join(", ")}`));
-    if (r.cadence !== void 0 && !CADENCE_ENUM.includes(r.cadence)) findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].cadence must be one of: ${CADENCE_ENUM.join(", ")}`));
-    if (!GATH_STATUS_ENUM.includes(r.status)) findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].status must be one of: ${GATH_STATUS_ENUM.join(", ")}`));
-    if (r.planted !== void 0 && !ISO_TS_RE.test(r.planted)) findings.push(f8("C-18.5", "error", `gathering.json requests[${i}].planted must be an ISO 8601 UTC instant`));
+    if (typeof r.authority !== "string" || r.authority.trim() === "") findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].authority must be a nonempty string`));
+    if (!CRITICALITY_ENUM.includes(r.criticality)) findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].criticality must be one of: ${CRITICALITY_ENUM.join(", ")}`));
+    if (r.cadence !== void 0 && !CADENCE_ENUM.includes(r.cadence)) findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].cadence must be one of: ${CADENCE_ENUM.join(", ")}`));
+    if (!GATH_STATUS_ENUM.includes(r.status)) findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].status must be one of: ${GATH_STATUS_ENUM.join(", ")}`));
+    if (r.planted !== void 0 && !ISO_TS_RE.test(r.planted)) findings.push(f9("C-18.5", "error", `gathering.json requests[${i}].planted must be an ISO 8601 UTC instant`));
   }
   const sweeps = Array.isArray(g.sweeps) ? g.sweeps : [];
   for (let i = 0; i < sweeps.length; i++) {
     const s = sweeps[i];
     if (typeof s !== "object" || s === null) {
-      findings.push(f8("C-18.5", "error", `gathering.json sweeps[${i}] is not an object`));
+      findings.push(f9("C-18.5", "error", `gathering.json sweeps[${i}] is not an object`));
       continue;
     }
-    if (typeof s.id !== "string" || s.id.trim() === "") findings.push(f8("C-18.5", "error", `gathering.json sweeps[${i}].id must be a nonempty string`));
-    if (s.ratified !== void 0 && typeof s.ratified !== "boolean") findings.push(f8("C-18.5", "error", `gathering.json sweeps[${i}].ratified must be boolean`));
+    if (typeof s.id !== "string" || s.id.trim() === "") findings.push(f9("C-18.5", "error", `gathering.json sweeps[${i}].id must be a nonempty string`));
+    if (s.ratified !== void 0 && typeof s.ratified !== "boolean") findings.push(f9("C-18.5", "error", `gathering.json sweeps[${i}].ratified must be boolean`));
     if (s.sources !== void 0) {
-      if (!Array.isArray(s.sources)) findings.push(f8("C-18.5", "error", `gathering.json sweeps[${i}].sources must be an array`));
-      else for (let L2 = 0; L2 < s.sources.length; L2++) if (!isPublicHttpsLocator(s.sources[L2])) findings.push(f8("C-18.5", "error", `gathering.json sweeps[${i}].sources[${L2}] is not an https public-host locator`));
+      if (!Array.isArray(s.sources)) findings.push(f9("C-18.5", "error", `gathering.json sweeps[${i}].sources must be an array`));
+      else for (let L2 = 0; L2 < s.sources.length; L2++) if (!isPublicHttpsLocator(s.sources[L2])) findings.push(f9("C-18.5", "error", `gathering.json sweeps[${i}].sources[${L2}] is not an https public-host locator`));
     }
   }
 }
@@ -98794,8 +98837,8 @@ function cadenceFor(authored, reading) {
       content_type: null,
       why: "the document states no frequency and the fetched document's content type could not be determined"
     };
-  const f11 = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : void 0;
-  if (f11 === void 0 || f11 !== null && !FREQ.includes(f11))
+  const f12 = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : void 0;
+  if (f12 === void 0 || f12 !== null && !FREQ.includes(f12))
     return {
       frequency: null,
       source: "undetermined",
@@ -98804,11 +98847,11 @@ function cadenceFor(authored, reading) {
       why: `the contract '${contract}' is given no frequency the catalog knows`
     };
   return {
-    frequency: f11,
+    frequency: f12,
     source: "contract",
     contract,
     content_type: contentType,
-    ...f11 === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}
+    ...f12 === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}
   };
 }
 var DRIVE_SHELLS_LIMIT_DEFAULT = 200;
@@ -98827,7 +98870,7 @@ var PENDING_ANY_DATE = "9999-12-31";
 var DAY_MS2 = 864e5;
 var MONITOR_VIEWER = "class:daemon";
 var MONITOR_AUTHOR = "bio-monitor";
-var DRIVE_ROWS = Object.freeze({ ...DRIVE_CAPTURE_CHECKS2, ...DRIVE_TICK_CHECKS });
+var DRIVE_ROWS = Object.freeze({ ...DRIVE_CAPTURE_CHECKS, ...DRIVE_TICK_CHECKS });
 var driveRow2 = (code) => {
   const row2 = DRIVE_ROWS[code];
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
@@ -98903,9 +98946,9 @@ function monitorObservationFor({
       return null;
   }
 }
-function markOverdue(text4, ords) {
+function markOverdue(text5, ords) {
   const want = new Set(ords.map(Number));
-  const lines = String(text4).split("\n");
+  const lines = String(text5).split("\n");
   let fence4 = 0, inClock = false, ord = -1, entryIndent = null;
   const hit = /* @__PURE__ */ new Set();
   for (let i = 0; i < lines.length; i++) {
@@ -98937,13 +98980,13 @@ function markOverdue(text4, ords) {
   }
   return hit.size === want.size ? lines.join("\n") : null;
 }
-function withSessionEntry(text4, checked, line) {
+function withSessionEntry(text5, checked, line) {
   const entry = "### Session " + checked + "\n\n" + line + "\n";
-  const at22 = text4.indexOf("## Session Log");
-  if (at22 < 0) return text4 + "\n## Session Log\n\n" + entry;
-  const nxt = text4.indexOf("\n## ", at22 + 1);
-  const cut3 = nxt === -1 ? text4.length : nxt + 1;
-  return text4.slice(0, cut3) + entry + "\n" + text4.slice(cut3);
+  const at22 = text5.indexOf("## Session Log");
+  if (at22 < 0) return text5 + "\n## Session Log\n\n" + entry;
+  const nxt = text5.indexOf("\n## ", at22 + 1);
+  const cut3 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
 }
 var clampLimit3 = (v, dflt, max) => {
   const n = Math.floor(Number(v));
@@ -99062,16 +99105,16 @@ var Monitoring = class {
      contract (for the cadence), determined whether or not a comparison could be made. */
   async #assess({ baseline, bytes: bytes2, ctx, beforeAt, afterAt, view }) {
     if (!bytes2 || !ctx) return { assessment: null, content: null, basis: "the source served no document to assess" };
-    const asText9 = profilesAsText(ctx.content_type, bytes2.length, false);
-    if (!asText9) return {
+    const asText10 = profilesAsText(ctx.content_type, bytes2.length, false);
+    if (!asText10) return {
       assessment: null,
       content: null,
       basis: "the fetched document is not read as text, and assess reads text documents only"
     };
-    const text4 = new TextDecoder("utf-8", { fatal: false }).decode(bytes2);
+    const text5 = new TextDecoder("utf-8", { fatal: false }).decode(bytes2);
     const v = view ? { view } : {};
-    const id = identify({ ...ctx, text: text4, ...v });
-    const dt = doctypeFor({ ...ctx, text: text4, handler: id.handler, kind: id.kind, ...v });
+    const id = identify({ ...ctx, text: text5, ...v });
+    const dt = doctypeFor({ ...ctx, text: text5, handler: id.handler, kind: id.kind, ...v });
     const content = {
       type: id.handler.shell ? null : dt.type.key,
       confidence: dt.confidence,
@@ -99247,7 +99290,7 @@ var Monitoring = class {
     try {
       const gov = this.governor;
       const g = await governedFetch(tickAddress, {
-        userAgent: civicosUserAgent2(this.env && this.env.VERSION || "0.0.0", this.env && this.env.INSTANCE_NAME || "unnamed", "monitor"),
+        userAgent: civicosUserAgent(this.env && this.env.VERSION || "0.0.0", this.env && this.env.INSTANCE_NAME || "unnamed", "monitor"),
         fetch: (u, i) => this.#fetch(u, i),
         governor: gov ? { admit: (q7) => gov.governorAdmit(q7), report: (q7) => gov.governorReport(q7) } : null
       });
@@ -99374,24 +99417,24 @@ var Monitoring = class {
             comparedBasis = "the captured baseline recorded no determined evidentiary digest, so the raw bytes were compared";
           else {
             const ct = res.headers.get("content-type");
-            const asText9 = profilesAsText(ct, bytes2.length, false);
+            const asText10 = profilesAsText(ct, bytes2.length, false);
             const headers = {};
             for (const [hk, hv] of res.headers) headers[hk.toLowerCase()] = hv;
             const profCtx = {
               headers,
               locator,
               content_type: ct || null,
-              text: asText9 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "",
+              text: asText10 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "",
               ...view ? { view } : {}
             };
             const stackId = identify(profCtx);
             const fresh = await substanceDigests(
-              asText9 ? bytes2 : null,
+              asText10 ? bytes2 : null,
               stackId,
               profCtx,
               seen,
               false,
-              asText9 || bytes2.length > ODF_DIGEST_MAX ? null : bytes2
+              asText10 || bytes2.length > ODF_DIGEST_MAX ? null : bytes2
             );
             const bdOver = bd.over || null, freshOver = fresh.over || null;
             if (bdOver !== freshOver)
@@ -99527,10 +99570,10 @@ var Monitoring = class {
       }
       out.push(line);
     }
-    let text4 = out.join("\n");
-    if (!/^\s+last_checked:/m.test(text4) && /^monitoring:/m.test(text4))
-      text4 = text4.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
-    const head = text4;
+    let text5 = out.join("\n");
+    if (!/^\s+last_checked:/m.test(text5) && /^monitoring:/m.test(text5))
+      text5 = text5.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
+    const head = text5;
     const withEntry = (capLine) => withSessionEntry(head, checked, "Monitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + (driveTick && driveTick.harvestable ? ` \u2014 fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed from the Drive ${driveTick.kind} in ${driveTick.address}` : "") + (capLine ? ` \u2014 ${capLine}` : ""));
     const carried = [];
     for (const [path, v] of Object.entries(img)) {
@@ -99541,7 +99584,7 @@ var Monitoring = class {
     }
     const liveSha = await sha256Hex11(live);
     const stamp2 = checked.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
-    const capCarried = !!(lookAfterPromote && carried.some((f11) => f11.sha256 === monCap.sha256));
+    const capCarried = !!(lookAfterPromote && carried.some((f12) => f12.sha256 === monCap.sha256));
     const promoteWith = async (withCap) => {
       const text22 = withEntry(!monCap ? null : withCap ? `the served bytes were captured as ${monCap.file} (sha256 ${monCap.sha256})` : `the served bytes (sha256 ${monCap.sha256}) were not filed: ${monCap.why}`);
       const addCap = withCap && !capCarried;
@@ -100391,7 +100434,7 @@ var Monitoring = class {
         notDocuments[drive.shape] = (notDocuments[drive.shape] || 0) + 1;
         continue;
       }
-      const f11 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
+      const f12 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
       const base = {
         bundle: r.id,
         locator: r.locator,
@@ -100400,17 +100443,17 @@ var Monitoring = class {
         kind: drive.kind
       };
       let reg = null;
-      if (f11 && typeof f11.content === "string") {
+      if (f12 && typeof f12.content === "string") {
         try {
-          reg = JSON.parse(f11.content);
+          reg = JSON.parse(f12.content);
         } catch {
           reg = null;
         }
-      } else if (f11) {
+      } else if (f12) {
         unreadable.push({ ...base, reason: "the register is not held inline" });
         continue;
       }
-      if (f11 && !reg) {
+      if (f12 && !reg) {
         unreadable.push({ ...base, reason: "the register is not parsable JSON" });
         continue;
       }
@@ -100483,7 +100526,7 @@ var Monitoring = class {
   gatheringCheck(c) {
     const pkg = c && c.pkg ? c.pkg : {};
     const files = Array.isArray(c && c.files) ? c.files : [];
-    const gj = pkg.replay ? null : files.find((f11) => f11.path === "data/gathering.json");
+    const gj = pkg.replay ? null : files.find((f12) => f12.path === "data/gathering.json");
     if (!gj || typeof gj.text !== "string") return null;
     const gf = [];
     checkGatheringGrammar({ files: /* @__PURE__ */ new Map([["data/gathering.json", gj.text]]) }, gf);
@@ -100578,10 +100621,10 @@ var Monitoring = class {
       MONITORING_READ_MAX + 1
     );
     let unread = files.length > MONITORING_READ_MAX;
-    for (const f11 of files.slice(0, MONITORING_READ_MAX)) {
+    for (const f12 of files.slice(0, MONITORING_READ_MAX)) {
       let g = null;
       try {
-        g = typeof f11.content === "string" ? JSON.parse(f11.content) : null;
+        g = typeof f12.content === "string" ? JSON.parse(f12.content) : null;
       } catch {
         g = null;
       }
@@ -100590,7 +100633,7 @@ var Monitoring = class {
         if (r && typeof r === "object" && r.status === "open")
           items.push({
             kind: "named-request",
-            bundle: f11.bundle_id,
+            bundle: f12.bundle_id,
             id: r.id ?? null,
             target: r.target?.text ?? null,
             locators: Array.isArray(r.locators) ? r.locators : [],
@@ -100602,7 +100645,7 @@ var Monitoring = class {
         if (w && typeof w === "object" && w.ratified === true)
           items.push({
             kind: "ratified-sweep",
-            bundle: f11.bundle_id,
+            bundle: f12.bundle_id,
             id: w.id ?? null,
             sources: Array.isArray(w.sources) ? w.sources : []
           });
@@ -100778,7 +100821,7 @@ var Monitoring = class {
             break;
           }
           for (const x of r.captures || []) {
-            const mine = (x.findings || []).filter((f11) => (f11.projects || []).includes(project)).map((f11) => f11.bundle_id);
+            const mine = (x.findings || []).filter((f12) => (f12.projects || []).includes(project)).map((f12) => f12.bundle_id);
             if (mine.length) captures.push({ c: x.capture_sha, rests: "finding", findings: mine });
           }
           n++;
@@ -100831,7 +100874,7 @@ var Monitoring = class {
       const e = byBundle.get(c.bundle);
       e.captures.push(c.capture);
       for (const k of c.rests_on || []) e.rests.add(k);
-      for (const f11 of c.findings || []) e.findings.add(f11);
+      for (const f12 of c.findings || []) e.findings.add(f12);
     }
     return [...byBundle.values()].map((b) => ({
       key: `monitoring::${project}::${b.bundle}`,
@@ -100933,11 +100976,11 @@ var Monitoring = class {
     const clock = fm && Array.isArray(fm.clock) ? fm.clock : [];
     const ords = entries.map((e) => Number(e.ord)).filter((o) => Number.isInteger(o) && o >= 0 && o < clock.length && clock[o] && clock[o].status === "pending" && entries.some((e) => Number(e.ord) === o && e.date === clock[o].date));
     if (!ords.length) return { ok: false, reason: "NOTHING_PENDING", detail: "no entry named is still pending in the document" };
-    let text4 = markOverdue(live, ords);
-    if (text4 === null) return { ok: false, reason: "UNSPLICEABLE_CLOCK", detail: "a pending entry's status line could not be found" };
-    text4 = text4.split("\n").map((l, i, a) => /^last_updated:/.test(l) && a.slice(0, i).filter((x) => x === "---").length === 1 ? "last_updated: " + at22 : l).join("\n");
+    let text5 = markOverdue(live, ords);
+    if (text5 === null) return { ok: false, reason: "UNSPLICEABLE_CLOCK", detail: "a pending entry's status line could not be found" };
+    text5 = text5.split("\n").map((l, i, a) => /^last_updated:/.test(l) && a.slice(0, i).filter((x) => x === "---").length === 1 ? "last_updated: " + at22 : l).join("\n");
     const dates = ords.map((o) => clock[o].date);
-    text4 = withSessionEntry(text4, at22, `Deadline recheck: ${ords.length === 1 ? "the clock entry" : "the clock entries"} dated ${dates.join(", ")} passed while pending and ${ords.length === 1 ? "is" : "are"} marked overdue (a mechanical mark; nothing else moved)`);
+    text5 = withSessionEntry(text5, at22, `Deadline recheck: ${ords.length === 1 ? "the clock entry" : "the clock entries"} dated ${dates.join(", ")} passed while pending and ${ords.length === 1 ? "is" : "are"} marked overdue (a mechanical mark; nothing else moved)`);
     const carried = [];
     for (const [path, v] of Object.entries(img)) {
       if (path === "bundle.md" || path.startsWith("_history/")) continue;
@@ -100963,7 +101006,7 @@ var Monitoring = class {
         last_updated: at22
       },
       files: [
-        { path: "bundle.md", text: text4, bytes: new TextEncoder().encode(text4).length, sha256: await sha256Hex11(text4) },
+        { path: "bundle.md", text: text5, bytes: new TextEncoder().encode(text5).length, sha256: await sha256Hex11(text5) },
         ...carried
       ]
     });
@@ -101184,8 +101227,8 @@ var Scheduler = class {
     this.#owners = owners;
   }
   #owner(name) {
-    const f11 = this.#owners[name];
-    return typeof f11 === "function" ? f11() : null;
+    const f12 = this.#owners[name];
+    return typeof f12 === "function" ? f12() : null;
   }
   /* ---- R5, R6: this module's own consumers, each calling its owner's services ---- */
   #own() {
@@ -103749,7 +103792,7 @@ var InstanceSetup = class _InstanceSetup {
         try {
           res = await this.#fetch(`https://${domain}${GROUP_WELL_KNOWN_PATH}`, {
             redirect: "manual",
-            headers: { "user-agent": civicosUserAgent2(this.#env.VERSION, this.#env.INSTANCE_NAME, "group-domain") }
+            headers: { "user-agent": civicosUserAgent(this.#env.VERSION, this.#env.INSTANCE_NAME, "group-domain") }
           });
         } catch {
           res = null;
@@ -103766,22 +103809,22 @@ var InstanceSetup = class _InstanceSetup {
             verdict = "absent";
             detail = status < 400 ? `the domain redirected (HTTP ${status}); the file is read on the claimed domain itself` : `the domain serves no ${GROUP_WELL_KNOWN_PATH} (HTTP ${status})`;
           } else if (status >= 200 && status < 300) {
-            const text4 = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
-            let f11 = null;
+            const text5 = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
+            let f12 = null;
             try {
-              f11 = JSON.parse(text4);
+              f12 = JSON.parse(text5);
             } catch {
-              f11 = null;
+              f12 = null;
             }
-            const isObject = !!f11 && typeof f11 === "object" && !Array.isArray(f11);
-            const inst = isObject && typeof f11.instance === "string" ? instanceAddress(f11.instance) : null;
-            const grp = isObject && typeof f11.group === "string" ? f11.group.trim() : null;
+            const isObject = !!f12 && typeof f12 === "object" && !Array.isArray(f12);
+            const inst = isObject && typeof f12.instance === "string" ? instanceAddress(f12.instance) : null;
+            const grp = isObject && typeof f12.group === "string" ? f12.group.trim() : null;
             if (inst === address && grp === slug) {
               verdict = "verified";
               detail = `the file names this instance (${address}) and its slug (${slug})`;
             } else {
               verdict = "mismatched";
-              detail = !isObject ? "the file is not the JSON object this plane reads ({ instance, group })" : `the file names instance ${JSON.stringify(inst ?? f11.instance ?? null).slice(0, 120)} and group ${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
+              detail = !isObject ? "the file is not the JSON object this plane reads ({ instance, group })" : `the file names instance ${JSON.stringify(inst ?? f12.instance ?? null).slice(0, 120)} and group ${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
             }
           } else {
             detail = `the domain answered HTTP ${status}, which is neither the file nor its absence`;
@@ -104644,9 +104687,9 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
        FINDING is the unit of truth: what a member signed is one
        document's bytes, and a case-level signature would be a signature
        over something nobody reviewed. */
-    findings: cs.findings.map((f11) => ({
-      bundle_id: f11.bundle_id,
-      title: f11.title,
+    findings: cs.findings.map((f12) => ({
+      bundle_id: f12.bundle_id,
+      title: f12.title,
       /* CASE-5, AND THIS ONE LINE WAS A FALSE STATEMENT IN A SIGNED-ADJACENT
          ARTIFACT. It read `edition: cs.edition` — the CASE's number,
          written onto every member as though it were the member's. While
@@ -104655,8 +104698,8 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          contradicts, and this is the copy that TRAVELS, so a reader has no
          way to check it against anything. It is the member's own edition,
          off the member's own published row, resolved by the pin. */
-      edition: f11.edition,
-      bundle_sha: f11.bundle_sha,
+      edition: f12.edition,
+      bundle_sha: f12.bundle_sha,
       /* THE PIN AND THE DESIGNATION, INSIDE THE CONTAINER. The design's
          sentence: the CASE artifact freezes its members — *"content by
          hash, version, per-member strength pair, role, the bar, the
@@ -104670,12 +104713,12 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          from the finding's own hash. `role` is the authored designation
          (clause 4): a stranger holding a SUPPORTING member must be able to
          see it was not presented as carrying the case. */
-      version_sha: f11.version_sha ?? null,
-      role: f11.role ?? null,
-      ratified_at: f11.ratified_at,
-      gate_version: f11.gate_version,
-      attestor: f11.attestor,
-      delivered_by: f11.delivered_by,
+      version_sha: f12.version_sha ?? null,
+      role: f12.role ?? null,
+      ratified_at: f12.ratified_at,
+      gate_version: f12.gate_version,
+      attestor: f12.attestor,
+      delivered_by: f12.delivered_by,
       /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
          ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
          `ratifyStatement()` returns a Uint8Array — it is the message fed
@@ -104691,20 +104734,20 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          right for `verifySshsig`'s caller two thousand lines up. */
       signature: {
         namespace: NS_RATIFY,
-        statement: new TextDecoder().decode(ratifyStatement(f11.bundle_id, f11.bundle_sha)),
-        armored: f11.sig_armored
+        statement: new TextDecoder().decode(ratifyStatement(f12.bundle_id, f12.bundle_sha)),
+        armored: f12.sig_armored
       },
-      strength: f11.strength,
-      required_strength: f11.required,
-      parts: f11.parts.map((p) => `${f11.bundle_id}/${p.path}`)
+      strength: f12.strength,
+      required_strength: f12.required,
+      parts: f12.parts.map((p) => `${f12.bundle_id}/${p.path}`)
     })),
     /* The parts are NAMESPACED BY FINDING, and that is forced rather than
        chosen: every finding carries a `bundle.md`, so a flat parts[]
        would have two members claiming one path and the archive would say
        two things about one name. */
-    parts: cs.findings.flatMap((f11) => f11.parts.map((p) => ({
-      path: `${f11.bundle_id}/${p.path}`,
-      finding: f11.bundle_id,
+    parts: cs.findings.flatMap((f12) => f12.parts.map((p) => ({
+      path: `${f12.bundle_id}/${p.path}`,
+      finding: f12.bundle_id,
       sha256: p.sha256,
       kind: p.kind,
       bytes: p.bytes ?? null
@@ -104878,21 +104921,21 @@ async function publishedRoutes({ op, url, env, stub }) {
   if (!c.ok) return P.json({ ok: false, ...c }, 404);
   const renderFinding = async (fnd) => {
     const md = await pubBytes(fnd.bundle_sha);
-    const text4 = md ? new TextDecoder().decode(md) : null;
-    const fm = text4 ? parseFrontmatter(text4).data || {} : null;
-    const { ok: _refused, ...whyUnavailable } = text4 ? {} : publishedStoreAbsent(env) ?? publishedObjectMissing();
-    const body = text4 ? {
+    const text5 = md ? new TextDecoder().decode(md) : null;
+    const fm = text5 ? parseFrontmatter(text5).data || {} : null;
+    const { ok: _refused, ...whyUnavailable } = text5 ? {} : publishedStoreAbsent(env) ?? publishedObjectMissing();
+    const body = text5 ? {
       state: "published",
       from_sha: fnd.bundle_sha,
-      question: sectionText(text4, "## Question"),
-      conclusion: sectionText(text4, "## Conclusion"),
-      falsifies: sectionText(text4, "## What Would Falsify This"),
+      question: sectionText(text5, "## Question"),
+      conclusion: sectionText(text5, "## Conclusion"),
+      falsifies: sectionText(text5, "## What Would Falsify This"),
       /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): a member published under rule 12
          carries no `## What This Excludes` in its own bytes — the case states it once, in
          its document — so the section is read from THAT signed document for such a member,
          and from the member's own bytes for a legacy one (rule 12 (e)). `excludes_from`
          says which, so a renderer never has to infer whose words it is printing. */
-      excludes: fnd.frozen_from === "case_document" ? typeof fnd.case_excludes === "string" ? fnd.case_excludes : null : sectionText(text4, "## What This Excludes"),
+      excludes: fnd.frozen_from === "case_document" ? typeof fnd.case_excludes === "string" ? fnd.case_excludes : null : sectionText(text5, "## What This Excludes"),
       excludes_from: fnd.frozen_from === "case_document" ? "case_document" : "member_bytes",
       /* BOTH, because the document says it in two places and they are not
          the same statement. The FRONTMATTER carries what op=conclude
@@ -104983,9 +105026,9 @@ async function publishedRoutes({ op, url, env, stub }) {
     verification: {
       container: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}&format=zip` : null,
       manifest: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
-      findings: findings.map((f11) => ({
-        bundle_id: f11.bundle_id,
-        bytes: `op=publishedbytes&sha256=${f11.bundle_sha}`
+      findings: findings.map((f12) => ({
+        bundle_id: f12.bundle_id,
+        bytes: `op=publishedbytes&sha256=${f12.bundle_sha}`
       })),
       detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own bundle sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without this instance's cooperation."
     }
@@ -105107,7 +105150,7 @@ __export(checks_exports32, {
   rowOf: () => rowOf5,
   withCaseMemberChecks: () => withCaseMemberChecks
 });
-function f9(check, severity, message2, repairs, code) {
+function f10(check, severity, message2, repairs, code) {
   const out = { check, severity, message: message2 };
   if (repairs) {
     out.repairable = true;
@@ -105146,7 +105189,7 @@ function completenessFields(fm) {
 function checkPublishedExtension(fm, findings) {
   const e = fm.edition;
   if (!Number.isInteger(e) || e < 1) {
-    findings.push(f9(
+    findings.push(f10(
       "C-2.8",
       "error",
       `a case member requires an integer edition of 1 or more (got '${e}'): an edition is what makes a revision safe \u2014 edition 2 does not overwrite edition 1, it joins it (DEC-12)`,
@@ -105155,7 +105198,7 @@ function checkPublishedExtension(fm, findings) {
   }
   const c = typeof fm.completeness === "object" && fm.completeness || null;
   if (!c) {
-    findings.push(f9(
+    findings.push(f10(
       "C-2.8",
       "error",
       "a case member requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything",
@@ -105184,16 +105227,16 @@ function checkPublishedExtension(fm, findings) {
     ));
   } else {
     if (typeof c.statement !== "string" || c.statement.trim() === "") {
-      findings.push(f9("C-2.8", "error", "a case member requires a non-empty completeness.statement"));
+      findings.push(f10("C-2.8", "error", "a case member requires a non-empty completeness.statement"));
     }
     if (typeof c.author !== "string" || c.author.trim() === "") {
-      findings.push(f9("C-2.8", "error", "a case member requires completeness.author: the completeness assertion is a named member's claim about the limits of this case"));
+      findings.push(f10("C-2.8", "error", "a case member requires completeness.author: the completeness assertion is a named member's claim about the limits of this case"));
     }
     if (!ISO_TS_RE.test(String(c.at || ""))) {
-      findings.push(f9("C-2.8", "error", `a case member requires completeness.at as an ISO timestamp (got '${c.at}')`));
+      findings.push(f10("C-2.8", "error", `a case member requires completeness.at as an ISO timestamp (got '${c.at}')`));
     }
     if (!SUBJECT_POSITIONS.includes(c.subject_position)) {
-      findings.push(f9(
+      findings.push(f10(
         "C-2.8",
         "error",
         `a case member requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(", ")} (got '${c.subject_position}'). The gate is that the position is declared and justified \u2014 never that contact happened, and never that the answer was favourable (DEC-13)`,
@@ -105201,7 +105244,7 @@ function checkPublishedExtension(fm, findings) {
       ));
     }
     if (typeof c.subject_justification !== "string" || c.subject_justification.trim() === "") {
-      findings.push(f9(
+      findings.push(f10(
         "C-2.8",
         "error",
         "a case member requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse. A group that sought comment says so and prints what came back; a group that deliberately did not says so and says why, and a reader weighs that justification exactly as they weigh any other declared bias (DEC-13)",
@@ -105210,7 +105253,7 @@ function checkPublishedExtension(fm, findings) {
     }
   }
   if (!Array.isArray(fm.completeness_excluded)) {
-    findings.push(f9(
+    findings.push(f10(
       "C-2.8",
       "error",
       "a case member requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal \u2014 an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse",
@@ -105219,13 +105262,13 @@ function checkPublishedExtension(fm, findings) {
   } else {
     fm.completeness_excluded.forEach((r, i) => {
       if (!r || typeof r !== "object") {
-        findings.push(f9("C-2.8", "error", `completeness_excluded[${i}] is not an object`));
+        findings.push(f10("C-2.8", "error", `completeness_excluded[${i}] is not an object`));
         return;
       }
       const named = typeof r.target === "string" && BUNDLE_ID_RE.test(r.target);
       const prose = typeof r.description === "string" && r.description.trim() !== "";
       if (!named && !prose) {
-        findings.push(f9(
+        findings.push(f10(
           "C-2.8",
           "error",
           `completeness_excluded[${i}] names neither a target nor a description: every exclusion row carries a target id OR prose, never neither`,
@@ -105233,7 +105276,7 @@ function checkPublishedExtension(fm, findings) {
         ));
       }
       if (typeof r.reason !== "string" || r.reason.trim() === "") {
-        findings.push(f9("C-2.8", "error", `completeness_excluded[${i}] carries no reason: WHAT was left out and WHY are two statements and one does not stand in for the other`));
+        findings.push(f10("C-2.8", "error", `completeness_excluded[${i}] carries no reason: WHAT was left out and WHY are two statements and one does not stand in for the other`));
       }
     });
   }
@@ -105241,14 +105284,14 @@ function checkPublishedExtension(fm, findings) {
   const axisCount = (a) => (axes || []).filter((x) => x && x.axis === a).length;
   const testimonyLeg = Array.isArray(fm.basis) && fm.basis.some((l) => l && typeof l === "object" && l.grade_axis === "testimony" && l.grade !== void 0 && l.grade !== null);
   if (!axes || axisCount("capture") !== 1 || axisCount("connection") !== 1 || axisCount("testimony") > 1 || axes.some((x) => !x || !GRADE_AXES.includes(x.axis))) {
-    findings.push(f9(
+    findings.push(f10(
       "C-2.8",
       "error",
       `a case member requires published_strength carrying BOTH axes, capture and connection, once each, and nothing but the axes this record measures (${GRADE_AXES.join(", ")}): a case does not have "a strength", it has one per axis, and composing them into one letter is the substitution R2 forbids`,
       ["publish through op=publish, which stamps the frozen axis objects into the bytes"]
     ));
   } else if (testimonyLeg && axisCount("testimony") !== 1) {
-    findings.push(f9(
+    findings.push(f10(
       "C-2.8",
       "error",
       "a case member whose basis carries a testimony grade requires a published_strength row for the testimony axis: the case rests on a member's word, and the frozen bytes must say at what, beside the capture and connection axes and never folded into either",
@@ -105258,18 +105301,18 @@ function checkPublishedExtension(fm, findings) {
   } else {
     for (const a of axes) {
       if (!STRENGTH_STATES2.includes(a.state)) {
-        findings.push(f9("C-2.8", "error", `published_strength.${a.axis} state '${a.state}' is not one of: ${STRENGTH_STATES2.join(", ")}`));
+        findings.push(f10("C-2.8", "error", `published_strength.${a.axis} state '${a.state}' is not one of: ${STRENGTH_STATES2.join(", ")}`));
       } else if (a.state === "graded" && !BASIS_GRADES.includes(a.grade)) {
-        findings.push(f9("C-2.8", "error", `published_strength.${a.axis} is graded but carries no grade`));
+        findings.push(f10("C-2.8", "error", `published_strength.${a.axis} is graded but carries no grade`));
       } else if (a.state !== "graded" && a.grade != null) {
-        findings.push(f9("C-2.8", "error", `published_strength.${a.axis} is ${a.state} and still carries grade '${a.grade}': ${a.state === "unrated" ? "UNRATED is not a low score, it is nothing established on this axis" : "undetermined is what we do not know, not a grade"}`));
+        findings.push(f10("C-2.8", "error", `published_strength.${a.axis} is ${a.state} and still carries grade '${a.grade}': ${a.state === "unrated" ? "UNRATED is not a low score, it is nothing established on this axis" : "undetermined is what we do not know, not a grade"}`));
       }
     }
   }
   const grouped = Array.isArray(fm.basis) && fm.basis.some((l) => l && typeof l === "object" && typeof l.ground === "string" && l.ground !== "");
   const frozenGrounds = Array.isArray(fm.published_strength_grounds) ? fm.published_strength_grounds : null;
   if (grouped && !frozenGrounds) {
-    findings.push(f9(
+    findings.push(f10(
       "C-2.8",
       "error",
       'a case member requires published_strength_grounds when the basis names grounds: the grade above is the STRONGEST ground rather than the weakest leg, and "these grounds were each independently sufficient" is a claim a reader can only test if the case says which legs were in which branch and what each branch reached',
@@ -105279,23 +105322,23 @@ function checkPublishedExtension(fm, findings) {
     for (let i = 0; i < frozenGrounds.length; i++) {
       const g = frozenGrounds[i];
       if (!g || typeof g !== "object") {
-        findings.push(f9("C-2.8", "error", `published_strength_grounds[${i}] is not an object`));
+        findings.push(f10("C-2.8", "error", `published_strength_grounds[${i}] is not an object`));
         continue;
       }
       if (!GRADE_AXES.includes(g.axis)) {
-        findings.push(f9("C-2.8", "error", `published_strength_grounds[${i}].axis '${g.axis}' is not one of: ${GRADE_AXES.join(", ")} \u2014 the branches are composed PER AXIS and both axes are frozen separately (DEC-21)`));
+        findings.push(f10("C-2.8", "error", `published_strength_grounds[${i}].axis '${g.axis}' is not one of: ${GRADE_AXES.join(", ")} \u2014 the branches are composed PER AXIS and both axes are frozen separately (DEC-21)`));
       }
       if (!STRENGTH_STATES2.includes(g.state)) {
-        findings.push(f9("C-2.8", "error", `published_strength_grounds[${i}].state '${g.state}' is not one of: ${STRENGTH_STATES2.join(", ")}`));
+        findings.push(f10("C-2.8", "error", `published_strength_grounds[${i}].state '${g.state}' is not one of: ${STRENGTH_STATES2.join(", ")}`));
       } else if (g.state === "graded" && !BASIS_GRADES.includes(g.grade)) {
-        findings.push(f9("C-2.8", "error", `published_strength_grounds[${i}] is graded but carries no grade`));
+        findings.push(f10("C-2.8", "error", `published_strength_grounds[${i}] is graded but carries no grade`));
       } else if (g.state !== "graded" && g.grade != null) {
-        findings.push(f9("C-2.8", "error", `published_strength_grounds[${i}] is ${g.state} and still carries grade '${g.grade}': a suspended ground states what is unknown, and an unrated one states that nothing on it is established \u2014 neither is a grade`));
+        findings.push(f10("C-2.8", "error", `published_strength_grounds[${i}] is ${g.state} and still carries grade '${g.grade}': a suspended ground states what is unknown, and an unrated one states that nothing on it is established \u2014 neither is a grade`));
       }
     }
     for (const label of new Set(fm.basis.filter((l) => l && typeof l.ground === "string" && l.ground).map((l) => l.ground))) {
       if (!frozenGrounds.some((g) => g && g.ground === label)) {
-        findings.push(f9("C-2.8", "error", `published_strength_grounds names no row for ground '${label}': every branch the basis carries is frozen on every axis, because a branch missing from the frozen result is one no reader can check`));
+        findings.push(f10("C-2.8", "error", `published_strength_grounds names no row for ground '${label}': every branch the basis carries is frozen on every axis, because a branch missing from the frozen result is one no reader can check`));
       }
     }
   }
@@ -105333,7 +105376,7 @@ function checkCaseDocument(fm, ctx = {}) {
   const findings = [];
   const { caseId = null, edition = null, priorCase = null, body = null, memberBasis = null } = ctx;
   if (!CASE_DOCUMENT_FORMATS_ACCEPTED.includes(fm?.format)) {
-    findings.push(f9(
+    findings.push(f10(
       C41.FORMAT,
       "error",
       `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before REC-188, '${CASE_DOCUMENT_FORMAT_V2}'; or, authored before BIO_Publication_v0_1.md \xA73 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
@@ -105341,17 +105384,17 @@ function checkCaseDocument(fm, ctx = {}) {
     ));
   }
   if (typeof fm?.case_id !== "string" || fm.case_id.trim() === "" || fm.case_id === "null") {
-    findings.push(f9(C41.IDENTITY, "error", "a case document requires case_id: without it the document names no case, so C-21.1 has nothing to be fresh against and the container has no identity to be an edition OF (DEC-44)"));
+    findings.push(f10(C41.IDENTITY, "error", "a case document requires case_id: without it the document names no case, so C-21.1 has nothing to be fresh against and the container has no identity to be an edition OF (DEC-44)"));
   } else if (caseId && fm.case_id !== caseId) {
-    findings.push(f9(C41.IDENTITY, "error", `this case document names case ${fm.case_id} and is being ratified as ${caseId}: the signature covers these bytes, so a case identity taken from the request rather than from the signed document would place a commitment where nobody made one`));
+    findings.push(f10(C41.IDENTITY, "error", `this case document names case ${fm.case_id} and is being ratified as ${caseId}: the signature covers these bytes, so a case identity taken from the request rather than from the signed document would place a commitment where nobody made one`));
   }
   if (!Number.isInteger(fm?.case_edition) || fm.case_edition < 1) {
-    findings.push(f9(C41.EDITION, "error", `a case document requires an integer case_edition of 1 or more (got '${fm?.case_edition}'): an edition is a SEPARATE DOCUMENT and answers forever, so a signature that did not cover the number would stand for every edition of this case at once`));
+    findings.push(f10(C41.EDITION, "error", `a case document requires an integer case_edition of 1 or more (got '${fm?.case_edition}'): an edition is a SEPARATE DOCUMENT and answers forever, so a signature that did not cover the number would stand for every edition of this case at once`));
   } else if (Number.isInteger(edition) && fm.case_edition !== edition) {
-    findings.push(f9(C41.EDITION, "error", `this case document names edition ${fm.case_edition} and is being ratified as edition ${edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a bundle`));
+    findings.push(f10(C41.EDITION, "error", `this case document names edition ${fm.case_edition} and is being ratified as edition ${edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a bundle`));
   }
   if (typeof fm?.case_project !== "string" || fm.case_project.trim() === "" || fm.case_project === "null") {
-    findings.push(f9(
+    findings.push(f10(
       C41.PROJECT,
       "error",
       "a case document requires case_project: a case is a PRODUCTION OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence the case was held to. A published case naming no project is one whose bar nobody declared, and a stranger holding it cannot say whose production it is",
@@ -105359,7 +105402,7 @@ function checkCaseDocument(fm, ctx = {}) {
     ));
   }
   if (typeof fm?.case_scope !== "string" || fm.case_scope.trim() === "") {
-    findings.push(f9(
+    findings.push(f10(
       C41.SCOPE,
       "error",
       "a case document requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings' titles \u2014 a scope this plane wrote is not a scope the group made (DEC-44)",
@@ -105367,7 +105410,7 @@ function checkCaseDocument(fm, ctx = {}) {
     ));
   }
   if (typeof fm?.bias_acknowledgement !== "string" || fm.bias_acknowledgement.trim() === "") {
-    findings.push(f9(
+    findings.push(f10(
       C41.BIAS,
       "error",
       "a case document requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) \u2014 what is refused here is publishing SILENTLY about the lens, not publishing under one",
@@ -105376,7 +105419,7 @@ function checkCaseDocument(fm, ctx = {}) {
   }
   const roster = Array.isArray(fm?.case_findings) ? fm.case_findings : null;
   if (!roster || !roster.length) {
-    findings.push(f9(
+    findings.push(f10(
       C41.ROSTER,
       "error",
       "a case document requires case_findings naming every finding in this case: a stranger holding this document must be able to see what the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)",
@@ -105387,7 +105430,7 @@ function checkCaseDocument(fm, ctx = {}) {
     const names = (roster || []).map((x) => String(x));
     const rows2 = Array.isArray(fm?.case_roles) ? fm.case_roles.filter((r) => r && typeof r === "object") : null;
     if (!rows2 || !rows2.length) {
-      findings.push(f9(
+      findings.push(f10(
         C41.ROLES,
         "error",
         "a case document requires case_roles: the publisher DESIGNATES each member load_bearing or supporting, and the whole partition is signed so a stranger can see which findings were presented as carrying the case (DEC-72 clause 4). There is no default \u2014 a member designated by omission was designated by nobody",
@@ -105398,13 +105441,13 @@ function checkCaseDocument(fm, ctx = {}) {
       const pinned = new Map(rows2.map((r) => [String(r.target ?? ""), r.version_sha]));
       for (const m of names) {
         if (!named.has(m)) {
-          findings.push(f9(C41.ROLES, "error", `case_roles designates no role for ${m}, which case_findings names as a member: the partition covers the roster exactly, because a member the partition is silent about was designated by nobody (DEC-72 clause 4)`));
+          findings.push(f10(C41.ROLES, "error", `case_roles designates no role for ${m}, which case_findings names as a member: the partition covers the roster exactly, because a member the partition is silent about was designated by nobody (DEC-72 clause 4)`));
         } else if (!CASE_MEMBER_ROLES.includes(named.get(m))) {
-          findings.push(f9(C41.ROLES, "error", `case_roles designates ${m} '${named.get(m)}', which is not one of: ${CASE_MEMBER_ROLES.join(", ")}`));
+          findings.push(f10(C41.ROLES, "error", `case_roles designates ${m} '${named.get(m)}', which is not one of: ${CASE_MEMBER_ROLES.join(", ")}`));
         }
         const pin = pinned.get(m);
         if (typeof pin !== "string" || !/^[0-9a-f]{64}$/.test(pin)) {
-          findings.push(f9(
+          findings.push(f10(
             C41.PINS,
             "error",
             `case_roles names ${m} without a 64-hex version_sha: publication PINS VERSIONS LIKE A COMMIT (DEC-72 clause 3), so a case that names its members and not the VERSIONS of them is a claim about the present rather than a frozen edition. The pin is the member's own bundle_sha, which is the hash that member signs`,
@@ -105414,11 +105457,11 @@ function checkCaseDocument(fm, ctx = {}) {
       }
       for (const [t] of named) {
         if (t && !names.includes(t)) {
-          findings.push(f9(C41.ROLES, "error", `case_roles designates ${t}, which case_findings does not name as a member of this case: the partition is OVER the roster and cannot reach outside it`));
+          findings.push(f10(C41.ROLES, "error", `case_roles designates ${t}, which case_findings does not name as a member of this case: the partition is OVER the roster and cannot reach outside it`));
         }
       }
       if (names.length && !names.some((m) => named.get(m) === "load_bearing")) {
-        findings.push(f9(
+        findings.push(f10(
           C41.ROLES,
           "error",
           "case_roles names no LOAD-BEARING member: a case rests on at least one finding that meets the project's standard of evidence (DEC-72's second ruled default). All-supporting material asserts nothing conclusively while the completeness assertion claims coverage of a question no member conclusively answers",
@@ -105429,7 +105472,7 @@ function checkCaseDocument(fm, ctx = {}) {
   }
   const c = typeof fm?.completeness === "object" && fm.completeness || null;
   if (!c) {
-    findings.push(f9(
+    findings.push(f10(
       C41.COMPLETENESS,
       "error",
       "a case document requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything",
@@ -105437,20 +105480,20 @@ function checkCaseDocument(fm, ctx = {}) {
     ));
   } else {
     if (typeof c.statement !== "string" || c.statement.trim() === "")
-      findings.push(f9(C41.COMPLETENESS, "error", "a case document requires a non-empty completeness.statement"));
+      findings.push(f10(C41.COMPLETENESS, "error", "a case document requires a non-empty completeness.statement"));
     if (typeof c.author !== "string" || c.author.trim() === "")
-      findings.push(f9(C41.COMPLETENESS, "error", "a case document requires completeness.author: the completeness assertion is a named member's claim about the limits of this case"));
+      findings.push(f10(C41.COMPLETENESS, "error", "a case document requires completeness.author: the completeness assertion is a named member's claim about the limits of this case"));
     if (typeof c.at !== "string" || !ISO_TS_RE.test(c.at))
-      findings.push(f9(C41.COMPLETENESS, "error", `a case document requires completeness.at as an ISO timestamp (got '${c.at}')`));
+      findings.push(f10(C41.COMPLETENESS, "error", `a case document requires completeness.at as an ISO timestamp (got '${c.at}')`));
     if (!SUBJECT_POSITIONS.includes(c.subject_position))
-      findings.push(f9(C41.COMPLETENESS, "error", `a case document requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(", ")} (got '${c.subject_position}'). The gate is that the position is declared and justified \u2014 never that contact happened, and never that the answer was favourable (DEC-13)`));
+      findings.push(f10(C41.COMPLETENESS, "error", `a case document requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(", ")} (got '${c.subject_position}'). The gate is that the position is declared and justified \u2014 never that contact happened, and never that the answer was favourable (DEC-13)`));
     if (typeof c.subject_justification !== "string" || c.subject_justification.trim() === "")
-      findings.push(f9(C41.COMPLETENESS, "error", "a case document requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse (DEC-13)"));
+      findings.push(f10(C41.COMPLETENESS, "error", "a case document requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse (DEC-13)"));
   }
   if (fm && fm.completeness_acknowledgements !== void 0) {
     const acks = fm.completeness_acknowledgements;
     if (!Array.isArray(acks)) {
-      findings.push(f9(C41.COMPLETENESS, "error", "a case document's completeness_acknowledgements must be a list \u2014 empty when nobody but the statement's author acknowledged it (BIO_Publication \xA73 rule 11)"));
+      findings.push(f10(C41.COMPLETENESS, "error", "a case document's completeness_acknowledgements must be a list \u2014 empty when nobody but the statement's author acknowledged it (BIO_Publication \xA73 rule 11)"));
     } else {
       const publisher = c && typeof c.author === "string" ? c.author : null;
       const statesWriter = !!c && Object.prototype.hasOwnProperty.call(c, "statement_by");
@@ -105458,36 +105501,36 @@ function checkCaseDocument(fm, ctx = {}) {
       const writerUndetermined = statesWriter && !writer;
       for (const a of acks) {
         if (!a || typeof a !== "object" || !["participant", "recipient"].includes(a.kind) || typeof a.by !== "string" || !a.by.trim() || typeof a.at !== "string")
-          findings.push(f9(C41.COMPLETENESS, "error", `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
+          findings.push(f10(C41.COMPLETENESS, "error", `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
         else if (a.kind === "participant" && writer && a.by === writer)
-          findings.push(f9(C41.COMPLETENESS, "error", `a case document lists ${a.by}, the member who WROTE its exclusion statement (completeness.statement_by), as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and the writer of the sentence has read it once. Who wrote the statement and who published the case are two acts and two names (\xA73 rule 13) \u2014 this is the writer, whether or not they are also completeness.author`));
+          findings.push(f10(C41.COMPLETENESS, "error", `a case document lists ${a.by}, the member who WROTE its exclusion statement (completeness.statement_by), as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and the writer of the sentence has read it once. Who wrote the statement and who published the case are two acts and two names (\xA73 rule 13) \u2014 this is the writer, whether or not they are also completeness.author`));
         else if (a.kind === "participant" && publisher && a.by === publisher)
-          findings.push(f9(C41.COMPLETENESS, "error", `a case document lists ${a.by}, completeness.author \u2014 the member who PREPARED AND PUBLISHED this case and authored this completeness block at that act \u2014 as having acknowledged its statement: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and the member who authored the block is its first reader by construction`));
+          findings.push(f10(C41.COMPLETENESS, "error", `a case document lists ${a.by}, completeness.author \u2014 the member who PREPARED AND PUBLISHED this case and authored this completeness block at that act \u2014 as having acknowledged its statement: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and the member who authored the block is its first reader by construction`));
       }
       if (writerUndetermined && acks.some((a) => a && typeof a === "object" && a.kind === "participant"))
-        findings.push(f9(C41.COMPLETENESS, "error", `a case document states that who wrote its exclusion statement is UNDETERMINED (completeness.statement_by is null) and lists ${acks.filter((a) => a && typeof a === "object" && a.kind === "participant").length} participant acknowledgement(s) of it: an acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and a document that cannot say who the FIRST reader was cannot support the claim that any of these is a second. Publish the edition again from a draft whose statement carries an author, or let the list stand with its recipients alone \u2014 a recipient of a review copy is never the statement's writer`));
+        findings.push(f10(C41.COMPLETENESS, "error", `a case document states that who wrote its exclusion statement is UNDETERMINED (completeness.statement_by is null) and lists ${acks.filter((a) => a && typeof a === "object" && a.kind === "participant").length} participant acknowledgement(s) of it: an acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and a document that cannot say who the FIRST reader was cannot support the claim that any of these is a second. Publish the edition again from a draft whose statement carries an author, or let the list stand with its recipients alone \u2014 a recipient of a review copy is never the statement's writer`));
       if (c && c.acknowledged !== void 0 && c.acknowledged !== acks.length)
-        findings.push(f9(C41.COMPLETENESS, "error", `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
+        findings.push(f10(C41.COMPLETENESS, "error", `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
     }
   }
   if (caseDocumentRequiresDisclosures(fm)) {
     const bm = fm?.bias_manifest;
     if (!bm || typeof bm !== "object" || Array.isArray(bm) || typeof bm.in_force !== "boolean") {
-      findings.push(f9(
+      findings.push(f10(
         C41.DISCLOSURES,
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself \u2014 computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
         ["re-publish through op=publish, which stamps the manifest in force for the case's project into the case document"]
       ));
     } else if (bm.in_force === true && !(typeof bm.statements_sha === "string" && /^[0-9a-f]{64}$/.test(bm.statements_sha))) {
-      findings.push(f9(
+      findings.push(f10(
         C41.DISCLOSURES,
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (bundle, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
         ["re-publish through op=publish"]
       ));
     } else if (bm.in_force === false && !(typeof bm.stated === "string" && bm.stated.trim())) {
-      findings.push(f9(
+      findings.push(f10(
         C41.DISCLOSURES,
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
@@ -105495,7 +105538,7 @@ function checkCaseDocument(fm, ctx = {}) {
       ));
     }
     if (bm && typeof bm === "object" && !Array.isArray(fm?.bias_manifest_bundles)) {
-      findings.push(f9(
+      findings.push(f10(
         C41.DISCLOSURES,
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias bundle was in force) and is legal \u2014 an ABSENT field is silence about which revisions the lens was`,
@@ -105503,7 +105546,7 @@ function checkCaseDocument(fm, ctx = {}) {
       ));
     }
     if (!c || !Number.isInteger(c.acknowledged) || c.acknowledged < 0) {
-      findings.push(f9(
+      findings.push(f10(
         C41.DISCLOSURES,
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : void 0}'): ZERO is a statement \u2014 nobody but its author acknowledged it \u2014 and is legal; an absent count is silence (BIO_Publication \xA73 rule 11). An acknowledgement is never required to publish`,
@@ -105511,7 +105554,7 @@ function checkCaseDocument(fm, ctx = {}) {
       ));
     }
     if (!Array.isArray(fm?.completeness_acknowledgements)) {
-      findings.push(f9(
+      findings.push(f10(
         C41.DISCLOSURES,
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal \u2014 an ABSENT field is silence about who else read what this case leaves out (BIO_Publication \xA73 rule 11)`,
@@ -105519,7 +105562,7 @@ function checkCaseDocument(fm, ctx = {}) {
       ));
     }
     if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by") || !(c.statement_by === null || typeof c.statement_by === "string" && c.statement_by.trim())) {
-      findings.push(f9(
+      findings.push(f10(
         C41.DISCLOSURES,
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement \u2014 a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication \xA73 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : void 0}${c && !Object.prototype.hasOwnProperty.call(c, "statement_by") ? ", with no such key" : ""})`,
@@ -105533,14 +105576,14 @@ function checkCaseDocument(fm, ctx = {}) {
       const list2 = fm?.bias_manifest_pins_proposed;
       const n = bm.pins_proposed;
       if (!Number.isInteger(n) || n < 0 || !Array.isArray(list2)) {
-        findings.push(f9(
+        findings.push(f10(
           C41.PENDING,
           "error",
           `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list2) ? `of ${list2.length}` : "absent"}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication \xA73 rule 18)`,
           ["re-publish through op=publish, which states every adoption of the scope pinning a proposed revision at signing"]
         ));
       } else if (list2.length !== n) {
-        findings.push(f9(
+        findings.push(f10(
           C41.PENDING,
           "error",
           `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list2.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
@@ -105549,14 +105592,14 @@ function checkCaseDocument(fm, ctx = {}) {
       } else {
         const bad = list2.filter((x) => !(x && typeof x === "object" && typeof x.bundle_id === "string" && x.bundle_id.trim() && typeof x.revision === "string" && /^[0-9a-f]{64}$/.test(x.revision) && (x.scope === "instance" || x.scope === "project")));
         if (bad.length > 0)
-          findings.push(f9(
+          findings.push(f10(
             C41.PENDING,
             "error",
             `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest_pins_proposed has ${bad.length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: ${JSON.stringify(bad[0])}): the ruling is that the document names the proposed revision the adoption pinned \u2014 its id \u2014 and a row without it says an adoption was pending without saying which`,
             ["re-publish through op=publish"]
           ));
         if (!(typeof bm.pins_proposed_stated === "string" && bm.pins_proposed_stated.trim()))
-          findings.push(f9(
+          findings.push(f10(
             C41.PENDING,
             "error",
             `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
@@ -105568,7 +105611,7 @@ function checkCaseDocument(fm, ctx = {}) {
   if (caseDocumentRequiresV4Disclosures(fm)) {
     const rows2 = fm?.case_citations;
     if (!Array.isArray(rows2)) {
-      findings.push(f9(
+      findings.push(f10(
         C41.CITATIONS,
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows2 ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal \u2014 an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication \xA73 rule 18)`,
@@ -105577,7 +105620,7 @@ function checkCaseDocument(fm, ctx = {}) {
     } else {
       const bad = rows2.filter((x) => !(x && typeof x === "object" && typeof x.target === "string" && x.target.trim() && CASE_CITATION_VERSIONS.includes(x.version) && (CITATION_NAMES_CAPTURE2.has(x.version) ? typeof x.capture === "string" && /^[0-9a-f]{64}$/.test(x.capture) : x.capture === null || x.capture === void 0)));
       if (bad.length > 0)
-        findings.push(f9(
+        findings.push(f10(
           C41.CITATIONS,
           "error",
           `a ${CASE_DOCUMENT_FORMAT} case document's case_citations has ${bad.length} row(s) that do not state a target and a version from {${CASE_CITATION_VERSIONS.join(", ")}}, with the 64-hex capture exactly where the version names one (first: ${JSON.stringify(bad[0])}): a citation edge that says it is pinned and omits the pin, or names a capture its version disowns, states a version nobody can verify`,
@@ -105587,7 +105630,7 @@ function checkCaseDocument(fm, ctx = {}) {
   }
   const srch = typeof fm?.searched === "object" && fm.searched || null;
   if (!srch) {
-    findings.push(f9(
+    findings.push(f10(
       C41.COMPLETENESS,
       "error",
       "a case document requires a searched block beside its completeness block: a completeness claim with no record of what was looked for is prose with nothing behind it, which is what the search-completeness literature identifies as the claim worth least (D-196). An empty or negative answer is legal here \u2014 SILENCE is not",
@@ -105595,16 +105638,16 @@ function checkCaseDocument(fm, ctx = {}) {
     ));
   } else {
     if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(srch.subject_source)))
-      findings.push(f9(
+      findings.push(f10(
         C41.COMPLETENESS,
         "error",
         `a case document's searched.subject_source must name a source this record recognises (got '${srch.subject_source}'; known: ${Object.keys(SEARCHED_SUBJECT_SOURCES).join(", ")}). THE SUBJECT SET IS THE FENCE: a coverage section computed over the observation log's own subjects is 100% searched by construction with every row in it honest, and is a statement about the log rather than about this case`,
         ["compute the section over the case's own subjects \u2014 its members' basis legs and the content rows those legs name"]
       ));
     if (!Number.isInteger(srch.subjects) || srch.subjects < 0)
-      findings.push(f9(C41.COMPLETENESS, "error", `a case document's searched block requires an integer subject count (got '${srch.subjects}')`));
+      findings.push(f10(C41.COMPLETENESS, "error", `a case document's searched block requires an integer subject count (got '${srch.subjects}')`));
     if (!Array.isArray(fm?.searched_levels))
-      findings.push(f9(
+      findings.push(f10(
         C41.COMPLETENESS,
         "error",
         "a case document requires a searched_levels field beside the searched block: an EMPTY list is a claim (this record could compute no level for this case) and is legal \u2014 an ABSENT field is silence about which levels were consulted",
@@ -105612,7 +105655,7 @@ function checkCaseDocument(fm, ctx = {}) {
       ));
   }
   if (!Array.isArray(fm?.completeness_excluded)) {
-    findings.push(f9(
+    findings.push(f10(
       C41.EXCLUDED,
       "error",
       "a case document requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal \u2014 an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse",
@@ -105621,7 +105664,7 @@ function checkCaseDocument(fm, ctx = {}) {
   }
   const rq = typeof fm?.required_strength === "object" && fm.required_strength || null;
   if (!rq || typeof rq.declared !== "boolean") {
-    findings.push(f9(
+    findings.push(f10(
       C41.BAR,
       "error",
       'a case document requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength each member reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17). An absent bar is not a bar of zero \u2014 a reader cannot tell "no bar was declared" from "nobody wrote this down"',
@@ -105630,18 +105673,18 @@ function checkCaseDocument(fm, ctx = {}) {
   } else if (rq.declared) {
     for (const axis of ["capture", "connection"]) {
       if (!Object.prototype.hasOwnProperty.call(rq, axis)) {
-        findings.push(f9(
+        findings.push(f10(
           C41.BAR,
           "error",
           `required_strength.${axis} is absent \u2014 the declared bar is a PAIR per R2 and both keys are always written: an axis nobody set is written null, never omitted, because a reader cannot tell an omitted key from one nobody wrote down`,
           [`write required_strength.${axis}: null if the project set no bar on the ${axis} axis`]
         ));
       } else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {
-        findings.push(f9(C41.BAR, "error", `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(", ")}, or null for an axis nobody set \u2014 the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
+        findings.push(f10(C41.BAR, "error", `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(", ")}, or null for an axis nobody set \u2014 the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
       }
     }
     if (rq.capture === null && rq.connection === null) {
-      findings.push(f9(
+      findings.push(f10(
         C41.BAR,
         "error",
         "required_strength is declared with no bar set on either axis \u2014 a declared bar that gates nothing claims a standard no axis holds; a case with no bar states declared: false",
@@ -105654,7 +105697,7 @@ function checkCaseDocument(fm, ctx = {}) {
     const rolesRows = Array.isArray(fm?.case_roles) ? fm.case_roles.filter((r) => r && typeof r === "object") : [];
     const rowsFor = (key, m) => (Array.isArray(fm?.[key]) ? fm[key] : []).filter((r) => r && typeof r === "object" && String(r.target ?? "") === m).map(({ target, ...rest }) => rest);
     if (!Array.isArray(fm?.case_strength)) {
-      findings.push(f9(
+      findings.push(f10(
         "C-2.8",
         "error",
         "a case document requires a case_strength field: since BIO_Publication_v0_1.md \xA73 rule 12 each member's FROZEN STRENGTH PAIR is stated here, once, and not in the member's bytes \u2014 a case document silent about what its findings reached leaves a reader with no strength at all",
@@ -105662,7 +105705,7 @@ function checkCaseDocument(fm, ctx = {}) {
       ));
     }
     if (!Array.isArray(fm?.case_strength_grounds)) {
-      findings.push(f9(
+      findings.push(f10(
         "C-2.8",
         "error",
         "a case document requires a case_strength_grounds field: an EMPTY list is a claim (no member's basis named grounds) and is legal \u2014 an ABSENT field is silence about the branches a structured grade was taken from",
@@ -105685,7 +105728,7 @@ function checkCaseDocument(fm, ctx = {}) {
       for (const x of own3) findings.push({ ...x, message: `case document, member ${m}: ${x.message}` });
     }
     if (typeof body === "string" && !/^## What This Excludes\s*$/m.test(body)) {
-      findings.push(f9(
+      findings.push(f10(
         "C-3.1",
         "error",
         "required heading '## What This Excludes' is missing from the case document: since BIO_Publication_v0_1.md \xA73 rule 12 the case states what it excludes once, here, and not in any member's bytes",
@@ -105695,9 +105738,9 @@ function checkCaseDocument(fm, ctx = {}) {
   }
   if (priorCase && c) {
     if (typeof priorCase.statement === "string" && priorCase.statement === (c.statement ?? null))
-      findings.push(f9("C-21.1", "error", `the completeness statement is byte-identical to edition ${priorCase.edition}'s. Every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition`));
+      findings.push(f10("C-21.1", "error", `the completeness statement is byte-identical to edition ${priorCase.edition}'s. Every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition`));
     if (typeof priorCase.bias_acknowledgement === "string" && priorCase.bias_acknowledgement === (fm?.bias_acknowledgement ?? null))
-      findings.push(f9("C-21.1", "error", `the bias acknowledgement is byte-identical to edition ${priorCase.edition}'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. Declaring a bias never blocks publication (DEC-20)`));
+      findings.push(f10("C-21.1", "error", `the bias acknowledgement is byte-identical to edition ${priorCase.edition}'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. Declaring a bias never blocks publication (DEC-20)`));
   }
   return findings;
 }
@@ -105885,11 +105928,11 @@ function caseMemberFindings(fm) {
 }
 function caseMemberImageFindings(image, parse3) {
   const md = image && image.files instanceof Map ? image.files.get("bundle.md") : image ? image["bundle.md"] : null;
-  const text4 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
-  if (text4 === null) return [];
+  const text5 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
+  if (text5 === null) return [];
   let fm = null;
   try {
-    fm = parse3(text4).data;
+    fm = parse3(text5).data;
   } catch {
     fm = null;
   }
@@ -106117,8 +106160,8 @@ function release({ sql, promotion, retrieval }, { handle, acknowledgment = "", m
     const cur = one(sql, `SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
     if (!liveMd || liveMd.content === null)
       return { ok: false, reason: "NO_DOCUMENT", bundleId: id, releasedSoFar: released };
-    let text4 = liveMd.content;
-    const withHistory = appendStateHistory3(text4, {
+    let text5 = liveMd.content;
+    const withHistory = appendStateHistory3(text5, {
       timestamp: when,
       from_state: cur.current_state,
       to_state: "verified",
@@ -106133,22 +106176,22 @@ function release({ sql, promotion, retrieval }, { handle, acknowledgment = "", m
         releasedSoFar: released,
         detail: "this document's state_history block cannot be extended in place, and a release recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
       };
-    text4 = withHistory;
-    text4 = setScalar4(text4, "prior_state", cur.current_state);
-    text4 = setScalar4(text4, "current_state", "verified");
-    text4 = setScalar4(text4, "last_updated", `"${when}"`);
+    text5 = withHistory;
+    text5 = setScalar4(text5, "prior_state", cur.current_state);
+    text5 = setScalar4(text5, "current_state", "verified");
+    text5 = setScalar4(text5, "last_updated", `"${when}"`);
     const entryLog = `### Session ${when} | Released (batch) | ${who2}
 Trigger: selection ${handle}
 Changes: state ${cur.current_state} to verified.
 Acknowledgment: ${ack}
 Mitigation: ${mit}
 `;
-    const at22 = text4.indexOf("## Session Log");
-    if (at22 < 0) text4 += "\n## Session Log\n\n" + entryLog;
+    const at22 = text5.indexOf("## Session Log");
+    if (at22 < 0) text5 += "\n## Session Log\n\n" + entryLog;
     else {
-      const nxt = text4.indexOf("\n## ", at22 + 1);
-      const cutAt = nxt === -1 ? text4.length : nxt + 1;
-      text4 = text4.slice(0, cutAt) + entryLog + "\n" + text4.slice(cutAt);
+      const nxt = text5.indexOf("\n## ", at22 + 1);
+      const cutAt = nxt === -1 ? text5.length : nxt + 1;
+      text5 = text5.slice(0, cutAt) + entryLog + "\n" + text5.slice(cutAt);
     }
     const carried = [];
     for (const r of rows(
@@ -106157,8 +106200,8 @@ Mitigation: ${mit}
       id
     ))
       carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-    const bytes2 = new TextEncoder().encode(text4);
-    const fm = parseFrontmatter(text4).data || {};
+    const bytes2 = new TextEncoder().encode(text5);
+    const fm = parseFrontmatter(text5).data || {};
     const promoted = promotion.promote({
       bundleId: id,
       base: cur.bundle_sha,
@@ -106166,7 +106209,7 @@ Mitigation: ${mit}
       author: who2,
       files: [{
         path: "bundle.md",
-        text: text4,
+        text: text5,
         bytes: bytes2.length,
         sha256: createSha256().update(bytes2).hex()
       }, ...carried],
@@ -106193,8 +106236,8 @@ Mitigation: ${mit}
     drift: sel.drift
   };
 }
-function appendStateHistory3(text4, e) {
-  const lines = text4.split("\n");
+function appendStateHistory3(text5, e) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -106221,8 +106264,8 @@ function appendStateHistory3(text4, e) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function setScalar4(text4, key, value) {
-  const lines = text4.split("\n");
+function setScalar4(text5, key, value) {
+  const lines = text5.split("\n");
   const end2 = lines.indexOf("---", 1);
   for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
     if (lines[i].startsWith(key + ":")) {
@@ -106230,7 +106273,7 @@ function setScalar4(text4, key, value) {
       return lines.join("\n");
     }
   }
-  return text4;
+  return text5;
 }
 
 // src/ratification/index.mjs
@@ -106531,8 +106574,8 @@ var Ratification = class _Ratification {
     return { same: pinned.filter((e) => e.same), pinned };
   }
   /* The `case_conclusions` row one document's text records for a member, or null (no readable text, or no row). */
-  static #recordedRowIn(text4, bundleId) {
-    const rows2 = typeof text4 === "string" ? (parseFrontmatter(text4).data || {}).case_conclusions : null;
+  static #recordedRowIn(text5, bundleId) {
+    const rows2 = typeof text5 === "string" ? (parseFrontmatter(text5).data || {}).case_conclusions : null;
     return Array.isArray(rows2) ? rows2.find((r) => r && typeof r === "object" && String(r.target ?? "") === String(bundleId)) || null : null;
   }
   /* REC-167 / C-65.1's question, asked of one document's TEXT: for each roster member, is the question concluded for
@@ -106541,13 +106584,13 @@ var Ratification = class _Ratification {
      answers the members that fail, each with what the text recorded and what the project stands on now. The commit
      asks it of the stored document it is about to sign, and R18's pre-flight of the unsigned text it is given, so the
      two answer alike. */
-  #conclusionsMoved(text4, project, roster, signerMember) {
+  #conclusionsMoved(text5, project, roster, signerMember) {
     const concViewer = signerMember ? `member:${signerMember}` : null;
     const moved = [];
     for (const m of roster) {
       const bm = this.record.head(m);
       const conc = this.caseConclusionFor(project, m, concViewer, bm ? bm.currentState : null);
-      const had = _Ratification.#recordedRowIn(text4, m);
+      const had = _Ratification.#recordedRowIn(text5, m);
       if (conc.state === "concluded" && _Ratification.#sameRecordedConclusion(had, _Ratification.#conclusionRowParsed(m, conc))) continue;
       moved.push({
         target: m,
@@ -106574,8 +106617,8 @@ var Ratification = class _Ratification {
   /* What a NEW edition would record for this member, rendered by the one writer and
      read back by the one parser — the same path an edition's own row took. */
   static #conclusionRowParsed(bundleId, c) {
-    const text4 = ["---", "case_conclusions:", ...caseConclusionRowLines(bundleId, c), "---", ""].join("\n");
-    const rows2 = (parseFrontmatter(text4).data || {}).case_conclusions;
+    const text5 = ["---", "case_conclusions:", ...caseConclusionRowLines(bundleId, c), "---", ""].join("\n");
+    const rows2 = (parseFrontmatter(text5).data || {}).case_conclusions;
     return Array.isArray(rows2) && rows2[0] && typeof rows2[0] === "object" ? rows2[0] : null;
   }
   static #sameRecordedConclusion(had, want) {
@@ -106772,9 +106815,9 @@ var Ratification = class _Ratification {
        the act's own; the act's envelope (`store`, `tokenClass` after the payload's refusals, the HTTP status) is the
        Worker's and is not here. It writes nothing and never throws: a part it cannot read makes the whole answer
        PREFLIGHT_UNDETERMINED, never a partial list read as a clear one. */
-  caseRatifyPreflight({ text: text4 = null, signer = null, viewer = null } = {}) {
+  caseRatifyPreflight({ text: text5 = null, signer = null, viewer = null } = {}) {
     try {
-      const src = typeof text4 === "string" ? text4 : "";
+      const src = typeof text5 === "string" ? text5 : "";
       const parsed = parseFrontmatter(src);
       const fm = parsed.data || {};
       const caseId = fm.case_id === void 0 || fm.case_id === null ? null : String(fm.case_id).trim();
@@ -106850,9 +106893,9 @@ var Ratification = class _Ratification {
     const out = {};
     for (const r of Array.isArray(fm.case_roles) ? fm.case_roles : []) {
       if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
-      const text4 = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
-      if (text4 === null) continue;
-      const mfm = parseFrontmatter(text4).data || {};
+      const text5 = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
+      if (text5 === null) continue;
+      const mfm = parseFrontmatter(text5).data || {};
       out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
     }
     return out;
@@ -107197,7 +107240,7 @@ var Ratification = class _Ratification {
      names each finding with its check. */
   check(c) {
     if (!c || c.replay || c.pkg && c.pkg.replay) return null;
-    const md = Array.isArray(c.files) ? c.files.find((f11) => f11 && f11.path === "bundle.md") : null;
+    const md = Array.isArray(c.files) ? c.files.find((f12) => f12 && f12.path === "bundle.md") : null;
     if (!md || typeof md.text !== "string") return null;
     let fm = null;
     try {
@@ -107586,10 +107629,10 @@ var TENSIONS_DEPTH_STATED = "Each conflict disclosed here is on something a find
 function tensionSide(side) {
   const s = side && typeof side === "object" ? side : {};
   const src = s.source && typeof s.source === "object" ? s.source : {};
-  const text4 = s.text ?? s.claim ?? s.note ?? s.ref ?? s.content_id ?? null;
+  const text5 = s.text ?? s.claim ?? s.note ?? s.ref ?? s.content_id ?? null;
   return {
     kind: s.kind ?? null,
-    text: text4 == null ? null : String(text4),
+    text: text5 == null ? null : String(text5),
     source: src.inquiry ?? src.bundle ?? s.inquiry ?? s.target ?? null,
     date: s.date ?? null,
     doctype: s.doctype ?? null,
@@ -108184,8 +108227,8 @@ var CaseAuthoring = class _CaseAuthoring {
   }
   /* The live `bundle.md` text of a held bundle, or null (blob-backed or absent): record-core R13. */
   #liveText(id) {
-    const f11 = this.record.readFile(id, "bundle.md");
-    return f11 && typeof f11.text === "string" ? f11.text : null;
+    const f12 = this.record.readFile(id, "bundle.md");
+    return f12 && typeof f12.text === "string" ? f12.text : null;
   }
   /* ==========================================================================================================
    * op=publish: publishCase (R1–R18)
@@ -108572,12 +108615,12 @@ var CaseAuthoring = class _CaseAuthoring {
       };
     const accountsCarried = /* @__PURE__ */ new Set();
     const captureRows = resting.map((r) => {
-      const { accounts_read, ...f11 } = facts.get(r.capture);
+      const { accounts_read, ...f12 } = facts.get(r.capture);
       const ack = selfJ.byCapture.get(r.capture) || null;
       const first = !accountsCarried.has(r.capture);
       accountsCarried.add(r.capture);
       return {
-        ...f11,
+        ...f12,
         member: r.member,
         self_attested_only: !!ack,
         ...ack ? { acknowledgement: {
@@ -108795,15 +108838,15 @@ var CaseAuthoring = class _CaseAuthoring {
           object_type: b.object_type,
           detail: "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a member of a case."
         };
-      const text4 = this.#liveText(id);
-      if (text4 === null)
+      const text5 = this.#liveText(id);
+      if (text5 === null)
         return {
           ok: false,
           reason: "NO_DOCUMENT",
           target: id,
           detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
         };
-      const fm = parseFrontmatter(text4).data || {};
+      const fm = parseFrontmatter(text5).data || {};
       const head = this.record.head(id);
       const conc = this.ratification.caseConclusionFor(proj, id, viewer, b.current_state);
       if (conc.state !== "concluded")
@@ -109078,17 +109121,17 @@ var CaseAuthoring = class _CaseAuthoring {
       membersOf.get(r.capture).push(r.member);
     }
     const refusals = [];
-    const unacknowledged = [...facts.values()].filter((f11) => f11.grade === EARNED_CAPTURE_CEILING && !f11.co_attested && membersOf.get(f11.capture).some((m) => roleOf.get(m) === "load_bearing") && !byCapture.has(f11.capture));
+    const unacknowledged = [...facts.values()].filter((f12) => f12.grade === EARNED_CAPTURE_CEILING && !f12.co_attested && membersOf.get(f12.capture).some((m) => roleOf.get(m) === "load_bearing") && !byCapture.has(f12.capture));
     if (unacknowledged.length)
       refusals.push(disclosureRefusal("CO_ATTESTATION_UNACKNOWLEDGED", {
-        unacknowledged: unacknowledged.map((f11) => ({
-          capture: f11.capture,
-          members: membersOf.get(f11.capture),
-          grade: f11.grade,
-          timestamp_at: f11.timestamp_at,
-          co_archive: f11.co_archive
+        unacknowledged: unacknowledged.map((f12) => ({
+          capture: f12.capture,
+          members: membersOf.get(f12.capture),
+          grade: f12.grade,
+          timestamp_at: f12.timestamp_at,
+          co_archive: f12.co_archive
         })),
-        detail: `${unacknowledged.length} load-bearing Grade ${EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp and co-archive (` + unacknowledged.map((f11) => `${f11.capture} under ${membersOf.get(f11.capture).join(", ")}`).join("; ") + `). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.`
+        detail: `${unacknowledged.length} load-bearing Grade ${EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp and co-archive (` + unacknowledged.map((f12) => `${f12.capture} under ${membersOf.get(f12.capture).join(", ")}`).join("; ") + `). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.`
       }));
     const noReason = [...byCapture.values()].filter((d) => !d.reason);
     if (noReason.length)
@@ -109243,7 +109286,7 @@ var CaseAuthoring = class _CaseAuthoring {
   static #undetermined(failed2) {
     return disclosureRefusal("TENSIONS_UNDETERMINED", {
       undetermined: failed2,
-      detail: `the record could not be read whole for conflicts on ${failed2.map((f11) => `${f11.finding ?? "this case's findings"} (${f11.why})`).join("; ")}, so what this case must disclose is not known. Nothing was published.`
+      detail: `the record could not be read whole for conflicts on ${failed2.map((f12) => `${f12.finding ?? "this case's findings"} (${f12.why})`).join("; ")}, so what this case must disclose is not known. Nothing was published.`
     });
   }
   /* R31, R33: how C-120.1 names an undisclosed entry. A half-seen one by its candidate and its finding only. */
@@ -109301,13 +109344,13 @@ var CaseAuthoring = class _CaseAuthoring {
   publishPreflight(args = {}) {
     const a = args && typeof args === "object" ? args : {};
     const seen = {};
-    let answer = null, text4 = null;
+    let answer = null, text5 = null;
     try {
       this.record.transact(() => {
         answer = this.#publishCase(a, { preflight: true, seen });
         if (answer && answer.ok === true) {
           const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, answer.caseId, answer.edition);
-          text4 = d ? d.text : null;
+          text5 = d ? d.text : null;
         }
         throw PREFLIGHT_ROLLBACK;
       });
@@ -109315,11 +109358,11 @@ var CaseAuthoring = class _CaseAuthoring {
       if (e !== PREFLIGHT_ROLLBACK) throw e;
     }
     const first = answer && answer.ok === false ? answer : null;
-    const ratify = text4 === null ? {
+    const ratify = text5 === null ? {
       reached: false,
       refusals: [],
       why: "ratification's pre-flight reads the document op=publish would store, and op=publish refuses first"
-    } : this.#ratifyPreflight(text4, str15(a.author), a.viewer ?? null);
+    } : this.#ratifyPreflight(text5, str15(a.author), a.viewer ?? null);
     const found = [];
     const who2 = str15(a.author);
     const auth = who2 && !isMachineIdentity(who2) ? this.#authority(a.project ?? null, a.viewer ?? null, who2) : null;
@@ -109351,13 +109394,13 @@ var CaseAuthoring = class _CaseAuthoring {
   }
   /* R34: ratification R18 over the text op=publish would store, with `signer` the act's author, folded into
      `{reached, refusals, why?}`. With no pre-flight offered, that is stated, never read as none. */
-  #ratifyPreflight(text4, signer, viewer) {
+  #ratifyPreflight(text5, signer, viewer) {
     const r = this.ratification;
     if (!r || typeof r.caseRatifyPreflight !== "function")
       return { reached: false, refusals: [], why: "ratification offers no pre-flight of the signing ceremony here" };
     let out = null;
     try {
-      out = r.caseRatifyPreflight({ text: text4, signer, viewer });
+      out = r.caseRatifyPreflight({ text: text5, signer, viewer });
     } catch {
       out = null;
     }
@@ -109387,7 +109430,7 @@ var CaseAuthoring = class _CaseAuthoring {
           case: answer.caseId,
           edition: answer.edition,
           document: answer.caseDocument,
-          pinned: answer.findings.map((f11) => ({ target: f11.target, bundleSha: f11.bundleSha }))
+          pinned: answer.findings.map((f12) => ({ target: f12.target, bundleSha: f12.bundleSha }))
         } : { stated: notReached }
       },
       {
@@ -109396,7 +109439,7 @@ var CaseAuthoring = class _CaseAuthoring {
         ...ok2 ? {
           roles: answer.roles,
           required: answer.required,
-          pairs: answer.findings.map((f11) => ({ target: f11.target, role: f11.role, strength: f11.strength }))
+          pairs: answer.findings.map((f12) => ({ target: f12.target, role: f12.role, strength: f12.strength }))
         } : { stated: notReached }
       },
       {
@@ -109458,8 +109501,8 @@ var CaseAuthoring = class _CaseAuthoring {
    *  none (`no_capture`). A question has no bytes (`no_bytes`). Set-based: one grouped count per chunk of targets
    *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge. */
   #caseCitations(project) {
-    const text4 = this.#liveText(project);
-    const refs = text4 !== null ? parseFrontmatter(text4).data?.references || [] : [];
+    const text5 = this.#liveText(project);
+    const refs = text5 !== null ? parseFrontmatter(text5).data?.references || [] : [];
     const edges = (Array.isArray(refs) ? refs : []).filter((r) => r && typeof r === "object" && r.rel === "cites" && r.status !== "severed" && typeof r.target === "string" && r.target.trim());
     const isDocument = (t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "information";
     const docs = [...new Set(edges.map((r) => r.target.trim()).filter(isDocument))];
@@ -109707,8 +109750,8 @@ var CaseAuthoring = class _CaseAuthoring {
       kind = "participant";
       by = who2;
     }
-    const text4 = fmSafe6(statement);
-    if (!text4)
+    const text5 = fmSafe6(statement);
+    if (!text5)
       return ack(
         "STATEMENT_ACK_NO_STATEMENT",
         "this draft states nothing about what its case excludes, so there is no statement to acknowledge yet. The draft's editor authors it (statement=); acknowledge it then."
@@ -109725,7 +109768,7 @@ var CaseAuthoring = class _CaseAuthoring {
         (statementAuthor && by === statementAuthor ? `you wrote this statement, and its acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). ` : `you prepared and published this case and authored its completeness block at that act, so you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). Who WROTE the statement is a separate fact, stated separately in these bytes (\xA73 rule 13). `) + `Ask a participant of this project, or hand the draft to a reader through a review grant. The case publishes without one and says so.`,
         { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor }
       );
-    const sha = statementSha(text4);
+    const sha = statementSha(text5);
     const needle = `
   statement_sha: ${sha}
 `;
@@ -110198,8 +110241,8 @@ var CITE_EXTENT_CHECKS = {
 };
 
 // src/citation/splice.mjs
-function spliceEdgeStatus(text4, changes) {
-  const lines = text4.split("\n");
+function spliceEdgeStatus(text5, changes) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -110259,8 +110302,8 @@ function spliceEdgeStatus(text4, changes) {
   }
   return applied === changes.size ? out.join("\n") : null;
 }
-function spliceReferences3(text4, additions) {
-  const lines = text4.split("\n");
+function spliceReferences3(text5, additions) {
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -110306,9 +110349,9 @@ function legExtentLines(l) {
   }
   return out;
 }
-function spliceBasis(text4, legs) {
-  if (!legs.length) return text4;
-  const lines = text4.split("\n");
+function spliceBasis(text5, legs) {
+  if (!legs.length) return text5;
+  const lines = text5.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
@@ -110343,8 +110386,8 @@ function spliceBasis(text4, legs) {
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-function setScalar5(text4, key, value) {
-  const lines = text4.split("\n");
+function setScalar5(text5, key, value) {
+  const lines = text5.split("\n");
   const end2 = lines.indexOf("---", 1);
   for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
     if (lines[i].startsWith(key + ":")) {
@@ -110352,14 +110395,14 @@ function setScalar5(text4, key, value) {
       return lines.join("\n");
     }
   }
-  return text4;
+  return text5;
 }
-function appendSessionLog4(text4, entry) {
-  const at22 = text4.indexOf("## Session Log");
-  if (at22 < 0) return text4 + "\n## Session Log\n\n" + entry;
-  const nxt = text4.indexOf("\n## ", at22 + 1);
-  const cut3 = nxt === -1 ? text4.length : nxt + 1;
-  return text4.slice(0, cut3) + entry + "\n" + text4.slice(cut3);
+function appendSessionLog4(text5, entry) {
+  const at22 = text5.indexOf("## Session Log");
+  if (at22 < 0) return text5 + "\n## Session Log\n\n" + entry;
+  const nxt = text5.indexOf("\n## ", at22 + 1);
+  const cut3 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
 }
 
 // src/citation/index.mjs
@@ -110433,32 +110476,32 @@ var Citation = class {
      at the top level (N196: a refusal nested one level down reads to the D-240 reader as an answer). It reads one
      file, bounded by the inline bound (1 MiB, promotion R48), and publishes no collection. */
   #document(project, detail) {
-    const f11 = this.record.readFile(project, "bundle.md");
-    if (!f11 || typeof f11.text !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
-    const parsed = parseFrontmatter(f11.text);
+    const f12 = this.record.readFile(project, "bundle.md");
+    if (!f12 || typeof f12.text !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
+    const parsed = parseFrontmatter(f12.text);
     if (!parsed.data)
       return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project, ...detail ? { detail } : {} };
-    return { ok: true, text: f11.text, data: parsed.data };
+    return { ok: true, text: f12.text, data: parsed.data };
   }
   /* Promote the rewritten `bundle.md` over the head, every OTHER live file carried forward untouched: promote writes a
      whole image, so a writer that mentions one file deletes the rest (the default that once destroyed a provenance
      register). Hand-authored, not mechanical: a member citing evidence is authorship, so no writer and no operation
      are claimed. */
-  #write(project, head, text4, when, author, fm, objectType) {
+  #write(project, head, text5, when, author, fm, objectType) {
     const carried = [];
     for (const path of this.record.livePaths(project) || []) {
       if (path === "bundle.md") continue;
-      const f11 = this.record.readFile(project, path);
-      if (!f11) continue;
-      carried.push(typeof f11.text === "string" ? { path, text: f11.text, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes });
+      const f12 = this.record.readFile(project, path);
+      if (!f12) continue;
+      carried.push(typeof f12.text === "string" ? { path, text: f12.text, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes });
     }
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     return this.promotion.promote({
       bundleId: project,
       base: head.bundleSha,
       snapKey: `${when.replace(/[-:]/g, "")}_${rand11(4)}`,
       author: author || "member",
-      files: [{ path: "bundle.md", text: text4, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
+      files: [{ path: "bundle.md", text: text5, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
       meta: {
         object_type: objectType,
         title: fm.title,
@@ -110581,18 +110624,18 @@ var Citation = class {
         project,
         detail: "the references block is not in a shape this grammar can edit in place"
       };
-    let text4 = setScalar5(spliced, "last_updated", `"${when}"`);
+    let text5 = setScalar5(spliced, "last_updated", `"${when}"`);
     const ids = [...sel.members].sort();
     const shown2 = ids.slice(0, CITE_LOG_SAMPLE);
     const listed = shown2.join(", ") + (ids.length > shown2.length ? `, and ${ids.length - shown2.length} more` : "");
-    text4 = appendSessionLog4(
-      text4,
+    text5 = appendSessionLog4(
+      text5,
       `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}
 Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
 `
     );
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     if (bytes2.length > INLINE_MAX)
       return {
         ok: false,
@@ -110602,7 +110645,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         limit: INLINE_MAX,
         detail: "the reasons appended to these edges would push bundle.md past the 1MB inline limit"
       };
-    const promoted = this.#write(project, p, text4, when, author, doc.data, "project");
+    const promoted = this.#write(project, p, text5, when, author, doc.data, "project");
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
     return {
       ok: true,
@@ -110989,20 +111032,20 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
           detail: "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document."
         };
     }
-    let text4 = setScalar5(spliced, "last_updated", `"${when}"`);
+    let text5 = setScalar5(spliced, "last_updated", `"${when}"`);
     const shown2 = add.slice(0, CITE_LOG_SAMPLE);
     const listed = shown2.join(", ") + (add.length > shown2.length ? `, and ${add.length - shown2.length} more` : "");
     const ungraded = filled.filter((l) => !l.grade).length;
     const graded = filled.length - ungraded;
     const setMovedNote = answerChanged(sel.drift, sel.moved) ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
-    text4 = appendSessionLog4(text4, ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
+    text5 = appendSessionLog4(text5, ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
 Trigger: selection ${handle}${setMovedNote}
 Changes: basis legs added for ${listed}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
 ` : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}${setMovedNote}
 Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
 `);
-    const bytes2 = new TextEncoder().encode(text4);
+    const bytes2 = new TextEncoder().encode(text5);
     if (bytes2.length > INLINE_MAX) {
       const perEdge = CITE_EDGE_BYTES + (edgePins.size ? CITE_PIN_BYTES : 0);
       const overhead = bytes2.length - add.length * perEdge;
@@ -111020,7 +111063,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       };
     }
     const fm = doc.data;
-    const promoted = this.#write(project, p, text4, when, author, fm, fm.object_type ?? p.type);
+    const promoted = this.#write(project, p, text5, when, author, fm, fm.object_type ?? p.type);
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
     return {
       ok: true,
@@ -112056,9 +112099,9 @@ var CAPTURE_ACTS = [
      guessed anywhere in this file. */
   { id: "attesttext", label: "Attest that this text matches the page image" }
 ];
-var edgesFrom = (f11) => vocabFor(STATES, f11.declared_type ?? f11.object_type)?.edges?.[f11.current_state] || [];
+var edgesFrom = (f12) => vocabFor(STATES, f12.declared_type ?? f12.object_type)?.edges?.[f12.current_state] || [];
 var countOf = (v) => typeof v === "number" && Number.isFinite(v) ? v : Array.isArray(v) ? v.length : null;
-var anyVersionEdgeTo = (f11, to) => (f11.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
+var anyVersionEdgeTo = (f12, to) => (f12.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
 var ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
@@ -112067,7 +112110,7 @@ var ACTS = [
     label: "Release (verify)",
     weight: "refuse",
     types: ["information"],
-    applies: (f11, ty) => ty === "information" && edgesFrom(f11).includes("verified")
+    applies: (f12, ty) => ty === "information" && edgesFrom(f12).includes("verified")
   },
   /* S-11 step 4. verified -> retired, AND nothing with a live cites edge: the
      same predicate the store's CITED refusal runs (#citesInto). A severed edge
@@ -112077,7 +112120,7 @@ var ACTS = [
     label: "Retire",
     weight: "refuse",
     types: ["information"],
-    applies: (f11, ty) => ty === "information" && edgesFrom(f11).includes("retired") && !(countOf(f11.cites_in?.confirmed) > 0)
+    applies: (f12, ty) => ty === "information" && edgesFrom(f12).includes("retired") && !(countOf(f12.cites_in?.confirmed) > 0)
   },
   /* S-11 step 3. An inquiry (né focus/problem — the type reaches here through
      normalizeType, so all three spellings land on this arm) may be
@@ -112106,7 +112149,7 @@ var ACTS = [
     label: "Dispose (defer or dismiss)",
     weight: "refuse",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && !f11.case_member && DISPOSITIONS.some((d) => edgesFrom(f11).includes(d))
+    applies: (f12, ty) => ty === "inquiry" && !f12.case_member && DISPOSITIONS.some((d) => edgesFrom(f12).includes(d))
   },
   /* REC-13. An inquiry whose machine offers the `concluded` edge — `open`, and
      its `surfaced` alias, and nothing else. Weight `single`, the first act
@@ -112164,7 +112207,7 @@ var ACTS = [
     label: "Conclude",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && f11.contradiction_inquiry !== true && (edgesFrom(f11).includes("concluded") || f11.current_state === "concluded" && f11.concludes_for_project === true)
+    applies: (f12, ty) => ty === "inquiry" && f12.contradiction_inquiry !== true && (edgesFrom(f12).includes("concluded") || f12.current_state === "concluded" && f12.concludes_for_project === true)
   },
   /* N345 (R8; contradiction R36): RESOLVE a contradiction inquiry — its conclusion with the kind of resolution the
      conflict turned out to be. Offered where `conclude` would be on such an inquiry, by its state machine's arm: the
@@ -112181,7 +112224,7 @@ var ACTS = [
     label: "Resolve this contradiction (conclude with what it turned out to be)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && f11.contradiction_inquiry === true && edgesFrom(f11).includes("concluded") && f11.contradiction_sides_seen !== false
+    applies: (f12, ty) => ty === "inquiry" && f12.contradiction_inquiry === true && edgesFrom(f12).includes("concluded") && f12.contradiction_sides_seen !== false
   },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
      back to `open`. TWO conditions and no third: the FROM state is in the
@@ -112224,7 +112267,7 @@ var ACTS = [
     label: "Reopen",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && (REOPENABLE_FROM.includes(f11.current_state) || !!f11.case_member) && edgesFrom(f11).includes("open")
+    applies: (f12, ty) => ty === "inquiry" && (REOPENABLE_FROM.includes(f12.current_state) || !!f12.case_member) && edgesFrom(f12).includes("open")
   },
   /* REC-14. An inquiry whose machine offers the `published` edge — which is
        `concluded` and nothing else, because a material set cannot be asserted
@@ -112349,7 +112392,7 @@ var ACTS = [
     weight: "single",
     types: ["inquiry"],
     prompt: SELF_ATTESTED_PROMPT,
-    applies: (f11, ty) => ty === "inquiry" && (f11.current_state === "concluded" || f11.concluded_for_project === true) && (!f11.case_member || f11.edition_warranted_for_project === true) && f11.project_owner !== false
+    applies: (f12, ty) => ty === "inquiry" && (f12.current_state === "concluded" || f12.concluded_for_project === true) && (!f12.case_member || f12.edition_warranted_for_project === true) && f12.project_owner !== false
   },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
@@ -112402,7 +112445,7 @@ var ACTS = [
     weight: "single",
     types: ["inquiry"],
     prompt: DIVIDE_PROMPT,
-    applies: (f11, ty) => ty === "inquiry" && edgesFrom(f11).includes("divided") && !f11.case_member && (f11.basis_legs ?? 0) >= 1 && (f11.rested_on?.working ?? 0) === 0
+    applies: (f12, ty) => ty === "inquiry" && edgesFrom(f12).includes("divided") && !f12.case_member && (f12.basis_legs ?? 0) >= 1 && (f12.rested_on?.working ?? 0) === 0
   },
   /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
        something, and whose record is still working.
@@ -112460,7 +112503,7 @@ var ACTS = [
        would then refuse it. That is a pre-flight disagreeing with the refusal it
        fronts, which is DEC-8's headline failure and the one thing this file
        exists to prevent. `divided` is untouched: it is still a state. */
-    applies: (f11, ty) => ty === "inquiry" && (f11.basis_legs ?? 0) >= 1 && !f11.case_member && f11.current_state !== "divided"
+    applies: (f12, ty) => ty === "inquiry" && (f12.basis_legs ?? 0) >= 1 && !f12.case_member && f12.current_state !== "divided"
   },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
        guards are type-only on both: any information bundle may be cited (cite
@@ -112514,7 +112557,7 @@ var ACTS = [
     label: "Move this action",
     weight: "single",
     types: ["action"],
-    applies: (f11, ty) => ty === "action" && edgesFrom(f11).length > 0
+    applies: (f12, ty) => ty === "action" && edgesFrom(f12).length > 0
   },
   /* REC-24 (d). Recording what was sent, what came back, or that nothing did.
      Published for an action in ANY state, and the breadth is deliberate: the
@@ -112530,7 +112573,7 @@ var ACTS = [
     label: "Record correspondence",
     weight: "single",
     types: ["action"],
-    applies: (f11, ty) => ty === "action"
+    applies: (f12, ty) => ty === "action"
   },
   /* D-149. Stating which laws govern the request, on an action in ANY state, for actioncorrespond's reason:
      the store's own guard is the object's TYPE and nothing else. Weight `single`: one list, one act. */
@@ -112539,7 +112582,7 @@ var ACTS = [
     label: "State governing laws",
     weight: "single",
     types: ["action"],
-    applies: (f11, ty) => ty === "action"
+    applies: (f12, ty) => ty === "action"
   },
   /* REC-214. Revising the risk tier, on an action in ANY state, for actioncorrespond's reason: the store's own
      guard is the object's TYPE and nothing else — a member may re-assess the legal exposure of a resolved action
@@ -112549,7 +112592,7 @@ var ACTS = [
     label: "Revise risk tier",
     weight: "single",
     types: ["action"],
-    applies: (f11, ty) => ty === "action"
+    applies: (f12, ty) => ty === "action"
   },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
@@ -112606,28 +112649,28 @@ var ACTS = [
     label: "Accept a reading of the evidence",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && anyVersionEdgeTo(f11, "accepted")
+    applies: (f12, ty) => ty === "inquiry" && anyVersionEdgeTo(f12, "accepted")
   },
   {
     id: "versionreject",
     label: "Turn down a reading (with a reason)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && anyVersionEdgeTo(f11, "rejected")
+    applies: (f12, ty) => ty === "inquiry" && anyVersionEdgeTo(f12, "rejected")
   },
   {
     id: "versionconsider",
     label: "Set a reading aside for now (with a reason)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && anyVersionEdgeTo(f11, "considering")
+    applies: (f12, ty) => ty === "inquiry" && anyVersionEdgeTo(f12, "considering")
   },
   {
     id: "versionrevert",
     label: "Put a reading back to where nobody had acted on it",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && anyVersionEdgeTo(f11, "suggested")
+    applies: (f12, ty) => ty === "inquiry" && anyVersionEdgeTo(f12, "suggested")
   },
   /* MAKE-CURRENT is offered when the question holds a reading a member has
      ACCEPTED, which is the store's own entry requirement (current implies
@@ -112639,7 +112682,7 @@ var ACTS = [
     label: "Stand this project on a reading",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && (f11.basis_version_states ?? []).includes("accepted")
+    applies: (f12, ty) => ty === "inquiry" && (f12.basis_version_states ?? []).includes("accepted")
   },
   /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: a PROJECT withdraws its
      conclusion, and the withdrawal APPENDS — the conclusion stays in the record.
@@ -112654,7 +112697,7 @@ var ACTS = [
     label: "Withdraw this project's conclusion (it stays in the record)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && (f11.basis_version_states ?? []).includes("accepted")
+    applies: (f12, ty) => ty === "inquiry" && (f12.basis_version_states ?? []).includes("accepted")
   },
   /* HIDE is offered wherever a reading exists AT ALL, in any state, and that
      breadth is deliberate rather than an omission: the prune offer's whole point
@@ -112668,7 +112711,7 @@ var ACTS = [
     label: "Hide a reading from the display (it stays in the record)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f11, ty) => ty === "inquiry" && (f11.basis_versions ?? 0) >= 1
+    applies: (f12, ty) => ty === "inquiry" && (f12.basis_versions ?? 0) >= 1
   },
   /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
      reinstate, and only there. Each of the three edits the project's own document, and the
@@ -112688,7 +112731,7 @@ var ACTS = [
        citable and the store refuses RETIRED_NOT_CITABLE for every caller, so the act is not
        offered on one — offering it would be the pre-flight disagreeing with the refusal it
        fronts (DEC-8). `source_status` is not read: a removed or modified source stays citable. */
-    applies: (f11, ty) => ty === "information" && f11.current_state !== "retired" || ty === "project" && f11.project_participant !== false || ty === "inquiry"
+    applies: (f12, ty) => ty === "information" && f12.current_state !== "retired" || ty === "project" && f12.project_participant !== false || ty === "inquiry"
   },
   /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
        side: some CASE holds a live cites edge to it. From the case's own side:
@@ -112731,7 +112774,7 @@ var ACTS = [
     label: "Sever a citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f11, ty) => (ty === "information" || ty === "inquiry") && (f11.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && countOf(f11.cites_out?.confirmed) > 0 && f11.project_participant !== false
+    applies: (f12, ty) => (ty === "information" || ty === "inquiry") && (f12.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && countOf(f12.cites_out?.confirmed) > 0 && f12.project_participant !== false
   },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
        refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
@@ -112757,7 +112800,7 @@ var ACTS = [
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f11, ty) => (ty === "information" || ty === "inquiry") && (f11.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f11.current_state === "retired") || ty === "project" && countOf(f11.cites_out?.severed_reinstatable) > 0 && f11.project_participant !== false
+    applies: (f12, ty) => (ty === "information" || ty === "inquiry") && (f12.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f12.current_state === "retired") || ty === "project" && countOf(f12.cites_out?.severed_reinstatable) > 0 && f12.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -112801,14 +112844,14 @@ var ACTS = [
     label: "Invite a member to this project",
     weight: "single",
     types: ["project"],
-    applies: (f11, ty) => ty === "project" && f11.roster?.owner === true
+    applies: (f12, ty) => ty === "project" && f12.roster?.owner === true
   },
   {
     id: "projectjoin",
     label: "Join this project",
     weight: "single",
     types: ["project"],
-    applies: (f11, ty) => ty === "project" && typeof f11.roster?.state === "string" && f11.roster.state !== "joined"
+    applies: (f12, ty) => ty === "project" && typeof f12.roster?.state === "string" && f12.roster.state !== "joined"
   },
   /* N45 (R18): an owner is offered leave only while ANOTHER owner stays committed (has not asked to leave), which is
      when membership R35 accepts it (LAST_COMMITTED_OWNER otherwise). The owner floor alone counted leaving owners too,
@@ -112818,35 +112861,35 @@ var ACTS = [
     label: "Ask to leave this project",
     weight: "single",
     types: ["project"],
-    applies: (f11, ty) => ty === "project" && f11.roster?.state === "joined" && (f11.roster?.owner !== true || f11.roster?.other_owner_committed === true)
+    applies: (f12, ty) => ty === "project" && f12.roster?.state === "joined" && (f12.roster?.owner !== true || f12.roster?.other_owner_committed === true)
   },
   {
     id: "projectremove",
     label: "Remove a participant",
     weight: "single",
     types: ["project"],
-    applies: (f11, ty) => ty === "project" && f11.roster?.owner === true
+    applies: (f12, ty) => ty === "project" && f12.roster?.owner === true
   },
   {
     id: "projectowneradd",
     label: "Add an owner",
     weight: "single",
     types: ["project"],
-    applies: (f11, ty) => ty === "project" && f11.roster?.owner === true
+    applies: (f12, ty) => ty === "project" && f12.roster?.owner === true
   },
   {
     id: "projectownerremove",
     label: "Remove an owner (with a reason)",
     weight: "single",
     types: ["project"],
-    applies: (f11, ty) => ty === "project" && f11.roster?.owner === true && f11.roster?.owner_floor_clear === true
+    applies: (f12, ty) => ty === "project" && f12.roster?.owner === true && f12.roster?.owner_floor_clear === true
   },
   {
     id: "projectownerrescue",
     label: "Add an owner to a project whose owners are all inactive (with a reason)",
     weight: "single",
     types: ["project"],
-    applies: (f11, ty) => ty === "project" && f11.roster?.rescue_open === true
+    applies: (f12, ty) => ty === "project" && f12.roster?.rescue_open === true
   },
   /* REC-149 (Membership v2 §7.14): WHETHER THIS PROJECT CAN BE FOUND — an OWNER's recorded act on the project
      that is the TARGET. It asks the PAIR fact `project_target_owner` (`#isProjectOwner(target, caller)`, the one
@@ -112860,7 +112903,7 @@ var ACTS = [
     label: "Choose whether this project can be found",
     weight: "single",
     types: ["project"],
-    applies: (f11, ty) => ty === "project" && f11.project_target_owner === true
+    applies: (f12, ty) => ty === "project" && f12.project_target_owner === true
   },
   /* N364 (R5, R29; K530): A MEMBER RECORDS A SOURCE'S CONSENT, with its evidence, for one disclosure and one audience
      (sources R7). AN ACTS ROW, NOT A NON-ACT, because the prompt must ride the act (DEC-78 item 5(d): consent to go public
@@ -113046,7 +113089,7 @@ var QUEUE_INBOX_CHECKS = Object.freeze({
     translation: "This was not saved: the list of tasks it carries is not written the way the record writes tasks, so a member could be shown something in it that the record cannot vouch for. The findings beside this say which entries and what is wrong with each. Nothing was changed."
   })
 });
-function f10(check, severity, message2, repairs) {
+function f11(check, severity, message2, repairs) {
   const out = { check, severity, message: message2 };
   if (repairs) {
     out.repairable = true;
@@ -113054,7 +113097,7 @@ function f10(check, severity, message2, repairs) {
   }
   return out;
 }
-function asText8(v) {
+function asText9(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
@@ -113069,44 +113112,44 @@ function checkInboxGrammar(ctx, findings) {
   if (!raw) return;
   let g;
   try {
-    g = JSON.parse(asText8(raw));
+    g = JSON.parse(asText9(raw));
   } catch {
     return;
   }
   if (typeof g !== "object" || g === null || Array.isArray(g)) {
-    findings.push(f10("C-19.1", "error", "data/inbox.json must be a JSON object"));
+    findings.push(f11("C-19.1", "error", "data/inbox.json must be a JSON object"));
     return;
   }
   const tasks = Array.isArray(g.tasks) ? g.tasks : null;
   if (g.tasks !== void 0 && !tasks) {
-    findings.push(f10("C-19.1", "error", "inbox.json tasks must be an array"));
+    findings.push(f11("C-19.1", "error", "inbox.json tasks must be an array"));
     return;
   }
   const seen = /* @__PURE__ */ new Set();
   for (let i = 0; i < (tasks || []).length; i++) {
     const tk = tasks[i];
     if (typeof tk !== "object" || tk === null) {
-      findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}] is not an object`));
+      findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}] is not an object`));
       continue;
     }
-    if (!TASK_ID_RE.test(tk.id || "")) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].id '${tk.id}' does not match the TASK grammar`));
-    else if (seen.has(tk.id)) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}] repeats id '${tk.id}'`));
+    if (!TASK_ID_RE.test(tk.id || "")) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].id '${tk.id}' does not match the TASK grammar`));
+    else if (seen.has(tk.id)) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}] repeats id '${tk.id}'`));
     else seen.add(tk.id);
-    if (!TASK_KIND_ENUM.includes(tk.kind)) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].kind '${tk.kind}' must be one of: ${TASK_KIND_ENUM.join(", ")}`));
+    if (!TASK_KIND_ENUM.includes(tk.kind)) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].kind '${tk.kind}' must be one of: ${TASK_KIND_ENUM.join(", ")}`));
     const sub = tk.subject;
-    if (!sub || typeof sub !== "object") findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}] missing subject block`));
+    if (!sub || typeof sub !== "object") findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}] missing subject block`));
     else {
       if (typeof sub.text !== "string" || sub.text.length === 0 || sub.text.length > 200 || /[\r\n]/.test(sub.text)) {
-        findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].subject.text must be a nonempty single-line string under 200 chars`));
+        findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].subject.text must be a nonempty single-line string under 200 chars`));
       }
       if (sub.description !== void 0 && (typeof sub.description !== "string" || sub.description.length > 2e3)) {
-        findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].subject.description must be a string under 2000 chars`));
+        findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].subject.description must be a string under 2000 chars`));
       }
     }
     if (!BUNDLE_ID_RE.test(tk.refers_to || "")) {
-      findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].refers_to '${String(tk.refers_to).slice(0, 40)}' is not a canonical bundle ID`));
+      findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].refers_to '${String(tk.refers_to).slice(0, 40)}' is not a canonical bundle ID`));
     } else if (ctx.resolveTarget && !ctx.resolveTarget(tk.refers_to)) {
-      findings.push(f10(
+      findings.push(f11(
         "C-19.1",
         "error",
         `inbox.json tasks[${i}].refers_to '${tk.refers_to}' does not resolve in the store`,
@@ -113114,46 +113157,46 @@ function checkInboxGrammar(ctx, findings) {
       ));
     }
     if (tk.locators !== void 0) {
-      if (!Array.isArray(tk.locators)) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].locators must be an array`));
+      if (!Array.isArray(tk.locators)) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].locators must be an array`));
       else for (let L2 = 0; L2 < tk.locators.length; L2++) {
-        if (!isPublicHttpsLocator(tk.locators[L2])) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].locators[${L2}] '${String(tk.locators[L2]).slice(0, 40)}' is not an https public-host locator`));
+        if (!isPublicHttpsLocator(tk.locators[L2])) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].locators[${L2}] '${String(tk.locators[L2]).slice(0, 40)}' is not an https public-host locator`));
       }
     }
     if (tk.assignee !== "unassigned" && !MEMBER_ID_RE.test(tk.assignee || "")) {
-      findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].assignee '${tk.assignee}' must be a member_id or the literal 'unassigned'`));
+      findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].assignee '${tk.assignee}' must be a member_id or the literal 'unassigned'`));
     }
-    if (!TASK_ROLE_ENUM.includes(tk.assignee_role)) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].assignee_role '${tk.assignee_role}' must be one of: ${TASK_ROLE_ENUM.join(", ")}`));
-    if (!TASK_STATUS_ENUM.includes(tk.status)) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].status '${tk.status}' must be one of: ${TASK_STATUS_ENUM.join(", ")}`));
-    if (!ISO_TS_RE.test(tk.created || "")) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].created must be an ISO 8601 UTC instant`));
+    if (!TASK_ROLE_ENUM.includes(tk.assignee_role)) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].assignee_role '${tk.assignee_role}' must be one of: ${TASK_ROLE_ENUM.join(", ")}`));
+    if (!TASK_STATUS_ENUM.includes(tk.status)) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].status '${tk.status}' must be one of: ${TASK_STATUS_ENUM.join(", ")}`));
+    if (!ISO_TS_RE.test(tk.created || "")) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].created must be an ISO 8601 UTC instant`));
     if (tk.resolved_at !== void 0 && tk.resolved_at !== null && !ISO_TS_RE.test(tk.resolved_at)) {
-      findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].resolved_at must be an ISO 8601 UTC instant`));
+      findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].resolved_at must be an ISO 8601 UTC instant`));
     }
     if (tk.status === "resolved" && !ISO_TS_RE.test(tk.resolved_at || "")) {
-      findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}] is resolved but carries no resolved_at instant`));
+      findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}] is resolved but carries no resolved_at instant`));
     }
     const hist = tk.history;
     if (!Array.isArray(hist) || hist.length === 0) {
-      findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].history must be a nonempty append-only array`));
+      findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].history must be a nonempty append-only array`));
     } else {
       let prev = "";
       for (let h = 0; h < hist.length; h++) {
         const e = hist[h];
         if (typeof e !== "object" || e === null) {
-          findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is not an object`));
+          findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is not an object`));
           continue;
         }
-        if (!ISO_TS_RE.test(e.at || "")) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].at must be an ISO 8601 UTC instant`));
+        if (!ISO_TS_RE.test(e.at || "")) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].at must be an ISO 8601 UTC instant`));
         else {
-          if (prev && e.at < prev) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is out of chronological order`));
+          if (prev && e.at < prev) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is out of chronological order`));
           prev = e.at;
         }
-        if (!TASK_EVENT_ENUM.includes(e.event)) findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].event '${e.event}' must be one of: ${TASK_EVENT_ENUM.join(", ")}`));
+        if (!TASK_EVENT_ENUM.includes(e.event)) findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].event '${e.event}' must be one of: ${TASK_EVENT_ENUM.join(", ")}`));
         if (typeof e.actor !== "string" || e.actor.length === 0 || e.actor.length > 64 || /[\r\n]/.test(e.actor)) {
-          findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].actor must be a nonempty single-line string under 64 chars`));
+          findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].actor must be a nonempty single-line string under 64 chars`));
         }
       }
       if (hist[0] && hist[0].event !== "created") {
-        findings.push(f10("C-19.1", "error", `inbox.json tasks[${i}].history does not begin with its creation`));
+        findings.push(f11("C-19.1", "error", `inbox.json tasks[${i}].history does not begin with its creation`));
       }
     }
   }
@@ -113345,7 +113388,7 @@ var Tasks = class _Tasks {
   inboxCheck(c) {
     const files = Array.isArray(c && c.files) ? c.files : [];
     const replay = !!(c && (c.replay || c.pkg && c.pkg.replay));
-    const inbox = replay ? null : files.find((f11) => f11 && f11.path === "data/inbox.json");
+    const inbox = replay ? null : files.find((f12) => f12 && f12.path === "data/inbox.json");
     if (!inbox || typeof inbox.text !== "string") return null;
     const found = [];
     checkInboxGrammar({ files: /* @__PURE__ */ new Map([["data/inbox.json", inbox.text]]) }, found);
@@ -113864,9 +113907,9 @@ var LOG2 = "Plan Log";
 var TOKEN4 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
 var q6 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
 var tok2 = (s) => TOKEN4.test(String(s)) ? String(s) : q6(s);
-var parseFm3 = (text4) => {
-  if (typeof text4 !== "string") return null;
-  const d = parseFrontmatter(text4).data;
+var parseFm3 = (text5) => {
+  if (typeof text5 !== "string") return null;
+  const d = parseFrontmatter(text5).data;
   return d && typeof d === "object" && !Array.isArray(d) ? d : null;
 };
 var planId = (allocated) => `${allocated}-plan`;
@@ -113912,8 +113955,8 @@ function planDoc({ id, project, title, author, at: at22, entry }) {
 }
 var logText2 = (seq, entry) => `### ${seq} | ${entry.kind} | ${entry.author} | ${entry.at}
 ${JSON.stringify(entry)}`;
-function logOf2(text4) {
-  const body = logSection2(text4);
+function logOf2(text5) {
+  const body = logSection2(text5);
   if (!body) return [];
   return body.split(/\n(?=### )/).map((part) => {
     const m = /^### (\d+) \| [^\n]*\n([\s\S]*)$/.exec(part.trim());
@@ -113926,34 +113969,34 @@ function logOf2(text4) {
     }
   });
 }
-function logSection2(text4) {
-  if (typeof text4 !== "string") return null;
+function logSection2(text5) {
+  if (typeof text5 !== "string") return null;
   const marker = `
 ## ${LOG2}
 `;
-  const i = text4.indexOf(marker);
+  const i = text5.indexOf(marker);
   if (i === -1) return null;
   const start = i + marker.length;
-  const nxt = text4.indexOf("\n## ", start - 1);
-  return text4.slice(start, nxt === -1 ? text4.length : nxt).trim();
+  const nxt = text5.indexOf("\n## ", start - 1);
+  return text5.slice(start, nxt === -1 ? text5.length : nxt).trim();
 }
 function fence3(lines) {
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   return end2 === -1 ? null : end2;
 }
-function setField3(text4, key, value) {
-  const lines = text4.split("\n");
+function setField3(text5, key, value) {
+  const lines = text5.split("\n");
   const end2 = fence3(lines);
-  if (end2 === null) return text4;
+  if (end2 === null) return text5;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
     lines[i] = `${key}: ${value}`;
     return lines.join("\n");
   }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function appendItem3(text4, key, fields) {
-  const lines = text4.split("\n");
+function appendItem3(text5, key, fields) {
+  const lines = text5.split("\n");
   const end2 = fence3(lines);
   if (end2 === null) return null;
   const item = Object.entries(fields).map(([k, v], i2) => `${i2 ? "    " : "  - "}${k}: ${v}`);
@@ -113966,27 +114009,27 @@ function appendItem3(text4, key, fields) {
   for (let n = i + 1; n < end2 && /^\s/.test(lines[n]); n++) last = n;
   return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
 }
-function appendToSection2(text4, heading, entry) {
+function appendToSection2(text5, heading, entry) {
   const marker = `
 ## ${heading}
 `;
-  const i = text4.indexOf(marker);
-  if (i === -1) return `${text4.replace(/\n*$/, "\n")}
+  const i = text5.indexOf(marker);
+  if (i === -1) return `${text5.replace(/\n*$/, "\n")}
 ## ${heading}
 
 ${entry.trim()}
 `;
   const start = i + marker.length;
-  const nxt = text4.indexOf("\n## ", start - 1);
-  const end2 = nxt === -1 ? text4.length : nxt;
-  const head = text4.slice(0, end2).replace(/\n*$/, "\n");
+  const nxt = text5.indexOf("\n## ", start - 1);
+  const end2 = nxt === -1 ? text5.length : nxt;
+  const head = text5.slice(0, end2).replace(/\n*$/, "\n");
   return `${head}
 ${entry.trim()}
-${text4.slice(end2)}`;
+${text5.slice(end2)}`;
 }
-function appendEntry2(text4, { entry, seq, state, fromState, blurb }) {
-  if (logSection2(text4) === null) return null;
-  let t = appendToSection2(text4, LOG2, logText2(seq, entry));
+function appendEntry2(text5, { entry, seq, state, fromState, blurb }) {
+  if (logSection2(text5) === null) return null;
+  let t = appendToSection2(text5, LOG2, logText2(seq, entry));
   t = setField3(t, "last_updated", q6(entry.at));
   if (state !== void 0 && state !== fromState) {
     t = setField3(t, "prior_state", fromState);
@@ -114757,8 +114800,8 @@ var ActionPlans = class {
     return this.#rows(qy, ...a)[0] || null;
   }
   #text(id) {
-    const f11 = this.record.readFile(id, "bundle.md");
-    return f11 && typeof f11.text === "string" ? f11.text : null;
+    const f12 = this.record.readFile(id, "bundle.md");
+    return f12 && typeof f12.text === "string" ? f12.text : null;
   }
   #nowMs() {
     return msOf(this.now());
@@ -114866,9 +114909,9 @@ var ActionPlans = class {
     const axes = ["capture", "connection"].filter((a) => typeof bar[a] === "string" && bar[a] in GRADE_RANK3);
     if (!axes.length) return { support: "established", why: "determined; the project declares no bar, so nothing is measured against one" };
     const findings = Array.isArray(d.findings) ? d.findings : [];
-    for (const f11 of findings) {
+    for (const f12 of findings) {
       for (const a of axes) {
-        const g = f11 && f11.frozen && f11.frozen[a] ? f11.frozen[a].grade : null;
+        const g = f12 && f12.frozen && f12.frozen[a] ? f12.frozen[a].grade : null;
         if (!(g in GRADE_RANK3))
           return { support: "short", why: `a finding's ${a} grade is not graded, so it is not shown to meet the project's bar (${a} ${bar[a]})` };
         if (GRADE_RANK3[g] > GRADE_RANK3[bar[a]])
@@ -114880,9 +114923,9 @@ var ActionPlans = class {
   /** R8: a subject's liveness, derived when read. */
   #liveness(s, viewer) {
     if (s.kind === "inquiry") {
-      const f11 = this.#inquiryFacts(s.inquiry, viewer);
-      if (!f11) return { state: "undetermined", says: "an object you may not see" };
-      return CLOSED_INQUIRY_STATES.includes(f11.state) ? { state: "closed", inquiry_state: f11.state } : { state: "live" };
+      const f12 = this.#inquiryFacts(s.inquiry, viewer);
+      if (!f12) return { state: "undetermined", says: "an object you may not see" };
+      return CLOSED_INQUIRY_STATES.includes(f12.state) ? { state: "closed", inquiry_state: f12.state } : { state: "live" };
     }
     const d = this.#determination(s.determination, viewer);
     if (!d) return { state: "undetermined", says: "an object you may not see" };
@@ -114936,9 +114979,9 @@ var ActionPlans = class {
     for (let i = 0; i < items.length; i++) {
       const s = items[i].subject;
       if (s.kind === "inquiry") {
-        const f11 = this.#inquiryFacts(s.inquiry, viewer);
-        if (!f11) return refuseNoSuchInquiry(s.inquiry, { index: i });
-        facts.push(f11);
+        const f12 = this.#inquiryFacts(s.inquiry, viewer);
+        if (!f12) return refuseNoSuchInquiry(s.inquiry, { index: i });
+        facts.push(f12);
       } else {
         const d = this.#determination(s.determination, viewer);
         if (!d) return noSuchDetermination(s.determination, { index: i });
@@ -115061,15 +115104,15 @@ var ActionPlans = class {
   }
   #append(p, entry, { state, blurb }) {
     const head = this.record.head(p.id);
-    const text4 = this.#text(p.id);
-    if (!head || text4 === null) return noSuchPlan(p.id);
-    const seq = logOf2(text4).length + 1;
-    const next = appendEntry2(text4, { entry, seq, state, fromState: head.currentState, blurb });
+    const text5 = this.#text(p.id);
+    if (!head || text5 === null) return noSuchPlan(p.id);
+    const seq = logOf2(text5).length + 1;
+    const next = appendEntry2(text5, { entry, seq, state, fromState: head.currentState, blurb });
     if (next === null)
       return refusal18("UNSPLICEABLE_PLAN", "the plan's document cannot be extended in place. Nothing was written.");
     const carried = (this.record.livePaths(p.id) || []).filter((x) => x !== "bundle.md").map((path) => {
-      const f11 = this.record.readFile(p.id, path);
-      return typeof f11.text === "string" ? { path, text: f11.text, sha256: f11.sha256 } : { path, blobSha: f11.blobSha, sha256: f11.sha256, bytes: f11.bytes };
+      const f12 = this.record.readFile(p.id, path);
+      return typeof f12.text === "string" ? { path, text: f12.text, sha256: f12.sha256 } : { path, blobSha: f12.blobSha, sha256: f12.sha256, bytes: f12.bytes };
     });
     const fm = parseFm3(next) || {};
     const r = this.promotion.promote({
@@ -115115,7 +115158,7 @@ var ActionPlans = class {
    *  asked; a project's creation is its creator's, who becomes its owner in the same act. */
   #workKindsCheck(c) {
     if (c.replay) return null;
-    const md = c.bundleMd && typeof c.bundleMd.text === "string" ? c.bundleMd.text : ((c.files || []).find((f11) => f11 && f11.path === "bundle.md") || {}).text;
+    const md = c.bundleMd && typeof c.bundleMd.text === "string" ? c.bundleMd.text : ((c.files || []).find((f12) => f12 && f12.path === "bundle.md") || {}).text;
     const next = (c.docFm && typeof c.docFm === "object" ? c.docFm : parseFm3(md)) || {};
     const heldFm = c.head ? parseFm3(this.#text(c.bundleId)) || {} : {};
     const norm = (v) => JSON.stringify(v === void 0 || v === null ? null : v);
@@ -115139,12 +115182,12 @@ var ActionPlans = class {
   /** R27: the tables, projected from the promoted document in the promotion's transaction. */
   project(c) {
     if (normalizeType(c.promotedType) !== ACTION_PLAN || !c.bundleMd || typeof c.bundleMd.text !== "string") return null;
-    const id = c.bundleId, text4 = c.bundleMd.text;
-    const log = logOf2(text4).filter((x) => !x.unreadable);
+    const id = c.bundleId, text5 = c.bundleMd.text;
+    const log = logOf2(text5).filter((x) => !x.unreadable);
     const heldRow = this.#one(`SELECT log_len FROM plans WHERE plan_id=?`, id);
     const from = heldRow ? heldRow.log_len : 0;
     for (const x of log.filter((y) => y.seq > from)) this.#apply(id, x);
-    const fm = parseFm3(text4) || {};
+    const fm = parseFm3(text5) || {};
     this.sql.exec(`UPDATE plans SET state=?, log_len=? WHERE plan_id=?`, String(fm.current_state ?? "open"), log.length, id);
     return null;
   }
@@ -115272,14 +115315,14 @@ var ActionPlans = class {
     const r = this.record.transact(() => {
       const id = planId(this.record.allocId("PLN", at22.slice(0, 4)).id);
       const entry = { kind: "open", project, title: title.trim(), subjects: s.items, author, at: at22 };
-      const text4 = planDoc({ id, project, title: title.trim(), author, at: at22, entry });
-      const fm = parseFm3(text4) || {};
+      const text5 = planDoc({ id, project, title: title.trim(), author, at: at22, entry });
+      const fm = parseFm3(text5) || {};
       const p = this.promotion.promote({
         bundleId: id,
         base: null,
         snapKey: this.#snap(),
         author,
-        files: [{ path: "bundle.md", text: text4 }],
+        files: [{ path: "bundle.md", text: text5 }],
         meta: {
           object_type: ACTION_PLAN,
           title: fm.title,
@@ -115355,9 +115398,9 @@ var ActionPlans = class {
     if (m) return m;
     const o = this.#openPlan(plan, author, viewer, "optionAdd");
     if (o.r) return o.r;
-    const f11 = this.#optionFields(args, o.p, viewer);
-    if (!f11.fields) return f11;
-    return this.#addOption(o.p, f11.fields, { author });
+    const f12 = this.#optionFields(args, o.p, viewer);
+    if (!f12.fields) return f12;
+    return this.#addOption(o.p, f12.fields, { author });
   }
   #addOption(p, fields, { author, proposal = null }) {
     const n = (this.#one(`SELECT COUNT(*) AS n FROM plan_options WHERE plan_id=?`, p.id) || { n: 0 }).n + 1;
@@ -115392,12 +115435,12 @@ var ActionPlans = class {
       lobbying: pick2("lobbying"),
       enforces: Object.prototype.hasOwnProperty.call(args, "enforces") ? args.enforces : cur.enforces ? cur.enforces.standard ?? cur.enforces.subject : void 0
     };
-    const f11 = this.#optionFields(merged, o.p, viewer);
-    if (!f11.fields) return f11;
-    const entry = { kind: "option_revise", option: held.id, fields: f11.fields, reason: reason.trim(), author, at: this.now() };
+    const f12 = this.#optionFields(merged, o.p, viewer);
+    if (!f12.fields) return f12;
+    const entry = { kind: "option_revise", option: held.id, fields: f12.fields, reason: reason.trim(), author, at: this.now() };
     const w = this.#append(o.p, entry, { blurb: "Option revised" });
     if (!w.ok) return w;
-    return { ok: true, plan: o.p.id, option: held.id, fields: f11.fields, reason: entry.reason, author, at: entry.at };
+    return { ok: true, plan: o.p.id, option: held.id, fields: f12.fields, reason: entry.reason, author, at: entry.at };
   }
   /** R11, R31: a proposal, by any credential, stored apart from the options. A machine's names its planning run. */
   async optionPropose(args = {}) {
@@ -115414,8 +115457,8 @@ var ActionPlans = class {
       gate = this.#runGate(run, p, who2, viewer);
       if (!gate.ok) return gate;
     }
-    const f11 = this.#optionFields(args, p, viewer);
-    if (!f11.fields) return f11;
+    const f12 = this.#optionFields(args, p, viewer);
+    if (!f12.fields) return f12;
     if (typeof why !== "string" || !why.trim() || why.length > WHY_MAX2)
       return refusal18(
         "PROPOSAL_WHY_REFUSED",
@@ -115452,7 +115495,7 @@ var ActionPlans = class {
         id,
         p.id,
         n,
-        JSON.stringify(f11.fields),
+        JSON.stringify(f12.fields),
         why.trim(),
         who2,
         machine3 ? 1 : 0,
@@ -115575,9 +115618,9 @@ var ActionPlans = class {
       tier: base.category === "legal" && base.tier !== "undetermined" ? base.tier : void 0
     };
     for (const k of Object.keys(args)) if (!["proposal", "author", "viewer", "plan"].includes(k)) merged[k] = args[k];
-    const f11 = this.#optionFields(merged, p, viewer);
-    if (!f11.fields) return f11;
-    const r = this.#addOption(p, f11.fields, { author, proposal: row2.proposal_id });
+    const f12 = this.#optionFields(merged, p, viewer);
+    if (!f12.fields) return f12;
+    const r = this.#addOption(p, f12.fields, { author, proposal: row2.proposal_id });
     if (!r.ok) return r;
     return { ...r, ...this.#origin(this.#proposalRow(row2.proposal_id)) };
   }
@@ -115999,14 +116042,14 @@ var ActionPlans = class {
     return cur ? { id: cur.id, state: cur.state, stage: cur.stage, stage_name: cur.stage_name ?? null } : null;
   }
   #optionView(p, o, live, viewer) {
-    const f11 = o.fields;
-    const bound = (f11.subjects || []).map((s) => ({ key: subjectKey(s), liveness: live.get(subjectKey(s)) || { state: "subject_removed" } }));
+    const f12 = o.fields;
+    const bound = (f12.subjects || []).map((s) => ({ key: subjectKey(s), liveness: live.get(subjectKey(s)) || { state: "subject_removed" } }));
     const anyLive = bound.some((b) => b.liveness.state === "live");
     const revisions = this.#rows(`SELECT * FROM plan_option_revisions WHERE plan_id=? AND option_id=? ORDER BY rev`, p.id, o.id).map((r) => ({ rev: r.rev, fields: unjson2(r.fields_json, {}), reason: r.reason ?? null, author: r.author, at: r.at }));
     const dispositions = this.#rows(`SELECT * FROM plan_history WHERE plan_id=? AND kind='dispose' ORDER BY seq`, p.id).map((h) => ({ ...unjson2(h.entry_json, {}), seq: h.seq })).filter((e) => (e.options || []).includes(o.id)).map((e) => ({ disposition: e.disposition, reason: e.reason ?? null, author: e.author, at: e.at }));
     const out = {
       id: o.id,
-      ...f11,
+      ...f12,
       disposition: o.disposition,
       dispositions,
       revisions,
@@ -116022,8 +116065,8 @@ var ActionPlans = class {
       const a = this.actions.actionRead({ id: o.action, viewer });
       out.action = ok(a) ? { id: o.action, state: a.current_state ?? null, started_by: o.startedBy, started_at: o.startedAt } : { id: null, says: "an object you may not see" };
     } else out.action = null;
-    if (f11.category === "legal") {
-      out.available = (f11.subjects || []).filter((s) => s.kind === "outcome").map((s) => {
+    if (f12.category === "legal") {
+      out.available = (f12.subjects || []).filter((s) => s.kind === "outcome").map((s) => {
         const av = this.filings.availableActions({ determination: s.determination, viewer });
         return { determination: s.determination, ...ok(av) ? { available: av } : { state: "undetermined", says: "the available actions could not be read" } };
       });
@@ -116407,10 +116450,10 @@ for (const name of [
   "planProposals",
   "planRunCheck"
 ]) {
-  const f11 = ActionPlans.prototype[name];
+  const f12 = ActionPlans.prototype[name];
   Object.defineProperty(ActionPlans.prototype, name, { configurable: true, writable: true, value: function(...a) {
     try {
-      return f11.apply(this, a);
+      return f12.apply(this, a);
     } catch (e) {
       if (e instanceof ProviderAbsent2) return refuseProviderUnavailable2(e.provider);
       throw e;
@@ -116418,10 +116461,10 @@ for (const name of [
   } });
 }
 {
-  const f11 = ActionPlans.prototype.optionPropose;
+  const f12 = ActionPlans.prototype.optionPropose;
   Object.defineProperty(ActionPlans.prototype, "optionPropose", { configurable: true, writable: true, value: async function(...a) {
     try {
-      return await f11.apply(this, a);
+      return await f12.apply(this, a);
     } catch (e) {
       if (e instanceof ProviderAbsent2) return refuseProviderUnavailable2(e.provider);
       throw e;
@@ -116533,18 +116576,18 @@ function priorOf(dispositions, key) {
 function cardinalityGroups(feed) {
   const groups = /* @__PURE__ */ new Map();
   for (const inst of feed && Array.isArray(feed.instances) ? feed.instances : []) {
-    for (const f11 of Array.isArray(inst.findings) ? inst.findings : []) {
-      if (!f11 || f11.kind !== CARDINALITY_EXCEEDED) continue;
-      const key = `${inst.progression_key}::${f11.stage_key}`;
+    for (const f12 of Array.isArray(inst.findings) ? inst.findings : []) {
+      if (!f12 || f12.kind !== CARDINALITY_EXCEEDED) continue;
+      const key = `${inst.progression_key}::${f12.stage_key}`;
       let g = groups.get(key);
       if (!g) {
         g = {
           key,
           progression_key: inst.progression_key,
           progression_label: inst.progression_label,
-          stage_key: f11.stage_key,
-          stage_label: f11.stage_label,
-          cardinality: f11.cardinality,
+          stage_key: f12.stage_key,
+          stage_label: f12.stage_label,
+          cardinality: f12.cardinality,
           definition_version: inst.definition_version,
           instances: []
         };
@@ -116555,9 +116598,9 @@ function cardinalityGroups(feed) {
         entity_label: inst.entity_label ?? null,
         progression_key: inst.progression_key,
         definition_version: inst.definition_version,
-        document_count: f11.document_count,
-        grade: f11.grade_determined === true ? f11.grade : null,
-        grade_determined: f11.grade_determined === true
+        document_count: f12.document_count,
+        grade: f12.grade_determined === true ? f12.grade : null,
+        grade_determined: f12.grade_determined === true
       });
     }
   }
@@ -119408,9 +119451,9 @@ function mutedAsItem(item, itemMutes) {
 function serializeMutedKinds(kinds) {
   return [...new Set((kinds || []).filter((k) => typeof k === "string" && k))].sort().join(",");
 }
-function parseMutedKinds(text4) {
-  if (typeof text4 !== "string" || !text4) return [];
-  return [...new Set(text4.split(",").map((k) => k.trim()).filter(Boolean))].sort();
+function parseMutedKinds(text5) {
+  if (typeof text5 !== "string" || !text5) return [];
+  return [...new Set(text5.split(",").map((k) => k.trim()).filter(Boolean))].sort();
 }
 function suppressedBy(item, mutes) {
   if (!item || !mutes || mutes.size === 0) return null;
@@ -120913,7 +120956,7 @@ var Queue = class _Queue {
     );
     const had = parseMutedKinds(row2 ? row2.muted_kinds : "");
     const next = unmute ? had.filter((k) => !named.includes(k)) : [.../* @__PURE__ */ new Set([...had, ...named])];
-    const text4 = serializeMutedKinds(next);
+    const text5 = serializeMutedKinds(next);
     this.sql.exec(
       `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen)
        VALUES (?, ?, ?, ?, ?)
@@ -120921,7 +120964,7 @@ var Queue = class _Queue {
                                                      last_seen=excluded.last_seen`,
       me,
       c.id,
-      text4,
+      text5,
       row2 ? row2.snoozed_until ?? null : null,
       stamp2
     );
@@ -120931,7 +120974,7 @@ var Queue = class _Queue {
       case: c.id,
       case_type: c.type,
       case_title: c.title,
-      muted_kinds: parseMutedKinds(text4),
+      muted_kinds: parseMutedKinds(text5),
       added: unmute ? [] : named.filter((k) => !had.includes(k)),
       removed: unmute ? named.filter((k) => had.includes(k)) : [],
       at: stamp2,
@@ -121875,7 +121918,7 @@ async function ratifyOp(req, stub, ctx) {
          signed — which is the same doctrine reading a different signature. */
       group: ratifiedFm.group ?? null,
       edges,
-      shas: shas.map(({ text: text4, ...s }) => s)
+      shas: shas.map(({ text: text5, ...s }) => s)
     })
   })));
   if (pubOut.refused) return storeRefused(pubOut, relay);
@@ -122091,7 +122134,7 @@ async function ratifyOp(req, stub, ctx) {
         edition: pub.case?.edition ?? null,
         complete: !!pub.case?.complete,
         awaiting: pub.case?.awaiting ?? [],
-        findings: (pub.case?.findings ?? []).map((f11) => f11.bundle_id),
+        findings: (pub.case?.findings ?? []).map((f12) => f12.bundle_id),
         detail: pub.case?.detail ?? null
       }
     } : {},
@@ -122292,9 +122335,9 @@ __export(checks_exports38, {
   SUGGEST_CHECKS: () => SUGGEST_CHECKS2,
   SUGGEST_CHECK_KEYS: () => SUGGEST_CHECK_KEYS,
   SUGGEST_KINDS: () => SUGGEST_KINDS,
-  SUGGEST_LEVELS: () => SUGGEST_LEVELS2
+  SUGGEST_LEVELS: () => SUGGEST_LEVELS
 });
-var SUGGEST_LEVELS2 = Object.freeze(["meaning", "content", "documents", "internet"]);
+var SUGGEST_LEVELS = Object.freeze(["meaning", "content", "documents", "internet"]);
 var EXTRACT_PROPOSE_ROWS = {
   NO_PROPOSER: {
     check: "C-104.1",
@@ -122560,7 +122603,7 @@ function suggestionFrontmatter(id, p) {
   };
 }
 function substanceOf(composition) {
-  return String(composition).split("\n").filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).map((ln) => ln.startsWith("ground	") ? ln.split("	").map((f11, i) => i === 3 ? "" : f11).join("	") : ln).join("\n");
+  return String(composition).split("\n").filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).map((ln) => ln.startsWith("ground	") ? ln.split("	").map((f12, i) => i === 3 ? "" : f12).join("	") : ln).join("\n");
 }
 var RunProductions = class {
   constructor({
@@ -122715,11 +122758,11 @@ var RunProductions = class {
       );
     const level = str18(args.level);
     const observedAt = str18(args.observed_at);
-    if (kind === "level-empty" && (!level || !SUGGEST_LEVELS2.includes(level) || !observedAt))
+    if (kind === "level-empty" && (!level || !SUGGEST_LEVELS.includes(level) || !observedAt))
       return refusal20(
         "SUGGEST_EMPTY_LEVEL_UNSTATED",
-        `kind=level-empty carries level=<${SUGGEST_LEVELS2.join("|")}> and observed_at=<the observation-log address of the search that establishes it>. Absence at one level is not evidence of absence at the next, and an unattributed empty answer is the one shape a later reader cannot check.`,
-        { target, level, observed_at: observedAt, levels: SUGGEST_LEVELS2 }
+        `kind=level-empty carries level=<${SUGGEST_LEVELS.join("|")}> and observed_at=<the observation-log address of the search that establishes it>. Absence at one level is not evidence of absence at the next, and an unattributed empty answer is the one shape a later reader cannot check.`,
+        { target, level, observed_at: observedAt, levels: SUGGEST_LEVELS }
       );
     const submission = canonicalJson({
       kind,
@@ -124182,7 +124225,7 @@ var Review = class {
      with whether its author has chosen an attribution level for this case edition, never the level itself (that is the
      author's to state, in the case document). A draft naming no case has no identity a level can be keyed to. */
   #observations(findings, ident) {
-    const seen = findings.filter((f11) => f11.present).map((f11) => f11.target);
+    const seen = findings.filter((f12) => f12.present).map((f12) => f12.target);
     const r = this.basisVersions.testimonyReach(seen);
     return [.../* @__PURE__ */ new Set([...r.self, ...r.via.map((v) => v.observation)])].map((obs) => {
       const chosen = ident.caseId ? this.publication.attributionInForce(ident.caseId, ident.edition, obs) : null;
@@ -124195,14 +124238,14 @@ var Review = class {
   }
   /** R18: a comment through R10's doors (`op=reviewcomment`). A recipient's is attributed to the grant, a member's to
    *  the member. */
-  comment({ draft = null, secretSha = null, viewer = null, bySecret = false, text: text4 = "" } = {}) {
+  comment({ draft = null, secretSha = null, viewer = null, bySecret = false, text: text5 = "" } = {}) {
     const v = String(viewer ?? "");
     const door = bySecret || v.startsWith("member:") ? this.#door({ draft, secretSha, viewer: v, bySecret }) : null;
     if (!door) return noReviewCopy();
     const { draft: d, grant } = door;
     const kind = grant ? "recipient" : "member";
     const author = grant ? grant.grant_id : v.slice("member:".length);
-    const body = String(text4 ?? "").trim();
+    const body = String(text5 ?? "").trim();
     if (!body || body.length > REVIEW_TEXT_MAX)
       return refusal19(
         "REVIEW_NO_COMMENT_TEXT",
@@ -124403,13 +124446,13 @@ var ProjectStage = class {
   }
   /* A live file's inline text as `{content}` (record-core R13), or null when it is not held inline. */
   #fileText(bundleId, path) {
-    let f11 = null;
+    let f12 = null;
     try {
-      f11 = this.record.readFile(bundleId, path);
+      f12 = this.record.readFile(bundleId, path);
     } catch {
-      f11 = null;
+      f12 = null;
     }
-    return f11 && typeof f11.text === "string" ? { content: f11.text } : null;
+    return f12 && typeof f12.text === "string" ? { content: f12.text } : null;
   }
   /** R1–R5 (N300, N346; K356, K362, K364, K379, K448, K452): a project's stage, what each stage has earned and still
    *  needs (`stages`), and its work products' readiness, derived afresh at every read from the record and never stored
@@ -124476,12 +124519,12 @@ var ProjectStage = class {
       readiness: work.readiness,
       basis: null
     };
-    const text4 = this.#fileText(pid, "bundle.md");
-    if (!text4) {
+    const text5 = this.#fileText(pid, "bundle.md");
+    if (!text5) {
       const detail = "the project's own document could not be read, so whether its owner closed it is undetermined";
       return { ...out, stage: "undetermined", detail, stages: this.#stages({ unread: detail }) };
     }
-    const fm = parseFrontmatter(text4.content).data || {};
+    const fm = parseFrontmatter(text5.content).data || {};
     const closeRecorded = fm.current_state === "closed";
     const closed = closeRecorded && CLOSED_REASONS.includes(fm.closed_reason);
     const read2 = this.#readHeld(pid, out.questions);
@@ -125060,8 +125103,8 @@ var Store = class _Store extends DurableObject {
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
         return { ok: false, reason: "NO_DOCUMENT", bundleId: id, retiredSoFar: retired };
-      let text4 = liveMd.content;
-      const withHistory = _Store.#appendStateHistory(text4, {
+      let text5 = liveMd.content;
+      const withHistory = _Store.#appendStateHistory(text5, {
         timestamp: when,
         from_state: cur.current_state,
         to_state: "retired",
@@ -125076,20 +125119,20 @@ var Store = class _Store extends DurableObject {
           retiredSoFar: retired,
           detail: "this document's state_history block cannot be extended in place, and a retirement recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
         };
-      text4 = withHistory;
-      text4 = _Store.#setScalar(text4, "prior_state", cur.current_state);
-      text4 = _Store.#setScalar(text4, "current_state", "retired");
-      text4 = _Store.#setScalar(text4, "last_updated", `"${when}"`);
+      text5 = withHistory;
+      text5 = _Store.#setScalar(text5, "prior_state", cur.current_state);
+      text5 = _Store.#setScalar(text5, "current_state", "retired");
+      text5 = _Store.#setScalar(text5, "last_updated", `"${when}"`);
       const entry = `### Session ${when} | Retired | ${author || "member"}
 Trigger: selection ${handle}
 Changes: state ${cur.current_state} to retired. Reason: ${why}.
 `;
-      const at22 = text4.indexOf("## Session Log");
-      if (at22 < 0) text4 += "\n## Session Log\n\n" + entry;
+      const at22 = text5.indexOf("## Session Log");
+      if (at22 < 0) text5 += "\n## Session Log\n\n" + entry;
       else {
-        const nxt = text4.indexOf("\n## ", at22 + 1);
-        const cutAt = nxt === -1 ? text4.length : nxt + 1;
-        text4 = text4.slice(0, cutAt) + entry + "\n" + text4.slice(cutAt);
+        const nxt = text5.indexOf("\n## ", at22 + 1);
+        const cutAt = nxt === -1 ? text5.length : nxt + 1;
+        text5 = text5.slice(0, cutAt) + entry + "\n" + text5.slice(cutAt);
       }
       const carried = [];
       for (const r of this.sql.exec(
@@ -125097,8 +125140,8 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
         id
       ))
         carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-      const bytes2 = new TextEncoder().encode(text4);
-      const fm = parseFrontmatter(text4).data || {};
+      const bytes2 = new TextEncoder().encode(text5);
+      const fm = parseFrontmatter(text5).data || {};
       const promoted = this.promote({
         bundleId: id,
         base: cur.bundle_sha,
@@ -125106,7 +125149,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
         author: author || "member",
         files: [{
           path: "bundle.md",
-          text: text4,
+          text: text5,
           bytes: bytes2.length,
           sha256: createSha256().update(bytes2).hex()
         }, ...carried],
@@ -125176,8 +125219,8 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
      populated shapes the corpus actually contains, exactly as #spliceReferences
      does for references. Returns null if the block is in a shape this restricted
      grammar cannot extend, so the caller refuses rather than guesses. */
-  static #appendStateHistory(text4, e) {
-    const lines = text4.split("\n");
+  static #appendStateHistory(text5, e) {
+    const lines = text5.split("\n");
     if (lines[0] !== "---") return null;
     const end2 = lines.indexOf("---", 1);
     if (end2 === -1) return null;
@@ -125204,8 +125247,8 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
-  static #setScalar(text4, key, value) {
-    const lines = text4.split("\n");
+  static #setScalar(text5, key, value) {
+    const lines = text5.split("\n");
     const end2 = lines.indexOf("---", 1);
     for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
       if (lines[i].startsWith(key + ":")) {
@@ -125213,7 +125256,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
         return lines.join("\n");
       }
     }
-    return text4;
+    return text5;
   }
   #rows(q7, ...a) {
     return [...this.sql.exec(q7, ...a)];
@@ -125460,14 +125503,14 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
     const { pkg, bundleId, base, files } = stepContext(c);
     const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
     if (cur && base !== null && normalizeType(cur.object_type) === "inquiry") {
-      const surfacedOf = (text4) => {
-        if (typeof text4 !== "string") return "unreadable";
-        const fm = parseFrontmatter(text4).data;
+      const surfacedOf = (text5) => {
+        if (typeof text5 !== "string") return "unreadable";
+        const fm = parseFrontmatter(text5).data;
         if (!fm || typeof fm !== "object") return "unreadable";
         return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
       };
       const heldMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
-      const nextMd = files.find((f11) => f11 && f11.path === "bundle.md");
+      const nextMd = files.find((f12) => f12 && f12.path === "bundle.md");
       const was = surfacedOf(heldMd ? heldMd.content : null);
       const now = surfacedOf(nextMd ? nextMd.text : null);
       const refusal20 = (code, detail, extra) => {
@@ -126917,9 +126960,9 @@ var REQUIRED_ARGUMENT_CHECKS = {
 // src/control-plane/pull.mjs
 var PULL_BUNDLE_SLUG = "doorbell-knock";
 var hexOf3 = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
-var enc3 = (text4) => {
-  const b = new TextEncoder().encode(text4);
-  return { text: text4, bytes: b.length, sha256: createSha256().update(b).hex() };
+var enc3 = (text5) => {
+  const b = new TextEncoder().encode(text5);
+  return { text: text5, bytes: b.length, sha256: createSha256().update(b).hex() };
 };
 function filing(record, doc, { knockId, by, identity, viewer, at: at22 }) {
   const cap = doc.capture || {};
@@ -129980,8 +130023,8 @@ var CONTROL_FLOW_AUTHORITY = [
     re: /\b(?:repeat|iterate|keep\s+(?:going|searching)|loop)\b(?:[^.]{0,40}?\b(?:until|while)\b)?/i
   }
 ];
-function controlFlowAuthority(text4) {
-  const s = typeof text4 === "string" ? text4 : "";
+function controlFlowAuthority(text5) {
+  const s = typeof text5 === "string" ? text5 : "";
   return CONTROL_FLOW_AUTHORITY.filter((p) => p.re.test(s)).map((p) => p.name);
 }
 var C = {
@@ -130348,7 +130391,7 @@ var ABSENCE_FACTS = {
 };
 var FACTS_SOURCE = "docs/architecture/BIO_Content_Framework_v0_10.md";
 function reportsAs(level) {
-  return SUGGEST_LEVELS2.find((s) => s === level || s === level + "s") ?? null;
+  return SUGGEST_LEVELS.find((s) => s === level || s === level + "s") ?? null;
 }
 var LICENSES_A_CONCLUSION = Object.keys(OBSERVATION_STATES).filter((s) => DEFINITIVE_STATES.has(s));
 var LICENSES_NOTHING = Object.keys(OBSERVATION_STATES).filter((s) => !DEFINITIVE_STATES.has(s));
@@ -130549,7 +130592,7 @@ function compose2() {
     }
   const out = {};
   for (const [code, [family, row2]] of first) (out[family] ??= {})[code] = row2;
-  for (const f11 of Object.keys(out)) Object.freeze(out[f11]);
+  for (const f12 of Object.keys(out)) Object.freeze(out[f12]);
   return Object.freeze(out);
 }
 var CHECK_FAMILIES = compose2();
@@ -130789,10 +130832,10 @@ function canonical(value) {
   if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
   return "{" + Object.keys(value).sort().map((k) => JSON.stringify(k) + ":" + canonical(value[k])).join(",") + "}";
 }
-function digest(text4) {
+function digest(text5) {
   let a = 2166136261, b = 16777619;
-  for (let i = 0; i < text4.length; i++) {
-    const c = text4.charCodeAt(i);
+  for (let i = 0; i < text5.length; i++) {
+    const c = text5.charCodeAt(i);
     a = Math.imul(a ^ c, 16777619) >>> 0;
     b = Math.imul(b ^ c + i, 2246822507) >>> 0;
   }
@@ -130974,7 +131017,7 @@ async function migrationReplayOf(env, storeName, b) {
   if (!/^[0-9a-f]{64}$/.test(cap)) return null;
   const registered = Array.isArray(b.register) && b.register.some((r) => r && r.sha256 === cap && r.path === DRIVE_PROVENANCE_PATH);
   if (!registered) return null;
-  const bm = Array.isArray(b.files) ? b.files.find((f11) => f11 && f11.path === "bundle.md" && typeof f11.text === "string") : null;
+  const bm = Array.isArray(b.files) ? b.files.find((f12) => f12 && f12.path === "bundle.md" && typeof f12.text === "string") : null;
   if (!bm) return null;
   const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
   if (bm.sha256 !== mdSha) return null;
@@ -130994,21 +131037,21 @@ async function migrationReplayOf(env, storeName, b) {
     return null;
   }
   const records = Array.isArray(prov?.promotions) ? prov.promotions : [];
-  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f11) => f11 && f11.name === "bundle.md" && f11.sha256 === mdSha));
+  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f12) => f12 && f12.name === "bundle.md" && f12.sha256 === mdSha));
   if (!match) return null;
   return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
 }
 function promotedTypeOf(b) {
-  const md = Array.isArray(b.files) ? b.files.find((f11) => f11 && f11.path === "bundle.md") : null;
+  const md = Array.isArray(b.files) ? b.files.find((f12) => f12 && f12.path === "bundle.md") : null;
   const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
   const said2 = fm && typeof fm === "object" ? fm.object_type : void 0;
   if (typeof said2 === "string" && said2.trim() !== "") return normalizeType(said2);
   return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : void 0;
 }
-async function replayVerdict(env, storeName, text4, viaSession, cls) {
+async function replayVerdict(env, storeName, text5, viaSession, cls) {
   let b;
   try {
-    b = JSON.parse(text4);
+    b = JSON.parse(text5);
   } catch {
     return null;
   }
@@ -131557,7 +131600,7 @@ function makeFetch(hooks = {}) {
           b.ownerMemberId = sessMember;
         }
         if (b.base === null && b.meta && !replayed && promotedType === "inquiry" && Array.isArray(b.files)) {
-          const bm = b.files.find((f11) => f11 && f11.path === "bundle.md" && typeof f11.text === "string");
+          const bm = b.files.find((f12) => f12 && f12.path === "bundle.md" && typeof f12.text === "string");
           if (bm) {
             const want = viaSession ? "human" : "agent";
             const lines = bm.text.split("\n");
