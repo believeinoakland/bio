@@ -43,17 +43,17 @@
  * decision has to be revisited deliberately, with FLEET told. It is NOT decided
  * here; see D-297.)
  *
- * usage:
- *   node tools/deploy-fleet.mjs <member> --instance <slug>
- *   node tools/deploy-fleet.mjs agent-worker --instance biosmoke7 --dry-run
+ * usage (bundler R19, R20; moved from the old process's `tools/` in T19), from the repository root:
+ *   node bio-plane/scripts/deploy-fleet.mjs <member> --instance <slug>
+ *   node bio-plane/scripts/deploy-fleet.mjs agent-worker --instance biosmoke7 --dry-run
  */
 import { readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseJsonc } from "./jsonc.mjs";   /* one parser, shared with release-assemble.mjs */
+import { parseJsonc } from "./jsonc.mjs";   /* R11: one parser, shared with release-assemble.mjs */
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[i + 1] ?? ""); };
 const DRY = argv.includes("--dry-run");
@@ -71,7 +71,7 @@ const die = (code, msg, detail) => {
 };
 
 if (!member) die("NO_MEMBER", "name the fleet member to deploy.",
-  "usage: node tools/deploy-fleet.mjs <member> --instance <slug>");
+  "usage: node bio-plane/scripts/deploy-fleet.mjs <member> --instance <slug>");
 if (!instance) die("NO_INSTANCE",
   "--instance is required and has NO DEFAULT, deliberately.",
   "A default would be a hardcoded instance name, which is the defect (D-292) this tool exists to fix.");
@@ -84,7 +84,7 @@ const memberDir = join(ROOT, member);
 if (!existsSync(join(memberDir, "fleet-member.json"))) {
   die("NOT_A_FLEET_MEMBER",
     `"${member}" carries no fleet-member.json, so it is not a fleet member.`,
-    "The plane is deployed with bio-plane/scripts/deploy.mjs (baton-gated) and the UI with\n" +
+    "The plane is deployed with bio-plane/scripts/deploy.mjs and the UI with\n" +
     "civicos-ui/deploy-ui.mjs. This tool deploys only members that declare themselves one.");
 }
 
@@ -161,7 +161,7 @@ if (DRY) { console.log("\n--dry-run: nothing was deployed."); process.exit(0); }
    resolves `main` relative to the same directory. The tracked config is never
    written to — hardcoding the instance into it is the defect inverted. */
 const genPath = join(memberDir, ".wrangler.deploy.generated.json");
-let status = 1;
+let status = 1;   /* wrangler's own exit status on failure (R20), 1 when it gave none */
 try {
   writeFileSync(genPath, JSON.stringify(cfg, null, 2) + "\n");
   console.log(`\ngenerated: ${member}/.wrangler.deploy.generated.json (temporary)`);
@@ -181,6 +181,7 @@ try {
     { cwd: memberDir, stdio: "inherit", env: { ...process.env, CLOUDFLARE_API_TOKEN: TOKEN } });
   status = 0;
 } catch (e) {
+  if (Number.isInteger(e.status) && e.status !== 0) status = e.status;
   console.error(`\nwrangler deploy FAILED: ${e.message}`);
 } finally {
   rmSync(genPath, { force: true });

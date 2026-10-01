@@ -94,26 +94,29 @@
  * declared part) is NOT driven — it requires hand-editing a generated manifest,
  * and it is stated rather than claimed.
  *
- * usage:
- *   node tools/release-assemble.mjs --dry-run
- *   node tools/release-assemble.mjs --version 0.57.0 --emit-payload <file>
- *   node tools/release-assemble.mjs --version 0.57.0 --sign
+ * usage (bundler R22, R23; moved from the old process's `tools/` in T19), from the repository root:
+ *   node bio-plane/scripts/release-assemble.mjs --dry-run
+ *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --emit-payload <file>
+ *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --sign
+ *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --fleet-sig <file>
  */
-import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
   REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256,
-} from "../bio-plane/scripts/fleet-bundle.mjs";
+} from "./fleet-bundle.mjs";
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
    on `fleetStatement`. This file defined its own copy for exactly one commit. */
-import { NS_FLEET, fleetStatement } from "../bio-plane/src/sshsig.mjs";
+import { NS_FLEET, fleetStatement } from "../src/sshsig.mjs";
 import { parseJsonc } from "./jsonc.mjs";
-import { resolveVersion } from "../bio-plane/scripts/resolve-version.mjs";
-import { signSshsig } from "./sign-sshsig.mjs";
+import { resolveVersion } from "./resolve-version.mjs";
+/* signatures' release signer (its R33). Read through its `tools/` path, which
+   signatures keeps as a re-export while it moves the file in T19. */
+import { signSshsig } from "../../tools/sign-sshsig.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[i + 1] ?? ""); };
@@ -122,6 +125,7 @@ const SIGN = argv.includes("--sign");
 const EMIT = flag("--emit-payload");
 
 const RELEASE_DIR = join(REPO_ROOT, "release");
+const RELEASE_JSON = join(RELEASE_DIR, "RELEASE.json");
 
 const die = (code, msg, detail) => {
   console.error(`REFUSED [${code}]: ${msg}`);
@@ -165,7 +169,12 @@ for (const m of all) {
       runnable.reason);
   }
 
-  const { findings, built } = await verifyFresh(m, committed);
+  const { checked, reason, findings, built } = await verifyFresh(m, committed);
+  /* The build itself can fail here with every vendored input present: that is
+     the same skipped guard, never a pass (R7). */
+  if (!checked) die("GUARD_CANNOT_RUN",
+    `${m.name}: the byte-identity arm could not run here, and a release will not be assembled on a skipped guard.`,
+    reason);
   if (findings.length) {
     die("STALE_OR_UNINSTALLABLE", `${m.name} did not pass the fleet build guard.`,
       findings.map((f) => "  - " + f).join("\n"));
@@ -298,8 +307,7 @@ const version = flag("--version") || resolveVersion().version;
    promise about bytes; re-using one is the release-channel form of the record
    claiming more than it can support. Bump the version instead. */
 {
-  const prevPath = join(RELEASE_DIR, "RELEASE.json");
-  const prev = existsSync(prevPath) ? JSON.parse(readFileSync(prevPath, "utf8")) : null;
+  const prev = existsSync(RELEASE_JSON) ? JSON.parse(readFileSync(RELEASE_JSON, "utf8")) : null;
   const planeFresh = entries.find((e) => e.member === "bio-plane");
   if (prev && prev.version === version && prev.sha256 && prev.sha256 !== planeFresh.sha256) {
     die("VERSION_ALREADY_RELEASED",
@@ -338,8 +346,7 @@ if (DRY) {
 
 /* ---- signing, and the acceptance is STOCK ssh-keygen ---------------------- */
 
-const existing = existsSync(join(RELEASE_DIR, "RELEASE.json"))
-  ? JSON.parse(readFileSync(join(RELEASE_DIR, "RELEASE.json"), "utf8")) : {};
+const existing = existsSync(RELEASE_JSON) ? JSON.parse(readFileSync(RELEASE_JSON, "utf8")) : {};
 
 const NS_RELEASE = "bio-release";
 
@@ -349,7 +356,7 @@ const NS_RELEASE = "bio-release";
  *  2026-09-13, it fails with "Couldn't load public key … No such file or
  *  directory". The doctrine is unaffected: stock ssh-keygen remains the
  *  ACCEPTANCE authority and `verifyWith` below is run on everything signed here,
- *  including immediately after signing it. See tools/sign-sshsig.mjs. */
+ *  including immediately after signing it. See signatures' sign-sshsig.mjs. */
 function signWith(seed, bytes, ns) {
   try { return signSshsig(seed, bytes, ns); }
   catch (e) {
@@ -361,6 +368,9 @@ function signWith(seed, bytes, ns) {
 
 /** Stock `ssh-keygen -Y verify` is the acceptance authority, here as everywhere. */
 function verifyWith(signer, sig, bytes, ns) {
+  /* No signer named in RELEASE.json is no key to accept anything for: a refusal, never a crash. */
+  if (typeof signer !== "string" || !signer.trim())
+    return { ok: false, reason: "release/RELEASE.json names no `signer`, so no key can accept the signature" };
   const dir = join(tmpdir(), "bio-ver-" + Date.now() + "-" + Math.random().toString(36).slice(2));
   mkdirSync(dir, { recursive: true });
   const allowed = join(dir, "allowed"), sigPath = join(dir, "p.sig");
@@ -372,6 +382,7 @@ function verifyWith(signer, sig, bytes, ns) {
       { input: bytes, stdio: ["pipe", "pipe", "pipe"] });
     return { ok: true, reason: null };
   } catch (e) { return { ok: false, reason: String(e.stderr || e.message).trim() }; }
+  finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
 let fleetSig = flag("--fleet-sig") ? readFileSync(flag("--fleet-sig"), "utf8") : null;
@@ -424,7 +435,8 @@ if (!fleetSig) die("NO_FLEET_SIG", "no fleet signature supplied.",
 
 /* ---- write the release ---------------------------------------------------- */
 
-for (const e of entries) copyFileSync(e.from, join(RELEASE_DIR, e.asset));
+mkdirSync(RELEASE_DIR, { recursive: true });
+for (const e of entries) copyFileSync(e.from, join(RELEASE_DIR, e.asset));   /* the plane's is bio-plane.bundled.mjs */
 /* Parts are published under the member's own name so two members declaring the
    same relative path cannot collide in one flat directory. */
 for (const e of entries) {
@@ -434,7 +446,6 @@ for (const e of entries) {
     copyFileSync(part.from, dest);
   }
 }
-copyFileSync(planeEntry.from, join(RELEASE_DIR, "bio-plane.bundled.mjs"));
 
 const out = {
   version,
@@ -453,6 +464,6 @@ const out = {
        parts: (parts || []).map(({ path, type, sha256: ps, bytes: pb }) => ({ path, type, sha256: ps, bytes: pb })) })),
   fleetSig,
 };
-writeFileSync(join(RELEASE_DIR, "RELEASE.json"), JSON.stringify(out, null, 2) + "\n");
+writeFileSync(RELEASE_JSON, JSON.stringify(out, null, 2) + "\n");
 console.log(`\nwrote release/RELEASE.json — ${version}, plane + ${fleetEntries.length} member(s)`);
 console.log("both signatures were verified with stock ssh-keygen before this file was written.");

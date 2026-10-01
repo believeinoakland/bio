@@ -1,5 +1,6 @@
-/* Taken into the product from the old process's tools/jsonc.mjs (T4, legacy-index, N12): `deploy.mjs` and
-   `resolve-version.mjs` read `wrangler.jsonc` through it, and tools/ is not product. Unchanged below this note. */
+/* bundler R11: the module's one JSONC reader (T19 retired the old process's `tools/jsonc.mjs` copy).
+   `deploy.mjs`, `resolve-version.mjs`, `deploy-fleet.mjs` and `release-assemble.mjs` all read
+   `wrangler.jsonc` through it. */
 /* Read a `wrangler.jsonc` — JSON with comments — without corrupting its strings.
  *
  * ONE COPY, because two tools now read the same configs for the same reason:

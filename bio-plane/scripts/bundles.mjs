@@ -43,7 +43,7 @@
  * **HOW IT REBUILDS: `npm run build` IN THE MEMBER'S OWN DIRECTORY**, never
  * `writeMember` from here. Two members have a PRE-STEP that a direct call would
  * silently skip — the plane's `embed:sign` regenerates `src/signpage.mjs` from
- * `tools/sign-release.html`, and `ocr-worker`'s build regenerates
+ * `src/sign-release.html`, and `ocr-worker`'s build regenerates
  * `src/tesslib.mjs` from its vendor — and a rebuild that skipped them would leave
  * a generated source stale while reporting the bundle fresh, which is this
  * defect's own shape one layer down. `package.json`'s `build` script is the ONE
@@ -57,7 +57,7 @@
  *     byte-identity arm in `fleetbundles.test.mjs` is what covers that half, and
  *     it needs the install.
  *   - A GENERATED input whose generator's input moved without the render being
- *     re-run — `tools/sign-release.html` against `src/signpage.mjs`. The input
+ *     re-run — `src/sign-release.html` against `src/signpage.mjs`. The input
  *     hashes cannot see it (the render is what is hashed), and the gate closes
  *     that loop by re-rendering in memory. This command closes it a different
  *     way, by running the member's real build, whose pre-step re-renders; the
@@ -70,8 +70,9 @@
  * NEGATIVE CONTROL: declared and run by `bio-plane/test/bundles.test.mjs`, whose
  * header carries the arms and their measured results.
  *
- *   node tools/bundles.mjs              rebuild every stale bundle, say which
- *   node tools/bundles.mjs --check      report only; write nothing; 0 all fresh, 1 stale
+ * From the repository root (bundler R21; moved from the old process's `tools/` in T19):
+ *   node bio-plane/scripts/bundles.mjs              rebuild every stale bundle, say which
+ *   node bio-plane/scripts/bundles.mjs --check      report only; write nothing; 0 all fresh, 1 stale
  */
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -79,13 +80,13 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
-/* The library lives in `bio-plane/scripts/` because `esbuild` does (its header
-   says why), so it is imported LAZILY and its absence is NAMED: a fresh checkout
+/* The library needs `esbuild` from `bio-plane/node_modules` (its header says
+   why), so it is imported LAZILY and its absence is NAMED: a fresh checkout
    with no install would otherwise fail here with a bare ERR_MODULE_NOT_FOUND for
    a package the reader never asked for. */
 export async function library() {
   try {
-    return await import("../bio-plane/scripts/fleet-bundle.mjs");
+    return await import("./fleet-bundle.mjs");
   } catch (e) {
     const err = new Error(
       "bundles: the fleet bundle library could not be loaded — " + e.message
@@ -154,7 +155,7 @@ export async function run({ repoRoot = null, check = false, plane = true, log = 
   }
   log(`bundles: ${stale.length} of ${members.length} bundle(s) are STALE — ${stale.map((r) => r.name).join(", ")}`);
   if (check) {
-    log(`bundles: --check, so nothing was rebuilt. Run \`node tools/bundles.mjs\` to rebuild them.`);
+    log(`bundles: --check, so nothing was rebuilt. Run \`node bio-plane/scripts/bundles.mjs\` to rebuild them.`);
     return 1;
   }
 
