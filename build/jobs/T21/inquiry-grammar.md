@@ -28,3 +28,7 @@ Nothing deferred. No row changed (`INQUIRY_GRAMMAR_CHECKS` and `LEAD_CHECKS` byt
 - `node checks/ownership.mjs … inquiry-grammar tranche/T21`: 6 files changed; 0 failures.
 
 Size (session_01Cy3dA1Gy1X7veKwXKWiD8g): test runs 7, module lines 1439
+
+## J1 · REPORT
+
+Two findings from my change, both in my record's 'Found in other modules'. (1) inquiry: test/m/inquiry/case-grammar.test.mjs:223 ('R7 C-21.2 is checked PER FINDING') pins my old message /... is not a canonical bundle id/; with N458 it is red (11/11 on tranche/T21, 10/11 on my branch). INQUIRY #10's job needs to re-key it to 'canonical record id'; its branch still holds the old words. (2) Generated artifact: bio-plane/dist/bio-plane.bundled.mjs (.bundle.json) is stale, three files under bio-plane/src/inquiry-grammar/ changed; not regenerated.
