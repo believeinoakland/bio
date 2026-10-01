@@ -2278,92 +2278,6 @@ export function lifecycleFindings(entries, i) {
 // C-18.5 is the F5 injection-posture gathering.json field grammar.
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// information@2 (M3' member submissions): the register contract extended by
-// the schema bump taken once. C-18.1 gains the @2 shapes (mandatory register,
-// capture encoding, custody for member-origin documents, attestation_attempts,
-// parts, derived, releases); C-18.6 verifies registered capture hashes against
-// stored bytes (decode-at-promotion means bytes at rest hash directly; legacy
-// base64 decodes first); C-18.7 stages the doctrine 4a release signature
-// (detached SSH signature, ssh-keygen -Y, namespace bio-release) as a warning
-// until member keys are distributed. Scoped by schema stamp: information@1
-// bundles keep the v1 contract per spec Section 8 check versioning.
-// ---------------------------------------------------------------------------
-
-const CAPTURE_ENCODINGS = ['utf8', 'base64', 'binary'];
-const RAW_SHA_RE = /^[0-9a-f]{64}$/;
-
-/** Stored value to hashable input: base64 decodes to raw bytes; utf8 and
- *  binary hash as stored (ctx.sha256 accepts string or bytes, so the Apps
- *  Script embed, which reads text files as strings, needs no TextEncoder). */
-function storedToHashable(v, encoding) {
-  if (encoding === 'base64') return b64ToBytes(asText(v));
-  return v;
-}
-
-async function checkInfo2Contract(ctx, findings) {
-  if (ctx.fm?.object_type !== 'information' || ctx.fm?.schema !== 'information@2') return;
-  const raw = ctx.files.get('data/provenance.json');
-  if (!raw) {
-    return;
-  }
-  let reg; try { reg = JSON.parse(asText(raw)); } catch { return; } // C-14.3 reports
-  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
-  if (!docs) return; // C-18.1 v1 shape check reports
-  // C-18.7 (warn): the staged posture until member keys are distributed.
-  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
-  const rels = Array.isArray(reg.releases) ? reg.releases : [];
-  for (const e of hist) {
-    if (!e || e.from_state !== 'collected' || e.to_state !== 'verified') continue;
-    const signed = rels.some(r => r && r.transition === e.timestamp && r.signature_file);
-    if (!signed) {
-      findings.push(f('C-18.7', 'warn', `collected -> verified transition at ${e.timestamp} has no signed release record; the target mechanism is a detached SSH signature over the transition record (ssh-keygen -Y sign, namespace bio-release; doctrine 4a)`,
-        ['sign the transition record and add the releases[] entry with signature_file, signer, namespace', 'record the interim member review of the release log in Review Notes']));
-    }
-  }
-  // C-18.6 (error): registered capture hashes verify against stored bytes.
-  // 1.11.0 (KICKOFF-P2M6 4a): byte-stored parts stream through the
-  // incremental SHA-256 one part at a time, decoded per part for legacy
-  // base64, so peak residency is a single part, never the reassembled
-  // whole. Text-stored parts keep the join path (Apps Script text reads
-  // are strings and hash natively over UTF-8; no TextEncoder dependency).
-  for (let i = 0; i < docs.length; i++) {
-    const d = docs[i]; if (!d || typeof d !== 'object') continue;
-    const cap = d.capture && typeof d.capture === 'object' ? d.capture : {};
-    if (!RAW_SHA_RE.test(cap.sha256 || '') || !CAPTURE_ENCODINGS.includes(cap.encoding)) continue;
-    let hashable = null;
-    let actual = null;
-    try {
-      if (Array.isArray(d.parts) && d.parts.length && d.parts.every(p => p && p.file && ctx.files.has(String(p.file)))) {
-        const stored = d.parts.map(p => ctx.files.get(String(p.file)));
-        const textStored = v => cap.encoding !== 'base64' && typeof v === 'string';
-        if (stored.every(v => textStored(v))) {
-          hashable = stored.join('');
-        } else if (stored.every(v => !textStored(v))) {
-          const h = createSha256();
-          for (const v of stored) h.update(cap.encoding === 'base64' ? b64ToBytes(asText(v)) : v);
-          actual = h.hex();
-        } else {
-          throw new Error('parts mix text and binary storage');
-        }
-      } else if (d.file && ctx.files.has(String(d.file))) {
-        hashable = storedToHashable(ctx.files.get(String(d.file)), cap.encoding);
-      }
-    } catch (err) {
-      findings.push(f('C-18.6', 'error', `provenance documents[${i}]: stored content could not be decoded for hash verification (${err && err.message}) (@2)`));
-      continue;
-    }
-    if (actual === null) {
-      if (hashable === null) continue;
-      actual = await ctx.sha256(hashable);
-    }
-    if (actual !== cap.sha256) {
-      findings.push(f('C-18.6', 'error', `provenance documents[${i}]: stored bytes hash ${actual.slice(0, 12)}… but the register records ${String(cap.sha256).slice(0, 12)}…; silent content mutation fails the gate (@2)`,
-        ['restore the capture from history', 'correct the register only if the recorded hash was wrong at intake, with a Session Log entry']));
-    }
-  }
-}
-
 /* `checkInboxGrammar`, the inbox task grammar (D-98, INBOX-GRAMMAR.md), and the task vocabularies only it read
    stood here until T15 (legacy-checks, N325). The grammar is queue's, a promotion check and an audit check queue
    registers, held whole in `src/queue/checks.mjs` since T14; this copy ran in no gate after T14. */
@@ -2384,7 +2298,6 @@ export { EXTENSION_ARMS } from '../src/record-grammar/index.mjs';
 
 export const LEGACY_GRAMMARS = Object.freeze([
   { module: 'legacy-checks', ids: ['C-2.7'], arm: checkInformationExtension },
-  { module: 'legacy-checks', ids: ['C-18.6', 'C-18.7'], arm: checkInfo2Contract },
   { module: 'legacy-checks', ids: ['C-6.1'], arm: (ctx, findings) => {
     supersedesEdgeFindings(ctx.fm, findings);
     divisionDisclosureFindings(ctx.fm, findings);

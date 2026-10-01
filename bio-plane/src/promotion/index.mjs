@@ -25,6 +25,7 @@ import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHE
 import { recordChecks } from "./record-checks.mjs";
 import { MECHANICAL_FIELD_SETS } from "./history.mjs";
 import { projectNameKey } from "./names.mjs";
+import { INFO2_GRAMMAR } from "./info2.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences,
          withProducingGroup } from "./text.mjs";
 import { runCaseGate as runCaseCatalogue, runGate as runBundleGate } from "../gate.mjs";
@@ -38,6 +39,8 @@ export { recordChecks } from "./record-checks.mjs";
 export { projectNameKey, checkProjectNameUniqueness } from "./names.mjs";
 export { withProducingGroup } from "./text.mjs";
 export { MECHANICAL_FIELD_SETS } from "./history.mjs";
+/* R55 (K773): C-18.6/.7, the information@2 register grammar, this module's since T19 and registered with record-core. */
+export { INFO2_GRAMMAR, checkInfo2Contract } from "./info2.mjs";
 /* R49 (K285): the one site of LISTENER_MALFORMED and LISTENER_DECLARED is membership's (its R81), re-exported for later
    modules, which call either spelling of the one function. */
 export { listenerRefusal } from "../membership/index.mjs";
@@ -1140,8 +1143,21 @@ export function promotionOf(host, deps) {
     /* record-core R59: the moved checks join the audit, with the caller's release registry from its context. */
     record.registerAuditCheck("promotion", ({ folderName, files, sha256 }, context) =>
       recordChecks({ folderName, files, releaseRegistry: (context && context.releaseRegistry) || null, sha256 }));
+    registerInfo2Grammar(record);
   }
   return p;
+}
+
+/* R55 (K773): the information@2 register grammar, registered with record-core's seam (its R67) once per record, when
+   the instance is first made, so the audit and the gate run it in its slot. A record with no seam (a test's stand-in)
+   is left alone; a refusal is a defect of the wiring (another module holding C-18.6/.7, or a second registration) and
+   throws, as capture's does, rather than leave the grammar silently unrun. */
+function registerInfo2Grammar(record) {
+  if (!record || typeof record.registerGrammar !== "function") return;
+  const answer = record.registerGrammar("promotion", INFO2_GRAMMAR);
+  if (answer && answer.ok === false)
+    throw new Error(`promotion: record-core refused the information@2 grammar: ${answer.reason}`
+                    + `${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
 /** K64, record-core R59 (K130): record-core's audit pass (R18–R20), which runs the checks this module took from the

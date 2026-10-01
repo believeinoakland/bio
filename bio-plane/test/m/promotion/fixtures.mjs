@@ -80,6 +80,8 @@ export function makeRecord() {
      *  answers them. A test sets `grammarList`. */
     grammarList: [],
     grammars() { return record.grammarList; },
+    /** record-core R67: a registration joins `grammarList` (R55's is promotion's own, made when it is first reached). */
+    registerGrammar(module, { ids, arm }) { record.grammarList.push({ module, ids, arm }); return { ok: true, module, ids }; },
     /** record-core R59: the audit checks a module registers, kept for a test to run. */
     auditChecks: [],
     registerAuditCheck(module, check) { record.auditChecks.push({ module, check }); return { ok: true, module }; },
