@@ -30,3 +30,14 @@ session_01NBsR9ExEChyivCpdRoXPVh,job,bias,11714950,210178,625,24247,,8,1813
 session_011739a9HGE4YavRmeCPffLH,job,observation-log,15683087,271560,140,36010,,6,3100
 session_01P2p1ii3vyq4yoTizW7hkpH,job,query-language,4678420,183300,64,10825,,2,2732
 session_01ChtF63P7fpv844FiEpcFRv,job,retrieval,10777707,182734,130,34160,,14,2345
+session_01TX5AkxzGdEht5xNHpYg8od,job,inquiry-grammar,25090564,291743,6470,86426,,9,1440
+session_01HTKr1rwoRp8yU8xwfxzPbx,job,inquiry,47262447,414588,801,88725,,25,3772
+session_01Jde3QCM77xBQXshNfBhmf8,job,citation,4498108,142261,72,14818,,2,1043
+session_01JEsrTU8WsdFTZH5jPHiT6F,job,basis-versions,25012273,309954,206,60845,,24,3488
+session_01SjzXY7cP7WiFCBXg3KiFsc,job,strength,6156380,136100,87,16996,,5,1553
+session_01QMBecKS8tAqi8UR6HBja3o,job,contradiction,7967586,194817,6377,18380,,6,3240
+session_01PtMaesRvgrZDSjJDZU62p8,job,ai-runs,15531543,248793,144,45823,,9,2714
+session_01M6NtmEV4tfiZ4TcHB6Fo5Z,job,run-productions,11658977,187518,6899,25219,,5,1342
+session_01JdoMamVEfLHhKsS3sNXRZi,job,capture-requests,11407586,186206,131,26714,,14,1593
+session_01CzVxoTSdmzkFH6wddsCLyf,job,skills,10647001,184982,6380,31558,,5,1703
+session_016iPtbmv6EzkgnPETAiejP6,job,agent-worker,41225912,483974,6490,79336,,48,3763
