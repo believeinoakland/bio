@@ -22,3 +22,7 @@ Size (session_011v92rStaFe1QmyF26UqmkU): test runs 1, module lines 837
 ## J1 · REPORT
 
 build/requirements/sources.md Uses still names legacy-checks for requiredArgument and isMachineIdentity. The module calls no requiredArgument, and isMachineIdentity now comes from record-grammar (its R15). The line should name record-grammar and drop legacy-checks; modules.json can drop legacy-checks from sources' uses. Both files are yours.
+
+## J2 · COMPLETE
+
+B1 applied: sources/index.mjs:31 imports isMachineIdentity from record-grammar (same binding). Sources tests 24/24 pass; format, architecture, coverage (15/15), ownership all 0 failures. Record at fb85a84713+ on job/T19/sources.
