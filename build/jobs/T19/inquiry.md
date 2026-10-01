@@ -1,6 +1,6 @@
 # inquiry (T19)
 
-**Status** · session_01HTKr1rwoRp8yU8xwfxzPbx · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01HTKr1rwoRp8yU8xwfxzPbx · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
@@ -24,3 +24,44 @@ For other modules:
 3. **promotion's stamp**: C-66.5's `where` changed and its row moved family (catalogue → `src/inquiry/checks.mjs`).
 
 Still to do in stage two (after inquiry-grammar merges): the grammar face's inquiry-grammar names and `checkBundle`, R11's synchronous entry arm, R38's rows read from inquiry-grammar.
+
+## J3 · COMPLETE
+
+**Complete**, both stages, `job/T19/inquiry` @ d4002afe51 (tranche/T19 merged after B4; stage one merged early, K815).
+
+**Entries applied.** Stage one (J2): N136's rest, N422, R50/C-66.5, K783, the record-grammar, promotion and content re-points, `contentIdFor` deleted, comments re-worded. Stage two (B4): the grammar face re-pointed (`grammar.mjs`: inquiry-grammar for `GROUND_LABEL_RE`, `checkInquiryBasis`, `checkLegExtentGrammar`, `leadLegFindings`, `supersedesEdgeFindings`, `divisionDisclosureFindings`, `checkInquiryExtension`, the rows; record-grammar for `STATES`, `BASIS_ROLES`, the titles and `checkBundle`); `checkInquiryEntry` runs `INQUIRY_GRAMMARS` when given no grammars; R11's entry arm synchronous at the write; R38's rows read from inquiry-grammar; `src/inquiry` imports nothing from the catalogue now. One more of my own: `divide`'s pre-flight judges each child by the full entry arm, so R23's `CHILD_REFUSED` covers inquiry-grammar R1–R2 as it says. `checkEntry` fills any inquiry-grammar slot no registration claims with its own arm (a record nothing registered it with still judges the inquiry; the composition root registers it first in `store.mjs`).
+
+**Rs met and their tests (for the marks, K775 (6)):**
+- R11: `promotion.test.mjs` "R11 K681 the entry arm at the write", "R11 check: the leg grammar…"; `facts.test.mjs` "R11 R17 …".
+- R36: `facts.test.mjs` "R36 R40 N136's rest…"; `promotion.test.mjs` "R36 …".
+- R38: `grammar.test.mjs` "R4 R5 R8 R9 R17 R38 the grammar face re-exports…"; `contradiction.test.mjs` (C-2.11–C-2.18).
+- R40: `promotion.test.mjs` "R40 R43 the read contract…", and "R12 projection…".
+- R42: `raise.test.mjs` (four tests, N422 under a caller's transaction, staled, dispose, divide), plus the existing dispose, divide and stale arms.
+- R50: `surfaced.test.mjs` (four tests).
+- K783 (record-core R69): `earned.test.mjs` "R13 K783 the earned registry is this module's audit context".
+
+**Deferred:** nothing.
+
+**In other modules** (R11 now enforces inquiry-grammar R1 at every inquiry write, as adopted; each fixture or act below writes an inquiry the entry requirements refuse; red after this merge, green before):
+1. **project-stage** (2 tests: R2, R4) and **consequences** (7 tests: R5, R8, R9 arms): their fixtures promote a `concluded` inquiry with no conclusion ("concluded state requires a non-empty conclusion"). Their fixtures need a conclusion, a falsifier (or the override pair) and a leg.
+2. **affordances** (2 tests): R19's `consequencerevise`/`addressedrecord` arm, the same fixture cause; and R8 R18's `contradictionresolve` arm, where `contradiction`'s resolve concludes a contradiction inquiry resting on no basis leg ("concluded state requires at least one basis leg"). Either affordances' fixture inquiry needs a leg, or contradiction's resolve concludes a question that rests on nothing, which C-2.8 refuses (against contradiction's requirements, if its resolve may conclude a leg-less question).
+3. Every other module using inquiry: results identical before and after (19 modules).
+
+**Tests and checks:** `node --test bio-plane/test/m/inquiry/`: 157 tests, 156 pass, 0 fail, 1 todo. No layer tests are named in the manifest. The 22 modules that use inquiry were run before and after on the same tranche: the only differences are the 11 above. `format`: 0 failures; `architecture`: 0 failures (25 files, 84 imports); `coverage`: 47 of 47 live ids; `ownership`: 0 failures (this stage touches no legacy file; stage one's legacy-store 0 added/41 removed, legacy-checks 0 added/54 removed).
+
+Size (session_01HTKr1rwoRp8yU8xwfxzPbx): test runs 24, module lines 3772
+
+## J4 · COMPLETE
+
+**Complete again after B5** (B4 was done in J3), `job/T19/inquiry` @ 734483fb6f, tranche/T19 merged. No code change was needed: no caller loses a version finding (P1), so none stays on the catalogue's `checkInquiryBasis`, and `src/inquiry` imports nothing from basis-versions.
+
+**How each former `checkInquiryBasis` caller gets the version block's findings now.** Each is covered by basis-versions' R6 promotion check (`src/basis-versions/index.mjs`:184–223, registered at :1635). It runs `basisVersionFindings` on every non-replay inquiry write, `BASIS_VERSION_REFUSED`, inside the same promotion transaction, after inquiry's step (module order):
+1. **`check()` (R11, the write; now `checkInquiryExtension`):** the same promotion runs basis-versions' R6 next. A write with a malformed `basis_versions` block answers `BASIS_VERSION_REFUSED` (C-25.2), nothing written. Before, it answered `BASIS_REFUSED` with the C-25 finding inside: same finding, now under basis-versions' own refusal.
+2. **`divide`'s pre-flight (R23):** the parent's revision and each child are promoted inside one `record.transact` (R26), so R6 judges each of them. With a version block that fails (a parent replayed with one), the division answers `BASIS_VERSION_REFUSED` from the parent's promotion; no child exists and the parent stays `open` (R26: all or none). Before, the pre-flight answered `CHILD_REFUSED`. The version block is not among R23's `CHILD_REFUSED` grounds (inquiry-grammar R1–R2, R4–R9), so it is refused at the write instead.
+3. **`ground`'s candidate (R27, R4–R8):** the regrouped document is promoted, so R6 judges it. The same parent answers `BASIS_VERSION_REFUSED`, with no `grounds` written. Version findings are not among R27's `BASIS_REFUSED` grounds (R4–R8).
+
+**How this was confirmed:** a scratch drive (not a module test, since inquiry may not use basis-versions, P4) of the inquiry fixture with `basisVersionsOf` registered and migrated. Results: a write answers `BASIS_VERSION_REFUSED ["C-25.2"]`; a divide answers `BASIS_VERSION_REFUSED` with no child head and the parent open; a ground answers `BASIS_VERSION_REFUSED` with no grounds written. Basis-versions' own suite holds R6 at the interface.
+
+**Tests and checks re-run (steps 5–7):** `node --test bio-plane/test/m/inquiry/`: 157 tests, 156 pass, 0 fail, 1 todo. `format`: 0 failures; `architecture`: 0 failures; `coverage`: 47 of 47; `ownership`: 0 failures. Everything in J3 stands: the Rs met with their tests, nothing deferred, and the 11 tests in project-stage, consequences and affordances that the R11 write check turns red.
+
+Size (session_01HTKr1rwoRp8yU8xwfxzPbx): test runs 25, module lines 3772

@@ -185,3 +185,23 @@ test("R38 the rows the module mints stay in the catalogue with their ids: C-54.1
 /* R31 (MK-5) is NOT YET MET, deferred by K181: no module defines an opinion element or its id yet, so there is
    nothing a refusal could name. Its test arrives with the element (case-authoring or publication). */
 test.todo("R31 a leg naming an opinion case element is refused by name (not yet met: MK-5; no module defines an opinion element or its id yet, K181)");
+
+test("R4 R5 R8 R9 R17 R38 the grammar face re-exports inquiry-grammar's and record-grammar's names as the same bindings, and reads inquiry-grammar's rows, never a copy", async () => {
+  const face = await import("../../../src/inquiry/index.mjs");
+  const IG = await import("../../../src/inquiry-grammar/index.mjs");
+  const RG = await import("../../../src/record-grammar/index.mjs");
+  for (const n of ["checkInquiryBasis", "checkLegExtentGrammar", "leadLegFindings", "supersedesEdgeFindings",
+                   "divisionDisclosureFindings", "GROUND_LABEL_RE", "checkInquiryExtension"])
+    assert.equal(face[n], IG[n], n);
+  for (const n of ["BASIS_ROLES", "INQUIRY_TITLE_MAX", "deriveInquiryTitle", "inquiryQuestionOf"]) assert.equal(face[n], RG[n], n);
+  assert.equal(face.INQUIRY_MACHINE, RG.STATES.inquiry);
+  assert.equal(INQUIRY_ROWS, IG.INQUIRY_GRAMMAR_ROWS, "R38: inquiry-grammar's rows, read");
+  for (const code of ["NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND", "LEAD_NOT_EVIDENCE"])
+    assert.ok(INQUIRY_ROWS[code] && INQUIRY_ROWS[code].check && INQUIRY_ROWS[code].translation, code);
+  /* R17: with no grammars named, the face judges with inquiry-grammar's own arms */
+  const bad = inquiryMd("INQ-2026-0009-z").replace("surfaced_by: human", "surfaced_by: robot");
+  assert.deepEqual(await checkInquiryEntry(bad), await checkInquiryEntry(bad, { grammars: IG.INQUIRY_GRAMMARS }));
+  assert.ok((await checkInquiryEntry(bad)).some((x) => x.check === "C-2.8"));
+  assert.ok(!(await checkInquiryEntry(bad, { grammars: [] })).some((x) => ["C-2.8", "C-6.1", "C-15.1"].includes(x.check)),
+    "an empty list judges nothing of the inquiry's: it is the caller's list");
+});
