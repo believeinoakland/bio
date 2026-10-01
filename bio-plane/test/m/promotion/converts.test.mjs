@@ -6,8 +6,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { makePromotion, doc, infoDoc, create, revise, sha, T0, T1 } from "./fixtures.mjs";
-import { GATE_VERSION, CATALOG_VERSION, recordChecks, PROMOTED_TYPE_CHECKS } from "../../../src/promotion/index.mjs";
-import { PROJECT_ID_CHECKS, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { GATE_VERSION, CATALOG_VERSION, recordChecks, PROMOTED_TYPE_CHECKS, PROJECT_MINT_CHECKS } from "../../../src/promotion/index.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const ID = "INFO-2026-0001";
 const pd = (title, extra = {}) => doc({ object_type: "project", title, current_state: "forming", created: T0, last_updated: T0, ...extra });
@@ -82,8 +82,8 @@ test("R19, R38 (project-mint): PROJECT_ID_SUPPLIED and PROJECT_ID_IN_BYTES answe
   for (const meta of [{}, { object_type: "information" }]) {
     const a = p.promote({ ...mk("Other"), bundleId: held, meta }), b = p.promote({ ...mk("Other"), bundleId: never, meta });
     assert.deepEqual(a, b);
-    assert.deepEqual([a.reason, a.check, a.translation], ["PROJECT_ID_SUPPLIED", PROJECT_ID_CHECKS.PROJECT_ID_SUPPLIED.check,
-                                                          PROJECT_ID_CHECKS.PROJECT_ID_SUPPLIED.translation]);
+    assert.deepEqual([a.reason, a.check, a.translation], ["PROJECT_ID_SUPPLIED", PROJECT_MINT_CHECKS.PROJECT_ID_SUPPLIED.check,
+                                                          PROJECT_MINT_CHECKS.PROJECT_ID_SUPPLIED.translation]);
     assert.doesNotMatch(JSON.stringify(a), /PROJ-2026-/);
   }
   /* Named in the bytes. */
@@ -91,7 +91,7 @@ test("R19, R38 (project-mint): PROJECT_ID_SUPPLIED and PROJECT_ID_IN_BYTES answe
   const bh = inBytes(held), bn = inBytes(never);
   assert.deepEqual(bh, bn);
   assert.deepEqual([bh.reason, bh.check], ["PROJECT_ID_IN_BYTES", "C-59.2"]);
-  assert.equal(bh.translation, PROJECT_ID_CHECKS.PROJECT_ID_IN_BYTES.translation);
+  assert.equal(bh.translation, PROJECT_MINT_CHECKS.PROJECT_ID_IN_BYTES.translation);
   assert.doesNotMatch(JSON.stringify(bh), /PROJ-2026-/);
   /* No front matter to write into: refused by name. */
   const nofm = p.promote({ ...mk("Other"), files: [{ path: "bundle.md", text: "no front matter" }], meta: { object_type: "project" } });

@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../../../src/promotion/index.mjs";
-import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { doc, T0, makePromotion } from "./fixtures.mjs";
 
 const ID = "INFO-2026-0001-report";
@@ -13,7 +13,7 @@ const md = (over = {}) => doc({ id: ID, object_type: "information", schema: "inf
 const base = (image, over = {}) => ({ bundleId: ID, image, knownIds: new Set([ID]), hasCapture: async () => ({ present: true }),
   registers: [], releaseRegistry: null, publishedRegistry: null, publishedCaseRegistry: null, earnedRegistry: null, ...over });
 
-/* What the catalogue itself says about the same image, as R27 defines the inputs. */
+/* What record-grammar's checkBundle says about the same image, as R27 defines the inputs (no grammars passed). */
 async function catalogue(image, knownIds = new Set([ID])) {
   const files = new Map(), elided = new Set();
   for (const [p, v] of Object.entries(image)) {
@@ -28,7 +28,7 @@ async function catalogue(image, knownIds = new Set([ID])) {
   return findings;
 }
 
-test("R27: runGate runs the whole bundle catalogue over the image: text entries are files, blob references are elided and never read, knownIds resolves references", async () => {
+test("R27: runGate runs checkBundle over the image: text entries are files, blob references are elided and never read, knownIds resolves references", async () => {
   const images = [
     { "bundle.md": md() },
     { "bundle.md": md({ id: "INFO-2026-0009-other" }) },
@@ -181,8 +181,10 @@ test("R27 (§1b): the gate passes the registered grammars to the catalogue: a gr
       earnedRegistry: null }, { grammars });
     return findings.filter((f) => f.severity === "error").map((f) => [f.check, f.message]);
   };
+  /* C-2.7's slot is capture's grammar, which every product caller registers (K767): the test registers a grammar in
+     that slot, as capture does, and never leans on the catalogue's held copy, which fills the slot only for a caller
+     registering none. (This module's tests cannot import capture, a later layer, so `claim` stands in for it.) */
   const builtIn = (await runGate(base(image))).findings.map((f) => [f.check, f.detail]);
-  assert.ok(builtIn.some(([c]) => c === "C-2.7"), "the built-in information arm judges this document");
   /* Through promotion's instance: the record's registrations, and no caller's. */
   const { p, record } = makePromotion();
   record.grammarList = [claim, extra];

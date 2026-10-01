@@ -16,28 +16,30 @@
  */
 
 import { parseFrontmatter, normalizeType, vocabFor, STATES,
-         deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity,
-         ACT_SHAPE_CHECKS, PROJECT_ID_CHECKS,
-         PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
-         CUSTODIAL_CHECKS, REGISTRATION_CHECKS } from "../../checks/bio-checks.mjs";
+         deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
-import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
-import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "./checks.mjs";
+import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER, CUSTODIAL_CHECKS } from "../membership/index.mjs";
+import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
+         PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { MECHANICAL_FIELD_SETS } from "./history.mjs";
 import { projectNameKey } from "./names.mjs";
+import { INFO2_GRAMMAR } from "./info2.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences,
          withProducingGroup } from "./text.mjs";
 import { runCaseGate as runCaseCatalogue, runGate as runBundleGate } from "../gate.mjs";
 
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../gate.mjs";
-export { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "./checks.mjs";
+export { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
+         PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
 /* Moved here from the catalogue in T18 (K636): the name key and C-77 (R19, R38), the producing group's one writing
    (R13), and the mechanical field sets R8 and C-20.1 read (a copy until T19 deletes the catalogue's). */
 export { projectNameKey, checkProjectNameUniqueness } from "./names.mjs";
 export { withProducingGroup } from "./text.mjs";
 export { MECHANICAL_FIELD_SETS } from "./history.mjs";
+/* R55 (K773): C-18.6/.7, the information@2 register grammar, this module's since T19 and registered with record-core. */
+export { INFO2_GRAMMAR, checkInfo2Contract } from "./info2.mjs";
 /* R49 (K285): the one site of LISTENER_MALFORMED and LISTENER_DECLARED is membership's (its R81), re-exported for later
    modules, which call either spelling of the one function. */
 export { listenerRefusal } from "../membership/index.mjs";
@@ -74,8 +76,7 @@ const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.
 
 /* The families whose rows this module's refusals carry (Uses; K93 (2)), and promotion's own rows last. A code is held
    by one row in the whole catalogue (DEC-49's one code, one row), so the first family naming it is its row. */
-const ROW_FAMILIES = [ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
-                      PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
+const ROW_FAMILIES = [PROMOTION_ROW_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_MINT_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
                       CUSTODIAL_CHECKS, PROMOTION_CHECKS];
 const rowOf = (code) => ROW_FAMILIES.find((t) => Object.prototype.hasOwnProperty.call(t, code))[code];
 /* A refusal carrying its row: its reason, code, check id and translation ("Errors"). Called with the code as a literal
@@ -126,6 +127,21 @@ function samePromotion(entry, want) {
   }
   return byName.size === 0;
 }
+/* R52 (N425, K692): the criticality the promotion records is `crucial` when the document's own front matter or the
+   envelope says so, as ratification's R22 counts it; otherwise the envelope's, as before. */
+function criticalityOf(fm, envelope) {
+  if ((fm && fm.criticality === "crucial") || envelope.criticality === "crucial") return "crucial";
+  return envelope.criticality ?? null;
+}
+/* R53 (N426): the project the document states (its front matter's top-level `project:`, a project id), so record-core's
+   `bundleInfo().project` holds it and membership's sight fences the bundle by that project. A document stating none,
+   and a project's own bundle, are committed with no project. */
+function projectOf(fm, type) {
+  if (type === "project" || !fm || typeof fm.project !== "string") return null;
+  const id = fm.project.trim();
+  return id === "" ? null : id;
+}
+
 /* R13: the producing group written into a created document's bytes, rehashed from what is written. */
 function stampGroup(files, slug) {
   return files.map((f) => {
@@ -139,12 +155,12 @@ function stampGroup(files, slug) {
 /* R40: a fact no module provides, answered in one place (DEC-49: one code, one site). It is never a value, so it is
    never read as false; `detail` says what the caller was doing when it found the fact missing. */
 const factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", code: "FACT_UNAVAILABLE",
-  check: REGISTRATION_CHECKS.FACT_UNAVAILABLE.check, translation: REGISTRATION_CHECKS.FACT_UNAVAILABLE.translation, fact, detail });
+  check: PROMOTION_REGISTRATION_CHECKS.FACT_UNAVAILABLE.check, translation: PROMOTION_REGISTRATION_CHECKS.FACT_UNAVAILABLE.translation, fact, detail });
 
 /* R39, R40, R47 (K231, N254): a second registration of what one registrant already holds (a step, a fact, the case
    catalogue) is refused here, the one site that mints STEP_DECLARED (C-102.8); `held` names what was registered twice. */
 function stepDeclared(held, detail) {
-  const row = REGISTRATION_CHECKS.STEP_DECLARED;
+  const row = PROMOTION_REGISTRATION_CHECKS.STEP_DECLARED;
   return { ok: false, reason: "STEP_DECLARED", code: "STEP_DECLARED", check: row.check, translation: row.translation,
            ...held, detail };
 }
@@ -176,8 +192,8 @@ class Promotion {
     /* DEC-49 REGION is-step-named */
     if (typeof module !== "string" || !module)
       return { ok: false, reason: "STEP_MODULE_UNNAMED", code: "STEP_MODULE_UNNAMED",
-               check: REGISTRATION_CHECKS.STEP_MODULE_UNNAMED.check,
-               translation: REGISTRATION_CHECKS.STEP_MODULE_UNNAMED.translation,
+               check: PROMOTION_REGISTRATION_CHECKS.STEP_MODULE_UNNAMED.check,
+               translation: PROMOTION_REGISTRATION_CHECKS.STEP_MODULE_UNNAMED.translation,
                detail: "a step names the module that registers it" };
     /* END DEC-49 REGION is-step-named */
     if (this.#steps.some((s) => s.module === module))
@@ -248,8 +264,8 @@ class Promotion {
                              `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.`);
     try { return { ok: true, fact: name, value: held.fn(...args) }; }
     catch (e) {
-      return { ok: false, reason: "FACT_FAILED", code: "FACT_FAILED", check: REGISTRATION_CHECKS.FACT_FAILED.check,
-               translation: REGISTRATION_CHECKS.FACT_FAILED.translation, fact: name,
+      return { ok: false, reason: "FACT_FAILED", code: "FACT_FAILED", check: PROMOTION_REGISTRATION_CHECKS.FACT_FAILED.check,
+               translation: PROMOTION_REGISTRATION_CHECKS.FACT_FAILED.translation, fact: name,
                detail: `the module that provides the fact '${name}' could not answer: ${cut(e && e.message ? e.message : e, 200)}` };
     }
   }
@@ -257,8 +273,8 @@ class Promotion {
   registerFact(name, module, fn) {
     /* DEC-49 REGION is-fact-named */
     if (typeof name !== "string" || !name || typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "FACT_MALFORMED", code: "FACT_MALFORMED", check: REGISTRATION_CHECKS.FACT_MALFORMED.check,
-               translation: REGISTRATION_CHECKS.FACT_MALFORMED.translation,
+      return { ok: false, reason: "FACT_MALFORMED", code: "FACT_MALFORMED", check: PROMOTION_REGISTRATION_CHECKS.FACT_MALFORMED.check,
+               translation: PROMOTION_REGISTRATION_CHECKS.FACT_MALFORMED.translation,
                detail: "a fact names itself, its module and its function" };
     /* END DEC-49 REGION is-fact-named */
     const held = this.#facts.get(name);
@@ -493,11 +509,13 @@ class Promotion {
         const said = sentFm ? sentFm.group : undefined;
         const stated = [said, envelope.group].find((x) => typeof x === "string" && x.trim() !== "");
         createdGroup = stated ? stated.trim() : recorded;
+        /* DEC-49 REGION is-group-undetermined */
         if (!createdGroup)
           return refusal("GROUP_UNDETERMINED",
             "this store records no producing group, and this creation names none — neither a group: line in its "
             + "bundle.md nor a group in its meta. The record does not supply one. Nothing was created.",
             { act: "promote" });
+        /* END DEC-49 REGION is-group-undetermined */
       }
     }
 
@@ -797,10 +815,10 @@ class Promotion {
         ? deriveInquiryTitle(inquiryQuestionOf(typeof finalMd.text === "string" ? finalMd.text : "")) ?? promotedTitle
         : promotedTitle;
       const committed = record.commit({
-        bundleId, type: promotedType, title: projectedTitle, project: null, snapKey, kind,
+        bundleId, type: promotedType, title: projectedTitle, project: projectOf(finalFm, promotedType), snapKey, kind,
         base: head ? base : EMPTY_STRING_SHA, author: author ?? null, writer, operation, files,
         state: promotedState, priorState: promotedPriorState, group: head ? head.groupId : createdGroup,
-        created: promotedCreated, lastUpdated: promotedLastUpdated, criticality: envelope.criticality ?? null,
+        created: promotedCreated, lastUpdated: promotedLastUpdated, criticality: criticalityOf(finalFm, envelope),
         at: promotedLastUpdated || this.#now() });
 
       /* R19 (membership R71): a project's creation is recorded with membership in the same transaction: the creating
@@ -1097,6 +1115,21 @@ class Promotion {
   }
 }
 
+/** R54 (K757, K760): promotion's route arms, keyed by op name, each a function of no arguments answering what the named
+ *  service answers, spread by the composition root as `membershipOps` is. `viewer`, `author` and `by` are the control
+ *  plane's stamps, read from the query, never from the body; which credential reaches each op is decided elsewhere. */
+export function promotionOps(promotion, url, body) {
+  const q = (k) => url.searchParams.get(k);
+  return {
+    promote: () => promotion.promote(body),
+    /* REC-31, conclude's shape: one target, no handle and no owner, with the viewer and author stamps. */
+    reopen: () => promotion.reopen({ target: q("target"), reason: q("reason"), viewer: q("viewer"), author: q("author") }),
+    /* REC-138, REC-197: an absent visibility is null, which is hidden. */
+    projectfork: () => promotion.forkProject({ projectId: q("projectId"), newId: q("newId"), title: q("title"),
+                                               visibility: q("visibility"), by: q("by"), viewer: q("viewer") }),
+  };
+}
+
 const instances = new WeakMap();
 
 /** The one promotion instance for `host` (the Durable Object's `ctx`); `deps` are read on the first call only. */
@@ -1109,8 +1142,23 @@ export function promotionOf(host, deps) {
     /* record-core R59: the moved checks join the audit, with the caller's release registry from its context. */
     record.registerAuditCheck("promotion", ({ folderName, files, sha256 }, context) =>
       recordChecks({ folderName, files, releaseRegistry: (context && context.releaseRegistry) || null, sha256 }));
+    registerInfo2Grammar(record);
   }
   return p;
+}
+
+/* R55 (K773): the information@2 register grammar, registered with record-core's seam (its R67) once per record, when
+   the first instance over it is made (two hosts may share one record), so the audit and the gate run it in its slot.
+   A record with no seam (a test's stand-in) is left alone; a refusal is a defect of the wiring (another module holding C-18.6/.7, or a second registration) and
+   throws, as capture's does, rather than leave the grammar silently unrun. */
+const info2Registered = new WeakSet();
+function registerInfo2Grammar(record) {
+  if (!record || typeof record.registerGrammar !== "function" || info2Registered.has(record)) return;
+  info2Registered.add(record);
+  const answer = record.registerGrammar("promotion", INFO2_GRAMMAR);
+  if (answer && answer.ok === false)
+    throw new Error(`promotion: record-core refused the information@2 grammar: ${answer.reason}`
+                    + `${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
 /** K64, record-core R59 (K130): record-core's audit pass (R18–R20), which runs the checks this module took from the

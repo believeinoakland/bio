@@ -2,7 +2,7 @@
  * and C-77, the same rule judged over a handed corpus. Moved here whole from the catalogue in T18 (K586 BOB-4, K636):
  * the door and the corpus check are one function in one module. The notes below are the catalogue's, kept. */
 
-import { parseFrontmatter, normalizeType } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType } from "../record-grammar/index.mjs";
 
 /* The catalogue's finding shape, `{check, severity, message, repairable?, repairs?}`. */
 const f = (check, severity, message, repairs) => ({ check, severity, message, ...(repairs ? { repairable: true, repairs } : {}) });

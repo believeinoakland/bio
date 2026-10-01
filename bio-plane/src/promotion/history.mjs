@@ -6,7 +6,7 @@
  * its write-order rank. A walk that needs "the promotion before" takes `seq` order, never key order, whose lexical
  * order is not a clock. An image with no `seq` on every entry is still walked, in key order, and the finding says so. */
 
-import { parseFrontmatter, canonicalJson, vocabFor, normalizeType, STATES } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, canonicalJson, vocabFor, normalizeType, STATES } from "../record-grammar/index.mjs";
 import { EMPTY_STRING_SHA } from "../record-core/index.mjs";
 
 const f = (check, severity, message, repairs) => ({ check, severity, message, ...(repairs ? { repairs } : {}) });

@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, create, T0 } from "./fixtures.mjs";
-import { parseFrontmatter, STATES, vocabFor } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter, STATES, vocabFor } from "../../../src/record-grammar/index.mjs";
 import { EDGE_REASON_MAX, REOPENABLE_FROM, DISPOSITIONS } from "../../../src/promotion/index.mjs";
 
 const ID = "INQ-2026-0001";

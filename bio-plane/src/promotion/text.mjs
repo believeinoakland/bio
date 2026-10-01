@@ -2,7 +2,7 @@
  * group (R13). The repository has a front-matter PARSER (the catalogue's) and no serializer, so a field is rewritten in
  * place and every other byte is left alone. `withProducingGroup` moved here whole from the catalogue in T18 (K636). */
 
-import { parseFrontmatter } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/index.mjs";
 
 /** Append one entry to `state_history`, for the inline-empty, absent and populated shapes. Null when the block is in
  *  a shape this grammar cannot extend, so the caller refuses rather than guesses. */

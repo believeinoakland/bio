@@ -2278,116 +2278,10 @@ export function lifecycleFindings(entries, i) {
 // C-18.5 is the F5 injection-posture gathering.json field grammar.
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// information@2 (M3' member submissions): the register contract extended by
-// the schema bump taken once. C-18.1 gains the @2 shapes (mandatory register,
-// capture encoding, custody for member-origin documents, attestation_attempts,
-// parts, derived, releases); C-18.6 verifies registered capture hashes against
-// stored bytes (decode-at-promotion means bytes at rest hash directly; legacy
-// base64 decodes first); C-18.7 stages the doctrine 4a release signature
-// (detached SSH signature, ssh-keygen -Y, namespace bio-release) as a warning
-// until member keys are distributed. Scoped by schema stamp: information@1
-// bundles keep the v1 contract per spec Section 8 check versioning.
-// ---------------------------------------------------------------------------
-
-const CAPTURE_ENCODINGS = ['utf8', 'base64', 'binary'];
-const RAW_SHA_RE = /^[0-9a-f]{64}$/;
-
-/** Stored value to hashable input: base64 decodes to raw bytes; utf8 and
- *  binary hash as stored (ctx.sha256 accepts string or bytes, so the Apps
- *  Script embed, which reads text files as strings, needs no TextEncoder). */
-function storedToHashable(v, encoding) {
-  if (encoding === 'base64') return b64ToBytes(asText(v));
-  return v;
-}
-
-async function checkInfo2Contract(ctx, findings) {
-  if (ctx.fm?.object_type !== 'information' || ctx.fm?.schema !== 'information@2') return;
-  const raw = ctx.files.get('data/provenance.json');
-  if (!raw) {
-    return;
-  }
-  let reg; try { reg = JSON.parse(asText(raw)); } catch { return; } // C-14.3 reports
-  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
-  if (!docs) return; // C-18.1 v1 shape check reports
-  // C-18.7 (warn): the staged posture until member keys are distributed.
-  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
-  const rels = Array.isArray(reg.releases) ? reg.releases : [];
-  for (const e of hist) {
-    if (!e || e.from_state !== 'collected' || e.to_state !== 'verified') continue;
-    const signed = rels.some(r => r && r.transition === e.timestamp && r.signature_file);
-    if (!signed) {
-      findings.push(f('C-18.7', 'warn', `collected -> verified transition at ${e.timestamp} has no signed release record; the target mechanism is a detached SSH signature over the transition record (ssh-keygen -Y sign, namespace bio-release; doctrine 4a)`,
-        ['sign the transition record and add the releases[] entry with signature_file, signer, namespace', 'record the interim member review of the release log in Review Notes']));
-    }
-  }
-  // C-18.6 (error): registered capture hashes verify against stored bytes.
-  // 1.11.0 (KICKOFF-P2M6 4a): byte-stored parts stream through the
-  // incremental SHA-256 one part at a time, decoded per part for legacy
-  // base64, so peak residency is a single part, never the reassembled
-  // whole. Text-stored parts keep the join path (Apps Script text reads
-  // are strings and hash natively over UTF-8; no TextEncoder dependency).
-  for (let i = 0; i < docs.length; i++) {
-    const d = docs[i]; if (!d || typeof d !== 'object') continue;
-    const cap = d.capture && typeof d.capture === 'object' ? d.capture : {};
-    if (!RAW_SHA_RE.test(cap.sha256 || '') || !CAPTURE_ENCODINGS.includes(cap.encoding)) continue;
-    let hashable = null;
-    let actual = null;
-    try {
-      if (Array.isArray(d.parts) && d.parts.length && d.parts.every(p => p && p.file && ctx.files.has(String(p.file)))) {
-        const stored = d.parts.map(p => ctx.files.get(String(p.file)));
-        const textStored = v => cap.encoding !== 'base64' && typeof v === 'string';
-        if (stored.every(v => textStored(v))) {
-          hashable = stored.join('');
-        } else if (stored.every(v => !textStored(v))) {
-          const h = createSha256();
-          for (const v of stored) h.update(cap.encoding === 'base64' ? b64ToBytes(asText(v)) : v);
-          actual = h.hex();
-        } else {
-          throw new Error('parts mix text and binary storage');
-        }
-      } else if (d.file && ctx.files.has(String(d.file))) {
-        hashable = storedToHashable(ctx.files.get(String(d.file)), cap.encoding);
-      }
-    } catch (err) {
-      findings.push(f('C-18.6', 'error', `provenance documents[${i}]: stored content could not be decoded for hash verification (${err && err.message}) (@2)`));
-      continue;
-    }
-    if (actual === null) {
-      if (hashable === null) continue;
-      actual = await ctx.sha256(hashable);
-    }
-    if (actual !== cap.sha256) {
-      findings.push(f('C-18.6', 'error', `provenance documents[${i}]: stored bytes hash ${actual.slice(0, 12)}… but the register records ${String(cap.sha256).slice(0, 12)}…; silent content mutation fails the gate (@2)`,
-        ['restore the capture from history', 'correct the register only if the recorded hash was wrong at intake, with a Session Log entry']));
-    }
-  }
-}
-
 /* `checkInboxGrammar`, the inbox task grammar (D-98, INBOX-GRAMMAR.md), and the task vocabularies only it read
    stood here until T15 (legacy-checks, N325). The grammar is queue's, a promotion check and an audit check queue
    registers, held whole in `src/queue/checks.mjs` since T14; this copy ran in no gate after T14. */
 
-// ---------------------------------------------------------------------------
-// C-20.1: the mechanical-writer diff-conformance auditor (I-20, State Rules
-// v1.5 draft; daemon slate Section 0). For any history promotion record marked
-// writer 'mechanical', the promoted diff (decidable from the history snapshots)
-// must stay within the operation's declared field set plus append-only
-// surfaces; the body change must be confined to the Session Log; and the files
-// touched must be a subset of the mechanical envelope. The field-set tables
-// live here (the registry), amended only by revision, never by code change.
-// ---------------------------------------------------------------------------
-
-/** Per-operation closed field sets (daemon slate Section 0). last_updated
- *  rides every mutating set: write-completeness law (C-12.1, C-13.2) makes it
- *  inseparable from any update. Frontmatter paths in dotted form; 'clock[]'
- *  denotes clock entry fields. */
-export const MECHANICAL_FIELD_SETS = {
-  'monitor-tick': ['source_status', 'monitoring.last_checked', 'reeval_pending.flag', 'reeval_pending.since', 'reeval_pending.source', 'last_updated'],
-  'sweep': [],
-  'deadline-recheck': ['clock[].status', 'last_updated'],
-  'member-attest': ['last_updated']
-};
 
 // ---------------------------------------------------------------------------
 // Runner: rule 2's wrapper (T19, legacy-checks; record-grammar R28, R40, R41)
@@ -2404,7 +2298,6 @@ export { EXTENSION_ARMS } from '../src/record-grammar/index.mjs';
 
 export const LEGACY_GRAMMARS = Object.freeze([
   { module: 'legacy-checks', ids: ['C-2.7'], arm: checkInformationExtension },
-  { module: 'legacy-checks', ids: ['C-18.6', 'C-18.7'], arm: checkInfo2Contract },
   { module: 'legacy-checks', ids: ['C-6.1'], arm: (ctx, findings) => {
     supersedesEdgeFindings(ctx.fm, findings);
     divisionDisclosureFindings(ctx.fm, findings);
@@ -4374,14 +4267,6 @@ export const MACHINE_FENCE_CHECKS = {
       + 'one: it may raise the question, gather what bears on it and draft the answer, and it may '
       + 'never be the one who answers. Sign in to conclude.',
   },
-  MACHINE_CANNOT_REOPEN: {
-    check: 'C-32.5',
-    where: 'src/promotion/index.mjs #reopen > is-machine-reopen',
-    translation: 'Reopening overturns something the group decided to set down, and that judgement '
-      + 'belongs to a person who will be named beside it. The credential that asked here is an '
-      + 'automated one: it may raise a question and work one, and may not undo the group\'s own '
-      + 'disposition. Sign in to reopen it.',
-  },
   MACHINE_CANNOT_PUBLISH: {
     check: 'C-32.6',
     where: 'src/case-authoring/index.mjs #publishCase > is-machine-publish',
@@ -4556,42 +4441,6 @@ export const ACT_SHAPE_CHECKS = {
       + 'its own limits is claiming to cover everything, and that is the overclaim this record '
       + 'exists to refuse.',
   },
-  CAS_STALE: {
-    check: 'C-33.21',
-    where: 'src/promotion/index.mjs #promote > is-promote-cas',
-    translation: 'Somebody else changed this document since you last read it, so writing now would '
-      + 'quietly discard their work. Read it again, fold your change into what is there, and write '
-      + 'once more.',
-  },
-  /* T4 (legacy-checks, N36), 2026-09-27: promotion R1's other half. A REVISION of a bundle the record does not
-     hold, and (R20) of one the caller may not see, which answers exactly as one that does not exist. Numbered in
-     this family beside CAS_STALE, R1's third answer; R1's first, EXISTS, is C-96.4. It is minted by ONE literal in
-     promotion, the module-level `ABSENT` helper both of `#promote`'s answers return; that helper is not a declared
-     function the guard can open, so the `where` names the region promotion is to mark around the R1 answers.
-     Two sites outside promotion mint the same code with the same meaning (a bundle by that id that the caller can
-     see does not exist): `src/store.mjs gateFacts` (op=ratify) and `src/index.mjs` op=monitor. The translation is
-     written to be true at all three, and says nothing was changed rather than written, because the monitor reads. */
-  ABSENT: {
-    check: 'C-33.49',
-    where: 'src/promotion/index.mjs #promote > is-promote-absent',
-    translation: 'There is no document by that id here that you can see. Either it does not exist, or it is '
-      + 'not one you have been let into, and the answer is the same for both so that it says nothing about '
-      + 'what you cannot see. Nothing was changed. To create a new document, create it rather than revising it.',
-  },
-  /* REC-176 (the history law, BIO_State_Rules_Consistency_v1_5.md §2.4: "History is append-only; nothing in
-     _history/ is ever modified or deleted"). `op=promote` wrote its manifest and history rows with INSERT OR
-     REPLACE keyed (bundle_id, snap_key), so a second promotion naming a key the bundle already holds silently
-     REPLACED the first promotion's rows. It now refuses that key before anything is written; a byte-identical
-     re-send of the promotion that key already names answers ok and writes nothing (§2.4's own convergent rule:
-     "the second detects the existing file and skips"). C-67 is minted (`node tools/mintid.mjs C`) rather than
-     C-33.n, because two parallel promote items took C-33 numbers the same day. */
-  SNAP_KEY_TAKEN: {
-    check: 'C-67.1',
-    where: 'src/promotion/index.mjs #promote > is-promote-snapkey',
-    translation: 'This write names a history entry this document already has, and it is a different write '
-      + 'from the one recorded there. The record never rewrites its history, so nothing was written. Send it '
-      + 'again under a new history key.',
-  },
   SELF_BASIS: {
     check: 'C-33.22',
     where: 'src/inquiry/index.mjs check > is-basis-acyclic, reached from op=promote through the step inquiry registers with promotion (K31)',
@@ -4604,24 +4453,6 @@ export const ACT_SHAPE_CHECKS = {
     translation: 'This write would close a loop: the chain it would join already rests, somewhere '
       + 'further along, on the thing being written. The path is named so the loop can be seen '
       + 'rather than re-derived, and support that circles back is support that rests on nothing.',
-  },
-  FILES_DROPPED: {
-    check: 'C-33.24',
-    where: 'src/promotion/index.mjs #promote > is-promote-files',
-    translation: 'This write would remove files the previous revision had, and it does not say it '
-      + 'means to. Carry them forward, or name them for deletion on purpose — losing part of a '
-      + 'document by omission is not something the record will do quietly.',
-  },
-  /* REC-175 (the Mechanical Verification Law, BIO_State_Rules_Consistency_v1_5.md §8: a stored digest is of the
-     stored bytes). `op=promote` wrote the caller's `sha256` for every file, and took bundle.md's as the bundle's
-     head, without computing either; it now computes each inline file's digest over its UTF-8 bytes (a blob's is
-     its content address) and refuses a supplied value naming another, before anything is written. */
-  FILE_DIGEST_MISMATCH: {
-    check: 'C-33.38',
-    where: 'src/promotion/index.mjs #promote > is-promote-digest',
-    translation: 'A fingerprint sent with this write does not match the file it was sent with, so the record '
-      + 'would have stored a fingerprint of something it does not hold. Nothing was written. Send the file '
-      + 'again with its own fingerprint, or with none and the record will compute it.',
   },
   NO_ALIAS: {
     check: 'C-33.25',
@@ -5886,54 +5717,6 @@ export const SURFACE_CHECKS = {
   },
 };
 
-/* REC-141 / C-59 — THE PLANE MINTS PROJECT IDS (Membership Architecture v2 §7, the bullet *"HOW the
- * plane mints a project id"*, BOB #15, 2026-09-18; §7.9 *"not its existence"*). A creation that NAMED
- * its project's id answered `EXISTS` at a hidden project's id and CREATED at a free one, so the answer
- * said whether a project the caller could not see existed (D-428's creation half). A caller-supplied id
- * for a NEW project — or any creation in the `PROJ-` namespace, or a fork's `newId` — is now refused
- * BEFORE any id is looked up, with one answer whether or not the id is taken, and the answer echoes no
- * id. The plane mints the id (`allocId`'s pattern) and writes it into the document's own `id:` before
- * the bytes are hashed and registered, so a document that already carries one is refused. */
-export const PROJECT_ID_CHECKS = {
-  PROJECT_ID_SUPPLIED: {
-    check: 'C-59.1',
-    where: 'src/promotion/index.mjs #promote > is-project-id-supplied',
-    translation: 'A new project is given its id by the record; it is not chosen. This request named an id, '
-      + 'so nothing was created. Send it again without one, and the record will answer with the id it gave '
-      + 'the project.',
-  },
-  PROJECT_ID_IN_BYTES: {
-    check: 'C-59.2',
-    where: 'src/promotion/index.mjs #promote > is-project-id-bytes',
-    translation: 'A new project\'s document must not carry an id line: the record writes the project\'s id '
-      + 'into the document itself when it creates it. Remove the id line and send it again. Nothing was created.',
-  },
-  PROJECT_FORK_ID_SUPPLIED: {
-    check: 'C-59.3',
-    where: 'src/promotion/index.mjs #fork > is-project-fork-id-supplied',
-    translation: 'A fork is given its id by the record; it is not chosen. This request named one, so nothing '
-      + 'was forked. Send it again without an id, and the record will answer with the id it gave the fork.',
-  },
-  PROJECT_DOCUMENT_UNREADABLE: {
-    check: 'C-59.4',
-    where: 'src/promotion/index.mjs #promote > is-project-id-bytes',
-    translation: 'The record could not write the new project\'s id into its document, because the document '
-      + 'sent is not text that begins with a front matter block. Nothing was created.',
-  },
-  /* REC-151 (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16, 2026-09-19): an id of a GATED
-     object (PROJ, CASE, DRAFT, RVG, TASK) is minted opaque by the act that creates it, and no caller
-     allocates one — a counter read through op=allocid would say how many exist, hidden ones included. */
-  ALLOCID_PREFIX_GATED: {
-    check: 'C-59.5',
-    where: 'src/record-core/index.mjs allocIdOp > is-allocid-prefix-gated',
-    translation: 'Ids of this kind are given by the record when the thing itself is created, and are not '
-      + 'handed out in advance. Create the project, case, draft, grant or task through its own action and '
-      + 'the record will answer with its id. Nothing was allocated.',
-  },
-};
-
-
-
 /* D-394 / C-80 — THE CROSS-VERSION NOTICE'S REFUSALS
  * (`BIO_Content_Framework_v0_10.md` §18.1, the cross-version relation).
  *
@@ -6771,74 +6554,6 @@ function coversImagePlacement(e, container) {
  *            to be a published case member and does not carry what one must (ratification R9, C-2.8's arm).
  * ========================================================================= */
 export const REGISTRATION_CHECKS = {
-  AUDIT_CHECK_DECLARED: {
-    check: 'C-102.1',
-    where: 'src/record-core/index.mjs registerAuditCheck',
-    translation: 'A part of this instance tried to register its audit check a second time. Each part '
-      + 'registers once, when it starts, so the second was refused and the first still runs. This is a fault '
-      + 'in how the instance was built, not in the record, and nothing in the record changed.',
-  },
-  AUDIT_CHECK_MALFORMED: {
-    check: 'C-102.2',
-    where: 'src/record-core/index.mjs registerAuditCheck',
-    translation: 'A part of this instance tried to register an audit check without naming itself or without '
-      + 'a check to run, so nothing was registered. This is a fault in how the instance was built, not in the '
-      + 'record, and nothing in the record changed.',
-  },
-  AUDIT_CHECK_FAILED: {
-    check: 'C-102.3',
-    where: 'src/record-core/index.mjs auditPass',
-    translation: 'One of the checks the audit runs over this document stopped with an error instead of '
-      + 'answering, so the document is counted as having an error rather than as clean. The error is in the '
-      + 'check and says nothing yet about the document. The audit changes nothing in the record.',
-  },
-  FACT_UNAVAILABLE: {
-    check: 'C-102.4',
-    where: 'src/promotion/index.mjs fact',
-    translation: 'No part of this instance answers that question yet, so there is no answer here, which is '
-      + 'not the same as the answer being no. Nothing was written.',
-  },
-  FACT_FAILED: {
-    check: 'C-102.5',
-    where: 'src/promotion/index.mjs fact',
-    translation: 'The part of this instance that answers that question stopped with an error instead of '
-      + 'answering, so there is no answer here, which is not the same as the answer being no. Nothing was '
-      + 'written.',
-  },
-  FACT_MALFORMED: {
-    check: 'C-102.6',
-    where: 'src/promotion/index.mjs registerFact > is-fact-named',
-    translation: 'A part of this instance tried to offer an answer to a question without naming the question, '
-      + 'itself, or how to answer it, so nothing was registered. This is a fault in how the instance was built, '
-      + 'not in the record, and nothing in the record changed.',
-  },
-  STEP_MODULE_UNNAMED: {
-    check: 'C-102.7',
-    where: 'src/promotion/index.mjs registerStep > is-step-named',
-    translation: 'A part of this instance tried to add its own check to every promotion without naming itself, '
-      + 'so nothing was registered. This is a fault in how the instance was built, not in the record, and '
-      + 'nothing in the record changed.',
-  },
-  STEP_DECLARED: {
-    check: 'C-102.8',
-    where: 'src/promotion/index.mjs stepDeclared',
-    translation: 'A part of this instance tried to register something it had already registered, or that '
-      + 'another part already provides, so the second registration was refused and the first still stands. '
-      + 'This is a fault in how the instance was built, not in the record, and nothing in the record changed.',
-  },
-  CASE_CATALOGUE_FAILED: {
-    check: 'C-102.9',
-    where: 'src/gate.mjs caseCatalogueFailed',
-    translation: 'The checks a case document must pass could not be run over this one, so it was not passed. '
-      + 'The fault is in the checks, not the document, and nothing was signed.',
-  },
-  CASE_MEMBER_REFUSED: {
-    check: 'C-102.10',
-    where: 'src/ratification/index.mjs check',
-    translation: 'This document claims to be part of a published case, and it does not carry what a part of '
-      + 'a published case must carry, so it was not written. Each problem is named beside this message. '
-      + 'Nothing in the record changed.',
-  },
 };
 
 /* =========================================================================

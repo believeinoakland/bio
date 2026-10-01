@@ -4,7 +4,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { promotionOf } from "../../../src/promotion/index.mjs";
-import { PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
+import { PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 export const EMPTY = sha("");
@@ -15,7 +15,7 @@ export function makeRecord() {
   db.exec(`
     CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, group_id TEXT NOT NULL, title TEXT,
       current_state TEXT NOT NULL, prior_state TEXT, created TEXT NOT NULL, last_updated TEXT NOT NULL, criticality TEXT,
-      bundle_sha TEXT NOT NULL, row_version INTEGER NOT NULL);
+      bundle_sha TEXT NOT NULL, row_version INTEGER NOT NULL, project TEXT);
     CREATE TABLE files (bundle_id TEXT, path TEXT NOT NULL, content TEXT, blob_sha TEXT, bytes INTEGER NOT NULL,
       sha256 TEXT NOT NULL, PRIMARY KEY (bundle_id, path));
     CREATE TABLE history (bundle_id TEXT, snap_key TEXT NOT NULL, path TEXT, content TEXT, blob_sha TEXT, sha256 TEXT,
@@ -60,7 +60,7 @@ export function makeRecord() {
     },
     bundleInfo(id) {
       const r = one(`SELECT * FROM bundles WHERE bundle_id=?`, id);
-      return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: null } : null;
+      return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: r.project ?? null } : null;
     },
     listByType({ type, after = null, limit = 200 }) {
       const ids = rows(`SELECT bundle_id FROM bundles WHERE object_type=? AND bundle_id>? ORDER BY bundle_id LIMIT ?`,
@@ -80,12 +80,17 @@ export function makeRecord() {
      *  answers them. A test sets `grammarList`. */
     grammarList: [],
     grammars() { return record.grammarList; },
+    /** record-core R67: a registration joins `grammarList` (R55's is promotion's own, made when it is first reached). */
+    registerGrammar(module, { ids, arm }) { record.grammarList.push({ module, ids, arm }); return { ok: true, module, ids }; },
     /** record-core R59: the audit checks a module registers, kept for a test to run. */
     auditChecks: [],
     registerAuditCheck(module, check) { record.auditChecks.push({ module, check }); return { ok: true, module }; },
     commits: 0,
-    commit({ bundleId, type, title, snapKey, kind, base, author, writer, operation, files, state, priorState, group,
+    /** record-core R44: the row records `project` and `criticality` as the caller gives them; `commitCalls` keeps each. */
+    commitCalls: [],
+    commit({ bundleId, type, title, project = null, snapKey, kind, base, author, writer, operation, files, state, priorState, group,
              created, lastUpdated, criticality, at }) {
+      record.commitCalls.push({ bundleId, project, criticality });
       record.commits++;
       const key = String(snapKey);
       if (one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, bundleId))
@@ -97,12 +102,12 @@ export function makeRecord() {
       for (const f of files)
         db.prepare(`INSERT INTO files VALUES (?,?,?,?,?,?)`).run(bundleId, f.path, f.text ?? null, f.blobSha ?? null, f.bytes, f.sha256);
       const md = files.find((f) => f.path === "bundle.md").sha256;
-      db.prepare(`INSERT INTO bundles VALUES (?,?,?,?,?,?,?,?,?,?,1)
+      db.prepare(`INSERT INTO bundles VALUES (?,?,?,?,?,?,?,?,?,?,1,?)
                   ON CONFLICT(bundle_id) DO UPDATE SET object_type=excluded.object_type, title=excluded.title,
                   current_state=excluded.current_state, prior_state=excluded.prior_state,
                   last_updated=excluded.last_updated, criticality=excluded.criticality, bundle_sha=excluded.bundle_sha,
-                  row_version=bundles.row_version+1`)
-        .run(bundleId, type, group, title ?? null, state, priorState ?? null, created, lastUpdated, criticality ?? null, md);
+                  row_version=bundles.row_version+1, project=excluded.project`)
+        .run(bundleId, type, group, title ?? null, state, priorState ?? null, created, lastUpdated, criticality ?? null, md, project);
       const r = one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { bundleSha: r.bundle_sha, rowVersion: r.row_version };
     },
