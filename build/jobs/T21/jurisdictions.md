@@ -1,6 +1,6 @@
 # jurisdictions (T21)
 
-**Status** · session_014nagcRH9hTKVppmJyfbM18 · depth 2 · WORKING · handled B1
+**Status** · session_014nagcRH9hTKVppmJyfbM18 · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
