@@ -19,6 +19,6 @@ No rule needed a new test: none of the unenforced rules is a test-support requir
 - `format: 86 modules, 84 requirements files; 0 failures`
 - `architecture: 4 product files, 2 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `coverage: 1 modules, 9 of 9 live requirement ids named by a test; 0 failures`
-- `ownership`: see below, after commit.
+- `ownership: 3 files changed by test-support between tranche/T21 and HEAD; 0 failures`
 
 Size (session_01Khzr9qLc3B6CdyeggE5ntx): test runs 1, module lines 76
