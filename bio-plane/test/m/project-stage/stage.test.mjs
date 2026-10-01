@@ -10,6 +10,9 @@ import { STAGE_QUESTIONS_MAX, WORK_PRODUCTS_MAX, READINESS_RUNGS, PROJECT_STAGES
          CLOSED_REASONS, CLOSED_RECORDED_MAX } from "../../../src/project-stage/index.mjs";
 
 const Q1 = "INQ-2026-0001", Q2 = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
+/* An inquiry's own (no-project) conclusion, as inquiry R11 accepts it (inquiry-grammar R1; K819): a conclusion and a
+   falsifier stated, beside the leg its basis must carry. */
+const CONCLUDED = { state: "concluded", extra: ['conclusion: "It is so."', 'falsifier: "A record."'] };
 
 /* A project's document: its own title and state, the questions it cites (`severed` marks a severed citation) and its
    conclusion record (`conclusions` rows as basis-versions reads them). */
@@ -116,7 +119,7 @@ test("R2 R5 negative control: a document's own `matured` (or `investigating`) ho
 test("R2 a question is held in any shared state, and a severed citation holds nothing; a no-project conclusion is not the project's", () => {
   const { w, write, stage } = setup();
   w.doc(DOC);
-  w.inquiry(Q1, { legs: [{ target: DOC }], state: "concluded" });
+  w.inquiry(Q1, { legs: [{ target: DOC }], ...CONCLUDED });
   /* the inquiry's own (no-project) concluded state is never the project's adoption */
   write({ cites: [Q1] });
   assert.equal(stage().stage, "investigating");
@@ -382,12 +385,13 @@ test("R4 no promise: each listed condition, met alone with nothing else changed,
 test("R4 uncounted inputs move nothing: a no-project conclusion, a signed edition not ratified, the document's own `matured`, a severed citation", () => {
   const { w, proj, write, stage } = setup();
   w.doc(DOC);
-  w.inquiry(Q1);
+  /* held with a leg first, since a concluded inquiry carries one (K819): its conclusion is then the only change */
+  w.inquiry(Q1, { legs: [{ target: DOC }] });
   write({ cites: [Q1] });
   const was = JSON.stringify(stage());
   const same = (why) => assert.equal(JSON.stringify(stage()), was, why);
   /* the question's own (no-project) conclusion */
-  w.inquiry(Q1, { state: "concluded" });
+  w.inquiry(Q1, { legs: [{ target: DOC }], ...CONCLUDED });
   same("a conclusion made without the project");
   /* a case edition signed and never ratified */
   w.inquiry(Q2, { legs: [{ target: DOC }] });
