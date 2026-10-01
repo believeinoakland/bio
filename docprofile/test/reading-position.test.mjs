@@ -89,7 +89,7 @@ test("R34 the readers that cannot place a reference place none: the calendar emi
   assert.deepEqual(typeOf("generic").parse({ text: "anything", locate }).entities, [], "the generic type reads no references");
 });
 
-test("R20 R34 a reference read again is another occurrence: one entity, every place in reading order, the first as its source", () => {
+test("R34 a reference read again is another occurrence: one entity, every place in reading order, the first as its source", () => {
   const pages = [
     ...PAGES,
     { page: 3, text: "Continued from item 3.1\n26-0910" },
