@@ -1,6 +1,6 @@
 # membership (T22)
 
-**Status** · session_01LdQT1TKUB5SDgdFi5gE5ik · depth 2 · RUNNING until 2026-10-02T00:34:22Z (node --test bio-plane/test/m (whole), then the baseline on tranche/T22) · handled B0
+**Status** · session_01LdQT1TKUB5SDgdFi5gE5ik · depth 2 · WORKING · handled B0
 
 ## J1 · REPORT
 
