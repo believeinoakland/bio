@@ -53,6 +53,7 @@ Terms as `membership` states them (administrators, `by` the control plane's stam
 
 - **R18** (`membership` R59's share) Credentials, sessions, signer keys and AI credentials are declared exempt from `purge`. *(not yet met: T19 layer 2)*
 - **R19** (was `membership` R91) R8's `attests` predicate does not look at `origin`: a self-registered key attests exactly as an administrator-registered one. *(not yet met: T19 layer 2)*
+- **R20** At start credentials registers its `setPassword` with membership's R95, so `enroll` sets the member's password inside the one act, as today (K774). *(not yet met: T19 layer 2)*
 
 ### Satisfies
 
