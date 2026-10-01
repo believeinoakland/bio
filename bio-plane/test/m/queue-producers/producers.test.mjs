@@ -71,6 +71,10 @@ test("R2: export-performed, one per export, to an administrator member or the ad
   const e = byId(w.read("ada"))["FINDING::export-performed::2"];
   assert.ok(!("catalogue_id" in e), "R8: queue stamps the catalogue id at its mint");
   assert.deepEqual(e.basis.bounds.limit, 200, "the latest 200");
+  /* K899 (1): text a member reads says "record" where it said "bundle"; the field names stay. */
+  assert.equal(e.summary, `A full working-corpus export was taken on ${iso(NOW)}: 3 records, 4 files`);
+  assert.ok(!/bundle/i.test(`${e.summary} ${e.detail} ${e.basis.detail}`), "no member-read sentence says bundle");
+  assert.equal(e.basis.bundles, 3, "the field keeps its name");
 });
 
 test("R2 (N172): newer-capture-affects-reference, one per open notice reevaluation answers the viewer, homed under its holder", () => {

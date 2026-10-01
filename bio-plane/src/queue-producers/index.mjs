@@ -1,9 +1,9 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R18).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R19).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14 and R15–R18 derive for a member and viewer, each
+ *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14 and R15–R19 derive for a member and viewer, each
  *                  homed through queue's walk and carrying queue's options (both passed in), with the facts the answer
  *                  publishes beside them. No item carries `disposition` (queue's mint gives it) or `catalogue_id`
  *                  (queue stamps it from its R2).
@@ -14,7 +14,7 @@
  * check row: it refuses nothing (draft §3.3).
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
- *   publication, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans   the providers.
+ *   publication, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -44,6 +44,7 @@ import { monitoringOf } from "../monitoring/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { actionPlansOf } from "../action-plans/index.mjs";
+import { actionsOf } from "../actions/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -85,6 +86,7 @@ export class QueueProducers {
   get #actionClocks() { return this.#dep("actionClocks", () => actionClocksOf(this.#host)); }
   get #escalation() { return this.#dep("escalation", () => escalationOf(this.#host)); }
   get #actionPlans() { return this.#dep("actionPlans", () => actionPlansOf(this.#host)); }
+  get #actions() { return this.#dep("actions", () => actionsOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -199,11 +201,13 @@ export class QueueProducers {
       items.push(...this.#contradictionUnseenItems(me, scope, viewer));
       /* OBLIGATION · R14: a member's own signing key, to the administrators. */
       items.push(...this.#obligationsSignerSelfRegistered(me, viewer, at));
-      /* The Action layer · R15–R18: an overdue date, a checkpoint come due, a stage proposed, a reminder asked for. */
+      /* The Action layer · R15–R19: an overdue date, a checkpoint come due, a stage proposed, a reminder asked for, a
+         legal threat with no hold stated. */
       items.push(...this.#conditionsActionClockOverdue(me, viewer, at));
       items.push(...this.#obligationsPlanCheckpointDue(me, viewer, at));
       items.push(...this.#obligationsEscalationStageProposed(me, viewer, at));
       items.push(...this.#obligationsActionReminder(me, viewer, at));
+      items.push(...this.#obligationsLitigationHold(me, viewer, at));
       return {
         items,
         facts: {
@@ -1467,7 +1471,7 @@ export class QueueProducers {
         kind: "export-performed",
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
-        summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} bundles, ${r.files} files`,
+        summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} records, ${r.files} files`,
         detail: `An export of the ${r.scope} left this instance with the root-of-trust credential `
               + `(Membership v2 §8.1). It is row ${r.seq} of the append-only export log`
               + (r.note ? `, noted "${r.note}"` : ", with no note") + `. Every administrator is told; `
@@ -1510,7 +1514,7 @@ export class QueueProducers {
 
   /** A home set made of the named cases themselves (each at depth 0, when this viewer sees it and it is a case) and
    *  every ancestor above them (queue R7): for an item that is ABOUT a case rather than about a document under one.
-   *  `walkFrom` (R15–R18) names the subjects the walk starts from when they are not the cases themselves: an action's
+   *  `walkFrom` (R15–R19) names the subjects the walk starts from when they are not the cases themselves: an action's
    *  item is homed under its project at depth 0 and under whatever its action's own walk reaches. */
   #homesAt(caseIds, viewer, walkFrom = caseIds) {
     const up = this.#homesOf(walkFrom);
@@ -2297,7 +2301,8 @@ export class QueueProducers {
   }
 
   /* ======================================================================
-   * K608 · R15–R18 — THE ACTION LAYER (monitoring R34, R35; action-clocks R3, R5; escalation R16; action-plans R17).
+   * K608 · R15–R19 — THE ACTION LAYER (monitoring R34, R35; action-clocks R3, R5; escalation R16; action-plans R17;
+   * actions R54).
    *
    * Bob's notification rulings (DEC-10, DEC-69, DEC-70, DEC-94; K613–K615): an item informs once at the occurrence, is
    * dispositionable and ages; it goes to the member who authored the thing it concerns, else the project's owners
@@ -2307,13 +2312,15 @@ export class QueueProducers {
    * module stops answering it. A caller with no member is none of the members these name, and is told none of them.
    * ====================================================================== */
 
-  /** How many pages of `overdueClocks` and `remindersDue` (each at most 500 entries) one read follows. */
+  /** How many pages of `overdueClocks`, `remindersDue` and `holdsDue` (each at most 500 entries) one read follows. */
   static QUEUE_ACTION_PAGES = 20;
   /** R16, R17, R18: the producers' own acts, each the op the item's fact is answered by. */
   static CHECKPOINT_JUDGE = Object.freeze({ id: "checkpointrecord", label: "Judge this checkpoint: met or not met", weight: "single" });
   static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: "Advance to the proposed stage", weight: "single" });
   static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: "Decline to advance now, with a reason", weight: "single" });
   static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: "Remind me again on a later day, or not again", weight: "single" });
+  /** R19: the item's door, a member's statement of the hold (actions R52, `op=actionhold`). */
+  static HOLD_STATE = Object.freeze({ id: "actionhold", label: "Record whether a litigation hold is in place", weight: "single" });
 
   /** Who an Action-layer item goes to (R15–R17): the member who authored the thing, when that is a member (a machine
    *  credential is not), else the project's owners, else the administrators; with the rule that chose them. */
@@ -2524,6 +2531,56 @@ export class QueueProducers {
         assignee_role: null,
         recipients: [me],
         options: [QueueProducers.REMINDER_ANSWER, ...this.#optionsOf([x.action])],
+      });
+    }
+    return out;
+  }
+
+  /** `litigation-hold` (R19; K899 (7), DEC-61, N-A19; actions R52, R54): one OBLIGATION per `legal` pressure mark
+   *  `actions.holdsDue` answers the viewer (no hold stated on it, whatever the action's state), to every administrator
+   *  member, or the `admin` machine credential as R14's, and to the member who marked it; to nobody else. Homed as R15's,
+   *  aged from the mark's instant, offering the hold statement (`actionhold`), which is its door: once any hold is
+   *  stated, `in_place` or `released`, the read no longer answers the mark. Raised once; nothing here repeats it. */
+  #obligationsLitigationHold(me, viewer, now) {
+    const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
+    if (!me && !admin) return [];
+    const page = this.#actionPages((after) => this.#actions.holdsDue({ after, viewer }));
+    const visible = this.#bundleRedactor(viewer);
+    const out = [];
+    let admins = null;
+    for (const m of page.items) {
+      if (!m || typeof m.action !== "string" || !m.action || !Number.isInteger(m.ord)) continue;
+      if (visible(m.action) === null) continue;      // R11: a mark on an action this viewer may not see is no item
+      const marker = typeof m.marked_by === "string" && m.marked_by ? m.marked_by : null;
+      if (!admin && marker !== me) continue;
+      if (admins === null) admins = this.#activeAdmins();
+      const project = typeof m.project === "string" && m.project && visible(m.project) !== null ? m.project : null;
+      const markedMs = Date.parse(m.marked_at ?? "");
+      const recipients = [...new Set([...admins, ...(marker && !marker.startsWith(MACHINE_AUTHOR_PREFIX) ? [marker] : [])])];
+      out.push({
+        id: `OBLIGATION::litigation-hold::${m.action}::${m.ord}`,
+        class: "OBLIGATION",
+        kind: "litigation-hold",
+        case: this.#actionHomes(m.action, project, viewer),
+        subject: { kind: "action", id: m.action, entry: m.ord, note: m.note ?? null, project },
+        summary: `a legal threat was recorded on ${m.action} and no litigation hold is stated for it`,
+        detail: `a received entry of this action (position ${m.ord}) was marked as a legal threat`
+              + (m.note ? ` ("${m.note}")` : "") + ". Record whether the group is preserving what the matter may reach "
+              + "(a hold in place) or not (released), with a reason. This is told once; it leaves when a member states it.",
+        basis: { source: "actions.holdsDue", action: m.action, entry: m.ord, note: m.note ?? null,
+                 marked_by: marker, marked_at: m.marked_at ?? null, project, recipients_rule: "administrators_and_marker",
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a legal pressure mark with no hold stated is actions' fact (its R52, R54), read here and never "
+                       + "stored. It goes to every administrator and to the member who marked it (DEC-61), is raised once "
+                       + "(DEC-69, DEC-70), and leaves when any member states a hold on that mark, in place or released." },
+        age: Number.isFinite(markedMs)
+          ? { state: "determined", since: m.marked_at, ms: Math.max(0, now - markedMs) }
+          : { state: "undetermined", reason: "no_mark_instant",
+              detail: "the mark carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients,
+        options: [QueueProducers.HOLD_STATE, ...this.#optionsOf([m.action])],
       });
     }
     return out;

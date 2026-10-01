@@ -1,5 +1,5 @@
 /* feedItems (R8) at its interface: what it answers, what it takes from queue, what it never carries; the bias debts
-   (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13), the Action layer's (R15–R18) and the
+   (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13), the Action layer's (R15–R19) and the
    signing key's (R14) among them. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -53,6 +53,8 @@ function busy(extra = {}) {
       opened_by: "alice", from: 1, to: 2, stage: "notification", instant: iso(NOW - 5), ids: [] }] }) },
     actionPlans: { checkpointsDue: () => ({ ok: true, limit: 500, truncated: false, items: [{ plan: "PLN-1", project: "PRJ-A",
       scenario: 1, version: 1, phase: "p", set_by: "alice", due: "2026-08-30", days_since_due: 2 }] }) },
+    actions: { holdsDue: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 1,
+      note: "a letter threatening suit", marked_by: "alice", marked_at: iso(NOW - 5), project: "PRJ-A" }] }) },
     ...extra,
   });
   w.member("alice", { role: "admin" });
@@ -78,7 +80,7 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
                    "newer-capture-affects-reference", "objective-gap", "source-modified", "governor-holding-host",
                    "partial-capture-outstanding", "capture-completed-unattended", "render-deferred",
                    "archive-fallback-eligible", "monitoring-recheck-due", "signer-self-registered", "action-clock-overdue",
-                   "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder"])
+                   "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold"])
     assert.ok(kinds.has(k), k);
   for (const it of r.items) {
     assert.ok(!("disposition" in it), `${it.id}: the mint's`);
@@ -89,7 +91,7 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   }
   assert.ok(w.asked.homes.length > 0 && w.asked.options.length > 0);
   // the options are exactly what optionsOf answered, except the producers' own acts (R9's take-up, the export log,
-  // R14's revoke, R16's judgement, R17's advance and decline, R18's answer)
+  // R14's revoke, R16's judgement, R17's advance and decline, R18's answer, R19's hold statement)
   const m = byId(r);
   assert.deepEqual(m["FINDING::p::s"].options, [{ id: "opt", on: ["INF-1"] }]);
   assert.deepEqual(m["FINDING::export-performed::1"].options.map((o) => o.id), ["exportlog"]);
@@ -98,6 +100,7 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   assert.deepEqual(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].options.map((o) => o.id), ["checkpointrecord"]);
   assert.deepEqual(m["OBLIGATION::escalation-stage-proposed::ESC-1::2"].options.map((o) => o.id), ["escalationadvance", "escalationdecline"]);
   assert.deepEqual(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-15"].options.map((o) => o.id), ["reminderanswer", "opt"]);
+  assert.deepEqual(m["OBLIGATION::litigation-hold::ACT-1::1"].options.map((o) => o.id), ["actionhold", "opt"]);
   // the homes are the walk's: the stance item is homed under both projects drawing on the question
   assert.deepEqual(m["FINDING::stance-changed-here-not-elsewhere::INQ-S::PRJ-A"].case.ancestors.map((a) => a.id), ["PRJ-A", "PRJ-B"]);
   // the facts, and one proposalsFeed read for both the findings and the dispositions
