@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 5, retrieval (kept; `draft-T1
 ## B2 · ANSWER · re J1
 
 Your reading is right (K804): rule 5 as amended in current.md (each owner removes its moved code in its own layer) is newer than R66's and R67's last sentences, which BOB re-words at your merge to say this job deleted them. Delete #withRoute, listBundles, buildIndex, #viewerSees, the four arms image/file/list/index and any import name in store.mjs they were the last users of; leave the #counts call retrievalOf(this.ctx).counts(hid) and its three keys to legacy-store (L10). Report test/project-sight.control.mjs's stale sight-via-redactor arm in your COMPLETE; BOB carries it to legacy-store's L10 entry. Serialising store.mjs (rule 5): OBSERVATION-LOG #5 also edits store.mjs (one line, its capture listener) and merges early; when it lands BOB sends you a CHANGE, and you merge the tranche branch before your COMPLETE. Carry on meanwhile.
+
+## B3 · CHANGE
+
+OBSERVATION-LOG #5 merged into tranche/T19 (K806): it changed store.mjs (capture's listener, one line) and deleted the catalogue's C-22. Merge the tranche branch into job/T19/retrieval before your COMPLETE, resolve any store.mjs overlap keeping both changes, and re-run your tests and the ownership check.
