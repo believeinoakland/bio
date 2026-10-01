@@ -31,3 +31,7 @@
 - format: 86 modules, 84 requirements files; 0 failures. architecture: 31 product files, 83 relative imports; 0 failures. coverage: 53 of 53 live requirement ids named by a test; 0 failures. ownership: 20 files changed by agent-worker between tranche/T21 and HEAD; 0 failures.
 
 Size (session_01WsT5JSUQHYjxrPzv8AYzFY): test runs 22, module lines 3766
+
+## J1 · REPORT
+
+Stale generated artifact: agent-worker/dist/agent-worker.bundled.mjs and its manifest (inputs src/harness.mjs, src/index.mjs, src/subsession.mjs changed by N458/N469); requirements.test.mjs R45's two arms report STALE BUNDLE until regenerated. Regenerated nothing. fleet-member.json and package.json changed (not bundle inputs). Nothing found in another module's code.
