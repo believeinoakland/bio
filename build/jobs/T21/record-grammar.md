@@ -34,3 +34,15 @@
 - `node checks/ownership.mjs … record-grammar tranche/T21`: 12 files changed; 0 failures
 
 Size (session_011zouWbsKdokGSgTHZdNzmM): test runs 8, module lines 2259
+
+## J1 · REPORT
+
+Generated artifacts staled by this change (not regenerated, B1): `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (not_product; fleetbundles.test.mjs names the six record-grammar files), and `newgroup/dist/newgroup.bundled.mjs` (installer; newgroup-bundle-fresh (C) fails with this change and passes on tranche/T21).
+
+Other modules' tests that go red with N456 (not fixed here, P7; each encodes the old slot or project ladder):
+- intent grammar.test.mjs:47 (R29): expects slot ids C-2.9, C-9.1 (intent's L7 share).
+- record-core record-core.test.mjs:1717 (R67): `['C-9.1']` alone no longer GRAMMAR_MALFORMED; :1984 (R67, K766): a second claim of C-9.1 is now GRAMMAR_DECLARED. The code is right under R67; the tests need re-keying.
+- promotion promote.test.mjs:340 (R19): revises a project forming → investigating, now STATE_MOVE_UNDECLARED (C-86.6).
+- project-stage stage.test.mjs:62, :100, :293, :385, :467 (R1, R2, R4): write investigating/matured moves, now STATE_MOVE_UNDECLARED.
+Rule 3 names only C-4.2 as accepted red; these nine are not named, so they are yours to place.
+Already red on tranche/T21 before this change: membership module-order.test.mjs:12 (R83), t9-notice-sight-bounds.test.mjs:185 (R79), promotion registry.test.mjs:58 (R39, R45, R46), all on modules.json's order after the fold.
