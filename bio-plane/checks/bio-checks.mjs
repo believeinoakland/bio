@@ -2368,9 +2368,6 @@ async function checkInfo2Contract(ctx, findings) {
    stood here until T15 (legacy-checks, N325). The grammar is queue's, a promotion check and an audit check queue
    registers, held whole in `src/queue/checks.mjs` since T14; this copy ran in no gate after T14. */
 
-/* `MECHANICAL_FIELD_SETS`, the per-operation closed field sets C-20.1 and promotion's R8 read, stood here until T19:
-   promotion holds the one copy (`src/promotion/history.mjs`) since T18, and its last importer here, promotion's own
-   module test, dropped its comparison (K750). C-20.1 itself left in T3 (K64). */
 
 // ---------------------------------------------------------------------------
 // Runner: rule 2's wrapper (T19, legacy-checks; record-grammar R28, R40, R41)
