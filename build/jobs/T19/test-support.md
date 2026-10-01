@@ -23,3 +23,7 @@
 - `format`: 83 modules, 78 requirements files; 0 failures · `architecture`: 4 product files, 2 relative imports; 0 failures · `coverage`: 9 of 9 live requirement ids named by a test; 0 failures · `ownership` vs `tranche/T19`: 3 files; 0 failures.
 
 Size (session_01RpWW8ZkFD9dYQi6UAZ9QQ4): test runs 5, module lines 368
+
+## J1 · COMPLETE
+
+N22 applied: the sweep makes a read-only tree writable on EACCES (lstat walk, never follows links) and retries; R2 met. Tests 25/25; format, architecture, coverage (9/9), ownership: 0 failures. Please strike R2's 'not yet met: N22' mark in build/requirements/test-support.md (outside my paths). Details in my record's Completion section.
