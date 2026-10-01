@@ -49,6 +49,10 @@ The record's shared grammar, below every module that reads or writes a document:
 - **R22** Both agree with `crypto.subtle.digest('SHA-256')` over known vectors, including the empty input, `abc`, and lengths 55, 56, 63, 64 and 65 bytes (the padding boundaries).
 - **R23** `b64ToBytes(s)` decodes standard base64 (`A–Z a–z 0–9 + /`), ignoring whitespace and `=`, to a `Uint8Array`, with no platform decoder; a character outside the alphabet throws `invalid base64 at position <i>`.
 
+**T19 layer 1's additions** (rule 6 of `build/plan/current.md`; worded at T19's fold, K653 BOB-6, K720). The rest of T19's stage (`STATES`, `HEADINGS`, the machine-work labels, `checkBundle` and its structural arms) is worded by the same fold.
+- **R28** `EXTENSION_ARMS` moves here with `checkBundle` (rule 2, K653 BOB-6): a frozen list of frozen `{name, ids}` entries, one per type arm `checkBundle` runs that a registered grammar (`opts.grammars`, record-core R67) may take the place of, claimed whole by its `ids`: `checkInfo2Contract` (`C-18.6`, `C-18.7`), `checkInquiryExtension` (`C-2.8`), `checkProjectExtension` (`C-2.9`, `C-9.1`). No id is in two entries. C-2.7's entry (`checkInformationExtension`) is not here: C-2.7 is capture's (registered in T18) and leaves the catalogue's list in this layer. The catalogue keeps a re-export (§12.2), and record-core reads this module's list (layer 2). *(not yet met: T19 layer 1)*
+- **R29** The shared act rows `NO_BASIS` (C-33.40) and `NO_CITATION` (C-33.41), each `{check, where, translation}` with its number and translation unchanged, move here from the catalogue's `ACT_SHAPE_CHECKS` (entities, progressions and inquiry read them). C-33.41's `where` names the entities and progressions sites that raise `NO_CITATION` (entities' declared relation; progressions' revision of a declared flow and exception document), not `src/store.mjs actNoCitation`, deleted by LEGACY-STORE #8 (N430, K720); the row change is `awaiting stamp` (promotion, layer 2). *(not yet met: T19 layer 1)*
+
 ## Private
 
 ### Uses

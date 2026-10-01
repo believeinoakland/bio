@@ -12,7 +12,7 @@ Gives any test process a temporary-file sandbox it owns and removes, and standar
 
 **Importing the sandbox (a side effect).**
 - **R1** On import, one directory is created under the host's temporary directory, named with the process id, and the process's temporary directory (`$TMPDIR`, and so `os.tmpdir()`) points inside it for the rest of the process.
-- **R2** When the process exits by any path that runs exit handlers (a normal end, `process.exit()`, an uncaught error), the directory and everything in it are removed synchronously before the process ends.
+- **R2** When the process exits by any path that runs exit handlers (a normal end, `process.exit()`, an uncaught error), the directory and everything in it are removed synchronously before the process ends, including a subdirectory or file a test left read-only, also when the process does not run as root: a removal refused for permission (`EACCES`) makes that part of the tree writable and is retried, so the directory never outlives the process. *(not yet met: N22)*
 - **R3** Importing it more than once in one process creates one directory and removes it once, and never throws.
 
 **`SANDBOX` → string.** 
@@ -42,4 +42,4 @@ None.
 
 ### Suggestions
 
-- A test of R2 spawns a child process that imports the module, writes a file, and exits through `process.exit()`, then checks the directory is gone; a test of R6 floods a pipe from a child and checks the final line arrives.
+- A test of R2 spawns a child process that imports the module, writes a file, and exits through `process.exit()`, then checks the directory is gone; R2's read-only case is tested by running that child as a non-root user (`setpriv` or `runuser`) with a read-only subdirectory left in the sandbox, and at the interface with an injected `EACCES` (N22); a test of R6 floods a pipe from a child and checks the final line arrives.
