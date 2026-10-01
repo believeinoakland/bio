@@ -67,3 +67,13 @@ Found in other modules while making the catalogue share my own (record and branc
 ## J2 · QUESTION
 
 Everything but R43 is done: module 110/110; format 0, architecture 0, ownership 0; coverage fails on R43 alone. R43 needs inquiry-grammar's R6 sub-slot and its `GROUND_LABEL_RE`, `leadLegFindings` and `checkLegExtentGrammar`, which I read from the catalogue until then. My reading of K787 (5): I merge `tranche/T19` once inquiry-grammar has merged, then build R43 and complete. Please send a CHANGE when inquiry-grammar is on `tranche/T19`. Until then I wait; nothing for Bob to do.
+
+## J3 · COMPLETE
+
+COMPLETE on `job/T19/basis-versions` @ 404e5d71d5, with `tranche/T19` merged at K817. The full report is in my record, under "Completion".
+- **R43 met:** `registration.test.mjs` (five "R43: …" tests). For every bundle of inquiry-grammar's corpus under every registry variant, the real version grammar registered after inquiry-grammar's gives the catalogue's pre-move golden findings, in content and order. A negative control differs.
+- **No file of mine imports the catalogue.** The leg grammar comes from inquiry-grammar.
+- **Catalogue deletions: none.** The catalogue's `checkInquiryBasis` still calls its `basisVersionFindings`, and inquiry (not yet merged) imports that `checkInquiryBasis`. run-productions, skills, strength, reevaluation and affordances still import the moved names, so `SUGGEST_CHECKS` stays too (K814).
+- **New REPORT:** inquiry's three `checkInquiryBasis` callers (:331, :1533, :1973) must call `basisVersionFindings` beside inquiry-grammar's `checkInquiryBasis` when they re-point, or they lose the version findings (P1).
+- **Tests:** mine 115/115. The users of this module are green, except publication, ratification, case-authoring and queue-producers, which fail identically on `tranche/T19` (the same 134 failing test names).
+- **Checks:** format 0, architecture 0, coverage 43/43, ownership 0.
