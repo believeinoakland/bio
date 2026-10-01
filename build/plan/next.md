@@ -9,6 +9,9 @@
 
 - N482 · 2026-10-01 · **bundler**, **subresources**, `not_product` (BUNDLER #5's J1 (2), K1020): `bio-plane/test/system/deploybindings.test.mjs`'s D-54 live arms read the text of `bio-plane/wrangler.jsonc`'s comment and `src/subresources.mjs`'s `SUBRESOURCE_CAP` source: ratchets on repository data no requirement states, and tests of source text (P7). State the guarded property as a requirement of its owner (subresources' cap; the deploy binding's), test it at that interface, then retire the source-text arms. **Hard reason:** a requirement must first say what is guarded (P5, P7); no current requirement does.
 
+- N483 · 2026-10-01 · **plane**, **conformance**, **queue-producers** (K1024, the split): after `corpus-export` lands, the plane's op map spreads `corpusExportOps` and publication's `export`/`exportlog` delegates and constant re-exports retire; conformance's `record.test.mjs`:165 and queue-producers (`EXPORT_LOG_LIMIT_DEFAULT`, `exportLog`) call `corpus-export` directly. **Hard reason:** the plane and conformance have no T22 job (P8); the delegates keep them green meanwhile.
+- N484 · 2026-10-01 · **record-core**, **provenance**, **corpus-export** (K1024): the export reads `bundles`' title and sha columns (beyond record-core R37), `register.bytes` (beyond provenance R48) and the `files`/`history`/`manifest` tables, which no requirement states; state each read contract in its owner's Provides. **Hard reason:** predates the split; a provider's requirement change is read by running jobs' users (P5), so it is written for T23.
+
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
 | row | item | hard reason | note |

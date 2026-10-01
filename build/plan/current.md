@@ -83,7 +83,7 @@ T21's rules hold: merge early; one file, one editor; a job names each `not yet m
 - **L10** monitoring (A28, A30, A32, A35; **A29**) · scheduler (N479)
 - **L11** **affordances** (J1; *J3*) · **op-declarations** (*J3*) · **control-plane** (*J3*) · queue-producers (N476, H15, H19; **J8**; *J5*) · queue (H15, H19) · instance-setup (H17) · installer (A24, A25, H17) (check)
 
-J2's audit may add a module to any layer. Sizes (K617, the 4,000-line mark): provenance 3,938 and extraction 3,997 take comments or fixture deletions only; ratification (3,770) takes only H2's contested arm and H6's refusal and stops and reports if its job would pass the mark; publication (4,408) is split first in its own L8 job and ends under the mark; inquiry (3,783) adds A9's registration only; docprofile (4,950) has no entry and no job. (check)
+J2's audit may add a module to any layer. Sizes (K617, the 4,000-line mark): provenance 3,938 and extraction 3,997 take comments or fixture deletions only; ratification (3,770) takes only H2's contested arm and H6's refusal and stops and reports if its job would pass the mark; publication (3,690; K1024) is split first in its own L8 job and ends under the mark; inquiry (3,783) adds A9's registration only; docprofile (4,950) has no entry and no job. (check)
 
 ## STARTs, sketched (BOB writes the final ones)
 
