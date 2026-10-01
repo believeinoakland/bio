@@ -12032,7 +12032,7 @@
    "recommendation": "Option 1, adding option 3's next step only where the member has just created the empty thing.",
    "whoDecides": "Design: the canon already sets the principle (state it, never dress it as an error); the vocabulary and treatments are detail within it.",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "",
     "title": "What screens say while waiting, loading or empty",
     "inOneBreath": "Should every screen use one shared set of plain statements for 'nothing here', 'still loading', 'could not read' and 'waiting on someone until a date', and may an empty screen suggest a next step?",
@@ -12233,6 +12233,18 @@
      "California Gov. Code §7922.535 (10-day determination), for the story only"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-86",
+     "DEC-94",
+     "DEC-98"
+    ],
+    "status": "ruled",
+    "title": "What screens say while empty, loading or waiting",
+    "decided": "Empty, loading, failed and waiting states share one vocabulary across every screen, each with its own fixed look and none dressed as an error: 'Nothing here' (truly empty); 'Still loading'; 'Could not read this, because…' (the screen's own request failed); and the record's 'Undetermined, because…'. A screen that cannot tell 'could not read' from 'none' says 'could not read'. Every wait carries one line naming what is awaited, from whom, and the expected or legal date where one exists ('Waiting on the City Clerk's reply, due 14 October'), or that no date is set. An empty screen offers one plain next step only on something the member has just created (a new project, a new plan: 'Nothing here yet. Add the first question.'), nowhere else. As a deadline nears, an item's position, colour or wording may change; that is display, not a notification. Exact wording and looks are the redesign's."
    }
   },
   {

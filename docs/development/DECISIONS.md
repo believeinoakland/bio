@@ -1576,3 +1576,21 @@ response: **Bob, 2026-10-01: A.**
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 13; Intake Doctrine §4.
 owed: the held-captures list and the bulk set-aside and bulk link acts (no set-aside act exists today), and the batch eligibility check's "contested" arm (a document in an unresolved contradiction), as requirements for Bob's approval (BOB places them); the UX page's open question 13 marked ruled.
+
+### DEC-98 · answered
+raised: 2026-10-01 · the same design session with Bob (the UX canon's open question 15)
+for: bob
+question: What do screens say while empty, loading, failed or waiting (renders held back, capture requests hours away, legal clocks of days): one shared vocabulary or screen by screen; must every wait say what, from whom and by when; may an empty screen offer a next step?
+why it is Bob's: UX; it extends DEC-86's rule (state what is not known, never as an error) to the ordinary states, and touches DEC-69 (no nagging).
+provisional: DEC-86 (Undetermined and its four neighbours); DEC-94 item 2 (a nearing deadline changes display only); instance-setup R20 and Publication §7 (a page that cannot read says so, never that none is recorded).
+alternative: (A) the shared vocabulary without next steps; (B) each screen designed on its own.
+recommendation: (C) A, plus a next step on something just created.
+reversal cost: low; nothing is built.
+response: **Bob, 2026-10-01: C, as recommended.**
+  1. ONE VOCABULARY, everywhere, each state with its own fixed look and none dressed as an error: "Nothing here" (truly empty); "Still loading"; "Could not read this, because…" (the screen's own request failed); and the record's "Undetermined, because…" (DEC-86). A screen that cannot tell "could not read" from "none" says "could not read".
+  2. EVERY WAIT SAYS WHAT, FROM WHOM AND BY WHEN: one line naming what is awaited, from whom, and the expected or legal date where one exists, or that no date is set.
+  3. A NEXT STEP ONLY ON SOMETHING JUST CREATED: an empty screen for something the member has just created (a new project, a new plan) shows one plain next step ("Nothing here yet. Add the first question."); nowhere else.
+  Exact wording and looks are the redesign's.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 15; Interaction Constructs §U.
+owed: each screen's reads distinguish empty, still loading and could-not-read (a check in each screen's build, BOB's to place); the redesign's patterns; the UX page's open question 15 marked ruled.
