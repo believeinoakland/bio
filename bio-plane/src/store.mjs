@@ -257,9 +257,6 @@ export class Store extends DurableObject {
     addColumns();
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill (K4, R3) */
 
-    /* D-432: the opaque minter's ledger learns every gated id that already stands in a live row, and every one the
-       counter issued for an untailed gated prefix — LAST, because it reads tables the schema pass above creates.
-       Every boot, idempotently; `#seedMintLedger` says what it reads and what it cannot see. */
     recordOf(this.ctx).seedMintLedger(Store.#MINT_LEDGER_LIVE);
 
     /* D-497: the SIGHT INDEX is recomputed from the owners' acts, every boot, AFTER the schema pass creates
