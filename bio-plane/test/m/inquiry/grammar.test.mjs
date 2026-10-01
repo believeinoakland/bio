@@ -195,7 +195,7 @@ test("R4 R5 R8 R9 R17 R38 the grammar face re-exports inquiry-grammar's and reco
     assert.equal(face[n], IG[n], n);
   for (const n of ["BASIS_ROLES", "INQUIRY_TITLE_MAX", "deriveInquiryTitle", "inquiryQuestionOf"]) assert.equal(face[n], RG[n], n);
   assert.equal(face.INQUIRY_MACHINE, RG.STATES.inquiry);
-  assert.equal(INQUIRY_ROWS, IG.INQUIRY_GRAMMAR_ROWS, "R38: inquiry-grammar's rows, read");
+  assert.equal(INQUIRY_ROWS, IG.INQUIRY_GRAMMAR_CHECKS, "R38: inquiry-grammar's rows, read");
   for (const code of ["NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND", "LEAD_NOT_EVIDENCE"])
     assert.ok(INQUIRY_ROWS[code] && INQUIRY_ROWS[code].check && INQUIRY_ROWS[code].translation, code);
   /* R17: with no grammars named, the face judges with inquiry-grammar's own arms */
