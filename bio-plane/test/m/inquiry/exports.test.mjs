@@ -1,10 +1,10 @@
-/* R52 (K861, plane R10): the two shares of what `plane` holds that this module exports for plane to register under its
-   name, and registers nowhere itself: (1) the figure source shaped as `record-core` R63's `counts(hid)`, with its key
-   list (`inquiryMigrationReplays`), registered here through R63 as plane will register it, and read whole, through the
-   caller's sight, through `op=stats`' source and in purge's proof; (2) the leg-grade resolver `retrieval`'s
-   `registerLegGrades` takes (its R55), registered through the real retrieval and read through its leg rows (R12). The
-   pins are the counts plane's held copy takes today (`held.mjs`' `n("inquiry_migration_replays", "bundle_id")`) and
-   its leg grades (`held.test.mjs`' last test), each re-stated over this module's own fixture. */
+/* R52 (K861, plane R10): the two shares this module exports for plane to register under its name, and registers
+   nowhere itself: (1) the figure source shaped as `record-core` R63's `counts(hid)`, with its key list
+   (`inquiryMigrationReplays`), registered here through R63 as plane registers it, and read whole, through the caller's
+   sight, through `op=stats`' source and in purge's proof; (2) the leg-grade resolver `retrieval`'s `registerLegGrades`
+   takes (its R55), registered through the real retrieval and read through its leg rows (R12). The pinned values are
+   this module's count of `inquiry_migration_replays` as its SQL states it and its leg grades as `legCapped` answers
+   them, each over this module's own fixture (they are the values plane answered before plane R10 was met, K923). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, inquiryMd } from "./fixture.mjs";
@@ -27,9 +27,8 @@ function replays() {
     CAP, "2026-09-28T00:00:00Z");
   return { w, P };
 }
-/* The held copy's count (plane R10, `held.mjs`), stated here as its SQL: the table less the rows naming a hidden bundle,
-   a NULL key naming none. */
-const heldCount = (w, hid) => w.row(hid
+/* The pinned count, stated here as its SQL: the table less the rows naming a hidden bundle, a NULL key naming none. */
+const pinnedCount = (w, hid) => w.row(hid
   ? `SELECT count(*) AS c FROM inquiry_migration_replays WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}`
   : `SELECT count(*) AS c FROM inquiry_migration_replays`, ...(hid ? hid.args : [])).c;
 const register = (w) => w.record.registerCounts("inquiry", [...Inquiry.COUNT_KEYS], (hid) => w.k.counts(hid));
@@ -44,15 +43,15 @@ test("R52 (1) the figure source: its key list is `inquiryMigrationReplays`, it r
   assert.deepEqual(Object.keys(w.k.counts(null)), [...Inquiry.COUNT_KEYS], "counts(hid) answers exactly its keys");
 });
 
-test("R52 (1) R63: the registered figure counts as plane's held copy counts it, whole and through each caller's sight; a NULL key names no bundle and is never dropped", () => {
+test("R52 (1) R63: the registered figure counts the table as its SQL states, whole and through each caller's sight; a NULL key names no bundle and is never dropped", () => {
   const { w } = replays();
   register(w);
   assert.equal(w.record.counts(null).inquiryMigrationReplays, 3, "whole: the two replays and the row naming no bundle");
-  assert.equal(w.record.counts(null).inquiryMigrationReplays, heldCount(w, null));
+  assert.equal(w.record.counts(null).inquiryMigrationReplays, pinnedCount(w, null));
   for (const [viewer, expected] of [["admin", 3], [V("alice"), 3], [V("bob"), 2], ["", 1], [null, 1], ["class:member", 3]]) {
     const hid = hiddenBundles(viewer);
     assert.equal(w.k.counts(hid).inquiryMigrationReplays, expected, `${viewer}`);
-    assert.equal(w.record.counts(hid).inquiryMigrationReplays, heldCount(w, hid), `${viewer}: as the held copy counts it`);
+    assert.equal(w.record.counts(hid).inquiryMigrationReplays, pinnedCount(w, hid), `${viewer}: as the pinned count states it`);
   }
   /* the plain inquiry wrote no row, and a revision writes none */
   assert.equal(w.row(`SELECT count(*) AS c FROM inquiry_migration_replays WHERE bundle_id=?`, PLAIN).c, 0);
@@ -82,7 +81,7 @@ test("R52 (1) R63: through op=stats' source the figure is the caller's sight, an
   const after = w.record.proofCounts();
   assert.equal(after.inquiryMigrationReplays, 2);
   assert.equal(before.inquiryMigrationReplays - after.inquiryMigrationReplays, 1, "the proof shows the replay row taken");
-  assert.equal(after.inquiryMigrationReplays, heldCount(w, null));
+  assert.equal(after.inquiryMigrationReplays, pinnedCount(w, null));
 });
 
 /* The leg-grade corpus: one document per capture ceiling, each by the route its bytes came by (provenance R24–R26): a
@@ -105,7 +104,7 @@ test("R52 (2) R14: the resolver caps each leg's capture letter as legCapped answ
                 { grade: "C", target_id: NONE }, { grade: "A", target_id: DB }, { grade: "D", target_id: DC }];
   const cap = w.k.earned(null, [DC, DB, DU, NONE]).earned.capture;
   const got = resolve(legs);
-  assert.deepEqual(got, legs.map((l) => legCapped(l.grade, cap[l.target_id], l.target_id)), "the held copy's answer, leg for leg");
+  assert.deepEqual(got, legs.map((l) => legCapped(l.grade, cap[l.target_id], l.target_id)), "legCapped's answer over the earned ceiling, leg for leg");
   assert.equal(got[0].grade, "C", "B above the archive replay's C is read at C");
   assert.equal(got[1], null, "B within the ceiling stands");
   assert.equal(got[2].grade, null, "an undetermined ceiling answers a null grade");
