@@ -7,7 +7,7 @@
 import { world as retrievalWorld, V, sha, provDoc, T0 } from "../retrieval/fixture.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { Citation, citationOf } from "../../../src/citation/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { BASIS_ROLES, checkLegExtentGrammar } from "../../../src/inquiry/index.mjs";
 
 export { V, sha, T0 };

@@ -5,7 +5,14 @@ import assert from "node:assert/strict";
 import { world, V, biasMd, docMd } from "./fixture.mjs";
 import { citationOps, inquiryServices, CITE_CHECKS, CITE_EXTENT_CHECKS } from "../../../src/citation/index.mjs";
 import { inquiryOf, BASIS_ROLES, checkLegExtentGrammar } from "../../../src/inquiry/index.mjs";
-import { ACT_SHAPE_CHECKS, CONTENT_EXTENT_CHECKS, STATES, OBJECT_TYPES } from "../../../checks/bio-checks.mjs";
+import { STATES, OBJECT_TYPES } from "../../../src/record-grammar/index.mjs";
+import * as recordGrammar from "../../../src/record-grammar/index.mjs";
+import * as recordCore from "../../../src/record-core/index.mjs";
+import * as membership from "../../../src/membership/index.mjs";
+import * as promotion from "../../../src/promotion/index.mjs";
+import * as content from "../../../src/content/index.mjs";
+import * as retrieval from "../../../src/retrieval/index.mjs";
+import * as inquiry from "../../../src/inquiry/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 
@@ -124,7 +131,7 @@ test("R10: no place is named in this module's outward text — its rows, and the
   assert.doesNotMatch(w.md(p), PLACES);
 });
 
-test("R11: each check moved here with its number, code and translation unchanged, its `where` re-pointed to this module, and none is left in the catalogue", () => {
+test("R11: each check moved here with its number, code and translation unchanged, its `where` re-pointed to this module, and no other home holds its code or number", () => {
   assert.deepEqual(Object.entries(CITE_CHECKS).map(([k, r]) => [k, r.check, r.where]), [
     ["BAD_NOTE", "C-33.15", "src/citation/index.mjs cite > is-cite-note"],
     ["NO_ROLE", "C-33.16", "src/citation/index.mjs cite > is-cite-role"],
@@ -140,10 +147,23 @@ test("R11: each check moved here with its number, code and translation unchanged
     ["BAD_EXTENT_VALUE", "C-45.10", "src/citation/index.mjs cite > is-cite-extent"],
   ]);
   for (const r of [...Object.values(CITE_CHECKS), ...Object.values(CITE_EXTENT_CHECKS)]) assert.ok(r.translation.length > 80);
-  for (const k of Object.keys(CITE_CHECKS)) assert.equal(k in ACT_SHAPE_CHECKS, false, `${k} is no longer the catalogue's`);
-  for (const k of Object.keys(CITE_EXTENT_CHECKS)) assert.equal(k in CONTENT_EXTENT_CHECKS, false, `${k} is no longer the catalogue's`);
-  const numbers = [...Object.values(ACT_SHAPE_CHECKS), ...Object.values(CONTENT_EXTENT_CHECKS)].map((r) => r.check);
-  for (const r of [...Object.values(CITE_CHECKS), ...Object.values(CITE_EXTENT_CHECKS)]) assert.equal(numbers.includes(r.check), false);
+  /* The rest of C-45 is `content`'s own table (its R48): none of this module's four codes or numbers is there. */
+  const { CONTENT_EXTENT_CHECKS } = content;
+  assert.ok(Object.keys(CONTENT_EXTENT_CHECKS).length > 0, "content's C-45 table is read (a control)");
+  for (const k of Object.keys(CITE_EXTENT_CHECKS)) assert.equal(k in CONTENT_EXTENT_CHECKS, false, `${k} is not content's`);
+  /* The act-shape family C-33 has no single home since its rows moved: each is held by the module that mints it. Every
+     row table the modules this one uses publish (each `*_CHECKS` export of their entries, record-grammar's shared act
+     rows C-33.40 and C-33.41 among them) is read, and none holds one of this module's codes or numbers. */
+  const homes = [];
+  for (const [name, mod] of Object.entries({ recordGrammar, recordCore, membership, promotion, content, retrieval, inquiry }))
+    for (const [exp, table] of Object.entries(mod))
+      if (/_CHECKS$/.test(exp) && table && typeof table === "object")
+        for (const [code, row] of Object.entries(table))
+          if (row && typeof row.check === "string") homes.push({ home: `${name}.${exp}`, code, check: row.check });
+  assert.ok(homes.some((h) => h.home === "recordGrammar.SHARED_ACT_CHECKS" && h.check === "C-33.40"), "the shared act rows are read (a control)");
+  assert.ok(homes.some((h) => /^C-33\./.test(h.check) && h.home.startsWith("retrieval.")), "retrieval's act-shape rows are read (a control)");
+  for (const [code, row] of [...Object.entries(CITE_CHECKS), ...Object.entries(CITE_EXTENT_CHECKS)])
+    assert.deepEqual(homes.filter((h) => h.code === code || h.check === row.check), [], `${code} (${row.check}) is held only here`);
 });
 
 test("K3, R7: the op routes — the control plane's stamps are read from the query, the part arrives whole as a bag, and no weight is read from the caller", async () => {
