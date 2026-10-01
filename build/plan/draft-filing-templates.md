@@ -189,3 +189,8 @@ The clauses change as follows (BOB's reading, P17; each stated so Bob can correc
 - **Calendar.** Holidays, office hours and the time zone are facts of the jurisdiction profile (`jurisdictions` R41–R44) and their confirmation horizons are the profile's (`local-facts` R3), never a template's.
 - **Placement.** `filing-templates` and `local-facts` join layer 9 in T21 (architecture, Bob's yes to Q9); the first profile's research (holidays, office hours, time zone) is a BOB worker's, starting now.
 
+
+**Bob's second answers (2026-10-01, K924).** "Maybe prior versions of a template shouldn't be referred to as 'retired'. Maybe 'updated' is more accurate." "Briefings for lower tiers don't require legal counsel's involvement, only tier 3 requires it." "Yes, a member can definitely develop a filing without a template as a starting point." Folded:
+- **Prior versions are `updated`**, not superseded or retired: when a later version is approved, the earlier one reads `updated`, naming its successor, and stays offered for a filing with its metadata (the latest is the default). `retired` remains only for withdrawing a whole template from use, by an approver with a reason; a retired template's versions are not offered.
+- **Briefings at every tier; counsel only at Tier 3.** A briefing (`counselPacket`, from a `brief` template or none) may be prepared at any tier. At Tier 3 it names the group's counsel (`NO_COUNSEL` as today); at Tiers 1 and 2 counsel is optional and the briefing may be for the group's own use or anyone it chooses. `NOT_TIER3` retires.
+- **Without a template:** confirmed as §5 reads it.
