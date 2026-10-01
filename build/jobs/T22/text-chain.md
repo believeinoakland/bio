@@ -24,3 +24,7 @@
 - `node checks/ownership.mjs … text-chain tranche/T22`: 1 files changed; 0 failures
 
 Size (session_017vtxc1g46pax3uvWUKZx2s): test runs 2, module lines 2032
+
+## J1 · REPORT
+
+Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product): src/textchain.mjs changed (comments only). Not regenerated.
