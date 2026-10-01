@@ -18,3 +18,7 @@
 - `ownership: 1 files changed by sources between tranche/T19 and HEAD; 0 failures`
 
 Size (session_011v92rStaFe1QmyF26UqmkU): test runs 1, module lines 837
+
+## J1 · REPORT
+
+build/requirements/sources.md Uses still names legacy-checks for requiredArgument and isMachineIdentity. The module calls no requiredArgument, and isMachineIdentity now comes from record-grammar (its R15). The line should name record-grammar and drop legacy-checks; modules.json can drop legacy-checks from sources' uses. Both files are yours.
