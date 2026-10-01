@@ -17,3 +17,7 @@
 - `checks/ownership.mjs bias tranche/T20`: ownership: 4 files changed by bias between tranche/T20 and HEAD; 0 failures
 
 Size (session_019fYYaznWEvSJmjoUKHDhz9): test runs 2, module lines 6
+
+## J1 · COMPLETE
+
+B1 applied (K881): R23's order test registers `tasks` in `legacy-store`'s place (scheduler < tasks < queue in MODULE_ORDER). Re-scan found two more retired ids, re-pointed: adopt-manifest R23 op test's listener -> `queue`; world.mjs's promotion facts -> their real providers (instance-setup, connections, publication). Tests only. test/m/bias/: 56 tests, 55 pass, 0 fail, 1 todo (R26). format, architecture, coverage (46/46), ownership: 0 failures. No artifact moved. Record has the details.
