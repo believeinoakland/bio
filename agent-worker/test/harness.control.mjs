@@ -229,7 +229,7 @@ const runMember = () => runNamed("agent-worker.test.mjs", "agent-worker");
 
 /* FL-7's arms reach ACROSS THE TREE, and they have to. This item's defect had
    one half in `agent-worker/src/harness.mjs` (the gate's ending) and the other
-   in `bio-plane/src/airun.mjs` (the catalogue that defines it), and the whole
+   in run-rules (`bio-plane/src/run-rules/rules.mjs`, the catalogue that defines it), and the whole
    point of the fix is that the two are now asserted against EACH OTHER. An arm
    that could only run the member's suites could not measure that at all.
    The plane's suites print `<label>: N pass, M fail` — a DIFFERENT tail from the
@@ -762,9 +762,9 @@ const AI_RUNS = join(PLANE, "src", "ai-runs", "index.mjs");
 
 arm({
   id: "G1", subject: "THE DEFECT ITSELF RESTORED — a gate-refused run recorded as one that FINISHED",
-  what: "`RUN_NEVER_STARTED` is emptied in the plane's airun.mjs, so `runStatusFor` falls through exactly as the pre-FL-8 ternary did and a launch the deployment gate refused is recorded `finished` again",
+  what: "`RUN_NEVER_STARTED` is emptied in run-rules, so `runStatusFor` falls through exactly as the pre-FL-8 ternary did and a launch the deployment gate refused is recorded `finished` again",
   mustFail: "airun ARM H1 (the status through three ops) and ARM H2, which must NAME the misdescription rather than report an unequal string; ARM W3, because `never-started` becomes a published term with no producer; ARM W5, which joins the ending and the status on one run; and the member suite's own FL-8 arm",
-  mustNot: "ARM H3 (the over-strictness partition — nothing about a completed, cancelled or bound-stopped run moves), ARM V9 (the vocabulary is untouched), ARM W1 (the store still asks airun.mjs), W2 or W4",
+  mustNot: "ARM H3 (the over-strictness partition — nothing about a completed, cancelled or bound-stopped run moves), ARM V9 (the vocabulary is untouched), ARM W1 (the store still asks run-rules), W2 or W4",
   file: AIRUN,
   find: `export const RUN_NEVER_STARTED = { "mode-not-deployed": 1 };`,
   replace: `export const RUN_NEVER_STARTED = {};`,
@@ -786,7 +786,7 @@ arm({
 
 arm({
   id: "G2", subject: "A SECOND COPY OF THE RULE THAT AGREES — the arm that earns the two-way claim",
-  what: "the store stops ASKING airun.mjs and decides the status itself, with a copy that returns IDENTICAL answers for every bound and every ending. Nothing a caller can observe changes; only where the rule lives does",
+  what: "the store stops ASKING run-rules and decides the status itself, with a copy that returns IDENTICAL answers for every bound and every ending. Nothing a caller can observe changes; only where the rule lives does",
   mustFail: "airun ARM W1, and EXACTLY THAT ONE. It is the whole point of this arm: a source-agreement assertion that failed here together with the behavioural arms would be the same comparison written twice, which is what FL-7's F3 measured one item ago",
   mustNot: "every other assertion in the suite — H1, H2, H3, H4, V9, W2, W3, W4, W5 — because the record a caller reads is byte-for-byte what it was",
   file: AI_RUNS,

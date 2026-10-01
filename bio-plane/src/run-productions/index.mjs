@@ -1,5 +1,5 @@
 /* run-productions — what an AI run produces, and the only way it produces it (requirements:
- * `build/requirements/run-productions.md`, R1–R19; map: `build/extraction/run-productions.md`). Extracted from the
+ * `build/requirements/run-productions.md`, R1–R20; map: `build/extraction/run-productions.md`). Extracted from the
  * legacy store (PL-3/IS-4's suggest endpoint `suggestVersion` with `#suggestionPersisted` and `#suggestionFrontmatter`;
  * SK-8's `extractPropose` and `extractProposals` with `#posFields`; the dispatch of `op=suggest`, `op=extractpropose`
  * and `op=extractproposals`), from the legacy schema (`suggest_refusals`, `proposed_readings`) and from the check
@@ -818,14 +818,30 @@ export class RunProductions {
                content_id: r.content_id ?? null, proposed_by: r.proposed_by, mint: mintLabel(r.proposed_by) })) };
   }
 
-  /** The counts `op=stats` reports of this module's tables (map §3): each row names a bundle (a proposal its document,
-   *  a stored refusal its question), and `hid`, when given, is `{sql, args}` naming the bundles the caller may not
-   *  see, whose rows are left out. */
+  /** R20 (K861, plane R10): this module's figure source, exported with its key list for `plane` to register under this
+   *  module's name through record-core R63 (`registerCounts("run-productions", [...RunProductions.COUNT_KEYS],
+   *  (hid) => p.counts(hid))`); the module registers nothing itself while plane holds its copy. Each figure is the
+   *  table's rows less those naming a bundle in `hid` by the column named here: a proposal by its document, a stored
+   *  refusal by its question. */
+  static COUNT_KEYS = Object.freeze(["proposedReadings", "suggestRefusals"]);
+  static #COUNTED = Object.freeze({ proposedReadings: ["proposed_readings", "bundle_id"],
+                                    suggestRefusals: ["suggest_refusals", "target"] });
+
+  /** R20, R17, D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): R63's `counts(hid)` for this module's tables,
+   *  answering exactly `COUNT_KEYS`. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for a viewer that
+   *  sees every bundle and for the direct internal call (purge's proof), which count whole. `COALESCE(k, '')`: a NULL
+   *  key names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure whose table cannot be read
+   *  is left out, and R63 answers it null, never zero. Synchronous; writes nothing; never throws. */
   counts(hid = null) {
-    const c = (t, k) => Number(this.#one(
-      `SELECT count(*) c FROM ${t}${hid ? ` WHERE COALESCE(${k}, '') NOT IN ${hid.sql}` : ""}`,
-      ...(hid ? hid.args : []))?.c ?? 0);
-    return { proposedReadings: c("proposed_readings", "bundle_id"), suggestRefusals: c("suggest_refusals", "target") };
+    const out = {};
+    for (const key of RunProductions.COUNT_KEYS) {
+      const [table, col] = RunProductions.#COUNTED[key];
+      try {
+        out[key] = Number(this.#one(`SELECT count(*) c FROM ${table}${hid ? ` WHERE COALESCE(${col}, '') NOT IN ${hid.sql}` : ""}`,
+                                    ...(hid ? hid.args : [])).c);
+      } catch { /* unread: R63 answers it null, never zero */ }
+    }
+    return out;
   }
 }
 

@@ -13,7 +13,7 @@ import { GOLDEN, run, plain, judge } from "./fixture.mjs";
 
 const { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, checkLegExtentGrammar, supersedesEdgeFindings,
         divisionDisclosureFindings, leadLegFindings, checkSupersession, INQUIRY_GRAMMARS, LEAD_CHECKS,
-        INQUIRY_GRAMMAR_ROWS, GROUND_LABEL_RE, EARNED_SOURCE_AXIS } = IG;
+        INQUIRY_GRAMMAR_CHECKS, GROUND_LABEL_RE, EARNED_SOURCE_AXIS } = IG;
 const VARIANTS = Object.keys(REGISTRY_VARIANTS);
 const ctxOf = (fm, pub = null, earned = null) => ({ fm, publishedRegistry: pub, earnedRegistry: earned });
 const sync = (fn) => { const r = run(fn); assert.equal(r.answer, undefined, "answers nothing"); return plain(r.findings); };
@@ -200,24 +200,35 @@ test("R5 the row: this module's LEAD_CHECKS is exactly {LEAD_NOT_EVIDENCE: C-54.
   for (const r of Object.values(OBSERVATION_LEAD_CHECKS)) assert.notEqual(r.check, "C-54.1");
 });
 
-test("R7 INQUIRY_GRAMMAR_ROWS: the six rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (awaiting stamp)", () => {
-  assert.ok(Object.isFrozen(INQUIRY_GRAMMAR_ROWS));
-  assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_ROWS),
+test("R7 INQUIRY_GRAMMAR_CHECKS: the six rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (awaiting stamp)", () => {
+  assert.ok(Object.isFrozen(INQUIRY_GRAMMAR_CHECKS));
+  assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_CHECKS),
                    ["LEAD_NOT_EVIDENCE", "NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND"]);
   const numbers = { LEAD_NOT_EVIDENCE: "C-54.1", NOT_INQUIRIES: "C-33.13", SELF_BASIS: "C-33.22", BASIS_CYCLE: "C-33.23",
                     MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8" };
-  for (const [k, row] of Object.entries(INQUIRY_GRAMMAR_ROWS)) {
+  for (const [k, row] of Object.entries(INQUIRY_GRAMMAR_CHECKS)) {
     assert.deepEqual(Object.keys(row), ["check", "where", "translation"], k);
     assert.equal(row.check, numbers[k], k);
     const was = k === "LEAD_NOT_EVIDENCE" ? GOLDEN.LEAD_CHECKS[k] : GOLDEN.rows[k];
     assert.equal(row.translation, was.translation, k);
     if (k !== "LEAD_NOT_EVIDENCE") assert.equal(row.where, was.where, k);
   }
-  assert.equal(INQUIRY_GRAMMAR_ROWS.LEAD_NOT_EVIDENCE, LEAD_CHECKS.LEAD_NOT_EVIDENCE, "one row, not a copy");
+  assert.equal(INQUIRY_GRAMMAR_CHECKS.LEAD_NOT_EVIDENCE, LEAD_CHECKS.LEAD_NOT_EVIDENCE, "one row, not a copy");
   assert.equal(LEAD_CHECKS.LEAD_NOT_EVIDENCE.where, "src/inquiry-grammar/grammar.mjs leadLegFindings > is-lead-not-evidence");
   /* the finding carries its row: the code is the row's key, the check its number */
   const r = run((f) => leadLegFindings("basis[0]", { content_id: "LEAD-2026-0101-abc" }, f)).findings[0];
-  assert.equal(r.check, INQUIRY_GRAMMAR_ROWS[r.code].check);
+  assert.equal(r.check, INQUIRY_GRAMMAR_CHECKS[r.code].check);
+});
+
+test("R7 the old name INQUIRY_GRAMMAR_ROWS, kept for its readers outside this module, is the same frozen object as INQUIRY_GRAMMAR_CHECKS, from both faces, and is not a `*_CHECKS` family", async () => {
+  const CHECKS = await import("../../../src/inquiry-grammar/checks.mjs");
+  for (const face of [IG, CHECKS]) {
+    assert.equal(face.INQUIRY_GRAMMAR_ROWS, INQUIRY_GRAMMAR_CHECKS, "the same object, not a copy");
+    assert.equal(face.INQUIRY_GRAMMAR_CHECKS, INQUIRY_GRAMMAR_CHECKS);
+    assert.ok(Object.isFrozen(face.INQUIRY_GRAMMAR_ROWS));
+  }
+  const families = Object.keys(CHECKS).filter((k) => /_CHECKS$/.test(k)).sort();
+  assert.deepEqual(families, ["INQUIRY_GRAMMAR_CHECKS", "LEAD_CHECKS"], "the module's families, found by the suffix alone");
 });
 
 test("R8 the invariants: each check the module holds is raised through its interface (C-2.8, C-21.2, C-6.1, C-6.3, C-15.1, C-54.1) and each row it holds is present (C-33.13, C-33.22, C-33.23, C-32.7, C-32.8)", async () => {
@@ -225,7 +236,7 @@ test("R8 the invariants: each check the module holds is raised through its inter
   for (const id of Object.keys(BUNDLE_CASES)) for (const v of VARIANTS)
     for (const x of await judge(id, v, INQUIRY_GRAMMARS)) raised.add(x.check);
   for (const c of ["C-2.8", "C-21.2", "C-6.1", "C-6.3", "C-15.1", "C-54.1"]) assert.ok(raised.has(c), c);
-  const rows = new Set(Object.values(INQUIRY_GRAMMAR_ROWS).map((r) => r.check));
+  const rows = new Set(Object.values(INQUIRY_GRAMMAR_CHECKS).map((r) => r.check));
   for (const c of ["C-33.13", "C-33.22", "C-33.23", "C-32.7", "C-32.8", "C-54.1"]) assert.ok(rows.has(c), c);
 });
 
@@ -251,7 +262,7 @@ test("R9 pure: the same inputs give the same findings, nothing handed in is chan
 
 test("R10 no place: no finding the corpus raises, and no row's translation, names a place", async () => {
   const PLACES = /\b(oakland|alameda|berkeley|california|san francisco|bay area|sacramento|los angeles|new york|port of)\b/i;
-  const texts = Object.values(INQUIRY_GRAMMAR_ROWS).map((r) => r.translation);
+  const texts = Object.values(INQUIRY_GRAMMAR_CHECKS).map((r) => r.translation);
   for (const id of Object.keys(BUNDLE_CASES)) for (const v of VARIANTS)
     for (const x of await judge(id, v, INQUIRY_GRAMMARS)) texts.push(x.message, ...(x.repairs || []));
   for (const [name, legs] of Object.entries(LEG_CASES))
