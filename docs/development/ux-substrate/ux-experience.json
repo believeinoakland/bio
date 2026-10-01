@@ -13937,7 +13937,7 @@
    "recommendation": "Build the first option now, since the bar already works, and put the catalogue on Bob's list as a research item with a named trigger; the chooser gains presets when it lands.",
    "whoDecides": "Bob: the catalogue is a requirements and doctrine question (what standard each audience needs); Design settles the chooser's wording within it.",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Partly narrowed since first raised. On 29 September you ruled a co-attested Grade B enough to publish, with Grade A the ceiling for adversarial or legal use. On 30 September you ruled that for actions (filings, counsel packets) the venue sets the standard: a sourced fact in the jurisdiction profile, shown beside each exhibit's grade, never refusing. Still open: guidance on what the audiences of a published case expect.",
     "title": "Standards of proof by audience: guidance for the project's bar",
     "inOneBreath": "When a group sets the standard of evidence a project's published case must meet, should CivicOS tell it what a newsroom, a city administrator or a court actually expects, and if so, how?",
@@ -14114,6 +14114,19 @@
      "build/rulings.md K628–K859 checked: none touch the bar or audience standards"
     ],
     "size": "short"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-72",
+     "DEC-81",
+     "DEC-105"
+    ],
+    "status": "ruled",
+    "title": "Standards of proof by audience: the project's bar",
+    "decided": "The bar belongs to a project and never combines across projects. The owner sets it now: a letter per axis, or none, each with its one-line meaning from the measures map, under the line 'CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.' When audience guidance comes, it takes the form already ruled for legal venues: sourced audience standards in the jurisdiction profile, shown beside the choice, reading 'Undetermined' where nobody has researched them, never preselected or defaulted. The research starts when a group asks what bar suits an audience, or a case is challenged as below its audience's standard.",
+    "trigger": "A group asks what bar suits an audience, or a case is challenged as below its audience's standard."
    }
   },
   {

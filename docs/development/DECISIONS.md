@@ -1694,3 +1694,17 @@ response: **As recommended (Bob, 2026-10-01): A.** A hunch counts for nothing in
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 21; Declared Bias (corrected).
 owed: "for now" lifted from strength R5; strength's count of hunches left out; the "Hunches to clear" list on question and project pages (BOB places them); the UX page's question 21 marked ruled.
+
+### DEC-105 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 22: standards of proof by audience, the project's bar)
+for: bob
+question: Ship the project's bar setting now with plain meanings and an honest note that no audience guidance exists, or hold it; what form audience guidance takes when it comes; and whether its research is commissioned now or on a trigger.
+why it is Bob's: requirements and UX (what the product tells a group about standards of proof).
+provisional: the bar belongs to a project and never combines across projects (DEC-72); co-attested Grade B suffices to publish (DEC-81); for actions each venue's standard is a sourced profile fact, never refusing (K597 (3), K600 (b)); the audience catalogue is owed (Publication §7).
+alternative: (B) audience standards as sourced profile facts now; (C) research first, the screen waits.
+recommendation: (A) letters now with an honest note, B named as the form guidance takes, the research on a trigger.
+reversal cost: low.
+response: **As recommended (Bob, 2026-10-01): A.** The owner sets a letter per axis, or none, each with its one-line meaning from the measures map, under the line "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words." When guidance comes it takes the venue form (B): sourced audience standards in the jurisdiction profile beside the choice, "Undetermined" where unresearched, never preselected or defaulted. The research waits for its trigger: a group asks what bar suits an audience, or a case is challenged as below its audience's standard.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 22; Publication §7.
+owed: the bar screen's honest note (strength, project settings; BOB places it); later, on the trigger, audience standards as profile facts (jurisdictions); the UX page's question 22 marked ruled.

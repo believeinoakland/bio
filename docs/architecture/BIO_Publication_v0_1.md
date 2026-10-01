@@ -609,6 +609,14 @@ shown — and escapes every value, the display name being member-supplied text o
 (recorded, none, unread) are point 1's, unchanged. Found by UI-78's worker: `op=groupnameset`'s answer told the
 administrator that every public surface shows the name beside the slug while this page showed the slug alone.
 
+**RULED 2026-10-01 by Bob (DEC-105): the bar is set in plain letters now; audience guidance later takes the venue form.**
+A project owner sets the bar now: a letter per axis, or none, each with its one-line meaning from the measures map, under the
+line "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words." When
+audience guidance comes, it takes the form already ruled for legal venues (K597 (3), K600 (b)): each researched audience
+standard is a sourced fact in the jurisdiction profile, shown beside the choice, reading "Undetermined: nobody has researched
+what this audience expects" where none exists, never preselected and never a default. The research is not commissioned now;
+it starts when a group asks what bar suits an audience, or a case is challenged as below its audience's standard.
+
 ## 8. Risk tiers, and what is dishonest today
 
 Evidence packages are classified in three tiers — file freely; file with caution; do not file without counsel, publishing the evidence and withholding the filing templates — because *"a poorly filed Tier 3 case could create adverse precedent that forecloses future, properly constructed challenges"* (`BIO_Communications_Platforms.md`; Roadmap §8). The field is `risk_tier` on the action schema (State Rules v1.5). The placeholders that satisfied the check are gone: the counterparty's with D-130, and `risk_tier: 1` with D-182 (2026-09-23), which writes UNDETERMINED wherever no member stated a tier and publishes the three words (`node tools/status.mjs 8.risk-tier`). NOT BUILT: a member-facing tier chooser, and actions written at the old default still read 1 because their bytes say so.
