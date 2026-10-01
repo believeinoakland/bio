@@ -101,7 +101,9 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   /* credentials (K789): the founder's claim, members' passwords and the AI credentials R18 reads are its (its R1–R15). */
   const credentials = credentialsOf(ctx, { record, membership }); credentials.migrate();
   const promotion = promotionOf(ctx, { record, membership });
-  for (const f of ["producingGroup", "citedBy", "caseMember"]) promotion.registerFact(f, "legacy-store", () => (f === "citedBy" ? [] : f === "producingGroup" ? "test-group" : false));
+  /* each fact by the module that registers it in the plane, answering as an empty record does */
+  for (const [f, m, v] of [["producingGroup", "instance-setup", "test-group"], ["citedBy", "connections", []], ["caseMember", "publication", false]])
+    promotion.registerFact(f, m, () => v);
   /* provenance's `register` (its read contract), which a promotion's steps read: empty here, as a record with no
      registered capture holds it. provenance is not among this module's uses, so the table stands alone. */
   sql.exec(`CREATE TABLE IF NOT EXISTS register (bundle_id TEXT, capture_sha TEXT, registered TEXT, authored INTEGER NOT NULL DEFAULT 0)`);

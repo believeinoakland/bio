@@ -71,7 +71,7 @@ test("R41: registerWaitSource takes one well-formed source; a second is WAIT_SOU
                         ["capture-requests", { tickMs: src.tickMs, holds: src.holds, woken: src.woken, completions: src.completions }]])
     assert.equal(w.runs.registerWaitSource(m, s).reason, "WAIT_SOURCE_MALFORMED");
   assert.deepEqual(w.runs.registerWaitSource("capture-requests", src), { ok: true, module: "capture-requests" });
-  const again = w.runs.registerWaitSource("legacy-store", waitSource({}).src);
+  const again = w.runs.registerWaitSource("agent-worker", waitSource({}).src);
   assert.deepEqual([again.ok, again.reason, again.declaredBy], [false, "WAIT_SOURCE_DECLARED", "capture-requests"]);
 });
 
