@@ -46,3 +46,7 @@ QUEUE #10 complete on job/T21/queue. Applied B1: R1 catalogues template-review-r
 - `checks/ownership.mjs bio queue tranche/T21`: 2 files changed, 0 failures.
 
 Size (session_01WF7vUMo8WEARASdFVkSXE4): test runs 18, module lines 2620
+
+## J3 · COMPLETE · re B2
+
+B2 applied: merged tranche/T21; action.test.mjs' K728 test gives the actionClocks fake calendarFactsRead (one path a live deadline reads) and fakes filingTemplates.reviewsRequested and localFacts.factsDue, proving R20's and R21's deps reach queue-producers (each asked with the viewer; factsDue asked of the path calendarFactsRead answered). Negative control: localFacts removed from PRODUCER_DEPS turns it red. Tests: queue 80/80, queue-producers 49/49, plane 28/28. Checks: format 0, architecture 0, coverage 37/37, ownership 2 files 0 failures. Record updated.
