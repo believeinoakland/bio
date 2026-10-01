@@ -135,8 +135,8 @@ test("R42 R44: a proposed reading's grade is computed, never taken: kind and key
   const b = proposedReadingGrade({ refKind: "meeting", refKey: "1" });
   assert.equal(b.grade, "B");
   assert.match(b.why, /^earned B/);
-  assert.equal(proposedReadingGrade({ label: "Council" }).grade, "C");
-  assert.equal(proposedReadingGrade({}).grade, null);
+  for (const [e, g, w] of [[{ label: "Council" }, "C", /^earned C/], [{}, null, /^earned nothing/]])
+    { const x = proposedReadingGrade(e); assert.equal(x.grade, g); assert.match(x.why, w); }
   const r = (e) => { const x = checkProposedRef(e); return x && x.reason; };
   assert.equal(r(null), "PROPOSAL_SHAPE");
   assert.equal(r({ ref: "m:1", refKind: "m", refKey: "1", grade: "A" }), "GRADE_OFFERED");

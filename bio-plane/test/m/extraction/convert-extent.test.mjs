@@ -3,7 +3,7 @@
    writer (R19, R20) to `readingOf` and `readingFor` (R27, R30). Converts extraction's share of two legacy suites, rows
    of `build/jobs/T17/legacy-tests.md`: `test/fw19-extent-arms.test.mjs` ("acquire persists docx tables/images and
    xlsx levels on container_extent") and `test/capture-container-extent.test.mjs` ("extraction R13: docx paragraph
-   count, levels per container and absent levels null, empty list null"). The old suites are kept (K619 (3)). The
+   count, levels per container and absent levels null, empty list null"). The old suites were deleted in T20 (K931). The
    containers are assembled here byte by byte with an independent crc32, as the old suites built them, so every
    figure below is the fixture's own ground truth. */
 import { test } from "node:test";

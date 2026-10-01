@@ -82,15 +82,13 @@ import { appendStep, checkChain, derivationCap, readingSource } from "./textchai
 
 /** The `ai_runs.mode` an EXTRACT run carries.
  *
- *  IT IS THE PLANE'S WORD AND IT IS DELIBERATELY NOT A ROW IN THE FLEET
- *  MEMBER'S `MODES` TABLE, which is a different roster answering a different
- *  question. `agent-worker/src/harness.mjs` `MODES` is the DEPLOYMENT gate —
- *  which mode the fleet member may DRIVE — and `gate-mode` is the first row
- *  every run's control flow takes. The plane has always stored `ai_runs.mode`
- *  verbatim and judged nothing about it. Adding a third row to that table is a
- *  deployment act in FLEET's lane, pinned in both directions by SK-4's
- *  `skillsequencing.test.mjs` ARM B4, and it is raised as a DELEGATION rather
- *  than reached into from here. */
+ *  IT IS THE PLANE'S WORD, and the fleet member's `MODES` table is a different
+ *  roster answering a different question. `agent-worker/src/harness.mjs`
+ *  `MODES` is the DEPLOYMENT gate — which mode the fleet member may DRIVE — and
+ *  `gate-mode` is the first step every run's control flow takes. That table
+ *  holds `extract` NOT deployed; deploying it is a deployment act in the fleet
+ *  member's lane, proved by `agent-worker`'s R14 tests, never reached into from
+ *  here. The plane stores `ai_runs.mode` verbatim and judges nothing about it. */
 export const EXTRACT_RUN_MODE = "extract";
 
 /** The functions an `ai` step may name, with what each one DID.
@@ -189,16 +187,13 @@ export function checkExtractVersion(version) {
 export function proposedReadingGrade(entry) {
   const e = entry && typeof entry === "object" ? entry : {};
   /* THE LETTER IS DECIDED ONCE AND THE SENTENCE IS COMPOSED FROM IT, and that
-     shape was earned by a control arm rather than chosen. The first cut wrote
-     each branch's letter and its sentence as two independent literals, and
-     `nc-sk8.mjs`'s `overstrict` arm — which promotes a name-only proposal from C
-     to B — produced a SURPRISING GREEN on the sentence assertion: the grade had
-     moved and the sentence still said *names only a NAME*, so the record would
-     have published a B explained by a C's reason and nothing in this repository
-     could have noticed. That is the drift class this project meets most, arriving
-     inside the one function whose whole job is to say what a grade rests on. The
-     letter is now interpolated INTO the sentence, so the two cannot disagree and
-     the arm fails as declared. */
+     shape was earned by a control arm rather than chosen (found by `nc-sk8.mjs`'s
+     `overstrict` arm, since deleted). The first cut wrote each branch's letter
+     and its sentence as two independent literals, and promoting a name-only
+     proposal from C to B left the sentence saying *names only a NAME*: a B
+     explained by a C's reason, which nothing would have noticed. The letter is
+     now interpolated INTO the sentence, so the two cannot disagree; R42's test
+     (`test/m/extraction/rules.test.mjs`) checks each sentence opens with its letter. */
   if (isNonEmptyString(e.refKind) && isNonEmptyString(e.refKey)) {
     const grade = "B";
     return { grade,

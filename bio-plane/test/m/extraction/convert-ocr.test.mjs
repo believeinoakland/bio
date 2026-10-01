@@ -3,7 +3,7 @@
    real `pdf` format entry and real PDF bytes as those suites built them. The tier-3 member is the COMMITTED OCR
    member (`ocr-worker`'s bundle, wasm and model, booted by `ocr-worker/test/memberworker.mjs`) for D-606's real path,
    and a scripted member honouring its one-page contract (`chooseChunk`: lowest page taken, the rest in `deferred`)
-   for the loop's failure modes. The old suites are kept (K619 (3)). */
+   for the loop's failure modes. `textchain.test.mjs` was deleted in T20 (K931). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -210,7 +210,7 @@ test("R5 (d606 §3): a page answered to the wrong call is dropped and counted, a
 });
 
 /* ===================================================================== *
- * textchain.test.mjs
+ * converted from textchain.test.mjs
  * ===================================================================== */
 
 test("R5 R11 R12 (textchain): with no OCR member bound a scan is a failed reading named a tier-3 candidate, saying no OCR engine is installed, its chain the layer alone", async () => {

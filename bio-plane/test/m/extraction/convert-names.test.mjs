@@ -3,7 +3,7 @@
    and `derivation_cap` unchanged after a worse and a better calibration (R38–R40, R44), with calibration itself.
    `test/readingname.test.mjs`: the name-term backfill (R37) re-deriving every source, the identifier tiers included
    (R19, R59). `test/extractrun.test.mjs`: `mintRatio` and the rest of R41–R43 that rules.test.mjs does not assert.
-   The old suites are kept (K619 (3)); each test names its requirement ids and the old suite. */
+   The old suites were deleted in T20 (K931); each test names its requirement ids and the suite it came from. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle } from "./fixture.mjs";
@@ -14,13 +14,13 @@ import { appendStep, derivationCap, layerChain } from "../../../src/textchain.mj
 
 const S1 = "1".repeat(64), S2 = "2".repeat(64), S3 = "3".repeat(64);
 
-/* ---- calibration.test.mjs ---- */
+/* ---- converted from calibration.test.mjs ---- */
 const probe = (over) => ({ engine: "pdfjs", version: "4.2.67", at: "2026-09-01T00:00:00Z", cap: "C", probe_id: "P-1",
                            probe_inputs: { corpus: "synthetic" }, scores: { cer: 0.02 }, measured_by: "m", ...over });
 const ocr = (engine, version, cal) => [{ step: "pixels", cap: "C", measured_by: "m", ...(cal ? { calibration: cal } : {}) },
                                        { step: "ocr", engine, version, cap: "C", measured_by: "m", ...(cal ? { calibration: cal } : {}) }];
 
-test("R39 R38 R40 R44 (calibration.test.mjs clause (d)): with calibration itself, a worse measurement's obligation names exactly the transcription bound to the superseded calibration, both calibrations named; the same engine on no calibration and another engine's calibration are not named; regraded 0 and no derivation_cap moves", () => {
+test("R39 R38 R40 R44 (from calibration.test.mjs clause (d)): with calibration itself, a worse measurement's obligation names exactly the transcription bound to the superseded calibration, both calibrations named; the same engine on no calibration and another engine's calibration are not named; regraded 0 and no derivation_cap moves", () => {
   const w = fresh({ cal: "module" });
   bundle(w.s, "B-1");
   const first = w.cal.calibrationRecord(probe(), { principal: "member:m1" });
@@ -50,14 +50,14 @@ test("R39 R38 R40 R44 (calibration.test.mjs clause (d)): with calibration itself
   assert.deepEqual(caps(), capsBefore);
 });
 
-/* ---- readingname.test.mjs, the backfill ---- */
+/* ---- converted from readingname.test.mjs, the backfill ---- */
 const E = (kind, key, label, ref = `${kind}:${key}`, source = null, occurrences) =>
   ({ kind, key, label, facts: {}, ref, source, ...(occurrences ? { occurrences } : {}) });
 const page = (p) => ({ kind: "pdf-page", ref: `p${p}`, page: p, rect: null });
 const all = (w, t, order) => w.rows(`SELECT * FROM ${t} ORDER BY ${order}`);
 const TERMS_ORDER = "capture_sha, ref, src, term";
 
-test("R37 R19 R59 (readingname.test.mjs, the backfill): cleared name terms are re-derived by reindexNames from the stored references alone, every source (ref, key, label) exactly as the writer wrote them, a label-less reference's identifier terms included, no document re-read", () => {
+test("R37 R19 R59 (from readingname.test.mjs, the backfill): cleared name terms are re-derived by reindexNames from the stored references alone, every source (ref, key, label) exactly as the writer wrote them, a label-less reference's identifier terms included, no document re-read", () => {
   const w = fresh();
   bundle(w.s, "B-1"); bundle(w.s, "B-2");
   w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: { entities: [
@@ -101,8 +101,8 @@ test("R37 R19 R59 (readingname.test.mjs, the backfill): cleared name terms are r
   assert.deepEqual([again.indexed, again.remaining], [0, 0]);
 });
 
-/* ---- extractrun.test.mjs ---- */
-test("R43 (extractrun.test.mjs §5): mintRatio answers ratio null when nothing was minted, saying so as an absence, else cited over minted with the uncited count", () => {
+/* ---- converted from extractrun.test.mjs ---- */
+test("R43 (from extractrun.test.mjs §5): mintRatio answers ratio null when nothing was minted, saying so as an absence, else cited over minted with the uncited count", () => {
   for (const m of [mintRatio({}), mintRatio({ minted: 0, cited: 0 }), mintRatio()]) {
     assert.deepEqual([m.minted, m.cited, m.uncited, m.ratio], [0, 0, 0, null]);
     assert.match(m.says, /nothing to measure/);
@@ -117,7 +117,7 @@ test("R43 (extractrun.test.mjs §5): mintRatio answers ratio null when nothing w
   assert.notEqual(mintRatio({}).says, mintRatio({ minted: 3, cited: 0 }).says, "the absence and the zero never read alike");
 });
 
-test("R43 R44 (extractrun.test.mjs §1, §6): proposalChain appends exactly ai(fn, version, cap) with the chain's derivation cap; a weaker cap is accepted; appendStep's refusal is returned unchanged; CAP_NOT_A_GRADE over a valid chain; NO_CAPTURE_CHAIN for none", () => {
+test("R43 R44 (from extractrun.test.mjs §1, §6): proposalChain appends exactly ai(fn, version, cap) with the chain's derivation cap; a weaker cap is accepted; appendStep's refusal is returned unchanged; CAP_NOT_A_GRADE over a valid chain; NO_CAPTURE_CHAIN for none", () => {
   const CHAIN = layerChain({ tier: 1, container: "pdf", cap: "C", measured_by: "m" });
   const weaker = proposalChain(CHAIN, { fn: "propose-reading", version: " 1 ", cap: "D" });
   assert.deepEqual(weaker, { ok: true, chain: [...CHAIN, { step: "ai", engine: "propose-reading", version: "1", cap: "D" }],
@@ -133,7 +133,7 @@ test("R43 R44 (extractrun.test.mjs §1, §6): proposalChain appends exactly ai(f
   assert.equal(proposalChain([], { fn: "propose-reading", version: "1" }).reason, "NO_CAPTURE_CHAIN");
 });
 
-test("R41 R42 (extractrun.test.mjs §0, §2): the run mode is extract; the ceiling is B, a property of the grader: kind and key earn B even with a label, a label alone C, nothing null; a well-formed reference passes checkProposedRef", () => {
+test("R41 R42 (from extractrun.test.mjs §0, §2): the run mode is extract; the ceiling is B, a property of the grader: kind and key earn B even with a label, a label alone C, nothing null; a well-formed reference passes checkProposedRef", () => {
   assert.equal(EXTRACT_RUN_MODE, "extract");
   assert.deepEqual([PROPOSED_READING_CEILING,
                     proposedReadingGrade({ refKind: "contract", refKey: "C-1", label: "anything" }).grade,
