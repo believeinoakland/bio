@@ -123,6 +123,12 @@ export const QUEUE_OBLIGATION_KINDS = {
   "litigation-hold":             "a reply the group marked as legal pressure: consider whether to place a litigation "
                               + "hold, and record it in place or released with a reason (op=actionhold, DEC-61) "
                               + "— LIVE: queue-producers R19",
+  /* K921 (R1; filing-templates R9, local-facts R1): two more OBLIGATIONs a named member owes, each leaving by its own act
+     (R12's doors) and never by a mute. Their producers are `queue-producers`' (its R20, R21). */
+  "template-review-requested":   "a member asked you to review a filing template's version (op=templatereview) "
+                              + "— LIVE: queue-producers R20",
+  "local-fact-due":              "a holiday calendar or office hours one of the group's deadlines reads is unconfirmed "
+                              + "or due for confirmation (op=factconfirm) — LIVE: queue-producers R21",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -190,9 +196,9 @@ export const QUEUE_FINDING_KINDS = {
      Both leave a list the way every finding does — by an authored, attributed
      act. CORRECTED 2026-09-23 (D-125, BOB #26's ruling): a member MAY now mute
      either one for THEMSELVES, because a mute is keyed on the member and moves no
-     other member's list; `test/current.test.mjs` drives exactly that — the mute
+     other member's list; the old `test/current.test.mjs` (deleted in T20) drove exactly that — the mute
      accepted, personal, writing no disposition, the finding still on a second
-     member's feed — where it used to drive a refusal. */
+     member's feed — where it used to drive a refusal; `test/m/queue/feed.test.mjs`' R16 test holds it now. */
   "stance-changed-here-not-elsewhere":
                                 "a project moved what it stands on for a SHARED question and the other "
                               + "projects drawing on it did not: one question, two live readings, "
@@ -240,16 +246,15 @@ export const QUEUE_FINDING_KINDS = {
  * published BESIDE the kind, as `catalogue_id`, by the producer that took it. A generator built later
  * takes the next number here; a kind with no generator takes none.
  *
- * NOT EXPORTED, AND THAT IS ITS SHAPE RATHER THAN AN ESCAPE (D-52 fix pass, 2026-09-23). The DEC-49
- * guard's arm E (`civicos-ui/check-refusal-codes.mjs`) harvests every EXPORTED plain object of this
- * module whose values are all strings as a MEMBER-FACING vocabulary — the texts a surface renders in
- * place of a machine word. This table is not one: its value is a machine id published as
- * `catalogue_id`, the item contract's "stable catalogue id" (NOTIFICATIONS.md §The item contract),
- * which no surface renders (`civicos-ui/` reads no `catalogue_id`; a member reads `summary` and
- * `detail`). Exported, it read as a 23rd vocabulary whose one term was the token "N-1" and failed the
- * guard for a reason that was not true of it. So the TABLE stays here, unexported, and what leaves the
- * module is the LOOKUP below — a function, which arm E does not
- * harvest, exactly as it does not harvest `classOfKind`. */
+ * NOT EXPORTED, AND THAT IS ITS SHAPE RATHER THAN AN ESCAPE (D-52 fix pass, 2026-09-23). Every
+ * EXPORTED plain object of this module whose values are all strings is a MEMBER-FACING vocabulary —
+ * the texts a surface renders in place of a machine word (R1: every kind has one sentence). This table
+ * is not one: its value is a machine id published as `catalogue_id`, the item contract's "stable
+ * catalogue id" (NOTIFICATIONS.md §The item contract), which no surface renders (`civicos-ui/` reads no
+ * `catalogue_id`; a member reads `summary` and `detail`). Found by the old DEC-49 guard's arm E
+ * (`civicos-ui/check-refusal-codes.mjs`, deleted in T20), which read it exported as a 23rd vocabulary
+ * whose one term was the token "N-1". So the TABLE stays here, unexported, and what leaves the module is
+ * the LOOKUP below, R2's `catalogueIdOf`, which `test/m/queue/catalogue.test.mjs`' R2 test drives. */
 const QUEUE_KIND_IDS = {
   "export-performed": "N-1",
 };
