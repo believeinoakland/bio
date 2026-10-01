@@ -1,4 +1,4 @@
-/* monitoring R28–R35, R44 and R50: standing intent, what reaches members, and what the understanding and action layers
+/* monitoring R28–R35, R44 and R50 (with N429): standing intent, what reaches members, and what the understanding and action layers
    rest on. R34, R44 and R50 run over the real actions module (its clock rule and its R33 bound) and the real
    action-clocks module (`pendingClocks`, its R1). */
 import { test } from "node:test";
@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { world, stubIntent, sha, V, NOW_MS } from "./fixture.mjs";
 import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER, DEADLINE_RECHECK_MAX } from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 test.todo("R28 each open named request in data/gathering.json whose cadence is due is captured through capture.acquire from its locators in order, the request named as authority (not yet met: Intake Doctrine §4; nothing executes a gathering request, and T8 plans no build of it)");
 test.todo("R29 a ratified sweep runs within its scope and breadth budget and lands at collected (not yet met: K102; sweeps wait for a design of what a sweep's query is)");
@@ -248,4 +248,53 @@ test("R50 deadlineRecheckDue(now) answers the wake's instant when it is at or be
   const r = await w.m.deadlineRecheck(wake);
   assert.deepEqual(r.marked.map((m) => [m.action, m.dates]), [[id, ["2026-10-03"]]]);
   assert.deepEqual([w.m.deadlineRecheckWake(wake), w.m.deadlineRecheckDue(wake)], [null, null]);
+});
+
+test("R50 (N429) an entry of an action whose last R34 mark failed is left out of the wake's earliest date until the start of the UTC day after the failure, so a failing mark is asked again once a day and never holds the wake in the past for the entries that can be marked", async () => {
+  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const FAIL = "ACTN-2026-0770-fails", OK = "ACTN-2026-0771-marks", LATER = "ACTN-2026-0772-later";
+  createAction(w, FAIL, [["a", "2026-09-01", "pending"]]);
+  createAction(w, LATER, [["a", "2026-10-05", "pending"]]);
+  const nextDay = dayAfter("2026-09-28");   /* NOW_MS is 2026-09-28T12:00:00Z */
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-09-01"), "before any failure, the past entry holds the wake");
+  /* R34's mark of FAIL fails: its entry is held out until the start of the next UTC day */
+  const real = w.promotion.promote.bind(w.promotion);
+  w.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" && pkg.bundleId === FAIL ? { ok: false, reason: "BASE_MOVED" } : real(pkg));
+  const r1 = await w.m.deadlineRecheck(NOW_MS);
+  assert.deepEqual(r1.failed.map((f) => f.action), [FAIL]);
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), nextDay, "held no earlier than the next day, never in the past");
+  assert.equal(w.m.deadlineRecheckDue(NOW_MS), null, "nothing due for the rest of the failure's day");
+  assert.equal(w.m.deadlineRecheckDue(nextDay - 1), null);
+  /* an entry that can be marked is not held back by the failing one: it holds the wake in the past, and is marked */
+  createAction(w, OK, [["a", "2026-09-10", "pending"]]);
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-09-10"));
+  const r2 = await w.m.deadlineRecheck(NOW_MS);
+  assert.deepEqual([r2.marked.map((m) => m.action), r2.failed.map((f) => f.action)], [[OK], [FAIL]]);
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), nextDay);
+  /* at the start of the next day the failing entry is asked again: due once, and failing again it is held a further day */
+  assert.equal(w.m.deadlineRecheckWake(nextDay), dayAfter("2026-09-01"));
+  assert.equal(w.m.deadlineRecheckDue(nextDay), dayAfter("2026-09-01"));
+  w.clock.ms = nextDay;
+  const r3 = await w.m.deadlineRecheck(nextDay);
+  assert.deepEqual(r3.failed.map((f) => f.action), [FAIL]);
+  assert.equal(w.m.deadlineRecheckWake(nextDay), nextDay + DAY, "once a day");
+  /* a later failure the same day holds to the same instant */
+  const r4 = await w.m.deadlineRecheck(nextDay + 3600000);
+  assert.deepEqual(r4.failed.map((f) => f.action), [FAIL]);
+  assert.equal(w.m.deadlineRecheckWake(nextDay + 3600000), nextDay + DAY);
+  /* when the mark lands, the hold is released: nothing pending is past, and the later entry holds the wake */
+  w.promotion.promote = real;
+  w.clock.ms = nextDay + DAY;
+  const r5 = await w.m.deadlineRecheck(nextDay + DAY);
+  assert.deepEqual(r5.marked.map((m) => m.action), [FAIL]);
+  assert.equal(w.m.deadlineRecheckWake(nextDay + DAY), dayAfter("2026-10-05"));
+  /* an entry not yet past is not moved by its action's failure: its own day after stands when later than the hold */
+  const v = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  createAction(v, "ACTN-2026-0773-both", [["past", "2026-09-01", "pending"], ["future", "2026-10-20", "pending"]]);
+  const vreal = v.promotion.promote.bind(v.promotion);
+  v.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? { ok: false, reason: "BASE_MOVED" } : vreal(pkg));
+  await v.m.deadlineRecheck(NOW_MS);
+  assert.equal(v.m.deadlineRecheckWake(NOW_MS), nextDay);
+  v.promotion.promote = vreal;
+  assert.equal(v.m.deadlineRecheckWake(nextDay), dayAfter("2026-09-01"));
 });
