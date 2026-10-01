@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { Membership, listenerRefusal, MODULE_ORDER, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { readFile } from "node:fs/promises";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
   .map(({ name }) => [name, w.rows(`SELECT * FROM "${name}"`)]));

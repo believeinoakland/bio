@@ -14,8 +14,8 @@
  * SQL joins record-core's `bundles` only on the stated read contract, `bundle_id` and `object_type`
  * (record-core R37); every other bundle fact (a project's title) is asked of `core.bundleInfo` (R34).
  */
-import { MACHINE_CLASS_PREFIX, isMachineIdentity, AI_CREDENTIAL_CHECKS,
-         SIGNER_ENROLMENT_CHECKS } from "../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX, isMachineIdentity } from "../record-grammar/index.mjs";
+import { AI_CREDENTIAL_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../checks/bio-checks.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
