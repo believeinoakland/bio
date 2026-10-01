@@ -1,6 +1,6 @@
 # bias (T19)
 
-**Status** · session_01NBsR9ExEChyivCpdRoXPVh · depth 2 · COMPLETE · handled B0
+**Status** · session_01NBsR9ExEChyivCpdRoXPVh · depth 2 · COMPLETE · handled B1
 
 ## Completion (BIAS #5)
 
