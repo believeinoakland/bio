@@ -30,3 +30,7 @@ Size (session_01QDj4FCYp9ZVbcHpGngkfgW): test runs 4, module lines 2255
 ## J1 · REPORT
 
 Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product): comments changed in src/drive.mjs, src/render.mjs, src/browserrender.mjs; not regenerated. monitoring: its tick finds the Drive baseline row with its own lookup (src/monitoring/index.mjs:578) beside driveBaselineRow (my R45), which its driveShells sweep uses; no test now proves the two choose the same row (the retired d525-driveshells.test.mjs did). monitoring could call driveBaselineRow, or test the agreement.
+
+## J2 · COMPLETE
+
+Done (fe8e75c261, record 225d518b5c on job/T21/capture-sources). N469, comments only: drive.mjs:338 (hygiene.test.mjs claim dropped; hops' derivation R51/R35 named with the module tests) and browserrender.mjs:28 (battery -> the plane's miniflare suites, which run src/plane/index.mjs raw, so the conclusion holds). Re-scan re-worded 7 more notes naming retired suites as live (drive.test, d525-driveshells, browser-render, index.mjs's arms -> acquisition, render.mjs serviceBindings). R38's equality with odf-reader R31 is proved by both sides pinning the same strings, no uses edge needed. capture-sources 74/74 (+1 todo R37); format, architecture, coverage 63/63, ownership 0 failures. Plane bundle stale, monitoring finding: J1. Details in the record's Completion.
