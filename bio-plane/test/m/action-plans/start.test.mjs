@@ -20,6 +20,7 @@ test("R18: a chosen option starts an action carrying its addressee, dated clock 
   const nobody = start(w, a, { contact: "nobody" });
   assert.equal(code(nobody), "CONTACT_NOT_A_MEMBER"); assert.ok(nobody.check && nobody.translation);
   assert.equal(code(start(w, a, { kind: "summon_dragons" })), "ACTION_KIND_UNKNOWN", "the action's write refusal passes through");
+  assert.equal(code(start(w, a, { contact: "nobody", kind: "summon_dragons" })), "CONTACT_NOT_A_MEMBER", "the contact is asked first");
   assert.equal(w.count("bundles WHERE object_type='action'"), 0, "a refused start writes no action");
   const r = start(w, a, { contact: "alice" });
   assert.equal(r.ok, true, JSON.stringify(r));
@@ -67,6 +68,8 @@ test("R29: choosing a dated option holds the member's reminders, set on the acti
   assert.equal(code(w.ap.optionDispose({ plan: w.PL, options: [a], disposition: "declined", reason: "r",
     reminders: [{ date: "2026-11-01", on: "2026-10-30" }], ...by("bob") })), "REMINDER_REFUSED");
   assert.equal(w.ap.planRead({ id: w.PL, viewer: V("bob") }).options[0].disposition, "open", "the whole act refused with it");
+  assert.equal(w.count("bundles WHERE object_type='action'"), 0, "asking action-clocks leaves no action behind");
+  assert.equal(w.count("action_reminders"), 0);
   assert.equal(code(w.ap.optionDispose({ plan: w.PL, options: [a], disposition: "chosen", reminders: [{ date: "2026-11-01", on: "2026-10-30" }],
     author: MACHINE, viewer: MACHINE })), "MACHINE_CANNOT_DISPOSE", "a machine setting reminders refuses");
   const c = w.ap.optionDispose({ plan: w.PL, options: [a], disposition: "chosen",

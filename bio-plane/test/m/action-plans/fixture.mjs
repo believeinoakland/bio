@@ -14,7 +14,6 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
-import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
 import { actionPlansOf } from "../../../src/action-plans/index.mjs";
 import { runPrincipalGate } from "../../../src/run-rules/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
@@ -67,7 +66,6 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   if (profiles) record.setSetting("jurisdiction_profiles", profiles, "test");
-  new Retrieval({ storage: st, record, membership, promotion, extraction: {}, observation: {} }).migrate();
   /* connections' `refs` projection, as far as actions' read joins it (its R25). */
   st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
 
@@ -125,11 +123,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
       r.bounds[bound].consumed += n; return null; },
   };
   const stand = { inquiry, strength, conformance, standards, escalation, filings, aiRuns };
-  /* actions, real, over the stand-in conformance; its retrieval registrations are the test's. */
-  promotion.registerStep("retrieval", { project: (c) => {
-    st.sql.exec(`INSERT INTO ${PROJECTION_TABLE} (bundle_id, action_clock_next) VALUES (?, NULL) ON CONFLICT(bundle_id) DO NOTHING`, c.bundleId);
-    return null;
-  } });
+  /* actions, real, over the stand-in conformance; what it registers with retrieval is the test's (nothing here reads it). */
   const retrievalStub = { registerActionFacts: () => ({ ok: true }), registerProjectionDecoration: () => ({ ok: true }) };
   const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
                                     content: { captureFor: () => null }, now: nowMs });

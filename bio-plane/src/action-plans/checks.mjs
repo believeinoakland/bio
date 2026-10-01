@@ -5,7 +5,7 @@
  * (rule (4) of T18's plan). Refusals minted by the modules this one uses are relayed with their own rows:
  * `NO_SUCH_PROJECT` (membership R78), `PROJECT_SEEN_NOT_A_PARTICIPANT` (membership R44), the project-authority
  * refusals (membership R55), `NO_SUCH_DETERMINATION` (conformance R19), `NO_SUCH_STANDARD` (standards R17),
- * `CONTACT_NOT_A_MEMBER` (actions R45, its row), `REMINDER_REFUSED` (action-clocks R4, its row), `AI_RUN_NOT_PRINCIPAL`
+ * `CONTACT_NOT_A_MEMBER` (actions R45) and `REMINDER_REFUSED` (action-clocks R4), each answered by its own module's act, `AI_RUN_NOT_PRINCIPAL`
  * (run-rules R5) and every refusal of the action's write (actions, action-clocks). */
 
 const at = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;
@@ -23,12 +23,12 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
       + 'Nothing was written.',
   },
   PLAN_NO_SUBJECT: {
-    check: 'C-124.3', where: at("#subjects", "is-plan-subjects"),
+    check: 'C-124.3', where: at("refuseNoSubject", "is-plan-subjects"),
     translation: 'A plan is about 1 to 50 matters: an open question, or one standard\'s outcome of a determination. '
       + 'Nothing was written.',
   },
   SUBJECT_MALFORMED: {
-    check: 'C-124.4', where: at("#subjects", "is-subject-shaped"),
+    check: 'C-124.4', where: at("refuseMalformed", "is-subject-shaped"),
     translation: 'A matter is either {kind: inquiry, inquiry} for a question still open, or {kind: outcome, '
       + 'determination, standard} for one standard\'s outcome of a determination. The one named was neither. '
       + 'Nothing was written.',
@@ -119,7 +119,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
     translation: 'A plan holds no cost, budget, money to be spent, assignee, hours or significance score. Those are '
       + 'not what this record is for. Send the act without them. Nothing was written.',
   },
-  NO_SUCH_PROPOSAL: {
+  NO_SUCH_PLAN_PROPOSAL: {
     check: 'C-124.22', where: at("optionAdopt", "is-proposal-seen"),
     translation: 'No proposal for an option answers to that id in a plan you may see. Nothing was written.',
   },
@@ -294,10 +294,10 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
     check: 'C-124.56', where: at("#append", "is-plan-spliceable"),
     translation: 'The plan\'s record cannot be extended in place. Nothing was written.',
   },
-  PROVIDER_UNAVAILABLE: {
+  PLAN_PROVIDER_UNAVAILABLE: {
     check: 'C-124.57', where: at("refuseProviderUnavailable", "is-provider-present"),
-    translation: 'Part of the record this answer depends on cannot be read on this instance yet, so nothing is '
-      + 'answered in its place. Nothing was written.',
+    translation: 'An action plan reads matters, actions and runs held by other parts of the record, and one of them '
+      + 'is not on this instance yet, so the plan is not answered in part. Nothing was written.',
   },
 });
 
@@ -305,11 +305,5 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
  *  `translation` from the row. */
 export function refusal(code, detail, extra) {
   const row = ACTION_PLAN_CHECKS[code];
-  return { ok: false, reason: code, detail, ...(extra || {}), code, check: row.check, translation: row.translation };
-}
-
-/** A refusal relayed with another module's own row (that module mints the code; this module answers the same
- *  condition, in its own order, with that row unchanged). */
-export function relayed(code, row, detail, extra) {
   return { ok: false, reason: code, detail, ...(extra || {}), code, check: row.check, translation: row.translation };
 }

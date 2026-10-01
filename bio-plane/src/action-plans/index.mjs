@@ -50,8 +50,8 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { conformanceOf, noSuchDetermination } from "../conformance/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
-import { actionsOf, ACTION_CATALOGUE_CHECKS } from "../actions/index.mjs";
-import { actionClocksOf, ACTION_CLOCK_CHECKS } from "../action-clocks/index.mjs";
+import { actionsOf } from "../actions/index.mjs";
+import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
@@ -59,7 +59,7 @@ import { runPrincipalGate } from "../run-rules/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType } from "../../checks/bio-checks.mjs";
 import { ACTION_PLAN, planId, planDoc, appendEntry, logOf, logSection, parseFm, q } from "./doc.mjs";
 import { ACTION_PLANS_TABLES, migrateActionPlans } from "./schema.mjs";
-import { ACTION_PLAN_CHECKS, refusal, relayed } from "./checks.mjs";
+import { ACTION_PLAN_CHECKS, refusal } from "./checks.mjs";
 import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TITLE_MAX, REASON_MAX,
          SUMMARY_MAX, DETAIL_MAX, WHY_MAX, NOTE_MAX, SUBJECTS_MAX, SCENARIOS_MAX, DATES_MAX, PLANS_PAGE_MAX, DUE_MAX,
          TRAY_PAGE, SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
@@ -260,22 +260,17 @@ export class ActionPlans {
   /** R1, R3, R4: the subjects named, judged stage by stage across the list (malformed, unseen, of the project, live,
    *  free), so two faults at once answer the earlier code. `{items: [{subject, key}]}` or a refusal. */
   #subjects(project, list, viewer, { plan = null } = {}) {
-    /* DEC-49 REGION is-plan-subjects */
     if (!Array.isArray(list) || !list.length || list.length > SUBJECTS_MAX)
-      return refusal("PLAN_NO_SUBJECT", `a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
-        { count: Array.isArray(list) ? list.length : null, max: SUBJECTS_MAX });
-    /* END DEC-49 REGION is-plan-subjects */
+      return refuseNoSubject(`a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
+        Array.isArray(list) ? list.length : null);
     const items = [];
     const keys = new Set();
     for (let i = 0; i < list.length; i++) {
       const s = normSubject(list[i]);
       const key = s ? subjectKey(s) : null;
-      /* DEC-49 REGION is-subject-shaped */
       if (!s || keys.has(key))
-        return refusal("SUBJECT_MALFORMED", s ? `matter ${i} is named twice. Nothing was written.`
-          : `matter ${i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.`,
-          { index: i });
-      /* END DEC-49 REGION is-subject-shaped */
+        return refuseMalformed(s ? `matter ${i} is named twice. Nothing was written.`
+          : `matter ${i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.`, i);
       keys.add(key);
       items.push({ subject: s, key });
     }
@@ -290,8 +285,7 @@ export class ActionPlans {
         const d = this.#determination(s.determination, viewer);
         if (!d) return noSuchDetermination(s.determination, { index: i });
         if (!(Array.isArray(d.outcomes) ? d.outcomes : []).some((o) => o && o.standard === s.standard))
-          return refusal("SUBJECT_MALFORMED", `matter ${i} names a standard that determination does not measure. Nothing was written.`,
-            { index: i });
+          return refuseMalformed(`matter ${i} names a standard that determination does not measure. Nothing was written.`, i);
         facts.push(d);
       }
     }
@@ -649,13 +643,10 @@ export class ActionPlans {
       const held = this.#subjectsOf(p.id);
       const key = s ? subjectKey(s) : typeof subject === "string" ? subject : null;
       if (!key || !held.some((x) => x.key === key))
-        return refusal("SUBJECT_MALFORMED", "the plan is not about that matter, so it cannot be removed. Nothing was written.",
-          { index: 0 });
-      /* DEC-49 REGION is-plan-subjects */
+        return refuseMalformed("the plan is not about that matter, so it cannot be removed. Nothing was written.", 0);
       if (held.length === 1)
-        return refusal("PLAN_NO_SUBJECT", "a plan is about at least one matter, and that is its last. Close the plan "
-          + "instead. Nothing was written.", { count: 0, max: SUBJECTS_MAX });
-      /* END DEC-49 REGION is-plan-subjects */
+        return refuseNoSubject("a plan is about at least one matter, and that is its last. Close the plan instead. "
+          + "Nothing was written.", 0);
       entry = { kind: "subject_remove", key, subject: held.find((x) => x.key === key).subject };
     }
     Object.assign(entry, { reason: reason.trim(), author, at: this.now() });
@@ -854,7 +845,7 @@ export class ActionPlans {
     const p = row ? this.#plan(row.plan_id, viewer) : null;
     /* DEC-49 REGION is-proposal-seen */
     if (!row || !p)
-      return refusal("NO_SUCH_PROPOSAL", "no proposal answers to that id in a plan this caller may see. Nothing was written.",
+      return refusal("NO_SUCH_PLAN_PROPOSAL", "no proposal answers to that id in a plan this caller may see. Nothing was written.",
         { proposal: typeof proposal === "string" ? proposal : null });
     /* END DEC-49 REGION is-proposal-seen */
     if (p.state !== "open") return refusePlanClosed(p.id);
@@ -904,7 +895,7 @@ export class ActionPlans {
     if (unknown !== undefined) return refuseNoSuchOption(unknown);
     const bad = refuseReason(reason, NEEDS_REASON.includes(disposition));
     if (bad) return bad;
-    const rem = this.#reminders(reminders, disposition, ids, held);
+    const rem = this.#reminders(reminders, disposition, ids, held, o.p, author, viewer);
     if (rem.r) return rem.r;
     const keys = refuseKeys(args);
     if (keys) return keys;
@@ -918,25 +909,36 @@ export class ActionPlans {
   }
   /* R29: the reminders the member asked for, held with the choice: `{date, on, option?}` each naming a date of its
      option and a day; an option named once may omit `option`. `{by: {option: [{date, on}]}}` or `{r: refusal}`. */
-  #reminders(list, disposition, ids, held) {
+  #reminders(list, disposition, ids, held, p, author, viewer) {
     const none = list === undefined || list === null || (Array.isArray(list) && !list.length);
     const by = Object.fromEntries([...new Set(ids)].map((x) => [x, []]));
     if (none) return { by };
-    const row = ACTION_CLOCK_CHECKS.REMINDER_REFUSED;
-    const refused = (detail) => ({ r: relayed("REMINDER_REFUSED", row, detail) });
-    if (disposition !== "chosen") return refused("reminders are set when an option is chosen. Nothing was written.");
-    if (!Array.isArray(list)) return refused("reminders is a list of {date, on}. Nothing was written.");
+    const refused = (opt, entry, on) => ({ r: this.#reminderRefusal(p, opt ? held.get(opt) : held.get(ids[0]), entry, on, author, viewer) });
+    if (disposition !== "chosen" || !Array.isArray(list)) return refused(null, -1, null);
     const one = new Set(ids).size === 1 ? ids[0] : null;
     for (const r of list) {
       const opt = isObj(r) ? (r.option ?? one) : null;
-      if (!isObj(r) || !opt || !by[opt])
-        return refused("each reminder names its option (one of those being chosen) and a date of it. Nothing was written.");
-      if (!(held.get(opt).fields.dates || []).some((d) => d.date === r.date))
-        return refused(`${String(r.date).slice(0, 20)} is not a regulated date of ${opt}. Nothing was written.`);
-      if (!isDay(r.on)) return refused(`on '${String(r.on).slice(0, 20)}' is not a day written YYYY-MM-DD. Nothing was written.`);
+      if (!isObj(r) || !opt || !by[opt]) return refused(null, -1, null);
+      const entry = (held.get(opt).fields.dates || []).findIndex((d) => d.date === r.date);
+      if (entry === -1 || !isDay(r.on)) return refused(opt, entry, r.on);
       if (!by[opt].some((x) => x.date === r.date && x.on === r.on)) by[opt].push({ date: r.date, on: r.on });
     }
     return { by };
+  }
+  /* R29: `REMINDER_REFUSED` is action-clocks' own (its R4), minted at its `reminderSet` and nowhere else. A reminder
+     asked with a choice is judged before any action exists, so it is asked of action-clocks on an action carrying the
+     option's dates, created in a transaction that always rolls back; its refusal is relayed unchanged. */
+  #reminderRefusal(p, opt, entry, on, author, viewer) {
+    let answer = null;
+    this.record.transact(() => {
+      const doc = actionDocument({ fields: { summary: opt.fields.summary, subjects: [], dates: opt.fields.dates || [] },
+                                   kind: "other", plan: p.id, option: opt.id, contact: null, breach: false, override: null,
+                                   at: this.now() });
+      const a = this.actions.actionCreate({ document: doc, author, viewer });
+      answer = ok(a) ? this.clocks.reminderSet({ target: a.id, entry, on: on ?? null, author, viewer }) : a;
+      return { ok: false };
+    });
+    return ok(answer) ? null : answer;
   }
 
   /** R14: set one scenario whole, keeping the earlier version in history. */
@@ -977,23 +979,25 @@ export class ActionPlans {
     const r = checkPhases(phases, { chosen, subjects });
     if (r.phases) return r;
     const at = { index: r.index, ...(r.phase ? { phase: r.phase } : {}), ...(r.option ? { option: r.option } : {}) };
-    if (r.fault === "malformed") {
-      /* DEC-49 REGION is-phase-shaped */
-      return refusal("PHASE_MALFORMED", `phase ${r.index ?? "list"}: ${r.detail}. Nothing was written.`, at);
-      /* END DEC-49 REGION is-phase-shaped */
-    }
-    if (r.fault === "not_chosen") {
-      /* DEC-49 REGION is-phase-option-chosen */
-      return refusal("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index}: ${r.detail}. Nothing was written.`, at);
-      /* END DEC-49 REGION is-phase-option-chosen */
-    }
-    if (r.fault === "branch") {
-      /* DEC-49 REGION is-branch-known */
-      return refusal("BRANCH_UNKNOWN", `phase ${r.index}: ${r.detail}. Nothing was written.`, at);
-      /* END DEC-49 REGION is-branch-known */
-    }
+    /* DEC-49 REGION is-phase-shaped */
+    if (r.fault === "malformed")
+      return refusal("PHASE_MALFORMED", `phase ${r.index ?? "list"} is not a phase this scenario can hold: ${r.detail}. `
+        + "Nothing was written.", at);
+    /* END DEC-49 REGION is-phase-shaped */
+    /* DEC-49 REGION is-phase-option-chosen */
+    if (r.fault === "not_chosen")
+      return refusal("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the group has not chosen: ${r.detail}. `
+        + "Nothing was written.", at);
+    /* END DEC-49 REGION is-phase-option-chosen */
+    /* DEC-49 REGION is-branch-known */
+    if (r.fault === "branch")
+      return refusal("BRANCH_UNKNOWN", `phase ${r.index} names a phase or a matter this scenario does not hold: ${r.detail}. `
+        + "Nothing was written.", at);
+    /* END DEC-49 REGION is-branch-known */
     /* DEC-49 REGION is-phase-acyclic */
-    return refusal("PHASE_CYCLE", `${r.detail}: no phase can start after itself. Nothing was written.`, at);
+    return refusal("PHASE_CYCLE", `following when each phase starts leads back to where it began: ${r.detail}, and no `
+      + "phase can start after itself. Nothing was written.",
+      at);
     /* END DEC-49 REGION is-phase-acyclic */
   }
 
@@ -1085,6 +1089,20 @@ export class ActionPlans {
     return [...out];
   }
 
+  /* R18: `CONTACT_NOT_A_MEMBER` is actions' own (its R45), minted at its write and nowhere else. It is asked here, in
+     R18's order (before any other refusal of the action's write), by offering actions a document whose only fault is
+     the contact, in a transaction that always rolls back; its answer is relayed unchanged. */
+  #contactRefusal(contact, p, opt, author, viewer) {
+    let answer = null;
+    this.record.transact(() => {
+      const doc = actionDocument({ fields: { summary: opt.fields.summary, subjects: [], dates: [] }, kind: "other",
+                                   plan: p.id, option: opt.id, contact, breach: false, override: null, at: this.now() });
+      answer = this.actions.actionCreate({ document: doc, author, viewer });
+      return { ok: false };
+    });
+    return ok(answer) ? null : answer;
+  }
+
   /** R18, R29: start a chosen option: compose its action, promote it, set the reminders asked with the choice, and link
    *  them, in one act; a refusal of either leaves neither. */
   optionStart(args = {}) {
@@ -1109,9 +1127,10 @@ export class ActionPlans {
       return refusal("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action });
     /* END DEC-49 REGION is-start-once */
     const contactId = contact === undefined || contact === null || contact === "" ? null : str(contact).replace(/^member:/, "");
-    if (contact !== undefined && contact !== null && contact !== "" && (!contactId || !this.membership.memberFacts(contactId)))
-      return relayed("CONTACT_NOT_A_MEMBER", ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER, "contact names a member of this "
-        + "instance by member id, and this one names none. Nothing was written.");
+    if (contact !== undefined && contact !== null && contact !== "" && (!contactId || !this.membership.memberFacts(contactId))) {
+      const refused = this.#contactRefusal(contactId ?? String(contact), p, opt, author, viewer);
+      if (refused) return refused;
+    }
     const reason = override === undefined || override === null ? null : isObj(override) ? override.reason : override;
     const at = this.now();
     const doc = actionDocument({ fields: opt.fields, kind, plan: p.id, option: opt.id, contact: contactId,
@@ -1498,6 +1517,22 @@ export function refuseNoSuchInquiry(inquiry, extra = null) {
   /* END DEC-49 REGION is-inquiry-seen */
 }
 
+/** R1, R4: a plan is about 1 to 50 matters; `count` is how many the act would leave or name. */
+export function refuseNoSubject(detail, count) {
+  /* DEC-49 REGION is-plan-subjects */
+  return refusal("PLAN_NO_SUBJECT", detail || `a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
+    { count: count ?? null, max: SUBJECTS_MAX });
+  /* END DEC-49 REGION is-plan-subjects */
+}
+
+/** R1, R4: a matter that is not one, named twice, measured by no standard named, or not in the plan. */
+export function refuseMalformed(detail, index) {
+  /* DEC-49 REGION is-subject-shaped */
+  return refusal("SUBJECT_MALFORMED", detail || "a matter is {kind: inquiry, inquiry} or {kind: outcome, determination, "
+    + "standard}. Nothing was written.", { index: index ?? null });
+  /* END DEC-49 REGION is-subject-shaped */
+}
+
 /** R4, R9, R13, R14, R16, R18, R20, R30: a closed plan takes no act. */
 export function refusePlanClosed(plan) {
   /* DEC-49 REGION is-plan-open */
@@ -1549,7 +1584,7 @@ export function refuseRunOtherPlan(run) {
  *  as though its part were empty. */
 export function refuseProviderUnavailable(provider) {
   /* DEC-49 REGION is-provider-present */
-  return refusal("PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have `
+  return refusal("PLAN_PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have `
     + "yet; nothing is answered in its place.", { provider });
   /* END DEC-49 REGION is-provider-present */
 }

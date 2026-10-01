@@ -104,11 +104,11 @@ test("R1 R6 R7 R9 R11 R13 R14 R16 R18 R20 R34: actionPlansOps reaches each servi
 test("R6 R30: a provider this host has not been given answers PROVIDER_UNAVAILABLE, never a partial answer", () => {
   const w = seeded({ omit: ["conformance"] });
   const r = w.ap.planOpen({ project: w.P, subjects: [w.S1], title: "t", ...by("bob") });
-  assert.equal(code(r), "PROVIDER_UNAVAILABLE"); assert.equal(r.provider, "conformance");
+  assert.equal(code(r), "PLAN_PROVIDER_UNAVAILABLE"); assert.equal(r.provider, "conformance");
   const w2 = seeded({ omit: ["escalation"] });
   opened(w2);
   const read = w2.ap.planRead({ id: w2.PL, viewer: V("bob") });
-  assert.equal(code(read), "PROVIDER_UNAVAILABLE"); assert.equal(read.provider, "escalation");
+  assert.equal(code(read), "PLAN_PROVIDER_UNAVAILABLE"); assert.equal(read.provider, "escalation");
   /* with no ai-runs, nothing registers a planning-run check (ai-runs then refuses plan mode, fail closed) */
   const w3 = world({ omit: ["aiRuns"] });
   assert.equal(w3.reg.checks.length, 0);

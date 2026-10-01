@@ -91,8 +91,8 @@ test("R11: a proposal is stored apart, labelled, never an option; a member adopt
                                                proposer: V("alice"), viewer: V("alice") })), "PROPOSAL_WHY_REFUSED");
   assert.equal(code(await w.ap.optionPropose({ plan: w.PL, summary: "s", category: "other", subjects: [w.S1], why: "w", viewer: V("alice") })), "PROPOSAL_NO_PROPOSER");
   assert.equal(code(w.ap.optionAdopt({ proposal: p.proposal.id, author: MACHINE, viewer: MACHINE })), "MACHINE_CANNOT_ADD_OPTION");
-  assert.equal(code(w.ap.optionAdopt({ proposal: "PLN-x/proposal/9", ...by("bob") })), "NO_SUCH_PROPOSAL");
-  assert.equal(code(w.ap.optionAdopt({ proposal: p.proposal.id, ...by("dave") })), "NO_SUCH_PROPOSAL", "a plan dave may not see");
+  assert.equal(code(w.ap.optionAdopt({ proposal: "PLN-x/proposal/9", ...by("bob") })), "NO_SUCH_PLAN_PROPOSAL");
+  assert.equal(code(w.ap.optionAdopt({ proposal: p.proposal.id, ...by("dave") })), "NO_SUCH_PLAN_PROPOSAL", "a plan dave may not see");
   const a = w.ap.optionAdopt({ proposal: p.proposal.id, ...by("bob") });
   assert.equal(a.ok, true); assert.equal(a.proposal, p.proposal.id);
   assert.equal(a.origin, undefined, "a member's proposal carries no assistant origin");
