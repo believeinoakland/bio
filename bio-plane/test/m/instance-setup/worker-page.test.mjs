@@ -1,10 +1,10 @@
-/* The page at the root and its intake, end to end through the real Worker (Miniflare over `src/index.mjs`): the bytes
-   served at `/` (R20), the one reader of the group behind them (R1, R3, R4), the tier chooser (R24, R32) and the
-   question's intake (R24) written through the plane and read back, and the record browser the page keeps working
-   (K102, ruling 4). Converts instance-setup's shares of `bio-plane/test/group-public.test.mjs` (P1–P7, G1, G3–G6),
-   `risk-tier.test.mjs` (sections 5 and 6), `inquiry.test.mjs` (section 5) and `browse.test.mjs` (the page's sections
-   and its pure functions); the per-credential projections of op=instancegroup are admission's share, and the source
-   reads of those suites are dropped (P7). */
+/* The page at the root and its intake, end to end through the real Worker (Miniflare over `src/plane/index.mjs`, plane
+   R6's entry): the bytes served at `/` (R20), the one reader of the group behind them (R1, R3, R4), the tier chooser
+   (R24, R32) and the question's intake (R24) written through the plane and read back, and the record browser the page
+   keeps working (K102, ruling 4). Converts instance-setup's shares of `bio-plane/test/group-public.test.mjs` (P1–P7,
+   G1, G3–G6), `risk-tier.test.mjs` (sections 5 and 6), `inquiry.test.mjs` (section 5) and `browse.test.mjs` (the page's
+   sections and its pure functions); the per-credential projections of op=instancegroup are admission's share, and the
+   source reads of those suites are dropped (P7). */
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -16,7 +16,7 @@ import { pageOver } from "./fixture.mjs";
 import { deriveInquiryTitle } from "../../../src/record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState } from "../../../src/action-grammar/index.mjs";
 
-const SRC = fileURLToPath(new URL("../../../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const ADM = "adm-instance-setup-page", MEM = "mem-instance-setup-page", PRB = "prb-instance-setup-page";
 const FIRST = "river-town", SECOND = "harbor-watch", LATE = "late-town";
@@ -26,7 +26,7 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
    a real one), and `__judge` runs record-grammar's checkBundle over a document with the grammars the record itself
    answers (record-core R67's `grammars()`, the registrations the plane's modules made at start: what promotion's gate
    and the audit pass), so a document is judged as the record judges it, never by the catalogue's wrapper. */
-const FAILING = `import worker, { Store as PlaneStore } from "./index.mjs";
+const FAILING = `import worker, { Store as PlaneStore } from "./plane/index.mjs";
 import { recordOf } from "./record-core/index.mjs";
 import { checkBundle } from "./record-grammar/index.mjs";
 const hex = async (v) => [...new Uint8Array(await crypto.subtle.digest("SHA-256",
@@ -68,7 +68,7 @@ after(async () => { for (const mf of live) await mf.dispose(); });
 const planeAt = async ({ name = FIRST, failing = false } = {}) => {
   const mf = new Miniflare({
     modules: true, modulesRoot: "/",
-    ...(failing ? { scriptPath: join(dirname(SRC), "instance-setup-failing-store.mjs"), script: FAILING }
+    ...(failing ? { scriptPath: join(dirname(SRC), "..", "instance-setup-failing-store.mjs"), script: FAILING }
                 : { scriptPath: SRC, script: readFileSync(SRC, "utf8") }),
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: failing ? "FailingStore" : "Store", useSQLite: true } },

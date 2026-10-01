@@ -734,7 +734,11 @@ test("R26 checkSignedAsset returns null only for the signed release of that vers
   assert.equal(await checkSignedAsset({ manifest: good, bytes, version: "1.2.3", signers }), null);
   const why = async (o) => checkSignedAsset({ manifest: good, bytes, version: "1.2.3", signers, ...o });
   assert.match(await why({ manifest: null }), /missing or does not parse/);
-  assert.match(await why({ version: "1.2.4" }), /RELEASE\.json is "1\.2\.3" but bio-plane\/package\.json is 1\.2\.4/);
+  const unsigned = await why({ version: "1.2.4" });
+  assert.match(unsigned, /RELEASE\.json is "1\.2\.3" but bio-plane\/package\.json is 1\.2\.4/);
+  /* The refusal names the command that cuts and signs a release, as the operator runs it from the repository root. */
+  assert.ok(unsigned.includes("cut and sign 1.2.4 (node bio-plane/scripts/release-assemble.mjs --sign)"), unsigned);
+  assert.ok(existsSync(new URL("../../bio-plane/scripts/release-assemble.mjs", import.meta.url)), "the command it names exists");
   assert.match(await why({ bytes: new TextEncoder().encode(src + " ") }), /hashes .* but RELEASE\.json records/);
   assert.match(await why({ signers: [] }), /lists no ARMED_SIGNERS/);
   assert.match(await why({ manifest: { ...good, sig: "" } }), /carries no signature/);

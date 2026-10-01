@@ -42,7 +42,10 @@ test("R13 R14 R15: the op map holds exactly `affordancefacts`, and it answers af
 test("R13 R15: an absent stamp reads null — no target is NO_TARGET, and with no author actor_is_machine is null and "
    + "with no `by` the roster is null", () => {
   const { a } = world();
-  assert.equal(route(a, { viewer: M1 }).affordancefacts().reason, "NO_TARGET");
+  const none = route(a, { viewer: M1 }).affordancefacts();
+  assert.equal(none.reason, "NO_TARGET");
+  /* K899 (1): the detail a member reads names a record id, never a bundle */
+  assert.equal(none.detail, "affordances are asked of an object: pass target=<record id>");
   const f = route(a, { target: IQ.a, viewer: M1 }).affordancefacts();
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
   assert.deepEqual(f, a.affordanceFacts({ target: IQ.a, viewer: M1, identity: null, author: null, by: null }));

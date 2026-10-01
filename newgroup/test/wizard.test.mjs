@@ -1311,7 +1311,7 @@ async function d116Install(slug, reply) {
    group's copy held its members uploaded and unreachable. The D-116 arms above serve a CANNED `memberVersions`; these
    do not. Here the account is a small STATEFUL fake: it keeps every script uploaded, applies `keep_bindings` by type
    (so a service binding not restated is DROPPED, as the update's comment says it is), REFUSES a PUT whose service
-   binding names a worker the account does not hold (code 10143 — the rule `tools/deploy-fleet.mjs` records as measured
+   binding names a worker the account does not hold (code 10143 — the rule `bio-plane/scripts/deploy-fleet.mjs` records as measured
    2026-08-10 / 2026-09-10, which forces the order), and answers `op=bootstrap&members=1` the way the plane's
    `memberVersions` does, DERIVED from the bindings the plane was last uploaded with: no binding -> UNBOUND; a binding
    to a member script -> that script's own name and VERSION (so a binding to the wrong worker reads MISNAMED); a binding

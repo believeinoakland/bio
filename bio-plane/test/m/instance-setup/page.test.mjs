@@ -172,7 +172,36 @@ test("R25 a bundle's history is listed in write order when every entry carries a
   const keyed = await shown([e("z"), e("a")]);
   assert.match(keyed, /Listed by snapshot key[^]*not necessarily the order they were written/);
   assert.ok(keyed.indexOf(">a<") < keyed.indexOf(">z<"));
-  assert.doesNotMatch(SETUP_HTML, /Every revision this bundle has ever had, oldest first/);
+  assert.doesNotMatch(SETUP_HTML, /Every revision this (?:record|bundle) has ever had, oldest first/);
+});
+
+/* The served bytes with what no member reads taken out: HTML comments, the script's comments, and the identifiers K899
+   (1) keeps (`bundle_id`, `bundleId`, `bundle.md` and its history paths, the section id and the script's names). */
+const memberText = (html) => html.replace(/<!--[^]*?-->/g, "")
+  .replace(/<script>([^]*?)<\/script>/g, (_, s) => s.replace(/\/\*[^]*?\*\//g, "").replace(/(^|[^:"'\\])\/\/[^\n]*/g, "$1"))
+  .replace(/\b(?:bundle_id|bundleId|bundle\.md|_history\/bundle_|s-bundle|openBundle|renderBundle|bundleSha|checkBundle)\b/g, "");
+
+test("K899 (1) the page says record where it said bundle: no text a member reads holds the word, the identifiers stay; the crumb, labels, browse summary and header, the not-found line and the publish refusals say record", async () => {
+  assert.doesNotMatch(memberText(SETUP_HTML), /bundle/i);
+  /* not vacuous: the identifiers the page sends and reads are still there */
+  for (const id of ['id="s-bundle"', '"bundle.md"', "bundleId", "bundle_id"]) assert.ok(SETUP_HTML.includes(id), id);
+  assert.match(memberText('<p>Files in this bundle</p><script>/* a bundle */ x("bundle.md")</script>'), /bundle/);
+  for (const words of ["<h2>Files in this record</h2>", "Every revision this record has ever had.", "This adds a record to the working record.",
+                       '<a id="e-back">Record</a>', '<span class="k">Record</span>'])
+    assert.ok(SETUP_HTML.includes(words), words);
+  const v = signedIn({ capabilities: ["read"], administer: false }, {
+    list: () => ({ result: [{ bundle_id: "INFO-2026-0001-a", object_type: "information", current_state: "collected" },
+                            { bundle_id: "INFO-2026-0002-b", object_type: "information", current_state: "collected" }] }),
+    image: () => ({ result: null }) });
+  await settle();
+  await v.ui.openBrowse(); await settle();
+  assert.match(v.el("#browse-summary").textContent, /^2 records\. /);
+  assert.match(v.el("#browse-body").innerHTML, /<th>Record<\/th><th>State<\/th>/);
+  await v.ui.openBundle("INFO-2026-0003-c"); await settle();
+  assert.equal(v.el("#b-md").innerHTML, "<p>This record was not found.</p>");
+  assert.match(v.ui.ratifyWhy({ reason: "RATIFY_STALE" }), /Reload this record and sign the new hash\./);
+  assert.match(v.ui.ratifyWhy({ reason: "SIG_BAD_SIGNATURE" }), /does not match this record and hash\./);
+  assert.match(v.ui.ratifyWhy({ reason: "GATE_REFUSED", findings: [{ check: "C-2.7" }] }), /^The checks refused this record: C-2\.7\./);
 });
 
 test("R32 the tiers the form offers and writes are action-grammar's RISK_TIERS and riskTierState, never a copy; the page states action_kind: other and offers no other kind", async () => {

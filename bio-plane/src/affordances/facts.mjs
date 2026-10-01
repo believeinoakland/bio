@@ -145,7 +145,7 @@ class AffordanceFacts {
    *  `by` the roster stamp. */
   affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {
     if (!target) return { ok: false, reason: "NO_TARGET",
-      detail: "affordances are asked of an object: pass target=<bundle id>" };
+      detail: "affordances are asked of an object: pass target=<record id>" };
     /* R13 (REC-25 / F-8): an object the viewer may not see answers NO_SUCH_BUNDLE — the SAME shape a truly absent id
        answers, so the refusal discloses nothing. Sight is membership's one rule (R80), and an absent viewer sees
        nothing. */

@@ -89,9 +89,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/bias/checks.mjs", BIAS],
   ["src/observation-log/checks.mjs", OBSERVATION_LOG],
   ["src/retrieval/checks.mjs", RETRIEVAL],
-  /* inquiry-grammar's R7 table of the inquiry's own rows (C-33.13, C-33.22, C-33.23, C-32.7, C-32.8) is named
-     `INQUIRY_GRAMMAR_ROWS`, not by the reserved suffix, so it is read here as the family `INQUIRY_GRAMMAR_CHECKS`. */
-  ["src/inquiry-grammar/checks.mjs", Object.freeze({ ...INQUIRY_GRAMMAR, INQUIRY_GRAMMAR_CHECKS: INQUIRY_GRAMMAR.INQUIRY_GRAMMAR_ROWS })],
+  ["src/inquiry-grammar/checks.mjs", INQUIRY_GRAMMAR],
   ["src/inquiry/index.mjs", INQUIRY],
   ["src/citation/checks.mjs", CITATION],
   ["src/basis-versions/checks.mjs", BASIS_VERSIONS],

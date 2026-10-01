@@ -522,6 +522,9 @@ export const JUSTIFICATION_REFUSALS = [
      supersession (conformance's C-113.22) and escalation's reasoned acts (escalation R24). The family's requirement,
      unchanged; `NO_REASON` stays for the acts that still answer it. */
   "INTENT_NO_REASON", "CONFORMANCE_NO_REASON", "ESCALATION_NO_REASON",
+  /* K918 (T20): a litigation hold's statement without its reason (actions R52, C-117.21), refused absent as well as
+     malformed, as RISK_TIER_REASON_REFUSED is. */
+  "HOLD_REFUSED",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -840,6 +843,9 @@ export const RUNGS = {
   optionrevise:          "reasoned", // PLAN_NO_REASON (action-plans R9: a revision with its reason)
   optiondispose:         "reasoned", // PLAN_NO_REASON (action-plans R13: declined and blocked need a reason)
   planclose:             "reasoned", // PLAN_NO_REASON (action-plans R20: a member closes a plan with a reason)
+  /* K918 (T20), on R27's rule: a litigation hold is stated with its reason and corrected forward by a further
+     statement, the earlier kept (actions R52). */
+  actionhold:            "reasoned", // HOLD_REFUSED (actions R52, C-117.21: a hold stated without its reason)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -2638,6 +2644,9 @@ export const NON_ACTS = {
   templatesave: "draft-directed: a member keeps an approved draft as a named template of the group's, keyed by the draft; writes a template row and moves no bundle",
   actioncreate: "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
   actionpressure: "entry-directed: a member marks one received correspondence entry as pressure, keyed by (action, entry ordinal); appends a mark and never rewrites the entry",
+  /* K899 (7), K902 (T20): a litigation hold is stated on one `legal` pressure mark, `actionpressure`'s key; it is
+     reached where the mark is shown (and from the hold reminder, queue-producers R19), never beside a bundle. */
+  actionhold: "entry-directed: keyed by (action, entry ordinal); appends a hold statement and never rewrites the entry or its mark",
   /* K727 (T18): action-plans' twelve acts. A plan is a `PLN-` record object whose options, scenarios and checkpoints are
      rows of its own, none a bundle state `affordanceFacts` describes; they are reached in the plan's view. Its reads
      (`plan`, `plans`, `planproposals`) carry no `NEEDS` row and are not named here (R12). */

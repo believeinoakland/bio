@@ -314,10 +314,10 @@ ${GROUP_LINE_UNREAD}
   <h1 id="b-title" style="font-size:clamp(22px,3.4vw,30px)"></h1>
   <div class="card" id="b-facts"></div>
   <div id="b-md" class="md"></div>
-  <h2>Files in this bundle</h2>
+  <h2>Files in this record</h2>
   <div class="card" id="b-files"></div>
   <h2>History</h2>
-  <p class="small">Every revision this bundle has ever had. The record is
+  <p class="small">Every revision this record has ever had. The record is
   append-only: nothing here can be edited or removed.</p>
   <div class="card" id="b-history"></div>
   <div id="b-ratify"></div>
@@ -326,7 +326,7 @@ ${GROUP_LINE_UNREAD}
 <section id="s-new">
   <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; New</p>
   <h1>Add something new</h1>
-  <p class="small">This creates a bundle in the working record. Nothing here is
+  <p class="small">This adds a record to the working record. Nothing here is
   public: the working record has never been published and cannot be read by
   anyone without a password.</p>
   <label for="n-type">What kind of thing is this?</label>
@@ -437,11 +437,11 @@ ${GROUP_LINE_UNREAD}
 </section>
 
 <section id="s-edit">
-  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; <a id="e-back">Bundle</a> &rsaquo; Edit</p>
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; <a id="e-back">Record</a> &rsaquo; Edit</p>
   <h1>Revise this</h1>
   <p class="small">Saving adds a revision. The version you are replacing stays in
   the history forever; nothing is overwritten and nothing is lost.</p>
-  <div class="card"><div class="kv"><span class="k">Bundle</span><span class="v mono" id="e-id"></span></div></div>
+  <div class="card"><div class="kv"><span class="k">Record</span><span class="v mono" id="e-id"></span></div></div>
   <label for="e-body">The record</label>
   <textarea id="e-body" rows="20" spellcheck="false"></textarea>
   <div class="actions" style="margin-top:16px"><button id="e-save">Save a revision</button></div>
@@ -703,12 +703,12 @@ async function openBrowse(){
   try { list = (await rec("list")).result || []; } catch { return; }
   const by = {};
   for (const b of list) (by[b.object_type] ||= []).push(b);
-  $("#browse-summary").textContent = list.length + " bundles. Everything below is read-only; the record can only be changed through the gated tools.";
+  $("#browse-summary").textContent = list.length + " records. Everything below is read-only; the record can only be changed through the gated tools.";
   let html = "";
   for (const [t, label] of TYPES){
     const rows = by[t] || []; delete by[t];
     if (!rows.length) continue;
-    html += "<h2>"+label+" ("+rows.length+")</h2><table class=\\"rec\\"><tr><th>Bundle</th><th>State</th><th>Updated</th></tr>";
+    html += "<h2>"+label+" ("+rows.length+")</h2><table class=\\"rec\\"><tr><th>Record</th><th>State</th><th>Updated</th></tr>";
     for (const b of rows)
       html += '<tr class="row" data-id="'+escH(b.bundle_id)+'"><td><span class="bid">'+escH(b.bundle_id)+'</span><br><span class="dim">'+escH(b.title||"")+"</span></td><td>"+chip(b.current_state)+"</td><td class=\\"dim\\">"+fmtWhen(b.last_updated)+"</td></tr>";
     html += "</table>";
@@ -761,7 +761,7 @@ async function openBundle(id){
   $("#b-files").innerHTML = ""; $("#b-history").innerHTML = "";
   let img;
   try { img = (await rec("image", { id })).result; } catch { return; }
-  if (!img){ $("#b-md").innerHTML = "<p>This bundle was not found.</p>"; return; }
+  if (!img){ $("#b-md").innerHTML = "<p>This record was not found.</p>"; return; }
   CURRENT = { id, img };
   renderBundle(id, img, null);
 }
@@ -842,7 +842,7 @@ async function ratifyPanel(id, liveText, historical){
   box.innerHTML = "<h2>Publish this</h2>"
     + '<p class="small">Publishing puts this revision where the public can verify it by hash. '
     + "It cannot be undone: a published hash answers forever, even after later revisions.</p>"
-    + '<div class="card"><div class="kv"><span class="k">Bundle</span><span class="v mono">'+escH(id)+"</span></div>"
+    + '<div class="card"><div class="kv"><span class="k">Record</span><span class="v mono">'+escH(id)+"</span></div>"
     + '<div class="kv"><span class="k">This revision</span><span class="v mono">'+escH(sha)+"</span></div></div>"
     + '<p class="small">Open the <a class="filelink" href="/sign" target="_blank" rel="noopener">signing page</a>, '
     + "unlock your key, choose Sign a ratification, paste in those two values, and paste what it "
@@ -870,13 +870,13 @@ async function ratifyPanel(id, liveText, historical){
 }
 function ratifyWhy(r){
   const why = r.reason || r.error || "unknown";
-  if (why === "RATIFY_STALE") return "Someone saved a newer revision while you were signing. Reload this bundle and sign the new hash.";
+  if (why === "RATIFY_STALE") return "Someone saved a newer revision while you were signing. Reload this record and sign the new hash.";
   if (why === "NO_SIGNERS") return "No keys are registered on this copy yet, so nothing can be published. An administrator registers keys under Members and keys.";
   if (why === "SIG_UNKNOWN_KEY") return "That signature was made with a key this group has not registered, or one that has been revoked.";
-  if (why === "SIG_BAD_SIGNATURE") return "That signature does not match this bundle and hash. Sign the exact values shown above.";
+  if (why === "SIG_BAD_SIGNATURE") return "That signature does not match this record and hash. Sign the exact values shown above.";
   if (why === "SIG_NAMESPACE") return "That signature was made for something other than ratification. Use the Sign a ratification tab.";
   if (why === "MALFORMED") return "That does not look like a signature. Copy the whole block, including the BEGIN and END lines.";
-  if (why === "GATE_REFUSED") return "The checks refused this bundle: "
+  if (why === "GATE_REFUSED") return "The checks refused this record: "
     + (r.findings||[]).map(f=>f.check + (f.where ? " (" + f.where + ")" : "")).join(", ")
     + ". Publishing is blocked until those are fixed.";
   return "Refused: " + why;
@@ -1300,7 +1300,7 @@ $("#e-save").addEventListener("click", async ()=>{
     if (!r.result || !r.result.ok) {
       const why = (r.result && r.result.reason) || r.error || "unknown";
       if (why === "FILES_DROPPED") {
-        e.textContent = "Saving would have removed files this bundle holds ("
+        e.textContent = "Saving would have removed files this record holds ("
           + (r.result.paths || []).join(", ") + "). Nothing was saved.";
         return; }
       e.textContent = (why === "CAS_STALE" || why === "STALE")

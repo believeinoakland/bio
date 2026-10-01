@@ -600,7 +600,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     /* N364: at sources' interface over its fixture, sources.test.mjs */
     "sourcedisclose", "sourcelink", "sourceconsent",
     /* K727: at action-plans' interface over its fixture, backing.test.mjs */
-    "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose"];
+    "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose",
+    /* K918: at actions' interface over its fixture, backing.test.mjs */
+    "actionhold"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 

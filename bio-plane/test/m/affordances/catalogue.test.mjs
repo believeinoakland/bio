@@ -90,7 +90,9 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
       /* N364: the member's acts on a source's history */
       "sourcedisclose", "sourcelink", "sourceconsent",
       /* K727: action-plans' acts that ask the member's reason */
-      "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose"],
+      "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose",
+      /* K918: actions R52's hold statement */
+      "actionhold"],
   };
   for (const k of Object.keys(want)) want[k].sort();
   const got = {};
@@ -434,6 +436,7 @@ const LAYER9_RUNGS = {
   /* K727: action-plans' (its R4, R9, R13, R14, R20) */
   plansubjectadd: "reasoned", plansubjectremove: "reasoned", optionrevise: "reasoned", optiondispose: "reasoned",
   planclose: "reasoned", scenarioset: "reversible",
+  actionhold: "reasoned",   // K918: actions R52
 };
 const LAYER9_ABSENT = {
   counselpacketexport: "substrate",
@@ -455,19 +458,19 @@ const LAYER9_READS = ["standard", "standards", "standardinforce", "determination
   "escalationsdue", "templates" /* K705: filings R26 */, "action", "actions" /* K709: actions R47 */,
   "plan", "plans", "planproposals" /* K727: action-plans R6, R7, R34 */];
 /* actions' op map holds acts and reads catalogued long before layer 9; only the ops K709 adds join this set. */
-const ACTIONS_NEW = ["actioncreate", "actionpressure", "action", "actions"];
-test("R3 R7 R12: layer 9's 40 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
-   + "21 reads none, and the op maps hold exactly those 61 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727)", () => {
+const ACTIONS_NEW = ["actioncreate", "actionpressure", "actionhold" /* K902 */, "action", "actions"];
+test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
+   + "21 reads none, and the op maps hold exactly those 62 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, K902)", () => {
   const url = new URL("http://x/");
   const keys = (f) => Object.keys(f({}, url, {}));
   const ESCALATION = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance", "escalationdecline",
     "escalationend", "escalationsuspend", "escalationresume", "escalation", "escalationsdue"];
   const actions = keys(actionsOps);
-  assert.deepEqual(ACTIONS_NEW.filter((op) => !actions.includes(op)), [], "actions' op map holds K709's four");
+  assert.deepEqual(ACTIONS_NEW.filter((op) => !actions.includes(op)), [], "actions' op map holds K709's four and K902's actionhold");
   const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION,
                ...ACTIONS_NEW, ...keys(actionPlansOps), ...keys(actionClocksOps)];
   const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
-  assert.equal(mutating.length, 40);
+  assert.equal(mutating.length, 41);
   assert.equal(LAYER9_READS.length, 21);
   assert.deepEqual([...ops].sort(), [...mutating, ...LAYER9_READS].sort());
   for (const op of mutating) {
@@ -645,4 +648,26 @@ test("R3: the signer pair and knockerconsent are graded `credential`, as signera
   assert.equal(RUNG_ABSENT.knockerconsent.ground, RUNG_ABSENT.knock.ground);
   assert.equal(RUNG_ABSENT.inboxpull.ground, "undetermined");
   for (const op of ["signerregister", "signerrevoke", "knockerconsent", "inboxpull"]) assert.ok(!Object.hasOwn(RUNGS, op), op);
+});
+
+/* K899 (7), K902, K918 (T20): actions R52's `op=actionhold`, a member's hold statement on a `legal` pressure mark: graded
+   `reasoned` (R2, R27; its backing is driven in backing.test.mjs) and named in NON_ACTS (R7), keyed by the entry the
+   mark is on. With the control plane's row for it (mutating, gated) nothing is unaccounted (R12). */
+test("R2 R7 R12 R19: actionhold, actions R52's op, is graded `reasoned`, HOLD_REFUSED is in the justification family, "
+   + "it is named in NON_ACTS as entry-directed, and with the control plane's row for it nothing is unaccounted", () => {
+  assert.ok(Object.keys(actionsOps({}, new URL("http://x/"), {})).includes("actionhold"), "actions' op map holds it");
+  assert.equal(RUNGS.actionhold, "reasoned");
+  assert.ok(!Object.hasOwn(RUNG_ABSENT, "actionhold"));
+  assert.ok(JUSTIFICATION_REFUSALS.includes("HOLD_REFUSED"));
+  assert.equal(NON_ACTS.actionhold, "entry-directed: keyed by (action, entry ordinal); appends a hold statement and "
+    + "never rewrites the entry or its mark");
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === "actionhold"));
+  const row = { op: "actionhold", mutating: true, gated: true };
+  const base = A.unaccounted([]);
+  const r = A.unaccounted([row]);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale, base.stale.filter((op) => op !== "actionhold"));
+  assert.ok(base.stale.includes("actionhold"), "carried by no row, both its keys read stale");
+  assert.deepEqual([A.decorate({ id: "actionhold", label: "x" }, null).rung, A.decorate({ id: "actionhold", label: "x" }, null).rung_absence],
+    ["reasoned", null], "R24: a rung, never a bare null");
 });

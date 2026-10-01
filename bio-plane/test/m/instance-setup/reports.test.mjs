@@ -129,7 +129,7 @@ test("R3 R10 R11 over the wire: a credentialed reader gets the row or the identi
 
 /* ---------------------------------------------------------------------------------------------- R19 on the real plane */
 
-const SRC = fileURLToPath(new URL("../../../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 let mf = null;
 const plane = async () => {
   if (mf) return mf;

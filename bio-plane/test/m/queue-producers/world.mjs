@@ -142,6 +142,7 @@ export function defaultFakes() {
                     remindersDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
     escalation: { escalationsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
     actionPlans: { checkpointsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
+    actions: { holdsDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
   };
 }
 
