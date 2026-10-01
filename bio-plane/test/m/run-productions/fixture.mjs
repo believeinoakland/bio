@@ -1,6 +1,6 @@
-/* run-productions over the modules it uses, each the real one where it is extracted (record-core, membership,
-   content), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage.
-   The providers not yet extracted are stand-ins the test controls, each written to its requirements' Provides, as
+/* run-productions over the modules it uses, the real record-core, membership and
+   content, on a real SQLite database (node:sqlite) standing in for a Durable Object's storage.
+   The other providers are stand-ins the test controls, each written to its requirements' Provides, as
    `runProductionsOf`'s deps take them (K61, K120): ai-runs (R28 `runFor`, R29 `boundOf`/`consumeBound`), strength
    (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
    `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),

@@ -818,9 +818,9 @@ export class RunProductions {
                content_id: r.content_id ?? null, proposed_by: r.proposed_by, mint: mintLabel(r.proposed_by) })) };
   }
 
-  /** R20 (K861, plane R10): this module's figure source, exported with its key list for `plane` to register under this
-   *  module's name through record-core R63 (`registerCounts("run-productions", [...RunProductions.COUNT_KEYS],
-   *  (hid) => p.counts(hid))`); the module registers nothing itself while plane holds its copy. Each figure is the
+  /** R20 (K861, plane R10): this module's figure source, exported with its key list; `plane` registers it under this
+   *  module's name through record-core R63 (`src/plane/stats.mjs`: `["run-productions", RunProductions.COUNT_KEYS,
+   *  (ctx, hid) => runProductionsOf(ctx).counts(hid)]`), and the module registers nothing itself. Each figure is the
    *  table's rows less those naming a bundle in `hid` by the column named here: a proposal by its document, a stored
    *  refusal by its question. */
   static COUNT_KEYS = Object.freeze(["proposedReadings", "suggestRefusals"]);
