@@ -552,10 +552,10 @@ export const MEANING = {
      own four-level statement say the level below had been searched when it had
      not. */
   resolves: { table: "resolutions", key: "bundle_id", bare: "grade", level: "meaning",
-              grain: "the bundle carrying a capture whose reference resolved so",
+              grain: "the record carrying a capture whose reference resolved so",
               sub: RESOLUTION_SUB, ...RESOLUTION_ROW },
   concerns: { table: "resolutions", key: "bundle_id", bare: "entity", level: "meaning",
-              grain: "the bundle carrying a capture that concerns the subject",
+              grain: "the record carrying a capture that concerns the subject",
               sub: RESOLUTION_SUB, ...RESOLUTION_ROW },
   /* ---------------------------------------------------------------------
    * REC-90 / CONTENT-SEARCH-DESIGN.md §4.2 — THE `content:` ARM, and it is
@@ -586,9 +586,9 @@ export const MEANING = {
    * the three existing arms compile through exactly the code they compiled
    * through before. THE COLUMN NAMES COME FROM THIS REGISTRY AND THE MEMBER'S
    * STRING IS ALWAYS AN ARGUMENT — the property the whole compiler has, kept
-   * rather than re-argued, and `content-arm.test.mjs` pins it by compiling a
-   * battery of hostile values and asserting the SQL is byte-identical across
-   * all of them while only `args` moves.
+   * rather than re-argued, and R7's test (`test/m/query-language/statements.test.mjs`)
+   * proves it by compiling hostile values and asserting the SQL is byte-identical
+   * across all of them while only `args` moves.
    * ------------------------------------------------------------------- */
   content: {
     table: "content", key: "bundle_id", bare: "kind",
@@ -696,9 +696,10 @@ export const MEANING = {
          question with rows it answers NOTHING about: a member walking the answers
          (each step, undetermined, present) would never meet the images, which is
          the silent drop the row forbids, one layer up. With the third value every
-         row answers exactly one chain question (`rec121-chain-bytes.test.mjs`
-         drives that partition), and `chain_last` below says the same word, so the
-         filter and the row label are one definition read twice. `does-not-apply`
+         row answers exactly one chain question (R6's test in
+         `test/m/query-language/grammar.test.mjs` drives that partition), and
+         `chain_last` below says the same word, so the filter and the row label
+         are one definition read twice. `does-not-apply`
          is NOT in `vocab`, exactly as `undetermined` is not: both are statements
          about the chain rather than step kinds, so neither becomes a bare word
          (`content:does-not-apply` would read as a kind of content). The literal
@@ -816,9 +817,10 @@ export const MEANING = {
    * where a member's text becomes a MATCH argument. A second spelling would
    * be a second grammar to learn and a second place to get the escaping
    * wrong; `ftsLiteral` doubles an embedded `"` and the expression is always a
-   * BOUND ARGUMENT, never interpolated, which `passage-arm.test.mjs` pins by
-   * compiling hostile values and asserting the SQL is byte-identical while
-   * only `args` moves.
+   * BOUND ARGUMENT, never interpolated, which R7's test
+   * (`test/m/query-language/statements.test.mjs`) proves by compiling hostile
+   * `passage:` values and asserting the SQL is byte-identical while only `args`
+   * moves.
    * ------------------------------------------------------------------- */
   passage: {
     table: "capture_text", key: "bundle_id", bare: "text",
@@ -1375,10 +1377,10 @@ function parseTokens(tokens, implicitOp, ctx) {
 
    THERE IS NO `phrase` FIELD, AND ITS ABSENCE IS THE POINT (D-255). This atom
    used to carry `phrase: quoted && /\s/.test(v)`, and NOTHING EVER READ IT —
-   one write site, zero read sites, measured twice: textually across the whole
-   repository, and behaviourally by `test/fieldread.control.mjs`, which wraps
-   every object this module builds in a recording Proxy and reports the fields
-   nothing ever asks for. A name that tells a reader something is handled, with
+   one write site, zero read sites, measured twice (D-255): textually across the
+   whole repository, and behaviourally by a field-read control of the time, which
+   wrapped every object this module builds in a recording Proxy and reported the
+   fields nothing ever asked for. A name that tells a reader something is handled, with
    nothing behind it, is the same family as D-228 one layer along.
 
    WHAT ACTUALLY PERFORMS PHRASE MATCHING, since the name was the only thing
@@ -1773,7 +1775,7 @@ function rankAtomList(atoms) {
 /* ---------------------------------------------------------------------------
  * D-447 — RELEVANCE IS COMPUTED OVER WHAT THE VIEWER CAN SEE, AND ONLY ITS ORDER IS PUBLISHED.
  *
- * WHAT WAS WRONG, measured at the op before this changed (`project-sight.test.mjs` §7, MEASUREMENTS M-for D-447):
+ * WHAT WAS WRONG, measured at the op before this changed (D-447's measurement, by a system suite of the time):
  * the rank was `bm25(bundles_fts)`, and FTS5's bm25 reads the WHOLE index — its IDF counts every row holding a
  * term and its length norm averages every row, hidden projects' rows included. So a member watching their own results
  * could watch a project they were never invited to change (Membership v2 §7.9: *"Not its existence"*). Every visible
@@ -1795,8 +1797,9 @@ function rankAtomList(atoms) {
  * and a bound argument, and the statement's variable ceiling (D-36) is shared with the set and the gate. Said in
  * the answer's `warnings`, never silently.
  * NO SCORE IS PUBLISHED, EVEN THIS ONE (IC for D-447): a hit's place in `hits` IS the order, and it carries its snippet.
- * `snippet()` needs no statistics — FTS5 picks the fragment by the row's own phrase hits — and the §7 digest over
- * the whole answer is what says so, not this comment.
+ * `snippet()` needs no statistics — FTS5 picks the fragment by the row's own phrase hits — and R11's test
+ * (`test/m/query-language/statements.test.mjs`), which compares the whole answer before and after hidden revisions,
+ * is what says so, not this comment.
  * ------------------------------------------------------------------------- */
 export const RANK_ATOMS_MAX = 8;
 const K1 = 1.2;
@@ -1968,8 +1971,9 @@ function metaSql(node, rel, frs) {
    LAST ELEMENT of a stored chain, `cited` about whether any EDGE points here,
    and `cap` has a first-class UNDETERMINED that is `IS NULL` rather than a
    value. Each is written at its own sub-field with its own reason; none of them
-   interpolates the member's string, which `content-arm.test.mjs` pins by
-   compiling hostile values and asserting the SQL does not move. */
+   interpolates the member's string, which R7's test
+   (`test/m/query-language/statements.test.mjs`) proves by compiling hostile values
+   and asserting the SQL does not move. */
 function meaningWhere(node) {
   const m = MEANING[node.arm];
   const sub = node.field ? m.sub[node.field] : null;
@@ -2067,8 +2071,8 @@ export const LIMIT_DEFAULT = 50, LIMIT_MAX = 500, IDS_MAX = 50000;
    several times the rows and a caller reading a whole project's bases would page
    the bundle ceiling many times over. 1000 keeps a project-sized basis reachable
    in a handful of requests while staying well inside the Durable Object's
-   response budget. Named constants rather than literals so `bounds.test.mjs`'s
-   roster walk finds this op the way it finds the others. */
+   response budget. Named constants rather than literals, exported so R12's test
+   (`test/m/query-language/statements.test.mjs`) reads the bounds the shape applies. */
 export const MEANING_LIMIT_DEFAULT = 200, MEANING_LIMIT_MAX = 1000;
 
 export function compile({ q = "", viewer = null, sort = null, dir = null,
@@ -2452,7 +2456,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        (2) THE TRUE ZERO SURVIVES AND MUST. A query whose OTHER arms select no
        document at all still reports `documents: 0` and still publishes the
        empty-DOCUMENT-level sentence; this narrows a FALSE zero and does not
-       remove the true one. Driven both ways in `passage-arm.test.mjs` S10.
+       remove the true one. Driven both ways by R16's tests in
+       `test/m/query-language/statements.test.mjs` and `converts.test.mjs`.
 
        NOT FIXED BY REORDERING `#meaningLevels`'s branch tests, deliberately:
        `documents === 0` winning first is how the defect SURFACED, not what
@@ -2531,7 +2536,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        statement as well as the rows: a join present in one and not the other is
        how `total` and the page come to describe different relations, and the
        join cannot change either count because it is on the other table's PRIMARY
-       KEY (asserted in `content-arm.test.mjs`, not reasoned about here). */
+       KEY (asserted by R15's test in `test/m/query-language/converts.test.mjs`, not
+       reasoned about here). */
     const joined = m.rowJoin
       ? `\n LEFT JOIN ${m.rowJoin.table} ${m.rowJoin.alias} ON ${m.rowJoin.on}` : "";
     /* REC-92 — THE MATCH ON THE ROW SHAPE, AND IT IS A CORRECTNESS REQUIREMENT
@@ -2633,8 +2639,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      Kept ALONGSIDE the compound-GROUP BY form rather than replacing it sight
      unseen, because which one wins is a measurement and not an argument: the
      GROUP BY form returns O(distinct values) rows and makes SQLite sort, the scan
-     form returns O(rows in scope) and makes JS count. `npm run bench:facets`
-     drives both over the same corpus and prints the comparison. */
+     form returns O(rows in scope) and makes JS count. Both count alike (R14, proven
+     in `test/m/query-language/statements.test.mjs`). */
   const facetScan = () => {
     if (!facetList.length) return null;
     const c = cte(false);
@@ -2688,13 +2694,11 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        delivered by a different op that surfaces already use.
 
        HOW IT WAS ESTABLISHED, because "nothing reads it" is the claim this
-       project has most often got wrong: NOT by grep. `test/fieldread.control.mjs
-       --tripwire-sweep` makes each field throw on any read in any spelling and
-       runs the WHOLE battery, which is what reaches `store.mjs` inside workerd
-       where a node sweep cannot see. Five of these fields' siblings read as
-       never-read in node and are LIVE. The pin that stops the two coming back is
-       structural (`Object.keys`) in `query.test.mjs`, because a field with no
-       consumer is invisible to every behavioural assertion there is.
+       project has most often got wrong: NOT by grep. A field-read control of the
+       time made each field throw on any read in any spelling and ran every suite
+       of the day, which is what reached `store.mjs` inside workerd where a node
+       sweep could not see. Five of these fields' siblings read as never-read in
+       node and were LIVE.
 
        REC-90 ADDS A SEVENTH, `level`, AND IT HAS A READER BEFORE IT IS WRITTEN —
        which is the test D-258 above set for a field on this descriptor.
