@@ -13,3 +13,7 @@ K750: all three readings adopted. (1) `MECHANICAL_FIELD_SETS` and `VERSION_NOTIC
 ## B3 · CHANGE
 
 Text-chain has merged into tranche/T19 (K752), with the extent algebra copied (the catalogue's copy stays; reevaluation deletes it in L7). Record-grammar's Rs R28–R41 are worded (K751): your wrapper keeps `checkBundle` calling record-grammar's with LEGACY_GRAMMARS filling the C-6.1 and C-15.1 slots (and C-18.6/.7, C-2.8, C-2.9/C-9.1 as today), and re-exports EXTENSION_ARMS; you write it after record-grammar merges. Merge tranche/T19.
+
+## B4 · CHANGE
+
+RECORD-GRAMMAR has merged into tranche/T19 (K765). Merge it, then: (1) your R26 pin (`catalogue.test.mjs`:190) gains the 17 names R41 adds (`isMachineMinted` stays out, K750); (2) write the wrapper (rule 2): the catalogue's `checkBundle` calls record-grammar's with `LEGACY_GRAMMARS` filling C-18.6/.7 (`checkInfo2Contract`), C-6.1 (`supersedesEdgeFindings` then `divisionDisclosureFindings`), C-15.1 (`checkRecheckCoverage`), C-2.8 (`checkInquiryExtension`), C-2.9/C-9.1 (`checkProjectExtension`); capture's grammar keeps C-2.7; re-export record-grammar's `EXTENSION_ARMS`; then delete the catalogue's copies record-grammar now holds, C-2.7 and `isMachineMinted` (K750). A caller registering no C-2.7 grammar gets no C-2.7 findings after the deletion: confirm each catalogue `checkBundle` caller in the product registers capture's grammar, or tell me which does not. Keep findings identical (record-grammar measured 292/292).
