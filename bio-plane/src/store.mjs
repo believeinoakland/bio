@@ -351,21 +351,14 @@ export class Store extends DurableObject {
       return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
     };
     const n = (t, ...keys) => nx(t, null, keys);
-    const mon = monitoringOf(this.ctx).counts();
     /* Each provider's counts asked once per answer, not once per key. The figures a module registers with record-core
        (its R63) are its own, spread after these: provenance, extraction, capture, content, entities, connections,
-       progressions, bias, retrieval, ai-runs and capture-requests take none here. */
+       progressions, bias, retrieval, ai-runs, capture-requests and monitoring take none here. */
     const prod = runProductionsOf(this.ctx).counts(hid);
     return {
       bundles: n("bundles", "bundle_id"), files: n("files", "bundle_id"), history: n("history", "bundle_id"),
       refs: n("refs", "bundle_id", "target_id"),
       textIndexOk: extractionOf(this.ctx).textIndexOk(),
-      /* REC-26: the monitoring consumers' idempotence state, reported so a purge
-         can PROVE it took them (D-113) and so an operator can see a tick that is
-         still open — a non-zero monitorTickEpoch means the last tick failed on
-         something and the next one will be its retry. */
-      /* REC-191: and the address types. The three are monitoring's tables, counted whole-store by its R46 (N266). */
-      monitorFired: mon.monitorFired, monitorTickEpoch: mon.monitorTickEpoch, monitorAddressType: mon.monitorAddressType,
       /* REC-27 / D-137: the participation graph and the pending owner-governance
          votes, reported so a purge can PROVE it took them (both are keyed on
          project_id, a bundle id, and were the silent-leftover the D-113 check
