@@ -1,7 +1,7 @@
 /* monitoring — its checks (requirements: `build/requirements/monitoring.md`, R27, R42; K6, K49).
  *
- * Moved from `legacy-checks` (`checks/bio-checks.mjs`) in T8 with their comments: C-18.5, `checkGatheringGrammar` and
- * its four vocabularies. `legacy-checks` cannot import this module, so its `checkBundle` no longer runs C-18.5: this
+ * Moved from `legacy-checks` (the legacy check catalogue) in T8 with their comments: C-18.5, `checkGatheringGrammar` and
+ * its four vocabularies. The grammar it reads (`isPublicHttpsLocator`, `ISO_TS_RE`) is `record-grammar`'s (T19). `legacy-checks` cannot import this module, so its `checkBundle` no longer runs C-18.5: this
  * module registers it with promotion (at the write, R27) and with record-core's audit (R42).
  *
  * T18 (R42 as worded, K649 (6)): the C-48.8 and C-48.9 rows (`DRIVE_TICK_EXPORT_IS_THE_SHELL`,
@@ -12,7 +12,8 @@
  * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows are
  * `awaiting stamp` (T19's promotion job). */
 
-import { isPublicHttpsLocator, ISO_TS_RE } from "../../checks/bio-checks.mjs";
+import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
+import { ISO_TS_RE } from "../record-grammar/ids.mjs";
 
 /* The catalogue's finding shape (legacy-checks' private `f`), for the check that moved here. */
 function f(check, severity, message) {

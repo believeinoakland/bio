@@ -1,6 +1,6 @@
-/* monitoring R19–R25, R30, R45 and R46: the services the scheduler calls (`cadenceDue/Wake/Tick`, `archiveDue/Wake/Tick`,
+/* monitoring R19–R25, R30, R45, R46 and R51: the services the scheduler calls (`cadenceDue/Wake/Tick`, `archiveDue/Wake/Tick`,
    each with the scheduler's rank), the idempotence key, re-entrance, the ticks in process with no binding or credential,
-   the administrator's pause and the due slate, the tick's source outcome, and `counts()`. Capture's `acquire` is the
+   the administrator's pause and the due slate, the tick's source outcome, and `counts()` with its registration (R51). Capture's `acquire` is the
    real module's method, replaced on the instance by a recorder in capture's answer shape where a test drives the
    archive arm (the archive's network is not this module's). */
 import { test } from "node:test";
@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { world, serve, sha, infoMd, V, DAEMON, NOW_MS } from "./fixture.mjs";
 import { monitoringOps, MONITOR_CADENCE_DELAY_MS, MONITOR_TICK_MS, MONITOR_CADENCE_BATCH, MONITOR_TICK_BATCH,
          MONITOR_RANK_READ, MONITOR_VIEWER, SLATE_DATA_BEGIN, SLATE_DATA_END, SLATE_FRAMING_OPEN, SLATE_FRAMING_CLOSE,
-         MONITOR_PAUSE_SETTING, MONITOR_ROOT_OF_TRUST, MONITOR_PAUSE_ACT }
+         MONITOR_PAUSE_SETTING, MONITOR_ROOT_OF_TRUST, MONITOR_PAUSE_ACT, MONITORING_COUNT_KEYS, monitoringOf }
   from "../../../src/monitoring/index.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
@@ -326,10 +326,11 @@ test("R30 an administrator pauses the daemon: monitoring's and the fallback's fe
   assert.equal((await w.m.archiveTick(NOW_MS)).fired.length, 1);
 });
 
-/* The founder claims the instance; `second` is an enrolled administrator and `ann` an ordinary member (membership R64). */
+/* The founder claims the instance through credentials (its R1, the fact membership R64 reads through its R94); `second`
+   is an enrolled administrator and `ann` an ordinary member (membership R64). */
 async function roster(w) {
   const m = w.membership;
-  await m.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+  assert.equal((await w.credentials.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" })).ok, true);
   for (const [id, role] of [["second", "admin"], ["ann", "member"]]) {
     const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, by: "admin" });
     assert.equal(a.ok, true, `${id} added: ${JSON.stringify(a).slice(0, 200)}`);
@@ -464,3 +465,31 @@ test("R46 counts() answers the rows held in R41's three tables, whole-store; syn
   w.st.db.exec(`DROP TABLE monitor_address_type`);
   assert.deepEqual(w.m.counts(), { monitorFired: 1, monitorTickEpoch: 1, monitorAddressType: null }, "an uncountable table is null, never a throw");
 });
+
+test("R51 R46's counts() is registered once at start through record-core's registerCounts under monitorFired, monitorTickEpoch and monitorAddressType, each whole-store whatever hid names", async () => {
+  const w = world();
+  assert.deepEqual(MONITORING_COUNT_KEYS, ["monitorFired", "monitorTickEpoch", "monitorAddressType"]);
+  assert.deepEqual(pick(w.record.counts()), { monitorFired: 0, monitorTickEpoch: 0, monitorAddressType: 0 }, "registered at start");
+  /* the same rows R46 answers, read through record-core */
+  const loc = "https://records.example.org/r51.txt";
+  w.monitored("INFO-2026-0346-r51", loc, "r51-v1", { freq: "hourly" });
+  w.net.routes[loc] = serve("r51-v1");
+  await w.m.monitor({ bundleId: "INFO-2026-0346-r51", viewer: DAEMON });
+  w.m.monitor = async () => { throw new Error("down"); };
+  await w.m.cadenceTick(NOW_MS + 2 * HOUR);
+  const whole = { monitorFired: 1, monitorTickEpoch: 1, monitorAddressType: 1 };
+  assert.deepEqual(w.m.counts(), whole);
+  assert.deepEqual(pick(w.record.counts()), whole);
+  /* whole-store whatever `hid` names: the tables name no bundle */
+  const hid = { sql: "(?)", args: ["INFO-2026-0346-r51"] };
+  assert.deepEqual(pick(w.record.counts(hid)), whole);
+  /* once: a second reach of the module registers nothing more, and the keys are held by monitoring */
+  monitoringOf(w.host);
+  const again = w.record.registerCounts("other", ["monitorFired"], () => ({ monitorFired: 9 }));
+  assert.deepEqual([again.ok, again.reason, again.heldBy], [false, "COUNTS_DECLARED", "monitoring"]);
+  assert.deepEqual(pick(w.record.counts()), whole, "the refused registration changed nothing");
+  /* an uncountable table is null through record-core, never a throw */
+  w.st.db.exec(`DROP TABLE monitor_fired`);
+  assert.deepEqual(pick(w.record.counts()), { ...whole, monitorFired: null });
+});
+const pick = (c) => Object.fromEntries(["monitorFired", "monitorTickEpoch", "monitorAddressType"].map((k) => [k, c[k]]));

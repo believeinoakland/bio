@@ -9,7 +9,9 @@
  * the two fires, the write-time gathering arm of the promotion step, the purge entries, the routes `driveshells` and
  * `monitorlook`), `index.mjs` (`op=monitor` with `monitorCadence`, `monitorAssess` and `monitorRecordLook`, now the
  * Durable Object service `monitor`, K72 (11)), `schema.mjs` (the three tables, now `./schema.mjs`) and
- * `checks/bio-checks.mjs` (C-18.5, now `./checks.mjs`). The legacy code's comments moved with it.
+ * the legacy check catalogue (C-18.5, now `./checks.mjs`). The legacy code's comments moved with it. The record's
+ * grammar it reads (the front-matter parser, the public-locator test, the one SHA-256, the machine stamp's prefix) is
+ * `record-grammar`'s (T19).
  *
  * REACHED as `monitoringOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R41), registers the gathering grammar with promotion (R27) and
@@ -56,7 +58,7 @@ import { detectFormat } from "../formats.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
 
@@ -194,6 +196,9 @@ export function cadenceFor(authored, reading) {
 export const DRIVE_SHELLS_LIMIT_DEFAULT = 200;
 export const DRIVE_SHELLS_LIMIT_MAX = 1000;
 export const DRIVE_SHELLS_RETRIEVALS_MAX = 50;
+
+/** R51: the figures R46 answers, registered with record-core's `registerCounts` (its R63) under these names. */
+export const MONITORING_COUNT_KEYS = Object.freeze(["monitorFired", "monitorTickEpoch", "monitorAddressType"]);
 
 /** R32: the most addresses one read answers. */
 export const MONITORING_READ_MAX = 1000;
@@ -369,8 +374,9 @@ export class Monitoring {
 
   migrate() { migrateMonitoring(this.sql); }
 
-  /** R46 (N266): the rows held in R41's three tables, whole-store, for legacy-store's `op=stats` (whose wire keys these
-   *  are). Synchronous, writes nothing, never throws: a table that cannot be counted answers null. */
+  /** R46 (N266): the rows held in R41's three tables, whole-store, for `op=stats` (whose wire keys these are), read
+   *  through record-core's `counts` since R51 registers it. Synchronous, writes nothing, never throws: a table that
+   *  cannot be counted answers null. */
   counts() {
     const n = (t) => { try { const r = this.#one(`SELECT count(*) c FROM ${t}`); return r ? Number(r.c) : null; } catch { return null; } };
     return { monitorFired: n("monitor_fired"), monitorTickEpoch: n("monitor_tick_epoch"),
@@ -2071,6 +2077,10 @@ export class Monitoring {
       const r = await this.#markOverdue(action, entries, at);
       (r.ok ? marked : failed).push(r.ok ? { action, ords: r.ords, dates: r.dates, revision: r.revision }
                                          : { action, reason: r.reason, ...(r.detail ? { detail: r.detail } : {}) });
+      /* R50 (N429): a failed mark holds its action's entries out of the wake until the next UTC day; a mark that
+         lands releases them. */
+      if (r.ok) this.#markFailed.delete(action);
+      else this.#markFailed.set(action, Math.floor(nowMs / DAY_MS) * DAY_MS + DAY_MS);
     }
     /* R35: a clock marked overdue can meet an escalation stage's trigger; escalation proposes the next stage and a
        member advances it. Asked with this module's own viewer (conformance answers a call with no viewer as unseen). */
@@ -2083,24 +2093,34 @@ export class Monitoring {
    *  sees (action-clocks R1's `pendingClocks`, read as its machine viewer, every page by its cursor), or null when none is
    *  pending: so `scheduler`'s `deadline-recheck` consumer runs R34 on the first alarm of the day an entry passes (an
    *  entry dated D is past from D + 1, R34's rule), and an instance with no pending entry holds no wake. A read that
-   *  fails holds no wake either: it is asked again at the scheduler's next reconcile. */
+   *  fails holds no wake either: it is asked again at the scheduler's next reconcile.
+   *  N429 (K719): an entry of an action whose last R34 mark failed is left out of that earliest date until the start of
+   *  the UTC day after the failure, and holds the wake no earlier than that instant, so a mark that keeps failing is
+   *  asked again once a day and never holds the wake in the past for the entries that can be marked. What failed is
+   *  held in memory, for the life of this instance: a restarted instance asks such an entry again at once, one more
+   *  re-check, never a loop. */
   deadlineRecheckWake(now = null) {
-    let earliest = null, after = null;
+    const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
+    let wake = null, after = null;
     try {
       for (let pages = 0; pages < DEADLINE_RECHECK_PAGES; pages++) {
         const p = this.actionClocks.pendingClocks({ before: PENDING_ANY_DATE, limit: DEADLINE_RECHECK_MAX, after,
                                                     viewer: MONITOR_VIEWER });
         if (!p || p.ok === false) return null;
-        for (const it of Array.isArray(p.items) ? p.items : [])
-          if (it && typeof it.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.date) && (earliest === null || it.date < earliest))
-            earliest = it.date;
+        for (const it of Array.isArray(p.items) ? p.items : []) {
+          if (!it || typeof it.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(it.date)) continue;
+          const day = Date.parse(`${it.date}T00:00:00Z`);
+          if (!Number.isFinite(day)) continue;
+          let at = day + DAY_MS;
+          const held = this.#markFailed.get(it.action);
+          if (held !== undefined && nowMs < held && at < held) at = held;
+          if (wake === null || at < wake) wake = at;
+        }
         if (!p.cursor) break;
         after = p.cursor;
       }
     } catch { return null; }
-    if (earliest === null) return null;
-    const day = Date.parse(`${earliest}T00:00:00Z`);
-    return Number.isFinite(day) ? day + DAY_MS : null;
+    return wake;
   }
 
   /** R50: the instant `deadlineRecheckWake` answers when it is at or before `now`, else null. */
@@ -2109,6 +2129,9 @@ export class Monitoring {
     const at = this.deadlineRecheckWake(nowMs);
     return at !== null && at <= nowMs ? at : null;
   }
+
+  /* R50 (N429): each action whose last R34 mark failed, with the start of the UTC day after the failure. */
+  #markFailed = new Map();
 
   async #markOverdue(action, entries, at) {
     const img = this.record.readImage(action);
@@ -2195,6 +2218,11 @@ export function monitoringOf(host, deps) {
     instances.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
+    /* R51: R46's figures, registered once with record-core (its R63) for `op=stats` and purge's proof. Whole-store
+       whatever `hid` names: these tables name no bundle. A record with no `registerCounts` (a test's stand-in) is not
+       asked. */
+    if (typeof record.registerCounts === "function")
+      record.registerCounts("monitoring", [...MONITORING_COUNT_KEYS], () => m.counts());
     promotion.registerStep("monitoring", { check: (c) => m.gatheringCheck(c) });
     record.registerAuditCheck("monitoring", (image) => m.audit(image));
     promotion.onCommitted("monitoring", (n) => m.actionCommitted(n));

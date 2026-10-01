@@ -5,7 +5,7 @@ import { world, serve, sha, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
 import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS } from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
 import { ACQUISITION_CHECKS } from "../../../src/acquisition/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const LOC = "https://records.example.org/inv.txt";
 const tick = (w, id) => w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: "machine", actor: DAEMON });

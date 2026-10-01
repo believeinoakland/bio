@@ -5,13 +5,14 @@
    the fixture registers, projecting from the document as retrieval does into retrieval's own table
    (`bundle_projection`, created by retrieval's `PROJECTION_SCHEMA`, the statements its `migrate()` runs; R61, N283); the host governor records every call and
    refuses the hosts a test names; the network is a scripted `fetch` the test controls; the evidence bucket is an
-   in-memory R2 stand-in; intent, action-clocks, escalation and publication are stand-ins in their Provides' shapes unless
+   in-memory R2 stand-in; credentials is the real module, made after membership as the composition root makes it; intent, action-clocks, escalation and publication are stand-ins in their Provides' shapes unless
    a test passes the real one (`realActions`: the real actions and action-clocks modules). Every test drives `monitoring`
    at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
@@ -19,7 +20,7 @@ import { Capture } from "../../../src/capture/index.mjs";
 import { monitoringOf } from "../../../src/monitoring/index.mjs";
 import { actionsOf, actionFacts } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { PROJECTION_SCHEMA, PROJECTION_TABLE } from "../../../src/retrieval/schema.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -131,6 +132,10 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   if (profiles) record.setSetting("jurisdiction_profiles", profiles, V("admin"));
   const membership = membershipOf(host, { record });
   membership.migrate();
+  /* credentials after membership, as the composition root migrates them (K789): its tables, its listener and its claim
+     fact registered with membership (its R16, R17, R20), so the founder claims through it (R30's roster) */
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
@@ -174,7 +179,7 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
     ...(actionClocks !== undefined ? { actionClocks } : clocks ? { actionClocks: clocks } : {}), ...(escalation !== undefined ? { escalation } : {}) });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act, clocks,
+    st, host, record, membership, credentials, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act, clocks,
     publication: publicationStub,
     rows: (q, ...x) => [...st.sql.exec(q, ...x)],
     row: (q, ...x) => [...st.sql.exec(q, ...x)][0] ?? null,
