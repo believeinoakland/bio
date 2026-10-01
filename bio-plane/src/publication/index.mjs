@@ -1971,7 +1971,7 @@ export class Publication {
       counts: { bundles: bundles.length, files: fileCount },
       register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
       recorded: "this export is in the append-only export log and is visible to every administrator",
-      verify: "every file carries its sha256 and every bundle its history chain and base links. Re-derive "
+      verify: "every file carries its sha256 and every record its history chain and base links. Re-derive "
             + "them on the way in and byte-compare every registered capture; trust nothing this manifest "
             + "asserts about itself." };
   }

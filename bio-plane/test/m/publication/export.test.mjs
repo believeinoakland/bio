@@ -34,6 +34,8 @@ test("R18 exportManifest answers every bundle with its files, promotions in writ
   assert.equal(EXPORT_NOTE_MAX, 280);
   assert.match(x.recorded, /append-only export log/);
   assert.match(x.verify, /Re-derive/);
+  assert.match(x.verify, /every record its history chain and base links/, "K899 (1): the text a member reads says record");
+  for (const said of [x.recorded, x.verify]) assert.doesNotMatch(said, /bundle/i, "no member-read sentence says bundle");
   w.op("export", {});
   assert.equal(w.rows(`SELECT note FROM export_log ORDER BY seq`)[1].note, null, "no note is stored as none");
 });
