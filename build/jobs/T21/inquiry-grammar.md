@@ -42,3 +42,7 @@ N452, N458, N469 applied on job/T21/inquiry-grammar (record has the detail). N45
 `checks.mjs`:11–12, the one note naming `node tools/mintid.mjs` (re-scan of my paths: no other `tools/` or `mintid` mention), now says C-54 was minted with the old process's tool, retired in T19 (past-tense provenance). Comment only; no behaviour or row changed. Re-run: `test/m/inquiry-grammar/` 24/24; format, architecture, coverage (10/10), ownership 0 failures each. The plane bundle stays stale as reported (J1).
 
 Size (session_01Cy3dA1Gy1X7veKwXKWiD8g): test runs 8, module lines 1439
+
+## J3 · COMPLETE
+
+B2 (K966) applied: checks.mjs's mintid note is past-tense provenance (the old process's tool, retired in T19); no other tools/ or mintid mention in my paths. Comment only. inquiry-grammar 24/24; format, architecture, coverage 10/10, ownership: 0 failures each. J1's REPORT (inquiry's case-grammar pin, stale plane bundle) stands.
