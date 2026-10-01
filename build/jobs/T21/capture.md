@@ -28,3 +28,7 @@ None. Seen and left alone: T20 ACQUISITION #3's REPORT J1 (1) found that `pullKn
 - `format`: 86 modules, 84 requirements files, 0 failures. `architecture capture`: 19 product files, 78 relative imports, 0 failures. `coverage capture`: 48 of 48 live ids named by a test, 0 failures. `ownership capture tranche/T21` (after the commit): 6 files, 0 failures.
 
 Size (session_016dWEeR3ZoeXU1HhPQ8dpXs): test runs 5, module lines 3002
+
+## J1 · REPORT
+
+Found in other modules (record, 'Found in other modules'): (1) Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product) still carries taskEnqueue's old BAD_CAPTURE_SHA sentence ('a bundle does not exist yet'); regenerate at the layer close. (2) The whole test/m has 41 failures, all in filings (35), project-stage (5) and intent (1), and each also fails on the unchanged base (job/T21/capture @ 550ac7ca71); none is from this job.
