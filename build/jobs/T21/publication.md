@@ -17,3 +17,7 @@ Size (session_01CCYTrHogp2BPXC92SHjSZ1): test runs 1, module lines 74
 ## J1 · REPORT
 
 public-read: bio-plane/src/publication/worker.mjs (its path, K702) :546 says preauth-vocabulary.test.mjs reads NOT_PUBLISHED's sentence, and :286 says a measurement was taken across the battery; T20 deleted both, so they name deleted files as live (N469's kind, not in my paths). Generated artifact staled by my comment edits under bio-plane/src/publication/: bio-plane/dist/bio-plane.bundled.mjs (.bundle.json); I regenerated nothing.
+
+## J2 · COMPLETE
+
+N469 applied, comments only: live notes re-pointed to R6, R14/R27/R28, R31, R38, R53 tests or dropped; provenance kept, past tense; five convert headers no longer claim their deleted old suite exists. Tests 94 pass, 0 fail, 2 todo (R30, R32). format, architecture, coverage (41/41), ownership (8 files): 0 failures. Record: build/jobs/T21/publication.md, Completion.
