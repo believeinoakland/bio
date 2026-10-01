@@ -82,12 +82,6 @@ const t = (label, got, want) => {
 
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
-const SUB_SRC = readFileSync(fileURLToPath(new URL("../src/subsession.mjs", import.meta.url)), "utf8");
-
-/* The comment stripper FL-2 had to correct and FL-3 reused: a naive "two slashes
-   to end of line" deletes a `http://` literal AND the rest of its line. */
-const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
-const SUB_CODE = strip(SUB_SRC);
 
 /* EVERY NESTED READ BELOW IS NULL-TOLERANT. FL-3's control measured the cost of
    the alternative twice: an assertion that THROWS ends the module while the tally
@@ -150,8 +144,13 @@ console.log("\n--- A1 · THE SPAWN CONTRACT: four levels, no write scope, NO FIE
      keys had ridden through into a sub-session's brief — the delete-list defect
      wearing the other costume, in the one object whose whole claim is that it has
      no field nobody named. Fixed at the source; the arm is what found it. */
-  t("nothing in the contract is built by spreading the plane's payload",
-    /\.\.\.\s*payload/.test(SUB_CODE), false);
+  /* CONVERTED BY N421 (T19): this read `src/subsession.mjs`' TEXT for `...payload`. At the interface: a payload carrying
+     a key the contract does not name at EVERY depth it reads (the top, `context`, `standard`) yields a contract whose
+     whole key tree is still exactly the pinned one — which is what "never spread" protects, whatever the code says. */
+  const widened = spawnContract({ level: "meaning", payload: { ...PAYLOAD, unnamed_top: 1,
+    context: { ...PAYLOAD.context, unnamed_context: 1 }, standard: { ...PAYLOAD.standard, unnamed_standard: 1 } } });
+  t("nothing in the contract is built by spreading the plane's payload: unnamed keys at every depth ride nowhere",
+    [widened.ok, [...keyTree(widened.contract ?? {})].sort()], [true, tree]);
 
   /* NO WRITE SCOPE, R17, R37 (N402, K575): held against the op declaration this member EXPORTS (`PLANE_OPS`), which
      control-plane pins op by op to its own table, `mutating` flag included (layer 11). This suite no longer parses the
@@ -348,7 +347,7 @@ console.log("\n--- A3 · THE RETURN CONTRACT: a REPORT with a citation, NEVER do
   t("so is an array of them", checkReport([{ level: "meaning" }])?.code ?? null, "REPORT_NOT_AN_OBJECT");
   t("and null", checkReport(null)?.code ?? null, "REPORT_NOT_AN_OBJECT");
 
-  console.log("\n  -- D-129's vocabulary is the PLANE's, pinned by a source read --");
+  console.log("\n  -- D-129's vocabulary is the PLANE's, pinned to its export --");
   /* T10: IMPORTED, no longer read as text — the plane re-exports the vocabulary from observation-log. */
   const planeStates = Object.keys(OBSERVATION_STATES || {});
   t("the plane's OBSERVATION_STATES was actually found", planeStates.length > 0, true);
@@ -362,8 +361,12 @@ console.log("\n--- A3 · THE RETURN CONTRACT: a REPORT with a citation, NEVER do
   t("a condition this member has never heard of travels through UNJUDGED",
     checkReport({ level: "meaning", state: "LOOKED_INDETERMINATE", observed_at: "log:1",
                   condition: "some-condition-only-the-plane-knows" }), null);
-  t("and no condition vocabulary is compiled into this member",
-    /client-rendered-shell|runtime-ceiling-reached/.test(SUB_CODE), false);
+  /* CONVERTED BY N421 (T19): this read `src/subsession.mjs`' TEXT for two condition words. At the interface: the
+     contract answers the plane's own condition words and a word nobody holds identically — it judges no vocabulary. */
+  const conditionAnswers = ["client-rendered-shell", "runtime-ceiling-reached", "host-governed", "a-word-nobody-holds", ""]
+    .map((condition) => checkReport({ level: "meaning", state: "LOOKED_INDETERMINATE", observed_at: "log:1", condition }));
+  t("and no condition vocabulary is compiled into this member: every condition, the plane's or none, is answered alike",
+    conditionAnswers, conditionAnswers.map(() => null));
 }
 
 console.log("\n--- A4 · THE FAN-IN: a refused return is NAMED, and never becomes an absence ---");

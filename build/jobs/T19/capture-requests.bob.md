@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 6, capture-requests (amended:
 ## B2 · ANSWER · re J1
 
 Your reading is adopted (K812). The store's own purge arm is Store#purge through record-core's purge with clears [lead_inquiry] (record-core R46), so clearLead and the store's call go, and captureRequests is registered with record-core R63. When AGENT-WORKER #6's re-point of plane-capturerequest.mjs merges, BOB posts a CHANGE; then merge, re-scan and delete the catalogue's C-28 table. Set WAITING ON BOB (J1) meanwhile.
+
+## B3 · CHANGE
+
+AGENT-WORKER #6 stage one is merged into tranche/T19 (K816): plane-capturerequest.mjs now imports your checks.mjs, not the catalogue's C-28. Merge the tranche branch, re-scan, delete the catalogue's CAPTURE_REQUEST_CHECKS (with C-28.13 if acquisition holds its own, as K717 said), test and COMPLETE.

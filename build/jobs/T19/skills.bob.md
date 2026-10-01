@@ -13,3 +13,7 @@ Your reading is adopted (K811). R15 is re-worded on tranche/T19: C-numbers are r
 ## B3 · CHANGE
 
 BASIS-VERSIONS #6 stage one is merged into tranche/T19 (K813). src/basis-versions/index.mjs now exports the names you read from the catalogue (SUGGEST_KINDS, isBoilerplate, SUFFICIENCY_UNCLAIMED, BASIS_VERSION_CHECKS, VERSION_STATES and the C-25 rows). Merge the tranche branch and re-point to them. Inquiry-grammar's merge comes later with its own CHANGE.
+
+## B4 · CHANGE
+
+INQUIRY-GRAMMAR #1 is merged into tranche/T19 (K817), and basis-versions' stage one was merged earlier (K813). Merge the tranche branch, re-point MACHINE_FENCE_CHECKS and BASIS_VERSION_CHECKS to their owners, test and COMPLETE.
