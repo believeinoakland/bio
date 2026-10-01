@@ -98,8 +98,8 @@ CREATE TABLE IF NOT EXISTS seq (
 -- draw asks this table as well as the live rows.
 -- EXEMPT FROM op=purge, IN BOTH ARMS, ON SEQ'S REASONING. The standing rule that a
 -- DERIVED table is named in purge does not reach it: nothing here is derived from
--- the corpus, and clearing it is the defect it closes. hygiene.test.mjs lists it
--- among the purge exemptions, beside seq.
+-- the corpus, and clearing it is the defect it closes. record-core's R23 test
+-- (test/m/record-core) proves it exempt from both forms, beside seq.
 -- Written in the minting act's own transaction, never one of its own, so an act that
 -- rolls back (the review copy's dry run of the publish gates) takes its row back with
 -- it. Seeded at every boot by record-core seedMintLedger from the live rows of each gated

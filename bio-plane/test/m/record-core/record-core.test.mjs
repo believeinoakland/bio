@@ -1725,7 +1725,7 @@ test("R67: a malformed grammar, or one claiming part of a slot, is GRAMMAR_MALFO
   const malformed = [["", { ids: ["C-2.7"], arm: f }], ["  ", { ids: ["C-2.7"], arm: f }], [null, { ids: ["C-2.7"], arm: f }], [7, { ids: ["C-2.7"], arm: f }],
     ["m", { ids: [], arm: f }], ["m", { ids: "C-2.7", arm: f }], ["m", { ids: ["C-2.7", "2.8"], arm: f }], ["m", { ids: ["c-2.7"], arm: f }],
     ["m", { ids: [7], arm: f }], ["m", { ids: ["C-2.7"], arm: "f" }], ["m", { ids: ["C-2.7"] }], ["m", undefined], ["m", {}],
-    ["m", { ids: ["C-18.6"], arm: f }], ["m", { ids: ["C-9.1"], arm: f }], ["m", { ids: ["C-2.7", "C-2.8", "C-9.1"], arm: f }]];
+    ["m", { ids: ["C-18.6"], arm: f }], ["m", { ids: ["C-2.7", "C-2.8", "C-18.7"], arm: f }]];
   for (const [m, g] of malformed) {
     const r = rc.registerGrammar(m, g);
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "GRAMMAR_MALFORMED", "GRAMMAR_MALFORMED", "C-102.16", RECORD_CORE_CHECKS.GRAMMAR_MALFORMED.translation],
@@ -1736,9 +1736,12 @@ test("R67: a malformed grammar, or one claiming part of a slot, is GRAMMAR_MALFO
   // each refusal names what checkBundle would reject: every arm is claimed whole, never in part
   for (const arm of EXTENSION_ARMS) if (arm.ids.length > 1)
     assert.equal(rc.registerGrammar("m", { ids: [arm.ids[0]], arm: f }).reason, "GRAMMAR_MALFORMED", arm.name);
+  /* K939: C-9.1 left record-grammar's project slot (its R28), so it is an id outside every slot, which a registration may
+     claim beside a whole slot (K766), and a second claim of it is a held id */
   assert.equal(rc.registerGrammar("project", { ids: ["C-9.1", "C-2.9", "C-800.1"], arm: f }).ok, true);
   const declared = [["project", { ids: ["C-2.7"], arm: f }, { module: "project", heldBy: "project" }],
-                    ["other", { ids: ["C-2.9", "C-9.1", "C-800.1"], arm: f }, { module: "other", id: "C-800.1", heldBy: "project" }],
+                    ["other", { ids: ["C-2.9", "C-9.1"], arm: f }, { module: "other", id: "C-9.1", heldBy: "project" }],
+                    ["other", { ids: ["C-2.9", "C-800.1"], arm: f }, { module: "other", id: "C-800.1", heldBy: "project" }],
                     ["other", { ids: ["C-800.1"], arm: f }, { module: "other", id: "C-800.1", heldBy: "project" }],
                     ["other", { ids: ["C-700.1", "C-700.1"], arm: f }, { module: "other", id: "C-700.1", heldBy: "other" }]];
   for (const [m, g, named] of declared) {
@@ -1798,7 +1801,7 @@ test("R18 R67: auditPass passes grammars() to the catalogue: a grammar runs in i
 
 /* ---- R64, R65: op=stats' disclosure ---- */
 
-/* A source standing for legacy-store's `#counts`: its wire form carries the log as `observationsNonLead`, its proof
+/* A source standing for the instance's one figures source (plane's since T20): its wire form carries the log as `observationsNonLead`, its proof
    form the whole log, `leads` and the themes. It records what it was asked. A hostile source may also answer every key
    in both forms; the disclosure is this module's either way. */
 function statsSource({ hostile = false } = {}) {
@@ -2015,8 +2018,10 @@ test("R67 (K766, N422): a registration may claim several whole slots and a slot 
   /* a later claimant not run by rest() runs after the first one returns */
   const { rc: r2 } = fresh();
   const order = [];
-  r2.registerGrammar("a", { ids: ["C-2.9", "C-9.1"], arm: () => order.push("a") });
-  r2.registerGrammar("b", { ids: ["C-9.1", "C-2.9"], arm: () => order.push("b") });
+  assert.equal(r2.registerGrammar("a", { ids: ["C-2.9", "C-9.1"], arm: () => order.push("a") }).ok, true);
+  assert.equal(r2.registerGrammar("b", { ids: ["C-2.9"], arm: () => order.push("b") }).ok, true, "the slot both claim (K939: C-2.9 alone)");
+  assert.equal(r2.registerGrammar("c", { ids: ["C-9.1"], arm: () => order.push("c") }).reason, "GRAMMAR_DECLARED",
+               "C-9.1 is outside every slot (K939): a second claim of it is a held id");
   await checkBundle({ folderName: "x", files: new Map([["bundle.md", doc("x", "project")]]), sha256: async () => "", sha512: async () => new Uint8Array() },
                     { grammars: r2.grammars() });
   assert.deepEqual(order, ["a", "b"]);
@@ -2316,7 +2321,7 @@ test("R46 R22 R72 (K775): a clears column is set to NULL where it names the purg
 
 /* ---- T20 layer 2: R74, this module's share of the instance's figures (K861, K877, plane R10) ---- */
 
-/* The plane's held copy's sight: membership's `hiddenBundles` shape over a gate that hides one project and its bundles. */
+/* A viewer's sight as plane hands it to R74: membership's `hiddenBundles` shape over a gate that hides one project and its bundles. */
 const HIDDEN_PROJECT = "PROJ-2026-0001-p";
 const hiddenOf = (gate) => ({ sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: [...gate.args] });
 const HID = hiddenOf({ sql: "COALESCE(b.project, '') <> ?", args: [HIDDEN_PROJECT] });
@@ -2336,9 +2341,9 @@ function figuresFixture() {
   return { s, rc };
 }
 
-/* The three figures as the held copy defines them, computed from the rows in JS: a row is dropped when its bundle_id
+/* The three figures as R74 defines them, computed from the rows in JS: a row is dropped when its bundle_id
    names a hidden bundle. */
-function heldFigures(s, hidden) {
+function expectedFigures(s, hidden) {
   const out = {};
   for (const t of ["bundles", "files", "history"])
     out[t] = rows(s, `SELECT bundle_id FROM ${t}`).filter((r) => !(r.bundle_id !== null && hidden.has(r.bundle_id))).length;
@@ -2346,13 +2351,13 @@ function heldFigures(s, hidden) {
 }
 const hiddenIds = (s) => new Set(rows(s, `SELECT bundle_id FROM bundles WHERE COALESCE(project, '') = ?`, HIDDEN_PROJECT).map((r) => r.bundle_id));
 
-test("R74: the exported figure source answers bundles, files and history as the held copy counts them, whole for a null hid and less a hidden project's rows through hid; refs is not its figure", () => {
+test("R74: the exported figure source answers bundles, files and history as R74 counts them, whole for a null hid and less a hidden project's rows through hid; refs is not its figure", () => {
   const { s, rc } = figuresFixture();
   assert.deepEqual(RecordCore.COUNT_KEYS, ["bundles", "files", "history"], "its key list, in order; no refs (K877)");
   assert.ok(Object.isFrozen(RecordCore.COUNT_KEYS));
   const hidden = hiddenIds(s);
   assert.deepEqual([...hidden].sort(), ["INFO-2026-0001-a", HIDDEN_PROJECT], "the fixture hides a project and its bundle");
-  const whole = heldFigures(s, new Set()), sighted = heldFigures(s, hidden);
+  const whole = expectedFigures(s, new Set()), sighted = expectedFigures(s, hidden);
   assert.deepEqual(whole, { bundles: 4, files: 6, history: 6 });
   assert.deepEqual(sighted, { bundles: 2, files: 2, history: 2 });
   assert.deepEqual(rc.ownCounts(null), whole, "a null hid counts whole");
@@ -2360,19 +2365,19 @@ test("R74: the exported figure source answers bundles, files and history as the 
   assert.deepEqual(rc.ownCounts(HID), sighted, "less the hidden project's rows, by bundle_id");
   assert.deepEqual(Object.keys(rc.ownCounts(HID)), RecordCore.COUNT_KEYS, "exactly its keys: refs is connections' table");
   /* a row naming a bundle not held is in no sight's hid, so it is never dropped (bundle_id is NOT NULL in all three tables,
-     so the held copy's NULL reading has nothing to read here) */
+     so R74's NULL reading has nothing to read here) */
   s.sql.exec(`INSERT INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES ('INFO-2099-0000-gone','KX','p','x',NULL,'0','t')`);
   assert.deepEqual(rc.ownCounts(HID), { ...sighted, history: 3 });
-  assert.deepEqual(rc.ownCounts(HID), heldFigures(s, hidden));
+  assert.deepEqual(rc.ownCounts(HID), expectedFigures(s, hidden));
   /* a sight that hides nothing, and one that hides everything (a viewer the gate refuses) */
-  assert.deepEqual(rc.ownCounts(hiddenOf({ sql: "1=1", args: [] })), heldFigures(s, new Set()));
+  assert.deepEqual(rc.ownCounts(hiddenOf({ sql: "1=1", args: [] })), expectedFigures(s, new Set()));
   assert.deepEqual(rc.ownCounts(hiddenOf({ sql: "0=1", args: [] })), { bundles: 0, files: 0, history: 1 }, "only the row naming no held bundle stays");
   /* it follows the tables, and writes nothing */
   const before = dump(s);
   rc.ownCounts(HID); rc.ownCounts(null);
   assert.deepEqual(dump(s), before);
   rc.commit({ bundleId: "INFO-2026-0004-d", type: "information", snapKey: "K1", project: HIDDEN_PROJECT, files: [file("bundle.md", "d")] });
-  assert.deepEqual(rc.ownCounts(HID), heldFigures(s, hiddenIds(s)));
+  assert.deepEqual(rc.ownCounts(HID), expectedFigures(s, hiddenIds(s)));
   assert.equal(rc.ownCounts(null).bundles, 5);
 });
 
@@ -2381,8 +2386,8 @@ test("R74 R63: registered through R63 under this module's name the export answer
   assert.deepEqual(rc.counts(null), {}, "nothing registered: record-core registers no figure of its own");
   assert.deepEqual(rc.registerCounts("record-core", [...RecordCore.COUNT_KEYS], (hid) => rc.ownCounts(hid)),
                    { ok: true, module: "record-core", keys: ["bundles", "files", "history"] }, "the name and keys are free for plane to register");
-  assert.deepEqual(rc.counts(null), heldFigures(s, new Set()));
-  assert.deepEqual(rc.counts(HID), heldFigures(s, hiddenIds(s)));
+  assert.deepEqual(rc.counts(null), expectedFigures(s, new Set()));
+  assert.deepEqual(rc.counts(HID), expectedFigures(s, hiddenIds(s)));
   /* beside another module's figures, as plane spreads them, each in its registration order */
   rc.registerCounts("connections", ["refs"], () => ({ refs: 2 }));
   assert.deepEqual(Object.keys(rc.counts(HID)), ["bundles", "files", "history", "refs"], "refs is another registration's key, never this one's");
@@ -2400,14 +2405,14 @@ test("R74 R64 R72: in purge's proof, through a stats source spreading R63's figu
   /* the plane's source: the viewer's hid, null for a viewer never sent (purge's proof is asked with none) */
   const asked = [];
   rc.registerStatsSource("plane", ({ viewer, proof }) => { asked.push([viewer, proof]); return { ...rc.counts(viewer === undefined ? null : HID) }; });
-  assert.deepEqual(rc.stats({ viewer: "member:iris" }), heldFigures(s, hiddenIds(s)), "op=stats through the viewer's sight");
-  assert.deepEqual(rc.stats({}), heldFigures(s, new Set()), "a viewer never sent counts whole");
-  const whole = heldFigures(s, new Set());
+  assert.deepEqual(rc.stats({ viewer: "member:iris" }), expectedFigures(s, hiddenIds(s)), "op=stats through the viewer's sight");
+  assert.deepEqual(rc.stats({}), expectedFigures(s, new Set()), "a viewer never sent counts whole");
+  const whole = expectedFigures(s, new Set());
   const r = recordCoreOps(rc, opsUrl("purge", { bundleId: "INFO-2026-0001-a" }), null).purge();
   assert.deepEqual(asked.slice(-2), [[undefined, true], [undefined, true]], "the proof is asked whole, before and after");
   const pick = (o) => Object.fromEntries(RecordCore.COUNT_KEYS.map((k) => [k, o[k]]));
   assert.deepEqual(pick(r.before), whole, "before: whole, the hidden project's rows included");
-  assert.deepEqual(pick(r.after), heldFigures(s, new Set()));
+  assert.deepEqual(pick(r.after), expectedFigures(s, new Set()));
   assert.deepEqual(pick(r.after), { bundles: 3, files: 4, history: 3 });
   assert.deepEqual(pick(r.removed), { bundles: 1, files: 2, history: 3 }, "removed: before less after, for each of the three");
   const all = recordCoreOps(rc, opsUrl("purge", {}), null).purge();
