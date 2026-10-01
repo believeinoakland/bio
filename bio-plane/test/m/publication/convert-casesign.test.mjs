@@ -4,7 +4,7 @@
    (K619); its ceremony, gate, container and signature arms are other modules' shares. Driven at the module's
    interface: `caseDocument`, `caseDocumentFacts`, `hasCaseStanding` and `op=casedocument`, with each viewer spelled as
    the control plane stamps it (membership R43's `viewerPredicate`; an `ai` credential stamps the principal membership
-   records for it, read back through `aiCredentialLook`). */
+   records for it, read back through credentials' `aiCredentialLook`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, V, sha } from "./fixture.mjs";
@@ -37,10 +37,10 @@ const neverOp = (viewer, edition = 1) => JSON.stringify(world().op("casedocument
 /* An `ai` credential minted by `who`, and the viewer the plane stamps for it: its recorded principal. */
 function agent(w, who, kind = "member") {
   const secretSha = sha(`agent-secret-${who}-${kind}`);
-  const m = w.membership.aiCredentialMint({ who, tokenId: `agent-${who}-${kind}`, secretSha, principalKind: kind,
+  const m = w.credentials.aiCredentialMint({ who, tokenId: `agent-${who}-${kind}`, secretSha, principalKind: kind,
     principalMember: kind === "member" ? who : null, taskScope: "investigative", writes: [], note: "converted casesign" });
   assert.equal(m.ok, true, `mint ${who} ${kind}: ${JSON.stringify(m)}`);
-  const look = w.membership.aiCredentialLook({ secretSha });
+  const look = w.credentials.aiCredentialLook({ secretSha });
   assert.equal(look.found, true);
   return look.credential.principal;
 }

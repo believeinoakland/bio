@@ -9,9 +9,10 @@
  *
  * Extracted from the legacy modules (T8, layer 8; K3, K31, K57, K94, K102): `store.mjs` (the case relation and the
  * revision flags, the case document reads, the MK-7 attribution act, the verified export and its log, the pinning
- * helpers and the commits, and the dispatch entries), `index.mjs` (the Worker half, `./worker.mjs`, and the door's
- * `caseflags` and `casedocument` arms, `./door.mjs`) and `bio-checks.mjs` (C-44.2, C-68.5, C-92.1–.9 and C-98, now
- * `./checks.mjs`). Its tables are `./schema.mjs`. The legacy code's comments moved with it; where one names a store
+ * helpers and the commits, and the dispatch entries), `index.mjs` (the door's `caseflags` and `casedocument` arms,
+ * `./door.mjs`) and the check catalogue (C-92.1–.9, now `./checks.mjs`, with C-122.1 new there). Its tables are
+ * `./schema.mjs`. It reads the record's shared grammar (the front-matter parser, actor identity, the one SHA-256, the
+ * section locator) from `record-grammar`, never from the catalogue (T19, rule 1). The legacy code's comments moved with it; where one names a store
  * method that is not this module's (`publishCase`, `ratifyCaseDocument`, `publish`, `#caseDocumentText`,
  * `#reauthorAcknowledgements`) it names the act as it stands.
  *
@@ -19,19 +20,20 @@
  * re-exported unchanged); the published record served without a credential (verify, the lists, the published case,
  * the manifest) is `public-read`'s, which reads this module's tables under R40 and calls its services R53–R55; a
  * project's stage is `project-stage`'s. Every table and every write stays here. `./worker.mjs`, `../container.mjs`
- * and `../inband.mjs` (public-read's R5–R7, R9) are in this module's paths only until BOB moves them to
- * `public-read`'s at this job's merge; `../deliverer.mjs` (R14) stays.
+ * and `../inband.mjs` are `public-read`'s (K697, K702); `../deliverer.mjs` (R14) is this module's.
  *
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
- * record-core's purge (R31), registers the facts `caseMember`, `publishedRegistry` and `publishedCaseRegistry` with
+ * record-core's purge (R31), registers with record-core the published registry as audit context (its R69, for the
+ * audit's C-21.2) and its opaque case ids as mint-ledger seeds (its R70, K783), registers the facts `caseMember`, `publishedRegistry` and `publishedCaseRegistry` with
  * promotion (R4, R7; the registration rule, K206, N152) and its promotion projection, the revision flag (R5), and
  * registers a case's cited parts and the ratified cases (R41, R43) with reevaluation (its R26, K359).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `head`, `readFile`, `textAtSha` (R60), `declarePurge`, the
  *                                   `bundles`, `files`, `history` and `manifest` tables (R18's export);
- *                                   `viewerPredicate`, `attestingKeys`, `memberFacts`; `registerStep`,
- *                                   `registerFact`, the fact `producingGroup`.
+ *                                   `viewerPredicate`, `memberFacts`; `registerStep`, `registerFact`, the fact
+ *                                   `producingGroup`.
+ *   credentials    `attestingKeys` (its R11; R2's signers), reached lazily (K757).
  *   inquiry        `exclusionsNaming` (R12).
  *   basisVersions  `testimonyReach` (R2, R17).
  *   contradiction  `unresolvedRecordOn` (its R29), for R50 (N345).
@@ -50,7 +52,8 @@ import { observerRef } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
-import { parseFrontmatter, isMachineIdentity, createSha256, sectionText as caseSectionText } from "../../checks/bio-checks.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
+import { parseFrontmatter, isMachineIdentity, createSha256, sectionText as caseSectionText } from "../record-grammar/index.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { rowOf, ATTRIBUTION_ACT_CHECKS } from "./checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, migratePublication, registerCaseDocumentSha,
@@ -150,15 +153,14 @@ function noCaseDocument(id, ed) {
 export class Publication {
   #deps;
   #review = null;        // R23: {module, ...doors}, filled once
-  #evidenceBlock = null; // the named copy of public-read R8 (K625): {module, name, fn}, filled once
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
-                contradiction = null, sources = null, now = null } = {}) {
+                contradiction = null, sources = null, credentials = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, basisVersions, contradiction, sources };
+    this.#deps = { host, inquiry, basisVersions, contradiction, sources, credentials };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -166,6 +168,9 @@ export class Publication {
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
+  get credentials() {
+    return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
+  }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
 
   migrate() { migratePublication(this.sql); }
@@ -230,22 +235,6 @@ export class Publication {
   #grantAdmitsCaseEdition(secretSha, caseId, edition) {
     if (!secretSha) return false;
     try { return !!this.reviewProvider().grantAdmitsCaseEdition(secretSha, caseId, edition); } catch { return false; }
-  }
-
-  /* ---------------------------------------------------------------- a named copy of public-read's R8 (K625, K651) */
-
-  /** The evidence-package block moved to `public-read` (its R8, which was this module's R36; K651). This named copy
-   *  answers as that one does, so `filings`' registration at its creation still lands, until `filings` re-points to
-   *  `public-read` (its layer-9 job); nothing here reads what it holds. This module's next job deletes it. */
-  registerEvidenceBlock(module, name, fn) {
-    if (!str(module) || !/^[a-z][a-z0-9_]{0,63}$/.test(String(name ?? "")) || typeof fn !== "function")
-      return { ok: false, reason: "PROVIDER_MALFORMED",
-               detail: "an evidence-package block names its module, a lowercase block name and its function" };
-    if (this.#evidenceBlock)
-      return { ok: false, reason: "PROVIDER_DECLARED", module: this.#evidenceBlock.module,
-               detail: `the evidence-package block is already registered by ${this.#evidenceBlock.module}` };
-    this.#evidenceBlock = { module: str(module), name: String(name), fn };
-    return { ok: true, module: this.#evidenceBlock.module, name: this.#evidenceBlock.name };
   }
 
   /* ---------------------------------------------------------------- R21: the case document's writes */
@@ -1535,7 +1524,7 @@ export class Publication {
       return noCaseDocument(id, ed);
     return {
       ok: true, doc,
-      signers: this.membership.attestingKeys(),   /* membership R70: the ONE predicate (D-158) */
+      signers: this.credentials.attestingKeys(),   /* credentials R11: the ONE predicate (D-158) */
       priorCase: this.#one(
         `SELECT edition, completeness, bias_acknowledgement FROM published_cases
           WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`, id, ed),
@@ -2640,9 +2629,10 @@ export class Publication {
         /* D-309: **ALL** OF THEM. This registry is per FINDING and stays per
            finding (the header above), and a finding's case membership is now a
            set — so `case_ids` carries every one and `case_id` keeps its old name
-           as the sole membership or null. Nothing in the check catalog reads
-           either key today (measured: zero hits for this registry's `case_id` in
-           `checks/bio-checks.mjs`), so the correction is to the shape rather than
+           as the sole membership or null. No check reads either key (measured
+           when this was written: zero hits for this registry's `case_id` in the
+           check catalogue, whose readers of it are inquiry-grammar's since T19),
+           so the correction is to the shape rather than
            to a live gate — which is why it is worth making now, before something
            starts reading a field that would have been quietly guessing. */
         case_ids: this.#casesOf(r.bundle_id, r.edition),
@@ -2709,6 +2699,17 @@ export function publicationOf(host, deps) {
     promotion.registerFact("caseMember", "publication", (id) => !!p.caseRelation(id).member);
     promotion.registerFact("publishedRegistry", "publication", (id, targets) => p.publishedRegistryFor(id, targets));
     promotion.registerFact("publishedCaseRegistry", "publication", (ids) => p.publishedCaseRegistryFor(ids));
+    /* R7, record-core R69 (K783): the audit judges each bundle's inherited legs (C-21.2) against the registry this
+       module holds, for the bundle and every target its basis names (inquiry R16), as the gate does through the fact. */
+    record.registerAuditContext("publication", (id) => {
+      const basis = p.inquiry.basisFor(id);
+      const targets = basis && basis.ok ? basis.legs.map((l) => l.target_id).filter((t) => typeof t === "string") : [];
+      return { publishedRegistry: p.publishedRegistryFor(id, targets) };
+    });
+    /* R40, record-core R70 (K783): the opaque case ids this module's published tables hold, so the mint ledger never
+       draws one again. `cases` and `case_documents` are ratification's registration (record-core R70). */
+    record.registerMintSeed("publication", [["CASE", "published_cases", "case_id"],
+                                            ["CASE", "published_case_members", "case_id"]]);
     /* R5: `base` is the sha this promotion REPLACES; a case edition that froze it is flagged. A pure INSERT that
        refuses nothing, so no promotion fails on it. */
     promotion.registerStep("publication", {
