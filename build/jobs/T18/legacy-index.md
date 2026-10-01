@@ -1,6 +1,6 @@
 # legacy-index (T18)
 
-**Status** · session_01LkPKEan57umKVtgyg8qesS · depth 2 · NEEDS BOB · handled B1
+**Status** · session_01LkPKEan57umKVtgyg8qesS · depth 2 · NEEDS BOB · handled B2
 
 ## Work
 
