@@ -1,12 +1,12 @@
 # signatures — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/sshsig.mjs`, `bio-plane/src/tsa.mjs`, `bio-plane/src/signpage.mjs`. All requirements below are met by the code as it stands; none is outstanding. No old-plan row and no `build/plan/next.md` entry targets this module. The module holds no local (jurisdiction) fact today: its namespace strings, endpoints and the signer page are the same for every instance, so the "No jurisdiction in the product" rule (`build/layers.md`) raises nothing here.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/sshsig.mjs`, `bio-plane/src/tsa.mjs`, `bio-plane/src/signpage.mjs`. All requirements below are met by the code as it stands; none is outstanding. No old-plan row and no `build/plan/next.md` entry targets this module. The module holds no local (jurisdiction) fact today: its namespace strings, endpoints and the signer page are the same for every instance, so the "No jurisdiction in the product" rule (`build/layers.md`) raises nothing here. AMENDED at T19's fold (BOB-5, K648, K653) by a worker for BOB #80, 2026-10-01: the operator-side release signer `tools/sign-sshsig.mjs` joins the module (live: the release assembler, bundler R23, imports it); R33–R36 state its behaviour today, tested by signatures' T19 job (layer 1). `tools/sign-release.html` is not taken: it is an older copy of `bio-plane/src/sign-release.html` differing only in the product name (R32), read by nothing, and legacy-index deletes it.
 
 ## Public
 
 ### Purpose
 
-Builds and verifies the signed and timestamped statements the plane and the installer exchange: OpenSSH detached signatures (SSHSIG) over a release, a fleet manifest, a bundle ratification or a case ratification; an RFC 3161 timestamp request and response, and the public-archive locator an opt-in co-archive returns; and the self-contained page a human signer uses to produce those signatures offline. It holds no record, no private key and no clock, and makes no network call itself — every network call is the caller's.
+Builds and verifies the signed and timestamped statements the plane and the installer exchange: OpenSSH detached signatures (SSHSIG) over a release, a fleet manifest, a bundle ratification or a case ratification; an RFC 3161 timestamp request and response, and the public-archive locator an opt-in co-archive returns; and the self-contained page a human signer uses to produce those signatures offline. It holds no record, no stored private key and no clock, and makes no network call itself — every network call is the caller's. Its one signing service (the release signer) runs on an operator's machine with a seed the caller passes, and never ships in the plane or the installer.
 
 ### Provides
 
@@ -68,6 +68,18 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R31** The page's own script signs `bio-release` and `bio-ratify` statements that both `ssh-keygen -Y verify` and `verifySshsig` (R1) accept.
 - **R32** The page's visible text names the product CivicOS, never BIO (`layers.md` rule 4); its wire formats are unchanged: the `BIOKEY-RAW1.`/`BIOKEY1.` prefixes, the `bio-release`/`bio-ratify` namespaces and the download filename.
 
+**The release signer (`tools/sign-sshsig.mjs`; T19 BOB-5)** — run only on an operator's machine by the release assembler (bundler R23), never imported by the plane or the installer.
+
+`signSshsig(envelope, message, namespace) → string`
+- **R33** Returns an armored OpenSSH signature (`-----BEGIN SSH SIGNATURE-----`, base64 wrapped at 70 columns, `-----END SSH SIGNATURE-----` and a newline): a version-1 SSHSIG blob with an `ssh-ed25519` key and signature, `namespace`, an empty reserved field and hash algorithm `sha512`, signing the exact bytes of `message` with the key the envelope's seed gives. Same inputs give the same output (Ed25519 is deterministic). Stock `ssh-keygen -Y verify` and `verifySshsig` (R2) both accept it for that namespace and the key of R35.
+
+`seedFromEnvelope(envelope) → {label, seed}`
+- **R34** Accepts exactly `BIOKEY-RAW1.<label>.<base64 of 32 bytes>` (surrounding whitespace ignored), the envelope the signer page (R25) mints, and returns the label and the 32-byte seed. Throws `Error` reading `release seed is not a BIOKEY-RAW1 envelope` for any other shape and `release seed is <n> bytes, expected 32` for a seed of another length; `signSshsig` and `signerPublicLine` throw the same.
+
+`signerPublicLine(envelope, comment = "bio-release") → string`, `keyFromSeed(seed)`, `publicFromKey(key)`
+- **R35** `signerPublicLine` returns `ssh-ed25519 <base64 wire public key> <comment>`, the line an allowed-signers list or `RELEASE.json`'s `signer` carries for the envelope's key; `keyFromSeed` gives the Ed25519 private key of a 32-byte seed and `publicFromKey` its 32 raw public bytes.
+- **R36** Never prints, writes or returns the seed or the private key; the only outputs are the signature and the public line.
+
 ### Errors
 
 Stated per service above. `verifySshsig`, `parseTimestampResponse` and `archiveLocatorFrom` never throw and always name a `reason` for a "no". `fleetStatement` throws (never partially renders) on an unstated compat date, flags list or part type; every other service throws only on malformed input it cannot make sense of (`verifySshsig`'s inner parse failures are caught and returned as `MALFORMED`, never thrown).
@@ -76,7 +88,7 @@ Stated per service above. `verifySshsig`, `parseTimestampResponse` and `archiveL
 
 ### Uses
 
-None. Every export is built from Web platform primitives (`crypto.subtle`, `atob`/`btoa`, `TextEncoder`/`TextDecoder`) and literal data; nothing here imports another module.
+None. Every export is built from Web platform primitives (`crypto.subtle`, `atob`/`btoa`, `TextEncoder`/`TextDecoder`) and literal data; nothing here imports another module. The release signer (R33–R36) alone uses Node's `node:crypto`, which is why it never ships in the plane or the installer.
 
 ### Invariants
 
@@ -95,3 +107,4 @@ None. Every export is built from Web platform primitives (`crypto.subtle`, `atob
 
 - **Checks.** Check C-18.8 (the gate's release-signature check, `bio-checks.mjs` "Release-signature primitives") still holds a second, hand-written SSHSIG/Ed25519 verifier. K10 (entry N8) replaces it with a call to `verifySshsig`: the Apps Script runtime that justified it is decommissioned. This module takes on no check-derived invariant.
 - **For callers.** `verifySshsig`'s `allowedKeys` and SSHSIG's own embedded key together are the only source of truth for who signed; a caller must supply the actual `ARMED_SIGNERS`/registry list, never a caller-asserted one. `fleetStatement`'s per-member `services` and `parts` fields are signed as the caller supplies them (R10); nothing in this module checks them against reality — that a member's declared parts match what was actually uploaded is the caller's obligation.
+- **The release signer (BOB-5).** The job moves `tools/sign-sshsig.mjs` beside `sshsig.mjs` (a script directory, not `src/`, so no bundle reaches it), re-points the assembler's import (bundler's file, `uses`), and re-points `sshsig.mjs`:229's note naming `tools/release-assemble.mjs`. R33's test signs with a throwaway seed and verifies with `verifySshsig` and, where present, stock `ssh-keygen`.
