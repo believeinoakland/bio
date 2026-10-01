@@ -45,7 +45,17 @@ function setup() {
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   };
   const stage = (viewer = V("olive")) => w.s.projectStage({ project: proj, viewer });
-  return { w, proj, write, stage };
+  /* A legacy state word (`investigating`, `matured`) held in the project's stored document, as a record written before
+     record-grammar R35's form (b) holds it: no act writes one now (only `forming → closed`, `closed → forming` and a
+     legacy word's `→ closed` are declared), so it is set in the rows, beside whatever the last write recorded. */
+  const legacy = (state) => {
+    const f = w.rows(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, proj)[0];
+    assert.match(f.content, /\ncurrent_state: \w+\n/);
+    w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='bundle.md'`,
+                  f.content.replace(/\ncurrent_state: \w+\n/, `\ncurrent_state: ${state}\n`), proj);
+    w.st.sql.exec(`UPDATE bundles SET current_state=? WHERE bundle_id=?`, state, proj);
+  };
+  return { w, proj, write, stage, legacy };
 }
 
 /* A case of the project, prepared (publication R21) and optionally signed and ratified (publication R22) over one finding. */
@@ -92,16 +102,16 @@ test("R1 R2 one project through the four stages by its inputs alone: cite, add a
   write({ state: "closed", closedReason: "resolved", cites: [Q1] });
   s = stage();
   assert.deepEqual([s.stage, s.closed_reason, s.basis], ["closed", "resolved", { rule: "closed", question: null, case: null, edition: null }]);
-  /* reopened (the owner's act): derived again */
-  write({ state: "investigating", cites: [Q1] });
+  /* reopened (the owner's act, `closed → forming`): derived again */
+  write({ state: "forming", cites: [Q1] });
   assert.deepEqual([stage().stage, stage().closed_reason], ["matured", null]);
 });
 
 test("R2 R5 negative control: a document's own `matured` (or `investigating`) holding no question still reads forming; the stage is never stored", () => {
-  const { w, proj, write, stage } = setup();
+  const { w, proj, stage, legacy } = setup();
   const before = Object.keys(w.snapshot());
-  for (const state of ["investigating", "matured"]) {   /* the declared moves, forming → investigating → matured */
-    write({ state });
+  for (const state of ["investigating", "matured"]) {   /* legacy words, stored and read as valid, never as the stage */
+    legacy(state);
     const s = stage();
     assert.deepEqual([s.stage, s.closed_reason], ["forming", null], state);
   }
@@ -317,7 +327,7 @@ test("R4 one rule: on every step of the four-stage walk `stages` is produced wit
   s = oneRule(stage());
   assert.deepEqual(at(s, "closed"), { stage: "closed", reached: true, earned: { closed_reason: "resolved" },
     since: "2026-09-26T12:00:00Z", needs: null, why: STAGE_SENTENCES.closed_reached });
-  write({ state: "investigating", cites: [Q1] });
+  write({ state: "forming", cites: [Q1] });
   oneRule(stage());
 });
 
@@ -383,7 +393,7 @@ test("R4 no promise: each listed condition, met alone with nothing else changed,
 });
 
 test("R4 uncounted inputs move nothing: a no-project conclusion, a signed edition not ratified, the document's own `matured`, a severed citation", () => {
-  const { w, proj, write, stage } = setup();
+  const { w, proj, write, stage, legacy } = setup();
   w.doc(DOC);
   /* held with a leg first, since a concluded inquiry carries one (K819): its conclusion is then the only change */
   w.inquiry(Q1, { legs: [{ target: DOC }] });
@@ -401,8 +411,8 @@ test("R4 uncounted inputs move nothing: a no-project conclusion, a signed editio
   const strip = (x) => JSON.stringify({ ...x, work_products: null, readiness: null });
   assert.equal(strip(signed), strip(JSON.parse(was)), "a signed edition not ratified");
   /* the document's own current_state, and a severed citation of a legged, concluded question */
-  write({ state: "investigating", cites: [Q1] });   /* the declared moves, forming → investigating → matured */
-  write({ state: "matured", cites: [Q1], severed: [Q2], conclusions: [{ inquiry: Q2 }] });
+  write({ cites: [Q1], severed: [Q2], conclusions: [{ inquiry: Q2 }] });
+  legacy("matured");   /* a legacy word, stored and read as valid */
   const after = stage();
   assert.equal(strip(after), strip(JSON.parse(was)), "the document's state word and a severed citation");
 });
@@ -482,7 +492,7 @@ test("R4 closed: each reason in `closed_reason` and `closed.earned`; the compute
   /* a close recorded with no history entry: the instant is not held, so it is null */
   write({ state: "closed", closedReason: "abandoned", cites: [Q1] });
   assert.equal(at(stage(), "closed").since, null);
-  write({ state: "investigating", cites: [Q1] });
+  write({ state: "forming", cites: [Q1] });
   const s = oneRule(stage());
   assert.deepEqual([s.stage, at(s, "closed").reached, at(s, "closed").why, "recorded" in at(s, "closed")],
                    ["investigating", false, STAGE_SENTENCES.closed_not_recorded, false]);
