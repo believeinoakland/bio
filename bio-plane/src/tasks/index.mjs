@@ -175,7 +175,7 @@ export class Tasks {
       !kinds.every((k) => this.#connections.edgeSevered(pid, bundleId, k || null)));
     if (cite) {
       const o = ownerOf(cite[0]);
-      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this bundle` };
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this record` };
     }
     /* membership's active administrators (its R86), in the order the roster holds them, the founder (who is no member
        row, and holds no task) aside: the earliest. */
@@ -301,7 +301,7 @@ export class Tasks {
       if (!reg) {
         this.#capture.taskEventAttempt({ kind: q.kind, captureSha: q.capture_sha, at });
         out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts + 1,
-          detail: "the capture is not yet filed in any bundle; the event is kept, not dropped" });
+          detail: "the capture is not yet filed in any record; the event is kept, not dropped" });
         continue;
       }
       const live = this.#one(

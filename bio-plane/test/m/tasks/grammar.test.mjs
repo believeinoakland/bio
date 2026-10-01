@@ -98,7 +98,7 @@ test("R4: the drain runs the same function over each candidate task: its refused
   const w2 = inbox([ev("c1")], { c1: ODD }); w2.bundle(ODD);
   const d = w2.t.taskDrain({ now: at0 });
   assert.deepEqual([d.created.length, d.refused.length, d.drained, w2.queue.length], [0, 1, 1, 0]);
-  assert.ok(d.refused[0].findings.some((f) => f.check === "C-19.1" && /canonical bundle ID/.test(f.detail)));
+  assert.ok(d.refused[0].findings.some((f) => f.check === "C-19.1" && /canonical record ID/.test(f.detail)));
   assert.equal(w2.all(`SELECT count(*) c FROM tasks`)[0].c, 0);
 });
 
@@ -125,8 +125,8 @@ const BOUNDS = [
   ["a subject.text that is not a string", (t) => { t.subject.text = 7; }, /subject\.text must be/],
   ["subject.description over 2000 chars", (t) => { t.subject.description = "x".repeat(2001); }, /subject\.description must be a string under 2000 chars$/],
   ["a subject.description that is not a string", (t) => { t.subject.description = 5; }, /subject\.description must be/],
-  ["a URL in refers_to", (t) => { t.refers_to = "https://drive.example.com/file/d/x"; }, /\.refers_to 'https:\/\/drive\.example\.com\/file\/d\/x' is not a canonical bundle ID$/],
-  ["a path in refers_to", (t) => { t.refers_to = "bundles/INFO-2026-0700"; }, /is not a canonical bundle ID$/],
+  ["a URL in refers_to", (t) => { t.refers_to = "https://drive.example.com/file/d/x"; }, /\.refers_to 'https:\/\/drive\.example\.com\/file\/d\/x' is not a canonical record ID$/],
+  ["a path in refers_to", (t) => { t.refers_to = "bundles/INFO-2026-0700"; }, /is not a canonical record ID$/],
   ["an id that does not resolve in the store", (t) => { t.refers_to = "INFO-2026-9999-absent"; }, /\.refers_to 'INFO-2026-9999-absent' does not resolve in the store$/],
   ["locators that are not an array", (t) => { t.locators = "https://records.example.org/a"; }, /\.locators must be an array$/],
   ["a plain http locator", (t) => { t.locators = ["http://records.example.org/a"]; }, /\.locators\[0\] 'http:\/\/records\.example\.org\/a' is not an https public-host locator$/],
@@ -189,6 +189,6 @@ test("R4 (N367): two tasks sharing an id are refused; the repair of an unresolva
   assert.deepEqual(f.map((x) => x.message), ["inbox.json tasks[1] repeats id 'TASK-2026-0001-subject'"]);
   const t = good(); t.refers_to = "INFO-2026-9999-absent";
   const [r] = errorsOf([t]);
-  assert.deepEqual([r.repairable, r.repairs], [true, ["re-point the task at the successor bundle", "resolve the task with a reason if its subject is gone"]]);
+  assert.deepEqual([r.repairable, r.repairs], [true, ["re-point the task at the successor record", "resolve the task with a reason if its subject is gone"]]);
   assert.equal(BOUNDS.length >= 31, true, "every per-bound arm of the retired suite is carried");
 });
