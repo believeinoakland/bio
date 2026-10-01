@@ -30,3 +30,7 @@
 - `node checks/ownership.mjs … bundler tranche/T22`: 9 files changed; 0 failures
 
 Size (session_014EDtgA8oD3Eyhq1jai3Z7j): test runs 9, module lines 5570
+
+## J1 · REPORT
+
+Other modules: (1) capture doorbell.test.mjs:272 R56 is flaky. It asserts that !f1.includes("198") over a 16-hex keyed digest with a random key, which fails about 0.34% of runs (14/4096). It failed once in my test/m after-run and passed 5/5 alone. (2) For BOB to place: deploybindings.test.mjs's D-54 live arms read bio-plane/wrangler.jsonc's comment text and src/subresources.mjs's SUBRESOURCE_CAP source (another module's): repository-data ratchets stated by no bundler requirement, left as they are. No generated artifact staled: no changed script is a bundle input.
