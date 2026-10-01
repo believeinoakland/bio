@@ -9,7 +9,7 @@
  * registers the one function with promotion (at the write, R4's `INBOX_REFUSED`) and with record-core's audit, and its
  * own drain runs it over every candidate task. */
 
-import { isPublicHttpsLocator, ISO_TS_RE, BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
+import { isPublicHttpsLocator, ISO_TS_RE, BUNDLE_ID_RE } from "../record-grammar/index.mjs";
 
 const at = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
 

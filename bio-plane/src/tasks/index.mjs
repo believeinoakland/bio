@@ -22,7 +22,7 @@
  * The ops are `tasksOps`' entries, which the legacy store's dispatcher spreads in.
  */
 
-import { isMachineStamp, isPublicHttpsLocator } from "../../checks/bio-checks.mjs";
+import { isMachineStamp, isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, perItem, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -543,7 +543,7 @@ export class Tasks {
    *  this identity — rather than `isMachineIdentity`, which also refuses a bare
    *  class word: the bare string "admin" is a LEGITIMATE actor here, ROOT_ADMIN's
    *  own session, so a bare-class arm would refuse the root administrator's
-   *  browser. Both predicates derive from the catalogue's one prefix list. */
+   *  browser. Both predicates derive from record-grammar's one prefix list (`MACHINE_CLASS_PREFIX`). */
   taskForward({ id = null, to = null, actor = null, now = null, items } = {}) {
     /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor (the control plane's stamp) is forced
        onto every item. */
