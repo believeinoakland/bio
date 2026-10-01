@@ -31,3 +31,7 @@
 - `node checks/ownership.mjs … instance-setup tranche/T18`: legacy-index 5 added, 44 removed (the import and the two door lines, listed by the check); 0 failures.
 
 Size (session_01CwJSXamDinAWCKtAtRctev): test runs 15, module lines 2926
+
+## J1 · REPORT
+
+Found outside my module (details in my record): (1) build/requirements/instance-setup.md Uses still names civicosUserAgent under legacy-checks, and RISK_TIERS/riskTierState 'until actions holds them'; both now come from acquisition and actions (BOB's wording). (2) bio-plane/dist/bio-plane.bundled.mjs (not_product) is stale from this job's src/index.mjs and src/setup.mjs changes; regenerate at the layer close. (3) Red on tranche/T18 before this job, measured on a clean checkout: test/m/control-plane R36 (N419, control-plane's entry this layer) and test/system/fleetbundles 'agent-worker's 153 inputs are all recorded' (agent-worker or bundler). Neither moves with this job.
