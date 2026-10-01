@@ -69,7 +69,9 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 
 - `jurisdictions`: `list`, `get`, `combine` (R12–R16).
 - `capture`: `captureLimit` (R37), and the listener registration of its R55 (R42).
-- `legacy-checks`: C-64's rows until they move (R30); `STATES`, `HEADINGS`, `deriveInquiryTitle` for the page, and `RISK_TIERS`, `riskTierState` until `actions` holds them (R32); `civicosUserAgent`.
+- `legacy-checks`: C-64's rows until they move (R30); `STATES`, `HEADINGS`, `deriveInquiryTitle` for the page, (R32).
+- `acquisition`: `civicosUserAgent`.
+- `actions`: `RISK_TIERS`, `riskTierState` (R32).
 - `actions`: `RISK_TIERS`, `riskTierState` (R24, R32), and R9's counterparty shape (R24).
 - `runtime-limits`: `liveToken`, `PUBLISHED_TOKEN_HASHES` (R17–R19), `cpuProbe` (R38).
 - `record-core`: `recordOf(ctx)`, `getSetting`/`setSetting` (R12–R14), `declarePurge` (R28), and `isFirstBoot` (its R54; R2, R13). *(not declared)*
