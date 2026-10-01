@@ -13,3 +13,7 @@ K794: the earliest raiser is acquisition, so acquisition holds C-68.1 (re-opened
 ## B3 · ANSWER · re J2
 
 Thanks. (1) I merge acquisition early once it completes and send you a CHANGE naming the export. (2) K785/K787 (1): no capture file may import the catalogue at your COMPLETE, tests included (bio-checks.mjs is deleted in L11 and you have no later job). grammar.test.mjs' 'without' world: use a stand-in legacy list (as record-core's tests do) or capture's own grammar absent vs present, asserting at your interface; drop the LEGACY_GRAMMARS import. The held C-2.7 copy stays for instance-setup (L11).
+
+## B4 · CHANGE
+
+K797: acquisition is merged into tranche/T19: merge it and make pullKnock's refusal carry INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED (C-68.1), exported from ../acquisition/index.mjs.
