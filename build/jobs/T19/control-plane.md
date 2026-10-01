@@ -44,3 +44,27 @@ Two blockers in B4's last act; the R43 deletion is built on my branch (@ 633e605
 **Found:** (a) admission's `admission.test.mjs`:197 is flaky, about 1 run in 16: `K.revoked.replace(/.$/, "0")` leaves the revoked credential unchanged when its last character is already `0`, so the answer is `AI_CREDENTIAL_REVOKED`. It is red in one of my full runs and green on reruns; admission's. (b) `bio-plane/checks/README.md` (`not_product`) describes the deleted catalogue and is now an orphan; yours to remove or keep.
 
 Full `test/m` with the deletion: 4,578 tests, 4,554 pass, 4 fail (text-chain extent N446; capture-sources R55/R57/R63 per Q1; plane R8, plane's own and red before my change; admission's flake), 20 todo. Module 91/91.
+
+## J5 · COMPLETE
+
+COMPLETE for R43 as built (B5, K853). Branch `job/T19/control-plane` @ cee8b13d7d (tranche/T19 merged in). The wrapper and `ops.mjs` wait for your next CHANGE (B5's step 3).
+
+**Applied:** the importer re-scan first. No product file, no fleet member, no package script and no module test imports `checks/bio-checks.mjs`, apart from text-chain's `extent.test.mjs` (N446). Indirect readers were checked too: `gate.mjs`, the ratification and promotion `gateVersion` tests and inquiry-grammar's golden file name it in strings only. Then the deletions: `bio-plane/checks/bio-checks.mjs` (−5,184), `test/m/legacy-checks/catalogue.test.mjs`, and `families.mjs`' CATALOGUE source and import. Every copy the catalogue held (`VERSION_MACHINE`, `SUFFICIENCY_CLAIM_STATES`, `INSTALLATION_CHECKS`' C-68.1, `CHECK_RETIREMENTS`, `ACTION_KINDS`, `lawProposalLabel`, `STRENGTH_STATES` and the rest) went with the file. `CHECK_FAMILIES` is now the modules' own families and this module's alone, and the totality test over `modules.json` stays green.
+
+**R met, with tests:** R43: `catalogue-end.test.mjs` arm 1 (every one of the 963 codes decorated before reads the same check and translation; all 59 fences still published, checked against `rows-before-r43.json`) and arm 2 (file and tests gone, no catalogue source, no importer but N446's); `families.test.mjs` (totality, first source record-grammar). R22 and R41 as before (`envelope.test.mjs`, `affordances-pack.test.mjs`). Earlier share: J3.
+
+**Accepted red by name (K810, K786, K853):**
+- `test/m/capture-sources/credentials.test.mjs`:557 (R55, R57, R63) runs the guard below.
+- `test/m/text-chain/extent.test.mjs` (N446).
+- legacy-tests' scripts that load or read the catalogue: `civicos-ui/check-refusal-codes.mjs`, `civicos-ui/check-semantics.mjs`.
+- legacy-tests' `civicos-ui/test/*` suites that import it (28): `act-attest`, `act-proposal`, `action-page`, `add-surface` (test and control), `authored-group`, `bias-vocabulary`, `capture-honesty`, `connections-sidebar`, `content-extent`, `custodial-acts`, `link-surface`, `onpoint-choice`, `plane-refusal-wire`, `preauth-vocabulary`, `project-id-surface`, `project-visibility-surface`, `published-index-pair`, `recipe-drive`, `refusal-codes.control`, `refusal-translation-surface` (test and control), `snapshot-render`, `surface-registry-a4.control`, `themes`, `ui102-laws-proposals`, `version-notice-surface`, `version-review`, and the suites that run `check-semantics.mjs`.
+- The old `bio-plane/test/*.mjs` and `bio-plane/test/system/*` suites that import it (20 under `test/system/`, 94 top level).
+- `tools/mintid.mjs` and `tools/m172-title-state-census.mjs` (legacy-index deletes `tools/`).
+
+**Generated artifact made stale (§14):** `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` still carry the catalogue as an input; they are regenerated at the layer close.
+
+**Ownership:** 1 failure, the deletion of `bio-plane/test/m/legacy-checks/catalogue.test.mjs` itself, outside my paths but ordered by START and B4. Legacy-checks −5,184, nothing added.
+
+**Tests and checks:** module `node --test test/m/control-plane/` 91 tests, 91 pass, 0 fail. Whole `test/m` before the last merge: 4,578 tests, 4,554 pass, 4 fail (the two above, plane R8 plane's own, admission's flake), 20 todo. format 0 failures; architecture 0 failures; coverage 26 of 27 (R42, T20); ownership 1 (the instructed deletion above).
+
+Size (session_01Q7pSz3M4L3gNs61ha41Bff): test runs 21, module lines 3340
