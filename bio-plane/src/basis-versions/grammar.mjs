@@ -166,7 +166,7 @@ export function basisVersionFindings(fm, findings) {
       push('VERSION_HIDDEN_NOT_BOOLEAN', `basis_versions[${i}] ('${name}').hidden is '${String(v.hidden).slice(0, 40)}': hiding a version is a boolean, because hiding it is ALL it does — the version stays in the record and stays queryable (DEC-29(b), D-214), so there is no third value for this field to hold`);
     }
     /* PL-2 / IS-2, layer 2 of the reason rule. `versionNeedsReason` is the ONE
-       predicate — imported by store.mjs's transition and called here — so the
+       predicate — imported by the six acts (`./index.mjs`) and called here — so the
        two layers cannot come to disagree about which states carry a reason. */
     if (versionNeedsReason(v.state)) {
       const why = typeof v.state_reason === 'string' ? v.state_reason.trim() : '';
@@ -285,13 +285,11 @@ export function basisVersionFindings(fm, findings) {
        has always been, in the arm below that already carries it. Absent is not
        machine and is not the no-claim value either: three findings, three arms.
 
-       THE SHAPE OF THIS PAIR IS ALSO WHAT `hygiene.test.mjs`'s (D1) READS. Its
-       anchor is the sentence `is not a named member` and it resolves upward to
-       the nearest `if (`, so the refusal that says a machine may not sign must
-       be produced by a guard that VISIBLY asks the one predicate. Written as an
-       `if/else if` on a state name it resolved to the licence arm instead and
-       (D1a)/(D1b) both fired — correctly, on an instrument working exactly as
-       built. Two independent `if`s, each answering its own question. */
+       Two independent `if`s, each answering its own question, so the refusal
+       that says a machine may not sign is produced by a guard that visibly asks
+       the one predicate (an `if/else if` on a state name once let the licence
+       arm answer it). `test/m/basis-versions/sufficiency-state.test.mjs` (R3)
+       proves both arms. */
     const singlePart = (partsOf.get(vn)?.size ?? 0) === 1;
     const noClaim = typeof g.asserted_by === 'string' && isSufficiencyUnclaimed(g.asserted_by);
     if (noClaim && !singlePart) {
@@ -324,7 +322,7 @@ export function basisVersionFindings(fm, findings) {
       if (themeLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
       if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
-        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
+        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical record id`);
       } else if (typeof fm?.id === 'string' && t === fm.id) {
         push('VERSION_LEG_SELF', `basis_version_legs[${li}] (version '${name}') rests on ${t}, which is this inquiry: a question is not evidence for its own answer, in any account of it`);
       } else {
@@ -348,9 +346,8 @@ export function basisVersionFindings(fm, findings) {
          is corrected with its reason and never quietly removed. */
       /* THE C-NUMBER IS READ OUT OF THE MAP AND NEVER TYPED, which is this
          function's own stated discipline ("`basisVersionFindings` reads the
-         C-number OUT of this map at every site") and is enforced by
-         `versions.test.mjs`: a second literal is a second place for the number
-         to drift. Typed here, that arm went red on this item's first battery. */
+         C-number OUT of this map at every site"): a second literal is a second
+         place for the number to drift. Typed here, that arm once went red. */
       checkLegExtentGrammar(leg, `basis_version_legs[${li}] (version '${name}')`,
         BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE.check, findings);
 

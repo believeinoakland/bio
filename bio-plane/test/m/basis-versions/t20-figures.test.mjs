@@ -1,9 +1,9 @@
 /* T20 layer 6 (K861, plane R10): R47, this module's share of the instance's figures, a source shaped as record-core
    R63's `counts(hid)` with its key list, which `plane` registers under this module's name. Proved at the interface: the
    source alone, then registered through the REAL record-core's R63 and read as `op=stats` and purge's proof read it,
-   each answer held against plane's held copy's own statement (`src/plane/held.mjs`, `nx`: `count(*)` less the rows
-   whose key, read as `COALESCE(key, '')`, is in `hid`; `basisVersions` keyed on `bundle_id`, `basisVersionLegs` on
-   `bundle_id` and `target_id`). */
+   each answer held against R47's own statement of the count, pinned below (`count(*)` less the rows whose key, read as
+   `COALESCE(key, '')`, is in `hid`; `basisVersions` keyed on `bundle_id`, `basisVersionLegs` on `bundle_id` and
+   `target_id`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
@@ -16,8 +16,8 @@ import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 const KEYS = ["basisVersions", "basisVersionLegs"];
 const pick = (o) => Object.fromEntries(KEYS.map((k) => [k, o[k]]));
 
-/* Plane's held copy, statement for statement: what R47 must answer exactly. */
-function heldCopy(sql, hid) {
+/* R47's count, stated as its own SQL: what the source must answer exactly. */
+function stated(sql, hid) {
   const nx = (t, keys) => {
     const conds = [], args = [];
     if (hid) for (const k of keys) { conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`); args.push(...hid.args); }
@@ -26,7 +26,7 @@ function heldCopy(sql, hid) {
   return { basisVersions: nx("inquiry_basis_versions", ["bundle_id"]),
            basisVersionLegs: nx("inquiry_basis_version_legs", ["bundle_id", "target_id"]) };
 }
-/* `hid` as plane's held copy takes it: a viewer never sent is the direct internal call, counted whole. */
+/* `hid` as R63 hands it: a viewer never sent is the direct internal call, counted whole. */
 const hidOf = (viewer) => (viewer === undefined ? null : hiddenBundles(viewer));
 
 const OPEN = "INFO-2026-0001-open", HID = "INFO-2026-0002-in-project";
@@ -61,7 +61,7 @@ const VIEWERS = [
   ["junk", { basisVersions: 0, basisVersionLegs: 0 }, "a viewer the gate refuses: every bundle hidden"],
 ];
 
-test("R47 the figure source: its key list, and counts(hid) — versions less those whose bundle is in hid, legs less those whose bundle or target is — whole for a null hid, as plane's held copy counts", () => {
+test("R47 the figure source: its key list, and counts(hid) — versions less those whose bundle is in hid, legs less those whose bundle or target is — whole for a null hid, exactly as R47 states the count", () => {
   assert.deepEqual([...BasisVersions.COUNT_KEYS], KEYS);
   assert.ok(Object.isFrozen(BasisVersions.COUNT_KEYS));
   const { w, proj } = build();
@@ -72,7 +72,7 @@ test("R47 the figure source: its key list, and counts(hid) — versions less tho
     const got = w.bv.counts(hidOf(viewer));
     assert.deepEqual(Object.keys(got), KEYS, `${why}: every key, in the list's order`);
     assert.deepEqual(got, want, why);
-    assert.deepEqual(got, heldCopy(w.st.sql, hidOf(viewer)), `${why}: exactly plane's copy`);
+    assert.deepEqual(got, stated(w.st.sql, hidOf(viewer)), `${why}: exactly R47's statement`);
   }
   /* each arm alone: a leg whose BUNDLE is hidden (INQ_B's) and one whose TARGET is hidden (wide's on HID) */
   w.st.sql.exec(`UPDATE bundles SET project=NULL WHERE bundle_id=?`, INQ_B);
@@ -80,13 +80,13 @@ test("R47 the figure source: its key list, and counts(hid) — versions less tho
   w.st.sql.exec(`UPDATE bundles SET project=NULL WHERE bundle_id=?`, HID);
   w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, proj, INQ_B);
   assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), { basisVersions: 2, basisVersionLegs: 3 }, "only the bundle arm");
-  assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), heldCopy(w.st.sql, hiddenBundles(V("zed"))));
+  assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), stated(w.st.sql, hiddenBundles(V("zed"))));
   /* sight follows the record: inviting zed into the project moves zed's count at once */
   w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, proj, HID);
   assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), VIEWERS.find(([v]) => v === V("zed"))[1]);
   assert.equal(w.membership.projectInvite({ projectId: proj, handle: "h_zed", by: "ann", viewer: V("ann") }).ok, true);
   assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), WHOLE);
-  assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), heldCopy(w.st.sql, hiddenBundles(V("zed"))));
+  assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), stated(w.st.sql, hiddenBundles(V("zed"))));
 });
 
 test("R47 a NULL key names no bundle, so hid never drops its row; it writes nothing", () => {
@@ -113,13 +113,13 @@ test("R47 a NULL key names no bundle, so hid never drops its row; it writes noth
   const before = snapshot();
   const all = hiddenBundles("junk");   // every bundle hidden
   assert.deepEqual(bv.counts(all), { basisVersions: 1, basisVersionLegs: 1 }, "only the row whose keys are all NULL stays");
-  assert.deepEqual(bv.counts(all), heldCopy(sql, all));
+  assert.deepEqual(bv.counts(all), stated(sql, all));
   assert.deepEqual(bv.counts(null), { basisVersions: 2, basisVersionLegs: 3 });
-  assert.deepEqual(bv.counts(null), heldCopy(sql, null));
+  assert.deepEqual(bv.counts(null), stated(sql, null));
   assert.equal(snapshot(), before, "writes nothing");
 });
 
-test("R47 registered through record-core R63 under basis-versions' name, it answers op=stats through each viewer's sight and purge's proof whole, as plane's copy; basis-versions registers nothing itself", () => {
+test("R47 registered through record-core R63 under basis-versions' name, it answers op=stats through each viewer's sight and purge's proof whole, exactly as R47 states the count; basis-versions registers nothing itself", () => {
   const { w } = build();
   const rc = w.record;
   /* the module registered nothing at its start: no figure of its is held by record-core */
@@ -129,7 +129,7 @@ test("R47 registered through record-core R63 under basis-versions' name, it answ
     { ok: true, module: "basis-versions", keys: KEYS });
   for (const [viewer, want, why] of VIEWERS) {
     assert.deepEqual(pick(rc.counts(hidOf(viewer))), want, `R63 ${why}`);
-    assert.deepEqual(pick(rc.counts(hidOf(viewer))), heldCopy(w.st.sql, hidOf(viewer)), `R63 ${why}: plane's copy`);
+    assert.deepEqual(pick(rc.counts(hidOf(viewer))), stated(w.st.sql, hidOf(viewer)), `R63 ${why}: R47's statement`);
   }
   /* op=stats and purge's proof, read through a stats source composed as plane composes it (R65: the registered
      figures, through the caller's sight, a viewer never sent counted whole) */
@@ -143,7 +143,7 @@ test("R47 registered through record-core R63 under basis-versions' name, it answ
   const p = recordCoreOps(rc, new URL(`http://x/?op=purge&bundleId=${INQ_B}`), null).purge();
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   assert.deepEqual(KEYS.map((k) => [p.before[k], p.after[k]]), [[3, 2], [4, 3]]);
-  assert.deepEqual(pick(p.after), heldCopy(w.st.sql, null), "after: plane's copy, whole");
+  assert.deepEqual(pick(p.after), stated(w.st.sql, null), "after: R47's statement, whole");
   /* a second registration under its name is refused, naming the holder (R63) */
   const again = rc.registerCounts("basis-versions", [...BasisVersions.COUNT_KEYS], (hid) => w.bv.counts(hid));
   assert.deepEqual([again.ok, again.reason, again.heldBy], [false, "COUNTS_DECLARED", "basis-versions"]);
