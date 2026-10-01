@@ -17019,7 +17019,7 @@
     "UC-111"
    ],
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "The other three Action sketches: fix them as the reference, or leave them to Design",
     "inOneBreath": "Besides the plan page you approved, should the Action design's other three screen sketches (starting and sending an action, the matter page, and the sheet of standards, filings and queue items) bind the interface redesign as the plan page does, or stay examples the designer may rework?",
@@ -17219,6 +17219,17 @@
      "build/rulings.md K921, K924 (Bob through the development process, cited in BOB's outbox B1): a filing template is the basis of a group's own filing (tiers 1, 2) or of a briefing to counsel (every tier, counsel needed only at Tier 3); every approved version is offered with its metadata, the latest by default, an earlier one 'updated' and still offered; a filing may be written without a template. Built in T21. The start-and-send sketch's template step should follow them."
     ],
     "size": "short"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "K608 (4)",
+     "DEC-115"
+    ],
+    "status": "ruled",
+    "title": "Which Action sketches bind the redesign",
+    "decided": "Besides the plan page, the starting-and-sending sketch binds the redesign's content, step order and wording: the refusal shown before anything runs, the reason asked in place, and approving kept separate from recording the sending. In the third sheet, the tier 2 filing draft and the tier 3 counsel packet panels bind likewise. The matter page, the standards list and the queue items stay examples the designer may rework within the requirements and the later rulings (the queue's three kinds, the hold strip, 'Matters'). Look and layout stay Design's throughout, and where a bound sketch predates a later ruling ('Matters'; the filing-template rules), the ruling wins."
    }
   },
   {

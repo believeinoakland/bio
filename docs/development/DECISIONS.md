@@ -1853,3 +1853,17 @@ response: **Bob, 2026-10-01: "Q#34: matters"** (A): every member-facing use of w
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 34; BIO_Action_v0_1.md §7 item 7 (RULED 2026-10-01).
 owed: "Matters"/"matter" in every member-facing string for a plan's subjects (action-plans' labels, the start preview, queue-producers' item wording, the glossary; the plan-page sketch's heading); the UX page's question 34 marked ruled.
+
+### DEC-115 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01TNeXM2Qvi7zMXT6BntbENE; the development process runs on his secondary account) (the UX canon's open question 35: the other three Action sketches, fixed as the reference or left to Design)
+for: bob
+question: For each of the Action design's three remaining sketches (starting and sending an action; the matter page; the sheet of standards, filings and queue items), whether it binds the interface redesign as the approved plan page does (its content, the order of its steps and its wording; look and layout stay Design's) or stays an example the designer may rework; optionally fixing only part of a sketch.
+why it is Bob's: UX (P17); the plan page's approval (K608 (4)) set the precedent.
+provisional: K608 (4) (the plan page approved); build/plan/action-design/HANDOFF.md ("the plan-page view is approved"); UX-ANSWERS.md OQ-9 (layout remains Design's).
+alternative: (A) fix all three; (B) fix starting and sending only; (D) fix none.
+recommendation: (C) fix starting and sending, plus the tier 2 filing draft and tier 3 counsel packet panels of the third sheet; the matter page, the standards list and the queue items stay examples.
+reversal cost: low (no screen is built from them yet).
+response: **Bob, 2026-10-01: "Q#35: as recommended"** (C): `start-and-send.html` binds the redesign's content, step order and wording (the refusal visible before anything runs, the reason asked in place, approving kept separate from recording the sending), as the plan page does; in `surfaces.html`, the tier 2 filing draft and tier 3 counsel packet panels bind likewise; the standards list and the queue items in that sheet, and `matter-page.html`, stay examples the designer may rework within the requirements. Look and layout stay Design's throughout. Where a bound sketch predates a later ruling, the ruling wins: "Matters" for a plan's subjects (DEC-114) and the filing-template rules (K921, K924: a template is the basis of a group's own filing or a briefing to counsel; every approved version offered, the latest by default; a filing may be written without one).
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 35; BIO_Action_v0_1.md §7 item 8 (RULED 2026-10-01).
+owed: the action-design HANDOFF's approval line extended to start-and-send and the two filing panels (build/plan/action-design, BOB's); the redesign's start-and-send flow and filing panels held to them; the matter page and queue items designed within the requirements (rulings since the sketches: DEC-110's queue kinds, DEC-113's hold strip, DEC-114's "Matters"); the UX page's question 35 marked ruled.
