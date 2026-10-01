@@ -68,8 +68,7 @@ import { caseDocumentStatesMemberBlocks, caseTensionsOf, disclosedCandidates, ca
          SECTIONS, REAUTHORABLE_SECTIONS, signedCitations, ATTRIBUTION_LEVELS, attributionFrontmatterLines,
          attributionBodyLines, publishedGraphEdges } from "../case-grammar/index.mjs";
 
-export { CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS, ATTRIBUTION_ACT_CHECKS,
-         CASE_SOURCES_CHECKS } from "./checks.mjs";
+export { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS } from "./checks.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
