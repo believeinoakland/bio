@@ -8,8 +8,8 @@
 
 /* =====================================================================
  * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5):
- * the same member knowledge BEFORE the search. C-54, minted with
- * `node tools/mintid.mjs C`.
+ * the same member knowledge BEFORE the search. C-54, minted with the old
+ * process's `node tools/mintid.mjs C` (that tool was retired in T19).
  *
  * ITS OWN FAMILY because its subject is its own: the ways a member's LEAD could
  * come to claim more than it is. §5 rules a lead is an authored row and NEVER
