@@ -580,8 +580,8 @@ export class AiRuns {
    *  `#runContextProjects` read the other way round: every question `#citesInto` says this project
    *  CONFIRMED-cites (the one live-cites predicate, and the very expression `op=suggest`'s context check (d)
    *  asks, so a SEVERED edge is not a question the run may land on). Not `#refEdgeSevered` directly: the
-   *  severance rule has one definition and a PINNED caller set (`severedhomes.test.mjs`), and a seventh reader
-   *  is the drift D-267 removed. Kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
+   *  severance rule has one definition, `connections`' `citesInto`, and a seventh reader is the drift D-267
+   *  removed; R19's test holds that a question the project severed is left out. Kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
    *  `SUGGEST_NOT_AN_INQUIRY` shape test) that THIS viewer can see (`#inSight`, the predicate its viewer gate
    *  asks). A question the viewer cannot see is omitted and not counted (§7.9: a count would say it exists).
    *  So the set published is exactly the set `suggestVersion`'s context check (d) admits for this caller, and
@@ -708,16 +708,15 @@ export class AiRuns {
               viewer = null } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = AiRuns.#aiIso(nowMs);
-    /* `started`, deliberately NOT `opened`. REC-58's consumer walk in
-       test/case-opened.test.mjs sweeps the WHOLE repository for `.opened` to
-       prove a published case's field has no consumers, and its own header
-       records that "a region-wide regex cannot tell the case's field from a
-       member's". A run answering `opened: true` would have made that headline
-       assertion read false for a reason that has nothing to do with published
-       cases — so the collision is avoided here rather than the other suite's
-       pin being weakened, which is the direction that keeps a real measurement
-       real. `started` is also the truer word: the run's own state vocabulary is
-       `running`, and nothing about it is ever "closed" without a named bound. */
+    /* `started`, deliberately NOT `opened`. When this was written, REC-58's
+       consumer walk (`test/case-opened.test.mjs`, since deleted) swept the
+       WHOLE repository for `.opened` to prove a published case's field had no
+       consumers, and a run answering `opened: true` would have made that
+       assertion read false for a reason that had nothing to do with published
+       cases — so the collision was avoided here rather than that suite
+       weakened. `started` is also the truer word: the run's own state vocabulary
+       is `running`, and nothing about it is ever "closed" without a named bound.
+       R10's test holds the answer's keys. */
     /* REC-76 — THIS REFUSAL WAS CODELESS UNTIL THE GUARD COULD SEE IT, and that
        is the item's own evidence rather than a tidy-up. `aiRunOpen` refuses with
        `started: false`; the DEC-49 guard's arm C graded a refusal by the single
@@ -931,14 +930,15 @@ export class AiRuns {
        `rerun_of` naming a run that is not there, or that is somewhere else, would be a discharge resting
        on the caller's word. Asked LAST of the open's guards — after authority and after shape — so a
        caller with no standing here learns nothing about which runs exist.
-       NO `DEC-49 REGION` MARKER HERE, and the absence is a CORRECTION this item's own guard run forced —
+       NO `DEC-49 REGION` MARKER HERE, and the absence was a CORRECTION this item's own guard run forced —
        the same shape as the note at this function's project gate, one cause down. The three rows'
-       `where` is the WHOLE FUNCTION, as its three existing rows' are, because `check-refusal-codes.mjs`
-       judges a region's refusals at the region AND again at an enclosing whole-function site, where the
-       code is not one of that site's rows: a region inside a function that keeps a whole-function `where`
-       fails all three by name. Measured on the first run of this item. The three rows are run-rules'
-       (`run-rules/checks.mjs`, read here by key, R35), whose header carries the argument and D-589's later
-       narrowing of C-33.29..31 into regions. */
+       `where` was the WHOLE FUNCTION, as its three existing rows' were, because `check-refusal-codes.mjs`
+       (deleted in T20) judged a region's refusals at the region AND again at an enclosing whole-function
+       site, where the code was not one of that site's rows: a region inside a function that kept a
+       whole-function `where` failed all three by name. Measured on the first run of this item. The three
+       rows are run-rules' (`run-rules/checks.mjs`, read here by key, R35), whose header carries the argument
+       and D-589's later narrowing of C-33.29..31 into regions. R9's test holds the three refusals in their
+       order, and R35's their rows. */
     const reRuns = String(rerunOf ?? "").trim();
     if (reRuns) {
       if (reRuns === String(run))
@@ -1205,7 +1205,7 @@ export class AiRuns {
        be checked; putting the gate on the shared exit would have made the gate
        a fact about the clock. So the MEMBER'S door is gated and the machine's
        exit is left alone — the two paths still terminate through one function,
-       which is what `airun.test.mjs` exists to hold.
+       which R14's and R31's tests hold (and R15's, for the reaper's ending).
 
        An unknown run is left to `#aiRunTerminate`'s own not-found answer, the
        same ordering the tick uses: the gate never tells a caller whether a run
@@ -1334,10 +1334,11 @@ export class AiRuns {
   /* HOW MANY RUNS ONE TICK HOLDS OR WAKES, AND THE FIGURE WAS NOT CHOSEN — IT
      WAS FORCED BY AN INSTRUMENT. The first shape of this consumer scanned
      `ai_runs` unbounded and looped over what came back, which is precisely the
-     class `derivation-bounds.test.mjs` ratchets (31 methods measured
-     2026-08-08, 11 of them dispatched): a method that AMPLIFIES work over an
-     unbounded scan. The suite failed on the new member and named it, so the
-     scan is bounded rather than the ceiling moved — a ceiling is not a ratchet.
+     class `derivation-bounds.test.mjs` (deleted in T20) ratcheted (31 methods
+     measured 2026-08-08, 11 of them dispatched): a method that AMPLIFIES work
+     over an unbounded scan. That suite failed on the new member and named it,
+     so the scan was bounded rather than the ceiling moved — a ceiling is not a
+     ratchet. The bound is R16's, at most 25 runs per tick, and R16's test holds it.
 
      SIZED ON THE PRODUCER IT FOLLOWS. The drain lands at most
      `CAPTURE_REQUEST_TICK_BATCH` completions per tick, so a wake batch smaller
@@ -1516,7 +1517,7 @@ export class AiRuns {
    * Nothing a caller sent is compared. REC-152 (C-22.12) would ALSO refuse the resumed run's first tick under a
    * key that is not its principal — and that is exactly why it is not relied on here: a dispatch that leans on
    * the refusal downstream has already handed a member's run to the group's key, and the refusal proves only
-   * that the tick failed. The arm in `test/d260-resume.test.mjs` counts calls AT THE BINDING for that reason.
+   * that the tick failed. R18's test counts calls AT THE BINDING for that reason: no withheld run reaches it.
    *
    * THE SECRET NEVER REACHES THE RECORD. The token is read from the Worker secret, used as the dispatch body's
    * `credential`, and dropped; what the tick answers, and what the wake entry says, name the credential by its
@@ -1887,8 +1888,9 @@ export class AiRuns {
    *  viewer was never invited to is absent from this list BYTE-IDENTICALLY to a
    *  run that does not exist, and **no count of what was withheld is reported**
    *  — that count is exactly the disclosure that somebody is investigating
-   *  something you cannot see (op=backlinks' rule, and `gate-reads.test.mjs`
-   *  carries the classification). It follows that a well-formed context with no
+   *  something you cannot see (op=backlinks' rule; R22's tests hold it: a
+   *  hidden context answers byte for byte as an empty one, and `truncated`
+   *  counts only the runs the viewer may see). It follows that a well-formed context with no
    *  visible runs answers an ordinary EMPTY LIST: "no runs here" and "no runs
    *  you may see" are ONE answer BY CONSTRUCTION rather than by care.
    *
@@ -1982,12 +1984,12 @@ export class AiRuns {
        WHY NOT A SHARED PRIVATE COMPOSER, which was written first and REVERTED,
        because the reason is a finding rather than a preference: extracting the
        block out of `aiRunRead` took `op=airun` OFF `meaning-bounds.test.mjs`'s
-       bare roster — not because the read got better, but because its unbounded
-       `ai_run_bounds` scan moved into a PRIVATE method the walk cannot follow.
-       The ratchet's FLOOR caught it immediately, which is exactly what that
-       floor is for, and REC-70's whole subject is a read the instrument could
-       not see. Calling the public method leaves `op=airun` classified exactly as
-       it was and creates no blind spot for the next reader to inherit.
+       (deleted in T20) bare roster — not because the read got better, but
+       because its unbounded `ai_run_bounds` scan moved into a PRIVATE method the
+       walk could not follow. The ratchet's FLOOR caught it immediately, which is
+       exactly what that floor was for, and REC-70's whole subject is a read the
+       instrument could not see. Calling the public method kept `op=airun`
+       classified exactly as it was; R22's test holds that each row is the read.
        WHAT IT COSTS, stated rather than hidden: one extra keyed lookup per row,
        and the gate compiled once more per row through the SAME `#bundleGate`.
        The bound above is what keeps that finite, and re-asking the gate cannot
@@ -2138,7 +2140,7 @@ export class AiRuns {
    *  not a fence: before this, the search half's payload existed only as a
    *  sentence in a design document, so there was nothing an assertion could read
    *  and nothing a negative control could break. The payload is BUILT here, by
-   *  one function, and `test/bias.test.mjs` asserts over the object this method
+   *  one function, and R23's and R34's test asserts over the object this method
    *  returns — not over a promise about it.
    *
    *  AND THE ASSERTION IS ABSENCE, NEVER EMPTINESS. The search payload is
@@ -2157,9 +2159,9 @@ export class AiRuns {
     const composing = String(half) === "compose";
     /* BOUNDED IN SQL AND PUBLISHED, and not because a walk asked. `ai_run_bounds`
        carries at most one row per member of `RUN_BOUNDS`, so the bound is real
-       and known — but "bounded by a vocabulary" is a fact in a comment, and
-       `test/meaning-bounds.test.mjs` grades what a method PUBLISHES precisely
-       because a comment is not a bound. The cap is the vocabulary's OWN size,
+       and known — but "bounded by a vocabulary" is a fact in a comment, and a
+       comment is not a bound: the cap is published (`limit`, `truncated`), and
+       R23's test holds it at the bound count. The cap is the vocabulary's OWN size,
        read live rather than typed, so a bound added to `RUN_BOUNDS` tomorrow
        widens this automatically instead of silently cutting the newest one. */
     const budgetCap = Object.keys(RUN_BOUNDS).length;
@@ -2230,8 +2232,10 @@ export class AiRuns {
    *
    *  Gated on the same column for the same reason as the read above.
    *
-   *  ===========================================================   *  REC-70 — BOUNDED, AND WHY THE RATCHET BUILT TO CATCH THIS DID NOT.
-   *  ===========================================================   *
+   *  ===========================================================
+   *  REC-70 — BOUNDED, AND WHY THE RATCHET BUILT TO CATCH THIS DID NOT.
+   *  ===========================================================
+   *
    *  THE DEFECT: this read was `... FROM ai_run_log WHERE run = ? ORDER BY seq`
    *  with no `LIMIT`, no `limit` and no `truncated` — D-225's class exactly,
    *  arriving in an op IS-6 added AFTER REC-60 measured its roster. A run's log
@@ -2240,8 +2244,8 @@ export class AiRuns {
    *
    *  THE PART THAT MATTERS MORE, AND IT IS RECORDED HERE BECAUSE THE NEXT
    *  UNBOUNDED READ WILL LAND BESIDE THIS ONE: `test/meaning-bounds.test.mjs`
-   *  exists to fail the build when a new read publishes a collection off an
-   *  unbounded row source, and it did not fail — `op=airunlog` appeared in NONE
+   *  (deleted in T20) existed to fail the build when a new read published a
+   *  collection off an unbounded row source, and it did not fail — `op=airunlog` appeared in NONE
    *  of its three buckets, so the walk never reached this method at all.
    *
    *  THE CAUSE, NAMED: **the walk graded only return objects containing the
@@ -2263,22 +2267,23 @@ export class AiRuns {
    *  method keeps `found: true`, which is what makes the corrected walk's
    *  verdict on it evidence rather than a coincidence.
    *
-   *  D-227 IS OPEN AND APPLIES HERE. That walk grades what a method PUBLISHES,
-   *  so an envelope left honest over a scan whose `LIMIT` was removed still
-   *  reads as bounded. This op's SQL bound is therefore pinned DIRECTLY, off
-   *  this segment's own source, in `meaning-bounds.test.mjs` — not inferred
-   *  from the envelope. */
+   *  D-227 APPLIED HERE. That walk graded what a method PUBLISHED, so an
+   *  envelope left honest over a scan whose `LIMIT` was removed still read as
+   *  bounded, and the suite pinned this op's SQL bound off its source. The pin
+   *  went with the suite. R24's test holds the published bound (the page,
+   *  `limit` and `truncated` over 205 entries); the SQL `LIMIT` below is what
+   *  keeps the read itself bounded, and no test reads it from the source. */
   log({ run, viewer = null, limit = null } = {}) {
     /* REC-70, IN THE BODY AND NOT ONLY IN THE HEADER ABOVE, because the
-       instrument that reads this file SEGMENTS FROM THE SIGNATURE DOWN — a
-       reasoning block written above the method is invisible to the same walk
+       instrument that read this file SEGMENTED FROM THE SIGNATURE DOWN — a
+       reasoning block written above the method was invisible to the same walk
        this note is about, which is a small instance of the identical mistake.
        THE CAUSE, in one line: this method answers success as `found: true`, and
-       `meaning-bounds.test.mjs` graded only returns containing `ok: true`, so
-       the ratchet built to catch an unbounded collection never reached it — one
-       of 27 dispatched ops hidden by that single literal. The walk was inverted
-       to grade everything that is not a declared refusal; this method keeps
-       `found: true` so the fix is proved rather than sidestepped. */
+       `meaning-bounds.test.mjs` (deleted in T20) graded only returns containing
+       `ok: true`, so the ratchet built to catch an unbounded collection never
+       reached it — one of 27 dispatched ops hidden by that single literal. The
+       walk was inverted to grade everything that is not a declared refusal; this
+       method kept `found: true` so the fix was proved rather than sidestepped. */
     const seen = this.#bundleGate("r.context_id", viewer);
     const row = this.#one(
       `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
@@ -2312,14 +2317,15 @@ export class AiRuns {
        consumer's schema check would catch it. The ordinal is the array index
        because the rows are already `ORDER BY seq` ascending and the cut falls at
        the END (§14b.7 replays from the start), so index + 1 is exact rather than
-       approximate. This is the digest-pinned property. */
+       approximate. R24's test holds it: entries numbered from 1. */
     /* REC-113 / IC-116 — THE COVERAGE CLAIM, PROJECTED AND THEN STATED.
        ADDITIVE: `result_kind` and `result_ref` are APPENDED to the projection
        and `coverage` is composed after them, so every key this op answered
        yesterday keeps its value AND ITS POSITION. That second half is not
-       pedantry — `test/rec113-identity.mjs` strips exactly these three keys back
-       off and compares the RAW RESPONSE TEXT to a pre-change build's, which is
-       only a comparison if the order survives.
+       pedantry — `test/rec113-identity.mjs` (since deleted) stripped exactly
+       these three keys back off and compared the RAW RESPONSE TEXT to a
+       pre-change build's, which is only a comparison if the order survives.
+       R24's test now holds the entries' keys in their order.
 
        WHY THE READ CHANGED AND THE REFUSAL DID NOT. C-22.10 does not fire on
        `authority_kind = 'run'` (D-366), so rows under this very authority may
