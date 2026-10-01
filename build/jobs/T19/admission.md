@@ -32,3 +32,7 @@ Complete: B1 applied. Both lookups already reach credentials through the store's
 - `node --test test/m/admission/`: 20 consecutive runs, each 19 pass, 0 fail. `format`, `architecture admission`, `coverage admission` (16/16), `ownership admission tranche/T19`: 0 failures.
 
 Size (session_01Fw5r9w5jim55wUjmoiT186): test runs 21, module lines 848
+
+## J2 · COMPLETE
+
+B2 applied: admission.test.mjs:197's altered revoked token now always differs from the original (last char becomes 1 when it is 0, else 0). admission 19/19 on 20 consecutive runs; format, architecture, coverage (16/16), ownership 0 failures.
