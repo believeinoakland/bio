@@ -207,9 +207,11 @@ test("R15: deriveLimits returns subrequests and cpu_ms, refusing a missing or no
 test("R16: npm run build renders the signer page, then writes the plane's bundle and manifest by R5 and prints size, SHA-256 and input counts", async () => {
   const root = await makeRepo({ build: false, realPackageJson: true, members: {} });
   try {
-    writeFileSync(join(root, "bio-plane/src/index.mjs"),
-      'import { tag } from "./tag.mjs";\nimport { SIGN_HTML } from "./signpage.mjs";\n'
+    writeFileSync(join(root, "bio-plane/src/plane/index.mjs"),
+      'import { tag } from "../tag.mjs";\nimport { SIGN_HTML } from "../signpage.mjs";\n'
       + "export default { fetch() { return new Response(tag + SIGN_HTML.length); } };\n");
+    /* The old entry path, left beside the plane's own: the bundle must not start from it (T20, K846). */
+    writeFileSync(join(root, "bio-plane/src/index.mjs"), 'export { default } from "./plane/index.mjs";\n');
     const r = spawnSync("npm", ["run", "build"], { cwd: join(root, "bio-plane"), encoding: "utf8" });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     const rendered = readFileSync(join(root, "bio-plane/src/signpage.mjs"), "utf8");
@@ -222,9 +224,21 @@ test("R16: npm run build renders the signer page, then writes the plane's bundle
     const manifest = readJson(join(plane.abs, plane.bundle.manifest));
     assert.deepEqual(manifest, manifestFrom(plane, built));
     assert.ok(manifest.inputs.some((i) => i.path === "src/signpage.mjs" && i.sha256 === hex(rendered)), "rendered before the bundle was cut");
+    assert.equal(manifest.recipe.entry, "src/plane/index.mjs", "the plane's own entry (plane R6)");
+    assert.ok(manifest.inputs.some((i) => i.path === "src/plane/index.mjs"));
+    assert.ok(!manifest.inputs.some((i) => i.path === "src/index.mjs"), "the old entry is not an input");
     assert.match(r.stdout, new RegExp(`bio-plane: built dist/bio-plane\\.bundled\\.mjs — ${art.length} B, sha256 ${hex(art)}`));
     assert.match(r.stdout, new RegExp(`bio-plane: wrote dist/bio-plane\\.bundle\\.json — ${manifest.inputs.length} first-party input\\(s\\), 0 vendored`));
   } finally { rm(root); }
+});
+
+test("R16: the plane is built from its own entry, the one its wrangler.jsonc's main names, and that file exists", () => {
+  const plane = planeMember();
+  assert.equal(plane.bundle.entry, "src/plane/index.mjs");
+  assert.equal(plane.entry, plane.bundle.entry);
+  assert.ok(existsSync(join(plane.abs, plane.bundle.entry)), "the entry exists in the repository");
+  const cfg = parseJsonc(readFileSync(join(plane.abs, "wrangler.jsonc"), "utf8"), "bio-plane/wrangler.jsonc");
+  assert.equal(cfg.main, plane.bundle.entry, "the bundle and a wrangler deploy start from one module");
 });
 
 /* --------------------------------------------------------------- R17, R18 */
