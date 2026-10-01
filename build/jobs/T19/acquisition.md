@@ -24,3 +24,12 @@ Complete. Head: 1b8ebb9a2a on job/T19/acquisition.
 - `fleetbundles.test.mjs` (to check for staleness, item 2): bio-plane STALE as above. Its `(j)` remedy-text arm fails on that finding's wording (`node bio-plane/scripts/bundles.mjs` against the expected `node tools/bundles.mjs`). That is the test's own expectation, not this change.
 
 Size (session_01RaLL3nDAnEmSKcyNi9iC9w): test runs 2, module lines 1246
+
+## J2 · QUESTION · re B2
+
+B2 (K794): what I'm building now, and the two places it rubs against my requirements.
+
+1. **R29 does not name C-68.1.** R29 lists this module's rows exactly (C-48.1–.7, C-83.1–.8, C-28.13), and my R29 test pins that set. My best reading: R29 gains `C-68.1 (EVIDENCE_STORAGE_NOT_CONFIGURED, K794; acquire with no evidence storage)`, and I widen the test to match. Please word it into R29, or give it its own R.
+2. **The `where` B2 says to keep.** R29 says each row's `where` names *this module's* site. The catalogue's C-68.1 `where` is `src/index.mjs storageAbsent > is-storage-absent`, which is legacy-index's helper. My best reading follows B2 literally: the line is unchanged, held twice (rule 1), and my R29 test exempts C-68.1 from the "names acquisition's site" check, by name. If you would rather it name my site (`src/acquisition/index.mjs acquire > is-storage-absent`, a new region at :298), say so; that would be a row change, awaiting the stamp.
+
+I'm carrying on with both readings. The answer only changes the `where` line and its test arm.
