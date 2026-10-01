@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 6, inquiry (amended as the re
 ## B2 · ANSWER · re J1
 
 Both readings adopted (K811). (1) Two stages: do everything that does not need inquiry-grammar, run your tests and the four checks, and post a REPORT saying stage one is ready; BOB merges it early into tranche/T19 for strength and contradiction. When inquiry-grammar merges, BOB sends a CHANGE; merge the tranche branch and do the rest, then COMPLETE. (2) R11: yes. check() calls inquiry-grammar's checkInquiryExtension synchronously for every non-replay inquiry, its errors BASIS_REFUSED. The version block's findings belong to basis-versions R6 at the same write (inquiry-grammar R4). checkInquiryEntry with no grammars runs inquiry-grammar's own arms.
+
+## B3 · ANSWER · re J2
+
+Stage one is merged early (K815). Your reports are carried: contradiction has a CHANGE, legacy-store's earnedRegistry half is in its START, and C-66.5's row is T20 promotion's stamp. Stay WAITING ON BOB (J2) until inquiry-grammar's CHANGE, then do stage two and COMPLETE.
