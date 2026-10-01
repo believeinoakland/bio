@@ -1542,7 +1542,7 @@ reasoning recorded in: this entry.
 owed: the relevance suggestion as labelled machine work with its dismissal memory and per-member switch (run-productions or retrieval, as BOB places it), and the unattended grade note (capture, queue), for Bob's approval; the UX page's open question 13 marked ruled.
 
 ### DEC-96 · answered
-raised: 2026-10-01 · the same design session with Bob (the UX canon's open question 12: the four points DEC-92 left for later)
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 12: the four points DEC-92 left for later)
 for: bob
 question: What does "Accepted by our group" commit a group to, is it public, and how is it withdrawn; how is a "Flagged" mark raised, answered and cleared, and who sees it; does "Meets standards" return; and what does a reader of the group's own case see when it rests on work the group accepted or flagged?
 why it is Bob's: doctrine (inherited trust: the fact of publication, never the credibility of the content) and UX.
@@ -1561,7 +1561,7 @@ reasoning recorded in: this entry; the UX substrate's brief for question 12.
 owed: the accept, withdraw, flag and clear acts (reasoned), the case's statement of acceptance, and the publication check that open flags on relied-on work are disclosed, as requirements for Bob's approval (BOB places them); the UX page's open question 12 marked ruled.
 
 ### DEC-97 · answered
-raised: 2026-10-01 · the same design session with Bob (the UX canon's open question 13: DEC-95 item 2, not ruled then)
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 13: DEC-95 item 2, not ruled then)
 for: bob
 question: Is there a list of held captures (collected, not yet released or set aside), and may a member act on several at once from it; and is anything beyond crucial material barred from a batch?
 why it is Bob's: UX, and doctrine (Intake Doctrine §4's batch rule and what "contested" means).
@@ -1578,7 +1578,7 @@ reasoning recorded in: this entry; the UX substrate's brief for question 13; Int
 owed: the held-captures list and the bulk set-aside and bulk link acts (no set-aside act exists today), and the batch eligibility check's "contested" arm (a document in an unresolved contradiction), as requirements for Bob's approval (BOB places them); the UX page's open question 13 marked ruled.
 
 ### DEC-98 · answered
-raised: 2026-10-01 · the same design session with Bob (the UX canon's open question 15)
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 15)
 for: bob
 question: What do screens say while empty, loading, failed or waiting (renders held back, capture requests hours away, legal clocks of days): one shared vocabulary or screen by screen; must every wait say what, from whom and by when; may an empty screen offer a next step?
 why it is Bob's: UX; it extends DEC-86's rule (state what is not known, never as an error) to the ordinary states, and touches DEC-69 (no nagging).
@@ -1596,7 +1596,7 @@ reasoning recorded in: this entry; the UX substrate's brief for question 15; Int
 owed: each screen's reads distinguish empty, still loading and could-not-read (a check in each screen's build, BOB's to place); the redesign's patterns; the UX page's open question 15 marked ruled.
 
 ### DEC-99 · answered
-raised: 2026-10-01 · the same design session with Bob (the UX canon's open question 16)
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 16)
 for: bob
 question: What accessibility standard must the member screens and the published case meet, which languages, and may a group issue a translated version of a published case?
 why it is Bob's: requirements and UX (a standing requirement every screen is built to; who signs a translation is doctrine).

@@ -14128,7 +14128,7 @@
    "recommendation": "Adopt the single sentence and marker, and have BOB record a ruling that re-evaluation, backlinks and strength R6 conform (state the incompleteness, no counts). Do not add the 'who to ask' hint.",
    "whoDecides": "Bob, for the scope: whether DEC-36's rule (a missing item is stated as missing, never named or counted) also governs hidden dependents and backlinks, which today are withheld silently. Design then settles the one sentence and marker within DEC-86. Strength's count leak was corrected in T12 (N303, K360).",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "",
     "title": "Saying 'there is more you cannot see' about work that depends on this",
     "inOneBreath": "When work a member cannot see rests on, or cites, the item they are looking at, should the screen say the list is incomplete, as it already must for hidden things the item itself rests on?",
@@ -14319,6 +14319,17 @@
      "build/rulings.md K628–K859 checked: none bears on this question"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-36",
+     "K903"
+    ],
+    "status": "ruled",
+    "title": "Saying 'there is more you cannot see' about work that depends on this",
+    "decided": "The rule for hidden things applies in both directions: a hidden item is never named or counted, and no id, title or state of it is shown, whether it is something the member's work rests on or something that rests on or cites what the member is looking at. Lists of dependents and 'cited by' lists withhold a hidden item whole, and say only that something was withheld, in the 'Withheld' style. The one-for-one placeholders ('an object you may not see') are removed, since they let a reader count hidden items. Ruled by Bob through the development process on his secondary account, 1 October (K903 (4))."
    }
   },
   {
@@ -16353,7 +16364,7 @@
    "basis": "open",
    "relatedUseCases": [],
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "The everyday word for one thing in the record (replacing 'bundle')",
     "inOneBreath": "Now that you have retired 'bundle', what word do members (and readers of published cases) see for a single thing the record holds when the screen cannot or should not say what kind of thing it is?",
@@ -16526,6 +16537,16 @@
      "bio-plane/src/provenance/checks.mjs C-53.13 translation (the one catalogue sentence using 'bundle')"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "K899"
+    ],
+    "status": "ruled",
+    "title": "The everyday word for one item in the record",
+    "decided": "Text members read says 'record' where it said 'bundle' (for example, 'This record was not found'); the internal identifiers stay as they are. Ruled by Bob through the development process on his secondary account, 1 October (K899 (1))."
    }
   },
   {
