@@ -7,9 +7,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, everyStatement, WORKERD_COMPOUND_SELECT } from "./fixture.mjs";
 import { compile, meaningVocabulary, MEANING, CHAIN_DOES_NOT_APPLY, CAP_DOES_NOT_APPLY } from "../../../src/query.mjs";
-import { normalizeType } from "../../../checks/bio-checks.mjs";
+import { normalizeType } from "../../../src/record-grammar/types.mjs";
 import { CONTENT_MINTED_BY_PLANE } from "../../../src/content/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
 const V = "class:member";
 const sorted = (a) => [...a].sort();

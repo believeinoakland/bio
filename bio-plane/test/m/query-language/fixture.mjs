@@ -1,6 +1,6 @@
 /* query-language's tests run the compiled statements against a real SQLite (node:sqlite, FTS5) holding the
    tables the statements name, each with the columns its owner's read contract states (record-core R37's
-   `bundles` projection and `bundles_fts`, membership's `members` and `project_participants`, content R45,
+   `bundles` (its `project` included, N426: membership's gate fences by it) and `bundles_fts`, membership's `members` and `project_participants`, content R45,
    extraction's `capture_text` and its index, entities' `resolutions`, inquiry's `inquiry_basis`, basis-versions'
    `inquiry_basis_version_legs`, provenance's `register`, extraction's `readings`, the `observation_log`).
    The module holds no database: every test compiles a plan at the interface and runs what it returns.
@@ -35,7 +35,8 @@ export function world({ projection = null, fields = null } = {}) {
     "action_risk_tier", "action_clock_overdue", "fts_id"].includes(c) ? "INTEGER" : "TEXT"}`;
   const onProj = (c) => !!P && !F.has(c) && (c === "fts_id" || PROJECTION_COLS.includes(c));
   const all = ["fts_id", "fm_json", ...cols];
-  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, ${all.filter((c) => !onProj(c) && !F.has(c)).map(decl).join(", ")})`);
+  /* record-core R37's `project` (N426): the project a bundle belongs to, empty or NULL for none. */
+  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, project TEXT, ${all.filter((c) => !onProj(c) && !F.has(c)).map(decl).join(", ")})`);
   if (P) db.exec(`CREATE TABLE ${P.table} (${P.key} TEXT PRIMARY KEY, ${all.filter(onProj).map(decl).join(", ")})`);
   const tables = new Map();
   for (const [c, r] of F) tables.set(r.table, { key: r.key, cols: [...(tables.get(r.table)?.cols || []), [c, r.col]] });

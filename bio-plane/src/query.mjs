@@ -424,13 +424,13 @@ export { MACHINE_READ_KINDS };
 
 export const MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
-     EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
+     EVERY VOCABULARY HERE IS IMPORTED FROM `record-grammar`, never listed. The
      first version of this registry typed the three grade sources the SCHEMA
      COMMENT names, and the live vocabulary has FIVE — `inherited` and `capture`
      were added by REC-31 and DEC-21 and that comment was never corrected. A hand
      copy would have made two of a member's legitimate questions unanswerable
      while every test passed, because the tests would have been written from the
-     same copy. The catalog IS the vocabulary; this is a view of it. */
+     same copy. The grammar IS the vocabulary; this is a view of it. */
   leg: {
     table: "inquiry_basis", key: "bundle_id", bare: "grade",
     grain: "the inquiry whose basis carries such a leg",
@@ -906,7 +906,7 @@ export const MEANING = {
    resolved by declaration order: picking one silently would answer a question
    the member did not ask, and on this surface a confidently wrong answer is the
    failure mode the whole item exists to remove. It is a warning and not a
-   load-time throw because the vocabularies come from the CATALOG, and a doctrine
+   load-time throw because the vocabularies come from `record-grammar`, and a doctrine
    change that introduces a collision must not brick the plane at import.
    `ambiguousBareWords()` publishes the set instead, so a NEW collision fails a
    suite rather than arriving as a surprise in front of a member. */
@@ -992,16 +992,18 @@ function rowColumns(m) {
 /* The text columns of the FTS5 table, in table order. `meta` carries the
    flattened frontmatter so a bare term finds a value no column projects, which
    is what makes the per-schema tail searchable without a schema per version. */
-/* Every vocabulary is IMPORTED FROM ITS OWNER, never listed (R22). The catalogue
-   (`legacy-checks`) holds the frontmatter parser, the type map, the machine-class
-   prefix and the leg vocabularies; `content` holds the extent grammar's kinds (its
+/* Every vocabulary is IMPORTED FROM ITS OWNER, never listed (R22). `record-grammar`
+   holds the frontmatter parser, the type map, the machine-class prefix and the leg
+   vocabularies; `content` holds the extent grammar's kinds (its
    R1: the eight and `envelope`), the literal the mint path writes for the plane, and
    `cited_as`'s rule; `text-chain` holds the step kinds and `mixed`. A hand copy of
    any of them would let a legitimate spelling (`content:pdf-page`, `content:plane`)
    go quietly unanswerable while every test written from the same copy passed, which
    is how the `leg:` arm's first version lost two of five grade sources. */
-import { parseFrontmatter, normalizeType, MACHINE_CLASS_PREFIX,
-         BASIS_ROLES, GRADE_AXES, GRADE_SOURCES } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "./record-grammar/frontmatter.mjs";
+import { normalizeType } from "./record-grammar/types.mjs";
+import { MACHINE_CLASS_PREFIX } from "./record-grammar/actors.mjs";
+import { BASIS_ROLES, GRADE_AXES, GRADE_SOURCES } from "./record-grammar/grades.mjs";
 import { CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE, contentCitedAs } from "./content/index.mjs";
 /* REC-90: the chain's step kinds, from the module that CLASSIFIES them. Nothing
    here tests a step name against a literal — `content:chain=ocr` reads its
@@ -1473,7 +1475,7 @@ function selector(tok, ctx) {
   let raw = String(tok.value);
   /* The type renames (normalisation site 4 of 4, REC-10): the projection
      stores canonical types only, so the legacy spellings `problem` and
-     `focus` are honoured as filter values THROUGH THE CATALOG'S OWN MAP
+     `focus` are honoured as filter values THROUGH `record-grammar`'s OWN MAP
      rather than restated here or answered with an empty page. The deliberate
      carve-out stands: schema stamps are document truth and are NOT mapped. */
   if (f.col === "object_type") raw = normalizeType(raw.toLowerCase());
