@@ -32,3 +32,7 @@ Size (session_016dWEeR3ZoeXU1HhPQ8dpXs): test runs 5, module lines 3002
 ## J1 · REPORT
 
 Found in other modules (record, 'Found in other modules'): (1) Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product) still carries taskEnqueue's old BAD_CAPTURE_SHA sentence ('a bundle does not exist yet'); regenerate at the layer close. (2) The whole test/m has 41 failures, all in filings (35), project-stage (5) and intent (1), and each also fails on the unchanged base (job/T21/capture @ 550ac7ca71); none is from this job.
+
+## J2 · COMPLETE
+
+B1 applied. N458: src/capture/index.mjs taskEnqueue BAD_CAPTURE_SHA detail now reads 'a record does not exist yet at capture time'; it was the only text member read in my paths that named a bundle; R15's test asserts the sentence. N469: two notes re-pointed. converts.test.mjs's header said the old suites stay; three were deleted in T20 (K879), and it now says these tests alone prove them. schema.mjs cited the deleted hygiene census for the purge-exempt tables; no test of mine proved R56/R66's exemption, so I added 'R56 R66: the doorbell's two keys and the inbox are exempt from purge' (figures.test.mjs, with a negative control), and the note names it. Tests: test/m/capture 95/0; whole test/m: no new red (41 pre-existing failures in filings, project-stage and intent, all red on the base too). Checks: format, architecture, coverage (48/48), ownership: 0 failures. Deferred: none. Record: build/jobs/T21/capture.md.
