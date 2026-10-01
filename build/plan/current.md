@@ -1,6 +1,6 @@
 # Plan: tranche T20
 
-**Status** · OPEN · BOB #84 · session_01RvNBNTyRvjKMwdJsTxUX2E · depth 1
+**Status** · OPEN · BOB #85 · session_01YQtb9XDsYeg4ihVV7VEGfP · depth 1
 
 **Jobs** · signatures: SIGNATURES #3 session_01ML4Fo3S55aQzLtgsN7sP6F; pdf-worker: PDF-WORKER #4 session_01517coXM6VXW6mGeq6J943P; ocr-worker: OCR-WORKER #4 session_011c8rK8CoDV7XQj17vpk2hx; bundler: BUNDLER #3 session_01Bn7W4BUTLpR4VJ7vgYfCWR; record-grammar: RECORD-GRAMMAR #3 session_01Dr61eQgdPoB6sfPdCc6qXC; text-chain: TEXT-CHAIN #5 session_01DmBUmF4hco6t1MeYZwfZeR; office-readers: OFFICE-READERS #4 session_01T9LFGqSu4UfTE1DhyznDUz
 
