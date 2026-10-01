@@ -23,7 +23,9 @@
 - `node --test bio-plane/test/m/conformance/`: 48 pass, 0 fail (47/1 at the start: K680's red).
 - Users: consequences 24/0, actions 47/0, escalation 29/0, affordances 106/0, filings 31/4 and control-plane 79/1 (both unchanged from the base); action-plans has no tests yet.
 - DEC-49 guard, real tree: no conformance failure.
-- `checks/format.mjs`: 0 failures; `architecture.mjs conformance`: 0 failures; `coverage.mjs conformance`: 22 of 22 live ids named, 0 failures; `ownership.mjs conformance tranche/T18`: see the line below.
+- `checks/format.mjs`: 0 failures; `architecture.mjs conformance`: 0 failures; `coverage.mjs conformance`: 22 of 22 live ids named, 0 failures; `ownership.mjs conformance tranche/T18`: 5 files changed, 0 failures.
+
+Size (session_01Api7vqXVAc7EyWoQRiM9r9): test runs 9, module lines 1478
 
 ## J1 · QUESTION
 
