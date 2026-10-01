@@ -59,7 +59,7 @@ Terms. **Affected** is `{kind, description, role?}`, `kind` one of `class`, `fun
   - an id in an assessment's `rests_on` or an addressed record's `evidence` the viewer may not see leaves its list;
   - an R8 cause about a withheld operand or the withheld causation is left out.
 
-  No id, title, state, placeholder or count: never a null in its place. The part states `out_of_view: true`, which says only that something was withheld. The computed value and grade, and every other fact the part records, stand. A viewer who may see everything is answered as before, with no `out_of_view` key. *(not yet met: T20 layer 9)*
+  No id, title, state, placeholder or count: never a null in its place. The part states `out_of_view: true`, which says only that something was withheld. The computed value and grade, and every other fact the part records, stand. A viewer who may see everything is answered as before, with no `out_of_view` key.
 
 ### Satisfies
 

@@ -65279,7 +65279,7 @@ function actionBasisFindings(fm, findings) {
       findings.push(f10(
         "C-2.10",
         "error",
-        `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical bundle id`,
+        `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical record id`,
         REPAIRS
       ));
     } else if (OBJECT_TYPES[target.split("-")[0]] === "action") {
@@ -65764,7 +65764,7 @@ function respondsToEdgeFindings(fm, findings) {
         "error",
         `references[${i}] is a responds_to edge whose target '${String(r.target).slice(0, 40)}' is not an ACTION: this edge says "this is what came back when we asked", so it points at the ask`,
         [
-          "point the edge at the ACTN- bundle whose correspondence this answers",
+          "point the edge at the ACTN- record whose correspondence this answers",
           "or use relates_to, which claims nothing about an exchange"
         ]
       ));
@@ -66394,6 +66394,23 @@ var ACTION_CATALOGUE_CHECKS = {
     check: "C-117.18",
     where: "src/actions/index.mjs actionPressure > is-pressure-entry",
     translation: "The entry is named by its position in the action's correspondence, counted from zero, and no entry stands at the position given. Nothing was written."
+  },
+  /* R52 (K899 (7), DEC-61; N-A19): a litigation hold stated on a `legal` pressure mark, in place or released, with a
+     reason. Minted by `actions`' `actionHold` (its regions `is-hold` and `is-hold-legal-mark`). */
+  MACHINE_CANNOT_SET_HOLD: {
+    check: "C-117.20",
+    where: "src/actions/index.mjs actionHold > is-hold",
+    translation: "Saying whether a litigation hold is in place is a member's judgement, and somebody answers for it. The credential that asked here is an automated one, so it cannot say. Sign in to record it yourself."
+  },
+  HOLD_REFUSED: {
+    check: "C-117.21",
+    where: "src/actions/index.mjs actionHold > is-hold",
+    translation: "A litigation hold is recorded as in place or released, with a reason of up to 500 characters and no quotation mark, backslash or line break. This one was not, so nothing was written."
+  },
+  HOLD_NO_LEGAL_MARK: {
+    check: "C-117.22",
+    where: "src/actions/index.mjs actionHold > is-hold-legal-mark",
+    translation: "A litigation hold is recorded on something the group received and marked as legal pressure. The entry named carries no such mark, so nothing was written."
   }
 };
 
@@ -102782,7 +102799,6 @@ var CAUSE_NOT_ESTABLISHED = "cause not established";
 var RECOMMENDATION_KEYS = Object.freeze(["recommendation", "policy"]);
 var FACTS_SAY = "These are facts the record holds, as the two sides of the question state them: what one side says the standard requires, and what the other says was done. They are the record's, not an outcome: whether the act complied is a member's determination.";
 var OUTCOMES_DIFFER_SAYS = "The outcomes differ from one standard to another. Each is the member's, given per standard, and none is composed into one verdict.";
-var UNSEEN = "an object you may not see";
 var DATE_RE5 = /^\d{4}-\d{2}-\d{2}$/;
 var str11 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj12 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -103080,14 +103096,54 @@ var Conformance = class _Conformance {
       }
     };
   }
-  #actView(r) {
+  /* The act as recorded; with `seen` (R24), an evidence content id the viewer may not see leaves the list. */
+  #actView(r, seen = null) {
+    const evidence = safeJson18(r.act_evidence, []);
     return {
       id: r.act_id,
       description: r.act_description,
       actor: { role: r.act_role, body: r.act_body },
       at: r.act_at ?? null,
       period: r.act_at ? null : { from: r.act_from, to: r.act_to },
-      evidence: safeJson18(r.act_evidence, [])
+      evidence: seen ? seen.contents(evidence) : evidence
+    };
+  }
+  /* R24 (K903 (4), DEC-36): one read's sight. Each filter keeps what `viewer` may see and leaves the rest out whole (no
+     id, no placeholder, no count), noting that something was withheld; the read then states `out_of_view: true`, and
+     nothing more. An id or content id the record does not hold (a proposal's free words) is authored, and stands. */
+  #sight(viewer) {
+    const self = this;
+    return {
+      withheld: false,
+      sees(id) {
+        if (self.membership.inSight(id, viewer)) return true;
+        let info = null;
+        try {
+          info = self.record.bundleInfo(id);
+        } catch {
+          info = null;
+        }
+        if (!info) return true;
+        this.withheld = true;
+        return false;
+      },
+      seesContent(cid) {
+        let row2 = null;
+        try {
+          row2 = self.content.contentRow(cid);
+        } catch {
+          row2 = null;
+        }
+        if (!row2 || self.membership.inSight(row2.bundle_id, viewer)) return true;
+        this.withheld = true;
+        return false;
+      },
+      contents(list2) {
+        return (Array.isArray(list2) ? list2 : []).filter((cid) => this.seesContent(cid));
+      },
+      mark(answer) {
+        return this.withheld ? { ...answer, out_of_view: true } : answer;
+      }
     };
   }
   /* The dates a standard is read at (R3): the act's date, or each end of its period. */
@@ -103541,35 +103597,37 @@ var Conformance = class _Conformance {
    *    {ok, id, project, act: {id, description, actor: {role, body}, at, period, evidence}, outcomes: [{standard,
    *     outcome}], standards: [{standard, outcome, in_force, in_force_why, rows: [{requires, did, reading, content}],
    *     disagreement}], findings: [{finding, case, edition, version_sha, role, frozen, live}], questions: [{question,
-   *     inquiry, opened}], author, at, supersedes, reason, superseded_by, live, proposal,
-   *     basis_changed: null | {causes: [{kind, subject, source, since, detail, affects?}], says},
-   *     cause: null | {statement, evidence: [content id | null]}, cause_says: null | "cause not established",
-   *     outcomes_differ, outcomes_differ_says: null | sentence}
-   *  `at` or `period` is null as the act states; a standard or finding the viewer may not see is null beside `says`, and
-   *  a cause's evidence the viewer may not see is null (R22, N345). `outcomes_differ` is true when the per-standard
-   *  outcomes are not all the same (DEC-84 item 3): a statement, with no duty. */
+   *     inquiry?, opened}], author, at, supersedes, reason, superseded_by, live, proposal,
+   *     basis_changed: null | {causes: [{kind, subject, source, since, detail?, affects?}], says},
+   *     cause: null | {statement, evidence: [content id]}, cause_says: null | "cause not established",
+   *     outcomes_differ, outcomes_differ_says: null | sentence, out_of_view?: true}
+   *  `at` or `period` is null as the act states. R24 (DEC-36): what the viewer may not see is withheld whole: a pinned
+   *  finding, a standard with its outcome, rows and disagreement, a question's `inquiry` key, an evidence content id of
+   *  the act, a row or the cause, and a cause of the flag whose subject is one; `out_of_view: true` says only that
+   *  something was. What is authored on the determination stands: `outcomes_differ` is over every standard (DEC-84 item
+   *  3: a statement, with no duty), and `basis_changed` stands while any cause is left. */
   determinationRead({ id = null, viewer = null } = {}) {
     const r = this.#seen(id, viewer);
     if (!r) return noSuchDetermination(str11(id));
     const did = r.determination_id;
+    const seen = this.#sight(viewer);
     const rows3 = this.#rows(
       `SELECT * FROM determination_rows WHERE determination_id=? ORDER BY ord LIMIT ?`,
       did,
       LIMITS.rows
     );
-    const seenStd = (sid) => this.membership.inSight(sid, viewer);
-    const standards = this.#rows(
+    const all = this.#rows(
       `SELECT * FROM determination_standards WHERE determination_id=? ORDER BY ord LIMIT ?`,
       did,
       LIMITS.standards
-    ).map((s) => {
+    );
+    const differ = new Set(all.map((s) => s.outcome)).size > 1;
+    const standards = all.filter((s) => seen.sees(s.standard_id)).map((s) => {
       const mine = rows3.filter((x) => x.standard_id === s.standard_id);
       const readings = mine.map((x) => x.reading);
       const disagreement = s.outcome === "noncompliant" && readings.length && readings.every((x) => x === "aligns") ? "every row reads aligns, and the member's outcome is noncompliant" : s.outcome === "compliant" && readings.includes("diverges") ? "a row reads diverges, and the member's outcome is compliant" : null;
-      const visible = seenStd(s.standard_id);
       return {
-        standard: visible ? s.standard_id : null,
-        ...visible ? {} : { says: UNSEEN },
+        standard: s.standard_id,
         outcome: s.outcome,
         in_force: s.in_force,
         in_force_why: s.in_force_why,
@@ -103577,7 +103635,7 @@ var Conformance = class _Conformance {
           requires: x.requires,
           did: x.did,
           reading: x.reading,
-          content: safeJson18(x.content, [])
+          content: seen.contents(safeJson18(x.content, []))
         })),
         disagreement
       };
@@ -103586,8 +103644,7 @@ var Conformance = class _Conformance {
       `SELECT * FROM determination_findings WHERE determination_id=? ORDER BY ord LIMIT ?`,
       did,
       LIMITS.findings
-    ).map((x) => {
-      if (!this.membership.inSight(x.finding_id, viewer)) return { finding: null, says: UNSEEN };
+    ).filter((x) => seen.sees(x.finding_id)).map((x) => {
       let live = null;
       try {
         live = this.strength.inquiryStrength({ id: x.finding_id, viewer });
@@ -103619,27 +103676,22 @@ var Conformance = class _Conformance {
       LIMITS.questions
     ).map((x) => ({
       question: x.question,
-      inquiry: this.membership.inSight(x.inquiry_id, viewer) ? x.inquiry_id : null,
+      ...x.inquiry_id && !seen.sees(x.inquiry_id) ? {} : { inquiry: x.inquiry_id },
       opened: x.opened === 1
     }));
     const by = this.#one(`SELECT * FROM determination_supersessions WHERE superseded=?`, did);
     const flag = this.#flag(r, viewer);
+    if (flag.withheld) seen.withheld = true;
     const cz = this.#one(`SELECT statement, evidence FROM determination_causes WHERE determination_id=?`, did);
-    const cause = cz ? { statement: cz.statement, evidence: safeJson18(cz.evidence, []).slice(0, LIMITS.evidence).map((cid) => {
-      let row2 = null;
-      try {
-        row2 = this.content.contentRow(cid);
-      } catch {
-        row2 = null;
-      }
-      return row2 && this.membership.inSight(row2.bundle_id, viewer) ? cid : null;
-    }) } : null;
-    const differ = new Set(standards.map((s) => s.outcome)).size > 1;
-    return {
+    const cause = cz ? {
+      statement: cz.statement,
+      evidence: seen.contents(safeJson18(cz.evidence, []).slice(0, LIMITS.evidence))
+    } : null;
+    return seen.mark({
       ok: true,
       id: did,
       project: r.project_id,
-      act: this.#actView(r),
+      act: this.#actView(r, seen),
       outcomes: standards.map((s) => ({ standard: s.standard, outcome: s.outcome })),
       standards,
       findings,
@@ -103656,19 +103708,23 @@ var Conformance = class _Conformance {
       cause_says: cause ? null : CAUSE_NOT_ESTABLISHED,
       outcomes_differ: differ,
       outcomes_differ_says: differ ? OUTCOMES_DIFFER_SAYS : null
-    };
+    });
   }
   /* R10: every cause standing on the determination: what reevaluation told (its R8, recorded as it came), and what the
      record answers now (a finding reopened or superseded since, or published in a later edition of its case; a
-     standard superseded; a newer capture of a text or evidence passage that does not carry it, or may not). Each once. */
+     standard superseded; a newer capture of a text or evidence passage that does not carry it, or may not). Each once.
+     R24: a cause whose subject `viewer` may not see (a finding, a standard, a passage) is left out whole, its detail with
+     it, as is every cause of a standard whose read is refused; a superseding standard the viewer may not see takes the
+     cause's `detail` with it. `withheld` says something was left out. Answers `{causes, withheld}`. */
   #flag(r, viewer) {
     const causes = [], keys = /* @__PURE__ */ new Set();
+    const seen = this.#sight(viewer);
+    const visible = (c) => c.kind === "passage" ? seen.seesContent(c.subject) : seen.sees(c.subject);
     const add = (c) => {
       const k = `${c.kind}|${c.subject}|${c.source}`;
-      if (!keys.has(k)) {
-        keys.add(k);
-        causes.push(c);
-      }
+      if (keys.has(k) || !visible(c)) return;
+      keys.add(k);
+      causes.push(c);
     };
     for (const x of this.#rows(`SELECT * FROM determination_flags WHERE determination_id=? ORDER BY at, kind, subject
                                 LIMIT 200`, r.determination_id))
@@ -103685,6 +103741,7 @@ var Conformance = class _Conformance {
       LIMITS.findings
     );
     for (const p of pins) {
+      if (!seen.sees(p.finding_id)) continue;
       let by = [];
       try {
         by = this.inquiry.supersededBy(p.finding_id) || [];
@@ -103730,26 +103787,32 @@ var Conformance = class _Conformance {
     const passages = new Set(safeJson18(r.act_evidence, []));
     for (const s of this.#rows(`SELECT standard_id FROM determination_standards WHERE determination_id=? ORDER BY ord
                                 LIMIT ?`, r.determination_id, LIMITS.standards)) {
+      if (!seen.sees(s.standard_id)) continue;
       let read2 = null;
       try {
         read2 = this.standards.standardRead({ id: s.standard_id, viewer });
       } catch {
         read2 = null;
       }
-      if (!read2 || read2.ok === false) continue;
-      if (str11(read2.superseded_by))
+      if (!read2 || read2.ok === false) {
+        seen.withheld = true;
+        continue;
+      }
+      const next = str11(read2.superseded_by);
+      if (next)
         add({
           kind: "standard",
           subject: s.standard_id,
           source: "superseded",
           since: null,
-          detail: `${s.standard_id} is superseded by ${read2.superseded_by}`
+          ...this.membership.inSight(next, viewer) ? { detail: `${s.standard_id} is superseded by ${next}` } : (seen.withheld = true, {})
         });
       for (const t of (Array.isArray(read2.text) ? read2.text : []).slice(0, LIMITS.evidence))
         if (typeof t === "string") passages.add(t);
         else if (isObj12(t) && str11(t.content_id ?? t.id)) passages.add(str11(t.content_id ?? t.id));
     }
     for (const cid of [...passages].slice(0, 2 * LIMITS.evidence)) {
+      if (!seen.seesContent(cid)) continue;
       let n = null;
       try {
         n = this.content.passageNotice({ contentId: cid, viewer });
@@ -103766,7 +103829,7 @@ var Conformance = class _Conformance {
           detail: n.affects === "affected" ? "a newer capture of its document does not carry this passage" : "a newer capture of its document may not carry this passage"
         });
     }
-    return { causes };
+    return { causes, withheld: seen.withheld };
   }
   /** R11: the determinations the filters admit, in id order, at most 200 a page (a lower `limit` honoured), `truncated`
    *  measured by reading one past; only those in projects the viewer sees in full (R15). */
@@ -103823,29 +103886,27 @@ var Conformance = class _Conformance {
     const truncated3 = page.length > cap;
     const items = page.slice(0, cap).map((r) => {
       const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, r.determination_id);
-      return {
+      const seen = this.#sight(viewer);
+      return seen.mark({
         id: r.determination_id,
         project: r.project_id,
-        act: this.#actView(r),
+        act: this.#actView(r, seen),
         outcomes: this.#rows(`SELECT standard_id, outcome FROM determination_standards WHERE determination_id=?
-                                     ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.standards).map((s) => ({
-          standard: this.membership.inSight(s.standard_id, viewer) ? s.standard_id : null,
-          outcome: s.outcome
-        })),
+                                     ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.standards).filter((s) => seen.sees(s.standard_id)).map((s) => ({ standard: s.standard_id, outcome: s.outcome })),
         findings: this.#rows(`SELECT finding_id, case_id, edition, version_sha, role FROM determination_findings
-                                     WHERE determination_id=? ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.findings).map((f17) => this.membership.inSight(f17.finding_id, viewer) ? {
+                                     WHERE determination_id=? ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.findings).filter((f17) => seen.sees(f17.finding_id)).map((f17) => ({
           finding: f17.finding_id,
           case: f17.case_id,
           edition: Number(f17.edition),
           version_sha: f17.version_sha,
           role: f17.role
-        } : { finding: null, says: UNSEEN }),
+        })),
         author: r.author,
         at: r.at,
         supersedes: r.supersedes ?? null,
         superseded_by: by ? by.superseded_by : null,
         live: !by
-      };
+      });
     });
     return { ok: true, items, limit: cap, truncated: truncated3, cursor: truncated3 ? items[items.length - 1].id : null };
   }
@@ -103936,26 +103997,40 @@ var Conformance = class _Conformance {
     if (!r || this.membership.sight(r.project_id, viewer) !== Membership.SIGHT_FULL) return refuseNoSuchComparison(id);
     return { ok: true, proposal: this.#proposalView(r, viewer) };
   }
+  /* R12, R24: a proposal as `viewer` may see it. A standard the viewer may not see leaves `standards`, its rows with it;
+     an evidence content id of the act or a row, and a question's `inquiry`, the same; a `contradiction` the viewer may
+     not see is left out (not null) and the proposal states `out_of_view: true`. One naming none keeps `contradiction:
+     null`. */
   #proposalView(r, viewer) {
     const label = proposalLabel(r.proposer ?? null, "comparison");
     const uses = this.#rows(`SELECT determination_id, at FROM comparison_proposal_uses WHERE proposal_id=?
                              ORDER BY determination_id LIMIT ?`, r.proposal_id, DETERMINATIONS_PAGE_MAX);
     const from = this.#one(`SELECT inquiry_id FROM comparison_proposal_contradictions WHERE proposal_id=?`, r.proposal_id);
-    return {
+    const seen = this.#sight(viewer);
+    const act = safeJson18(r.act, null);
+    const hidden = new Set(safeJson18(r.standards, []).filter((s) => !seen.sees(s)));
+    const rows3 = safeJson18(r.rows, []).filter((x) => !isObj12(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => isObj12(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x);
+    const questions = safeJson18(r.questions, []).map((x) => {
+      if (!isObj12(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
+      const { inquiry: _i, ...rest } = x;
+      return rest;
+    });
+    const link = from ? seen.sees(from.inquiry_id) ? { contradiction: from.inquiry_id } : {} : { contradiction: null };
+    return seen.mark({
       id: r.proposal_id,
       project: r.project_id,
-      act: safeJson18(r.act, null),
-      standards: safeJson18(r.standards, []).map((s) => this.membership.inSight(s, viewer) ? s : null),
-      rows: safeJson18(r.rows, []),
-      questions: safeJson18(r.questions, []),
+      act: isObj12(act) ? { ...act, evidence: seen.contents(act.evidence) } : act,
+      standards: safeJson18(r.standards, []).filter((s) => !hidden.has(s)),
+      rows: rows3,
+      questions,
       proposer: r.proposer ?? null,
       label,
       machine_work: label.machine_work,
       at: r.at,
       says: PROPOSAL_SAYS,
       drawn_on_by: uses.map((u) => ({ determination: u.determination_id, at: u.at })),
-      contradiction: from && this.membership.inSight(from.inquiry_id, viewer) ? from.inquiry_id : null
-    };
+      ...link
+    });
   }
   /** R21 (N345; DEC-76 item 3, DEC-84 item 10): the rows a comparison may start from, as facts: `requires` from the
    *  side of the contradiction inquiry's candidate named `standardSide` (`a` or `b`, the member's, never defaulted) and
@@ -104437,6 +104512,22 @@ CREATE TABLE IF NOT EXISTS action_pressure (
   at          TEXT NOT NULL,
   PRIMARY KEY (bundle_id, ord)
 );
+
+-- R52 (K899 (7), DEC-61): A LITIGATION HOLD stated on a received entry marked
+-- pressure of kind legal: in_place (the group is preserving what the matter may
+-- reach) or released, with the member's reason. Each statement is appended and
+-- never rewritten; the latest for an entry (its highest seq) is its hold. It is
+-- the group's recorded statement and suspends nothing.
+CREATE TABLE IF NOT EXISTS action_holds (
+  bundle_id   TEXT NOT NULL,    -- the action
+  ord         INTEGER NOT NULL, -- the received entry carrying the legal mark
+  seq         INTEGER NOT NULL, -- the statement's place among that entry's, from 1
+  hold        TEXT NOT NULL,    -- in_place | released
+  reason      TEXT NOT NULL,
+  stated_by   TEXT NOT NULL,    -- the member who stated it
+  at          TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, ord, seq)
+);
 `;
 var ACTIONS_TABLES = Object.freeze([
   "action_basis",
@@ -104445,7 +104536,8 @@ var ACTIONS_TABLES = Object.freeze([
   "action_law_proposals",
   "action_risk_proposals",
   "action_overrides",
-  "action_pressure"
+  "action_pressure",
+  "action_holds"
 ]);
 function migrateActions(sql) {
   const bare2 = ACTIONS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -104463,6 +104555,8 @@ var ACTION_LEGS_MAX = 500;
 var ACTION_LEDGER_MAX = 500;
 var PLAN_ID_RE = /^PLN-\d{4}-\d{4}(-[a-z0-9]+)*$/;
 var PRESSURE_KINDS = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
+var HOLD_STATES = Object.freeze(["in_place", "released"]);
+var HOLDS_DUE_MAX = 500;
 var RISK_PROPOSAL_BASIS_MAX = 500;
 var LAWS_ACT = Symbol("d149-laws-act");
 var RISK_TIER_ACT = Symbol("rec214-risk-tier-act");
@@ -105377,7 +105471,7 @@ var Actions = class _Actions {
         reason: "NO_RESOLUTION",
         target,
         legal: RESOLUTIONS,
-        detail: `an action that is resolved says HOW it resolved: one of ${RESOLUTIONS.join(", ")}. C-2.10 requires it in the resolved state, so a move without one would produce a bundle the catalog rejects.`
+        detail: `an action that is resolved says HOW it resolved: one of ${RESOLUTIONS.join(", ")}. C-2.10 requires it in the resolved state, so a move without one would produce a record the catalog rejects.`
       };
     if (to !== "resolved" && res)
       return {
@@ -105896,6 +105990,40 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       at23
     );
     return { ok: true, target, ord: n, pressure: { kind: mark.kind, note: mark.note }, by: who2, at: at23, weight: "single" };
+  }
+  /** R52 (K899 (7), DEC-61; N-A19): a member states the litigation hold on a received entry marked pressure of kind
+   *  `legal`: `in_place` or `released`, with a reason. Each statement is appended to this module's own table and never
+   *  rewritten; the latest for an entry is its hold. It is the group's recorded statement and suspends nothing. */
+  actionHold({ target, ord = null, hold = null, reason = null, viewer = null, author = null } = {}) {
+    const who2 = String(author ?? "").trim();
+    const h = typeof hold === "string" ? hold.trim() : "";
+    const why = typeof reason === "string" ? reason.trim() : "";
+    const machine3 = !who2 || isMachineIdentity(who2) ? refuse3("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.") : null;
+    const shape = !HOLD_STATES.includes(h) || !why || why.length > NOTE_MAX4 || /["\\\r\n]/.test(why) ? refuse3("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX4} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX4 }) : null;
+    if (machine3) return machine3;
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (shape) return { ...shape, target };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
+    const mark = Number.isInteger(n) ? this.#one(`SELECT kind FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) : null;
+    if (!mark || mark.kind !== "legal")
+      return refuse3("HOLD_NO_LEGAL_MARK", "a litigation hold is stated on a received entry marked as legal pressure; the entry named carries no such mark. Nothing was written.", { target, ord: ord ?? null });
+    const at23 = stampInstant("second", this.#nowMs(null));
+    const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_holds WHERE bundle_id=? AND ord=?`, target, n).n;
+    this.sql.exec(
+      `INSERT INTO action_holds (bundle_id, ord, seq, hold, reason, stated_by, at) VALUES (?,?,?,?,?,?,?)`,
+      target,
+      n,
+      seq,
+      h,
+      why,
+      who2,
+      at23
+    );
+    return { ok: true, target, ord: n, hold: h, reason: why, by: who2, at: at23 };
   }
   /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R3, R5–R11, R45, R46 and action-grammar R3 and R6 at the act): the plane
    *  mints the action's id and writes it into the document; the refusals are the promotion's. Answers `{ok, id}`. */
@@ -106767,12 +106895,73 @@ Changes: responds_to edge added to ${actionId}.
       option: fm.option === void 0 || fm.option === null ? null : fm.option,
       /* R8: the premise override, with who stated it and when. */
       premise_override: this.#overrideRead(row2.bundle_id, fm),
-      /* R48: the received entries marked as pressure, apart from the ledger. */
+      /* R48: the received entries marked as pressure, apart from the ledger; R52: a `legal` mark with its holds. */
       pressure: this.#rows(
         `SELECT ord, kind, note, marked_by, at FROM action_pressure WHERE bundle_id=? ORDER BY ord`,
         row2.bundle_id
-      ).map((r) => ({ ord: r.ord, kind: r.kind, note: r.note, by: r.marked_by, at: r.at }))
+      ).map((r) => ({
+        ord: r.ord,
+        kind: r.kind,
+        note: r.note,
+        by: r.marked_by,
+        at: r.at,
+        ...r.kind === "legal" ? this.#holdsOf(row2.bundle_id, r.ord) : {}
+      }))
     };
+  }
+  /* R52: an entry's hold statements, oldest first, and its current hold (the latest; null while none is stated). */
+  #holdsOf(id, ord) {
+    const holds = this.#rows(`SELECT seq, hold, reason, stated_by, at FROM action_holds WHERE bundle_id=? AND ord=?
+      ORDER BY seq`, id, ord).map((h) => ({ seq: h.seq, hold: h.hold, reason: h.reason, by: h.stated_by, at: h.at }));
+    return { holds, hold: holds.length ? holds[holds.length - 1].hold : null };
+  }
+  /** R54 (K899 (7); for `queue-producers` R19): every `legal` pressure mark on a visible action on which no hold is
+   *  stated, whatever the action's state (a legal matter outlives the action), at most 500 per page in (action id,
+   *  position) order. `cursor` is the last mark answered, `<action>#<position>`, when `truncated`, else null; `after`
+   *  is a previous page's cursor or an action id, read as after all that action's marks. Writes nothing. */
+  holdsDue({ after = null, limit = null, viewer = null } = {}) {
+    const max = clampLimit(limit, HOLDS_DUE_MAX, HOLDS_DUE_MAX);
+    const gate = viewerPredicate(viewer);
+    const from = after === null || after === void 0 || after === "" ? null : String(after);
+    const at23 = from ? /^(.+)#(\d+)$/.exec(from) : null;
+    const seek = at23 ? { sql: "AND (p.bundle_id > ? OR (p.bundle_id = ? AND p.ord > ?))", args: [at23[1], at23[1], Number(at23[2])] } : from ? { sql: "AND p.bundle_id > ?", args: [from] } : { sql: "", args: [] };
+    const rows3 = this.#rows(`SELECT p.bundle_id, p.ord, p.note, p.marked_by, p.at FROM action_pressure p
+      JOIN bundles b ON b.bundle_id = p.bundle_id
+      WHERE p.kind='legal' AND b.object_type='action' AND (${gate.sql}) ${seek.sql}
+        AND NOT EXISTS (SELECT 1 FROM action_holds h WHERE h.bundle_id = p.bundle_id AND h.ord = p.ord)
+      ORDER BY p.bundle_id, p.ord LIMIT ?`, ...gate.args, ...seek.args, max + 1);
+    const truncated3 = rows3.length > max;
+    const projects = /* @__PURE__ */ new Map();
+    const items = rows3.slice(0, max).map((r) => {
+      if (!projects.has(r.bundle_id)) projects.set(r.bundle_id, this.#projectOf(this.#heldFm(r.bundle_id), viewer));
+      return {
+        action: r.bundle_id,
+        ord: r.ord,
+        note: r.note,
+        marked_by: r.marked_by,
+        marked_at: r.at,
+        project: projects.get(r.bundle_id)
+      };
+    });
+    const tail = items[items.length - 1];
+    return { ok: true, items, limit: max, truncated: truncated3, cursor: truncated3 && tail ? `${tail.action}#${tail.ord}` : null };
+  }
+  /* R54: the action's project, as `action-clocks` answers it: the project of the first determination among its
+     `rests_on` legs the viewer may read (conformance's `determinationRead`), null when it rests on none. */
+  #projectOf(fm, viewer) {
+    const conf = this.conformance;
+    if (!conf || typeof conf.determinationRead !== "function") return null;
+    for (const l of Array.isArray(fm && fm.action_basis) ? fm.action_basis : []) {
+      if (!l || typeof l !== "object" || l.kind !== "rests_on" || typeof l.target !== "string") continue;
+      let d = null;
+      try {
+        d = conf.determinationRead({ id: l.target, viewer });
+      } catch {
+        d = null;
+      }
+      if (d && d.ok !== false && typeof d.project === "string" && d.project) return d.project;
+    }
+    return null;
   }
   /* R8: the override as the document states it, stamped with who and when from this module's table; null when the
      document states none. */
@@ -106984,6 +107173,7 @@ for (const m of [
   "actionQuotes",
   "actionRiskPropose",
   "actionPressure",
+  "actionHold",
   "actionCreate",
   "check"
 ]) {
@@ -107105,6 +107295,15 @@ function actionsOps(a, url, body) {
       target: q7("target") || b.target,
       ord: q7("ord") ?? b.ord ?? null,
       pressure: b.pressure ?? (q7("pressure_kind") !== null || q7("pressure_note") !== null ? { kind: q7("pressure_kind") ?? "", note: q7("pressure_note") ?? "" } : null),
+      viewer: q7("viewer"),
+      author: q7("author")
+    }),
+    /* R52: a litigation hold on a `legal` pressure mark (declared to the door by op-declarations, K902). */
+    actionhold: () => a.actionHold({
+      target: q7("target") || b.target,
+      ord: q7("ord") ?? b.ord ?? null,
+      hold: q7("hold") ?? b.hold ?? null,
+      reason: q7("reason") ?? b.reason ?? null,
       viewer: q7("viewer"),
       author: q7("author")
     }),
@@ -107993,6 +108192,7 @@ var UNDETERMINED_WHY = Object.freeze({
   not_assessed: "nobody has assessed it",
   not_computable: "the record holds the figures, and the computation named cannot be carried out over them"
 });
+var NO_UNIT = "no measure is stated, so the computation has no unit";
 var RATIONALE_MAX = 2e3;
 var REASON_MAX3 = 500;
 var PERSON_KINDS = /* @__PURE__ */ new Set([
@@ -108530,7 +108730,7 @@ var Consequences = class {
     const stored = operands.map(({ decimals, ...o }) => o);
     const docOps = stored.map((o) => ({ content: o.content, figure: o.figure }));
     if (!lacking && !measure)
-      lacking = { code: "not_assessed", why: "no measure is stated, so the computation has no unit" };
+      lacking = { code: "not_assessed", why: NO_UNIT };
     let result = null;
     if (!lacking) {
       result = compute(op, operands);
@@ -108581,8 +108781,19 @@ var Consequences = class {
   /* ===================================================================== *
    * THE ANSWER FOR ONE PART (R2–R5, R7, R8, R12)
    * ===================================================================== */
+  /* R15 (K903 (4), DEC-36): what the part's answer holds is withheld whole where the viewer may not see it, as strength
+     R6 withholds a member: an operand whose content lies in a bundle the viewer may not see leaves the operands, a
+     causation inquiry the viewer may not see is not named (its state stands, its `inquiry`, `why` and `strength` keys
+     go), an id of `rests_on` or of an addressed record's `evidence` the viewer may not see leaves its list, and R8's
+     causes about either go with it. No id, title, state, placeholder or count is left in their place: a sentence the
+     part recorded that names an operand by its place is renumbered among the operands answered, and one about an
+     operand withheld, or one that counts or orders the operands, keeps only its first clause. `out_of_view: true`
+     says only that something was withheld; a viewer who may see everything is answered as before, with no such key.
+     An id that names nothing is answered as one the viewer may not see (R13's one answer). The computed value and
+     grade, and every other fact the part records, stand. */
   #answer(r, viewer) {
     const who2 = viewer ?? INTERNAL2;
+    let withheld = false;
     const out = {
       id: r.bundle_id,
       determination: r.determination,
@@ -108598,11 +108809,16 @@ var Consequences = class {
       reason: r.reason,
       superseded_by: this.#successor(r.bundle_id)
     };
+    const place = /* @__PURE__ */ new Map();
     if (r.state === "computed" || r.op) {
-      const ops = this.#operands(r.bundle_id).map((o) => {
+      const ops = this.#operands(r.bundle_id).flatMap((o) => {
         const row2 = this.content.contentRow(o.content_id);
-        const seen2 = row2 && this.membership.inSight(row2.bundle_id, who2);
-        return seen2 ? {
+        if (!row2 || !this.membership.inSight(row2.bundle_id, who2)) {
+          withheld = true;
+          return [];
+        }
+        place.set(o.ord, place.size);
+        return [{
           content: o.content_id,
           figure: o.figure,
           number: o.number,
@@ -108610,72 +108826,88 @@ var Consequences = class {
           grade: o.grade,
           route: o.route,
           determined: !!o.determined
-        } : { content: null, says: "an object you may not see" };
+        }];
       });
       out.computation = { op: r.op, operands: ops };
     }
     if (r.state === "computed") {
-      out.grade = { grade: r.grade, determined: r.grade !== null, why: r.grade_why };
+      out.grade = { grade: r.grade, determined: r.grade !== null, why: gradeWhyFor(r, place) };
       out.label = r.machine ? { machine_work: true, says: `machine work: computed by ${r.author || "a machine"} from the operands shown` } : { machine_work: false, says: `computed from the operands shown; recorded by ${r.author}` };
     } else if (r.state === "assessed") {
+      const recorded = parse(r.rests_on) || [];
+      const rests = recorded.filter((x) => this.#resolvesEvidence(x, who2));
+      if (rests.length < recorded.length) withheld = true;
       out.assessment = {
         by: r.author,
         at: r.at,
         rationale: r.rationale,
-        rests_on: parse(r.rests_on) || [],
-        says: (parse(r.rests_on) || []).length ? "a member's assessment, resting on the ids listed" : "a member's assessment, resting on nothing in the record (stated as none)"
+        rests_on: rests,
+        says: rests.length ? "a member's assessment, resting on the ids listed" : "a member's assessment, resting on nothing in the record (stated as none)"
       };
       out.label = { machine_work: false, says: "a member's assessment: never presented, summed or graded as computed" };
     } else {
       out.undetermined = {
         code: r.undetermined_code,
-        why: r.undetermined_why,
+        why: undeterminedWhyFor(r, place, withheld),
         says: "undetermined: not known, and never read as zero"
       };
     }
-    out.causation = { state: r.causation_state, inquiry: r.causation, why: r.causation_why };
-    const seen = !r.causation || this.membership.inSight(r.causation, who2);
-    if (r.causation_state === "established" && r.causation) {
-      let s = null;
-      try {
-        s = seen ? this.strength.inquiryStrength({ id: r.causation, viewer: who2 }) : null;
-      } catch {
-        s = null;
+    const causationSeen = !r.causation || this.membership.inSight(r.causation, who2);
+    if (!causationSeen) {
+      withheld = true;
+      out.causation = { state: r.causation_state };
+    } else {
+      out.causation = { state: r.causation_state, inquiry: r.causation, why: r.causation_why };
+      if (r.causation_state === "established" && r.causation) {
+        let s = null;
+        try {
+          s = this.strength.inquiryStrength({ id: r.causation, viewer: who2 });
+        } catch {
+          s = null;
+        }
+        out.causation.strength = s && s.ok ? {
+          capture: s.capture ?? null,
+          connection: s.connection ?? null,
+          testimony: s.testimony ?? null,
+          says: "per axis, never composed (DEC-44)"
+        } : { capture: null, connection: null, testimony: null, says: "the inquiry's strength could not be read for you" };
+        if (s && s.ok && s.out_of_view === true) withheld = true;
       }
-      out.causation.strength = s && s.ok ? {
-        capture: s.capture ?? null,
-        connection: s.connection ?? null,
-        testimony: s.testimony ?? null,
-        says: "per axis, never composed (DEC-44)"
-      } : { capture: null, connection: null, testimony: null, says: "the inquiry's strength could not be read for you" };
-    }
-    if (!seen) {
-      out.causation.inquiry = null;
-      out.causation.why = "an object you may not see";
     }
     const a = this.#addressedOf(r.bundle_id);
-    out.addressed = a ? { state: a.state, evidence: parse(a.evidence) || [], reason: a.reason, by: a.author, at: a.at } : { state: "never_assessed", says: "no member has recorded whether this consequence has been addressed" };
-    const changed = this.#basisChanged(r, who2);
+    if (a) {
+      const recorded = parse(a.evidence) || [];
+      const evidence = recorded.filter((x) => this.#resolvesEvidence(x, who2));
+      if (evidence.length < recorded.length) withheld = true;
+      out.addressed = { state: a.state, evidence, reason: a.reason, by: a.author, at: a.at };
+    } else {
+      out.addressed = { state: "never_assessed", says: "no member has recorded whether this consequence has been addressed" };
+    }
+    const changed = this.#basisChanged(r, who2, place, causationSeen);
     if (changed.length) out.basis_changed = changed;
+    if (withheld) out.out_of_view = true;
     return out;
   }
   /* R8: a notice, never a recomputation: an operand passage whose document has a newer capture that does not carry it,
-     or a causation inquiry reopened or superseded since the part was recorded. */
-  #basisChanged(r, who2) {
+     or a causation inquiry reopened or superseded since the part was recorded. R15: a withheld operand (no `place`)
+     or a withheld causation raises no cause, and an operand is named by its place among the operands answered. */
+  #basisChanged(r, who2, place, causationSeen) {
     const causes = [];
     if (r.op) {
       for (const o of this.#operands(r.bundle_id)) {
+        if (!place.has(o.ord)) continue;
         let n = null;
         try {
           n = this.content.passageNotice({ contentId: o.content_id, viewer: who2 });
         } catch {
           n = null;
         }
+        const at23 = place.get(o.ord);
         if (n && n.affects === "affected")
-          causes.push({ cause: "newer_capture", operand: o.ord, why: `a newer capture of operand ${o.ord}'s document does not carry its passage; nothing is recomputed until a member revises this part` });
+          causes.push({ cause: "newer_capture", operand: at23, why: `a newer capture of operand ${at23}'s document does not carry its passage; nothing is recomputed until a member revises this part` });
       }
     }
-    if (r.causation && r.causation_state !== "not_applicable") {
+    if (r.causation && causationSeen && r.causation_state !== "not_applicable") {
       const sup = this.#supersededBy(r.causation);
       if (sup.length) causes.push({ cause: "causation_superseded", why: "the causation inquiry has been superseded" });
       else if (r.causation_state === "established") {
@@ -108819,6 +109051,34 @@ var Consequences = class {
     return { ok: true, determination: d.id, state: "addressed", parts, why: "every live part is recorded addressed, with evidence" };
   }
 };
+function renumbered(text5, place) {
+  let gone = false;
+  const t = String(text5).replace(/\b(operand (?:is )?)(\d+)/g, (m, w, n) => {
+    if (!place.has(Number(n))) {
+      gone = true;
+      return m;
+    }
+    return `${w}${place.get(Number(n))}`;
+  });
+  return gone ? null : t;
+}
+function gradeWhyFor(r, place) {
+  if (r.grade_why == null) return r.grade_why;
+  const t = renumbered(r.grade_why, place);
+  if (t !== null) return t;
+  return r.grade === null ? "an operand's capture grade is undetermined, so the weakest link is not known" : `the weakest operand's capture grade is ${r.grade}; a computation is as strong as its weakest figure (DEC-21)`;
+}
+function undeterminedWhyFor(r, place, withheld) {
+  const head = UNDETERMINED_WHY[r.undetermined_code];
+  const why = r.undetermined_why;
+  if (!withheld || !head || typeof why !== "string" || !why.startsWith(`${head}: `)) return why;
+  const detail = why.slice(head.length + 2);
+  if (/^operand \d+/.test(detail)) {
+    const t = renumbered(detail, place);
+    return t === null ? head : `${head}: ${t}`;
+  }
+  return detail === NO_UNIT ? why : head;
+}
 function titleOf3(p) {
   return `${p.affected.kind}: ${p.affected.description}`.replace(/\s+/g, " ").slice(0, 110);
 }
@@ -108835,6 +109095,8 @@ function partDoc(id, p) {
     "prior_state: null",
     `created: ${q4(p.at)}`,
     `last_updated: ${q4(p.at)}`,
+    /* R13, promotion R53: the part belongs to its determination's project, so membership R43 fences the object too. */
+    ...p.project ? [`project: ${q4(p.project)}`] : [],
     `determination: ${q4(p.determination)}`,
     `standard: ${q4(p.standard)}`,
     `part_state: ${p.state}`,
@@ -110185,18 +110447,23 @@ var Filings = class _Filings {
     const m = this.membership;
     return !!str14(id) && !!m && typeof m.inSight === "function" && this.#call(() => m.inSight(id, viewer)) === true;
   }
-  /* A determination as conformance's read answers it (its R9), or null. */
+  /* A determination as conformance's read answers it (its R9), or null. R27 (DEC-36): what conformance withholds from
+     `viewer` (its R24: left out, `out_of_view: true`) is carried as `withheld`, and nothing stands in for it; an item
+     answered without an id (a placeholder) is read the same way, left out. */
   #det(id, viewer) {
     if (!str14(id) || !this.conformance || typeof this.conformance.determinationRead !== "function") return null;
     const d = this.#call(() => this.conformance.determinationRead({ id: str14(id), viewer }));
     if (!d || d.ok === false) return null;
+    const named = (key) => (Array.isArray(d[key]) ? d[key] : []).map((x) => isObj14(x) ? { ...x, id: str14(key === "findings" ? x.finding : x.standard) || str14(x.id) } : null);
+    const findings = named("findings"), standards = named("standards");
+    const seen = (x) => !!(x && x.id);
     return {
       id: str14(d.id) || str14(id),
       project: str14(d.project),
       act: isObj14(d.act) ? d.act : {},
-      /* K252: conformance names a finding `finding` and a standard `standard`; each is read here under `id`. */
-      findings: (Array.isArray(d.findings) ? d.findings : []).map((f17) => isObj14(f17) ? { ...f17, id: str14(f17.finding) || str14(f17.id) } : f17),
-      standards: (Array.isArray(d.standards) ? d.standards : []).map((x) => isObj14(x) ? { ...x, id: str14(x.standard) || str14(x.id) } : x),
+      findings: findings.filter(seen),
+      standards: standards.filter(seen),
+      withheld: d.out_of_view === true || !findings.every(seen) || !standards.every(seen),
       live: d.live !== false && !str14(d.superseded_by),
       superseded_by: str14(d.superseded_by),
       basis_changed: isObj14(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null
@@ -110277,21 +110544,21 @@ var Filings = class _Filings {
       out.act = str14(act.description) ? { value: str14(act.description), source: det.id } : none("the determination states no act");
       const period = isObj14(act.period) ? act.period : null;
       out.act_date = str14(act.at) ? { value: str14(act.at), source: det.id } : period && (str14(period.from) || str14(period.to)) ? { value: `${str14(period.from) || "undetermined"} to ${str14(period.to) || "undetermined"}`, source: det.id } : none("the determination states no date for the act, so it is undetermined");
+      const cut3 = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
       const cites = [], srcs = [];
       let withheld = false;
       for (const s of det.standards) {
-        const sid = str14(isObj14(s) ? s.id : s);
-        const r = sid ? this.#standard(sid, viewer) : null;
+        const r = this.#standard(s.id, viewer);
         if (!r || !str14(r.cite)) {
           withheld = true;
           continue;
         }
         cites.push(str14(r.cite));
-        srcs.push(sid);
+        srcs.push(s.id);
       }
-      out.standards = withheld ? none("a standard the determination names is not one you may see") : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
-      const fs = det.findings.filter((f17) => isObj14(f17) && str14(f17.id));
-      out.findings = fs.length !== det.findings.length ? none("a finding the determination rests on is not one you may see") : fs.length ? {
+      out.standards = withheld ? none("a standard the determination names is not one you may see") : det.withheld ? none(cut3) : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
+      const fs = det.findings;
+      out.findings = det.withheld ? none(cut3) : fs.length ? {
         value: fs.map((f17) => `${f17.id} (case ${f17.case ?? "undetermined"}, edition ${f17.edition ?? "undetermined"})`).join("; "),
         source: fs.map((f17) => `${f17.id}@${f17.case ?? "?"}/${f17.edition ?? "?"}`).join(", ")
       } : none("the determination names no finding");
@@ -110447,7 +110714,7 @@ ${text5}`;
       source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue`
     } : { state: "undetermined", why: "the profile gives this kind no venue" };
     const standard = this.#venueStandard(v, a.kind);
-    const facts = det ? det.findings.map((f17) => this.#fact(f17, det)) : [];
+    const facts = det ? det.findings.map((f17) => this.#fact(f17)) : [];
     const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard);
     const basis = this.#basisOf(a, det, gov);
     const tpl = { from: source.from, source: source.source, ...source.template ? { template: source.template, name: source.name } : {} };
@@ -110787,10 +111054,9 @@ ${body}` : body;
     };
   }
   /* ---------------------------------------------------------------- R8–R12: the counsel packet */
-  /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. */
-  #fact(f17, det) {
-    if (!isObj14(f17) || !str14(f17.id))
-      return { finding: null, withheld: "an object you may not see", source: det.id };
+  /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. Only
+     a finding `#det` kept is asked (R27: one withheld is no item). */
+  #fact(f17) {
     const source = `${f17.id}@${f17.case ?? "?"}/${f17.edition ?? "?"}`;
     const text5 = f17.version_sha ? this.#call(() => this.record.textAtSha(f17.id, f17.version_sha)) : null;
     const base = { finding: f17.id, case: f17.case ?? null, edition: f17.edition ?? null, version_sha: f17.version_sha ?? null, source };
@@ -110983,7 +111249,7 @@ ${body}` : body;
   #assemble(a, det, viewer, marking) {
     const v = this.#view();
     const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
-    const facts = det ? det.findings.map((f17) => this.#fact(f17, det)) : [];
+    const facts = det ? det.findings.map((f17) => this.#fact(f17)) : [];
     const events = [], undated = [];
     const act = det ? det.act || {} : {};
     const actDay = realDate(act.at) || (isObj14(act.period) ? realDate(act.period.from) : null);
@@ -110995,7 +111261,6 @@ ${body}` : body;
         ...isObj14(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
       });
     for (const f17 of facts) {
-      if (!f17.finding) continue;
       const r = f17.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f17.case, Number(f17.edition)) : null;
       push(
         r ? realDate(String(r.ratified_at).slice(0, 10)) : null,
@@ -111025,21 +111290,25 @@ ${body}` : body;
       });
     events.sort(byDayThenSource);
     const standard = this.#venueStandard(v, a.kind);
-    const standards = (det ? det.standards : []).map((s) => {
-      const sid = str14(isObj14(s) ? s.id : s);
-      const r = sid ? this.#standard(sid, viewer) : null;
-      if (!r) return { standard: null, withheld: "an object you may not see", source: det.id };
-      return {
-        standard: sid,
+    let refused = false;
+    const standards = (det ? det.standards : []).flatMap((s) => {
+      const r = this.#standard(s.id, viewer);
+      if (!r) {
+        refused = true;
+        return [];
+      }
+      return [{
+        standard: s.id,
         cite: r.cite ?? null,
         kind: r.kind ?? null,
         issuer: r.issuer ?? null,
         text: Array.isArray(r.text) ? r.text : [],
-        outcome: isObj14(s) ? s.outcome ?? null : null,
-        in_force: this.#inForce(sid, realDate(act.at)),
-        source: sid
-      };
+        outcome: s.outcome ?? null,
+        in_force: this.#inForce(s.id, realDate(act.at)),
+        source: s.id
+      }];
     });
+    const unseen = { out_of_view: true };
     const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t) => ({
       theory_id: t.theory_id,
       candidate: true,
@@ -111053,7 +111322,7 @@ ${body}` : body;
     }));
     const cons = det && this.consequences && typeof this.consequences.consequencesOf === "function" ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
     return {
-      facts: section("Facts", facts, det ? {} : { says: "no determination is held: the action rests on a premise a member overrode, so no finding is set out as a fact" }),
+      facts: section("Facts", facts, det ? det.withheld ? unseen : {} : { says: "no determination is held: the action rests on a premise a member overrode, so no finding is set out as a fact" }),
       chronology: section(
         "Chronology",
         events.map(({ day, ...e }) => ({ date: day, ...e })),
@@ -111063,7 +111332,7 @@ ${body}` : body;
         venue_standard: standard,
         says: standard.state === "stated" ? "each exhibit's capture grade and co-attestation, beside the venue's standard; an exhibit below it, or at a grade the profile marks contestable, is flagged, and nothing is refused for its grade" : "each exhibit's capture grade and co-attestation, shown alone: the venue's standard is undetermined"
       }),
-      standards: section("Standards", standards, det ? {} : { says: "no determination is held, so no standard is set out" }),
+      standards: section("Standards", standards, det ? det.withheld || refused ? unseen : {} : { says: "no determination is held, so no standard is set out" }),
       theories: section(
         "Candidate theories and remedies",
         theories,
@@ -111088,28 +111357,32 @@ ${body}` : body;
     return {
       determination: det.id,
       project: det.project,
-      findings: det.findings.filter((f17) => isObj14(f17) && str14(f17.id)).map((f17) => ({ id: f17.id, case: f17.case ?? null, edition: f17.edition ?? null })),
-      standards: det.standards.map((s) => str14(isObj14(s) ? s.id : s)).filter(Boolean),
+      findings: det.findings.map((f17) => ({ id: f17.id, case: f17.case ?? null, edition: f17.edition ?? null })),
+      standards: det.standards.map((s) => s.id),
       ...over
     };
   }
   /** R12: each cause a version's basis changed since it was assembled, read now; nothing in the version changes. Asked
-   *  only for a version `viewer` may see (R11, R13), so the determination's causes are in a project it sees; a
-   *  superseding standard it may not see is not named. */
+   *  only for a version `viewer` may see (R11, R13). R27 (DEC-36): whether the determination was superseded is read as
+   *  the plane reads it, so a superseded one is named, and its successor only when `viewer` may read it; its flag's
+   *  causes are the ones conformance answers `viewer` (its R24), never read as the machine; a superseding standard
+   *  `viewer` may not see is left out of its cause, which states `out_of_view: true`. */
   #basisChanged(basis, viewer) {
     const causes = [];
     const d = basis.determination ? this.#det(basis.determination, MACHINE_READER) : null;
     if (!basis.determination) {
-    } else if (!d || !d.live) causes.push({
-      cause: "determination_superseded",
-      determination: basis.determination,
-      ...d && d.superseded_by ? { by: d.superseded_by } : {}
-    });
-    else if (d.basis_changed) causes.push({
-      cause: "determination_flagged",
-      determination: basis.determination,
-      causes: d.basis_changed.causes ?? []
-    });
+    } else if (!d || !d.live) {
+      const by = d && d.superseded_by;
+      causes.push({
+        cause: "determination_superseded",
+        determination: basis.determination,
+        ...!by ? {} : this.#det(by, viewer) ? { by } : { out_of_view: true }
+      });
+    } else {
+      const seen = this.#det(basis.determination, viewer);
+      if (seen && seen.basis_changed)
+        causes.push({ cause: "determination_flagged", determination: basis.determination, causes: seen.basis_changed.causes ?? [] });
+    }
     for (const f17 of basis.findings || []) {
       const e = this.#call(() => this.publication.publishedEditionsOf({ finding: f17.id, project: basis.project || null }));
       const later = e && e.ok ? e.items.filter((i) => i.case === f17.case && Number(i.edition) > Number(f17.edition)) : [];
@@ -111123,12 +111396,8 @@ ${body}` : body;
     }
     for (const s of basis.standards || []) {
       const r = this.#standard(s, MACHINE_READER);
-      if (r && str14(r.superseded_by))
-        causes.push({
-          cause: "standard_superseded",
-          standard: s,
-          ...this.#inSight(str14(r.superseded_by), viewer) ? { by: str14(r.superseded_by) } : { by: null, why: "an object you may not see" }
-        });
+      const by = r && str14(r.superseded_by);
+      if (by) causes.push({ cause: "standard_superseded", standard: s, ...this.#inSight(by, viewer) ? { by } : { out_of_view: true } });
     }
     return causes;
   }
@@ -111621,10 +111890,12 @@ ${inbandBlock(quartet)}`, inband: quartet };
             says: match ? "an office of the active profile" : "not an office the active profile lists; the kinds are the profile's all the same"
           },
           ...tier3 ? { tier3: {
-            standards: d.standards.filter((s) => isObj14(s) && s.outcome === "noncompliant").map((s) => s.id),
-            factual_basis: d.findings.filter((f17) => isObj14(f17) && str14(f17.id)).map((f17) => ({ finding: f17.id, case: f17.case ?? null, edition: f17.edition ?? null })),
+            standards: d.standards.filter((s) => s.outcome === "noncompliant").map((s) => s.id),
+            factual_basis: d.findings.map((f17) => ({ finding: f17.id, case: f17.case ?? null, edition: f17.edition ?? null })),
             counsel: COUNSEL_SENTENCE
-          } } : {}
+          } } : {},
+          /* R27 (DEC-36): what conformance withheld from the viewer is left out; this states only that it was. */
+          ...d.withheld ? { out_of_view: true } : {}
         };
       }),
       says: !v.view ? `${v.why}, so no kind is listed` : dets.length ? "the kinds a group may pursue against these offices, from the jurisdiction profile; a Tier 3 kind requires competent counsel, and no template or legal strategy is part of this block" : "no live determination rests on this case's findings, so no action is listed against an office"
@@ -111658,7 +111929,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
           const d = this.#det(id, MACHINE_READER);
           if (!d || !d.live) continue;
           if (owner && d.project && d.project !== owner.project_id) continue;
-          if (!d.findings.some((x) => isObj14(x) && x.case === caseId)) continue;
+          if (!d.findings.some((x) => x.case === caseId)) continue;
           seen.set(id, d);
         }
       }
@@ -112189,6 +112460,17 @@ var Escalation = class {
     const r = this.actions.actionRead({ id: action, viewer });
     return r && r.ok !== false ? ledgerOf(r) : null;
   }
+  /* R26 (K903 (4), DEC-36): each attached action as `actions` answers it to this viewer, read once per attachment and
+     shared by the triggers and the actions; null where `actionRead` refuses it, which withholds it whole. */
+  #sight(attached, viewer) {
+    const seen = /* @__PURE__ */ new Map();
+    for (const a of attached) {
+      if (seen.has(a.action)) continue;
+      const r = this.actions.actionRead({ id: a.action, viewer });
+      seen.set(a.action, r && r.ok !== false ? r : null);
+    }
+    return seen;
+  }
   /* ===================================================================== *
    * THE TRIGGERS (R2, R4–R12): each edge out of the current stage, met or not, from the record at `nowMs`.
    * An edge with alternatives is first met at its earliest alternative met; an alternative's instant is the latest
@@ -112199,9 +112481,11 @@ var Escalation = class {
     if (!ok2.length) return null;
     return ok2.reduce((m, a) => a.ms < m.ms ? a : m);
   }
-  #triggers(e, nowMs, viewer) {
+  #triggers(e, nowMs, viewer, sight = null) {
     const edges = STAGE_TABLE[e.stage] || [];
-    const attached = this.#attachments(e.id);
+    const all = this.#attachments(e.id);
+    const seen = sight || this.#sight(all, viewer);
+    const attached = all.filter((a) => seen.get(a.action));
     const evaluations = this.#evaluations(e.id);
     const notes = [];
     const out = [];
@@ -112210,8 +112494,12 @@ var Escalation = class {
       out.push(m ? { from: e.stage, to, met: true, ids: m.ids, instant: iso2(m.ms), ...extra } : { from: e.stage, to, met: false, ids: [], missing, ...extra });
     };
     const stageActs = (s) => attached.filter((a) => a.stage === s);
+    const ledger = (action) => {
+      const r = seen.get(action);
+      return r ? ledgerOf(r) : null;
+    };
     const firstSent = (action) => {
-      const l = this.#ledger(action, viewer);
+      const l = ledger(action);
       if (!l) return null;
       const i = l.findIndex((x) => x.direction === "sent");
       return i === -1 ? null : { ledger: l, index: i, entry: l[i] };
@@ -112273,7 +112561,7 @@ var Escalation = class {
     } else if (e.stage === 6 || e.stage === 7) {
       const alts = [];
       for (const a of attached) {
-        const l = this.#ledger(a.action, viewer) || [];
+        const l = ledger(a.action) || [];
         for (const x of l) {
           if (x.direction !== "received") continue;
           if (latest && !(instantOrder(x.recorded_at, latest.at) > 0)) continue;
@@ -112351,12 +112639,12 @@ var Escalation = class {
   }
   /* The escalation's attached actions as the reader sees them, with stage 7's statements and R12's undetermined
      election or oversight. */
-  #actionsOf(e, viewer) {
+  #actionsOf(e, viewer, seen) {
     const view = this.#view();
-    return this.#attachments(e.id).map((a) => {
-      const visible = this.actions.actionRead({ id: a.action, viewer });
+    return this.#attachments(e.id).flatMap((a) => {
+      const visible = seen.get(a.action);
+      if (!visible) return [];
       const item = { action: a.action, stage: a.stage, attached_by: a.author, at: a.at };
-      if (!visible || visible.ok === false) return { ...item, action: null, says: "an object you may not see" };
       if (a.stage === 7) {
         item.purpose = a.purpose;
         item.standards = a.standards;
@@ -112370,7 +112658,7 @@ var Escalation = class {
         const f17 = this.filings.filingsFor({ action: a.action, viewer });
         item.filings = f17 && f17.ok !== false ? { drafts: f17.drafts ?? [], packets: f17.packets ?? [] } : null;
       }
-      return item;
+      return [item];
     });
   }
   /* R12: an action's counterparty office in the view, `{elected?, oversight?}`; undefined where the profile is silent. */
@@ -112387,14 +112675,47 @@ var Escalation = class {
   #history(id) {
     return logOf(this.#text(id));
   }
+  /** R26 (K903 (4), DEC-36): the read with every attached action the viewer may not see withheld whole, in the history
+   *  and the evaluations as in `actions` and `notes` (withheld at their source): its attachment entry leaves the
+   *  history, an id naming it or one of its ledger entries (`<id>`, `<id>#<ord>`) leaves an advance's trigger ids, and
+   *  a response naming it loses the key. With one withheld, no entry carries the log's `seq` (K913). The escalation's own acts stand. `out_of_view: true` says only that something
+   *  was withheld; with nothing withheld the answer is as before, with no such key. */
+  #withhold(answer, attached, seen) {
+    const hidden = new Set(attached.filter((a) => !seen.get(a.action)).map((a) => a.action));
+    if (!hidden.size) return answer;
+    const names = (x) => typeof x === "string" && (hidden.has(x) || hidden.has(x.replace(/#\d+$/, "")));
+    const response = (v) => {
+      if (!isObj15(v.response) || !hidden.has(v.response.action)) return v;
+      const { response: _, ...rest } = v;
+      return rest;
+    };
+    const unnumbered = (v) => {
+      const { seq: _, ...rest } = v;
+      return rest;
+    };
+    const history = answer.history.filter((h) => !(h.kind === "attach" && hidden.has(h.action))).map((h) => {
+      const x = unnumbered(response(h));
+      return isObj15(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.filter((i) => !names(i)) } } : x;
+    });
+    const proposed = answer.proposed.map((p) => ({ ...p, declines: p.declines.map(unnumbered) }));
+    return {
+      ...answer,
+      history,
+      evaluations: answer.evaluations.map((v) => unnumbered(response(v))),
+      proposed,
+      out_of_view: true
+    };
+  }
   /** R2: the escalation as the record stands at `nowMs`. */
   escalationRead({ id, nowMs, viewer } = {}) {
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     const at23 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
-    const { triggers, notes } = this.#triggers(e, at23, viewer);
+    const attached = this.#attachments(e.id);
+    const seen = this.#sight(attached, viewer);
+    const { triggers, notes } = this.#triggers(e, at23, viewer, seen);
     const proposed = this.#proposed(e, triggers, at23);
-    const answer = {
+    let answer = {
       ok: true,
       id: e.id,
       project: e.project,
@@ -112409,13 +112730,14 @@ var Escalation = class {
       as_of: iso2(at23),
       history: this.#history(e.id),
       standards: e.standards,
-      actions: this.#actionsOf(e, viewer),
+      actions: this.#actionsOf(e, viewer, seen),
       evaluations: this.#evaluations(e.id),
       triggers,
       notes,
       proposed,
       exit: this.#exit(e, viewer)
     };
+    answer = this.#withhold(answer, attached, seen);
     if (e.state === "suspended")
       answer.suspended = { since: e.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep running in the actions, and it is not ended" };
     if (e.state === "ended") answer.ended = { at: e.stateSince, says: "ended: compliance was restored and the consequences addressed" };
@@ -122067,6 +122389,7 @@ var PROPOSAL_SAYS5 = "this is a proposal, not an option: it is stored apart from
 var CHECK_SAYS = "a check informs; it never refuses or changes anything.";
 var DAY_MS5 = 864e5;
 var ACT2 = Symbol("action-plans act");
+var WITHHELD = Symbol("action-plans withheld");
 var GRADE_RANK3 = Object.freeze({ A: 0, B: 1, C: 2, D: 3 });
 var isMachine2 = (who2) => str16(who2) === "" || isMachineIdentity(str16(who2));
 var unjson2 = (s, d = null) => {
@@ -122248,6 +122571,8 @@ var ActionPlans = class {
     if (s.kind === "inquiry") return { support: "hypothetical", why: "a suspected matter: an inquiry still open, not a determination" };
     const d = this.#determination(s.determination, viewer);
     if (!d) return { support: "undetermined", why: "the determination does not answer to this reader" };
+    if (d.out_of_view === true)
+      return { support: "short", why: "a finding the determination rests on is not one you may see, so it is not shown to meet the project's bar" };
     const bar = this.strength.projectBar(project) || {};
     const axes = ["capture", "connection"].filter((a) => typeof bar[a] === "string" && bar[a] in GRADE_RANK3);
     if (!axes.length) return { support: "established", why: "determined; the project declares no bar, so nothing is measured against one" };
@@ -122263,18 +122588,52 @@ var ActionPlans = class {
     }
     return { support: "established", why: "determined; every finding it rests on meets the project's bar on each declared axis" };
   }
-  /** R8: a subject's liveness, derived when read. */
+  /** R8: a subject's liveness, derived when read; null for a subject the viewer may not see, which R35 withholds whole.
+   *  A successor the viewer may not see is left out, the key with it (R35); `withheld` says so. */
   #liveness(s, viewer) {
     if (s.kind === "inquiry") {
       const f17 = this.#inquiryFacts(s.inquiry, viewer);
-      if (!f17) return { state: "undetermined", says: "an object you may not see" };
+      if (!f17) return null;
       return CLOSED_INQUIRY_STATES.includes(f17.state) ? { state: "closed", inquiry_state: f17.state } : { state: "live" };
     }
     const d = this.#determination(s.determination, viewer);
-    if (!d) return { state: "undetermined", says: "an object you may not see" };
+    if (!d) return null;
     if (d.live === true) return { state: "live" };
-    const by = typeof d.superseded_by === "string" && this.#determination(d.superseded_by, viewer) ? d.superseded_by : null;
-    return { state: "superseded", successor: by };
+    if (typeof d.superseded_by !== "string") return { state: "superseded", successor: null };
+    if (!this.#determination(d.superseded_by, viewer)) return { state: "superseded", [WITHHELD]: true };
+    return { state: "superseded", successor: d.superseded_by };
+  }
+  /* R35: one read's sight of the objects a plan names, asked once each. `subject(s)` and `action(id)` answer whether the
+     viewer may see it; `field(f)` is an option's fields with every unseen subject withheld whole (its `subjects`, an
+     `enforces` naming one); `phases(ps)` drops a `when_subject` naming one; `withheld` is set whenever anything is. */
+  #sight(viewer) {
+    const memo = /* @__PURE__ */ new Map();
+    const ask2 = (k, f17) => {
+      if (!memo.has(k)) memo.set(k, !!f17());
+      return memo.get(k);
+    };
+    const v = {
+      withheld: false,
+      subject: (s) => {
+        const seen = !s || typeof s !== "object" ? true : ask2(`s:${subjectKey(s)}`, () => s.kind === "inquiry" ? this.#inquiryFacts(s.inquiry, viewer) : this.#determination(s.determination, viewer));
+        if (!seen) v.withheld = true;
+        return seen;
+      },
+      action: (id) => ask2(`a:${id}`, () => ok(this.actions.actionRead({ id, viewer }))),
+      subjects: (list2) => Array.isArray(list2) ? list2.filter((s) => v.subject(s)) : list2,
+      fields: (f17) => {
+        if (!isObj16(f17)) return f17;
+        const out = { ...f17, subjects: v.subjects(f17.subjects) };
+        if (out.enforces && out.enforces.subject && !v.subject(out.enforces.subject)) delete out.enforces;
+        return out;
+      },
+      phases: (ps) => Array.isArray(ps) ? ps.map((ph) => {
+        if (!isObj16(ph) || !isObj16(ph.starts) || !ph.starts.when_subject || v.subject(ph.starts.when_subject)) return ph;
+        const { when_subject, ...starts } = ph.starts;
+        return { ...ph, starts };
+      }) : ps
+    };
+    return v;
   }
   /* ===================================================================== *
    * THE SHARED REFUSALS OF AN ACT
@@ -122910,20 +123269,30 @@ var ActionPlans = class {
     return typeof id === "string" ? this.#one(`SELECT * FROM plan_option_proposals WHERE proposal_id=?`, id) : null;
   }
   /* R11, R32: a proposal as answered: labelled, with its why and sources; a machine's with its disclosure and the
-     project's work_kinds as they stood when its run opened; never a score. */
-  #proposalView(r) {
+     project's work_kinds as they stood when its run opened; never a score. Read through a plan (`see`, R35), a subject or
+     source the viewer may not see is withheld whole; the proposer's own answer is given as stored. */
+  #proposalView(r, see = null, viewer = null) {
     const machine3 = r.machine === 1;
     const kinds = machine3 ? this.#runRow(r.run) : null;
+    const fields = unjson2(r.fields_json, {});
+    let sources = machine3 ? unjson2(r.sources_json, []) : null;
+    if (see && Array.isArray(sources)) {
+      const kept = sources.filter((x) => this.#sourceSeen(x, viewer));
+      if (kept.length !== sources.length) {
+        see.withheld = true;
+        sources = kept;
+      }
+    }
     return {
       id: r.proposal_id,
       plan: r.plan_id,
-      ...unjson2(r.fields_json, {}),
+      ...see ? see.fields(fields) : fields,
       why: r.why,
       label: proposalLabel(r.proposer, "plan_option"),
       ...machine3 ? {
         run: r.run,
         skill_version: r.skill_version ?? null,
-        sources: unjson2(r.sources_json, []),
+        sources,
         disclosure: DISCLOSURE(r.run, r.skill_version),
         work_kinds: kinds && kinds.work_kinds_json !== null && kinds.work_kinds_json !== void 0 ? { state: "stated", kinds: unjson2(kinds.work_kinds_json, []) } : { state: "undetermined", says: "the project's work_kinds when this run opened were not recorded" }
       } : {},
@@ -123276,17 +123645,23 @@ var ActionPlans = class {
   /* ===================================================================== *
    * THE READS
    * ===================================================================== */
-  /** R6, R8, R19, R32, R34: the plan as the record stands at `nowMs`. */
+  /** R6, R8, R19, R32, R34: the plan as the record stands at `nowMs`; R35: what the viewer may not see withheld whole,
+   *  and `out_of_view: true` when anything was. */
   planRead({ id, nowMs, viewer } = {}) {
     const p = this.#plan(id, viewer);
     if (!p) return noSuchPlan(id);
     const now = Number.isFinite(nowMs) ? nowMs : this.#nowMs();
+    const see = this.#sight(viewer);
     const all = this.#subjectsOf(p.id, { all: true });
     const current = all.filter((s) => s.removedSeq === null);
     const inPlan = new Set(current.map((s) => s.key));
     const live = /* @__PURE__ */ new Map();
-    const subjects = current.map((s) => {
-      const lv = this.#liveness(s.subject, viewer);
+    const subjects = current.filter((s) => see.subject(s.subject)).map((s) => {
+      let lv = this.#liveness(s.subject, viewer);
+      if (lv[WITHHELD]) {
+        see.withheld = true;
+        lv = { state: lv.state };
+      }
       live.set(s.key, lv);
       const out = {
         subject: s.subject,
@@ -123303,13 +123678,17 @@ var ActionPlans = class {
       if (s.subject.kind === "outcome") out.escalation = this.#escalationOf(s.subject, viewer);
       return out;
     });
-    const options = this.#options(p.id).map((o) => this.#optionView(p, o, live, viewer));
-    const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer));
-    const proposals = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND machine=0 ORDER BY n`, p.id).map((r) => this.#proposalView(r));
+    const held = this.#options(p.id);
+    const options = held.map((o) => this.#optionView(p, o, live, viewer, see));
+    const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer, see));
+    const proposals = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND machine=0 ORDER BY n`, p.id).map((r) => this.#proposalView(r, see, viewer));
     const runs = this.#planRuns(p.id).map((run) => {
-      const page = this.#trayPage(p.id, run, 0);
+      const page = this.#trayPage(p.id, run, 0, see, viewer);
       return { run, proposals: page.proposals, next: page.next };
     });
+    const removed = all.filter((s) => s.removedSeq !== null && !inPlan.has(s.key) && see.subject(s.subject)).map((s) => ({ subject: s.subject, key: s.key }));
+    const checks = this.#checks(p, options, scenarios, live, now, viewer, new Map(held.map((o) => [o.id, o.fields])));
+    const history = this.#historyView(p.id, see);
     return {
       ok: true,
       id: p.id,
@@ -123322,14 +123701,38 @@ var ActionPlans = class {
       as_of: iso4(now),
       work_kinds: this.#workKinds(p.project),
       subjects,
-      removed_subjects: all.filter((s) => s.removedSeq !== null && !inPlan.has(s.key)).map((s) => ({ subject: s.subject, key: s.key })),
+      removed_subjects: removed,
       options,
       proposals,
       planning_runs: runs,
       scenarios,
-      checks: this.#checks(p, options, scenarios, live, now, viewer),
-      history: this.#history(p.id)
+      checks,
+      history,
+      ...see.withheld ? { out_of_view: true } : {}
     };
+  }
+  /* R6, R35: the plan's history as the viewer may read it. An act about a subject the viewer may not see leaves the
+     list; an unseen subject, action or track leaves the entry that names it. When an act is withheld, no entry carries
+     its `seq`, so the gap counts nothing. */
+  #historyView(planId2, see) {
+    let dropped = false;
+    const out = [];
+    for (const h of this.#history(planId2)) {
+      if ((h.kind === "subject_add" || h.kind === "subject_remove") && !see.subject(h.subject)) {
+        dropped = true;
+        continue;
+      }
+      const e = { ...h };
+      if (h.kind === "open" && Array.isArray(h.subjects)) e.subjects = h.subjects.filter((x) => see.subject(x && x.subject));
+      if (h.fields) e.fields = see.fields(h.fields);
+      if (h.phases) e.phases = see.phases(h.phases);
+      if (h.kind === "start" && typeof h.action === "string" && !see.action(h.action)) {
+        delete e.action;
+        see.withheld = true;
+      }
+      out.push(e);
+    }
+    return dropped ? out.map(({ seq, ...e }) => e) : out;
   }
   /** R21: the project's `work_kinds` as its document states them, or undetermined; it gates, filters and orders nothing. */
   #workKinds(project) {
@@ -123364,11 +123767,15 @@ var ActionPlans = class {
     const cur = items.filter((e) => e.state !== "ended").at(-1) || items.at(-1) || null;
     return cur ? { id: cur.id, state: cur.state, stage: cur.stage, stage_name: cur.stage_name ?? null } : null;
   }
-  #optionView(p, o, live, viewer) {
-    const f17 = o.fields;
+  /* R6, R8, R35: one option as the viewer may read it: a subject they may not see leaves its `subjects`,
+     `subjects_liveness` and `available`, and an action they may not see leaves the `action` key. Whether every matter it
+     serves is no longer live is said only when every one is seen. */
+  #optionView(p, o, live, viewer, see) {
+    const f17 = see.fields(o.fields);
+    const whole = (o.fields.subjects || []).length === (f17.subjects || []).length;
     const bound = (f17.subjects || []).map((s) => ({ key: subjectKey(s), liveness: live.get(subjectKey(s)) || { state: "subject_removed" } }));
-    const anyLive = bound.some((b) => b.liveness.state === "live");
-    const revisions = this.#rows(`SELECT * FROM plan_option_revisions WHERE plan_id=? AND option_id=? ORDER BY rev`, p.id, o.id).map((r) => ({ rev: r.rev, fields: unjson2(r.fields_json, {}), reason: r.reason ?? null, author: r.author, at: r.at }));
+    const anyLive = !whole || bound.some((b) => b.liveness.state === "live");
+    const revisions = this.#rows(`SELECT * FROM plan_option_revisions WHERE plan_id=? AND option_id=? ORDER BY rev`, p.id, o.id).map((r) => ({ rev: r.rev, fields: see.fields(unjson2(r.fields_json, {})), reason: r.reason ?? null, author: r.author, at: r.at }));
     const dispositions = this.#rows(`SELECT * FROM plan_history WHERE plan_id=? AND kind='dispose' ORDER BY seq`, p.id).map((h) => ({ ...unjson2(h.entry_json, {}), seq: h.seq })).filter((e) => (e.options || []).includes(o.id)).map((e) => ({ disposition: e.disposition, reason: e.reason ?? null, author: e.author, at: e.at }));
     const out = {
       id: o.id,
@@ -123386,7 +123793,8 @@ var ActionPlans = class {
     Object.assign(out, this.#origin(o.proposal ? this.#proposalRow(o.proposal) : null));
     if (o.action) {
       const a = this.actions.actionRead({ id: o.action, viewer });
-      out.action = ok(a) ? { id: o.action, state: a.current_state ?? null, started_by: o.startedBy, started_at: o.startedAt } : { id: null, says: "an object you may not see" };
+      if (ok(a)) out.action = { id: o.action, state: a.current_state ?? null, started_by: o.startedBy, started_at: o.startedAt };
+      else see.withheld = true;
     } else out.action = null;
     if (f17.category === "legal") {
       out.available = (f17.subjects || []).filter((s) => s.kind === "outcome").map((s) => {
@@ -123396,8 +123804,9 @@ var ActionPlans = class {
     }
     return out;
   }
-  #scenarioView(p, sc, viewer) {
+  #scenarioView(p, sc, viewer, see) {
     const { judged, times } = this.#timed(p, sc, viewer);
+    const shown2 = see.phases(sc.phases);
     return {
       scenario: sc.scenario,
       version: sc.version,
@@ -123405,7 +123814,7 @@ var ActionPlans = class {
       name: sc.name,
       set_by: sc.author,
       set_at: sc.at,
-      phases: sc.phases.map((ph) => {
+      phases: shown2.map((ph) => {
         const t = times.get(ph.id), j = judged.get(ph.id) || null;
         return {
           ...ph,
@@ -123425,7 +123834,9 @@ var ActionPlans = class {
     };
   }
   /** R19: the checks, each with its reason; derived on read, they refuse and change nothing. */
-  #checks(p, options, scenarios, live, now, viewer) {
+  /* `held` maps an option to its fields as recorded: whether an option rests only on suspected matters is the plan's own
+     fact, asked of every subject it serves, seen or not (R35 withholds the subject, not what the plan says of it). */
+  #checks(p, options, scenarios, live, now, viewer, held) {
     const out = [];
     const today = dayOf(now);
     const outward = (o) => !!o.addressee;
@@ -123437,9 +123848,9 @@ var ActionPlans = class {
           if (d.date < today) out.push({ check: "date_past", option: o.id, date: d.date, says: `${o.id}'s regulated date ${d.date} has passed (${d.basis})` });
       }
       const states = (o.subjects_liveness || []).map((b) => b.liveness.state);
-      if (states.length && !states.includes("live"))
+      if (states.length && !states.includes("live") && o.says)
         out.push({ check: "subjects_not_live", option: o.id, says: `every matter ${o.id} serves is no longer live` });
-      const hypothetical = (o.subjects || []).every((s) => s.kind === "inquiry");
+      const hypothetical = ((held.get(o.id) || o).subjects || []).every((s) => s.kind === "inquiry");
       if (outward(o) && hypothetical)
         out.push({ check: "outward_on_hypothesis", option: o.id, says: `${o.id} addresses someone outside the group and rests only on suspected matters: nothing it serves is determined yet` });
       if (o.lobbying && o.enforces) {
@@ -123496,6 +123907,9 @@ var ActionPlans = class {
   plansFor({ project = null, subject = null, state = null, after = null, limit = null, viewer } = {}) {
     const cap = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Math.min(Number(limit), PLANS_PAGE_MAX) : PLANS_PAGE_MAX;
     const s = subject === null || subject === void 0 || subject === "" ? null : typeof subject === "string" ? subject : normSubject(subject) ? subjectKey(normSubject(subject)) : "\0";
+    const see = this.#sight(viewer);
+    const asked = s === null ? null : subjectOfKey(s);
+    if (asked && !see.subject(asked)) return { ok: true, items: [], truncated: false, cursor: null, limit: cap };
     const where = [], args = [];
     if (project) {
       where.push("p.project_id=?");
@@ -123522,6 +123936,8 @@ var ActionPlans = class {
           truncated3 = true;
           break;
         }
+        const held = this.#subjectsOf(r.plan_id).map((x) => x.subject);
+        const shown2 = see.subjects(held);
         items.push({
           id: r.plan_id,
           project: r.project_id,
@@ -123529,7 +123945,8 @@ var ActionPlans = class {
           state: r.state,
           opened_by: r.opened_by,
           opened_at: r.opened_at,
-          subjects: this.#subjectsOf(r.plan_id).map((x) => x.subject)
+          subjects: shown2,
+          ...shown2.length !== held.length ? { out_of_view: true } : {}
         });
       }
       if (truncated3 || rows3.length <= cap) break;
@@ -123571,7 +123988,7 @@ var ActionPlans = class {
       if (!runs.some((x) => x.run === r.run)) runs.push({ run: r.run, at: r.at });
     return runs.sort((a, b) => instantOrder(a.at, b.at) || (a.run < b.run ? -1 : 1)).map((r) => r.run);
   }
-  #trayPage(planId2, run, from) {
+  #trayPage(planId2, run, from, see, viewer) {
     const rows3 = this.#rows(
       `SELECT * FROM plan_option_proposals WHERE plan_id=? AND run=? AND run_ord > ? ORDER BY run_ord LIMIT ?`,
       planId2,
@@ -123581,7 +123998,7 @@ var ActionPlans = class {
     );
     const page = rows3.slice(0, TRAY_PAGE);
     return {
-      proposals: page.map((r) => this.#proposalView(r)),
+      proposals: page.map((r) => this.#proposalView(r, see, viewer)),
       next: rows3.length > TRAY_PAGE ? `${run}#${page.at(-1).run_ord}` : null
     };
   }
@@ -123603,14 +124020,16 @@ var ActionPlans = class {
       from = n;
     }
     if (!r) return { ok: true, plan: p.id, run: null, proposals: [], next: null };
-    const page = this.#trayPage(p.id, r, from);
+    const see = this.#sight(viewer);
+    const page = this.#trayPage(p.id, r, from, see, viewer);
     return {
       ok: true,
       plan: p.id,
       run: r,
       proposals: page.proposals,
       next: page.next,
-      says: "the assistant's proposals in its own order, strongest first; no score is recorded or answered"
+      says: "the assistant's proposals in its own order, strongest first; no score is recorded or answered",
+      ...see.withheld ? { out_of_view: true } : {}
     };
   }
   /** R30 (fills ai-runs R47): a planning run is opened over an open plan of its project, by a member who has joined it. */
@@ -123642,6 +124061,11 @@ var ActionPlans = class {
     }
   }
 };
+function subjectOfKey(k) {
+  const m = /^inquiry:(.+)$/.exec(k) || /^outcome:([^#]+)#(.+)$/.exec(k);
+  if (!m) return null;
+  return k.startsWith("inquiry:") ? normSubject({ kind: "inquiry", inquiry: m[1] }) : normSubject({ kind: "outcome", determination: m[1], standard: m[2] });
+}
 function actionDocument({ fields, kind, plan, option, contact, breach, override, at: at23 }) {
   const legs = [...new Set((fields.subjects || []).map((s) => s.kind === "inquiry" ? s.inquiry : s.determination))];
   const a = fields.addressee;

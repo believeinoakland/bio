@@ -100,7 +100,7 @@ Terms. A **subject** is `{kind: "inquiry", inquiry, act?, standards?}` (suspecte
   - a superseded subject's successor (R8 names it only when seen; else no `successor` key);
   - a started option's action (no `action` key).
 
-  No id, state, placeholder or count. The plan states `out_of_view: true`. A determined subject's support is `short` when conformance withheld a finding it rests on (its R24's `out_of_view`), never computed over the visible findings alone. *(not yet met: T20 layer 9)*
+  No id, state, placeholder or count. The plan states `out_of_view: true`. A determined subject's support is `short` when conformance withheld a finding it rests on (its R24's `out_of_view`), never computed over the visible findings alone.
 
 ### Satisfies
 

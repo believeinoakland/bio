@@ -83,7 +83,7 @@ Terms. The **governing tier** of an action is the stricter (higher) of its kind'
   - a superseded standard whose successor the reader may not see is named superseded without `by`, and the cause states `out_of_view: true`;
   - a flagged determination's causes are those conformance answers the reader, never read as the machine.
 
-  R3's blank whose source conformance withheld stays `[UNFILLED: <name>]` with why "… is not one you may see", read from conformance's `out_of_view`, naming nothing of it. Versions already assembled keep their bytes (R12). *(not yet met: T20 layer 9)*
+  R3's blank whose source conformance withheld stays `[UNFILLED: <name>]` with why "… is not one you may see", read from conformance's `out_of_view`, naming nothing of it. Versions already assembled keep their bytes (R12).
 
 ### Satisfies
 
