@@ -51,7 +51,7 @@ Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary acc
 ## Layer 2
 
 - **record-core** · **amended** as the refresh: `op=stats`, `registerStatsSource`, purge's call **done in T18** (K650); kept the rest as drafted; `registerGrammar` reads `EXTENSION_ARMS` from record-grammar; **N422** (record-core share): `registerGrammar`'s answer (`index.mjs`:970) classified for the DEC-49 guard. Catalogue imports: `index.mjs`, `test/m/record-core/record-core.test.mjs`.
-- **membership** · **amended** as the refresh (seam, the split's deletion, families, N70 bounds, converts; `MODULE_ORDER` if the fold did not). Catalogue imports: `index.mjs` and 11 module tests.
+- **membership** · **amended** as the refresh (seam, the split's deletion, families, N70 bounds, converts; `MODULE_ORDER` if the fold did not). Catalogue imports: `index.mjs` and 11 module tests. **Rule 8, as the L2 fold found it:** `MODULE_ORDER` (R83) gains `site-profiles` (before docprofile) and `credentials` (after membership), the two ids `modules.json` holds that it lacks; inquiry-grammar, action-grammar and plane are not yet in `modules.json` (their folds come before L6, L9, L11).
 - **credentials** (new) · **kept.**
 - **promotion** · **amended.** As drafted, plus:
   - **N425:** `bundles.criticality` derived from the document's own front matter as well as the envelope, named by a test (R39 worded before L2; matches ratification R22, K692).
