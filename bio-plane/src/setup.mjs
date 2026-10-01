@@ -16,11 +16,14 @@
  * when the page is served — see `setupPage` below.
  */
 
-import { STATES, HEADINGS, deriveInquiryTitle } from "../checks/bio-checks.mjs";
+/* R24: the record's document vocabulary and the inquiry title rule are record-grammar's (its R30, R32, R35), read
+   there and never copied. */
+import { STATES, HEADINGS } from "./record-grammar/document.mjs";
+import { deriveInquiryTitle } from "./record-grammar/titles.mjs";
 /* The CivicOS agent's one composer is acquisition's (its R24), read there and never copied. */
 import { civicosUserAgent } from "./acquisition/index.mjs";
-/* R32 (N65 (3)): the risk tiers and their reader are actions', read there and never copied (actions R40). */
-import { RISK_TIERS, riskTierState } from "./actions/checks.mjs";
+/* R32 (N65 (3)): the risk tiers and their reader are action-grammar's, read there and never copied (its R1). */
+import { RISK_TIERS, riskTierState } from "./action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS, list as heldProfiles, get as heldProfile, combine as combineProfiles }
   from "../../jurisdictions/index.mjs";
 import { recordOf, stampInstant } from "./record-core/index.mjs";
@@ -34,8 +37,8 @@ import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS } from "./setup-fleet.mjs";
 
-/* The intake form obeys the check catalog's own tables rather than a copy of
-   them. Injected at module load, so a catalog change moves the UI with it and
+/* The intake form obeys the record grammar's own tables (record-grammar R32, R35) rather than a copy of
+   them. Injected at module load, so a grammar change moves the UI with it and
    drift is impossible rather than merely discouraged. The previous version
    carried a hand-written table that stamped `forming` on Problems and Actions,
    which is legal for neither, and the plane's own gate was too thin to notice
@@ -45,7 +48,7 @@ const FIRST_STATE_JSON = JSON.stringify(
 const HEADINGS_JSON = JSON.stringify(HEADINGS);
 /* D-483: the tier vocabulary, injected the way FIRST_STATE and HEADINGS are and for the same reason —
    the words a member is offered are the PLANE's words, read from the one map op=affordances publishes as
-   vocabularies.risk_tiers (affordances.mjs holds RISK_TIERS itself, not a copy of it), so a catalogue
+   vocabularies.risk_tiers (both read action-grammar's RISK_TIERS, never a copy of it), so a vocabulary
    change moves this control with it and a surface inventing a label is impossible rather than discouraged.
    riskTierState travels with the map because the page must not decide for itself WHICH keys a member may
    author: the settable tiers are exactly the values the plane reads back as themselves. */
@@ -885,7 +888,7 @@ function ratifyWhy(r){
    here can claim to be someone else. */
 const NL = String.fromCharCode(10);
 const PREFIX = { information:"INFO", inquiry:"INQ", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
-/* From the check catalog, not from memory. */
+/* From the record grammar's tables (record-grammar R32, R35), not from memory. */
 const FIRST_STATE = ${FIRST_STATE_JSON};
 const HEADINGS = ${HEADINGS_JSON};
 /* information@1 for typed intake, deliberately. The @2 contract makes the
@@ -1059,7 +1062,7 @@ function acquireWhy(a){
 /* ---- create ---- */
 /* C-16: a Question has ONE authored field, the question itself. No Title
    control and no second gating field: the title is DERIVED from the question
-   (the rule lives in the check catalog and is embedded verbatim below, so
+   (the rule is record-grammar's, R30, and is embedded verbatim below, so
    this page and the store's projection cannot drift), and a gate that
    pressures a member into writing what they do not know is a bug in the
    gate. */
@@ -2223,7 +2226,8 @@ export class InstanceSetup {
   }
 
   /** R12, R16: the active profiles, each with its name and what it covers, the conflicts `jurisdictions.combine`
-   *  reports over them, and the held profiles an administrator may choose among (R15), from the namespace addressed. */
+   *  reports over them, the facts of their combined view `agent-worker` reads (`view`, N420), and the held profiles an
+   *  administrator may choose among (R15), from the namespace addressed. */
   profiles() {
     const core = this.#record();
     const set = core.getSetting("jurisdiction_profiles");
@@ -2235,7 +2239,7 @@ export class InstanceSetup {
     });
     const combined = ids.length ? combineProfiles(ids) : { ok: true, conflicts: [] };
     const out = { ok: true, profiles: active, conflicts: combined.ok ? combined.conflicts : [],
-                  ...(combined.ok ? {} : { errors: combined.errors }), choices };
+                  ...(combined.ok ? {} : { errors: combined.errors }), view: profileView(combined), choices };
     if (!ids.length) {
       out.detail = "no active profile: this copy reads no local facts, which is valid, and every fact that needs one "
         + "is answered as undetermined until an administrator chooses";
@@ -2384,6 +2388,24 @@ export class InstanceSetup {
                         + "completed step's elapsed time and below what its next step would have cost."
                         : "No run has been cut off yet, so the ceiling is above everything tried.") };
   }
+}
+
+/* R12 (N420): the three facts of the active profiles' combined view that `agent-worker` R51 reads: `deadlines` and
+   `legal_organisations` as `jurisdictions.combine` gives them (its R29, R34), and `venues`, each `{kind, venue}` of a
+   combined `action_kinds` entry that gives one (its R25, R29). A fact no active profile states, or that `combine`
+   withholds (a conflict) or cannot give (its errors), is ABSENT, never an empty list: the reader then reads it
+   undetermined, which is what it is. Nothing here chooses between profiles or supplies a default. */
+function profileView(combined) {
+  const view = {};
+  const v = combined && combined.ok === true && combined.view && typeof combined.view === "object" ? combined.view : null;
+  if (!v) return view;
+  for (const fact of ["deadlines", "legal_organisations"])
+    if (Array.isArray(v[fact]) && v[fact].length) view[fact] = v[fact];
+  const venues = (Array.isArray(v.action_kinds) ? v.action_kinds : [])
+    .filter((k) => k && typeof k.kind === "string" && k.venue && typeof k.venue === "object")
+    .map((k) => ({ kind: k.kind, venue: k.venue }));
+  if (venues.length) view.venues = venues;
+  return view;
 }
 
 const INSTANCES = new WeakMap();

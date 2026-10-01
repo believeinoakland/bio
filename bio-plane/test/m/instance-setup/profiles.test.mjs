@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { list as heldProfiles, combine } from "../../../../jurisdictions/index.mjs";
-import { boot, pageOver } from "./fixture.mjs";
+import { boot, pageOver, stubOver, doAnswer } from "./fixture.mjs";
 import { INSTANCE_SETUP_CHECKS, SETUP_HTML, NO_GROUP_RECORDED, RUNTIME_ASYMMETRY } from "../../../src/setup.mjs";
 
 const REAL = heldProfiles().filter((p) => p.test !== true);
@@ -36,6 +36,66 @@ test("R12 profiles(): the record-core setting's ids in order, each with its name
   const gone = w.m.profiles();
   assert.deepEqual(gone.profiles, [{ id: "gone-profile", name: null, covers: null, held: false }]);
   assert.ok(Array.isArray(gone.errors) && gone.errors.length);
+});
+
+/* R12's view as `combine` gives it over `ids`: the three facts, each absent when the combined view holds none. */
+const viewOf = (ids) => {
+  const c = combine(ids);
+  const want = {};
+  if (!c.ok) return want;
+  for (const f of ["deadlines", "legal_organisations"]) if ((c.view[f] || []).length) want[f] = c.view[f];
+  const venues = (c.view.action_kinds || []).filter((k) => k.venue).map((k) => ({ kind: k.kind, venue: k.venue }));
+  if (venues.length) want.venues = venues;
+  return want;
+};
+
+test("R12 R16 profiles() carries view: combine's deadlines and legal_organisations, and each {kind, venue} of a combined action kind that gives one, over two profiles one not Oakland's; a venue combine withholds, and every fact when nothing is active or the list cannot be combined, is absent, never an empty list; through the route too", async () => {
+  const w = await world();
+  const OAK = REAL.find((p) => p.id === "oakland-alameda"), OTHER = TEST[0];
+  assert.ok(OAK && OTHER && OTHER.id !== OAK.id, "two held profiles, one not Oakland's");
+  /* nothing active: the view states no fact, so agent-worker reads each undetermined */
+  assert.deepEqual(w.m.profiles().view, {});
+  for (const ids of [[OTHER.id], [OAK.id], [OAK.id, OTHER.id]]) {
+    w.record.setSetting("jurisdiction_profiles", ids, "admin");
+    const view = w.m.profiles().view;
+    const c = combine(ids);
+    assert.deepEqual(view, viewOf(ids), ids.join("+"));
+    for (const f of ["deadlines", "legal_organisations", "venues"]) {
+      assert.ok(Array.isArray(view[f]) && view[f].length > 0, `${ids.join("+")}: ${f} stated`);
+      for (const x of view[f]) assert.equal(typeof x, "object");
+    }
+    assert.deepEqual(view.deadlines, c.view.deadlines);
+    assert.deepEqual(view.legal_organisations, c.view.legal_organisations);
+    for (const v of view.venues) assert.deepEqual(Object.keys(v), ["kind", "venue"]);
+    /* every kind that gives a venue is listed, with that venue as combined, and no other */
+    assert.deepEqual(view.venues.map((v) => v.kind), c.view.action_kinds.filter((k) => k.venue).map((k) => k.kind));
+    for (const v of view.venues) assert.deepEqual(v.venue, c.view.action_kinds.find((k) => k.kind === v.kind).venue);
+  }
+  /* the profile that is not Oakland's alone: its own facts, none of Oakland's */
+  w.record.setSetting("jurisdiction_profiles", [OTHER.id], "admin");
+  const own = w.m.profiles().view;
+  for (const f of ["deadlines", "legal_organisations"]) for (const x of own[f]) assert.equal(x.profile, OTHER.id, f);
+  for (const v of own.venues) assert.equal(v.venue.profile, OTHER.id);
+  /* together: the two disagree on records_request's venue, so combine withholds it and the view lists no venue for it */
+  w.record.setSetting("jurisdiction_profiles", [OAK.id, OTHER.id], "admin");
+  const both = w.m.profiles();
+  assert.ok(both.conflicts.some((x) => x.at === "action_kinds[records_request].venue"), "the premise: a withheld venue");
+  assert.equal(both.view.venues.some((v) => v.kind === "records_request"), false);
+  assert.ok(both.view.venues.some((v) => v.venue.profile === OAK.id) && both.view.venues.some((v) => v.venue.profile === OTHER.id));
+  /* a list combine cannot give answers no fact at all */
+  w.record.setSetting("jurisdiction_profiles", [OAK.id, "gone-profile"], "admin");
+  const gone = w.m.profiles();
+  assert.ok(gone.errors.length);
+  assert.deepEqual(gone.view, {});
+  /* an empty list set by an administrator: none */
+  w.prov.admins.add("admin");
+  assert.deepEqual(w.m.profilesSet({ profiles: [], by: "admin" }).view, {});
+  /* R16: the namespace addressed answers its own view, through the route the plane relays */
+  const scratch = await world();
+  w.m.profilesSet({ profiles: [OAK.id], by: "admin" });
+  const routed = await doAnswer(stubOver(w.m).fetch("http://do/profiles"));
+  assert.deepEqual(routed.result.view, viewOf([OAK.id]));
+  assert.deepEqual((await doAnswer(stubOver(scratch.m).fetch("http://do/profiles"))).result.view, {});
 });
 
 test("R13 at the first boot JURISDICTION_PROFILES (comma-separated, in order) is recorded when every id is held and none is a test profile; else nothing is recorded and profiles() says why; no later boot records it", async () => {
@@ -158,6 +218,8 @@ test("R15 end to end through the Worker's route: the page served at / shows the 
   const token = JSON.parse(admin.sandbox.sessionStorage.getItem("bio-session")).t;
   const read = await api("profiles", undefined, token);
   assert.deepEqual(read.result.profiles.map((p) => p.id), [REAL[0].id]);
+  /* R12's view through the Worker's route, as agent-worker R51 reads op=profiles */
+  assert.deepEqual(read.result.view, viewOf([REAL[0].id]));
 
   /* a second administrator (the group's floor before any ordinary member), enrolled: an administrator's own session,
      not only the founder's, sets the list, and the set is attributed to that session's member */
