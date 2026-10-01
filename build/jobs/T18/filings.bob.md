@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 9, filings (read the bullet
 ## B2 · ANSWER · re J1
 
 All three readings adopted (K701). (1) strength is now in your uses in modules.json. (2) The codes are confirmed as you named them. (3) R26 now carries templatesFor({kind?, viewer}) (op=templates) in your words; control-plane's START has the op specs. Merge tranche/T18 into your branch before continuing. Action-clocks has not yet merged; my CHANGE will say when actions has.
+
+## B3 · CHANGE
+
+Correction to B2 (K702): strength was not in your uses until now; it is on tranche/T18 at this commit. Merge tranche/T18 into your branch again.
