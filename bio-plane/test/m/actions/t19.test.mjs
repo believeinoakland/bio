@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const M = V("alice");
@@ -11,11 +12,10 @@ const md = (id, lines) => actionMd(id, ["action_kind: other", ...CP, ...lines]);
 
 test("R45 contactNotAMember is the one answer to a contact naming no member: fixed fields, its row C-117.11, one sentence; extra adds and never replaces; never throws", () => {
   const r = actions.contactNotAMember();
-  const row = actions.ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER;
+  const row = grammar.ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER;
   assert.deepEqual(Object.keys(r).sort(), ["check", "code", "detail", "ok", "reason", "translation"]);
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "CONTACT_NOT_A_MEMBER", "CONTACT_NOT_A_MEMBER",
     "C-117.11", row.translation]);
-  assert.equal(row.where, "src/actions/index.mjs contactNotAMember > is-contact-member", "its row names the one site");
   assert.equal(typeof r.detail, "string"); assert.ok(r.detail.length > 20);
   const x = actions.contactNotAMember({ plan: "PLN-2026-0001", option: "o", reason: "OTHER", code: "X", check: "C-0",
                                         translation: "t", detail: "mine", ok: true });

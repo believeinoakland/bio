@@ -5,12 +5,12 @@
  * Extracted from the legacy modules (T8, layer 9; K3, K4, K6, K23, K31, K57, K61, K64, K75 (2), K79, K102):
  * `store.mjs` (the clock rule, `#actionDerived`, `actionMove` … `#spliceCorrespondence`, the governing-laws fence, the
  * action, risk-tier and `responds_to` arms of the promotion step and its three projections, the purge list entries and
- * the dispatch) and `schema.mjs` (the four tables, now `./schema.mjs`); the catalogue's action arms and rows are
- * `./checks.mjs`. The legacy code's comments moved with it.
+ * the dispatch) and `schema.mjs` (the four tables, now `./schema.mjs`). The legacy code's comments moved with it. The
+ * action document's grammar, its arms, readers and rows are `action-grammar`'s (T19 layer 9), read from there.
  *
  * REACHED as `actionsOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R36), registers its check and projection with promotion (R1–R3,
- * R7, R11, R33), its audit check with record-core (R37), and its facts and projection decoration with retrieval (R12,
+ * R7, R11, R33), action-grammar's audit arm with record-core (R51), and its facts and projection decoration with retrieval (R12,
  * R25; retrieval R53, R56).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
@@ -42,13 +42,16 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, lifecycleFindings, lawProposalLabel,
          LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX, riskTierHistoryOf,
          governingLawsOf, requestLifecycleOf, consequenceState, respondsToEdgeFindings, checkActionExtension,
-         recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, kindReadsAsWritten,
-         addresseeIsOffice, ADDRESSEE_KINDS,
+         recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, addresseeIsOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
-         LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS, ACTION_CATALOGUE_CHECKS } from "./checks.mjs";
+         LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
+         ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
-export * from "./checks.mjs";
+/* K835 (N447 drops it in T20): the action vocabularies `affordances` and its tests read from here until its layer-11 job
+   re-points to action-grammar, re-exported, never a copy. */
+export { PRODUCT_KINDS, RISK_TIERS, LAW_LEVELS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, CORRESPONDENCE_STAGES,
+         CORRESPONDENCE_OUTCOMES, RESOLUTIONS, actionKinds } from "../action-grammar/index.mjs";
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 
 /** R13, R15: the longest reason, account, medium or party (the legacy store's `RELEASE_ACK_MAX`). */
@@ -248,7 +251,7 @@ export class Actions {
     const c = combine(ids);
     return c && c.ok ? c.view : null;
   }
-  /** R10, R40, R42 (N231): the kinds this instance accepts now: the product's own and the active profiles' combined
+  /** R10, R42 (N231; action-grammar R1's `actionKinds`): the kinds this instance accepts now: the product's own and the active profiles' combined
    *  view. Writes nothing and never throws: a view that cannot be read answers the product's kinds alone. */
   kinds() {
     let view = null;
@@ -459,12 +462,12 @@ export class Actions {
     return null;
   }
 
-  /* R4–R7, R9, R10, R33: the C-2.10 arms enforced at the write (C-73.6, C-101), each by its own name, carrying the
-     arm's own findings. A MISSING counterparty and a pending entry PAST its date land; the audit reports them (R37). */
+  /* R6, R7, R9, R10, R33: the C-2.10 arms enforced at the write (C-73.6, C-101), each by its own name, carrying the
+     arm's own findings. A MISSING counterparty and a pending entry PAST its date land; the audit reports them (R51). */
   #writeArms(c, heldFm, nextFm, who) {
     const { head, writer, operation } = c;
     const creation = !head;
-    /* R4, R6 (N297): the law arm's one refusal, minted by `recordsLawRefusal` alone. */
+    /* R6 (N297; action-grammar R3): the law arm's one refusal, minted by `recordsLawRefusal` alone. */
     const law = recordsLawRefusal(nextFm);
     if (law) return law;
     /* DEC-49 REGION is-promote-action-kind */
@@ -816,7 +819,7 @@ export class Actions {
     return null;
   }
 
-  /** R37: the audit's action arm over one bundle image (record-core R59): C-2.10's arms and C-11.1 over an action,
+  /** R51: the audit's action arm over one bundle image (record-core R59): C-2.10's arms and C-11.1 over an action,
    *  and C-6.1's `responds_to` arm over any document. */
   audit(image) {
     const files = image && image.files instanceof Map ? image.files : null;
@@ -1385,7 +1388,7 @@ export class Actions {
     return { ok: true, target, ord: n, pressure: { kind: mark.kind, note: mark.note }, by: who, at, weight: "single" };
   }
 
-  /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R11, R44–R46 at the act): the plane
+  /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R3, R5–R11, R45, R46 and action-grammar R3 and R6 at the act): the plane
    *  mints the action's id and writes it into the document; the refusals are the promotion's. Answers `{ok, id}`. */
   actionCreate({ document = null, viewer = null, author = null } = {}) {
     const text = typeof document === "string" ? document : null;
@@ -2226,7 +2229,7 @@ function proposalLabelFor(who, subject) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables, registers its step, audit, facts and
- *  decoration (R3, R12, R25, R36, R37; retrieval R53, R56). */
+ *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56). */
 export function actionsOf(host, deps) {
   let a = instances.get(host);
   if (!a) {

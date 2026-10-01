@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, actionMd, CP } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const M = V("alice");
@@ -107,25 +108,25 @@ test("R8 a member's breach action written through op=promote reads the determina
 test("R42 kinds() answers the kinds the instance accepts now, over the active profiles' combined view; offered as the read op actionkinds; writes nothing and never throws", () => {
   const w = world();
   const k = w.a.kinds();
-  assert.deepEqual(k.slice(0, 3), [...actions.PRODUCT_KINDS]);
+  assert.deepEqual(k.slice(0, 3), [...grammar.PRODUCT_KINDS]);
   assert.ok(k.includes("bylaw_complaint"), "the test profile's kind");
   const before = w.rows(`SELECT COUNT(*) AS n FROM manifest`)[0].n;
   const op = actions.actionsOps(w.a, new URL("https://x/?viewer=member:alice"), null).actionkinds();
   assert.deepEqual(op, { ok: true, kinds: k });
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM manifest`)[0].n, before, "writes nothing");
-  assert.deepEqual(world({ profiles: null }).a.kinds(), [...actions.PRODUCT_KINDS], "no profile active: the product's kinds alone");
+  assert.deepEqual(world({ profiles: null }).a.kinds(), [...grammar.PRODUCT_KINDS], "no profile active: the product's kinds alone");
   const odd = world({ profiles: ["no-such-profile"] });
-  assert.deepEqual(odd.a.kinds(), [...actions.PRODUCT_KINDS], "a view that does not combine");
+  assert.deepEqual(odd.a.kinds(), [...grammar.PRODUCT_KINDS], "a view that does not combine");
   const broken = world({ recordAs: (r) => new Proxy(r, { get(t, key) {
     if (key === "getSetting") return () => { throw new Error("storage unavailable"); };
     const v = t[key]; return typeof v === "function" ? v.bind(t) : v;
   } }) });
-  assert.deepEqual(broken.a.kinds(), [...actions.PRODUCT_KINDS], "never throws");
+  assert.deepEqual(broken.a.kinds(), [...grammar.PRODUCT_KINDS], "never throws");
 });
 
 test("R43 noSuchAction answers the one refusal for an action the caller may not see: fixed fields, one sentence, its catalogue row; extra adds and never replaces; never throws", () => {
   const r = actions.noSuchAction("ACTN-2026-0001-a");
-  const row = actions.ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
+  const row = grammar.ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
   assert.deepEqual(Object.keys(r).sort(), ["action", "check", "code", "detail", "ok", "reason", "translation"]);
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.action], [false, "NO_SUCH_ACTION", "NO_SUCH_ACTION", "C-117.2", row.translation, "ACTN-2026-0001-a"]);
   assert.equal(row.where, "src/actions/index.mjs noSuchAction > is-no-such-action");

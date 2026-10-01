@@ -1,8 +1,8 @@
-/* actions' acts at its interface: move, correspond, laws, proposals, tier, quotes (R13–R24, R27, R28, R34). */
+/* actions' acts at its interface: move, correspond, laws, proposals, tier, quotes (R13–R19, R22–R24, R27, R28, R34). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
-import * as actions from "../../../src/actions/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const M = V("alice");
@@ -90,11 +90,11 @@ test("R18 actionLaws: refusals in order; the whole list replaced, stamped and lo
   const lvl = L([{ level: "local", citation: "x" }]);
   assert.equal(lvl.check, "C-73.3");
   /* N246: the translation names the levels LAW_LEVELS holds (jurisdictions R31), and no other. */
-  for (const l of actions.LAW_LEVELS) assert.ok(lvl.translation.includes(l), l);
-  assert.deepEqual(lvl.legal, [...actions.LAW_LEVELS]);
+  for (const l of grammar.LAW_LEVELS) assert.ok(lvl.translation.includes(l), l);
+  assert.deepEqual(lvl.legal, [...grammar.LAW_LEVELS]);
   assert.doesNotMatch(lvl.translation, /\blocal\b|three levels/);
   const lv = world(); lv.action(A);
-  for (const l of actions.LAW_LEVELS)
+  for (const l of grammar.LAW_LEVELS)
     assert.equal(lv.a.actionLaws({ target: A, laws: [{ level: l, citation: `Code ${l}` }], viewer: M, author: M }).ok, true, `${l} is a level`);
   const set = L(ok);
   assert.deepEqual([set.ok, set.by, set.replaced], [true, M, null]);
@@ -115,7 +115,7 @@ test("R18 actionLaws: refusals in order; the whole list replaced, stamped and lo
   assert.equal(block.proposals.length, 2, "a proposer replaces its own proposal only");
 });
 
-test("R20 R21 R22 quote and lifecycle grammar at the act, first found; no due date computed", () => {
+test("R15 R22 the act refuses by action-grammar's quote and lifecycle grammar (its R4, R5), first found, then DUE_CITE_NOT_GOVERNING; no due date computed", () => {
   const w = world();
   const s = w.doc("INFO-2026-0001-d");
   w.action(A);
@@ -201,8 +201,8 @@ test("R28 actionRiskPropose: refusals; stored apart and labelled; never the tier
   assert.equal(P({ basis: "" }).check, "C-90.6");
   /* C-90.2 is one condition at the act and at a proposal, answered through one site (N297's guard, arm G). */
   const bt = P({ tier: 7 });
-  assert.deepEqual([bt.reason, bt.check, bt.translation], ["BAD_RISK_TIER", "C-90.2", actions.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.translation]);
-  assert.equal(actions.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.where, "src/actions/index.mjs #badRiskTier > is-bad-risk-tier");
+  assert.deepEqual([bt.reason, bt.check, bt.translation], ["BAD_RISK_TIER", "C-90.2", grammar.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.translation]);
+  assert.equal(grammar.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.where, "src/actions/index.mjs #badRiskTier > is-bad-risk-tier");
   const before = w.text(A);
   const p = P({});
   assert.deepEqual([p.ok, p.evidence, p.proposal.machine_work, p.risk_tier], [true, false, true, 1]);
