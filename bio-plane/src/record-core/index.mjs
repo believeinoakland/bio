@@ -798,8 +798,8 @@ export class RecordCore {
       }
       for (const [id, rows] of rowsBy) if (!seen.has(id)) { out.orphan_manifest_bundles++; out.manifest_rows += rows.length; }
     } catch { /* R57 never throws */ }
-    out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated "
-      + "snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation "
+    out.note = "read-only: a record whose manifest holds fewer rows than it has promotions lost a row to a repeated "
+      + "snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a record with no creation "
       + "row, which an overwrite and a store predating the creation row both produce. Which key collided is not "
       + "recorded and is not guessed.";
     return out;
@@ -913,15 +913,15 @@ export class RecordCore {
     return Object.fromEntries(out);
   }
 
-  /** R74 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
-   *  module's name through R63 (`registerCounts("record-core", RecordCore.COUNT_KEYS, (hid) => rc.ownCounts(hid))`); the
-   *  module registers nothing itself while plane holds its copy. Each figure is the table's rows less those naming a
-   *  bundle in `hid` by its `bundle_id`. `refs` is `connections`' table and not this module's figure (R31; K877). */
+  /** R74 (K861, plane R10): this module's share of the instance's figures, exported for `plane`, which registers it
+   *  under this module's name through R63 (`registerCounts("record-core", RecordCore.COUNT_KEYS, (hid) => rc.ownCounts(hid))`);
+   *  the module registers nothing itself. Each figure is the table's rows less those naming a bundle in `hid` by its
+   *  `bundle_id`. `refs` is `connections`' table and not this module's figure (R31; K877). */
   static COUNT_KEYS = Object.freeze(["bundles", "files", "history"]);
   static #COUNTED = Object.freeze({ bundles: "bundles", files: "files", history: "history" });
 
   /** R74, D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): R63's `counts(hid)` for this module's share, moved
-   *  from the plane's held copy with its reading kept. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for
+   *  here from the plane in T20 (K861) with its reading kept. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for
    *  a viewer that sees every bundle and for the direct internal call, which count whole. `COALESCE(k, '')`: a NULL key
    *  names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure whose table cannot be read is
    *  left out, and R63 answers it null. Synchronous; writes nothing; never throws. */

@@ -2,8 +2,8 @@
    answers a CURSOR, as workerd's does, never an array (rows are read by iterating it, or its `toArray()`/`one()`;
    `[0]` or `.length` of it is undefined), and refuses a LIKE or GLOB pattern over workerd's 50 bytes, which
    node:sqlite does not (K313, K316); `transactionSync(fn)` rolls back everything `fn` wrote when it throws and nests
-   as savepoints. Over node:sqlite (SQLite, the engine a Durable Object runs). The legacy battery exercises the same
-   module inside Miniflare's real Durable Object. */
+   as savepoints. Over node:sqlite (SQLite, the engine a Durable Object runs). The plane's Miniflare suites
+   (`test/stats-disclosure.test.mjs`, `test/members.test.mjs`) exercise the same module inside a real Durable Object. */
 import { DatabaseSync } from "node:sqlite";
 import { RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 
