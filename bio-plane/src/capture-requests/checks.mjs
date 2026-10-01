@@ -4,7 +4,7 @@
  * C-28, the capture-request family, less C-28.13 (the capture-request arm's row, `acquisition`'s: its R1, R29), COPIED
  * from the check catalogue (`bio-plane/checks/bio-checks.mjs`) in T18: each row's code, number and translation are
  * unchanged and its `where` names this module's site, `awaiting stamp` for promotion's T19 job. The catalogue's copy
- * stays until T19's layer 1 deletes it (K529: promotion's `gate.mjs` still reads it). `CAPTURE_PURPOSES`,
+ * was deleted by this module in T19 (rule 1, K816): this table is now the only one. `CAPTURE_PURPOSES`,
  * `CAPTURE_UA_MODES` and `userAgentIsLegible` MOVED here (K586 BOB-1: this module was their only product importer).
  * The CivicOS agent's one composer, `civicosUserAgent`, is `acquisition`'s (its R24), read from there so the drain
  * judges the string `acquisition` sends. C-108 is this module's own family (K181 (2); K174's pattern).

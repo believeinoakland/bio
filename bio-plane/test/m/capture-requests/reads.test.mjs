@@ -231,24 +231,37 @@ test("R29 the wait source registered with ai-runs (its R41, K182): tickMs, holds
   assert.deepEqual(cold.waitRegs[0].source.holds(iso, 25), [], "nothing is held for what will never complete");
 });
 
-test("R35 the table is declared to record-core's purge keyed by target: a bundle's purge deletes its requests and clears a lead naming it, a whole-store purge clears the table", async () => {
+test("R35 the table is declared to record-core's purge keyed by target: a bundle's purge deletes its requests and clears a lead naming it, a whole-store purge clears the table, and the census counts it", async () => {
   const w = world().scene();
   const under1 = w.ask({ address: "https://a.example.org/" }).request;
   w.run("R-2", { context: "INQ-2" });
   const under2 = w.ask({ run: "R-2", target: "INQ-2", address: "https://b.example.org/" }).request;
   w.bundle("INQ-3");
   const lead3 = w.ask({ run: "R-2", target: "INQ-2", address: "https://c.example.org/", lead: "INQ-3" }).request;
+  /* the census: record-core's counts report the table, every row for a direct internal call; a caller's hidden
+     bundles drop the rows whose lead names one */
+  const figure = (hid) => w.record.counts(hid).captureRequests;
+  assert.equal(figure(null), 3);
+  assert.equal(figure({ sql: "(?)", args: ["INQ-3"] }), 2);
+  assert.equal(figure({ sql: "(?)", args: ["INQ-1"] }), 3);
   const p = w.record.purge({ bundleId: "INQ-1" });
   assert.equal(p.removed.capture_requests, 1);
   assert.equal(w.req(under1), null);
   assert.ok(w.req(under2));
-  w.cr.clearLead("INQ-3");
-  assert.equal(w.req(lead3).lead_inquiry, null);
+  assert.equal(figure(null), 2);
+  /* a bundle's purge clears a lead naming it, on a row that stays (record-core R46's `clears`) */
+  assert.equal(w.req(lead3).lead_inquiry, "INQ-3");
+  const q = w.record.purge({ bundleId: "INQ-3" });
+  assert.equal(q.removed.capture_requests, 0, "a lead is a pointer: its row is not the bundle's");
   assert.ok(w.req(lead3), "the row stays; only its pointer goes");
+  assert.equal(w.req(lead3).lead_inquiry, null);
+  assert.equal(w.req(lead3).target, "INQ-2");
   w.record.purge({});
   assert.equal(w.row(`SELECT count(*) AS n FROM capture_requests`).n, 0);
-  /* declared once, by this module */
+  assert.equal(figure(null), 0);
+  /* declared once, by this module: the table and the figure */
   assert.equal(w.record.declarePurge("x", [{ name: "capture_requests", keys: ["target"] }]).reason, "TABLE_DECLARED");
+  assert.equal(w.record.registerCounts("x", ["captureRequests"], () => ({})).code, "COUNTS_DECLARED");
 });
 
 test("R43 requestById answers one request as R24 answers a row, with R25's render_deferral, when its target is one the viewer can see; null for a blank, unknown or unseen id alike; it writes nothing and never throws", async () => {
