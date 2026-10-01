@@ -28,3 +28,7 @@ Size (session_01FuWDwjxZ1hV1x1vsQyNDjp): test runs 1, module lines 1358
 ## J1 · REPORT
 
 Generated artifacts staled by this change (not regenerated, B1): `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (not_product): `src/run-productions/index.mjs` and `checks.mjs` changed, comments only.
+
+## J2 · COMPLETE
+
+N468 applied (index.mjs:821, counts.test.mjs header, :42, :84 re-worded to plane registering the export under this module's name); N469: none in my paths, re-scan found none live. Own stale notes fixed in checks.mjs and fixture.mjs. Comments and test wording only. test/m/run-productions/ 39 pass 0 fail; format, architecture, coverage (20/20), ownership 0 failures. Record: build/jobs/T21/run-productions.md.
