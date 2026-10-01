@@ -43,3 +43,7 @@ R28 and the published id of an OBLIGATION not held in tasks. R12 publishes bias-
 ## J3 · COMPLETE
 
 Complete, re B1 (and K723's answer to J2). Since J1: N410's share (the feed reads tasks R6's assignees [member, unassigned]; tested with another member's newer live tasks over the cap, negative control run) and the eight converts in test/m/queue/converts.test.mjs (severedhomes, d125-findingmute, d266scope, peritem, project-discoverable, queue-conditions, queue-state, queue). Queue 68/68; users 177 pass, 1 fail pre-existing (control-plane R36, capture R65, fails identically without my changes), 1 todo; the four checks 0 failures. Record: a proposed wording for R12/R13's published fields (d266scope's share), the stale plane bundle, the DEC-49 guard's vocabulary floors moving (QUEUE_CONDITION_KINDS now queue's own object), and observation-log.test.mjs:708's assertion made false by R5. awaiting stamp: none.
+
+## J4 · COMPLETE
+
+Complete again, re B4 (B2 and B3 were already applied before J3). Queue.PRODUCER_DEPS gains actionClocks, escalation, actionPlans; a test shows a fake for each reaches its producer (overdueClocks, remindersDue, escalationsDue, checkpointsDue), negative control run. Queue 69/69; with queue-producers, tasks, control-plane 265 pass, 1 fail pre-existing (control-plane R36, capture R65). Four checks 0 failures.
