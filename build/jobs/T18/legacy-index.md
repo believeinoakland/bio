@@ -22,3 +22,7 @@
 **Tests and checks.** No module tests (`tests: []`). `fleetbundles.test.mjs` (the manifest's verify): every arm passes but the one above, which fails the same on the tranche branch. From the process repository: `format`: 82 modules, 77 requirements files; 0 failures. `architecture legacy-index`: 21 product files, 35 relative imports; 0 failures. `coverage legacy-index`: 0 of 0 live ids; 0 failures. `ownership legacy-index tranche/T18`: 13 files changed; 0 failures.
 
 Size (session_01LkPKEan57umKVtgyg8qesS): test runs 3, module lines ~3,960 deleted, 3 written.
+
+## J1 · COMPLETE
+
+Entry applied whole, nothing deferred: Bob approved the deletions in this session. migrate/, coverage.mjs, declared-source.mjs and the four probes deleted; package.json drops test:migrate, test:coverage and 61 scripts naming absent files; budgetsweep and battery comments updated. src/index.mjs untouched; nothing awaiting stamp. For you: drop migrate/ from paths and migrate/README.md from not_product. Reports in the record: old suites broken by the removals (unrun, K619), comments in other modules naming the retired files, and a pre-existing fleetbundles failure (agent-worker's 153-input pin) identical on tranche/T18. Checks: format, architecture, coverage, ownership 0 failures.
