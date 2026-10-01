@@ -27,3 +27,7 @@ Size (session_017tQLk2aQAUDMSy5xnai7Pb): test runs 4, module lines 2543
 ## J1 · REPORT
 
 Generated artifact staled (manifest §14): my change to bio-plane/src/monitoring/index.mjs and checks.mjs stales bio-plane/dist/bio-plane.bundled.mjs and bio-plane.bundle.json (owned not_product). fleetbundles.test.mjs passes on tranche/T21 and fails with my change (the plane member stale). Regenerate at the layer close: bio-plane/: npm run build. I regenerated nothing (B1).
+
+## J2 · COMPLETE
+
+K949 and N469 applied; record's Completion section has the detail. (1) The tick's baseline now goes through capture-sources R45 (driveBaselineRow), then its archive-hop fallback; behaviour unchanged. New test worded to R3 (tick.test.mjs) proves the tick and the Drive shell sweep choose the same row in six cases; a mutation that reorders the tick fails it. No requirement gap: R3 states the tick's baseline. (2) N469: two live notes named files that no longer exist (checks.mjs:39 monitor-assess.test.mjs; index.mjs:659 drive.control.mjs, with its echo at :697); re-worded to the module tests or dropped; provenance notes kept. Tests: monitoring 79 (73 pass, 0 fail, 6 todo, each not yet met). Checks: format, architecture, coverage (50/50), ownership (4 files) all 0 failures. Stale plane bundle: REPORT J1. Deviation stated: I read the public parts this change rests on (capture-sources, subresources, record-grammar, runtime-limits), not all 23 in Uses; the whole set (~175k tokens) would have passed half my window (mechanics §6). Size: test runs 4, module lines 2543.
