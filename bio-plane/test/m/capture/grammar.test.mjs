@@ -1,14 +1,18 @@
 /* capture R37 (C-2.7; K585 (3)): the information grammar, registered through record-core's grammar seam (its R67), at
-   the module's interface: what `captureOf` registers, and that a bundle is judged identically with the registration
-   and without it, through `checkBundle` given `record.grammars()` (what promotion's gate passes, its R27) and through
-   record-core's audit (its R18). A fresh store per test; no network. */
+   the module's interface: what `captureOf` registers, that another module's claim on the same slot runs beside it
+   (record-core R67 as worded, K766, K783), and that a bundle is judged by record-grammar's `checkBundle` given
+   `record.grammars()` (what promotion's gate passes, its R27) and by record-core's audit (its R18) exactly as by the
+   catalogue's held C-2.7 copy (K767: the one comparison that still names the catalogue, until its last importer
+   deletes it). The other slots are filled as the host fills them, `registerLegacyGrammars`. A fresh store per test;
+   no network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { storage, provenance } from "./fixture.mjs";
 import { captureOf, MONITOR_FREQ, INFORMATION_GRAMMAR, checkInformationExtension } from "../../../src/capture/index.mjs";
-import { recordOf } from "../../../src/record-core/index.mjs";
-import { checkBundle, canonicalJson } from "../../../checks/bio-checks.mjs";
+import { recordOf, registerLegacyGrammars } from "../../../src/record-core/index.mjs";
+import { checkBundle, canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { LEGACY_GRAMMARS } from "../../../checks/bio-checks.mjs";
 
 const hex = (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
 const T0 = "2026-07-01T00:00:00Z";
@@ -59,11 +63,11 @@ const CASES = {
                                                                                criticality: "vital", source: undefined }) },
 };
 
-const judge = async (id, image, opts) => {
+const judge = async (id, image, grammars) => {
   const files = new Map(Object.entries(image));
   const { findings } = await checkBundle({ folderName: id, files, elidedPaths: new Set(), sha256: async (v) => hex(v),
     sha512: async (b) => new Uint8Array(createHash("sha512").update(b).digest()), resolveTarget: (t) => t in CASES,
-    releaseRegistry: null, publishedRegistry: null, publishedCaseRegistry: null, earnedRegistry: null }, opts);
+    releaseRegistry: null, publishedRegistry: null, publishedCaseRegistry: null, earnedRegistry: null }, { grammars });
   return findings;
 };
 
@@ -72,6 +76,16 @@ function world() {
   const record = recordOf(ctx);
   record.migrate();
   return { ctx, record };
+}
+
+/* A host's grammar list (the composition root's order): capture's registration when `capture`, then the catalogue's
+   entries for every slot still free, `registerLegacyGrammars`. Without capture, C-2.7's slot is the catalogue's held
+   copy: the comparison R37's tests make. */
+function hosted({ capture }) {
+  const w = world();
+  if (capture) captureOf(w.ctx, { record: w.record, provenance: provenance(w.ctx.storage) });
+  assert.equal(registerLegacyGrammars(w.record, LEGACY_GRAMMARS).ok, true);
+  return w;
 }
 
 test("R37 (C-2.7): captureOf registers the information grammar with record-core once per storage, claiming C-2.7 whole; MONITOR_FREQ is the grammar's cadence list", () => {
@@ -86,41 +100,66 @@ test("R37 (C-2.7): captureOf registers the information grammar with record-core 
   assert.equal(record.grammars().length, 1, "reaching the instance again registers nothing more");
   assert.deepEqual([...MONITOR_FREQ], ["hourly", "daily", "weekly", "monthly", "per_meeting", "none"]);
   assert.ok(Object.isFrozen(MONITOR_FREQ));
-  /* a record another module has already claimed C-2.7 on: the wiring's defect is loud, never a grammar silently unrun */
-  const other = world();
-  other.record.registerGrammar("elsewhere", { ids: ["C-2.7"], arm: () => {} });
-  assert.throws(() => captureOf(other.ctx, { record: other.record, provenance: provenance(other.ctx.storage) }), /refused the information grammar: GRAMMAR_DECLARED/);
 });
 
-test("R37 (C-2.7): with the grammar registered, checkBundle given record.grammars() (the gate's list) judges every bundle exactly as the catalogue's own arm: the same findings, ids, severities, messages and order", async () => {
+test("R37 (C-2.7; record-core R67, K766): another module's grammar may claim C-2.7's slot too; capture's registration is accepted beside it and both arms run in the slot, in registration order; a refusal R67 still makes is loud, never a grammar silently unrun", async () => {
   const { ctx, record } = world();
+  const ran = [];
+  assert.equal(record.registerGrammar("elsewhere", { ids: ["C-2.7"], arm: () => { ran.push("elsewhere"); } }).ok, true);
   captureOf(ctx, { record, provenance: provenance(ctx.storage) });
+  const g = record.grammars();
+  assert.deepEqual(g.map((x) => [x.module, [...x.ids]]), [["elsewhere", ["C-2.7"]]], "one entry for the slot, at its first claimant's place");
+  const id = "INFO-2026-0002-enums";
+  const findings = await judge(id, CASES[id], g);
+  assert.deepEqual(ran, ["elsewhere"], "the other claimant's arm ran in the slot, once");
+  const alone = await judge(id, CASES[id], [{ module: "capture", ...INFORMATION_GRAMMAR }]);
+  assert.ok(alone.some((f) => f.check === "C-2.7"));
+  assert.deepEqual(findings.filter((f) => f.check === "C-2.7"), alone.filter((f) => f.check === "C-2.7"),
+                   "capture's arm ran in the slot beside the other claimant");
+  /* capture registering twice on one record (a second storage's instance over a shared record) is R67's GRAMMAR_DECLARED */
+  const twice = world();
+  assert.equal(twice.record.registerGrammar("capture", INFORMATION_GRAMMAR).ok, true);
+  assert.throws(() => captureOf(twice.ctx, { record: twice.record, provenance: provenance(twice.ctx.storage) }),
+                /refused the information grammar: GRAMMAR_DECLARED \(held by capture\)/);
+  /* a record with no seam (a stand-in) is left alone */
+  const bare = { storage: storage() };
+  const stand = { declarePurge() {}, transact: (fn) => fn() };
+  assert.ok(captureOf(bare, { record: stand, governor: {}, provenance: provenance(bare.storage) }));
+});
+
+test("R37 (C-2.7): with the grammar registered, record-grammar's checkBundle given record.grammars() (the gate's list) judges every bundle exactly as the catalogue's held copy: the same findings, ids, severities, messages and order", async () => {
+  const mine = hosted({ capture: true }), held = hosted({ capture: false });
+  const listed = mine.record.grammars();
+  assert.deepEqual([listed[0].module, [...listed[0].ids]], ["capture", ["C-2.7"]], "capture's own arm fills C-2.7");
+  assert.ok(listed.slice(1).every((g) => g.module === "legacy-checks" && !g.ids.includes("C-2.7")), "the catalogue only the rest");
+  assert.equal(held.record.grammars().find((g) => g.ids.includes("C-2.7")).module, "legacy-checks");
   let judged = 0;
   for (const [id, image] of Object.entries(CASES)) {
-    const builtIn = await judge(id, image);
-    const registered = await judge(id, image, { grammars: record.grammars() });
-    assert.deepEqual(registered, builtIn, id);
-    if (builtIn.some((f) => f.check === "C-2.7")) judged++;
+    const catalogue = await judge(id, image, held.record.grammars());
+    const registered = await judge(id, image, mine.record.grammars());
+    assert.deepEqual(registered, catalogue, id);
+    if (catalogue.some((f) => f.check === "C-2.7")) judged++;
   }
   assert.ok(judged >= 10, `the cases exercise the grammar (${judged} bundles carry a C-2.7 finding)`);
-  const clean = await judge("INFO-2026-0001-clean", CASES["INFO-2026-0001-clean"], { grammars: record.grammars() });
+  const clean = await judge("INFO-2026-0001-clean", CASES["INFO-2026-0001-clean"], mine.record.grammars());
   assert.equal(clean.filter((f) => f.check === "C-2.7").length, 0, "a well-formed item raises no C-2.7");
-  assert.equal((await judge("PROJ-2026-0001-notinfo", CASES["PROJ-2026-0001-notinfo"], { grammars: record.grammars() }))
+  assert.equal((await judge("PROJ-2026-0001-notinfo", CASES["PROJ-2026-0001-notinfo"], mine.record.grammars()))
     .filter((f) => f.check === "C-2.7").length, 0, "another type is not judged by it");
-  /* the registered arm is the one that runs: a grammar standing in its place changes the findings */
+  /* the registered arm is the one that runs: a grammar standing in its place changes the findings, and none runs nothing */
   const decoy = [{ module: "decoy", ids: ["C-2.7"], arm: () => {} }];
-  assert.equal((await judge("INFO-2026-0002-enums", CASES["INFO-2026-0002-enums"], { grammars: decoy })).some((f) => f.check === "C-2.7"), false);
+  assert.equal((await judge("INFO-2026-0002-enums", CASES["INFO-2026-0002-enums"], decoy)).some((f) => f.check === "C-2.7"), false);
+  assert.equal((await judge("INFO-2026-0002-enums", CASES["INFO-2026-0002-enums"], [])).some((f) => f.check === "C-2.7"), false);
 });
 
 test("R37 (C-2.7): record-core's audit over the same bundles answers the same report with capture's grammar registered as with the catalogue's arm", async () => {
   const report = async (register) => {
-    const { ctx, record } = world();
-    if (register) captureOf(ctx, { record, provenance: provenance(ctx.storage) });
+    /* "without": C-2.7's slot filled from the catalogue's `LEGACY_GRAMMARS` (K783), as with every other free slot */
+    const { record } = hosted({ capture: register });
     for (const [id, image] of Object.entries(CASES))
       record.transact(() => record.commit({ bundleId: id, type: id.startsWith("PROJ") ? "project" : "information", title: "t",
         snapKey: "k1", kind: "creation", author: "member:ann", state: "collected", group: "test-group", created: T0, lastUpdated: T0, at: T0,
         files: Object.entries(image).map(([path, text]) => ({ path, text, sha256: hex(text) })) }));
-    assert.equal(record.grammars().length, register ? 1 : 0);
+    assert.equal(record.grammars().find((g) => g.ids.includes("C-2.7")).module, register ? "capture" : "legacy-checks");
     return record.auditPass({ limit: 50 });
   };
   const withGrammar = await report(true), without = await report(false);

@@ -1,12 +1,14 @@
 /* capture's test fixture: a Durable Object storage stand-in over node:sqlite (`sql.exec`, `transactionSync` nesting
-   as savepoints), record-core's tables, the two tables of provenance's stated read contract that capture joins
-   (`register`, `captured_locators`: provenance R48, only the contract's columns), an evidence bucket, and stand-ins
-   for the providers capture reaches (host-governor, provenance), each behaving as its Provides state. */
+   as savepoints), record-core's tables, membership's and credentials' (K789: the signer keys R69 reads are credentials',
+   its R11, built after membership as the host builds them), the two tables of provenance's stated read contract that
+   capture joins (`register`, `captured_locators`: provenance R48, only the contract's columns), an evidence bucket,
+   and stand-ins for the providers capture reaches (host-governor, provenance), each behaving as its Provides state. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
@@ -88,9 +90,11 @@ export function fresh({ env = {}, evidence = null, gov = null, prov = undefined 
   const ctx = { storage: s };
   const core = recordOf(ctx, { evidence, evidencePrefix: "bio/captures/" });
   core.migrate();
-  membershipOf(ctx).migrate();
+  membershipOf(ctx, { record: core }).migrate();
+  const credentials = credentialsOf(ctx, { record: core });
+  credentials.migrate();
   const c = new Capture(s, { record: core, env: { ...env, ...(evidence ? { CAPTURES: evidence } : {}) }, governor: gov ?? governor(),
-                             provenance: prov === undefined ? provenance(s) : prov });
+                             provenance: prov === undefined ? provenance(s) : prov, credentials });
   c.migrate();
   return { s, c, core, rows: (q, ...a) => s.sql.exec(q, ...a) };
 }
@@ -147,7 +151,8 @@ export async function sshsign(key, message, namespace) {
     sstr(new Uint8Array(0)), sstr("sha512"), sstr(cat8(sstr("ssh-ed25519"), sstr(sig))));
   return `-----BEGIN SSH SIGNATURE-----\n${b64(blob).replace(/(.{70})/g, "$1\n")}\n-----END SSH SIGNATURE-----\n`;
 }
-/* A member and a signer key in membership's tables, as its R25/R27 leave them (`status` of each). */
+/* A member in membership's table and a signer key in credentials' (`status` of each), as membership's R13/R16 and
+   credentials' R6/R7 leave them. */
 export function signer(s, memberId, keyB64, { keyStatus = "active", memberStatus = "active" } = {}) {
   s.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', 'member', ?, '2026-01-01', '2026-01-01')`,
              memberId, memberStatus);

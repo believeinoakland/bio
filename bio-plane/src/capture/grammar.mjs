@@ -6,9 +6,11 @@
  * (`registerGrammar`, its R67), once per storage in `captureOf`: record-core's audit and promotion's gate pass the
  * registrations to `checkBundle` as `opts.grammars`, and a grammar claiming an arm's whole id list runs IN THAT ARM'S
  * PLACE over the same context, so the findings, their ids, severities and order are the catalogue's own. Copied
- * whole from the catalogue in T18; the catalogue's copy stays until inquiry's face passes grammars too (T19), then
- * goes (K624 (1)). Pure: no store, no network, no clock. */
-import { canonicalJson, ISO_TS_RE } from "../../checks/bio-checks.mjs";
+ * whole from the catalogue in T18; the catalogue holds a copy (rule 1, K767) only for the callers that still judge
+ * through its own `checkBundle` without registering this grammar (instance-setup's tests), and the last of them to
+ * re-point deletes it. Its shared grammar (`canonicalJson`, `ISO_TS_RE`) is record-grammar's (its R2, R12). Pure: no
+ * store, no network, no clock. */
+import { canonicalJson, ISO_TS_RE } from "../record-grammar/index.mjs";
 
 /* The catalogue's finding shape (`f`), so a finding from this arm is the one the built-in arm made. */
 const f = (check, severity, message, repairs) => {
