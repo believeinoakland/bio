@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { world, run, sha, HTML, page, rendererEnv } from "./fixture.mjs";
 import { RENDER_DEFAULTS, RENDERED_METHOD, renderReserveMs } from "../../../src/render.mjs";
 import { normalizeAddress } from "../../../src/subresources.mjs";
-import { EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { RENDER_CAPTURE_CHECKS } from "../../../src/acquisition/index.mjs";
 
 /* d57selflink's page: a calendar that links to itself, beside two other same-host pages. */

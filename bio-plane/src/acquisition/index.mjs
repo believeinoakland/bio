@@ -12,8 +12,8 @@
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
-import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../checks/bio-checks.mjs";
-import { civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS } from "./checks.mjs";
+import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../record-grammar/index.mjs";
+import { civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
 import { detectFormat } from "../formats.mjs";
 import { odfEvidentiaryDigest, ODF_FORMATS } from "../odf.mjs";
@@ -28,7 +28,7 @@ import { attest as provenanceAttest, ARCHIVE_CAPTURE_GRADE } from "../provenance
 
 /* capture R24, R29: the one user agent and this module's rows, for every module that sends or judges them. */
 export { CIVICOS_CONTACT_URL, civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS,
-         ACQUISITION_CHECKS } from "./checks.mjs";
+         INSTALLATION_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -295,8 +295,14 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
-  if (!ev) return answer(503, { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op,
-                                error: "this instance has no evidence storage configured" });
+  /* C-68.1 (K794): this module is the earliest raiser, so the row is its own (R29). */
+  if (!ev) {
+    /* DEC-49 REGION is-storage-absent */
+    const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+    return answer(503, { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check, translation: row.translation, op,
+                         error: "this instance has no evidence storage configured" });
+    /* END DEC-49 REGION is-storage-absent */
+  }
   /* R1, K58: THE CAPTURE-REQUEST ARM IS IN PROCESS ONLY. From outside, `via: "capture-request"` is refused
      C-28.13 whatever the caller: the AI does not capture, it REQUESTS, and the daemon captures. */
   if (!captureRequest && body.via === "capture-request") {
@@ -549,7 +555,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   }
   await noteOutcome("success", res.status);
 
-  /* R10. Streamed in parts of 8 MiB, so peak residency is one part. The incremental hasher is the CATALOGUE'S, the
+  /* R10. Streamed in parts of 8 MiB, so peak residency is one part. The incremental hasher is RECORD-GRAMMAR'S, the
      one C-18.6 verifies parts with, so a disagreement between two implementations cannot look like tampering. */
   const PART = 8 * 1024 * 1024;
   const MAX = 256 * 1024 * 1024;
