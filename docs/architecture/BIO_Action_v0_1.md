@@ -81,6 +81,7 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 4. **Certification by a licensed professional:** deferred until a group needs a licensed name on an output; meanwhile the attribution levels serve (Publication §3 rule 7). Agreed.
 5. **Confidential referral:** an action addressed to the oversight office, prepared as a filing or communication, sent by the member's own hand and recorded; nothing non-public leaves by a system path (DEC-31). Agreed.
 6. **Joint action with another group:** recorded and deferred (Bob, 2026-09-30). The design for when it is taken up is in §8.
+7. **The member word for what a plan addresses: "Matters"** (RULED 2026-10-01 by Bob, DEC-114). Every member-facing use reads "matter" / "Matters": the plan page's heading and add button, the options' tags, the start preview, queue items and the glossary; the approved plan-page sketch changes in that one word. "Subject" keeps its one member-facing meaning, an entity on the Subjects screen. The internal term in the requirements stays "subject".
 
 ## 8. The reasoning behind points 2 and 6
 

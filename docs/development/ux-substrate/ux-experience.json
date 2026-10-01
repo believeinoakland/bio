@@ -16828,7 +16828,7 @@
     "UC-126"
    ],
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "What a plan is about: 'Subjects' or 'Matters'",
     "inOneBreath": "On the action plan page, should the list of things the plan is about be headed 'Subjects' or 'Matters', given that 'Subject' already names a person, office, place, law or thing elsewhere in CivicOS?",
@@ -16999,6 +16999,16 @@
      "Checked K628-K859: none settles or changes this question."
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-114"
+    ],
+    "status": "ruled",
+    "title": "What a plan is about: 'Matters'",
+    "decided": "Members see 'Matters' (one 'matter') for the things an action plan addresses, everywhere they appear: the plan page's heading and add button, the options' tags, the preview when an action starts, queue items and the glossary. The approved plan-page sketch changes in that one word. 'Subject' keeps its one member-facing meaning: a person in a public role, office, place, law or thing on the Subjects screen. The requirements' internal term stays 'subject'."
    }
   },
   {

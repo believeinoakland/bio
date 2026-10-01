@@ -1839,3 +1839,17 @@ response: **Bob, 2026-10-01: "Q#31: as recommended"** (A): once devices store as
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 31; INVESTIGATIVE-SESSION.md "TRANSCRIPT RETENTION" (RULED 2026-10-01); BIO_Assistant_and_AI_Roles_v0_1.md item 6.
 owed: the hold statement's list of projects (the threatened action's project filled in; further projects by a later statement); the device transcript store's check for a hold before either scheduled deletion, failing closed (deleting nothing when it cannot check); "hold released" made heavier than reasoned, its form stating what will be deleted, the administrators and the placer told once; the held-project strip, shown only to members who can see the project; the control plane's wipe of a real record refused while any hold is in place (actions R52's "Nothing here suspends a purge" superseded); the UX page's question 31 marked ruled.
+
+### DEC-114 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01TNeXM2Qvi7zMXT6BntbENE; the development process runs on his secondary account) (the UX canon's open question 34: what a plan is about, 'Subjects' or 'Matters')
+for: bob
+question: The word members see for the things an action plan addresses, used everywhere they appear (the plan page's heading and buttons, the preview when an action starts, queue items, the glossary), given that 'Subject' already names an entity (a person in a public role, office, place, law or thing) on the Subjects screen.
+why it is Bob's: member vocabulary (P17: UX).
+provisional: the approved plan-page sketch's 'Subjects' heading (K608 (4)); the Action canon's prose, which calls them matters (K590 (4); BIO_Action_v0_1.md §3); action-plans Terms and R6 (the internal term 'subject').
+alternative: (B) keep 'Subjects', with a glossary warning; (C) 'Issues' or 'Concerns'.
+recommendation: (A) 'Matters'.
+reversal cost: low (one word, before any plan screen is built).
+response: **Bob, 2026-10-01: "Q#34: matters"** (A): every member-facing use of what a plan addresses reads "matter" / "Matters": the plan page's section heading and add button, the options' tags, the preview when an action starts, queue items and the glossary. The approved plan-page sketch changes in that one word. "Subject" keeps its one member-facing meaning (an entity on the Subjects screen). The internal term in the requirements stays "subject" (BOB's). The matter page of question 35 is named consistently with it.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 34; BIO_Action_v0_1.md §7 item 7 (RULED 2026-10-01).
+owed: "Matters"/"matter" in every member-facing string for a plan's subjects (action-plans' labels, the start preview, queue-producers' item wording, the glossary; the plan-page sketch's heading); the UX page's question 34 marked ruled.
