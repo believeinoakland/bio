@@ -27,3 +27,7 @@
 - `checks/format.mjs`: 84 modules, 82 requirements files; 0 failures. `checks/architecture.mjs`: 24 product files, 67 relative imports; 0 failures. `checks/coverage.mjs`: 17 of 17 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … tranche/T20`: 4 files changed; 0 failures.
 
 Size (session_01XLWRBsRPw2zAufibUqk5eL): test runs 8, module lines 2,159
+
+## J1 · REPORT
+
+Found in other modules (record, Completion): (1) legacy-tests: bio-plane/test/system/d278-codeless-refusals.test.mjs:205-206 pins the old publishedcase argument sentence; already red on tranche/T20 (imports the deleted checks/bio-checks.mjs), deleted in L11 (K879), so not re-keyed. (2) civicos-ui/test/publishedcase.test.mjs:463 VERIFY_DETAIL is a stale fixture copy of the old verification sentence (own bundle sha); stubbed, nothing fails. (3) Generated artifact staled: the plane bundle bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json), inputs src/public-read/index.mjs and src/publication/worker.mjs; release/bio-plane.bundled.mjs also carries the old strings.
