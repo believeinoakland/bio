@@ -29,3 +29,7 @@ N458 proof needs a requirement id to name. No requirement states the "record" wo
 ## J2 · REPORT
 
 Generated artifacts after my change to `bio-plane/src/sign-release.html` and its render `src/signpage.mjs`: (1) plane bundle STALE (`bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json`; owner `not_product`): `fleetbundles.test.mjs` goes from 0 FAILs on `tranche/T21` (checked with my change stashed) to 4, all bio-plane: the D-298 staleness arm, the fresh-build byte identity, the manifest sha256, and the comment-only arm. Regenerate at the L1 close. (2) Installer bundle (`newgroup/dist/newgroup.bundled.mjs`): not staled; its signatures input is `sshsig.mjs`, unchanged, and `newgroup-bundle-fresh.test.mjs` passes (1/1). Nothing found in another module.
+
+## J3 · COMPLETE
+
+Done. N458: "record" for "bundle" in the signer page's member-read text (`sign-release.html` :138, :142, :144, :397, :398, :403; :123's file name stays), `signpage.mjs` re-rendered by `embed-signpage.mjs`. N469: no note in my paths names a deleted file. Proof: a new R32 arm over the rendered page and the strings its script writes (fails on the old page). signatures 56/56, bundler 45/45; format, architecture, coverage (36/36), ownership 0 failures. Plane bundle stale (REPORT J2). J1 (the requirement id the proof names) is still open; built on my reading.
