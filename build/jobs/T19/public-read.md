@@ -27,3 +27,7 @@
 - `checks/format.mjs`: 87 modules, 0 failures. `checks/architecture.mjs … public-read`: 24 files, 67 imports, 0 failures. `checks/coverage.mjs … public-read`: 17 of 17, 0 failures. `checks/ownership.mjs … public-read tranche/T19`: 12 files, legacy-index 0 lines, 0 failures.
 
 Size (session_012N1gfy5QA5rP3F2eTHXTkt): test runs 9, module lines 2159
+
+## J1 · REPORT
+
+Two for BOB, neither mine to change. (1) control-plane R22: CHECK_FAMILY_FILES (control-plane/families.mjs) does not list src/public-read/checks.mjs, so families.test.mjs' totality arm also names public-read's three families (that arm is already red at the tranche head for credentials, inquiry-grammar, basis-versions; count unchanged). The codes resolve through publication's copies until publication deletes them; the list needs this file no later than that deletion. (2) Requirements/uses: public-read.md's Uses still names legacy-checks for parseFrontmatter, normalizeType, sectionText; they now come from record-grammar and no public-read file imports legacy-checks, so that Uses line and the legacy-checks edge in modules.json can go.
