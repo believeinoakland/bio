@@ -41,3 +41,7 @@ My best reading, which I am building: `project` is record-core's `bundleInfo(act
 - `format`: 82 modules, 77 requirements files; 0 failures. `architecture action-clocks`: 7 product files, 26 relative imports; 0 failures. `coverage action-clocks`: 9 of 9 live requirement ids named by a test; 0 failures. `ownership action-clocks tranche/T18`: 8 files changed; 0 failures.
 
 Size (session_01UKdcungjhYbWwBjvB2YNNz): test runs 7, module lines 638
+
+## J3 · REPORT
+
+Other modules, from J2: (1) promotion commits every bundle with project: null (promotion/index.mjs:800), so record-core's bundleInfo().project is null for every action (see J1). (2) actions' job: delete the clock copy as J2 lists; after it, action_clock_proposals purges under action-clocks' declaration. (3) legacy-store (K671): construct actionClocksOf and spread actionClocksOps; op-declarations: specs for reminderset and reminderanswer (mutating, a member's act); control-plane: ACTION_CLOCK_CHECKS in CHECK_FAMILIES. (4) Catalogue family C-123 taken for the reminders' rows; renumber if another T18 job took it.
