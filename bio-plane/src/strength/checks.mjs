@@ -28,8 +28,8 @@ const at = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
  * one as the other: **the builder CAN produce both conditions the moment an
  * edit composes the two axes or drops the state-set line**, which is precisely
  * what R2's forbidden composition and DEC-40's stripped filter line are. They
- * are DRIVEN — `test/strengthpair.control.mjs` arms each one and records what
- * failed — so neither is a refusal nobody can prove fires.
+ * are DRIVEN — `test/m/strength/version.test.mjs` (R10, R24) arms each one
+ * through `refusePairComposed` — so neither is a refusal nobody can prove fires.
  *
  * NO MEMBER-FACING TRANSLATION BELOW SAYS "ground", "partition", "AND" or "OR"
  * as a member-facing word (DEC-32's elicitation clause 1, D-226). The
@@ -149,8 +149,8 @@ export const VERSION_STRENGTH_INERT_SOURCES = ['hunch'];
  * upstream origin — for a partition of a question's reasons that NOBODY HAS
  * WRITTEN YET, so the elicitation's read-back can name every shared origin
  * BEFORE the member's answers are written. It is gated as `op=versionstrength`
- * is and writes nothing. C-71 is minted (`node tools/mintid.mjs C`) rather than
- * taken as C-30.n: the op is a second door onto `#independenceOf`, not a second
+ * is and writes nothing. C-71 was minted as a family of its own (by the old
+ * process's id tool, since retired) rather than taken as C-30.n: the op is a second door onto `#independenceOf`, not a second
  * strength read, and none of these refusals is a statement about a strength.
  * =========================================================================== */
 export const PARTITION_INDEPENDENCE_CHECKS = Object.freeze({

@@ -26,7 +26,9 @@ function projected() {
 
 test("R6: NO_ID; an absent or invisible id is NO_SUCH_BUNDLE, one answer; NOT_AN_INQUIRY after sight", () => {
   const w = projected();
-  assert.equal(w.s.inquiryStrength({ viewer: MACHINE }).reason, "NO_ID");
+  const noId = w.s.inquiryStrength({ viewer: MACHINE });
+  assert.equal(noId.reason, "NO_ID");
+  assert.match(noId.detail, /pass id=<record id>/);
   const absent = w.s.inquiryStrength({ id: "INQ-2026-0099-a", viewer: MACHINE });
   const unseen = w.s.inquiryStrength({ id: INQ, viewer: "someone" });
   assert.deepEqual(absent, { ok: false, reason: "NO_SUCH_BUNDLE", target: "INQ-2026-0099-a" });
@@ -34,6 +36,8 @@ test("R6: NO_ID; an absent or invisible id is NO_SUCH_BUNDLE, one answer; NOT_AN
   const doc = w.s.inquiryStrength({ id: "INFO-2026-0001-a", viewer: MACHINE });
   assert.equal(doc.reason, "NOT_AN_INQUIRY");
   assert.equal(doc.object_type, "information");
+  /* N458: members read "record", never "bundle", in a refusal's sentence. */
+  for (const r of [noId, doc]) assert.doesNotMatch(r.detail, /bundle/i);
 });
 
 /* Every id field a named member may carry, and every list of named members an axis or a ground holds. */
