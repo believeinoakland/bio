@@ -2642,6 +2642,9 @@ export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, ST
          sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, installationRow, dispatchRow, replayRow,
          dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          publishAffordances, requiredArgument, storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
+/* Rule 1 (K648): `legacy-index`' arms stamp with record-grammar's two machine prefixes, read through this door until their
+   file goes (plane R8), so that no file imports the catalogue once R43 ends it. */
+export { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX };
 /* K624 (1), (2): `legacy-index`' arms (`src/index.mjs`) read these of admission through this module until their modules
    take them; the door itself calls admission directly. */
 export { SCRATCH, NAMESPACES, classify, scopeFor } from "../admission/index.mjs";

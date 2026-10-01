@@ -12,7 +12,7 @@ import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
    are character-identical while the prefixes are `token:` and `class:`. */
 /* D-270 / C-61: the argument complaint's row, used AS A VALUE at the one governed site — the code is a STRING
    LITERAL there so the DEC-49 guard's arm C can COMPARE it rather than read past a variable. */
-import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
+import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "./control-plane/index.mjs";
 import { bindPublishedPlane, assembleCaseContainer } from "./publication/worker.mjs";
 import { publicReadDoorOp } from "./public-read/door.mjs";
 import { publicationDoorOp } from "./publication/door.mjs";
