@@ -1,6 +1,6 @@
 /* record-core: the DDL of the module's own tables (bundles, files, history, manifest, leases,
-   seq, minted_ids, settings). The legacy schema interpolates it until it is divided. Whole-line
-   `--` comments only and no semicolon inside a comment: the store strips comment lines and splits
+   seq, minted_ids, settings), run by this module's own `migrate()`, first (R71). Whole-line
+   `--` comments only and no semicolon inside a comment: `migrate` strips comment lines and splits
    the text on semicolons. */
 export const RECORD_SCHEMA = `CREATE TABLE IF NOT EXISTS bundles (
   bundle_id     TEXT PRIMARY KEY,
