@@ -4,8 +4,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, text, rendererEnv } from "./fixture.mjs";
+import { readFileSync, readdirSync } from "node:fs";
 import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, CIVICOS_CONTACT_URL,
-         civicosUserAgent, userAgent } from "../../../src/acquisition/index.mjs";
+         civicosUserAgent, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 
 const EXPECTED = {
   CAPTURE_NOT_DRAINING: "C-28.13",
@@ -16,7 +17,7 @@ const EXPECTED = {
   EVIDENCE_STORAGE_NOT_CONFIGURED: "C-68.1",
 };
 
-test("R29: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13 and C-68.1, each with its code, number, a translation and a where naming this module's site (C-68.1's since K796)", () => {
+test("R29: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13 and C-68.1, each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(ACQUISITION_CHECKS).map(([k, v]) => [k, v.check])), EXPECTED);
   assert.deepEqual(Object.keys(DRIVE_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("DRIVE_")).sort(), "C-48.8 and C-48.9 are monitoring's");
   assert.deepEqual(Object.keys(RENDER_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("RENDER_")).sort());
@@ -24,14 +25,14 @@ test("R29: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C
   assert.deepEqual(Object.keys(INSTALLATION_CHECKS), ["EVIDENCE_STORAGE_NOT_CONFIGURED"], "the rest of C-68 is control-plane's and publication's");
   for (const [code, row] of Object.entries(ACQUISITION_CHECKS)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
-    assert.match(row.where, /^src\/acquisition\/index\.mjs acquire > is-[a-z-]+/, code);
+    assert.match(row.where, /^src\/acquisition\/index\.mjs (acquire|evidenceStorageAbsent) > is-[a-z-]+/, code);
     assert.ok(Object.isFrozen(row), `${code} is frozen`);
     assert.ok(!/oakland|alameda/i.test(row.translation), `${code}: R30, no place in outward text`);
   }
   assert.ok(Object.isFrozen(ACQUISITION_CHECKS) && Object.isFrozen(DRIVE_CAPTURE_CHECKS) && Object.isFrozen(RENDER_CAPTURE_CHECKS) && Object.isFrozen(INSTALLATION_CHECKS));
-  /* K794, K796: C-68.1 is the catalogue's row with its number and translation unchanged, its where this module's site */
+  /* K794, K850: C-68.1 is the catalogue's row with its number and translation unchanged, its where the one raiser's region */
   assert.deepEqual({ ...INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED }, {
-    check: "C-68.1", where: "src/acquisition/index.mjs acquire > is-storage-absent",
+    check: "C-68.1", where: "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent",
     translation: "This copy was installed without the storage it keeps captured documents in, so it cannot "
       + "keep or read the bytes of a captured document. That is a fact about how the copy was set up, not "
       + "about this request: whoever installed it can connect that storage in the hosting account. Nothing "
@@ -104,4 +105,64 @@ test("R29 (C-68.1, K794): acquire with no evidence storage is refused 503 with i
   /* negative control: the same act with storage bound is a filed capture carrying no row */
   const ok = await run(world(), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
   assert.deepEqual([ok.status, ok.body.ok, "check" in ok.body], [200, true, false]);
+});
+
+/* K850: the door's answer as control-plane's `storageAbsent` gives it through its `json` today, for each op it hands the
+   raiser to, with the error each site passes byte-identical (capture/ops.mjs, extraction/ops.mjs, provenance/ops.mjs). */
+const C681 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+const doorBody = (op, error) => ({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+                                   check: C681.check, translation: C681.translation, error, op });
+const acquireBody = (error) => ({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: C681.check, translation: C681.translation,
+                                  op: "acquire", error });
+
+test("R29 (C-68.1, K850): the exported raiser answers the door's body for the op and error it is given, key for key and in order, 503; with {code: false} it answers acquire's; never throws", () => {
+  for (const [op, error] of [["capture", "R2 is not configured on this instance"], ["pdfstructure", "R2 is not configured on this instance"],
+                             ["acquire", "this instance has no evidence storage configured"], ["attest", "this instance has no evidence storage configured"]]) {
+    const a = evidenceStorageAbsent(op, error);
+    assert.equal(a.status, 503, op);
+    assert.deepEqual(a.body, doorBody(op, error), op);
+    assert.equal(JSON.stringify(a.body), JSON.stringify(doorBody(op, error)), `${op}: the door's bytes, its keys in their order`);
+    assert.deepEqual(Object.keys(a), ["status", "body"], `${op}: a status and a body, as the door's json takes them`);
+    const b = evidenceStorageAbsent(op, error, { code: false });
+    assert.equal(b.status, 503);
+    assert.equal(JSON.stringify(b.body), JSON.stringify({ ...acquireBody(error), op }), `${op}: acquire's shape, no code`);
+    assert.equal("code" in b.body, false);
+  }
+  /* the op and error are the caller's, passed through unchanged, whatever they are; each call answers a fresh body */
+  for (const [op, error] of [[undefined, undefined], [null, ""], ["x", { not: "a string" }]]) {
+    const a = evidenceStorageAbsent(op, error);
+    assert.deepEqual([a.status, a.body.op, a.body.error, a.body.check], [503, op, error, "C-68.1"]);
+  }
+  assert.notEqual(evidenceStorageAbsent("a", "e").body, evidenceStorageAbsent("a", "e").body, "a caller may decorate its own body");
+  assert.doesNotThrow(() => evidenceStorageAbsent());
+  /* negative control: the explicit default is the door's body */
+  assert.equal(JSON.stringify(evidenceStorageAbsent("capture", "e", { code: true }).body), JSON.stringify(doorBody("capture", "e")));
+  assert.equal(JSON.stringify(evidenceStorageAbsent("capture", "e", {}).body), JSON.stringify(doorBody("capture", "e")));
+});
+
+test("R29 (C-68.1, K850): acquire without evidence storage answers as before, byte for byte, and its answer is the raiser's own", async () => {
+  const error = "this instance has no evidence storage configured";
+  const r = await run(world({ evidence: false }), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
+  assert.equal(r.status, 503);
+  assert.equal(JSON.stringify(r.body), JSON.stringify(acquireBody(error)), "acquire's body unchanged: ok, reason, check, translation, op, error; no code");
+  assert.deepEqual({ status: r.status, body: r.body }, evidenceStorageAbsent("acquire", error, { code: false }), "raised through the export");
+});
+
+test("R29 (C-68.1, K850): the module's source holds exactly one is-storage-absent region, inside evidenceStorageAbsent, and the row's where names it", () => {
+  const dir = new URL("../../../src/acquisition/", import.meta.url);
+  const files = readdirSync(dir).filter((f) => f.endsWith(".mjs"));
+  const opens = [], closes = [];
+  for (const f of files) {
+    const src = readFileSync(new URL(f, dir), "utf8");
+    for (const m of src.matchAll(/DEC-49 REGION is-storage-absent\b/g)) opens.push([f, m.index, src]);
+    for (const m of src.matchAll(/END DEC-49 REGION is-storage-absent\b/g)) closes.push([f, m.index]);
+  }
+  /* each END line also matches the opening pattern; one region is one opening and one END */
+  assert.deepEqual([opens.length - closes.length, closes.length], [1, 1], "exactly one is-storage-absent region");
+  const [file, at, src] = opens.find(([f, i]) => !closes.some(([g, j]) => g === f && j + 4 === i));
+  assert.equal(file, "index.mjs");
+  const fn = src.lastIndexOf("export function evidenceStorageAbsent(", at);
+  assert.ok(fn >= 0 && !/\nexport (async )?function /.test(src.slice(fn + 1, at)), "the region is inside evidenceStorageAbsent");
+  assert.ok(closes[0][1] > at && !/\nexport (async )?function /.test(src.slice(at, closes[0][1])), "and closes inside it");
+  assert.equal(C681.where, "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent");
 });
