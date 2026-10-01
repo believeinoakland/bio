@@ -109,7 +109,7 @@ test("R5 remindersDue lists each unanswered reminder whose day has come, on a pe
   assert.deepEqual(at("2026-09-28T23:59:59Z").items, [], "not before its day");
   const d = at("2026-09-29T00:00:00Z");
   assert.deepEqual(d.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", on: "2026-09-29", set_by: BOB,
-                               project: w.record.bundleInfo(A).project }]);
+                               project: null }]);
   assert.deepEqual(at("2026-10-01T08:00:00Z").items.map((x) => [x.ord, x.on]), [[0, "2026-09-29"], [1, "2026-10-01"]]);
   /* answered: gone. */
   w.clock.ms = Date.parse("2026-10-01T09:00:00Z");

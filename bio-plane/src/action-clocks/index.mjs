@@ -11,9 +11,11 @@
  * REACHED as `actionClocksOf(host, deps)` (K61): one instance per host, created on the first call. At creation it
  * creates its tables and declares them to record-core's purge (R9).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
- *   record, membership   layer 2: `readFile`, `readImage`, `bundleInfo`, `transact`, `getSetting`, `declarePurge`;
+ *   record, membership   layer 2: `readFile`, `readImage`, `transact`, `getSetting`, `declarePurge`;
  *                        `viewerPredicate`.
  *   actions              `actionRead` (its R29) and `noSuchAction` (its R43).
+ *   conformance          `determinationRead` (its R9): the project of the determination an action rests on (R3, R5;
+ *                        K702). A host on which it cannot be created answers every project null.
  *   now                  the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env                  the instance bindings.
  *
@@ -23,6 +25,7 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { PROJECTION_TABLE } from "../retrieval/index.mjs";
+import { conformanceOf } from "../conformance/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, lawProposalLabel } from "../../checks/bio-checks.mjs";
@@ -68,16 +71,24 @@ const clampLimit = (v, dflt, max) => { const n = Math.floor(Number(v)); return N
 export class ActionClocks {
   #deps;
 
-  constructor({ storage, record, membership, actions = null, host = null, now = null, env = null } = {}) {
+  constructor({ storage, record, membership, actions = null, conformance = null, host = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, actions };
+    this.#deps = { host, actions, conformance: conformance ?? undefined };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
 
   get actions() { return this.#deps.actions ||= actionsOf(this.#deps.host); }
+  /* R3, R5 (K702): conformance's `determinationRead`, reached on the same host unless a test passes its own; null where
+     it cannot be created, and every project then reads null. */
+  get conformance() {
+    if (this.#deps.conformance === undefined || this.#deps.conformance === null) {
+      try { this.#deps.conformance = conformanceOf(this.#deps.host); } catch { this.#deps.conformance = false; }
+    }
+    return this.#deps.conformance || null;
+  }
 
   migrate() { migrateActionClocks(this.sql); }
 
@@ -132,8 +143,19 @@ export class ActionClocks {
     const first = [...entries].sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0))[0];
     return first && typeof first.author === "string" ? first.author : null;
   }
-  #projectOf(id) {
-    try { const i = this.record.bundleInfo(id); return i ? i.project ?? null : null; } catch { return null; }
+  /* R3, R5 (K702): the action's project is the project of the first determination among its `rests_on` legs, in the
+     document's order, read through `conformance.determinationRead` as the read's viewer sees it (a leg naming no
+     determination, or one the viewer may not see, is passed over); null when it rests on none. */
+  #projectOf(fm, viewer) {
+    const conf = this.conformance;
+    if (!conf || typeof conf.determinationRead !== "function") return null;
+    for (const l of (Array.isArray(fm && fm.action_basis) ? fm.action_basis : [])) {
+      if (!l || typeof l !== "object" || l.kind !== "rests_on" || typeof l.target !== "string") continue;
+      let d = null;
+      try { d = conf.determinationRead({ id: l.target, viewer }); } catch { d = null; }
+      if (d && d.ok !== false && typeof d.project === "string" && d.project) return d.project;
+    }
+    return null;
   }
 
   /* R1, R3: ONE PAGING RULE over the clock entries of the actions `candidates` reads, in (action id, entry position)
@@ -221,7 +243,7 @@ export class ActionClocks {
         const dated = typeof e.date === "string" && isDay(e.date);
         const past = dated && e.date < today;
         if (!(e.status === "overdue" || (e.status === "pending" && past))) return null;
-        if (!who.has(r.bundle_id)) who.set(r.bundle_id, { project: this.#projectOf(r.bundle_id), created_by: this.#createdBy(r.bundle_id) });
+        if (!who.has(r.bundle_id)) who.set(r.bundle_id, { project: this.#projectOf(this.#heldFm(r.bundle_id), viewer), created_by: this.#createdBy(r.bundle_id) });
         return { action: r.bundle_id, ord: i, date: typeof e.date === "string" ? e.date : null, basis: e.basis ?? null,
                  text: e.text ?? null, status: e.status, past, ...who.get(r.bundle_id) };
       },
@@ -401,7 +423,7 @@ export class ActionClocks {
         if (!e || typeof e !== "object" || e.status !== "pending") continue;
         if (items.length === max) { truncated = true; break; }
         items.push({ action: r.bundle_id, ord: r.entry, date: e.date ?? null, basis: e.basis ?? null, text: e.text ?? null,
-                     on: r.day, set_by: r.set_by, project: this.#projectOf(r.bundle_id) });
+                     on: r.day, set_by: r.set_by, project: this.#projectOf(fmOf(r.bundle_id), viewer) });
       }
       if (truncated || rows.length <= max || !last) break;
       cur = { sql: `AND (r.bundle_id > ? OR (r.bundle_id = ? AND (r.entry > ? OR (r.entry = ? AND (r.day > ?

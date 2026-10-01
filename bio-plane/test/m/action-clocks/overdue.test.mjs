@@ -29,7 +29,7 @@ test("R3 overdueClocks lists every overdue or past pending entry of open visible
   const r = w.c.overdueClocks({ viewer: M });
   assert.deepEqual(r.items.map(key), [`${A}:0`, `${A}:3`, `${D}:0`]);
   assert.deepEqual(r.items[0], { action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", status: "pending", past: true,
-                                 project: w.record.bundleInfo(A).project, created_by: M });
+                                 project: null, created_by: M });
   assert.equal(r.items[0].created_by, M, "the creator, not the later reviser");
   assert.deepEqual([r.as_of, r.limit, r.actions_limit, r.truncated, r.cursor], ["2026-09-28", 500, 500, false, null]);
   assert.deepEqual(counts(w), before, "writes nothing");
@@ -128,4 +128,22 @@ test("R9 every read answers an invisible action as an absent one; the module's t
   for (const p of ["Oakland", "Alameda", "California", "CPRA", ...oak.covers]) assert.ok(!outward.includes(p), p);
   assert.equal(profile("test-port-ellery").test, true);
   assert.deepEqual(w.record.getSetting("jurisdiction_profiles"), ["test-port-ellery"]);
+});
+
+test("R3 R5 the action's project is the project of the first determination among its rests_on legs that the viewer may see, read through conformance; null when it rests on none (K702)", () => {
+  const w = world();
+  for (const x of ["INFO-2026-0001-d", "CONF-2026-0001-hidden", "CONF-2026-0002-seen", "CONF-2026-0003-later"]) w.doc(x);
+  w.determinations.set("CONF-2026-0001-hidden", { project: "PROJ-2026-0009", sees: [BOB] });
+  w.determinations.set("CONF-2026-0002-seen", { project: "PROJ-2026-0001", sees: [M, BOB] });
+  w.determinations.set("CONF-2026-0003-later", { project: "PROJ-2026-0002", sees: [M, BOB] });
+  const legs = (...l) => ["action_basis:", ...l.flatMap(([t, k]) => [`  - target: ${t}`, `    kind: ${k}`])];
+  w.action(A, ["clock:", ...CLK("2026-09-01"), ...legs(["CONF-2026-0003-later", "advances"], ["INFO-2026-0001-d", "rests_on"],
+    ["CONF-2026-0001-hidden", "rests_on"], ["CONF-2026-0002-seen", "rests_on"], ["CONF-2026-0003-later", "rests_on"])]);
+  w.action(B, ["clock:", ...CLK("2026-09-01"), ...legs(["CONF-2026-0002-seen", "advances"])]);
+  const proj = (viewer) => w.c.overdueClocks({ viewer }).items.map((x) => [x.action, x.project]);
+  assert.deepEqual(proj(M), [[A, "PROJ-2026-0001"], [B, null]], "an advances leg, a document and an unseen determination are passed over");
+  assert.deepEqual(proj(BOB), [[A, "PROJ-2026-0009"], [B, null]], "the first the viewer sees");
+  w.c.reminderSet({ target: A, entry: 0, on: "2026-09-20", author: M, viewer: M });
+  w.c.reminderSet({ target: B, entry: 0, on: "2026-09-20", author: M, viewer: M });
+  assert.deepEqual(w.c.remindersDue({ viewer: M }).items.map((x) => [x.action, x.project]), [[A, "PROJ-2026-0001"], [B, null]]);
 });
