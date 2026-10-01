@@ -11,3 +11,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 10, legacy-store (amended; �
  K830 (RATIFICATION #11 J2): after ratification merges, `store.mjs`:24's `stampInstant` import may be dead (drop it if no use remains); the two CASE rows of `#MINT_LEDGER_LIVE` (`cases`, `case_documents`) duplicate ratification's registered seeds: remove them; `test/m/legacy-store/retire.test.mjs` goes (ratification holds the arm).
 
  K834 (ESCALATION #7 J1): escalation publishes `escalationOps(escalation, url, body)` from `src/escalation/ops.mjs` with its own number parser; spread it, and remove the ten escalation arms and the N216 comment (`#numberParam` stays while other arms use it).
+
+## B2 · CHANGE
+
+MONITORING #8 is merged into `tranche/T19` (K841): R51 registers its `counts()` with record-core (`MONITORING_COUNT_KEYS`). Merge the tranche branch into yours; you may now delete `store.mjs`'s by-name `counts()` call for monitoring (`build/extraction/legacy-store.md` §4.2 (2)) and continue as your START says.
