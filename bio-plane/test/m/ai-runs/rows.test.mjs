@@ -5,7 +5,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, ORG } from "./world.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
-import * as CATALOGUE from "../../../checks/bio-checks.mjs";
 
 /** Every code this module's acts mint, with its catalogue number (R35, R40, R46, R47). */
 export const MINTED = {
@@ -18,7 +17,7 @@ export const MINTED = {
   AI_RUN_MODE_UNCHECKED: "C-109.7",
 };
 
-test("R35: each check this module's acts mint has its row in run-rules' table, read by key — its number, a translation and a where naming this module's site; none is in the catalogue", () => {
+test("R35: each check this module's acts mint has its row in run-rules' table, read by key — its number, a translation and a where naming this module's site", () => {
   for (const [code, check] of Object.entries(MINTED)) {
     const row = AI_RUNS_CHECKS[code];
     assert.ok(row, `${code} has a row`);
@@ -26,9 +25,6 @@ test("R35: each check this module's acts mint has its row in run-rules' table, r
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
     assert.match(row.where, /^src\/ai-runs\/index\.mjs /, code);
   }
-  const catalogue = Object.entries(CATALOGUE).filter(([k, v]) => /_CHECKS$/.test(k) && v && typeof v === "object")
-    .flatMap(([, fam]) => Object.values(fam)).filter((r) => r && typeof r.check === "string").map((r) => r.check);
-  for (const check of Object.values(MINTED)) assert.equal(catalogue.includes(check), false, `${check} is still in the catalogue`);
 });
 
 test("R39: no place is named in the module's outward text — its acts' rows, refusals, notes and answers", async () => {

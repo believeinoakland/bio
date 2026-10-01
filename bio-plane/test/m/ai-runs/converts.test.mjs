@@ -70,9 +70,9 @@ test("R16, R18 (convert d260-resume): each withheld resumption's wake entry says
   await w.group("ann");
   w.bundle(INQ);
   w.ctx.id = { equals: (x) => x === "id:bio" };
-  w.membership.aiCredentialMint({ who: "admin", tokenId: "tok-org", secretSha: sha(TOKEN), principalKind: "organisation",
+  w.credentials.aiCredentialMint({ who: "admin", tokenId: "tok-org", secretSha: sha(TOKEN), principalKind: "organisation",
     taskScope: "investigative", writes: ["airuntick"], note: "the instance's key" });
-  const cred = w.membership.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
+  const cred = w.credentials.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
   const stamp = `${cred.principal}/${cred.tokenId}`;
   const runs = { INST: stamp, MEM: "member:ann/tok-m", OTHER: "class:ai/other" };
   for (const [run, principalPlane] of Object.entries(runs)) await w.runs.open(OPEN({ run, principalPlane }));

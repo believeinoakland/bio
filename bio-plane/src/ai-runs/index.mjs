@@ -8,7 +8,7 @@
  * reaper (`reap`) takes that exit for a run that was killed and called nothing.
  *
  * Reached as `aiRunsOf(ctx, env)` (K61), one instance per Durable Object storage; it reaches record-core,
- * membership, connections, bias and observation-log through their factories on the same `ctx`. */
+ * membership, credentials, connections, bias and observation-log through their factories on the same `ctx`. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
@@ -19,7 +19,8 @@ import { retrievalOf } from "../retrieval/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { CONDITION_KINDS } from "../observation-log/vocabulary.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { normalizeType, OBJECT_TYPES, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { normalizeType, OBJECT_TYPES, isMachineIdentity } from "../record-grammar/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { sha256hex, instanceAiCredential, instanceClaudeToken } from "../tokens.mjs";
 /* The run's vocabulary, pure rules, deployment order and rows are `run-rules`' (K617, K649 (1)); read there, never
@@ -115,6 +116,34 @@ export class AiRuns {
     });
     /* R25–R26: the surfacing step, joining every promotion (promotion R39, K31). */
     promotionOf(ctx).registerStep("ai-runs", { check: (c) => this.#surfacingCheck(c), project: (c) => this.#surfacingProject(c) });
+    /* R38: this module's tables' figures, for `op=stats` and purge's proof (record-core R63; moved from the legacy
+       store's `#counts`, its `#hiddenRunTail` with them). */
+    recordOf(ctx).registerCounts("ai-runs", [...AiRuns.COUNT_KEYS], (hid) => this.counts(hid));
+  }
+
+  /** R38 (D-113, D-464, D-486): the figures of this module's tables, through the caller's sight. `hid` is record-core
+   *  R63's: membership's `hiddenBundles` (its R88, the bundles the viewer may not see), or null for a viewer that sees
+   *  every bundle and for the direct internal call, which count whole. `aiRuns` drops a run whose context is hidden and
+   *  `inquiryRunSurfacings` a row whose question is; `aiRunBounds` and `aiRunLog` (the observation log's run rows) keep
+   *  only the rows of a run R19 would answer `found: true` for, as R42's `hiddenRuns` does: with `hid` given, a run is in
+   *  sight exactly when its context is a bundle not in `hid`, which is `runSight`'s gate, since `hid` is every bundle the
+   *  gate does not pass (every one, for a viewer it refuses). Synchronous; writes nothing. */
+  static COUNT_KEYS = Object.freeze(["aiRuns", "aiRunBounds", "inquiryRunSurfacings", "aiRunLog"]);
+  counts(hid = null) {
+    const c = (q, ...a) => this.#one(q, ...a).c;
+    if (!hid) return { aiRuns: c(`SELECT count(*) c FROM ai_runs`), aiRunBounds: c(`SELECT count(*) c FROM ai_run_bounds`),
+      inquiryRunSurfacings: c(`SELECT count(*) c FROM inquiry_run_surfacings`),
+      aiRunLog: c(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`) };
+    const seen = `(SELECT r.run FROM ai_runs r WHERE r.context_id IS NULL OR (r.context_id IN (SELECT bundle_id FROM bundles)
+                   AND r.context_id NOT IN ${hid.sql}))`;
+    return {
+      aiRuns: c(`SELECT count(*) c FROM ai_runs WHERE COALESCE(context_id, '') NOT IN ${hid.sql}`, ...hid.args),
+      aiRunBounds: c(`SELECT count(*) c FROM ai_run_bounds WHERE COALESCE(run, '') IN ${seen}`, ...hid.args),
+      inquiryRunSurfacings: c(`SELECT count(*) c FROM inquiry_run_surfacings WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}`,
+        ...hid.args),
+      aiRunLog: c(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run' AND COALESCE(authority, '') IN ${seen}`,
+        ...hid.args),
+    };
   }
 
   /** R30: the runs as the bias debt's work products (bias R33): `list(after, limit)` the run ids after `after`,
@@ -699,17 +728,21 @@ export class AiRuns {
        its canned translation are read from the catalogue at the moment of
        refusal, on REC-64's precedent three guards down; the `note` is kept
        unchanged beside it because it is the OPERATOR's sentence. */
+    /* R35: every refusal this act mints, built in one place from its row read by key, so each code is written once, at
+       its refusal (the DEC-49 guard's arm G), and each answer keeps its shape: the run, `started: false`, the code, its
+       check and translation, then what that refusal adds. `run || null` because the first refusal is of a blank id. */
+    const refusal = (code, more = {}) => {
+      const row = ROW(code);
+      return { run: run || null, started: false, code, check: row.check, translation: row.translation, ...more };
+    };
     /* DEC-49 REGION is-airun-open-context — C-33.30. The request names no run id or no
        context for it to sit in: asked before anything is looked up. D-589 narrowed C-33.29..31 from a
        whole-function `where` into one region each (REC-71's rule: a row names the smallest span), so a
        refusal written elsewhere in this function is judged by ITS OWN row and not by these three. */
     if (!run || !contextType || !contextId)
-      return { run: run || null, started: false,
-               code: "AI_RUN_NO_CONTEXT",
-               check: ROW("AI_RUN_NO_CONTEXT").check,
-               translation: ROW("AI_RUN_NO_CONTEXT").translation,
+      return refusal("AI_RUN_NO_CONTEXT", {
                note: "a run needs an id and the context it runs in (an inquiry or a project): "
-                   + "a run nothing is in the context of has nowhere to be visible" };
+                   + "a run nothing is in the context of has nowhere to be visible" });
     /* END DEC-49 REGION is-airun-open-context */
     /* PL-18 / DEC-63 — THE GATE, AND IT RUNS BEFORE THE RUN'S OWN SHAPE IS
        JUDGED. Placed here, immediately after the context is known and before
@@ -790,13 +823,10 @@ export class AiRuns {
     /* DEC-49 REGION is-airun-open-capability — C-33.29. No account to run under: the
        two principals are not both named. See REC-64's note above for why one code and not two. */
     if (!principalPlane || !principalClaude)
-      return { run, started: false,
-               code: "AI_RUN_CAPABILITY_UNAVAILABLE",
-               check: ROW("AI_RUN_CAPABILITY_UNAVAILABLE").check,
-               translation: ROW("AI_RUN_CAPABILITY_UNAVAILABLE").translation,
+      return refusal("AI_RUN_CAPABILITY_UNAVAILABLE", {
                note: "a run names TWO principals — the plane credential acting and WHICH LEVEL of the "
                    + "Claude-account cascade pays (member, then project, then instance). They are "
-                   + "different principals and an act must say both (DEC-27(b), DEC-55.4)" };
+                   + "different principals and an act must say both (DEC-27(b), DEC-55.4)" });
     /* END DEC-49 REGION is-airun-open-capability */
     /* SK-1 — THE THIRD CONDITION, AND IT IS REFUSED WHERE THE PRINCIPALS ARE.
        §11 records what a run was FORMED under, and the skill version is one of
@@ -818,38 +848,33 @@ export class AiRuns {
     /* DEC-49 REGION is-airun-open-mode — C-109.1. */
     const deployed = this.#deployedModes();
     if (!deployed.includes(runMode))
-      return { run, started: false,
-               code: "AI_RUN_MODE_NOT_DEPLOYED",
-               check: ROW("AI_RUN_MODE_NOT_DEPLOYED").check,
-               translation: ROW("AI_RUN_MODE_NOT_DEPLOYED").translation,
+      return refusal("AI_RUN_MODE_NOT_DEPLOYED", {
                mode: String(mode).slice(0, 60), deployed: [...deployed],
                note: `the mode '${String(mode).slice(0, 60)}' is not deployed on this instance: the modes deploy in one `
                    + `order, each only after the one before it is verified live, and today ${deployed.join(", ")} `
-                   + `${deployed.length === 1 ? "is" : "are"} deployed. Nothing was written` };
+                   + `${deployed.length === 1 ? "is" : "are"} deployed. Nothing was written` });
     /* END DEC-49 REGION is-airun-open-mode */
     /* R46 (K660; BIO_Action_v0_1.md §4 rule 1): THE PLANNING RUN, asked after the mode is known deployed and before
        anything else about the run's shape: its plan named (and a plan named by no other mode), over a project, by a
-       member, with no search allowance, in that order. Each code is written once, at its refusal; the row is read by
-       key from run-rules' table. */
-    const planNo = (code, detail, extra = {}) => ({ run, started: false, code, check: ROW(code).check,
-      translation: ROW(code).translation, detail, ...extra, note: "Nothing was written" });
+       member, with no search allowance, in that order. Each code is written once, at its refusal (`refusal` above). */
+    const planRefusal = (code, detail, extra = {}) => refusal(code, { detail, ...extra, note: "Nothing was written" });
     const planNamed = typeof plan === "string" && plan.trim() !== "";
     const who = actor == null ? "" : String(actor).trim();
     const search = (Array.isArray(bounds) ? bounds : []).find((b) => b && typeof b === "object"
       && (b.bound === "fetches" || b.bound === "subsessions") && typeof b.allowed === "number" && b.allowed > 0);
     /* DEC-49 REGION is-airun-open-plan */
     if (runMode === "plan" && !planNamed)
-      return planNo("AI_RUN_PLAN_REQUIRED", "a planning run names the plan it works on: pass plan=<the plan's id>");
+      return planRefusal("AI_RUN_PLAN_REQUIRED", "a planning run names the plan it works on: pass plan=<the plan's id>");
     if (runMode !== "plan" && plan != null)
-      return planNo("AI_RUN_PLAN_UNEXPECTED", `a run in mode '${runMode.slice(0, 60)}' names no plan; only a run in `
+      return planRefusal("AI_RUN_PLAN_UNEXPECTED", `a run in mode '${runMode.slice(0, 60)}' names no plan; only a run in `
         + "mode 'plan' works on one");
     if (runMode === "plan" && String(contextType) !== "project")
-      return planNo("AI_RUN_PLAN_NEEDS_PROJECT", "a planning run is over the project the plan belongs to: contextType=project");
+      return planRefusal("AI_RUN_PLAN_NEEDS_PROJECT", "a planning run is over the project the plan belongs to: contextType=project");
     if (runMode === "plan" && (!who || isMachineIdentity(who)))
-      return planNo("AI_RUN_PLAN_NEEDS_MEMBER", "only a member starts a planning run, for one plan at a time; nothing "
+      return planRefusal("AI_RUN_PLAN_NEEDS_MEMBER", "only a member starts a planning run, for one plan at a time; nothing "
         + "starts one by itself");
     if (runMode === "plan" && search)
-      return planNo("AI_RUN_PLAN_NO_SEARCH", `a planning run works from what the record already holds, so it declares `
+      return planRefusal("AI_RUN_PLAN_NO_SEARCH", `a planning run works from what the record already holds, so it declares `
         + `no '${search.bound}' allowance (it was given ${search.allowed})`, { bound: search.bound });
     /* END DEC-49 REGION is-airun-open-plan */
     /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
@@ -898,11 +923,7 @@ export class AiRuns {
     /* DEC-49 REGION is-airun-open-already — C-33.31. The run id is already on record.
        Asked AFTER the lens is computed and immediately before the insert, with no await between them. */
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
-      return { run, started: false,
-               code: "AI_RUN_ALREADY_OPEN",
-               check: ROW("AI_RUN_ALREADY_OPEN").check,
-               translation: ROW("AI_RUN_ALREADY_OPEN").translation,
-               note: "a run with this id already exists" };
+      return refusal("AI_RUN_ALREADY_OPEN", { note: "a run with this id already exists" });
     /* END DEC-49 REGION is-airun-open-already */
 
     /* REC-207 — THE RE-RUN LINK IS JUDGED BEFORE IT IS WRITTEN, because a link the record cannot stand
@@ -915,36 +936,28 @@ export class AiRuns {
        `where` is the WHOLE FUNCTION, as its three existing rows' are, because `check-refusal-codes.mjs`
        judges a region's refusals at the region AND again at an enclosing whole-function site, where the
        code is not one of that site's rows: a region inside a function that keeps a whole-function `where`
-       fails all three by name. Measured on the first run of this item. The row's own header in
-       bio-checks.mjs carries the argument and names the honest fix as REC-71's work. */
+       fails all three by name. Measured on the first run of this item. The three rows are run-rules'
+       (`run-rules/checks.mjs`, read here by key, R35), whose header carries the argument and D-589's later
+       narrowing of C-33.29..31 into regions. */
     const reRuns = String(rerunOf ?? "").trim();
     if (reRuns) {
       if (reRuns === String(run))
-        return { run, started: false,
-                 code: "AI_RUN_RERUN_SELF",
-                 check: ROW("AI_RUN_RERUN_SELF").check,
-                 translation: ROW("AI_RUN_RERUN_SELF").translation,
+        return refusal("AI_RUN_RERUN_SELF", {
                  note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's "
                      + "work this one repeats, and a self-reference would let one run discharge its own "
-                     + "bias debt" };
+                     + "bias debt" });
       const target = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, reRuns);
       /* UNSEEN ANSWERS AS ABSENT, byte for byte — `aiRunClose`'s own posture and REC-25/REC-30's rule.
          A caller must not be able to establish that a run exists by offering to re-run it. */
       if (!target || !this.#aiRunInSight(reRuns, viewer))
-        return { run, started: false,
-                 code: "AI_RUN_RERUN_UNKNOWN",
-                 check: ROW("AI_RUN_RERUN_UNKNOWN").check,
-                 translation: ROW("AI_RUN_RERUN_UNKNOWN").translation,
+        return refusal("AI_RUN_RERUN_UNKNOWN", {
                  note: "no such run: it either never existed, was purged, or is not one this caller can "
-                     + "open" };
+                     + "open" });
       if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
-        return { run, started: false,
-                 code: "AI_RUN_RERUN_OTHER_CONTEXT",
-                 check: ROW("AI_RUN_RERUN_OTHER_CONTEXT").check,
-                 translation: ROW("AI_RUN_RERUN_OTHER_CONTEXT").translation,
+        return refusal("AI_RUN_RERUN_OTHER_CONTEXT", {
                  note: "a re-run runs the same question or project again. The lens a bias debt is owed "
                      + "against is the one in force for the INDEBTED run's context, so a re-run somewhere "
-                     + "else would be measured against a different lens entirely" };
+                     + "else would be measured against a different lens entirely" });
     }
 
     /* R47 (K660): THE CHECK A LATER MODULE REGISTERED FOR THIS MODE, applied LAST, synchronously, just before the
@@ -960,11 +973,10 @@ export class AiRuns {
       if (said !== null)
         return said && typeof said === "object" && typeof said.code === "string"
           ? { run, started: false, ...said }
-          : { run, started: false, code: "AI_RUN_MODE_UNCHECKED", check: ROW("AI_RUN_MODE_UNCHECKED").check,
-              translation: ROW("AI_RUN_MODE_UNCHECKED").translation,
+          : refusal("AI_RUN_MODE_UNCHECKED", {
               detail: held ? `the check ${held.module} registered for mode '${runMode}' gave no answer`
                            : `nothing is registered to check a run in mode '${runMode}'`,
-              note: "Nothing was written" };
+              note: "Nothing was written" });
     }
     /* END DEC-49 REGION is-airun-open-check */
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : AiRuns.AI_RUN_LEASE_MS;
@@ -1544,7 +1556,7 @@ export class AiRuns {
     if (!store) return { ready: false, withheld: "NAMESPACE_UNDETERMINED" };
     const sha = await sha256hex(cred.token);
     let look = null;
-    if (store === "bio") look = this.#membership().aiCredentialLook({ secretSha: sha });
+    if (store === "bio") look = credentialsOf(this.ctx).aiCredentialLook({ secretSha: sha });
     else {
       try {
         const res = await env.STORE.get(env.STORE.idFromName("bio"))

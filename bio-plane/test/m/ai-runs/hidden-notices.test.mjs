@@ -3,8 +3,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0 } from "./world.mjs";
 import { hiddenRuns } from "../../../src/ai-runs/index.mjs";
-import { MODULE_ORDER } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MODULE_ORDER, hiddenBundles } from "../../../src/membership/index.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const HIDDEN = "PROJ-2026-0009";
 
@@ -108,6 +108,42 @@ test("R42 (K333): hiddenRuns(viewer, column) is the same predicate over a column
     }
   }
   assert.equal(w.count("ai_runs"), 4, "nothing was dropped");
+});
+
+test("R38, R42 (D-113, D-486): the figures of this module's tables are registered with record-core (its R63) and taken through the caller's sight — aiRunBounds and aiRunLog keep exactly the rows R42's tail keeps, aiRuns and inquiryRunSurfacings drop the rows naming a hidden bundle, and no sight (hid null) counts whole", async () => {
+  const w = await hiddenWorld();
+  for (const run of ["RI", "RP", "RH", "RX", "R-PURGED"])
+    w.sql.exec(`INSERT OR IGNORE INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, 'fetches', 3, 0)`, run);
+  for (const [q, run] of [[INQ, "RI"], [HIDDEN, "RH"], ["INQ-2026-0404", "RX"]])
+    w.sql.exec(`INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?, ?, ?, ?)`, q, run, ORG, T0);
+  const KEYS = ["aiRuns", "aiRunBounds", "inquiryRunSurfacings", "aiRunLog"];
+  const mine = (all) => Object.fromEntries(KEYS.map((k) => [k, all[k]]));
+  const c = (q, ...a) => w.row(q, ...a).c;
+  const whole = { aiRuns: 4, aiRunBounds: 5, inquiryRunSurfacings: 3, aiRunLog: c(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`) };
+  assert.deepEqual(mine(w.record.counts(null)), whole, "no sight: whole");
+  assert.deepEqual(Object.keys(w.record.counts(null)).filter((k) => KEYS.includes(k)), KEYS, "registered, in this order");
+  for (const viewer of ["admin", "member:ann", "member:bob", "member:dan", "member:second", "member:nobody",
+                        `${MACHINE_CLASS_PREFIX}ai`, "who-knows", "", null, 7]) {
+    const hid = hiddenBundles(viewer);
+    const got = mine(w.record.counts(hid));
+    assert.deepEqual(got, mine(w.runs.counts(hid)), String(viewer));
+    const runs = hiddenRuns(viewer, "run"), log = hiddenRuns(viewer);
+    const hidden = (col) => (hid ? [` AND COALESCE(${col}, '') NOT IN ${hid.sql}`, hid.args] : ["", []]);
+    const [rs, ra] = hidden("context_id"), [ss, sa] = hidden("bundle_id");
+    assert.deepEqual(got, {
+      aiRuns: c(`SELECT count(*) c FROM ai_runs WHERE 1=1${rs}`, ...ra),
+      aiRunBounds: c(`SELECT count(*) c FROM ai_run_bounds WHERE 1=1${runs.sql}`, ...runs.args),
+      inquiryRunSurfacings: c(`SELECT count(*) c FROM inquiry_run_surfacings WHERE 1=1${ss}`, ...sa),
+      aiRunLog: c(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${log.sql}`, ...log.args),
+    }, String(viewer));
+  }
+  /* the cases spelled out: dan sees neither project; RX's context is held by nothing, so only aiRuns counts it */
+  assert.deepEqual(mine(w.record.counts(hiddenBundles("member:dan"))), { aiRuns: 2, aiRunBounds: 1, inquiryRunSurfacings: 2,
+    aiRunLog: c(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run' AND authority = 'RI'`) });
+  assert.deepEqual(mine(w.record.counts(hiddenBundles(""))), { aiRuns: 1, aiRunBounds: 0, inquiryRunSurfacings: 1, aiRunLog: 0 },
+    "a refused viewer sees no run (fail closed)");
+  const again = w.record.registerCounts("ai-runs", ["aiRuns"], () => ({}));
+  assert.equal(again.code, "COUNTS_DECLARED");
 });
 
 test("R43: onRunOpened — one registration per module, a malformed or second one refused by membership's listenerRefusal; after each successful open commits every listener is called once, in the modules' total order, with {run, contextType, contextId, expires}; a listener that throws or rejects changes neither the run nor the answer", async () => {
