@@ -1,10 +1,11 @@
 /* gate-recorded.mjs — REC-147 (M-162): THE MACHINE JUDGEMENT, AS IT ANSWERED, RECORDED.
- * Copied 2026-09-30 (CONTRADICTION #4, T17, N394) from `test/contradiction-judge-recorded.mjs` unchanged but for this header, so the gate
- * is this module's test (`gate.test.mjs`) and outlives the old suite's retirement.
+ * Copied 2026-09-30 (CONTRADICTION #4, T17, N394) from `test/contradiction-judge-recorded.mjs` unchanged but for this header
+ * and, since T21 (N469), the notes below that named the old suites as live, so the gate is this module's test
+ * (`gate.test.mjs`) and outlives the old suite's retirement.
  *
- * WHAT THIS IS. §5's judgement is a model inside a run, and a model is neither deterministic nor reachable from the
- * battery (the plane holds no model caller: D-260). So the judgement was RUN, blind, and its answers are recorded
- * here verbatim; contradiction-overstrict.test.mjs drives this recording through M0-71's own measure()/gate() over
+ * WHAT THIS IS. §5's judgement is a model inside a run, and a model is neither deterministic nor reachable from a
+ * test (the plane holds no model caller: D-260). So the judgement was RUN, blind, and its answers are recorded
+ * here verbatim; gate.test.mjs drives this recording through M0-71's own measure()/gate() (gate-measure.mjs) over
  * the pairs op=contradictionpairs forms, exactly where the baseline is driven. A recording is a measurement of THE
  * RUNS IT RECORDS and of nothing later: a changed prompt (JUDGEMENT_PROMPT_SHA256) or a changed corpus text leaves a
  * pair this file cannot answer, and the gate then fails JUDGEMENT_ABSENT by name rather than scoring a stale answer.
