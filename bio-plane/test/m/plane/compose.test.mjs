@@ -97,3 +97,26 @@ test("R11, R5: every op of local-facts' and filing-templates' maps is in the rou
   assert.deepEqual([machine.ok, machine.result.ok, machine.result.reason], [true, false, "MACHINE_CANNOT_CONFIRM"]);
 });
 const LF_OPS = new Set(Object.keys(localFactsOps(null, new URL("http://do/"), null)));
+
+test("R11: queue is handed the composed filing-templates and local-facts, so op=queue through the door raises queue-producers R20's review request from the plane's own instance and asks its local-facts for R21's facts due", async () => {
+  const { actionClocksOf } = await import("../../../src/action-clocks/index.mjs");
+  const x = await store();
+  x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                          VALUES ('bob', 'Cover bob', 'h_bob', 'member', 'active', '["contribute"]', 't', 't')`);
+  const read = async () => (await (await x.fetch("/queue?member=bob&viewer=member:bob")).json()).result;
+  const kinds = (r) => (r.items || []).map((i) => i.kind);
+  /* negative control: nothing asked, nothing raised */
+  assert.equal(kinds(await read()).includes("template-review-requested"), false);
+  /* The plane's own instances answer: a review asked of bob, and one live action reading one fact. */
+  const asked = { template: "TPL-a", version: "TPL-a@1", name: "Records request", kind: "records_request", member: "bob",
+                  asked_by: { id: "olga", name: "Olga" }, asked_at: "2026-09-01T00:00:00Z" };
+  filingTemplatesOf(x.ctx).reviewsRequested = () => ({ ok: true, items: [asked], limit: 500, truncated: false, cursor: null });
+  const PATH = "profile:p/time_zone", dueAsked = [];
+  actionClocksOf(x.ctx).calendarFactsRead = () => ({ ok: true, paths: [{ path: PATH, actions: [{ action: "ACT-1", project: null, created_by: "bob" }] }] });
+  localFactsOf(x.ctx).factsDue = (a) => { dueAsked.push(a); return { ok: true, due: [], unknown: [] }; };
+  const r = await read();
+  const item = (r.items || []).find((i) => i.kind === "template-review-requested");
+  assert.ok(item, JSON.stringify(kinds(r)));
+  assert.equal(item.id, "OBLIGATION::template-review-requested::TPL-a@1::bob");
+  assert.deepEqual(dueAsked.map((a) => a.paths), [[PATH]], "local-facts' factsDue asked over the paths a live action reads");
+});
