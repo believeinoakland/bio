@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, sha, HTML, page, text } from "./fixture.mjs";
 import { normalizeAddress, normalizeCitation } from "../../../src/subresources.mjs";
-import { EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 
 const O = "https://w.example";
 const CSS_MAIN = `@import url("deep.css");\nbody { background: url(img/bg.png) repeat; }\n.evil { background: url("javascript:alert(1)"); }\n`;
