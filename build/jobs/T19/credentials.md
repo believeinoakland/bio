@@ -16,3 +16,15 @@ Found in reading, for membership's seam (not mine to change):
 
 - **`enroll` (membership R16) sets the member's password** by `this.setPassword(...)`, a write to `credentials`' table. No seam in membership's or my requirements covers it once the table is mine. Options: (a) credentials registers a password setter with membership at start (as R17's `registerClaimed`), membership R16 calling it inside `enroll`; (b) the control plane's `enroll` relay calls `credentials.setPassword` after membership's answer (not one act). I recommend (a), worded as a new membership R and a credentials R; until then my tests set members' passwords through my own `setPassword` after enrolment, so they hold under either.
 - `memberSet` and `adminRemove` also delete sessions and revoke signers directly (R8, R20); my R16 listener now does both on `onRevoked`, so membership's deletion drops those two statements and `#claimed`'s read of `credentials` (R64, R86 through R94).
+
+## J3 · REPORT
+
+The copy is built and pushed (`job/T19/credentials` @ 633280d85f), against membership's seam as worded (R92 `sessionRights`, R94 `registerClaimed`), which is not on `tranche/T19` yet. **Do not merge it before membership's seam:** `credentialsOf` registers with `membership.registerClaimed` at start, and the store's `migrate` now builds credentials, so without the seam the store's boot throws.
+
+- `bio-plane/src/credentials/` (index 590 lines, schema 115, checks 112): R1–R19; reads `members` only through `memberFacts`, `sessionRights`, `activeAdmins`, `isAdministrator`, `notAnAdmin`; `credentialsOps` (the 12 routes); rows C-63, C-29.1–.5/.11, C-96.8, C-96.15–.17 (J1's reading 1).
+- `test/m/credentials/` 7 files, 32 tests: every R1–R19 named; converts `signer-enrolment` and `aicredential` (my shares). With membership's seam shimmed locally (not committed) 32/32 pass; I re-run unshimmed once the seam merges.
+- Legacy-store (§12.2): import, `credentialsOf(this.ctx).migrate()` after membership's, `...credentialsOps(...)` after `membershipOps` in `routes`, the 12 delegates and `LOGIN_REFUSAL_DETAIL` re-pointed; +16/−18 (blank lines removed). `Store.SIGNER_ATTESTS` left on membership (J1, 3).
+- Checks: format 0, architecture 0, coverage 19/19, ownership 0.
+- ✱ deletion: `SIGNER_ENROLMENT_CHECKS` can go from the catalogue once membership's deletion drops its imports (`membership/index.mjs`, `t16-own-keys.test.mjs`). `AI_CREDENTIAL_CHECKS` is also imported by the old suite `test/aicredential.test.mjs`:47, so per K635 its deletion waits for the release unless you rule the old suite's import may be cut (it is not run, K619).
+
+Next: on your word that the seam merged, I merge `tranche/T19`, run my tests and legacy-store's unshimmed, and complete.
