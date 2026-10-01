@@ -20,3 +20,7 @@
 - `node checks/ownership.mjs … query-language tranche/T19`: `6 files changed by query-language between tranche/T19 and HEAD; 0 failures`.
 
 Size (session_01P2p1ii3vyq4yoTizW7hkpH): test runs 2, module lines 2732
+
+## J1 · COMPLETE
+
+Both entries applied: query.mjs and its three tests import the six names from record-grammar (frontmatter, types, actors, grades); no query-language file imports bio-checks.mjs. K776: the fixture's bundles carries record-core R37's project; the five red tests pass. Tests 38/38; format, architecture, coverage (26/26), ownership all 0 failures. For you: requirements Uses and modules.json uses still name legacy-checks for these names (record entry). Record: build/jobs/T19/query-language.md on job/T19/query-language.
